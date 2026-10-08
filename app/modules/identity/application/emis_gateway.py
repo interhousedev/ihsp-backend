@@ -18,9 +18,11 @@ from app.modules.identity.application.register_ports import (
 )
 from app.shared.contracts.emis import (
     EmisAuthFailed,
+    EmisClassHour,
     EmisProfile,
     EmisSubject,
     EmisSubjectRatings,
+    EmisTimetableItem,
     EmisUnavailable,
 )
 from app.shared.contracts.identity import UserStatus
@@ -63,6 +65,14 @@ class EmisGatewayImpl:
             return await self._emis.ratings(token, emis_subject_id, semester)
 
         return await self._call(user_id, fetch)
+
+    async def class_hours(self, user_id: UUID) -> list[EmisClassHour]:
+        """Return the lyceum's bells (any linked student's token will do)."""
+        return await self._call(user_id, self._emis.class_hours)
+
+    async def timetable(self, user_id: UUID) -> list[EmisTimetableItem]:
+        """Return the weekly timetable of the student's group."""
+        return await self._call(user_id, self._emis.timetable)
 
     # - - - Token handling - - -
 

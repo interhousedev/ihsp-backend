@@ -369,3 +369,51 @@ async def test_leaving_twice_or_for_a_non_student_does_nothing(env: Env) -> None
     async with env.uow_factory() as uow:
         student = await uow.students.get(pupil.id)
     assert student is not None and student.left_reason == "expelled"
+
+
+async def test_a_group_without_a_timetable_asks_for_an_import(env: Env) -> None:
+    """ACA-1: the caller kicks academic.bootstrap_group once the account is saved."""
+    await env.term()
+
+    ref = await env.services.enrollment.ensure_student(
+        user_id=new_id(),
+        group_emis_id=3292,
+        group_name="2ТН2",
+        current_semester=3,
+        curriculum_id=None,
+    )
+
+    assert ref.needs_timetable
+
+
+async def test_a_group_with_a_timetable_does_not_ask_for_an_import(env: Env) -> None:
+    """ACA-1: the second student of an imported group finds the timetable there."""
+    term = await env.term()
+    subject = await env.subject()
+    group = await env.group("2TN2", emis_group_id=3292)
+    await env.entry(
+        term, weekday=1, period=1, subject=subject, audience=[str(group.id)]
+    )
+
+    ref = await env.services.enrollment.ensure_student(
+        user_id=new_id(),
+        group_emis_id=3292,
+        group_name="2TN2",
+        current_semester=3,
+        curriculum_id=None,
+    )
+
+    assert not ref.needs_timetable
+
+
+async def test_without_a_term_there_is_nowhere_to_import_a_timetable(env: Env) -> None:
+    """ACA-1: no term yet, no pointless task."""
+    ref = await env.services.enrollment.ensure_student(
+        user_id=new_id(),
+        group_emis_id=3292,
+        group_name="2ТН2",
+        current_semester=3,
+        curriculum_id=None,
+    )
+
+    assert not ref.needs_timetable

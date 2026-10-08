@@ -39,6 +39,7 @@ class User:
     activation_expires_at: datetime | None = None
     activation_purpose: ActivationPurpose | None = None
     emis_student_id: int | None = None
+    emis_teacher_id: int | None = None
     emis_vault_ref: UUID | None = None
     emis_status: Literal["active", "needs_reauth"] | None = None
     mail_suspended_at: datetime | None = None

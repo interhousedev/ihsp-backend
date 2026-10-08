@@ -15,6 +15,7 @@ from app.modules.academic.application.marks.get_subject_detail import (
 from app.modules.academic.application.marks.get_sync_failures import GetSyncFailures
 from app.modules.academic.application.marks.list_subjects import ListSubjects
 from app.modules.academic.application.marks.list_sync_runs import ListSyncRuns
+from app.modules.academic.application.marks.ports.bell_sync import BellSync
 from app.modules.academic.application.marks.run_manual_sync import RunManualSync
 from app.modules.academic.application.marks.sync_all import SyncAll
 from app.modules.academic.application.marks.sync_student import SyncStudent
@@ -54,6 +55,7 @@ def build_marks(
     identity_commands: IdentityCommands,
     enrollment: AcademicEnrollment,
     links: LinksApi,
+    bell_sync: BellSync,
 ) -> MarksServices:
     """Wire the marks use cases to SQL repositories and other modules' contracts."""
 
@@ -73,6 +75,7 @@ def build_marks(
         enrollment=enrollment,
         apply=ApplyRatings(clock=deps.clock),
         clock=deps.clock,
+        kicker=deps.kicker,
         institution_id=deps.settings.emis.institution_id,
     )
     return MarksServices(
@@ -80,6 +83,7 @@ def build_marks(
         sync_all=SyncAll(
             uow_factory=uow_factory,
             sync_student=sync_student,
+            bell_sync=bell_sync,
             identity=identity,
             clock=deps.clock,
         ),

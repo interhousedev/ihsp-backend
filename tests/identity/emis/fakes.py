@@ -20,9 +20,11 @@ from app.shared.base_error import ConflictError
 from app.shared.clock import Clock
 from app.shared.contracts.academic import StudentRef
 from app.shared.contracts.emis import (
+    EmisClassHour,
     EmisProfile,
     EmisSubject,
     EmisSubjectRatings,
+    EmisTimetableItem,
 )
 from app.shared.contracts.identity import UserStatus
 from app.shared.db.uow import AfterCommit
@@ -43,6 +45,7 @@ class ControlledEmis:
         self.passwords: dict[str, str] = {}
         self.profiles: dict[str, EmisProfile] = {}
         self.down = False
+        self.timetable_error: Exception | None = None
 
     def revoke(self, token: str) -> None:
         """Make EMIS answer 401 for this token."""
@@ -86,6 +89,20 @@ class ControlledEmis:
         self.calls.append("ratings")
         self._check(token)
         return await self._inner.ratings(token, subject_id, semester)
+
+    async def class_hours(self, token: str) -> list[EmisClassHour]:
+        """Return the bells."""
+        self.calls.append("class_hours")
+        self._check(token)
+        return await self._inner.class_hours(token)
+
+    async def timetable(self, token: str) -> list[EmisTimetableItem]:
+        """Return the timetable of the token's group."""
+        self.calls.append("timetable")
+        self._check(token)
+        if self.timetable_error is not None:
+            raise self.timetable_error
+        return await self._inner.timetable(token)
 
 
 # - - - Services of B1 and B3 - - -
@@ -206,6 +223,7 @@ class FakeEnrollment:
         self.left: list[tuple[UUID, str]] = []
         self.imported: UUID | None = None
         self.fail_ensure = False
+        self.needs_timetable = False
         self.group_id = new_id()
 
     async def ensure_student(
@@ -236,6 +254,7 @@ class FakeEnrollment:
             subgroup=None,
             status="active",
             synced_at=None,
+            needs_timetable=self.needs_timetable,
         )
 
     async def find_imported_student(

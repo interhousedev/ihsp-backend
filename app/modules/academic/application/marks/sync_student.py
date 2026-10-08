@@ -25,6 +25,7 @@ from app.shared.contracts.identity import (
 )
 from app.shared.ids import new_id
 from app.shared.notifications import NotificationDraft, NotificationType
+from app.shared.tasks import TaskKicker
 
 import structlog
 
@@ -44,6 +45,7 @@ class SyncStudent:
         enrollment: AcademicEnrollment,
         apply: ApplyRatings,
         clock: Clock,
+        kicker: TaskKicker,
         institution_id: int,
     ) -> None:
         """Store collaborators; ``institution_id`` is the lyceum's EMIS id."""
@@ -54,6 +56,7 @@ class SyncStudent:
         self._enrollment = enrollment
         self._apply = apply
         self._clock = clock
+        self._kicker = kicker
         self._institution_id = institution_id
 
     async def execute(
@@ -104,7 +107,9 @@ class SyncStudent:
         """Refresh the profile if asked, fetch ratings, then write them."""
         effective: SyncMode = "backfill" if state.backfilled_at is None else mode
         if effective in ("backfill", "profile"):
-            refreshed = await self._refresh_profile(state, counters)
+            refreshed = await self._refresh_profile(
+                state, counters, import_timetable=effective == "profile"
+            )
             if refreshed is None:
                 return SyncOutcome(state.user_id, "left")
             state = refreshed
@@ -113,9 +118,17 @@ class SyncStudent:
         return SyncOutcome(state.user_id, "ok")
 
     async def _refresh_profile(
-        self, state: StudentSyncState, counters: SyncCounters
+        self,
+        state: StudentSyncState,
+        counters: SyncCounters,
+        *,
+        import_timetable: bool,
     ) -> StudentSyncState | None:
-        """Apply the EMIS profile and subjects (SYNC-3, SYNC-9); None if they left."""
+        """Apply the EMIS profile and subjects (SYNC-3, SYNC-9); None if they left.
+
+        The daily profile run also asks for the timetable of a group that has none
+        (ACA-1); after a registration the backfill leaves that to its own task.
+        """
         user_id = state.user_id
         counters.emis_requests += 1
         profile = await self._emis.profile(user_id)
@@ -138,6 +151,12 @@ class SyncStudent:
         counters.emis_requests += 1
         subjects = await self._emis.subjects(user_id)
         await self._enrollment.sync_subjects(group_id=ref.group_id, subjects=subjects)
+        if import_timetable and ref.needs_timetable:
+            await self._kicker.kick(
+                "academic.bootstrap_group",
+                user_id=str(user_id),
+                group_id=str(ref.group_id),
+            )
         async with self._uow_factory() as uow:
             await uow.students.touch_profile_synced(user_id, at=self._clock.now())
             await uow.commit()

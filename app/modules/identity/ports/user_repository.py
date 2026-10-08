@@ -30,6 +30,14 @@ class UserRepository(Protocol):
         """Find a user by recovery email, case-insensitively."""
         ...
 
+    async def get_by_emis_teacher_id(self, emis_teacher_id: int) -> User | None:
+        """Find the teacher linked to an EMIS teacher id."""
+        ...
+
+    async def list_with_roles(self, roles: Sequence[Role]) -> list[User]:
+        """Return users holding any role, except deleted and deactivated ones."""
+        ...
+
     async def get_by_activation_hash(self, token_hash: str) -> User | None:
         """Find the user holding an activation token hash."""
         ...

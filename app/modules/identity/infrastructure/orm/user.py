@@ -33,6 +33,7 @@ class User(IdMixin, TimestampMixin, Base):
             "activation_token_hash", name="uq_users_activation_token_hash"
         ),
         UniqueConstraint("emis_student_id", name="uq_users_emis_student_id"),
+        UniqueConstraint("emis_teacher_id", name="uq_users_emis_teacher_id"),
         UniqueConstraint("emis_vault_ref", name="uq_users_emis_vault_ref"),
         Index("ix_users_roles", "roles", postgresql_using="gin"),
         Index(
@@ -83,6 +84,7 @@ class User(IdMixin, TimestampMixin, Base):
         )
     )
     emis_student_id: Mapped[int | None] = mapped_column(Integer)
+    emis_teacher_id: Mapped[int | None] = mapped_column(Integer)
     emis_vault_ref: Mapped[UUID | None] = mapped_column(Uuid)
     emis_status: Mapped[str | None] = mapped_column(
         Enum(

@@ -1,11 +1,17 @@
 """ID-7, SYNC (gateway side): HttpEmisSource calls the internal API with the token."""
 
 from collections.abc import AsyncIterator, Iterator
-from datetime import date
+from datetime import date, time
 from uuid import UUID
 
 from app.bootstrap.adapters.http_emis_source import HttpEmisSource
-from app.shared.contracts.emis import EmisAuthFailed, EmisMarkType, EmisUnavailable
+from app.shared.contracts.emis import (
+    EmisAuthFailed,
+    EmisMarkType,
+    EmisTeacher,
+    EmisUnavailable,
+)
+from tests.identity.emis.emis_fixtures import load_json
 
 import httpx
 import pytest
@@ -158,3 +164,62 @@ async def test_a_non_json_error_page_is_unavailable(
 
     with pytest.raises(EmisUnavailable):
         await source.profile(USER)
+
+
+async def test_class_hours_are_parsed_from_the_gateway(
+    source: HttpEmisSource, gateway: respx.MockRouter
+) -> None:
+    """ACA-4: the worker gets the bells through the identity process."""
+    route = gateway.get(f"/{USER}/class-hours").respond(
+        200,
+        json=[
+            {"pair_number": 0, "begin_time": "08:30:00", "end_time": "09:50:00"},
+            {"pair_number": 1, "begin_time": "10:10", "end_time": "11:30"},
+        ],
+    )
+
+    hours = await source.class_hours(USER)
+
+    assert [(h.pair_number, h.begin_time, h.end_time) for h in hours] == [
+        (0, time(8, 30), time(9, 50)),
+        (1, time(10, 10), time(11, 30)),
+    ]
+    assert route.calls.last.request.headers["Authorization"] == "Bearer svc-token"
+
+
+async def test_the_timetable_is_parsed_from_the_gateway(
+    source: HttpEmisSource, gateway: respx.MockRouter
+) -> None:
+    """ACA-1: teacher, half, parity and missing values survive the round trip."""
+    gateway.get(f"/{USER}/timetable").respond(
+        200, json=load_json("timetable_gateway.json")
+    )
+
+    items = await source.timetable(USER)
+
+    assert [(i.weekday, i.pair_number, i.subject_emis_id) for i in items] == [
+        (3, 0, 101),
+        (3, 1, 103),
+        (6, 4, None),
+    ]
+    assert items[0].teacher == EmisTeacher(9001, "Gulnora", "Kalandarova", "Akbarovna")
+    assert (items[1].subgroup, items[1].week_parity) == (2, "odd")
+    assert items[1].teacher == EmisTeacher(None, "Sardor", "Yuldashev", None)
+    assert (items[2].teacher, items[2].room, items[2].week_parity) == (
+        None,
+        "Кластер",
+        "even",
+    )
+    assert items[0].room == "101" and items[0].subgroup is None
+
+
+async def test_a_timetable_503_is_unavailable(
+    source: HttpEmisSource, gateway: respx.MockRouter
+) -> None:
+    """ACA-1: an unconfigured or failing EMIS timetable is "EMIS unavailable"."""
+    gateway.get(f"/{USER}/timetable").respond(
+        503, json={"type": "emis/unavailable", "status": 503}
+    )
+
+    with pytest.raises(EmisUnavailable):
+        await source.timetable(USER)

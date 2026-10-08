@@ -15,8 +15,20 @@ TERM_BODY = {
     "starts_on": "2026-09-01",
     "ends_on": "2026-12-25",
     "bells": [
-        {"period": 1, "start": "08:30", "end": "09:15", "weekdays": [1, 2, 3, 4, 5]},
-        {"period": 2, "start": "09:25", "end": "10:10", "weekdays": [1, 2, 3, 4, 5, 6]},
+        {
+            "period": 1,
+            "start": "08:30",
+            "end": "09:15",
+            "weekdays": [1, 2, 3, 4, 5],
+            "source": "manual",
+        },
+        {
+            "period": 2,
+            "start": "09:25",
+            "end": "10:10",
+            "weekdays": [1, 2, 3, 4, 5, 6],
+            "source": "emis",
+        },
     ],
     "non_study_days": ["2026-10-12"],
     "moved_days": [{"date": "2026-11-14", "follows_weekday": 1}],

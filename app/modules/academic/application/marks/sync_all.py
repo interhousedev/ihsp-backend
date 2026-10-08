@@ -5,6 +5,7 @@ from collections import Counter
 from collections.abc import Awaitable, Callable
 from uuid import UUID
 
+from app.modules.academic.application.marks.ports.bell_sync import BellSync
 from app.modules.academic.application.marks.ports.unit_of_work import MarksUowFactory
 from app.modules.academic.application.marks.sync_student import SyncStudent
 from app.modules.academic.domain.marks.sync import SyncCounters, SyncMode
@@ -18,6 +19,7 @@ import structlog
 log = structlog.get_logger(__name__)
 
 PROFILE_SLOT = "20:00"
+BELL_ATTEMPTS = 3  # students tried until one EMIS link answers
 SPREAD_SECONDS = 1200.0
 CONCURRENCY = 10
 FAILURE_ALERT_RATIO = 0.2
@@ -32,6 +34,7 @@ class SyncAll:
         *,
         uow_factory: MarksUowFactory,
         sync_student: SyncStudent,
+        bell_sync: BellSync,
         identity: IdentityDirectory,
         clock: Clock,
         concurrency: int = CONCURRENCY,
@@ -41,6 +44,7 @@ class SyncAll:
         """Store collaborators; tests pass ``spread_seconds=0``."""
         self._uow_factory = uow_factory
         self._sync_student = sync_student
+        self._bell_sync = bell_sync
         self._identity = identity
         self._clock = clock
         self._concurrency = concurrency
@@ -57,12 +61,24 @@ class SyncAll:
         tally: Counter[str] = Counter()
         mode: SyncMode = "profile" if slot == PROFILE_SLOT else "regular"
         try:
+            if mode == "profile":
+                await self._sync_bells(user_ids)
             await self._run_students(run_id, user_ids, mode, counters, tally)
         except Exception:
             await self._finish(run_id, "failed", len(user_ids), counters, tally)
             raise
         await self._finish(run_id, "done", len(user_ids), counters, tally)
         return run_id
+
+    async def _sync_bells(self, user_ids: list[UUID]) -> None:
+        """Bells are the same for everyone: one working EMIS link is enough (ACA-4)."""
+        for user_id in user_ids[:BELL_ATTEMPTS]:
+            try:
+                await self._bell_sync.execute(user_id)
+            except Exception:
+                log.warning("bell_sync_failed", user_id=str(user_id), exc_info=True)
+            else:
+                return
 
     async def _candidates(self) -> list[UUID]:
         """Students with a finished backfill and a working EMIS link."""

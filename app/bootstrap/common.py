@@ -17,6 +17,7 @@ from app.bootstrap.container import Container, build_infrastructure
 from app.modules.academic.wiring import (
     AcademicModule,
     build_classwork,
+    build_emis_import,
     build_marks,
     build_schedule,
 )
@@ -258,6 +259,12 @@ class _Assembler:
         )
         if closer is not None:
             self.add_closer(closer)
+        emis_import = build_emis_import(
+            self.deps,
+            schedule=schedule,
+            emis=source,
+            identity_commands=identity.commands,
+        )
         marks = build_marks(
             self.deps,
             emis=source,
@@ -266,8 +273,14 @@ class _Assembler:
             identity_commands=identity.commands,
             enrollment=schedule.enrollment,
             links=links.public,
+            bell_sync=emis_import.sync_class_hours,
         )
-        c.academic = AcademicModule(schedule=schedule, classwork=classwork, marks=marks)
+        c.academic = AcademicModule(
+            schedule=schedule,
+            classwork=classwork,
+            marks=marks,
+            emis_import=emis_import,
+        )
 
     def build_mail(self) -> None:
         """Mail; sending suspension is read from the identity user record."""

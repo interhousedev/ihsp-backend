@@ -7,12 +7,18 @@ from app.modules.identity.application.register_models import (
     EmisRequestError,
 )
 from app.modules.identity.infrastructure.emis.fake import (
+    FAKE_CLASS_HOURS,
     FAKE_STUDENTS,
     FAKE_SUBJECTS,
     FakeEmisClient,
 )
+from app.modules.identity.infrastructure.emis.mapping import to_class_hours
+from app.modules.identity.infrastructure.emis.models.responses.class_hours import (
+    ClassHoursV1DTO,
+)
 from app.shared.contracts.emis import EmisMarkType
 from tests.fakes.clock import FixedClock
+from tests.identity.emis.emis_fixtures import load_fixture
 
 import pytest
 
@@ -115,3 +121,40 @@ async def test_future_semesters_have_no_marks_and_past_ones_do() -> None:
     assert semester_one.marks
     assert semester_four.marks == ()
     assert semester_four.semester_rating is None
+
+
+async def test_class_hours_are_the_recorded_emis_response() -> None:
+    """ACA-4: the fake answers exactly what the real class-hours endpoint did."""
+    client = make_client()
+    token = await client.login("student01", "password")
+
+    hours = await client.class_hours(token)
+
+    recorded = to_class_hours(
+        ClassHoursV1DTO.model_validate(load_fixture("class_hours.json"))
+    )
+    assert hours == recorded == list(FAKE_CLASS_HOURS)
+
+
+async def test_the_timetable_belongs_to_the_students_group() -> None:
+    """ACA-1: two groups, different timetables, teachers shared by id."""
+    client = make_client()
+    second_year = await client.timetable(await client.login("student01", "password"))
+    first_year = await client.timetable(await client.login("student16", "password"))
+
+    assert second_year and first_year and second_year != first_year
+    teachers = {i.teacher.emis_id for i in second_year if i.teacher} & {
+        i.teacher.emis_id for i in first_year if i.teacher
+    }
+    assert teachers  # the same teachers teach both groups
+    assert {i.subgroup for i in second_year} == {None, 1, 2}
+    assert {i.week_parity for i in second_year} == {"every", "odd", "even"}
+    assert all(1 <= i.weekday <= 6 and i.pair_number >= 0 for i in second_year)
+
+
+async def test_the_timetable_needs_a_valid_token() -> None:
+    """ID-7: the timetable is behind the student's token like every data call."""
+    client = make_client()
+
+    with pytest.raises(EmisAuthError):
+        await client.timetable("fake-token:nobody")

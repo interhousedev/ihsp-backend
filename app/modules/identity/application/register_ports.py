@@ -11,7 +11,13 @@ from app.modules.identity.application.register_models import (
     EmisSecret,
     NewStudentAccount,
 )
-from app.shared.contracts.emis import EmisProfile, EmisSubject, EmisSubjectRatings
+from app.shared.contracts.emis import (
+    EmisClassHour,
+    EmisProfile,
+    EmisSubject,
+    EmisSubjectRatings,
+    EmisTimetableItem,
+)
 from app.shared.db.uow import AfterCommit
 from app.shared.notifications import AuditDraft, NotificationDraft
 
@@ -20,7 +26,15 @@ from pydantic import BaseModel
 # - - - EMIS and Vault - - -
 
 
-class EmisApi(Protocol):
+class EmisTimetableSource(Protocol):
+    """Where the weekly timetable of a student's group comes from."""
+
+    async def timetable(self, token: str) -> list[EmisTimetableItem]:
+        """Return the weekly timetable of the token's group (ACA-1)."""
+        ...
+
+
+class EmisApi(EmisTimetableSource, Protocol):
     """The EMIS HTTP API, returning normalized data (client or fake)."""
 
     async def login(self, login: str, password: str) -> str:
@@ -39,6 +53,10 @@ class EmisApi(Protocol):
         self, token: str, subject_id: int, semester: int
     ) -> EmisSubjectRatings:
         """Return marks and the semester rating of one subject."""
+        ...
+
+    async def class_hours(self, token: str) -> list[EmisClassHour]:
+        """Return the bells (``student-profiles/class-hours/``)."""
         ...
 
 

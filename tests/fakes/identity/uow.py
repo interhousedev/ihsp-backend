@@ -88,6 +88,19 @@ class FakeUserRepository:
             lambda u: (u.recovery_email or "").lower() == email.strip().lower()
         )
 
+    async def get_by_emis_teacher_id(self, emis_teacher_id: int) -> User | None:
+        """Lookup by EMIS teacher id."""
+        return self._find(lambda u: u.emis_teacher_id == emis_teacher_id)
+
+    async def list_with_roles(self, roles: Sequence[Role]) -> list[User]:
+        """Copies of users holding any role, except deleted and deactivated ones."""
+        return [
+            _copy(u)
+            for u in self._s.users.values()
+            if u.roles & set(roles)
+            and u.status not in (UserStatus.DELETED, UserStatus.DEACTIVATED)
+        ]
+
     async def get_by_activation_hash(self, token_hash: str) -> User | None:
         """Lookup by activation token hash."""
         return self._find(lambda u: u.activation_token_hash == token_hash)

@@ -1,8 +1,9 @@
-"""Fake EMIS for ``EMIS__MODE=fake``: 30 students, 8 subjects, deterministic marks."""
+"""Fake EMIS for ``EMIS__MODE=fake``: 30 students, 8 subjects, marks, timetable."""
 
 import hashlib
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date, time, timedelta
+from typing import Literal
 
 from app.modules.identity.application.register_models import (
     EmisAuthError,
@@ -11,11 +12,14 @@ from app.modules.identity.application.register_models import (
 from app.modules.identity.infrastructure.emis.mapping import payload_hash
 from app.shared.clock import Clock, local_today
 from app.shared.contracts.emis import (
+    EmisClassHour,
     EmisMark,
     EmisMarkType,
     EmisProfile,
     EmisSubject,
     EmisSubjectRatings,
+    EmisTeacher,
+    EmisTimetableItem,
 )
 from app.shared.text import normalize_group_name, title_case
 
@@ -58,6 +62,37 @@ FAKE_SUBJECTS: tuple[EmisSubject, ...] = (
 )
 
 
+# The real response of ``student-profiles/class-hours/``: five 80-minute pairs.
+FAKE_CLASS_HOURS: tuple[EmisClassHour, ...] = (
+    EmisClassHour(0, time(8, 30), time(9, 50)),
+    EmisClassHour(1, time(10, 10), time(11, 30)),
+    EmisClassHour(2, time(12, 10), time(13, 30)),
+    EmisClassHour(3, time(13, 40), time(15, 0)),
+    EmisClassHour(4, time(15, 10), time(16, 30)),
+)
+
+_MATH = EmisTeacher(9001, "Gulnora", "Kalandarova", "Akbarovna")
+_LANGUAGES = EmisTeacher(9002, "Sardor", "Yuldashev", "Rustamovich")
+_UZBEK = EmisTeacher(9003, "Madina", "Ismoilova", None)
+_HUMANITIES = EmisTeacher(9004, "Timur", "Nazarov", "Aliyevich")
+_IT = EmisTeacher(9005, "Oybek", "Rahimov", None)
+
+# subject EMIS id -> (teacher of the whole group | teachers of halves 1 and 2).
+_TEACHERS_OF: dict[int, tuple[EmisTeacher, ...]] = {
+    101: (_MATH,),
+    102: (_MATH,),
+    103: (_LANGUAGES, _UZBEK),  # English is taught by halves
+    104: (_LANGUAGES,),
+    105: (_UZBEK,),
+    106: (_HUMANITIES,),
+    107: (_IT, _HUMANITIES),  # Informatics is taught by halves
+    108: (_IT,),
+}
+_ROOMS_OF = {3292: ("101", "204"), 3291: ("102", "Кластер")}
+_WEEKDAYS = (1, 2, 3, 4, 5)
+_PAIRS_PER_DAY = 4
+
+
 @dataclass(frozen=True, slots=True)
 class FakeStudent:
     """One student of the fake EMIS (names as EMIS sends them: Latin upper case)."""
@@ -95,6 +130,55 @@ def _build_students() -> tuple[FakeStudent, ...]:
 
 FAKE_STUDENTS: tuple[FakeStudent, ...] = _build_students()
 _BY_LOGIN = {student.login: student for student in FAKE_STUDENTS}
+
+
+def _cells(
+    subject: EmisSubject, teachers: tuple[EmisTeacher, ...], rooms: tuple[str, ...]
+) -> list[tuple[EmisTeacher, str, Literal[1, 2] | None]]:
+    """The (teacher, room, half) cells of a subject: two halves or the whole group."""
+    if len(teachers) == 2:
+        return [(teachers[0], rooms[0], 1), (teachers[1], rooms[1], 2)]
+    return [(teachers[0], rooms[0], None)]
+
+
+def _timetable_of(group_emis_id: int) -> tuple[EmisTimetableItem, ...]:
+    """A full week of four pairs a day; 2TN2 also has a Saturday odd/even pair."""
+    rooms = _ROOMS_OF.get(group_emis_id)
+    if rooms is None:
+        return ()
+    shift = 0 if group_emis_id == 3292 else 3
+    subjects = sorted(FAKE_SUBJECTS, key=lambda subject: subject.emis_subject_id)
+    items: list[EmisTimetableItem] = []
+    for weekday in _WEEKDAYS:
+        for pair in range(_PAIRS_PER_DAY):
+            subject = subjects[(weekday * _PAIRS_PER_DAY + pair + shift) % 8]
+            teachers = _TEACHERS_OF[subject.emis_subject_id]
+            items.extend(
+                EmisTimetableItem(
+                    weekday=weekday,
+                    pair_number=pair,
+                    subject_emis_id=subject.emis_subject_id,
+                    subject_name=subject.name_en,
+                    teacher=teacher,
+                    room=room,
+                    subgroup=half,
+                )
+                for teacher, room, half in _cells(subject, teachers, rooms)
+            )
+    if group_emis_id == 3292:
+        items.append(_saturday(106, "History", _HUMANITIES, rooms[0], "odd"))
+        items.append(_saturday(105, "Uzbek", _UZBEK, rooms[0], "even"))
+    return tuple(items)
+
+
+def _saturday(
+    subject_id: int,
+    name: str,
+    teacher: EmisTeacher,
+    room: str,
+    parity: Literal["odd", "even"],
+) -> EmisTimetableItem:
+    return EmisTimetableItem(6, 0, subject_id, name, teacher, room, week_parity=parity)
 
 
 def _digest(*parts: object) -> int:
@@ -177,6 +261,15 @@ class FakeEmisClient:
             marks=tuple(marks),
             payload_hash=digest,
         )
+
+    async def class_hours(self, token: str) -> list[EmisClassHour]:
+        """Return the five bells of the real ``class-hours`` response."""
+        self._student(token)
+        return list(FAKE_CLASS_HOURS)
+
+    async def timetable(self, token: str) -> list[EmisTimetableItem]:
+        """Return the weekly timetable of the token's group."""
+        return list(_timetable_of(self._student(token).group_emis_id))
 
     def _marks(
         self, student: FakeStudent, subject_id: int, semester: int

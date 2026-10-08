@@ -20,6 +20,9 @@ class StudentRef:
     subgroup: int | None
     status: Literal["active", "left"]
     synced_at: dt.datetime | None
+    # True when the group has no timetable in the current term: kick
+    # `academic.bootstrap_group` (after the student's account is committed).
+    needs_timetable: bool = False
 
 
 @dataclass(frozen=True, slots=True)

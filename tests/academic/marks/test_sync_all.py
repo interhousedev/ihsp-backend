@@ -136,6 +136,7 @@ async def test_students_are_spread_over_twenty_minutes(
     sync_all = SyncAll(
         uow_factory=env.uow_factory,
         sync_student=env.sync,
+        bell_sync=env.bells,
         identity=env.identity,  # type: ignore[arg-type]
         clock=env.clock,
         concurrency=1,
@@ -144,3 +145,57 @@ async def test_students_are_spread_over_twenty_minutes(
     await sync_all.execute("manual")
 
     assert sorted(delays) == [0.0, 300.0, 600.0, 900.0]
+
+
+async def test_the_evening_run_syncs_the_bells_once_for_everyone(
+    env: Env, sessionmaker_in_tx: Maker
+) -> None:
+    """ACA-4: class hours are the same for all students: one call per run."""
+    ids = await _crowd(env, sessionmaker_in_tx, 2)
+    env.emis.profile_result = EmisProfile(1, "A", "B", None, 10815, 3292, "2TN2", 3, 1)
+
+    await env.sync_all().execute("20:00")
+
+    assert len(env.bells.calls) == 1 and env.bells.calls[0] in ids
+
+
+async def test_the_other_runs_leave_the_bells_alone(
+    env: Env, sessionmaker_in_tx: Maker
+) -> None:
+    """ACA-4: only the 20:00 profile run refreshes the bells."""
+    await _crowd(env, sessionmaker_in_tx, 1)
+
+    for slot in ("11:30", "15:00", "manual"):
+        await env.sync_all().execute(slot)
+
+    assert env.bells.calls == []
+
+
+async def test_a_failed_bell_sync_tries_the_next_student_and_never_fails_the_run(
+    env: Env, sessionmaker_in_tx: Maker
+) -> None:
+    """ID-7: one student's broken EMIS link must not decide the lyceum's bells."""
+    ids = await _crowd(env, sessionmaker_in_tx, 3)
+    env.bells.fail_for = set(ids[:2])
+    env.emis.profile_result = EmisProfile(1, "A", "B", None, 10815, 3292, "2TN2", 3, 1)
+
+    await env.sync_all().execute("20:00")
+
+    assert env.bells.calls[-1] not in env.bells.fail_for or len(env.bells.calls) == 3
+    [run] = await runs(sessionmaker_in_tx)
+    assert run.status == "done"
+
+
+async def test_when_no_link_works_the_run_still_finishes(
+    env: Env, sessionmaker_in_tx: Maker
+) -> None:
+    """ID-7: bells are retried the next evening."""
+    ids = await _crowd(env, sessionmaker_in_tx, 1)
+    env.bells.fail_for = set(ids)
+    env.emis.profile_result = EmisProfile(1, "A", "B", None, 10815, 3292, "2TN2", 3, 1)
+
+    await env.sync_all().execute("20:00")
+
+    assert len(env.bells.calls) == 2
+    [run] = await runs(sessionmaker_in_tx)
+    assert run.status == "done"

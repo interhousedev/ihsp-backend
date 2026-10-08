@@ -2,10 +2,13 @@
 
 import hashlib
 import json
-from datetime import date, datetime
+from datetime import date, datetime, time
 from typing import Any
 
 from app.modules.identity.application.register_models import EmisRequestError
+from app.modules.identity.infrastructure.emis.models.responses.class_hours import (
+    ClassHoursV1DTO,
+)
 from app.modules.identity.infrastructure.emis.models.responses.curriculum import (
     CurriculumV1DTO,
 )
@@ -16,6 +19,7 @@ from app.modules.identity.infrastructure.emis.models.responses.ratings import (
     RatingsV1DTO,
 )
 from app.shared.contracts.emis import (
+    EmisClassHour,
     EmisMark,
     EmisMarkType,
     EmisProfile,
@@ -123,3 +127,21 @@ def to_ratings(
         marks=tuple(marks),
         payload_hash=payload_hash(raw_result),
     )
+
+
+def _parse_clock(value: str) -> time:
+    try:
+        return datetime.strptime(value.strip(), "%H:%M").time()
+    except ValueError as exc:
+        raise EmisRequestError(f"unexpected class hour time {value!r}") from exc
+
+
+def to_class_hours(dto: ClassHoursV1DTO) -> list[EmisClassHour]:
+    """Map the bells ordered by pair; a pair that ends before it begins is rejected."""
+    hours: list[EmisClassHour] = []
+    for item in sorted(dto.results, key=lambda pair: pair.pair_number):
+        begin, end = _parse_clock(item.begin_time), _parse_clock(item.end_time)
+        if item.pair_number < 0 or not begin < end:
+            raise EmisRequestError(f"unexpected class hour {item.pair_number}")
+        hours.append(EmisClassHour(item.pair_number, begin, end))
+    return hours

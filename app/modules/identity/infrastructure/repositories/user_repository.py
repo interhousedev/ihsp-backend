@@ -42,6 +42,7 @@ def _to_entity(row: UserRow) -> User:
             else None
         ),
         emis_student_id=row.emis_student_id,
+        emis_teacher_id=row.emis_teacher_id,
         emis_vault_ref=row.emis_vault_ref,
         emis_status=row.emis_status,  # type: ignore[arg-type]
         mail_suspended_at=row.mail_suspended_at,
@@ -73,6 +74,7 @@ def _apply(row: UserRow, user: User) -> None:
         user.activation_purpose.value if user.activation_purpose else None
     )
     row.emis_student_id = user.emis_student_id
+    row.emis_teacher_id = user.emis_teacher_id
     row.emis_vault_ref = user.emis_vault_ref
     row.emis_status = user.emis_status
     row.mail_suspended_at = user.mail_suspended_at
@@ -138,6 +140,24 @@ class SqlUserRepository:
         return await self._first(
             func.lower(UserRow.recovery_email) == email.strip().lower()
         )
+
+    async def get_by_emis_teacher_id(self, emis_teacher_id: int) -> User | None:
+        """Find the teacher linked to an EMIS teacher id."""
+        return await self._first(UserRow.emis_teacher_id == emis_teacher_id)
+
+    async def list_with_roles(self, roles: Sequence[Role]) -> list[User]:
+        """Return users holding any role, except deleted and deactivated ones."""
+        rows = await self._session.scalars(
+            select(UserRow)
+            .where(
+                _has_any_role(roles),
+                UserRow.status.not_in(
+                    [UserStatus.DELETED.value, UserStatus.DEACTIVATED.value]
+                ),
+            )
+            .order_by(UserRow.created_at, UserRow.id)
+        )
+        return [_to_entity(row) for row in rows]
 
     async def get_by_activation_hash(self, token_hash: str) -> User | None:
         """Find the user holding an activation token hash."""

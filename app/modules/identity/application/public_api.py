@@ -6,6 +6,7 @@ from typing import Any, Literal
 from uuid import UUID
 
 from app.modules.identity.application.audit_drafts import make_audit
+from app.modules.identity.application.ensure_teacher import ensure_teacher
 from app.modules.identity.application.load_user import require_user
 from app.modules.identity.application.revoke_access import AccessRevoker
 from app.modules.identity.application.update_preferences import UpdatePreferences
@@ -142,6 +143,23 @@ class IdentityCommandsImpl:
             await uow.users.add(user)
             await uow.commit()
         return _ref(user)
+
+    async def ensure_teacher(
+        self,
+        *,
+        emis_teacher_id: int | None,
+        first_name: str,
+        last_name: str,
+        middle_name: str | None,
+    ) -> UserRef:
+        """Find or create a teacher named by an EMIS timetable."""
+        return await ensure_teacher(
+            self.uow_factory,
+            emis_teacher_id=emis_teacher_id,
+            first_name=first_name,
+            last_name=last_name,
+            middle_name=middle_name,
+        )
 
     async def set_emis_status(
         self, user_id: UUID, status: Literal["active", "needs_reauth"]

@@ -1,6 +1,7 @@
 """Syncing one student against a scripted EMIS (SYNC-3 to SYNC-9, ACA-14, ACA-22)."""
 
 import datetime as dt
+from dataclasses import replace
 from decimal import Decimal
 
 from app.shared.contracts.emis import (
@@ -240,6 +241,53 @@ async def test_profile_run_applies_a_new_group(
     assert env.enrollment.synced_subjects[0][0] == env.world.group_id
     student = await student_of(sessionmaker_in_tx, env.world.user_id)
     assert student.profile_synced_at == env.clock.now()
+
+
+async def test_profile_run_asks_for_the_timetable_of_a_group_without_one(
+    env: Env,
+) -> None:
+    """ACA-1: a student who moved to an unknown group starts the import."""
+    env.enrollment.ref = replace(env.enrollment.ref, needs_timetable=True)
+    env.emis.profile_result = EmisProfile(
+        1, "Aliya", "Karimova", None, 10815, 3300, "3TN1", 4, 88
+    )
+
+    await env.sync.execute(env.world.user_id, mode="profile")
+
+    assert env.kicker.calls == [
+        (
+            "academic.bootstrap_group",
+            {
+                "user_id": str(env.world.user_id),
+                "group_id": str(env.enrollment.ref.group_id),
+            },
+        )
+    ]
+
+
+async def test_profile_run_leaves_a_group_with_a_timetable_alone(env: Env) -> None:
+    """ACA-1: no task for a group that already has its lessons."""
+    env.emis.profile_result = EmisProfile(
+        1, "Aliya", "Karimova", None, 10815, 3292, "2TN2", 3, 1
+    )
+
+    await env.sync.execute(env.world.user_id, mode="profile")
+
+    assert env.kicker.calls == []
+
+
+async def test_a_backfill_does_not_start_the_import_the_registration_did(
+    env: Env,
+) -> None:
+    """ACA-1: registration kicked bootstrap_group itself; the backfill only syncs."""
+    env.enrollment.ref = replace(env.enrollment.ref, needs_timetable=True)
+    env.emis.profile_result = EmisProfile(
+        1, "Aliya", "Karimova", None, 10815, 3292, "2TN2", 3, 1
+    )
+
+    await env.sync.execute(env.world.user_id, mode="backfill")
+
+    assert env.kicker.calls == []
 
 
 async def test_other_institution_marks_the_student_as_left(env: Env) -> None:

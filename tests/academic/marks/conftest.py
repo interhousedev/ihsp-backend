@@ -18,6 +18,7 @@ from app.shared.contracts.identity import UserPreferences
 from app.shared.contracts.links import ResourceRef
 from app.shared.rate_limit import RateLimiter
 from app.shared.wiring import ModuleDeps
+from tests.academic.marks.fakes.bell_sync import FakeBellSync
 from tests.academic.marks.fakes.emis import FakeEmis, make_ratings
 from tests.academic.marks.fakes.enrollment import (
     FakeEnrollment,
@@ -38,6 +39,7 @@ from tests.academic.marks.world import (
 )
 from tests.fakes.clock import FixedClock
 from tests.fakes.outbox import InMemoryOutbox
+from tests.fakes.tasks import FakeTaskKicker
 
 import pytest
 import pytest_asyncio
@@ -57,12 +59,15 @@ class Env:
     sync: SyncStudent
     uow_factory: MarksUowFactory
     clock: FixedClock
+    bells: FakeBellSync
+    kicker: FakeTaskKicker
 
     def sync_all(self) -> SyncAll:
         """Build SyncAll that runs one student at a time without delays."""
         return SyncAll(
             uow_factory=self.uow_factory,
             sync_student=self.sync,
+            bell_sync=self.bells,
             identity=self.identity,  # type: ignore[arg-type]
             clock=self.clock,
             concurrency=1,
@@ -96,6 +101,7 @@ async def env(
     uow_factory: MarksUowFactory,
     outbox: InMemoryOutbox,
     clock: FixedClock,
+    kicker: FakeTaskKicker,
 ) -> Env:
     """A seeded world with an active student and a sync use case wired to fakes."""
     world = await seed_world(sessionmaker_in_tx)
@@ -121,10 +127,21 @@ async def env(
         enrollment=enrollment,
         apply=ApplyRatings(clock=clock),
         clock=clock,
+        kicker=kicker,
         institution_id=10815,
     )
     return Env(
-        world, emis, identity, commands, enrollment, outbox, sync, uow_factory, clock
+        world,
+        emis,
+        identity,
+        commands,
+        enrollment,
+        outbox,
+        sync,
+        uow_factory,
+        clock,
+        FakeBellSync(),
+        kicker,
     )
 
 
@@ -216,4 +233,5 @@ async def services(
         identity_commands=env.commands,  # type: ignore[arg-type]
         enrollment=env.enrollment,
         links=links,  # type: ignore[arg-type]
+        bell_sync=env.bells,
     )

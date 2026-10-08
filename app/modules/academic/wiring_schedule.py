@@ -188,13 +188,8 @@ def assemble_schedule(
     )
 
 
-def build_schedule(
-    deps: ModuleDeps,
-    *,
-    identity: IdentityDirectory,
-    identity_commands: IdentityCommands,
-) -> ScheduleServices:
-    """Build the schedule services on PostgreSQL and Redis."""
+def sql_schedule_uow_factory(deps: ModuleDeps) -> UowFactory:
+    """Units of work over PostgreSQL, with the outbox and audit writers of the deps."""
 
     def uow_factory() -> SqlScheduleUnitOfWork:
         return SqlScheduleUnitOfWork(
@@ -204,8 +199,18 @@ def build_schedule(
             deps.outbox_committed_hook,
         )
 
+    return uow_factory
+
+
+def build_schedule(
+    deps: ModuleDeps,
+    *,
+    identity: IdentityDirectory,
+    identity_commands: IdentityCommands,
+) -> ScheduleServices:
+    """Build the schedule services on PostgreSQL and Redis."""
     return assemble_schedule(
-        uow_factory=uow_factory,
+        uow_factory=sql_schedule_uow_factory(deps),
         reader=SqlScheduleReader(deps.sessionmaker),
         import_store=RedisImportStore(deps.redis),
         room_cache=RedisRoomPageCache(deps.redis),

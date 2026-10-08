@@ -1,4 +1,4 @@
-"""HTTP client of the EMIS API (login, profile, curriculum, ratings)."""
+"""HTTP client of the EMIS API (login, profile, curriculum, ratings, class hours)."""
 
 import asyncio
 from typing import Any, TypeVar
@@ -8,9 +8,13 @@ from app.modules.identity.application.register_models import (
     EmisRequestError,
 )
 from app.modules.identity.infrastructure.emis.mapping import (
+    to_class_hours,
     to_profile,
     to_ratings,
     to_subjects,
+)
+from app.modules.identity.infrastructure.emis.models.responses.class_hours import (
+    ClassHoursV1DTO,
 )
 from app.modules.identity.infrastructure.emis.models.responses.curriculum import (
     CurriculumV1DTO,
@@ -24,13 +28,23 @@ from app.modules.identity.infrastructure.emis.models.responses.profile import (
 from app.modules.identity.infrastructure.emis.models.responses.ratings import (
     RatingsV1DTO,
 )
+from app.modules.identity.infrastructure.emis.timetable_endpoint import (
+    fetch_timetable,
+)
 from app.settings import EmisSettings
-from app.shared.contracts.emis import EmisProfile, EmisSubject, EmisSubjectRatings
+from app.shared.contracts.emis import (
+    EmisClassHour,
+    EmisProfile,
+    EmisSubject,
+    EmisSubjectRatings,
+    EmisTimetableItem,
+)
 
 import httpx
 from pydantic import BaseModel, ValidationError
 
 CURRICULUM_PATH = "student-profiles/curriculum/"
+CLASS_HOURS_PATH = "student-profiles/class-hours/"
 LOGIN_PATH = "student-profiles/login/"
 _TIMEOUT = httpx.Timeout(20.0, connect=5.0)
 M = TypeVar("M", bound=BaseModel)
@@ -76,15 +90,15 @@ class EmisClient:
         """Close the HTTP connection pool."""
         await self._http.aclose()
 
-    async def _request(
+    async def _send(
         self,
         method: str,
         path: str,
         *,
         token: str | None = None,
         body: dict[str, str] | None = None,
-    ) -> dict[str, Any]:
-        """Send one request and return the ``result`` object of the response."""
+    ) -> httpx.Response:
+        """Send one request; any 401 is ``EmisAuthError``, other non-200 is an error."""
         headers = {"Authorization": token} if token else {}
         async with self._semaphore:
             if self._delay:
@@ -99,7 +113,27 @@ class EmisClient:
             raise EmisAuthError()
         if response.status_code != 200:
             raise EmisRequestError(f"HTTP {response.status_code}")
+        return response
+
+    async def _request(
+        self,
+        method: str,
+        path: str,
+        *,
+        token: str | None = None,
+        body: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
+        """Send one request and return the ``result`` object of the response."""
+        response = await self._send(method, path, token=token, body=body)
         return _result_of(response)
+
+    async def get_json(self, path: str, token: str) -> Any:
+        """GET a path and return the whole JSON body, not only ``result``."""
+        response = await self._send("GET", path, token=token)
+        try:
+            return response.json()
+        except ValueError as exc:
+            raise EmisRequestError("response is not JSON") from exc
 
     async def login(self, login: str, password: str) -> str:
         """Log in and return the access token."""
@@ -130,6 +164,17 @@ class EmisClient:
         return to_ratings(
             dto, raw_result=result, subject_id=subject_id, semester=semester
         )
+
+    async def class_hours(self, token: str) -> list[EmisClassHour]:
+        """Return the bells; this response has a ``results`` list, not ``result``."""
+        body = await self.get_json(CLASS_HOURS_PATH, token)
+        if not isinstance(body, dict) or not isinstance(body.get("results"), list):
+            raise EmisRequestError("class hours response has no results list")
+        return to_class_hours(parse_result(ClassHoursV1DTO, body))
+
+    async def timetable(self, token: str) -> list[EmisTimetableItem]:
+        """Return the weekly timetable of the token's group (endpoint: to fill in)."""
+        return await fetch_timetable(self.get_json, token)
 
 
 def _result_of(response: httpx.Response) -> dict[str, Any]:

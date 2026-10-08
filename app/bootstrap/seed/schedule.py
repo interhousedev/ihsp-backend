@@ -7,8 +7,11 @@ from uuid import UUID
 from app.bootstrap.container import Container
 from app.modules.academic.application.schedule.entry_builder import EntryInput
 from app.modules.academic.application.schedule.results import TermData
-from app.modules.academic.domain.schedule.term import Bell
-from app.modules.identity.infrastructure.emis.fake import FAKE_SUBJECTS
+from app.modules.academic.domain.schedule.emis_bells import bells_from_class_hours
+from app.modules.identity.infrastructure.emis.fake import (
+    FAKE_CLASS_HOURS,
+    FAKE_SUBJECTS,
+)
 from app.shared.actor import SYSTEM_ACTOR
 from app.shared.base_error import ConflictError
 
@@ -20,15 +23,6 @@ ACADEMIC_YEAR = "2026-2027"
 TERM_START = dt.date(2026, 9, 2)
 TERM_END = dt.date(2026, 12, 30)
 NON_STUDY_DAYS = (dt.date(2026, 10, 1),)
-BELLS = (
-    (1, dt.time(8, 30), dt.time(9, 15)),
-    (2, dt.time(9, 25), dt.time(10, 10)),
-    (3, dt.time(10, 20), dt.time(11, 5)),
-    (4, dt.time(11, 25), dt.time(12, 10)),
-    (5, dt.time(12, 20), dt.time(13, 5)),
-    (6, dt.time(13, 15), dt.time(14, 0)),
-)
-STUDY_WEEKDAYS = [1, 2, 3, 4, 5, 6]
 LESSONS_PER_DAY = 5
 DIVIDED_SUBJECTS = (103, 107)  # English and Informatics split into subgroups
 
@@ -76,10 +70,8 @@ async def _ensure_term(container: Container) -> TermData:
     for term in await schedule.list_terms.execute():
         if term.academic_year == ACADEMIC_YEAR and term.half == 1:
             return term
-    bells = [
-        Bell(period=period, start=start, end=end, weekdays=STUDY_WEEKDAYS)
-        for period, start, end in BELLS
-    ]
+    # The bells are the EMIS class hours, as the daily sync would store them.
+    bells = bells_from_class_hours(FAKE_CLASS_HOURS)
     return await schedule.create_term.execute(
         academic_year=ACADEMIC_YEAR,
         half=1,

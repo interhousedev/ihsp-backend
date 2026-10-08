@@ -23,6 +23,7 @@ from app.modules.academic.domain.schedule.student import (
     Student,
 )
 from app.modules.academic.domain.schedule.subject import LANGUAGES, Subject
+from app.modules.academic.domain.schedule.term import pick_current_term
 from app.shared.clock import Clock
 from app.shared.contracts.academic import LessonRef, RoomRef, StudentRef
 from app.shared.contracts.emis import EmisSubject
@@ -152,6 +153,7 @@ class AcademicEnrollmentImpl:
             else:
                 student.move_to(group.id)
                 await uow.students.save(student)
+            needs_timetable = await self._lacks_timetable(uow, group.id)
             await uow.commit()
         return StudentRef(
             user_id=student.user_id,
@@ -160,7 +162,15 @@ class AcademicEnrollmentImpl:
             subgroup=student.subgroup,
             status=student.status,
             synced_at=student.synced_at,
+            needs_timetable=needs_timetable,
         )
+
+    async def _lacks_timetable(self, uow: ScheduleUnitOfWork, group_id: UUID) -> bool:
+        """True when a current term exists and the group has no entries in it."""
+        term = pick_current_term(await uow.terms.list_all(), today(self.clock))
+        if term is None:
+            return False
+        return not await uow.entries.search(term.id, group_id=group_id)
 
     async def _upsert_group(
         self,

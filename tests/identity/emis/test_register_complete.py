@@ -84,7 +84,8 @@ async def test_registration_creates_the_account_secret_and_student(
     ]
     assert world.enrollment.subjects_synced == [(world.enrollment.group_id, 8)]
     assert world.kicker.calls == [
-        ("academic.backfill_student", {"user_id": str(registered.user_id)})
+        ("academic.backfill_student", {"user_id": str(registered.user_id)}),
+        ("academic.sync_class_hours", {"user_id": str(registered.user_id)}),
     ]
     assert [a.type for a in world.ledger.audits] == ["user.registered"]
     assert await world.redis.keys("reg:*") == []
@@ -278,3 +279,48 @@ async def test_a_deleted_account_gives_its_emis_profile_back(world: World) -> No
     assert registered.login == "abdullayev.alisher2"
     assert world.repo.accounts[old.id].emis_student_id is None
     assert world.repo.accounts[registered.user_id].emis_student_id == 78201
+
+
+async def test_a_student_of_an_unknown_group_starts_the_timetable_import(
+    world: World,
+) -> None:
+    """ACA-1: bootstrap_group runs in the background, after the account is saved."""
+    world.enrollment.needs_timetable = True
+
+    _, registered = await world.register()
+
+    assert world.kicker.calls == [
+        ("academic.backfill_student", {"user_id": str(registered.user_id)}),
+        (
+            "academic.bootstrap_group",
+            {
+                "user_id": str(registered.user_id),
+                "group_id": str(world.enrollment.group_id),
+            },
+        ),
+    ]
+
+
+async def test_a_student_of_a_known_group_only_refreshes_the_bells(
+    world: World,
+) -> None:
+    """ACA-4: the class hours are synced on registration; no second import."""
+    world.enrollment.needs_timetable = False
+
+    await world.register()
+
+    assert "academic.bootstrap_group" not in world.kicker.names()
+    assert world.kicker.names().count("academic.sync_class_hours") == 1
+
+
+async def test_no_timetable_task_starts_when_the_registration_fails(
+    world: World,
+) -> None:
+    """ACA-1: tasks start after the commit, never for a rolled back account."""
+    world.enrollment.needs_timetable = True
+    world.enrollment.fail_ensure = True
+
+    with pytest.raises(RuntimeError):
+        await world.register()
+
+    assert world.kicker.calls == []

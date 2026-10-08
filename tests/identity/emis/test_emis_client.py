@@ -1,10 +1,11 @@
 """ID-1, ID-7, SYNC-2: the EMIS client parses recorded responses and maps errors."""
 
 from collections.abc import AsyncIterator, Iterator
-from datetime import date
+from datetime import date, time
 
 from app.modules.identity.application.register_models import (
     EmisAuthError,
+    EmisNotConfiguredError,
     EmisRequestError,
 )
 from app.modules.identity.infrastructure.emis.client import EmisClient
@@ -19,6 +20,7 @@ BASE = "https://emis.test/api/v1/"
 PROFILE = "student-profiles/profile/"
 CURRICULUM = "student-profiles/curriculum/"
 RATINGS = "student-profiles/edu-subjects/35/ratings/?semester=3"
+CLASS_HOURS = "student-profiles/class-hours/"
 
 
 @pytest.fixture
@@ -161,12 +163,64 @@ async def test_payload_hash_is_stable_and_changes_with_the_data(
     assert len(first) == 64
 
 
+async def test_class_hours_are_the_pairs_of_the_results_list(
+    client: EmisClient, emis_http: respx.MockRouter
+) -> None:
+    """ACA-4: the response has `results` (not `result`); pair numbers are 0-based."""
+    route = emis_http.get(CLASS_HOURS).respond(
+        200, json=load_fixture("class_hours.json")
+    )
+
+    hours = await client.class_hours("emis-token-1")
+
+    assert [(h.pair_number, h.begin_time, h.end_time) for h in hours] == [
+        (0, time(8, 30), time(9, 50)),
+        (1, time(10, 10), time(11, 30)),
+        (2, time(12, 10), time(13, 30)),
+        (3, time(13, 40), time(15, 0)),
+        (4, time(15, 10), time(16, 30)),
+    ]
+    assert route.calls.last.request.headers["Authorization"] == "emis-token-1"
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"results": [{"pair_number": 0, "begin_time": "9am", "end_time": "09:50"}]},
+        {"results": [{"pair_number": 0, "begin_time": "09:50", "end_time": "08:30"}]},
+        {"results": [{"pair_number": -1, "begin_time": "08:30", "end_time": "09:50"}]},
+        {"results": [{"begin_time": "08:30", "end_time": "09:50"}]},
+        {"result": {"pairs": []}},
+        [],
+    ],
+)
+async def test_unexpected_class_hours_raise_request_error(
+    client: EmisClient, emis_http: respx.MockRouter, body: object
+) -> None:
+    """ID-7: a changed shape is reported, never turned into bad bells."""
+    emis_http.get(CLASS_HOURS).respond(200, json=body)
+
+    with pytest.raises(EmisRequestError):
+        await client.class_hours("t")
+
+
+async def test_the_timetable_endpoint_is_not_configured_yet(
+    client: EmisClient, emis_http: respx.MockRouter
+) -> None:
+    """ACA-1: no invented URL; the gateway reports EMIS as unavailable."""
+    with pytest.raises(EmisNotConfiguredError):
+        await client.timetable("t")
+
+    assert emis_http.calls.call_count == 0
+
+
 @pytest.mark.parametrize(
     ("path", "call"),
     [
         (PROFILE, "profile"),
         (CURRICULUM, "curriculum"),
         (RATINGS, "ratings"),
+        (CLASS_HOURS, "class_hours"),
     ],
 )
 async def test_401_on_a_data_endpoint_raises_auth_error(

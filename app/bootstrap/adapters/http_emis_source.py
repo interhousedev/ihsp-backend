@@ -1,17 +1,20 @@
 """EmisSource over the identity process's internal API (worker, api and bot use it)."""
 
-from datetime import date
+from datetime import date, time
 from typing import Any
 from uuid import UUID
 
 from app.settings import Settings
 from app.shared.contracts.emis import (
     EmisAuthFailed,
+    EmisClassHour,
     EmisMark,
     EmisMarkType,
     EmisProfile,
     EmisSubject,
     EmisSubjectRatings,
+    EmisTeacher,
+    EmisTimetableItem,
     EmisUnavailable,
 )
 
@@ -98,6 +101,23 @@ class HttpEmisSource:
             payload_hash=body["payload_hash"],
         )
 
+    async def class_hours(self, user_id: UUID) -> list[EmisClassHour]:
+        """Return the bells of the lyceum."""
+        body = await self._get(f"{user_id}/class-hours")
+        return [
+            EmisClassHour(
+                pair_number=item["pair_number"],
+                begin_time=time.fromisoformat(item["begin_time"]),
+                end_time=time.fromisoformat(item["end_time"]),
+            )
+            for item in body
+        ]
+
+    async def timetable(self, user_id: UUID) -> list[EmisTimetableItem]:
+        """Return the weekly timetable of the student's group."""
+        body = await self._get(f"{user_id}/timetable")
+        return [_timetable_item(item) for item in body]
+
     async def _get(self, path: str, params: dict[str, int] | None = None) -> Any:
         try:
             response = await self._http.get(
@@ -110,6 +130,29 @@ class HttpEmisSource:
         if response.status_code == 200:
             return response.json()
         raise _error_for(response)
+
+
+def _timetable_item(item: dict[str, Any]) -> EmisTimetableItem:
+    teacher = item["teacher"]
+    return EmisTimetableItem(
+        weekday=item["weekday"],
+        pair_number=item["pair_number"],
+        subject_emis_id=item["subject_emis_id"],
+        subject_name=item["subject_name"],
+        teacher=(
+            EmisTeacher(
+                emis_id=teacher["emis_id"],
+                first_name=teacher["first_name"],
+                last_name=teacher["last_name"],
+                middle_name=teacher["middle_name"],
+            )
+            if teacher
+            else None
+        ),
+        room=item["room"],
+        subgroup=item["subgroup"],
+        week_parity=item["week_parity"],
+    )
 
 
 def _error_for(response: httpx.Response) -> EmisAuthFailed | EmisUnavailable:

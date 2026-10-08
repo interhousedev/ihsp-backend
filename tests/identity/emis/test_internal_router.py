@@ -5,6 +5,7 @@ from uuid import UUID
 
 from app.bootstrap.adapters.http_emis_source import HttpEmisSource
 from app.interfaces.http.internal.emis import ROUTERS
+from app.modules.identity.application.register_models import EmisNotConfiguredError
 from app.settings import Settings
 from tests.conftest import HttpClientFactory
 from tests.identity.emis.world import World
@@ -111,6 +112,79 @@ async def test_ratings_take_subject_and_semester(
     assert len(body["payload_hash"]) == 64
 
 
+async def test_class_hours_are_returned_as_a_list(
+    api: tuple[AsyncClient, UUID, dict[str, str]],
+) -> None:
+    """ACA-4: EmisClassHour[] with 0-based pairs."""
+    client, user_id, headers = api
+
+    response = await client.get(
+        f"/internal/emis/{user_id}/class-hours", headers=headers
+    )
+
+    body = response.json()
+    assert response.status_code == 200
+    assert [p["pair_number"] for p in body] == [0, 1, 2, 3, 4]
+    assert body[0] == {
+        "pair_number": 0,
+        "begin_time": "08:30:00",
+        "end_time": "09:50:00",
+    }
+
+
+async def test_the_timetable_is_returned_with_teachers_halves_and_parity(
+    api: tuple[AsyncClient, UUID, dict[str, str]],
+) -> None:
+    """ACA-1: EmisTimetableItem[] of the student's group."""
+    client, user_id, headers = api
+
+    response = await client.get(f"/internal/emis/{user_id}/timetable", headers=headers)
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body[0].keys() == {
+        "weekday",
+        "pair_number",
+        "subject_emis_id",
+        "subject_name",
+        "teacher",
+        "room",
+        "subgroup",
+        "week_parity",
+    }
+    assert body[0]["teacher"].keys() == {
+        "emis_id",
+        "first_name",
+        "last_name",
+        "middle_name",
+    }
+    assert {item["subgroup"] for item in body} == {None, 1, 2}
+
+
+async def test_the_timetable_needs_the_service_token(
+    api: tuple[AsyncClient, UUID, dict[str, str]],
+) -> None:
+    """ID-7: the new routes are as private as the old ones."""
+    client, user_id, _ = api
+
+    for path in ("timetable", "class-hours"):
+        response = await client.get(f"/internal/emis/{user_id}/{path}")
+        assert response.status_code == 401
+
+
+async def test_an_unconfigured_timetable_endpoint_is_a_503_problem(
+    world: World, api: tuple[AsyncClient, UUID, dict[str, str]]
+) -> None:
+    """ACA-1: until the endpoint is known, the worker sees "EMIS unavailable"."""
+    client, user_id, headers = api
+    world.emis.timetable_error = EmisNotConfiguredError("not configured")
+
+    response = await client.get(f"/internal/emis/{user_id}/timetable", headers=headers)
+
+    assert response.status_code == 503
+    assert response.json()["type"] == "emis/unavailable"
+
+
 async def test_missing_query_parameters_are_a_validation_error(
     api: tuple[AsyncClient, UUID, dict[str, str]],
 ) -> None:
@@ -168,3 +242,5 @@ async def test_http_source_and_router_work_together(
     assert await source.profile(user_id) == direct_profile
     assert await source.ratings(user_id, 101, 3) == direct_ratings
     assert await source.subjects(user_id) == await world.gateway.subjects(user_id)
+    assert await source.class_hours(user_id) == await world.gateway.class_hours(user_id)
+    assert await source.timetable(user_id) == await world.gateway.timetable(user_id)

@@ -3,7 +3,7 @@
 import datetime as dt
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from app.modules.academic.domain.schedule.errors import (
@@ -25,8 +25,15 @@ HourMinute = Annotated[
 ]
 
 
+BellSource = Literal["manual", "emis"]
+
+
 class Bell(BaseModel):
-    """Start and end of one period on some weekdays (jsonb of Term.bells)."""
+    """Start and end of one period on some weekdays (jsonb of Term.bells).
+
+    ``source`` says who set the bell: Administration (``manual``) or the EMIS
+    ``class-hours`` sync (``emis``), which keeps its bells equal to EMIS.
+    """
 
     model_config = ConfigDict(frozen=True)
 
@@ -34,6 +41,7 @@ class Bell(BaseModel):
     start: HourMinute
     end: HourMinute
     weekdays: list[int] = Field(min_length=1)
+    source: BellSource = "manual"
 
 
 class MovedDay(BaseModel):

@@ -23,12 +23,17 @@ from app.modules.academic.infrastructure.schedule.import_store import RedisImpor
 from app.modules.academic.infrastructure.schedule.mappers import lesson_to_entity
 from app.modules.academic.infrastructure.schedule.reader import SqlScheduleReader
 from app.modules.academic.infrastructure.schedule.uow import SqlScheduleUnitOfWork
+from app.modules.academic.wiring_emis_import import (
+    EmisImportServices,
+    assemble_emis_import,
+)
 from app.modules.academic.wiring_schedule import ScheduleServices, assemble_schedule
 from app.shared.actor import Role
 from app.shared.contracts.identity import UserRef, UserStatus
 from app.shared.ids import new_id, random_digits
 from app.shared.notifications import AuditDraft, NotificationDraft
 from app.shared.text import slugify
+from tests.fakes.academic.schedule.emis import FakeEmisSource
 from tests.fakes.academic.schedule.identity import (
     FakeIdentity,
     FakeIdentityCommands,
@@ -83,6 +88,8 @@ class Env:
 
     kind: EnvKind
     services: ScheduleServices
+    emis_import: EmisImportServices
+    emis: FakeEmisSource
     uow_factory: UowFactory
     reader: ScheduleReader
     identity: FakeIdentity
@@ -410,9 +417,19 @@ def build_env(
         rooms_url=ROOMS_URL,
         mail_domain=MAIL_DOMAIN,
     )
+    emis = FakeEmisSource()
+    emis_import = assemble_emis_import(
+        uow_factory=uow_factory,
+        emis=emis,
+        identity_commands=commands,  # type: ignore[arg-type]
+        generate=services.generate_lessons,
+        clock=clock,
+    )
     return Env(
         kind=kind,
         services=services,
+        emis_import=emis_import,
+        emis=emis,
         uow_factory=uow_factory,
         reader=reader,
         identity=identity,

@@ -67,6 +67,8 @@ class FakeIdentityCommands:
         """Create users in the given directory."""
         self.directory = directory
         self.created: list[dict[str, Any]] = []
+        self.teachers: list[dict[str, Any]] = []
+        self._emis_teachers: dict[int, UserRef] = {}
 
     async def create_unregistered_student(
         self,
@@ -96,3 +98,42 @@ class FakeIdentityCommands:
             }
         )
         return user
+
+    async def ensure_teacher(
+        self,
+        *,
+        emis_teacher_id: int | None,
+        first_name: str,
+        last_name: str,
+        middle_name: str | None,
+    ) -> UserRef:
+        """Find a teacher by EMIS id or name, else create a pending one."""
+        self.teachers.append(
+            {"emis_teacher_id": emis_teacher_id, "last_name": last_name}
+        )
+        known = self._emis_teachers.get(emis_teacher_id) if emis_teacher_id else None
+        if known is None:
+            known = next(
+                (
+                    user
+                    for user in self.directory.users.values()
+                    if Role.TEACHER in user.roles
+                    and (user.last_name.casefold(), user.first_name.casefold())
+                    == (last_name.casefold(), first_name.casefold())
+                ),
+                None,
+            )
+        if known is None:
+            known = make_user(
+                first_name=first_name,
+                last_name=last_name,
+                middle_name=middle_name,
+                roles=frozenset({Role.TEACHER}),
+                status=UserStatus.PENDING_ACTIVATION,
+                login=f"{last_name}.{first_name}".lower(),
+                emis_status=None,
+            )
+            self.directory.add(known)
+        if emis_teacher_id:
+            self._emis_teachers[emis_teacher_id] = known
+        return known

@@ -39,6 +39,29 @@ async def test_subjects_and_ratings_are_passed_through(world: World) -> None:
     assert ratings.marks
 
 
+async def test_class_hours_and_timetable_use_the_stored_token(world: World) -> None:
+    """ACA-1, ACA-4: the bells and the group's timetable go through the gateway."""
+    user_id = await registered_user(world)
+
+    hours = await world.gateway.class_hours(user_id)
+    items = await world.gateway.timetable(user_id)
+
+    assert [h.pair_number for h in hours] == [0, 1, 2, 3, 4]
+    assert items and {i.teacher.emis_id for i in items if i.teacher} >= {9001}
+    assert world.emis.calls == ["class_hours", "timetable"]
+
+
+async def test_a_stale_token_is_replaced_for_class_hours_too(world: World) -> None:
+    """ID-7: the same one-time re-login for every endpoint."""
+    user_id = await registered_user(world)
+    world.emis.revoke(world.store.secrets[world.secret_ref_of(user_id)].access_token)
+
+    hours = await world.gateway.class_hours(user_id)
+
+    assert len(hours) == 5
+    assert world.emis.calls == ["class_hours", "login", "class_hours"]
+
+
 async def test_a_stale_token_triggers_one_relogin_and_the_new_token_is_stored(
     world: World,
 ) -> None:

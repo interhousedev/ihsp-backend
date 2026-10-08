@@ -30,7 +30,7 @@ from app.modules.identity.application.register_verification import EmailVerifier
 from app.modules.identity.domain.login_name import base_login, next_free
 from app.modules.identity.domain.password_policy import check_password
 from app.shared.clock import Clock
-from app.shared.contracts.academic import AcademicEnrollment
+from app.shared.contracts.academic import AcademicEnrollment, StudentRef
 from app.shared.contracts.identity import UserStatus
 from app.shared.ids import new_id
 from app.shared.notifications import AuditDraft
@@ -207,8 +207,27 @@ class CompleteRegistration:
                     user_id=str(user_id),
                 )
             )
+            self._kick_timetable(uow, user_id, student)
             await uow.commit()
         return login
+
+    def _kick_timetable(
+        self, uow: EmisUnitOfWork, user_id: UUID, student: StudentRef
+    ) -> None:
+        """Import an unknown group's timetable, else only refresh the EMIS bells.
+
+        Both tasks need the account to be committed, so they start after the commit;
+        the import also syncs the bells first.
+        """
+        if student.needs_timetable:
+            task, params = "academic.bootstrap_group", {
+                "group_id": str(student.group_id)
+            }
+        else:
+            task, params = "academic.sync_class_hours", {}
+        uow.after_commit(
+            partial(self._kicker.kick, task, user_id=str(user_id), **params)
+        )
 
     @staticmethod
     async def _ensure_free(uow: EmisUnitOfWork, pending: PendingRegistration) -> None:
