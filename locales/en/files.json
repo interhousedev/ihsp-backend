@@ -1,0 +1,14 @@
+{
+  "files-quota-exceeded": "Not enough storage space for this file. Delete some files and try again.",
+  "files-too-large": "The file is too large. The limit is 100 MB per file.",
+  "files-type-not-allowed": "This file type is not allowed. Use PDF, DOCX, PPTX, XLSX, TXT, MD, PNG or JPG.",
+  "files-invalid-name": "The file name is empty or longer than {max_length} characters.",
+  "files-invalid-checksum": "The file checksum is not valid.",
+  "files-invalid-size": "The file is empty or its size is not valid.",
+  "files-upload-missing": "The file was not uploaded. Upload it again.",
+  "files-not-found": "File not found.",
+  "files-deleted": "This file was deleted.",
+  "files-not-ready": "The file is not ready yet.",
+  "files-no-text": "This file has no readable text.",
+  "files-page-not-found": "This page of the file does not exist."
+}
