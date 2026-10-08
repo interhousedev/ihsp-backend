@@ -1,0 +1,6 @@
+{
+  "result": null,
+  "code": 401,
+  "success": false,
+  "error": "Login or password is incorrect"
+}

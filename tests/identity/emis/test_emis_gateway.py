@@ -1,0 +1,127 @@
+"""ID-7, ID-8, SYNC-8: the gateway reuses the token, re-logs in once, flags reauth."""
+
+from uuid import UUID
+
+from app.shared.contracts.emis import EmisAuthFailed, EmisUnavailable
+from app.shared.ids import new_id
+from tests.identity.emis.world import World
+
+import pytest
+
+
+async def registered_user(world: World) -> UUID:
+    _, registered = await world.register()
+    world.emis.calls.clear()
+    return registered.user_id
+
+
+async def test_profile_uses_the_stored_token_without_logging_in(
+    world: World,
+) -> None:
+    """ID-7: the stored access token is reused."""
+    user_id = await registered_user(world)
+
+    profile = await world.gateway.profile(user_id)
+
+    assert profile.emis_student_id == 78201
+    assert world.emis.calls == ["profile"]
+
+
+async def test_subjects_and_ratings_are_passed_through(world: World) -> None:
+    """SYNC-2: subjects and one subject's ratings come back normalized."""
+    user_id = await registered_user(world)
+
+    subjects = await world.gateway.subjects(user_id)
+    ratings = await world.gateway.ratings(user_id, subjects[0].emis_subject_id, 3)
+
+    assert len(subjects) == 8
+    assert (ratings.emis_subject_id, ratings.semester) == (101, 3)
+    assert ratings.marks
+
+
+async def test_a_stale_token_triggers_one_relogin_and_the_new_token_is_stored(
+    world: World,
+) -> None:
+    """ID-7: a 401 on a data endpoint logs in again, stores the token, retries."""
+    user_id = await registered_user(world)
+    ref = world.secret_ref_of(user_id)
+    world.emis.revoke(world.store.secrets[ref].access_token)
+
+    profile = await world.gateway.profile(user_id)
+
+    assert profile.group_name == "2TN2"
+    assert world.emis.calls == ["profile", "login", "profile"]
+    assert [r for r, _ in world.store.updated_tokens] == [ref]
+
+
+async def test_rejected_password_sets_needs_reauth_and_raises_auth_failed(
+    world: World,
+) -> None:
+    """ID-8, SYNC-8: EMIS refusing the stored password flags the link."""
+    user_id = await registered_user(world)
+    world.emis.revoke(world.store.secrets[world.secret_ref_of(user_id)].access_token)
+    world.emis.passwords["student01"] = "changed-in-emis"
+
+    with pytest.raises(EmisAuthFailed):
+        await world.gateway.profile(user_id)
+
+    assert world.repo.accounts[user_id].emis_status == "needs_reauth"
+    assert world.store.updated_tokens == []
+
+
+async def test_a_link_that_needs_reauth_fails_fast(world: World) -> None:
+    """SYNC-8: the student is skipped without any EMIS request."""
+    user_id = await registered_user(world)
+    world.repo.accounts[user_id].emis_status = "needs_reauth"
+
+    with pytest.raises(EmisAuthFailed):
+        await world.gateway.profile(user_id)
+
+    assert world.emis.calls == []
+
+
+async def test_a_user_without_an_emis_link_is_auth_failed(world: World) -> None:
+    """ID-7: unknown users and users without a link cannot be fetched."""
+    with pytest.raises(EmisAuthFailed):
+        await world.gateway.profile(new_id())
+
+
+async def test_an_emis_outage_is_unavailable_and_keeps_the_link(
+    world: World,
+) -> None:
+    """SYNC-8: EMIS down means retry next run; nothing is flagged."""
+    user_id = await registered_user(world)
+    world.emis.down = True
+
+    with pytest.raises(EmisUnavailable):
+        await world.gateway.profile(user_id)
+
+    assert world.repo.accounts[user_id].emis_status == "active"
+
+
+async def test_a_vault_outage_is_unavailable(world: World) -> None:
+    """ID-6: Vault problems are ours, not the student's."""
+    user_id = await registered_user(world)
+    world.store.down = True
+
+    with pytest.raises(EmisUnavailable):
+        await world.gateway.profile(user_id)
+
+
+async def test_a_fresh_token_that_is_refused_is_unavailable_not_reauth(
+    world: World, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """ID-7: if EMIS refuses a token it just issued, the password is not at fault."""
+    user_id = await registered_user(world)
+    token = world.store.secrets[world.secret_ref_of(user_id)].access_token
+    world.emis.revoke(token)
+
+    async def stubborn_login(login: str, password: str) -> str:
+        return token
+
+    monkeypatch.setattr(world.emis, "login", stubborn_login)
+
+    with pytest.raises(EmisUnavailable):
+        await world.gateway.profile(user_id)
+
+    assert world.repo.accounts[user_id].emis_status == "active"
