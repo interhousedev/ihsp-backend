@@ -116,6 +116,8 @@ async def test_enrolling_returns_the_course_page(
         "title": "Reading",
         "completed": False,
         "badge": None,
+        "points_earned": 0.0,
+        "points_total": 0.0,
     }
     assert page.headers["cache-control"] == "private, max-age=60"
 
@@ -185,9 +187,15 @@ async def test_a_step_is_read_and_marked_viewed(
         "step_id": str(text),
         "revision_id": str(course.step("text").revision_id),
         "title": "Reading",
-        "blocks": [{"id": "text", "type": "text", "markdown": "Read this."}],
+        "blocks": [
+            {"id": "text", "type": "text", "markdown": "Read this.", "passed": False}
+        ],
         "completed": False,
         "preview": False,
+        "blocks_passed": 0,
+        "blocks_total": 1,
+        "points_earned": 0.0,
+        "points_total": 0.0,
     }
     assert viewed.json()["completed"] is True
     assert viewed.json()["step_id"] == str(text)
@@ -203,6 +211,9 @@ async def test_a_step_is_read_and_marked_viewed(
         },
         "best": None,
         "open_attempt_id": None,
+        "passed": False,
+        "points_earned": 0.0,
+        "points_total": 3.0,
     }
     assert not FORBIDDEN_KEYS & keys_of(test_step.json())
 
