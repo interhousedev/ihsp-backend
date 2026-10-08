@@ -1,0 +1,129 @@
+# Edge nginx (production): TLS termination and routing by host and path.
+# Rendered by the nginx image's entrypoint (envsubst over HOST_* and CERT_NAME) into
+# /etc/nginx/conf.d/. Route files are in materials/nginx/common (mounted at /etc/nginx/ihsp).
+# Static apps come from the `web` container (image built from web/deploy).
+
+resolver 127.0.0.11 valid=10s ipv6=off;
+server_tokens off;
+client_max_body_size 25m;
+proxy_connect_timeout 5s;
+proxy_send_timeout 60s;
+proxy_read_timeout 120s;
+
+# Port 80: ACME challenges for certbot, the healthcheck, and a redirect to HTTPS.
+server {
+    listen 80 default_server;
+    server_name _;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    include /etc/nginx/ihsp/health.inc;
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# Unknown host names get no certificate.
+server {
+    listen 443 ssl default_server;
+    ssl_reject_handshake on;
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${HOST_ID};
+    include /etc/nginx/conf.d/tls.inc;
+    include /etc/nginx/ihsp/upstreams.inc;
+    include /etc/nginx/ihsp/route-id.inc;
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${HOST_SP};
+    include /etc/nginx/conf.d/tls.inc;
+    include /etc/nginx/ihsp/upstreams.inc;
+    include /etc/nginx/ihsp/route-static.inc;
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${HOST_STAFF};
+    include /etc/nginx/conf.d/tls.inc;
+    include /etc/nginx/ihsp/upstreams.inc;
+    include /etc/nginx/ihsp/route-static.inc;
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${HOST_ADMIN};
+    include /etc/nginx/conf.d/tls.inc;
+    include /etc/nginx/ihsp/upstreams.inc;
+    include /etc/nginx/ihsp/route-static.inc;
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${HOST_LMS};
+    include /etc/nginx/conf.d/tls.inc;
+    include /etc/nginx/ihsp/upstreams.inc;
+    include /etc/nginx/ihsp/route-static.inc;
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${HOST_S};
+    include /etc/nginx/conf.d/tls.inc;
+    include /etc/nginx/ihsp/upstreams.inc;
+    include /etc/nginx/ihsp/route-s.inc;
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${HOST_API};
+    include /etc/nginx/conf.d/tls.inc;
+    include /etc/nginx/ihsp/upstreams.inc;
+    include /etc/nginx/ihsp/route-api.inc;
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${HOST_MCP};
+    include /etc/nginx/conf.d/tls.inc;
+    include /etc/nginx/ihsp/upstreams.inc;
+    include /etc/nginx/ihsp/route-mcp.inc;
+}
+
+# Bundled object storage (compose profile `rustfs`); without it this host is not in DNS.
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${HOST_STORAGE};
+    include /etc/nginx/conf.d/tls.inc;
+    include /etc/nginx/ihsp/upstreams.inc;
+    include /etc/nginx/ihsp/route-storage.inc;
+}
+
+# The bare domain only serves room pages under /r/; the root sends people to the student app.
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${HOST_APEX};
+    include /etc/nginx/conf.d/tls.inc;
+    include /etc/nginx/ihsp/upstreams.inc;
+    include /etc/nginx/ihsp/route-apex.inc;
+
+    location = / {
+        return 302 https://${HOST_SP}/;
+    }
+}

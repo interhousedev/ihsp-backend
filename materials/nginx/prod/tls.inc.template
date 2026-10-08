@@ -1,0 +1,10 @@
+# TLS settings shared by every 443 server. One certificate (Let's Encrypt, webroot) covers
+# all host names; scripts/prod_init.sh certs creates it (a self-signed placeholder first).
+ssl_certificate     /etc/letsencrypt/live/${CERT_NAME}/fullchain.pem;
+ssl_certificate_key /etc/letsencrypt/live/${CERT_NAME}/privkey.pem;
+ssl_protocols TLSv1.2 TLSv1.3;
+ssl_prefer_server_ciphers off;
+ssl_session_cache shared:SSL:10m;
+ssl_session_timeout 1d;
+ssl_session_tickets off;
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;

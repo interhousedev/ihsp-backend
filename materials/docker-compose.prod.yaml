@@ -1,0 +1,572 @@
+# IHSP production stack (one Docker host). Project name `ihsp`.
+#
+#   cd /opt/ihsp
+#   docker compose --env-file .env.prod -f materials/docker-compose.prod.yaml up -d --wait
+#
+# Layout on the server (scripts/cloud_deploy.sh creates it):
+#   /opt/ihsp/{materials,scripts,secrets,data,backups}  and  /opt/ihsp/.env.prod
+# Variables come from .env.prod (materials/.env.prod.sample documents every one).
+#
+# Published ports: 80 and 443 (nginx) and 25 (the `mail` process). Nothing else: Hydra's
+# admin API (4445), Vault (8200), PostgreSQL, Redis and the object store stay on the
+# internal Docker networks. First-time setup: scripts/prod_init.sh.
+name: ihsp
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+x-healthcheck: &healthcheck
+  interval: 15s
+  timeout: 5s
+  retries: 5
+  start_period: 30s
+  start_interval: 3s # probe often while starting so `up --wait` returns quickly
+
+x-backend: &backend
+  image: ghcr.io/${IMAGE_OWNER:?set IMAGE_OWNER in .env.prod}/ihsp-backend:${TAG:?set TAG in .env.prod}
+  restart: unless-stopped
+  logging: *logging
+  volumes:
+    - ./healthcheck:/healthcheck:ro
+
+# Settings every backend process needs. The production guard of app/settings.py refuses
+# development defaults for the service token and the S3 secret everywhere.
+x-backend-env: &backend-env
+  IHSP_ENV: prod
+  IHSP_LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  # uvicorn trusts X-Forwarded-For only from the edge nginx (fixed address on `edge`).
+  FORWARDED_ALLOW_IPS: ${EDGE_NGINX_IP:-172.31.240.10}
+  IHSP_DATABASE__URL: postgresql+asyncpg://ihsp:${POSTGRES_PASSWORD:?}@postgres:5432/ihsp
+  IHSP_DATABASE__POOL_SIZE: ${DATABASE_POOL_SIZE:-10}
+  IHSP_REDIS__URL: redis://:${REDIS_PASSWORD:?}@redis:6379/0
+  IHSP_S3__ENDPOINT_URL: ${IHSP_S3__ENDPOINT_URL:?}
+  IHSP_S3__PUBLIC_ENDPOINT_URL: ${IHSP_S3__PUBLIC_ENDPOINT_URL:?}
+  IHSP_S3__REGION: ${IHSP_S3__REGION:-us-east-1}
+  IHSP_S3__ACCESS_KEY: ${IHSP_S3__ACCESS_KEY:?}
+  IHSP_S3__SECRET_KEY: ${IHSP_S3__SECRET_KEY:?}
+  IHSP_S3__BUCKET: ${IHSP_S3__BUCKET:-ihsp}
+  IHSP_HYDRA__PUBLIC_URL: http://hydra:4444
+  IHSP_HYDRA__ADMIN_URL: http://hydra:4445
+  IHSP_HYDRA__ISSUER: https://id.${DOMAIN:?}/
+  IHSP_TOKENS__REFRESH_COOKIE_SECURE: "true"
+  IHSP_TOKENS__SERVICE_TOKEN: ${IHSP_TOKENS__SERVICE_TOKEN:?}
+  IHSP_TELEGRAM__BOT_TOKEN: ${IHSP_TELEGRAM__BOT_TOKEN:?}
+  IHSP_TELEGRAM__BOT_USERNAME: ${IHSP_TELEGRAM__BOT_USERNAME:-ihspbot}
+  IHSP_TELEGRAM__MODE: ${IHSP_TELEGRAM__MODE:-webhook}
+  IHSP_TELEGRAM__ADMIN_CHAT_ID: # optional, from .env.prod when set
+  IHSP_EMIS__MODE: ${IHSP_EMIS__MODE:-real}
+  IHSP_EMIS__BASE_URL: ${IHSP_EMIS__BASE_URL:-https://emis.edu.uz/api/v1/}
+  IHSP_EMIS__PROFILE_PATH: ${IHSP_EMIS__PROFILE_PATH:-student-profiles/profile/}
+  IHSP_EMIS__INSTITUTION_ID: ${IHSP_EMIS__INSTITUTION_ID:-10815}
+  IHSP_EMIS__GATEWAY_URL: http://identity:8001/internal/emis
+  IHSP_OPENROUTER__MODE: ${IHSP_OPENROUTER__MODE:-real}
+  IHSP_OPENROUTER__MODEL_STUDENT: ${IHSP_OPENROUTER__MODEL_STUDENT:-anthropic/claude-haiku-4.5}
+  IHSP_OPENROUTER__MODEL_ADMIN: ${IHSP_OPENROUTER__MODEL_ADMIN:-anthropic/claude-haiku-4.5}
+  IHSP_OPENROUTER__APP_URL: https://sp.${DOMAIN}
+  IHSP_SMTP_OUT__MAIL_DOMAIN: mail.${DOMAIN}
+  IHSP_SMTP_OUT__SYSTEM_FROM: no-reply@${DOMAIN}
+  IHSP_URLS__ID: https://id.${DOMAIN}
+  IHSP_URLS__SP: https://sp.${DOMAIN}
+  IHSP_URLS__STAFF: https://staff.${DOMAIN}
+  IHSP_URLS__ADMIN: https://admin.${DOMAIN}
+  IHSP_URLS__LMS: https://lms.${DOMAIN}
+  IHSP_URLS__SHARE: https://s.${DOMAIN}
+  IHSP_URLS__SHORT_LINKS: https://s.${DOMAIN}
+  IHSP_URLS__ROOMS: https://${DOMAIN}/r
+  IHSP_URLS__API: https://api.${DOMAIN}
+  IHSP_URLS__MCP: https://mcp.${DOMAIN}
+
+# Only identity and worker hold EMIS secrets (the worker destroys the Vault secret of a
+# deleted account) and the JWT-bearer signing key; `python -m app <process>` refuses to
+# start either without them in production (Settings.require_production_ready). Every other
+# process runs with no Vault credentials and an in-memory key it never uses.
+x-vault-env: &vault-env
+  IHSP_VAULT__URL: http://vault:8200
+  IHSP_VAULT__ROLE_ID: # the AppRole ids; written to .env.prod by scripts/prod_init.sh vault
+  IHSP_VAULT__SECRET_ID:
+  IHSP_JWT_BEARER__PRIVATE_KEY_PATH: /run/secrets/jwt_bearer
+
+# Outbound mail relay (identity sends login codes, the worker sends student mail).
+x-smtp-out-env: &smtp-out-env
+  IHSP_SMTP_OUT__HOST: ${IHSP_SMTP_OUT__HOST:?}
+  IHSP_SMTP_OUT__PORT: ${IHSP_SMTP_OUT__PORT:-587}
+  IHSP_SMTP_OUT__USERNAME: ${IHSP_SMTP_OUT__USERNAME:?}
+  IHSP_SMTP_OUT__PASSWORD: ${IHSP_SMTP_OUT__PASSWORD:?}
+  IHSP_SMTP_OUT__STARTTLS: ${IHSP_SMTP_OUT__STARTTLS:-true}
+
+x-openrouter-env: &openrouter-env
+  IHSP_OPENROUTER__API_KEY: ${IHSP_OPENROUTER__API_KEY:?}
+
+# The same S3 settings feed the bucket bootstrap job.
+x-cors-origins: &cors-origins https://id.${DOMAIN},https://sp.${DOMAIN},https://staff.${DOMAIN},https://admin.${DOMAIN},https://lms.${DOMAIN}
+
+services:
+  # ---------------------------------------------------------------- data stores
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    logging: *logging
+    command: ["postgres", "-c", "max_connections=200"]
+    shm_size: 256mb
+    environment:
+      POSTGRES_USER: ihsp
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_DB: ihsp
+      HYDRA_DB_PASSWORD: ${HYDRA_DB_PASSWORD:?} # used once by init-hydra.sh
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./postgres/init-hydra.sh:/docker-entrypoint-initdb.d/10-hydra.sh:ro
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "pg_isready -U ihsp -d ihsp"]
+    networks: [data]
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    logging: *logging
+    # AOF on, no eviction (rate limits, FSM, the taskiq stream and budgets live here).
+    command:
+      - sh
+      - -c
+      - exec redis-server --appendonly yes --maxmemory-policy noeviction --requirepass "$$REDIS_PASSWORD"
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?}
+      REDISCLI_AUTH: ${REDIS_PASSWORD:?}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+    networks: [data]
+
+  # Server mode with integrated Raft storage. It starts sealed after every restart:
+  # `scripts/prod_init.sh unseal`. The healthcheck passes while sealed (exit code 2) so
+  # the rest of the stack keeps running; registration and EMIS sync pause until unsealed.
+  vault:
+    image: hashicorp/vault:2.1
+    restart: unless-stopped
+    logging: *logging
+    command: ["server"] # the image adds -config=/vault/config
+    cap_add: [IPC_LOCK]
+    environment:
+      VAULT_ADDR: http://127.0.0.1:8200
+    volumes:
+      - vault_data:/vault/file
+      - ./vault/config:/vault/config:ro
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "vault status >/dev/null 2>&1; [ $$? -ne 1 ]"]
+    networks: [data]
+
+  # Optional bundled S3 server for a single-host setup (`--profile rustfs`). In production
+  # prefer the cloud provider's S3 and leave this off. Presigned URLs need a public host:
+  # set STORAGE_PUBLIC_HOST (nginx proxies it to this service).
+  s3:
+    image: rustfs/rustfs:1.0.1
+    profiles: [rustfs]
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      RUSTFS_ACCESS_KEY: ${IHSP_S3__ACCESS_KEY:?}
+      RUSTFS_SECRET_KEY: ${IHSP_S3__SECRET_KEY:?}
+    volumes:
+      - s3_data:/data # runs as uid 10001: named volume, not a bind mount
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/health"]
+    networks: [data, edge]
+
+  # ------------------------------------------------------------------- Ory Hydra
+  hydra-migrate:
+    image: oryd/hydra:v26.2.0
+    restart: "no"
+    logging: *logging
+    command: migrate -c /etc/config/hydra/hydra.yml sql up -e --yes
+    environment:
+      DSN: postgres://hydra:${HYDRA_DB_PASSWORD:?}@postgres:5432/hydra?sslmode=disable&max_conns=5&max_idle_conns=2
+    volumes:
+      - ./hydra/hydra.prod.yml:/etc/config/hydra/hydra.yml:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [data]
+
+  hydra:
+    image: oryd/hydra:v26.2.0
+    restart: unless-stopped
+    logging: *logging
+    # The token hook secret is spliced into a copy of the config (Hydra has no ${VAR}).
+    entrypoint: ["sh", "-c"]
+    command:
+      - >-
+        sed "s|REPLACE_WITH_TOKENS__SERVICE_TOKEN|$$IHSP_TOKENS__SERVICE_TOKEN|"
+        /etc/config/hydra/hydra.yml > /tmp/hydra.yml
+        && exec hydra serve -c /tmp/hydra.yml all
+    environment:
+      DSN: postgres://hydra:${HYDRA_DB_PASSWORD:?}@postgres:5432/hydra?sslmode=disable&max_conns=20&max_idle_conns=4
+      SECRETS_SYSTEM: ${HYDRA_SECRET_SYSTEM:?}
+      SECRETS_COOKIE: ${HYDRA_SECRET_COOKIE:?}
+      SECRETS_PAGINATION: ${HYDRA_SECRET_PAGINATION:?}
+      IHSP_TOKENS__SERVICE_TOKEN: ${IHSP_TOKENS__SERVICE_TOKEN:?}
+      URLS_SELF_ISSUER: https://id.${DOMAIN}/
+      URLS_LOGIN: https://id.${DOMAIN}/login/
+      URLS_CONSENT: https://id.${DOMAIN}/consent/
+      URLS_LOGOUT: https://id.${DOMAIN}/logout/
+      URLS_POST_LOGOUT_REDIRECT: https://id.${DOMAIN}/
+      SERVE_PUBLIC_CORS_ALLOWED_ORIGINS: *cors-origins
+      SQA_OPT_OUT: "true"
+    volumes:
+      - ./hydra/hydra.prod.yml:/etc/config/hydra/hydra.yml:ro
+    depends_on:
+      hydra-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:4445/health/ready"]
+    networks: [data, edge] # 4444 (public) is proxied by nginx; 4445 (admin) is never published
+
+  # Hydra does not purge expired tokens on its own.
+  hydra-janitor:
+    image: oryd/hydra:v26.2.0
+    restart: unless-stopped
+    logging: *logging
+    entrypoint: ["sh", "-c"]
+    command:
+      - >-
+        while true; do
+        hydra janitor -c /etc/config/hydra/hydra.yml -e --tokens --requests --grants --keep-if-younger 24h
+        && touch /tmp/janitor.ok;
+        sleep 21600;
+        done
+    environment:
+      DSN: postgres://hydra:${HYDRA_DB_PASSWORD:?}@postgres:5432/hydra?sslmode=disable&max_conns=5&max_idle_conns=2
+      SQA_OPT_OUT: "true"
+    volumes:
+      - ./hydra/hydra.prod.yml:/etc/config/hydra/hydra.yml:ro
+    depends_on:
+      hydra-migrate:
+        condition: service_completed_successfully
+    healthcheck: # a successful run in the last 400 minutes (the loop runs every 360)
+      test: ["CMD-SHELL", "find /tmp/janitor.ok -mmin -400 | grep -q ."]
+      interval: 5m
+      timeout: 10s
+      retries: 2
+      start_period: 10m
+      start_interval: 5s
+    networks: [data]
+
+  # ---------------------------------------------------------- application processes
+  migrate:
+    <<: *backend
+    restart: "no"
+    command: ["python", "-m", "app", "migrate"]
+    environment:
+      <<: *backend-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [data]
+
+  identity:
+    <<: *backend
+    command: ["python", "-m", "app", "identity"]
+    environment:
+      <<: [*backend-env, *smtp-out-env, *vault-env]
+      IHSP_HYDRA__MINIAPP_CLIENT_SECRET: ${IHSP_HYDRA__MINIAPP_CLIENT_SECRET:?}
+    secrets:
+      - source: jwt_bearer
+        target: jwt_bearer
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "python", "/healthcheck/check.py", "http", "http://127.0.0.1:8001/health"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      hydra:
+        condition: service_healthy
+      vault:
+        condition: service_healthy
+    networks: [data, edge]
+
+  api:
+    <<: *backend
+    command: ["python", "-m", "app", "api"]
+    environment:
+      <<: [*backend-env, *openrouter-env]
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "python", "/healthcheck/check.py", "http", "http://127.0.0.1:8000/health"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      hydra:
+        condition: service_healthy
+    networks: [data, edge]
+
+  bot:
+    <<: *backend
+    command: ["python", "-m", "app", "bot"]
+    environment:
+      <<: *backend-env
+      IHSP_TELEGRAM__WEBHOOK_SECRET: ${IHSP_TELEGRAM__WEBHOOK_SECRET:?}
+      IHSP_TELEGRAM__WEBHOOK_URL: https://api.${DOMAIN} # base URL; the bot registers /telegram/<secret>
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "python", "/healthcheck/check.py", "proc", "app", "bot"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    networks: [data, edge]
+
+  # Inbound SMTP for mail.<domain> (MX record). Published straight on port 25.
+  mail:
+    <<: *backend
+    command: ["python", "-m", "app", "mail"]
+    ports:
+      - "25:2525"
+    environment:
+      <<: *backend-env
+      IHSP_SMTP_IN__HOST: 0.0.0.0
+      IHSP_SMTP_IN__PORT: "2525"
+      IHSP_SMTP_IN__TLS_CERT_PATH: /tls/fullchain.pem # copied by certbot's deploy hook
+      IHSP_SMTP_IN__TLS_KEY_PATH: /tls/privkey.pem
+      IHSP_SMTP_IN__CHECK_SPF: "true"
+      IHSP_SMTP_IN__CHECK_DKIM: "true"
+    volumes:
+      - ./healthcheck:/healthcheck:ro
+      - ../data/mail-tls:/tls:ro
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "python", "/healthcheck/check.py", "smtp", "127.0.0.1", "2525"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    networks: [data, edge]
+
+  worker:
+    <<: *backend
+    command: ["python", "-m", "app", "worker"]
+    stop_grace_period: 60s
+    environment:
+      <<: [*backend-env, *smtp-out-env, *openrouter-env, *vault-env]
+    secrets: # identity.destroy_emis_secret deletes the Vault secret of a closed account
+      - source: jwt_bearer
+        target: jwt_bearer
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "python", "/healthcheck/check.py", "proc", "app", "worker"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      vault:
+        condition: service_healthy
+    networks: [data, edge]
+
+  # Exactly one instance: it fires the cron table of app/interfaces/jobs/schedule.py.
+  scheduler:
+    <<: *backend
+    command: ["python", "-m", "app", "scheduler"]
+    environment:
+      <<: *backend-env
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "python", "/healthcheck/check.py", "proc", "app", "scheduler"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    networks: [data, edge]
+
+  # ----------------------------------------------------------------------- edge
+  # Static apps (image built from web/deploy): internal only, nginx proxies to it.
+  web:
+    image: ghcr.io/${IMAGE_OWNER:?}/ihsp-web:${TAG:?}
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      APP_ENV: prod
+      APP_HOST_ID: id.${DOMAIN}
+      APP_HOST_SP: sp.${DOMAIN}
+      APP_HOST_STAFF: staff.${DOMAIN}
+      APP_HOST_ADMIN: admin.${DOMAIN}
+      APP_HOST_LMS: lms.${DOMAIN}
+      APP_HOST_SHARE: s.${DOMAIN}
+      API_HOST: api.${DOMAIN}
+      MCP_HOST: mcp.${DOMAIN}
+      ROOT_HOST: ${DOMAIN}
+      # The web image has backend routes of its own (web/deploy/sites/api.conf and others).
+      # The edge nginx in front of it never sends that traffic here, but nginx resolves
+      # these upstreams when it starts, so they point at a closed local port instead of at
+      # services that may still be starting.
+      HYDRA_UPSTREAM: 127.0.0.1:9
+      IDENTITY_UPSTREAM: 127.0.0.1:9
+      API_UPSTREAM: 127.0.0.1:9
+      BOT_UPSTREAM: 127.0.0.1:9
+      BACKEND_UPSTREAM: 127.0.0.1:9
+      IHSP_WEB_API_URL: https://api.${DOMAIN}
+      IHSP_WEB_ID_URL: https://id.${DOMAIN}
+      IHSP_WEB_HYDRA_URL: https://id.${DOMAIN}
+      IHSP_WEB_SP_URL: https://sp.${DOMAIN}
+      IHSP_WEB_STAFF_URL: https://staff.${DOMAIN}
+      IHSP_WEB_ADMIN_URL: https://admin.${DOMAIN}
+      IHSP_WEB_LMS_URL: https://lms.${DOMAIN}
+      IHSP_WEB_SHARE_URL: https://s.${DOMAIN}/ai
+      IHSP_WEB_SHORT_LINKS_URL: https://s.${DOMAIN}
+      IHSP_WEB_ROOMS_URL: https://${DOMAIN}
+      IHSP_WEB_MCP_URL: https://mcp.${DOMAIN}
+      IHSP_BOT_USERNAME: ${IHSP_TELEGRAM__BOT_USERNAME:-ihspbot}
+      IHSP_STORAGE_ORIGIN: ${IHSP_S3__PUBLIC_ENDPOINT_URL:?}
+      # connect-src / img-src of the CSP header (script-src is a per-page <meta> in the image)
+      CSP_CONNECT_SRC: "'self' https://api.${DOMAIN} ${IHSP_S3__PUBLIC_ENDPOINT_URL:?}"
+      CSP_IMG_SRC: "'self' data: blob: ${IHSP_S3__PUBLIC_ENDPOINT_URL:?}"
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1/health"]
+    networks: [edge]
+
+  # TLS termination and routing by host and path (materials/nginx).
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    logging: *logging
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      NGINX_ENVSUBST_FILTER: ^(HOST|CERT)_
+      CERT_NAME: ${DOMAIN:?}
+      HOST_ID: id.${DOMAIN}
+      HOST_SP: sp.${DOMAIN}
+      HOST_STAFF: staff.${DOMAIN}
+      HOST_ADMIN: admin.${DOMAIN}
+      HOST_LMS: lms.${DOMAIN}
+      HOST_S: s.${DOMAIN}
+      HOST_API: api.${DOMAIN}
+      HOST_MCP: mcp.${DOMAIN}
+      HOST_APEX: ${DOMAIN}
+      HOST_STORAGE: ${STORAGE_PUBLIC_HOST:-storage.invalid}
+    volumes:
+      - ./nginx/prod:/etc/nginx/templates:ro
+      - ./nginx/common:/etc/nginx/ihsp:ro
+      - ../data/letsencrypt:/etc/letsencrypt:ro
+      - ../data/certbot-www:/var/www/certbot:ro
+    depends_on:
+      web:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/health"]
+    networks:
+      edge:
+        ipv4_address: ${EDGE_NGINX_IP:-172.31.240.10}
+
+  # Renews the certificate twice a day when due. Reload nginx and restart `mail` after a
+  # renewal (the host cron line that scripts/prod_init.sh prints does it weekly).
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    logging: *logging
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        trap exit TERM;
+        while :; do
+        certbot renew --webroot -w /var/www/certbot --quiet && touch /tmp/certbot.ok;
+        sleep 12h & wait $${!};
+        done
+    volumes:
+      - ../data/letsencrypt:/etc/letsencrypt
+      - ../data/certbot-www:/var/www/certbot
+      - ../data/mail-tls:/mail-tls
+      - ./certbot:/hooks:ro
+    healthcheck: # a successful renew check in the last 25 hours
+      test: ["CMD-SHELL", "find /tmp/certbot.ok -mmin -1500 | grep -q ."]
+      interval: 1h
+      timeout: 10s
+      retries: 2
+      start_period: 5m
+      start_interval: 5s
+    networks: [edge]
+
+  # ----------------------------------------------------------- one-off tool jobs
+  # `docker compose --profile tools run --rm <service>`; scripts/prod_init.sh uses them.
+  bootstrap: # registers the first-party OAuth clients and the JWT-bearer trust in Hydra
+    <<: *backend
+    profiles: [tools]
+    restart: "no"
+    command: ["python", "/scripts/hydra_bootstrap.py"]
+    environment:
+      <<: *backend-env
+      PYTHONPATH: /app
+      IHSP_JWT_BEARER__PRIVATE_KEY_PATH: /run/secrets/jwt_bearer
+      IHSP_HYDRA__MINIAPP_CLIENT_SECRET: ${IHSP_HYDRA__MINIAPP_CLIENT_SECRET:?}
+    volumes:
+      - ../scripts:/scripts:ro
+    secrets:
+      - source: jwt_bearer
+        target: jwt_bearer
+    networks: [data]
+
+  vault-setup: # enables Transit/AppRole, writes policies; needs VAULT_TOKEN from the caller
+    <<: *backend
+    profiles: [tools]
+    restart: "no"
+    command: ["python", "/init/setup.py"]
+    environment:
+      VAULT_ADDR: http://vault:8200
+    volumes:
+      - ./vault:/init:ro
+    networks: [data]
+
+  s3-init: # bucket, CORS and lifecycle on any S3 server (also an external one: see README-RUN.md)
+    <<: *backend
+    profiles: [tools, rustfs]
+    restart: "no"
+    command: ["python", "/init/init.py"]
+    environment:
+      S3_ENDPOINT_URL: ${IHSP_S3__ENDPOINT_URL:?}
+      S3_ACCESS_KEY: ${IHSP_S3__ACCESS_KEY:?}
+      S3_SECRET_KEY: ${IHSP_S3__SECRET_KEY:?}
+      S3_BUCKET: ${IHSP_S3__BUCKET:-ihsp}
+      S3_CORS_ORIGINS: *cors-origins
+    volumes:
+      - ./s3:/init:ro
+    networks: [data, edge]
+
+networks:
+  # Internal: no route to the outside world. Databases, Vault and Hydra's admin API.
+  data:
+    internal: true
+  # nginx's side; also gives the application processes their outbound access
+  # (EMIS, Telegram, OpenRouter, SMTP relay, DNS for SPF/DKIM checks).
+  edge:
+    ipam:
+      config:
+        - subnet: ${EDGE_SUBNET:-172.31.240.0/24}
+
+volumes:
+  pg_data:
+  redis_data:
+  vault_data:
+  s3_data:
+
+secrets:
+  # Signing key of the JWT-bearer assertions: identity and worker only (and the Hydra
+  # bootstrap job, which registers its public half).
+  jwt_bearer:
+    file: ../secrets/jwt-bearer.pem
