@@ -1,6 +1,6 @@
 """Sets and cards: the same suite runs on the in-memory fake and on PostgreSQL."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from uuid import UUID
 
 from app.modules.flashcards.domain.flashcard import Flashcard
@@ -9,11 +9,12 @@ from app.modules.flashcards.domain.flashcard_set import (
     SetCounts,
     SetSource,
 )
+from app.modules.flashcards.domain.review_log import ReviewLogEntry
 from app.modules.flashcards.infrastructure.uow import SqlFlashcardsUnitOfWork
 from app.modules.flashcards.ports.unit_of_work import UowFactory
 from app.shared.db.uow_testing import noop_audit_writer, noop_outbox_writer
 from app.shared.ids import new_id
-from app.shared.srs import CardState, SrsState
+from app.shared.srs import CardState, Rating, SrsState
 from tests.fakes.flashcards.uow import FakeFlashcardsStore, fake_uow_factory
 
 import pytest
@@ -255,7 +256,108 @@ async def test_counts_for_sets_split_new_and_due_cards(uow_factory: UowFactory) 
         )
         nothing = await uow.cards.counts_for_sets([], due_before=bound)
 
-    assert counts.get(busy.id) == SetCounts(new=2, due=2)
+    assert counts.get(busy.id) == SetCounts(new=2, due=2, learning=1, review=1)
     assert counts.get(calm.id) == SetCounts(new=0, due=0)
     assert counts.get(empty.id, SetCounts()) == SetCounts()
     assert nothing == {}
+
+
+# - - - Review log - - -
+
+
+def make_entry(
+    flashcard_set: FlashcardSet,
+    card: Flashcard,
+    at: datetime,
+    *,
+    user: UUID | None = None,
+    duration_ms: int | None = None,
+) -> ReviewLogEntry:
+    """A log row for a card of the set."""
+    return ReviewLogEntry(
+        id=new_id(),
+        user_id=user or flashcard_set.owner_id,
+        set_id=flashcard_set.id,
+        card_id=card.id,
+        rating=Rating.MEDIUM,
+        state_before=CardState.NEW,
+        interval_after_days=0.5,
+        reviewed_at=at,
+        duration_ms=duration_ms,
+    )
+
+
+async def test_the_log_counts_reviews_per_tashkent_day(uow_factory: UowFactory) -> None:
+    """WEB-22: 19:30 UTC is 00:30 of the next day in Tashkent (UTC+5)."""
+    flashcard_set = make_set()
+    card = make_card(flashcard_set.id, 0)
+    late = datetime(2026, 10, 6, 18, 59, tzinfo=UTC)
+    after_midnight = datetime(2026, 10, 6, 19, 30, tzinfo=UTC)
+    async with uow_factory() as uow:
+        await uow.sets.add(flashcard_set)
+        await uow.cards.add_many([card])
+        for at in (NOW, late, after_midnight, after_midnight):
+            await uow.reviews.add(make_entry(flashcard_set, card, at))
+        await uow.commit()
+
+    async with uow_factory() as uow:
+        counts = await uow.reviews.daily_counts(flashcard_set.owner_id, set_id=None)
+
+    assert counts == {date(2026, 10, 6): 2, date(2026, 10, 7): 2}
+
+
+async def test_the_log_is_per_user_and_can_be_limited_to_a_set(
+    uow_factory: UowFactory,
+) -> None:
+    """Only the user's own reviews count; `set_id` narrows to one set."""
+    first, second = make_set(), make_set()
+    mine = first.owner_id
+    first_card, second_card = make_card(first.id, 0), make_card(second.id, 0)
+    async with uow_factory() as uow:
+        for flashcard_set in (first, second):
+            await uow.sets.add(flashcard_set)
+        await uow.cards.add_many([first_card, second_card])
+        await uow.reviews.add(make_entry(first, first_card, NOW))
+        await uow.reviews.add(make_entry(second, second_card, NOW, user=mine))
+        await uow.reviews.add(make_entry(second, second_card, NOW))  # its owner
+        await uow.commit()
+
+    async with uow_factory() as uow:
+        everything = await uow.reviews.daily_counts(mine, set_id=None)
+        one_set = await uow.reviews.daily_counts(mine, set_id=first.id)
+        nobody = await uow.reviews.daily_counts(new_id(), set_id=None)
+
+    assert everything == {date(2026, 10, 6): 2}
+    assert one_set == {date(2026, 10, 6): 1}
+    assert nobody == {}
+
+
+async def test_the_time_spent_is_summed_inside_the_window(
+    uow_factory: UowFactory,
+) -> None:
+    """Today's seconds: rows in [start, end), rows without a time count as zero."""
+    flashcard_set = make_set()
+    card = make_card(flashcard_set.id, 0)
+    start, end = NOW, NOW + timedelta(hours=1)
+    async with uow_factory() as uow:
+        await uow.sets.add(flashcard_set)
+        await uow.cards.add_many([card])
+        for at, ms in (
+            (start - timedelta(seconds=1), 9000),
+            (start, 1500),
+            (start + timedelta(minutes=5), 2500),
+            (start + timedelta(minutes=6), None),
+            (end, 7000),
+        ):
+            await uow.reviews.add(make_entry(flashcard_set, card, at, duration_ms=ms))
+        await uow.commit()
+
+    async with uow_factory() as uow:
+        total = await uow.reviews.duration_ms_between(
+            flashcard_set.owner_id, set_id=None, start=start, end=end
+        )
+        empty = await uow.reviews.duration_ms_between(
+            new_id(), set_id=None, start=start, end=end
+        )
+
+    assert (total, empty) == (4000, 0)

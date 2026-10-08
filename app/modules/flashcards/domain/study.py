@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 
 from app.modules.flashcards.domain.flashcard import Flashcard
+from app.modules.flashcards.domain.flashcard_set import SetCounts
 from app.shared.clock import TASHKENT, to_local
 from app.shared.srs import CardState
 
@@ -41,6 +42,11 @@ def study_day(now: datetime) -> date:
     return to_local(now).date()
 
 
+def day_start(now: datetime) -> datetime:
+    """Return the first moment of the study day that `now` falls in."""
+    return datetime.combine(study_day(now), time.min, tzinfo=TASHKENT)
+
+
 def day_end(now: datetime) -> datetime:
     """Return the first moment after today's study day (exclusive end)."""
     tomorrow = study_day(now) + timedelta(days=1)
@@ -51,6 +57,33 @@ def is_due_today(card: Flashcard, end_of_day: datetime) -> bool:
     """Return True for a card that has been seen and is due before the day ends."""
     return card.state is not CardState.NEW and (
         card.due_at is None or card.due_at < end_of_day
+    )
+
+
+def tally(cards: Sequence[Flashcard], end_of_day: datetime) -> SetCounts:
+    """Count a set's new cards and the seen cards due before the day ends."""
+    learning = sum(
+        1 for c in cards if c.state in _LEARNING and is_due_today(c, end_of_day)
+    )
+    review = sum(
+        1 for c in cards if c.state is CardState.REVIEW and is_due_today(c, end_of_day)
+    )
+    new = sum(1 for c in cards if c.state is CardState.NEW)
+    return SetCounts(new=new, due=learning + review, learning=learning, review=review)
+
+
+def limit_counts(
+    counts: SetCounts, *, new_per_day: int, reviews_per_day: int, usage: DailyUsage
+) -> tuple[int, int, int]:
+    """Return (new, learning, due) as the deck list shows them: with daily limits.
+
+    Learning cards are never limited, reviews by what is left of `reviews_per_day`
+    and new cards by what is left of `new_per_day`.
+    """
+    return (
+        new_today(counts.new, new_per_day, usage.new),
+        counts.learning,
+        min(counts.review, max(0, reviews_per_day - usage.review)),
     )
 
 

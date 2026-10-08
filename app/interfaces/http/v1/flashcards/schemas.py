@@ -1,10 +1,11 @@
 """Request and response models of the flash card endpoints (names = API contract)."""
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal, Self
 from uuid import UUID
 
 from app.modules.flashcards.application.views import (
+    ReviewStatsView,
     SetDetailView,
     SetItemView,
     StudyNextView,
@@ -23,6 +24,10 @@ from app.modules.flashcards.domain.limits import (
 )
 
 from pydantic import BaseModel, ConfigDict, Field
+
+MAX_DURATION_MS = 3_600_000
+STATS_YEAR_MIN = 2000
+STATS_YEAR_MAX = 2100
 
 SourceName = Literal["manual", "ai", "mcp", "copied"]
 RatingName = Literal["again", "hard", "medium", "easy"]
@@ -69,9 +74,14 @@ class ReplaceCardsBody(BaseModel):
 
 
 class ReviewBody(BaseModel):
-    """POST /v1/me/flashcards/{card_id}/review."""
+    """POST /v1/me/flashcards/{card_id}/review.
+
+    `duration_ms` is how long the student looked at the card (the server keeps at
+    most one minute of it).
+    """
 
     rating: RatingName
+    duration_ms: int | None = Field(default=None, ge=0, le=MAX_DURATION_MS)
 
 
 class CopyBody(BaseModel):
@@ -94,6 +104,9 @@ class SetItemResponse(_Response):
     card_count: int
     due_today: int
     new_today: int
+    new_count: int
+    learning_count: int
+    due_count: int
 
     @classmethod
     def from_view(cls, view: SetItemView) -> Self:
@@ -162,5 +175,34 @@ class StudyNextResponse(_Response):
 
     @classmethod
     def from_view(cls, view: StudyNextView) -> Self:
+        """Build from the use case view."""
+        return cls.model_validate(view)
+
+
+class DayCountResponse(_Response):
+    """Reviews on one study day (a Tashkent calendar day)."""
+
+    date: date
+    count: int
+
+
+class ReviewStatsResponse(_Response):
+    """ReviewStats: the heatmap and the numbers of Anki's deck overview."""
+
+    year: int
+    set_id: UUID | None
+    days: list[DayCountResponse]
+    total_reviews: int
+    days_studied: int
+    daily_average: float
+    days_learned_percent: float
+    longest_streak: int
+    current_streak: int
+    first_review_date: date | None
+    today_count: int
+    today_seconds: int
+
+    @classmethod
+    def from_view(cls, view: ReviewStatsView) -> Self:
         """Build from the use case view."""
         return cls.model_validate(view)

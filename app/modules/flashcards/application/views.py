@@ -1,7 +1,7 @@
 """What the use cases return (the HTTP layer maps these to the API contract)."""
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from uuid import UUID
 
 
@@ -20,7 +20,12 @@ class CardView:
 
 @dataclass(frozen=True, slots=True)
 class SetItemView:
-    """A set in the list (FlashcardSetItem)."""
+    """A set in the list (FlashcardSetItem).
+
+    `new_count`, `learning_count` and `due_count` are the three numbers of Anki's
+    deck list, after the daily limits; `due_today` and `new_today` are the older
+    names of the due total and `new_count`.
+    """
 
     id: UUID
     title: str
@@ -29,6 +34,9 @@ class SetItemView:
     card_count: int
     due_today: int
     new_today: int
+    new_count: int
+    learning_count: int
+    due_count: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,3 +86,29 @@ class StudyNextView:
     intervals: IntervalsView | None
     counts: CountsView
     done_for_today: bool
+
+
+@dataclass(frozen=True, slots=True)
+class DayCountView:
+    """Reviews on one study day."""
+
+    date: date
+    count: int
+
+
+@dataclass(frozen=True, slots=True)
+class ReviewStatsView:
+    """Heatmap and numbers of the deck overview (ReviewStats)."""
+
+    year: int
+    set_id: UUID | None
+    days: tuple[DayCountView, ...]
+    total_reviews: int
+    days_studied: int
+    daily_average: float
+    days_learned_percent: float
+    longest_streak: int
+    current_streak: int
+    first_review_date: date | None
+    today_count: int
+    today_seconds: int

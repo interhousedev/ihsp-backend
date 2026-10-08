@@ -17,7 +17,11 @@ from app.modules.academic.infrastructure.orm import (
     Term,
     TimetableEntry,
 )
-from app.modules.flashcards.infrastructure.orm import Flashcard, FlashcardSet
+from app.modules.flashcards.infrastructure.orm import (
+    Flashcard,
+    FlashcardReview,
+    FlashcardSet,
+)
 from app.modules.identity.infrastructure.orm import AuditEvent, Session, User
 from app.modules.links.infrastructure.orm import Link
 from app.modules.lms.infrastructure.orm import (
@@ -561,6 +565,71 @@ async def test_flashcard_defaults_match_the_spaced_repetition_start(
 
     assert (flashcard_set.new_per_day, flashcard_set.reviews_per_day) == (20, 200)
     assert (card.state, card.step, card.ease, card.reps) == ("new", 0, 2.5, 0)
+
+
+def make_review(flashcard_set: FlashcardSet, card: Flashcard, **fields: Any) -> Any:
+    """Build a review log row for a card."""
+    values: dict[str, Any] = {
+        "user_id": flashcard_set.owner_id,
+        "set_id": flashcard_set.id,
+        "card_id": card.id,
+        "rating": "medium",
+        "state_before": "new",
+        "interval_after_days": 0.5,
+        "reviewed_at": NOW,
+    }
+    return FlashcardReview(**{**values, **fields})
+
+
+async def test_a_review_log_row_accepts_the_four_ratings_and_four_states(
+    db: AsyncSession,
+) -> None:
+    """ai.flashcard_reviews: rating and state_before are checked; time is optional."""
+    flashcard_set = FlashcardSet(owner_id=new_id(), title="Log", source="manual")
+    await saved(db, flashcard_set)
+    card = Flashcard(set_id=flashcard_set.id, position=1, front="a", back="b")
+    await saved(db, card)
+
+    await saved(
+        db,
+        *(
+            make_review(flashcard_set, card, rating=r)
+            for r in ("again", "hard", "medium", "easy")
+        ),
+        *(
+            make_review(flashcard_set, card, state_before=s)
+            for s in ("new", "learning", "review", "relearning")
+        ),
+    )
+    await assert_rejected(db, make_review(flashcard_set, card, rating="good"))
+    await assert_rejected(db, make_review(flashcard_set, card, state_before="old"))
+    row = make_review(flashcard_set, card)
+    await saved(db, row)
+    await db.refresh(row)
+
+    assert row.duration_ms is None
+
+
+async def test_deleting_a_card_keeps_its_log_and_deleting_the_set_removes_it(
+    db: AsyncSession,
+) -> None:
+    """ai.flashcard_reviews: card_id is set to NULL, set_id cascades."""
+    flashcard_set = FlashcardSet(owner_id=new_id(), title="Log", source="manual")
+    await saved(db, flashcard_set)
+    card = Flashcard(set_id=flashcard_set.id, position=1, front="a", back="b")
+    await saved(db, card)
+    row = make_review(flashcard_set, card)
+    await saved(db, row)
+
+    await db.delete(card)
+    await db.flush()
+    await db.refresh(row)
+    assert row.card_id is None
+
+    await db.delete(flashcard_set)
+    await db.flush()
+    remaining = await db.scalars(select(FlashcardReview))
+    assert remaining.all() == []
 
 
 # - - - lms - - -

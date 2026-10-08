@@ -59,6 +59,9 @@ async def test_list_sets_gives_counts_for_today(h: FlashcardsHarness) -> None:
             "card_count": 3,
             "due_today": 1,
             "new_today": 2,
+            "new_count": 2,
+            "learning_count": 1,
+            "due_count": 0,
         }
     ]
 

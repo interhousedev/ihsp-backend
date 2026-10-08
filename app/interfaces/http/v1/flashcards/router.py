@@ -4,6 +4,7 @@ from app.interfaces.http.v1.flashcards.handlers import (
     copy_from_share,
     create_set,
     delete_set,
+    get_review_stats,
     get_set,
     list_sets,
     replace_cards,
@@ -20,6 +21,10 @@ router.add_api_route("/flashcard-sets", list_sets.list_sets, methods=["GET"])
 router.add_api_route("/flashcard-sets", create_set.create_set, methods=["POST"])
 router.add_api_route(
     "/flashcard-sets/copy", copy_from_share.copy_from_share, methods=["POST"]
+)
+# Before `/flashcard-sets/{set_id}`, or "stats" would be parsed as a set id.
+router.add_api_route(
+    "/flashcard-sets/stats", get_review_stats.get_review_stats, methods=["GET"]
 )
 router.add_api_route("/flashcard-sets/{set_id}", get_set.get_set, methods=["GET"])
 router.add_api_route(

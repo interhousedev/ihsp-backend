@@ -18,7 +18,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 SCHEMAS = {"id", "academic", "files", "links", "ai", "notify", "admin", "mail", "lms"}
 AI_TABLES = {"ai.chats", "ai.chat_messages"}
-FLASHCARD_TABLES = {"ai.flashcard_sets", "ai.flashcards"}
+FLASHCARD_TABLES = {"ai.flashcard_sets", "ai.flashcards", "ai.flashcard_reviews"}
 
 
 def _model_tables() -> set[str]:
@@ -77,7 +77,7 @@ def _compare(connection: Connection) -> list[object]:
 async def test_upgrade_heads_builds_exactly_the_models(
     new_database: DatabaseFactory,
 ) -> None:
-    """On an empty database one ``upgrade heads`` creates the 33 tables of the
+    """On an empty database one ``upgrade heads`` creates the 34 tables of the
     models, with no difference left for autogenerate, and btree_gist."""
     url = await new_database()
 

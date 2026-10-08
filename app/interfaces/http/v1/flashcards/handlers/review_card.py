@@ -12,6 +12,9 @@ async def review_card(
 ) -> StudyNextResponse:
     """Rate a card and return the next one."""
     view = await container.flashcards.review_card.execute(
-        owner_id=actor.user_id, card_id=card_id, rating=Rating(body.rating)
+        owner_id=actor.user_id,
+        card_id=card_id,
+        rating=Rating(body.rating),
+        duration_ms=body.duration_ms,
     )
     return StudyNextResponse.from_view(view)

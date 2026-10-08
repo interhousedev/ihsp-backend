@@ -2,14 +2,16 @@
 
 import copy
 from collections.abc import Callable, Sequence
-from datetime import datetime
+from datetime import date, datetime
 from types import TracebackType
 from typing import Self
 from uuid import UUID
 
 from app.modules.flashcards.domain.flashcard import Flashcard
 from app.modules.flashcards.domain.flashcard_set import FlashcardSet, SetCounts
-from app.shared.srs import CardState
+from app.modules.flashcards.domain.review_log import ReviewLogEntry
+from app.modules.flashcards.domain.study import tally
+from app.shared.clock import to_local
 
 
 class FakeFlashcardsStore:
@@ -19,6 +21,7 @@ class FakeFlashcardsStore:
         """Start empty."""
         self.sets: dict[UUID, FlashcardSet] = {}
         self.cards: dict[UUID, Flashcard] = {}
+        self.reviews: list[ReviewLogEntry] = []
         self.commits = 0
 
     def cards_of(self, set_id: UUID) -> list[Flashcard]:
@@ -102,19 +105,56 @@ class FakeCardRepository:
     async def counts_for_sets(
         self, set_ids: Sequence[UUID], *, due_before: datetime
     ) -> dict[UUID, SetCounts]:
-        """New cards and seen cards due before the bound, per set with cards."""
-        result: dict[UUID, SetCounts] = {}
+        """New and due cards before the bound, per set that has cards."""
+        by_set: dict[UUID, list[Flashcard]] = {}
         for card in self.store.cards.values():
-            if card.set_id not in set_ids:
-                continue
-            old = result.get(card.set_id, SetCounts())
-            if card.state is CardState.NEW:
-                result[card.set_id] = SetCounts(new=old.new + 1, due=old.due)
-            elif card.due_at is not None and card.due_at < due_before:
-                result[card.set_id] = SetCounts(new=old.new, due=old.due + 1)
-            else:
-                result[card.set_id] = old
-        return result
+            if card.set_id in set_ids:
+                by_set.setdefault(card.set_id, []).append(card)
+        return {sid: tally(cards, due_before) for sid, cards in by_set.items()}
+
+
+class FakeReviewLogRepository:
+    """The review log of a FakeFlashcardsStore."""
+
+    def __init__(self, store: FakeFlashcardsStore) -> None:
+        """Bind to the store."""
+        self.store = store
+
+    async def add(self, entry: ReviewLogEntry) -> None:
+        """Append a log row."""
+        self.store.reviews.append(entry)
+
+    def _of(self, user_id: UUID, set_id: UUID | None) -> list[ReviewLogEntry]:
+        return [
+            e
+            for e in self.store.reviews
+            if e.user_id == user_id and set_id in (None, e.set_id)
+        ]
+
+    async def daily_counts(
+        self, user_id: UUID, *, set_id: UUID | None
+    ) -> dict[date, int]:
+        """Reviews per Tashkent day."""
+        counts: dict[date, int] = {}
+        for entry in self._of(user_id, set_id):
+            day = to_local(entry.reviewed_at).date()
+            counts[day] = counts.get(day, 0) + 1
+        return counts
+
+    async def duration_ms_between(
+        self,
+        user_id: UUID,
+        *,
+        set_id: UUID | None,
+        start: datetime,
+        end: datetime,
+    ) -> int:
+        """Sum of the measured times of reviews in [start, end)."""
+        return sum(
+            e.duration_ms or 0
+            for e in self._of(user_id, set_id)
+            if start <= e.reviewed_at < end
+        )
 
 
 class FakeFlashcardsUnitOfWork:
@@ -125,6 +165,7 @@ class FakeFlashcardsUnitOfWork:
         self.store = store
         self.sets = FakeSetRepository(store)
         self.cards = FakeCardRepository(store)
+        self.reviews = FakeReviewLogRepository(store)
 
     async def __aenter__(self) -> Self:
         """Open the unit of work."""

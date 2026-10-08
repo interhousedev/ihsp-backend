@@ -75,11 +75,18 @@ class FlashcardsHarness:
         )
 
     async def rate(
-        self, card_id: UUID, rating: Rating, owner: Actor | None = None
+        self,
+        card_id: UUID,
+        rating: Rating,
+        owner: Actor | None = None,
+        duration_ms: int | None = None,
     ) -> StudyNextView:
         """Rate a card as the student (or the given owner)."""
         return await self.services.review_card.execute(
-            owner_id=(owner or self.student).user_id, card_id=card_id, rating=rating
+            owner_id=(owner or self.student).user_id,
+            card_id=card_id,
+            rating=rating,
+            duration_ms=duration_ms,
         )
 
 

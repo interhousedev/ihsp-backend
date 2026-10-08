@@ -43,7 +43,12 @@ class FlashcardSet:
 
 @dataclass(frozen=True, slots=True)
 class SetCounts:
-    """Cards of a set that count towards today's lists."""
+    """Cards of a set that count towards today's lists, before the daily limits.
+
+    `due` is every seen card due before the day ends: `learning + review`.
+    """
 
     new: int = 0
     due: int = 0
+    learning: int = 0
+    review: int = 0

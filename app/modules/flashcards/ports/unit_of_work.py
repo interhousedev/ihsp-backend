@@ -5,6 +5,7 @@ from types import TracebackType
 from typing import Protocol, Self
 
 from app.modules.flashcards.ports.card_repository import FlashcardRepository
+from app.modules.flashcards.ports.review_log_repository import ReviewLogRepository
 from app.modules.flashcards.ports.set_repository import FlashcardSetRepository
 
 
@@ -19,6 +20,11 @@ class FlashcardsUnitOfWork(Protocol):
     @property
     def cards(self) -> FlashcardRepository:
         """Cards of the open transaction."""
+        ...
+
+    @property
+    def reviews(self) -> ReviewLogRepository:
+        """Review log of the open transaction."""
         ...
 
     async def __aenter__(self) -> Self:

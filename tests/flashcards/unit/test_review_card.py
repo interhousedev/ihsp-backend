@@ -136,3 +136,77 @@ async def test_an_unknown_card_is_not_found(h: FlashcardsHarness) -> None:
         await h.rate(new_id(), Rating.EASY)
 
     assert raised.value.code == "flashcards/card-not-found"
+
+
+# - - - Review log - - -
+
+
+async def test_every_rating_writes_a_log_row(h: FlashcardsHarness) -> None:
+    """WEB-23: user, set, card, rating, state before, interval after and time."""
+    created = await h.make_set(1)
+    card_id = created.cards[0].id
+
+    await h.rate(card_id, Rating.EASY, duration_ms=4200)
+
+    (entry,) = h.store.reviews
+    assert (entry.user_id, entry.set_id, entry.card_id) == (
+        h.student.user_id,
+        created.id,
+        card_id,
+    )
+    assert (entry.rating, entry.state_before) == (Rating.EASY, CardState.NEW)
+    assert entry.interval_after_days == pytest.approx(4.0)
+    assert entry.reviewed_at == h.clock.now()
+    assert entry.duration_ms == 4200
+
+
+async def test_a_learning_step_logs_the_real_delay_in_days(
+    h: FlashcardsHarness,
+) -> None:
+    """WEB-23: Again on a new card comes back in 1 minute = 1/1440 day."""
+    created = await h.make_set(1)
+
+    await h.rate(created.cards[0].id, Rating.AGAIN)
+
+    (entry,) = h.store.reviews
+    assert entry.interval_after_days == pytest.approx(1 / 1440)
+    assert entry.duration_ms is None
+
+
+async def test_answers_after_the_first_log_the_state_the_card_had(
+    h: FlashcardsHarness,
+) -> None:
+    """WEB-23: new, then learning, then review."""
+    created = await h.make_set(1)
+    card_id = created.cards[0].id
+
+    await h.rate(card_id, Rating.MEDIUM)
+    h.clock.advance(minutes=10)
+    await h.rate(card_id, Rating.MEDIUM)
+    h.clock.advance(days=1)
+    await h.rate(card_id, Rating.MEDIUM)
+
+    assert [e.state_before for e in h.store.reviews] == [
+        CardState.NEW,
+        CardState.LEARNING,
+        CardState.REVIEW,
+    ]
+
+
+async def test_the_time_spent_is_capped_at_one_minute(h: FlashcardsHarness) -> None:
+    """WEB-23: a card left open for ten minutes counts as a minute."""
+    created = await h.make_set(1)
+
+    await h.rate(created.cards[0].id, Rating.EASY, duration_ms=600_000)
+
+    assert h.store.reviews[0].duration_ms == 60_000
+
+
+async def test_a_refused_rating_writes_no_log_row(h: FlashcardsHarness) -> None:
+    """Ownership: another student's card leaves no trace."""
+    created = await h.make_set(1)
+
+    with pytest.raises(CardNotFoundError):
+        await h.rate(created.cards[0].id, Rating.EASY, owner=h.other_student)
+
+    assert h.store.reviews == []

@@ -6,6 +6,7 @@ from app.modules.flashcards.application.add_cards import AddCards
 from app.modules.flashcards.application.copy_from_share import CopyFromShare
 from app.modules.flashcards.application.create_set import CreateSet
 from app.modules.flashcards.application.delete_set import DeleteSet
+from app.modules.flashcards.application.get_review_stats import GetReviewStats
 from app.modules.flashcards.application.get_set import GetSet
 from app.modules.flashcards.application.list_sets import ListSets
 from app.modules.flashcards.application.public_api import FlashcardsApiImpl
@@ -33,6 +34,7 @@ class FlashcardsServices:
     create_set: CreateSet
     list_sets: ListSets
     get_set: GetSet
+    get_review_stats: GetReviewStats
     update_set: UpdateSet
     delete_set: DeleteSet
     replace_cards: ReplaceCards
@@ -75,6 +77,7 @@ def build(
         create_set=create_set,
         list_sets=list_sets,
         get_set=GetSet(uow_factory=uow_factory, views=views),
+        get_review_stats=GetReviewStats(uow_factory=uow_factory, clock=deps.clock),
         update_set=UpdateSet(uow_factory=uow_factory, views=views),
         delete_set=DeleteSet(uow_factory=uow_factory),
         replace_cards=ReplaceCards(uow_factory=uow_factory, views=views),

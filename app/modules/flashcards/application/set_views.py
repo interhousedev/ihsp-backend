@@ -17,14 +17,14 @@ from app.modules.flashcards.domain.intervals import format_interval
 from app.modules.flashcards.domain.study import (
     DailyUsage,
     day_end,
-    is_due_today,
-    new_today,
+    limit_counts,
     plan_study,
     study_day,
+    tally,
 )
 from app.modules.flashcards.ports.daily_counters import DailyCounters
 from app.shared.clock import Clock
-from app.shared.srs import CardState, Rating, preview
+from app.shared.srs import Rating, preview
 
 
 def card_view(card: Flashcard) -> CardView:
@@ -54,8 +54,14 @@ class SetViews:
         return await self.counters.usage(flashcard_set.owner_id, flashcard_set.id, day)
 
     async def item(self, flashcard_set: FlashcardSet, counts: SetCounts) -> SetItemView:
-        """Return the list item: `due_today` and `new_today` from the counts."""
+        """Return the list item with today's counts, limited by the daily limits."""
         usage = await self.usage(flashcard_set)
+        new, learning, due = limit_counts(
+            counts,
+            new_per_day=flashcard_set.new_per_day,
+            reviews_per_day=flashcard_set.reviews_per_day,
+            usage=usage,
+        )
         return SetItemView(
             id=flashcard_set.id,
             title=flashcard_set.title,
@@ -63,18 +69,17 @@ class SetViews:
             source=flashcard_set.source.value,
             card_count=flashcard_set.card_count,
             due_today=counts.due,
-            new_today=new_today(counts.new, flashcard_set.new_per_day, usage.new),
+            new_today=new,
+            new_count=new,
+            learning_count=learning,
+            due_count=due,
         )
 
     async def detail(
         self, flashcard_set: FlashcardSet, cards: Sequence[Flashcard]
     ) -> SetDetailView:
         """Return the set with its cards, counting `due_today` and `new_today`."""
-        end_of_day = day_end(self.clock.now())
-        counts = SetCounts(
-            new=sum(1 for card in cards if card.state is CardState.NEW),
-            due=sum(1 for card in cards if is_due_today(card, end_of_day)),
-        )
+        counts = tally(cards, day_end(self.clock.now()))
         item = await self.item(flashcard_set, counts)
         return SetDetailView(
             id=item.id,
@@ -84,6 +89,9 @@ class SetViews:
             card_count=item.card_count,
             due_today=item.due_today,
             new_today=item.new_today,
+            new_count=item.new_count,
+            learning_count=item.learning_count,
+            due_count=item.due_count,
             new_per_day=flashcard_set.new_per_day,
             reviews_per_day=flashcard_set.reviews_per_day,
             cards=tuple(card_view(card) for card in cards),

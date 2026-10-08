@@ -110,16 +110,24 @@ class SqlFlashcardRepository:
         if not set_ids:
             return {}
         is_new = CardRow.state == CardState.NEW.value
+        learning = CardRow.state.in_(
+            [CardState.LEARNING.value, CardState.RELEARNING.value]
+        )
+        review = CardRow.state == CardState.REVIEW.value
+        due = ~is_new & (CardRow.due_at < due_before)
         stmt = (
             select(
                 CardRow.set_id,
                 func.count().filter(is_new),
-                func.count().filter(~is_new, CardRow.due_at < due_before),
+                func.count().filter(due),
+                func.count().filter(learning & due),
+                func.count().filter(review & due),
             )
             .where(CardRow.set_id.in_(set_ids))
             .group_by(CardRow.set_id)
         )
         result = await self.session.execute(stmt)
         return {
-            set_id: SetCounts(new=new, due=due) for set_id, new, due in result.all()
+            set_id: SetCounts(new=new, due=due_, learning=learn, review=rev)
+            for set_id, new, due_, learn, rev in result.all()
         }

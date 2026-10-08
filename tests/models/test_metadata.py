@@ -1,4 +1,4 @@
-"""The ORM metadata holds exactly the 33 tables of README -> Models."""
+"""The ORM metadata holds exactly the 34 tables of README -> Models."""
 
 from app.shared.db import models  # noqa: F401  (imports every module's ORM package)
 from app.shared.db.base import Base
@@ -25,11 +25,13 @@ EXPECTED_TABLES = {
     # files (1), links (1)
     "files.files",
     "links.links",
-    # ai (4: chats and messages of module ai, sets and cards of module flashcards)
+    # ai (5: chats and messages of module ai; sets, cards and the review log of
+    # module flashcards)
     "ai.chats",
     "ai.chat_messages",
     "ai.flashcard_sets",
     "ai.flashcards",
+    "ai.flashcard_reviews",
     # notify (1), admin (1), mail (1)
     "notify.notifications",
     "admin.broadcasts",
@@ -47,10 +49,10 @@ EXPECTED_TABLES = {
 
 
 def test_metadata_contains_every_table_of_the_models_readme() -> None:
-    """README -> Models: 33 tables, each in the schema of its module."""
+    """README -> Models: 34 tables, each in the schema of its module."""
     actual = {table.fullname for table in Base.metadata.tables.values()}
 
-    assert len(EXPECTED_TABLES) == 33
+    assert len(EXPECTED_TABLES) == 34
     assert actual == EXPECTED_TABLES
 
 
@@ -80,7 +82,7 @@ def test_no_foreign_key_crosses_a_schema_except_inside_ai() -> None:
 def test_flashcards_branch_has_no_foreign_key_to_ai_tables() -> None:
     """The flashcards migration branch does not depend on the ai branch."""
     ai_tables = {"ai.chats", "ai.chat_messages"}
-    for name in ("ai.flashcard_sets", "ai.flashcards"):
+    for name in ("ai.flashcard_sets", "ai.flashcards", "ai.flashcard_reviews"):
         for foreign_key in Base.metadata.tables[name].foreign_keys:
             assert foreign_key.column.table.fullname not in ai_tables
 

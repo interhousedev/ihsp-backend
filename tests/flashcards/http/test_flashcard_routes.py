@@ -20,10 +20,27 @@ SET_ITEM_KEYS = {
     "card_count",
     "due_today",
     "new_today",
+    "new_count",
+    "learning_count",
+    "due_count",
 }
 SET_DETAIL_KEYS = SET_ITEM_KEYS | {"new_per_day", "reviews_per_day", "cards"}
 CARD_KEYS = {"id", "position", "front", "back", "state", "due_at"}
 STUDY_KEYS = {"set_id", "card", "intervals", "counts", "done_for_today"}
+STATS_KEYS = {
+    "year",
+    "set_id",
+    "days",
+    "total_reviews",
+    "days_studied",
+    "daily_average",
+    "days_learned_percent",
+    "longest_streak",
+    "current_streak",
+    "first_review_date",
+    "today_count",
+    "today_seconds",
+}
 CARDS = [{"front": "Q1", "back": "A1"}, {"front": "Q2", "back": "A2"}]
 
 
@@ -73,7 +90,7 @@ def test_the_package_exports_a_list_of_routers() -> None:
 
 
 def test_the_routes_are_exactly_the_contract() -> None:
-    """§ API contract → Flash cards: nine routes, no more."""
+    """§ API contract → Flash cards: nine routes plus the stats, no more."""
     routes = {
         (method, route.path)
         for router in ROUTERS
@@ -92,6 +109,7 @@ def test_the_routes_are_exactly_the_contract() -> None:
         ("GET", "/v1/me/flashcard-sets/{set_id}/study"),
         ("POST", "/v1/me/flashcards/{card_id}/review"),
         ("POST", "/v1/me/flashcard-sets/copy"),
+        ("GET", "/v1/me/flashcard-sets/stats"),
     }
 
 
@@ -511,3 +529,120 @@ async def test_a_student_lists_only_their_own_sets(api: Api) -> None:
     theirs = await api.client.get("/v1/me/flashcard-sets")
 
     assert theirs.json() == []
+
+
+# - - - Counts as Anki shows them, and the review log - - -
+
+
+async def test_list_items_carry_new_learning_and_due_counts(api: Api) -> None:
+    """GET /v1/me/flashcard-sets: `new_count`, `learning_count`, `due_count`."""
+    created = await api.create(count=2)
+    await api.client.post(
+        f"/v1/me/flashcards/{created['cards'][0]['id']}/review",
+        json={"rating": "medium"},
+    )
+
+    response = await api.client.get("/v1/me/flashcard-sets")
+
+    (item,) = response.json()
+    assert (item["new_count"], item["learning_count"], item["due_count"]) == (1, 1, 0)
+
+
+async def test_review_accepts_the_time_spent_and_logs_it(api: Api) -> None:
+    """POST /v1/me/flashcards/{card_id}/review: optional `duration_ms`."""
+    created = await api.create()
+
+    response = await api.client.post(
+        f"/v1/me/flashcards/{created['cards'][0]['id']}/review",
+        json={"rating": "easy", "duration_ms": 3500},
+    )
+
+    assert response.status_code == 200
+    assert [e.duration_ms for e in api.h.store.reviews] == [3500]
+
+
+@pytest.mark.parametrize("duration", [-1, 3_600_001, "slow"])
+async def test_review_refuses_a_bad_duration(api: Api, duration: Any) -> None:
+    """`duration_ms` is a whole number of milliseconds from 0 to one hour."""
+    created = await api.create()
+
+    response = await api.client.post(
+        f"/v1/me/flashcards/{created['cards'][0]['id']}/review",
+        json={"rating": "easy", "duration_ms": duration},
+    )
+
+    assert response.status_code == 422
+    assert api.h.store.reviews == []
+
+
+async def test_stats_returns_the_heatmap_and_streaks(api: Api) -> None:
+    """GET /v1/me/flashcard-sets/stats → ReviewStats (WEB-22)."""
+    created = await api.create()
+    for card in created["cards"]:
+        await api.client.post(
+            f"/v1/me/flashcards/{card['id']}/review",
+            json={"rating": "easy", "duration_ms": 2500},
+        )
+
+    response = await api.client.get("/v1/me/flashcard-sets/stats")
+
+    body = response.json()
+    assert response.status_code == 200 and set(body) == STATS_KEYS
+    assert body["year"] == 2026 and body["set_id"] is None
+    assert body["days"] == [{"date": "2026-10-06", "count": 2}]
+    assert (body["today_count"], body["today_seconds"]) == (2, 5)
+    assert (body["current_streak"], body["longest_streak"]) == (1, 1)
+    assert (body["daily_average"], body["days_learned_percent"]) == (2.0, 100.0)
+    assert body["first_review_date"] == "2026-10-06"
+
+
+async def test_stats_can_be_limited_to_a_set_and_a_year(api: Api) -> None:
+    """Query `set_id` and `year`."""
+    created = await api.create()
+    other = await api.create("Other")
+    for source in (created, other):
+        await api.client.post(
+            f"/v1/me/flashcards/{source['cards'][0]['id']}/review",
+            json={"rating": "easy"},
+        )
+
+    one_set = await api.client.get(
+        "/v1/me/flashcard-sets/stats", params={"set_id": created["id"]}
+    )
+    last_year = await api.client.get(
+        "/v1/me/flashcard-sets/stats", params={"year": 2025}
+    )
+
+    assert one_set.json()["set_id"] == created["id"]
+    assert one_set.json()["today_count"] == 1
+    assert (last_year.json()["year"], last_year.json()["days"]) == (2025, [])
+
+
+@pytest.mark.parametrize("year", [1999, 2101, "abc"])
+async def test_stats_refuses_a_year_out_of_range(api: Api, year: Any) -> None:
+    """`year` is 2000-2100."""
+    response = await api.client.get(
+        "/v1/me/flashcard-sets/stats", params={"year": year}
+    )
+
+    assert response.status_code == 422
+
+
+async def test_stats_of_someone_elses_set_is_404(api: Api) -> None:
+    """Ownership: `set_id` of another student's set is `set-not-found`."""
+    theirs = await api.h.make_set(1, owner=api.h.other_student)
+
+    response = await api.client.get(
+        "/v1/me/flashcard-sets/stats", params={"set_id": str(theirs.id)}
+    )
+
+    problem(response, 404, "flashcards/set-not-found")
+
+
+async def test_stats_is_for_students(api: Api) -> None:
+    """A teacher has no flash cards: the route is for students (like the list)."""
+    api.actor = api.h.teacher
+
+    response = await api.client.get("/v1/me/flashcard-sets/stats")
+
+    assert response.status_code == 403
