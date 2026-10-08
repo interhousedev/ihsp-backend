@@ -19,9 +19,12 @@ serve:
 urls:
   self:
     issuer: http://localhost:4444/ # trailing slash: the form MCP clients compare
-  login: http://localhost:3001/login/
-  consent: http://localhost:3001/consent/
-  logout: http://localhost:3001/logout/
+  # Redirect endpoints of the identity process: they accept silently (single sign-on,
+  # first-party consent, logout) and only send the browser to the static login app
+  # (http://localhost:3001/login/ ...) when a form is really needed.
+  login: http://localhost:8000/v1/oauth/flow/login
+  consent: http://localhost:8000/v1/oauth/flow/consent
+  logout: http://localhost:8000/v1/oauth/flow/logout
   post_logout_redirect: http://localhost:3001/
 
 secrets:
@@ -40,6 +43,7 @@ strategies:
 ttl:
   access_token: 15m # durations use h/m/s, never d
   refresh_token: 720h
+  authentication_session: 720h # cap of `remember_for` of the single sign-on session
 
 oauth2:
   pkce:

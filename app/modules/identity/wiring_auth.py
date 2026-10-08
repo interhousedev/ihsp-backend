@@ -82,6 +82,9 @@ from app.modules.identity.application.revoke_connector import RevokeConnector
 from app.modules.identity.application.revoke_other_sessions import RevokeOtherSessions
 from app.modules.identity.application.revoke_session import RevokeSession
 from app.modules.identity.application.revoke_user_sessions import RevokeUserSessions
+from app.modules.identity.application.route_consent_request import RouteConsentRequest
+from app.modules.identity.application.route_login_request import RouteLoginRequest
+from app.modules.identity.application.route_logout_request import RouteLogoutRequest
 from app.modules.identity.application.send_consent_otp import SendConsentOtp
 from app.modules.identity.application.send_login_reminder import SendLoginReminder
 from app.modules.identity.application.start_login_session import LoginSessionStarter
@@ -157,6 +160,10 @@ class AuthServices:
     send_consent_otp: SendConsentOtp
     accept_consent: AcceptConsent
     accept_logout: AcceptLogout
+    # - - - Hydra's login, consent and logout URLs (redirects only) - - -
+    route_login_request: RouteLoginRequest
+    route_consent_request: RouteConsentRequest
+    route_logout_request: RouteLogoutRequest
     # - - - Token handler - - -
     exchange_code: ExchangeCode
     refresh_tokens: RefreshTokens
@@ -303,6 +310,10 @@ def build_auth(
         load_epoch=load_epoch,
         clock=clock,
     )
+    login_info = GetLoginInfo(uow_factory=uow_factory, hydra=hydra, clock=clock)
+    accept_logout = AcceptLogout(
+        uow_factory=uow_factory, hydra=hydra, revocations=revocations, clock=clock
+    )
     request_login_otp = RequestLoginOtp(
         uow_factory=uow_factory,
         otp=otp,
@@ -335,7 +346,7 @@ def build_auth(
         hasher=hasher,
         signer=signer,
         uow_factory=uow_factory,
-        get_login_info=GetLoginInfo(uow_factory=uow_factory, hydra=hydra, clock=clock),
+        get_login_info=login_info,
         log_in_with_password=LogInWithPassword(
             uow_factory=uow_factory,
             hydra=hydra,
@@ -367,8 +378,15 @@ def build_auth(
             auto_accept=auto_accept,
             clock=clock,
         ),
-        accept_logout=AcceptLogout(
-            uow_factory=uow_factory, hydra=hydra, revocations=revocations, clock=clock
+        accept_logout=accept_logout,
+        route_login_request=RouteLoginRequest(
+            hydra=hydra, login_info=login_info, id_url=settings.urls.id
+        ),
+        route_consent_request=RouteConsentRequest(
+            hydra=hydra, auto_accept=auto_accept, id_url=settings.urls.id
+        ),
+        route_logout_request=RouteLogoutRequest(
+            accept_logout=accept_logout, id_url=settings.urls.id
         ),
         exchange_code=ExchangeCode(hydra=hydra),
         refresh_tokens=RefreshTokens(uow_factory=uow_factory, hydra=hydra, clock=clock),

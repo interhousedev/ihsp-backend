@@ -14,6 +14,10 @@ from app.shared.clock import Clock
 from app.shared.ids import new_id
 
 REMEMBER_FOR_SECONDS = 30 * 24 * 3600
+# Hydra sets its login cookie only for a remembered login. Without it the next app would
+# ask for the password again, so a login is always remembered: "stay signed in" makes
+# the single sign-on session long, the default makes it last one school day.
+SSO_SESSION_SECONDS = 12 * 3600
 
 
 @dataclass(frozen=True, slots=True)
@@ -52,8 +56,8 @@ class LoginSessionStarter:
         return await self.hydra.accept_login(
             request.challenge,
             subject=str(user.id),
-            remember=remember,
-            remember_for=REMEMBER_FOR_SECONDS if remember else 0,
+            remember=True,
+            remember_for=REMEMBER_FOR_SECONDS if remember else SSO_SESSION_SECONDS,
             amr=list(amr),
             context={
                 "session_id": str(session.id),

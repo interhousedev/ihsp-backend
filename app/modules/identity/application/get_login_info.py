@@ -36,6 +36,10 @@ class GetLoginInfo:
     async def execute(self, challenge: str) -> LoginInfo:
         """Return the login info; ``redirect_to`` is set when the login was skipped."""
         request = await self.hydra.get_login_request(challenge)
+        return await self.describe(request)
+
+    async def describe(self, request: LoginRequest) -> LoginInfo:
+        """Describe an already loaded request; accepts it when it can be skipped."""
         client_id = request.client.client_id
         redirect = await self._try_skip(request)
         return LoginInfo(

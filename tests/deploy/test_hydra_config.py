@@ -52,11 +52,26 @@ def test_oauth2_settings_match_dev_except_the_hook(
     assert prod["oauth2"]["grant"]["refresh_token"]["rotation_grace_period"] == "30s"
 
 
-def test_prod_urls_are_https_on_the_id_host(prod: dict[str, Any]) -> None:
+def test_prod_urls_are_https(prod: dict[str, Any]) -> None:
     urls = prod["urls"]
     assert urls["self"]["issuer"] == "https://id.ihsu.uz/"  # MCP clients compare it
-    for key in ("login", "consent", "logout", "post_logout_redirect"):
-        assert urls[key].startswith("https://id.ihsu.uz/"), key
+    assert urls["post_logout_redirect"] == "https://id.ihsu.uz/"
+    for key in ("login", "consent", "logout"):
+        assert urls[key] == f"https://api.ihsu.uz/v1/oauth/flow/{key}", key
+
+
+def test_login_consent_and_logout_are_redirect_endpoints_of_identity(
+    prod: dict[str, Any], dev: dict[str, Any]
+) -> None:
+    """ID-16: no page is rendered unless a form is needed; dev and prod use one path."""
+    for key in ("login", "consent", "logout"):
+        assert dev["urls"][key] == f"http://localhost:8000/v1/oauth/flow/{key}", key
+        assert prod["urls"][key].endswith(f"/v1/oauth/flow/{key}"), key
+
+
+def test_single_sign_on_session_can_last_thirty_days(prod: dict[str, Any]) -> None:
+    """`remember_for` of the login (30 days) is capped by this lifetime."""
+    assert prod["ttl"]["authentication_session"] == "720h"
 
 
 def test_prod_secrets_and_dev_mode_stay_out_of_the_file(prod: dict[str, Any]) -> None:
@@ -91,3 +106,17 @@ def test_the_compose_files_use_the_same_config_file() -> None:
     for name in ("docker-compose.prod.yaml", "docker-compose.local.yaml"):
         text = Path(MATERIALS_DIR / name).read_text(encoding="utf-8")
         assert "./hydra/hydra.prod.yml:/etc/config/hydra/hydra.yml:ro" in text
+
+
+def test_compose_files_point_hydra_at_the_flow_endpoints() -> None:
+    expected = {
+        "docker-compose.prod.yaml": "https://api.${DOMAIN}",
+        "docker-compose.local.yaml": (
+            "http://api.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}"
+        ),
+    }
+    for name, base in expected.items():
+        text = Path(MATERIALS_DIR / name).read_text(encoding="utf-8")
+        for key in ("login", "consent", "logout"):
+            line = f"URLS_{key.upper()}: {base}/v1/oauth/flow/{key}"
+            assert line in text, (name, line)

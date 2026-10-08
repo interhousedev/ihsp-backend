@@ -27,9 +27,13 @@ serve:
 urls:
   self:
     issuer: https://id.ihsu.uz/ # == JWT `iss` == HYDRA__ISSUER of the backend; keep the trailing slash
-  login: https://id.ihsu.uz/login/
-  consent: https://id.ihsu.uz/consent/
-  logout: https://id.ihsu.uz/logout/
+  # Redirect endpoints of the identity process (nginx routes /v1/oauth/ on the api host
+  # to it): they accept silently (single sign-on, first-party consent, logout) and only
+  # send the browser to the static login app (https://id.ihsu.uz/login/ ...) when a
+  # form is really needed.
+  login: https://api.ihsu.uz/v1/oauth/flow/login
+  consent: https://api.ihsu.uz/v1/oauth/flow/consent
+  logout: https://api.ihsu.uz/v1/oauth/flow/logout
   post_logout_redirect: https://id.ihsu.uz/
 
 strategies:
@@ -40,6 +44,7 @@ strategies:
 ttl:
   access_token: 15m # durations use h/m/s, never d
   refresh_token: 720h
+  authentication_session: 720h # cap of `remember_for` of the single sign-on session
 
 oauth2:
   pkce:

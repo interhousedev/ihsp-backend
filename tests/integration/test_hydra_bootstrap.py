@@ -36,6 +36,20 @@ def test_web_clients_are_public_pkce_clients_without_consent(
     assert client["scope"] == "openid offline_access"
 
 
+def test_web_clients_have_names_that_read_well_on_the_login_form(
+    bootstrap: ModuleType,
+) -> None:
+    """The form says "to continue to <name>"."""
+    names = {
+        app: bootstrap.web_client(app, f"http://localhost/{app}")["client_name"]
+        for app in bootstrap.WEB_APPS
+    }
+
+    assert names["sp"] == "IHSP Student Portal"
+    assert names["admin"] == "IHSP Administration"
+    assert len(set(names.values())) == len(names)
+
+
 def test_miniapp_client_is_confidential_with_the_jwt_bearer_grant(
     bootstrap: ModuleType,
 ) -> None:

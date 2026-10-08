@@ -213,9 +213,9 @@ services:
       SECRETS_PAGINATION: ${HYDRA_SECRET_PAGINATION:?}
       IHSP_TOKENS__SERVICE_TOKEN: ${IHSP_TOKENS__SERVICE_TOKEN:?}
       URLS_SELF_ISSUER: https://id.${DOMAIN}/
-      URLS_LOGIN: https://id.${DOMAIN}/login/
-      URLS_CONSENT: https://id.${DOMAIN}/consent/
-      URLS_LOGOUT: https://id.${DOMAIN}/logout/
+      URLS_LOGIN: https://api.${DOMAIN}/v1/oauth/flow/login
+      URLS_CONSENT: https://api.${DOMAIN}/v1/oauth/flow/consent
+      URLS_LOGOUT: https://api.${DOMAIN}/v1/oauth/flow/logout
       URLS_POST_LOGOUT_REDIRECT: https://id.${DOMAIN}/
       SERVE_PUBLIC_CORS_ALLOWED_ORIGINS: *cors-origins
       SQA_OPT_OUT: "true"

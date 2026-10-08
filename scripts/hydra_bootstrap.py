@@ -6,7 +6,9 @@ Usage (settings come from the environment, as in every process):
 
 Creates or updates
 
-* the public PKCE clients `id`, `sp`, `staff`, `admin`, `lms` (consent skipped);
+* the public PKCE clients `id`, `sp`, `staff`, `admin`, `lms` (consent skipped: the
+  identity process accepts it on the server and answers Hydra's consent URL with a
+  redirect, see `GET /v1/oauth/flow/consent`);
 * the confidential client `miniapp` (JWT-bearer grant for the Telegram mini app). Its
   secret is `IHSP_HYDRA__MINIAPP_CLIENT_SECRET`; when that is not set the script
   generates one and prints it as an env line for `.env` (first run only);
@@ -33,6 +35,14 @@ JWT_BEARER_GRANT = "urn:ietf:params:oauth:grant-type:jwt-bearer"
 AUDIENCE = "ihsp-api"
 SCOPE = "openid offline_access"
 WEB_APPS = ("id", "sp", "staff", "admin", "lms")
+# Shown on the login form ("to continue to ..."), so they read like product names.
+CLIENT_NAMES = {
+    "id": "IHSP Account",
+    "sp": "IHSP Student Portal",
+    "staff": "IHSP Staff Portal",
+    "admin": "IHSP Administration",
+    "lms": "IHSP Learning",
+}
 MINIAPP = "miniapp"
 DEV_MINIAPP_SECRET = "dev-miniapp-secret"  # default of identity's own setting
 TRUST_YEARS = 2
@@ -49,7 +59,7 @@ def web_client(app: str, base_url: str) -> dict[str, Any]:
     base = base_url.rstrip("/")
     return {
         "client_id": app,
-        "client_name": f"IHSP {app}",
+        "client_name": CLIENT_NAMES.get(app, f"IHSP {app}"),
         "token_endpoint_auth_method": "none",
         "grant_types": ["authorization_code", "refresh_token"],
         "response_types": ["code"],

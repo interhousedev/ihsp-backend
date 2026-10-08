@@ -222,9 +222,9 @@ services:
       SECRETS_PAGINATION: ihsp-local-hydra-paging-secret-0001
       IHSP_TOKENS__SERVICE_TOKEN: dev-service-token
       URLS_SELF_ISSUER: http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}/
-      URLS_LOGIN: http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}/login/
-      URLS_CONSENT: http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}/consent/
-      URLS_LOGOUT: http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}/logout/
+      URLS_LOGIN: http://api.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}/v1/oauth/flow/login
+      URLS_CONSENT: http://api.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}/v1/oauth/flow/consent
+      URLS_LOGOUT: http://api.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}/v1/oauth/flow/logout
       URLS_POST_LOGOUT_REDIRECT: http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}/
       SERVE_PUBLIC_CORS_ALLOWED_ORIGINS: *cors-origins
       SQA_OPT_OUT: "true"
