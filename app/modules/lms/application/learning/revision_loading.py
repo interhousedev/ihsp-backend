@@ -1,5 +1,6 @@
 """Loading revisions and their student render, with the in-process cache."""
 
+from collections.abc import Iterable
 from uuid import UUID
 
 from app.modules.lms.domain.learning.entities import RevisionData
@@ -36,6 +37,25 @@ async def load_rendered(
     rendered = render_revision(revision.id, revision.content)
     cache.put(rendered)
     return rendered
+
+
+async def load_rendered_many(
+    uow: LearningUnitOfWork, cache: RenderCache, revision_ids: Iterable[UUID]
+) -> dict[UUID, RenderedRevision]:
+    """Return the renders of several revisions, loading the uncached ones together."""
+    renders: dict[UUID, RenderedRevision] = {}
+    missing: list[UUID] = []
+    for revision_id in dict.fromkeys(revision_ids):
+        cached = cache.get(revision_id)
+        if cached is not None:
+            renders[revision_id] = cached
+        else:
+            missing.append(revision_id)
+    for revision in (await uow.revisions.get_many(missing)).values():
+        rendered = render_revision(revision.id, revision.content)
+        cache.put(rendered)
+        renders[revision.id] = rendered
+    return renders
 
 
 def find_test_block(content: StepContent, block_id: str) -> TestBlock:

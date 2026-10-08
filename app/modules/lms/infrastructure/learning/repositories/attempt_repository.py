@@ -1,5 +1,6 @@
 """SQLAlchemy repository of test attempts."""
 
+from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
 from uuid import UUID
@@ -195,6 +196,32 @@ class SqlAttemptRepository:
             .distinct()
         )
         return set(rows)
+
+    async def best_scores(
+        self, user_id: UUID, step_ids: Sequence[UUID]
+    ) -> dict[tuple[UUID, str], Decimal]:
+        """Return the best score per ``(step_id, block_id)`` of the user."""
+        if not step_ids:
+            return {}
+        rows = await self.session.execute(
+            select(
+                AttemptRow.step_id,
+                AttemptRow.block_id,
+                func.max(func.coalesce(AttemptRow.override_score, AttemptRow.score)),
+            )
+            .where(
+                AttemptRow.user_id == user_id,
+                AttemptRow.step_id.in_(step_ids),
+                AttemptRow.is_preview.is_(False),
+                AttemptRow.submitted_at.is_not(None),
+            )
+            .group_by(AttemptRow.step_id, AttemptRow.block_id)
+        )
+        return {
+            (step_id, block_id): Decimal(best)
+            for step_id, block_id, best in rows
+            if best is not None
+        }
 
     async def list_submitted_for_course(self, course_id: UUID) -> list[Attempt]:
         """Return all submitted non-preview attempts in the course."""

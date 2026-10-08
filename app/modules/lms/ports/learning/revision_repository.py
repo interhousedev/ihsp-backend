@@ -1,5 +1,6 @@
 """Port: immutable step revisions."""
 
+from collections.abc import Sequence
 from typing import Protocol
 from uuid import UUID
 
@@ -11,4 +12,8 @@ class RevisionRepository(Protocol):
 
     async def get(self, revision_id: UUID) -> RevisionData | None:
         """Return a revision with its parsed content."""
+        ...
+
+    async def get_many(self, revision_ids: Sequence[UUID]) -> dict[UUID, RevisionData]:
+        """Return the revisions that exist, by id, in one query."""
         ...

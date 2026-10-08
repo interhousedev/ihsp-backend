@@ -51,6 +51,31 @@ async def test_preview_renders_the_draft_without_correct_answers(
     assert "Secret question?" not in raw
 
 
+async def test_preview_carries_the_numbers_of_the_lesson_header(
+    services: AuthoringServices, course: CourseFixture
+) -> None:
+    """UF-LMS-09: the learner header works in a preview with nothing passed."""
+    owner, tester = course.team.owner, course.team.tester
+    seeded = await seed_published(services, owner, course.id)
+    await set_blocks(
+        services,
+        owner,
+        seeded.step_b,
+        text_block("Draft text"),
+        quiz_block(single_question("First?"), single_question("Second?")),
+    )
+
+    preview = await services.preview_step.execute(
+        tester, course.id, seeded.step_b.step_id
+    )
+
+    assert (preview.blocks_total, preview.blocks_passed) == (2, 0)
+    assert (preview.points_total, preview.points_earned) == (2.0, 0.0)
+    assert [block["passed"] for block in preview.blocks] == [False, False]
+    assert preview.blocks[1]["points_total"] == 2.0
+    assert preview.blocks[1]["points_earned"] == 0.0
+
+
 async def test_preview_needs_view_drafts(
     services: AuthoringServices, course: CourseFixture
 ) -> None:

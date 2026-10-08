@@ -1,6 +1,8 @@
 """Port: test attempts."""
 
+from collections.abc import Sequence
 from datetime import datetime
+from decimal import Decimal
 from typing import Protocol
 from uuid import UUID
 
@@ -56,6 +58,16 @@ class AttemptRepository(Protocol):
 
     async def passed_block_ids(self, user_id: UUID, step_id: UUID) -> set[str]:
         """Return the test blocks of the step with a passed non-preview attempt."""
+        ...
+
+    async def best_scores(
+        self, user_id: UUID, step_ids: Sequence[UUID]
+    ) -> dict[tuple[UUID, str], Decimal]:
+        """Return the best score per ``(step_id, block_id)`` of the user.
+
+        Counts submitted non-preview attempts; a reviewer's override replaces the
+        graded score of its attempt.
+        """
         ...
 
     async def list_submitted_for_course(self, course_id: UUID) -> list[Attempt]:

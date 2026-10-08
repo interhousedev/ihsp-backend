@@ -3,11 +3,15 @@
 from collections import defaultdict
 from collections.abc import Mapping
 from copy import deepcopy
+from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
 from app.modules.lms.application.learning.attempt_finisher import AttemptFinisher
-from app.modules.lms.application.learning.attempt_presenter import attempt_result
+from app.modules.lms.application.learning.attempt_presenter import (
+    attempt_result,
+    number,
+)
 from app.modules.lms.application.learning.revision_loading import (
     find_test_block,
     load_rendered,
@@ -29,13 +33,14 @@ from app.modules.lms.application.learning.views import (
     StepBlockView,
 )
 from app.modules.lms.domain.learning.cards import select_next
-from app.modules.lms.domain.learning.entities import Attempt
+from app.modules.lms.domain.learning.entities import Attempt, StepState
 from app.modules.lms.domain.learning.errors import (
     CourseNotFoundError,
     NotEnrolledError,
 )
 from app.modules.lms.domain.learning.grading import review_visible
 from app.modules.lms.domain.learning.live import RenderCache, RenderedRevision
+from app.modules.lms.domain.learning.points import earned_points
 from app.modules.lms.ports.learning.daily_counters import DailyCounters
 from app.modules.lms.ports.learning.unit_of_work import LearningUnitOfWork
 from app.shared.actor import Actor
@@ -76,8 +81,8 @@ class GetStepView:
             rendered = await load_rendered(
                 uow, self.cache, context.live_step.revision_id
             )
-            blocks = await self._blocks(uow, actor, step_id, rendered)
             state = await uow.states.get(actor.user_id, step_id)
+            blocks = await self._blocks(uow, actor, step_id, rendered, state)
             await uow.commit()
         return LearningStepView(
             step_id=step_id,
@@ -86,6 +91,14 @@ class GetStepView:
             blocks=blocks,
             completed=state is not None and state.completed_at is not None,
             preview=False,
+            blocks_total=len(blocks),
+            blocks_passed=sum(1 for block in blocks if block.passed),
+            points_total=number(rendered.points_total),
+            points_earned=sum(
+                block.points_earned
+                for block in blocks
+                if isinstance(block, LearningQuizBlockView)
+            ),
         )
 
     async def _check_access(
@@ -103,27 +116,36 @@ class GetStepView:
         actor: Actor,
         step_id: UUID,
         rendered: RenderedRevision,
+        state: StepState | None,
     ) -> list[StepBlockView]:
-        """Fill the cached render with the student's attempts and card counts."""
+        """Fill the cached render with the student's attempts, cards and passes."""
         by_block: dict[str, list[Attempt]] = defaultdict(list)
         for attempt in await uow.attempts.list_for_step(actor.user_id, step_id):
             by_block[attempt.block_id].append(attempt)
-        state = await uow.states.get(actor.user_id, step_id)
+        best_scores = await uow.attempts.best_scores(actor.user_id, [step_id])
+        cards = state.cards if state else {}
         views: list[StepBlockView] = []
         for block in deepcopy(rendered.blocks):
             if block["type"] == "test":
-                views.append(await self._quiz(uow, block, by_block[block["id"]]))
+                total = rendered.test_points.get(block["id"], Decimal(0))
+                earned = earned_points(best_scores.get((step_id, block["id"])), total)
+                views.append(
+                    await self._quiz(uow, block, by_block[block["id"]], (total, earned))
+                )
             elif block["type"] == "flashcards":
-                cards = state.cards if state else {}
                 views.append(await self._cards(actor, block, rendered, cards))
             else:
-                views.append(LearningTextBlockView(**block))
+                views.append(LearningTextBlockView(**block, passed=state is not None))
         return views
 
     async def _quiz(
-        self, uow: LearningUnitOfWork, block: dict[str, Any], attempts: list[Attempt]
+        self,
+        uow: LearningUnitOfWork,
+        block: dict[str, Any],
+        attempts: list[Attempt],
+        points: tuple[Decimal, Decimal],
     ) -> LearningQuizBlockView:
-        """Fill the attempts left, the best result and the open attempt."""
+        """Fill the attempts left, the best result, the open attempt and points."""
         rules = block["rules"]
         limit: int | None = rules["attempts_left"]  # the cached render holds the limit
         left = None if limit is None else max(0, limit - len(attempts))
@@ -134,6 +156,9 @@ class GetStepView:
             rules=LearningQuizRulesView(**{**rules, "attempts_left": left}),
             best=await self._best(uow, attempts, left),
             open_attempt_id=open_attempt.id if open_attempt else None,
+            passed=any(a.passed for a in attempts if a.is_submitted),
+            points_total=number(points[0]),
+            points_earned=number(points[1]),
         )
 
     async def _best(
@@ -170,4 +195,7 @@ class GetStepView:
             type="flashcards",
             cards_count=block["cards_count"],
             due=counts.total,
+            passed=all(
+                card_id in states for card_id in rendered.card_ids.get(block["id"], ())
+            ),
         )

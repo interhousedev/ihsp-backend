@@ -8,10 +8,12 @@ render is cached in process memory by revision id (LMS-14, step 5 of the design)
 from collections import OrderedDict
 from collections.abc import Mapping
 from dataclasses import dataclass
+from decimal import Decimal
 from typing import Any, Final, Literal
 from uuid import UUID
 
 from app.modules.lms.domain.authoring.manifest import parse_manifest as parse_sections
+from app.modules.lms.domain.learning.points import block_max_points, sum_points
 from app.modules.lms.domain.step_content import (
     FlashcardsBlock,
     StepContent,
@@ -117,6 +119,12 @@ class RenderedRevision:
     blocks: tuple[dict[str, Any], ...]
     test_block_ids: tuple[str, ...]
     card_ids: Mapping[str, tuple[str, ...]]
+    test_points: Mapping[str, Decimal]
+
+    @property
+    def points_total(self) -> Decimal:
+        """Return the points of a perfect pass of every test of the step."""
+        return sum_points(self.test_points.values())
 
 
 def render_revision(revision_id: UUID, content: StepContent) -> RenderedRevision:
@@ -133,6 +141,11 @@ def render_revision(revision_id: UUID, content: StepContent) -> RenderedRevision
             block.id: tuple(card.id for card in block.cards)
             for block in content.blocks
             if isinstance(block, FlashcardsBlock)
+        },
+        test_points={
+            block.id: block_max_points(block)
+            for block in content.blocks
+            if isinstance(block, TestBlock)
         },
     )
 

@@ -48,6 +48,10 @@ class LearningOutlineStepView(BaseModel):
     title: str
     completed: bool | None = None
     badge: Literal["new", "changed"] | None = None
+    # Points a perfect pass of the step's tests gives, and what the student has
+    # earned (None when not enrolled).
+    points_total: float = 0.0
+    points_earned: float | None = None
 
 
 class LearningOutlineSectionView(BaseModel):
@@ -66,6 +70,11 @@ class LearningCoursePageView(LearningCourseCardView):
     enrolled: bool
     can_edit: bool
     changed_since_last_visit: list[UUID]
+    # Course totals for the learner sidebar and the promo page; the "earned"
+    # values are None when the viewer is not enrolled.
+    steps_completed: int | None = None
+    points_total: float = 0.0
+    points_earned: float | None = None
 
 
 class LearningMyCoursesView(BaseModel):
@@ -141,6 +150,7 @@ class LearningTextBlockView(BaseModel):
     id: str
     type: Literal["text"]
     markdown: str
+    passed: bool = False
 
 
 class LearningQuizRulesView(BaseModel):
@@ -160,6 +170,9 @@ class LearningQuizBlockView(BaseModel):
     rules: LearningQuizRulesView
     best: LearningAttemptResultView | None
     open_attempt_id: UUID | None
+    passed: bool = False
+    points_total: float = 0.0
+    points_earned: float = 0.0
 
 
 class LearningFlashcardsBlockView(BaseModel):
@@ -169,6 +182,7 @@ class LearningFlashcardsBlockView(BaseModel):
     type: Literal["flashcards"]
     cards_count: int
     due: int
+    passed: bool = False
 
 
 StepBlockView = Annotated[
@@ -186,6 +200,11 @@ class LearningStepView(BaseModel):
     blocks: list[StepBlockView]
     completed: bool
     preview: bool
+    # Block counts and points for the lesson header and the step strip.
+    blocks_total: int = 0
+    blocks_passed: int = 0
+    points_total: float = 0.0
+    points_earned: float = 0.0
 
 
 class LearningStepProgressView(BaseModel):

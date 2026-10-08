@@ -77,7 +77,7 @@ def build_learning(
     counters = RedisDailyCounters(deps.redis)
     completion = StepCompletion(cache)
     finisher = AttemptFinisher(completion)
-    pages = CoursePageBuilder(identity, clock)
+    pages = CoursePageBuilder(identity, clock, cache)
     return LearningServices(
         list_catalog=ListCatalog(uow_factory),
         list_my_courses=ListMyCourses(uow_factory, clock),

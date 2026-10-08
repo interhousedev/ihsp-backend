@@ -85,6 +85,11 @@ class PreviewStepView(BaseModel):
     blocks: list[dict[str, Any]]
     completed: bool
     preview: bool
+    # Same lesson header numbers as `LearningStepView`; nothing is passed in a preview.
+    blocks_total: int = 0
+    blocks_passed: int = 0
+    points_total: float = 0.0
+    points_earned: float = 0.0
 
 
 # - - - Revisions, pending changes, versions - - -
