@@ -232,11 +232,13 @@ class FakeClassworkQueries:
         """Nothing to do."""
         self.items: list[dict[str, Any]] = []
         self.missing: list[LessonRef] = []
+        self.homework_starts: list[date | None] = []
 
     async def homework(
         self, user_id: UUID, start: date | None, end: date | None, done: bool | None
     ) -> list[dict[str, Any]]:
-        """Return items filtered by the done flag."""
+        """Return items filtered by the done flag; remember the lower bound asked."""
+        self.homework_starts.append(start)
         return [i for i in self.items if done is None or bool(i["done_at"]) == done]
 
     async def missing_attendance(

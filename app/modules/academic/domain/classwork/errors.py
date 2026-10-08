@@ -98,6 +98,13 @@ class HomeworkTextError(ValidationFailedError):
     message_key = "homework-text-invalid"
 
 
+class HomeworkCancelledLessonError(ValidationFailedError):
+    """Homework cannot be set for a cancelled lesson: no student would see it."""
+
+    code = "homework/lesson-cancelled"
+    message_key = "homework-lesson-cancelled"
+
+
 class HomeworkNoteTooLongError(ValidationFailedError):
     """A private note is longer than 1000 characters (WEB-20)."""
 

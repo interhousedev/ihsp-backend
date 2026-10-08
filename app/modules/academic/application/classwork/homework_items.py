@@ -5,21 +5,27 @@ from typing import Any
 
 from app.modules.academic.application.classwork.lesson_items import subject_ref
 from app.modules.academic.application.classwork.people import PeopleDirectory
-from app.modules.academic.domain.classwork.homework_rules import is_updated
+from app.modules.academic.domain.classwork.homework_rules import (
+    days_overdue,
+    is_updated,
+)
 from app.modules.academic.domain.classwork.records import HomeworkRecord
+from app.shared.clock import Clock, local_today
 
 
 class HomeworkItemBuilder:
     """Resolves teachers and builds the to-do items."""
 
-    def __init__(self, people: PeopleDirectory) -> None:
-        """Store the people directory."""
+    def __init__(self, people: PeopleDirectory, clock: Clock) -> None:
+        """Store the people directory and the clock that tells what is overdue."""
         self.people = people
+        self.clock = clock
 
     async def build_many(
         self, records: Sequence[HomeworkRecord], locale: str
     ) -> list[dict[str, Any]]:
         """Build one item per record, in order."""
+        today = local_today(self.clock)
         teachers = await self.people.people(
             record.lesson.teacher_id
             for record in records
@@ -42,6 +48,11 @@ class HomeworkItemBuilder:
                         else None
                     ),
                     "given_on": lesson.date.isoformat(),
+                    "days_overdue": days_overdue(
+                        todo.done_at if todo else None,
+                        lesson.homework_due_date,
+                        today,
+                    ),
                     "updated": is_updated(
                         lesson.homework_updated_at, todo.updated_at if todo else None
                     ),

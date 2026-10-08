@@ -63,6 +63,7 @@
   "bot-homework-cancelled": "Bekor qilindi. Vazifa saqlanmadi.",
   "bot-homework-empty": "Bajariladigan vazifa yoʻq.",
   "bot-homework-item": "<b>{subject}</b> · muddat: {due}",
+  "bot-homework-item-overdue": "<b>{subject}</b> · muddati oʻtgan: {due}",
   "bot-homework-preview": "<b>Uyga vazifa</b>\n{text}\n\nSaqlansinmi?",
   "bot-homework-saved": "Uyga vazifa saqlandi:\n{text}",
   "bot-homework-text-only": "Iltimos, uyga vazifani matn koʻrinishida yuboring.",

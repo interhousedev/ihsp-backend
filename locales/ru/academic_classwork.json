@@ -11,6 +11,7 @@
   "attendance-absent-outside-roster": "Некоторых студентов нет в составе этого урока.",
   "attendance-lesson-cancelled": "Для отменённого урока посещаемость не отмечается.",
   "attendance-excuse-not-absent": "Уважительной можно сделать только отметку об отсутствии.",
+  "homework-lesson-cancelled": "Нельзя задать домашнее задание на отменённое занятие.",
   "homework-text-invalid": "Домашнее задание должно быть длиной от 1 до {max} символов.",
   "homework-note-too-long": "Заметка может содержать до {max} символов.",
   "academic-topic-too-long": "Тема может содержать до {max} символов.",

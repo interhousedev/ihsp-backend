@@ -31,7 +31,11 @@ NEW_MARKS_LIMIT = 10
 
 
 class StudentToday:
-    """Now and next lesson, the day timeline, due homework, marks and the semester."""
+    """Now and next lesson, the day timeline, due homework, marks and the semester.
+
+    ``due`` is the homework to do: overdue items first, then those due by the next
+    study day.
+    """
 
     def __init__(
         self,
@@ -88,7 +92,7 @@ class StudentToday:
             "now_or_next": await self._now_or_next(card, state, now, locale),
             "lessons": lessons,
             "next_study_day": None if next_day is None else next_day.isoformat(),
-            "due": await self.homework.execute(actor, "upcoming"),
+            "due": await self.homework.due(actor),
             "new_marks": [mark_item(mark, locale) for mark in marks],
             "semester": semester,
             "synced_at": student.synced_at.isoformat() if student.synced_at else None,

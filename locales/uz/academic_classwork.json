@@ -11,6 +11,7 @@
   "attendance-absent-outside-roster": "Ba'zi talabalar bu dars tarkibida yo'q.",
   "attendance-lesson-cancelled": "Bekor qilingan dars uchun davomat belgilanmaydi.",
   "attendance-excuse-not-absent": "Faqat dars qoldirgan talabani sababli deb belgilash mumkin.",
+  "homework-lesson-cancelled": "Bekor qilingan darsga uyga vazifa qo'shib bo'lmaydi.",
   "homework-text-invalid": "Uy vazifasi 1 dan {max} belgigacha bo'lishi kerak.",
   "homework-note-too-long": "Eslatma {max} belgigacha bo'lishi mumkin.",
   "academic-topic-too-long": "Mavzu {max} belgigacha bo'lishi mumkin.",

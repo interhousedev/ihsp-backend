@@ -156,7 +156,7 @@ def build_classwork(
 
     people = PeopleDirectory(identity)
     lesson_items = LessonItemBuilder(people)
-    homework_items = HomeworkItemBuilder(people)
+    homework_items = HomeworkItemBuilder(people, clock)
     roster_loader = RosterLoader(people)
     sheets = AttendanceSheetBuilder(people, edit_days)
     study_days = StudyDays(schedule)

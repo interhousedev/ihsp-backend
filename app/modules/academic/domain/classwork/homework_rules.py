@@ -49,9 +49,9 @@ def bucket(
 ) -> Bucket:
     """Sort an item into the to-do lists (ACA-10, WEB-18).
 
-    Done items go to ``done``. Open items due from today up to the next study
-    day are ``upcoming``; later or undated ones are ``later``; items whose due
-    date has passed are ``overdue`` and are not shown.
+    Done items go to ``done``. Open items whose due date has passed are
+    ``overdue``; those due from today up to the next study day are ``upcoming``;
+    later or undated ones are ``later``. Every item is in exactly one list.
     """
     if done_at is not None:
         return "done"
@@ -62,6 +62,15 @@ def bucket(
     if due_date <= (next_study_day or today):
         return "upcoming"
     return "later"
+
+
+def days_overdue(
+    done_at: dt.datetime | None, due_date: dt.date | None, today: dt.date
+) -> int:
+    """Whole days an open item is past its due date; 0 if done, undated or not late."""
+    if done_at is not None or due_date is None or due_date >= today:
+        return 0
+    return (today - due_date).days
 
 
 def is_updated(

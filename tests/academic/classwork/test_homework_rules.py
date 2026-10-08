@@ -12,6 +12,7 @@ from app.modules.academic.domain.classwork.homework_rules import (
     clean_homework_text,
     clean_note,
     clean_topic,
+    days_overdue,
     is_updated,
 )
 
@@ -41,6 +42,24 @@ def test_friday_with_a_saturday_study_day_sorts_items_into_lists(
 ) -> None:
     """WEB-18: Upcoming is due next study day, Later is the rest, Done is ticked."""
     assert bucket(done_at, due, FRIDAY, SATURDAY) == expected
+
+
+def test_every_open_item_is_in_exactly_one_list_even_when_long_overdue() -> None:
+    """WEB-18: past due items are never dropped."""
+    long_ago = FRIDAY - dt.timedelta(days=80)
+
+    assert bucket(None, long_ago, FRIDAY, SATURDAY) == "overdue"
+    assert bucket(None, THURSDAY, FRIDAY, None) == "overdue"
+
+
+def test_days_overdue_counts_whole_days_of_open_dated_items_only() -> None:
+    """WEB-18: "3 days overdue"; done, undated and not yet late items are 0."""
+    assert days_overdue(None, THURSDAY, FRIDAY) == 1
+    assert days_overdue(None, FRIDAY - dt.timedelta(days=9), FRIDAY) == 9
+    assert days_overdue(None, FRIDAY, FRIDAY) == 0
+    assert days_overdue(None, SATURDAY, FRIDAY) == 0
+    assert days_overdue(None, None, FRIDAY) == 0
+    assert days_overdue(NOON, THURSDAY, FRIDAY) == 0
 
 
 def test_without_a_next_study_day_only_today_is_upcoming() -> None:

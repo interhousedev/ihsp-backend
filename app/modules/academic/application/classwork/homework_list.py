@@ -1,4 +1,4 @@
-"""Use case: the student's homework lists (WEB-18, UF-WEB-13)."""
+"""Use case: the student's homework lists (WEB-3, WEB-18, UF-WEB-13)."""
 
 import datetime as dt
 from collections.abc import Callable
@@ -24,12 +24,13 @@ from app.modules.academic.domain.classwork.records import HomeworkRecord
 from app.shared.actor import Actor
 from app.shared.clock import Clock, local_today
 
-Status = Literal["upcoming", "later", "done"]
+Status = Literal["overdue", "upcoming", "later", "done"]
+DUE: tuple[Status, ...] = ("overdue", "upcoming")
 HISTORY_DAYS = 90
 
 
 class HomeworkList:
-    """Sort the student's homework into Upcoming, Later and Done."""
+    """Sort the student's homework into Overdue, Upcoming, Later and Done."""
 
     def __init__(
         self,
@@ -46,8 +47,8 @@ class HomeworkList:
         self.items = items
         self.study_days = study_days
 
-    async def records(self, actor: Actor, status: Status) -> list[HomeworkRecord]:
-        """Return the matching records in display order."""
+    async def records(self, actor: Actor, *statuses: Status) -> list[HomeworkRecord]:
+        """Return the records of the chosen lists, the lists in the order given."""
         now = self.clock.now()
         today = local_today(self.clock)
         async with self.uow_factory() as uow:
@@ -60,20 +61,26 @@ class HomeworkList:
                 uow.lesson_reader, student.user_id, keys, today
             )
         cutoff = now - dt.timedelta(days=DONE_RETENTION_DAYS)
-        picked = []
+        picked: dict[Status, list[HomeworkRecord]] = {s: [] for s in statuses}
         for record in found:
             done_at = record.todo.done_at if record.todo else None
             where = bucket(done_at, record.lesson.homework_due_date, today, next_day)
-            if where != status:
+            if where not in picked:
                 continue
-            if status == "done" and done_at is not None and done_at < cutoff:
+            if where == "done" and done_at is not None and done_at < cutoff:
                 continue
-            picked.append(record)
-        return _ordered(picked, status)
+            picked[where].append(record)
+        return [r for s in statuses for r in _ordered(picked[s], s)]
 
     async def execute(self, actor: Actor, status: Status) -> list[dict[str, Any]]:
         """Return ``HomeworkItem`` JSON for the chosen list."""
         records = await self.records(actor, status)
+        locale = await self.people.locale(actor.user_id)
+        return await self.items.build_many(records, locale)
+
+    async def due(self, actor: Actor) -> list[dict[str, Any]]:
+        """Return the open items that need doing: overdue first, then upcoming."""
+        records = await self.records(actor, *DUE)
         locale = await self.people.locale(actor.user_id)
         return await self.items.build_many(records, locale)
 

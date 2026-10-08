@@ -75,7 +75,7 @@ class ResourceItemResponse(BaseModel):
 
 
 class HomeworkItemResponse(BaseModel):
-    """``HomeworkItem``."""
+    """``HomeworkItem``; ``days_overdue`` is 0 unless the open item is past due."""
 
     lesson_id: UUID
     subject: SubjectRefResponse
@@ -83,6 +83,7 @@ class HomeworkItemResponse(BaseModel):
     text: str
     due_date: dt.date | None
     given_on: dt.date
+    days_overdue: int
     updated: bool
     done_at: dt.datetime | None
     note: str | None

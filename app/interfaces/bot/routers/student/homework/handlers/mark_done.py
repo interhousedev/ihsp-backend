@@ -7,6 +7,7 @@ from app.interfaces.bot.screens.homework import build_homework
 from app.interfaces.bot.services import BotServices
 from app.interfaces.bot.utilities.reply_edit import show
 from app.shared.actor import Actor
+from app.shared.clock import local_today
 from app.shared.contracts.callbacks import HomeworkDoneCb
 from app.shared.contracts.identity import UserRef
 from app.shared.i18n.core import I18nContext
@@ -28,4 +29,5 @@ async def mark_done(
         b64_to_uuid(callback_data.lesson), actor, callback_data.done
     )
     lessons = await load_upcoming(user, services)
-    await show(callback, build_homework(lessons, i18n, services.urls.homework))
+    today = local_today(services.clock)
+    await show(callback, build_homework(lessons, i18n, services.urls.homework, today))

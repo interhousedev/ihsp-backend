@@ -63,6 +63,7 @@
   "bot-homework-cancelled": "Отменено. Домашнее задание не сохранено.",
   "bot-homework-empty": "Нет домашних заданий.",
   "bot-homework-item": "<b>{subject}</b> · до {due}",
+  "bot-homework-item-overdue": "<b>{subject}</b> · просрочено, срок был {due}",
   "bot-homework-preview": "<b>Домашнее задание</b>\n{text}\n\nСохранить?",
   "bot-homework-saved": "Домашнее задание сохранено:\n{text}",
   "bot-homework-text-only": "Пожалуйста, отправьте домашнее задание текстом.",

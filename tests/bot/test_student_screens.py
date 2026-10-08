@@ -142,6 +142,37 @@ async def test_homework_lists_items_with_a_done_button(harness: Harness) -> None
     )
 
 
+async def test_homework_past_due_stays_in_the_list_and_is_marked_overdue(
+    harness: Harness,
+) -> None:
+    """WEB-18, UF-BOT-03: past-due homework is not dropped; it says it is overdue."""
+    late = make_lesson(
+        subject_name="Chemistry",
+        date=TODAY - timedelta(days=3),
+        homework_text="Learn the table",
+        homework_due_date=TODAY - timedelta(days=1),
+    )
+    undated = make_lesson(
+        subject_name="Physics",
+        date=TODAY - timedelta(days=2),
+        homework_text="Read page 5",
+        homework_due_date=None,
+    )
+    harness.world.classwork_queries.items = [
+        {"lesson": late, "done_at": None, "note": None},
+        {"lesson": undated, "done_at": None, "note": None},
+    ]
+
+    await harness.send("/homework")
+
+    text = harness.last_text()
+    assert "bot-homework-item-overdue[due=05.10,subject=Chemistry]" in text
+    assert "bot-homework-item[due=04.10,subject=Physics]" in text
+    [asked] = harness.world.classwork_queries.homework_starts
+    assert asked is not None
+    assert asked < TODAY - timedelta(days=30)
+
+
 async def test_done_button_ticks_the_homework_and_refreshes_the_list(
     harness: Harness, world: World
 ) -> None:

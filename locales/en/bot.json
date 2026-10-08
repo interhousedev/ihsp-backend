@@ -63,6 +63,7 @@
   "bot-homework-cancelled": "Cancelled. The homework was not saved.",
   "bot-homework-empty": "No homework to do.",
   "bot-homework-item": "<b>{subject}</b> · due {due}",
+  "bot-homework-item-overdue": "<b>{subject}</b> · overdue since {due}",
   "bot-homework-preview": "<b>Homework</b>\n{text}\n\nSave it?",
   "bot-homework-saved": "Homework saved:\n{text}",
   "bot-homework-text-only": "Please send the homework as text.",

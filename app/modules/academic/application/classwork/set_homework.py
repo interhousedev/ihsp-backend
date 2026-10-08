@@ -9,6 +9,7 @@ from app.modules.academic.application.classwork.ports.unit_of_work import (
     LessonUnitOfWork,
 )
 from app.modules.academic.domain.classwork.attendance_rules import ensure_lesson_staff
+from app.modules.academic.domain.classwork.errors import HomeworkCancelledLessonError
 from app.modules.academic.domain.classwork.homework_rules import clean_homework_text
 from app.modules.academic.domain.classwork.lesson import Lesson
 from app.shared.actor import Actor
@@ -37,6 +38,8 @@ class SetHomework:
         async with self.uow_factory() as uow:
             lesson = await require_lesson(uow, lesson_id)
             ensure_lesson_staff(lesson, actor)
+            if not lesson.scheduled:
+                raise HomeworkCancelledLessonError(params={"lesson_id": str(lesson_id)})
             due = due_date
             if due is None:
                 due = await uow.lessons.next_lesson_date(
