@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ t("links-interstitial-title") }}{% endblock %}
+{% block body %}
+<h1>{{ t("links-interstitial-title") }}</h1>
+<p>{{ t("links-interstitial-body") }}</p>
+<p><code>{{ destination }}</code></p>
+<p><a href="{{ destination }}" rel="noopener noreferrer nofollow">{{ t("links-interstitial-continue") }}</a></p>
+<p><a href="{{ report_url }}">{{ t("links-report-link") }}</a></p>
+{% endblock %}
