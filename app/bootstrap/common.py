@@ -1,0 +1,377 @@
+"""The composition root: builds the container for one process (FINAL_PLAN § 3.12)."""
+
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+from typing import Any, Literal, cast
+
+from app.bootstrap.adapters.admin_tools import AdminToolBackendAdapter
+from app.bootstrap.adapters.emis_source import make_emis_source
+from app.bootstrap.adapters.lazy_proxy import LazyProxy
+from app.bootstrap.adapters.mail_suspension import MailSuspensionAdapter
+from app.bootstrap.adapters.mcp_ports import ConnectorCoursesAdapter, McpAuditAdapter
+from app.bootstrap.adapters.signature_sniffer import SignatureSniffer
+from app.bootstrap.adapters.telegram import make_telegram_sender
+from app.bootstrap.adapters.term_resolver import TermResolverAdapter
+from app.bootstrap.adapters.usage_resolver import UsageResolverAdapter
+from app.bootstrap.container import Container, build_infrastructure
+from app.modules.academic.wiring import (
+    AcademicModule,
+    build_classwork,
+    build_marks,
+    build_schedule,
+)
+from app.modules.admin.wiring import build as build_admin
+from app.modules.ai.infrastructure.gateway_factory import make_llm_gateway
+from app.modules.ai.wiring import build as build_ai
+from app.modules.files.ports.content_sniffer import ContentSniffer
+from app.modules.files.wiring import build as build_files
+from app.modules.flashcards.ports.share_resolver import ShareResolver
+from app.modules.flashcards.wiring import build as build_flashcards
+from app.modules.identity.application.register_ports import CredentialStore
+from app.modules.identity.infrastructure.audit_writer import write_audit_events
+from app.modules.identity.infrastructure.hydra.factory import build_hydra_admin
+from app.modules.identity.ports.email_sender import EmailSender
+from app.modules.identity.ports.hydra_gateway import HydraGateway
+from app.modules.identity.wiring import build as build_identity
+from app.modules.links.wiring import build as build_links
+from app.modules.lms.wiring import build as build_lms
+from app.modules.notify.infrastructure.outbox_writer import write_notifications
+from app.modules.notify.wiring import build as build_notify
+from app.settings import Settings
+from app.shared.clock import Clock
+from app.shared.contracts.ai import AiQueries, LlmGateway
+from app.shared.contracts.notify import TelegramSender
+from app.shared.rate_limit import RateLimiter
+from app.shared.tasks import TaskKicker
+from app.shared.wiring import ModuleDeps
+
+import structlog
+from redis.asyncio import Redis
+
+log = structlog.get_logger(__name__)
+
+ProcessName = Literal[
+    "all", "identity", "api", "bot", "mail", "worker", "scheduler", "cli"
+]
+
+
+@dataclass(frozen=True, slots=True)
+class ProcessPlan:
+    """Which parts of the system a process builds."""
+
+    emis: bool  # EMIS gateway, registration, Vault (identity-side secrets)
+    in_process_emis_source: bool  # marks read EMIS through the local gateway
+    files: bool
+    mail: bool
+    full: bool  # classwork, marks, flash cards, links, AI, notify, admin
+    lms: bool
+
+
+PLANS: dict[str, ProcessPlan] = {
+    "all": ProcessPlan(True, True, True, True, True, True),
+    "cli": ProcessPlan(True, True, True, True, True, True),
+    "identity": ProcessPlan(True, True, False, False, False, False),
+    "api": ProcessPlan(False, False, True, True, True, True),
+    "bot": ProcessPlan(False, False, True, True, True, False),
+    "mail": ProcessPlan(False, False, True, True, False, False),
+    # The worker destroys the Vault secret of deleted accounts.
+    "worker": ProcessPlan(True, False, True, True, True, True),
+    "scheduler": ProcessPlan(False, False, False, False, False, False),
+}
+
+
+@dataclass(frozen=True, slots=True)
+class BuildOverrides:
+    """Replacements for infrastructure that tests and local tools pass in."""
+
+    clock: Clock | None = None
+    redis: Redis | None = None
+    hydra: HydraGateway | None = None
+    credentials: CredentialStore | None = None
+    email_sender: EmailSender | None = None
+    telegram: TelegramSender | None = None
+    llm: LlmGateway | None = None
+
+
+def make_deps(container: Container) -> ModuleDeps:
+    """The infrastructure every module's build() receives."""
+    kicker = container.kicker
+
+    async def kick_dispatch() -> None:
+        await kicker.kick("notify.dispatch_due")
+
+    return ModuleDeps(
+        settings=container.settings,
+        clock=container.clock,
+        redis=container.redis,
+        sessionmaker=container.sessionmaker,
+        kicker=kicker,
+        rate_limiter=container.rate_limiter,
+        i18n=container.i18n,
+        outbox_writer=write_notifications,
+        audit_writer=write_audit_events,
+        outbox_committed_hook=kick_dispatch,
+    )
+
+
+class _Assembler:
+    """Builds the modules of one container in dependency order."""
+
+    def __init__(
+        self, container: Container, plan: ProcessPlan, overrides: BuildOverrides
+    ) -> None:
+        self.container = container
+        self.plan = plan
+        self.overrides = overrides
+        # Cycles (links ↔ flash cards, links ↔ AI, files ↔ links/AI) go through proxies.
+        self.usage_links: LazyProxy[Any] = LazyProxy("links (files usage)")
+        self.usage_ai: LazyProxy[Any] = LazyProxy("ai (files usage)")
+        self.ai_proxy: LazyProxy[AiQueries] = LazyProxy("ai (links)")
+        self.deps = make_deps(container)
+
+    def add_closer(self, closer: Callable[[], Awaitable[None]]) -> None:
+        """Register something to close with the container."""
+        self.container.closers.append(closer)
+
+    def build(self) -> None:
+        """Run every step the process needs."""
+        self.build_telegram()
+        self.build_identity_and_schedule()
+        if self.plan.files:
+            self.build_files()
+        if self.plan.full:
+            self.build_core()
+        if self.plan.mail:
+            self.build_mail()
+        if self.plan.full:
+            self.build_notify_and_admin()
+            self.build_ai()
+        if self.plan.lms:
+            self.build_lms()
+        if self.plan.full:
+            self.build_mcp_ports()
+
+    # - - - Steps - - -
+
+    def build_telegram(self) -> None:
+        """TelegramSender: real or fake by TELEGRAM__MODE."""
+        if self.overrides.telegram is not None:
+            self.container.telegram = self.overrides.telegram
+            return
+        sender, closer = make_telegram_sender(
+            self.container.settings, self.container.redis
+        )
+        self.container.telegram = sender
+        if closer is not None:
+            self.add_closer(closer)
+
+    def build_identity_and_schedule(self) -> None:
+        """Identity auth, the academic schedule, then EMIS (needs the enrollment)."""
+        c = self.container
+        hydra = self.overrides.hydra
+        if hydra is None:
+            admin = build_hydra_admin(c.settings)
+            self.add_closer(admin.aclose)
+            hydra = admin
+        identity = build_identity(
+            self.deps,
+            hydra=hydra,
+            telegram_sender=c.telegram,
+            email_sender=self.overrides.email_sender,
+        )
+        c.identity = identity
+        schedule = build_schedule(
+            self.deps,
+            identity=identity.directory,
+            identity_commands=identity.commands,
+        )
+        c.academic = AcademicModule(schedule=schedule)
+        if self.plan.emis:
+            emis = identity.attach_emis(
+                self.deps,
+                academic_enrollment=schedule.enrollment,
+                credentials=self.overrides.credentials,
+            )
+            self.add_closer(emis.close)
+
+    def build_files(self) -> None:
+        """Files; where files are used comes from links and AI (late bound)."""
+        c = self.container
+        schedule = c.academic.schedule
+        usage = (
+            UsageResolverAdapter(self.usage_links.view, self.usage_ai.view)
+            if self.plan.full
+            else None
+        )
+        files = build_files(
+            self.deps,
+            terms=TermResolverAdapter(schedule.current_term, schedule.list_terms),
+            usage=usage,
+            sniffer=self.make_sniffer(),
+        )
+        c.files = files
+        self.add_closer(files.close)
+
+    def make_sniffer(self) -> ContentSniffer | None:
+        """libmagic, or in development a signature look-up when it is missing."""
+        try:
+            from app.modules.files.infrastructure.sniffing.magic_sniffer import (
+                MagicSniffer,
+            )
+
+            return MagicSniffer()
+        except ImportError:
+            if self.container.settings.env == "prod":
+                raise
+            log.warning("libmagic_missing", fallback="SignatureSniffer")
+            return SignatureSniffer()
+
+    def build_core(self) -> None:
+        """Flash cards, links, classwork and marks (links ↔ flash cards ↔ AI cycles)."""
+        c = self.container
+        schedule = c.academic.schedule
+        identity = c.identity
+        flashcards_links: LazyProxy[ShareResolver] = LazyProxy("links (flash cards)")
+        flashcards = build_flashcards(self.deps, links=flashcards_links.view)
+        links = build_links(
+            self.deps,
+            files=c.files.public,
+            schedule=schedule.queries,
+            identity=identity.directory,
+            ai=self.ai_proxy.view,
+            flashcards=flashcards.public,
+        )
+        flashcards_links.bind(links.public)
+        self.usage_links.bind(links.public)
+        c.flashcards = flashcards
+        c.links = links
+        classwork = build_classwork(
+            self.deps,
+            identity=identity.directory,
+            schedule=schedule.queries,
+            links=links.public,
+        )
+        source, closer = make_emis_source(
+            c.settings,
+            gateway=identity.emis_services.gateway if identity.emis_services else None,
+            in_process=self.plan.in_process_emis_source,
+        )
+        if closer is not None:
+            self.add_closer(closer)
+        marks = build_marks(
+            self.deps,
+            emis=source,
+            identity=identity.directory,
+            schedule=schedule.queries,
+            identity_commands=identity.commands,
+            enrollment=schedule.enrollment,
+            links=links.public,
+        )
+        c.academic = AcademicModule(schedule=schedule, classwork=classwork, marks=marks)
+
+    def build_mail(self) -> None:
+        """Mail; sending suspension is read from the identity user record."""
+        try:
+            from app.modules.mail.wiring import build as build_mail
+        except ImportError:
+            log.warning("module_not_available", module="mail")
+            return
+        c = self.container
+        suspension = MailSuspensionAdapter(c.identity.auth.uow_factory, c.clock)
+        c.mail = build_mail(
+            self.deps,
+            identity=c.identity.directory,
+            files=c.files.public,
+            suspension=suspension,
+        )
+
+    def build_notify_and_admin(self) -> None:
+        """Notifications (bot renderers registered) and broadcasts."""
+        c = self.container
+        schedule = c.academic.schedule.queries
+        c.notify = build_notify(
+            self.deps,
+            identity=c.identity.directory,
+            schedule=schedule,
+            links=c.links.public,
+            mail=c.mail.public if c.mail is not None else cast(Any, None),
+            files=c.files.public,
+            telegram=c.telegram,
+        )
+        self.register_bot_renderers()
+        c.admin = build_admin(
+            self.deps, identity=c.identity.directory, schedule=schedule
+        )
+
+    def register_bot_renderers(self) -> None:
+        """The bot module formats lesson prompts, mail and security notices."""
+        try:
+            from app.interfaces.bot.renderers import register_bot_renderers
+        except ImportError:
+            log.warning("module_not_available", module="bot renderers")
+            return
+        register_bot_renderers(self.container.notify.renderers, self.container)
+
+    def build_ai(self) -> None:
+        """The assistants; their Administration tools go through one adapter."""
+        c = self.container
+        tools = AdminToolBackendAdapter(c)
+        c.admin_tools = tools
+        ai = build_ai(
+            self.deps,
+            llm=self.overrides.llm or make_llm_gateway(c.settings),
+            identity=c.identity.directory,
+            schedule=c.academic.schedule.queries,
+            classwork=c.academic.classwork.queries,
+            marks=c.academic.marks.queries,
+            files=c.files.public,
+            flashcards=c.flashcards.public,
+            admin_tools=tools,
+            links=c.links.public,
+        )
+        ai.bindings.share_lookup = c.links.public
+        self.ai_proxy.bind(ai.public)
+        self.usage_ai.bind(ai.public)
+        c.ai = ai
+
+    def build_lms(self) -> None:
+        """LMS authoring and learning."""
+        c = self.container
+        c.lms = build_lms(
+            self.deps, identity=c.identity.directory, files=c.files.public
+        )
+
+    def build_mcp_ports(self) -> None:
+        """Ports the MCP servers need beyond the contracts."""
+        c = self.container
+        c.mcp_audit = McpAuditAdapter(c.sessionmaker)
+        c.mcp_connector_courses = ConnectorCoursesAdapter(c.identity.auth.uow_factory)
+
+
+async def build_container(
+    settings: Settings,
+    *,
+    process: str,
+    kicker: TaskKicker | None = None,
+    overrides: BuildOverrides | None = None,
+) -> Container:
+    """Build the container for one process; modules the process does not need stay None.
+
+    Without ``kicker`` tasks go to the taskiq broker, and the caller must have run
+    ``await broker.startup()`` (the process bootstraps do).
+    """
+    plan = PLANS[process]
+    if kicker is None:
+        from app.interfaces.jobs.broker import TaskiqKicker, broker
+
+        kicker = TaskiqKicker(broker)
+    given = overrides or BuildOverrides()
+    container = build_infrastructure(settings, kicker)
+    if given.clock is not None:
+        container.clock = given.clock
+    if given.redis is not None:
+        container.redis = given.redis
+        container.rate_limiter = RateLimiter(given.redis)
+    _Assembler(container, plan, given).build()
+    log.info("container_built", process=process)
+    return container
