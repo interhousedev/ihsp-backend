@@ -1,0 +1,7 @@
+{
+  "fc-card-not-found": "Card not found.",
+  "fc-invalid-cards": "Each side of a card needs 1 to {max_chars} characters, and a set holds at most {max_cards} cards.",
+  "fc-invalid-set": "The field \"{field}\" must be between {min} and {max}.",
+  "fc-set-not-found": "Flash card set not found.",
+  "fc-share-not-found": "This link does not lead to a flash card set."
+}
