@@ -1,0 +1,13 @@
+{
+  "mail-not-found": "Email not found.",
+  "mail-purged": "The full email was deleted after 30 days.",
+  "mail-mailbox-unavailable": "You do not have an active mailbox.",
+  "mail-suspended": "Sending from your mailbox is suspended. You can still receive email.",
+  "mail-daily-limit": "Limit of {limit} emails per day reached. Try again tomorrow.",
+  "mail-global-limit": "The system sending limit for today is reached. Try again tomorrow.",
+  "mail-invalid-recipient": "\"{address}\" is not a valid email address.",
+  "mail-no-recipients": "Add at least one recipient.",
+  "mail-too-many-recipients": "An email can have at most {limit} recipients.",
+  "mail-too-large": "The email is too large to send. The limit is 25 MB.",
+  "mail-not-inbound": "Only received emails can be marked as spam."
+}
