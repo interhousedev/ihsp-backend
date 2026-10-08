@@ -1,0 +1,17 @@
+{
+  "id": "gen-err",
+  "choices": [
+    {
+      "finish_reason": "error",
+      "error": {
+        "code": 502,
+        "message": "upstream failed"
+      },
+      "message": {
+        "role": "assistant",
+        "content": ""
+      }
+    }
+  ],
+  "usage": {}
+}
