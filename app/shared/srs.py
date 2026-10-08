@@ -10,6 +10,7 @@ GRADUATING_INTERVAL_DAYS = 1.0
 EASY_INTERVAL_DAYS = 4.0
 START_EASE = 2.5
 MIN_EASE = 1.3
+MAX_INTERVAL_DAYS = 36500.0
 
 
 class CardState(StrEnum):
@@ -113,7 +114,7 @@ def _review(card: SrsState, rating: Rating, now: datetime) -> SrsState:
     else:
         ease = card.ease + 0.15
         days = card.interval_days * card.ease * 1.3
-    days = max(1.0, days)
+    days = min(MAX_INTERVAL_DAYS, max(1.0, days))
     return replace(
         card,
         ease=ease,
