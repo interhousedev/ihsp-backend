@@ -1,0 +1,18 @@
+{
+  "lms-learn-course-not-found": "Course not found.",
+  "lms-learn-step-not-found": "This step is not part of the published course.",
+  "lms-learn-block-not-found": "This block does not exist in the step.",
+  "lms-learn-card-not-found": "This flash card no longer exists.",
+  "lms-learn-attempt-not-found": "Attempt not found.",
+  "lms-learn-invite-not-valid": "Invite not valid.",
+  "lms-learn-not-enrolled": "Enroll in the course to open this step.",
+  "lms-learn-permission-denied": "You do not have the course permission \"{permission}\".",
+  "lms-learn-no-attempts-left": "No attempts left for this test.",
+  "lms-learn-attempt-cooldown": "The next attempt is available at {available_at}.",
+  "lms-learn-attempt-closed": "This attempt is already submitted or its time is over.",
+  "lms-learn-attempt-not-submitted": "This attempt has no result yet.",
+  "lms-learn-attempt-start-conflict": "The attempt could not be started. Try again.",
+  "lms-learn-answer-invalid": "The answer to question {question_id} is not valid.",
+  "lms-learn-score-invalid": "The score must be between 0 and {max_score}.",
+  "lms-learn-attempt-preview": "Preview attempts cannot be reviewed."
+}

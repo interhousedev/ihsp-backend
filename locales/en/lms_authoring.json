@@ -1,0 +1,23 @@
+{
+  "lms-course-not-found": "Course not found.",
+  "lms-step-not-found": "Step not found.",
+  "lms-revision-not-found": "This saved state of the step was not found.",
+  "lms-version-not-found": "Version not found.",
+  "lms-staff-not-found": "This person is not on the course staff.",
+  "lms-user-not-found": "No active user with the login {login}.",
+  "lms-permission-denied": "You do not have the \"{permission}\" permission in this course.",
+  "lms-draft-conflict": "Someone else changed this draft while you were editing. Review their version before saving.",
+  "lms-draft-changed": "The draft changed after you reviewed it. Review the pending changes again.",
+  "lms-slug-taken": "A course with the address \"{slug}\" already exists.",
+  "lms-slug-invalid": "The course address may contain only lowercase Latin letters, digits and hyphens (3 to 60 characters).",
+  "lms-title-invalid": "The title must have 1 to {max_length} characters.",
+  "lms-staff-exists": "This person is already on the course staff.",
+  "lms-staff-invalid": "The role or the permissions are not valid.",
+  "lms-last-manager": "The course must keep at least one person who can manage staff.",
+  "lms-outline-invalid": "This change does not fit the current outline of the course.",
+  "lms-content-invalid": "The step content is not valid.",
+  "lms-file-missing": "The step refers to a file that does not exist.",
+  "lms-nothing-to-publish": "There are no changes to publish.",
+  "lms-no-live-version": "There is no published version to go back to.",
+  "lms-invite-not-applicable": "Only invite-only courses have an invite code."
+}
