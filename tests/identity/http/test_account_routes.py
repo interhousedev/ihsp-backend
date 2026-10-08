@@ -64,6 +64,19 @@ async def test_get_me_returns_the_user_me_shape(api: Api) -> None:
     ]
 
 
+async def test_theme_defaults_to_light_until_the_user_chooses(api: Api) -> None:
+    """WEB-17: a new account paints light; the saved choice wins on every platform."""
+    user = await api.world.add_user(preferences={"locale": "uz"})
+    api.login_as(user)
+
+    fresh = await api.client.get(ME)
+    await api.client.patch(f"{ME}/preferences", json={"theme": "system"})
+    chosen = await api.client.get(ME)
+
+    assert fresh.json()["preferences"]["theme"] == "light"
+    assert chosen.json()["preferences"]["theme"] == "system"
+
+
 async def test_patch_preferences_merges_and_returns_the_document(api: Api) -> None:
     """WEB-17: partial UserPreferences in, the full document out."""
     user = await api.world.add_user()

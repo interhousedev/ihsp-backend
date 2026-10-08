@@ -27,7 +27,7 @@ class UserPreferences(BaseModel):
     """User settings (README → Models → User → preferences)."""
 
     locale: Literal["uz", "ru", "en"] = "ru"
-    theme: Literal["system", "light", "dark"] = "system"
+    theme: Literal["system", "light", "dark"] = "light"
     marks_enabled: bool = True
     marks_types: list[Literal["lesson", "midterm", "final"]] = [
         "lesson",

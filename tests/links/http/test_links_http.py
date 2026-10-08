@@ -258,6 +258,47 @@ async def test_lesson_resources_endpoints(world: LinksWorld, api: Api) -> None:
     assert deleted.status_code == 204
 
 
+async def test_admin_manages_resources_of_any_lesson(world: LinksWorld, api: Api) -> None:
+    """ACA-9, STF-6: Administration adds, hides and deletes resources of another teacher's lesson."""
+    teacher = world.person("Galina", Role.TEACHER)
+    student = world.person("Aleksey")
+    admin = world.person("Root", Role.ADMIN)
+    lesson = world.schedule.add_lesson(
+        teacher_id=teacher.user_id, students=[student.user_id]
+    )
+    path = f"/v1/lessons/{lesson.id}/resources"
+    as_student, as_admin = await api(student), await api(admin)
+
+    attachment = await as_student.post(
+        path,
+        json={"role": "attachment", "kind": "url", "target_url": "https://example.org/d"},
+    )
+    material = await as_admin.post(
+        path,
+        json={"role": "material", "kind": "url", "target_url": "https://example.org/m"},
+    )
+    listing = await as_admin.get(path)
+    hidden = await as_admin.post(
+        f"{path}/{attachment.json()[0]['link_id']}/hide", json={"hidden": True}
+    )
+    deleted = await as_admin.delete(f"{path}/{attachment.json()[0]['link_id']}")
+    also = await as_admin.post(
+        path,
+        json={
+            "role": "material",
+            "kind": "url",
+            "target_url": "https://example.org/n",
+            "also_lesson_ids": [str(lesson.id)],
+        },
+    )
+
+    assert material.status_code == 200
+    assert [r["role"] for r in listing.json()] == ["material", "attachment"]
+    assert hidden.status_code == 200 and hidden.json()["hidden"] is True
+    assert deleted.status_code == 204
+    assert also.status_code == 200
+
+
 async def test_also_lesson_ids_creates_a_resource_per_lesson(
     world: LinksWorld, api: Api
 ) -> None:
