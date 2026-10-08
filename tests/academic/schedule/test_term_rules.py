@@ -1,0 +1,133 @@
+"""Term validation, bell JSON and picking the current term (ADM-8, ADM-18, ACA-4)."""
+
+import datetime as dt
+
+from app.modules.academic.domain.schedule.errors import (
+    TermBellsInvalidError,
+    TermDatesInvalidError,
+    TermMovedDayInvalidError,
+    TermNonStudyDayInvalidError,
+)
+from app.modules.academic.domain.schedule.term import (
+    Bell,
+    MovedDay,
+    bells_from_json,
+    bells_to_json,
+    pick_current_term,
+    validate_term,
+)
+from tests.academic.schedule.builders import make_term
+from tests.academic.schedule.env import default_bells
+
+import pytest
+
+
+def test_a_valid_term_passes() -> None:
+    """ADM-8: the default term is valid."""
+    validate_term(make_term())
+
+
+def test_a_term_must_start_before_it_ends() -> None:
+    """ACA-4: starts_on < ends_on."""
+    term = make_term(starts_on=dt.date(2026, 12, 1), ends_on=dt.date(2026, 12, 1))
+
+    with pytest.raises(TermDatesInvalidError):
+        validate_term(term)
+
+
+def test_a_period_may_appear_once_per_weekday() -> None:
+    """ADM-8: bells are unique per period and weekday."""
+    twice = [
+        Bell(period=1, start=dt.time(8, 30), end=dt.time(9, 15), weekdays=[1, 2]),
+        Bell(period=1, start=dt.time(8, 0), end=dt.time(8, 45), weekdays=[2, 3]),
+    ]
+
+    with pytest.raises(TermBellsInvalidError):
+        validate_term(make_term(bells=twice))
+
+
+def test_a_bell_must_end_after_it_starts() -> None:
+    """ADM-8: a period of zero length is rejected."""
+    bad = [Bell(period=1, start=dt.time(9, 0), end=dt.time(9, 0), weekdays=[1])]
+
+    with pytest.raises(TermBellsInvalidError):
+        validate_term(make_term(bells=bad))
+
+
+def test_a_bell_cannot_be_on_sunday() -> None:
+    """ADM-8: bells apply to weekdays 1-6."""
+    bad = [Bell(period=1, start=dt.time(8, 0), end=dt.time(9, 0), weekdays=[7])]
+
+    with pytest.raises(TermBellsInvalidError):
+        validate_term(make_term(bells=bad))
+
+
+def test_non_study_days_must_be_inside_the_term() -> None:
+    """ADM-18: a holiday outside the term is a mistake."""
+    with pytest.raises(TermNonStudyDayInvalidError):
+        validate_term(make_term(non_study_days=[dt.date(2027, 1, 1)]))
+
+
+@pytest.mark.parametrize("weekday", [0, 7])
+def test_a_moved_day_must_follow_a_weekday_from_one_to_six(weekday: int) -> None:
+    """ADM-18: follows_weekday is 1-6."""
+    moved = [MovedDay(date=dt.date(2026, 11, 14), follows_weekday=weekday)]
+
+    with pytest.raises(TermMovedDayInvalidError):
+        validate_term(make_term(moved_days=moved))
+
+
+def test_bells_are_stored_as_hours_and_minutes() -> None:
+    """README -> Term.bells: times are "08:30" in the jsonb column."""
+    stored = bells_to_json(default_bells())
+
+    assert stored[0] == {
+        "period": 1,
+        "start": "08:30",
+        "end": "09:15",
+        "weekdays": [1, 2, 3, 4, 5],
+    }
+    assert bells_from_json(stored) == default_bells()
+
+
+def test_stored_bells_are_validated_on_read() -> None:
+    """CODESTYLE: jsonb columns are validated on read."""
+    with pytest.raises(ValueError):
+        bells_from_json(
+            [{"period": 1, "start": "nope", "end": "09:15", "weekdays": [1]}]
+        )
+
+
+def test_the_current_term_is_the_one_containing_today() -> None:
+    """ADM-8: a term that contains today wins."""
+    first = make_term(starts_on=dt.date(2026, 9, 1), ends_on=dt.date(2026, 12, 25))
+    second = make_term(
+        half=2, starts_on=dt.date(2027, 1, 11), ends_on=dt.date(2027, 5, 30)
+    )
+
+    assert pick_current_term([second, first], dt.date(2026, 10, 6)) is first
+
+
+def test_between_terms_the_next_term_is_current() -> None:
+    """ADM-8: on a winter break the next term starts counting."""
+    first = make_term(starts_on=dt.date(2026, 9, 1), ends_on=dt.date(2026, 12, 25))
+    second = make_term(
+        half=2, starts_on=dt.date(2027, 1, 11), ends_on=dt.date(2027, 5, 30)
+    )
+
+    assert pick_current_term([first, second], dt.date(2026, 12, 30)) is second
+
+
+def test_after_the_last_term_the_last_term_is_current() -> None:
+    """ADM-8: in summer the last term is still shown."""
+    first = make_term(starts_on=dt.date(2026, 9, 1), ends_on=dt.date(2026, 12, 25))
+    second = make_term(
+        half=2, starts_on=dt.date(2027, 1, 11), ends_on=dt.date(2027, 5, 30)
+    )
+
+    assert pick_current_term([first, second], dt.date(2027, 7, 1)) is second
+
+
+def test_without_terms_there_is_no_current_term() -> None:
+    """ADM-8: an empty school has no term."""
+    assert pick_current_term([], dt.date(2026, 10, 6)) is None
