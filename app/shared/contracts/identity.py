@@ -144,6 +144,21 @@ class IdentityCommands(Protocol):
         """Create a student who has not registered yet (EMIS import)."""
         ...
 
+    async def ensure_teacher(
+        self,
+        *,
+        emis_teacher_id: int | None,
+        first_name: str,
+        last_name: str,
+        middle_name: str | None,
+    ) -> UserRef:
+        """Find or create a teacher named by an EMIS timetable.
+
+        Found by EMIS teacher id, else by name; a new account is a staff account
+        waiting for activation, without an email (ID-10).
+        """
+        ...
+
     async def set_emis_status(
         self, user_id: UUID, status: Literal["active", "needs_reauth"]
     ) -> None:
