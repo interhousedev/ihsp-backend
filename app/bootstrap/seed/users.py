@@ -59,7 +59,6 @@ async def _ensure(
         existing = await uow.users.get_by_login(login)
         if existing is not None:
             return existing.id
-        admin = Role.ADMIN in roles
         user = User(
             id=new_id(),
             first_name=first_name,
@@ -69,8 +68,6 @@ async def _ensure(
             roles=roles,
             recovery_email=f"{login}@{MAIL_DOMAIN}",
             recovery_email_verified_at=container.clock.now(),
-            otp_enabled=admin,
-            otp_via_email=admin,
             status=UserStatus.ACTIVE,
             preferences={"locale": "ru"},
         )
@@ -81,7 +78,7 @@ async def _ensure(
 
 
 async def ensure_admin(container: Container) -> UUID:
-    """The administrator `admin.ihsp`; sign-in asks for a code mailed to Mailpit."""
+    """The administrator `admin.ihsp`; password sign-in (OTP is optional)."""
     return await _ensure(
         container,
         login=ADMIN_LOGIN,

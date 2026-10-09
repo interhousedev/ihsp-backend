@@ -58,7 +58,6 @@ class CreateStaffAccount:
                 login=chosen,
                 roles=set(roles),
                 recovery_email=address,
-                otp_enabled=Role.ADMIN in roles,
                 status=UserStatus.PENDING_ACTIVATION,
             )
             url = self.links.issue(user, ActivationPurpose.ACTIVATE)

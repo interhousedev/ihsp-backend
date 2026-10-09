@@ -1,4 +1,4 @@
-"""POST /v1/id/login: password login, with a second factor for Administration."""
+"""POST /v1/id/login: password login; an administrator who turned OTP on also enters a code."""
 
 from dataclasses import dataclass
 
@@ -9,10 +9,7 @@ from app.modules.identity.application.password_authenticator import (
 )
 from app.modules.identity.application.request_context import RequestContext
 from app.modules.identity.application.start_login_session import LoginSessionStarter
-from app.modules.identity.domain.client_policy import (
-    may_use_client,
-    requires_recent_mfa,
-)
+from app.modules.identity.domain.client_policy import may_use_client
 from app.modules.identity.domain.errors import RoleMissingError
 from app.modules.identity.domain.user import User
 from app.modules.identity.ports.hydra_gateway import HydraGateway, LoginRequest
@@ -46,7 +43,7 @@ class LogInWithPassword:
         remember: bool,
         ctx: RequestContext,
     ) -> LoginResult:
-        """Return the redirect URL, or a second-factor ticket for Administration."""
+        """Return the redirect URL, or a second-factor ticket (an administrator with OTP on)."""
         await self.rate_limiter.hit(
             f"login-ip:{ctx.throttle_ip}", limit=IP_LIMIT_PER_HOUR, window_seconds=3600
         )
@@ -55,7 +52,7 @@ class LogInWithPassword:
             user = await self.authenticator.authenticate(uow, login, password, ctx)
             if not may_use_client(request.client.client_id, user.roles):
                 raise RoleMissingError(params={"client_id": request.client.client_id})
-            if user.is_admin or requires_recent_mfa(request.client.client_id):
+            if user.is_admin and user.otp_enabled:
                 return await self._second_factor(uow, user, request, remember, ctx)
             redirect = await self.starter.start(
                 uow, request, user, amr=["pwd"], mfa=False, ctx=ctx, remember=remember

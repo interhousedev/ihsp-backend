@@ -30,7 +30,7 @@ async def test_get_login_describes_the_request(api: Api) -> None:
         "client_id": "admin",
         "client_name": "Client admin",
         "skip": False,
-        "requires_second_factor": True,
+        "requires_second_factor": False,
         "redirect_to": None,
     }
 

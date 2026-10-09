@@ -6,7 +6,6 @@ from app.modules.identity.domain.errors import (
     InvalidCredentialsError,
     OtpChannelMissingError,
     OtpInvalidError,
-    OtpMandatoryError,
     PasswordPolicyError,
 )
 from app.modules.identity.domain.session import LoginSession
@@ -318,14 +317,13 @@ async def test_disabling_otp_needs_the_password(auth_world: World) -> None:
     assert (stored.otp_enabled, stored.otp_via_email) == (False, False)
 
 
-async def test_administration_cannot_turn_otp_off(auth_world: World) -> None:
-    """ID-11: OTP is mandatory for Administration."""
+async def test_administration_can_turn_otp_off(auth_world: World) -> None:
+    """OTP is optional for Administration too."""
     admin = await auth_world.add_user(roles={Role.ADMIN}, otp_enabled=True)
 
-    with pytest.raises(OtpMandatoryError):
-        await auth_world.auth.disable_otp.execute(actor_of(admin), PASSWORD, CTX)
+    await auth_world.auth.disable_otp.execute(actor_of(admin), PASSWORD, CTX)
 
-    assert auth_world.user(admin.id).otp_enabled is True
+    assert auth_world.user(admin.id).otp_enabled is False
 
 
 # - - - Recovery email - - -

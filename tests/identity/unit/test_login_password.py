@@ -111,6 +111,20 @@ async def test_student_is_refused_by_the_staff_client(auth_world: World) -> None
         await log_in(auth_world, student.login or "", PASSWORD)
 
 
+async def test_administration_without_otp_logs_in_with_the_password_alone(
+    auth_world: World,
+) -> None:
+    """OTP is optional: an administrator who did not turn it on gets no code step."""
+    admin = await auth_world.add_user(roles={Role.ADMIN}, otp_enabled=False)
+    auth_world.hydra.add_login("lc-1", client_id="admin")
+
+    result = await log_in(auth_world, admin.login or "", PASSWORD)
+
+    assert result.second_factor is None
+    assert result.redirect_to
+    assert auth_world.hydra.last("accept_login")["amr"] == ["pwd"]
+
+
 async def test_administration_gets_a_second_factor_then_logs_in_with_pwd_and_otp(
     auth_world: World,
 ) -> None:

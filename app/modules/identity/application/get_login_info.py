@@ -4,10 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from app.modules.identity.application.start_login_session import REMEMBER_FOR_SECONDS
-from app.modules.identity.domain.client_policy import (
-    may_use_client,
-    requires_recent_mfa,
-)
+from app.modules.identity.domain.client_policy import may_use_client
 from app.modules.identity.domain.session import LoginSession
 from app.modules.identity.ports.hydra_gateway import HydraGateway, LoginRequest
 from app.modules.identity.ports.unit_of_work import IdentityUnitOfWorkPort, UowFactory
@@ -46,7 +43,7 @@ class GetLoginInfo:
             client_id=client_id,
             client_name=request.client.client_name,
             skip=redirect is not None,
-            requires_second_factor=requires_recent_mfa(client_id),
+            requires_second_factor=False,
             redirect_to=redirect,
         )
 
@@ -89,12 +86,9 @@ class GetLoginInfo:
         session = None
         if request.session_id:
             session = await uow.sessions.get_by_hydra_sid(request.session_id)
-        strict = requires_recent_mfa(client_id)
-        if (session is None or session.user_id != user_id) and not strict:
+        if session is None or session.user_id != user_id:
             # No exact match: any live session of the user proves they signed in.
             session = await uow.sessions.latest_active(user_id, now)
         if session is None or session.user_id != user_id or not session.is_active(now):
-            return None
-        if strict and not session.mfa_is_fresh(now):
             return None
         return session

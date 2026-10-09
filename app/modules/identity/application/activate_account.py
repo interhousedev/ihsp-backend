@@ -56,10 +56,6 @@ class ActivateAccount:
             if purpose == ActivationPurpose.ACTIVATE or not user.has_verified_email:
                 await self._verify_email(uow, user, token, email, email_code)
             user.password_hash = await self.hasher.hash(password)
-            if user.is_admin and user.has_verified_email:
-                # The email was just confirmed with a code: it is the first OTP channel.
-                user.otp_enabled = True
-                user.otp_via_email = True
             user.clear_activation()
             if user.status == UserStatus.PENDING_ACTIVATION:
                 user.status = UserStatus.ACTIVE

@@ -227,7 +227,7 @@ async def test_staff_account_with_an_explicit_login_for_the_cli(
     )
 
     assert created.user.login == "root.admin"
-    assert created.user.otp_enabled is True
+    assert created.user.otp_enabled is False
     with pytest.raises(LoginTakenError):
         await auth_world.auth.create_staff_account.execute(
             actor_id=None,

@@ -73,8 +73,8 @@ class TelegramLogin:
         otp_code: str | None,
         ctx: RequestContext,
     ) -> LoginResult | None:
-        """Administration also needs a code; send one on the first attempt."""
-        if not user.is_admin:
+        """An administrator with OTP on also needs a code; send one on the first attempt."""
+        if not (user.is_admin and user.otp_enabled):
             return None
         if otp_code:
             await self.otp.check("tg-login", str(user.id), otp_code)

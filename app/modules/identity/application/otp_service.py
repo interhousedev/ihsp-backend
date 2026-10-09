@@ -21,15 +21,15 @@ from app.modules.identity.ports.otp_store import OtpStore
 def channels_for(user: User, links: Sequence[TelegramLink]) -> list[str]:
     """OTP channels of an account: Telegram links with delivery on, email if chosen.
 
-    Administration accounts fall back to the verified recovery email so the
-    mandatory second factor can never lock them out (ID-11).
+    Administration accounts that turned OTP on fall back to the verified recovery
+    email so the second factor can never lock them out.
     """
     channels: list[str] = []
     if any(link.can_receive_otp for link in links):
         channels.append(CHANNEL_TELEGRAM)
     if user.otp_via_email and user.has_verified_email:
         channels.append(CHANNEL_EMAIL)
-    if not channels and user.is_admin and user.has_verified_email:
+    if not channels and user.is_admin and user.otp_enabled and user.has_verified_email:
         channels.append(CHANNEL_EMAIL)
     return channels
 

@@ -259,10 +259,10 @@ async def test_unknown_activation_token_is_gone(auth_world: World) -> None:
         await auth_world.auth.activation_info.execute("nope")
 
 
-async def test_administration_activation_turns_on_email_otp_and_redirects_to_admin(
+async def test_administration_activation_leaves_otp_off_and_redirects_to_admin(
     auth_world: World,
 ) -> None:
-    """ID-11, UF-ID-13 4: the confirmed email is the first OTP channel."""
+    """OTP is optional: activating an administrator does not turn it on."""
     root = await admin_of(auth_world)
     created = await auth_world.auth.create_staff_account.execute(
         actor_id=root.user_id,
@@ -275,7 +275,7 @@ async def test_administration_activation_turns_on_email_otp_and_redirects_to_adm
     )
     token = token_of(created.activation_url)
     info = await auth_world.auth.activation_info.execute(token)
-    assert info.requires_otp is True
+    assert info.requires_otp is False
 
     await auth_world.auth.activation_send_email_code.execute(
         token, "boss@example.org", CTX
@@ -290,13 +290,13 @@ async def test_administration_activation_turns_on_email_otp_and_redirects_to_adm
 
     boss = auth_world.user(created.user.id)
     assert redirect == "http://localhost:3004"
-    assert (boss.otp_enabled, boss.otp_via_email) == (True, True)
+    assert (boss.otp_enabled, boss.otp_via_email) == (False, False)
     auth_world.hydra.add_login("lc-1", client_id="admin")
     first = await auth_world.auth.log_in_with_password.execute(
         "lc-1", boss.login or "", "N3wStrongPass", remember=False, ctx=CTX
     )
-    assert first.second_factor is not None
-    assert first.second_factor.channels == ["email"]
+    assert first.second_factor is None
+    assert first.redirect_to is not None
 
 
 # - - - Block, roles, sessions - - -
@@ -371,7 +371,7 @@ async def test_role_change_bumps_the_epoch_and_revokes_hydra_sessions(
     assert Role.ADMIN in result.roles
     stored = auth_world.user(user.id)
     assert stored.auth_epoch > 5
-    assert stored.otp_enabled is True  # OTP is mandatory for Administration
+    assert stored.otp_enabled is False  # OTP stays optional for Administration
     assert auth_world.store.sessions[session.id].revoked_at is not None
     assert auth_world.hydra.last("revoke_login_sessions")["subject"] == str(user.id)
     assert auth_world.hydra.last("revoke_consent_sessions")["subject"] == str(user.id)

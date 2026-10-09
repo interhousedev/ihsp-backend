@@ -104,12 +104,10 @@ class User:
         self.bump_epoch()
 
     def grant(self, role: Role) -> bool:
-        """Add a role; return True if it was new. Administration forces OTP."""
+        """Add a role; return True if it was new."""
         if role in self.roles:
             return False
         self.roles.add(role)
-        if role == Role.ADMIN:
-            self.otp_enabled = True
         self.bump_epoch()
         return True
 

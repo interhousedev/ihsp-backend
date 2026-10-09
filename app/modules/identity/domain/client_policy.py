@@ -38,11 +38,6 @@ def may_use_client(client_id: str, roles: Iterable[Role]) -> bool:
     return required is None or bool(required & set(roles))
 
 
-def requires_recent_mfa(client_id: str) -> bool:
-    """The admin platform accepts only recent password + OTP logins (ID-11)."""
-    return client_id == ADMIN_CLIENT
-
-
 def refresh_days(client_id: str) -> int:
     """Days a refresh token (and its cookie) lasts: 90 for the installed app, else 30.
 

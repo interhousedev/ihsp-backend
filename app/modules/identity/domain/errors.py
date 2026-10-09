@@ -115,13 +115,6 @@ class OtpChannelMissingError(ValidationFailedError):
     message_key = "id-otp-no-channel"
 
 
-class OtpMandatoryError(ForbiddenError):
-    """One-time codes cannot be turned off for Administration."""
-
-    code = "id/otp-mandatory"
-    message_key = "id-otp-mandatory"
-
-
 class SelfActionForbiddenError(ForbiddenError):
     """An administrator cannot do this to their own account."""
 

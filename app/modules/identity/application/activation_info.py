@@ -32,5 +32,5 @@ class ActivationInfo:
             first_name=user.first_name,
             last_name=user.last_name,
             login=user.login,
-            requires_otp=user.is_admin,
+            requires_otp=False,
         )
