@@ -25,8 +25,8 @@ if TYPE_CHECKING:
     from app.modules.files.wiring import FilesServices
     from app.modules.flashcards.wiring import FlashcardsServices
     from app.modules.identity.wiring import IdentityModule
-    from app.modules.links.wiring import LinksServices
     from app.modules.library.wiring import LibraryServices
+    from app.modules.links.wiring import LinksServices
     from app.modules.lms.wiring import LmsModule
     from app.modules.mail.wiring import MailServices
     from app.modules.notebooks.wiring import NotebooksServices

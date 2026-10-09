@@ -1,4 +1,4 @@
-"""LIB-6, LIB-9: a reading position is `{page}` for PDF and `{cfi, progress}` for EPUB."""
+"""LIB-6, LIB-9: a position is `{page}` for PDF and `{cfi, progress}` for EPUB."""
 
 from typing import Any
 

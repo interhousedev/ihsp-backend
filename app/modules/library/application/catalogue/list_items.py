@@ -20,6 +20,7 @@ from app.modules.library.domain.catalogue_search import (
 )
 from app.modules.library.domain.enums import ItemType, ShelfState, UploaderRole
 from app.modules.library.domain.search_query import parse_query
+from app.modules.library.ports.stats_recorder import StatsRecorder
 from app.modules.library.ports.unit_of_work import UowFactory
 from app.settings import LibrarySettings
 from app.shared.actor import Actor
@@ -64,8 +65,10 @@ class ListItems:
         cards: CardBuilder,
         identity: IdentityDirectory,
         settings: LibrarySettings,
+        stats: StatsRecorder | None = None,
     ) -> None:
         """Store the unit of work factory, the card builder and the settings."""
+        self.stats = stats
         self.uow_factory = uow_factory
         self.cards = cards
         self.identity = identity
@@ -117,6 +120,8 @@ class ListItems:
             cards = await self.cards.build(
                 uow, ordered, viewer=actor, locale=locale, hits=hits
             )
+        if query.q and offset == 0 and not cards and self.stats is not None:
+            await self.stats.no_result(query.q)
         return CardPage(
             items=cards, next_cursor=next_cursor(offset, len(page), len(found) > limit)
         )

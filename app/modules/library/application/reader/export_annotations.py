@@ -31,7 +31,8 @@ def _block(prefix: str, text: str) -> list[str]:
 
 def render_annotation(annotation: Annotation) -> list[str]:
     """The Markdown lines of one annotation: kind, colour, place, quote and note."""
-    lines = [f"- **{annotation.kind.value}** ({annotation.color.value}, {_where(annotation)})"]
+    place = f"{annotation.color.value}, {_where(annotation)}"
+    lines = [f"- **{annotation.kind.value}** ({place})"]
     if annotation.quote:
         lines += _block("> ", annotation.quote)
     if annotation.note:
@@ -52,7 +53,7 @@ class ExportAnnotations:
             annotations = await uow.annotations.list_for_user(
                 actor.user_id, item_id=item_id
             )
-            items = await uow.items.get_many({a.item_id for a in annotations})
+            items = await uow.items.get_many(list({a.item_id for a in annotations}))
         grouped: dict[UUID, list[Annotation]] = {}
         for annotation in annotations:
             grouped.setdefault(annotation.item_id, []).append(annotation)

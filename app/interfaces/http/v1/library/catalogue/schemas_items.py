@@ -6,7 +6,7 @@ Every area that answers with items imports `ItemCardSchema.from_view(card)` and
 they do not apply; nullable keys stay as `null`.
 """
 
-from typing import Literal, Self
+from typing import Any, Literal, Self
 from uuid import UUID
 
 from app.modules.library.application.detail import (
@@ -14,6 +14,7 @@ from app.modules.library.application.detail import (
     ItemDetailView,
     ItemFileView,
     ListRefView,
+    ProgressView,
     RightsBoxView,
     TopicRefView,
 )
@@ -335,6 +336,19 @@ class CanSchema(BaseModel):
         )
 
 
+class ProgressSchema(BaseModel):
+    """`progress`: where the caller stopped in the item."""
+
+    file_id: UUID
+    locator: dict[str, Any]
+    percent: float
+
+    @classmethod
+    def from_view(cls, view: ProgressView) -> Self:
+        """Build from the progress view."""
+        return cls(file_id=view.file_id, locator=view.locator, percent=view.percent)
+
+
 class ItemDetailSchema(ItemCardBase):
     """`ItemDetail`: the card plus status, files, topics and lists."""
 
@@ -353,6 +367,7 @@ class ItemDetailSchema(ItemCardBase):
     rights_box: RightsBoxSchema | None = None
     external_keywords: list[str] | None = None
     external_isbn: str | None = None
+    progress: ProgressSchema | None = None
 
     @classmethod
     def from_view(cls, view: ItemDetailView) -> Self:
@@ -383,5 +398,8 @@ class ItemDetailSchema(ItemCardBase):
                     else None
                 ),
                 "external_isbn": view.external_isbn,
+                "progress": (
+                    ProgressSchema.from_view(view.progress) if view.progress else None
+                ),
             }
         )

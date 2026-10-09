@@ -73,6 +73,10 @@ CRON_JOBS: tuple[CronJob, ...] = (
     CronJob("notebooks.purge_shared", "45 4 * * *"),
     CronJob("notebooks.sweep_auto_notebooks", "20,50 * * * *"),
     CronJob("notebooks.embed_passages", EVERY_10_MINUTES),
+    CronJob("library.rollup_stats", "10 2 * * *"),
+    CronJob("library.purge", "10 4 * * *"),
+    CronJob("library.rights_review", "40 4 * * *"),
+    CronJob("library.remind_queue", "30 7 * * *"),
 )
 
 
@@ -83,6 +87,7 @@ JOB_FEATURES: tuple[tuple[str, Feature], ...] = (
     ("mail.", Feature.MAIL),
     ("lms.", Feature.LMS),
     ("ai.", Feature.AI_ASSISTANT),
+    ("library.", Feature.LIBRARY),
     ("academic.sync_all", Feature.EMIS_SYNC),
 )
 

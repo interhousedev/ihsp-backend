@@ -60,7 +60,9 @@ async def test_siblings_cannot_share_a_slug_but_other_parents_can(
     root = make_topic(SUBJECT, "Root", slug="root")
     async with uow_factory() as uow:
         await uow.taxonomy.add_topic(root)
-        await uow.taxonomy.add_topic(make_topic(SUBJECT, "A", parent_id=root.id, slug="x"))
+        await uow.taxonomy.add_topic(
+            make_topic(SUBJECT, "A", parent_id=root.id, slug="x")
+        )
         await uow.taxonomy.add_topic(make_topic(SUBJECT, "B", slug="x"))
         with pytest.raises(IntegrityError):
             await uow.taxonomy.add_topic(make_topic(SUBJECT, "C", slug="x"))

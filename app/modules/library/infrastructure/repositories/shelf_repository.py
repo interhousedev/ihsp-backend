@@ -7,9 +7,9 @@ from app.modules.library.domain.enums import ItemStatus, ShelfState, Visibility
 from app.modules.library.domain.reader_shelf import ShelfEntry
 from app.modules.library.infrastructure.orm import Item as ItemRow
 from app.modules.library.infrastructure.orm import ShelfEntry as ShelfRow
+from app.modules.library.infrastructure.repositories.rowcount import rows_affected
 from app.modules.library.ports.shelf_repository import ShelfCursor
 from app.shared.ids import new_id
-from app.modules.library.infrastructure.repositories.rowcount import rows_affected
 
 from sqlalchemy import and_, delete, func, or_, select
 from sqlalchemy.dialects.postgresql import insert

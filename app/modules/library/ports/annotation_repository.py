@@ -61,7 +61,7 @@ class AnnotationRepository(Protocol):
         after: AnnotationCursor | None,
         limit: int,
     ) -> list[Annotation]:
-        """Live annotations, most recently changed first, continuing after the cursor."""
+        """Live annotations, most recently changed first, after the cursor."""
         ...
 
     async def list_for_item(self, user_id: UUID, item_id: UUID) -> list[Annotation]:

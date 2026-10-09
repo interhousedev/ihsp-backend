@@ -8,6 +8,7 @@ from app.bootstrap.adapters.admin_tools import AdminToolBackendAdapter
 from app.bootstrap.adapters.emis_source import make_emis_source
 from app.bootstrap.adapters.lazy_proxy import LazyProxy
 from app.bootstrap.adapters.library_academic import LibraryAcademicAdapter
+from app.bootstrap.adapters.library_lessons import LibraryLessonsAdapter
 from app.bootstrap.adapters.mail_suspension import MailSuspensionAdapter
 from app.bootstrap.adapters.mcp_ports import ConnectorCoursesAdapter, McpAuditAdapter
 from app.bootstrap.adapters.notebook_terms import NotebookTermsAdapter
@@ -396,6 +397,7 @@ class _Assembler:
             identity=c.identity.directory,
             files=c.files.public,
             academic=LibraryAcademicAdapter(c.academic.schedule, c.clock),
+            lessons=LibraryLessonsAdapter(c.academic.schedule.queries, c.clock),
         )
 
     def build_embeddings(self, llm: LlmGateway) -> EmbeddingIndex | None:

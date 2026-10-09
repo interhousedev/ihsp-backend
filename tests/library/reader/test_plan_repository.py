@@ -160,7 +160,13 @@ async def test_linked_lessons_groups_stored_links_by_lesson(
     uow_factory: UowFactory,
 ) -> None:
     """LIB-11: the suggestion reads the links of earlier lessons."""
-    first, second, empty, teacher, item = new_id(), new_id(), new_id(), new_id(), new_id()
+    first, second, empty, teacher, item = (
+        new_id(),
+        new_id(),
+        new_id(),
+        new_id(),
+        new_id(),
+    )
     async with uow_factory() as uow:
         await uow.plans.set_lesson_refs(first, [link(first, item, "A", teacher)])
         await uow.plans.set_lesson_refs(second, [link(second, item, "B", teacher)])

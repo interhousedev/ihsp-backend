@@ -11,6 +11,7 @@ from app.modules.library.domain.enums import (
     ListStatus,
     ShelfState,
 )
+from app.modules.library.domain.errors import ListTooLongError
 from app.modules.library.domain.reading_list import (
     EntryDraft,
     ReadingList,
@@ -24,7 +25,6 @@ from app.modules.library.domain.reading_list_policy import (
     can_view_list,
     needs_staff,
 )
-from app.modules.library.domain.errors import ListTooLongError
 from app.modules.library.domain.taxonomy_errors import (
     ListEntryInvalidError,
     ListInvalidError,
@@ -148,9 +148,7 @@ def test_link_needs_a_web_address_and_gets_a_title() -> None:
 
 def test_item_entry_keeps_no_url_or_title() -> None:
     """LIB-4: the card of the item supplies the title."""
-    entry = build_entries(
-        [link(url=None, item_id=new_id(), title="ignored")], 100
-    )[0]
+    entry = build_entries([link(url=None, item_id=new_id(), title="ignored")], 100)[0]
 
     assert entry.url is None
     assert entry.title is None

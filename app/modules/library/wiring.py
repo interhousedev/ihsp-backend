@@ -7,6 +7,7 @@ The module is split in areas that share `LibraryCore`; each area has its own
 from dataclasses import dataclass
 
 from app.modules.library.ports.directories import AcademicDirectory
+from app.modules.library.ports.lesson_directory import LessonDirectory
 from app.modules.library.wiring_bridge import BridgeServices, build_bridge
 from app.modules.library.wiring_catalogue import CatalogueServices, build_catalogue
 from app.modules.library.wiring_core import CoreOverrides, LibraryCore, build_core
@@ -38,6 +39,7 @@ def build(
     identity: IdentityDirectory,
     files: FilesApi,
     academic: AcademicDirectory,
+    lessons: LessonDirectory | None = None,
     overrides: CoreOverrides | None = None,
 ) -> LibraryServices:
     """Wire the whole module over the given ports (real or fake)."""
@@ -49,7 +51,7 @@ def build(
         catalogue=build_catalogue(core),
         taxonomy=build_taxonomy(core),
         materials=build_materials(core),
-        reader=build_reader(core),
+        reader=build_reader(core, lessons),
         external=build_external(core),
         bridge=build_bridge(core),
     )

@@ -181,7 +181,7 @@ async def test_item_detail_shape_for_a_book(
     assert set(body) == CARD_KEYS | {
         "book", "status", "status_reason", "status_note", "visibility", "subtitle",
         "description", "publisher", "isbn", "files", "topics", "lists", "can",
-        "rights_box",
+        "rights_box", "progress",
     }  # fmt: skip
     assert body["status"] == "published" and body["visibility"] == "lyceum"
     assert body["files"][0]["format"] == "pdf" and body["files"][0]["toc"] == []

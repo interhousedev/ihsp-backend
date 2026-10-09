@@ -27,7 +27,10 @@ def ref(**fields: object) -> LessonRefInput:
 
 def test_valid_refs_are_kept_in_order() -> None:
     """LIB-11: the teacher's order is the display order."""
-    refs = [ref(section_label="A"), ref(section_label="B", page_from=None, page_to=None)]
+    refs = [
+        ref(section_label="A"),
+        ref(section_label="B", page_from=None, page_to=None),
+    ]
 
     assert validate_refs(refs) == refs
 

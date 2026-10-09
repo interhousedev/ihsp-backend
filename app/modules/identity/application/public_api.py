@@ -226,6 +226,7 @@ class IdentityCommandsImpl:
                     "files.delete_owner",
                     "links.revoke_owner",
                     "notebooks.delete_owner",
+                    "library.delete_owner",
                 ):
                     await self.kicker.kick(task, user_id=str(user_id))
 

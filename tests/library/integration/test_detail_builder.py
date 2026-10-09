@@ -6,7 +6,7 @@ from app.modules.library.domain.entities import Item, SubjectLink
 from app.modules.library.domain.enums import ShelfState, Visibility
 from app.modules.library.infrastructure.orm import ShelfEntry
 from app.modules.library.wiring import LibraryServices
-from app.shared.actor import Actor
+from app.shared.actor import Actor, Role
 from app.shared.ids import new_id
 from tests.factories.library import make_book, make_external, make_material
 from tests.fakes.library.academic import FakeAcademicDirectory
@@ -86,3 +86,56 @@ async def test_material_card_shows_attribution_shelf_and_progress(
     assert card.material is not None and card.material.uploader_name == "Aziza K."
     assert card.shelf_state is ShelfState.READING
     assert card.tag_source == "material"
+
+
+async def test_detail_carries_the_saved_reading_position(
+    library: LibraryServices,
+    store_item: StoreItem,
+    student: Actor,
+    other_student: Actor,
+) -> None:
+    """LIB-6: the reader opens the item and learns where the caller stopped."""
+    book = await store_item(make_book(title="Fizika 10"))
+    await library.reader.save_progress.execute(
+        student,
+        book.id,
+        file_id=book.files[0].file_id,
+        locator={"page": 42},
+        percent=35.0,
+        client_ts=library.core.clock.now(),
+        seconds_read=60,
+    )
+
+    async with library.core.uow_factory() as uow:
+        loaded = await uow.items.get(book.id)
+        assert loaded is not None
+        mine = await library.core.detail.build(uow, loaded, viewer=student, locale="en")
+        theirs = await library.core.detail.build(
+            uow, loaded, viewer=other_student, locale="en"
+        )
+
+    assert mine.progress is not None
+    assert (mine.progress.file_id, mine.progress.locator, mine.progress.percent) == (
+        book.files[0].file_id,
+        {"page": 42},
+        35.0,
+    )
+    assert theirs.progress is None
+
+
+async def test_a_search_without_results_is_counted_for_librarians(
+    library: LibraryServices, student: Actor
+) -> None:
+    """LIB-16: queries that find nothing reach the statistics (no user is named)."""
+    from app.modules.library.application.catalogue.list_items import ListItemsQuery
+
+    await library.catalogue.list_items.execute(
+        student, ListItemsQuery(q="  Zzyzx   Theory ")
+    )
+    stats = await library.taxonomy.get_stats.execute(
+        Actor(user_id=new_id(), roles=frozenset({Role.LIBRARIAN}))
+    )
+
+    assert [(m.q, m.count) for m in stats.searches_without_results] == [
+        ("zzyzx theory", 1)
+    ]

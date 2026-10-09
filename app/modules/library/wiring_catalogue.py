@@ -69,6 +69,7 @@ def build_catalogue(core: LibraryCore) -> CatalogueServices:
             cards=core.cards,
             identity=core.identity,
             settings=core.settings,
+            stats=core.stats,
         ),
         get_item=GetItem(
             uow_factory=uow_factory,

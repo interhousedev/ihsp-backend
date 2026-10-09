@@ -613,6 +613,237 @@
         "title": "AnchorText",
         "type": "object"
       },
+      "AnnotationColor": {
+        "description": "Highlight colours.",
+        "enum": [
+          "yellow",
+          "green",
+          "blue",
+          "pink"
+        ],
+        "title": "AnnotationColor",
+        "type": "string"
+      },
+      "AnnotationInput": {
+        "additionalProperties": false,
+        "description": "`AnnotationInput`.",
+        "properties": {
+          "client_id": {
+            "format": "uuid",
+            "title": "Client Id",
+            "type": "string"
+          },
+          "color": {
+            "$ref": "#/components/schemas/AnnotationColor"
+          },
+          "file_id": {
+            "format": "uuid",
+            "title": "File Id",
+            "type": "string"
+          },
+          "item_id": {
+            "format": "uuid",
+            "title": "Item Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AnnotationKind"
+          },
+          "locator": {
+            "additionalProperties": true,
+            "title": "Locator",
+            "type": "object"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote"
+          }
+        },
+        "required": [
+          "client_id",
+          "item_id",
+          "file_id",
+          "kind",
+          "locator",
+          "color"
+        ],
+        "title": "AnnotationInput",
+        "type": "object"
+      },
+      "AnnotationKind": {
+        "description": "Kinds of reader annotation.",
+        "enum": [
+          "highlight",
+          "note",
+          "bookmark"
+        ],
+        "title": "AnnotationKind",
+        "type": "string"
+      },
+      "AnnotationPatchBody": {
+        "additionalProperties": false,
+        "description": "`AnnotationPatchBody`: only the keys that were sent are applied.",
+        "properties": {
+          "color": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AnnotationColor"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          }
+        },
+        "title": "AnnotationPatchBody",
+        "type": "object"
+      },
+      "AnnotationResponse": {
+        "description": "`Annotation`.",
+        "properties": {
+          "client_id": {
+            "format": "uuid",
+            "title": "Client Id",
+            "type": "string"
+          },
+          "color": {
+            "$ref": "#/components/schemas/AnnotationColor"
+          },
+          "file_id": {
+            "format": "uuid",
+            "title": "File Id",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "item_id": {
+            "format": "uuid",
+            "title": "Item Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/AnnotationKind"
+          },
+          "locator": {
+            "additionalProperties": true,
+            "title": "Locator",
+            "type": "object"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "item_id",
+          "file_id",
+          "kind",
+          "locator",
+          "quote",
+          "note",
+          "color",
+          "client_id",
+          "updated_at"
+        ],
+        "title": "AnnotationResponse",
+        "type": "object"
+      },
+      "AnnotationsSyncBody": {
+        "additionalProperties": false,
+        "description": "`AnnotationsSyncBody`: at most 200 changes in all.",
+        "properties": {
+          "deletes": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Deletes",
+            "type": "array"
+          },
+          "upserts": {
+            "items": {
+              "$ref": "#/components/schemas/AnnotationInput"
+            },
+            "title": "Upserts",
+            "type": "array"
+          }
+        },
+        "title": "AnnotationsSyncBody",
+        "type": "object"
+      },
+      "AnnotationsSyncResponse": {
+        "description": "`{items}`: the current state of the touched annotations.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AnnotationResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "AnnotationsSyncResponse",
+        "type": "object"
+      },
       "AnswerConfig": {
         "description": "Accepted answers of a text or number question.",
         "properties": {
@@ -3138,6 +3369,51 @@
           }
         },
         "title": "BookPatchBody",
+        "type": "object"
+      },
+      "BookPlanResponse": {
+        "description": "`BookPlan`: the plan with the title of its book.",
+        "properties": {
+          "item_id": {
+            "format": "uuid",
+            "title": "Item Id",
+            "type": "string"
+          },
+          "item_title": {
+            "title": "Item Title",
+            "type": "string"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/PlanSectionBody"
+            },
+            "title": "Sections",
+            "type": "array"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "year_of_study": {
+            "title": "Year Of Study",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "subject_id",
+          "year_of_study",
+          "item_id",
+          "item_title",
+          "sections",
+          "updated_at"
+        ],
+        "title": "BookPlanResponse",
         "type": "object"
       },
       "BookRowSchema": {
@@ -8959,6 +9235,26 @@
         "title": "ItemLanguage",
         "type": "string"
       },
+      "ItemRefTitle": {
+        "description": "`{id, title}` of the linked book.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "ItemRefTitle",
+        "type": "object"
+      },
       "ItemSort": {
         "description": "`?sort=`; without a query the default is the newest first.",
         "enum": [
@@ -10941,6 +11237,48 @@
         "title": "LessonItem",
         "type": "object"
       },
+      "LessonItemRefResponse": {
+        "description": "`LessonItemRef`: a section of a book that a lesson follows.",
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/ItemRefTitle"
+          },
+          "page_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page From"
+          },
+          "page_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page To"
+          },
+          "section_label": {
+            "title": "Section Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item",
+          "section_label",
+          "page_from",
+          "page_to"
+        ],
+        "title": "LessonItemRefResponse",
+        "type": "object"
+      },
       "LessonPatchBody": {
         "description": "Body of PATCH /v1/admin/lessons/{id}; null clears teacher, room or topic.",
         "properties": {
@@ -11034,6 +11372,49 @@
           }
         },
         "title": "LessonPatchBody",
+        "type": "object"
+      },
+      "LessonRefBody": {
+        "additionalProperties": false,
+        "description": "`{item_id, section_label, page_from, page_to}`.",
+        "properties": {
+          "item_id": {
+            "format": "uuid",
+            "title": "Item Id",
+            "type": "string"
+          },
+          "page_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page From"
+          },
+          "page_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page To"
+          },
+          "section_label": {
+            "title": "Section Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id",
+          "section_label"
+        ],
+        "title": "LessonRefBody",
         "type": "object"
       },
       "LessonResourceInput": {
@@ -12095,6 +12476,38 @@
         "title": "MaterialPatchBody",
         "type": "object"
       },
+      "MeLibraryResponse": {
+        "description": "`MeLibrary`: continue reading, shelf counts and the offline limits.",
+        "properties": {
+          "continue": {
+            "items": {
+              "$ref": "#/components/schemas/ItemCardSchema"
+            },
+            "title": "Continue",
+            "type": "array"
+          },
+          "offline": {
+            "$ref": "#/components/schemas/OfflineLimits"
+          },
+          "shelf_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/ShelfState"
+            },
+            "title": "Shelf Counts",
+            "type": "object"
+          }
+        },
+        "required": [
+          "continue",
+          "shelf_counts",
+          "offline"
+        ],
+        "title": "MeLibraryResponse",
+        "type": "object"
+      },
       "MessageFeedbackBody": {
         "description": "POST /v1/ai/chats/{id}/messages/{seq}/feedback.",
         "properties": {
@@ -12498,6 +12911,50 @@
           "token"
         ],
         "title": "NewConnectorResponse",
+        "type": "object"
+      },
+      "NextSectionResponse": {
+        "description": "`{item_id, item_title, section}`: the suggested section.",
+        "properties": {
+          "item_id": {
+            "format": "uuid",
+            "title": "Item Id",
+            "type": "string"
+          },
+          "item_title": {
+            "title": "Item Title",
+            "type": "string"
+          },
+          "section": {
+            "$ref": "#/components/schemas/PlanSectionBody"
+          }
+        },
+        "required": [
+          "item_id",
+          "item_title",
+          "section"
+        ],
+        "title": "NextSectionResponse",
+        "type": "object"
+      },
+      "NextSuggestionResponse": {
+        "description": "`{suggestion: ... | null}`.",
+        "properties": {
+          "suggestion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NextSectionResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "suggestion"
+        ],
+        "title": "NextSuggestionResponse",
         "type": "object"
       },
       "NoteInput": {
@@ -13272,6 +13729,25 @@
         "title": "OAuthClientResponse",
         "type": "object"
       },
+      "OfflineLimits": {
+        "description": "What one device may keep for offline reading.",
+        "properties": {
+          "max_bytes": {
+            "title": "Max Bytes",
+            "type": "integer"
+          },
+          "max_items": {
+            "title": "Max Items",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "max_items",
+          "max_bytes"
+        ],
+        "title": "OfflineLimits",
+        "type": "object"
+      },
       "OpenCourseWorkspaceBody": {
         "description": "POST /v1/notebooks/course-workspaces.",
         "properties": {
@@ -13704,6 +14180,33 @@
         "title": "Page[AdminUserResponse]",
         "type": "object"
       },
+      "Page_AnnotationResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AnnotationResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "Page[AnnotationResponse]",
+        "type": "object"
+      },
       "Page_AuditItemResponse_": {
         "properties": {
           "items": {
@@ -13945,6 +14448,33 @@
           "items"
         ],
         "title": "Page[QueueRowResponse]",
+        "type": "object"
+      },
+      "Page_ShelfEntryResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ShelfEntryResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "Page[ShelfEntryResponse]",
         "type": "object"
       },
       "Page_StudentItemResponse_": {
@@ -14315,6 +14845,42 @@
           "existing_steps"
         ],
         "title": "PlanPreviewResponse",
+        "type": "object"
+      },
+      "PlanSectionBody": {
+        "additionalProperties": false,
+        "description": "`{n, title, page_from, page_to, hours}`: one chapter of the plan.",
+        "properties": {
+          "hours": {
+            "default": 1,
+            "title": "Hours",
+            "type": "number"
+          },
+          "n": {
+            "title": "N",
+            "type": "integer"
+          },
+          "page_from": {
+            "title": "Page From",
+            "type": "integer"
+          },
+          "page_to": {
+            "title": "Page To",
+            "type": "integer"
+          },
+          "title": {
+            "maxLength": 200,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "n",
+          "title",
+          "page_from",
+          "page_to"
+        ],
+        "title": "PlanSectionBody",
         "type": "object"
       },
       "PlanSectionInput": {
@@ -15092,19 +15658,30 @@
         "title": "ProblemResponse",
         "type": "object"
       },
-      "ProgressBody": {
-        "description": "PUT .../progress: the state is opaque to the server (at most 16 KB).",
+      "ProgressSchema": {
+        "description": "`progress`: where the caller stopped in the item.",
         "properties": {
-          "state": {
+          "file_id": {
+            "format": "uuid",
+            "title": "File Id",
+            "type": "string"
+          },
+          "locator": {
             "additionalProperties": true,
-            "title": "State",
+            "title": "Locator",
             "type": "object"
+          },
+          "percent": {
+            "title": "Percent",
+            "type": "number"
           }
         },
         "required": [
-          "state"
+          "file_id",
+          "locator",
+          "percent"
         ],
-        "title": "ProgressBody",
+        "title": "ProgressSchema",
         "type": "object"
       },
       "ProposalBody": {
@@ -15389,6 +15966,43 @@
           "endpoint"
         ],
         "title": "PushUnsubscribeBody",
+        "type": "object"
+      },
+      "PutBookPlanBody": {
+        "additionalProperties": false,
+        "description": "`PUT /library/book-plans`: the textbook and its sections.",
+        "properties": {
+          "item_id": {
+            "format": "uuid",
+            "title": "Item Id",
+            "type": "string"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/PlanSectionBody"
+            },
+            "title": "Sections",
+            "type": "array"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "year_of_study": {
+            "maximum": 4.0,
+            "minimum": 1.0,
+            "title": "Year Of Study",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "subject_id",
+          "year_of_study",
+          "item_id",
+          "sections"
+        ],
+        "title": "PutBookPlanBody",
         "type": "object"
       },
       "Question": {
@@ -18455,6 +19069,24 @@
         "title": "SetItemResponse",
         "type": "object"
       },
+      "SetLessonRefsBody": {
+        "additionalProperties": false,
+        "description": "`PUT /staff/lessons/{id}/item-refs`: `{refs: [...]}`.",
+        "properties": {
+          "refs": {
+            "items": {
+              "$ref": "#/components/schemas/LessonRefBody"
+            },
+            "title": "Refs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "refs"
+        ],
+        "title": "SetLessonRefsBody",
+        "type": "object"
+      },
       "SetSourceLabelsBody": {
         "description": "PUT /v1/notebooks/{id}/sources/{sid}/labels: at most 3 labels (a typed error).",
         "properties": {
@@ -18582,6 +19214,61 @@
           "messages"
         ],
         "title": "SharedChat",
+        "type": "object"
+      },
+      "ShelfBody": {
+        "additionalProperties": false,
+        "description": "`PUT /me/library/shelf/{item_id}`.",
+        "properties": {
+          "state": {
+            "$ref": "#/components/schemas/ShelfState"
+          }
+        },
+        "required": [
+          "state"
+        ],
+        "title": "ShelfBody",
+        "type": "object"
+      },
+      "ShelfEntryResponse": {
+        "description": "`ShelfEntry`: the card, the state, and `removed` for taken-down items.",
+        "properties": {
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "item": {
+            "$ref": "#/components/schemas/ItemCardSchema"
+          },
+          "removed": {
+            "title": "Removed",
+            "type": "boolean"
+          },
+          "state": {
+            "$ref": "#/components/schemas/ShelfState"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item",
+          "state",
+          "finished_at",
+          "updated_at",
+          "removed"
+        ],
+        "title": "ShelfEntryResponse",
         "type": "object"
       },
       "ShelfState": {
@@ -26717,6 +27404,50 @@
         "title": "TelegramAccountResponse",
         "type": "object"
       },
+      "app__interfaces__http__v1__library__reader__schemas_reader__ProgressBody": {
+        "additionalProperties": false,
+        "description": "`PUT /me/library/progress/{item_id}`.",
+        "properties": {
+          "client_ts": {
+            "format": "date-time",
+            "title": "Client Ts",
+            "type": "string"
+          },
+          "file_id": {
+            "format": "uuid",
+            "title": "File Id",
+            "type": "string"
+          },
+          "locator": {
+            "additionalProperties": true,
+            "title": "Locator",
+            "type": "object"
+          },
+          "percent": {
+            "title": "Percent",
+            "type": "number"
+          },
+          "seconds_read": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seconds Read"
+          }
+        },
+        "required": [
+          "file_id",
+          "locator",
+          "percent",
+          "client_ts"
+        ],
+        "title": "ProgressBody",
+        "type": "object"
+      },
       "app__interfaces__http__v1__links__schemas__FileItem": {
         "description": "A file as shown next to a link (the files module owns the full model).",
         "properties": {
@@ -27775,6 +28506,21 @@
           "resets_at"
         ],
         "title": "UsagePartResponse",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__notebooks__schemas_studio__ProgressBody": {
+        "description": "PUT .../progress: the state is opaque to the server (at most 16 KB).",
+        "properties": {
+          "state": {
+            "additionalProperties": true,
+            "title": "State",
+            "type": "object"
+          }
+        },
+        "required": [
+          "state"
+        ],
+        "title": "ProgressBody",
         "type": "object"
       },
       "app__modules__library__domain__enums__Visibility": {
@@ -35742,6 +36488,109 @@
         ]
       }
     },
+    "/v1/library/book-plans": {
+      "get": {
+        "description": "The textbook plan of the subject and year (`null` when there is none).",
+        "operationId": "get_book_plan_v1_library_book_plans_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "year_of_study",
+            "required": true,
+            "schema": {
+              "maximum": 4,
+              "minimum": 1,
+              "title": "Year Of Study",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/BookPlanResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Book Plan V1 Library Book Plans Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Book Plan",
+        "tags": [
+          "library"
+        ]
+      },
+      "put": {
+        "description": "Save the plan (teachers of the subject and librarians).",
+        "operationId": "put_book_plan_v1_library_book_plans_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PutBookPlanBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookPlanResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Book Plan",
+        "tags": [
+          "library"
+        ]
+      }
+    },
     "/v1/library/collections": {
       "get": {
         "description": "Published collections with the number of items the caller can see.",
@@ -42259,6 +43108,698 @@
         ]
       }
     },
+    "/v1/me/lessons/{lesson_id}/item-refs": {
+      "get": {
+        "description": "The books a lesson follows (its students and teacher).",
+        "operationId": "get_lesson_item_refs_v1_me_lessons__lesson_id__item_refs_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lesson_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lesson Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LessonItemRefResponse"
+                  },
+                  "title": "Response Get Lesson Item Refs V1 Me Lessons  Lesson Id  Item Refs Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Lesson Item Refs",
+        "tags": [
+          "library"
+        ]
+      }
+    },
+    "/v1/me/library": {
+      "get": {
+        "description": "Continue reading, shelf counts and the offline limits.",
+        "operationId": "get_me_library_v1_me_library_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeLibraryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Me Library",
+        "tags": [
+          "library"
+        ]
+      }
+    },
+    "/v1/me/library/annotations": {
+      "get": {
+        "description": "The caller's own annotations, newest first.",
+        "operationId": "list_annotations_v1_me_library_annotations_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "item_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Item Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AnnotationKind"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "color",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AnnotationColor"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Color"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_AnnotationResponse_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Annotations",
+        "tags": [
+          "library"
+        ]
+      },
+      "post": {
+        "description": "Store an annotation; sending the same `client_id` again changes nothing.",
+        "operationId": "create_annotation_v1_me_library_annotations_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnotationInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnotationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Annotation",
+        "tags": [
+          "library"
+        ]
+      }
+    },
+    "/v1/me/library/annotations/export": {
+      "get": {
+        "description": "The caller's annotations as Markdown text.",
+        "operationId": "export_annotations_v1_me_library_annotations_export_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "item_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Item Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Annotations",
+        "tags": [
+          "library"
+        ]
+      }
+    },
+    "/v1/me/library/annotations/sync": {
+      "post": {
+        "description": "Apply a device's queued changes (at most 200) and answer with their state.",
+        "operationId": "sync_annotations_v1_me_library_annotations_sync_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnotationsSyncBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnotationsSyncResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sync Annotations",
+        "tags": [
+          "library"
+        ]
+      }
+    },
+    "/v1/me/library/annotations/{annotation_id}": {
+      "delete": {
+        "description": "Delete an annotation of the caller.",
+        "operationId": "delete_annotation_v1_me_library_annotations__annotation_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "annotation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Annotation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Annotation",
+        "tags": [
+          "library"
+        ]
+      },
+      "patch": {
+        "description": "Change the note or the colour (`note: null` clears the note).",
+        "operationId": "update_annotation_v1_me_library_annotations__annotation_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "annotation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Annotation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnotationPatchBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnotationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Annotation",
+        "tags": [
+          "library"
+        ]
+      }
+    },
+    "/v1/me/library/progress/{item_id}": {
+      "put": {
+        "description": "Save the reading position (last write wins by `client_ts`).",
+        "operationId": "save_progress_v1_me_library_progress__item_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__interfaces__http__v1__library__reader__schemas_reader__ProgressBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save Progress",
+        "tags": [
+          "library"
+        ]
+      }
+    },
+    "/v1/me/library/shelf": {
+      "get": {
+        "description": "The shelf, newest change first; taken-down items stay as `removed` rows.",
+        "operationId": "list_shelf_v1_me_library_shelf_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ShelfState"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_ShelfEntryResponse_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Shelf",
+        "tags": [
+          "library"
+        ]
+      }
+    },
+    "/v1/me/library/shelf/{item_id}": {
+      "delete": {
+        "description": "Take an item off the shelf (nothing happens when it was not there).",
+        "operationId": "remove_shelf_entry_v1_me_library_shelf__item_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Shelf Entry",
+        "tags": [
+          "library"
+        ]
+      },
+      "put": {
+        "description": "Put an item on the shelf or move it (UniLibrary records too, as links).",
+        "operationId": "put_shelf_entry_v1_me_library_shelf__item_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShelfBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShelfEntryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Shelf Entry",
+        "tags": [
+          "library"
+        ]
+      }
+    },
     "/v1/me/library/uploads": {
       "get": {
         "description": "My materials with status, reason and place in the review queue.",
@@ -44036,7 +45577,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ProgressBody"
+                "$ref": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_studio__ProgressBody"
               }
             }
           },
@@ -47427,6 +48968,108 @@
         "summary": "Set Topic",
         "tags": [
           "staff-classwork"
+        ]
+      }
+    },
+    "/v1/staff/lessons/{lesson_id}/item-refs": {
+      "put": {
+        "description": "Replace the links of the lesson; its topic is never touched.",
+        "operationId": "set_lesson_item_refs_v1_staff_lessons__lesson_id__item_refs_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lesson_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lesson Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetLessonRefsBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LessonItemRefResponse"
+                  },
+                  "title": "Response Set Lesson Item Refs V1 Staff Lessons  Lesson Id  Item Refs Put",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Lesson Item Refs",
+        "tags": [
+          "library"
+        ]
+      }
+    },
+    "/v1/staff/library/book-plans/next": {
+      "get": {
+        "description": "The section after the last one linked to an earlier lesson, if any.",
+        "operationId": "suggest_next_section_v1_staff_library_book_plans_next_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "lesson_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lesson Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NextSuggestionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Suggest Next Section",
+        "tags": [
+          "library"
         ]
       }
     },

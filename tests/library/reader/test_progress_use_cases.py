@@ -46,9 +46,7 @@ async def report(
     )
 
 
-async def stored(
-    uow_factory: UowFactory, actor: Actor, item: Item
-) -> ReadingProgress:
+async def stored(uow_factory: UowFactory, actor: Actor, item: Item) -> ReadingProgress:
     """The stored progress of the actor in the item."""
     async with uow_factory() as uow:
         progress = await uow.progress.get(actor.user_id, item.id)
@@ -131,7 +129,11 @@ async def test_item_the_user_cannot_read_is_not_found(
 
 
 async def test_file_of_another_item_is_refused(
-    reader: ReaderServices, student: Actor, book: Item, material: Item, clock: FixedClock
+    reader: ReaderServices,
+    student: Actor,
+    book: Item,
+    material: Item,
+    clock: FixedClock,
 ) -> None:
     """LIB-6: the file must belong to the item."""
     with pytest.raises(FileNotInItemError):

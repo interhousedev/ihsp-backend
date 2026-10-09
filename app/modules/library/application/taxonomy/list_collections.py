@@ -35,7 +35,8 @@ class ListCollections:
             stored = await uow.taxonomy.collection_item_ids([c.id for c in collections])
             every_id = list(dict.fromkeys(i for ids in stored.values() for i in ids))
             visible = {
-                item.id for item in await self.builder.visible_items(uow, every_id, viewer)
+                item.id
+                for item in await self.builder.visible_items(uow, every_id, viewer)
             }
         return [
             await self.builder.public_view(

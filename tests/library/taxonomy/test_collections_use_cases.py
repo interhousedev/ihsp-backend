@@ -1,6 +1,7 @@
 """LIB-4, LIB-2: curated collections, public reading and librarian management."""
 
 from collections.abc import Awaitable, Callable
+
 from app.modules.library.domain.entities import Item
 from app.modules.library.domain.enums import ItemStatus, Rights, Visibility
 from app.modules.library.domain.errors import CollectionNotFoundError, ItemNotFoundError
@@ -304,4 +305,3 @@ async def test_manage_list_shows_drafts_with_all_item_ids(
 
     assert [c.title["en"] for c in listed] == ["B", "A"]
     assert listed[0].item_ids == (book.id,)
-

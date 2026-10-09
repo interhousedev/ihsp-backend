@@ -60,7 +60,10 @@ class ListShelf:
             items = await uow.items.get_many([row.item_id for row in page])
             present = [row for row in page if row.item_id in items]
             cards = await self.cards.build(
-                uow, [items[row.item_id] for row in present], viewer=actor, locale=locale
+                uow,
+                [items[row.item_id] for row in present],
+                viewer=actor,
+                locale=locale,
             )
         views = [
             shelf_entry_view(row, items[row.item_id], card, actor)
@@ -71,7 +74,9 @@ class ListShelf:
         return Paged(
             items=views,
             next_cursor=(
-                encode_cursor({"u": last.updated_at.isoformat(), "i": str(last.item_id)})
+                encode_cursor(
+                    {"u": last.updated_at.isoformat(), "i": str(last.item_id)}
+                )
                 if last
                 else None
             ),

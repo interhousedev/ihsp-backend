@@ -6,11 +6,11 @@ from uuid import UUID
 from app.modules.library.domain.enums import AnnotationColor, AnnotationKind
 from app.modules.library.domain.reader_annotation import Annotation
 from app.modules.library.infrastructure.orm import Annotation as AnnotationRow
+from app.modules.library.infrastructure.repositories.rowcount import rows_affected
 from app.modules.library.ports.annotation_repository import (
     AnnotationCursor,
     AnnotationFilter,
 )
-from app.modules.library.infrastructure.repositories.rowcount import rows_affected
 
 from sqlalchemy import Select, and_, delete, or_, select
 from sqlalchemy.dialects.postgresql import insert
@@ -36,7 +36,7 @@ def _annotation_from(row: AnnotationRow) -> Annotation:
 
 
 def _like_pattern(text: str) -> str:
-    """`%text%` with the LIKE wildcards of `text` escaped (escape character `\\`)."""
+    """`%text%` with the LIKE wildcards of `text` escaped."""
     escaped = text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
     return f"%{escaped}%"
 
@@ -158,7 +158,7 @@ class SqlAnnotationRepository:
         after: AnnotationCursor | None,
         limit: int,
     ) -> list[Annotation]:
-        """Live annotations, most recently changed first, continuing after the cursor."""
+        """Live annotations, most recently changed first, after the cursor."""
         query = select(AnnotationRow).where(
             AnnotationRow.user_id == user_id, AnnotationRow.deleted_at.is_(None)
         )

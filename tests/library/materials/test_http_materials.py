@@ -348,4 +348,6 @@ async def test_status_reason_codes_are_published_in_the_openapi_schema(
     schema = (await client.get("/openapi.json")).json()
 
     codes = schema["components"]["schemas"]["StatusReasonCode"]["enum"]
-    assert {"withdrawn_by_owner", "reported", "superseded", "account_closed"} <= set(codes)
+    assert {"withdrawn_by_owner", "reported", "superseded", "account_closed"} <= set(
+        codes
+    )

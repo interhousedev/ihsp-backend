@@ -18,6 +18,7 @@ from redis.exceptions import RedisError
 log = structlog.get_logger(__name__)
 
 KEY_TTL = timedelta(days=3)
+NO_RESULT_QUERY_MAX = 100
 
 
 def stats_key(day: str) -> str:
@@ -63,3 +64,15 @@ class RedisStatsRecorder:
             await self.redis.expire(stats_key(day), int(KEY_TTL.total_seconds()))
         except RedisError:
             log.warning("library_stats_failed", item_id=str(item_id))
+
+    async def no_result(self, query: str) -> None:
+        """Count one search that found nothing."""
+        text = " ".join(query.lower().split())[:NO_RESULT_QUERY_MAX]
+        if not text:
+            return
+        key = f"library:stats:noresult:{self._day()}"
+        try:
+            await wait(self.redis.hincrby(key, text, 1))
+            await wait(self.redis.expire(key, int(KEY_TTL.total_seconds())))
+        except RedisError:
+            log.warning("library_stats_failed", query_length=len(text))

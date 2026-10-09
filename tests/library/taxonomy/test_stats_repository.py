@@ -188,7 +188,9 @@ async def test_junk_in_the_hash_is_ignored(redis: FakeRedis, clock: FixedClock) 
 async def test_searches_without_results_are_ranked(redis: FakeRedis) -> None:
     """LIB-16: top queries of a day, most frequent first."""
     counters = RedisStatsCounters(redis)
-    await redis.hset(no_result_key("2026-10-05"), mapping={"b": "2", "a": "2", "c": "9"})
+    await redis.hset(
+        no_result_key("2026-10-05"), mapping={"b": "2", "a": "2", "c": "9"}
+    )
 
     top = await counters.no_results(DAY, limit=2)
 

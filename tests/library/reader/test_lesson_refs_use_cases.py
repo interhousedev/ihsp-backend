@@ -18,7 +18,9 @@ from tests.fakes.library.lessons import FakeLessonDirectory
 import pytest
 
 
-def ref(item: Item, label: str = "Section 12", pages: tuple[int, int] = (54, 61)) -> LessonRefInput:
+def ref(
+    item: Item, label: str = "Section 12", pages: tuple[int, int] = (54, 61)
+) -> LessonRefInput:
     """A link to pages of the item."""
     return LessonRefInput(
         item_id=item.id, section_label=label, page_from=pages[0], page_to=pages[1]
@@ -34,7 +36,9 @@ async def test_teacher_links_the_lesson_to_a_section_and_students_see_it(
     book: Item,
 ) -> None:
     """LIB-11: the link shows as title, section and pages."""
-    lesson = lessons.add(subject, teacher_id=teacher.user_id, students=(student.user_id,))
+    lesson = lessons.add(
+        subject, teacher_id=teacher.user_id, students=(student.user_id,)
+    )
 
     saved = await reader.set_lesson_item_refs.execute(teacher, lesson, [ref(book)])
     seen_by_student = await reader.get_lesson_item_refs.execute(student, lesson)
@@ -118,7 +122,9 @@ async def test_only_people_of_the_lesson_may_read_its_links(
     book: Item,
 ) -> None:
     """LIB-16: a student outside the audience sees nothing, not even that it exists."""
-    lesson = lessons.add(subject, teacher_id=teacher.user_id, students=(student.user_id,))
+    lesson = lessons.add(
+        subject, teacher_id=teacher.user_id, students=(student.user_id,)
+    )
     await reader.set_lesson_item_refs.execute(teacher, lesson, [ref(book)])
 
     with pytest.raises(LessonNotFoundError):
@@ -139,10 +145,16 @@ async def test_links_to_books_the_viewer_cannot_see_are_left_out(
     librarian: Actor,
 ) -> None:
     """LIB-14: a taken-down book vanishes from the lesson of a student."""
-    lesson = lessons.add(subject, teacher_id=librarian.user_id, students=(student.user_id,))
-    await reader.set_lesson_item_refs.execute(
-        librarian, lesson, [ref(book, "A"), ref(taken_down, "B", (1, 2))]
-    ) if False else None
+    lesson = lessons.add(
+        subject, teacher_id=librarian.user_id, students=(student.user_id,)
+    )
+    (
+        await reader.set_lesson_item_refs.execute(
+            librarian, lesson, [ref(book, "A"), ref(taken_down, "B", (1, 2))]
+        )
+        if False
+        else None
+    )
     # Set through the lesson's real teacher so the librarian check does not interfere.
     lessons.lessons[lesson] = dataclasses.replace(
         lessons.lessons[lesson], teacher_id=teacher.user_id
@@ -185,9 +197,7 @@ async def test_invalid_links_are_refused(
     lesson = lessons.add(subject, teacher_id=teacher.user_id)
 
     with pytest.raises(InvalidLessonRefError):
-        await reader.set_lesson_item_refs.execute(
-            teacher, lesson, [ref(book, "   ")]
-        )
+        await reader.set_lesson_item_refs.execute(teacher, lesson, [ref(book, "   ")])
     with pytest.raises(InvalidLessonRefError):
         await reader.set_lesson_item_refs.execute(
             teacher, lesson, [ref(book, "A", (9, 3))]

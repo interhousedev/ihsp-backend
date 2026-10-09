@@ -86,7 +86,7 @@ class RedisStatsCounters:
             await wait(self.redis.delete(*(readers_key(stamp, i) for i in chunk)))
 
     async def no_results(self, day: date, limit: int) -> dict[str, int]:
-        """The most frequent searches without results on the day, as `{query: count}`."""
+        """The most frequent searches without results on the day: `{query: count}`."""
         try:
             fields: dict[str, str] = await wait(
                 self.redis.hgetall(no_result_key(day.isoformat()))

@@ -135,7 +135,9 @@ async def test_counts_can_leave_out_items_that_are_no_longer_listed(
     """LIB-7: removed rows stay on the shelf but are not counted."""
     user = new_id()
     shown = await store_item(make_book(title="Shown"))
-    taken_down = await store_item(make_book(title="Gone", status=ItemStatus.UNPUBLISHED))
+    taken_down = await store_item(
+        make_book(title="Gone", status=ItemStatus.UNPUBLISHED)
+    )
     hidden = await store_item(make_book(title="Hidden", visibility=Visibility.HIDDEN))
     async with uow_factory() as uow:
         for item in (shown, taken_down, hidden):

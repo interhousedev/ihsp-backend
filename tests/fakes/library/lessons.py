@@ -14,6 +14,7 @@ class FakeLessonDirectory:
         self.lessons: dict[UUID, LessonSubject] = {}
         self.students: dict[UUID, set[UUID]] = {}  # lesson -> students
         self.history: dict[UUID, list[UUID]] = {}  # lesson -> earlier, newest first
+        self.topics: dict[UUID, str] = {}  # lesson -> topic (never changed by us)
 
     def add(
         self,

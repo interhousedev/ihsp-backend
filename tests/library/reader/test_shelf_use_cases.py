@@ -104,7 +104,9 @@ async def test_taken_down_item_stays_as_a_removed_row(
 ) -> None:
     """LIB-14: a takedown keeps the title on the shelf and marks the row removed."""
     book = await store_item(make_book(title="Copyrighted"))
-    await reader.put_shelf_entry.execute(student, book.id, ShelfState.READING, locale="en")
+    await reader.put_shelf_entry.execute(
+        student, book.id, ShelfState.READING, locale="en"
+    )
     async with uow_factory() as uow:
         stored = await uow.items.get(book.id)
         assert stored is not None
@@ -143,7 +145,9 @@ async def test_shelf_is_newest_first_with_a_cursor_and_a_state_filter(
     second = await reader.list_shelf.execute(
         student, limit=2, cursor=first.next_cursor, locale="en"
     )
-    wanted = await reader.list_shelf.execute(student, state=ShelfState.WANT, locale="en")
+    wanted = await reader.list_shelf.execute(
+        student, state=ShelfState.WANT, locale="en"
+    )
 
     assert [e.item.id for e in first.items] == [ids[2], ids[1]]
     assert first.next_cursor is not None
@@ -161,7 +165,9 @@ async def test_shelves_are_private(
     book: Item,
 ) -> None:
     """LIB-16: nobody else, librarians and Administration included, sees a shelf."""
-    await reader.put_shelf_entry.execute(student, book.id, ShelfState.READING, locale="en")
+    await reader.put_shelf_entry.execute(
+        student, book.id, ShelfState.READING, locale="en"
+    )
 
     for other in (other_student, librarian, admin):
         page = await reader.list_shelf.execute(other, locale="en")

@@ -38,6 +38,7 @@ async def test_the_notes_of_a_book_are_added_under_its_title(
         "item_id": str(book.id),
         "item_title": "Physics 10",
         "item_kind": "book",
+        "author": "A. Author",
     }
 
 

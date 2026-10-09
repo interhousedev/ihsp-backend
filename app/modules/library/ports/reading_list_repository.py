@@ -66,7 +66,7 @@ class ReadingListRepository(Protocol):
         ...
 
     async def clear_topic(self, topic_ids: Collection[UUID]) -> int:
-        """Forget the topics on entries (a deleted topic); returns the entries changed."""
+        """Forget the topics on entries (a deleted topic); returns entries changed."""
         ...
 
     async def summaries_for_subject(

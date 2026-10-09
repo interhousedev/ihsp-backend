@@ -61,7 +61,9 @@ async def test_list_round_trip_and_update(uow_factory: UowFactory) -> None:
     assert loaded.updated_at == NOW + timedelta(days=1)
 
 
-async def test_find_filters_and_orders_by_latest_change(uow_factory: UowFactory) -> None:
+async def test_find_filters_and_orders_by_latest_change(
+    uow_factory: UowFactory,
+) -> None:
     """LIB-4: subject, owner, group and status filters; newest change first."""
     group = new_id()
     old = make_reading_list(OWNER, title="Old", subject_id=SUBJECT)
@@ -119,7 +121,9 @@ async def test_entries_round_trip_and_replace_in_one_step(
             ],
         )
         first = (await uow.lists.entries([reading_list.id]))[reading_list.id]
-        await uow.lists.replace_entries(reading_list.id, [link_entry(0, "https://b.example")])
+        await uow.lists.replace_entries(
+            reading_list.id, [link_entry(0, "https://b.example")]
+        )
         second = (await uow.lists.entries([reading_list.id]))[reading_list.id]
         await uow.lists.replace_entries(reading_list.id, [])
         empty = await uow.lists.entries([reading_list.id])
@@ -200,7 +204,14 @@ async def test_hub_summaries_show_published_lists_the_group_may_see(
     )
     elsewhere = make_reading_list(OWNER, title="Elsewhere", subject_id=new_id())
     async with uow_factory() as uow:
-        for each in (subject_list, school_list, own_group, other_group, draft, elsewhere):
+        for each in (
+            subject_list,
+            school_list,
+            own_group,
+            other_group,
+            draft,
+            elsewhere,
+        ):
             await uow.lists.add(each)
         await uow.lists.replace_entries(
             subject_list.id,

@@ -5,10 +5,20 @@ from dataclasses import dataclass
 from app.modules.library.application.reader.annotation_writer import AnnotationWriter
 from app.modules.library.application.reader.create_annotation import CreateAnnotation
 from app.modules.library.application.reader.delete_annotation import DeleteAnnotation
+from app.modules.library.application.reader.delete_reader_data import DeleteReaderData
 from app.modules.library.application.reader.export_annotations import ExportAnnotations
+from app.modules.library.application.reader.get_book_plan import GetBookPlan
 from app.modules.library.application.reader.get_me_library import GetMeLibrary
+from app.modules.library.application.reader.lesson_access import NoLessons
+from app.modules.library.application.reader.lesson_item_refs import (
+    GetLessonItemRefs,
+    SetLessonItemRefs,
+    SuggestNextSection,
+)
 from app.modules.library.application.reader.list_annotations import ListAnnotations
 from app.modules.library.application.reader.list_shelf import ListShelf
+from app.modules.library.application.reader.public_queries import LibraryQueriesImpl
+from app.modules.library.application.reader.put_book_plan import PutBookPlan
 from app.modules.library.application.reader.put_shelf_entry import PutShelfEntry
 from app.modules.library.application.reader.remove_shelf_entry import RemoveShelfEntry
 from app.modules.library.application.reader.save_progress import SaveProgress
@@ -33,6 +43,13 @@ class ReaderServices:
     update_annotation: UpdateAnnotation
     delete_annotation: DeleteAnnotation
     export_annotations: ExportAnnotations
+    delete_owner: DeleteReaderData
+    put_book_plan: PutBookPlan
+    get_book_plan: GetBookPlan
+    get_lesson_item_refs: GetLessonItemRefs
+    set_lesson_item_refs: SetLessonItemRefs
+    suggest_next_section: SuggestNextSection
+    queries: LibraryQueriesImpl
 
 
 def build_reader(
@@ -40,6 +57,7 @@ def build_reader(
 ) -> ReaderServices:
     """Wire the use cases of the reader area."""
     writer = AnnotationWriter(clock=core.clock)
+    directory = lessons or NoLessons()
     return ReaderServices(
         put_shelf_entry=PutShelfEntry(
             uow_factory=core.uow_factory, clock=core.clock, cards=core.cards
@@ -62,4 +80,21 @@ def build_reader(
             uow_factory=core.uow_factory, clock=core.clock
         ),
         export_annotations=ExportAnnotations(uow_factory=core.uow_factory),
+        delete_owner=DeleteReaderData(uow_factory=core.uow_factory),
+        put_book_plan=PutBookPlan(
+            uow_factory=core.uow_factory, clock=core.clock, academic=core.academic
+        ),
+        get_book_plan=GetBookPlan(uow_factory=core.uow_factory, academic=core.academic),
+        get_lesson_item_refs=GetLessonItemRefs(
+            uow_factory=core.uow_factory, lessons=directory
+        ),
+        set_lesson_item_refs=SetLessonItemRefs(
+            uow_factory=core.uow_factory, lessons=directory, clock=core.clock
+        ),
+        suggest_next_section=SuggestNextSection(
+            uow_factory=core.uow_factory, lessons=directory
+        ),
+        queries=LibraryQueriesImpl(
+            uow_factory=core.uow_factory, academic=core.academic
+        ),
     )

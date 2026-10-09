@@ -15,6 +15,7 @@ from tests.library.reader.helpers import StoreItem
 import pytest
 import pytest_asyncio
 
+
 @pytest.fixture
 def lessons() -> FakeLessonDirectory:
     """Lessons configured by the test."""

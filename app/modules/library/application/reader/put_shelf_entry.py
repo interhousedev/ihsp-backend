@@ -16,7 +16,9 @@ from app.shared.clock import Clock
 class PutShelfEntry:
     """Shelve a book, a material or a pinned UniLibrary record (as a link)."""
 
-    def __init__(self, *, uow_factory: UowFactory, clock: Clock, cards: CardBuilder) -> None:
+    def __init__(
+        self, *, uow_factory: UowFactory, clock: Clock, cards: CardBuilder
+    ) -> None:
         """Store the unit of work factory, the clock and the card builder."""
         self.uow_factory = uow_factory
         self.clock = clock

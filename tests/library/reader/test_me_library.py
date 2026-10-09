@@ -84,9 +84,15 @@ async def test_shelf_counts_cover_all_states_and_skip_removed_rows(
     first = await store_item(make_book(title="One"))
     second = await store_item(make_book(title="Two"))
     gone = await store_item(make_book(title="Soon gone"))
-    await reader.put_shelf_entry.execute(student, first.id, ShelfState.WANT, locale="en")
-    await reader.put_shelf_entry.execute(student, second.id, ShelfState.WANT, locale="en")
-    await reader.put_shelf_entry.execute(student, gone.id, ShelfState.READING, locale="en")
+    await reader.put_shelf_entry.execute(
+        student, first.id, ShelfState.WANT, locale="en"
+    )
+    await reader.put_shelf_entry.execute(
+        student, second.id, ShelfState.WANT, locale="en"
+    )
+    await reader.put_shelf_entry.execute(
+        student, gone.id, ShelfState.READING, locale="en"
+    )
     async with uow_factory() as uow:
         item = await uow.items.get(gone.id)
         assert item is not None

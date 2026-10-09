@@ -21,8 +21,8 @@ from app.shared.actor import Actor
 from app.shared.base_error import ForbiddenError
 from app.shared.ids import new_id
 from tests.factories.library import make_book
-from tests.library.taxonomy.conftest import Recorded
 from tests.fakes.library.academic import FakeAcademicDirectory
+from tests.library.taxonomy.conftest import Recorded
 from tests.library.taxonomy.helpers import item_entry, make_reading_list
 
 import pytest

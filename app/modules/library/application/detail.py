@@ -1,6 +1,7 @@
 """Builds `ItemDetail` (the TS contract): the card plus status, files, topics, lists."""
 
 from dataclasses import dataclass
+from typing import Any
 from uuid import UUID
 
 from app.modules.library.application.cards import CardBuilder
@@ -82,6 +83,15 @@ class CanView:
 
 
 @dataclass(frozen=True, slots=True)
+class ProgressView:
+    """Where the viewer stopped in the item (books and materials only)."""
+
+    file_id: UUID
+    locator: dict[str, Any]
+    percent: float
+
+
+@dataclass(frozen=True, slots=True)
 class ItemDetailView:
     """`ItemDetail` of the TS contract."""
 
@@ -101,6 +111,7 @@ class ItemDetailView:
     rights_box: RightsBoxView | None = None
     external_keywords: tuple[str, ...] | None = None
     external_isbn: str | None = None
+    progress: ProgressView | None = None
 
 
 def file_view(item_file: ItemFile) -> ItemFileView:
@@ -154,6 +165,11 @@ class DetailBuilder:
         lists = await uow.lists.lists_for_item(
             item.id, group_id=group_id, staff=is_librarian(viewer)
         )
+        saved = (
+            await uow.progress.get(viewer.user_id, item.id)
+            if viewer is not None and item.kind is not ItemKind.EXTERNAL
+            else None
+        )
         external = item.external
         snapshot = external.snapshot if external else {}
         keywords = snapshot.get("keywords")
@@ -191,6 +207,15 @@ class DetailBuilder:
                 tuple(str(k) for k in keywords) if isinstance(keywords, list) else None
             ),
             external_isbn=(str(snapshot["isbn"]) if snapshot.get("isbn") else None),
+            progress=(
+                ProgressView(
+                    file_id=saved.file_id,
+                    locator=dict(saved.locator),
+                    percent=saved.percent,
+                )
+                if saved
+                else None
+            ),
         )
 
     def _rights_box(self, item: Item, locale: str) -> RightsBoxView | None:

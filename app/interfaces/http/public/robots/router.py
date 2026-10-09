@@ -1,13 +1,27 @@
-"""robots.txt of the public hosts: nothing is indexed."""
+"""robots.txt of the public hosts: nothing is indexed, except the library's pages."""
 
-from fastapi import APIRouter
+from typing import Annotated
+
+from app.bootstrap.container import Container
+from app.interfaces.http.dependencies import get_container
+from app.interfaces.http.public.library.robots import (
+    is_library_host,
+    library_robots_txt,
+)
+
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import PlainTextResponse
 
 ROBOTS_TXT = "User-agent: *\nDisallow: /\n"
 
 
-async def robots() -> PlainTextResponse:
-    """Disallow crawling of short links, shares and room pages (ROOM-5)."""
+async def robots(
+    request: Request, container: Annotated[Container, Depends(get_container)]
+) -> PlainTextResponse:
+    """Disallow crawling (ROOM-5); the library host shows its public pages."""
+    settings = container.settings.library
+    if is_library_host(request, settings):
+        return PlainTextResponse(library_robots_txt(settings))
     return PlainTextResponse(ROBOTS_TXT)
 
 

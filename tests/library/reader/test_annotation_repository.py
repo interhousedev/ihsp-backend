@@ -105,7 +105,9 @@ async def test_soft_deleted_annotation_is_hidden_but_found_by_client_id(
     assert listed == [] and for_item == []
 
 
-async def test_find_any_matches_the_id_or_the_client_id(uow_factory: UowFactory) -> None:
+async def test_find_any_matches_the_id_or_the_client_id(
+    uow_factory: UowFactory,
+) -> None:
     """LIB-9: a device that never synced a note deletes it by `client_id`."""
     user = new_id()
     first, second = note(user), note(user)
@@ -118,12 +120,19 @@ async def test_find_any_matches_the_id_or_the_client_id(uow_factory: UowFactory)
     assert {a.id for a in found} == {first.id, second.id}
 
 
-async def test_list_page_filters_and_pages_newest_first(uow_factory: UowFactory) -> None:
+async def test_list_page_filters_and_pages_newest_first(
+    uow_factory: UowFactory,
+) -> None:
     """LIB-8: filter by item, kind, colour and text; page by `updated_at`."""
     user, item = new_id(), new_id()
     first = note(user, item, minutes=1, quote="Force equals mass times acceleration")
     second = note(
-        user, item, minutes=2, kind=AnnotationKind.NOTE, quote=None, text="Ask about 50%"
+        user,
+        item,
+        minutes=2,
+        kind=AnnotationKind.NOTE,
+        quote=None,
+        text="Ask about 50%",
     )
     third = note(user, item, minutes=3, color=AnnotationColor.GREEN)
     elsewhere = note(user, minutes=4)
@@ -264,7 +273,9 @@ async def test_adding_the_same_client_id_twice_keeps_the_first(
     first = note(user, client_id=client_id, text="first")
     async with uow_factory() as uow:
         inserted = await uow.annotations.add(first)
-        duplicate = await uow.annotations.add(note(user, client_id=client_id, text="second"))
+        duplicate = await uow.annotations.add(
+            note(user, client_id=client_id, text="second")
+        )
 
         kept = await uow.annotations.get_by_client_id(user, client_id)
         everything = await uow.annotations.list_for_user(user, item_id=None)

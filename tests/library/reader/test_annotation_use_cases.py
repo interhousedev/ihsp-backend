@@ -164,7 +164,9 @@ async def test_sync_creates_updates_and_deletes_in_one_call(
     clock.advance(minutes=5)
 
     fresh = data(book, quote="new")
-    edited = data(book, client_id=keep.client_id, note="final", color=AnnotationColor.PINK)
+    edited = data(
+        book, client_id=keep.client_id, note="final", color=AnnotationColor.PINK
+    )
     result = await reader.sync_annotations.execute(
         student, upserts=[fresh, edited], deletes=[drop.id]
     )
@@ -195,10 +197,14 @@ async def test_sync_replay_does_not_bring_back_a_deleted_annotation(
 ) -> None:
     """LIB-9: syncing the same queue twice is safe."""
     payload = data(book)
-    first = await reader.sync_annotations.execute(student, upserts=[payload], deletes=[])
+    first = await reader.sync_annotations.execute(
+        student, upserts=[payload], deletes=[]
+    )
     await reader.delete_annotation.execute(student, first[0].id)
 
-    again = await reader.sync_annotations.execute(student, upserts=[payload], deletes=[])
+    again = await reader.sync_annotations.execute(
+        student, upserts=[payload], deletes=[]
+    )
 
     assert again == []
     assert (await reader.list_annotations.execute(student)).items == []
@@ -256,11 +262,15 @@ async def test_one_bad_change_rolls_the_whole_sync_back(
 
 
 async def test_list_filters_by_item_kind_colour_and_text_and_pages(
-    reader: ReaderServices, student: Actor, book: Item, material: Item, clock: FixedClock
+    reader: ReaderServices,
+    student: Actor,
+    book: Item,
+    material: Item,
+    clock: FixedClock,
 ) -> None:
     """LIB-8: My library searches and filters the notes, newest first."""
     created: list[UUID] = []
-    for item, payload in (
+    for _item, payload in (
         (book, data(book, quote="mass and force")),
         (book, data(book, kind=AnnotationKind.NOTE, quote=None, note="ask teacher")),
         (material, data(material, color=AnnotationColor.BLUE)),

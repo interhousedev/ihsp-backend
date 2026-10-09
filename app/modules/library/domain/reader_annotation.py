@@ -90,7 +90,7 @@ def edit_annotation(
     note: str | None | Unchanged = UNCHANGED,
     color: AnnotationColor | None = None,
 ) -> Annotation:
-    """The annotation with a new note and/or colour; same object when nothing changes."""
+    """The annotation with a new note and/or colour (same object if unchanged)."""
     new_note = (
         annotation.note
         if isinstance(note, Unchanged)

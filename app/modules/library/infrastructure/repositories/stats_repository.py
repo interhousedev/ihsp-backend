@@ -28,7 +28,7 @@ class SqlStatsRepository:
     async def upsert_day(
         self, item_id: UUID, day: date, opens: int, readers: int, offline_saves: int
     ) -> None:
-        """Set the counters of the item on the day (repeating the call changes nothing)."""
+        """Set the counters of the item on the day (a repeat changes nothing)."""
         values = {"opens": opens, "readers": readers, "offline_saves": offline_saves}
         statement = insert(StatRow).values(item_id=item_id, day=day, **values)
         await self.session.execute(
@@ -39,7 +39,7 @@ class SqlStatsRepository:
         )
 
     async def totals(self, start: date, end: date) -> tuple[int, int]:
-        """`(opens, readers)` over the days; readers add up each item's daily readers."""
+        """`(opens, readers)` over the days; daily readers of each item add up."""
         row = (
             await self.session.execute(
                 select(
@@ -84,7 +84,7 @@ class SqlStatsRepository:
         return {ReportReason(reason): int(count) for reason, count in rows.all()}
 
     async def uploads_by_day(self, since: datetime, until: datetime) -> dict[date, int]:
-        """Materials created in `[since, until)` per UTC day (days without are absent)."""
+        """Materials created in `[since, until)` per UTC day (empty days absent)."""
         # A literal zone keeps the SELECT and GROUP BY expressions identical.
         day = cast(func.timezone(literal_column("'UTC'"), ItemRow.created_at), Date)
         rows = await self.session.execute(

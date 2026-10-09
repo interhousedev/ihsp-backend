@@ -36,7 +36,9 @@ class UpdateAnnotation:
             current = await uow.annotations.get(actor.user_id, annotation_id)
             if current is None:
                 raise AnnotationNotFoundError(support_details=f"{annotation_id}")
-            edited = edit_annotation(current, now=self.clock.now(), note=note, color=color)
+            edited = edit_annotation(
+                current, now=self.clock.now(), note=note, color=color
+            )
             if edited is not current:
                 await uow.annotations.save(edited)
                 await uow.commit()

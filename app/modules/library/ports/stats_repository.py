@@ -14,11 +14,11 @@ class StatsRepository(Protocol):
     async def upsert_day(
         self, item_id: UUID, day: date, opens: int, readers: int, offline_saves: int
     ) -> None:
-        """Set the counters of the item on the day (repeating the call changes nothing)."""
+        """Set the counters of the item on the day (a repeat changes nothing)."""
         ...
 
     async def totals(self, start: date, end: date) -> tuple[int, int]:
-        """`(opens, readers)` over the days; readers add up each item's daily readers."""
+        """`(opens, readers)` over the days; daily readers of each item add up."""
         ...
 
     async def top_items(
@@ -38,7 +38,7 @@ class StatsRepository(Protocol):
         ...
 
     async def uploads_by_day(self, since: datetime, until: datetime) -> dict[date, int]:
-        """Materials created in `[since, until)` per UTC day (days without are absent)."""
+        """Materials created in `[since, until)` per UTC day (empty days absent)."""
         ...
 
     async def subject_ids_with_materials(self) -> set[UUID]:
@@ -58,5 +58,5 @@ class StatsCounters(Protocol):
         ...
 
     async def no_results(self, day: date, limit: int) -> dict[str, int]:
-        """The most frequent searches without results on the day, as `{query: count}`."""
+        """The most frequent searches without results on the day: `{query: count}`."""
         ...

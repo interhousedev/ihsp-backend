@@ -31,7 +31,6 @@ from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-
 def names_group(group_id: UUID) -> ColumnElement[bool]:
     """`group_ids @> {group_id}`: the list names the group (uses the GIN index).
 
@@ -220,7 +219,7 @@ class SqlReadingListRepository:
         await self.session.flush()
 
     async def clear_topic(self, topic_ids: Collection[UUID]) -> int:
-        """Forget the topics on entries (a deleted topic); returns the entries changed."""
+        """Forget the topics on entries (a deleted topic); returns entries changed."""
         if not topic_ids:
             return 0
         rows = await self.session.execute(
@@ -242,9 +241,7 @@ class SqlReadingListRepository:
         ]
         if group_id is not None:
             audience.append(
-                and_(
-                    ListRow.scope == ListScope.GROUPS.value, names_group(group_id)
-                )
+                and_(ListRow.scope == ListScope.GROUPS.value, names_group(group_id))
             )
         listed = or_(
             ListItemRow.item_id.is_(None),

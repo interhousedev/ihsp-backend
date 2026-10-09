@@ -14,3 +14,7 @@ class StatsRecorder(Protocol):
     async def offline_saved(self, item_id: UUID) -> None:
         """Count one 'saved for offline' of the item."""
         ...
+
+    async def no_result(self, query: str) -> None:
+        """Count one search that found nothing (shown to librarians, never users)."""
+        ...
