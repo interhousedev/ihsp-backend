@@ -7927,13 +7927,7 @@
             "type": "string"
           },
           "purpose": {
-            "enum": [
-              "ai_upload",
-              "link",
-              "mail"
-            ],
-            "title": "Purpose",
-            "type": "string"
+            "$ref": "#/components/schemas/FilePurpose"
           },
           "reject_reason": {
             "anyOf": [

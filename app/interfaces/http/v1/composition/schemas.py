@@ -9,6 +9,7 @@ from app.interfaces.http.v1.composition.shared_schemas import (
     LessonItemResponse,
     SubjectRefResponse,
 )
+from app.shared.contracts.files import FilePurpose
 
 from pydantic import BaseModel
 
@@ -43,7 +44,7 @@ class FileItemResponse(BaseModel):
     name: str
     content_type: str
     byte_size: int
-    purpose: Literal["ai_upload", "link", "mail"]
+    purpose: FilePurpose
     status: Literal["pending", "processing", "ready", "rejected", "deleted"]
     reject_reason: str | None
     text_bytes: int | None
