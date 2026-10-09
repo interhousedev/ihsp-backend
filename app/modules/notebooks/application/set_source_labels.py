@@ -50,7 +50,9 @@ class SetSourceLabels:
         async with self.uow_factory() as uow:
             await load_notebook(uow, actor.user_id, notebook_id, for_update=True)
             await load_source(uow, actor.user_id, notebook_id, source_id)
-            known = {label.id for label in await uow.labels.list_for_notebook(notebook_id)}
+            known = {
+                label.id for label in await uow.labels.list_for_notebook(notebook_id)
+            }
             if not set(ids) <= known:
                 raise LabelNotFoundError()
             await uow.labels.replace_links(source_id, ids, LabelOrigin.MANUAL)

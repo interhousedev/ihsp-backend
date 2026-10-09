@@ -27,7 +27,9 @@ class LabelsServices:
     label_sources: LabelSources
 
 
-def build_labels(core: NotebooksCore, *, sleep: Sleep = asyncio.sleep) -> LabelsServices:
+def build_labels(
+    core: NotebooksCore, *, sleep: Sleep = asyncio.sleep
+) -> LabelsServices:
     """Build the label use cases; `sleep` is the pause between model retries."""
     deps = core.deps
     return LabelsServices(
