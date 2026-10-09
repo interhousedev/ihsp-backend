@@ -126,6 +126,12 @@ class LearningAttemptQuestionView(BaseModel):
     prompt: str
     points: float
     options: list[dict[str, str]] | None = None
+    lefts: list[dict[str, str]] | None = None
+    rights: list[dict[str, str]] | None = None
+    table: dict[str, list[str]] | None = None
+    blanks: int | None = None
+    variables: list[str] | None = None
+    code: dict[str, Any] | None = None
 
 
 class LearningAttemptView(BaseModel):
@@ -150,6 +156,18 @@ class LearningTextBlockView(BaseModel):
     id: str
     type: Literal["text"]
     markdown: str
+    passed: bool = False
+
+
+class LearningVideoBlockView(BaseModel):
+    """A video block of a step."""
+
+    id: str
+    type: Literal["video"]
+    source: Literal["link", "upload"]
+    url: str
+    file_id: str | None = None
+    caption: str = ""
     passed: bool = False
 
 
@@ -186,7 +204,10 @@ class LearningFlashcardsBlockView(BaseModel):
 
 
 StepBlockView = Annotated[
-    LearningTextBlockView | LearningQuizBlockView | LearningFlashcardsBlockView,
+    LearningTextBlockView
+    | LearningVideoBlockView
+    | LearningQuizBlockView
+    | LearningFlashcardsBlockView,
     Field(discriminator="type"),
 ]
 

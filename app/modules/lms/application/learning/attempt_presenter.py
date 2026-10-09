@@ -28,7 +28,10 @@ def number(value: Decimal | None) -> float:
 def attempt_view(attempt: Attempt, test: TestBlock) -> LearningAttemptView:
     """Return an attempt in progress: its variant without correctness data."""
     questions = render_questions(
-        test, list(attempt.variant.question_ids), attempt.variant.option_order
+        test,
+        list(attempt.variant.question_ids),
+        attempt.variant.option_order,
+        attempt.variant.params,
     )
     return LearningAttemptView(
         id=attempt.id,

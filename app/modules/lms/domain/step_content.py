@@ -7,10 +7,27 @@ import secrets
 from collections.abc import Iterator
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 ShowAnswers = Literal["never", "after_submit", "after_pass", "after_last_attempt"]
-QuestionType = Literal["single", "multiple", "text", "number"]
+QuestionType = Literal[
+    "single",
+    "multiple",
+    "text",
+    "number",
+    "sorting",
+    "matching",
+    "table",
+    "blanks",
+    "random_number",
+    "formula",
+    "free",
+    "code",
+]
+FormulaMode = Literal["symbolic", "numeric"]
+VideoSource = Literal["link", "upload"]
+MAX_TABLE_SIDE = 30
+MAX_VARIABLES = 10
 
 
 class Card(BaseModel):
@@ -40,6 +57,91 @@ class AnswerConfig(BaseModel):
     tolerance: float = 0.0
 
 
+class Pair(BaseModel):
+    """A left item and its right match of a matching question."""
+
+    id: str = ""
+    left: str
+    right: str
+
+
+class TableSpec(BaseModel):
+    """A grid of a table question: the cells to mark are ``correct[row][column]``."""
+
+    rows: list[str] = Field(default_factory=list, max_length=MAX_TABLE_SIDE)
+    columns: list[str] = Field(default_factory=list, max_length=MAX_TABLE_SIDE)
+    correct: list[list[bool]] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _shape(self) -> "TableSpec":
+        """``correct`` must have one row per row title and one cell per column."""
+        if len(self.correct) != len(self.rows) or any(
+            len(line) != len(self.columns) for line in self.correct
+        ):
+            raise ValueError("table.correct must match rows x columns")
+        return self
+
+
+class Blank(BaseModel):
+    """One blank of a fill-in-the-blanks question, marked ``{{n}}`` (1-based) in the prompt."""
+
+    id: str = ""
+    accepted: list[str] = Field(default_factory=list, max_length=50)
+    regex: str | None = Field(default=None, max_length=200)
+    case_sensitive: bool = False
+
+
+class Variable(BaseModel):
+    """A random variable of a generated numeric question."""
+
+    name: str = Field(pattern=r"^[A-Za-z_][A-Za-z0-9_]{0,15}$")
+    min: float
+    max: float
+    integer: bool = True
+
+    @model_validator(mode="after")
+    def _range(self) -> "Variable":
+        """The range must not be empty."""
+        if self.min > self.max:
+            raise ValueError("variable min must not exceed max")
+        return self
+
+
+class RandomSpec(BaseModel):
+    """Variables and the formula of the answer; each attempt draws its own values."""
+
+    variables: list[Variable] = Field(default_factory=list, max_length=MAX_VARIABLES)
+    formula: str = Field(default="", max_length=500)
+    tolerance: float = Field(default=0.01, ge=0)
+
+    @model_validator(mode="after")
+    def _unique(self) -> "RandomSpec":
+        """Variable names are unique."""
+        names = [variable.name for variable in self.variables]
+        if len(set(names)) != len(names):
+            raise ValueError("duplicate variable name")
+        return self
+
+
+class FormulaSpec(BaseModel):
+    """The expected expression of a math formula question."""
+
+    expression: str = Field(default="", max_length=500)
+    variables: list[str] = Field(
+        default_factory=lambda: ["x"], max_length=MAX_VARIABLES
+    )
+    mode: FormulaMode = "symbolic"
+    tolerance: float = Field(default=1e-6, ge=0)
+
+
+class CodeSpec(BaseModel):
+    """A code question: no execution; the output is compared or the answer is graded by hand."""
+
+    language: str = Field(default="python", max_length=32)
+    starter: str = Field(default="", max_length=10_000)
+    expected_outputs: list[str] = Field(default_factory=list, max_length=20)
+
+
 class Question(BaseModel):
     """A test question."""
 
@@ -50,6 +152,12 @@ class Question(BaseModel):
     explanation: str | None = None
     options: list[Option] | None = None
     answer: AnswerConfig | None = None
+    pairs: list[Pair] | None = Field(default=None, max_length=50)
+    table: TableSpec | None = None
+    blanks: list[Blank] | None = Field(default=None, max_length=50)
+    random: RandomSpec | None = None
+    formula: FormulaSpec | None = None
+    code: CodeSpec | None = None
 
 
 class TestConfig(BaseModel):
@@ -86,6 +194,17 @@ class TestBlock(BaseModel):
     questions: list[Question] = Field(default_factory=list)
 
 
+class VideoBlock(BaseModel):
+    """A video: a link (YouTube, Vimeo, direct file) or an uploaded file."""
+
+    id: str = ""
+    type: Literal["video"] = "video"
+    source: VideoSource = "link"
+    url: str = Field(default="", max_length=2000)
+    file_id: str | None = None
+    caption: str = Field(default="", max_length=500)
+
+
 class FlashcardsBlock(BaseModel):
     """A block of flash cards studied with spaced repetition."""
 
@@ -94,10 +213,22 @@ class FlashcardsBlock(BaseModel):
     cards: list[Card] = Field(default_factory=list)
 
 
-Block = Annotated[TextBlock | TestBlock | FlashcardsBlock, Field(discriminator="type")]
+Block = Annotated[
+    TextBlock | VideoBlock | TestBlock | FlashcardsBlock, Field(discriminator="type")
+]
 
 
-Identified = TextBlock | TestBlock | FlashcardsBlock | Question | Option | Card
+Identified = (
+    TextBlock
+    | VideoBlock
+    | TestBlock
+    | FlashcardsBlock
+    | Question
+    | Option
+    | Card
+    | Pair
+    | Blank
+)
 
 
 class StepContent(BaseModel):
@@ -124,6 +255,8 @@ def _items(content: StepContent) -> Iterator[Identified]:
             for question in block.questions:
                 yield question
                 yield from question.options or []
+                yield from question.pairs or []
+                yield from question.blanks or []
         elif isinstance(block, FlashcardsBlock):
             yield from block.cards
 

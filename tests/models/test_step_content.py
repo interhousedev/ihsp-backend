@@ -111,7 +111,7 @@ def test_readme_example_is_valid_and_keeps_its_structure() -> None:
 
 
 def test_unknown_block_type_is_rejected() -> None:
-    bad = {"title": "t", "blocks": [{"id": "x", "type": "video"}]}
+    bad = {"title": "t", "blocks": [{"id": "x", "type": "audio"}]}
 
     with pytest.raises(ValidationError):
         StepContent.model_validate(bad)

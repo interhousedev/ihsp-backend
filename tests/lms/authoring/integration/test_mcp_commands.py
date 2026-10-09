@@ -160,7 +160,7 @@ async def test_invalid_blocks_and_questions_are_refused_with_a_typed_error(
 
     with pytest.raises(ContentInvalidError):
         await services.draft_commands.add_block(
-            owner, step, {"type": "video", "url": "x"}, via_mcp=True
+            owner, step, {"type": "audio", "url": "x"}, via_mcp=True
         )
     with pytest.raises(ContentInvalidError):
         await services.draft_commands.add_question(

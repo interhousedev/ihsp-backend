@@ -8,6 +8,7 @@ from app.modules.lms.domain.step_content import (
     StepContent,
     TestBlock,
     TextBlock,
+    VideoBlock,
 )
 
 
@@ -24,10 +25,21 @@ def render_step(content: StepContent, *, revision_id: str) -> dict[str, Any]:
     return {"revision_id": revision_id, "title": content.title, "blocks": blocks}
 
 
-def _render_block(block: TextBlock | TestBlock | FlashcardsBlock) -> dict[str, Any]:
+def _render_block(
+    block: TextBlock | VideoBlock | TestBlock | FlashcardsBlock,
+) -> dict[str, Any]:
     """Render one block without correctness data."""
     if isinstance(block, TextBlock):
         return {"id": block.id, "type": "text", "markdown": block.markdown}
+    if isinstance(block, VideoBlock):
+        return {
+            "id": block.id,
+            "type": "video",
+            "source": block.source,
+            "url": block.url,
+            "file_id": block.file_id,
+            "caption": block.caption,
+        }
     if isinstance(block, TestBlock):
         config = block.config
         total = len(block.questions)
@@ -56,6 +68,7 @@ def render_questions(
     test: TestBlock,
     question_ids: list[str],
     option_order: dict[str, list[str]],
+    params: dict[str, dict[str, float]] | None = None,
 ) -> list[dict[str, Any]]:
     """Return the ``AttemptView.questions`` of one attempt variant.
 
@@ -70,20 +83,52 @@ def render_questions(
     for question_id in question_ids:
         if question_id not in by_id:
             raise ValueError(f"unknown question id: {question_id}")
-        rendered.append(_render_question(by_id[question_id], option_order))
+        rendered.append(
+            _render_question(
+                by_id[question_id], option_order, (params or {}).get(question_id, {})
+            )
+        )
     return rendered
 
 
+def fill_prompt(prompt: str, params: dict[str, float]) -> str:
+    """Replace ``{name}`` by the attempt's value of the variable."""
+    for name, value in params.items():
+        prompt = prompt.replace("{" + name + "}", f"{value:g}")
+    return prompt
+
+
 def _render_question(
-    question: Question, option_order: dict[str, list[str]]
+    question: Question, option_order: dict[str, list[str]], params: dict[str, float]
 ) -> dict[str, Any]:
     """Render one question for an attempt."""
     item: dict[str, Any] = {
         "id": question.id,
         "type": question.type,
-        "prompt": question.prompt,
+        "prompt": fill_prompt(question.prompt, params),
         "points": question.points,
     }
+    if question.pairs is not None:
+        by_pair = {pair.id: pair for pair in question.pairs}
+        order = [pid for pid in option_order.get(question.id, []) if pid in by_pair]
+        order += [pid for pid in by_pair if pid not in order]
+        item["lefts"] = [{"id": p.id, "text": p.left} for p in question.pairs]
+        item["rights"] = [{"id": pid, "text": by_pair[pid].right} for pid in order]
+    if question.table is not None:
+        item["table"] = {
+            "rows": question.table.rows,
+            "columns": question.table.columns,
+        }
+    if question.blanks is not None:
+        item["blanks"] = len(question.blanks)
+    if question.formula is not None:
+        item["variables"] = question.formula.variables
+    if question.code is not None:
+        item["code"] = {
+            "language": question.code.language,
+            "starter": question.code.starter,
+            "auto": bool(question.code.expected_outputs),
+        }
     if question.options is not None:
         by_id = {option.id: option for option in question.options}
         order = [oid for oid in option_order.get(question.id, []) if oid in by_id]

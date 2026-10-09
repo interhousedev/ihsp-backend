@@ -99,11 +99,27 @@ class BlockAnswer(_Loose):
     tolerance: float = 0.0
 
 
+QuestionType = Literal[
+    "single",
+    "multiple",
+    "text",
+    "number",
+    "sorting",
+    "matching",
+    "table",
+    "blanks",
+    "random_number",
+    "formula",
+    "free",
+    "code",
+]
+
+
 class BlockQuestion(_Loose):
     """A question of a test block."""
 
     id: str = ""
-    type: Literal["single", "multiple", "text", "number"]
+    type: QuestionType
     prompt: str
     points: float = 1.0
     explanation: str | None = None
@@ -127,6 +143,17 @@ class TextBlock(_Loose):
     markdown: str = ""
 
 
+class VideoBlock(_Loose):
+    """A video block (a link or an uploaded file)."""
+
+    id: str = ""
+    type: Literal["video"] = "video"
+    source: Literal["link", "upload"] = "link"
+    url: str = ""
+    file_id: str | None = None
+    caption: str = ""
+
+
 class TestBlock(_Loose):
     """A test block: its settings and questions."""
 
@@ -146,7 +173,9 @@ class FlashcardsBlock(_Loose):
     cards: list[BlockCard] = Field(default_factory=list)
 
 
-Block = Annotated[TextBlock | TestBlock | FlashcardsBlock, Field(discriminator="type")]
+Block = Annotated[
+    TextBlock | VideoBlock | TestBlock | FlashcardsBlock, Field(discriminator="type")
+]
 
 
 # - - - Preview - - -

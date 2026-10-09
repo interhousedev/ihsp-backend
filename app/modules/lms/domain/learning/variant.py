@@ -4,8 +4,9 @@ The variant is derived from the attempt id, so it is reproducible, and it is
 stored with the attempt, so reloading the page never reshuffles.
 """
 
+import math
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any
 from uuid import UUID
@@ -19,12 +20,14 @@ class Variant:
 
     question_ids: tuple[str, ...]
     option_order: dict[str, list[str]]
+    params: dict[str, dict[str, float]] = field(default_factory=dict)
 
     def to_json(self) -> dict[str, Any]:
-        """Return the stored form ``{question_ids, option_order}``."""
+        """Return the stored form ``{question_ids, option_order, params}``."""
         return {
             "question_ids": list(self.question_ids),
             "option_order": {k: list(v) for k, v in self.option_order.items()},
+            "params": {k: dict(v) for k, v in self.params.items()},
         }
 
     @classmethod
@@ -34,6 +37,10 @@ class Variant:
             question_ids=tuple(raw.get("question_ids", [])),
             option_order={
                 key: list(value) for key, value in raw.get("option_order", {}).items()
+            },
+            params={
+                key: {name: float(num) for name, num in value.items()}
+                for key, value in raw.get("params", {}).items()
             },
         )
 
@@ -51,12 +58,34 @@ def build_variant(test: TestBlock, attempt_id: UUID) -> Variant:
     option_order = {
         question.id: _option_order(question, rng, shuffle=shuffle)
         for question in questions
-        if question.options
+        if question.options or question.pairs
+    }
+    params = {
+        question.id: draw_params(question, attempt_id)
+        for question in questions
+        if question.type == "random_number" and question.random is not None
     }
     return Variant(
         question_ids=tuple(question.id for question in questions),
         option_order=option_order,
+        params=params,
     )
+
+
+def draw_params(question: Question, attempt_id: UUID) -> dict[str, float]:
+    """Return the seeded values of the variables of a generated numeric question."""
+    spec = question.random
+    if spec is None:
+        return {}
+    rng = random.Random(f"{attempt_id}:{question.id}")
+    values: dict[str, float] = {}
+    for variable in spec.variables:
+        if variable.integer:
+            low, high = math.ceil(variable.min), math.floor(variable.max)
+            values[variable.name] = float(rng.randint(low, max(low, high)))
+        else:
+            values[variable.name] = round(rng.uniform(variable.min, variable.max), 2)
+    return values
 
 
 def max_score_of(test: TestBlock, variant: Variant) -> Decimal:
@@ -87,9 +116,13 @@ def _pick_questions(test: TestBlock, rng: random.Random) -> list[Question]:
 def _option_order(
     question: Question, rng: random.Random, *, shuffle: bool
 ) -> list[str]:
-    """Return the option ids of a question in display order."""
+    """Return the option ids (or matching pair ids) of a question in display order."""
+    if question.pairs is not None:
+        return _shuffled_always([pair.id for pair in question.pairs], rng)
     options = question.options or []
     order = [option.id for option in options]
+    if question.type == "sorting":
+        return _shuffled_always(order, rng)
     if not shuffle:
         return order
     free = [index for index, option in enumerate(options) if not option.pinned]
@@ -97,4 +130,14 @@ def _option_order(
     rng.shuffle(movable)
     for index, option_id in zip(free, movable, strict=True):
         order[index] = option_id
+    return order
+
+
+def _shuffled_always(ids: list[str], rng: random.Random) -> list[str]:
+    """Shuffle so that the result differs from the given order when it can."""
+    order = list(ids)
+    for _ in range(5):
+        rng.shuffle(order)
+        if order != ids or len(ids) < 2:
+            break
     return order

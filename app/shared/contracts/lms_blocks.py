@@ -53,11 +53,53 @@ class OptionInput(BaseModel):
     )
 
 
+class PairInput(BaseModel):
+    """A matching pair: a left item and the right item that belongs to it."""
+
+    left: str = Field(min_length=1, max_length=500)
+    right: str = Field(min_length=1, max_length=500)
+
+
+class BlankInput(BaseModel):
+    """One blank of a fill-in-the-blanks question (``{{1}}``, ``{{2}}`` in the prompt)."""
+
+    accepted: list[str] = Field(default_factory=list, max_length=20)
+    regex: str | None = Field(default=None, max_length=200)
+
+
+class VariableInput(BaseModel):
+    """A random variable of a generated numeric question."""
+
+    name: str = Field(pattern=r"^[A-Za-z_][A-Za-z0-9_]{0,15}$")
+    min: float
+    max: float
+    integer: bool = True
+
+
 class QuestionInput(BaseModel):
     """A test question. Fill the fields that belong to its type."""
 
-    type: Literal["single", "multiple", "text", "number"] = Field(
-        description="single: one correct option; multiple: several; text; number."
+    type: Literal[
+        "single",
+        "multiple",
+        "text",
+        "number",
+        "sorting",
+        "matching",
+        "table",
+        "blanks",
+        "random_number",
+        "formula",
+        "free",
+        "code",
+    ] = Field(
+        description=(
+            "single: one correct option; multiple: several; text; number; "
+            "sorting: `items` in the right order; matching: `pairs`; "
+            "table: `rows`, `columns`, `correct_cells`; blanks: `blanks`; "
+            "random_number: `variables` and `formula`; formula: `expression`; "
+            "code: optional `expected_outputs`; free: graded by a teacher."
+        )
     )
     prompt: str = Field(min_length=1, max_length=2000, description="Question text.")
     points: int = Field(
@@ -86,6 +128,33 @@ class QuestionInput(BaseModel):
     tolerance: float = Field(
         default=0.0, ge=0, description="For number: allowed difference."
     )
+    items: list[str] | None = Field(
+        default=None, max_length=20, description="For sorting: items in order."
+    )
+    pairs: list[PairInput] | None = Field(
+        default=None, max_length=20, description="For matching: at least two pairs."
+    )
+    rows: list[str] | None = Field(
+        default=None, max_length=30, description="Table rows."
+    )
+    columns: list[str] | None = Field(
+        default=None, max_length=30, description="Table columns."
+    )
+    correct_cells: list[tuple[int, int]] | None = Field(
+        default=None, description="For table: the (row, column) cells to mark, 0-based."
+    )
+    blanks: list[BlankInput] | None = Field(default=None, max_length=20)
+    variables: list[VariableInput] | None = Field(
+        default=None, max_length=10, description="For random_number."
+    )
+    formula: str | None = Field(
+        default=None, max_length=500, description="For random_number: answer formula."
+    )
+    expression: str | None = Field(
+        default=None, max_length=500, description="For formula: the correct expression."
+    )
+    expression_variables: list[str] | None = Field(default=None, max_length=10)
+    expected_outputs: list[str] | None = Field(default=None, max_length=20)
 
 
 class QuizSettingsInput(BaseModel):
@@ -164,9 +233,71 @@ def build_question(question: QuestionInput) -> dict[str, Any]:
         result["options"] = _options(question)
     elif question.type == "text":
         result["answer"] = _text_answer(question)
-    else:
+    elif question.type == "number":
         result["answer"] = _number_answer(question)
+    else:
+        result.update(_task_fields(question))
     return result
+
+
+def _task_fields(question: QuestionInput) -> dict[str, Any]:
+    """Return the type-specific fields of the richer question types."""
+    kind = question.type
+    if kind == "sorting":
+        items = question.items or []
+        if len(items) < 2:
+            raise BlockInputError("a sorting question needs at least two items")
+        return {"options": [{"id": "", "text": i, "correct": False} for i in items]}
+    if kind == "matching":
+        pairs = question.pairs or []
+        if len(pairs) < 2:
+            raise BlockInputError("a matching question needs at least two pairs")
+        return {"pairs": [{"id": "", "left": p.left, "right": p.right} for p in pairs]}
+    if kind == "table":
+        rows, columns = question.rows or [], question.columns or []
+        cells = set(question.correct_cells or [])
+        if not rows or not columns or not cells:
+            raise BlockInputError("a table question needs rows, columns and cells")
+        if any(r >= len(rows) or c >= len(columns) or r < 0 or c < 0 for r, c in cells):
+            raise BlockInputError("correct_cells point outside the table")
+        grid = [
+            [(r, c) in cells for c in range(len(columns))] for r in range(len(rows))
+        ]
+        return {"table": {"rows": rows, "columns": columns, "correct": grid}}
+    if kind == "blanks":
+        blanks = question.blanks or []
+        if not blanks or any(not b.accepted and not b.regex for b in blanks):
+            raise BlockInputError("each blank needs accepted answers or a regex")
+        return {
+            "blanks": [
+                {"id": "", "accepted": b.accepted, "regex": b.regex} for b in blanks
+            ]
+        }
+    if kind == "random_number":
+        if not question.variables or not (question.formula or "").strip():
+            raise BlockInputError("random_number needs variables and a formula")
+        if any(v.min > v.max for v in question.variables):
+            raise BlockInputError("a variable has min above max")
+        return {
+            "random": {
+                "variables": [v.model_dump() for v in question.variables],
+                "formula": question.formula,
+                "tolerance": question.tolerance,
+            }
+        }
+    if kind == "formula":
+        if not (question.expression or "").strip():
+            raise BlockInputError("a formula question needs `expression`")
+        return {
+            "formula": {
+                "expression": question.expression,
+                "variables": question.expression_variables or ["x"],
+                "mode": "symbolic",
+            }
+        }
+    if kind == "code":
+        return {"code": {"expected_outputs": question.expected_outputs or []}}
+    return {}
 
 
 def _options(question: QuestionInput) -> list[dict[str, Any]]:

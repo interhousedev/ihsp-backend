@@ -17,6 +17,10 @@ class LearningAnswerBody(BaseModel):
     option_ids: list[str] | None = Field(default=None, max_length=100)
     text: str | None = Field(default=None, max_length=10_000)
     number: float | None = Field(default=None, allow_inf_nan=False)
+    pairs: dict[str, str] | None = Field(default=None, max_length=50)
+    cells: list[str] | None = Field(default=None, max_length=900)
+    texts: list[str] | None = Field(default=None, max_length=50)
+    output: str | None = Field(default=None, max_length=10_000)
 
 
 class LearningSaveAnswersBody(BaseModel):

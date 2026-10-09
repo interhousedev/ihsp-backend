@@ -30,6 +30,7 @@ from app.modules.lms.application.learning.views import (
     LearningQuizRulesView,
     LearningStepView,
     LearningTextBlockView,
+    LearningVideoBlockView,
     StepBlockView,
 )
 from app.modules.lms.domain.learning.cards import select_next
@@ -134,6 +135,8 @@ class GetStepView:
                 )
             elif block["type"] == "flashcards":
                 views.append(await self._cards(actor, block, rendered, cards))
+            elif block["type"] == "video":
+                views.append(LearningVideoBlockView(**block, passed=state is not None))
             else:
                 views.append(LearningTextBlockView(**block, passed=state is not None))
         return views

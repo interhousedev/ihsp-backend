@@ -643,7 +643,7 @@ async def test_a_stale_lock_version_conflicts_and_the_error_carries_the_current_
     "content",
     [
         {"blocks": []},
-        {"title": "T", "blocks": [{"type": "video", "url": "x"}]},
+        {"title": "T", "blocks": [{"type": "audio", "url": "x"}]},
         {"title": "T", "blocks": [{"type": "text", "markdown": 5}]},
         {"title": "T", "blocks": "no"},
         {
