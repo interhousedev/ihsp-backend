@@ -171,7 +171,7 @@ async def test_commands_unlink_telegram(auth_world: World) -> None:
 async def test_close_account_revokes_everything_and_starts_the_clean_up(
     auth_world: World,
 ) -> None:
-    """ID-29: status deleted, access revoked, files, links and Vault clean-up kicked."""
+    """ID-29: status deleted, access revoked, files, links, notebooks, library and Vault clean-up kicked."""
     user = await auth_world.add_user(auth_epoch=1)
     session = auth_world.add_session(user)
     auth_world.add_link(user, 555)
@@ -189,6 +189,7 @@ async def test_close_account_revokes_everything_and_starts_the_clean_up(
         "files.delete_owner",
         "links.revoke_owner",
         "notebooks.delete_owner",
+        "library.delete_owner",
     ]
     assert all(kw == {"user_id": str(user.id)} for _, kw in auth_world.kicker.calls)
 

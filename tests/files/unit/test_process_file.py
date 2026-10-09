@@ -41,7 +41,7 @@ async def test_pdf_text_is_stored_next_to_the_object_and_the_file_is_ready(
 async def test_docx_paragraphs_and_tables_are_extracted_in_order(
     fakes: FilesFakes, student: Actor
 ) -> None:
-    """python-docx: paragraphs and table rows."""
+    """python-docx: paragraphs and table rows; blocks are separated by blank lines."""
     data = make_docx("Intro paragraph", table=[["Name", "Mark"], ["Alice", "5"]])
     file_id = await upload_ready(
         fakes, student, name="journal.docx", data=data, content_type=DOCX_TYPE
@@ -49,7 +49,7 @@ async def test_docx_paragraphs_and_tables_are_extracted_in_order(
 
     file = fakes.db.row(file_id)
     text = fakes.storage.objects[file.text_key].data.decode()
-    assert text.splitlines() == ["Intro paragraph", "Name\tMark", "Alice\t5"]
+    assert text == "Intro paragraph\n\nName\tMark\nAlice\t5"
 
 
 async def test_plain_text_is_decoded_with_replacement(
