@@ -59,6 +59,33 @@ def test_text_block_is_rendered_as_is(content: StepContent) -> None:
     }
 
 
+RICH_MARKDOWN = (
+    "**Bold** *italic* <u>under</u> ~~strike~~ `code` ||spoiler||\n\n"
+    "Inline $\\frac{a}{b}$ and $$x^2$$, prices $5 and \\$10.\n\n"
+    "$$\n\\int_0^1 x^2 \\, dx \\\\ a & b\n$$\n\n"
+    "> quote\n\n"
+    "```python\nprint('<b>&amp;</b>')\n```\n\n"
+    "<script>alert(1)</script>"
+)
+
+
+def test_text_block_with_math_and_formatting_is_rendered_unchanged() -> None:
+    """LMS-17: LaTeX, spoilers, `<u>` and raw HTML reach the student as written.
+
+    The web renderer is the only place that interprets (and escapes) Markdown.
+    """
+    content = StepContent.model_validate(
+        {
+            "title": "Rich",
+            "blocks": [{"id": "b1", "type": "text", "markdown": RICH_MARKDOWN}],
+        }
+    )
+
+    block = render_step(content, revision_id="r")["blocks"][0]
+
+    assert block["markdown"] == RICH_MARKDOWN
+
+
 def test_block_under_test_shows_rules_but_no_questions(content: StepContent) -> None:
     block = render_step(content, revision_id="r")["blocks"][1]
 
