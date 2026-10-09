@@ -15,6 +15,8 @@
   "id-otp-no-channel": "There is no channel to send a code to. Link Telegram or confirm your email.",
   "id-otp-mandatory": "One-time codes cannot be turned off for Administration.",
   "id-self-action-forbidden": "You cannot do this to your own account.",
+  "id-lms-admin-needs-admin": "The LMS admin role can only be given to a member of Administration.",
+  "id-course-creator-not-staff": "Only a teacher or a member of Administration can create courses.",
   "id-invalid-status": "The account status does not allow this action.",
   "id-activation-invalid": "This link has expired or was already used. Ask Administration for a new one.",
   "id-connector-invalid": "The connector settings are not valid.",

@@ -55,7 +55,9 @@ AUDIENCE_BY_SERVER: Final[Mapping[ServerName, str]] = {
 # server the real check (edit permission on the course) is done by the LMS use cases.
 ALLOWED_ROLES_BY_SERVER: Final[Mapping[ServerName, frozenset[Role]]] = {
     "student": frozenset({Role.STUDENT}),
-    "lms": frozenset({Role.TEACHER, Role.STUDENT, Role.LMS_ADMIN, Role.ADMIN}),
+    "lms": frozenset(
+        {Role.TEACHER, Role.STUDENT, Role.LMS_ADMIN, Role.LMS_CREATOR, Role.ADMIN}
+    ),
     "admin": frozenset({Role.ADMIN}),
 }
 

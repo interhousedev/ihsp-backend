@@ -2435,6 +2435,7 @@
                 "teacher",
                 "admin",
                 "lms_admin",
+                "lms_creator",
                 "librarian"
               ],
               "type": "string"
@@ -5289,6 +5290,60 @@
           "new"
         ],
         "title": "CountsResponse",
+        "type": "object"
+      },
+      "CourseCreatorResponse": {
+        "description": "CourseCreator: a person who holds the `lms_creator` role.",
+        "properties": {
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "login": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Login"
+          },
+          "middle_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Middle Name"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "login",
+          "first_name",
+          "last_name",
+          "middle_name",
+          "status"
+        ],
+        "title": "CourseCreatorResponse",
         "type": "object"
       },
       "CourseDraftResponse": {
@@ -14315,6 +14370,33 @@
         "title": "Page[ChatItemResponse]",
         "type": "object"
       },
+      "Page_CourseCreatorResponse_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CourseCreatorResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "Page[CourseCreatorResponse]",
+        "type": "object"
+      },
       "Page_FileItem_": {
         "properties": {
           "items": {
@@ -18057,6 +18139,7 @@
           "teacher",
           "admin",
           "lms_admin",
+          "lms_creator",
           "librarian"
         ],
         "title": "Role",
@@ -20634,6 +20717,7 @@
                 "teacher",
                 "admin",
                 "lms_admin",
+                "lms_creator",
                 "librarian"
               ],
               "type": "string"
@@ -26291,6 +26375,7 @@
                 "teacher",
                 "admin",
                 "lms_admin",
+                "lms_creator",
                 "librarian"
               ],
               "type": "string"
@@ -49070,6 +49155,147 @@
         "summary": "Suggest Next Section",
         "tags": [
           "library"
+        ]
+      }
+    },
+    "/v1/staff/lms/creators": {
+      "get": {
+        "description": "Holders of `lms_creator`, newest first (LMS admins only).",
+        "operationId": "list_creators_v1_staff_lms_creators_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_CourseCreatorResponse_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Creators",
+        "tags": [
+          "lms-authoring"
+        ]
+      }
+    },
+    "/v1/staff/lms/creators/{user_id}": {
+      "delete": {
+        "description": "Revoke `lms_creator` (LMS admins only); the person's courses stay theirs.",
+        "operationId": "remove_creator_v1_staff_lms_creators__user_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Creator",
+        "tags": [
+          "lms-authoring"
+        ]
+      },
+      "put": {
+        "description": "Grant `lms_creator` (LMS admins only); students are refused.",
+        "operationId": "add_creator_v1_staff_lms_creators__user_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseCreatorResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Creator",
+        "tags": [
+          "lms-authoring"
         ]
       }
     },

@@ -28,6 +28,7 @@ from app.modules.identity.application.confirm_otp_reset import ConfirmOtpReset
 from app.modules.identity.application.confirm_password_reset import (
     ConfirmPasswordReset,
 )
+from app.modules.identity.application.course_creators import ManageCourseCreators
 from app.modules.identity.application.create_connector import CreateConnector
 from app.modules.identity.application.create_staff_account import CreateStaffAccount
 from app.modules.identity.application.create_teacher import CreateTeacher
@@ -216,6 +217,7 @@ class AuthServices:
     block_user: BlockUser
     unblock_user: UnblockUser
     change_roles: ChangeRoles
+    manage_course_creators: ManageCourseCreators
     revoke_user_sessions: RevokeUserSessions
     admin_reset_password: AdminResetPassword
     admin_reset_otp: AdminResetOtp
@@ -291,6 +293,7 @@ def build_auth(
     init_max_age = timedelta(seconds=settings.telegram.init_data_max_age_seconds)
     links = ActivationLinks(clock=clock, email=email, id_app_url=settings.urls.id)
     users = ListUsers(uow_factory=uow_factory)
+    change_roles = ChangeRoles(uow_factory=uow_factory, revoker=revoker)
     update_prefs = UpdatePreferences(uow_factory=uow_factory)
     creator = CreateStaffAccount(uow_factory=uow_factory, links=links)
 
@@ -517,7 +520,10 @@ def build_auth(
         get_user_detail=GetUserDetail(uow_factory=uow_factory, clock=clock),
         block_user=BlockUser(uow_factory=uow_factory, revoker=revoker),
         unblock_user=UnblockUser(uow_factory=uow_factory),
-        change_roles=ChangeRoles(uow_factory=uow_factory, revoker=revoker),
+        change_roles=change_roles,
+        manage_course_creators=ManageCourseCreators(
+            users=users, change_roles=change_roles
+        ),
         revoke_user_sessions=RevokeUserSessions(
             uow_factory=uow_factory, revoker=revoker
         ),

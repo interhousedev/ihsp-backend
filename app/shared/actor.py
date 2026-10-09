@@ -15,6 +15,7 @@ class Role(StrEnum):
     TEACHER = "teacher"
     ADMIN = "admin"
     LMS_ADMIN = "lms_admin"
+    LMS_CREATOR = "lms_creator"
     LIBRARIAN = "librarian"
 
 

@@ -28,6 +28,7 @@ class TeacherSpec:
     key: str
     last_name: str
     first_name: str
+    course_creator: bool = False
 
     @property
     def login(self) -> str:
@@ -36,7 +37,7 @@ class TeacherSpec:
 
 
 TEACHERS: tuple[TeacherSpec, ...] = (
-    TeacherSpec("math", "Usmonov", "Bobur"),
+    TeacherSpec("math", "Usmonov", "Bobur", course_creator=True),
     TeacherSpec("languages", "Karimova", "Nodira"),
     TeacherSpec("it", "Rahimov", "Sherzod"),
     TeacherSpec("uzbek", "Saidova", "Malika"),
@@ -92,7 +93,7 @@ async def ensure_admin(container: Container) -> UUID:
 
 
 async def ensure_teachers(container: Container) -> dict[str, UUID]:
-    """The five teachers, by key."""
+    """The five teachers, by key; the maths teacher can also create courses."""
     return {
         spec.key: await _ensure(
             container,
@@ -100,7 +101,11 @@ async def ensure_teachers(container: Container) -> dict[str, UUID]:
             first_name=spec.first_name,
             last_name=spec.last_name,
             password=TEACHER_PASSWORD,
-            roles={Role.TEACHER},
+            roles=(
+                {Role.TEACHER, Role.LMS_CREATOR}
+                if spec.course_creator
+                else {Role.TEACHER}
+            ),
         )
         for spec in TEACHERS
     }

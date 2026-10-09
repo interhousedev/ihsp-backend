@@ -12,7 +12,9 @@ SERVERS: tuple[Server, ...] = ("student", "lms", "admin")
 # on some course) happens at call time (MCP-5).
 ALLOWED_SERVER_ROLES: dict[str, frozenset[Role]] = {
     "student": frozenset({Role.STUDENT}),
-    "lms": frozenset({Role.TEACHER, Role.STUDENT, Role.LMS_ADMIN, Role.ADMIN}),
+    "lms": frozenset(
+        {Role.TEACHER, Role.STUDENT, Role.LMS_ADMIN, Role.LMS_CREATOR, Role.ADMIN}
+    ),
     "admin": frozenset({Role.ADMIN}),
 }
 

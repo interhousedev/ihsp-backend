@@ -110,6 +110,7 @@ async def test_admin_tools_read_and_write_the_seeded_school(
     assert names == {"2TN2", "1TN1"}
     assert len(detail["students"]) == 1
     assert [u["login"] for u in found["users"]] == ["usmonov.bobur"]
+    assert sorted(found["users"][0]["roles"]) == ["lms_creator", "teacher"]
     assert len(teachers["teachers"]) == 5
 
     for date_args in (

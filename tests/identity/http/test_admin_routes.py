@@ -76,7 +76,7 @@ async def test_unknown_user_is_404_id_user_not_found(api: Api) -> None:
 async def test_block_unblock_roles_and_sessions_routes(api: Api) -> None:
     """ADM-5: the user management actions."""
     await api.admin()
-    user = await api.world.add_user()
+    user = await api.world.add_user(roles={Role.TEACHER})
     session = api.world.add_session(user)
 
     blocked = await api.client.post(
@@ -84,13 +84,14 @@ async def test_block_unblock_roles_and_sessions_routes(api: Api) -> None:
     )
     unblocked = await api.client.post(f"/v1/admin/users/{user.id}/unblock")
     roles = await api.client.post(
-        f"/v1/admin/users/{user.id}/roles", json={"grant": ["lms_admin"], "revoke": []}
+        f"/v1/admin/users/{user.id}/roles",
+        json={"grant": ["lms_creator"], "revoke": []},
     )
     revoked = await api.client.post(f"/v1/admin/users/{user.id}/sessions/revoke")
 
     assert blocked.json()["status"] == UserStatus.BLOCKED.value
     assert unblocked.json()["status"] == "active"
-    assert sorted(roles.json()["roles"]) == ["lms_admin", "student"]
+    assert sorted(roles.json()["roles"]) == ["lms_creator", "teacher"]
     assert revoked.status_code == 204
     assert api.world.store.sessions[session.id].revoked_at is not None
 

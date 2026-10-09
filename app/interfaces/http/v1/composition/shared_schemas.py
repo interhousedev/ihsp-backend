@@ -8,7 +8,9 @@ from app.shared.lesson_kind import LessonKind, TopicSource
 
 from pydantic import BaseModel, ConfigDict, Field
 
-RoleName = Literal["student", "teacher", "admin", "lms_admin", "librarian"]
+RoleName = Literal[
+    "student", "teacher", "admin", "lms_admin", "lms_creator", "librarian"
+]
 
 
 class PersonRefResponse(BaseModel):

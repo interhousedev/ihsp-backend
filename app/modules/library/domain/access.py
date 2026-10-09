@@ -10,7 +10,14 @@ from app.shared.actor import Actor, Role
 
 STAFF_ROLES = frozenset({Role.LIBRARIAN, Role.ADMIN})
 SIGNED_IN_ROLES = frozenset(
-    {Role.STUDENT, Role.TEACHER, Role.LIBRARIAN, Role.ADMIN, Role.LMS_ADMIN}
+    {
+        Role.STUDENT,
+        Role.TEACHER,
+        Role.LIBRARIAN,
+        Role.ADMIN,
+        Role.LMS_ADMIN,
+        Role.LMS_CREATOR,
+    }
 )
 # Statuses an item can be in while a librarian still has something to look at.
 REVIEWABLE = frozenset(

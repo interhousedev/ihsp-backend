@@ -129,6 +129,20 @@ class SelfActionForbiddenError(ForbiddenError):
     message_key = "id-self-action-forbidden"
 
 
+class LmsAdminNeedsAdminError(ValidationFailedError):
+    """`lms_admin` is an extra role of Administration: it needs `admin` as well."""
+
+    code = "id/lms-admin-needs-admin"
+    message_key = "id-lms-admin-needs-admin"
+
+
+class CourseCreatorNotStaffError(ValidationFailedError):
+    """Only a teacher or an administrator can be a course creator."""
+
+    code = "id/course-creator-not-staff"
+    message_key = "id-course-creator-not-staff"
+
+
 class InvalidStatusError(ConflictError):
     """The account status does not allow this transition."""
 

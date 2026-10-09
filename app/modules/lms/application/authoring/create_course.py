@@ -8,19 +8,27 @@ from app.modules.lms.domain.authoring.course_rules import (
     new_invite_code,
     validate_slug,
 )
-from app.modules.lms.domain.authoring.entities import Course
+from app.modules.lms.domain.authoring.entities import Course, StaffMember
 from app.modules.lms.domain.authoring.enums import CourseStatus, Visibility
 from app.modules.lms.domain.authoring.errors import SlugTakenError
 from app.modules.lms.domain.authoring.hashing import outline_hash
 from app.modules.lms.domain.authoring.outline import empty_outline
-from app.modules.lms.domain.authoring.permissions import CourseAccess
+from app.modules.lms.domain.authoring.permissions import (
+    PERMISSIONS,
+    CourseAccess,
+    ordered,
+)
 from app.shared.actor import Actor, Role
 from app.shared.clock import Clock
 from app.shared.ids import new_id
 
 
 class CreateCourse:
-    """Create a course that students cannot see yet (LMS admins only)."""
+    """Create a course that students cannot see yet (LMS admins and course creators).
+
+    A course creator becomes the owner of the course; an LMS admin already holds
+    every permission, so no staff row is added for them.
+    """
 
     def __init__(
         self, uow_factory: UowFactory, clock: Clock, presenter: Presenter
@@ -34,7 +42,7 @@ class CreateCourse:
         self, actor: Actor, *, title: str, slug: str, visibility: Visibility
     ) -> CourseDraftView:
         """Create the course with an empty outline and no live version."""
-        actor.require(Role.LMS_ADMIN)
+        actor.require(Role.LMS_ADMIN, Role.LMS_CREATOR)
         clean = clean_title(title)
         validate_slug(slug)
         meta = {"title": clean, "description": ""}
@@ -54,11 +62,27 @@ class CreateCourse:
             draft_updated_by=actor.user_id,
             draft_updated_at=self.clock.now(),
         )
+        owner = None if actor.has(Role.LMS_ADMIN) else _owner_of(course, actor)
         async with self.uow_factory() as uow:
             if await uow.courses.slug_exists(slug):
                 raise SlugTakenError(params={"slug": slug})
             await uow.courses.add(course)
+            if owner is not None:
+                await uow.staff.add(owner)
             await uow.commit()
             return await self.presenter.course_draft(
-                uow, course, CourseAccess(actor=actor, staff=None)
+                uow, course, CourseAccess(actor=actor, staff=owner)
             )
+
+
+def _owner_of(course: Course, actor: Actor) -> StaffMember:
+    """The creator's staff row: every permission, not shown on the course page."""
+    return StaffMember(
+        course_id=course.id,
+        user_id=actor.user_id,
+        role="owner",
+        permissions=ordered(PERMISSIONS),
+        show_on_page=False,
+        position=0,
+        added_by=actor.user_id,
+    )

@@ -232,7 +232,7 @@ def rule_for_name(name: str) -> TypeRule | None:
 
 def scope_for(actor: Actor) -> FileScope:
     """Students without a staff role use the student scope; everyone else staff."""
-    staff_roles = {Role.TEACHER, Role.ADMIN, Role.LMS_ADMIN}
+    staff_roles = {Role.TEACHER, Role.ADMIN, Role.LMS_ADMIN, Role.LMS_CREATOR}
     if staff_roles & actor.roles:
         return FileScope.STAFF
     return FileScope.STUDENT

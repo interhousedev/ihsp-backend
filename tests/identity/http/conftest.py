@@ -7,6 +7,7 @@ from typing import Any
 from app.interfaces.http.dependencies import get_actor
 from app.interfaces.http.v1.admin_users import ROUTERS as ADMIN_ROUTERS
 from app.interfaces.http.v1.id import ROUTERS as ID_ROUTERS
+from app.interfaces.http.v1.lms_authoring.creators.router import router as creators
 from app.interfaces.http.v1.oauth import ROUTERS as OAUTH_ROUTERS
 from app.modules.identity.domain.session import LoginSession
 from app.modules.identity.domain.user import User
@@ -70,7 +71,7 @@ async def api(auth_world: World, http_client: HttpClientFactory) -> Api:
 
     identity = SimpleNamespace(auth=auth_world.auth, token_verifier=None)
     client = await http_client(
-        [*OAUTH_ROUTERS, *ID_ROUTERS, *ADMIN_ROUTERS],
+        [*OAUTH_ROUTERS, *ID_ROUTERS, *ADMIN_ROUTERS, creators],
         {get_actor: current_actor},
         identity=identity,
     )

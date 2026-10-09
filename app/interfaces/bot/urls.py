@@ -63,7 +63,7 @@ class BotUrls:
             return self.sp
         if Role.ADMIN in held:
             return self.admin
-        if Role.LMS_ADMIN in held:
+        if Role.LMS_ADMIN in held or Role.LMS_CREATOR in held:
             return self.lms
         return self.sp
 

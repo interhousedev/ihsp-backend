@@ -22,7 +22,16 @@ def register(kit: ToolKit) -> None:
             ),
         ],
         roles: Annotated[
-            list[Literal["student", "teacher", "admin", "lms_admin", "librarian"]]
+            list[
+                Literal[
+                    "student",
+                    "teacher",
+                    "admin",
+                    "lms_admin",
+                    "lms_creator",
+                    "librarian",
+                ]
+            ]
             | None,
             Field(description="Only users with one of these roles."),
         ] = None,

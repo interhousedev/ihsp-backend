@@ -50,17 +50,98 @@ async def test_lms_admin_creates_a_course_with_an_empty_unpublished_draft(
     ]
 
 
-async def test_only_the_lms_admin_creates_courses(
+async def test_only_the_lms_admin_and_course_creators_create_courses(
     services: AuthoringServices, make_actor: Callable[..., Actor]
 ) -> None:
-    """LMS-21: courses are created by the LMS admin only."""
-    with pytest.raises(ForbiddenError):
-        await services.create_course.execute(
-            make_actor(Role.TEACHER),
-            title="Algebra",
-            slug="algebra",
-            visibility=Visibility.PUBLIC,
+    """LMS-21: a teacher or a student alone cannot create courses."""
+    for role in (Role.TEACHER, Role.STUDENT, Role.ADMIN):
+        with pytest.raises(ForbiddenError):
+            await services.create_course.execute(
+                make_actor(role),
+                title="Algebra",
+                slug="algebra",
+                visibility=Visibility.PUBLIC,
+            )
+
+
+async def test_a_course_creator_owns_the_course_they_create(
+    services: AuthoringServices,
+    identity: FakeIdentityDirectory,
+    make_actor: Callable[..., Actor],
+) -> None:
+    """LMS-21: the creator gets an `owner` row with every permission."""
+    creator = make_actor(Role.TEACHER, Role.LMS_CREATOR)
+    identity.add_user("creator", user_id=creator.user_id, roles=[Role.LMS_CREATOR])
+
+    created = await services.create_course.execute(
+        creator, title="Algebra", slug="algebra-own", visibility=Visibility.PUBLIC
+    )
+    staff = await services.list_course_staff.execute(creator, created.id)
+    mine = await services.queries.courses_for_staff(creator.user_id, "edit")
+
+    assert created.my_permissions == [
+        "edit",
+        "publish",
+        "review",
+        "manage_staff",
+        "view_drafts",
+    ]
+    assert [(i.user.id, i.role, i.show_on_page) for i in staff] == [
+        (creator.user_id, "owner", False)
+    ]
+    assert [c["slug"] for c in mine] == ["algebra-own"]
+
+
+async def test_an_lms_admin_creating_a_course_gets_no_staff_row(
+    services: AuthoringServices, admin: Actor
+) -> None:
+    """The admin already holds every permission on every course."""
+    created = await services.create_course.execute(
+        admin, title="Algebra", slug="algebra-adm", visibility=Visibility.PUBLIC
+    )
+
+    assert await services.list_course_staff.execute(admin, created.id) == []
+
+
+async def test_a_course_creator_works_only_on_own_and_shared_courses(
+    services: AuthoringServices,
+    identity: FakeIdentityDirectory,
+    make_actor: Callable[..., Actor],
+    course: CourseFixture,
+) -> None:
+    """Creators see and edit their own courses and those they were added to."""
+    creator = make_actor(Role.TEACHER, Role.LMS_CREATOR)
+    friend = make_actor(Role.TEACHER, Role.LMS_CREATOR)
+    identity.add_user("creator", user_id=creator.user_id, roles=[Role.LMS_CREATOR])
+    identity.add_user("friend", user_id=friend.user_id, roles=[Role.LMS_CREATOR])
+    mine = await services.create_course.execute(
+        creator, title="Mine", slug="mine-1", visibility=Visibility.PUBLIC
+    )
+    await services.create_course.execute(
+        friend, title="Theirs", slug="theirs-1", visibility=Visibility.PUBLIC
+    )
+
+    with pytest.raises(CoursePermissionError):
+        await services.update_course_settings.execute(
+            friend, mine.id, status=CourseStatus.ARCHIVED
         )
+    with pytest.raises(CoursePermissionError):
+        await services.update_course_settings.execute(
+            creator, course.id, status=CourseStatus.ARCHIVED
+        )
+    await services.add_course_staff.execute(
+        creator, mine.id, login="friend", role="Teacher", permissions=None
+    )
+    shared = await services.update_course_settings.execute(
+        friend, mine.id, status=CourseStatus.ARCHIVED
+    )
+    queries = services.queries
+    creator_sees = await queries.courses_for_staff(creator.user_id, "edit")
+    friend_sees = await queries.courses_for_staff(friend.user_id, "edit")
+
+    assert shared.status == "archived"
+    assert [c["slug"] for c in creator_sees] == ["mine-1"]
+    assert sorted(c["slug"] for c in friend_sees) == ["mine-1", "theirs-1"]
 
 
 async def test_slug_must_be_valid_and_unique(

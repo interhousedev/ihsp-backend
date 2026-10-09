@@ -13,19 +13,32 @@ from app.modules.identity.domain.audit_event import (
     ROLE_GRANTED,
     ROLE_REVOKED,
 )
-from app.modules.identity.domain.errors import SelfActionForbiddenError
+from app.modules.identity.domain.errors import (
+    CourseCreatorNotStaffError,
+    LmsAdminNeedsAdminError,
+    SelfActionForbiddenError,
+)
 from app.modules.identity.domain.user import User
 from app.modules.identity.ports.unit_of_work import UowFactory
 from app.shared.actor import Actor, Role
 from app.shared.base_error import ValidationFailedError
 from app.shared.notifications import AuditDraft
 
-MANAGED_ROLES = frozenset({Role.ADMIN, Role.LMS_ADMIN, Role.LIBRARIAN})
+MANAGED_ROLES = frozenset(
+    {Role.ADMIN, Role.LMS_ADMIN, Role.LMS_CREATOR, Role.LIBRARIAN}
+)
+# Who may become a course creator.
+COURSE_CREATOR_BASES = frozenset({Role.TEACHER, Role.ADMIN})
 
 
 @dataclass(frozen=True, slots=True)
 class ChangeRoles:
-    """Any role change logs the user out everywhere in the same transaction (ID-11)."""
+    """Any role change logs the user out everywhere in the same transaction (ID-11).
+
+    `lms_admin` is an extra role of Administration: it is only granted to a user who
+    holds `admin`, and removing `admin` removes it too. `lms_creator` is only granted
+    to a teacher or an administrator.
+    """
 
     uow_factory: UowFactory
     revoker: AccessRevoker
@@ -43,6 +56,7 @@ class ChangeRoles:
         self._validate(actor, user_id, grant, revoke)
         async with self.uow_factory() as uow:
             user = await require_user(uow, user_id)
+            revoke = self._with_dependents(user, grant, revoke)
             granted = [role for role in dict.fromkeys(grant) if user.grant(role)]
             revoked = [role for role in dict.fromkeys(revoke) if user.revoke(role)]
             if not granted and not revoked:
@@ -65,12 +79,26 @@ class ChangeRoles:
     ) -> None:
         if not set(grant) | set(revoke) <= MANAGED_ROLES:
             raise ValidationFailedError(
-                params={"roles": ["admin", "lms_admin", "librarian"]}
+                params={"roles": ["admin", "lms_admin", "lms_creator", "librarian"]}
             )
         if set(grant) & set(revoke):
             raise ValidationFailedError(params={"reason": "grant and revoke overlap"})
         if actor.user_id == user_id and Role.ADMIN in revoke:
             raise SelfActionForbiddenError()
+
+    @staticmethod
+    def _with_dependents(
+        user: User, grant: Sequence[Role], revoke: Sequence[Role]
+    ) -> list[Role]:
+        """Check the roles that lean on others; return `revoke` plus what goes along."""
+        after = (user.roles | set(grant)) - set(revoke)
+        if Role.LMS_ADMIN in grant and Role.ADMIN not in after:
+            raise LmsAdminNeedsAdminError()
+        if Role.LMS_CREATOR in grant and not after & COURSE_CREATOR_BASES:
+            raise CourseCreatorNotStaffError()
+        if Role.ADMIN in revoke and Role.LMS_ADMIN not in revoke:
+            return [*revoke, Role.LMS_ADMIN]
+        return list(revoke)
 
     @staticmethod
     def _event(
