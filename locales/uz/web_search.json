@@ -1,0 +1,5 @@
+{
+  "web-search-disabled": "Internetdan qidirish mavjud emas.",
+  "web-search-quota-exceeded": "Bugungi internet qidiruvlarining hammasi ishlatildi ({limit}). Ular yarim tunda yangilanadi.",
+  "web-search-unavailable": "Internetdan qidirish hozir mavjud emas. Bir daqiqadan keyin urinib ko'ring yoki uni o'chiring."
+}
