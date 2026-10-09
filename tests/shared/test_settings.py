@@ -1,7 +1,8 @@
 """Settings: defaults, environment, files, production guard."""
 
+from collections import Counter
 from pathlib import Path
-from typing import Any
+from typing import Any, get_args, get_origin
 
 from app.settings import Settings, load_settings
 from app.settings_loader import path_exists
@@ -189,37 +190,47 @@ def test_the_cli_checks_the_process_before_it_starts(
 def test_every_variable_in_the_env_files_is_a_real_setting(name: str) -> None:
     """materials/.env.sample documents every variable; dev.env has no typos."""
     for variable in env_names(MATERIALS / name):
-        parts = variable.removeprefix("IHSP_").lower().split("__")
+        name = variable.replace("<TASK>", "STUDIO_QUIZ")
+        parts = name.removeprefix("IHSP_").lower().split("__")
         if parts == ["env_file"]:
             continue
         assert has_field(Settings, parts), variable
 
 
-def test_the_sample_documents_every_setting() -> None:
-    """No setting is missing from .env.sample.
+def leaf_variables(model: type[BaseModel], prefix: str = "") -> list[str]:
+    """Env names (lower case, without IHSP_) of every leaf setting, in field order.
 
-    A per-task dict (`ai.tasks`) counts as documented when any of its variables is.
+    A dict of models (`ai.tasks`) gets a `<key>` segment, as in settings.md.
     """
-    documented = {
-        v.removeprefix("IHSP_").lower() for v in env_names(MATERIALS / ".env.sample")
-    }
-
-    def is_documented(path: str) -> bool:
-        return any(name == path or name.startswith(f"{path}__") for name in documented)
-
-    missing = []
-    for section, field in Settings.model_fields.items():
+    names: list[str] = []
+    for name, field in model.model_fields.items():
         annotation: Any = field.annotation
+        path = f"{prefix}{name}"
+        if get_origin(annotation) is dict:
+            key_type, annotation = get_args(annotation)
+            path += f"__<{key_type.__name__.removeprefix('Ai').lower()}>"
         if isinstance(annotation, type) and issubclass(annotation, BaseModel):
-            missing += [
-                f"{section}__{name}"
-                for name in annotation.model_fields
-                if not is_documented(f"{section}__{name}")
-            ]
-        elif section not in documented:
-            missing.append(section)
+            names += leaf_variables(annotation, f"{path}__")
+        else:
+            names.append(path)
+    return names
 
-    assert missing == []
+
+def test_the_sample_documents_every_setting_in_order() -> None:
+    """Every leaf setting has one line in .env.sample (commented ones count).
+
+    The lines follow the field order of the models, which is the section order of
+    docs/reference/settings.md. A per-task variable is written with `<TASK>`.
+    """
+    expected = leaf_variables(Settings)
+    in_file = [
+        v.removeprefix("IHSP_").lower() for v in env_names(MATERIALS / ".env.sample")
+    ]
+    lines = [name for name in in_file if name in set(expected)]
+
+    assert sorted(set(expected) - set(lines)) == [], "missing from .env.sample"
+    assert [n for n, count in Counter(lines).items() if count > 1] == []
+    assert lines == expected
 
 
 def test_dev_env_loads(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
