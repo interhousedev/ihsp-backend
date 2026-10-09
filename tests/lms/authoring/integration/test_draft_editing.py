@@ -436,3 +436,48 @@ async def test_oversized_content_is_refused(
         await set_blocks(services, owner, step, text_block("x" * 1_100_000))
 
     assert caught.value.params["reason"] == "too-large"
+
+
+async def test_continuous_autosaves_update_one_draft_in_place(
+    services: AuthoringServices,
+    course: CourseFixture,
+    sessionmaker_in_tx: async_sessionmaker[AsyncSession],
+) -> None:
+    """Autosave every second or two: one draft per step, one pending entry."""
+    owner = course.team.owner
+    section = await services.create_section.execute(owner, course.id, "Limits")
+    step = await services.create_step.execute(
+        owner, course.id, section_id=section.id, title="Intro"
+    )
+    saved = step
+    for n in range(5):
+        saved = await services.save_step_draft.execute(
+            owner,
+            step.step_id,
+            content_of("Intro", text_block(f"typing {n}")),
+            saved.lock_version,
+        )
+
+    assert saved.content.blocks[0].markdown == "typing 4"
+    assert saved.lock_version == step.lock_version + 5
+    pending = await services.get_pending_changes.execute(owner, course.id)
+    assert [s.step_id for s in pending.steps] == [step.step_id]
+    history = await services.list_step_history.execute(owner, step.step_id)
+    assert history == []
+    row = await step_row(sessionmaker_in_tx, step.step_id)
+    assert row.draft["blocks"][0]["markdown"] == "typing 4"
+
+
+async def test_autosave_after_a_publish_keeps_one_pending_change(
+    services: AuthoringServices, course: CourseFixture
+) -> None:
+    """Editing a published step many times is still a single pending change."""
+    owner = course.team.owner
+    seeded = await seed_published(services, owner, course.id)
+    first = seeded.step_a
+    saved = first
+    for n in range(3):
+        saved = await set_blocks(services, owner, saved, text_block(f"edit {n}"))
+
+    pending = await services.get_pending_changes.execute(owner, course.id)
+    assert [s.step_id for s in pending.steps].count(first.step_id) == 1
