@@ -1,7 +1,8 @@
 """ID-1: the fake EMIS used in development (EMIS__MODE=fake)."""
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 
+import app.modules.identity.infrastructure.emis.fake as fake_module
 from app.modules.identity.application.register_models import (
     EmisAuthError,
     EmisRequestError,
@@ -11,12 +12,14 @@ from app.modules.identity.infrastructure.emis.fake import (
     FAKE_STUDENTS,
     FAKE_SUBJECTS,
     FakeEmisClient,
+    FakeStudent,
 )
+from app.modules.identity.infrastructure.emis.fake_schedule import week_body
 from app.modules.identity.infrastructure.emis.mapping import to_class_hours
 from app.modules.identity.infrastructure.emis.models.responses.class_hours import (
     ClassHoursV1DTO,
 )
-from app.shared.contracts.emis import EmisMarkType
+from app.shared.contracts.emis import EmisClass, EmisMarkType
 from tests.fakes.clock import FixedClock
 from tests.identity.emis.emis_fixtures import load_fixture
 
@@ -136,20 +139,105 @@ async def test_class_hours_are_the_recorded_emis_response() -> None:
     assert hours == recorded == list(FAKE_CLASS_HOURS)
 
 
+WINDOW = (date(2026, 10, 5), date(2026, 11, 1))  # four weeks from the fake's Monday
+
+
+async def test_the_fake_week_bodies_are_the_recorded_fixtures() -> None:
+    """ACA-1: the fixtures are what the fake sends; both have the real EMIS shape."""
+    client = make_client()
+    student = _student("student01")
+    cells = fake_module._cells_of(student.group_emis_id)
+    today = date(2026, 10, 6)
+
+    for number in range(4):
+        monday = WINDOW[0] + timedelta(days=7 * number)
+        body = week_body(
+            cells,
+            student.group_emis_id,
+            student.half,
+            monday,
+            monday + timedelta(days=6),
+            today,
+        )
+        assert body == load_fixture(f"class_schedules_week{number + 1}.json")
+    assert await client.timetable(await client.login("student01", "password"), *WINDOW)
+
+
 async def test_the_timetable_belongs_to_the_students_group() -> None:
     """ACA-1: two groups, different timetables, teachers shared by id."""
     client = make_client()
-    second_year = await client.timetable(await client.login("student01", "password"))
-    first_year = await client.timetable(await client.login("student16", "password"))
+    second_year = await client.timetable(
+        await client.login("student01", "password"), *WINDOW
+    )
+    first_year = await client.timetable(
+        await client.login("student16", "password"), *WINDOW
+    )
 
-    assert second_year and first_year and second_year != first_year
-    teachers = {i.teacher.emis_id for i in second_year if i.teacher} & {
-        i.teacher.emis_id for i in first_year if i.teacher
+    assert second_year and first_year
+
+    def plan(classes: list[EmisClass]) -> set[tuple[date, int, int]]:
+        return {(c.date, c.pair_number, c.subject.emis_subject_id) for c in classes}
+
+    assert plan(second_year) != plan(first_year)
+    teachers = {c.teacher.emis_id for c in second_year if c.teacher} & {
+        c.teacher.emis_id for c in first_year if c.teacher
     }
     assert teachers  # the same teachers teach both groups
-    assert {i.subgroup for i in second_year} == {None, 1, 2}
-    assert {i.week_parity for i in second_year} == {"every", "odd", "even"}
-    assert all(1 <= i.weekday <= 6 and i.pair_number >= 0 for i in second_year)
+    assert all(
+        1 <= c.date.isoweekday() <= 6 and c.pair_number >= 0 for c in second_year
+    )
+    assert len({c.class_id for c in second_year}) == len(second_year)
+
+
+async def test_a_student_sees_only_the_slots_of_their_own_half() -> None:
+    """ACA-2: halves 1 and 2 of one group see the same whole-group classes."""
+    client = make_client()
+    one = await client.timetable(await client.login("student01", "password"), *WINDOW)
+    two = await client.timetable(await client.login("student02", "password"), *WINDOW)
+
+    assert {c.subgroup for c in one} == {None, 1}
+    assert {c.subgroup for c in two} == {None, 2}
+
+    def whole(classes: list[EmisClass]) -> set[tuple[date, int, int]]:
+        return {
+            (c.date, c.pair_number, c.class_id) for c in classes if c.subgroup is None
+        }
+
+    assert whole(one) == whole(two)
+    assert {(c.date, c.pair_number) for c in one} == {
+        (c.date, c.pair_number) for c in two
+    }
+
+
+async def test_saturday_alternates_between_two_subjects_week_by_week() -> None:
+    """ACA-5: History in odd weeks, Uzbek in even weeks (counted from 31 Aug)."""
+    client = make_client()
+    classes = await client.timetable(
+        await client.login("student01", "password"), *WINDOW
+    )
+
+    saturdays = [c for c in classes if c.date.isoweekday() == 6]
+    assert [(c.date.day, c.subject.name_en) for c in saturdays] == [
+        (10, "Uzbek"),
+        (17, "History"),
+        (24, "Uzbek"),
+        (31, "History"),
+    ]
+
+
+async def test_kinds_and_topics_follow_the_calendar() -> None:
+    """ACA-7: a midterm on 20 Oct; topics exist for days up to the fake's today only."""
+    client = make_client()
+    classes = await client.timetable(
+        await client.login("student01", "password"), *WINDOW
+    )
+
+    midterms = [c for c in classes if c.kind == "midterm"]
+    assert {(c.date, c.pair_number) for c in midterms} == {(date(2026, 10, 20), 0)}
+    assert {c.kind for c in classes} == {"lecture", "practice", "midterm"}
+    with_topic = [c for c in classes if c.topic is not None]
+    assert with_topic and all(c.date <= date(2026, 10, 6) for c in with_topic)
+    assert any(c.topic and c.topic.topic_file_url for c in with_topic)
 
 
 async def test_the_timetable_needs_a_valid_token() -> None:
@@ -157,4 +245,8 @@ async def test_the_timetable_needs_a_valid_token() -> None:
     client = make_client()
 
     with pytest.raises(EmisAuthError):
-        await client.timetable("fake-token:nobody")
+        await client.timetable("fake-token:nobody", *WINDOW)
+
+
+def _student(login: str) -> FakeStudent:
+    return next(s for s in FAKE_STUDENTS if s.login == login)

@@ -4,13 +4,14 @@ from datetime import date, time
 from typing import Literal
 
 from app.shared.contracts.emis import (
+    EmisClass,
     EmisClassHour,
     EmisMarkType,
     EmisProfile,
     EmisSubject,
     EmisSubjectRatings,
     EmisTeacher,
-    EmisTimetableItem,
+    EmisTopic,
 )
 
 from pydantic import BaseModel
@@ -132,26 +133,48 @@ class EmisTeacherResponse(BaseModel):
         )
 
 
-class EmisTimetableItemResponse(BaseModel):
-    """EmisTimetableItem."""
+class EmisTopicResponse(BaseModel):
+    """EmisTopic."""
 
-    weekday: int
+    name: str
+    description: str | None
+    topic_file_url: str | None
+    homework_file_url: str | None
+    video_url: str | None
+
+    @classmethod
+    def from_contract(cls, topic: EmisTopic) -> "EmisTopicResponse":
+        """Build the response from the contract dataclass."""
+        return cls(
+            name=topic.name,
+            description=topic.description,
+            topic_file_url=topic.topic_file_url,
+            homework_file_url=topic.homework_file_url,
+            video_url=topic.video_url,
+        )
+
+
+class EmisClassResponse(BaseModel):
+    """EmisClass: ``pair_number`` is 0-based, ``subgroup`` is the student's own half."""
+
+    class_id: int
+    date: date
     pair_number: int
-    subject_emis_id: int | None
-    subject_name: str
+    subject: EmisSubjectResponse
     teacher: EmisTeacherResponse | None
     room: str | None
     subgroup: Literal[1, 2] | None
-    week_parity: Literal["every", "odd", "even"]
+    kind: Literal["lecture", "practice", "midterm", "final", "other"]
+    topic: EmisTopicResponse | None
 
     @classmethod
-    def from_contract(cls, item: EmisTimetableItem) -> "EmisTimetableItemResponse":
+    def from_contract(cls, item: EmisClass) -> "EmisClassResponse":
         """Build the response from the contract dataclass."""
         return cls(
-            weekday=item.weekday,
+            class_id=item.class_id,
+            date=item.date,
             pair_number=item.pair_number,
-            subject_emis_id=item.subject_emis_id,
-            subject_name=item.subject_name,
+            subject=EmisSubjectResponse.from_contract(item.subject),
             teacher=(
                 EmisTeacherResponse.from_contract(item.teacher)
                 if item.teacher
@@ -159,5 +182,6 @@ class EmisTimetableItemResponse(BaseModel):
             ),
             room=item.room,
             subgroup=item.subgroup,
-            week_parity=item.week_parity,
+            kind=item.kind,
+            topic=EmisTopicResponse.from_contract(item.topic) if item.topic else None,
         )

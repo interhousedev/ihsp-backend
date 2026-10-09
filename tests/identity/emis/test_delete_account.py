@@ -65,6 +65,7 @@ async def test_files_and_links_of_the_student_are_scheduled_for_removal(
     assert world.kicker.calls == [
         ("files.delete_owner", {"user_id": str(user_id)}),
         ("links.revoke_owner", {"user_id": str(user_id)}),
+        ("notebooks.delete_owner", {"user_id": str(user_id)}),
     ]
 
 

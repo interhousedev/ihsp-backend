@@ -2,12 +2,20 @@
 
 import hashlib
 import json
+import unicodedata
 from datetime import date, datetime, time
 from typing import Any
 
 from app.modules.identity.application.register_models import EmisRequestError
 from app.modules.identity.infrastructure.emis.models.responses.class_hours import (
     ClassHoursV1DTO,
+)
+from app.modules.identity.infrastructure.emis.models.responses.class_schedules import (
+    ClassSchedulesV1DTO,
+    ClassTeacherV1DTO,
+    ClassV1DTO,
+    SubjectV1DTO,
+    TopicV1DTO,
 )
 from app.modules.identity.infrastructure.emis.models.responses.curriculum import (
     CurriculumV1DTO,
@@ -19,14 +27,22 @@ from app.modules.identity.infrastructure.emis.models.responses.ratings import (
     RatingsV1DTO,
 )
 from app.shared.contracts.emis import (
+    EmisClass,
     EmisClassHour,
     EmisMark,
     EmisMarkType,
     EmisProfile,
     EmisSubject,
     EmisSubjectRatings,
+    EmisTeacher,
+    EmisTopic,
 )
+from app.shared.lesson_kind import LessonKind
 from app.shared.text import normalize_group_name, title_case
+
+import structlog
+
+log = structlog.get_logger(__name__)
 
 # EMIS names the rating groups in Uzbek; the prefix is enough to tell them apart.
 _RATING_PREFIXES: tuple[tuple[str, EmisMarkType], ...] = (
@@ -145,3 +161,118 @@ def to_class_hours(dto: ClassHoursV1DTO) -> list[EmisClassHour]:
             raise EmisRequestError(f"unexpected class hour {item.pair_number}")
         hours.append(EmisClassHour(item.pair_number, begin, end))
     return hours
+
+
+# - - - Class schedules - - -
+
+# EMIS names the class types in Uzbek; apostrophes come in several shapes, so the
+# names are compared as bare letters ("Ma'ruza" -> "maruza").
+_CLASS_KINDS: dict[str, LessonKind] = {
+    "maruza": "lecture",
+    "lecture": "lecture",
+    "лекция": "lecture",
+    "amaliyot": "practice",
+    "practice": "practice",
+    "практика": "practice",
+    "oraliqnazorat": "midterm",
+    "midtermcontrol": "midterm",
+    "рубежныйконтроль": "midterm",
+    "yakuniynazorat": "final",
+    "finalcontrol": "final",
+    "итоговыйконтроль": "final",
+}
+_HTTP = ("http://", "https://")
+
+
+def class_kind(name: str | None) -> LessonKind:
+    """Map an EMIS class type name to a lesson kind; unknown names are "other"."""
+    letters = "".join(
+        ch
+        for ch in (name or "").casefold()
+        if ch.isalpha() and unicodedata.category(ch) != "Lm"  # not ʼ or ʻ
+    )
+    return _CLASS_KINDS.get(letters, "other")
+
+
+def _parse_day(value: str) -> date:
+    try:
+        return datetime.strptime(value.strip(), "%d.%m.%Y").date()
+    except ValueError as exc:
+        raise EmisRequestError(f"unexpected class date {value!r}") from exc
+
+
+def _subject(dto: SubjectV1DTO) -> EmisSubject:
+    uz, ru, en = (
+        (dto.name.uz or "").strip(),
+        (dto.name.ru or "").strip(),
+        (dto.name.en or "").strip(),
+    )
+    fallback = uz or ru or en or f"Subject {dto.id}"
+    return EmisSubject(dto.id, uz or fallback, ru or fallback, en or fallback)
+
+
+def _teacher(row: ClassTeacherV1DTO) -> EmisTeacher | None:
+    if row.teacher is None:
+        return None
+    person = row.teacher.citizen
+    first, last = title_case(person.first_name), title_case(person.last_name)
+    if not first and not last:
+        return None
+    middle = title_case(person.middle_name or "")
+    return EmisTeacher(row.teacher.id, first, last, middle or None)
+
+
+def _url(value: str | None) -> str | None:
+    url = (value or "").strip()
+    return url if url.lower().startswith(_HTTP) else None
+
+
+def _topic(dto: TopicV1DTO | None) -> EmisTopic | None:
+    name = ((dto.name if dto else None) or "").strip()
+    if dto is None or not name:
+        return None
+    return EmisTopic(
+        name=name,
+        description=(dto.description or "").strip() or None,
+        topic_file_url=_url(dto.topic_file_url),
+        homework_file_url=_url(dto.homework_file_url),
+        video_url=_url(dto.video_url),
+    )
+
+
+def _class(day: date, item: ClassV1DTO) -> EmisClass | None:
+    """Map a class by its first teacher row that names a subject."""
+    if item.pair_number < 0:
+        raise EmisRequestError(f"unexpected pair number {item.pair_number}")
+    for row in item.teachers or []:
+        if row.edu_subject is None:
+            continue
+        half = row.group_number if item.is_seperated else None
+        room = ((row.room.name if row.room else None) or "").strip()
+        return EmisClass(
+            class_id=item.id,
+            date=day,
+            pair_number=item.pair_number,
+            subject=_subject(row.edu_subject),
+            teacher=_teacher(row),
+            room=room or None,
+            subgroup=1 if half == 1 else 2 if half == 2 else None,
+            kind=class_kind(row.class_type.name if row.class_type else None),
+            topic=_topic(row.topic),
+        )
+    return None
+
+
+def to_classes(dto: ClassSchedulesV1DTO) -> list[EmisClass]:
+    """Map the days to classes, ordered by date and pair; skip one with no subject."""
+    classes: list[EmisClass] = []
+    for day in dto.results:
+        when = _parse_day(day.date)
+        for item in day.classes or []:
+            mapped = _class(when, item)
+            if mapped is None:
+                log.warning("emis_class_without_subject", class_id=item.id)
+            else:
+                classes.append(mapped)
+    classes.sort(key=lambda c: (c.date, c.pair_number, c.class_id))
+    return classes

@@ -7,10 +7,10 @@ from app.interfaces.http.internal.emis.handlers.get_subjects import get_subjects
 from app.interfaces.http.internal.emis.handlers.get_timetable import get_timetable
 from app.interfaces.http.internal.emis.schemas import (
     EmisClassHourResponse,
+    EmisClassResponse,
     EmisProfileResponse,
     EmisSubjectRatingsResponse,
     EmisSubjectResponse,
-    EmisTimetableItemResponse,
 )
 from app.interfaces.http.internal.emis.service_auth import require_service_token
 
@@ -50,5 +50,5 @@ router.add_api_route(
     "/{user_id}/timetable",
     get_timetable,
     methods=["GET"],
-    response_model=list[EmisTimetableItemResponse],
+    response_model=list[EmisClassResponse],
 )

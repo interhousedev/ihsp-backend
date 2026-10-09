@@ -9,9 +9,9 @@ from app.shared.contracts.emis import (
     EmisAuthFailed,
     EmisMarkType,
     EmisTeacher,
+    EmisTopic,
     EmisUnavailable,
 )
-from tests.identity.emis.emis_fixtures import load_json
 
 import httpx
 import pytest
@@ -190,27 +190,75 @@ async def test_class_hours_are_parsed_from_the_gateway(
 async def test_the_timetable_is_parsed_from_the_gateway(
     source: HttpEmisSource, gateway: respx.MockRouter
 ) -> None:
-    """ACA-1: teacher, half, parity and missing values survive the round trip."""
-    gateway.get(f"/{USER}/timetable").respond(
-        200, json=load_json("timetable_gateway.json")
+    """ACA-1: the dates go as ISO query parameters; teacher, half and topic survive."""
+    route = gateway.get(f"/{USER}/timetable").respond(
+        200,
+        json=[
+            {
+                "class_id": 11,
+                "date": "2026-10-05",
+                "pair_number": 0,
+                "subject": {
+                    "emis_subject_id": 34,
+                    "name_uz": "Algebra",
+                    "name_ru": "Algebra",
+                    "name_en": "Algebra",
+                },
+                "teacher": {
+                    "emis_id": 2976,
+                    "first_name": "Aleksandr",
+                    "last_name": "Dryaxlov",
+                    "middle_name": None,
+                },
+                "room": "23",
+                "subgroup": 1,
+                "kind": "practice",
+                "topic": None,
+            },
+            {
+                "class_id": 12,
+                "date": "2026-10-05",
+                "pair_number": 3,
+                "subject": {
+                    "emis_subject_id": 28,
+                    "name_uz": "Tarix",
+                    "name_ru": "История",
+                    "name_en": "History",
+                },
+                "teacher": None,
+                "room": None,
+                "subgroup": None,
+                "kind": "midterm",
+                "topic": {
+                    "name": "Jadids",
+                    "description": None,
+                    "topic_file_url": "https://cdn-emis.edu.uz/a.pdf",
+                    "homework_file_url": None,
+                    "video_url": None,
+                },
+            },
+        ],
     )
 
-    items = await source.timetable(USER)
+    classes = await source.timetable(USER, date(2026, 10, 5), date(2026, 11, 1))
 
-    assert [(i.weekday, i.pair_number, i.subject_emis_id) for i in items] == [
-        (3, 0, 101),
-        (3, 1, 103),
-        (6, 4, None),
-    ]
-    assert items[0].teacher == EmisTeacher(9001, "Gulnora", "Kalandarova", "Akbarovna")
-    assert (items[1].subgroup, items[1].week_parity) == (2, "odd")
-    assert items[1].teacher == EmisTeacher(None, "Sardor", "Yuldashev", None)
-    assert (items[2].teacher, items[2].room, items[2].week_parity) == (
-        None,
-        "Кластер",
-        "even",
+    assert dict(route.calls.last.request.url.params) == {
+        "begin": "2026-10-05",
+        "end": "2026-11-01",
+    }
+    first, second = classes
+    assert (first.class_id, first.date, first.kind, first.subgroup) == (
+        11,
+        date(2026, 10, 5),
+        "practice",
+        1,
     )
-    assert items[0].room == "101" and items[0].subgroup is None
+    assert first.teacher == EmisTeacher(2976, "Aleksandr", "Dryaxlov", None)
+    assert (first.subject.emis_subject_id, first.room, first.topic) == (34, "23", None)
+    assert second.teacher is None and second.kind == "midterm"
+    assert second.topic == EmisTopic(
+        name="Jadids", topic_file_url="https://cdn-emis.edu.uz/a.pdf"
+    )
 
 
 async def test_a_timetable_503_is_unavailable(
@@ -222,4 +270,4 @@ async def test_a_timetable_503_is_unavailable(
     )
 
     with pytest.raises(EmisUnavailable):
-        await source.timetable(USER)
+        await source.timetable(USER, date(2026, 10, 5), date(2026, 10, 11))

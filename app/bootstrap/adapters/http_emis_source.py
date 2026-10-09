@@ -1,5 +1,6 @@
 """EmisSource over the identity process's internal API (worker, api and bot use it)."""
 
+import datetime as dt
 from datetime import date, time
 from typing import Any
 from uuid import UUID
@@ -7,6 +8,7 @@ from uuid import UUID
 from app.settings import Settings
 from app.shared.contracts.emis import (
     EmisAuthFailed,
+    EmisClass,
     EmisClassHour,
     EmisMark,
     EmisMarkType,
@@ -14,7 +16,7 @@ from app.shared.contracts.emis import (
     EmisSubject,
     EmisSubjectRatings,
     EmisTeacher,
-    EmisTimetableItem,
+    EmisTopic,
     EmisUnavailable,
 )
 
@@ -113,12 +115,17 @@ class HttpEmisSource:
             for item in body
         ]
 
-    async def timetable(self, user_id: UUID) -> list[EmisTimetableItem]:
-        """Return the weekly timetable of the student's group."""
-        body = await self._get(f"{user_id}/timetable")
-        return [_timetable_item(item) for item in body]
+    async def timetable(
+        self, user_id: UUID, begin: dt.date, end: dt.date
+    ) -> list[EmisClass]:
+        """Return the student's classes on the dates begin..end."""
+        body = await self._get(
+            f"{user_id}/timetable",
+            {"begin": begin.isoformat(), "end": end.isoformat()},
+        )
+        return [_emis_class(item) for item in body]
 
-    async def _get(self, path: str, params: dict[str, int] | None = None) -> Any:
+    async def _get(self, path: str, params: dict[str, int | str] | None = None) -> Any:
         try:
             response = await self._http.get(
                 f"{self._base}/{path}", params=params, headers=self._headers
@@ -132,13 +139,18 @@ class HttpEmisSource:
         raise _error_for(response)
 
 
-def _timetable_item(item: dict[str, Any]) -> EmisTimetableItem:
-    teacher = item["teacher"]
-    return EmisTimetableItem(
-        weekday=item["weekday"],
+def _emis_class(item: dict[str, Any]) -> EmisClass:
+    subject, teacher, topic = item["subject"], item["teacher"], item["topic"]
+    return EmisClass(
+        class_id=item["class_id"],
+        date=date.fromisoformat(item["date"]),
         pair_number=item["pair_number"],
-        subject_emis_id=item["subject_emis_id"],
-        subject_name=item["subject_name"],
+        subject=EmisSubject(
+            emis_subject_id=subject["emis_subject_id"],
+            name_uz=subject["name_uz"],
+            name_ru=subject["name_ru"],
+            name_en=subject["name_en"],
+        ),
         teacher=(
             EmisTeacher(
                 emis_id=teacher["emis_id"],
@@ -151,7 +163,18 @@ def _timetable_item(item: dict[str, Any]) -> EmisTimetableItem:
         ),
         room=item["room"],
         subgroup=item["subgroup"],
-        week_parity=item["week_parity"],
+        kind=item["kind"],
+        topic=(
+            EmisTopic(
+                name=topic["name"],
+                description=topic["description"],
+                topic_file_url=topic["topic_file_url"],
+                homework_file_url=topic["homework_file_url"],
+                video_url=topic["video_url"],
+            )
+            if topic
+            else None
+        ),
     )
 
 

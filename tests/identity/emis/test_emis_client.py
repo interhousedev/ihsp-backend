@@ -1,15 +1,17 @@
 """ID-1, ID-7, SYNC-2: the EMIS client parses recorded responses and maps errors."""
 
+import datetime as dt
 from collections.abc import AsyncIterator, Iterator
 from datetime import date, time
 
 from app.modules.identity.application.register_models import (
     EmisAuthError,
-    EmisNotConfiguredError,
     EmisRequestError,
 )
 from app.modules.identity.infrastructure.emis.client import EmisClient
-from app.shared.contracts.emis import EmisMarkType
+from app.modules.identity.infrastructure.emis.fake import FakeEmisClient
+from app.shared.contracts.emis import EmisMarkType, EmisTeacher, EmisTopic
+from tests.fakes.clock import FixedClock
 from tests.identity.emis.emis_fixtures import load_fixture
 
 import httpx
@@ -21,6 +23,9 @@ PROFILE = "student-profiles/profile/"
 CURRICULUM = "student-profiles/curriculum/"
 RATINGS = "student-profiles/edu-subjects/35/ratings/?semester=3"
 CLASS_HOURS = "student-profiles/class-hours/"
+CLASS_SCHEDULES = "student-profiles/class-schedules/"
+WEEK_BEGINS = ["05.10.2026", "12.10.2026", "19.10.2026", "26.10.2026"]
+WEEK_ENDS = ["11.10.2026", "18.10.2026", "25.10.2026", "01.11.2026"]
 
 
 @pytest.fixture
@@ -204,14 +209,193 @@ async def test_unexpected_class_hours_raise_request_error(
         await client.class_hours("t")
 
 
-async def test_the_timetable_endpoint_is_not_configured_yet(
+def week_route(
+    router: respx.MockRouter, begin: str, end: str, body: object
+) -> respx.Route:
+    """Answer one `class-schedules` request for the week begin..end."""
+    return router.get(
+        CLASS_SCHEDULES, params={"begin_date": begin, "end_date": end}
+    ).respond(200, json=body)
+
+
+async def test_the_recorded_class_schedules_response_is_mapped_class_by_class(
     client: EmisClient, emis_http: respx.MockRouter
 ) -> None:
-    """ACA-1: no invented URL; the gateway reports EMIS as unavailable."""
-    with pytest.raises(EmisNotConfiguredError):
-        await client.timetable("t")
+    """ACA-1: DD.MM.YYYY dates, a null `classes` day is empty, halves and kinds map."""
+    route = week_route(
+        emis_http,
+        "05.10.2026",
+        "11.10.2026",
+        load_fixture("class_schedules_sample.json"),
+    )
 
-    assert emis_http.calls.call_count == 0
+    classes = await client.timetable(
+        "emis-token-1", dt.date(2026, 10, 5), dt.date(2026, 10, 11)
+    )
+
+    assert route.calls.last.request.headers["Authorization"] == "emis-token-1"
+    assert [(c.class_id, c.date, c.pair_number) for c in classes] == [
+        (3185314, dt.date(2026, 10, 5), 0),
+        (3185325, dt.date(2026, 10, 5), 3),
+    ]
+    split, midterm = classes
+    assert (split.subject.emis_subject_id, split.subject.name_en) == (34, "Algebra")
+    assert split.subject.name_ru == "Algebra"  # EMIS sent an empty Russian name
+    assert (split.kind, split.subgroup, split.room, split.topic) == (
+        "practice",
+        1,
+        "23",
+        None,
+    )
+    assert split.teacher == EmisTeacher(2976, "Aleksandr", "Dryaxlov", "Viktorovich")
+    assert (midterm.kind, midterm.subgroup, midterm.room) == ("midterm", None, "102")
+    assert midterm.subject.name_ru == "История Узбекистана"
+    assert midterm.topic == EmisTopic(
+        name="Движение джадидов. Наука и культура в Туркестане. ПК-1",
+        description="освоить тему",
+        topic_file_url="https://cdn-emis.edu.uz/files/4a5c9ef7-0001.pdf",
+        homework_file_url="https://cdn-emis.edu.uz/files/ceb51d0d-0002.pdf",
+        video_url="https://www.youtube.com/watch?v=q0sUmfmG7gI",
+    )
+
+
+async def test_four_weeks_take_four_requests_and_match_the_fake(
+    client: EmisClient, emis_http: respx.MockRouter
+) -> None:
+    """ACA-1: one request per week; the fake EMIS answers with the same shape."""
+    routes = [
+        week_route(
+            emis_http, begin, end, load_fixture(f"class_schedules_week{n + 1}.json")
+        )
+        for n, (begin, end) in enumerate(zip(WEEK_BEGINS, WEEK_ENDS, strict=True))
+    ]
+
+    classes = await client.timetable("t", dt.date(2026, 10, 5), dt.date(2026, 11, 1))
+
+    assert [route.call_count for route in routes] == [1, 1, 1, 1]
+    fake = FakeEmisClient(FixedClock())
+    token = await fake.login("student01", "password")
+    assert classes == await fake.timetable(
+        token, dt.date(2026, 10, 5), dt.date(2026, 11, 1)
+    )
+    assert {c.kind for c in classes} == {"lecture", "practice", "midterm"}
+    saturdays = [c for c in classes if c.date.isoweekday() == 6]
+    assert [c.subject.name_en for c in saturdays] == [
+        "Uzbek",
+        "History",
+        "Uzbek",
+        "History",
+    ]
+
+
+async def test_a_range_is_split_at_mondays(
+    client: EmisClient, emis_http: respx.MockRouter
+) -> None:
+    """ACA-1: Wednesday to the next Tuesday is two requests."""
+    empty = {"results": [], "total_pages": 1, "success": True}
+    first = week_route(emis_http, "07.10.2026", "11.10.2026", empty)
+    second = week_route(emis_http, "12.10.2026", "13.10.2026", empty)
+
+    assert (
+        await client.timetable("t", dt.date(2026, 10, 7), dt.date(2026, 10, 13)) == []
+    )
+
+    assert (first.call_count, second.call_count) == (1, 1)
+
+
+@pytest.mark.parametrize(
+    ("name", "kind"),
+    [
+        ("Ma'ruza", "lecture"),
+        ("Ma’ruza", "lecture"),
+        ("MAʼRUZA", "lecture"),
+        ("Amaliyot", "practice"),
+        ("Oraliq nazorat", "midterm"),
+        ("Yakuniy nazorat", "final"),
+        ("Laboratoriya", "other"),
+        ("", "other"),
+        (None, "other"),
+    ],
+)
+def test_class_type_names_map_to_lesson_kinds(name: str | None, kind: str) -> None:
+    """ACA-7: apostrophes and case do not matter; unknown names are "other"."""
+    from app.modules.identity.infrastructure.emis.mapping import class_kind
+
+    assert class_kind(name) == kind
+
+
+async def test_odd_shapes_of_a_class_are_handled(
+    client: EmisClient, emis_http: respx.MockRouter
+) -> None:
+    """ACA-1: no subject skips the class; plain classes have no half; bad URLs go."""
+    teacher = {
+        "edu_subject": {"id": 5, "name": {"uz": "", "ru": "", "en": ""}},
+        "class_type": {"name": "Yakuniy nazorat"},
+        "teacher": {"id": 1, "citizen": {"first_name": "", "last_name": ""}},
+        "room": {"name": " "},
+        "group_number": 2,
+        "topic": {"name": "T", "topic_file_url": "ftp://x/y", "video_url": " "},
+    }
+    body = {
+        "results": [
+            {
+                "date": "05.10.2026",
+                "classes": [
+                    {
+                        "id": 1,
+                        "is_seperated": False,
+                        "pair_number": 1,
+                        "teachers": [teacher],
+                    },
+                    {"id": 2, "pair_number": 2, "teachers": [{"room": {"name": "9"}}]},
+                    {"id": 3, "pair_number": 3, "teachers": None},
+                ],
+            }
+        ]
+    }
+    week_route(emis_http, "05.10.2026", "11.10.2026", body)
+
+    classes = await client.timetable("t", dt.date(2026, 10, 5), dt.date(2026, 10, 11))
+
+    [only] = classes
+    assert (only.class_id, only.subgroup, only.kind) == (1, None, "final")
+    assert only.subject.name_uz == "Subject 5"  # every name was empty
+    assert (only.teacher, only.room) == (None, None)
+    assert only.topic == EmisTopic(name="T")
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        [],
+        {"result": {}},
+        {"results": [{"date": "5 Oct", "classes": None}]},
+        {
+            "results": [
+                {"date": "05.10.2026", "classes": [{"id": 1, "pair_number": -1}]}
+            ]
+        },
+        {"results": [{"date": "05.10.2026", "classes": [{"pair_number": 0}]}]},
+    ],
+)
+async def test_unexpected_class_schedules_raise_request_error(
+    client: EmisClient, emis_http: respx.MockRouter, body: object
+) -> None:
+    """ID-7: a changed shape is reported, never turned into wrong lessons."""
+    week_route(emis_http, "05.10.2026", "11.10.2026", body)
+
+    with pytest.raises(EmisRequestError):
+        await client.timetable("t", dt.date(2026, 10, 5), dt.date(2026, 10, 11))
+
+
+async def test_a_stale_token_on_class_schedules_is_an_auth_error(
+    client: EmisClient, emis_http: respx.MockRouter
+) -> None:
+    """ID-7: a 401 on the timetable means the token is stale like on any endpoint."""
+    emis_http.get(CLASS_SCHEDULES).respond(401, json={"code": 401})
+
+    with pytest.raises(EmisAuthError):
+        await client.timetable("stale", dt.date(2026, 10, 5), dt.date(2026, 10, 11))
 
 
 @pytest.mark.parametrize(

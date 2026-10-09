@@ -1,5 +1,6 @@
 """The ID module's gateway to EMIS: stored token, one re-login (ID-7)."""
 
+import datetime as dt
 from collections.abc import Awaitable, Callable
 from typing import TypeVar
 from uuid import UUID
@@ -18,11 +19,11 @@ from app.modules.identity.application.register_ports import (
 )
 from app.shared.contracts.emis import (
     EmisAuthFailed,
+    EmisClass,
     EmisClassHour,
     EmisProfile,
     EmisSubject,
     EmisSubjectRatings,
-    EmisTimetableItem,
     EmisUnavailable,
 )
 from app.shared.contracts.identity import UserStatus
@@ -70,9 +71,15 @@ class EmisGatewayImpl:
         """Return the lyceum's bells (any linked student's token will do)."""
         return await self._call(user_id, self._emis.class_hours)
 
-    async def timetable(self, user_id: UUID) -> list[EmisTimetableItem]:
-        """Return the weekly timetable of the student's group."""
-        return await self._call(user_id, self._emis.timetable)
+    async def timetable(
+        self, user_id: UUID, begin: dt.date, end: dt.date
+    ) -> list[EmisClass]:
+        """Return the student's classes on the dates begin..end."""
+
+        async def fetch(token: str) -> list[EmisClass]:
+            return await self._emis.timetable(token, begin, end)
+
+        return await self._call(user_id, fetch)
 
     # - - - Token handling - - -
 

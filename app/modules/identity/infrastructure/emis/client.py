@@ -1,6 +1,7 @@
 """HTTP client of the EMIS API (login, profile, curriculum, ratings, class hours)."""
 
 import asyncio
+import datetime as dt
 from typing import Any, TypeVar
 
 from app.modules.identity.application.register_models import (
@@ -9,12 +10,16 @@ from app.modules.identity.application.register_models import (
 )
 from app.modules.identity.infrastructure.emis.mapping import (
     to_class_hours,
+    to_classes,
     to_profile,
     to_ratings,
     to_subjects,
 )
 from app.modules.identity.infrastructure.emis.models.responses.class_hours import (
     ClassHoursV1DTO,
+)
+from app.modules.identity.infrastructure.emis.models.responses.class_schedules import (
+    ClassSchedulesV1DTO,
 )
 from app.modules.identity.infrastructure.emis.models.responses.curriculum import (
     CurriculumV1DTO,
@@ -28,16 +33,13 @@ from app.modules.identity.infrastructure.emis.models.responses.profile import (
 from app.modules.identity.infrastructure.emis.models.responses.ratings import (
     RatingsV1DTO,
 )
-from app.modules.identity.infrastructure.emis.timetable_endpoint import (
-    fetch_timetable,
-)
 from app.settings import EmisSettings
 from app.shared.contracts.emis import (
+    EmisClass,
     EmisClassHour,
     EmisProfile,
     EmisSubject,
     EmisSubjectRatings,
-    EmisTimetableItem,
 )
 
 import httpx
@@ -45,6 +47,8 @@ from pydantic import BaseModel, ValidationError
 
 CURRICULUM_PATH = "student-profiles/curriculum/"
 CLASS_HOURS_PATH = "student-profiles/class-hours/"
+CLASS_SCHEDULES_PATH = "student-profiles/class-schedules/"
+EMIS_DATE = "%d.%m.%Y"
 LOGIN_PATH = "student-profiles/login/"
 _TIMEOUT = httpx.Timeout(20.0, connect=5.0)
 M = TypeVar("M", bound=BaseModel)
@@ -172,9 +176,36 @@ class EmisClient:
             raise EmisRequestError("class hours response has no results list")
         return to_class_hours(parse_result(ClassHoursV1DTO, body))
 
-    async def timetable(self, token: str) -> list[EmisTimetableItem]:
-        """Return the weekly timetable of the token's group (endpoint: to fill in)."""
-        return await fetch_timetable(self.get_json, token)
+    async def timetable(
+        self, token: str, begin: dt.date, end: dt.date
+    ) -> list[EmisClass]:
+        """Return the classes on begin..end, one request per Monday-to-Sunday week.
+
+        ``begin_date`` and ``end_date`` are ``DD.MM.YYYY``; the answer is a ``results``
+        list with one item per day. EMIS is asked for one week at a time.
+        """
+        classes: list[EmisClass] = []
+        for first, last in _weeks(begin, end):
+            path = (
+                f"{CLASS_SCHEDULES_PATH}?begin_date={first.strftime(EMIS_DATE)}"
+                f"&end_date={last.strftime(EMIS_DATE)}"
+            )
+            body = await self.get_json(path, token)
+            if not isinstance(body, dict) or not isinstance(body.get("results"), list):
+                raise EmisRequestError("class schedules response has no results list")
+            classes.extend(to_classes(parse_result(ClassSchedulesV1DTO, body)))
+        return classes
+
+
+def _weeks(begin: dt.date, end: dt.date) -> list[tuple[dt.date, dt.date]]:
+    """Split begin..end at Mondays: [(begin, first Sunday), (Monday, Sunday), ...]."""
+    spans: list[tuple[dt.date, dt.date]] = []
+    first = begin
+    while first <= end:
+        sunday = first + dt.timedelta(days=7 - first.isoweekday())
+        spans.append((first, min(sunday, end)))
+        first = sunday + dt.timedelta(days=1)
+    return spans
 
 
 def _result_of(response: httpx.Response) -> dict[str, Any]:

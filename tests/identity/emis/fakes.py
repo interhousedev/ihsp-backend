@@ -1,5 +1,6 @@
 """Fakes for the ports of the EMIS use cases (B2); the real ones are in B1 and B3."""
 
+import datetime as dt
 from collections.abc import Sequence
 from copy import copy
 from dataclasses import dataclass, field, replace
@@ -20,11 +21,11 @@ from app.shared.base_error import ConflictError
 from app.shared.clock import Clock
 from app.shared.contracts.academic import StudentRef
 from app.shared.contracts.emis import (
+    EmisClass,
     EmisClassHour,
     EmisProfile,
     EmisSubject,
     EmisSubjectRatings,
-    EmisTimetableItem,
 )
 from app.shared.contracts.identity import UserStatus
 from app.shared.db.uow import AfterCommit
@@ -96,13 +97,15 @@ class ControlledEmis:
         self._check(token)
         return await self._inner.class_hours(token)
 
-    async def timetable(self, token: str) -> list[EmisTimetableItem]:
-        """Return the timetable of the token's group."""
+    async def timetable(
+        self, token: str, begin: dt.date, end: dt.date
+    ) -> list[EmisClass]:
+        """Return the student's classes on begin..end."""
         self.calls.append("timetable")
         self._check(token)
         if self.timetable_error is not None:
             raise self.timetable_error
-        return await self._inner.timetable(token)
+        return await self._inner.timetable(token, begin, end)
 
 
 # - - - Services of B1 and B3 - - -

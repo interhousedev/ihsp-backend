@@ -1,17 +1,27 @@
 """Fake EMIS for ``EMIS__MODE=fake``: 30 students, 8 subjects, marks, timetable."""
 
-import hashlib
+import datetime as dt
 from dataclasses import dataclass
 from datetime import date, time, timedelta
-from typing import Literal
 
 from app.modules.identity.application.register_models import (
     EmisAuthError,
     EmisRequestError,
 )
-from app.modules.identity.infrastructure.emis.mapping import payload_hash
+from app.modules.identity.infrastructure.emis.fake_schedule import (
+    Cell,
+    Parity,
+    cells_of,
+    digest,
+    week_body,
+)
+from app.modules.identity.infrastructure.emis.mapping import payload_hash, to_classes
+from app.modules.identity.infrastructure.emis.models.responses.class_schedules import (
+    ClassSchedulesV1DTO,
+)
 from app.shared.clock import Clock, local_today
 from app.shared.contracts.emis import (
+    EmisClass,
     EmisClassHour,
     EmisMark,
     EmisMarkType,
@@ -19,7 +29,6 @@ from app.shared.contracts.emis import (
     EmisSubject,
     EmisSubjectRatings,
     EmisTeacher,
-    EmisTimetableItem,
 )
 from app.shared.text import normalize_group_name, title_case
 
@@ -88,9 +97,10 @@ _TEACHERS_OF: dict[int, tuple[EmisTeacher, ...]] = {
     107: (_IT, _HUMANITIES),  # Informatics is taught by halves
     108: (_IT,),
 }
-_ROOMS_OF = {3292: ("101", "204"), 3291: ("102", "Кластер")}
-_WEEKDAYS = (1, 2, 3, 4, 5)
-_PAIRS_PER_DAY = 4
+_SATURDAY: tuple[tuple[int, EmisTeacher, Parity], ...] = (
+    (106, _HUMANITIES, "odd"),  # History on odd weeks
+    (105, _UZBEK, "even"),  # Uzbek on even weeks
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,6 +116,11 @@ class FakeStudent:
     group_name: str  # as in EMIS, Cyrillic
     current_semester: int
     curriculum_id: int
+
+    @property
+    def half(self) -> int:
+        """Which half of the group: odd login numbers are 1, even ones 2."""
+        return 1 if int(self.login.removeprefix("student")) % 2 else 2
 
 
 def _build_students() -> tuple[FakeStudent, ...]:
@@ -132,58 +147,8 @@ FAKE_STUDENTS: tuple[FakeStudent, ...] = _build_students()
 _BY_LOGIN = {student.login: student for student in FAKE_STUDENTS}
 
 
-def _cells(
-    subject: EmisSubject, teachers: tuple[EmisTeacher, ...], rooms: tuple[str, ...]
-) -> list[tuple[EmisTeacher, str, Literal[1, 2] | None]]:
-    """The (teacher, room, half) cells of a subject: two halves or the whole group."""
-    if len(teachers) == 2:
-        return [(teachers[0], rooms[0], 1), (teachers[1], rooms[1], 2)]
-    return [(teachers[0], rooms[0], None)]
-
-
-def _timetable_of(group_emis_id: int) -> tuple[EmisTimetableItem, ...]:
-    """A full week of four pairs a day; 2TN2 also has a Saturday odd/even pair."""
-    rooms = _ROOMS_OF.get(group_emis_id)
-    if rooms is None:
-        return ()
-    shift = 0 if group_emis_id == 3292 else 3
-    subjects = sorted(FAKE_SUBJECTS, key=lambda subject: subject.emis_subject_id)
-    items: list[EmisTimetableItem] = []
-    for weekday in _WEEKDAYS:
-        for pair in range(_PAIRS_PER_DAY):
-            subject = subjects[(weekday * _PAIRS_PER_DAY + pair + shift) % 8]
-            teachers = _TEACHERS_OF[subject.emis_subject_id]
-            items.extend(
-                EmisTimetableItem(
-                    weekday=weekday,
-                    pair_number=pair,
-                    subject_emis_id=subject.emis_subject_id,
-                    subject_name=subject.name_en,
-                    teacher=teacher,
-                    room=room,
-                    subgroup=half,
-                )
-                for teacher, room, half in _cells(subject, teachers, rooms)
-            )
-    if group_emis_id == 3292:
-        items.append(_saturday(106, "History", _HUMANITIES, rooms[0], "odd"))
-        items.append(_saturday(105, "Uzbek", _UZBEK, rooms[0], "even"))
-    return tuple(items)
-
-
-def _saturday(
-    subject_id: int,
-    name: str,
-    teacher: EmisTeacher,
-    room: str,
-    parity: Literal["odd", "even"],
-) -> EmisTimetableItem:
-    return EmisTimetableItem(6, 0, subject_id, name, teacher, room, week_parity=parity)
-
-
-def _digest(*parts: object) -> int:
-    raw = ":".join(str(part) for part in parts).encode()
-    return int.from_bytes(hashlib.sha256(raw).digest()[:4], "big")
+def _cells_of(group_emis_id: int) -> list[Cell]:
+    return cells_of(group_emis_id, FAKE_SUBJECTS, _TEACHERS_OF, _SATURDAY)
 
 
 def _semester_window(current: int, semester: int) -> tuple[date, date]:
@@ -267,9 +232,28 @@ class FakeEmisClient:
         self._student(token)
         return list(FAKE_CLASS_HOURS)
 
-    async def timetable(self, token: str) -> list[EmisTimetableItem]:
-        """Return the weekly timetable of the token's group."""
-        return list(_timetable_of(self._student(token).group_emis_id))
+    async def timetable(
+        self, token: str, begin: dt.date, end: dt.date
+    ) -> list[EmisClass]:
+        """Return the classes on begin..end: the real response shape, week by week."""
+        student = self._student(token)
+        cells = _cells_of(student.group_emis_id)
+        today = local_today(self._clock)
+        classes: list[EmisClass] = []
+        first = begin
+        while first <= end:
+            sunday = first + timedelta(days=7 - first.isoweekday())
+            body = week_body(
+                cells,
+                student.group_emis_id,
+                student.half,
+                first,
+                min(sunday, end),
+                today,
+            )
+            classes.extend(to_classes(ClassSchedulesV1DTO.model_validate(body)))
+            first = sunday + timedelta(days=1)
+        return classes
 
     def _marks(
         self, student: FakeStudent, subject_id: int, semester: int
@@ -281,11 +265,11 @@ class FakeEmisClient:
         marks: list[EmisMark] = []
         day = start
         while day <= min(end, today):
-            value = _digest(student.login, subject_id, day.isoformat())
+            value = digest(student.login, subject_id, day.isoformat())
             if day.weekday() < 6 and value % 4 == 0:  # Monday to Saturday
                 marks.append(EmisMark(EmisMarkType.LESSON, day, 2 + (value >> 2) % 4))
             day += timedelta(days=1)
         if semester == student.current_semester and today >= _MIDTERM_DATE:
-            value = _digest(student.login, subject_id, "midterm")
+            value = digest(student.login, subject_id, "midterm")
             marks.append(EmisMark(EmisMarkType.MIDTERM, _MIDTERM_DATE, 3 + value % 3))
         return marks

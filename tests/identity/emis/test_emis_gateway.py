@@ -1,5 +1,6 @@
 """ID-7, ID-8, SYNC-8: the gateway reuses the token, re-logs in once, flags reauth."""
 
+from datetime import date
 from uuid import UUID
 
 from app.shared.contracts.emis import EmisAuthFailed, EmisUnavailable
@@ -44,10 +45,13 @@ async def test_class_hours_and_timetable_use_the_stored_token(world: World) -> N
     user_id = await registered_user(world)
 
     hours = await world.gateway.class_hours(user_id)
-    items = await world.gateway.timetable(user_id)
+    items = await world.gateway.timetable(
+        user_id, date(2026, 10, 5), date(2026, 10, 11)
+    )
 
     assert [h.pair_number for h in hours] == [0, 1, 2, 3, 4]
     assert items and {i.teacher.emis_id for i in items if i.teacher} >= {9001}
+    assert {i.date for i in items} <= {date(2026, 10, d) for d in range(5, 12)}
     assert world.emis.calls == ["class_hours", "timetable"]
 
 

@@ -1,11 +1,12 @@
 """ID-7: the internal EMIS gateway API: service token, JSON shapes, error mapping."""
 
+from datetime import date
 from types import SimpleNamespace
 from uuid import UUID
 
 from app.bootstrap.adapters.http_emis_source import HttpEmisSource
 from app.interfaces.http.internal.emis import ROUTERS
-from app.modules.identity.application.register_models import EmisNotConfiguredError
+from app.modules.identity.application.register_models import EmisRequestError
 from app.settings import Settings
 from tests.conftest import HttpClientFactory
 from tests.identity.emis.world import World
@@ -132,25 +133,36 @@ async def test_class_hours_are_returned_as_a_list(
     }
 
 
-async def test_the_timetable_is_returned_with_teachers_halves_and_parity(
+async def test_the_timetable_is_returned_class_by_class(
     api: tuple[AsyncClient, UUID, dict[str, str]],
 ) -> None:
-    """ACA-1: EmisTimetableItem[] of the student's group."""
+    """ACA-1: EmisClass[] of the student for begin..end, ISO dates."""
     client, user_id, headers = api
 
-    response = await client.get(f"/internal/emis/{user_id}/timetable", headers=headers)
+    response = await client.get(
+        f"/internal/emis/{user_id}/timetable",
+        params={"begin": "2026-10-05", "end": "2026-10-11"},
+        headers=headers,
+    )
 
     body = response.json()
     assert response.status_code == 200
     assert body[0].keys() == {
-        "weekday",
+        "class_id",
+        "date",
         "pair_number",
-        "subject_emis_id",
-        "subject_name",
+        "subject",
         "teacher",
         "room",
         "subgroup",
-        "week_parity",
+        "kind",
+        "topic",
+    }
+    assert body[0]["subject"].keys() == {
+        "emis_subject_id",
+        "name_uz",
+        "name_ru",
+        "name_en",
     }
     assert body[0]["teacher"].keys() == {
         "emis_id",
@@ -158,7 +170,39 @@ async def test_the_timetable_is_returned_with_teachers_halves_and_parity(
         "last_name",
         "middle_name",
     }
-    assert {item["subgroup"] for item in body} == {None, 1, 2}
+    assert {item["date"] for item in body} <= {f"2026-10-{d:02d}" for d in range(5, 12)}
+    assert {item["subgroup"] for item in body} == {None, 1}
+    assert {item["kind"] for item in body} <= {"lecture", "practice"}
+    topics = [item["topic"] for item in body if item["topic"]]
+    assert topics and topics[0].keys() == {
+        "name",
+        "description",
+        "topic_file_url",
+        "homework_file_url",
+        "video_url",
+    }
+
+
+@pytest.mark.parametrize(
+    "params",
+    [
+        {},
+        {"begin": "2026-10-05"},
+        {"begin": "2026-10-11", "end": "2026-10-05"},
+        {"begin": "2026-10-01", "end": "2026-12-31"},
+    ],
+)
+async def test_the_timetable_needs_a_sensible_date_range(
+    api: tuple[AsyncClient, UUID, dict[str, str]], params: dict[str, str]
+) -> None:
+    """ACA-1: both dates are required and the range is at most two months."""
+    client, user_id, headers = api
+
+    response = await client.get(
+        f"/internal/emis/{user_id}/timetable", params=params, headers=headers
+    )
+
+    assert response.status_code == 422
 
 
 async def test_the_timetable_needs_the_service_token(
@@ -172,14 +216,18 @@ async def test_the_timetable_needs_the_service_token(
         assert response.status_code == 401
 
 
-async def test_an_unconfigured_timetable_endpoint_is_a_503_problem(
+async def test_an_unexpected_timetable_is_a_503_problem(
     world: World, api: tuple[AsyncClient, UUID, dict[str, str]]
 ) -> None:
-    """ACA-1: until the endpoint is known, the worker sees "EMIS unavailable"."""
+    """ID-7: the worker sees "EMIS unavailable" when EMIS answers something odd."""
     client, user_id, headers = api
-    world.emis.timetable_error = EmisNotConfiguredError("not configured")
+    world.emis.timetable_error = EmisRequestError("class schedules changed")
 
-    response = await client.get(f"/internal/emis/{user_id}/timetable", headers=headers)
+    response = await client.get(
+        f"/internal/emis/{user_id}/timetable",
+        params={"begin": "2026-10-05", "end": "2026-10-11"},
+        headers=headers,
+    )
 
     assert response.status_code == 503
     assert response.json()["type"] == "emis/unavailable"
@@ -243,4 +291,7 @@ async def test_http_source_and_router_work_together(
     assert await source.ratings(user_id, 101, 3) == direct_ratings
     assert await source.subjects(user_id) == await world.gateway.subjects(user_id)
     assert await source.class_hours(user_id) == await world.gateway.class_hours(user_id)
-    assert await source.timetable(user_id) == await world.gateway.timetable(user_id)
+    begin, end = date(2026, 10, 5), date(2026, 11, 1)
+    assert await source.timetable(user_id, begin, end) == await world.gateway.timetable(
+        user_id, begin, end
+    )

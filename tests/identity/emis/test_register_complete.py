@@ -85,7 +85,13 @@ async def test_registration_creates_the_account_secret_and_student(
     assert world.enrollment.subjects_synced == [(world.enrollment.group_id, 8)]
     assert world.kicker.calls == [
         ("academic.backfill_student", {"user_id": str(registered.user_id)}),
-        ("academic.sync_class_hours", {"user_id": str(registered.user_id)}),
+        (
+            "academic.sync_group_timetable",
+            {
+                "user_id": str(registered.user_id),
+                "group_id": str(world.enrollment.group_id),
+            },
+        ),
     ]
     assert [a.type for a in world.ledger.audits] == ["user.registered"]
     assert await world.redis.keys("reg:*") == []
@@ -281,36 +287,30 @@ async def test_a_deleted_account_gives_its_emis_profile_back(world: World) -> No
     assert world.repo.accounts[registered.user_id].emis_student_id == 78201
 
 
-async def test_a_student_of_an_unknown_group_starts_the_timetable_import(
-    world: World,
+@pytest.mark.parametrize("needs_timetable", [True, False])
+async def test_every_new_student_syncs_the_timetable_of_their_group(
+    world: World, needs_timetable: bool
 ) -> None:
-    """ACA-1: bootstrap_group runs in the background, after the account is saved."""
-    world.enrollment.needs_timetable = True
+    """ACA-1: an unknown group is filled; a known one gets the student's own half."""
+    world.enrollment.needs_timetable = needs_timetable
 
     _, registered = await world.register()
 
-    assert world.kicker.calls == [
-        ("academic.backfill_student", {"user_id": str(registered.user_id)}),
-        (
-            "academic.bootstrap_group",
-            {
-                "user_id": str(registered.user_id),
-                "group_id": str(world.enrollment.group_id),
-            },
-        ),
+    assert world.kicker.names() == [
+        "academic.backfill_student",
+        "academic.sync_group_timetable",
     ]
+    assert world.kicker.calls[1][1] == {
+        "user_id": str(registered.user_id),
+        "group_id": str(world.enrollment.group_id),
+    }
 
 
-async def test_a_student_of_a_known_group_only_refreshes_the_bells(
-    world: World,
-) -> None:
-    """ACA-4: the class hours are synced on registration; no second import."""
-    world.enrollment.needs_timetable = False
-
+async def test_the_bells_are_left_to_the_timetable_sync(world: World) -> None:
+    """ACA-4: the timetable sync refreshes the bells first; no separate task."""
     await world.register()
 
-    assert "academic.bootstrap_group" not in world.kicker.names()
-    assert world.kicker.names().count("academic.sync_class_hours") == 1
+    assert "academic.sync_class_hours" not in world.kicker.names()
 
 
 async def test_no_timetable_task_starts_when_the_registration_fails(

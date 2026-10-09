@@ -1,26 +1,28 @@
-"""A scripted EmisSource for the schedule tests: bells and a group's timetable."""
+"""A scripted EmisSource for the schedule tests: bells and a student's classes."""
 
+import datetime as dt
 from uuid import UUID
 
 from app.modules.identity.infrastructure.emis.fake import FAKE_CLASS_HOURS
 from app.shared.contracts.emis import (
     EmisAuthFailed,
+    EmisClass,
     EmisClassHour,
     EmisProfile,
     EmisSubject,
     EmisSubjectRatings,
-    EmisTimetableItem,
     EmisUnavailable,
 )
 
 
 class FakeEmisSource:
-    """Answers class hours and timetable from scripted lists and records the calls."""
+    """Answers class hours and classes from scripted lists and records the calls."""
 
     def __init__(self) -> None:
-        """Start with the real EMIS bells and an empty timetable."""
+        """Start with the real EMIS bells and no classes."""
         self.hours: list[EmisClassHour] = list(FAKE_CLASS_HOURS)
-        self.items: list[EmisTimetableItem] = []
+        self.classes: list[EmisClass] = []
+        self.by_user: dict[UUID, list[EmisClass]] = {}
         self.calls: list[tuple[str, UUID]] = []
         self.hours_error: Exception | None = None
         self.timetable_error: Exception | None = None
@@ -32,12 +34,15 @@ class FakeEmisSource:
             raise self.hours_error
         return list(self.hours)
 
-    async def timetable(self, user_id: UUID) -> list[EmisTimetableItem]:
-        """Return the scripted timetable."""
+    async def timetable(
+        self, user_id: UUID, begin: dt.date, end: dt.date
+    ) -> list[EmisClass]:
+        """Return the scripted classes of the student that fall on begin..end."""
         self.calls.append(("timetable", user_id))
         if self.timetable_error is not None:
             raise self.timetable_error
-        return list(self.items)
+        shown = self.by_user.get(user_id, self.classes)
+        return [item for item in shown if begin <= item.date <= end]
 
     def down(self) -> None:
         """EMIS cannot be reached."""

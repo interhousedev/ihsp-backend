@@ -7,6 +7,7 @@ from typing import Literal, Protocol
 from uuid import UUID
 
 from app.shared.base_error import BaseError
+from app.shared.lesson_kind import LessonKind
 
 
 class EmisMarkType(StrEnum):
@@ -82,22 +83,34 @@ class EmisTeacher:
 
 
 @dataclass(frozen=True, slots=True)
-class EmisTimetableItem:
-    """One cell of a group's weekly timetable in EMIS.
+class EmisTopic:
+    """The topic a teacher entered for a class, with the files and video around it."""
 
-    ``weekday`` is ISO (1 = Monday ... 6 = Saturday). ``pair_number`` is 0-based like
-    ``EmisClassHour.pair_number`` (0 = period 1). ``subgroup`` is the half (1 or 2) or
-    None for the whole group. ``week_parity`` is relative to the term's first Monday.
+    name: str
+    description: str | None = None
+    topic_file_url: str | None = None
+    homework_file_url: str | None = None
+    video_url: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class EmisClass:
+    """One class of the student's timetable on a date (``class-schedules``).
+
+    ``pair_number`` is 0-based like ``EmisClassHour.pair_number``. ``subgroup`` is the
+    student's own half (1 or 2) when EMIS split the class, else None: the other half's
+    slot only reaches IHSP through a student of that half.
     """
 
-    weekday: int
+    class_id: int
+    date: dt.date
     pair_number: int
-    subject_emis_id: int | None
-    subject_name: str
+    subject: EmisSubject
     teacher: EmisTeacher | None
     room: str | None
-    subgroup: Literal[1, 2] | None = None
-    week_parity: Literal["every", "odd", "even"] = "every"
+    subgroup: Literal[1, 2] | None
+    kind: LessonKind
+    topic: EmisTopic | None = None
 
 
 class EmisAuthFailed(BaseError):
@@ -137,6 +150,8 @@ class EmisSource(Protocol):
         """Return the bells of the lyceum (the same for every student)."""
         ...
 
-    async def timetable(self, user_id: UUID) -> list[EmisTimetableItem]:
-        """Return the weekly timetable of the student's group."""
+    async def timetable(
+        self, user_id: UUID, begin: dt.date, end: dt.date
+    ) -> list[EmisClass]:
+        """Return the student's classes on the dates begin..end (inclusive)."""
         ...
