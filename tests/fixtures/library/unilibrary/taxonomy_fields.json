@@ -1,0 +1,49 @@
+{
+  "result": [
+    {
+      "id": 27,
+      "language": "uz",
+      "name": "Fizika"
+    },
+    {
+      "id": 27,
+      "language": "ru",
+      "name": "Физика"
+    },
+    {
+      "id": 27,
+      "language": "en",
+      "name": "Physics"
+    },
+    {
+      "id": 25,
+      "language": "uz",
+      "name": "Matematika"
+    },
+    {
+      "id": 25,
+      "language": "ru",
+      "name": "Математика"
+    },
+    {
+      "id": 25,
+      "language": "en",
+      "name": "Mathematics"
+    },
+    {
+      "id": 18,
+      "language": "uz",
+      "name": "Adabiyot"
+    },
+    {
+      "id": 18,
+      "language": "ru",
+      "name": "Литература"
+    },
+    {
+      "id": 18,
+      "language": "en",
+      "name": "Literature"
+    }
+  ]
+}

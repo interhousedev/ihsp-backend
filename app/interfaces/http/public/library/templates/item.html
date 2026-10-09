@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block head %}
+<title>{{ page.title }} · {{ t('library-page-site-name') }}</title>
+<meta name="description" content="{{ short_description }}">
+{% if not page.indexable %}
+<meta name="robots" content="noindex, nofollow">
+{% endif %}
+<link rel="canonical" href="{{ page.canonical_url }}">
+<meta property="og:site_name" content="{{ t('library-page-site-name') }}">
+<meta property="og:type" content="{{ og_type }}">
+<meta property="og:title" content="{{ page.title }}">
+<meta property="og:description" content="{{ short_description }}">
+<meta property="og:url" content="{{ page.canonical_url }}">
+{% if page.cover_url %}
+<meta property="og:image" content="{{ page.cover_url }}">
+{% endif %}
+<meta name="twitter:card" content="{{ 'summary_large_image' if page.cover_url else 'summary' }}">
+<script type="application/ld+json">{{ json_ld|safe }}</script>
+{% endblock %}
+{% block home %}{{ page.app_url }}{% endblock %}
+{% block content %}
+<article{% if page.cover_url %} class="has-cover"{% endif %}>
+{% if page.cover_url %}
+  <img class="cover" src="{{ page.cover_url }}" alt="" width="192" height="270" loading="lazy" referrerpolicy="no-referrer">
+{% endif %}
+  <div>
+    <p class="muted">{{ page.tag_label }}</p>
+    <h1>{{ page.title }}</h1>
+{% if page.subtitle %}
+    <p class="muted">{{ page.subtitle }}</p>
+{% endif %}
+    <dl>
+{% if page.authors %}
+      <dt>{{ t('library-page-authors') }}</dt><dd>{{ page.authors|join(', ') }}</dd>
+{% endif %}
+{% if page.publisher %}
+      <dt>{{ t('library-page-publisher') }}</dt><dd>{{ page.publisher }}</dd>
+{% endif %}
+{% if page.year_published %}
+      <dt>{{ t('library-page-year') }}</dt><dd>{{ page.year_published }}</dd>
+{% endif %}
+      <dt>{{ t('library-page-language') }}</dt><dd>{{ t('library-language-' ~ page.language.value) }}</dd>
+{% if page.isbn %}
+      <dt>ISBN</dt><dd>{{ page.isbn }}</dd>
+{% endif %}
+    </dl>
+{% if page.description %}
+    <p>{{ page.description }}</p>
+{% endif %}
+{% if page.uploader %}
+    <p class="muted">{{ t('library-page-uploaded-by', name=page.uploader) }}</p>
+{% endif %}
+{% if page.rights_text %}
+    <div class="box">
+      <strong>{{ t('library-page-rights') }}</strong>
+      <p>{{ page.rights_text }}</p>
+{% if page.licence %}
+      <p class="muted">{{ t('library-page-licence') }}: {{ page.licence }}</p>
+{% endif %}
+{% if page.attribution %}
+      <p class="muted">{{ page.attribution }}</p>
+{% endif %}
+    </div>
+{% endif %}
+{% if page.external_url %}
+    <p class="muted">{{ t('library-page-unilibrary-note') }}</p>
+    <p><a class="button" href="{{ page.external_url }}" target="_blank" rel="noopener noreferrer">{{ t('library-page-open-unilibrary') }}</a></p>
+{% elif page.sign_in_required %}
+    <p class="muted">{{ t('library-page-lyceum-notice') }}</p>
+    <p><a class="button" href="{{ page.app_url }}" rel="nofollow">{{ t('library-page-sign-in') }}</a></p>
+{% else %}
+    <p><a class="button" href="{{ page.app_url }}">{{ t('library-page-read') }}</a></p>
+{% endif %}
+  </div>
+</article>
+{% endblock %}

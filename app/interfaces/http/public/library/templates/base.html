@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="{{ locale }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{% block head %}{% endblock %}
+<style>
+:root { color-scheme: light dark; --fg: #1b1b1f; --bg: #fbfbfc; --muted: #5d5d66; --accent: #1d4ed8; --card: #ffffff; --line: #e1e1e6; }
+@media (prefers-color-scheme: dark) { :root { --fg: #ececf1; --bg: #121214; --muted: #a0a0ab; --accent: #8ab4ff; --card: #1b1b1f; --line: #2d2d33; } }
+* { box-sizing: border-box; }
+body { margin: 0; font: 16px/1.5 system-ui, sans-serif; color: var(--fg); background: var(--bg); }
+main { max-width: 46rem; margin: 0 auto; padding: 1rem; }
+header.site { padding: .75rem 1rem; border-bottom: 1px solid var(--line); font-weight: 600; }
+header.site a { color: inherit; text-decoration: none; }
+article { display: grid; gap: 1rem; }
+@media (min-width: 40rem) { article.has-cover { grid-template-columns: 12rem 1fr; } }
+img.cover { width: 100%; max-width: 12rem; height: auto; border-radius: .5rem; border: 1px solid var(--line); }
+h1 { margin: 0 0 .25rem; font-size: 1.6rem; line-height: 1.2; }
+.muted { color: var(--muted); }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: .25rem 1rem; margin: 1rem 0; }
+dt { color: var(--muted); }
+dd { margin: 0; }
+.box { background: var(--card); border: 1px solid var(--line); border-radius: .5rem; padding: .75rem 1rem; margin: 1rem 0; }
+a.button { display: inline-block; padding: .6rem 1.1rem; border-radius: .5rem; background: var(--accent); color: #fff; text-decoration: none; font-weight: 600; }
+@media (prefers-color-scheme: dark) { a.button { color: #0b0b0d; } }
+a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<header class="site"><a href="{% block home %}{% endblock %}">{{ t('library-page-site-name') }}</a></header>
+<main>
+{% block content %}{% endblock %}
+</main>
+</body>
+</html>
