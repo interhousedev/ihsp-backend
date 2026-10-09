@@ -15,6 +15,7 @@
   "lms-staff-invalid": "The role or the permissions are not valid.",
   "lms-last-manager": "The course must keep at least one person who can manage staff.",
   "lms-outline-invalid": "This change does not fit the current outline of the course.",
+  "lms-plan-invalid": "The course plan is not valid. Use 1 to {max_sections} sections with up to {max_steps} steps each, and step briefs of up to {max_brief} characters.",
   "lms-content-invalid": "The step content is not valid.",
   "lms-file-missing": "The step refers to a file that does not exist.",
   "lms-nothing-to-publish": "There are no changes to publish.",
