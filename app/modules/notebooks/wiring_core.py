@@ -1,0 +1,153 @@
+"""Shared collaborators of the notebooks use cases (built once per process)."""
+
+from dataclasses import dataclass, field
+
+from app.modules.notebooks.application.budget import NotebookBudget
+from app.modules.notebooks.application.context_builder import ContextBuilder
+from app.modules.notebooks.application.course_context import CourseContextLoader
+from app.modules.notebooks.application.get_usage import GetUsage
+from app.modules.notebooks.application.llm import NotebookLlm
+from app.modules.notebooks.application.locale import LocaleResolver
+from app.modules.notebooks.application.quota import QuotaService
+from app.modules.notebooks.infrastructure.lms_course_gate import (
+    NO_COURSES,
+    LmsCourseGate,
+)
+from app.modules.notebooks.infrastructure.redis_budget_store import (
+    COURSE_PREFIX as BUDGET_COURSE_PREFIX,
+)
+from app.modules.notebooks.infrastructure.redis_budget_store import RedisBudgetStore
+from app.modules.notebooks.infrastructure.redis_quota_store import (
+    COURSE_PREFIX as QUOTA_COURSE_PREFIX,
+)
+from app.modules.notebooks.infrastructure.redis_quota_store import RedisQuotaStore
+from app.modules.notebooks.infrastructure.redis_turn_lock import RedisTurnLock
+from app.modules.notebooks.infrastructure.uow import SqlNotebooksUnitOfWork
+from app.modules.notebooks.ports.budget_store import BudgetStore
+from app.modules.notebooks.ports.course_gate import CourseGate
+from app.modules.notebooks.ports.quota_store import QuotaStore
+from app.modules.notebooks.ports.turn_lock import TurnLock
+from app.modules.notebooks.ports.unit_of_work import UowFactory
+from app.shared.contracts.ai import LlmGateway
+from app.shared.contracts.embeddings import EmbeddingIndex
+from app.shared.contracts.identity import IdentityDirectory
+from app.shared.contracts.lms import LmsWorkspace
+from app.shared.contracts.web_search import WebSearchApi
+from app.shared.wiring import ModuleDeps
+
+
+@dataclass(frozen=True, slots=True)
+class NotebooksCore:
+    """What every slice of the module needs."""
+
+    deps: ModuleDeps
+    uow_factory: UowFactory
+    llm: NotebookLlm
+    budget: NotebookBudget
+    quota: QuotaService
+    locale: LocaleResolver
+    context: ContextBuilder
+    usage: GetUsage
+    turn_lock: TurnLock
+    web_search: WebSearchApi | None = None  # None: web search is not available
+    embeddings: EmbeddingIndex | None = None  # None: retrieval by words only
+    # Course workspaces: the LMS side (None in a process without the LMS).
+    workspace: LmsWorkspace | None = None
+    course_context: CourseContextLoader = field(
+        default_factory=lambda: CourseContextLoader(None)
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class CoreOverrides:
+    """Replacements for the SQL unit of work and the Redis stores (tests)."""
+
+    uow_factory: UowFactory | None = None
+    budget_store: BudgetStore | None = None
+    quota_store: QuotaStore | None = None
+    turn_lock: TurnLock | None = None
+
+
+def sql_uow_factory(
+    deps: ModuleDeps, course_gate: CourseGate = NO_COURSES
+) -> UowFactory:
+    """The SQL unit of work with the module's outbox/audit writers."""
+
+    def make() -> SqlNotebooksUnitOfWork:
+        return SqlNotebooksUnitOfWork(
+            deps.sessionmaker,
+            deps.outbox_writer,
+            deps.audit_writer,
+            deps.outbox_committed_hook,
+            course_gate=course_gate,
+        )
+
+    return make
+
+
+def _budget(deps: ModuleDeps, store: BudgetStore | None) -> NotebookBudget:
+    """The student pool with the pool of course workspaces next to it."""
+    settings = deps.settings
+    course = NotebookBudget(
+        RedisBudgetStore(deps.redis, prefix=BUDGET_COURSE_PREFIX),
+        deps.clock,
+        settings,
+        for_course=True,
+    )
+    return NotebookBudget(
+        store or RedisBudgetStore(deps.redis), deps.clock, settings, course=course
+    )
+
+
+def _quota(deps: ModuleDeps, store: QuotaStore | None) -> QuotaService:
+    """The student output quotas with the course workspace quotas next to them."""
+    settings = deps.settings
+    course = QuotaService(
+        RedisQuotaStore(deps.redis, prefix=QUOTA_COURSE_PREFIX),
+        deps.clock,
+        settings,
+        for_course=True,
+    )
+    return QuotaService(
+        store or RedisQuotaStore(deps.redis), deps.clock, settings, course=course
+    )
+
+
+def build_core(
+    deps: ModuleDeps,
+    *,
+    gateway: LlmGateway,
+    identity: IdentityDirectory,
+    overrides: CoreOverrides | None = None,
+    web_search: WebSearchApi | None = None,
+    workspace: LmsWorkspace | None = None,
+    embeddings: EmbeddingIndex | None = None,
+) -> NotebooksCore:
+    """Build the shared services; `overrides` replace the stores (tests).
+
+    `workspace` (the LMS side of course workspaces) opens the workspaces to the
+    course staff; without it no course workspace can be opened. `embeddings` turns
+    retrieval into hybrid (words and meaning); None keeps it lexical.
+    """
+    over = overrides or CoreOverrides()
+    settings = deps.settings
+    budget = _budget(deps, over.budget_store)
+    quota = _quota(deps, over.quota_store)
+    gate: CourseGate = (
+        NO_COURSES if workspace is None else LmsCourseGate(workspace, settings)
+    )
+    return NotebooksCore(
+        deps=deps,
+        uow_factory=over.uow_factory or sql_uow_factory(deps, gate),
+        llm=NotebookLlm(gateway, settings),
+        budget=budget,
+        quota=quota,
+        locale=LocaleResolver(identity),
+        context=ContextBuilder(settings, embeddings),
+        usage=GetUsage(budget, quota, settings),
+        turn_lock=over.turn_lock or RedisTurnLock(deps.redis),
+        web_search=web_search,
+        embeddings=embeddings,
+        workspace=workspace,
+        course_context=CourseContextLoader(workspace),
+    )

@@ -10,8 +10,10 @@ class Assistant(StrEnum):
 
     STUDENT = "student"
     ADMIN = "admin"
+    LMS_AUTHOR = "lms_author"  # course staff, inside one course workspace
 
 
+# The author assistant has no global role: course staff may use it, checked per course.
 ASSISTANT_ROLE: dict[Assistant, Role] = {
     Assistant.STUDENT: Role.STUDENT,
     Assistant.ADMIN: Role.ADMIN,
