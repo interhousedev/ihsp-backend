@@ -12,7 +12,6 @@ from app.modules.academic.domain.assessments.records import (
     AssessmentKind,
     AssessmentSource,
     AssessmentStatus,
-    LessonCandidate,
     NewAssessment,
 )
 from app.modules.academic.domain.marks.read_models import SubjectInfo
@@ -112,8 +111,6 @@ class AssessmentReader(Protocol):
         """Return the curriculum subjects of every active group that has any."""
         ...
 
-    async def exam_lessons(
-        self, since: dt.date, until: dt.date
-    ) -> list[LessonCandidate]:
-        """Return scheduled lessons EMIS marked as a midterm or a final."""
+    async def active_group_ids(self) -> list[UUID]:
+        """Return the ids of the active groups (those whose controls are suggested)."""
         ...

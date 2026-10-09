@@ -26,9 +26,12 @@ from app.modules.academic.application.assessments.send_reminders import (
 from app.modules.academic.application.assessments.update_assessment import (
     UpdateAssessment,
 )
+from app.modules.academic.application.public_schedule import ScheduleQueriesImpl
 from app.modules.academic.infrastructure.assessments.uow import (
     SqlAssessmentsUnitOfWork,
 )
+from app.modules.academic.infrastructure.schedule.reader import SqlScheduleReader
+from app.shared.contracts.academic import ScheduleQueries
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.wiring import ModuleDeps
 
@@ -48,9 +51,17 @@ class AssessmentServices:
 
 
 def build_assessments(
-    deps: ModuleDeps, *, identity: IdentityDirectory
+    deps: ModuleDeps,
+    *,
+    identity: IdentityDirectory,
+    schedule: ScheduleQueries | None = None,
 ) -> AssessmentServices:
-    """Wire the assessments use cases to SQL repositories."""
+    """Wire the assessments use cases to SQL repositories.
+
+    EMIS control lessons are read through ``schedule.emis_control_lessons``; without
+    one, the schedule's own queries are built over the same database.
+    """
+    schedule = schedule or ScheduleQueriesImpl(SqlScheduleReader(deps.sessionmaker))
 
     def uow_factory() -> SqlAssessmentsUnitOfWork:
         return SqlAssessmentsUnitOfWork(
@@ -79,7 +90,7 @@ def build_assessments(
         ),
         delete=DeleteAssessment(uow_factory=uow_factory, clock=clock),
         generate_suggestions=GenerateTentativeAssessments(
-            uow_factory=uow_factory, clock=clock
+            uow_factory=uow_factory, schedule=schedule, clock=clock
         ),
         send_reminders=SendAssessmentReminders(
             uow_factory=uow_factory, identity=identity, clock=clock

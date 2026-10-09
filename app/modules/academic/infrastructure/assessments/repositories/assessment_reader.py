@@ -2,7 +2,6 @@
 
 import datetime as dt
 from collections.abc import Collection, Sequence
-from typing import Any
 from uuid import UUID
 
 from app.modules.academic.application.assessments.ports.repositories import (
@@ -10,12 +9,10 @@ from app.modules.academic.application.assessments.ports.repositories import (
 )
 from app.modules.academic.domain import audience as audience_keys
 from app.modules.academic.domain.assessments.periods import TermControls
-from app.modules.academic.domain.assessments.records import LessonCandidate
 from app.modules.academic.domain.marks.read_models import SubjectInfo
 from app.modules.academic.domain.schedule.term import control_periods_from_json
 from app.modules.academic.infrastructure.orm.group import Group
 from app.modules.academic.infrastructure.orm.lesson import Lesson
-from app.modules.academic.infrastructure.orm.room import Room
 from app.modules.academic.infrastructure.orm.student import Student
 from app.modules.academic.infrastructure.orm.subject import Subject
 from app.modules.academic.infrastructure.orm.term import Term
@@ -141,41 +138,7 @@ class SqlAssessmentReader:
             r.id: tuple(r.subject_ids) for r in (await self.session.execute(stmt)).all()
         }
 
-    async def exam_lessons(
-        self, since: dt.date, until: dt.date
-    ) -> list[LessonCandidate]:
-        """Return scheduled lessons EMIS marked as a midterm or a final."""
-        stmt = (
-            sa.select(
-                Lesson.id,
-                Lesson.subject_id,
-                Lesson.audience,
-                Lesson.date,
-                Lesson.starts_at,
-                Lesson.kind,
-                Lesson.topic,
-                Room.name.label("room_name"),
-            )
-            .outerjoin(Room, Room.id == Lesson.room_id)
-            .where(
-                Lesson.kind.in_(("midterm", "final")),
-                Lesson.status == "scheduled",
-                Lesson.date >= since,
-                Lesson.date <= until,
-            )
-            .order_by(Lesson.date, Lesson.starts_at)
-        )
-        rows: list[Any] = list((await self.session.execute(stmt)).all())
-        return [
-            LessonCandidate(
-                lesson_id=r.id,
-                subject_id=r.subject_id,
-                audience=tuple(r.audience),
-                date=r.date,
-                starts_at=r.starts_at,
-                kind=r.kind,
-                topic=r.topic,
-                room=r.room_name,
-            )
-            for r in rows
-        ]
+    async def active_group_ids(self) -> list[UUID]:
+        """Return the ids of the active groups (those whose controls are suggested)."""
+        stmt = sa.select(Group.id).where(Group.status == "active").order_by(Group.id)
+        return list(await self.session.scalars(stmt))

@@ -150,9 +150,12 @@ async def add_exam_lesson(
     kind: str = "midterm",
     subject_id: UUID | None = None,
     topic: str | None = None,
+    emis_topic: str | None = None,
     hour: int = 4,
+    audience: list[str] | None = None,
+    status: str = "scheduled",
 ) -> UUID:
-    """Insert a scheduled lesson of the given EMIS kind for the whole group."""
+    """Insert a lesson of the given EMIS kind (scheduled; for the whole group)."""
     lesson_id = new_id()
     start = dt.datetime.combine(day, dt.time(hour, 0), tzinfo=dt.UTC)
     async with env.maker() as session:
@@ -166,10 +169,11 @@ async def add_exam_lesson(
                 ends_at=start + dt.timedelta(minutes=45),
                 subject_id=subject_id or env.world.math_id,
                 teacher_id=env.world.teacher_id,
-                audience=[str(env.world.group_id)],
-                status="scheduled",
+                audience=audience or [str(env.world.group_id)],
+                status=status,
                 kind=kind,
                 topic=topic,
+                emis_topic=emis_topic,
             )
         )
         await session.commit()
