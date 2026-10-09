@@ -1,0 +1,8 @@
+{
+  "academic-assessment-not-found": "Nazorat topilmadi",
+  "academic-not-assessment-teacher": "Nazoratlarni faqat shu guruhda ushbu fanni o‘qitadigan o‘qituvchi yoki ma’muriyat o‘zgartira oladi",
+  "academic-not-head-student": "Nazorat sanasini faqat guruhingiz sardori taklif qila oladi",
+  "academic-assessment-subject-not-found": "Fan topilmadi",
+  "academic-invalid-assessment": "Nazorat noto‘g‘ri berilgan: auditoriya, sana, boshlanish vaqti va matn uzunligini tekshiring",
+  "academic-assessment-exists": "Bunday nazorat guruhingiz taqvimida allaqachon bor"
+}
