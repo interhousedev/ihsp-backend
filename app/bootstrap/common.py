@@ -306,7 +306,9 @@ class _Assembler:
             classwork=classwork,
             marks=marks,
             emis_import=emis_import,
-            assessments=build_assessments(self.deps, identity=identity.directory),
+            assessments=build_assessments(
+                self.deps, identity=identity.directory, schedule=schedule.queries
+            ),
         )
 
     def build_mail(self) -> None:
