@@ -42,7 +42,7 @@ async def test_subject_cards(
     assert physics["semester_mark"] == 3.0
     assert math["subject"]["name"] == "Mathematics"
     assert math["subject"]["short_name"] == "Math"
-    assert math["semester_mark"] == 4.0  # no final yet: only the lesson average
+    assert math["semester_mark"] == 4.5  # lesson 4.0 and midterm 5.0, no final yet
     assert math["emis_rating"] == 90
     assert math["absences"] == 1
     assert math["teachers"] == [

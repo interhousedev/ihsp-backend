@@ -158,7 +158,13 @@ class FakeFilesApi:
         """Return the metadata of the files that exist."""
         return {i: self.refs[i] for i in file_ids if i in self.refs}
 
-    async def download_url(self, file_id: UUID, *, inline: bool | None = None) -> str:
+    async def download_url(
+        self,
+        file_id: UUID,
+        *,
+        inline: bool | None = None,
+        ttl_seconds: int | None = None,
+    ) -> str:
         """Return a fake URL."""
         return f"https://files.example.com/{file_id}"
 

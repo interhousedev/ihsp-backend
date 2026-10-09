@@ -108,3 +108,38 @@ async def test_saves_and_publishing_at_the_same_time_never_deadlock(
 
     final = await committed.get_course_draft.execute(admin, course.id)
     assert final.draft_seq >= 8
+
+
+async def test_the_same_plan_applied_at_the_same_time_is_created_once(
+    committed: AuthoringServices,
+) -> None:
+    """LMS-AI: the course row is locked first, so racing plans never duplicate or
+    deadlock, and one of them can publish in between."""
+    admin = Actor(user_id=UUID_ADMIN, roles=frozenset({Role.LMS_ADMIN}))
+    course = await committed.create_course.execute(
+        admin, title="Race", slug="race-plan", visibility=Visibility.PUBLIC
+    )
+    plan = [
+        {"title": "Limits", "steps": [{"title": "Idea"}, {"title": "Rules"}]},
+        {"title": "Derivatives", "steps": [{"title": "Definition"}]},
+    ]
+
+    results = await asyncio.gather(
+        *(
+            committed.workspace_commands.apply_outline(admin, course.id, plan)
+            for _ in range(5)
+        ),
+        return_exceptions=True,
+    )
+
+    assert [r for r in results if isinstance(r, BaseException)] == []
+    created = [
+        len(r["created_steps"]) for r in results if not isinstance(r, BaseException)
+    ]
+    assert sorted(created) == [0, 0, 0, 0, 3]
+    draft = await committed.get_course_draft.execute(admin, course.id)
+    assert [(s.title, [t.title for t in s.steps]) for s in draft.outline] == [
+        ("Limits", ["Idea", "Rules"]),
+        ("Derivatives", ["Definition"]),
+    ]
+    assert draft.draft_seq == 1

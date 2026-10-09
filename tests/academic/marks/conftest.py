@@ -30,6 +30,7 @@ from tests.academic.marks.fakes.identity import (
     FakeIdentityCommands,
     make_user,
 )
+from tests.academic.marks.fakes.timetable_sync import FakeTimetableSync
 from tests.academic.marks.world import (
     DAY,
     MATH_EMIS,
@@ -60,6 +61,7 @@ class Env:
     uow_factory: MarksUowFactory
     clock: FixedClock
     bells: FakeBellSync
+    timetables: FakeTimetableSync
     kicker: FakeTaskKicker
 
     def sync_all(self) -> SyncAll:
@@ -68,6 +70,7 @@ class Env:
             uow_factory=self.uow_factory,
             sync_student=self.sync,
             bell_sync=self.bells,
+            timetable_sync=self.timetables,
             identity=self.identity,  # type: ignore[arg-type]
             clock=self.clock,
             concurrency=1,
@@ -141,6 +144,7 @@ async def env(
         uow_factory,
         clock,
         FakeBellSync(),
+        FakeTimetableSync(),
         kicker,
     )
 
@@ -234,4 +238,5 @@ async def services(
         enrollment=env.enrollment,
         links=links,  # type: ignore[arg-type]
         bell_sync=env.bells,
+        timetable_sync=env.timetables,
     )

@@ -4,15 +4,20 @@ import datetime as dt
 
 from app.modules.academic.domain.schedule.errors import (
     TermBellsInvalidError,
+    TermControlPeriodsInvalidError,
     TermDatesInvalidError,
     TermMovedDayInvalidError,
     TermNonStudyDayInvalidError,
 )
 from app.modules.academic.domain.schedule.term import (
     Bell,
+    ControlPeriod,
+    ControlPeriods,
     MovedDay,
     bells_from_json,
     bells_to_json,
+    control_periods_from_json,
+    control_periods_to_json,
     pick_current_term,
     validate_term,
 )
@@ -132,3 +137,69 @@ def test_after_the_last_term_the_last_term_is_current() -> None:
 def test_without_terms_there_is_no_current_term() -> None:
     """ADM-8: an empty school has no term."""
     assert pick_current_term([], dt.date(2026, 10, 6)) is None
+
+
+def _period(start: str, end: str) -> ControlPeriod:
+    return ControlPeriod(
+        start=dt.date.fromisoformat(start), end=dt.date.fromisoformat(end)
+    )
+
+
+def test_control_periods_are_optional() -> None:
+    """A term without control weeks is valid; they are filled in later."""
+    validate_term(make_term(control_periods=ControlPeriods()))
+    validate_term(
+        make_term(
+            control_periods=ControlPeriods(final=_period("2026-12-14", "2026-12-20"))
+        )
+    )
+
+
+def test_valid_control_periods_pass_and_list_in_order() -> None:
+    """ACA-15: two midterm weeks and a final week, one after another."""
+    periods = ControlPeriods(
+        final=_period("2026-12-14", "2026-12-19"),
+        midterm_1=_period("2026-10-20", "2026-10-25"),
+        midterm_2=_period("2026-11-24", "2026-11-28"),
+    )
+
+    validate_term(make_term(control_periods=periods))
+
+    assert [name for name, _ in periods.items()] == ["midterm_1", "midterm_2", "final"]
+    assert periods.get("midterm_2") == _period("2026-11-24", "2026-11-28")
+    assert ControlPeriods().get("final") is None
+
+
+@pytest.mark.parametrize(
+    "periods",
+    [
+        ControlPeriods(midterm_1=_period("2026-10-25", "2026-10-20")),
+        ControlPeriods(midterm_1=_period("2026-08-25", "2026-09-02")),
+        ControlPeriods(final=_period("2026-12-20", "2027-01-05")),
+        ControlPeriods(
+            midterm_1=_period("2026-10-20", "2026-10-25"),
+            midterm_2=_period("2026-10-25", "2026-10-30"),
+        ),
+        ControlPeriods(
+            midterm_2=_period("2026-11-24", "2026-11-28"),
+            final=_period("2026-11-01", "2026-11-05"),
+        ),
+    ],
+    ids=["reversed", "before-term", "after-term", "overlap", "out-of-order"],
+)
+def test_bad_control_periods_are_rejected(periods: ControlPeriods) -> None:
+    """A period is reversed, outside the term, or does not follow the one before."""
+    with pytest.raises(TermControlPeriodsInvalidError):
+        validate_term(make_term(control_periods=periods))
+
+
+def test_control_periods_round_trip_through_json() -> None:
+    """Only the periods that are set are stored."""
+    periods = ControlPeriods(midterm_1=_period("2026-10-20", "2026-10-25"))
+
+    raw = control_periods_to_json(periods)
+
+    assert raw == {"midterm_1": {"start": "2026-10-20", "end": "2026-10-25"}}
+    assert control_periods_from_json(raw) == periods
+    assert control_periods_from_json(None) == ControlPeriods()
+    assert control_periods_from_json({}) == ControlPeriods()

@@ -7,6 +7,7 @@ from typing import Any
 from app.modules.ai.domain.chat import ChatMessage, MessageRole
 from app.modules.ai.domain.tool_call import ToolCall, ToolStatus
 from app.modules.ai.domain.tools import MAX_RESULT_CHARS
+from app.shared.web_citations import render_web_block
 
 WINDOW_MESSAGES = 30
 SUMMARY_EVERY = 20
@@ -50,11 +51,14 @@ def _wrapped(result: dict[str, Any]) -> str:
     return json.dumps({UNTRUSTED: cut}, ensure_ascii=False)
 
 
-def _user_text(message: ChatMessage) -> str:
+def _user_text(message: ChatMessage, *, full_web: bool = True) -> str:
     lines = [message.text]
     lines.extend(
         f"[attached: {a.name} ({a.file_id})]" for a in message.content.attachments
     )
+    web = render_web_block(message.content.web, full=full_web)
+    if web:
+        lines.append(web)
     return "\n".join(lines)
 
 
@@ -91,9 +95,13 @@ def to_llm_messages(
 ) -> list[dict[str, Any]]:
     """Build the OpenAI-format messages (without the system message)."""
     out: list[dict[str, Any]] = []
-    for message in messages:
+    last_user = max(
+        (i for i, m in enumerate(messages) if m.role is MessageRole.USER), default=-1
+    )
+    for index, message in enumerate(messages):
         if message.role is MessageRole.USER:
-            out.append({"role": "user", "content": _user_text(message)})
+            text = _user_text(message, full_web=index == last_user)
+            out.append({"role": "user", "content": text})
         else:
             out.extend(_assistant_entries(message))
     if summary and out and out[0]["role"] == "user":
@@ -109,6 +117,10 @@ def to_llm_messages(
 def message_chars(message: ChatMessage) -> int:
     """Return the approximate size of a message in the request."""
     size = len(message.text)
+    if message.role is MessageRole.USER:
+        size += sum(
+            len(r.title) + len(r.url) + len(r.snippet) for r in message.content.web
+        )
     for call in message.tool_calls:
         size += len(json.dumps(call.args)) + len(tool_result_content(call))
     return size

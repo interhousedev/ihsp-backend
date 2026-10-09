@@ -22,5 +22,6 @@ async def update_term(
         bells=body.bells,
         non_study_days=body.non_study_days,
         moved_days=body.moved_days,
+        control_periods=body.control_periods,
     )
     return TermResponse.model_validate(term)

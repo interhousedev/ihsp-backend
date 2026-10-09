@@ -66,7 +66,7 @@ def build_http_app(container: Container, *, process: str) -> FastAPI:
         mounts, hooks = mcp_parts(container)
     app = create_app(
         container,
-        routers=routers_for(process),
+        routers=routers_for(process, container.settings),
         mounts=mounts,
         lifespan_hooks=hooks,
     )

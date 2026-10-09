@@ -79,6 +79,8 @@ def lesson_item(ref: LessonRef, teachers: Mapping[UUID, UserRef]) -> JsonObject:
         "is_overridden": False,
         "changes": None,
         "topic": ref.topic,
+        "kind": ref.kind,
+        "topic_source": ref.topic_source,
         "has_homework": bool(ref.homework_text),
         "attendance_submitted": False,
     }

@@ -53,6 +53,12 @@ class LinkRepository(Protocol):
         """Return live lesson resources (hidden included), oldest first."""
         ...
 
+    async def lesson_urls_of_owner(
+        self, owner_id: UUID, lesson_ids: Sequence[UUID]
+    ) -> set[tuple[UUID, str]]:
+        """Return (lesson id, URL) of all the owner's resources, deleted ones too."""
+        ...
+
     async def moderation_queue(
         self, *, after: ModerationCursor | None, limit: int
     ) -> list[Link]:

@@ -1,9 +1,11 @@
 """UF-WEB-07 (upload part), UF-WEB-18: the whole flow on real PostgreSQL and S3."""
 
+import hashlib
 from collections.abc import AsyncIterator
 from datetime import date
-from uuid import uuid4
+from uuid import UUID, uuid4
 
+from app.modules.files.domain.errors import StoredFileNotFoundError
 from app.modules.files.domain.status import FileStatus
 from app.modules.files.infrastructure.extraction.extractor import FileTextExtractor
 from app.modules.files.infrastructure.s3.storage import S3Storage
@@ -20,14 +22,20 @@ from tests.fakes.files.sniffer import SignatureSniffer
 from tests.fakes.tasks import FakeTaskKicker
 from tests.files.helpers import (
     DOCX_TYPE,
+    EPUB_TYPE,
     PDF_TYPE,
     PNG_BYTES,
+    TocItem,
     make_docx,
+    make_epub,
+    make_jpeg,
     make_pdf,
+    make_png,
     sha256_b64,
 )
 
 import httpx
+import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -141,7 +149,7 @@ async def test_pdf_upload_through_a_presigned_put_to_a_searchable_ready_file(
     view = await services.get_file.execute(actor, file_id)
     assert view.file.status == FileStatus.READY
     assert view.file.text_bytes is not None
-    assert view.file.metadata == {"pages": 1}
+    assert view.file.metadata == {"pages": 1, "page_starts": [0]}
     assert str(view.expires_on) == "2027-01-29"
     assert await stack.storage.get(view.file.key) == data
     assert await stack.storage.head(view.file.text_key) is not None
@@ -237,3 +245,90 @@ async def test_store_bytes_writes_the_object_and_cleanup_removes_it(
     assert deleted >= 1
     refreshed = await stack.services.public.get(ref.id)
     assert refreshed is not None and refreshed.status == "deleted"
+
+
+async def _upload_as(
+    stack: Stack, actor: Actor, name: str, data: bytes, content_type: str, purpose: str
+) -> UUID:
+    """Request, PUT to S3, complete and process a file; return its id."""
+    ticket = await stack.services.request_upload.execute(
+        actor,
+        name=name,
+        size=len(data),
+        content_type=content_type,
+        sha256_b64=sha256_b64(data),
+        purpose=FilePurpose(purpose),
+    )
+    assert await stack.put(ticket.upload.url, ticket.upload.headers, data) == 200
+    view = await stack.services.complete_upload.execute(actor, ticket.view.file.id)
+    await stack.services.process_file.execute(view.file.id)
+    return view.file.id
+
+
+async def test_a_library_epub_is_stored_processed_and_served_to_librarians(
+    stack: Stack,
+) -> None:
+    """LIB-3: library scope, EPUB pages and outline in JSONB, 900 s URL, delete."""
+    librarian = Actor(user_id=uuid4(), roles=frozenset({Role.STUDENT, Role.LIBRARIAN}))
+    reader = student()
+    toc: list[TocItem] = [("One", "ch1.xhtml", []), ("Two", "ch2.xhtml#x", [])]
+    data = make_epub(["<p>Evergreen oak</p>", "<p>Birch</p>"], toc=toc)
+
+    file_id = await _upload_as(
+        stack, librarian, "trees.epub", data, EPUB_TYPE, "library_book"
+    )
+
+    public = stack.services.public
+    ref = await public.get(file_id)
+    assert ref is not None and ref.scope == FileScope.LIBRARY
+    assert ref.content_type == EPUB_TYPE and ref.status == "ready"
+    assert await public.page_count(file_id) == 2
+    assert [(e.title, e.page) for e in await public.read_outline(file_id)] == [
+        ("One", 1),
+        ("Two", 2),
+    ]
+    assert (await public.read_text_with_pages(file_id)).page_starts == (0, 14)
+    assert await public.sha256(file_id) == hashlib.sha256(data).hexdigest()
+    assert await stack.services.cleanup_expired.execute() == 0
+
+    url = await public.download_url(file_id, ttl_seconds=900)
+    assert "X-Amz-Expires=900" in url
+    async with httpx.AsyncClient() as client:
+        assert (await client.get(url)).content == data
+    assert await public.check_access(file_id, librarian)
+    assert not await public.check_access(file_id, reader)
+    with pytest.raises(StoredFileNotFoundError):
+        await stack.services.get_download_url.execute(reader, file_id)
+
+    row = await stack.services.get_file.execute(librarian, file_id)
+    await public.delete_file(file_id)
+    assert await stack.storage.head(row.file.key) is None
+    assert await stack.storage.head(row.file.text_key) is None
+    assert await public.get(file_id) is None
+
+
+async def test_photos_uploaded_to_s3_are_combined_into_one_pdf(stack: Stack) -> None:
+    """LIB-5: JPEG and PNG objects read from S3, the PDF written back and scanned."""
+    author = student()
+    photos = [
+        await _upload_as(
+            stack, author, "a.jpg", make_jpeg(40, 20), "image/jpeg", "library_material"
+        ),
+        await _upload_as(
+            stack, author, "b.png", make_png(20, 40), "image/png", "library_material"
+        ),
+    ]
+
+    ref = await stack.services.public.combine_images_to_pdf(
+        photos,
+        owner_id=author.user_id,
+        scope=FileScope.LIBRARY,
+        purpose=FilePurpose.LIBRARY_MATERIAL,
+        name="Week 3",
+    )
+    await stack.services.process_file.execute(ref.id)
+
+    assert ref.name == "Week 3.pdf"
+    assert await stack.services.public.page_count(ref.id) == 2
+    pdf = await stack.services.public.read_bytes(ref.id)
+    assert pdf.startswith(b"%PDF-1.4")

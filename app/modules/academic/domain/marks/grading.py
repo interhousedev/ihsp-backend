@@ -27,19 +27,20 @@ def average(values: Sequence[int]) -> Decimal | None:
 def semester_mark(
     lesson: Sequence[int], midterm: Sequence[int], final: Sequence[int]
 ) -> Decimal | None:
-    """ACA-15: mean of the lesson, midterm and final means, else the lesson mean.
+    """ACA-15: the mean of the means of the mark types that have marks.
 
-    The three means are combined only when all three types have marks. They are
-    combined unrounded, so the result is rounded once.
+    Lesson, midterm and final means count as soon as their type has a mark, so a
+    mark with a midterm but no final yet is the mean of two means. They are combined
+    unrounded, so the result is rounded once.
     """
-    lesson_mean = _mean(lesson)
-    midterm_mean = _mean(midterm)
-    final_mean = _mean(final)
-    if lesson_mean is None:
+    means = [
+        mean
+        for mean in (_mean(lesson), _mean(midterm), _mean(final))
+        if mean is not None
+    ]
+    if not means:
         return None
-    if midterm_mean is None or final_mean is None:
-        return _round(lesson_mean)
-    return _round((lesson_mean + midterm_mean + final_mean) / Decimal(3))
+    return _round(sum(means) / Decimal(len(means)))
 
 
 def gpa(all_marks: Sequence[int]) -> Decimal | None:
@@ -47,10 +48,11 @@ def gpa(all_marks: Sequence[int]) -> Decimal | None:
     return average(all_marks)
 
 
-def uses_full_formula(
+def present_types(
     lesson_avg: Decimal | None,
     midterm_avg: Decimal | None,
     final_avg: Decimal | None,
-) -> bool:
-    """Return True when the semester mark averages all three mark types."""
-    return None not in (lesson_avg, midterm_avg, final_avg)
+) -> tuple[str, ...]:
+    """Return the mark types that have marks, in the order lesson, midterm, final."""
+    averages = (("lesson", lesson_avg), ("midterm", midterm_avg), ("final", final_avg))
+    return tuple(name for name, value in averages if value is not None)

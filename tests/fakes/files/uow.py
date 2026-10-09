@@ -16,6 +16,11 @@ from app.shared.notifications import AuditDraft, NotificationDraft
 _COUNTED = {FileStatus.PENDING, FileStatus.PROCESSING, FileStatus.READY}
 
 
+def _study_file(file: StoredFile) -> bool:
+    """Library files are left out of owner lists, search and clean-up."""
+    return file.scope != FileScope.LIBRARY
+
+
 class FileStore:
     """The 'database': rows and indexed texts shared by every transaction."""
 
@@ -82,6 +87,7 @@ class InMemoryFileRepository:
             f
             for f in self.store.rows.values()
             if f.owner_id == owner_id
+            and _study_file(f)
             and f.status not in {FileStatus.PENDING, FileStatus.DELETED}
             and (purpose is None or f.purpose == purpose)
         ]
@@ -95,7 +101,9 @@ class InMemoryFileRepository:
         rows = [
             f
             for f in self.store.rows.values()
-            if f.owner_id == owner_id and f.status == FileStatus.READY
+            if f.owner_id == owner_id
+            and _study_file(f)
+            and f.status == FileStatus.READY
         ]
         rows.sort(key=lambda f: (f.created_at, f.id), reverse=True)
         return [copy.deepcopy(f) for f in rows[:limit]]
@@ -105,7 +113,9 @@ class InMemoryFileRepository:
         rows = [
             f
             for f in self.store.rows.values()
-            if f.owner_id == owner_id and f.status != FileStatus.DELETED
+            if f.owner_id == owner_id
+            and _study_file(f)
+            and f.status != FileStatus.DELETED
         ]
         return [copy.deepcopy(f) for f in rows[:limit]]
 
@@ -123,6 +133,7 @@ class InMemoryFileRepository:
             f
             for f in self.store.rows.values()
             if f.owner_id == owner_id
+            and _study_file(f)
             and f.status == FileStatus.READY
             and f.id in self.store.texts
             and all(w in self.store.texts[f.id].lower() for w in words)
@@ -164,6 +175,7 @@ class InMemoryFileRepository:
             f
             for f in self.store.rows.values()
             if f.status != FileStatus.DELETED
+            and _study_file(f)
             and (
                 (f.expires_at is not None and f.expires_at < now)
                 or (f.scope == FileScope.STUDENT and f.term_id in expired_term_ids)

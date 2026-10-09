@@ -8,7 +8,7 @@ from app.modules.ai.application.chat_views import ChatViews
 from app.modules.ai.application.locale import LocaleResolver
 from app.modules.ai.application.pending_calls import expire_overdue
 from app.modules.ai.domain.assistant import Assistant
-from app.modules.ai.domain.chat import MessageRole
+from app.modules.ai.domain.chat import Chat, MessageRole
 from app.modules.ai.domain.tool_call import ToolStatus
 from app.modules.ai.ports.unit_of_work import AiUnitOfWork
 from app.shared.clock import Clock
@@ -44,10 +44,13 @@ class AiQueriesImpl:
     async def chat_for_share(
         self, chat_id: UUID, until_seq: int | None
     ) -> dict[str, Any] | None:
-        """Return a chat for a share page; None for admin and deleted chats."""
+        """Return a chat for a share page; None for admin, author and deleted chats.
+
+        Author chats talk about unpublished course drafts: they are never shared.
+        """
         async with self.uow_factory() as uow:
             chat = await uow.chats.get(chat_id)
-            if chat is None or chat.deleted_at or chat.assistant is Assistant.ADMIN:
+            if chat is None or chat.deleted_at or chat.assistant in _PRIVATE:
                 return None
             messages = await uow.messages.list_range(
                 chat_id, after_seq=0, up_to_seq=until_seq
@@ -71,6 +74,35 @@ class AiQueriesImpl:
             ],
         }
 
+    async def chat_transcript(
+        self, owner_id: UUID, chat_id: UUID, until_seq: int | None
+    ) -> dict[str, Any] | None:
+        """Return a chat as plain text for a notebook source.
+
+        User and assistant texts only (tool calls, results and approval cards are
+        not part of the text; empty texts are skipped). ``last_seq`` is the highest
+        seq of the whole chat, so callers can tell when the snapshot is outdated.
+        None for Administration chats, deleted chats and chats of another owner.
+        """
+        async with self.uow_factory() as uow:
+            chat = await uow.chats.get(chat_id)
+            if chat is None or not _readable_by(chat, owner_id):
+                return None
+            messages = await uow.messages.list_range(
+                chat_id, after_seq=0, up_to_seq=until_seq
+            )
+            last_seq = await uow.messages.last_seq(chat_id)
+        return {
+            "title": chat.title,
+            "last_message_at": chat.last_message_at,
+            "last_seq": last_seq,
+            "messages": [
+                {"seq": m.seq, "role": m.role.value, "text": m.text}
+                for m in messages
+                if m.text.strip()
+            ],
+        }
+
     async def chats_using_files(
         self, file_ids: Sequence[UUID]
     ) -> dict[UUID, list[tuple[UUID, str]]]:
@@ -89,6 +121,18 @@ class AiQueriesImpl:
         if chat is None or chat.deleted_at:
             return None
         return chat.owner_id
+
+
+_PRIVATE = (Assistant.ADMIN, Assistant.LMS_AUTHOR)
+
+
+def _readable_by(chat: Chat, owner_id: UUID) -> bool:
+    """Return True for a live student chat of this owner (no admin, no author)."""
+    return (
+        chat.owner_id == owner_id
+        and chat.deleted_at is None
+        and chat.assistant not in _PRIVATE
+    )
 
 
 def _notes(views: ChatViews, calls: list[Any], locale: str) -> list[str]:

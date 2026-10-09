@@ -29,12 +29,13 @@ class FakeFiles:
         name: str = "Lecture 5.pdf",
         status: str = "ready",
         purpose: FilePurpose = FilePurpose.LINK,
+        scope: FileScope = FileScope.STUDENT,
     ) -> FileRef:
         """Create and store a file."""
         file = FileRef(
             id=new_id(),
             owner_id=owner_id,
-            scope=FileScope.STUDENT,
+            scope=scope,
             purpose=purpose,
             name=name,
             content_type="application/pdf",
@@ -53,7 +54,13 @@ class FakeFiles:
         """Return the files that exist."""
         return {i: self.files[i] for i in file_ids if i in self.files}
 
-    async def download_url(self, file_id: UUID, *, inline: bool | None = None) -> str:
+    async def download_url(
+        self,
+        file_id: UUID,
+        *,
+        inline: bool | None = None,
+        ttl_seconds: int | None = None,
+    ) -> str:
         """Return a presigned-looking URL or raise NotFoundError."""
         file = self.files.get(file_id)
         if file is None or file.status == "deleted":

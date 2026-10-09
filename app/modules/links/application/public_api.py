@@ -5,6 +5,7 @@ from typing import Literal
 from uuid import UUID
 
 from app.modules.links.application.add_lesson_resources import AddLessonResources
+from app.modules.links.application.import_lesson_urls import ImportLessonUrls
 from app.modules.links.application.resource_builder import ResourceBuilder
 from app.modules.links.application.resource_refs import to_ref
 from app.modules.links.domain.errors import InvalidLinkTargetError
@@ -12,7 +13,7 @@ from app.modules.links.domain.link import SHARE_KINDS, LessonRole, LinkKind, Lin
 from app.modules.links.ports.unit_of_work import UowFactory
 from app.shared.actor import Actor
 from app.shared.clock import Clock
-from app.shared.contracts.links import ResourceRef
+from app.shared.contracts.links import ImportedUrl, ResourceRef
 
 
 class LinksApiImpl:
@@ -24,12 +25,14 @@ class LinksApiImpl:
         uow_factory: UowFactory,
         builder: ResourceBuilder,
         add_resources: AddLessonResources,
+        import_urls: ImportLessonUrls,
         clock: Clock,
     ) -> None:
         """Store the collaborators."""
         self.uow_factory = uow_factory
         self.builder = builder
         self.add_resources = add_resources
+        self.import_urls = import_urls
         self.clock = clock
 
     async def lesson_resources(
@@ -84,6 +87,10 @@ class LinksApiImpl:
             file_id=file_id,
         )
         return to_ref(views[0])
+
+    async def import_lesson_urls(self, urls: Sequence[ImportedUrl]) -> int:
+        """Attach URLs from EMIS as materials (author "EMIS"); return the new ones."""
+        return await self.import_urls.execute(urls)
 
     async def used_by_files(
         self, file_ids: Sequence[UUID]

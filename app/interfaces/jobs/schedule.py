@@ -7,6 +7,9 @@ imported here; a test checks that every name below is a registered task.
 from dataclasses import dataclass, field
 from typing import Any
 
+from app.settings import Settings
+from app.shared.features import Feature, is_enabled
+
 from taskiq.abc.schedule_source import ScheduleSource
 from taskiq.scheduler.scheduled_task import ScheduledTask
 
@@ -43,6 +46,8 @@ CRON_JOBS: tuple[CronJob, ...] = (
     *(CronJob("academic.sync_all", cron, {"slot": slot}) for slot, cron in SYNC_SLOTS),
     CronJob("academic.generate_lessons", "0 2 * * *"),
     CronJob("academic.lesson_reminders", EVERY_MINUTE),
+    CronJob("academic.generate_assessments", "30 2,20 * * *"),
+    CronJob("academic.assessment_reminders", "30 7 * * *"),
     CronJob("notify.dispatch_due", EVERY_MINUTE),
     CronJob("admin.start_scheduled_broadcasts", EVERY_MINUTE),
     CronJob("admin.finish_broadcasts", EVERY_5_MINUTES),
@@ -61,7 +66,35 @@ CRON_JOBS: tuple[CronJob, ...] = (
     CronJob("lms.prune_revisions", "0 5 * * *"),
     CronJob("ai.purge_admin_chats", "15 3 * * *"),
     CronJob("bootstrap.cleanup_otp_messages", EVERY_MINUTE),
+    CronJob("notebooks.refresh_summaries", EVERY_MINUTE),
+    CronJob("notebooks.sweep_stuck", EVERY_10_MINUTES),
+    CronJob("notebooks.sweep_sources", "30 3 * * *"),
+    CronJob("notebooks.purge_deleted", "15 4 * * *"),
+    CronJob("notebooks.purge_shared", "45 4 * * *"),
+    CronJob("notebooks.sweep_auto_notebooks", "20,50 * * * *"),
+    CronJob("notebooks.embed_passages", EVERY_10_MINUTES),
 )
+
+
+# Task-name prefixes that stop being scheduled while their feature is switched off.
+JOB_FEATURES: tuple[tuple[str, Feature], ...] = (
+    ("notebooks.embed_passages", Feature.VECTOR_SEARCH),
+    ("notebooks.", Feature.NOTEBOOKS),
+    ("mail.", Feature.MAIL),
+    ("lms.", Feature.LMS),
+    ("ai.", Feature.AI_ASSISTANT),
+    ("academic.sync_all", Feature.EMIS_SYNC),
+)
+
+
+def enabled_jobs(
+    settings: Settings, jobs: tuple[CronJob, ...] = CRON_JOBS
+) -> tuple[CronJob, ...]:
+    """The jobs whose feature (`FEATURES__...`) is on; the others are not sent."""
+    off = tuple(
+        prefix for prefix, feature in JOB_FEATURES if not is_enabled(settings, feature)
+    )
+    return tuple(job for job in jobs if not job.task_name.startswith(off))
 
 
 def scheduled_tasks(jobs: tuple[CronJob, ...] = CRON_JOBS) -> list[ScheduledTask]:
@@ -81,11 +114,15 @@ def scheduled_tasks(jobs: tuple[CronJob, ...] = CRON_JOBS) -> list[ScheduledTask
 
 
 class CronScheduleSource(ScheduleSource):
-    """ScheduleSource that serves `CRON_JOBS`."""
+    """ScheduleSource that serves `CRON_JOBS` (minus the switched-off features)."""
 
-    def __init__(self, jobs: tuple[CronJob, ...] = CRON_JOBS) -> None:
-        """Keep the jobs (defaults to the project schedule)."""
-        self._jobs = jobs
+    def __init__(
+        self,
+        jobs: tuple[CronJob, ...] = CRON_JOBS,
+        settings: Settings | None = None,
+    ) -> None:
+        """Keep the jobs (defaults to the project schedule) and filter by `settings`."""
+        self._jobs = jobs if settings is None else enabled_jobs(settings, jobs)
 
     async def get_schedules(self) -> list[ScheduledTask]:
         """Return the cron entries."""

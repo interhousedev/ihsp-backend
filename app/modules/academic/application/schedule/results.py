@@ -1,11 +1,11 @@
 """Read models returned by the schedule use cases (HTTP maps them to schemas)."""
 
 import datetime as dt
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Literal
 from uuid import UUID
 
-from app.modules.academic.domain.schedule.term import Bell, MovedDay
+from app.modules.academic.domain.schedule.term import Bell, ControlPeriods, MovedDay
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,6 +57,7 @@ class TermData:
     non_study_days: list[dt.date]
     moved_days: list[MovedDay]
     is_current: bool
+    control_periods: ControlPeriods = field(default_factory=ControlPeriods)
 
 
 @dataclass(frozen=True, slots=True)
@@ -133,6 +134,7 @@ class TimetableEntryData:
     audience: list[AudienceItemData]
     valid_from: dt.date
     valid_to: dt.date | None
+    source: Literal["manual", "emis"] = "manual"
 
 
 @dataclass(frozen=True, slots=True)
@@ -143,6 +145,7 @@ class ConflictData:
     with_entry_id: UUID | None
     with_lesson_id: UUID | None
     description: str
+    week_parity: Literal["every", "odd", "even"] | None = None
 
 
 @dataclass(frozen=True, slots=True)

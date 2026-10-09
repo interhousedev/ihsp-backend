@@ -13,6 +13,7 @@ from app.modules.links.application.dismiss_reports import DismissReports
 from app.modules.links.application.flush_hits import FlushHits
 from app.modules.links.application.get_public_share import GetPublicShare
 from app.modules.links.application.hide_lesson_resource import HideLessonResource
+from app.modules.links.application.import_lesson_urls import ImportLessonUrls
 from app.modules.links.application.lesson_access import LessonAccess
 from app.modules.links.application.link_creation_limit import LinkCreationLimit
 from app.modules.links.application.link_urls import LinkUrls
@@ -136,7 +137,7 @@ def build(
     allocator = SlugAllocator(rng)
     limit = LinkCreationLimit(deps.rate_limiter)
     builder = ResourceBuilder(files, identity, urls)
-    invalidator = RoomCacheInvalidator(schedule, cache)
+    invalidator = RoomCacheInvalidator(schedule, cache, deps.kicker)
     access = LessonAccess(schedule)
     not_found = NotFoundCounter(deps.rate_limiter)
     pages = PublicPages(renderer, urls)
@@ -264,6 +265,13 @@ def build(
             uow_factory=uow_factory,
             builder=builder,
             add_resources=add_resources,
+            import_urls=ImportLessonUrls(
+                uow_factory=uow_factory,
+                policy=policy,
+                allocator=allocator,
+                invalidator=invalidator,
+                clock=deps.clock,
+            ),
             clock=deps.clock,
         ),
     )

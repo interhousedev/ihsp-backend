@@ -127,7 +127,8 @@ class SyncStudent:
         """Apply the EMIS profile and subjects (SYNC-3, SYNC-9); None if they left.
 
         The daily profile run also asks for the timetable of a group that has none
-        (ACA-1); after a registration the backfill leaves that to its own task.
+        (ACA-1); after a registration the backfill leaves that to its own task. The
+        timetables of the other groups are refreshed by the run itself.
         """
         user_id = state.user_id
         counters.emis_requests += 1
@@ -153,7 +154,7 @@ class SyncStudent:
         await self._enrollment.sync_subjects(group_id=ref.group_id, subjects=subjects)
         if import_timetable and ref.needs_timetable:
             await self._kicker.kick(
-                "academic.bootstrap_group",
+                "academic.sync_group_timetable",
                 user_id=str(user_id),
                 group_id=str(ref.group_id),
             )

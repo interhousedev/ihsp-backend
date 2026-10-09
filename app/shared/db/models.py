@@ -15,6 +15,9 @@ MODULES = (
     "flashcards",
     "mail",
     "lms",
+    "notebooks",
+    "library",
+    "vectors",
 )
 
 

@@ -40,6 +40,7 @@ class CourseStep(IdMixin, TimestampMixin, Base):
         Enum(
             "ui",
             "mcp",
+            "ai",
             name="draft_updated_via",
             native_enum=False,
             create_constraint=True,
@@ -64,6 +65,7 @@ class CourseStep(IdMixin, TimestampMixin, Base):
         Enum(
             "ui",
             "mcp",
+            "ai",
             name="created_via",
             native_enum=False,
             create_constraint=True,

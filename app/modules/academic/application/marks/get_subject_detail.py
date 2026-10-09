@@ -206,6 +206,7 @@ def _resource(view: ViewContext, ref: ResourceRef) -> dict[str, Any]:
         "title": ref.title,
         "author": author,
         "hidden": ref.hidden,
+        "source": ref.source,
         "file": None,
         "created_at": None,
     }

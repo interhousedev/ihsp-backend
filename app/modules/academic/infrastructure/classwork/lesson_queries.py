@@ -10,6 +10,7 @@ from app.modules.academic.infrastructure.orm.group import Group
 from app.modules.academic.infrastructure.orm.lesson import Lesson as LessonRow
 from app.modules.academic.infrastructure.orm.room import Room
 from app.modules.academic.infrastructure.orm.subject import Subject
+from app.shared.lesson_kind import LessonKind, topic_source_of
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -50,6 +51,8 @@ def lesson_select() -> sa.Select[Any]:
             row.attendance_by,
             row.attendance_at,
             row.attendance_source,
+            row.kind,
+            row.emis_topic,
         )
         .select_from(row)
         .join(Subject, Subject.id == row.subject_id)
@@ -105,6 +108,8 @@ def _to_lesson(row: Any, names_by_id: dict[UUID, str]) -> Lesson:
         attendance_by=row.attendance_by,
         attendance_at=row.attendance_at,
         attendance_source=row.attendance_source,
+        kind=cast(LessonKind, row.kind),
+        topic_source=topic_source_of(row.topic, row.emis_topic),
     )
 
 

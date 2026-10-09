@@ -6,11 +6,17 @@ from typing import Any
 from app.modules.academic.application.schedule.results import TermData
 from app.modules.academic.domain.schedule.errors import (
     TermBellsInvalidError,
+    TermControlPeriodsInvalidError,
     TermDuplicateError,
     TermNotFoundError,
     TermOverlapError,
 )
-from app.modules.academic.domain.schedule.term import Bell, MovedDay
+from app.modules.academic.domain.schedule.term import (
+    Bell,
+    ControlPeriod,
+    ControlPeriods,
+    MovedDay,
+)
 from app.shared.ids import new_id
 from tests.academic.schedule.env import TERM_END, TERM_START, Env, default_bells
 
@@ -117,6 +123,33 @@ async def test_a_moved_day_can_be_added_later(env: Env) -> None:
     updated = await env.services.update_term.execute(term.id, moved_days=moved)
 
     assert updated.moved_days == moved
+
+
+async def test_control_periods_are_set_on_create_and_changed_on_update(
+    env: Env,
+) -> None:
+    """The admin sets the midterm and final weeks of the term."""
+    midterm_1 = ControlPeriod(start=dt.date(2026, 10, 20), end=dt.date(2026, 10, 25))
+    created = await create(env, control_periods=ControlPeriods(midterm_1=midterm_1))
+    assert created.control_periods.midterm_1 == midterm_1
+    assert created.control_periods.final is None
+
+    final = ControlPeriod(start=dt.date(2026, 12, 14), end=dt.date(2026, 12, 19))
+    updated = await env.services.update_term.execute(
+        created.id, control_periods=ControlPeriods(midterm_1=midterm_1, final=final)
+    )
+
+    assert updated.control_periods == ControlPeriods(midterm_1=midterm_1, final=final)
+    (listed,) = await env.services.list_terms.execute()
+    assert listed.control_periods == updated.control_periods
+
+
+async def test_control_periods_outside_the_term_are_rejected(env: Env) -> None:
+    """A control week must lie inside the term."""
+    outside = ControlPeriod(start=dt.date(2027, 1, 10), end=dt.date(2027, 1, 15))
+
+    with pytest.raises(TermControlPeriodsInvalidError):
+        await create(env, control_periods=ControlPeriods(final=outside))
 
 
 async def test_updating_cannot_make_a_term_overlap_another(env: Env) -> None:

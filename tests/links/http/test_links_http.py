@@ -243,7 +243,7 @@ async def test_lesson_resources_endpoints(world: LinksWorld, api: Api) -> None:
     assert added.status_code == 200
     assert set(item) == {
         "link_id", "lesson_id", "role", "kind", "short_url", "title", "author",
-        "hidden", "file", "created_at",
+        "hidden", "file", "created_at", "source",
     }  # fmt: skip
     assert item["author"] == {
         "id": str(student.user_id),
@@ -258,8 +258,10 @@ async def test_lesson_resources_endpoints(world: LinksWorld, api: Api) -> None:
     assert deleted.status_code == 204
 
 
-async def test_admin_manages_resources_of_any_lesson(world: LinksWorld, api: Api) -> None:
-    """ACA-9, STF-6: Administration adds, hides and deletes resources of another teacher's lesson."""
+async def test_admin_manages_resources_of_any_lesson(
+    world: LinksWorld, api: Api
+) -> None:
+    """ACA-9, STF-6: Administration manages resources of another teacher's lesson."""
     teacher = world.person("Galina", Role.TEACHER)
     student = world.person("Aleksey")
     admin = world.person("Root", Role.ADMIN)
@@ -271,7 +273,11 @@ async def test_admin_manages_resources_of_any_lesson(world: LinksWorld, api: Api
 
     attachment = await as_student.post(
         path,
-        json={"role": "attachment", "kind": "url", "target_url": "https://example.org/d"},
+        json={
+            "role": "attachment",
+            "kind": "url",
+            "target_url": "https://example.org/d",
+        },
     )
     material = await as_admin.post(
         path,

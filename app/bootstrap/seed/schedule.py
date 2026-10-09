@@ -8,6 +8,7 @@ from app.bootstrap.container import Container
 from app.modules.academic.application.schedule.entry_builder import EntryInput
 from app.modules.academic.application.schedule.results import TermData
 from app.modules.academic.domain.schedule.emis_bells import bells_from_class_hours
+from app.modules.academic.domain.schedule.term import ControlPeriod, ControlPeriods
 from app.modules.identity.infrastructure.emis.fake import (
     FAKE_CLASS_HOURS,
     FAKE_SUBJECTS,
@@ -23,6 +24,12 @@ ACADEMIC_YEAR = "2026-2027"
 TERM_START = dt.date(2026, 9, 2)
 TERM_END = dt.date(2026, 12, 30)
 NON_STUDY_DAYS = (dt.date(2026, 10, 1),)
+# The control weeks Administration sets: two midterms and the final (ACA-23).
+CONTROL_PERIODS = ControlPeriods(
+    midterm_1=ControlPeriod(start=dt.date(2026, 10, 19), end=dt.date(2026, 10, 24)),
+    midterm_2=ControlPeriod(start=dt.date(2026, 11, 23), end=dt.date(2026, 11, 28)),
+    final=ControlPeriod(start=dt.date(2026, 12, 14), end=dt.date(2026, 12, 19)),
+)
 LESSONS_PER_DAY = 5
 DIVIDED_SUBJECTS = (103, 107)  # English and Informatics split into subgroups
 
@@ -69,6 +76,10 @@ async def _ensure_term(container: Container) -> TermData:
     schedule = container.academic.schedule
     for term in await schedule.list_terms.execute():
         if term.academic_year == ACADEMIC_YEAR and term.half == 1:
+            if not term.control_periods.items():
+                return await schedule.update_term.execute(
+                    term.id, control_periods=CONTROL_PERIODS
+                )
             return term
     # The bells are the EMIS class hours, as the daily sync would store them.
     bells = bells_from_class_hours(FAKE_CLASS_HOURS)
@@ -80,6 +91,7 @@ async def _ensure_term(container: Container) -> TermData:
         bells=bells,
         non_study_days=NON_STUDY_DAYS,
         moved_days=[],
+        control_periods=CONTROL_PERIODS,
     )
 
 

@@ -30,5 +30,6 @@
   "academic-entry-invalid": "Jadval yozuvi noto‘g‘ri.",
   "academic-lesson-not-found": "Dars topilmadi.",
   "academic-import-invalid": "Fayl talabalar ro‘yxati sifatida o‘qilmadi.",
-  "academic-import-expired": "Import ko‘rinishi eskirdi. Faylni qayta yuklang."
+  "academic-import-expired": "Import ko‘rinishi eskirdi. Faylni qayta yuklang.",
+  "academic-term-control-periods-invalid": "Nazorat davri noto‘g‘ri: u tugashidan oldin boshlanishi, semestr ichida bo‘lishi va oldingi nazoratdan keyin kelishi kerak (oraliq 1, oraliq 2, yakuniy)."
 }

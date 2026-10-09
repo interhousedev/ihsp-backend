@@ -1,4 +1,4 @@
-"""The ORM metadata holds exactly the 34 tables of README -> Models."""
+"""The ORM metadata holds exactly the tables of README -> Models and the modules."""
 
 from app.shared.db import models  # noqa: F401  (imports every module's ORM package)
 from app.shared.db.base import Base
@@ -10,7 +10,7 @@ EXPECTED_TABLES = {
     "id.telegram_links",
     "id.mcp_connectors",
     "id.audit_events",
-    # academic (11)
+    # academic (12)
     "academic.terms",
     "academic.groups",
     "academic.students",
@@ -22,6 +22,7 @@ EXPECTED_TABLES = {
     "academic.marks",
     "academic.results",
     "academic.sync_runs",
+    "academic.assessments",
     # files (1), links (1)
     "files.files",
     "links.links",
@@ -32,8 +33,9 @@ EXPECTED_TABLES = {
     "ai.flashcard_sets",
     "ai.flashcards",
     "ai.flashcard_reviews",
-    # notify (1), admin (1), mail (1)
+    # notify (2), admin (1), mail (1)
     "notify.notifications",
+    "notify.push_subscriptions",
     "admin.broadcasts",
     "mail.mail_messages",
     # lms (8)
@@ -45,14 +47,58 @@ EXPECTED_TABLES = {
     "lms.enrollments",
     "lms.step_states",
     "lms.test_attempts",
+    # notebooks (12)
+    "notebooks.notebooks",
+    "notebooks.sources",
+    "notebooks.passages",
+    "notebooks.documents",
+    "notebooks.document_aliases",
+    "notebooks.document_guides",
+    "notebooks.shared_summaries",
+    "notebooks.shared_artifacts",
+    "notebooks.messages",
+    "notebooks.artifacts",
+    "notebooks.artifact_assets",
+    "notebooks.artifact_progress",
+    "notebooks.source_labels",
+    "notebooks.source_label_links",
+    "notebooks.source_label_runs",
+    # library (25)
+    "library.items",
+    "library.external_details",
+    "library.book_details",
+    "library.material_details",
+    "library.item_files",
+    "library.item_pages",
+    "library.topics",
+    "library.item_subjects",
+    "library.item_topics",
+    "library.collections",
+    "library.collection_items",
+    "library.reading_lists",
+    "library.reading_list_items",
+    "library.external_feeds",
+    "library.external_field_map",
+    "library.item_reports",
+    "library.item_events",
+    "library.sanctions",
+    "library.book_suggestions",
+    "library.shelf_entries",
+    "library.reading_progress",
+    "library.annotations",
+    "library.book_plans",
+    "library.lesson_item_refs",
+    "library.item_stats",
+    # vectors (1)
+    "vectors.embeddings",
 }
 
 
 def test_metadata_contains_every_table_of_the_models_readme() -> None:
-    """README -> Models: 34 tables, each in the schema of its module."""
+    """README -> Models plus notebooks, push, exams, documents, library, vectors: 74."""
     actual = {table.fullname for table in Base.metadata.tables.values()}
 
-    assert len(EXPECTED_TABLES) == 34
+    assert len(EXPECTED_TABLES) == 74
     assert actual == EXPECTED_TABLES
 
 

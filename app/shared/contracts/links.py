@@ -22,6 +22,23 @@ class ResourceRef:
     author_first_name: str
     hidden: bool
     file_id: UUID | None
+    # "emis": brought by EMIS (a hint, labelled in the UI), "user": added by a person.
+    source: Literal["user", "emis"] = "user"
+
+
+# Lesson resources that an outside system (EMIS) brought carry this author, who is no
+# user account: the resource list shows the name "EMIS".
+EMIS_AUTHOR_ID = UUID("00000000-0000-0000-0000-00000000e015")
+EMIS_AUTHOR_NAME = "EMIS"
+
+
+@dataclass(frozen=True, slots=True)
+class ImportedUrl:
+    """A web address an outside system attaches to a lesson as a material."""
+
+    lesson_id: UUID
+    url: str
+    title: str
 
 
 class LinksApi(Protocol):
@@ -49,6 +66,14 @@ class LinksApi(Protocol):
         file_id: UUID | None = None,
     ) -> ResourceRef:
         """Attach a URL or an uploaded file to the lesson."""
+        ...
+
+    async def import_lesson_urls(self, urls: Sequence[ImportedUrl]) -> int:
+        """Attach URLs from EMIS as materials (author "EMIS"); return how many are new.
+
+        Idempotent: a URL that EMIS already attached to the lesson is skipped, even
+        if a teacher deleted it since. Blocked or malformed URLs are skipped.
+        """
         ...
 
     async def resolve_share(self, slug: str) -> tuple[str, UUID] | None:

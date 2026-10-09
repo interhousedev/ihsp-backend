@@ -39,6 +39,13 @@ class TermDatesInvalidError(ValidationFailedError):
     message_key = "academic-term-dates-invalid"
 
 
+class TermControlPeriodsInvalidError(ValidationFailedError):
+    """A control period is reversed, outside the term or overlaps the one before."""
+
+    code = "academic/term-control-periods-invalid"
+    message_key = "academic-term-control-periods-invalid"
+
+
 class TermBellsInvalidError(ValidationFailedError):
     """Bell periods are malformed or repeated on a weekday."""
 

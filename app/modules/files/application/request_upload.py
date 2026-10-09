@@ -6,16 +6,18 @@ from uuid import UUID
 from app.modules.files.application.file_views import FileView, FileViewBuilder
 from app.modules.files.domain.errors import QuotaExceededError, TypeNotAllowedError
 from app.modules.files.domain.policy import (
+    LIBRARY_PURPOSES,
     PRESIGN_PUT_SECONDS,
     FilesLimits,
     check_checksum,
     check_declared,
     check_size,
+    check_upload_role,
     key_extension,
     key_for,
     month_label,
     normalize_name,
-    scope_for,
+    scope_for_purpose,
 )
 from app.modules.files.domain.status import FileStatus
 from app.modules.files.domain.stored_file import StoredFile
@@ -27,7 +29,9 @@ from app.shared.clock import Clock, local_today
 from app.shared.contracts.files import FilePurpose, FileScope
 from app.shared.ids import new_id
 
-UPLOAD_PURPOSES = frozenset({FilePurpose.AI_UPLOAD, FilePurpose.LINK})
+UPLOAD_PURPOSES = (
+    frozenset({FilePurpose.AI_UPLOAD, FilePurpose.LINK}) | LIBRARY_PURPOSES
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,11 +76,12 @@ class RequestUpload:
         """Validate the request and reserve the quota; return the upload ticket."""
         if purpose not in UPLOAD_PURPOSES:
             raise TypeNotAllowedError(params={"purpose": purpose.value})
+        check_upload_role(purpose, actor)
         clean = normalize_name(name)
         _, signed_type = check_declared(clean, content_type)
-        check_size(size, self._limits.file_max_bytes)
+        scope = scope_for_purpose(purpose, actor)
+        check_size(size, self._limits.max_bytes_for(scope))
         checksum = check_checksum(sha256_b64)
-        scope = scope_for(actor)
         term_id = await self._term_for(scope)
         now = self._clock.now()
         file_id = new_id()
@@ -104,7 +109,7 @@ class RequestUpload:
             updated_at=now,
             term_id=term_id,
         )
-        await self._reserve(file)
+        await self._reserve(file, self._limits.quota_for_actor(scope, actor))
         return UploadTicket(view=await self._views.build_one(file), upload=upload)
 
     async def _term_for(self, scope: FileScope) -> UUID | None:
@@ -113,9 +118,8 @@ class RequestUpload:
             return None
         return await self._terms.current_term_id(local_today(self._clock))
 
-    async def _reserve(self, file: StoredFile) -> None:
+    async def _reserve(self, file: StoredFile, quota: int | None) -> None:
         """Check the quota under the owner's advisory lock and insert the row."""
-        quota = self._limits.quota_for(file.scope)
         async with self._uow_factory() as uow:
             await uow.files.lock_owner(file.owner_id)
             used = await uow.files.used_bytes(file.owner_id, file.scope, file.term_id)

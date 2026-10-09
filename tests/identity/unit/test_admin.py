@@ -414,6 +414,57 @@ async def test_only_administration_roles_can_be_managed_and_not_your_own(
         )
 
 
+async def test_librarian_can_be_granted_to_a_student_and_a_teacher(
+    auth_world: World,
+) -> None:
+    """ADM-5, LIB-1: `librarian` joins other roles and writes a library audit event."""
+    admin = await admin_of(auth_world)
+    student = await auth_world.add_user(roles={Role.STUDENT})
+    teacher = await auth_world.add_user(roles={Role.TEACHER}, login="t.lib")
+
+    for user in (student, teacher):
+        await auth_world.auth.change_roles.execute(
+            admin, user.id, grant=[Role.LIBRARIAN], revoke=[], ctx=CTX
+        )
+
+    assert auth_world.user(student.id).roles == {Role.STUDENT, Role.LIBRARIAN}
+    assert auth_world.user(teacher.id).roles == {Role.TEACHER, Role.LIBRARIAN}
+    assert auth_world.store.audit_types(student.id) == [
+        "role.granted",
+        "library.role_granted",
+    ]
+
+
+async def test_revoking_librarian_is_a_plain_role_revoke(auth_world: World) -> None:
+    """ADM-5, LIB-1: only the grant writes `library.role_granted`."""
+    admin = await admin_of(auth_world)
+    user = await auth_world.add_user(roles={Role.STUDENT, Role.LIBRARIAN})
+
+    await auth_world.auth.change_roles.execute(
+        admin, user.id, grant=[], revoke=[Role.LIBRARIAN], ctx=CTX
+    )
+
+    assert auth_world.user(user.id).roles == {Role.STUDENT}
+    assert auth_world.store.audit_types(user.id) == ["role.revoked"]
+
+
+async def test_the_librarian_grant_event_names_the_role_and_the_admin(
+    auth_world: World,
+) -> None:
+    """GEN-6, LIB-1: the library audit event carries the role and who granted it."""
+    admin = await admin_of(auth_world)
+    user = await auth_world.add_user(roles={Role.STUDENT})
+
+    await auth_world.auth.change_roles.execute(
+        admin, user.id, grant=[Role.LIBRARIAN], revoke=[], ctx=CTX
+    )
+
+    event = next(a for a in auth_world.store.audits if a.type == "library.role_granted")
+    assert event.user_id == user.id
+    assert event.actor_id == admin.user_id
+    assert event.metadata == {"role": "librarian"}
+
+
 async def test_revoking_sessions_does_not_touch_the_epoch(auth_world: World) -> None:
     """ADM-5: only sessions are cut; tokens die through the revocation list."""
     admin = await admin_of(auth_world)

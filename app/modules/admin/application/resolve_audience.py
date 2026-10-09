@@ -8,7 +8,7 @@ from app.shared.actor import Role
 from app.shared.contracts.academic import ScheduleQueries
 from app.shared.contracts.identity import IdentityDirectory, UserStatus
 
-ALL_ROLES = (Role.STUDENT, Role.TEACHER, Role.ADMIN, Role.LMS_ADMIN)
+ALL_ROLES = (Role.STUDENT, Role.TEACHER, Role.ADMIN, Role.LMS_ADMIN, Role.LIBRARIAN)
 CHUNK = 500
 
 

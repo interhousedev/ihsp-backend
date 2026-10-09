@@ -27,6 +27,15 @@ class NotificationType(StrEnum):
     ACCOUNT_CLOSING = "account_closing"
     MAIL_SUSPENDED = "mail_suspended"
     SYNC_ALERT = "sync_alert"
+    NOTEBOOK_ARTIFACT_READY = "notebook_artifact_ready"
+    ASSESSMENT_REMINDER = "assessment_reminder"
+    LIBRARY_ITEM_APPROVED = "library_item_approved"
+    LIBRARY_ITEM_CHANGES_REQUESTED = "library_item_changes_requested"
+    LIBRARY_ITEM_REJECTED = "library_item_rejected"
+    LIBRARY_ITEM_UNPUBLISHED = "library_item_unpublished"
+    LIBRARY_QUEUE_WAITING = "library_queue_waiting"
+    LIBRARY_REPORT_FILED = "library_report_filed"
+    LIBRARY_READING_LIST_NEW = "library_reading_list_new"
 
 
 @dataclass(frozen=True, slots=True)

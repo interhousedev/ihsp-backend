@@ -5,6 +5,8 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
+from app.shared.library_audit import LibraryAuditType
+
 LOGIN_SUCCESS = "login.success"
 LOGIN_FAILED = "login.failed"
 LOGOUT = "logout"
@@ -25,6 +27,7 @@ CONNECTOR_CREATED = "connector.created"
 CONNECTOR_REVOKED = "connector.revoked"
 ROLE_GRANTED = "role.granted"
 ROLE_REVOKED = "role.revoked"
+LIBRARY_ROLE_GRANTED = LibraryAuditType.ROLE_GRANTED.value
 USER_BLOCKED = "user.blocked"
 USER_UNBLOCKED = "user.unblocked"
 USER_CREATED = "user.created"

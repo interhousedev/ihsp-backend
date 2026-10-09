@@ -31,6 +31,7 @@ def resource_item(ref: ResourceRef, author: Person | None) -> dict[str, Any]:
         "title": ref.title,
         "author": person,
         "hidden": ref.hidden,
+        "source": ref.source,
         "file": None,
         "created_at": None,
     }

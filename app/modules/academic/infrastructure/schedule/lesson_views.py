@@ -16,6 +16,7 @@ from app.modules.academic.infrastructure.orm import Room as RoomRow
 from app.modules.academic.infrastructure.orm import Subject as SubjectRow
 from app.modules.academic.infrastructure.schedule.mappers import subject_to_entity
 from app.shared.contracts.academic import LessonRef
+from app.shared.lesson_kind import topic_source_of
 
 from sqlalchemy import Row, Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -69,6 +70,8 @@ def _ref(
         topic=row.topic,
         homework_text=row.homework_text,
         homework_due_date=row.homework_due_date,
+        kind=cast(Any, row.kind),
+        topic_source=topic_source_of(row.topic, row.emis_topic),
     )
 
 

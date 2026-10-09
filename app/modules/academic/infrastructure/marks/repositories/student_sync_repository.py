@@ -81,6 +81,15 @@ class SqlStudentSyncRepository:
         )
         return list((await self.session.execute(stmt)).scalars())
 
+    async def list_sync_members(self) -> list[tuple[UUID, UUID, int | None]]:
+        """Return (user id, group id, subgroup) of the same students."""
+        stmt = (
+            sa.select(Student.user_id, Student.group_id, Student.subgroup)
+            .where(Student.status == "active", Student.backfilled_at.is_not(None))
+            .order_by(Student.user_id)
+        )
+        return [(row[0], row[1], row[2]) for row in await self.session.execute(stmt)]
+
     async def record_success(
         self, user_id: UUID, *, at: dt.datetime, backfilled: bool
     ) -> None:

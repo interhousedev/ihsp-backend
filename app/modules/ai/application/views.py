@@ -7,6 +7,7 @@ from typing import Literal
 from uuid import UUID
 
 from app.modules.ai.application.budget import UsageInfo
+from app.shared.contracts.web_search import WebResult
 
 
 class TurnStatus(StrEnum):
@@ -22,10 +23,12 @@ class ChatItemView:
     """One row of the chat list."""
 
     id: UUID
-    assistant: Literal["student", "admin"]
+    assistant: Literal["student", "admin", "lms_author"]
     title: str
     last_message_at: datetime
     pending_approvals: int
+    tier: Literal["fast", "smart"]
+    course_id: UUID | None = None  # author chats: the course they belong to
 
 
 @dataclass(frozen=True, slots=True)
@@ -70,6 +73,8 @@ class ChatMessageView:
     file_ids: list[UUID]
     tool_calls: list[ToolCallView]
     created_at: datetime
+    feedback: Literal["up", "down"] | None
+    web: list[WebResult] = field(default_factory=list)
 
 
 @dataclass(frozen=True, slots=True)

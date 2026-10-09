@@ -3,13 +3,21 @@
 from collections.abc import Sequence
 from uuid import UUID
 
-from app.modules.ai.domain.chat import ChatMessage, MessageContent, MessageRole
+from app.modules.ai.domain.chat import (
+    ChatMessage,
+    Feedback,
+    MessageContent,
+    MessageRole,
+)
 from app.modules.ai.domain.tool_call import ToolCall
 from app.modules.ai.infrastructure.orm.chat import Chat as ChatRow
 from app.modules.ai.infrastructure.orm.chat_message import ChatMessage as MessageRow
 
-from sqlalchemy import ARRAY, Uuid, func, literal, select
+from sqlalchemy import ARRAY, Uuid, delete, func, literal, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+_FEEDBACK_OF = {1: Feedback.UP, -1: Feedback.DOWN}
+_FEEDBACK_VALUE = {Feedback.UP: 1, Feedback.DOWN: -1}
 
 
 def _to_entity(row: MessageRow) -> ChatMessage:
@@ -24,6 +32,8 @@ def _to_entity(row: MessageRow) -> ChatMessage:
         tool_calls=[ToolCall.model_validate(c) for c in row.tool_calls or []],
         tokens_in=row.tokens_in,
         tokens_out=row.tokens_out,
+        feedback=_FEEDBACK_OF.get(row.feedback) if row.feedback is not None else None,
+        feedback_comment=row.feedback_comment,
     )
 
 
@@ -67,6 +77,27 @@ class SqlMessageRepository:
         row.tokens_in = message.tokens_in
         row.tokens_out = message.tokens_out
         await self.session.flush()
+
+    async def set_feedback(self, message: ChatMessage) -> None:
+        """Write the message's feedback and comment (and nothing else)."""
+        row = await self.session.get(MessageRow, message.id)
+        if row is None:
+            return
+        row.feedback = (
+            _FEEDBACK_VALUE[message.feedback] if message.feedback is not None else None
+        )
+        row.feedback_comment = message.feedback_comment
+        await self.session.flush()
+
+    async def delete_after(self, chat_id: UUID, seq: int) -> int:
+        """Delete the messages with a `seq` above this one; return how many."""
+        stmt = (
+            delete(MessageRow)
+            .where(MessageRow.chat_id == chat_id, MessageRow.seq > seq)
+            .returning(MessageRow.id)
+            .execution_options(synchronize_session="fetch")
+        )
+        return len((await self.session.execute(stmt)).all())
 
     async def last_seq(self, chat_id: UUID) -> int:
         """Return the highest `seq` of the chat, 0 for an empty chat."""

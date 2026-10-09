@@ -7,7 +7,8 @@
 #   scripts/local_down.sh      stop (add --wipe to delete the volumes)
 #
 # Hosts (LOCAL_DOMAIN defaults to `localhost`):
-#   id.localhost  sp.localhost  staff.localhost  admin.localhost  lms.localhost
+#   id.localhost  sp.localhost  app.localhost  staff.localhost  admin.localhost  lms.localhost
+#   library.localhost (books and materials; /b/, /sitemap.xml, /robots.txt, /opds/ come from the api)
 #   s.localhost (short links, /ai/ share viewer)  api.localhost  mcp.localhost
 #   localhost/r/<slug> (room pages)
 # Nothing here is a secret: every password and token below is a development value.
@@ -72,6 +73,14 @@ x-backend-env: &backend-env
   IHSP_OPENROUTER__MODE: ${IHSP_OPENROUTER__MODE:-fake}
   IHSP_OPENROUTER__API_KEY: # optional: set it in .env.local together with OPENROUTER__MODE=real
   IHSP_OPENROUTER__APP_URL: http://sp.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+  # Models per task and feature flags (docs/reference/settings.md); override them in
+  # .env.local. An empty value means "not set".
+  IHSP_AI__DEFAULT__MODEL: ${IHSP_AI__DEFAULT__MODEL:-anthropic/claude-haiku-4.5}
+  IHSP_AI__TASKS__STUDENT_CHAT_SMART__MODEL: ${IHSP_AI__TASKS__STUDENT_CHAT_SMART__MODEL:-}
+  IHSP_FEATURES__NOTEBOOKS: ${IHSP_FEATURES__NOTEBOOKS:-true}
+  IHSP_FEATURES__AI_ASSISTANT: ${IHSP_FEATURES__AI_ASSISTANT:-true}
+  IHSP_FEATURES__MAIL: ${IHSP_FEATURES__MAIL:-true}
+  IHSP_FEATURES__EMIS_SYNC: ${IHSP_FEATURES__EMIS_SYNC:-true}
   IHSP_SMTP_OUT__HOST: mailpit
   IHSP_SMTP_OUT__PORT: "1025"
   IHSP_SMTP_OUT__STARTTLS: "false"
@@ -79,21 +88,29 @@ x-backend-env: &backend-env
   IHSP_SMTP_OUT__SYSTEM_FROM: no-reply@ihsu.uz
   IHSP_URLS__ID: http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
   IHSP_URLS__SP: http://sp.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+  IHSP_URLS__APP: http://app.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
   IHSP_URLS__STAFF: http://staff.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
   IHSP_URLS__ADMIN: http://admin.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
   IHSP_URLS__LMS: http://lms.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+  IHSP_URLS__LIBRARY: http://library.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
   IHSP_URLS__SHARE: http://s.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
   IHSP_URLS__SHORT_LINKS: http://s.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
   IHSP_URLS__ROOMS: http://${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}/r
   IHSP_URLS__API: http://api.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
   IHSP_URLS__MCP: http://mcp.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+  # Installable app version served by GET /v1/app/version: `latest` is the newest build,
+  # `min_supported` the oldest one allowed to keep running (older clients update at once).
+  IHSP_APP__LATEST: ${IHSP_APP__LATEST:-1.0.0}
+  IHSP_APP__MIN_SUPPORTED: ${IHSP_APP__MIN_SUPPORTED:-1.0.0}
 
-x-cors-origins: &cors-origins http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://sp.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://staff.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://admin.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://lms.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+x-cors-origins: &cors-origins http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://sp.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://app.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://staff.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://admin.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://lms.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://library.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
 
 services:
   # ---------------------------------------------------------------- data stores
   postgres:
-    image: postgres:16
+    image: pgvector/pgvector:pg16
+    # HNSW index builds use parallel workers that need more than Docker's 64 MB /dev/shm.
+    shm_size: 256mb
     restart: unless-stopped
     logging: *logging
     environment:
@@ -368,9 +385,11 @@ services:
       APP_ENV: dev
       APP_HOST_ID: id.${LOCAL_DOMAIN:-localhost}
       APP_HOST_SP: sp.${LOCAL_DOMAIN:-localhost}
+      APP_HOST_APP: app.${LOCAL_DOMAIN:-localhost}
       APP_HOST_STAFF: staff.${LOCAL_DOMAIN:-localhost}
       APP_HOST_ADMIN: admin.${LOCAL_DOMAIN:-localhost}
       APP_HOST_LMS: lms.${LOCAL_DOMAIN:-localhost}
+      APP_HOST_LIBRARY: library.${LOCAL_DOMAIN:-localhost}
       APP_HOST_SHARE: s.${LOCAL_DOMAIN:-localhost}
       API_HOST: api.${LOCAL_DOMAIN:-localhost}
       MCP_HOST: mcp.${LOCAL_DOMAIN:-localhost}
@@ -388,9 +407,11 @@ services:
       IHSP_WEB_ID_URL: http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
       IHSP_WEB_HYDRA_URL: http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
       IHSP_WEB_SP_URL: http://sp.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+      IHSP_WEB_APP_URL: http://app.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
       IHSP_WEB_STAFF_URL: http://staff.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
       IHSP_WEB_ADMIN_URL: http://admin.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
       IHSP_WEB_LMS_URL: http://lms.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+      IHSP_WEB_LIBRARY_URL: http://library.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
       IHSP_WEB_SHARE_URL: http://s.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}/ai
       IHSP_WEB_SHORT_LINKS_URL: http://s.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
       IHSP_WEB_ROOMS_URL: http://${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
@@ -415,9 +436,11 @@ services:
       NGINX_ENVSUBST_FILTER: ^HOST_
       HOST_ID: id.${LOCAL_DOMAIN:-localhost}
       HOST_SP: sp.${LOCAL_DOMAIN:-localhost}
+      HOST_APP: app.${LOCAL_DOMAIN:-localhost}
       HOST_STAFF: staff.${LOCAL_DOMAIN:-localhost}
       HOST_ADMIN: admin.${LOCAL_DOMAIN:-localhost}
       HOST_LMS: lms.${LOCAL_DOMAIN:-localhost}
+      HOST_LIBRARY: library.${LOCAL_DOMAIN:-localhost}
       HOST_S: s.${LOCAL_DOMAIN:-localhost}
       HOST_API: api.${LOCAL_DOMAIN:-localhost}
       HOST_MCP: mcp.${LOCAL_DOMAIN:-localhost}

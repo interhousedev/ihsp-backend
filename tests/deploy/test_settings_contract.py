@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from app.settings import Settings
+from app.settings_loader import setting_exists
 from tests.deploy.helpers import (
     BACKEND_PROCESSES,
     LOCAL_ENV_SAMPLE,
@@ -18,7 +19,6 @@ from tests.deploy.helpers import (
 import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from pydantic import BaseModel
 
 pytestmark = requires_compose
 
@@ -33,19 +33,12 @@ SECRET_HOLDERS = ("identity", "worker")
 
 
 def _setting_exists(name: str) -> bool:
-    """Return True when IHSP_<SECTION>__<FIELD> names a field of Settings."""
-    parts = name.removeprefix("IHSP_").lower().split("__")
-    model: type[BaseModel] = Settings
-    for index, part in enumerate(parts):
-        field = model.model_fields.get(part)
-        if field is None:
-            return False
-        annotation = field.annotation
-        if index < len(parts) - 1:
-            if not (isinstance(annotation, type) and issubclass(annotation, BaseModel)):
-                return False
-            model = annotation
-    return True
+    """Return True when IHSP_<SECTION>__<FIELD> names a field of Settings.
+
+    Dict sections such as `IHSP_AI__TASKS__<TASK>__MODEL` are checked too, including
+    that the task name is a real one.
+    """
+    return setting_exists(name)
 
 
 def _env_names(text: str) -> set[str]:

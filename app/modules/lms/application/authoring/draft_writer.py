@@ -65,6 +65,19 @@ class StepDraftWriter:
         incoming = collect_ids(content.model_dump(mode="json"))
         if incoming - existing:
             existing |= await uow.revisions.known_ids(step.id)
+        return await self._finish(content, existing)
+
+    async def prepare_new(self, content: StepContent) -> PreparedContent:
+        """Prepare the first content of a step that is being created.
+
+        There are no known IDs yet, so every ID in the content is assigned by the
+        server; otherwise the same checks as `prepare`.
+        """
+        return await self._finish(content, set())
+
+    async def _finish(
+        self, content: StepContent, existing: set[str]
+    ) -> PreparedContent:
         try:
             assigned = assign_ids(content, existing)
         except ValueError as exc:

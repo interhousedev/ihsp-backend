@@ -14,13 +14,16 @@ from app.modules.files.domain.errors import (
     InvalidSizeError,
     TypeNotAllowedError,
 )
+from app.modules.files.domain.stored_file import StoredFile
 from app.shared.actor import Actor, Role
-from app.shared.contracts.files import FileScope
+from app.shared.base_error import ForbiddenError
+from app.shared.contracts.files import FilePurpose, FileScope
 
 MAX_NAME_LENGTH = 255
 SNIFF_BYTES = 65536  # libmagic needs more than 1 KiB to recognise OOXML
 PRESIGN_PUT_SECONDS = 300
 PRESIGN_GET_SECONDS = 60
+MAX_PRESIGN_GET_SECONDS = 3600  # longest ``ttl_seconds`` another module may ask for
 EXPIRY_GRACE = timedelta(days=14)
 EXPIRY_WARNING = timedelta(days=7)
 PENDING_TTL = timedelta(hours=24)
@@ -31,12 +34,25 @@ PDF = "application/pdf"
 DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
 XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+EPUB = "application/epub+zip"
 INLINE_TYPES = frozenset({PDF, "image/png", "image/jpeg"})
 
 _ZIP_FALLBACKS = frozenset({"application/zip", "application/octet-stream"})
 _TEXT_EXTRA = frozenset({"application/json", "application/xml"})
 _LOOSE_DECLARED = frozenset({"", "application/octet-stream"})
 _ZIP_MAGIC = b"PK\x03\x04"
+MB = 1024 * 1024
+GB = 1024 * MB
+LIBRARY_PURPOSES = frozenset(
+    {
+        FilePurpose.LIBRARY_BOOK,
+        FilePurpose.LIBRARY_COVER,
+        FilePurpose.LIBRARY_MATERIAL,
+    }
+)
+LIBRARIAN_ONLY_PURPOSES = frozenset(
+    {FilePurpose.LIBRARY_BOOK, FilePurpose.LIBRARY_COVER}
+)
 _CONTROL = re.compile(r"[\x00-\x1f\x7f]")
 _SAFE_EXTENSION = re.compile(r"\.[a-z0-9]{1,10}")
 
@@ -50,6 +66,7 @@ class TypeRule:
     detected: frozenset[str]
     text: bool = False
     zip_based: bool = False
+    loose_declared: bool = False  # browsers often send no type for it
 
 
 RULES: dict[str, TypeRule] = {
@@ -57,6 +74,13 @@ RULES: dict[str, TypeRule] = {
     ".docx": TypeRule(DOCX, frozenset({DOCX}), frozenset({DOCX}), zip_based=True),
     ".pptx": TypeRule(PPTX, frozenset({PPTX}), frozenset({PPTX}), zip_based=True),
     ".xlsx": TypeRule(XLSX, frozenset({XLSX}), frozenset({XLSX}), zip_based=True),
+    ".epub": TypeRule(
+        EPUB,
+        frozenset({EPUB}),
+        frozenset({EPUB}),
+        zip_based=True,
+        loose_declared=True,
+    ),
     ".txt": TypeRule(
         "text/plain", frozenset({"text/plain"}), frozenset({"text/plain"}), text=True
     ),
@@ -84,14 +108,41 @@ class FilesLimits:
     staff_quota_bytes: int
     file_max_bytes: int
     ai_text_max_bytes: int
+    library_file_max_bytes: int = 300 * MB  # LIBRARY__FILE_MAX_BYTES
+    library_student_quota_bytes: int = 300 * MB  # LIBRARY__STUDENT_QUOTA_BYTES
+    library_teacher_quota_bytes: int = 2 * GB  # LIBRARY__TEACHER_QUOTA_BYTES
+
+    def max_bytes_for(self, scope: FileScope) -> int:
+        """Return the size limit of one file in the scope."""
+        if scope == FileScope.LIBRARY:
+            return self.library_file_max_bytes
+        return self.file_max_bytes
 
     def quota_for(self, scope: FileScope) -> int | None:
-        """Return the quota of a scope, or None when the scope has no quota."""
+        """Return the quota of a scope, or None when the scope has no quota.
+
+        The library scope has quotas that depend on who uploads: see
+        ``quota_for_actor``.
+        """
         if scope == FileScope.STUDENT:
             return self.student_quota_bytes
         if scope == FileScope.STAFF:
             return self.staff_quota_bytes
         return None
+
+    def quota_for_actor(self, scope: FileScope, actor: Actor) -> int | None:
+        """Return the quota the actor's uploads in the scope count against.
+
+        In the library scope librarians and administrators have none, teachers have
+        their own quota, everyone else the student one; it is separate from FILE-5.
+        """
+        if scope != FileScope.LIBRARY:
+            return self.quota_for(scope)
+        if is_librarian(actor):
+            return None
+        if actor.has(Role.TEACHER):
+            return self.library_teacher_quota_bytes
+        return self.library_student_quota_bytes
 
 
 def normalize_name(raw: str) -> str:
@@ -128,7 +179,7 @@ def check_declared(name: str, declared: str) -> tuple[TypeRule, str]:
     normalized = normalize_content_type(declared)
     if normalized in rule.declared:
         return rule, normalized
-    if rule.text and normalized in _LOOSE_DECLARED:
+    if (rule.text or rule.loose_declared) and normalized in _LOOSE_DECLARED:
         return rule, rule.canonical
     raise TypeNotAllowedError(params={"extension": ext, "content_type": normalized})
 
@@ -138,7 +189,9 @@ def check_size(size: int, max_bytes: int) -> None:
     if size < 1:
         raise InvalidSizeError(params={"size": size})
     if size > max_bytes:
-        raise FileTooLargeError(params={"size": size, "max_bytes": max_bytes})
+        raise FileTooLargeError(
+            params={"size": size, "max_bytes": max_bytes, "max_mb": max_bytes // MB}
+        )
 
 
 def check_checksum(sha256_b64: str) -> str:
@@ -150,6 +203,15 @@ def check_checksum(sha256_b64: str) -> str:
     if len(raw) != SHA256_BYTES:
         raise InvalidChecksumError()
     return sha256_b64
+
+
+def checksum_hex(sha256_b64: str) -> str | None:
+    """Return the lower-case hex of a stored base64 SHA-256, or None if invalid."""
+    try:
+        raw = base64.b64decode(sha256_b64, validate=True)
+    except ValueError:
+        return None
+    return raw.hex() if len(raw) == SHA256_BYTES else None
 
 
 def detected_matches(rule: TypeRule, detected: str, head: bytes) -> bool:
@@ -174,6 +236,42 @@ def scope_for(actor: Actor) -> FileScope:
     if staff_roles & actor.roles:
         return FileScope.STAFF
     return FileScope.STUDENT
+
+
+def is_librarian(actor: Actor) -> bool:
+    """Librarians and administrators run the library."""
+    return actor.has(Role.LIBRARIAN) or actor.has(Role.ADMIN)
+
+
+def scope_for_purpose(purpose: FilePurpose, actor: Actor) -> FileScope:
+    """Library purposes live in the library scope; the rest follow the actor."""
+    if purpose in LIBRARY_PURPOSES:
+        return FileScope.LIBRARY
+    return scope_for(actor)
+
+
+def check_upload_role(purpose: FilePurpose, actor: Actor) -> None:
+    """Books and covers may only be uploaded by librarians and administrators."""
+    if purpose in LIBRARIAN_ONLY_PURPOSES and not is_librarian(actor):
+        raise ForbiddenError(params={"purpose": purpose.value})
+
+
+def check_scope_purpose(scope: FileScope, purpose: FilePurpose) -> None:
+    """`library_*` purposes belong to the library scope, and only they do."""
+    if (purpose in LIBRARY_PURPOSES) != (scope == FileScope.LIBRARY):
+        raise TypeNotAllowedError(
+            params={"purpose": purpose.value, "scope": scope.value}
+        )
+
+
+def may_read(file: StoredFile, actor: Actor) -> bool:
+    """The owner and administrators read a file; librarians also read library files.
+
+    Everyone else gets library files from the library, which checks its own rules.
+    """
+    if file.is_owned_by(actor.user_id) or actor.has(Role.ADMIN):
+        return True
+    return file.scope == FileScope.LIBRARY and actor.has(Role.LIBRARIAN)
 
 
 def month_label(now: datetime) -> str:

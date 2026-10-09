@@ -77,15 +77,18 @@ class TimetableEntryResponse(ApiModel):
     audience: list[AudienceItemResponse]
     valid_from: dt.date
     valid_to: dt.date | None
+    # "emis": imported from EMIS and kept equal to it; editing it makes it "manual".
+    source: Literal["manual", "emis"] = "manual"
 
 
 class ConflictResponse(ApiModel):
-    """Conflict."""
+    """Conflict; ``week_parity`` says in which weeks the other entry runs."""
 
     kind: Literal["teacher", "room", "audience"]
     with_entry_id: UUID | None
     with_lesson_id: UUID | None
     description: str
+    week_parity: WeekParityName | None = None
 
 
 class CheckResponse(BaseModel):

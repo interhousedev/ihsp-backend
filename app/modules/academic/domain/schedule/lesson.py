@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 from typing import Any, Literal
 from uuid import UUID
 
+from app.shared.lesson_kind import LessonKind
+
 LessonStatus = Literal["scheduled", "cancelled"]
 
 
@@ -33,6 +35,11 @@ class Lesson:
     topic: str | None = None
     changes: dict[str, Any] | None = None
     has_content: bool = False
+    kind: LessonKind = "other"
+    # The EMIS class this lesson mirrors; None for hand-made or hand-edited lessons.
+    emis_class_id: int | None = None
+    # The topic EMIS last sent; ``topic`` follows it until a teacher writes their own.
+    emis_topic: str | None = None
 
     def starts_after(self, now: dt.datetime) -> bool:
         """Return True if the lesson has not started yet."""

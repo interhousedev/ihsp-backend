@@ -95,5 +95,19 @@ class TextPageNotFoundError(NotFoundError):
     message_key = "files-page-not-found"
 
 
+class ImageNotSupportedError(ValidationFailedError):
+    """The image cannot be put into a PDF as it is; the user should send a JPEG."""
+
+    code = "files/image-unsupported"
+    message_key = "error-file-image-unsupported"
+
+
+class ImageCountError(ValidationFailedError):
+    """A PDF can be made from 1 to 20 images."""
+
+    code = "files/image-count"
+    message_key = "files-image-count"
+
+
 class TextExtractionError(Exception):
     """A text extractor could not read the file (never shown to users)."""

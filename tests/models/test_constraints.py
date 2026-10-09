@@ -17,6 +17,8 @@ from app.modules.academic.infrastructure.orm import (
     Term,
     TimetableEntry,
 )
+from app.modules.ai.infrastructure.orm import Chat as AiChat
+from app.modules.ai.infrastructure.orm import ChatMessage as AiChatMessage
 from app.modules.flashcards.infrastructure.orm import (
     Flashcard,
     FlashcardReview,
@@ -630,6 +632,52 @@ async def test_deleting_a_card_keeps_its_log_and_deleting_the_set_removes_it(
     await db.flush()
     remaining = await db.scalars(select(FlashcardReview))
     assert remaining.all() == []
+
+
+# - - - ai chats (schema ai) - - -
+
+
+async def test_a_chat_tier_is_fast_by_default_and_checked(db: AsyncSession) -> None:
+    """ai.chats: tier defaults to fast and accepts only fast or smart."""
+    plain = AiChat(owner_id=new_id(), assistant="student", title="T", model="m")
+    await saved(
+        db,
+        plain,
+        AiChat(
+            owner_id=new_id(), assistant="student", title="T", model="m", tier="smart"
+        ),
+    )
+    await db.refresh(plain)
+
+    assert plain.tier == "fast"
+    await assert_rejected(
+        db,
+        AiChat(
+            owner_id=new_id(), assistant="student", title="T", model="m", tier="turbo"
+        ),
+    )
+
+
+async def test_message_feedback_is_checked(db: AsyncSession) -> None:
+    """ai.chat_messages: feedback is 1 or -1; a comment needs a rating (max 500)."""
+    chat = AiChat(owner_id=new_id(), assistant="student", title="T", model="m")
+    await saved(db, chat)
+
+    def message(seq: int, **fields: Any) -> AiChatMessage:
+        return AiChatMessage(
+            chat_id=chat.id, seq=seq, role="assistant", content={"text": "a"}, **fields
+        )
+
+    await saved(
+        db,
+        message(1),
+        message(2, feedback=1),
+        message(3, feedback=-1, feedback_comment="x" * 500),
+    )
+    await assert_rejected(db, message(4, feedback=0))
+    await assert_rejected(db, message(5, feedback=2))
+    await assert_rejected(db, message(6, feedback_comment="no rating"))
+    await assert_rejected(db, message(7, feedback=1, feedback_comment="x" * 501))
 
 
 # - - - lms - - -

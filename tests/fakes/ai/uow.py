@@ -59,14 +59,19 @@ class FakeChatRepository:
         *,
         before: tuple[datetime, UUID] | None,
         limit: int,
+        title_contains: str | None = None,
+        course_id: UUID | None = None,
     ) -> list[Chat]:
         """Newest first, live chats of the owner after the cursor."""
+        needle = (title_contains or "").casefold()
         rows = [
             c
             for c in self.store.chats.values()
             if c.owner_id == owner_id
             and c.assistant is assistant
             and c.deleted_at is None
+            and needle in c.title.casefold()
+            and (course_id is None or c.course_id == course_id)
         ]
         rows.sort(key=lambda c: (c.last_message_at, c.id), reverse=True)
         if before is not None:
@@ -116,6 +121,21 @@ class FakeMessageRepository:
         for index, row in enumerate(rows):
             if row.seq == message.seq:
                 rows[index] = copy.deepcopy(message)
+
+    async def set_feedback(self, message: ChatMessage) -> None:
+        """Store the feedback and comment of the message with the same seq."""
+        for row in self._rows(message.chat_id):
+            if row.seq == message.seq:
+                row.feedback = message.feedback
+                row.feedback_comment = message.feedback_comment
+
+    async def delete_after(self, chat_id: UUID, seq: int) -> int:
+        """Delete the messages above `seq`; return how many."""
+        rows = self._rows(chat_id)
+        kept = [m for m in rows if m.seq <= seq]
+        removed = len(rows) - len(kept)
+        self.store.messages[chat_id] = kept
+        return removed
 
     async def last_seq(self, chat_id: UUID) -> int:
         """Highest seq, 0 when empty."""

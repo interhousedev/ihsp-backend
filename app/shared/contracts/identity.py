@@ -43,6 +43,7 @@ class UserPreferences(BaseModel):
     lessons_links_lead_min: int = 5
     lessons_prompt_enabled: bool = True
     mail_forward_to_telegram: bool = True
+    notify_push: bool = True  # Web Push is a second channel next to Telegram
     today_cards: list[str] = [
         "now",
         "timeline",

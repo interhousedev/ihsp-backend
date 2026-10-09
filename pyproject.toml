@@ -30,6 +30,7 @@ dependencies = [
     "python-docx>=1.2.0",
     "python-magic>=0.4.27",
     "python-multipart>=0.0.32",
+    "pywebpush>=2.5.0",
     "redis>=7.0,<8",
     "regex>=2026.9.29",
     "sqlalchemy[asyncio]>=2.0.54,<2.1",
@@ -105,6 +106,9 @@ module = [
     "docx.*",
     "icalendar",
     "icalendar.*",
+    "pywebpush",
+    "py_vapid",
+    "http_ece",
 ]
 ignore_missing_imports = true
 
@@ -113,6 +117,7 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"
 testpaths = ["tests"]
+markers = ["slow: performance tests (notebooks retrieval and chunking)"]
 filterwarnings = [
     "ignore::DeprecationWarning:aiobotocore.*",
     "ignore::DeprecationWarning:botocore.*",

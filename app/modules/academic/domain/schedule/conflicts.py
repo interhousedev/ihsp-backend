@@ -8,7 +8,10 @@ from uuid import UUID
 
 from app.modules.academic.domain import audience as audience_keys
 from app.modules.academic.domain.schedule.lesson import Lesson
-from app.modules.academic.domain.schedule.timetable_entry import TimetableEntry
+from app.modules.academic.domain.schedule.timetable_entry import (
+    TimetableEntry,
+    WeekParity,
+)
 
 ConflictKind = Literal["teacher", "room", "audience"]
 
@@ -27,6 +30,8 @@ class Conflict:
     with_entry_id: UUID | None
     with_lesson_id: UUID | None
     description: str
+    # Which weeks the other entry runs in; None when it is a lesson.
+    week_parity: WeekParity | None = None
 
     def to_json(self) -> dict[str, Any]:
         """Return the API shape of a Conflict."""
@@ -37,6 +42,7 @@ class Conflict:
                 str(self.with_lesson_id) if self.with_lesson_id else None
             ),
             "description": self.description,
+            "week_parity": self.week_parity,
         }
 
 
@@ -103,7 +109,8 @@ def entry_conflicts(
             shared_audience=audiences_overlap(candidate.audience, other.audience),
         )
         found.extend(
-            Conflict(kind, other.id, None, _DESCRIPTIONS[kind]) for kind in kinds
+            Conflict(kind, other.id, None, _DESCRIPTIONS[kind], other.week_parity)
+            for kind in kinds
         )
     return found
 

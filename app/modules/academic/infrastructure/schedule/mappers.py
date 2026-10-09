@@ -11,6 +11,8 @@ from app.modules.academic.domain.schedule.term import (
     Term,
     bells_from_json,
     bells_to_json,
+    control_periods_from_json,
+    control_periods_to_json,
     moved_days_from_json,
     moved_days_to_json,
 )
@@ -40,6 +42,7 @@ def term_to_entity(row: TermRow) -> Term:
         bells=bells_from_json(row.bells),
         non_study_days=list(row.non_study_days or []),
         moved_days=moved_days_from_json(row.moved_days),
+        control_periods=control_periods_from_json(row.control_periods),
     )
 
 
@@ -52,6 +55,7 @@ def term_apply(row: TermRow, term: Term) -> None:
     row.bells = bells_to_json(term.bells)
     row.non_study_days = list(term.non_study_days)
     row.moved_days = moved_days_to_json(term.moved_days)
+    row.control_periods = control_periods_to_json(term.control_periods)
 
 
 def term_new_row(term: Term) -> TermRow:
@@ -213,6 +217,7 @@ def entry_to_entity(row: EntryRow) -> TimetableEntry:
         audience=list(row.audience or []),
         valid_from=row.valid_from,
         valid_to=row.valid_to,
+        source=cast(Any, row.source),
     )
 
 
@@ -228,6 +233,7 @@ def entry_apply(row: EntryRow, entry: TimetableEntry) -> None:
     row.audience = list(entry.audience)
     row.valid_from = entry.valid_from
     row.valid_to = entry.valid_to
+    row.source = entry.source
 
 
 def entry_new_row(entry: TimetableEntry) -> EntryRow:
@@ -260,6 +266,9 @@ def lesson_to_entity(row: LessonRow, *, has_content: bool = False) -> Lesson:
         topic=row.topic,
         changes=dict(row.changes) if row.changes else None,
         has_content=has_content,
+        kind=cast(Any, row.kind),
+        emis_class_id=row.emis_class_id,
+        emis_topic=row.emis_topic,
     )
 
 
@@ -280,6 +289,9 @@ def lesson_apply(row: LessonRow, lesson: Lesson) -> None:
     row.changes = lesson.changes
     row.status = lesson.status
     row.is_overridden = lesson.is_overridden
+    row.kind = lesson.kind
+    row.emis_class_id = lesson.emis_class_id
+    row.emis_topic = lesson.emis_topic
 
 
 def lesson_new_row(lesson: Lesson) -> LessonRow:

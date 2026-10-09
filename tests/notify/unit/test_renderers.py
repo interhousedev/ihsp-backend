@@ -351,3 +351,60 @@ async def test_notifications_without_a_page_have_no_buttons(world: World) -> Non
         message.text_html
         == "<b>Account closing</b>\nYour account will be closed on 01.11."
     )
+
+
+async def test_ready_notebook_output_opens_the_artifact_as_a_mini_app(
+    world: World,
+) -> None:
+    """NB-21: bold title, kind and title of the output, and an Open notebook button."""
+    notebook_id, artifact_id = new_id(), new_id()
+    payload = {
+        "notebook_id": str(notebook_id),
+        "artifact_id": str(artifact_id),
+        "kind": "quiz",
+        "title": "Cells <1> & tissues",
+    }
+
+    message = await world.render(NotificationType.NOTEBOOK_ARTIFACT_READY, payload)
+
+    assert message == RenderedMessage(
+        text_html=(
+            "<b>Notebook output is ready</b>\n"
+            "Ready: Quiz “Cells &lt;1&gt; &amp; tissues”"
+        ),
+        buttons=[
+            [
+                {
+                    "text": "Open notebook",
+                    "web_app_url": (
+                        f"{URLS.sp}/notebooks/view/"
+                        f"?id={notebook_id}&artifact={artifact_id}"
+                    ),
+                }
+            ]
+        ],
+    )
+
+
+async def test_ready_notebook_output_is_rendered_in_the_language_of_the_reader(
+    world: World,
+) -> None:
+    """NB-21: the message and the button follow the locale of the account."""
+    payload = {
+        "notebook_id": str(new_id()),
+        "artifact_id": str(new_id()),
+        "kind": "report",
+        "title": "Клетка",
+    }
+
+    message = await world.render(
+        NotificationType.NOTEBOOK_ARTIFACT_READY, payload, locale="ru"
+    )
+
+    assert message is not None
+    assert message.text_html == (
+        "<b>Материал блокнота готов</b>\nГотово: Отчёт «Клетка»"
+    )
+    assert [b["text"] for row in message.buttons or [] for b in row] == [
+        "Открыть блокнот"
+    ]

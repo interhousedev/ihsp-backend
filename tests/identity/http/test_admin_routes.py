@@ -95,6 +95,19 @@ async def test_block_unblock_roles_and_sessions_routes(api: Api) -> None:
     assert api.world.store.sessions[session.id].revoked_at is not None
 
 
+async def test_roles_route_grants_the_librarian_role(api: Api) -> None:
+    """ADM-5, LIB-1: a student can also be a librarian."""
+    await api.admin()
+    user = await api.world.add_user()
+
+    response = await api.client.post(
+        f"/v1/admin/users/{user.id}/roles", json={"grant": ["librarian"], "revoke": []}
+    )
+
+    assert response.status_code == 200
+    assert sorted(response.json()["roles"]) == ["librarian", "student"]
+
+
 async def test_blocking_yourself_is_403(api: Api) -> None:
     """A safeguard: id/self-action-forbidden."""
     admin = await api.admin()

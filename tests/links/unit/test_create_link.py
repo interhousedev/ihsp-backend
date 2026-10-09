@@ -11,6 +11,7 @@ from app.modules.links.domain.errors import (
 from app.modules.links.domain.link import LinkKind
 from app.shared.actor import Role
 from app.shared.base_error import ForbiddenError, RateLimitedError
+from app.shared.contracts.files import FilePurpose, FileScope
 from tests.fakes.clock import FixedClock
 from tests.fakes.links.world import LinksWorld
 
@@ -47,6 +48,25 @@ async def test_file_link_gets_an_eight_character_slug(world: LinksWorld) -> None
 
     assert len(view.link.slug) == 8
     assert view.file == file
+
+
+@pytest.mark.parametrize(
+    "purpose",
+    [FilePurpose.LIBRARY_BOOK, FilePurpose.LIBRARY_COVER, FilePurpose.LIBRARY_MATERIAL],
+)
+async def test_library_files_never_get_a_short_link(
+    world: LinksWorld, purpose: FilePurpose
+) -> None:
+    """LIB-3: library files are served by the library, never through `/s/{slug}`."""
+    ann = world.person("Ann")
+    file = world.files.add(ann.user_id, purpose=purpose, scope=FileScope.LIBRARY)
+
+    with pytest.raises(FileNotReadyError):
+        await world.services.create_link.execute(
+            ann, kind=LinkKind.FILE, file_id=file.id
+        )
+
+    assert world.uow.store.links == {}
 
 
 @pytest.mark.parametrize("status", ["pending", "processing", "rejected", "deleted"])

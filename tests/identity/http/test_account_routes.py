@@ -98,6 +98,24 @@ async def test_patch_preferences_merges_and_returns_the_document(api: Api) -> No
     assert cleared.json()["theme"] == "dark"
 
 
+async def test_push_notifications_are_on_by_default_and_can_be_switched_off(
+    api: Api,
+) -> None:
+    """Web Push is a second channel; each account can opt out of it."""
+    user = await api.world.add_user()
+    api.login_as(user)
+
+    fresh = await api.client.get(ME)
+    off = await api.client.patch(f"{ME}/preferences", json={"notify_push": False})
+    after = await api.client.get(ME)
+    invalid = await api.client.patch(f"{ME}/preferences", json={"notify_push": None})
+
+    assert fresh.json()["preferences"]["notify_push"] is True
+    assert off.json()["notify_push"] is False
+    assert after.json()["preferences"]["notify_push"] is False
+    assert invalid.status_code == 422
+
+
 async def test_patch_preferences_rejects_unknown_and_invalid_values(api: Api) -> None:
     """Validation errors are 422."""
     user = await api.world.add_user()

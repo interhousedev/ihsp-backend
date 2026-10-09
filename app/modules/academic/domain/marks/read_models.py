@@ -82,6 +82,8 @@ class LessonRow:
     attendance_roster: tuple[UUID, ...] | None
     attendance_absent: tuple[UUID, ...] | None
     attendance_excused: dict[str, Any] | None
+    kind: str = "other"
+    emis_topic: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

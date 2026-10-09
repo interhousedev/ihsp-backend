@@ -15,6 +15,7 @@ class Role(StrEnum):
     TEACHER = "teacher"
     ADMIN = "admin"
     LMS_ADMIN = "lms_admin"
+    LIBRARIAN = "librarian"
 
 
 @dataclass(frozen=True, slots=True)

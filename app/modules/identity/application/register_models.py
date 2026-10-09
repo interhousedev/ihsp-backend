@@ -22,10 +22,6 @@ class EmisRequestError(Exception):
     """EMIS did not answer, or answered with something unexpected."""
 
 
-class EmisNotConfiguredError(EmisRequestError):
-    """An EMIS call that IHSP knows it needs but whose endpoint is not set up yet."""
-
-
 class CredentialNotFoundError(Exception):
     """The Vault secret does not exist (never written, or destroyed)."""
 

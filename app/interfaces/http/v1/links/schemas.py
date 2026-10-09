@@ -11,6 +11,7 @@ from app.modules.links.application.views import (
     ResourceView,
 )
 from app.shared.contracts.files import FileRef
+from app.shared.contracts.links import EMIS_AUTHOR_ID
 
 from pydantic import BaseModel
 
@@ -26,7 +27,7 @@ class PersonRef(BaseModel):
 class UsedBy(BaseModel):
     """Where a file is used."""
 
-    kind: Literal["link", "lesson", "chat"]
+    kind: Literal["link", "lesson", "chat", "notebook"]
     id: UUID
     label: str
 
@@ -81,6 +82,7 @@ class ResourceItem(BaseModel):
     hidden: bool
     file: FileItem | None
     created_at: datetime
+    source: Literal["user", "emis"] = "user"
 
 
 class ModerationItem(BaseModel):
@@ -162,6 +164,7 @@ def resource_item(view: ResourceView) -> ResourceItem:
         hidden=link.is_hidden,
         file=file_item(view.file, view),
         created_at=link.created_at,
+        source="emis" if link.owner_id == EMIS_AUTHOR_ID else "user",
     )
 
 

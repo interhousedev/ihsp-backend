@@ -1,8 +1,9 @@
 """Idempotent bucket bootstrap for an S3-compatible server (RustFS in dev).
 
-Creates the bucket, its CORS rules (browser uploads with presigned PUT) and the
-lifecycle rules. Needs ``aiobotocore``. Environment: S3_ENDPOINT_URL, S3_ACCESS_KEY,
-S3_SECRET_KEY, S3_BUCKET, S3_CORS_ORIGINS (comma separated).
+Creates the bucket, its CORS rules (browser uploads with presigned PUT, and reads with
+Range for the PDF reader of the library and sp apps) and the lifecycle rules. Needs
+``aiobotocore``. Environment: S3_ENDPOINT_URL, S3_ACCESS_KEY, S3_SECRET_KEY, S3_BUCKET,
+S3_CORS_ORIGINS (comma separated).
 """
 
 import asyncio
@@ -47,7 +48,15 @@ async def main() -> None:
                         "AllowedOrigins": os.environ["S3_CORS_ORIGINS"].split(","),
                         "AllowedMethods": ["GET", "HEAD", "PUT"],
                         "AllowedHeaders": ["*"],
-                        "ExposeHeaders": ["ETag", "x-amz-checksum-sha256"],
+                        # The readers (library, sp) load books with HTTP Range requests
+                        # and need the range headers of the answer.
+                        "ExposeHeaders": [
+                            "ETag",
+                            "x-amz-checksum-sha256",
+                            "Accept-Ranges",
+                            "Content-Range",
+                            "Content-Length",
+                        ],
                         "MaxAgeSeconds": 3600,
                     }
                 ]

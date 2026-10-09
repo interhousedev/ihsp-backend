@@ -59,6 +59,16 @@ def fmt_datetime(value: Any) -> str:
     return parsed.strftime("%d.%m.%Y")
 
 
+def fmt_time(value: Any) -> str:
+    """Format an aware datetime or ISO string as HH:MM in Tashkent ("" otherwise)."""
+    parsed = _parse(value)
+    if not isinstance(parsed, datetime):
+        return ""
+    if parsed.tzinfo is not None:
+        parsed = to_local(parsed)
+    return parsed.strftime("%H:%M")
+
+
 def fmt_number(value: Any) -> str:
     """Show floats with two decimals and everything else as it is."""
     if isinstance(value, float):

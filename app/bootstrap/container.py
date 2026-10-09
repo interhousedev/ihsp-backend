@@ -26,8 +26,10 @@ if TYPE_CHECKING:
     from app.modules.flashcards.wiring import FlashcardsServices
     from app.modules.identity.wiring import IdentityModule
     from app.modules.links.wiring import LinksServices
+    from app.modules.library.wiring import LibraryServices
     from app.modules.lms.wiring import LmsModule
     from app.modules.mail.wiring import MailServices
+    from app.modules.notebooks.wiring import NotebooksServices
     from app.modules.notify.wiring import NotifyServices
 
 # A module the current process does not build stays None (tests set what they need).
@@ -57,6 +59,8 @@ class Container:
     flashcards: "FlashcardsServices" = NOT_BUILT
     mail: "MailServices" = NOT_BUILT
     lms: "LmsModule" = NOT_BUILT
+    notebooks: "NotebooksServices" = NOT_BUILT
+    library: "LibraryServices" = NOT_BUILT
     admin_tools: AdminToolBackend = NOT_BUILT
     mcp_audit: "McpAuditPort" = NOT_BUILT
     mcp_connector_courses: "ConnectorCoursesPort" = NOT_BUILT

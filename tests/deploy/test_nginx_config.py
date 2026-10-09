@@ -14,9 +14,11 @@ NGINX_IMAGE = "nginx:1.27-alpine"
 HOST_ENV = {
     "HOST_ID": "id.ihsu.test",
     "HOST_SP": "sp.ihsu.test",
+    "HOST_APP": "app.ihsu.test",
     "HOST_STAFF": "staff.ihsu.test",
     "HOST_ADMIN": "admin.ihsu.test",
     "HOST_LMS": "lms.ihsu.test",
+    "HOST_LIBRARY": "library.ihsu.test",
     "HOST_S": "s.ihsu.test",
     "HOST_API": "api.ihsu.test",
     "HOST_MCP": "mcp.ihsu.test",
@@ -107,3 +109,43 @@ def test_the_api_routes_send_identity_paths_to_identity() -> None:
     assert route.index("teachers/[^/]+/profile") < route.index("(users|teachers|audit)")
     assert "location ^~ /telegram/" in route
     assert "location ^~ /internal/" in route
+
+
+def test_the_library_route_sends_public_pages_to_the_api_and_the_rest_to_web() -> None:
+    route = (MATERIALS_DIR / "nginx" / "common" / "route-library.inc").read_text()
+    for location in (
+        "location ^~ /b/ {",
+        "location = /sitemap.xml {",
+        "location = /robots.txt {",
+        "location ^~ /opds/ {",
+    ):
+        body = route.split(location, 1)[1].split("}", 1)[0]
+        assert "proxy_pass $up_api;" in body, location
+        # the Host header reaches the api unchanged, as for the room pages
+        assert "/etc/nginx/ihsp/proxy.inc;" in body, location
+    # everything else is the static app; student projects (/p/) are not routed yet
+    assert (
+        "location / {\n    include /etc/nginx/ihsp/proxy.inc;\n    proxy_pass $up_web;"
+        in route
+    )
+    assert "location ^~ /p/" not in route
+    assert route.count("proxy_pass $up_api;") == 4
+
+
+@pytest.mark.parametrize("mode", ["local", "prod"])
+def test_the_library_host_has_its_own_route(mode: str, tmp_path: Path) -> None:
+    mounts: list[str] = []
+    if mode == "prod":
+        if shutil.which("openssl") is None:
+            pytest.skip("openssl is not installed")
+        _self_signed(tmp_path)
+        mounts = [f"{tmp_path}:/etc/letsencrypt:ro"]
+    dump = _nginx(mode, mounts, "-T").stdout
+    servers = dump.split("\nserver {")
+    library = next(s for s in servers if "server_name library.ihsu.test;" in s)
+    assert "include /etc/nginx/ihsp/route-library.inc;" in library
+    # nginx -T appends the included files: the library route is in the tested config
+    assert "location ^~ /opds/ {" in dump
+    # the other static hosts keep the plain static route
+    lms = next(s for s in servers if "server_name lms.ihsu.test;" in s)
+    assert "include /etc/nginx/ihsp/route-static.inc;" in lms

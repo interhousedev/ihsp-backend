@@ -6,9 +6,9 @@ from uuid import UUID
 from app.modules.ai.application.chat_views import ChatViews
 from app.modules.ai.application.late_bindings import LateBindings
 from app.modules.ai.application.locale import LocaleResolver
+from app.modules.ai.application.owned_chat import ChatGuard
 from app.modules.ai.application.pending_calls import expire_overdue
 from app.modules.ai.application.views import ChatDetailView
-from app.modules.ai.domain.errors import ChatNotFoundError
 from app.modules.ai.ports.unit_of_work import AiUnitOfWork
 from app.shared.actor import Actor
 from app.shared.clock import Clock
@@ -21,6 +21,7 @@ class GetChat:
         self,
         *,
         uow_factory: Callable[[], AiUnitOfWork],
+        guard: ChatGuard,
         clock: Clock,
         locale: LocaleResolver,
         views: ChatViews,
@@ -28,6 +29,7 @@ class GetChat:
     ) -> None:
         """Store the collaborators."""
         self.uow_factory = uow_factory
+        self.guard = guard
         self.clock = clock
         self.locale = locale
         self.views = views
@@ -37,9 +39,7 @@ class GetChat:
         """Return the chat or raise ChatNotFoundError (also for other people's)."""
         now = self.clock.now()
         async with self.uow_factory() as uow:
-            chat = await uow.chats.get(chat_id)
-            if chat is None or chat.deleted_at or chat.owner_id != actor.user_id:
-                raise ChatNotFoundError()
+            chat = await self.guard.owned(uow, actor, chat_id)
             if await expire_overdue(uow, chat, now):
                 await uow.commit()
             messages = await uow.messages.list_range(

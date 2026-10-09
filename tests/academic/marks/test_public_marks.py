@@ -16,7 +16,7 @@ async def test_subjects_summary(services: MarksServices, env: Env) -> None:
     physics, math = summaries
     assert (physics.semester_mark, physics.absences) == (3.0, 0)
     assert math.subject_id == env.world.math_id
-    assert math.semester_mark == 4.0
+    assert math.semester_mark == 4.5  # lesson 4.0 and midterm 5.0, no final yet
     assert math.emis_rating == 90
     assert (math.absences, math.lessons_with_attendance) == (1, 1)
     assert math.teacher_names == ("Bobur Aliev",)

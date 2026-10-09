@@ -10,6 +10,7 @@ from tests.files.helpers import (
     EXE_BYTES,
     PNG_BYTES,
     make_docx,
+    make_epub,
     make_pdf,
     real_jpeg,
     real_png,
@@ -34,6 +35,7 @@ def sniffer() -> ContentSniffer:
         ("a.png", real_png(), "image/png"),
         ("a.jpg", real_jpeg(), "image/jpeg"),
         ("a.docx", make_docx("hello"), DOCX_TYPE),
+        ("a.epub", make_epub(["<p>hello</p>"]), "application/epub+zip"),
         ("a.txt", "Привет, мир".encode(), "text/plain"),
         ("a.md", b"# Title\n\ntext", "text/plain"),
     ],
@@ -59,3 +61,15 @@ async def test_an_executable_and_a_png_do_not_pass_as_pdf(
     for data in (EXE_BYTES, PNG_BYTES):
         detected = await sniffer.sniff(data)
         assert not policy.detected_matches(rule, detected, data)
+
+
+async def test_a_docx_renamed_to_epub_does_not_pass_as_an_epub(
+    sniffer: ContentSniffer,
+) -> None:
+    """The real type must fit the extension, also for zip-based formats."""
+    rule = policy.RULES[".epub"]
+    data = make_docx("hello")
+
+    detected = await sniffer.sniff(data)
+
+    assert not policy.detected_matches(rule, detected, data[:16])

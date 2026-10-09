@@ -7,8 +7,10 @@ from typing import Any, Literal, cast
 from app.bootstrap.adapters.admin_tools import AdminToolBackendAdapter
 from app.bootstrap.adapters.emis_source import make_emis_source
 from app.bootstrap.adapters.lazy_proxy import LazyProxy
+from app.bootstrap.adapters.library_academic import LibraryAcademicAdapter
 from app.bootstrap.adapters.mail_suspension import MailSuspensionAdapter
 from app.bootstrap.adapters.mcp_ports import ConnectorCoursesAdapter, McpAuditAdapter
+from app.bootstrap.adapters.notebook_terms import NotebookTermsAdapter
 from app.bootstrap.adapters.signature_sniffer import SignatureSniffer
 from app.bootstrap.adapters.telegram import make_telegram_sender
 from app.bootstrap.adapters.term_resolver import TermResolverAdapter
@@ -16,13 +18,18 @@ from app.bootstrap.adapters.usage_resolver import UsageResolverAdapter
 from app.bootstrap.container import Container, build_infrastructure
 from app.modules.academic.wiring import (
     AcademicModule,
+    build_assessments,
     build_classwork,
     build_emis_import,
     build_marks,
     build_schedule,
 )
 from app.modules.admin.wiring import build as build_admin
-from app.modules.ai.infrastructure.gateway_factory import make_llm_gateway
+from app.modules.ai.infrastructure.gateway_factory import (
+    make_embedding_gateway,
+    make_llm_gateway,
+    make_web_search_gateway,
+)
 from app.modules.ai.wiring import build as build_ai
 from app.modules.files.ports.content_sniffer import ContentSniffer
 from app.modules.files.wiring import build as build_files
@@ -34,14 +41,22 @@ from app.modules.identity.infrastructure.hydra.factory import build_hydra_admin
 from app.modules.identity.ports.email_sender import EmailSender
 from app.modules.identity.ports.hydra_gateway import HydraGateway
 from app.modules.identity.wiring import build as build_identity
+from app.modules.library.wiring import build as build_library
 from app.modules.links.wiring import build as build_links
 from app.modules.lms.wiring import build as build_lms
+from app.modules.notebooks.infrastructure.web_fetcher import HttpWebFetcher
+from app.modules.notebooks.wiring import build as build_notebooks
+from app.modules.notebooks.wiring_studio import LmsApplyPorts
 from app.modules.notify.infrastructure.outbox_writer import write_notifications
+from app.modules.notify.ports.push_sender import PushSender
 from app.modules.notify.wiring import build as build_notify
+from app.modules.vectors.wiring import build as build_vectors
 from app.settings import Settings
 from app.shared.clock import Clock
 from app.shared.contracts.ai import AiQueries, LlmGateway
+from app.shared.contracts.embeddings import EmbeddingIndex
 from app.shared.contracts.notify import TelegramSender
+from app.shared.features import Feature, is_enabled
 from app.shared.rate_limit import RateLimiter
 from app.shared.tasks import TaskKicker
 from app.shared.wiring import ModuleDeps
@@ -92,6 +107,7 @@ class BuildOverrides:
     email_sender: EmailSender | None = None
     telegram: TelegramSender | None = None
     llm: LlmGateway | None = None
+    push: PushSender | None = None
 
 
 def make_deps(container: Container) -> ModuleDeps:
@@ -128,6 +144,8 @@ class _Assembler:
         self.usage_links: LazyProxy[Any] = LazyProxy("links (files usage)")
         self.usage_ai: LazyProxy[Any] = LazyProxy("ai (files usage)")
         self.ai_proxy: LazyProxy[AiQueries] = LazyProxy("ai (links)")
+        self.usage_notebooks: LazyProxy[Any] = LazyProxy("notebooks (files usage)")
+        self.llm: LlmGateway | None = overrides.llm
         self.deps = make_deps(container)
 
     def add_closer(self, closer: Callable[[], Awaitable[None]]) -> None:
@@ -150,6 +168,8 @@ class _Assembler:
         if self.plan.lms:
             self.build_lms()
         if self.plan.full:
+            self.build_library()
+            self.build_notebooks()
             self.build_mcp_ports()
 
     # - - - Steps - - -
@@ -200,7 +220,11 @@ class _Assembler:
         c = self.container
         schedule = c.academic.schedule
         usage = (
-            UsageResolverAdapter(self.usage_links.view, self.usage_ai.view)
+            UsageResolverAdapter(
+                self.usage_links.view,
+                self.usage_ai.view,
+                self.usage_notebooks.view,
+            )
             if self.plan.full
             else None
         )
@@ -264,6 +288,7 @@ class _Assembler:
             schedule=schedule,
             emis=source,
             identity_commands=identity.commands,
+            urls=links.public,
         )
         marks = build_marks(
             self.deps,
@@ -274,12 +299,14 @@ class _Assembler:
             enrollment=schedule.enrollment,
             links=links.public,
             bell_sync=emis_import.sync_class_hours,
+            timetable_sync=emis_import.sync_group_timetable,
         )
         c.academic = AcademicModule(
             schedule=schedule,
             classwork=classwork,
             marks=marks,
             emis_import=emis_import,
+            assessments=build_assessments(self.deps, identity=identity.directory),
         )
 
     def build_mail(self) -> None:
@@ -310,7 +337,10 @@ class _Assembler:
             mail=c.mail.public if c.mail is not None else cast(Any, None),
             files=c.files.public,
             telegram=c.telegram,
+            push=self.overrides.push,
         )
+        for closer in c.notify.closers:
+            self.add_closer(closer)
         self.register_bot_renderers()
         c.admin = build_admin(
             self.deps, identity=c.identity.directory, schedule=schedule
@@ -330,9 +360,10 @@ class _Assembler:
         c = self.container
         tools = AdminToolBackendAdapter(c)
         c.admin_tools = tools
+        self.llm = self.overrides.llm or make_llm_gateway(c.settings)
         ai = build_ai(
             self.deps,
-            llm=self.overrides.llm or make_llm_gateway(c.settings),
+            llm=self.llm,
             identity=c.identity.directory,
             schedule=c.academic.schedule.queries,
             classwork=c.academic.classwork.queries,
@@ -341,6 +372,7 @@ class _Assembler:
             flashcards=c.flashcards.public,
             admin_tools=tools,
             links=c.links.public,
+            web_search=make_web_search_gateway(c.settings, self.llm),
         )
         ai.bindings.share_lookup = c.links.public
         self.ai_proxy.bind(ai.public)
@@ -353,6 +385,66 @@ class _Assembler:
         c.lms = build_lms(
             self.deps, identity=c.identity.directory, files=c.files.public
         )
+
+    def build_library(self) -> None:
+        """Library: books, materials and the UniLibrary base; before notebooks."""
+        c = self.container
+        c.library = build_library(
+            self.deps,
+            identity=c.identity.directory,
+            files=c.files.public,
+            academic=LibraryAcademicAdapter(c.academic.schedule, c.clock),
+        )
+
+    def build_embeddings(self, llm: LlmGateway) -> EmbeddingIndex | None:
+        """The vectors module's index; None when search by meaning is switched off."""
+        settings = self.container.settings
+        if not is_enabled(settings, Feature.VECTOR_SEARCH):
+            return None
+        gateway = make_embedding_gateway(settings, llm)
+        return build_vectors(self.deps, gateway=gateway).index
+
+    def build_notebooks(self) -> None:
+        """Notebooks: built after AI and LMS; the assistant reaches it late-bound."""
+        c = self.container
+        llm = self.llm or self.overrides.llm or make_llm_gateway(c.settings)
+        notebooks = build_notebooks(
+            self.deps,
+            llm=llm,
+            identity=c.identity.directory,
+            files=c.files.public,
+            ai=c.ai.public,
+            links=c.links.public,
+            schedule=c.academic.schedule.queries,
+            flashcards=c.flashcards.public,
+            lms=c.lms.learning.source_reader if self.plan.lms else None,
+            library=c.library.bridge.source_reader,
+            fetcher=HttpWebFetcher(),
+            classwork=c.academic.classwork.queries,
+            terms=NotebookTermsAdapter(c.academic.schedule.current_term),
+            web_search=c.ai.web_search,
+            workspace=c.lms.authoring.workspace if self.plan.lms else None,
+            embeddings=self.build_embeddings(llm),
+            lms_apply=(
+                LmsApplyPorts(
+                    workspace=c.lms.authoring.workspace_commands,
+                    queries=c.lms.authoring.queries,
+                    drafts=c.lms.authoring.draft_commands,
+                )
+                if self.plan.lms
+                else None
+            ),
+        )
+        c.ai.bindings.notebooks = notebooks.public
+        c.ai.bindings.notebooks_commands = notebooks.commands
+        if self.plan.lms:  # the course author assistant (lms_author)
+            authoring = c.lms.authoring
+            c.ai.bindings.lms_workspace = authoring.workspace
+            c.ai.bindings.lms_workspace_commands = authoring.workspace_commands
+            c.ai.bindings.lms_queries = authoring.queries
+            c.ai.bindings.lms_draft_commands = authoring.draft_commands
+        self.usage_notebooks.bind(notebooks.public)
+        c.notebooks = notebooks
 
     def build_mcp_ports(self) -> None:
         """Ports the MCP servers need beyond the contracts."""

@@ -1,5 +1,6 @@
 """ORM models of the academic module (schema ``academic``)."""
 
+from app.modules.academic.infrastructure.orm.assessment import Assessment
 from app.modules.academic.infrastructure.orm.group import Group
 from app.modules.academic.infrastructure.orm.homework_todo import HomeworkTodo
 from app.modules.academic.infrastructure.orm.lesson import Lesson
@@ -13,6 +14,7 @@ from app.modules.academic.infrastructure.orm.term import Term
 from app.modules.academic.infrastructure.orm.timetable_entry import TimetableEntry
 
 __all__ = [
+    "Assessment",
     "Group",
     "HomeworkTodo",
     "Lesson",

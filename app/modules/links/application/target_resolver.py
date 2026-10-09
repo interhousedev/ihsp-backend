@@ -8,7 +8,7 @@ from app.modules.links.domain.link import LinkKind
 from app.modules.links.domain.url_policy import UrlPolicy
 from app.modules.links.ports.title_fetcher import TitleFetcher
 from app.shared.actor import Actor
-from app.shared.contracts.files import FilePurpose, FileRef, FilesApi
+from app.shared.contracts.files import FilePurpose, FileRef, FilesApi, FileScope
 
 READY = "ready"
 
@@ -62,4 +62,5 @@ def _usable(file: FileRef | None, actor: Actor) -> bool:
         and file.owner_id == actor.user_id
         and file.status == READY
         and file.purpose != FilePurpose.MAIL
+        and file.scope != FileScope.LIBRARY  # the library serves its own files
     )

@@ -82,3 +82,25 @@ class NoTurnLock:
     async def hold(self, chat_id: UUID) -> AsyncIterator[None]:
         """Do nothing."""
         yield
+
+
+class InMemorySearchQuotaStore:
+    """SearchQuotaStore without Redis."""
+
+    def __init__(self) -> None:
+        """Start empty."""
+        self.days: dict[tuple[UUID, date], int] = {}
+
+    async def used(self, user_id: UUID, day: date) -> int:
+        """Return a day's searches."""
+        return self.days.get((user_id, day), 0)
+
+    async def add(self, user_id: UUID, day: date, units: int) -> int:
+        """Count searches and return the total."""
+        total = self.days.get((user_id, day), 0) + units
+        self.days[(user_id, day)] = total
+        return total
+
+    async def remove(self, user_id: UUID, day: date, units: int) -> None:
+        """Give searches back."""
+        self.days[(user_id, day)] = max(self.days.get((user_id, day), 0) - units, 0)

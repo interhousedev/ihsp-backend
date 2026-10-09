@@ -65,6 +65,8 @@ def test_lesson_item_has_exactly_the_contract_fields() -> None:
         "is_overridden",
         "changes",
         "topic",
+        "kind",
+        "topic_source",
         "has_homework",
         "attendance_submitted",
     }
@@ -114,3 +116,14 @@ def test_teacher_and_changes_are_passed_through() -> None:
     assert item["teacher"] == teacher
     assert item["changes"] == changes
     assert item["is_overridden"] is True
+
+
+def test_kind_and_topic_source_come_from_the_lesson() -> None:
+    """EMIS labels: the exam kind, and who wrote the topic."""
+    ref = _ref(kind="midterm", topic="Jadids", topic_source="emis")
+
+    item = _item(ref)
+
+    assert (item["kind"], item["topic_source"]) == ("midterm", "emis")
+    plain = _item(_ref())
+    assert (plain["kind"], plain["topic_source"]) == ("other", None)

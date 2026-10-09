@@ -12,10 +12,14 @@ from app.modules.academic.application.marks.get_semester_grades import (
 from app.modules.academic.application.marks.get_subject_detail import (
     GetSubjectDetail,
 )
+from app.modules.academic.application.marks.get_subject_planner import (
+    GetSubjectPlanner,
+)
 from app.modules.academic.application.marks.get_sync_failures import GetSyncFailures
 from app.modules.academic.application.marks.list_subjects import ListSubjects
 from app.modules.academic.application.marks.list_sync_runs import ListSyncRuns
 from app.modules.academic.application.marks.ports.bell_sync import BellSync
+from app.modules.academic.application.marks.ports.timetable_sync import TimetableSync
 from app.modules.academic.application.marks.run_manual_sync import RunManualSync
 from app.modules.academic.application.marks.sync_all import SyncAll
 from app.modules.academic.application.marks.sync_student import SyncStudent
@@ -39,6 +43,7 @@ class MarksServices:
     list_sync_runs: ListSyncRuns
     list_subjects: ListSubjects
     get_subject_detail: GetSubjectDetail
+    get_subject_planner: GetSubjectPlanner
     get_semester_grades: GetSemesterGrades
     get_day_grades: GetDayGrades
     get_record_book: GetRecordBook
@@ -56,6 +61,7 @@ def build_marks(
     enrollment: AcademicEnrollment,
     links: LinksApi,
     bell_sync: BellSync,
+    timetable_sync: TimetableSync,
 ) -> MarksServices:
     """Wire the marks use cases to SQL repositories and other modules' contracts."""
 
@@ -84,6 +90,7 @@ def build_marks(
             uow_factory=uow_factory,
             sync_student=sync_student,
             bell_sync=bell_sync,
+            timetable_sync=timetable_sync,
             identity=identity,
             clock=deps.clock,
         ),
@@ -100,6 +107,9 @@ def build_marks(
         ),
         get_subject_detail=GetSubjectDetail(
             uow_factory=uow_factory, identity=identity, links=links, clock=deps.clock
+        ),
+        get_subject_planner=GetSubjectPlanner(
+            uow_factory=uow_factory, identity=identity
         ),
         get_semester_grades=GetSemesterGrades(
             uow_factory=uow_factory, identity=identity

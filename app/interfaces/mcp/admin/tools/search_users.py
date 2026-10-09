@@ -22,7 +22,7 @@ def register(kit: ToolKit) -> None:
             ),
         ],
         roles: Annotated[
-            list[Literal["student", "teacher", "admin", "lms_admin"]] | None,
+            list[Literal["student", "teacher", "admin", "lms_admin", "librarian"]] | None,
             Field(description="Only users with one of these roles."),
         ] = None,
         limit: Annotated[int, Field(ge=1, le=50, description="Most results.")] = 20,

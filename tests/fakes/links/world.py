@@ -38,6 +38,7 @@ class LinksWorld:
     flashcards: FakeFlashcards
     titles: FakeTitleFetcher
     redis: Redis
+    kicker: FakeTaskKicker
     people: dict[str, Actor] = field(default_factory=dict)
 
     def person(self, name: str, *roles: Role, last_name: str | None = None) -> Actor:
@@ -65,12 +66,13 @@ def build_world(
     files, schedule, identity = FakeFiles(), FakeSchedule(), FakeIdentity()
     ai, flashcards, titles = FakeAi(), FakeFlashcards(), FakeTitleFetcher()
     uow = FakeUowFactory()
+    kicker = FakeTaskKicker()
     deps = ModuleDeps(
         settings=settings,
         clock=clock,
         redis=redis,
         sessionmaker=sessionmaker,
-        kicker=FakeTaskKicker(),
+        kicker=kicker,
         rate_limiter=RateLimiter(redis),
         i18n=i18n,
         outbox_writer=noop_outbox_writer,
@@ -92,5 +94,5 @@ def build_world(
         ),
     )
     return LinksWorld(
-        services, uow, files, schedule, identity, ai, flashcards, titles, redis
+        services, uow, files, schedule, identity, ai, flashcards, titles, redis, kicker
     )

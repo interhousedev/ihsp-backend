@@ -22,20 +22,28 @@ def _text(value: bytes | str) -> str:
     return value.decode() if isinstance(value, bytes) else value
 
 
+STUDENT_PREFIX = "ai"
+COURSE_PREFIX = "ai:lms"  # the course staff pool, shared with the notebooks module
+
+
 class RedisBudgetStore:
-    """Implements BudgetStore with `ai:session:{user}` and `ai:day:{user}:{date}`."""
+    """Implements BudgetStore with `{prefix}:session:{user}` and `{prefix}:day:...`.
 
-    def __init__(self, redis: Redis) -> None:
-        """Store the Redis client."""
+    The assistants' pool uses the prefix `ai`; the course staff pool `ai:lms` has
+    the same key layout as the notebooks module's store with that prefix, so the
+    author assistant and the workspace chat and Studio count against one pool.
+    """
+
+    def __init__(self, redis: Redis, prefix: str = STUDENT_PREFIX) -> None:
+        """Store the Redis client and the key prefix of the pool."""
         self.redis = redis
+        self.prefix = prefix
 
-    @staticmethod
-    def _session_key(user_id: UUID) -> str:
-        return f"ai:session:{user_id}"
+    def _session_key(self, user_id: UUID) -> str:
+        return f"{self.prefix}:session:{user_id}"
 
-    @staticmethod
-    def _day_key(user_id: UUID, day: date) -> str:
-        return f"ai:day:{user_id}:{day.isoformat()}"
+    def _day_key(self, user_id: UUID, day: date) -> str:
+        return f"{self.prefix}:day:{user_id}:{day.isoformat()}"
 
     async def session(self, user_id: UUID) -> SessionWindow | None:
         """Return the open session window, if there is one."""

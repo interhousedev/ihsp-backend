@@ -5,7 +5,8 @@ from typing import Any
 from uuid import UUID
 
 from app.modules.ai.domain.assistant import Assistant
-from app.modules.ai.domain.chat import Chat
+from app.modules.ai.domain.chat import Chat, ChatTier
+from app.modules.ai.domain.chat_scope import ChatScope
 from app.modules.ai.infrastructure.orm.chat import Chat as ChatRow
 
 from sqlalchemy import delete, select, tuple_
@@ -22,6 +23,8 @@ def _to_entity(row: ChatRow) -> Chat:
         last_message_at=row.last_message_at,
         pending_approvals=int(row.pending_approvals or 0),
         deleted_at=row.deleted_at,
+        tier=ChatTier(row.tier),
+        scope=ChatScope.model_validate(row.scope) if row.scope else None,
     )
 
 
@@ -33,6 +36,14 @@ def _apply(row: ChatRow, chat: Chat) -> None:
     row.last_message_at = chat.last_message_at
     row.pending_approvals = chat.pending_approvals
     row.deleted_at = chat.deleted_at
+    row.tier = chat.tier.value
+    row.scope = chat.scope.model_dump(mode="json") if chat.scope else None
+
+
+def _like_pattern(query: str) -> str:
+    """Return a LIKE pattern that matches the text anywhere; wildcards are literal."""
+    escaped = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+    return f"%{escaped}%"
 
 
 class SqlChatRepository:
@@ -80,6 +91,8 @@ class SqlChatRepository:
         *,
         before: tuple[datetime, UUID] | None,
         limit: int,
+        title_contains: str | None = None,
+        course_id: UUID | None = None,
     ) -> list[Chat]:
         """Return the owner's live chats, newest first, after the cursor."""
         stmt = select(ChatRow).where(
@@ -87,6 +100,12 @@ class SqlChatRepository:
             ChatRow.assistant == assistant.value,
             ChatRow.deleted_at.is_(None),
         )
+        if course_id is not None:
+            stmt = stmt.where(ChatRow.scope["course_id"].astext == str(course_id))
+        if title_contains:
+            stmt = stmt.where(
+                ChatRow.title.ilike(_like_pattern(title_contains), escape="\\")
+            )
         if before is not None:
             stmt = stmt.where(
                 tuple_(ChatRow.last_message_at, ChatRow.id) < (before[0], before[1])

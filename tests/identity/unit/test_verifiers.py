@@ -124,6 +124,21 @@ async def test_valid_token_gives_the_actor(
     assert actor.scopes == frozenset()
 
 
+async def test_a_librarian_role_in_the_token_reaches_the_actor(
+    auth_world: World, tokens: TokenFactory
+) -> None:
+    """LIB-1, ID-16: `librarian` in the claims is kept next to `student`."""
+    user = await auth_world.add_user(auth_epoch=2)
+
+    actor = await tokens.verifier.verify(
+        tokens.token(user.id, epoch=2, roles=("student", "librarian")),
+        audience="ihsp-api",
+    )
+
+    assert actor.roles == {Role.STUDENT, Role.LIBRARIAN}
+    assert actor.has(Role.LIBRARIAN)
+
+
 @pytest.mark.parametrize("iss", ["http://localhost:4444", "http://localhost:4444/"])
 async def test_issuer_is_accepted_with_or_without_trailing_slash(
     auth_world: World, tokens: TokenFactory, iss: str

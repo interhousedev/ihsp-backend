@@ -1,6 +1,7 @@
 """In-memory notification repository and unit of work."""
 
 import copy
+from collections.abc import Sequence
 from datetime import datetime
 from types import TracebackType
 from typing import Self
@@ -9,7 +10,97 @@ from uuid import UUID
 from app.modules.notify.domain.notification import Notification
 from app.modules.notify.domain.notification_filter import NotificationFilter
 from app.modules.notify.domain.notification_status import NotificationStatus
+from app.modules.notify.domain.push_subscription import PushSubscription
+from app.shared.ids import new_id
 from app.shared.notifications import NotificationType
+
+
+class InMemoryPushSubscriptions:
+    """Implements PushSubscriptionRepository over a dictionary keyed by id."""
+
+    def __init__(self) -> None:
+        """Start empty."""
+        self.rows: dict[UUID, PushSubscription] = {}
+
+    def add(self, subscription: PushSubscription) -> PushSubscription:
+        """Store a subscription and return it."""
+        self.rows[subscription.id] = subscription
+        return subscription
+
+    def for_user(self, user_id: UUID) -> list[PushSubscription]:
+        """Return the user's subscriptions (for assertions)."""
+        return sorted(
+            (s for s in self.rows.values() if s.user_id == user_id),
+            key=lambda s: (s.created_at, str(s.id)),
+        )
+
+    async def upsert(
+        self,
+        *,
+        user_id: UUID,
+        endpoint: str,
+        p256dh: str,
+        auth: str,
+        user_agent: str | None,
+        now: datetime,
+    ) -> UUID:
+        """Insert by endpoint or move the existing one to the user."""
+        for row in self.rows.values():
+            if row.endpoint == endpoint:
+                row.user_id, row.p256dh, row.auth = user_id, p256dh, auth
+                row.user_agent, row.created_at, row.failures = user_agent, now, 0
+                return row.id
+        created = PushSubscription(
+            id=new_id(),
+            user_id=user_id,
+            endpoint=endpoint,
+            p256dh=p256dh,
+            auth=auth,
+            user_agent=user_agent,
+            created_at=now,
+        )
+        self.rows[created.id] = created
+        return created.id
+
+    async def trim(self, user_id: UUID, keep: int) -> int:
+        """Delete the user's oldest rows beyond `keep`."""
+        mine = self.for_user(user_id)
+        old = mine[: max(len(mine) - keep, 0)]
+        for row in old:
+            del self.rows[row.id]
+        return len(old)
+
+    async def delete_by_endpoint(self, user_id: UUID, endpoint: str) -> bool:
+        """Delete the user's row with this endpoint."""
+        for row in list(self.rows.values()):
+            if row.user_id == user_id and row.endpoint == endpoint:
+                del self.rows[row.id]
+                return True
+        return False
+
+    async def list_for_user(self, user_id: UUID) -> list[PushSubscription]:
+        """Return copies of the user's rows, oldest first."""
+        return [copy.copy(s) for s in self.for_user(user_id)]
+
+    async def delete_many(self, ids: Sequence[UUID]) -> None:
+        """Delete rows by id."""
+        for subscription_id in ids:
+            self.rows.pop(subscription_id, None)
+
+    async def record_success(self, ids: Sequence[UUID], now: datetime) -> None:
+        """Set `last_success_at` and clear failures."""
+        for subscription_id in ids:
+            if subscription_id in self.rows:
+                self.rows[subscription_id].last_success_at = now
+                self.rows[subscription_id].failures = 0
+
+    async def record_failure(self, subscription_id: UUID) -> int:
+        """Count one failure."""
+        row = self.rows.get(subscription_id)
+        if row is None:
+            return 0
+        row.failures += 1
+        return row.failures
 
 
 def _due(n: Notification, now: datetime) -> bool:
@@ -28,6 +119,7 @@ class InMemoryNotificationRepository:
     def __init__(self) -> None:
         """Start empty."""
         self.rows: dict[UUID, Notification] = {}
+        self.push = InMemoryPushSubscriptions()
 
     def add(self, notification: Notification) -> Notification:
         """Store a copy and return the original."""
@@ -136,6 +228,11 @@ class FakeNotifyUnitOfWork:
     def notifications(self) -> InMemoryNotificationRepository:
         """The shared repository."""
         return self._repository
+
+    @property
+    def push_subscriptions(self) -> InMemoryPushSubscriptions:
+        """The shared push subscriptions."""
+        return self._repository.push
 
     async def __aenter__(self) -> Self:
         """Open (nothing to do)."""

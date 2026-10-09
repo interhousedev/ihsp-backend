@@ -1,7 +1,7 @@
 {
   "files-quota-exceeded": "Недостаточно места для этого файла. Удалите ненужные файлы и повторите.",
-  "files-too-large": "Файл слишком большой. Максимальный размер файла — 100 МБ.",
-  "files-type-not-allowed": "Этот тип файла не разрешён. Используйте PDF, DOCX, PPTX, XLSX, TXT, MD, PNG или JPG.",
+  "files-too-large": "Файл слишком большой. Максимальный размер файла — {max_mb} МБ.",
+  "files-type-not-allowed": "Этот тип файла не разрешён. Используйте PDF, EPUB, DOCX, PPTX, XLSX, TXT, MD, PNG или JPG.",
   "files-invalid-name": "Имя файла пустое или длиннее {max_length} символов.",
   "files-invalid-checksum": "Контрольная сумма файла недействительна.",
   "files-invalid-size": "Файл пустой или его размер недействителен.",
@@ -10,5 +10,7 @@
   "files-deleted": "Этот файл удалён.",
   "files-not-ready": "Файл ещё не готов.",
   "files-no-text": "В этом файле нет читаемого текста.",
-  "files-page-not-found": "Такой страницы файла нет."
+  "files-page-not-found": "Такой страницы файла нет.",
+  "files-image-count": "Выберите от 1 до {max} изображений.",
+  "error-file-image-unsupported": "Это изображение нельзя добавить в PDF как есть. Сохраните фото в формате JPEG и повторите."
 }

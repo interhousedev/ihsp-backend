@@ -3,6 +3,9 @@
 from app.modules.notify.application.renderers.account_closing import (
     AccountClosingRenderer,
 )
+from app.modules.notify.application.renderers.assessment_reminder import (
+    AssessmentReminderRenderer,
+)
 from app.modules.notify.application.renderers.broadcast import BroadcastRenderer
 from app.modules.notify.application.renderers.emis_reauth import EmisReauthRenderer
 from app.modules.notify.application.renderers.files_expiring import (
@@ -14,6 +17,27 @@ from app.modules.notify.application.renderers.lesson_changed import (
 from app.modules.notify.application.renderers.lesson_resources import (
     LessonResourcesRenderer,
 )
+from app.modules.notify.application.renderers.library_item_approved import (
+    LibraryItemApprovedRenderer,
+)
+from app.modules.notify.application.renderers.library_item_changes_requested import (
+    LibraryItemChangesRequestedRenderer,
+)
+from app.modules.notify.application.renderers.library_item_rejected import (
+    LibraryItemRejectedRenderer,
+)
+from app.modules.notify.application.renderers.library_item_unpublished import (
+    LibraryItemUnpublishedRenderer,
+)
+from app.modules.notify.application.renderers.library_queue_waiting import (
+    LibraryQueueWaitingRenderer,
+)
+from app.modules.notify.application.renderers.library_reading_list_new import (
+    LibraryReadingListNewRenderer,
+)
+from app.modules.notify.application.renderers.library_report_filed import (
+    LibraryReportFiledRenderer,
+)
 from app.modules.notify.application.renderers.login_failures import (
     LoginFailuresRenderer,
 )
@@ -22,6 +46,9 @@ from app.modules.notify.application.renderers.mail_suspended import (
     MailSuspendedRenderer,
 )
 from app.modules.notify.application.renderers.marks import MarksRenderer
+from app.modules.notify.application.renderers.notebook_artifact_ready import (
+    NotebookArtifactReadyRenderer,
+)
 from app.modules.notify.application.renderers.registry import RendererRegistry
 from app.modules.notify.application.renderers.result_below import ResultBelowRenderer
 from app.modules.notify.application.renderers.result_drop import ResultDropRenderer
@@ -67,3 +94,34 @@ def register_builtin_renderers(
         NotificationType.MAIL_SUSPENDED, MailSuspendedRenderer(i18n, urls)
     )
     registry.register(NotificationType.SYNC_ALERT, SyncAlertRenderer(i18n, urls))
+    registry.register(
+        NotificationType.NOTEBOOK_ARTIFACT_READY,
+        NotebookArtifactReadyRenderer(i18n, urls),
+    )
+    registry.register(
+        NotificationType.ASSESSMENT_REMINDER, AssessmentReminderRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.LIBRARY_ITEM_APPROVED, LibraryItemApprovedRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.LIBRARY_ITEM_CHANGES_REQUESTED,
+        LibraryItemChangesRequestedRenderer(i18n, urls),
+    )
+    registry.register(
+        NotificationType.LIBRARY_ITEM_REJECTED, LibraryItemRejectedRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.LIBRARY_ITEM_UNPUBLISHED,
+        LibraryItemUnpublishedRenderer(i18n, urls),
+    )
+    registry.register(
+        NotificationType.LIBRARY_QUEUE_WAITING, LibraryQueueWaitingRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.LIBRARY_REPORT_FILED, LibraryReportFiledRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.LIBRARY_READING_LIST_NEW,
+        LibraryReadingListNewRenderer(i18n, urls),
+    )

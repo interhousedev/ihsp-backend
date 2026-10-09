@@ -256,7 +256,7 @@ async def test_profile_run_asks_for_the_timetable_of_a_group_without_one(
 
     assert env.kicker.calls == [
         (
-            "academic.bootstrap_group",
+            "academic.sync_group_timetable",
             {
                 "user_id": str(env.world.user_id),
                 "group_id": str(env.enrollment.ref.group_id),
@@ -276,10 +276,10 @@ async def test_profile_run_leaves_a_group_with_a_timetable_alone(env: Env) -> No
     assert env.kicker.calls == []
 
 
-async def test_a_backfill_does_not_start_the_import_the_registration_did(
+async def test_a_backfill_does_not_start_the_sync_the_registration_did(
     env: Env,
 ) -> None:
-    """ACA-1: registration kicked bootstrap_group itself; the backfill only syncs."""
+    """ACA-1: registration kicked the timetable sync itself; the backfill only syncs."""
     env.enrollment.ref = replace(env.enrollment.ref, needs_timetable=True)
     env.emis.profile_result = EmisProfile(
         1, "Aliya", "Karimova", None, 10815, 3292, "2TN2", 3, 1
@@ -304,24 +304,33 @@ async def test_other_institution_marks_the_student_as_left(env: Env) -> None:
 async def test_drops_and_the_formula_switch(
     env: Env, sessionmaker_in_tx: Maker
 ) -> None:
-    """ACA-22: no drop alert for a formula switch; real drops do alert."""
+    """ACA-22: no subject drop alert when a mark type appears; real drops do alert."""
     uid, math = env.world.user_id, env.world.math_id
-    base = [("lesson", DAY, 5), ("lesson", DAY, 4), ("midterm", DAY, 3)]
+    base = [
+        ("lesson", DAY, 5),
+        ("lesson", DAY, 5),
+        ("lesson", DAY, 5),
+        ("midterm", DAY, 4),
+    ]
     env.emis.set(make_ratings(MATH_EMIS, 3, base))
     await env.sync.execute(uid)
     assert (await result_of(sessionmaker_in_tx, uid, 3, math)).value == Decimal("4.50")
     env.outbox.notifications.clear()
 
-    # The final appears: 4.50 -> 4.17 only because of the formula (and GPA rises).
-    env.emis.set(make_ratings(MATH_EMIS, 3, [*base, ("final", DAY, 5)]))
+    # The final appears: 4.50 -> 4.33 only because a third type counts now. The
+    # subject drop is held back; the GPA (4.75 -> 4.60) really fell and alerts.
+    env.emis.set(make_ratings(MATH_EMIS, 3, [*base, ("final", DAY, 4)]))
     await env.sync.execute(uid)
-    assert (await result_of(sessionmaker_in_tx, uid, 3, math)).value == Decimal("4.17")
-    assert _types(env) == [NotificationType.MARKS]
+    assert (await result_of(sessionmaker_in_tx, uid, 3, math)).value == Decimal("4.33")
+    drops = [
+        d for d in env.outbox.notifications if d.type == NotificationType.RESULT_DROP
+    ]
+    assert [d.payload["scope"] for d in drops] == ["gpa"]
     env.outbox.notifications.clear()
 
-    # A real fall: a 2 under the same formula, GPA 4.25 -> 3.80.
+    # A real fall: a 2 with the same three types, GPA 4.60 -> 4.17.
     env.emis.set(
-        make_ratings(MATH_EMIS, 3, [*base, ("final", DAY, 5), ("lesson", OTHER_DAY, 2)])
+        make_ratings(MATH_EMIS, 3, [*base, ("final", DAY, 4), ("lesson", OTHER_DAY, 2)])
     )
     await env.sync.execute(uid)
     drops = [
@@ -329,10 +338,10 @@ async def test_drops_and_the_formula_switch(
     ]
     assert {d.payload["scope"] for d in drops} == {"gpa", "subject"}
     gpa = next(d for d in drops if d.payload["scope"] == "gpa")
-    assert (gpa.payload["old"], gpa.payload["new"]) == (4.25, 3.8)
+    assert (gpa.payload["old"], gpa.payload["new"]) == (4.6, 4.17)
     subject = next(d for d in drops if d.payload["scope"] == "subject")
     assert subject.payload["subject_name"] == "Mathematics"
-    assert (subject.payload["old"], subject.payload["new"]) == (4.17, 3.89)
+    assert (subject.payload["old"], subject.payload["new"]) == (4.33, 4.08)
 
 
 async def test_curriculum_subjects_without_emis_id_are_skipped(env: Env) -> None:

@@ -51,6 +51,8 @@ def lesson_item(
         "is_overridden": is_overridden,
         "changes": changes,
         "topic": ref.topic,
+        "kind": ref.kind,
+        "topic_source": ref.topic_source,
         "has_homework": has_homework,
         "attendance_submitted": attendance_submitted,
     }

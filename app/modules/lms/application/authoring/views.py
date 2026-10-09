@@ -24,7 +24,7 @@ class OutlineStepView(BaseModel):
 
     step_id: UUID
     title: str
-    badge: Literal["new", "changed", "removed", "mcp"] | None = None
+    badge: Literal["new", "changed", "removed", "mcp", "ai"] | None = None
 
 
 class OutlineSectionView(BaseModel):
@@ -64,7 +64,7 @@ class StepDraftView(BaseModel):
     content: StepContent
     lock_version: int
     status: Literal["new", "changed", "unchanged"]
-    updated_via: Literal["ui", "mcp"]
+    updated_via: Literal["ui", "mcp", "ai"]
     updated_by: PersonRefView | None
     updated_at: datetime | None
 
@@ -113,6 +113,7 @@ class PendingStepView(BaseModel):
     title: str
     change: Literal["added", "changed", "removed"]
     via_mcp: bool
+    via_ai: bool = False
 
 
 class PendingChangesView(BaseModel):
@@ -199,4 +200,50 @@ class SectionCreatedView(BaseModel):
     id: str
     title: str
     lock_version: int
+    draft_seq: int
+
+
+# - - - Applying a course plan - - -
+
+
+class PlannedStepView(BaseModel):
+    """What applying the plan does with one step (``step_id`` is null for new)."""
+
+    title: str
+    step_id: UUID | None
+    action: Literal["new", "exists"]
+
+
+class PlannedSectionView(BaseModel):
+    """What applying the plan does with one section (``section_id`` null for new)."""
+
+    title: str
+    section_id: str | None
+    action: Literal["new", "exists"]
+    steps: list[PlannedStepView]
+
+
+class CreatedSectionView(BaseModel):
+    """A section the plan created."""
+
+    id: str
+    title: str
+
+
+class CreatedStepView(BaseModel):
+    """A step the plan created."""
+
+    step_id: UUID
+    section_id: str
+    title: str
+
+
+class PlanAppliedView(BaseModel):
+    """The result (or, for a dry run, the preview) of applying a course plan."""
+
+    created_sections: list[CreatedSectionView]
+    created_steps: list[CreatedStepView]
+    existing_sections: int
+    existing_steps: int
+    plan: list[PlannedSectionView]
     draft_seq: int

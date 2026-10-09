@@ -17,6 +17,7 @@ from app.modules.academic.domain.schedule.lesson import Lesson
 from app.modules.academic.domain.schedule.lesson_view import LessonView
 from app.modules.academic.domain.schedule.subject import LANGUAGES, subject_name
 from app.shared.contracts.academic import LessonRef, RoomRef, StudentRef
+from app.shared.lesson_kind import topic_source_of
 from tests.fakes.academic.schedule.store import ScheduleStore
 
 
@@ -56,6 +57,8 @@ class FakeScheduleReader:
             topic=lesson.topic,
             homework_text=None,
             homework_due_date=None,
+            kind=lesson.kind,
+            topic_source=topic_source_of(lesson.topic, lesson.emis_topic),
         )
         return LessonView(
             ref=ref,
@@ -158,6 +161,31 @@ class FakeScheduleReader:
                 lesson
                 for lesson in self.store.lessons.values()
                 if lesson.teacher_id == teacher_id and start <= lesson.date <= end
+            ],
+            locale,
+        )
+
+    async def control_lessons(
+        self,
+        group_ids: Sequence[UUID],
+        start: dt.date,
+        end: dt.date,
+        locale: str,
+    ) -> list[LessonView]:
+        """Return scheduled midterm and final lessons of the groups."""
+        keys = {
+            key
+            for group_id in group_ids
+            for key in audience_keys.student_keys(group_id, None)
+        }
+        return self._views(
+            [
+                lesson
+                for lesson in self.store.lessons.values()
+                if lesson.kind in ("midterm", "final")
+                and lesson.status == "scheduled"
+                and start <= lesson.date <= end
+                and keys & set(lesson.audience)
             ],
             locale,
         )

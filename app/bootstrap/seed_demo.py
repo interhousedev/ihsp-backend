@@ -8,6 +8,7 @@ from app.bootstrap.common import build_container
 from app.bootstrap.container import Container
 from app.bootstrap.seed.content import seed_broadcast, seed_course, seed_flashcards
 from app.bootstrap.seed.groups import finish_groups
+from app.bootstrap.seed.notebooks import seed_notebook
 from app.bootstrap.seed.schedule import generate_lessons, seed_structure
 from app.bootstrap.seed.students import (
     EMIS_LOGINS,
@@ -56,6 +57,7 @@ async def seed(
     members = await container.academic.schedule.queries.group_user_ids([first_group])
     if members:
         await seed_flashcards(container, members[0])
+        await seed_notebook(container, members[0])
     await seed_course(container, admin_id)
     await seed_broadcast(container, admin_id)
 

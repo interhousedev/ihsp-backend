@@ -7,9 +7,11 @@ from app.interfaces.http.v1.ai.handlers import (
     get_chat,
     get_usage,
     list_chats,
+    regenerate_answer,
     reject_tool_call,
     rename_chat,
     send_message,
+    set_message_feedback,
 )
 
 from fastapi import APIRouter, status
@@ -28,6 +30,17 @@ router.add_api_route(
 )
 router.add_api_route(
     "/chats/{chat_id}/messages", send_message.send_message, methods=["POST"]
+)
+router.add_api_route(
+    "/chats/{chat_id}/regenerate",
+    regenerate_answer.regenerate_answer,
+    methods=["POST"],
+)
+router.add_api_route(
+    "/chats/{chat_id}/messages/{seq}/feedback",
+    set_message_feedback.set_message_feedback,
+    methods=["POST"],
+    status_code=status.HTTP_204_NO_CONTENT,
 )
 router.add_api_route(
     "/chats/{chat_id}/tool-calls/{call_id}/approve",

@@ -188,6 +188,7 @@ async def test_close_account_revokes_everything_and_starts_the_clean_up(
         "identity.destroy_emis_secret",
         "files.delete_owner",
         "links.revoke_owner",
+        "notebooks.delete_owner",
     ]
     assert all(kw == {"user_id": str(user.id)} for _, kw in auth_world.kicker.calls)
 

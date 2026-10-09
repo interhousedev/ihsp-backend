@@ -171,6 +171,19 @@ class SqlLinkRepository:
         rows = (await self.session.execute(stmt)).scalars().all()
         return [_to_entity(row) for row in rows]
 
+    async def lesson_urls_of_owner(
+        self, owner_id: UUID, lesson_ids: Sequence[UUID]
+    ) -> set[tuple[UUID, str]]:
+        """Return (lesson id, URL) of all the owner's resources, deleted ones too."""
+        if not lesson_ids:
+            return set()
+        stmt = select(LinkRow.lesson_id, LinkRow.target_url).where(
+            LinkRow.owner_id == owner_id,
+            LinkRow.lesson_id.in_(lesson_ids),
+            LinkRow.target_url.is_not(None),
+        )
+        return {(row[0], row[1]) for row in (await self.session.execute(stmt)).all()}
+
     async def moderation_queue(
         self, *, after: ModerationCursor | None, limit: int
     ) -> list[Link]:

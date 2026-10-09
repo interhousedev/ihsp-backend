@@ -6,6 +6,8 @@ from urllib.parse import urlparse
 
 from app.bootstrap.container import Container
 from app.interfaces.http.main import create_app
+from app.settings import Settings
+from app.shared.features import Feature
 
 import structlog
 from fastapi import APIRouter, FastAPI
@@ -33,6 +35,9 @@ API_PACKAGES: tuple[str, ...] = (
     f"{V1}.me_schedule",
     f"{V1}.me_classwork",
     f"{V1}.me_marks",
+    f"{V1}.me_assessments",
+    f"{V1}.staff_assessments",
+    f"{V1}.admin_assessments",
     f"{V1}.staff_classwork",
     f"{V1}.staff_groups",
     f"{V1}.admin_schedule",
@@ -43,17 +48,37 @@ API_PACKAGES: tuple[str, ...] = (
     f"{V1}.files",
     f"{V1}.links",
     f"{V1}.notifications",
+    f"{V1}.push",
+    f"{V1}.app_version",
     f"{V1}.ai",
+    f"{V1}.web_search",
     f"{V1}.flashcards",
+    f"{V1}.notebooks",
+    f"{V1}.library",
     f"{V1}.lms_authoring",
     f"{V1}.lms_learning",
     f"{PUBLIC}.rooms",
     f"{PUBLIC}.short_links",
+    f"{PUBLIC}.library",
     f"{PUBLIC}.robots",
     f"{PUBLIC}.ical",
 )
 
 SHORT_LINKS_PACKAGE = f"{PUBLIC}.short_links"
+
+# A router package that belongs to a feature is left out while `FEATURES__<NAME>` is
+# off, so its URLs answer 404.
+FEATURE_PACKAGES: dict[str, Feature] = {
+    f"{V1}.ai": Feature.AI_ASSISTANT,
+    f"{V1}.flashcards": Feature.FLASHCARDS,
+    f"{V1}.notebooks": Feature.NOTEBOOKS,
+    f"{V1}.library": Feature.LIBRARY,
+    f"{PUBLIC}.library": Feature.LIBRARY,
+    f"{V1}.lms_authoring": Feature.LMS,
+    f"{V1}.lms_learning": Feature.LMS,
+    f"{V1}.push": Feature.PUSH,
+    f"{V1}.admin_sync": Feature.EMIS_SYNC,
+}
 
 
 def _import_routers(package: str) -> list[APIRouter]:
@@ -72,21 +97,34 @@ def _import_routers(package: str) -> list[APIRouter]:
     return [router] if router is not None else []
 
 
-def collect_routers(packages: tuple[str, ...]) -> list[APIRouter]:
-    """Routers of the packages, in order."""
+def collect_routers(
+    packages: tuple[str, ...], settings: Settings | None = None
+) -> list[APIRouter]:
+    """Routers of the packages, in order; with `settings`, switched-off features go."""
     routers: list[APIRouter] = []
     for package in packages:
+        feature = FEATURE_PACKAGES.get(package)
+        if (
+            settings is not None
+            and feature
+            and not getattr(settings.features, feature.value)
+        ):
+            log.info("router_feature_off", package=package, feature=feature.value)
+            continue
         routers.extend(_import_routers(package))
     return routers
 
 
-def routers_for(process: str) -> list[APIRouter]:
-    """The routers of one HTTP process (`all`, `identity` or `api`)."""
+def routers_for(process: str, settings: Settings | None = None) -> list[APIRouter]:
+    """The routers of one HTTP process (`all`, `identity` or `api`).
+
+    Pass `settings` to leave out the routers of features that are switched off.
+    """
     if process == "identity":
-        return collect_routers(IDENTITY_PACKAGES)
+        return collect_routers(IDENTITY_PACKAGES, settings)
     if process == "api":
-        return collect_routers(API_PACKAGES)
-    return collect_routers(IDENTITY_PACKAGES + API_PACKAGES)
+        return collect_routers(API_PACKAGES, settings)
+    return collect_routers(IDENTITY_PACKAGES + API_PACKAGES, settings)
 
 
 def _host(url: str) -> str | None:

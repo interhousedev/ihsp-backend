@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 
 from app.modules.files.application.cleanup_expired import CleanupExpired
+from app.modules.files.application.combine_images_to_pdf import CombineImagesToPdf
 from app.modules.files.application.complete_upload import CompleteUpload
 from app.modules.files.application.delete_file import DeleteFile
 from app.modules.files.application.delete_owner_files import DeleteOwnerFiles
@@ -17,7 +18,10 @@ from app.modules.files.application.process_file import ProcessFile
 from app.modules.files.application.public_api import FilesApiImpl
 from app.modules.files.application.purge_pending import PurgePending
 from app.modules.files.application.read_file_bytes import ReadFileBytes
+from app.modules.files.application.read_full_text import ReadFullText
+from app.modules.files.application.read_outline import ReadOutline
 from app.modules.files.application.read_text_page import ReadTextPage
+from app.modules.files.application.remove_file import RemoveFile
 from app.modules.files.application.rename_file import RenameFile
 from app.modules.files.application.request_upload import RequestUpload
 from app.modules.files.application.search_text import SearchText
@@ -31,10 +35,12 @@ from app.modules.files.infrastructure.null_resolvers import (
     NoTermResolver,
     NoUsageResolver,
 )
+from app.modules.files.infrastructure.pdf.images_to_pdf import PureImagePdfBuilder
 from app.modules.files.infrastructure.s3.storage import S3Storage
 from app.modules.files.infrastructure.sniffing.magic_sniffer import MagicSniffer
 from app.modules.files.infrastructure.uow import SqlFilesUnitOfWork
 from app.modules.files.ports.content_sniffer import ContentSniffer
+from app.modules.files.ports.image_pdf import ImagePdfBuilder
 from app.modules.files.ports.storage import ObjectStorage
 from app.modules.files.ports.term_resolver import TermResolver
 from app.modules.files.ports.text_extractor import TextExtractor
@@ -60,7 +66,11 @@ class FilesServices:
     list_owned_files: ListOwnedFiles
     storage_usage: StorageUsage
     store_bytes: StoreBytes
+    combine_images: CombineImagesToPdf
+    remove_file: RemoveFile
     read_text_page: ReadTextPage
+    read_full_text: ReadFullText
+    read_outline: ReadOutline
     read_file_bytes: ReadFileBytes
     search_text: SearchText
     cleanup_expired: CleanupExpired
@@ -109,6 +119,9 @@ def build(
         staff_quota_bytes=settings.limits.storage_staff_bytes,
         file_max_bytes=settings.limits.file_max_bytes,
         ai_text_max_bytes=settings.limits.ai_text_max_bytes,
+        library_file_max_bytes=settings.library.file_max_bytes,
+        library_student_quota_bytes=settings.library.student_quota_bytes,
+        library_teacher_quota_bytes=settings.library.teacher_quota_bytes,
     )
 
     def uow_factory() -> SqlFilesUnitOfWork:
@@ -145,12 +158,15 @@ def assemble(
     extractor: TextExtractor,
     limits: FilesLimits,
     closers: list[Callable[[], Awaitable[None]]],
+    image_pdf: ImagePdfBuilder | None = None,
 ) -> FilesServices:
     """Create the use cases from ready-made adapters (tests pass fakes)."""
     views = FileViewBuilder(terms, usage, limits)
     links = DownloadLinks(storage, clock)
     read_bytes = ReadFileBytes(uow_factory=uow_factory, storage=storage)
     read_page = ReadTextPage(uow_factory=uow_factory, storage=storage)
+    read_full = ReadFullText(uow_factory=uow_factory, storage=storage)
+    read_outline = ReadOutline(uow_factory=uow_factory)
     search = SearchText(uow_factory=uow_factory, storage=storage)
     list_owned = ListOwnedFiles(uow_factory=uow_factory)
     store = StoreBytes(
@@ -162,6 +178,14 @@ def assemble(
         kicker=kicker,
         limits=limits,
     )
+    combine_images = CombineImagesToPdf(
+        uow_factory=uow_factory,
+        storage=storage,
+        store=store,
+        builder=image_pdf or PureImagePdfBuilder(),
+        limits=limits,
+    )
+    remove_file = RemoveFile(uow_factory=uow_factory, storage=storage)
     return FilesServices(
         request_upload=RequestUpload(
             uow_factory=uow_factory,
@@ -194,7 +218,11 @@ def assemble(
             uow_factory=uow_factory, terms=terms, clock=clock, limits=limits
         ),
         store_bytes=store,
+        combine_images=combine_images,
+        remove_file=remove_file,
         read_text_page=read_page,
+        read_full_text=read_full,
+        read_outline=read_outline,
         read_file_bytes=read_bytes,
         search_text=search,
         cleanup_expired=CleanupExpired(
@@ -215,8 +243,12 @@ def assemble(
             links=links,
             read_bytes_uc=read_bytes,
             read_text_page_uc=read_page,
+            read_full_text_uc=read_full,
+            read_outline_uc=read_outline,
             search_text_uc=search,
             store_bytes_uc=store,
+            combine_images_uc=combine_images,
+            remove_file_uc=remove_file,
             list_owned_uc=list_owned,
         ),
         limits=limits,

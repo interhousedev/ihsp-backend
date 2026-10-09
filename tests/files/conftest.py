@@ -32,3 +32,9 @@ def teacher(make_actor: Callable[..., Actor]) -> Actor:
 def admin(make_actor: Callable[..., Actor]) -> Actor:
     """An administrator."""
     return make_actor(Role.ADMIN)
+
+
+@pytest.fixture
+def librarian(make_actor: Callable[..., Actor]) -> Actor:
+    """A librarian (a student who runs the library)."""
+    return make_actor(Role.STUDENT, Role.LIBRARIAN)

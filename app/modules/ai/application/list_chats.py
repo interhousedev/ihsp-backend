@@ -4,8 +4,8 @@ from collections.abc import Callable
 from datetime import datetime
 from uuid import UUID
 
-from app.modules.ai.application.assistant_profile import require_assistant_role
 from app.modules.ai.application.chat_views import ChatViews
+from app.modules.ai.application.owned_chat import ChatGuard
 from app.modules.ai.application.pending_calls import expire_overdue
 from app.modules.ai.application.views import ChatItemView
 from app.modules.ai.domain.assistant import Assistant
@@ -22,26 +22,47 @@ class ListChats:
         self,
         *,
         uow_factory: Callable[[], AiUnitOfWork],
+        guard: ChatGuard,
         clock: Clock,
         views: ChatViews,
     ) -> None:
         """Store the collaborators."""
         self.uow_factory = uow_factory
+        self.guard = guard
         self.clock = clock
         self.views = views
 
     async def execute(
-        self, *, actor: Actor, assistant: Assistant, cursor: str | None, limit: int
+        self,
+        *,
+        actor: Actor,
+        assistant: Assistant,
+        cursor: str | None,
+        limit: int,
+        q: str | None = None,
+        course_id: UUID | None = None,
     ) -> Page[ChatItemView]:
-        """Return one page of the caller's live chats."""
-        require_assistant_role(actor, assistant)
+        """Return one page of the caller's live chats; `q` searches the titles.
+
+        Author chats are listed per course: `course_id` is required for them and
+        needs the ``edit`` permission; the other assistants ignore it.
+        """
+        await self.guard.assistant(actor, assistant, course_id)
+        if assistant is not Assistant.LMS_AUTHOR:
+            course_id = None
+        needle = " ".join(q.split()) if q else None
         data = decode_cursor(cursor)
         before = (
             (datetime.fromisoformat(data["at"]), UUID(data["id"])) if data else None
         )
         async with self.uow_factory() as uow:
             rows = await uow.chats.list_for_owner(
-                actor.user_id, assistant, before=before, limit=limit + 1
+                actor.user_id,
+                assistant,
+                before=before,
+                limit=limit + 1,
+                title_contains=needle or None,
+                course_id=course_id,
             )
             page, more = rows[:limit], len(rows) > limit
             if any(chat.pending_approvals for chat in page):

@@ -11,6 +11,7 @@ from app.shared.base_error import NotFoundError
 from tests.integration.conftest import ContainerFactory, IntegrationWorld
 
 import pytest
+from sqlalchemy import text
 
 
 async def _admin(container: Container) -> Actor:
@@ -42,6 +43,50 @@ async def test_seed_is_idempotent(
     groups, entries, members, teachers = first
     assert (groups, members, teachers) == (2, 2, 5)
     assert entries > 20
+
+
+async def test_seed_creates_one_demo_notebook_with_every_output(
+    make_container: ContainerFactory, world: IntegrationWorld
+) -> None:
+    """NB-1, NB-8: the demo notebook has three sources, a chat turn and every output."""
+    container = await make_container("all")
+
+    await seed(container, world.credentials)
+    await seed(container, world.credentials)
+
+    async with container.sessionmaker() as session:
+        books = (
+            await session.execute(text("SELECT id FROM notebooks.notebooks"))
+        ).all()
+        sources = await session.scalar(
+            text("SELECT count(*) FROM notebooks.sources WHERE status = 'ready'")
+        )
+        messages = await session.scalar(text("SELECT count(*) FROM notebooks.messages"))
+        kinds = (
+            (
+                await session.execute(
+                    text(
+                        "SELECT kind FROM notebooks.artifacts WHERE status = 'ready' "
+                        "ORDER BY kind"
+                    )
+                )
+            )
+            .scalars()
+            .all()
+        )
+    assert len(books) == 1
+    assert (sources, messages) == (3, 2)
+    assert list(kinds) == sorted(
+        [
+            "report",
+            "mind_map",
+            "flashcards",
+            "quiz",
+            "data_table",
+            "slides",
+            "infographic",
+        ]
+    )
 
 
 async def test_admin_tools_read_and_write_the_seeded_school(

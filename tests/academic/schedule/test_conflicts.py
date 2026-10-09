@@ -196,8 +196,8 @@ def test_an_entry_without_teacher_or_room_cannot_clash_on_them() -> None:
 
 
 def test_conflicts_serialize_to_the_api_shape() -> None:
-    """API: Conflict = {kind, with_entry_id, with_lesson_id, description}."""
-    other = entry(teacher=TEACHER)
+    """API: Conflict = kind, both ids, description and the other entry's parity."""
+    other = entry(teacher=TEACHER, parity="odd")
     found = entry_conflicts(entry(teacher=TEACHER, audience=whole(GROUP_B)), [other])
 
     assert found[0].to_json() == {
@@ -205,6 +205,7 @@ def test_conflicts_serialize_to_the_api_shape() -> None:
         "with_entry_id": str(other.id),
         "with_lesson_id": None,
         "description": found[0].description,
+        "week_parity": "odd",
     }
 
 

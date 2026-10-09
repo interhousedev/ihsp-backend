@@ -27,6 +27,7 @@ async def test_container_builds_for_every_process(
     assert (container.academic.marks is not None) is plan.full
     assert (container.notify is not None) is plan.full
     assert (container.lms is not None) is plan.lms
+    assert (container.notebooks is not None) is plan.full
     assert (container.identity.emis_services is not None) is plan.emis
 
 
@@ -44,3 +45,7 @@ async def test_all_has_every_module(make_container: ContainerFactory) -> None:
         container.ai.public,  # type: ignore[arg-type]
     )
     assert await usage.used_by([some_id]) == {}
+    # The assistant reaches notebooks through the late bindings.
+    assert container.ai.bindings.notebooks is container.notebooks.public
+    assert container.ai.bindings.notebooks_commands is container.notebooks.commands
+    assert await container.notebooks.public.used_by_files([some_id]) == {}

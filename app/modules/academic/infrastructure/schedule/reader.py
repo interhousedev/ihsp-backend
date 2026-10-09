@@ -28,6 +28,8 @@ from app.shared.contracts.academic import RoomRef, StudentRef
 from sqlalchemy import ColumnElement, exists, literal, or_, select, tuple_
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+CONTROL_KINDS = ("midterm", "final")
+
 
 class SqlScheduleReader:
     """Reads lessons, rooms and students with short read-only sessions."""
@@ -155,6 +157,31 @@ class SqlScheduleReader:
         """Return the teacher's lessons (any status) between two dates."""
         return await self._query(
             [LessonRow.teacher_id == teacher_id, LessonRow.date.between(start, end)],
+            locale,
+        )
+
+    async def control_lessons(
+        self,
+        group_ids: Sequence[UUID],
+        start: dt.date,
+        end: dt.date,
+        locale: str,
+    ) -> list[LessonView]:
+        """Return the groups' scheduled midterm and final lessons between two dates."""
+        keys = [
+            key
+            for group_id in group_ids
+            for key in audience_keys.student_keys(group_id, None)
+        ]
+        if not keys:
+            return []
+        return await self._query(
+            [
+                LessonRow.kind.in_(CONTROL_KINDS),
+                LessonRow.status == "scheduled",
+                LessonRow.date.between(start, end),
+                overlaps(LessonRow.audience, keys),
+            ],
             locale,
         )
 

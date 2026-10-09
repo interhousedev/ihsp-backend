@@ -8,6 +8,7 @@ from uuid import UUID
 
 from app.shared.actor import Actor
 from app.shared.contracts.emis import EmisSubject
+from app.shared.lesson_kind import LessonKind, TopicSource
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,7 +22,7 @@ class StudentRef:
     status: Literal["active", "left"]
     synced_at: dt.datetime | None
     # True when the group has no timetable in the current term: kick
-    # `academic.bootstrap_group` (after the student's account is committed).
+    # `academic.sync_group_timetable` (after the student's account is committed).
     needs_timetable: bool = False
 
 
@@ -46,6 +47,8 @@ class LessonRef:
     topic: str | None
     homework_text: str | None
     homework_due_date: dt.date | None
+    kind: LessonKind = "other"
+    topic_source: TopicSource | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,6 +113,16 @@ class ScheduleQueries(Protocol):
 
     async def is_in_audience(self, user_id: UUID, lesson_id: UUID) -> bool:
         """Return True if the student attends the lesson."""
+        ...
+
+    async def emis_control_lessons(
+        self, group_ids: Sequence[UUID], start: dt.date, end: dt.date
+    ) -> list[LessonRef]:
+        """Return scheduled lessons EMIS calls a midterm or a final (``kind``), by date.
+
+        EMIS exam weeks are reliable, unlike its topics and files. Each lesson has its
+        id, subject, date and audience.
+        """
         ...
 
     async def is_lesson_teacher(self, user_id: UUID, lesson_id: UUID) -> bool:

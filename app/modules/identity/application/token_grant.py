@@ -16,7 +16,7 @@ class TokenGrant:
 
 
 def require_web_client(client_id: str) -> str:
-    """Only our five web platforms use the token handler."""
+    """Only our first-party web clients use the token handler."""
     if client_id not in WEB_CLIENTS:
         raise UnknownClientError(params={"client_id": client_id})
     return client_id

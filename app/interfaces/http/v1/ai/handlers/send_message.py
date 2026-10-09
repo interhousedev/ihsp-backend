@@ -19,6 +19,10 @@ async def send_message(
 ) -> TurnResultResponse:
     """Send a message and return what the assistant did with it."""
     view = await container.ai.send_message.execute(
-        actor=actor, chat_id=chat_id, text=body.text, file_ids=body.file_ids
+        actor=actor,
+        chat_id=chat_id,
+        text=body.text,
+        file_ids=body.file_ids,
+        web_search=body.web_search,
     )
     return TurnResultResponse.from_view(view)

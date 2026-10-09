@@ -8,6 +8,34 @@ _SCHEMA_LISTS = ("anyOf", "allOf", "oneOf", "prefixItems")
 _SCHEMA_VALUES = ("items", "additionalProperties", "not")
 
 
+def strict_tool_parameters(model: type[BaseModel]) -> dict[str, Any]:
+    """Return `tool_parameters` closed everywhere: every object forbids extra keys.
+
+    Pydantic's `discriminator` hints (which point into `$defs`) are dropped: the
+    `type` constant of each variant already tells the model which fields belong
+    together, and a provider must never see a dangling reference.
+    """
+    return _closed(tool_parameters(model))  # type: ignore[no-any-return]
+
+
+def _closed(node: Any) -> Any:
+    if isinstance(node, list):
+        return [_closed(item) for item in node]
+    if not isinstance(node, dict):
+        return node
+    closed: dict[str, Any] = {}
+    for key, value in node.items():
+        if key == "discriminator" and isinstance(value, dict):
+            continue
+        if key == "properties" and isinstance(value, dict):
+            closed[key] = {name: _closed(sub) for name, sub in value.items()}
+            continue
+        closed[key] = _closed(value)
+    if closed.get("type") == "object" and "properties" in closed:
+        closed["additionalProperties"] = False
+    return closed
+
+
 def tool_parameters(model: type[BaseModel]) -> dict[str, Any]:
     """Return the model's JSON schema with `$ref`s inlined and titles removed."""
     schema = model.model_json_schema()

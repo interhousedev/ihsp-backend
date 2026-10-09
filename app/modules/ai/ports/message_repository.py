@@ -18,6 +18,14 @@ class MessageRepository(Protocol):
         """Write the message's tool calls and usage."""
         ...
 
+    async def set_feedback(self, message: ChatMessage) -> None:
+        """Write the message's feedback and comment (and nothing else)."""
+        ...
+
+    async def delete_after(self, chat_id: UUID, seq: int) -> int:
+        """Delete the messages with a `seq` above this one; return how many."""
+        ...
+
     async def last_seq(self, chat_id: UUID) -> int:
         """Return the highest `seq` of the chat, 0 for an empty chat."""
         ...

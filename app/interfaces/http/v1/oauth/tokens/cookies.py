@@ -1,11 +1,17 @@
 """The refresh token cookie: HttpOnly, SameSite=Strict, host-only (GEN-7)."""
 
+from app.modules.identity.domain.client_policy import refresh_days
 from app.settings import Settings
 
 from fastapi import Request, Response
 
 COOKIE_PATH = "/v1/oauth"
-COOKIE_MAX_AGE = 30 * 24 * 3600
+SECONDS_PER_DAY = 24 * 3600
+
+
+def cookie_max_age(client_id: str) -> int:
+    """Seconds the cookie lasts: the client's refresh lifetime (90 days for `app`)."""
+    return refresh_days(client_id) * SECONDS_PER_DAY
 
 
 def cookie_name(settings: Settings, client_id: str) -> str:
@@ -20,7 +26,7 @@ def set_refresh_cookie(
     response.set_cookie(
         key=cookie_name(settings, client_id),
         value=token,
-        max_age=COOKIE_MAX_AGE,
+        max_age=cookie_max_age(client_id),
         path=COOKIE_PATH,
         secure=settings.tokens.refresh_cookie_secure,
         httponly=True,

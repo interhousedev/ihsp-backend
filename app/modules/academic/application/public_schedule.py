@@ -67,6 +67,13 @@ class ScheduleQueriesImpl:
         )
         return [view.ref for view in views]
 
+    async def emis_control_lessons(
+        self, group_ids: Sequence[UUID], start: dt.date, end: dt.date
+    ) -> list[LessonRef]:
+        """Return scheduled lessons EMIS calls a midterm or a final, ordered by date."""
+        views = await self.reader.control_lessons(group_ids, start, end, self.locale)
+        return [view.ref for view in views]
+
     async def is_in_audience(self, user_id: UUID, lesson_id: UUID) -> bool:
         """Return True if the active student attends the lesson."""
         return await self.reader.is_in_audience(user_id, lesson_id)

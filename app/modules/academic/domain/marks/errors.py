@@ -1,6 +1,6 @@
 """Errors of the student-facing marks views and the sync controls."""
 
-from app.shared.base_error import ConflictError, NotFoundError
+from app.shared.base_error import ConflictError, NotFoundError, ValidationFailedError
 
 
 class StudentNotFoundError(NotFoundError):
@@ -22,3 +22,10 @@ class SyncAlreadyRunningError(ConflictError):
 
     code = "academic/sync-running"
     message_key = "academic-sync-running"
+
+
+class InvalidWhatIfError(ValidationFailedError):
+    """A hypothetical mark is not ``<type>:<2..5>`` or there are too many."""
+
+    code = "academic/invalid-what-if"
+    message_key = "academic-invalid-what-if"

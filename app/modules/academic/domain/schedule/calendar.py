@@ -29,10 +29,23 @@ def effective_weekday(day: dt.date, term: Term) -> int | None:
     return None if weekday == SUNDAY else weekday
 
 
+def term_week(day: dt.date, term: Term) -> int:
+    """Return the number of the term's week that holds the day (the first is 1).
+
+    The anchor is the term's first Monday: the Monday of the week that contains
+    ``term.starts_on``. Weeks before the term have numbers below 1.
+    """
+    return ((day - monday_of(term.starts_on)).days // 7) + 1
+
+
+def parity_of_week(week: int) -> Parity:
+    """Return "odd" for weeks 1, 3, 5 ... and "even" for weeks 2, 4, 6 ..."""
+    return "odd" if week % 2 == 1 else "even"
+
+
 def week_parity(day: dt.date, term: Term) -> Parity:
-    """Return "odd" or "even": the week index counts from the term's first Monday."""
-    index = ((day - monday_of(term.starts_on)).days // 7) + 1
-    return "odd" if index % 2 == 1 else "even"
+    """Return "odd" or "even": the week counts from the term's first Monday."""
+    return parity_of_week(term_week(day, term))
 
 
 def bell_for(term: Term, period: int, weekday: int) -> tuple[dt.time, dt.time] | None:

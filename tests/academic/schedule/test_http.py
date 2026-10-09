@@ -35,6 +35,8 @@ TERM_BODY = {
 }
 
 
+NO_CONTROL_PERIODS = {"midterm_1": None, "midterm_2": None, "final": None}
+
 # - - - terms - - -
 
 
@@ -46,9 +48,46 @@ async def test_terms_can_be_created_listed_and_patched(env: Env, api: Api) -> No
     patched = await api.client.patch(f"/v1/admin/terms/{term_id}", json={"half": 2})
 
     assert created.status_code == 200
-    assert created.json() == {**TERM_BODY, "id": term_id, "is_current": True}
+    assert created.json() == {
+        **TERM_BODY,
+        "id": term_id,
+        "is_current": True,
+        "control_periods": NO_CONTROL_PERIODS,
+    }
     assert [t["id"] for t in listed.json()] == [term_id]
     assert patched.json()["half"] == 2 and patched.json()["bells"] == TERM_BODY["bells"]
+
+
+async def test_control_periods_are_set_on_create_and_replaced_on_patch(
+    env: Env, api: Api
+) -> None:
+    """Administration sets the midterm and final weeks; PATCH replaces them."""
+    weeks = {"midterm_1": {"start": "2026-10-19", "end": "2026-10-24"}}
+    created = await api.client.post(
+        "/v1/admin/terms", json={**TERM_BODY, "control_periods": weeks}
+    )
+    term_id = created.json()["id"]
+    final = {"final": {"start": "2026-12-14", "end": "2026-12-19"}}
+    untouched = await api.client.patch(f"/v1/admin/terms/{term_id}", json={"half": 2})
+    replaced = await api.client.patch(
+        f"/v1/admin/terms/{term_id}", json={"control_periods": {**weeks, **final}}
+    )
+    reversed_ = await api.client.patch(
+        f"/v1/admin/terms/{term_id}",
+        json={
+            "control_periods": {"final": {"start": "2026-12-19", "end": "2026-12-14"}}
+        },
+    )
+
+    assert created.json()["control_periods"] == {**NO_CONTROL_PERIODS, **weeks}
+    assert untouched.json()["control_periods"] == {**NO_CONTROL_PERIODS, **weeks}
+    assert replaced.json()["control_periods"] == {
+        **NO_CONTROL_PERIODS,
+        **weeks,
+        **final,
+    }
+    assert reversed_.status_code == 422
+    assert reversed_.json()["type"] == "academic/term-control-periods-invalid"
 
 
 async def test_an_overlapping_term_answers_409_with_a_stable_type(
@@ -417,6 +456,7 @@ async def test_a_conflicting_entry_answers_409_with_the_conflicts(
             "with_entry_id": first.json()["id"],
             "with_lesson_id": None,
             "description": problem["params"]["conflicts"][0]["description"],
+            "week_parity": "every",
         }
     ]
 
@@ -625,6 +665,8 @@ async def test_student_profile_and_timetable(env: Env, api: Api) -> None:
         "is_overridden",
         "changes",
         "topic",
+        "kind",
+        "topic_source",
         "has_homework",
         "attendance_submitted",
     }

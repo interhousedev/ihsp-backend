@@ -15,6 +15,7 @@ from app.modules.academic.domain.marks.read_models import (
     SubjectInfo,
 )
 from app.shared.contracts.identity import IdentityDirectory, UserRef
+from app.shared.lesson_kind import topic_source_of
 
 
 def num(value: Decimal | None) -> float | None:
@@ -88,6 +89,8 @@ class ViewContext:
             "is_overridden": row.is_overridden,
             "changes": row.changes,
             "topic": row.topic,
+            "kind": row.kind,
+            "topic_source": topic_source_of(row.topic, row.emis_topic),
             "has_homework": bool(row.homework_text),
             "attendance_submitted": row.attendance_roster is not None,
         }

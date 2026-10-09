@@ -254,6 +254,8 @@ async def test_endpoint_serializes_every_group_with_the_contract_fields(
         "is_overridden",
         "changes",
         "topic",
+        "kind",
+        "topic_source",
         "has_homework",
         "attendance_submitted",
     }

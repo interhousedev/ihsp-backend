@@ -50,6 +50,16 @@ server {
     include /etc/nginx/ihsp/route-static.inc;
 }
 
+# Installable app (PWA): the sp build on its own host with its own env.js; the web container routes by Host.
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${HOST_APP};
+    include /etc/nginx/conf.d/tls.inc;
+    include /etc/nginx/ihsp/upstreams.inc;
+    include /etc/nginx/ihsp/route-static.inc;
+}
+
 server {
     listen 443 ssl;
     http2 on;
@@ -75,6 +85,16 @@ server {
     include /etc/nginx/conf.d/tls.inc;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-static.inc;
+}
+
+# Library: the static app from the web container; /b/, /sitemap.xml, /robots.txt and /opds/ from the api.
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${HOST_LIBRARY};
+    include /etc/nginx/conf.d/tls.inc;
+    include /etc/nginx/ihsp/upstreams.inc;
+    include /etc/nginx/ihsp/route-library.inc;
 }
 
 server {

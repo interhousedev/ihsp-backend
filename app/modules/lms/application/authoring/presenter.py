@@ -40,7 +40,7 @@ from app.modules.lms.domain.step_content import StepContent
 from app.modules.lms.ports.authoring.unit_of_work import AuthoringUnitOfWork
 from app.shared.contracts.identity import IdentityDirectory
 
-Badge = Literal["new", "changed", "removed", "mcp"]
+Badge = Literal["new", "changed", "removed", "mcp", "ai"]
 
 
 class Presenter:
@@ -194,6 +194,7 @@ class Presenter:
                     title=s.title,
                     change=s.change.value,
                     via_mcp=s.via_mcp,
+                    via_ai=s.via_ai,
                 )
                 for s in pending.steps
             ],
@@ -262,7 +263,9 @@ def _badges(pending: Pending) -> dict[UUID, Badge]:
     for item in pending.steps:
         if item.change is StepChange.REMOVED:
             continue
-        if item.via_mcp:
+        if item.via_ai:
+            badges[item.step_id] = "ai"
+        elif item.via_mcp:
             badges[item.step_id] = "mcp"
         elif item.change is StepChange.ADDED:
             badges[item.step_id] = "new"

@@ -54,6 +54,16 @@ class ScheduleReader(Protocol):
         """Return the teacher's lessons (any status) between two dates."""
         ...
 
+    async def control_lessons(
+        self,
+        group_ids: Sequence[UUID],
+        start: dt.date,
+        end: dt.date,
+        locale: str,
+    ) -> list[LessonView]:
+        """Return the groups' scheduled midterm and final lessons between two dates."""
+        ...
+
     async def projected_for_student(
         self, user_id: UUID, start: dt.date, end: dt.date, locale: str
     ) -> list[LessonView]:

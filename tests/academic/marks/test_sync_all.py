@@ -137,6 +137,7 @@ async def test_students_are_spread_over_twenty_minutes(
         uow_factory=env.uow_factory,
         sync_student=env.sync,
         bell_sync=env.bells,
+        timetable_sync=env.timetables,
         identity=env.identity,  # type: ignore[arg-type]
         clock=env.clock,
         concurrency=1,
@@ -199,3 +200,65 @@ async def test_when_no_link_works_the_run_still_finishes(
     assert len(env.bells.calls) == 2
     [run] = await runs(sessionmaker_in_tx)
     assert run.status == "done"
+
+
+async def test_the_evening_run_refreshes_each_group_once_per_half(
+    env: Env, sessionmaker_in_tx: Maker
+) -> None:
+    """ACA-1: a student sees only their own half, so one student per half is asked."""
+    ids = await _crowd(env, sessionmaker_in_tx, 3)
+    await _set_subgroups(
+        sessionmaker_in_tx, {ids[0]: 1, ids[1]: 1, ids[2]: 2, ids[3]: None}
+    )
+    env.emis.profile_result = EmisProfile(1, "A", "B", None, 10815, 3292, "2TN2", 3, 1)
+
+    await env.sync_all().execute("20:00")
+
+    asked = {user_id for _, user_id, _ in env.timetables.calls}
+    assert len(env.timetables.calls) == 3
+    assert asked == {ids[0], ids[2], ids[3]}  # first of half 1, of half 2, of unknown
+    assert {group for group, _, _ in env.timetables.calls} == {env.world.group_id}
+    assert all(refresh is False for _, _, refresh in env.timetables.calls)
+
+
+async def test_the_other_runs_leave_the_timetables_alone(
+    env: Env, sessionmaker_in_tx: Maker
+) -> None:
+    """ACA-1: only the 20:00 profile run reads timetables."""
+    await _crowd(env, sessionmaker_in_tx, 1)
+
+    for slot in ("11:30", "15:00", "manual"):
+        await env.sync_all().execute(slot)
+
+    assert env.timetables.calls == []
+
+
+async def test_a_broken_link_makes_the_next_student_of_that_half_try(
+    env: Env, sessionmaker_in_tx: Maker
+) -> None:
+    """ID-7: one student's EMIS password must not stop their group's timetable."""
+    ids = await _crowd(env, sessionmaker_in_tx, 3)
+    env.timetables.fail_for = {ids[0]}
+    env.timetables.raise_for = {ids[1]}
+    env.emis.profile_result = EmisProfile(1, "A", "B", None, 10815, 3292, "2TN2", 3, 1)
+
+    await env.sync_all().execute("20:00")
+
+    assert [user_id for _, user_id, _ in env.timetables.calls] == ids[:3]
+    [run] = await runs(sessionmaker_in_tx)
+    assert run.status == "done"
+
+
+async def _set_subgroups(maker: Maker, subgroups: dict[UUID, int | None]) -> None:
+    from app.modules.academic.infrastructure.orm.student import Student
+
+    import sqlalchemy as sa
+
+    async with maker() as session:
+        for user_id, subgroup in subgroups.items():
+            await session.execute(
+                sa.update(Student)
+                .where(Student.user_id == user_id)
+                .values(subgroup=subgroup)
+            )
+        await session.commit()

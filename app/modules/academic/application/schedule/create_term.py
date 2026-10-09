@@ -7,7 +7,12 @@ from app.modules.academic.application.schedule.common import UowFactory, today
 from app.modules.academic.application.schedule.results import TermData
 from app.modules.academic.application.schedule.term_checks import check_term
 from app.modules.academic.application.schedule.term_views import term_list
-from app.modules.academic.domain.schedule.term import Bell, MovedDay, Term
+from app.modules.academic.domain.schedule.term import (
+    Bell,
+    ControlPeriods,
+    MovedDay,
+    Term,
+)
 from app.shared.clock import Clock
 from app.shared.ids import new_id
 
@@ -30,6 +35,7 @@ class CreateTerm:
         bells: Sequence[Bell],
         non_study_days: Sequence[dt.date],
         moved_days: Sequence[MovedDay],
+        control_periods: ControlPeriods | None = None,
     ) -> TermData:
         """Validate and insert the term."""
         term = Term(
@@ -41,6 +47,7 @@ class CreateTerm:
             bells=sorted(bells, key=lambda bell: bell.period),
             non_study_days=sorted(set(non_study_days)),
             moved_days=list(moved_days),
+            control_periods=control_periods or ControlPeriods(),
         )
         async with self.uow_factory() as uow:
             await check_term(uow, term, exclude_id=None)

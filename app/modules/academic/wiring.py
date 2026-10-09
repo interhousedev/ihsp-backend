@@ -3,6 +3,10 @@
 from dataclasses import dataclass
 from typing import Any
 
+from app.modules.academic.wiring_assessments import (
+    AssessmentServices,
+    build_assessments,
+)
 from app.modules.academic.wiring_classwork import ClassworkServices, build_classwork
 from app.modules.academic.wiring_emis_import import (
     EmisImportServices,
@@ -13,10 +17,12 @@ from app.modules.academic.wiring_schedule import ScheduleServices, build_schedul
 
 __all__ = [
     "AcademicModule",
+    "AssessmentServices",
     "ClassworkServices",
     "EmisImportServices",
     "MarksServices",
     "ScheduleServices",
+    "build_assessments",
     "build_classwork",
     "build_emis_import",
     "build_marks",
@@ -40,3 +46,4 @@ class AcademicModule:
     classwork: ClassworkServices = _NOT_BUILT
     marks: MarksServices = _NOT_BUILT
     emis_import: EmisImportServices = _NOT_BUILT
+    assessments: AssessmentServices = _NOT_BUILT

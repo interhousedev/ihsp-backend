@@ -126,9 +126,9 @@ def test_drops_can_be_switched_off() -> None:
 
 
 def test_no_drop_when_the_formula_switched() -> None:
-    """ACA-22: the final appears and the mark falls only because of the new formula."""
-    before = _snap("4.50", "4.50", "3.00", None)
-    after = _snap("4.17", "4.50", "3.00", "5.00")
+    """ACA-22: the final appears and the mark falls only because of a new type."""
+    before = _snap("3.75", "4.50", "3.00", None)
+    after = _snap("3.17", "4.50", "3.00", "2.00")
     change = SubjectChange(MATH, "Math", 3, before, after)
     assert _build(UserPreferences(), None, [change]) == []
     same_formula = SubjectChange(

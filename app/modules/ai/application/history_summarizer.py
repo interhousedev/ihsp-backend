@@ -1,7 +1,6 @@
 """Summaries of long chats (README AI-9; plan step 7)."""
 
 from collections.abc import Callable
-from uuid import UUID
 
 from app.modules.ai.application.budget import BudgetService
 from app.modules.ai.domain.chat import Chat
@@ -11,6 +10,8 @@ from app.modules.ai.domain.prompts import SUMMARY_SYSTEM_PROMPT
 from app.modules.ai.domain.transcript import render_transcript
 from app.modules.ai.ports.summary_store import StoredSummary, SummaryStore
 from app.modules.ai.ports.unit_of_work import AiUnitOfWork
+from app.settings import Settings
+from app.shared.ai_tasks import AiTask
 from app.shared.contracts.ai import LlmGateway
 
 import structlog
@@ -29,12 +30,14 @@ class HistorySummarizer:
         store: SummaryStore,
         llm: LlmGateway,
         budget: BudgetService,
+        settings: Settings,
     ) -> None:
         """Store the collaborators."""
         self.uow_factory = uow_factory
         self.store = store
         self.llm = llm
         self.budget = budget
+        self.settings = settings
 
     async def context(self, chat: Chat, last_seq: int) -> tuple[str | None, int]:
         """Return (summary, after_seq): messages after `after_seq` go in full."""
@@ -65,26 +68,32 @@ class HistorySummarizer:
         return summary
 
     async def _ask(self, chat: Chat, transcript: str) -> str:
-        estimate = len(transcript) // 3 + SUMMARY_MAX_TOKENS
+        task = self.settings.ai_profile(AiTask.CHAT_SUMMARY)
+        max_tokens = task.output_tokens(SUMMARY_MAX_TOKENS)
+        estimate = (len(transcript) // 3 + max_tokens) * task.budget_weight
         if await self.budget.check(chat.owner_id, chat.assistant, estimate):
             return ""
         try:
             response = await self.llm.complete(
-                model=chat.model,
+                model=task.model,
                 system=SUMMARY_SYSTEM_PROMPT,
                 messages=[{"role": "user", "content": transcript}],
                 tools=[],
-                max_tokens=SUMMARY_MAX_TOKENS,
+                max_tokens=max_tokens,
+                provider=task.provider(),
+                tuning=task.tuning,
             )
         except AiProviderError:
             log.warning("ai.summary_failed", chat_id=str(chat.id))
             return ""
-        await self._count(chat.owner_id, response)
+        await self._count(chat, response, task.budget_weight)
         return str(response.get("text") or "").strip()
 
-    async def _count(self, user_id: UUID, response: dict[str, object]) -> None:
+    async def _count(
+        self, chat: Chat, response: dict[str, object], weight: int
+    ) -> None:
+        """Count the summary in the pool of the chat's assistant."""
         usage = response.get("usage")
         if isinstance(usage, dict):
-            await self.budget.add(
-                user_id, int(usage.get("input", 0)) + int(usage.get("output", 0))
-            )
+            tokens = int(usage.get("input", 0)) + int(usage.get("output", 0))
+            await self.budget.add(chat.owner_id, tokens * weight, chat.assistant)

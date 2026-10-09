@@ -240,6 +240,7 @@ class UpdateLesson:
         now: dt.datetime,
     ) -> None:
         lesson.is_overridden = True
+        lesson.emis_class_id = None  # edited by hand: EMIS no longer manages it
         lesson.changes = merge_changes(lesson.changes, changes)
         if lesson.status == "scheduled":
             await raise_on_lesson_conflicts(

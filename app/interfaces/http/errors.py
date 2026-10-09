@@ -44,19 +44,24 @@ def _internal_body(error_id: str) -> dict[str, Any]:
     }
 
 
+def problem_body(request: Request, exc: BaseError) -> dict[str, Any]:
+    """The problem+json body of a domain error (no `error_id`, no logging)."""
+    return {
+        "type": exc.code,
+        "title": _title(request, exc.message_key, exc.params),
+        "status": exc.status,
+        "message_key": exc.message_key,
+        "params": exc.params,
+    }
+
+
 def install_error_handlers(app: FastAPI) -> None:
     """Register handlers for domain errors, HTTP errors, validation and crashes."""
 
     @app.exception_handler(BaseError)
     async def handle_base_error(request: Request, exc: BaseError) -> JSONResponse:
         """Map a BaseError to its status and stable type."""
-        body: dict[str, Any] = {
-            "type": exc.code,
-            "title": _title(request, exc.message_key, exc.params),
-            "status": exc.status,
-            "message_key": exc.message_key,
-            "params": exc.params,
-        }
+        body = problem_body(request, exc)
         if exc.status >= 500:
             error_id = str(new_id())
             body["error_id"] = error_id

@@ -8,6 +8,7 @@ from uuid import UUID
 
 from app.modules.academic.domain.schedule.errors import (
     TermBellsInvalidError,
+    TermControlPeriodsInvalidError,
     TermDatesInvalidError,
     TermMovedDayInvalidError,
     TermNonStudyDayInvalidError,
@@ -53,6 +54,43 @@ class MovedDay(BaseModel):
     follows_weekday: int
 
 
+ControlName = Literal["midterm_1", "midterm_2", "final"]
+CONTROL_NAMES: tuple[ControlName, ...] = ("midterm_1", "midterm_2", "final")
+
+
+class ControlPeriod(BaseModel):
+    """The dates of a control week: both ends are control days."""
+
+    model_config = ConfigDict(frozen=True)
+
+    start: dt.date
+    end: dt.date
+
+
+class ControlPeriods(BaseModel):
+    """The control weeks of a term, set by Administration (Term.control_periods).
+
+    A semester has two midterm controls and one final control. A period that is not
+    set yet is None.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    midterm_1: ControlPeriod | None = None
+    midterm_2: ControlPeriod | None = None
+    final: ControlPeriod | None = None
+
+    def get(self, name: ControlName) -> ControlPeriod | None:
+        """Return the period of one control, or None when it is not set."""
+        period: ControlPeriod | None = getattr(self, name)
+        return period
+
+    def items(self) -> list[tuple[ControlName, ControlPeriod]]:
+        """Return the periods that are set, in the order midterm 1, midterm 2, final."""
+        found = ((name, self.get(name)) for name in CONTROL_NAMES)
+        return [(name, period) for name, period in found if period is not None]
+
+
 _BELLS = TypeAdapter(list[Bell])
 _MOVED_DAYS = TypeAdapter(list[MovedDay])
 
@@ -66,6 +104,16 @@ def bells_to_json(bells: Sequence[Bell]) -> list[dict[str, Any]]:
     """Serialize bells for the jsonb column ("08:30" times)."""
     dumped: list[dict[str, Any]] = _BELLS.dump_python(list(bells), mode="json")
     return dumped
+
+
+def control_periods_from_json(raw: Any) -> ControlPeriods:
+    """Validate the jsonb stored in Term.control_periods."""
+    return ControlPeriods.model_validate(raw or {})
+
+
+def control_periods_to_json(periods: ControlPeriods) -> dict[str, Any]:
+    """Serialize the control periods for the jsonb column (set ones only)."""
+    return periods.model_dump(mode="json", exclude_none=True)
 
 
 def moved_days_from_json(raw: Any) -> list[MovedDay]:
@@ -91,6 +139,7 @@ class Term:
     bells: list[Bell] = field(default_factory=list)
     non_study_days: list[dt.date] = field(default_factory=list)
     moved_days: list[MovedDay] = field(default_factory=list)
+    control_periods: ControlPeriods = field(default_factory=ControlPeriods)
 
     def contains(self, day: dt.date) -> bool:
         """Return True if the day lies inside the term."""
@@ -108,6 +157,18 @@ def validate_term(term: Term) -> None:
     for moved in term.moved_days:
         if moved.follows_weekday not in STUDY_WEEKDAYS:
             raise TermMovedDayInvalidError(params={"date": moved.date.isoformat()})
+    _validate_control_periods(term)
+
+
+def _validate_control_periods(term: Term) -> None:
+    """Each period lies in the term, ends after it starts and follows the one before."""
+    previous_end: dt.date | None = None
+    for name, period in term.control_periods.items():
+        inside = term.starts_on <= period.start and period.end <= term.ends_on
+        after_previous = previous_end is None or previous_end < period.start
+        if not (period.start <= period.end and inside and after_previous):
+            raise TermControlPeriodsInvalidError(params={"control": name})
+        previous_end = period.end
 
 
 def _validate_bells(bells: Sequence[Bell]) -> None:

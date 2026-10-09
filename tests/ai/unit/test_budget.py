@@ -56,9 +56,11 @@ async def test_the_daily_limit_blocks_until_tashkent_midnight(
     make_harness: HarnessFactory,
 ) -> None:
     """AI-8: the day resets at 00:00 Tashkent; the error says when."""
-    h = make_harness(limits={"ai_daily_tokens_student": 8_000})
+    # The pre-check estimates the whole request, tool catalog included, so the
+    # limit is far above one request and the first answer uses most of it.
+    h = make_harness(limits={"ai_daily_tokens_student": 20_000})
     chat = await h.new_chat()
-    h.llm.push(text_reply("a", tokens=3_000))
+    h.llm.push(text_reply("a", tokens=16_000))
     await h.say(chat.id, "one")
 
     with pytest.raises(AiLimitReachedError) as caught:

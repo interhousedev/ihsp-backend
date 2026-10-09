@@ -71,5 +71,6 @@ broker: AsyncBroker = build_broker(
     _settings.redis.url, in_memory=_settings.env == "test"
 )
 scheduler = TaskiqScheduler(
-    broker=broker, sources=[CronScheduleSource(), LabelScheduleSource(broker)]
+    broker=broker,
+    sources=[CronScheduleSource(settings=_settings), LabelScheduleSource(broker)],
 )

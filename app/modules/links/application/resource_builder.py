@@ -9,6 +9,7 @@ from app.modules.links.application.views import LinkView, PersonView, ResourceVi
 from app.modules.links.domain.link import Link, LinkKind
 from app.shared.contracts.files import FileRef, FilesApi
 from app.shared.contracts.identity import IdentityDirectory
+from app.shared.contracts.links import EMIS_AUTHOR_ID, EMIS_AUTHOR_NAME
 
 UNUSABLE_FILE_STATUSES = frozenset({"deleted", "rejected"})
 
@@ -71,6 +72,8 @@ class ResourceBuilder:
                 first_name=user.first_name if user else "",
                 last_name=user.last_name if user else "",
             )
+            if link.owner_id == EMIS_AUTHOR_ID:  # no account: an outside system
+                author = PersonView(link.owner_id, EMIS_AUTHOR_NAME, "")
             views.append(
                 ResourceView(
                     link=link,

@@ -63,21 +63,45 @@ x-backend-env: &backend-env
   IHSP_EMIS__INSTITUTION_ID: ${IHSP_EMIS__INSTITUTION_ID:-10815}
   IHSP_EMIS__GATEWAY_URL: http://identity:8001/internal/emis
   IHSP_OPENROUTER__MODE: ${IHSP_OPENROUTER__MODE:-real}
-  IHSP_OPENROUTER__MODEL_STUDENT: ${IHSP_OPENROUTER__MODEL_STUDENT:-anthropic/claude-haiku-4.5}
-  IHSP_OPENROUTER__MODEL_ADMIN: ${IHSP_OPENROUTER__MODEL_ADMIN:-anthropic/claude-haiku-4.5}
+  # Models per task (docs/reference/settings.md). An empty value means "not set": a task
+  # without its own model uses IHSP_AI__DEFAULT__MODEL. More IHSP_AI__TASKS__<TASK>__*
+  # variables can be added here, and set in .env.prod.
+  IHSP_AI__DEFAULT__MODEL: ${IHSP_AI__DEFAULT__MODEL:-anthropic/claude-haiku-4.5}
+  IHSP_AI__DEFAULT__TEMPERATURE: ${IHSP_AI__DEFAULT__TEMPERATURE:-0.2}
+  IHSP_AI__TASKS__STUDENT_CHAT__MODEL: ${IHSP_AI__TASKS__STUDENT_CHAT__MODEL:-}
+  IHSP_AI__TASKS__STUDENT_CHAT_SMART__MODEL: ${IHSP_AI__TASKS__STUDENT_CHAT_SMART__MODEL:-}
+  IHSP_AI__TASKS__ADMIN_CHAT__MODEL: ${IHSP_AI__TASKS__ADMIN_CHAT__MODEL:-}
+  IHSP_AI__TASKS__NOTEBOOK_CHAT__MODEL: ${IHSP_AI__TASKS__NOTEBOOK_CHAT__MODEL:-}
+  # Deprecated names of the first three (still honoured by app/settings.py).
+  IHSP_OPENROUTER__MODEL_STUDENT: ${IHSP_OPENROUTER__MODEL_STUDENT:-}
+  IHSP_OPENROUTER__MODEL_ADMIN: ${IHSP_OPENROUTER__MODEL_ADMIN:-}
+  # Feature flags: set one to false in .env.prod to switch a part of the product off.
+  IHSP_FEATURES__NOTEBOOKS: ${IHSP_FEATURES__NOTEBOOKS:-true}
+  IHSP_FEATURES__AI_ASSISTANT: ${IHSP_FEATURES__AI_ASSISTANT:-true}
+  IHSP_FEATURES__FLASHCARDS: ${IHSP_FEATURES__FLASHCARDS:-true}
+  IHSP_FEATURES__LMS: ${IHSP_FEATURES__LMS:-true}
+  IHSP_FEATURES__MAIL: ${IHSP_FEATURES__MAIL:-true}
+  IHSP_FEATURES__PUSH: ${IHSP_FEATURES__PUSH:-true}
+  IHSP_FEATURES__EMIS_SYNC: ${IHSP_FEATURES__EMIS_SYNC:-true}
   IHSP_OPENROUTER__APP_URL: https://sp.${DOMAIN}
   IHSP_SMTP_OUT__MAIL_DOMAIN: mail.${DOMAIN}
   IHSP_SMTP_OUT__SYSTEM_FROM: no-reply@${DOMAIN}
   IHSP_URLS__ID: https://id.${DOMAIN}
   IHSP_URLS__SP: https://sp.${DOMAIN}
+  IHSP_URLS__APP: https://app.${DOMAIN}
   IHSP_URLS__STAFF: https://staff.${DOMAIN}
   IHSP_URLS__ADMIN: https://admin.${DOMAIN}
   IHSP_URLS__LMS: https://lms.${DOMAIN}
+  IHSP_URLS__LIBRARY: https://library.${DOMAIN}
   IHSP_URLS__SHARE: https://s.${DOMAIN}
   IHSP_URLS__SHORT_LINKS: https://s.${DOMAIN}
   IHSP_URLS__ROOMS: https://${DOMAIN}/r
   IHSP_URLS__API: https://api.${DOMAIN}
   IHSP_URLS__MCP: https://mcp.${DOMAIN}
+  # Installable app version served by GET /v1/app/version: `latest` is the newest build,
+  # `min_supported` the oldest one allowed to keep running (older clients update at once).
+  IHSP_APP__LATEST: ${IHSP_APP__LATEST:-1.0.0}
+  IHSP_APP__MIN_SUPPORTED: ${IHSP_APP__MIN_SUPPORTED:-1.0.0}
 
 # Only identity and worker hold EMIS secrets (the worker destroys the Vault secret of a
 # deleted account) and the JWT-bearer signing key; `python -m app <process>` refuses to
@@ -101,12 +125,12 @@ x-openrouter-env: &openrouter-env
   IHSP_OPENROUTER__API_KEY: ${IHSP_OPENROUTER__API_KEY:?}
 
 # The same S3 settings feed the bucket bootstrap job.
-x-cors-origins: &cors-origins https://id.${DOMAIN},https://sp.${DOMAIN},https://staff.${DOMAIN},https://admin.${DOMAIN},https://lms.${DOMAIN}
+x-cors-origins: &cors-origins https://id.${DOMAIN},https://sp.${DOMAIN},https://app.${DOMAIN},https://staff.${DOMAIN},https://admin.${DOMAIN},https://lms.${DOMAIN},https://library.${DOMAIN}
 
 services:
   # ---------------------------------------------------------------- data stores
   postgres:
-    image: postgres:16
+    image: pgvector/pgvector:pg16
     restart: unless-stopped
     logging: *logging
     command: ["postgres", "-c", "max_connections=200"]
@@ -402,9 +426,11 @@ services:
       APP_ENV: prod
       APP_HOST_ID: id.${DOMAIN}
       APP_HOST_SP: sp.${DOMAIN}
+      APP_HOST_APP: app.${DOMAIN}
       APP_HOST_STAFF: staff.${DOMAIN}
       APP_HOST_ADMIN: admin.${DOMAIN}
       APP_HOST_LMS: lms.${DOMAIN}
+      APP_HOST_LIBRARY: library.${DOMAIN}
       APP_HOST_SHARE: s.${DOMAIN}
       API_HOST: api.${DOMAIN}
       MCP_HOST: mcp.${DOMAIN}
@@ -422,9 +448,11 @@ services:
       IHSP_WEB_ID_URL: https://id.${DOMAIN}
       IHSP_WEB_HYDRA_URL: https://id.${DOMAIN}
       IHSP_WEB_SP_URL: https://sp.${DOMAIN}
+      IHSP_WEB_APP_URL: https://app.${DOMAIN}
       IHSP_WEB_STAFF_URL: https://staff.${DOMAIN}
       IHSP_WEB_ADMIN_URL: https://admin.${DOMAIN}
       IHSP_WEB_LMS_URL: https://lms.${DOMAIN}
+      IHSP_WEB_LIBRARY_URL: https://library.${DOMAIN}
       IHSP_WEB_SHARE_URL: https://s.${DOMAIN}/ai
       IHSP_WEB_SHORT_LINKS_URL: https://s.${DOMAIN}
       IHSP_WEB_ROOMS_URL: https://${DOMAIN}
@@ -452,9 +480,11 @@ services:
       CERT_NAME: ${DOMAIN:?}
       HOST_ID: id.${DOMAIN}
       HOST_SP: sp.${DOMAIN}
+      HOST_APP: app.${DOMAIN}
       HOST_STAFF: staff.${DOMAIN}
       HOST_ADMIN: admin.${DOMAIN}
       HOST_LMS: lms.${DOMAIN}
+      HOST_LIBRARY: library.${DOMAIN}
       HOST_S: s.${DOMAIN}
       HOST_API: api.${DOMAIN}
       HOST_MCP: mcp.${DOMAIN}

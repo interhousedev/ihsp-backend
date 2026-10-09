@@ -16,7 +16,18 @@ from fakeredis.aioredis import FakeRedis
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-SCHEMAS = ("id", "academic", "files", "links", "ai", "notify", "admin", "mail", "lms")
+SCHEMAS = (
+    "id",
+    "academic",
+    "files",
+    "links",
+    "ai",
+    "notify",
+    "admin",
+    "mail",
+    "lms",
+    "notebooks",
+)
 
 ContainerFactory = Callable[..., Coroutine[Any, Any, Container]]
 

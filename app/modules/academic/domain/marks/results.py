@@ -34,11 +34,11 @@ def compute_gpa(values: Sequence[int]) -> ResultSnapshot:
 
 
 def formula_switched(old: ResultSnapshot | None, new: ResultSnapshot) -> bool:
-    """Return True if the semester mark changed formula between two results (ACA-22)."""
+    """Return True if the mark types behind the semester mark changed (ACA-22)."""
     if old is None:
         return False
-    before = grading.uses_full_formula(old.lesson_avg, old.midterm_avg, old.final_avg)
-    after = grading.uses_full_formula(new.lesson_avg, new.midterm_avg, new.final_avg)
+    before = grading.present_types(old.lesson_avg, old.midterm_avg, old.final_avg)
+    after = grading.present_types(new.lesson_avg, new.midterm_avg, new.final_avg)
     return before != after
 
 

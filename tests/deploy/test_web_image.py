@@ -5,7 +5,7 @@ import re
 from tests.deploy.helpers import BACKEND_DIR, SCRIPTS_DIR
 
 WEB_DEPLOY = BACKEND_DIR.parent / "web" / "deploy"
-APPS = ("id", "sp", "staff", "admin", "lms", "share")
+APPS = ("id", "sp", "staff", "admin", "lms", "share", "library")
 
 
 def _nginx_stage(name: str) -> list[str]:
@@ -59,6 +59,9 @@ def test_local_up_builds_the_apps_one_at_a_time_on_the_host() -> None:
     assert 'bun run --filter "./apps/$app" build' in script
     assert "deploy/Dockerfile.prebuilt" in script
     assert "bun deploy/csp-hash.ts" in script
+    # every app of the image is built, the library included
+    build_list = next(x for x in script.splitlines() if x.startswith("web_apps=("))
+    assert set(build_list.removeprefix("web_apps=(").rstrip(")").split()) == set(APPS)
     # one `bun run --filter` per app, never the parallel `bun run build` of the root
     code = [x for x in script.splitlines() if not x.lstrip().startswith("#")]
     assert not any("bun run build" in line for line in code)

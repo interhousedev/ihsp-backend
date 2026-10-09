@@ -18,7 +18,7 @@ from pydantic import BaseModel, ConfigDict, Field
 Weekday = Annotated[int, Field(ge=1, le=6)]
 Period = Annotated[int, Field(ge=1, le=12)]
 Short = Annotated[str, Field(min_length=1, max_length=200)]
-RoleName = Literal["student", "teacher", "admin", "lms_admin"]
+RoleName = Literal["student", "teacher", "admin", "lms_admin", "librarian"]
 Parity = Literal["every", "odd", "even"]
 
 

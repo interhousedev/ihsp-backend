@@ -129,3 +129,31 @@ async def test_empty_list_writes_nothing(db_session: AsyncSession) -> None:
     await write_notifications(db_session, [])
 
     assert await rows(db_session, "w7:") == []
+
+
+async def test_ready_notebook_output_is_stored_once_per_artifact(
+    db_session: AsyncSession,
+) -> None:
+    """NB-21: the type fits the column and a repeated artifact adds no second row."""
+    user, notebook, artifact = new_id(), new_id(), new_id()
+    payload = {
+        "notebook_id": str(notebook),
+        "artifact_id": str(artifact),
+        "kind": "quiz",
+        "title": "Cells",
+    }
+    ready = NotificationDraft(
+        user_id=user,
+        type=NotificationType.NOTEBOOK_ARTIFACT_READY,
+        payload=payload,
+        dedupe_key=f"notebook_artifact_ready:{artifact}",
+    )
+
+    await write_notifications(db_session, [ready])
+    await write_notifications(db_session, [ready])
+
+    (row,) = await rows(db_session, "notebook_artifact_ready:")
+    assert row["type"] == "notebook_artifact_ready"
+    assert row["user_id"] == user
+    assert row["payload"] == payload
+    assert row["status"] == "pending"

@@ -2,20 +2,27 @@
 
 import asyncio
 import json
-from collections.abc import Awaitable, Callable
+import re
+from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable
+from contextlib import aclosing
 from typing import Any
 
-from app.modules.ai.domain.errors import AiProviderError
+from app.modules.ai.domain.errors import AiInvalidOutputError, AiProviderError
+from app.shared.contracts.ai import LlmTuning
 
 import httpx
 import structlog
 
 log = structlog.get_logger(__name__)
 
+_FENCE = re.compile(r"```(?:json|JSON)?[ \t]*\n?(.*?)```", re.DOTALL)
+
 RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
 DEFAULT_RETRY_SECONDS = 2.0
 MAX_RETRY_SECONDS = 10.0
 TEMPERATURE = 0.2
+CONNECT_TIMEOUT_SECONDS = 10.0
+MICRO = 1_000_000
 
 
 class OpenRouterGateway:
@@ -50,6 +57,28 @@ class OpenRouterGateway:
         """Close the HTTP client."""
         await self._client.aclose()
 
+    async def chat(
+        self, payload: dict[str, Any], *, timeout_seconds: float | None = None
+    ) -> dict[str, Any]:
+        """Send a prepared request body and return the checked JSON response.
+
+        For callers that need fields beyond text and tools (the web search reads the
+        message `annotations`). Retries and error mapping are the same as `complete`.
+        """
+        return await self._post(payload, timeout_seconds=timeout_seconds)
+
+    async def embeddings(
+        self, payload: dict[str, Any], *, timeout_seconds: float | None = None
+    ) -> dict[str, Any]:
+        """`POST /embeddings` with a prepared body; returns the checked JSON response.
+
+        Same key, retries and error mapping as the chat calls (`OpenRouterEmbeddings`
+        builds the body and reads the vectors).
+        """
+        return await self._post(
+            payload, timeout_seconds=timeout_seconds, path="/embeddings"
+        )
+
     async def complete(
         self,
         *,
@@ -58,18 +87,128 @@ class OpenRouterGateway:
         messages: list[dict[str, Any]],
         tools: list[dict[str, Any]],
         max_tokens: int,
+        provider: dict[str, Any] | None = None,
+        tuning: LlmTuning | None = None,
     ) -> dict[str, Any]:
         """Return {"text", "tool_calls", "usage"} for one model request."""
-        payload = build_payload(model, system, messages, tools, max_tokens)
+        payload = build_payload(model, system, messages, tools, max_tokens, tuning)
+        if provider is not None:
+            payload["provider"] = provider
         data = await self._post(payload)
         return parse_response(data)
 
-    async def _post(self, payload: dict[str, Any]) -> dict[str, Any]:
+    async def complete_json(
+        self,
+        *,
+        model: str,
+        system: str,
+        messages: list[dict[str, Any]],
+        schema_name: str,
+        schema: dict[str, Any],
+        max_tokens: int,
+        provider: dict[str, Any] | None = None,
+        timeout_seconds: float | None = None,
+        tuning: LlmTuning | None = None,
+    ) -> dict[str, Any]:
+        """Return {"data", "text", "usage"} for a strict JSON schema request.
+
+        Raises:
+            AiProviderError: The provider failed.
+            AiInvalidOutputError: The answer holds no JSON object.
+        """
+        payload = build_payload(model, system, messages, [], max_tokens, tuning)
+        payload["response_format"] = {
+            "type": "json_schema",
+            "json_schema": {"name": schema_name, "strict": True, "schema": schema},
+        }
+        if provider is not None:
+            payload["provider"] = provider
+        data = await self._post(payload, timeout_seconds=timeout_seconds)
+        result = parse_response(data)
+        return {
+            "data": parse_json_object(result["text"]),
+            "text": result["text"],
+            "usage": result["usage"],
+        }
+
+    async def stream(
+        self,
+        *,
+        model: str,
+        system: str,
+        messages: list[dict[str, Any]],
+        max_tokens: int,
+        provider: dict[str, Any] | None = None,
+        timeout_seconds: float | None = None,
+        tuning: LlmTuning | None = None,
+    ) -> AsyncIterator[dict[str, Any]]:
+        """Yield {"delta": text} items, then {"usage": {...}} (server-sent events).
+
+        A failed connection is retried once, but only before the first delta.
+        """
+        payload = build_payload(model, system, messages, [], max_tokens, tuning)
+        payload["stream"] = True
+        payload["stream_options"] = {"include_usage": True}
+        if provider is not None:
+            payload["provider"] = provider
+        for attempt in (1, 2):
+            delivered = False
+            try:
+                async with aclosing(
+                    self._stream_once(payload, timeout_seconds)
+                ) as items:  # a consumer that stops early still frees the connection
+                    async for item in items:
+                        delivered = delivered or "delta" in item
+                        yield item
+                return
+            except _RetryLater as later:
+                if delivered or attempt == 2:
+                    raise later.error from None
+                await self._sleep(later.seconds)
+
+    async def _stream_once(
+        self, payload: dict[str, Any], timeout_seconds: float | None
+    ) -> AsyncGenerator[dict[str, Any], None]:
         url = f"{self._base_url}/chat/completions"
+        try:
+            async with self._client.stream(
+                "POST",
+                url,
+                json=payload,
+                headers=self._headers,
+                **_timeout_args(timeout_seconds),
+            ) as response:
+                if response.status_code != 200:
+                    raise await _stream_status_error(response)
+                parser = SseParser()
+                async for line in response.aiter_lines():
+                    for item in parser.feed(line):
+                        yield item
+                    if parser.done:
+                        break
+                for item in parser.finish():
+                    yield item
+        except httpx.HTTPError as exc:
+            raise _RetryLater(
+                DEFAULT_RETRY_SECONDS,
+                AiProviderError(support_details=f"transport: {exc!r}"),
+            ) from exc
+
+    async def _post(
+        self,
+        payload: dict[str, Any],
+        *,
+        timeout_seconds: float | None = None,
+        path: str = "/chat/completions",
+    ) -> dict[str, Any]:
+        url = f"{self._base_url}{path}"
         for attempt in (1, 2):
             try:
                 response = await self._client.post(
-                    url, json=payload, headers=self._headers
+                    url,
+                    json=payload,
+                    headers=self._headers,
+                    **_timeout_args(timeout_seconds),
                 )
             except httpx.HTTPError as exc:
                 if attempt == 1:
@@ -89,8 +228,12 @@ def build_payload(
     messages: list[dict[str, Any]],
     tools: list[dict[str, Any]],
     max_tokens: int,
+    tuning: LlmTuning | None = None,
 ) -> dict[str, Any]:
     """Build the request body; Anthropic models get a cache breakpoint on the system.
+
+    `tuning` (from the task's model profile) sets the temperature, the reasoning effort
+    and the fallback models (OpenRouter's `models` list, the model first).
 
     One breakpoint on the last system part caches the tools and the system prompt
     together, because the provider caches the prefix `tools, system, messages`.
@@ -106,10 +249,38 @@ def build_payload(
         "max_tokens": max_tokens,
         "temperature": TEMPERATURE,
     }
+    if tuning is not None:
+        _apply_tuning(payload, model, tuning)
     if tools:
         payload["tools"] = tools
         payload["tool_choice"] = "auto"
     return payload
+
+
+def _apply_tuning(payload: dict[str, Any], model: str, tuning: LlmTuning) -> None:
+    """Add what the model profile sets; unset parts keep the gateway's defaults."""
+    if tuning.temperature is not None:
+        payload["temperature"] = tuning.temperature
+    if tuning.reasoning_effort is not None:
+        payload["reasoning"] = {"effort": tuning.reasoning_effort}
+    if tuning.fallbacks:
+        payload["models"] = [model, *tuning.fallbacks]
+
+
+class _RetryLater(Exception):
+    """A failure that may be retried after ``seconds``; ``error`` is the final one."""
+
+    def __init__(self, seconds: float, error: AiProviderError) -> None:
+        super().__init__(error.support_details)
+        self.seconds = seconds
+        self.error = error
+
+
+def _timeout_args(seconds: float | None) -> dict[str, Any]:
+    """The per-request timeout; without it the client's default applies."""
+    if seconds is None:
+        return {}
+    return {"timeout": httpx.Timeout(seconds, connect=CONNECT_TIMEOUT_SECONDS)}
 
 
 def _retry_after(response: httpx.Response) -> float:
@@ -187,8 +358,126 @@ def _tool_call(raw: dict[str, Any]) -> dict[str, Any]:
 
 def _usage(raw: dict[str, Any]) -> dict[str, int]:
     details = raw.get("prompt_tokens_details") or {}
-    return {
+    usage = {
         "input": int(raw.get("prompt_tokens", 0)),
         "output": int(raw.get("completion_tokens", 0)),
         "cached": int(details.get("cached_tokens", 0)),
     }
+    if raw.get("cost") is not None:
+        usage["cost_micro"] = round(float(raw["cost"]) * MICRO)
+    return usage
+
+
+def parse_json_object(text: str) -> dict[str, Any]:
+    """Return the JSON object in a model answer.
+
+    Accepts a bare object, an object inside a Markdown code fence and an object with
+    some text before or after it. Anything else raises ``AiInvalidOutputError``
+    (the message never holds the text).
+    """
+    body = _unfenced(text)
+    try:
+        whole = json.loads(body)
+    except ValueError:
+        found = _first_object(body)
+        if found is None:
+            raise AiInvalidOutputError(support_details="not a JSON object") from None
+        return found
+    if not isinstance(whole, dict):
+        raise AiInvalidOutputError(support_details="not a JSON object")
+    return whole
+
+
+def _unfenced(text: str) -> str:
+    """Return the content of the first Markdown code fence, else the trimmed text."""
+    match = _FENCE.search(text)
+    return (match.group(1) if match else text).strip()
+
+
+def _first_object(text: str) -> dict[str, Any] | None:
+    """Return the first JSON object that starts at some ``{`` of the text."""
+    decoder = json.JSONDecoder()
+    start = text.find("{")
+    while start != -1:
+        try:
+            value, _ = decoder.raw_decode(text, start)
+        except ValueError:
+            value = None
+        if isinstance(value, dict):
+            return value
+        start = text.find("{", start + 1)
+    return None
+
+
+async def _stream_status_error(response: httpx.Response) -> Exception:
+    """Build the error for a non-200 streamed response (retryable ones wrap it)."""
+    status = response.status_code
+    body = await response.aread()
+    try:
+        parsed = json.loads(body)
+    except ValueError:
+        parsed = None
+    error = parsed.get("error") if isinstance(parsed, dict) else None
+    _log_error(status, error)
+    failure = AiProviderError(
+        params={"status": status},
+        support_details=f"HTTP {status}: {_error_text(error) if error else 'no body'}",
+    )
+    if status in RETRY_STATUSES:
+        return _RetryLater(_retry_after(response), failure)
+    return failure
+
+
+class SseParser:
+    """Reads the server-sent events of a streamed completion, line by line.
+
+    Blank lines, ``:`` keep-alive comments and other SSE fields are ignored; the
+    stream ends at ``data: [DONE]``. ``feed`` returns the ``{"delta": text}`` items of
+    a line and ``finish`` returns the final ``{"usage": {...}}``.
+    """
+
+    def __init__(self) -> None:
+        """Start before the first line."""
+        self.done = False
+        self._finished = False
+        self._usage: dict[str, Any] = {}
+
+    def feed(self, line: str) -> list[dict[str, Any]]:
+        """Return the items of one line."""
+        text = line.strip()
+        if not text.startswith("data:"):
+            return []
+        body = text[len("data:") :].strip()
+        if body == "[DONE]":
+            self.done = self._finished = True
+            return []
+        chunk = _parse_chunk(body)
+        if isinstance(chunk.get("usage"), dict):
+            self._usage = chunk["usage"]
+        choice = (chunk.get("choices") or [{}])[0]
+        if choice.get("finish_reason"):
+            self._finished = True
+        content = (choice.get("delta") or {}).get("content")
+        return [{"delta": content}] if content else []
+
+    def finish(self) -> list[dict[str, Any]]:
+        """Return the usage item; a stream cut short is a provider error."""
+        if not self._finished:
+            raise AiProviderError(support_details="stream ended early")
+        return [{"usage": _usage(self._usage)}]
+
+
+def _parse_chunk(body: str) -> dict[str, Any]:
+    """Parse one event; an error object (also inside a choice) is a provider error."""
+    try:
+        chunk = json.loads(body)
+    except ValueError as exc:
+        raise AiProviderError(support_details="stream chunk is not JSON") from exc
+    if not isinstance(chunk, dict):
+        raise AiProviderError(support_details="stream chunk is not an object")
+    choice = (chunk.get("choices") or [{}])[0]
+    error = chunk.get("error") or choice.get("error")
+    if error or choice.get("finish_reason") == "error":
+        _log_error(200, error)
+        raise AiProviderError(support_details=f"stream error: {_error_text(error)}")
+    return chunk

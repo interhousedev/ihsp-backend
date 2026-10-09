@@ -38,6 +38,10 @@ class StudentSyncRepository(Protocol):
         """Return active students whose backfill is done."""
         ...
 
+    async def list_sync_members(self) -> list[tuple[UUID, UUID, int | None]]:
+        """Return (user id, group id, subgroup) of the same students."""
+        ...
+
     async def record_success(
         self, user_id: UUID, *, at: dt.datetime, backfilled: bool
     ) -> None:

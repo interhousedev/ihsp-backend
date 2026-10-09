@@ -13,7 +13,7 @@ from app.modules.academic.application.schedule.results import TermData
 from app.modules.academic.application.schedule.term_checks import check_term
 from app.modules.academic.application.schedule.term_views import term_list
 from app.modules.academic.domain.schedule.errors import TermNotFoundError
-from app.modules.academic.domain.schedule.term import Bell, MovedDay
+from app.modules.academic.domain.schedule.term import Bell, ControlPeriods, MovedDay
 from app.shared.clock import Clock
 from app.shared.tasks import TaskKicker
 
@@ -40,6 +40,7 @@ class UpdateTerm:
         bells: Sequence[Bell] | None = None,
         non_study_days: Sequence[dt.date] | None = None,
         moved_days: Sequence[MovedDay] | None = None,
+        control_periods: ControlPeriods | None = None,
     ) -> TermData:
         """Change the given fields; None means unchanged."""
         async with self.uow_factory() as uow:
@@ -57,6 +58,8 @@ class UpdateTerm:
                 term.non_study_days = sorted(set(non_study_days))
             if moved_days is not None:
                 term.moved_days = list(moved_days)
+            if control_periods is not None:
+                term.control_periods = control_periods
             await check_term(uow, term, exclude_id=term.id)
             await uow.terms.save(term)
             kick_generation(uow, self.kicker, self.clock, term.id)

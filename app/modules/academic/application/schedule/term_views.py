@@ -18,6 +18,7 @@ def term_data(term: Term, *, is_current: bool) -> TermData:
         bells=list(term.bells),
         non_study_days=sorted(term.non_study_days),
         moved_days=sorted(term.moved_days, key=lambda moved: moved.date),
+        control_periods=term.control_periods,
         is_current=is_current,
     )
 

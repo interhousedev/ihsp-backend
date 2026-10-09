@@ -89,3 +89,27 @@ async def test_turn_lock_is_exclusive_and_released(redis: FakeRedis) -> None:
             raise RuntimeError("boom")
     async with lock.hold(chat):
         pass
+
+
+async def test_the_course_pool_is_shared_with_the_notebooks_module(
+    redis: FakeRedis,
+) -> None:
+    """The author assistant and the course workspace count in the same ai:lms keys."""
+    from app.modules.ai.infrastructure.redis_budget_store import COURSE_PREFIX
+    from app.modules.notebooks.infrastructure.redis_budget_store import (
+        COURSE_PREFIX as NOTEBOOKS_COURSE_PREFIX,
+    )
+    from app.modules.notebooks.infrastructure.redis_budget_store import (
+        RedisBudgetStore as NotebooksBudgetStore,
+    )
+
+    author = RedisBudgetStore(redis, COURSE_PREFIX)
+    workspace = NotebooksBudgetStore(redis, NOTEBOOKS_COURSE_PREFIX)
+    user, day = new_id(), date(2026, 10, 6)
+
+    await author.add_day(user, day, 300)
+    await workspace.add_day(user, day, 200)
+
+    assert await author.day_used(user, day) == 500
+    assert await RedisBudgetStore(redis).day_used(user, day) == 0
+    assert await redis.get(f"ai:lms:day:{user}:2026-10-06") in ("500", b"500")

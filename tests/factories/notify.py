@@ -6,6 +6,7 @@ from uuid import UUID
 
 from app.modules.notify.domain.notification import Notification
 from app.modules.notify.domain.notification_status import NotificationStatus
+from app.modules.notify.domain.push_subscription import PushSubscription
 from app.shared.actor import Role
 from app.shared.contracts.identity import UserRef, UserStatus
 from app.shared.contracts.links import ResourceRef
@@ -13,6 +14,13 @@ from app.shared.ids import new_id
 from app.shared.notifications import NotificationType
 
 NOW = datetime.fromisoformat("2026-10-06T09:00:00+00:00")
+
+# A real-looking key pair: 65-byte uncompressed P-256 point and a 16-byte secret.
+P256DH = (
+    "BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQtUbVlUls0VJXg7A8u-Ts1"
+    "XbjhazAkj7I99e8QcYP7DkM"
+)
+AUTH = "tBHItJI5svbpez7KI4CCXg"
 
 
 def make_user(
@@ -84,4 +92,25 @@ def make_resource(
         author_first_name=author,
         hidden=hidden,
         file_id=None,
+    )
+
+
+def make_subscription(
+    user_id: UUID,
+    *,
+    endpoint: str | None = None,
+    created_at: datetime = NOW,
+    failures: int = 0,
+) -> PushSubscription:
+    """A Web Push subscription of one device."""
+    subscription_id = new_id()
+    return PushSubscription(
+        id=subscription_id,
+        user_id=user_id,
+        endpoint=endpoint or f"https://fcm.googleapis.com/fcm/send/{subscription_id}",
+        p256dh=P256DH,
+        auth=AUTH,
+        user_agent="Mozilla/5.0 (test)",
+        created_at=created_at,
+        failures=failures,
     )

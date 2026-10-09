@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Literal, Self
 from uuid import UUID
 
+from app.interfaces.http.v1.web_search.schemas import WebResultResponse
 from app.modules.ai.application.budget import UsageInfo
 from app.modules.ai.application.views import (
     ChatDetailView,
@@ -13,13 +14,18 @@ from app.modules.ai.application.views import (
 
 from pydantic import BaseModel, ConfigDict, Field
 
-AssistantName = Literal["student", "admin"]
+AssistantName = Literal["student", "admin", "lms_author"]
+TierName = Literal["fast", "smart"]
 
 
 class CreateChatBody(BaseModel):
-    """POST /v1/ai/chats."""
+    """POST /v1/ai/chats; `tier` only matters for the student assistant."""
 
     assistant: AssistantName
+    tier: TierName | None = None
+    course_id: UUID | None = None
+    """Required for `lms_author` (422 `ai/course-required` without it): the course
+    the chat works on; the caller needs the course's ``edit`` permission (403)."""
 
 
 class RenameChatBody(BaseModel):
@@ -33,12 +39,22 @@ class SendMessageBody(BaseModel):
 
     text: str = Field(min_length=1, max_length=8000)
     file_ids: list[UUID] = Field(default_factory=list, max_length=5)
+    web_search: bool = False
+    """Answer with a web search: spends one of today's searches (404 when the feature
+    is off, 429 when they are used up, 503 when the provider fails)."""
 
 
 class RejectToolCallBody(BaseModel):
     """POST /v1/ai/chats/{id}/tool-calls/{call_id}/reject."""
 
     reason: str | None = Field(default=None, max_length=500)
+
+
+class MessageFeedbackBody(BaseModel):
+    """POST /v1/ai/chats/{id}/messages/{seq}/feedback."""
+
+    rating: Literal["up", "down"]
+    comment: str | None = Field(default=None, max_length=500)
 
 
 class _Response(BaseModel):
@@ -53,6 +69,9 @@ class ChatItemResponse(_Response):
     title: str
     last_message_at: datetime
     pending_approvals: int
+    tier: TierName
+    course_id: UUID | None = None
+    """The course of an `lms_author` chat; null for the other assistants."""
 
     @classmethod
     def from_view(cls, view: ChatItemView) -> Self:
@@ -106,6 +125,9 @@ class ChatMessageViewResponse(_Response):
     file_ids: list[UUID]
     tool_calls: list[ToolCallViewResponse]
     created_at: datetime
+    feedback: Literal["up", "down"] | None
+    web: list[WebResultResponse]
+    """Pages of the message's web search; `⟦w1⟧` chips in the text point at them."""
 
 
 class UsagePartResponse(_Response):

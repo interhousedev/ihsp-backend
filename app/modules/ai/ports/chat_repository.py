@@ -34,8 +34,15 @@ class ChatRepository(Protocol):
         *,
         before: tuple[datetime, UUID] | None,
         limit: int,
+        title_contains: str | None = None,
+        course_id: UUID | None = None,
     ) -> list[Chat]:
-        """Return the owner's live chats, newest first, after the cursor."""
+        """Return the owner's live chats, newest first, after the cursor.
+
+        `title_contains` keeps the chats whose title has this text (any case,
+        wildcards are literal characters); `course_id` keeps the author chats of
+        that course (``scope.course_id``).
+        """
         ...
 
     async def with_pending(self, owner_id: UUID) -> list[Chat]:

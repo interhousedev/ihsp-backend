@@ -69,6 +69,15 @@ async def test_build_reads_limits_from_settings_and_exposes_the_files_api(
     assert services.limits.staff_quota_bytes == settings.limits.storage_staff_bytes
     assert services.limits.file_max_bytes == settings.limits.file_max_bytes
     assert services.limits.ai_text_max_bytes == settings.limits.ai_text_max_bytes
+    assert services.limits.library_file_max_bytes == settings.library.file_max_bytes
+    assert (
+        services.limits.library_student_quota_bytes
+        == settings.library.student_quota_bytes
+    )
+    assert (
+        services.limits.library_teacher_quota_bytes
+        == settings.library.teacher_quota_bytes
+    )
     for method in (
         "get",
         "get_many",
@@ -79,6 +88,11 @@ async def test_build_reads_limits_from_settings_and_exposes_the_files_api(
         "store_bytes",
         "check_access",
         "list_owned",
+        "read_outline",
+        "page_count",
+        "sha256",
+        "combine_images_to_pdf",
+        "delete_file",
     ):
         assert callable(getattr(public, method))
     await services.close()

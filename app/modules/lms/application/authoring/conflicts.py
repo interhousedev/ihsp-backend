@@ -13,12 +13,28 @@ async def course_conflict(
     course: Course,
     access: CourseAccess,
 ) -> DraftConflictError:
-    """Conflict whose `params.theirs` is the current `CourseDraft`."""
+    """Conflict whose `params.theirs` is the current `CourseDraft`.
+
+    `params.lock_version` repeats its lock version for callers that only retry.
+    """
     view = await presenter.course_draft(uow, course, access)
-    return DraftConflictError(params={"theirs": view.model_dump(mode="json")})
+    return DraftConflictError(
+        params={
+            "theirs": view.model_dump(mode="json"),
+            "lock_version": view.lock_version,
+        }
+    )
 
 
 async def step_conflict(presenter: Presenter, step: CourseStep) -> DraftConflictError:
-    """Conflict whose `params.theirs` is the current `StepDraft`."""
+    """Conflict whose `params.theirs` is the current `StepDraft`.
+
+    `params.lock_version` repeats its lock version for callers that only retry.
+    """
     view = await presenter.step_draft(step)
-    return DraftConflictError(params={"theirs": view.model_dump(mode="json")})
+    return DraftConflictError(
+        params={
+            "theirs": view.model_dump(mode="json"),
+            "lock_version": view.lock_version,
+        }
+    )

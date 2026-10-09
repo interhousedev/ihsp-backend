@@ -5,6 +5,7 @@ from datetime import datetime
 
 from app.modules.notify.domain.notification import Notification
 from app.modules.notify.domain.notification_status import (
+    DeliveryKey,
     DeliveryState,
     NotificationStatus,
 )
@@ -12,7 +13,7 @@ from app.modules.notify.domain.retry_policy import next_retry_at
 
 
 def skip(notification: Notification, reason: str) -> None:
-    """Close the notification without sending anything to Telegram."""
+    """Close the notification without sending anything."""
     notification.status = NotificationStatus.SKIPPED
     notification.next_attempt_at = None
     notification.error = reason
@@ -30,9 +31,9 @@ def schedule_retry(notification: Notification, now: datetime) -> None:
 
 
 def settle(
-    notification: Notification, account_ids: Sequence[int], now: datetime
+    notification: Notification, account_ids: Sequence[DeliveryKey], now: datetime
 ) -> None:
-    """Set the final status after a send round over the user's accounts.
+    """Set the final status after a send round over the user's accounts and devices.
 
     Blocked accounts don't count. Everything else sent: `sent`. Only blocked
     accounts: `skipped`. Otherwise the failed accounts are retried.

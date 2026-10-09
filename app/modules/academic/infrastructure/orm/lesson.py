@@ -8,6 +8,7 @@ from app.shared.db.base import Base, IdMixin, TimestampMixin
 
 from sqlalchemy import (
     ARRAY,
+    BigInteger,
     Boolean,
     CheckConstraint,
     Date,
@@ -69,6 +70,7 @@ class Lesson(IdMixin, TimestampMixin, Base):
         Index("ix_lessons_ends_at", "ends_at"),
         Index("ix_lessons_teacher_id_date", "teacher_id", "date"),
         Index("ix_lessons_audience", "audience", postgresql_using="gin"),
+        Index("ix_lessons_emis_class_id", "emis_class_id"),
         Index(
             "ix_lessons_attendance_roster", "attendance_roster", postgresql_using="gin"
         ),
@@ -104,6 +106,21 @@ class Lesson(IdMixin, TimestampMixin, Base):
         server_default=text("'scheduled'"),
     )
     is_overridden: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    kind: Mapped[str] = mapped_column(
+        Enum(
+            "lecture",
+            "practice",
+            "midterm",
+            "final",
+            "other",
+            name="kind",
+            native_enum=False,
+            create_constraint=True,
+        ),
+        server_default=text("'other'"),
+    )
+    emis_class_id: Mapped[int | None] = mapped_column(BigInteger)
+    emis_topic: Mapped[str | None] = mapped_column(Text)
     homework_text: Mapped[str | None] = mapped_column(Text)
     homework_due_date: Mapped[dt.date | None] = mapped_column(Date)
     homework_due_auto: Mapped[bool] = mapped_column(

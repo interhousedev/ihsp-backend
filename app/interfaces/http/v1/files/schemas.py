@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 class UsedByItem(BaseModel):
     """A place that uses a file."""
 
-    kind: Literal["link", "lesson", "chat"]
+    kind: Literal["link", "lesson", "chat", "notebook"]
     id: UUID
     label: str
 
@@ -42,7 +42,9 @@ class RequestUploadBody(BaseModel):
     size: int
     content_type: str = Field(max_length=255)
     sha256_b64: str = Field(min_length=1, max_length=128)
-    purpose: Literal["ai_upload", "link"]
+    purpose: Literal[
+        "ai_upload", "link", "library_book", "library_cover", "library_material"
+    ]
 
 
 class UploadInfo(BaseModel):

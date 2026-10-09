@@ -124,7 +124,11 @@ class DeleteAccount:
                     user_agent=user_agent,
                 )
             )
-            for task in ("files.delete_owner", "links.revoke_owner"):
+            for task in (
+                "files.delete_owner",
+                "links.revoke_owner",
+                "notebooks.delete_owner",
+            ):
                 uow.after_commit(
                     partial(self._kicker.kick, task, user_id=str(account.id))
                 )

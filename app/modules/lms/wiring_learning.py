@@ -19,6 +19,7 @@ from app.modules.lms.application.learning.next_card import NextCard
 from app.modules.lms.application.learning.override_score import OverrideScore
 from app.modules.lms.application.learning.review_card import ReviewCard
 from app.modules.lms.application.learning.save_answers import SaveAnswers
+from app.modules.lms.application.learning.source_reader import LmsSourceReaderImpl
 from app.modules.lms.application.learning.start_attempt import StartAttempt
 from app.modules.lms.application.learning.step_completion import StepCompletion
 from app.modules.lms.application.learning.submit_attempt import SubmitAttempt
@@ -50,6 +51,7 @@ class LearningServices:
     list_course_students: ListCourseStudents
     get_attempt: GetAttempt
     override_score: OverrideScore
+    source_reader: LmsSourceReaderImpl
 
 
 def build_learning(
@@ -94,4 +96,5 @@ def build_learning(
         list_course_students=ListCourseStudents(uow_factory, clock, identity),
         get_attempt=GetAttempt(uow_factory, clock, identity, finisher),
         override_score=OverrideScore(uow_factory, clock, identity, completion),
+        source_reader=LmsSourceReaderImpl(uow_factory),
     )

@@ -6,6 +6,7 @@ import sys
 from collections.abc import Sequence
 
 from app.settings import load_settings
+from app.settings_loader import SettingsError
 
 PROCESSES = (
     "all",
@@ -20,6 +21,7 @@ PROCESSES = (
     "seed-demo",
 )
 NOT_WIRED_EXIT_CODE = 2
+BAD_SETTINGS_EXIT_CODE = 78  # EX_CONFIG
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -47,7 +49,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             raise
         sys.stderr.write(f"{args.process} is not wired yet\n")
         return NOT_WIRED_EXIT_CODE
-    settings = load_settings()
+    try:
+        settings = load_settings()
+    except SettingsError as exc:  # a list of the bad variables, not a traceback
+        sys.stderr.write(f"{exc}\n")
+        return BAD_SETTINGS_EXIT_CODE
     settings.require_production_ready(args.process)
     result: int | None = module.run(settings, args)
     return result or 0

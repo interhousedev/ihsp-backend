@@ -154,7 +154,7 @@ def test_prod_images_are_pinned(prod_model: dict[str, Any]) -> None:
     assert images["hydra"] == "oryd/hydra:v26.2.0"
     assert images["s3"] == "rustfs/rustfs:1.0.1"
     assert images["vault"].startswith("hashicorp/vault:2.")
-    assert images["postgres"] == "postgres:16"
+    assert images["postgres"] == "pgvector/pgvector:pg16"
     for name in ("identity", "api", "bot", "mail", "worker", "scheduler", "migrate"):
         assert images[name].startswith("ghcr.io/")
         assert images[name].endswith("/ihsp-backend:CHANGE_ME")
@@ -249,6 +249,27 @@ def test_local_web_csp_allows_the_plain_http_api_and_storage(
     assert "http://localhost:9100" in env["CSP_CONNECT_SRC"]
     assert "http://localhost:9100" in env["CSP_IMG_SRC"]
     assert env["APP_ENV"] == "dev"
+
+
+@pytest.mark.parametrize("which", ["prod", "local"])
+def test_the_library_host_is_wired_through_the_stack(
+    request: pytest.FixtureRequest, which: str
+) -> None:
+    """Like lms, the library host is set in the web image, nginx, backend and CORS."""
+    services = _model(request, which)["services"]
+    web = services["web"]["environment"]
+    host = web["APP_HOST_LIBRARY"]
+    origin = web["IHSP_WEB_LIBRARY_URL"]
+
+    assert host.startswith("library.")
+    assert services["nginx"]["environment"]["HOST_LIBRARY"] == host
+    assert origin.endswith(host)
+    assert services["api"]["environment"]["IHSP_URLS__LIBRARY"] == origin
+    # browsers call Hydra's token endpoint and read book files from the storage bucket
+    assert origin in services["hydra"]["environment"][
+        "SERVE_PUBLIC_CORS_ALLOWED_ORIGINS"
+    ].split(",")
+    assert origin in services["s3-init"]["environment"]["S3_CORS_ORIGINS"].split(",")
 
 
 def test_local_web_image_is_packed_from_the_host_build_by_default(

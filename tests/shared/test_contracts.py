@@ -3,6 +3,7 @@
 import datetime as dt
 import importlib
 import logging
+import re
 from uuid import uuid4
 
 from app.shared.actor import Role
@@ -98,10 +99,11 @@ def test_render_types_carry_the_message_and_its_recipient() -> None:
 
 
 def test_every_notification_type_is_unique() -> None:
-    """17 types, values are snake_case strings."""
+    """Values are unique snake_case strings; the library adds 7 of the 26."""
     values = [t.value for t in NotificationType]
 
-    assert len(values) == len(set(values)) == 17
+    assert len(values) == len(set(values)) == 26
+    assert all(re.fullmatch("[a-z]+(_[a-z]+)*", value) for value in values)
 
 
 def test_module_deps_is_frozen() -> None:

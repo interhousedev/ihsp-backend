@@ -2,7 +2,7 @@
 
 from app.modules.links.application.views import ResourceView
 from app.modules.links.domain.link import LessonRole, LinkKind
-from app.shared.contracts.links import ResourceRef
+from app.shared.contracts.links import EMIS_AUTHOR_ID, ResourceRef
 
 
 def to_ref(view: ResourceView) -> ResourceRef:
@@ -21,4 +21,5 @@ def to_ref(view: ResourceView) -> ResourceRef:
         author_first_name=view.author.first_name,
         hidden=link.is_hidden,
         file_id=link.file_id,
+        source="emis" if link.owner_id == EMIS_AUTHOR_ID else "user",
     )

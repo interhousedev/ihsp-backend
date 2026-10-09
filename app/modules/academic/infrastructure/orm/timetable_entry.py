@@ -62,3 +62,13 @@ class TimetableEntry(IdMixin, TimestampMixin, Base):
     audience: Mapped[list[str]] = mapped_column(ARRAY(Text))
     valid_from: Mapped[date] = mapped_column(Date)
     valid_to: Mapped[date | None] = mapped_column(Date)
+    source: Mapped[str] = mapped_column(
+        Enum(
+            "manual",
+            "emis",
+            name="source",
+            native_enum=False,
+            create_constraint=True,
+        ),
+        server_default=text("'manual'"),
+    )

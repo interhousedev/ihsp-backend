@@ -29,6 +29,7 @@ class PendingStep:
     title: str
     change: StepChange
     via_mcp: bool
+    via_ai: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,10 +90,18 @@ def compute_pending(
             change = StepChange.CHANGED
         else:
             continue
-        steps.append(PendingStep(step_id, snap.title, change, snap.via is StepVia.MCP))
+        steps.append(
+            PendingStep(
+                step_id,
+                snap.title,
+                change,
+                via_mcp=snap.via is StepVia.MCP,
+                via_ai=snap.via is StepVia.AI,
+            )
+        )
     present = set(in_outline)
     steps.extend(
-        PendingStep(m.step_id, m.title, StepChange.REMOVED, False)
+        PendingStep(m.step_id, m.title, StepChange.REMOVED, via_mcp=False)
         for m in live
         if m.step_id not in present
     )

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any, ClassVar, Generic, TypeVar
 from uuid import UUID
 
+from app.modules.ai.domain.chat_scope import ChatScope
 from app.modules.ai.domain.json_schema import tool_parameters
 from app.modules.ai.domain.tool_args import ToolArgs, parse_args
 from app.modules.ai.domain.tool_call import PreviewData, ToolAccess
@@ -17,11 +18,12 @@ A = TypeVar("A", bound=ToolArgs)
 
 @dataclass(frozen=True, slots=True)
 class ToolContext:
-    """Who runs a tool, in which chat, in which language."""
+    """Who runs a tool, in which chat, in which language (and in which workspace)."""
 
     actor: Actor
     chat_id: UUID
     locale: str
+    scope: ChatScope | None = None  # set for author chats: the course workspace
 
 
 class _Tool(ABC, Generic[A]):

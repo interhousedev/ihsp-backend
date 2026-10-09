@@ -12,6 +12,11 @@ import pytest
 
 URLS = UrlsSettings()
 LESSON_ID = str(new_id())
+NOTEBOOK_ID = str(new_id())
+ARTIFACT_ID = str(new_id())
+ASSESSMENT_ID = str(new_id())
+ITEM_ID = str(new_id())
+LIST_ID = str(new_id())
 
 PAYLOADS: dict[NotificationType, dict[str, Any]] = {
     NotificationType.MARKS: {
@@ -91,6 +96,53 @@ PAYLOADS: dict[NotificationType, dict[str, Any]] = {
     NotificationType.ACCOUNT_CLOSING: {"closes_on": "2026-11-01"},
     NotificationType.MAIL_SUSPENDED: {"reason": "spam"},
     NotificationType.SYNC_ALERT: {"run_id": "r", "failed": 3, "total": 120},
+    NotificationType.NOTEBOOK_ARTIFACT_READY: {
+        "notebook_id": NOTEBOOK_ID,
+        "artifact_id": ARTIFACT_ID,
+        "kind": "mind_map",
+        "title": "Photosynthesis",
+    },
+    NotificationType.ASSESSMENT_REMINDER: {
+        "assessment_id": ASSESSMENT_ID,
+        "subject_name": "Mathematics",
+        "kind": "midterm",
+        "control": "midterm_1",
+        "title": "Algebra",
+        "date": "2026-10-21",
+        "period_end": None,
+        "days_left": 3,
+        "starts_at": "2026-10-21T04:00:00+00:00",
+        "room": "204",
+    },
+    NotificationType.LIBRARY_ITEM_APPROVED: {"item_id": ITEM_ID, "title": "Algebra"},
+    NotificationType.LIBRARY_ITEM_CHANGES_REQUESTED: {
+        "item_id": ITEM_ID,
+        "title": "Algebra",
+        "message": "Scan the pages straight.",
+    },
+    NotificationType.LIBRARY_ITEM_REJECTED: {
+        "item_id": ITEM_ID,
+        "title": "Algebra",
+        "reason": "duplicate",
+        "message": "It is already in the library.",
+    },
+    NotificationType.LIBRARY_ITEM_UNPUBLISHED: {
+        "item_id": ITEM_ID,
+        "title": "Algebra",
+        "reason": "copyright",
+        "note": "The publisher asked us.",
+    },
+    NotificationType.LIBRARY_QUEUE_WAITING: {"count": 7, "oldest_hours": 52},
+    NotificationType.LIBRARY_REPORT_FILED: {
+        "item_id": ITEM_ID,
+        "title": "Algebra",
+        "reason": "exam_leak",
+    },
+    NotificationType.LIBRARY_READING_LIST_NEW: {
+        "list_id": LIST_ID,
+        "title": "Start of term",
+        "subject": "Physics",
+    },
 }
 
 
@@ -210,3 +262,69 @@ def test_emis_reauth_links_to_the_id_security_page(i18n: I18nCore) -> None:
     result = describe(NotificationType.EMIS_REAUTH, {}, "ru", i18n=i18n, urls=URLS)
 
     assert result.link == f"{URLS.id}/security/emis/"
+
+
+@pytest.mark.parametrize(
+    ("locale", "title", "body"),
+    [
+        ("en", "Notebook output is ready", "Ready: Mind map “Photosynthesis”"),
+        ("ru", "Материал блокнота готов", "Готово: Ментальная карта «Photosynthesis»"),
+        ("uz", "Daftar materiali tayyor", "Tayyor: Aql xaritasi «Photosynthesis»"),
+    ],
+)
+def test_a_ready_notebook_output_names_its_kind_and_title(
+    i18n: I18nCore, locale: str, title: str, body: str
+) -> None:
+    """NB-21: the bell says which Studio output is ready, in the reader's language."""
+    result = describe(
+        NotificationType.NOTEBOOK_ARTIFACT_READY,
+        PAYLOADS[NotificationType.NOTEBOOK_ARTIFACT_READY],
+        locale,
+        i18n=i18n,
+        urls=URLS,
+    )
+
+    assert (result.title, result.body) == (title, body)
+
+
+def test_a_ready_notebook_output_links_to_the_artifact_in_ihsp_web(
+    i18n: I18nCore,
+) -> None:
+    """NB-21: the notification opens the notebook with the new output selected."""
+    result = describe(
+        NotificationType.NOTEBOOK_ARTIFACT_READY,
+        PAYLOADS[NotificationType.NOTEBOOK_ARTIFACT_READY],
+        "en",
+        i18n=i18n,
+        urls=URLS,
+    )
+
+    assert result.link == (
+        f"{URLS.sp}/notebooks/view/?id={NOTEBOOK_ID}&artifact={ARTIFACT_ID}"
+    )
+
+
+@pytest.mark.parametrize(
+    ("kind", "label"),
+    [
+        ("report", "Report"),
+        ("mind_map", "Mind map"),
+        ("flashcards", "Flash cards"),
+        ("quiz", "Quiz"),
+        ("data_table", "Data table"),
+        ("slides", "Slide deck"),
+        ("infographic", "Infographic"),
+        ("podcast", "podcast"),
+    ],
+)
+def test_every_studio_kind_has_a_label_and_an_unknown_one_is_shown_as_is(
+    i18n: I18nCore, kind: str, label: str
+) -> None:
+    """NB-21: the kind label is translated; a kind added later never shows a key."""
+    payload = {**PAYLOADS[NotificationType.NOTEBOOK_ARTIFACT_READY], "kind": kind}
+
+    result = describe(
+        NotificationType.NOTEBOOK_ARTIFACT_READY, payload, "en", i18n=i18n, urls=URLS
+    )
+
+    assert result.body == f"Ready: {label} “Photosynthesis”"

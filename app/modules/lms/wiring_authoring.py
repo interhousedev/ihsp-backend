@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from app.modules.lms.application.authoring.add_course_staff import AddCourseStaff
 from app.modules.lms.application.authoring.append_block import AppendBlock
 from app.modules.lms.application.authoring.append_question import AppendQuestion
+from app.modules.lms.application.authoring.apply_course_plan import ApplyCoursePlan
 from app.modules.lms.application.authoring.apply_outline_ops import ApplyOutlineOps
 from app.modules.lms.application.authoring.compare_versions import CompareVersions
 from app.modules.lms.application.authoring.create_course import CreateCourse
@@ -55,6 +56,10 @@ from app.modules.lms.application.public_authoring import (
     LmsDraftCommandsImpl,
     LmsQueriesImpl,
 )
+from app.modules.lms.application.public_workspace import (
+    LmsWorkspaceCommandsImpl,
+    LmsWorkspaceImpl,
+)
 from app.modules.lms.infrastructure.authoring.uow import SqlAuthoringUnitOfWork
 from app.modules.lms.ports.authoring.unit_of_work import AuthoringUnitOfWork
 from app.shared.clock import Clock
@@ -98,6 +103,8 @@ class AuthoringServices:
     prune_revisions: PruneRevisions
     queries: LmsQueriesImpl
     draft_commands: LmsDraftCommandsImpl
+    workspace: LmsWorkspaceImpl
+    workspace_commands: LmsWorkspaceCommandsImpl
 
 
 def build_authoring(
@@ -179,5 +186,14 @@ def assemble_authoring(
             create_step=create_step,
             append_block=AppendBlock(get_step_draft, save_step_draft),
             append_question=AppendQuestion(get_step_draft, save_step_draft),
+        ),
+        workspace=LmsWorkspaceImpl(
+            uow_factory=uow_factory,
+            identity=identity,
+            get_course_draft=get_course_draft,
+        ),
+        workspace_commands=LmsWorkspaceCommandsImpl(
+            apply_course_plan=ApplyCoursePlan(uow_factory, clock, writer),
+            save_step_draft=save_step_draft,
         ),
     )

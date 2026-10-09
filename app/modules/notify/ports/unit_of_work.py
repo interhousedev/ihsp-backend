@@ -4,6 +4,9 @@ from types import TracebackType
 from typing import Protocol, Self
 
 from app.modules.notify.ports.notification_repository import NotificationRepository
+from app.modules.notify.ports.push_subscription_repository import (
+    PushSubscriptionRepository,
+)
 
 
 class NotifyUnitOfWork(Protocol):
@@ -12,6 +15,11 @@ class NotifyUnitOfWork(Protocol):
     @property
     def notifications(self) -> NotificationRepository:
         """Notification repository bound to this transaction."""
+        ...
+
+    @property
+    def push_subscriptions(self) -> PushSubscriptionRepository:
+        """Web Push subscription repository bound to this transaction."""
         ...
 
     async def __aenter__(self) -> Self:

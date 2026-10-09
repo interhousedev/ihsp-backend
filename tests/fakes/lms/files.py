@@ -45,7 +45,13 @@ class FakeFilesApi:
         """Return the existing files among the ids."""
         return {fid: self.files[fid] for fid in file_ids if fid in self.files}
 
-    async def download_url(self, file_id: UUID, *, inline: bool | None = None) -> str:
+    async def download_url(
+        self,
+        file_id: UUID,
+        *,
+        inline: bool | None = None,
+        ttl_seconds: int | None = None,
+    ) -> str:
         """Return a fake URL."""
         return f"https://files.test/{file_id}"
 

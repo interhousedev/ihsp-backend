@@ -79,7 +79,12 @@ async def test_tool_calls_and_usage_are_mapped(gateway: OpenRouterGateway) -> No
         {"id": "toolu_01A", "name": "get_marks", "arguments": {"from": "2026-09-01"}},
         {"id": "toolu_01B", "name": "get_homework", "arguments": {}},
     ]
-    assert result["usage"] == {"input": 10339, "output": 60, "cached": 10318}
+    assert result["usage"] == {
+        "input": 10339,
+        "output": 60,
+        "cached": 10318,
+        "cost_micro": 140,  # usage.cost 0.00014 USD
+    }
 
 
 @respx.mock

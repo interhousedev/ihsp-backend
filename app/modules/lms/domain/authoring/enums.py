@@ -18,10 +18,11 @@ class CourseStatus(StrEnum):
 
 
 class StepVia(StrEnum):
-    """Where a draft change came from (the "via MCP" badge)."""
+    """Where a draft change came from (the "via MCP" and "via AI" badges)."""
 
     UI = "ui"
     MCP = "mcp"
+    AI = "ai"
 
 
 class RevisionKind(StrEnum):

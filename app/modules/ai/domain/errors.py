@@ -9,14 +9,11 @@ from app.shared.base_error import (
     RateLimitedError,
     ValidationFailedError,
 )
+from app.shared.contracts import ai as ai_contract
 
-
-class AiProviderError(BaseError):
-    """The language model provider failed or is unavailable."""
-
-    code = "ai/provider-error"
-    status = 503
-    message_key = "ai-provider-error"
+# The provider errors live in the contract, so that other modules can raise them.
+AiProviderError = ai_contract.AiProviderError
+AiInvalidOutputError = ai_contract.AiInvalidOutputError
 
 
 class AiLimitReachedError(RateLimitedError):
@@ -32,6 +29,34 @@ class ChatNotFoundError(NotFoundError):
 
     code = "ai/chat-not-found"
     message_key = "ai-chat-not-found"
+
+
+class MessageNotFoundError(NotFoundError):
+    """The chat has no message with this sequence number."""
+
+    code = "ai/message-not-found"
+    message_key = "ai-message-not-found"
+
+
+class FeedbackNotAllowedError(ValidationFailedError):
+    """Only the assistant's own messages can be rated."""
+
+    code = "ai/feedback-not-allowed"
+    message_key = "ai-feedback-not-allowed"
+
+
+class ApprovalPendingError(ConflictError):
+    """An approval card still waits, so the answer cannot be generated again."""
+
+    code = "ai/approval-pending"
+    message_key = "ai-approval-pending"
+
+
+class NothingToRegenerateError(ConflictError):
+    """The chat has no user message to answer again."""
+
+    code = "ai/nothing-to-regenerate"
+    message_key = "ai-nothing-to-regenerate"
 
 
 class ToolCallNotFoundError(NotFoundError):
@@ -63,10 +88,24 @@ class TurnInProgressError(ConflictError):
 
 
 class WrongAssistantError(ForbiddenError):
-    """The user's roles do not allow this assistant."""
+    """The user's roles (or course permissions) do not allow this assistant."""
 
     code = "ai/wrong-assistant"
     message_key = "ai-wrong-assistant"
+
+
+class AuthorUnavailableError(NotFoundError):
+    """The course author assistant is switched off or not wired in this process."""
+
+    code = "ai/feature-disabled"
+    message_key = "ai-feature-disabled"
+
+
+class CourseRequiredError(ValidationFailedError):
+    """The course author assistant works on one course: `course_id` is missing."""
+
+    code = "ai/course-required"
+    message_key = "ai-course-required"
 
 
 class AttachmentInvalidError(ValidationFailedError):

@@ -1,6 +1,7 @@
 """Task academic.sync_class_hours: store the EMIS bells in the current term (ACA-4).
 
-Kicked after a registration; the 20:00 sync run also calls the use case once.
+The group timetable sync and the 20:00 sync run call the use case themselves; this
+task is for starting a bell sync by hand.
 """
 
 from uuid import UUID

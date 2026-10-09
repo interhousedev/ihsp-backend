@@ -9,7 +9,9 @@ from app.modules.ai.ports.turn_lock import TurnLock
 from app.modules.ai.ports.unit_of_work import UowFactory
 from app.modules.ai.wiring import AiOverrides, AiServices, build
 from app.settings import Settings
+from app.settings_ai import AiTaskSettings
 from app.shared.actor import Actor, Role
+from app.shared.ai_tasks import AiTask
 from app.shared.contracts.ai import LlmGateway
 from app.shared.db.uow_testing import noop_audit_writer, noop_outbox_writer
 from app.shared.i18n.core import I18nCore
@@ -29,10 +31,12 @@ from tests.fakes.ai.contracts import (
 from tests.fakes.ai.llm import ScriptedLlm
 from tests.fakes.ai.stores import (
     InMemoryBudgetStore,
+    InMemorySearchQuotaStore,
     InMemorySummaryStore,
     InMemoryTurnLock,
 )
 from tests.fakes.ai.uow import FakeAiStore, fake_uow_factory
+from tests.fakes.ai.web_search import ScriptedWebSearch
 from tests.fakes.clock import FixedClock
 from tests.fakes.tasks import FakeTaskKicker
 
@@ -49,6 +53,7 @@ class AiHarness:
     store: FakeAiStore
     llm: ScriptedLlm
     budget: InMemoryBudgetStore
+    course_budget: InMemoryBudgetStore  # the course staff pool (author assistant)
     summaries: InMemorySummaryStore
     marks: FakeMarks
     classwork: FakeClasswork
@@ -57,10 +62,13 @@ class AiHarness:
     flashcards: FakeFlashcards
     links: FakeLinks
     admin_backend: FakeAdminBackend
+    search: ScriptedWebSearch
+    search_quota: InMemorySearchQuotaStore
     clock: FixedClock
     student: Actor
     admin: Actor
     other_student: Actor
+    teacher: Actor
     settings: Settings
 
     async def new_chat(
@@ -71,7 +79,13 @@ class AiHarness:
         return await self.services.create_chat.execute(actor=who, assistant=assistant)
 
     async def say(
-        self, chat_id: Any, text: str, *, actor: Actor | None = None, files: Any = None
+        self,
+        chat_id: Any,
+        text: str,
+        *,
+        actor: Actor | None = None,
+        files: Any = None,
+        web: bool = False,
     ) -> Any:
         """Send a message as the student (or the given actor)."""
         return await self.services.send_message.execute(
@@ -79,6 +93,7 @@ class AiHarness:
             chat_id=chat_id,
             text=text,
             file_ids=files or [],
+            web_search=web,
         )
 
 
@@ -94,30 +109,43 @@ def make_harness(
     kicker: FakeTaskKicker,
     make_actor: Callable[..., Actor],
 ) -> HarnessFactory:
-    """Factory of harnesses; options replace the model, limits, lock or unit of work."""
+    """Factory of harnesses; options replace the limits, tasks, lock or unit of work."""
 
     def factory(
         *,
         llm: LlmGateway | None = None,
         limits: dict[str, int] | None = None,
+        tasks: dict[AiTask, AiTaskSettings] | None = None,
+        features: dict[str, bool] | None = None,
         lock: TurnLock | None = None,
         uow_factory: UowFactory | None = None,
     ) -> AiHarness:
         student_user = make_user(Role.STUDENT, first="Aziza", last="Karimova")
         other_user = make_user(Role.STUDENT, first="Bobur", last="Rashidov")
         admin_user = make_user(Role.ADMIN, first="Dilnoza", last="Saidova")
-        identity = FakeIdentity(student_user, other_user, admin_user)
+        teacher_user = make_user(Role.TEACHER, first="Nodira", last="Usmonova")
+        identity = FakeIdentity(student_user, other_user, admin_user, teacher_user)
         cfg = settings
         if limits:
             cfg = settings.model_copy(
                 update={"limits": settings.limits.model_copy(update=limits)}
             )
+        if tasks:
+            cfg = cfg.model_copy(
+                update={"ai": cfg.ai.model_copy(update={"tasks": tasks})}
+            )
+        if features:
+            cfg = cfg.model_copy(
+                update={"features": cfg.features.model_copy(update=features)}
+            )
         scripted = ScriptedLlm()
+        search, search_quota = ScriptedWebSearch(), InMemorySearchQuotaStore()
         store, budget, summaries = (
             FakeAiStore(),
             InMemoryBudgetStore(),
             InMemorySummaryStore(),
         )
+        course_budget = InMemoryBudgetStore()
         parts = {
             "marks": FakeMarks(),
             "classwork": FakeClasswork(),
@@ -150,8 +178,11 @@ def make_harness(
             flashcards=parts["flashcards"],
             admin_tools=parts["admin_backend"],
             links=parts["links"],
+            web_search=search,
             overrides=AiOverrides(
                 budget_store=budget,
+                course_budget_store=course_budget,
+                search_quota_store=search_quota,
                 summary_store=summaries,
                 turn_lock=lock or InMemoryTurnLock(),
                 uow_factory=uow_factory or fake_uow_factory(store),
@@ -162,12 +193,16 @@ def make_harness(
             store=store,
             llm=scripted,
             budget=budget,
+            course_budget=course_budget,
             summaries=summaries,
             clock=clock,
             student=make_actor(Role.STUDENT, user_id=student_user.id),
             admin=make_actor(Role.ADMIN, user_id=admin_user.id),
             other_student=make_actor(Role.STUDENT, user_id=other_user.id),
+            teacher=make_actor(Role.TEACHER, user_id=teacher_user.id),
             settings=cfg,
+            search=search,
+            search_quota=search_quota,
             **parts,
         )
 

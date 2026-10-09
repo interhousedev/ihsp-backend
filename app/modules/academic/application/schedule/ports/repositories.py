@@ -266,6 +266,16 @@ class LessonRepository(Protocol):
         """Return lessons made from entries whose origin date is in the range."""
         ...
 
+    async def in_audience(
+        self, term_id: UUID, start: dt.date, end: dt.date, keys: Collection[str]
+    ) -> list[Lesson]:
+        """Return the term's lessons dated start..end whose audience holds a key."""
+        ...
+
+    async def with_emis_class_ids(self, class_ids: Collection[int]) -> list[Lesson]:
+        """Return the lessons that mirror one of the EMIS classes."""
+        ...
+
     async def find_overlapping(
         self, starts_at: dt.datetime, ends_at: dt.datetime
     ) -> list[Lesson]:

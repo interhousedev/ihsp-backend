@@ -4,9 +4,10 @@ from app.modules.files.domain.errors import (
     FileDeletedError,
     StoredFileNotFoundError,
 )
+from app.modules.files.domain.policy import may_read
 from app.modules.files.domain.status import FileStatus
 from app.modules.files.domain.stored_file import StoredFile
-from app.shared.actor import Actor, Role
+from app.shared.actor import Actor
 from app.shared.base_error import ForbiddenError
 from app.shared.contracts.files import FileScope
 
@@ -14,8 +15,8 @@ OWNER_EDITABLE_SCOPES = frozenset({FileScope.STUDENT, FileScope.STAFF})
 
 
 def can_read(file: StoredFile, actor: Actor) -> bool:
-    """The owner and administrators may read a file."""
-    return file.is_owned_by(actor.user_id) or actor.has(Role.ADMIN)
+    """The owner and administrators may read a file (librarians: library files)."""
+    return may_read(file, actor)
 
 
 def require_readable(file: StoredFile | None, actor: Actor) -> StoredFile:

@@ -70,6 +70,7 @@ class PreferencesPatchBody(BaseModel):
     lessons_links_lead_min: int | None = None
     lessons_prompt_enabled: bool | None = None
     mail_forward_to_telegram: bool | None = None
+    notify_push: bool | None = None
     today_cards: list[str] | None = None
     onboarding_dismissed: list[str] | None = None
     seen_marks_at: datetime | None = None

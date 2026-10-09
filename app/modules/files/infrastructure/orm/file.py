@@ -43,6 +43,7 @@ class File(IdMixin, TimestampMixin, Base):
             "course",
             "mail",
             "system",
+            "library",
             name="scope",
             native_enum=False,
             create_constraint=True,

@@ -35,7 +35,7 @@ async def test_pdf_text_is_stored_next_to_the_object_and_the_file_is_ready(
     assert "Second page" in sidecar.data.decode()
     assert sidecar.content_type == "text/plain; charset=utf-8"
     assert file.text_bytes == len(sidecar.data)
-    assert file.metadata == {"pages": 2}
+    assert file.metadata == {"pages": 2, "page_starts": [0, 12]}
 
 
 async def test_docx_paragraphs_and_tables_are_extracted_in_order(

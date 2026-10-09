@@ -5,11 +5,11 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from app.modules.ai.application.continue_turn import TurnProgress
+from app.modules.ai.application.owned_chat import ChatGuard
 from app.modules.ai.application.pending_calls import find_call, refresh_counter
 from app.modules.ai.application.views import TurnStatus
 from app.modules.ai.domain.chat import Chat, ChatMessage
 from app.modules.ai.domain.errors import (
-    ChatNotFoundError,
     ToolCallExpiredError,
     ToolCallNotPendingError,
 )
@@ -32,10 +32,15 @@ class CallDecider:
     """Moves a call out of `pending_approval` exactly once."""
 
     def __init__(
-        self, *, uow_factory: Callable[[], AiUnitOfWork], clock: Clock
+        self,
+        *,
+        uow_factory: Callable[[], AiUnitOfWork],
+        guard: ChatGuard,
+        clock: Clock,
     ) -> None:
         """Store the collaborators."""
         self.uow_factory = uow_factory
+        self.guard = guard
         self.clock = clock
 
     async def claim(
@@ -49,9 +54,7 @@ class CallDecider:
 
         The caller sets the new status and commits.
         """
-        chat = await uow.chats.get_for_update(chat_id)
-        if chat is None or chat.deleted_at or chat.owner_id != actor.user_id:
-            raise ChatNotFoundError()
+        chat = await self.guard.chat(actor, await uow.chats.get_for_update(chat_id))
         message, call = await find_call(uow, chat, call_id)
         if call.is_overdue(self.clock.now()):
             call.status = ToolStatus.EXPIRED

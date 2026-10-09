@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from app.settings import Settings, load_settings
+from app.settings_loader import path_exists
 from app.shared.paths import BACKEND_ROOT
 
 import pytest
@@ -26,16 +27,8 @@ def env_names(path: Path) -> list[str]:
 
 
 def has_field(model: type[BaseModel] | type[BaseSettings], parts: list[str]) -> bool:
-    """True if the path parts name a field, walking nested models."""
-    field = model.model_fields.get(parts[0])
-    if field is None:
-        return False
-    if len(parts) == 1:
-        return True
-    annotation: Any = field.annotation
-    if isinstance(annotation, type) and issubclass(annotation, BaseModel):
-        return has_field(annotation, parts[1:])
-    return False
+    """True if the path parts name a field, walking nested models and dict keys."""
+    return path_exists(parts, model)
 
 
 def test_defaults_match_the_dev_compose_stack(
@@ -76,7 +69,7 @@ def test_secrets_are_masked_in_repr() -> None:
 
 
 def test_cors_origins_come_from_urls() -> None:
-    """cors_app_origins covers id, sp, staff, admin, lms; share is separate."""
+    """cors_app_origins: id, sp, staff, admin, lms, app, library; share is separate."""
     settings = Settings()
 
     assert settings.cors_app_origins() == [
@@ -85,6 +78,8 @@ def test_cors_origins_come_from_urls() -> None:
         "http://localhost:3003",
         "http://localhost:3004",
         "http://localhost:3005",
+        "http://localhost:3007",
+        "http://localhost:3008",
     ]
     assert settings.cors_share_origins() == ["http://localhost:3006"]
 
@@ -201,10 +196,17 @@ def test_every_variable_in_the_env_files_is_a_real_setting(name: str) -> None:
 
 
 def test_the_sample_documents_every_setting() -> None:
-    """No setting is missing from .env.sample."""
+    """No setting is missing from .env.sample.
+
+    A per-task dict (`ai.tasks`) counts as documented when any of its variables is.
+    """
     documented = {
         v.removeprefix("IHSP_").lower() for v in env_names(MATERIALS / ".env.sample")
     }
+
+    def is_documented(path: str) -> bool:
+        return any(name == path or name.startswith(f"{path}__") for name in documented)
+
     missing = []
     for section, field in Settings.model_fields.items():
         annotation: Any = field.annotation
@@ -212,7 +214,7 @@ def test_the_sample_documents_every_setting() -> None:
             missing += [
                 f"{section}__{name}"
                 for name in annotation.model_fields
-                if f"{section}__{name}" not in documented
+                if not is_documented(f"{section}__{name}")
             ]
         elif section not in documented:
             missing.append(section)

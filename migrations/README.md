@@ -6,7 +6,8 @@ module has `branch_labels = ("<module>",)` and `down_revision = None`, and lives
 depend on each other. Schema `ai` is shared by the `ai` and `flashcards` branches.
 
 Branches: `identity` (schema `id`), `academic`, `files`, `links`, `ai`, `flashcards` (tables in
-schema `ai`), `notify`, `admin`, `mail`, `lms`.
+schema `ai`), `notify`, `admin`, `mail`, `lms`, `notebooks`, `library`, `vectors` (schema `vectors`: the
+shared `embeddings` table; needs the `pgvector` Postgres image).
 
 ## Rules
 
@@ -14,6 +15,10 @@ schema `ai`), `notify`, `admin`, `mail`, `lms`.
   `VARCHAR(32)`, keep ids short).
 - The first revision runs `CREATE SCHEMA IF NOT EXISTS <schema>` (the version table lives in
   `public`). The `academic` first revision also runs `CREATE EXTENSION IF NOT EXISTS btree_gist`.
+  The `vectors` one runs `CREATE EXTENSION IF NOT EXISTS vector` (downgrade keeps it) and creates the
+  `halfvec(1024)` column and its HNSW index with plain SQL/`op.create_index`. The `notebooks` one runs `CREATE EXTENSION IF NOT EXISTS pg_trgm` (its downgrade leaves the
+  extension in place) and creates `passages.search_vector` as a stored generated column
+  (`sa.Computed`).
 - Module agents write revisions by hand against an empty database. Never autogenerate against a
   shared database. Never edit an applied revision.
 - Exclusion constraints: `op.create_exclude_constraint(..., (sa.literal_column("room_id"), "="), ...)`,
@@ -36,7 +41,9 @@ Then add `op.execute("CREATE SCHEMA IF NOT EXISTS <schema>")` as the first state
 GIN, partial, exclusion and CHECK constraints were rendered (add them by hand when they were
 not), and write `downgrade()`.
 
-`-x schema=<schema>` limits autogenerate to that schema's objects.
+`-x schema=<schema>` limits autogenerate to that schema's objects. Autogenerate refuses a
+database that is not at the heads, so on the throw-away database run `alembic upgrade heads`
+first (before the new branch exists).
 
 ## Later revisions
 

@@ -48,3 +48,6 @@ class Term(IdMixin, TimestampMixin, Base):
     bells: Mapped[list[dict[str, Any]]] = mapped_column(
         JSONB, server_default=text("'[]'::jsonb")
     )
+    control_periods: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, server_default=text("'{}'::jsonb")
+    )

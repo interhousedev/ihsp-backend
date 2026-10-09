@@ -4,9 +4,11 @@ import datetime as dt
 from typing import Any, Literal
 from uuid import UUID
 
+from app.shared.lesson_kind import LessonKind, TopicSource
+
 from pydantic import BaseModel, ConfigDict, Field
 
-RoleName = Literal["student", "teacher", "admin", "lms_admin"]
+RoleName = Literal["student", "teacher", "admin", "lms_admin", "librarian"]
 
 
 class PersonRefResponse(BaseModel):
@@ -58,6 +60,9 @@ class LessonItemResponse(BaseModel):
     # Record<string, [unknown, unknown]>: old and new value of each changed field.
     changes: dict[str, Any] | None
     topic: str | None
+    kind: LessonKind = "other"
+    # "emis": the topic came from EMIS (a hint); "manual": a person wrote it.
+    topic_source: TopicSource | None = None
     has_homework: bool
     attendance_submitted: bool
 

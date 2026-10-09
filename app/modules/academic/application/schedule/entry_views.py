@@ -49,6 +49,7 @@ async def build_entry_data(
                 audience=_audience(entry.audience, groups),
                 valid_from=entry.valid_from,
                 valid_to=entry.valid_to,
+                source=entry.source,
             )
         )
     return result

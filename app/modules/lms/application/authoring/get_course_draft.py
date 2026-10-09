@@ -6,8 +6,8 @@ from app.modules.lms.application.authoring.access import access_to, load_course
 from app.modules.lms.application.authoring.presenter import Presenter
 from app.modules.lms.application.authoring.uow_factory import UowFactory
 from app.modules.lms.application.authoring.views import CourseDraftView
-from app.modules.lms.domain.authoring.permissions import EDIT, VIEW_DRAFTS
-from app.shared.actor import Actor
+from app.modules.lms.domain.authoring.permissions import EDIT, VIEW_DRAFTS, CourseAccess
+from app.shared.actor import SYSTEM_ACTOR, Actor
 
 
 class GetCourseDraft:
@@ -24,4 +24,17 @@ class GetCourseDraft:
             course = await load_course(uow, course_id)
             access = await access_to(uow, actor, course_id)
             access.require(EDIT, VIEW_DRAFTS)
+            return await self.presenter.course_draft(uow, course, access)
+
+    async def unchecked(self, course_id: UUID) -> CourseDraftView | None:
+        """Return `CourseDraft` without any access check; None for an unknown course.
+
+        For callers that have just checked the access themselves, such as the course
+        workspace: the view is built as for an LMS admin.
+        """
+        async with self.uow_factory() as uow:
+            course = await uow.courses.get(course_id)
+            if course is None:
+                return None
+            access = CourseAccess(actor=SYSTEM_ACTOR, staff=None)
             return await self.presenter.course_draft(uow, course, access)

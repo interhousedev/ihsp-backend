@@ -647,7 +647,7 @@ class Smoke:
             )
         )
         mine = None
-        for status in ("upcoming", "later"):
+        for status in ("overdue", "upcoming", "later"):
             items = ok(
                 await self.student.get("/v1/me/homework", params={"status": status})
             )

@@ -6,6 +6,7 @@ from typing import Any
 from uuid import UUID
 
 from app.modules.notify.domain.notification_status import (
+    DeliveryKey,
     DeliveryState,
     NotificationStatus,
 )
@@ -14,7 +15,7 @@ from app.shared.notifications import NotificationType
 
 @dataclass(slots=True)
 class Notification:
-    """A notification for one user with its Telegram delivery state."""
+    """A notification for one user with its Telegram and push delivery state."""
 
     id: UUID
     user_id: UUID
@@ -25,17 +26,17 @@ class Notification:
     created_at: datetime
     broadcast_id: UUID | None = None
     status: NotificationStatus = NotificationStatus.PENDING
-    deliveries: dict[int, DeliveryState] = field(default_factory=dict)
+    deliveries: dict[DeliveryKey, DeliveryState] = field(default_factory=dict)
     attempts: int = 0
     next_attempt_at: datetime | None = None
     sent_at: datetime | None = None
     read_at: datetime | None = None
     error: str | None = None
 
-    def delivered_to(self, telegram_user_id: int) -> bool:
-        """Return True if this account already got the message."""
-        return self.deliveries.get(telegram_user_id) == DeliveryState.SENT
+    def delivered_to(self, key: DeliveryKey) -> bool:
+        """Return True if this Telegram account or device already got the message."""
+        return self.deliveries.get(key) == DeliveryState.SENT
 
-    def record(self, telegram_user_id: int, state: DeliveryState) -> None:
-        """Remember the result for one Telegram account."""
-        self.deliveries[telegram_user_id] = state
+    def record(self, key: DeliveryKey, state: DeliveryState) -> None:
+        """Remember the result for one Telegram account or push device."""
+        self.deliveries[key] = state

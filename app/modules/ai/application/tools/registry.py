@@ -10,11 +10,17 @@ from app.modules.ai.domain.assistant import Assistant
 class ToolRegistry:
     """Looks tools up by assistant and name; the list order stays constant."""
 
-    def __init__(self, student: Sequence[Tool], admin: Sequence[Tool]) -> None:
-        """Index the tools of both assistants."""
+    def __init__(
+        self,
+        student: Sequence[Tool],
+        admin: Sequence[Tool],
+        author: Sequence[Tool] = (),
+    ) -> None:
+        """Index the tools of the three assistants."""
         self._tools: dict[Assistant, dict[str, Tool]] = {
             Assistant.STUDENT: {tool.name: tool for tool in student},
             Assistant.ADMIN: {tool.name: tool for tool in admin},
+            Assistant.LMS_AUTHOR: {tool.name: tool for tool in author},
         }
 
     def get(self, assistant: Assistant, name: str) -> Tool | None:

@@ -4,6 +4,8 @@ import datetime as dt
 from typing import Any, Literal
 from uuid import UUID
 
+from app.shared.lesson_kind import LessonKind, TopicSource
+
 from pydantic import BaseModel
 
 MarkType = Literal["lesson", "midterm", "final"]
@@ -69,6 +71,9 @@ class LessonItem(BaseModel):
     is_overridden: bool
     changes: dict[str, Any] | None
     topic: str | None
+    kind: LessonKind = "other"
+    # "emis": the topic came from EMIS (a hint); "manual": a person wrote it.
+    topic_source: TopicSource | None = None
     has_homework: bool
     attendance_submitted: bool
 
@@ -94,6 +99,7 @@ class ResourceItem(BaseModel):
     hidden: bool
     file: dict[str, Any] | None
     created_at: dt.datetime | None
+    source: Literal["user", "emis"] = "user"
 
 
 class SubjectCardResponse(BaseModel):

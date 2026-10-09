@@ -7,6 +7,7 @@ from uuid import UUID
 from app.modules.notify.domain.notification import Notification
 from app.modules.notify.domain.notification_filter import NotificationFilter
 from app.modules.notify.domain.notification_status import (
+    DeliveryKey,
     DeliveryState,
     NotificationStatus,
 )
@@ -18,6 +19,11 @@ from sqlalchemy.engine import CursorResult, RowMapping
 from sqlalchemy.ext.asyncio import AsyncSession
 
 _BROADCAST = NotificationType.BROADCAST.value
+
+
+def _delivery_key(key: str) -> DeliveryKey:
+    """Telegram ids are stored as digit strings; push keys stay `push:<id>`."""
+    return int(key) if key.lstrip("-").isdigit() else key
 
 
 def _to_entity(row: RowMapping) -> Notification:
@@ -32,7 +38,7 @@ def _to_entity(row: RowMapping) -> Notification:
         broadcast_id=row["broadcast_id"],
         status=NotificationStatus(row["status"]),
         deliveries={
-            int(key): DeliveryState(value)
+            _delivery_key(key): DeliveryState(value)
             for key, value in (row["deliveries"] or {}).items()
         },
         attempts=row["attempts"] or 0,

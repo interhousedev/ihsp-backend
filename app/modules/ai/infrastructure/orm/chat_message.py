@@ -7,10 +7,13 @@ from app.shared.db.base import Base, IdMixin, TimestampMixin
 
 from sqlalchemy import (
     ARRAY,
+    CheckConstraint,
     Enum,
     ForeignKey,
     Index,
     Integer,
+    SmallInteger,
+    Text,
     UniqueConstraint,
     Uuid,
     text,
@@ -26,6 +29,12 @@ class ChatMessage(IdMixin, TimestampMixin, Base):
     __table_args__ = (
         UniqueConstraint("chat_id", "seq", name="uq_chat_messages_chat_id_seq"),
         Index("ix_chat_messages_file_ids", "file_ids", postgresql_using="gin"),
+        CheckConstraint("feedback IN (1, -1)", name="feedback_value"),
+        CheckConstraint(
+            "feedback_comment IS NULL OR "
+            "(feedback IS NOT NULL AND char_length(feedback_comment) <= 500)",
+            name="feedback_comment",
+        ),
         {"schema": "ai"},
     )
 
@@ -49,3 +58,6 @@ class ChatMessage(IdMixin, TimestampMixin, Base):
     tool_calls: Mapped[list[dict[str, Any]] | None] = mapped_column(JSONB)
     tokens_in: Mapped[int | None] = mapped_column(Integer)
     tokens_out: Mapped[int | None] = mapped_column(Integer)
+    # The user's thumbs on an assistant message: 1 up, -1 down; the comment needs one.
+    feedback: Mapped[int | None] = mapped_column(SmallInteger)
+    feedback_comment: Mapped[str | None] = mapped_column(Text)

@@ -22,7 +22,20 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 target_metadata = Base.metadata
-SCHEMAS = {"id", "academic", "files", "links", "ai", "notify", "admin", "mail", "lms"}
+SCHEMAS = {
+    "id",
+    "academic",
+    "files",
+    "links",
+    "ai",
+    "notify",
+    "admin",
+    "mail",
+    "lms",
+    "notebooks",
+    "library",
+    "vectors",
+}
 # `alembic -x schema=academic revision --autogenerate ...` limits the diff to a schema.
 SCHEMA_FILTER: str | None = context.get_x_argument(as_dictionary=True).get("schema")
 VERSION_SCHEMA = "public"

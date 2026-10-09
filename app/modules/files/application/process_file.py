@@ -1,8 +1,10 @@
 """Process an accepted upload: extract text, store the sidecar, index, mark ready."""
 
+from typing import Any
 from uuid import UUID
 
 from app.modules.files.domain.errors import TextExtractionError
+from app.modules.files.domain.outline import OUTLINE_KEY, PAGES_KEY, outline_to_metadata
 from app.modules.files.domain.status import FileStatus, RejectReason
 from app.modules.files.domain.stored_file import StoredFile
 from app.modules.files.ports.storage import ObjectStorage
@@ -75,7 +77,7 @@ class ProcessFile:
         extracted: ExtractedText | None,
     ) -> None:
         """Index the text and mark the file ready, unless someone else did."""
-        metadata = {"pages": extracted.pages} if extracted and extracted.pages else {}
+        metadata = _metadata(extracted, text_bytes)
         async with self._uow_factory() as uow:
             file = await uow.files.get(file_id)
             if file is None or file.status != FileStatus.PROCESSING:
@@ -95,3 +97,19 @@ class ProcessFile:
             file.reject(RejectReason.PROCESSING_FAILED, self._clock.now())
             await uow.files.save(file)
             await uow.commit()
+
+
+def _metadata(
+    extracted: ExtractedText | None, text_bytes: int | None
+) -> dict[str, Any]:
+    """Return the file metadata: page count and outline, page offsets with text."""
+    metadata: dict[str, Any] = {}
+    if extracted is None:
+        return metadata
+    if extracted.pages:
+        metadata[PAGES_KEY] = extracted.pages
+    if extracted.page_starts and text_bytes is not None:
+        metadata["page_starts"] = list(extracted.page_starts)
+    if extracted.outline:
+        metadata[OUTLINE_KEY] = outline_to_metadata(extracted.outline)
+    return metadata

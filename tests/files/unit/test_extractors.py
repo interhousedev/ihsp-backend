@@ -45,12 +45,12 @@ async def test_garbage_pdf_raises_extraction_error(
 
 
 async def test_docx_paragraphs_and_table_rows(extractor: FileTextExtractor) -> None:
-    """python-docx: paragraphs then table rows, cells joined by tabs."""
+    """python-docx: paragraphs as blocks, then table rows, cells joined by tabs."""
     data = make_docx("First", "Second", table=[["a", "b"], ["c", "d"]])
 
     result = await extractor.extract(DOCX_TYPE, data)
 
-    assert result.text.splitlines() == ["First", "Second", "a\tb", "c\td"]
+    assert result.text.split("\n\n") == ["First", "Second", "a\tb\nc\td"]
     assert result.pages is None
 
 

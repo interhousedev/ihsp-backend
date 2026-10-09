@@ -5,7 +5,7 @@ from typing import Literal
 from uuid import UUID
 
 from app.interfaces.http.v1.admin_schedule.shared_schemas import ApiModel
-from app.modules.academic.domain.schedule.term import Bell, MovedDay
+from app.modules.academic.domain.schedule.term import Bell, ControlPeriods, MovedDay
 
 from pydantic import BaseModel, Field
 
@@ -20,6 +20,7 @@ class TermInputBody(BaseModel):
     bells: list[Bell] = Field(default_factory=list)
     non_study_days: list[dt.date] = Field(default_factory=list)
     moved_days: list[MovedDay] = Field(default_factory=list)
+    control_periods: ControlPeriods = Field(default_factory=ControlPeriods)
 
 
 class TermPatchBody(BaseModel):
@@ -32,6 +33,7 @@ class TermPatchBody(BaseModel):
     bells: list[Bell] | None = None
     non_study_days: list[dt.date] | None = None
     moved_days: list[MovedDay] | None = None
+    control_periods: ControlPeriods | None = None
 
 
 class TermResponse(ApiModel):
@@ -45,4 +47,5 @@ class TermResponse(ApiModel):
     bells: list[Bell]
     non_study_days: list[dt.date]
     moved_days: list[MovedDay]
+    control_periods: ControlPeriods
     is_current: bool

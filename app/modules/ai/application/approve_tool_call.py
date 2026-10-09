@@ -60,7 +60,7 @@ class ApproveToolCall:
         locale = await self.locale.locale_of(actor.user_id)
         async with self.locks.hold(chat_id):
             claim = await self._claim(actor, chat_id, call_id)
-            ctx = ToolContext(actor, chat_id, locale)
+            ctx = ToolContext(actor, chat_id, locale, scope=claim.chat.scope)
             outcome = await self.runner.run_approved(
                 claim.chat.assistant, ctx, claim.call
             )

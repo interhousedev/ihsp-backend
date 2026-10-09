@@ -114,7 +114,13 @@ async def test_the_whole_authoring_flow_over_http(
     assert saved.json()["content"]["blocks"][0]["id"]
     assert saved.json()["status"] == "new"
     assert pending.json()["steps"] == [
-        {"step_id": step_id, "title": "Intro", "change": "added", "via_mcp": False}
+        {
+            "step_id": step_id,
+            "title": "Intro",
+            "change": "added",
+            "via_mcp": False,
+            "via_ai": False,
+        }
     ]
     assert published.json()["number"] == 1 and published.json()["note"] == "First"
     assert published.json()["changes"] == {

@@ -48,6 +48,8 @@ _LESSON_COLUMNS = (
     Lesson.attendance_roster,
     Lesson.attendance_absent,
     Lesson.attendance_excused,
+    Lesson.kind,
+    Lesson.emis_topic,
 )
 
 
@@ -76,6 +78,8 @@ def _lesson_row(r: Any) -> LessonRow:
             None if r.attendance_absent is None else tuple(r.attendance_absent)
         ),
         attendance_excused=r.attendance_excused,
+        kind=r.kind,
+        emis_topic=r.emis_topic,
     )
 
 

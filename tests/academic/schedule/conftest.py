@@ -41,6 +41,28 @@ def env(
     return build_env(kind, clock=clock, kicker=kicker, redis=redis, maker=maker)
 
 
+@pytest.fixture(params=["fake", "sql"])
+def topics_env(
+    request: pytest.FixtureRequest,
+    clock: FixedClock,
+    kicker: FakeTaskKicker,
+    redis: FakeRedis,
+) -> Env:
+    """Like `env`, with EMIS__IMPORT_TOPICS on (topics, files, videos imported)."""
+    kind: EnvKind = request.param
+    maker: async_sessionmaker[AsyncSession] | None = None
+    if kind == "sql":
+        maker = request.getfixturevalue("sessionmaker_in_tx")
+    return build_env(
+        kind,
+        clock=clock,
+        kicker=kicker,
+        redis=redis,
+        maker=maker,
+        import_topics=True,
+    )
+
+
 @pytest.fixture
 def sql_env(
     clock: FixedClock,

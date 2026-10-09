@@ -2,7 +2,7 @@
 
 import base64
 import hashlib
-from datetime import timedelta
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from app.modules.files.application.process_hook import process_hook
@@ -10,6 +10,7 @@ from app.modules.files.domain.errors import QuotaExceededError, TypeNotAllowedEr
 from app.modules.files.domain.policy import (
     SNIFF_BYTES,
     FilesLimits,
+    check_scope_purpose,
     check_size,
     detected_matches,
     key_extension,
@@ -28,6 +29,13 @@ from app.shared.clock import Clock, local_today
 from app.shared.contracts.files import FilePurpose, FileScope
 from app.shared.ids import new_id
 from app.shared.tasks import TaskKicker
+
+
+def _expires_at(scope: FileScope, now: datetime, days: int | None) -> datetime | None:
+    """Library files are kept for good (FILE-6 does not apply to them)."""
+    if days is None or scope == FileScope.LIBRARY:
+        return None
+    return now + timedelta(days=days)
 
 
 class StoreBytes:
@@ -63,9 +71,14 @@ class StoreBytes:
         data: bytes,
         expires_days: int | None = None,
     ) -> StoredFile:
-        """Write the object and its row; text extraction runs in the background."""
+        """Write the object and its row; text extraction runs in the background.
+
+        Library files never expire and have no quota here: the library module checks
+        who may upload what, and ``expires_days`` is ignored for them.
+        """
+        check_scope_purpose(scope, purpose)
         clean = normalize_name(name)
-        content_type = await self._check_content(purpose, clean, data)
+        content_type = await self._check_content(scope, purpose, clean, data)
         now = self._clock.now()
         term_id = await self._term_for(scope)
         file_id = new_id()
@@ -84,9 +97,7 @@ class StoreBytes:
             created_at=now,
             updated_at=now,
             term_id=term_id,
-            expires_at=(
-                None if expires_days is None else now + timedelta(days=expires_days)
-            ),
+            expires_at=_expires_at(scope, now, expires_days),
         )
         await self._write(file, data)
         return file
@@ -98,13 +109,15 @@ class StoreBytes:
             FileStatus.READY if purpose == FilePurpose.MAIL else FileStatus.PROCESSING
         )
 
-    async def _check_content(self, purpose: FilePurpose, name: str, data: bytes) -> str:
+    async def _check_content(
+        self, scope: FileScope, purpose: FilePurpose, name: str, data: bytes
+    ) -> str:
         """Return the content type; for non-mail files refuse unlisted types."""
         head = data[:SNIFF_BYTES]
         detected = await self._sniffer.sniff(head) if head else "application/x-empty"
         if purpose == FilePurpose.MAIL:
             return detected
-        check_size(len(data), self._limits.file_max_bytes)
+        check_size(len(data), self._limits.max_bytes_for(scope))
         rule = rule_for_name(name)
         if rule is None or not detected_matches(rule, detected, head):
             raise TypeNotAllowedError(params={"content_type": detected})

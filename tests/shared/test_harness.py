@@ -104,7 +104,11 @@ async def test_s3_bucket_fixture_gives_a_working_bucket(
 async def test_the_dev_bucket_exists_with_browser_upload_cors(
     settings: Settings,
 ) -> None:
-    """s3-init created ihsp-dev and allows PUT/GET from the six web origins."""
+    """s3-init created ihsp-dev and allows PUT/GET from the web origins.
+
+    The six apps on 3001-3006 and the library on 3008, which uploads and reads book
+    files straight from the bucket.
+    """
     async with get_session().create_client(
         "s3",
         endpoint_url=settings.s3.endpoint_url,
@@ -118,5 +122,6 @@ async def test_the_dev_bucket_exists_with_browser_upload_cors(
 
     origins = {origin for rule in rules for origin in rule["AllowedOrigins"]}
     methods = {method for rule in rules for method in rule["AllowedMethods"]}
-    assert origins == {f"http://localhost:{port}" for port in range(3001, 3007)}
+    ports = [*range(3001, 3007), 3008]
+    assert origins == {f"http://localhost:{port}" for port in ports}
     assert {"PUT", "GET"} <= methods

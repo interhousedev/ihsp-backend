@@ -27,13 +27,29 @@ class ChatUsage(Protocol):
         ...
 
 
-class UsageResolverAdapter:
-    """Files ← links + ai: where a file is shown, shared or attached."""
+class NotebookUsage(Protocol):
+    """What the notebooks module offers (NotebooksQueriesImpl)."""
 
-    def __init__(self, links: LinkUsage, ai: ChatUsage) -> None:
-        """Keep both providers (they may be lazy proxies)."""
+    async def used_by_files(
+        self, file_ids: Sequence[UUID]
+    ) -> dict[UUID, list[tuple[str, UUID, str]]]:
+        """Return (kind, notebook_id, title) per file."""
+        ...
+
+
+class UsageResolverAdapter:
+    """Files ← links + ai + notebooks: where a file is shown, shared or attached."""
+
+    def __init__(
+        self,
+        links: LinkUsage,
+        ai: ChatUsage,
+        notebooks: NotebookUsage | None = None,
+    ) -> None:
+        """Keep the providers (they may be lazy proxies)."""
         self._links = links
         self._ai = ai
+        self._notebooks = notebooks
 
     async def used_by(self, file_ids: Sequence[UUID]) -> dict[UUID, list[UsedBy]]:
         """Return the places that refer to each file (missing key = unused)."""
@@ -44,7 +60,7 @@ class UsageResolverAdapter:
             for kind, item_id, label in items:
                 used.setdefault(file_id, []).append(
                     UsedBy(
-                        kind=cast(Literal["link", "lesson", "chat"], kind),
+                        kind=cast(Literal["link", "lesson", "chat", "notebook"], kind),
                         id=item_id,
                         label=label,
                     )
@@ -54,4 +70,16 @@ class UsageResolverAdapter:
                 used.setdefault(file_id, []).append(
                     UsedBy(kind="chat", id=chat_id, label=title)
                 )
+        for file_id, books in (await self._notebook_uses(file_ids)).items():
+            for _, notebook_id, title in books:
+                used.setdefault(file_id, []).append(
+                    UsedBy(kind="notebook", id=notebook_id, label=title)
+                )
         return used
+
+    async def _notebook_uses(
+        self, file_ids: Sequence[UUID]
+    ) -> dict[UUID, list[tuple[str, UUID, str]]]:
+        if self._notebooks is None:
+            return {}
+        return await self._notebooks.used_by_files(file_ids)

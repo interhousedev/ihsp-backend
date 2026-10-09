@@ -89,6 +89,18 @@ class FakeLinkRepository:
         found.sort(key=lambda link: (link.created_at, link.id))
         return [replace(link) for link in found]
 
+    async def lesson_urls_of_owner(
+        self, owner_id: UUID, lesson_ids: Sequence[UUID]
+    ) -> set[tuple[UUID, str]]:
+        """Return (lesson id, URL) of every resource the owner ever added."""
+        return {
+            (link.lesson_id, link.target_url)
+            for link in self.working.values()
+            if link.owner_id == owner_id
+            and link.lesson_id in lesson_ids
+            and link.target_url is not None
+        }
+
     async def moderation_queue(
         self, *, after: ModerationCursor | None, limit: int
     ) -> list[Link]:

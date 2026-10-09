@@ -9,7 +9,20 @@ from sqlalchemy import text
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
-SCHEMAS = ("id", "academic", "files", "links", "ai", "notify", "admin", "mail", "lms")
+SCHEMAS = (
+    "id",
+    "academic",
+    "files",
+    "links",
+    "ai",
+    "notify",
+    "admin",
+    "mail",
+    "lms",
+    "notebooks",
+    "library",
+    "vectors",
+)
 
 
 def admin_url(database_url: str) -> str:
@@ -62,6 +75,8 @@ async def create_tables(
     tables = [t for t in Base.metadata.sorted_tables if t.schema in wanted]
     async with engine.begin() as conn:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS btree_gist"))
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm"))
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         for schema in wanted:
             await conn.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{schema}"'))
         await conn.run_sync(Base.metadata.create_all, tables=tables)

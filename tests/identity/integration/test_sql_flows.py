@@ -122,6 +122,29 @@ async def test_login_block_and_epoch_against_postgres(sql_auth: Rig) -> None:
         )
 
 
+async def test_librarian_role_is_stored_and_audited_against_postgres(
+    sql_auth: Rig,
+) -> None:
+    """ADM-5, LIB-1: the roles column and the audit table accept `librarian`."""
+    auth = sql_auth.auth
+    admin = await add_user(auth, roles={Role.ADMIN}, otp_enabled=True)
+    user = await add_user(auth)
+
+    await auth.change_roles.execute(
+        Actor(user_id=admin.id, roles=frozenset({Role.ADMIN})),
+        user.id,
+        grant=[Role.LIBRARIAN],
+        revoke=[],
+        ctx=CTX,
+    )
+
+    async with auth.uow_factory() as uow:
+        stored = await uow.users.get(user.id)
+        events = await uow.audit_events.recent_for_user(user.id, 10)
+    assert stored.roles == {Role.STUDENT, Role.LIBRARIAN}
+    assert sorted(e.type for e in events) == ["library.role_granted", "role.granted"]
+
+
 async def test_failed_login_audit_and_notification_are_committed(
     sql_auth: Rig, outbox: InMemoryOutbox
 ) -> None:

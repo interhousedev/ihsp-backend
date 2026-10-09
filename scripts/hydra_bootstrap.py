@@ -6,9 +6,11 @@ Usage (settings come from the environment, as in every process):
 
 Creates or updates
 
-* the public PKCE clients `id`, `sp`, `staff`, `admin`, `lms` (consent skipped: the
-  identity process accepts it on the server and answers Hydra's consent URL with a
-  redirect, see `GET /v1/oauth/flow/consent`);
+* the seven public PKCE clients `id`, `sp`, `staff`, `admin`, `lms`, `app`, `library`
+  (consent skipped: the identity process accepts it on the server and answers Hydra's
+  consent URL with a redirect, see `GET /v1/oauth/flow/consent`). `app`, the installable
+  PWA, keeps people signed in longer: its refresh tokens live 90 days (2160h) instead
+  of Hydra's global 720h, set per client to match its 90-day `rt_app` cookie;
 * the confidential client `miniapp` (JWT-bearer grant for the Telegram mini app). Its
   secret is `IHSP_HYDRA__MINIAPP_CLIENT_SECRET`; when that is not set the script
   generates one and prints it as an env line for `.env` (first run only);
@@ -25,6 +27,10 @@ import time
 from datetime import timedelta
 from typing import Any
 
+from app.modules.identity.domain.client_policy import (
+    LONG_SESSION_CLIENTS,
+    refresh_days,
+)
 from app.modules.identity.infrastructure.jwt_assertion import JoseAssertionSigner
 from app.settings import Settings, load_settings
 from app.shared.clock import SystemClock
@@ -34,7 +40,7 @@ import httpx
 JWT_BEARER_GRANT = "urn:ietf:params:oauth:grant-type:jwt-bearer"
 AUDIENCE = "ihsp-api"
 SCOPE = "openid offline_access"
-WEB_APPS = ("id", "sp", "staff", "admin", "lms")
+WEB_APPS = ("id", "sp", "staff", "admin", "lms", "app", "library")
 # Shown on the login form ("to continue to ..."), so they read like product names.
 CLIENT_NAMES = {
     "id": "IHSP Account",
@@ -42,6 +48,8 @@ CLIENT_NAMES = {
     "staff": "IHSP Staff Portal",
     "admin": "IHSP Administration",
     "lms": "IHSP Learning",
+    "app": "IHSP App",
+    "library": "IHSP Library",
 }
 MINIAPP = "miniapp"
 DEV_MINIAPP_SECRET = "dev-miniapp-secret"  # default of identity's own setting
@@ -55,9 +63,13 @@ def out(message: str) -> None:
 
 
 def web_client(app: str, base_url: str) -> dict[str, Any]:
-    """A first-party public client: PKCE, no secret, consent skipped."""
+    """A first-party public client: PKCE, no secret, consent skipped.
+
+    Long-session clients (`app`) also get their own refresh token lifespans; the
+    others inherit Hydra's global 720h.
+    """
     base = base_url.rstrip("/")
-    return {
+    client: dict[str, Any] = {
         "client_id": app,
         "client_name": CLIENT_NAMES.get(app, f"IHSP {app}"),
         "token_endpoint_auth_method": "none",
@@ -70,6 +82,26 @@ def web_client(app: str, base_url: str) -> dict[str, Any]:
         "skip_consent": True,
         "skip_logout_consent": True,
         "metadata": {"first_party": True},
+    }
+    if app in LONG_SESSION_CLIENTS:
+        # Go durations have no "d" unit, so days are written as hours.
+        lifespan = f"{refresh_days(app) * 24}h"
+        client["authorization_code_grant_refresh_token_lifespan"] = lifespan
+        client["refresh_token_grant_refresh_token_lifespan"] = lifespan
+    return client
+
+
+def web_app_bases(settings: Settings) -> dict[str, str]:
+    """The public origin of every web app, from `IHSP_URLS__*`."""
+    urls = settings.urls
+    return {
+        "id": urls.id,
+        "sp": urls.sp,
+        "staff": urls.staff,
+        "admin": urls.admin,
+        "lms": urls.lms,
+        "app": urls.app,
+        "library": urls.library,
     }
 
 
@@ -170,14 +202,7 @@ def main() -> int:
     settings = load_settings()
     api = HydraAdminApi(settings.hydra.admin_url)
     api.wait_ready()
-    urls = settings.urls
-    bases = {
-        "id": urls.id,
-        "sp": urls.sp,
-        "staff": urls.staff,
-        "admin": urls.admin,
-        "lms": urls.lms,
-    }
+    bases = web_app_bases(settings)
     for app in WEB_APPS:
         out(f"client {app}: {api.upsert_client(web_client(app, bases[app]))}")
     secret, generated = miniapp_secret(settings)

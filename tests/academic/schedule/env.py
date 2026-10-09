@@ -14,6 +14,7 @@ from app.modules.academic.domain.schedule.student import Student
 from app.modules.academic.domain.schedule.subject import Subject
 from app.modules.academic.domain.schedule.term import Bell, MovedDay, Term
 from app.modules.academic.domain.schedule.timetable_entry import (
+    EntrySource,
     TimetableEntry,
     WeekParity,
 )
@@ -31,6 +32,7 @@ from app.modules.academic.wiring_schedule import ScheduleServices, assemble_sche
 from app.shared.actor import Role
 from app.shared.contracts.identity import UserRef, UserStatus
 from app.shared.ids import new_id, random_digits
+from app.shared.lesson_kind import LessonKind
 from app.shared.notifications import AuditDraft, NotificationDraft
 from app.shared.text import slugify
 from tests.fakes.academic.schedule.emis import FakeEmisSource
@@ -43,6 +45,7 @@ from tests.fakes.academic.schedule.reader import FakeScheduleReader
 from tests.fakes.academic.schedule.room_cache import FakeRoomPageCache
 from tests.fakes.academic.schedule.store import ScheduleStore
 from tests.fakes.academic.schedule.uow import uow_factory_for
+from tests.fakes.academic.schedule.urls import FakeLessonUrls
 from tests.fakes.clock import FixedClock
 from tests.fakes.outbox import InMemoryOutbox
 from tests.fakes.tasks import FakeTaskKicker
@@ -90,6 +93,7 @@ class Env:
     services: ScheduleServices
     emis_import: EmisImportServices
     emis: FakeEmisSource
+    urls: FakeLessonUrls
     uow_factory: UowFactory
     reader: ScheduleReader
     identity: FakeIdentity
@@ -267,6 +271,7 @@ class Env:
         parity: WeekParity = "every",
         valid_from: dt.date | None = None,
         valid_to: dt.date | None = None,
+        source: EntrySource = "manual",
     ) -> TimetableEntry:
         """Insert a timetable entry."""
         entry = TimetableEntry(
@@ -281,6 +286,7 @@ class Env:
             audience=audience,
             valid_from=valid_from or term.starts_on,
             valid_to=valid_to,
+            source=source,
         )
         async with self.uow_factory() as uow:
             await uow.entries.add(entry)
@@ -300,6 +306,10 @@ class Env:
         starts_at: dt.datetime | None = None,
         entry: TimetableEntry | None = None,
         overridden: bool = False,
+        kind: LessonKind = "other",
+        emis_class_id: int | None = None,
+        topic: str | None = None,
+        emis_topic: str | None = None,
     ) -> Lesson:
         """Insert a lesson (default time: 10:00 Tashkent on the day)."""
         begin = starts_at or (
@@ -320,6 +330,10 @@ class Env:
             is_overridden=overridden,
             timetable_entry_id=entry.id if entry else None,
             origin_date=day if entry else None,
+            kind=kind,
+            emis_class_id=emis_class_id,
+            topic=topic,
+            emis_topic=emis_topic,
         )
         async with self.uow_factory() as uow:
             await uow.lessons.add(lesson)
@@ -381,6 +395,7 @@ def build_env(
     kicker: FakeTaskKicker,
     redis: Redis,
     maker: async_sessionmaker[AsyncSession] | None = None,
+    import_topics: bool = False,
 ) -> Env:
     """Assemble the schedule services on fakes or on PostgreSQL."""
     identity = FakeIdentity()
@@ -418,18 +433,24 @@ def build_env(
         mail_domain=MAIL_DOMAIN,
     )
     emis = FakeEmisSource()
+    urls = FakeLessonUrls()
     emis_import = assemble_emis_import(
         uow_factory=uow_factory,
         emis=emis,
         identity_commands=commands,  # type: ignore[arg-type]
         generate=services.generate_lessons,
+        urls=urls,
+        cache=cache,
+        kicker=kicker,
         clock=clock,
+        import_topics=import_topics,
     )
     return Env(
         kind=kind,
         services=services,
         emis_import=emis_import,
         emis=emis,
+        urls=urls,
         uow_factory=uow_factory,
         reader=reader,
         identity=identity,

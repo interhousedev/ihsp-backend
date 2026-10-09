@@ -263,6 +263,28 @@ async def test_every_change_clears_the_room_page_cache(world: LinksWorld) -> Non
     assert await world.redis.get(key) is None
 
 
+async def test_every_change_asks_the_notebooks_to_sync_the_lesson(
+    world: LinksWorld,
+) -> None:
+    """NB-AUTO: add, hide and delete kick `notebooks.sync_lesson_notebooks`."""
+    c = Class(world)
+    task = "notebooks.sync_lesson_notebooks"
+    expected = (task, {"lesson_id": str(c.lesson.id)})
+
+    views = await _attach(world, c.student, c.lesson.id)
+    assert world.kicker.calls == [expected]
+
+    await world.services.hide_lesson_resource.execute(
+        c.teacher, c.lesson.id, views[0].link.id, hidden=True
+    )
+    assert world.kicker.calls == [expected, expected]
+
+    await world.services.delete_lesson_resource.execute(
+        c.admin, c.lesson.id, views[0].link.id
+    )
+    assert world.kicker.calls == [expected, expected, expected]
+
+
 async def test_list_shows_materials_first_and_hides_hidden_from_other_students(
     world: LinksWorld,
 ) -> None:

@@ -30,6 +30,8 @@ class ChatViews:
             title=chat.title,
             last_message_at=chat.last_message_at,
             pending_approvals=chat.pending_approvals,
+            tier=chat.tier.value,
+            course_id=chat.course_id,
         )
 
     def note(self, tool: str, locale: str) -> str:
@@ -77,4 +79,6 @@ class ChatViews:
             file_ids=list(message.file_ids),
             tool_calls=[self.tool_call(c, locale, now) for c in message.tool_calls],
             created_at=message.created_at,
+            feedback=message.feedback.value if message.feedback else None,
+            web=list(message.content.web),
         )

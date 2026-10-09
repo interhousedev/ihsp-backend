@@ -5,7 +5,7 @@
 #
 # Usage: scripts/local_up.sh [--no-build] [--full-build] [--no-seed]
 #   --no-build     reuse the images from the last run (and the web apps built on the host)
-#   --full-build   build the web image the long way: `next build` of all six apps inside
+#   --full-build   build the web image the long way: `next build` of all seven apps inside
 #                  Docker (web/deploy/Dockerfile). Needs a Docker VM with plenty of memory
 #                  and nothing else heavy running; the default does not.
 #   --no-seed      skip `python -m app seed-demo`
@@ -37,7 +37,7 @@ done
 
 compose_file=materials/docker-compose.local.yaml
 web_dir=../web
-web_apps=(id sp staff admin lms share)
+web_apps=(id sp staff admin lms share library)
 if [ "$full_build" -eq 1 ]; then
     export WEB_DOCKERFILE=deploy/Dockerfile
 else
@@ -135,6 +135,9 @@ echo "==> checking the edge"
 check "api.$domain" /health 200
 check "id.$domain" /.well-known/openid-configuration 200
 check "sp.$domain" / 200
+check "app.$domain" / 200
+check "library.$domain" / 200
+check "library.$domain" /env.js 200
 check "s.$domain" /ai/view/ 200
 
 cat << EOF
@@ -142,9 +145,11 @@ cat << EOF
 IHSP is running.
 
   Student app    http://sp.$domain$suffix/
+  App (PWA)      http://app.$domain$suffix/      (installable: open it on a phone)
   Teacher app    http://staff.$domain$suffix/
   Admin          http://admin.$domain$suffix/
   LMS            http://lms.$domain$suffix/
+  Library        http://library.$domain$suffix/
   Login (id)     http://id.$domain$suffix/
   API            http://api.$domain$suffix/      (health: /health)
   MCP            http://mcp.$domain$suffix/

@@ -21,6 +21,8 @@ class SignatureSniffer:
     @staticmethod
     def _zip_type(head: bytes) -> str:
         prefix = "application/vnd.openxmlformats-officedocument."
+        if b"mimetypeapplication/epub+zip" in head[:100]:
+            return "application/epub+zip"
         if b"word/" in head:
             return prefix + "wordprocessingml.document"
         if b"ppt/" in head:

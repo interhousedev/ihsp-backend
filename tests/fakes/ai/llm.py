@@ -3,6 +3,7 @@
 from typing import Any
 
 from app.modules.ai.domain.errors import AiProviderError
+from app.shared.contracts.ai import LlmTuning
 
 
 def text_reply(text: str, *, tokens: int = 100) -> dict[str, Any]:
@@ -48,6 +49,8 @@ class ScriptedLlm:
         messages: list[dict[str, Any]],
         tools: list[dict[str, Any]],
         max_tokens: int,
+        provider: dict[str, Any] | None = None,
+        tuning: LlmTuning | None = None,
     ) -> dict[str, Any]:
         """Record the request and return the next response."""
         self.requests.append(
@@ -57,6 +60,8 @@ class ScriptedLlm:
                 "messages": messages,
                 "tools": tools,
                 "max_tokens": max_tokens,
+                "provider": provider,
+                "tuning": tuning,
             }
         )
         if not self.queue:

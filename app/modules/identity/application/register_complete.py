@@ -214,19 +214,19 @@ class CompleteRegistration:
     def _kick_timetable(
         self, uow: EmisUnitOfWork, user_id: UUID, student: StudentRef
     ) -> None:
-        """Import an unknown group's timetable, else only refresh the EMIS bells.
+        """Sync the group's timetable through the new student's EMIS link.
 
-        Both tasks need the account to be committed, so they start after the commit;
-        the import also syncs the bells first.
+        It fills an unknown group, adds the slots of the student's own half, sets the
+        student's subgroup and refreshes the EMIS bells. The task needs the account
+        to be committed, so it starts after the commit.
         """
-        if student.needs_timetable:
-            task, params = "academic.bootstrap_group", {
-                "group_id": str(student.group_id)
-            }
-        else:
-            task, params = "academic.sync_class_hours", {}
         uow.after_commit(
-            partial(self._kicker.kick, task, user_id=str(user_id), **params)
+            partial(
+                self._kicker.kick,
+                "academic.sync_group_timetable",
+                user_id=str(user_id),
+                group_id=str(student.group_id),
+            )
         )
 
     @staticmethod

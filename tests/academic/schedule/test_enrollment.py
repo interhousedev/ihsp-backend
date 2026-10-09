@@ -372,7 +372,7 @@ async def test_leaving_twice_or_for_a_non_student_does_nothing(env: Env) -> None
 
 
 async def test_a_group_without_a_timetable_asks_for_an_import(env: Env) -> None:
-    """ACA-1: the caller kicks academic.bootstrap_group once the account is saved."""
+    """ACA-1: the caller kicks academic.sync_group_timetable after saving."""
     await env.term()
 
     ref = await env.services.enrollment.ensure_student(

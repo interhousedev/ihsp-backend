@@ -207,11 +207,12 @@ async def test_audience_is_the_union_of_roles_groups_and_semesters(
 
 
 async def test_everyone_means_all_active_users_with_a_role(adm: Admin) -> None:
-    """ADM-11: everyone = student, teacher, admin and lms_admin, active only."""
+    """ADM-11: everyone = student, teacher, admin, lms_admin and librarian."""
     students = adm.students(2)
     adm.students(1, status=UserStatus.BLOCKED)
     teacher = adm.identity.add_user(make_user(Role.TEACHER), 5)
     lms = adm.identity.add_user(make_user(Role.LMS_ADMIN), 6)
+    librarian = adm.identity.add_user(make_user(Role.LIBRARIAN), 7)
 
     ids = await adm.resolver.execute(Audience(everyone=True))
 
@@ -219,6 +220,7 @@ async def test_everyone_means_all_active_users_with_a_role(adm: Admin) -> None:
         adm.admin_user.id,
         teacher.id,
         lms.id,
+        librarian.id,
         *(s.id for s in students),
     }
 

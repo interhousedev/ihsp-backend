@@ -131,6 +131,13 @@ class OutlineError(ValidationFailedError):
     message_key = "lms-outline-invalid"
 
 
+class PlanInvalidError(ValidationFailedError):
+    """A course plan breaks a limit (sections, steps, briefs) or has a wrong shape."""
+
+    code = "lms/plan-invalid"
+    message_key = "lms-plan-invalid"
+
+
 class ContentInvalidError(ValidationFailedError):
     """Step content is invalid (for example duplicate IDs)."""
 

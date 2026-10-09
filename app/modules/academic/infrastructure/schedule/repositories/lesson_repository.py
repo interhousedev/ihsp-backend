@@ -7,6 +7,7 @@ from uuid import UUID
 from app.modules.academic.domain.schedule.lesson import Lesson
 from app.modules.academic.infrastructure.orm import Lesson as LessonRow
 from app.modules.academic.infrastructure.orm import Mark as MarkRow
+from app.modules.academic.infrastructure.schedule.array_ops import overlaps
 from app.modules.academic.infrastructure.schedule.mappers import (
     lesson_apply,
     lesson_new_row,
@@ -133,6 +134,34 @@ class SqlLessonRepository:
             LessonRow.term_id == term_id,
             LessonRow.timetable_entry_id.is_not(None),
             LessonRow.origin_date.between(start, end),
+        )
+        rows = (await self.session.execute(stmt)).all()
+        return [lesson_to_entity(row, has_content=bool(flag)) for row, flag in rows]
+
+    async def in_audience(
+        self, term_id: UUID, start: dt.date, end: dt.date, keys: Collection[str]
+    ) -> list[Lesson]:
+        """Return the term's lessons dated start..end whose audience holds a key."""
+        if not keys:
+            return []
+        stmt = (
+            select(LessonRow, has_content_clause())
+            .where(
+                LessonRow.term_id == term_id,
+                LessonRow.date.between(start, end),
+                overlaps(LessonRow.audience, list(keys)),
+            )
+            .order_by(LessonRow.date, LessonRow.period, LessonRow.id)
+        )
+        rows = (await self.session.execute(stmt)).all()
+        return [lesson_to_entity(row, has_content=bool(flag)) for row, flag in rows]
+
+    async def with_emis_class_ids(self, class_ids: Collection[int]) -> list[Lesson]:
+        """Return the lessons that mirror one of the EMIS classes."""
+        if not class_ids:
+            return []
+        stmt = select(LessonRow, has_content_clause()).where(
+            LessonRow.emis_class_id.in_(list(class_ids))
         )
         rows = (await self.session.execute(stmt)).all()
         return [lesson_to_entity(row, has_content=bool(flag)) for row, flag in rows]

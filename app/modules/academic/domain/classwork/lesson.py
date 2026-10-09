@@ -7,6 +7,7 @@ from uuid import UUID
 
 from app.modules.academic.domain.classwork.names import localized
 from app.shared.contracts.academic import LessonRef
+from app.shared.lesson_kind import LessonKind, TopicSource
 
 
 @dataclass(slots=True)
@@ -45,6 +46,8 @@ class Lesson:
     attendance_by: UUID | None
     attendance_at: dt.datetime | None
     attendance_source: str | None
+    kind: LessonKind = "other"
+    topic_source: TopicSource | None = None
 
     @property
     def group_names(self) -> tuple[str, ...]:
@@ -98,4 +101,6 @@ class Lesson:
             topic=self.topic,
             homework_text=self.homework_text,
             homework_due_date=self.homework_due_date,
+            kind=self.kind,
+            topic_source=self.topic_source,
         )

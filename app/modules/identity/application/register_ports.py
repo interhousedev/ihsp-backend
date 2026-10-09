@@ -1,5 +1,6 @@
 """Ports of the EMIS use cases: EMIS client, Vault, accounts, Redis and B1 services."""
 
+import datetime as dt
 from collections.abc import Callable
 from datetime import datetime
 from types import TracebackType
@@ -12,11 +13,11 @@ from app.modules.identity.application.register_models import (
     NewStudentAccount,
 )
 from app.shared.contracts.emis import (
+    EmisClass,
     EmisClassHour,
     EmisProfile,
     EmisSubject,
     EmisSubjectRatings,
-    EmisTimetableItem,
 )
 from app.shared.db.uow import AfterCommit
 from app.shared.notifications import AuditDraft, NotificationDraft
@@ -27,10 +28,12 @@ from pydantic import BaseModel
 
 
 class EmisTimetableSource(Protocol):
-    """Where the weekly timetable of a student's group comes from."""
+    """Where the dated classes of a student come from (ACA-1)."""
 
-    async def timetable(self, token: str) -> list[EmisTimetableItem]:
-        """Return the weekly timetable of the token's group (ACA-1)."""
+    async def timetable(
+        self, token: str, begin: dt.date, end: dt.date
+    ) -> list[EmisClass]:
+        """Return the token's classes on the dates begin..end (inclusive)."""
         ...
 
 

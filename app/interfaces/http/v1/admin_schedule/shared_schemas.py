@@ -4,6 +4,8 @@ import datetime as dt
 from typing import Any, Literal
 from uuid import UUID
 
+from app.shared.lesson_kind import LessonKind, TopicSource
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -68,5 +70,8 @@ class LessonItemResponse(ApiModel):
     is_overridden: bool
     changes: dict[str, list[Any]] | None
     topic: str | None
+    kind: LessonKind = "other"
+    # "emis": the topic came from EMIS (a hint); "manual": a person wrote it.
+    topic_source: TopicSource | None = None
     has_homework: bool
     attendance_submitted: bool

@@ -30,6 +30,12 @@ class CheckEntry:
             )
             conflicts = await conflicts_for(uow, entry)
         return [
-            ConflictData(c.kind, c.with_entry_id, c.with_lesson_id, c.description)
+            ConflictData(
+                c.kind,
+                c.with_entry_id,
+                c.with_lesson_id,
+                c.description,
+                c.week_parity,
+            )
             for c in conflicts
         ]

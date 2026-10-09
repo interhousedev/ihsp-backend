@@ -32,6 +32,9 @@ _HEADLINE_OPTIONS = (
     "MaxWords=35, MinWords=15, ShortWord=2, MaxFragments=2, "
     'FragmentDelimiter=" ... ", StartSel="**", StopSel="**"'
 )
+# Library files belong to the library: not My files, not the assistant's, not
+# deleted with the account, and never cleaned up (FILE-6 is for students and mail).
+_NOT_LIBRARY: ColumnElement[bool] = File.scope != FileScope.LIBRARY.value
 _COUNTED = (
     FileStatus.PENDING.value,
     FileStatus.PROCESSING.value,
@@ -150,6 +153,7 @@ class SqlFileRepository:
         """List the owner's files, newest first; pending and deleted are hidden."""
         stmt = select(File).where(
             File.owner_id == owner_id,
+            _NOT_LIBRARY,
             File.status.not_in((FileStatus.PENDING.value, FileStatus.DELETED.value)),
         )
         if purpose is not None:
@@ -169,7 +173,11 @@ class SqlFileRepository:
         """List the owner's ready files, newest first."""
         stmt = (
             select(File)
-            .where(File.owner_id == owner_id, File.status == FileStatus.READY.value)
+            .where(
+                File.owner_id == owner_id,
+                _NOT_LIBRARY,
+                File.status == FileStatus.READY.value,
+            )
             .order_by(File.created_at.desc(), File.id.desc())
             .limit(limit)
         )
@@ -181,6 +189,7 @@ class SqlFileRepository:
             select(File)
             .where(
                 File.owner_id == owner_id,
+                _NOT_LIBRARY,
                 File.status != FileStatus.DELETED.value,
             )
             .order_by(File.created_at, File.id)
@@ -204,6 +213,7 @@ class SqlFileRepository:
             select(File)
             .where(
                 File.owner_id == owner_id,
+                _NOT_LIBRARY,
                 File.status == FileStatus.READY.value,
                 File.search_vector.op("@@")(tsquery),
             )
@@ -248,7 +258,7 @@ class SqlFileRepository:
             due = or_(due, term_due)
         stmt = (
             select(File)
-            .where(File.status != FileStatus.DELETED.value, due)
+            .where(File.status != FileStatus.DELETED.value, _NOT_LIBRARY, due)
             .order_by(File.created_at, File.id)
             .limit(limit)
         )

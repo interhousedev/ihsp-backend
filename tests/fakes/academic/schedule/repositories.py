@@ -482,6 +482,28 @@ class FakeLessonRepository:
             and start <= lesson.origin_date <= end
         ]
 
+    async def in_audience(
+        self, term_id: UUID, start: dt.date, end: dt.date, keys: Collection[str]
+    ) -> list[Lesson]:
+        """Return the term's lessons dated start..end whose audience holds a key."""
+        wanted = set(keys)
+        found = [
+            _copy(lesson)
+            for lesson in self.store.lessons.values()
+            if lesson.term_id == term_id
+            and start <= lesson.date <= end
+            and wanted & set(lesson.audience)
+        ]
+        return sorted(found, key=lambda x: (x.date, x.period, str(x.id)))
+
+    async def with_emis_class_ids(self, class_ids: Collection[int]) -> list[Lesson]:
+        """Return the lessons that mirror one of the EMIS classes."""
+        return [
+            _copy(lesson)
+            for lesson in self.store.lessons.values()
+            if lesson.emis_class_id in class_ids
+        ]
+
     async def find_overlapping(
         self, starts_at: dt.datetime, ends_at: dt.datetime
     ) -> list[Lesson]:
