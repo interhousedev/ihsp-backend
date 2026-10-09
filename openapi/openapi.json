@@ -4300,6 +4300,122 @@
         "title": "CodeBody",
         "type": "object"
       },
+      "CollectionDetailResponse": {
+        "description": "`CollectionDetail`: the collection and the cards the viewer may see.",
+        "properties": {
+          "cover_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Url"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "item_count": {
+            "title": "Item Count",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemCardSchema"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "description",
+          "cover_url",
+          "item_count",
+          "items"
+        ],
+        "title": "CollectionDetailResponse",
+        "type": "object"
+      },
+      "CollectionResponse": {
+        "description": "`Collection` in the reader's language.",
+        "properties": {
+          "cover_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Url"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "item_count": {
+            "title": "Item Count",
+            "type": "integer"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "description",
+          "cover_url",
+          "item_count"
+        ],
+        "title": "CollectionResponse",
+        "type": "object"
+      },
       "CompareStepView": {
         "description": "How one step differs between two versions.",
         "properties": {
@@ -5347,6 +5463,55 @@
         "title": "CreateChatBody",
         "type": "object"
       },
+      "CreateCollectionBody": {
+        "additionalProperties": false,
+        "description": "`CollectionInput`.",
+        "properties": {
+          "cover_file_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover File Id"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NamesBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "item_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Item Ids",
+            "type": "array"
+          },
+          "published": {
+            "title": "Published",
+            "type": "boolean"
+          },
+          "title": {
+            "$ref": "#/components/schemas/NamesBody"
+          }
+        },
+        "required": [
+          "title",
+          "published"
+        ],
+        "title": "CreateCollectionBody",
+        "type": "object"
+      },
       "CreateConnectorBody": {
         "description": "POST /v1/id/me/connectors.",
         "properties": {
@@ -5536,6 +5701,98 @@
         "title": "CreateNotebookBody",
         "type": "object"
       },
+      "CreateReadingListBody": {
+        "additionalProperties": false,
+        "description": "`ReadingListInput`.",
+        "properties": {
+          "academic_year": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Academic Year"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "group_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Group Ids",
+            "type": "array"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/ListScope"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ListStatus",
+            "default": "draft"
+          },
+          "subject_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Id"
+          },
+          "term_half": {
+            "anyOf": [
+              {
+                "enum": [
+                  1,
+                  2
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Term Half"
+          },
+          "title": {
+            "maxLength": 300,
+            "title": "Title",
+            "type": "string"
+          },
+          "year_of_study": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year Of Study"
+          }
+        },
+        "required": [
+          "title",
+          "scope"
+        ],
+        "title": "CreateReadingListBody",
+        "type": "object"
+      },
       "CreateSetBody": {
         "description": "POST /v1/me/flashcard-sets.",
         "properties": {
@@ -5655,6 +5912,63 @@
           "title"
         ],
         "title": "CreateStepBody",
+        "type": "object"
+      },
+      "CreateTopicBody": {
+        "additionalProperties": false,
+        "description": "`TopicInput`.",
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/NamesBody"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "year_of_study": {
+            "anyOf": [
+              {
+                "maximum": 4.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year Of Study"
+          }
+        },
+        "required": [
+          "subject_id",
+          "name"
+        ],
+        "title": "CreateTopicBody",
         "type": "object"
       },
       "CreatedSectionResponse": {
@@ -8008,6 +8322,26 @@
           }
         },
         "title": "GroupPatchBody",
+        "type": "object"
+      },
+      "GroupResponse": {
+        "description": "A study group a reading list can be aimed at.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "GroupResponse",
         "type": "object"
       },
       "GroupStatsItemResponse": {
@@ -10832,6 +11166,83 @@
         "title": "LibraryReportBody",
         "type": "object"
       },
+      "LibraryStatsResponse": {
+        "description": "`LibraryStats`.",
+        "properties": {
+          "items_by_status": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/ItemStatus"
+            },
+            "title": "Items By Status",
+            "type": "object"
+          },
+          "opens": {
+            "title": "Opens",
+            "type": "integer"
+          },
+          "queue": {
+            "$ref": "#/components/schemas/QueueStatsResponse"
+          },
+          "readers": {
+            "title": "Readers",
+            "type": "integer"
+          },
+          "reports_by_reason": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "$ref": "#/components/schemas/ReportReason"
+            },
+            "title": "Reports By Reason",
+            "type": "object"
+          },
+          "searches_without_results": {
+            "items": {
+              "$ref": "#/components/schemas/SearchMissResponse"
+            },
+            "title": "Searches Without Results",
+            "type": "array"
+          },
+          "subjects_without_materials": {
+            "items": {
+              "$ref": "#/components/schemas/SubjectRefSchema"
+            },
+            "title": "Subjects Without Materials",
+            "type": "array"
+          },
+          "top_items": {
+            "items": {
+              "$ref": "#/components/schemas/TopItemResponse"
+            },
+            "title": "Top Items",
+            "type": "array"
+          },
+          "uploads_by_day": {
+            "items": {
+              "$ref": "#/components/schemas/UploadDayResponse"
+            },
+            "title": "Uploads By Day",
+            "type": "array"
+          }
+        },
+        "required": [
+          "opens",
+          "readers",
+          "queue",
+          "uploads_by_day",
+          "searches_without_results",
+          "top_items",
+          "items_by_status",
+          "reports_by_reason",
+          "subjects_without_materials"
+        ],
+        "title": "LibraryStatsResponse",
+        "type": "object"
+      },
       "LibrarySubjectSchema": {
         "description": "`LibrarySubject`: a subject with its number of visible items.",
         "properties": {
@@ -11065,6 +11476,26 @@
         "title": "ListRefSchema",
         "type": "object"
       },
+      "ListScope": {
+        "description": "Audience of a reading list.",
+        "enum": [
+          "subject",
+          "groups",
+          "school"
+        ],
+        "title": "ListScope",
+        "type": "string"
+      },
+      "ListStatus": {
+        "description": "State of a reading list.",
+        "enum": [
+          "draft",
+          "published",
+          "archived"
+        ],
+        "title": "ListStatus",
+        "type": "string"
+      },
       "LmsStepInput": {
         "description": "A step of an LMS course (text and flash card blocks only).\n\nA student adds the live step of a course they are enrolled in; a course workspace\nadds the *draft* of its own course's steps (`draft: true`).",
         "properties": {
@@ -11229,6 +11660,132 @@
         "title": "LogoutResponse",
         "type": "object"
       },
+      "ManageCollectionResponse": {
+        "description": "`ManageCollection`: all languages and the stored item ids.",
+        "properties": {
+          "cover_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Url"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NamesResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "item_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Item Ids",
+            "type": "array"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "published": {
+            "title": "Published",
+            "type": "boolean"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "title": {
+            "$ref": "#/components/schemas/NamesResponse"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "description",
+          "cover_url",
+          "published",
+          "position",
+          "item_ids"
+        ],
+        "title": "ManageCollectionResponse",
+        "type": "object"
+      },
+      "ManageTopicResponse": {
+        "description": "`ManageTopic`: all three names, for the editor.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "$ref": "#/components/schemas/NamesResponse"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "year_of_study": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year Of Study"
+          }
+        },
+        "required": [
+          "id",
+          "subject_id",
+          "parent_id",
+          "name",
+          "slug",
+          "position",
+          "year_of_study"
+        ],
+        "title": "ManageTopicResponse",
+        "type": "object"
+      },
       "MarkItem": {
         "description": "One mark.",
         "properties": {
@@ -11377,7 +11934,7 @@
         "type": "object"
       },
       "MaterialInputBody": {
-        "description": "`MaterialInput`: the upload form.",
+        "description": "`MaterialInput`: the upload form; `attested` may be false until submit.",
         "properties": {
           "attested": {
             "title": "Attested",
@@ -11471,6 +12028,17 @@
       "MaterialPatchBody": {
         "description": "`PATCH /library/materials/{id}`: only the keys that were sent are applied.",
         "properties": {
+          "attested": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attested"
+          },
           "body_md": {
             "anyOf": [
               {
@@ -11864,6 +12432,54 @@
           "follows_weekday"
         ],
         "title": "MovedDay",
+        "type": "object"
+      },
+      "NamesBody": {
+        "additionalProperties": false,
+        "description": "Names in the three languages of the lyceum.",
+        "properties": {
+          "en": {
+            "default": "",
+            "maxLength": 200,
+            "title": "En",
+            "type": "string"
+          },
+          "ru": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Ru",
+            "type": "string"
+          },
+          "uz": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Uz",
+            "type": "string"
+          }
+        },
+        "title": "NamesBody",
+        "type": "object"
+      },
+      "NamesResponse": {
+        "description": "The three names of a topic, collection title or description.",
+        "properties": {
+          "en": {
+            "default": "",
+            "title": "En",
+            "type": "string"
+          },
+          "ru": {
+            "default": "",
+            "title": "Ru",
+            "type": "string"
+          },
+          "uz": {
+            "default": "",
+            "title": "Uz",
+            "type": "string"
+          }
+        },
+        "title": "NamesResponse",
         "type": "object"
       },
       "NewConnectorResponse": {
@@ -13629,6 +14245,26 @@
         "title": "PersonRefView",
         "type": "object"
       },
+      "PersonResponse": {
+        "description": "`{id, name}` of the owner of a list.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "PersonResponse",
+        "type": "object"
+      },
       "PinExternalBody": {
         "description": "`PinExternalBody`: the category decides the link of the record.",
         "properties": {
@@ -14949,6 +15585,44 @@
         "additionalProperties": true,
         "type": "object"
       },
+      "QueueStatsResponse": {
+        "description": "Waiting time of the review queue.",
+        "properties": {
+          "average_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average Hours"
+          },
+          "length": {
+            "title": "Length",
+            "type": "integer"
+          },
+          "oldest_age_hours": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Oldest Age Hours"
+          }
+        },
+        "required": [
+          "length",
+          "oldest_age_hours",
+          "average_hours"
+        ],
+        "title": "QueueStatsResponse",
+        "type": "object"
+      },
       "QueueTab": {
         "description": "The tabs of the librarian queue (doc § 3.6).",
         "enum": [
@@ -15182,6 +15856,514 @@
         ],
         "title": "Rating",
         "type": "string"
+      },
+      "ReadingListCardResponse": {
+        "description": "`ReadingListCard`.",
+        "properties": {
+          "academic_year": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Academic Year"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "entry_count": {
+            "title": "Entry Count",
+            "type": "integer"
+          },
+          "essential_count": {
+            "title": "Essential Count",
+            "type": "integer"
+          },
+          "essential_done": {
+            "title": "Essential Done",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/PersonResponse"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/ListScope"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ListStatus"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubjectRefSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "term_half": {
+            "anyOf": [
+              {
+                "enum": [
+                  1,
+                  2
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Term Half"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "year_of_study": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year Of Study"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "scope",
+          "status",
+          "subject",
+          "year_of_study",
+          "academic_year",
+          "term_half",
+          "owner",
+          "entry_count",
+          "essential_count",
+          "essential_done",
+          "updated_at"
+        ],
+        "title": "ReadingListCardResponse",
+        "type": "object"
+      },
+      "ReadingListDetailResponse": {
+        "description": "`ReadingListDetail`: the card, the groups, the entries, `can_edit`.",
+        "properties": {
+          "academic_year": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Academic Year"
+          },
+          "can_edit": {
+            "title": "Can Edit",
+            "type": "boolean"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/ReadingListEntryResponse"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "entry_count": {
+            "title": "Entry Count",
+            "type": "integer"
+          },
+          "essential_count": {
+            "title": "Essential Count",
+            "type": "integer"
+          },
+          "essential_done": {
+            "title": "Essential Done",
+            "type": "integer"
+          },
+          "group_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Group Ids",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/PersonResponse"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/ListScope"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ListStatus"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubjectRefSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "term_half": {
+            "anyOf": [
+              {
+                "enum": [
+                  1,
+                  2
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Term Half"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "year_of_study": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year Of Study"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "scope",
+          "status",
+          "subject",
+          "year_of_study",
+          "academic_year",
+          "term_half",
+          "owner",
+          "entry_count",
+          "essential_count",
+          "essential_done",
+          "updated_at",
+          "group_ids",
+          "entries",
+          "can_edit"
+        ],
+        "title": "ReadingListDetailResponse",
+        "type": "object"
+      },
+      "ReadingListEntryResponse": {
+        "description": "`ReadingListEntry`: an item card or a plain link, with my read status.",
+        "properties": {
+          "due_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due On"
+          },
+          "importance": {
+            "$ref": "#/components/schemas/Importance"
+          },
+          "item": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ItemCardSchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "page_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page From"
+          },
+          "page_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page To"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "read_state": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ShelfState"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "topic_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic Id"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "week_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Week Label"
+          }
+        },
+        "required": [
+          "position",
+          "item",
+          "url",
+          "title",
+          "importance",
+          "page_from",
+          "page_to",
+          "week_label",
+          "due_on",
+          "topic_id",
+          "note",
+          "read_state"
+        ],
+        "title": "ReadingListEntryResponse",
+        "type": "object"
+      },
+      "ReadingListItemBody": {
+        "additionalProperties": false,
+        "description": "`ReadingListItemInput`.",
+        "properties": {
+          "due_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due On"
+          },
+          "importance": {
+            "$ref": "#/components/schemas/Importance"
+          },
+          "item_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "page_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page From"
+          },
+          "page_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page To"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "topic_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic Id"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "week_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Week Label"
+          }
+        },
+        "required": [
+          "importance"
+        ],
+        "title": "ReadingListItemBody",
+        "type": "object"
       },
       "RecordBookResponse": {
         "description": "All semesters with results.",
@@ -15536,6 +16718,24 @@
           "cards"
         ],
         "title": "ReplaceCardsBody",
+        "type": "object"
+      },
+      "ReplaceEntriesBody": {
+        "additionalProperties": false,
+        "description": "`PUT /library/reading-lists/{id}/items`: `{items: ReadingListItemInput[]}`.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReadingListItemBody"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ReplaceEntriesBody",
         "type": "object"
       },
       "ReportBody": {
@@ -16714,6 +17914,25 @@
           "snippet"
         ],
         "title": "SearchHitResponse",
+        "type": "object"
+      },
+      "SearchMissResponse": {
+        "description": "A query that found nothing.",
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "q": {
+            "title": "Q",
+            "type": "string"
+          }
+        },
+        "required": [
+          "q",
+          "count"
+        ],
+        "title": "SearchMissResponse",
         "type": "object"
       },
       "SearchResponse": {
@@ -18255,6 +19474,19 @@
         ],
         "title": "StartRegistrationBody",
         "type": "object"
+      },
+      "StatusReasonCode": {
+        "description": "System codes of `item.status_reason`; a librarian may write own words instead.\n\nThe API publishes this enum so clients can translate the codes; any other value is\nfree text written by a librarian or a teacher, shown as it is.",
+        "enum": [
+          "withdrawn_by_owner",
+          "reported",
+          "superseded",
+          "account_closed",
+          "unpublished",
+          "takedown"
+        ],
+        "title": "StatusReasonCode",
+        "type": "string"
       },
       "StepContent-Input": {
         "description": "Title and blocks of a step (``CourseStep.draft``, ``StepRevision.content``).",
@@ -21612,6 +22844,24 @@
         "title": "ToolCallViewResponse",
         "type": "object"
       },
+      "TopItemResponse": {
+        "description": "A much opened item.",
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/ItemCardSchema"
+          },
+          "opens": {
+            "title": "Opens",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "item",
+          "opens"
+        ],
+        "title": "TopItemResponse",
+        "type": "object"
+      },
       "TopicRefSchema": {
         "description": "A topic the item feeds, with the page range.",
         "properties": {
@@ -21654,6 +22904,57 @@
           "page_to"
         ],
         "title": "TopicRefSchema",
+        "type": "object"
+      },
+      "TopicResponse": {
+        "description": "`Topic`: a node of the tree of one subject.",
+        "properties": {
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/TopicResponse"
+            },
+            "title": "Children",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "year_of_study": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year Of Study"
+          }
+        },
+        "required": [
+          "id",
+          "subject_id",
+          "name",
+          "slug",
+          "year_of_study",
+          "children"
+        ],
+        "title": "TopicResponse",
         "type": "object"
       },
       "TurnResultResponse": {
@@ -21912,6 +23213,72 @@
         "title": "UpdateAutoSettingsBody",
         "type": "object"
       },
+      "UpdateCollectionBody": {
+        "additionalProperties": false,
+        "description": "`Partial<CollectionInput>`: only the keys that were sent are applied.",
+        "properties": {
+          "cover_file_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover File Id"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NamesBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "item_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Ids"
+          },
+          "published": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NamesBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "UpdateCollectionBody",
+        "type": "object"
+      },
       "UpdateEmisPasswordBody": {
         "description": "The new EMIS password.",
         "properties": {
@@ -22040,6 +23407,121 @@
           }
         },
         "title": "UpdateNotebookBody",
+        "type": "object"
+      },
+      "UpdateReadingListBody": {
+        "additionalProperties": false,
+        "description": "`Partial<ReadingListInput>`: only the keys that were sent are applied.",
+        "properties": {
+          "academic_year": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Academic Year"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "group_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Ids"
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ListScope"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ListStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subject_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Id"
+          },
+          "term_half": {
+            "anyOf": [
+              {
+                "enum": [
+                  1,
+                  2
+                ],
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Term Half"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "year_of_study": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year Of Study"
+          }
+        },
+        "title": "UpdateReadingListBody",
         "type": "object"
       },
       "UpdateSetBody": {
@@ -22199,6 +23681,93 @@
         "title": "UpdateStaffBody",
         "type": "object"
       },
+      "UpdateTopicBody": {
+        "additionalProperties": false,
+        "description": "`Partial<TopicInput>`: only the keys that were sent are applied.",
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NamesBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          },
+          "subject_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Id"
+          },
+          "year_of_study": {
+            "anyOf": [
+              {
+                "maximum": 4.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year Of Study"
+          }
+        },
+        "title": "UpdateTopicBody",
+        "type": "object"
+      },
+      "UploadDayResponse": {
+        "description": "Materials uploaded on one day.",
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "day": {
+            "format": "date",
+            "title": "Day",
+            "type": "string"
+          }
+        },
+        "required": [
+          "day",
+          "count"
+        ],
+        "title": "UploadDayResponse",
+        "type": "object"
+      },
       "UploadInfo": {
         "description": "The request the client sends to storage.",
         "properties": {
@@ -22263,6 +23832,9 @@
           },
           "reason": {
             "anyOf": [
+              {
+                "$ref": "#/components/schemas/StatusReasonCode"
+              },
               {
                 "type": "string"
               },
@@ -34170,6 +35742,119 @@
         ]
       }
     },
+    "/v1/library/collections": {
+      "get": {
+        "description": "Published collections with the number of items the caller can see.",
+        "operationId": "list_collections_v1_library_collections_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CollectionResponse"
+                  },
+                  "title": "Response List Collections V1 Library Collections Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Collections",
+        "tags": [
+          "library"
+        ]
+      }
+    },
+    "/v1/library/collections/{collection_id}": {
+      "get": {
+        "description": "A published collection (by id or slug) with the cards the caller can see.",
+        "operationId": "get_collection_v1_library_collections__collection_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "collection_id",
+            "required": true,
+            "schema": {
+              "title": "Collection Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Collection",
+        "tags": [
+          "library"
+        ]
+      }
+    },
     "/v1/library/external/unilibrary/search": {
       "get": {
         "description": "Live UniLibrary results as cards that are not stored (`404` while off).",
@@ -35403,6 +37088,437 @@
         ]
       }
     },
+    "/v1/library/my-groups": {
+      "get": {
+        "description": "Groups the teacher teaches or curates; librarians and Administration get all.",
+        "operationId": "list_my_groups_v1_library_my_groups_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GroupResponse"
+                  },
+                  "title": "Response List My Groups V1 Library My Groups Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List My Groups",
+        "tags": [
+          "library"
+        ]
+      }
+    },
+    "/v1/library/reading-lists": {
+      "get": {
+        "description": "Lists the caller may open (students: the lists of their group and school).",
+        "operationId": "list_reading_lists_v1_library_reading_lists_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "subject_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "mine",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Mine",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ListStatus"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ReadingListCardResponse"
+                  },
+                  "title": "Response List Reading Lists V1 Library Reading Lists Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Reading Lists",
+        "tags": [
+          "library"
+        ]
+      },
+      "post": {
+        "description": "Create a list (teachers for their subjects and groups, librarians for any).",
+        "operationId": "create_reading_list_v1_library_reading_lists_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReadingListBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadingListDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Reading List",
+        "tags": [
+          "library"
+        ]
+      }
+    },
+    "/v1/library/reading-lists/{list_id}": {
+      "delete": {
+        "description": "Delete a list with its entries (its owner, or a librarian).",
+        "operationId": "delete_reading_list_v1_library_reading_lists__list_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "list_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "List Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Reading List",
+        "tags": [
+          "library"
+        ]
+      },
+      "get": {
+        "description": "The list with its entries and my read status.",
+        "operationId": "get_reading_list_v1_library_reading_lists__list_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "list_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "List Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadingListDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Reading List",
+        "tags": [
+          "library"
+        ]
+      },
+      "patch": {
+        "description": "Change the sent fields of a list (its owner, or a librarian).",
+        "operationId": "update_reading_list_v1_library_reading_lists__list_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "list_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "List Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReadingListBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadingListDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Reading List",
+        "tags": [
+          "library"
+        ]
+      }
+    },
+    "/v1/library/reading-lists/{list_id}/items": {
+      "put": {
+        "description": "Replace all entries at once (at most 100, else `422 library/list-too-long`).",
+        "operationId": "replace_list_entries_v1_library_reading_lists__list_id__items_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "list_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "List Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplaceEntriesBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadingListDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Replace List Entries",
+        "tags": [
+          "library"
+        ]
+      }
+    },
     "/v1/library/subjects": {
       "get": {
         "description": "Subjects with visible items and their counts; `?all=1` lists every subject.",
@@ -35504,6 +37620,77 @@
         "summary": "Create Suggestion",
         "tags": [
           "library-materials"
+        ]
+      }
+    },
+    "/v1/library/topics": {
+      "get": {
+        "description": "The topic tree of a subject (of every subject without `subject_id`).",
+        "operationId": "list_topics_v1_library_topics_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "subject_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject Id"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TopicResponse"
+                  },
+                  "title": "Response List Topics V1 Library Topics Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Topics",
+        "tags": [
+          "library"
         ]
       }
     },
@@ -38230,6 +40417,161 @@
         ]
       }
     },
+    "/v1/manage/library/collections": {
+      "get": {
+        "description": "Every collection, published or not, with all languages.",
+        "operationId": "list_manage_collections_v1_manage_library_collections_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ManageCollectionResponse"
+                  },
+                  "title": "Response List Manage Collections V1 Manage Library Collections Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Manage Collections",
+        "tags": [
+          "library"
+        ]
+      },
+      "post": {
+        "description": "Create a collection with its items.",
+        "operationId": "create_collection_v1_manage_library_collections_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCollectionBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManageCollectionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Collection",
+        "tags": [
+          "library"
+        ]
+      }
+    },
+    "/v1/manage/library/collections/{collection_id}": {
+      "delete": {
+        "description": "Delete a collection; its items stay in the library.",
+        "operationId": "delete_collection_v1_manage_library_collections__collection_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "collection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Collection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Collection",
+        "tags": [
+          "library"
+        ]
+      },
+      "patch": {
+        "description": "Change the sent fields; `null` clears the description or the cover.",
+        "operationId": "update_collection_v1_manage_library_collections__collection_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "collection_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Collection Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCollectionBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManageCollectionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Collection",
+        "tags": [
+          "library"
+        ]
+      }
+    },
     "/v1/manage/library/import": {
       "post": {
         "description": "Create draft books from the CSV; rows with errors are listed.",
@@ -38518,6 +40860,90 @@
         ]
       }
     },
+    "/v1/manage/library/stats": {
+      "get": {
+        "description": "Opens, readers, queue times and the rest, for the last 30 days by default.",
+        "operationId": "get_library_stats_v1_manage_library_stats_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibraryStatsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Library Stats",
+        "tags": [
+          "library"
+        ]
+      }
+    },
     "/v1/manage/library/suggestions/{suggestion_id}/{decision}": {
       "post": {
         "description": "Accept or decline a book suggestion.",
@@ -38565,6 +40991,190 @@
         "summary": "Decide Suggestion",
         "tags": [
           "library-manage"
+        ]
+      }
+    },
+    "/v1/manage/library/topics": {
+      "get": {
+        "description": "Topics with all three names, flat, in tree order.",
+        "operationId": "list_manage_topics_v1_manage_library_topics_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "subject_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ManageTopicResponse"
+                  },
+                  "title": "Response List Manage Topics V1 Manage Library Topics Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Manage Topics",
+        "tags": [
+          "library"
+        ]
+      },
+      "post": {
+        "description": "Create a topic (librarians and Administration).",
+        "operationId": "create_topic_v1_manage_library_topics_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTopicBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManageTopicResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Topic",
+        "tags": [
+          "library"
+        ]
+      }
+    },
+    "/v1/manage/library/topics/{topic_id}": {
+      "delete": {
+        "description": "Delete a topic with its sub-topics; items keep existing.",
+        "operationId": "delete_topic_v1_manage_library_topics__topic_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "topic_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Topic Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Topic",
+        "tags": [
+          "library"
+        ]
+      },
+      "patch": {
+        "description": "Change the sent fields of a topic.",
+        "operationId": "update_topic_v1_manage_library_topics__topic_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "topic_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Topic Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTopicBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManageTopicResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Topic",
+        "tags": [
+          "library"
         ]
       }
     },

@@ -65,6 +65,7 @@ SOURCE_KEYS = {
     "ref",
     "stale",
     "has_guide",
+    "label_ids",
     "synced_at",
     "created_at",
 }

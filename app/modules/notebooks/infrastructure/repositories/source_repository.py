@@ -17,7 +17,7 @@ from app.modules.notebooks.infrastructure.orm.notebook import Notebook as Notebo
 from app.modules.notebooks.infrastructure.orm.source import Source as SourceRow
 
 from sqlalchemy import Select, delete, func, select, update
-from sqlalchemy.dialects.postgresql import aggregate_order_by, array_agg
+from sqlalchemy.dialects.postgresql import aggregate_order_by
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import flag_modified
 
@@ -25,7 +25,7 @@ _USABLE = [SourceStatus.READY.value, SourceStatus.STALE.value]
 _UNFINISHED = [SourceStatus.PROCESSING.value, SourceStatus.PENDING.value]
 # The ids of a source's labels in label order, read with the source (no N+1).
 _LABEL_IDS = (
-    select(array_agg(aggregate_order_by(LinkRow.label_id, LabelRow.position)))
+    select(func.array_agg(aggregate_order_by(LinkRow.label_id, LabelRow.position)))
     .select_from(LinkRow)
     .join(LabelRow, LabelRow.id == LinkRow.label_id)
     .where(LinkRow.source_id == SourceRow.id)

@@ -5,13 +5,13 @@ from uuid import UUID
 
 from app.modules.notebooks.domain.labels import LabelOrigin, LabelRunStatus
 from app.modules.notebooks.infrastructure.orm.enum_column import str_enum
-from app.shared.db.base import Base, IdMixin
+from app.shared.db.base import Base, IdMixin, TimestampMixin
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Uuid, func, text
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Uuid, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 
-class SourceLabel(IdMixin, Base):
+class SourceLabel(IdMixin, TimestampMixin, Base):
     """A topic label of a notebook (made by the model or by the student)."""
 
     __tablename__ = "source_labels"
@@ -33,12 +33,9 @@ class SourceLabel(IdMixin, Base):
     emoji: Mapped[str] = mapped_column(String(16))
     position: Mapped[int] = mapped_column(Integer)
     origin: Mapped[str] = mapped_column(str_enum(LabelOrigin, "origin"))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
 
 
-class SourceLabelLink(Base):
+class SourceLabelLink(TimestampMixin, Base):
     """A label on a source; `origin` tells whether the model or the student set it."""
 
     __tablename__ = "source_label_links"
@@ -60,7 +57,7 @@ class SourceLabelLink(Base):
     origin: Mapped[str] = mapped_column(str_enum(LabelOrigin, "origin"))
 
 
-class SourceLabelRun(Base):
+class SourceLabelRun(TimestampMixin, Base):
     """The state of the automatic labeling of a notebook (one row at most)."""
 
     __tablename__ = "source_label_runs"
