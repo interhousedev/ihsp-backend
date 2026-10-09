@@ -390,6 +390,7 @@ services:
       APP_HOST_ADMIN: admin.${LOCAL_DOMAIN:-localhost}
       APP_HOST_LMS: lms.${LOCAL_DOMAIN:-localhost}
       APP_HOST_LIBRARY: library.${LOCAL_DOMAIN:-localhost}
+      PWA_APPS: "${PWA_APPS:-lms library staff admin}"
       APP_HOST_SHARE: s.${LOCAL_DOMAIN:-localhost}
       API_HOST: api.${LOCAL_DOMAIN:-localhost}
       MCP_HOST: mcp.${LOCAL_DOMAIN:-localhost}

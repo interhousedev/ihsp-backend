@@ -431,6 +431,7 @@ services:
       APP_HOST_ADMIN: admin.${DOMAIN}
       APP_HOST_LMS: lms.${DOMAIN}
       APP_HOST_LIBRARY: library.${DOMAIN}
+      PWA_APPS: "${PWA_APPS:-lms library staff admin}"
       APP_HOST_SHARE: s.${DOMAIN}
       API_HOST: api.${DOMAIN}
       MCP_HOST: mcp.${DOMAIN}
