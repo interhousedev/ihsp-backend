@@ -8,9 +8,11 @@ from app.bootstrap.container import Container
 from app.bootstrap.seed.students import CapturingEmailSender
 from app.settings import Settings
 from tests.fakes.clock import FixedClock
+from tests.fakes.files.storage import InMemoryStorage
 from tests.fakes.identity.vault import InMemoryCredentialStore
 from tests.fakes.tasks import FakeTaskKicker
 
+import pytest
 import pytest_asyncio
 from fakeredis.aioredis import FakeRedis
 from sqlalchemy import text
@@ -27,9 +29,26 @@ SCHEMAS = (
     "mail",
     "lms",
     "notebooks",
+    "library",
 )
 
 ContainerFactory = Callable[..., Coroutine[Any, Any, Container]]
+
+
+class _MemoryS3(InMemoryStorage):
+    """Stands in for S3Storage: the demo seed writes real file blobs."""
+
+    def __init__(self, **_: object) -> None:
+        super().__init__()
+
+    async def close(self) -> None:
+        """Nothing to close."""
+
+
+@pytest.fixture(autouse=True)
+def memory_s3(monkeypatch: pytest.MonkeyPatch) -> None:
+    """No object store runs in the tests: the files module writes to memory."""
+    monkeypatch.setattr("app.modules.files.wiring.S3Storage", _MemoryS3)
 
 
 class IntegrationWorld:

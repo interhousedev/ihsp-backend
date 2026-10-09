@@ -8,6 +8,7 @@ from app.bootstrap.common import build_container
 from app.bootstrap.container import Container
 from app.bootstrap.seed.content import seed_broadcast, seed_course, seed_flashcards
 from app.bootstrap.seed.groups import finish_groups
+from app.bootstrap.seed.library import seed_library
 from app.bootstrap.seed.notebooks import seed_notebook
 from app.bootstrap.seed.schedule import generate_lessons, seed_structure
 from app.bootstrap.seed.students import (
@@ -18,6 +19,8 @@ from app.bootstrap.seed.students import (
 from app.bootstrap.seed.users import (
     ADMIN_LOGIN,
     ADMIN_PASSWORD,
+    LIBRARIAN_LOGIN,
+    LIBRARIAN_PASSWORD,
     TEACHER_PASSWORD,
     TEACHERS,
     ensure_admin,
@@ -60,6 +63,7 @@ async def seed(
         await seed_notebook(container, members[0])
     await seed_course(container, admin_id)
     await seed_broadcast(container, admin_id)
+    await seed_library(container, structure.subject_ids, structure.group_ids)
 
 
 def describe() -> None:
@@ -67,6 +71,7 @@ def describe() -> None:
     out(f"admin:    {ADMIN_LOGIN} / {ADMIN_PASSWORD} (code arrives in Mailpit)")
     for spec in TEACHERS:
         out(f"teacher:  {spec.login} / {TEACHER_PASSWORD}")
+    out(f"librarian: {LIBRARIAN_LOGIN} / {LIBRARIAN_PASSWORD} (when the library is on)")
     for emis_login in EMIS_LOGINS:
         student = FAKE_BY_LOGIN[emis_login]
         login = base_login(

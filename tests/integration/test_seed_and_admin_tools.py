@@ -6,6 +6,7 @@ from uuid import UUID
 from app.bootstrap.container import Container
 from app.bootstrap.seed.users import ADMIN_LOGIN
 from app.bootstrap.seed_demo import seed
+from app.settings import Settings
 from app.shared.actor import Actor, Role
 from app.shared.base_error import NotFoundError
 from tests.integration.conftest import ContainerFactory, IntegrationWorld
@@ -159,3 +160,66 @@ async def test_unknown_tool_is_not_found(
         await container.admin_tools.call(
             "delete_everything", {}, Actor(user_id=UUID(int=1), roles=frozenset())
         )
+
+
+async def _library_counts(container: Container) -> dict[str, int]:
+    async with container.sessionmaker() as session:
+        counts = {}
+        for name, query in {
+            "books": "SELECT count(*) FROM library.items WHERE kind = 'book'",
+            "published_books": "SELECT count(*) FROM library.items "
+            "WHERE kind = 'book' AND status = 'published'",
+            "published_materials": "SELECT count(*) FROM library.items "
+            "WHERE kind = 'material' AND status = 'published'",
+            "queued_materials": "SELECT count(*) FROM library.items "
+            "WHERE kind = 'material' AND status = 'pending_review'",
+            "topics": "SELECT count(*) FROM library.topics",
+            "collections": "SELECT count(*) FROM library.collections",
+            "reading_lists": "SELECT count(*) FROM library.reading_lists "
+            "WHERE status = 'published'",
+            "librarians": "SELECT count(*) FROM id.users "
+            "WHERE 'librarian' = ANY(roles)",
+        }.items():
+            counts[name] = int(await session.scalar(text(query)) or 0)
+    return counts
+
+
+async def test_seed_adds_the_demo_library_once(
+    make_container: ContainerFactory,
+    world: IntegrationWorld,
+) -> None:
+    """Books, topics, a collection, a list, two materials, a librarian; no repeats."""
+    container = await make_container("all")
+
+    await seed(container, world.credentials)
+    first = await _library_counts(container)
+    await seed(container, world.credentials)
+
+    assert first == await _library_counts(container)
+    assert first == {
+        "books": 6,
+        "published_books": 6,
+        "published_materials": 1,
+        "queued_materials": 1,
+        "topics": 2,
+        "collections": 1,
+        "reading_lists": 1,
+        "librarians": 1,
+    }
+
+
+async def test_seed_skips_the_library_when_the_feature_is_off(
+    make_container: ContainerFactory,
+    world: IntegrationWorld,
+    settings: Settings,
+) -> None:
+    """FEATURES__LIBRARY=false: no library data and no librarian."""
+    container = await make_container("all")
+    container.settings = settings.model_copy(
+        update={"features": settings.features.model_copy(update={"library": False})}
+    )
+
+    await seed(container, world.credentials)
+
+    assert (await _library_counts(container))["books"] == 0
+    assert (await _library_counts(container))["librarians"] == 0

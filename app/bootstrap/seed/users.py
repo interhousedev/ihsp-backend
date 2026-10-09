@@ -16,6 +16,8 @@ log = structlog.get_logger(__name__)
 ADMIN_LOGIN = "admin.ihsp"
 ADMIN_PASSWORD = "AdminDemo1"
 TEACHER_PASSWORD = "TeacherDemo1"
+LIBRARIAN_LOGIN = "tursunov.sardor"
+LIBRARIAN_PASSWORD = "LibrarianDemo1"
 MAIL_DOMAIN = "ihsu.uz"
 
 
@@ -102,3 +104,15 @@ async def ensure_teachers(container: Container) -> dict[str, UUID]:
         )
         for spec in TEACHERS
     }
+
+
+async def ensure_librarian(container: Container) -> UUID:
+    """The demo librarian `tursunov.sardor`, apart from the students who upload."""
+    return await _ensure(
+        container,
+        login=LIBRARIAN_LOGIN,
+        first_name="Sardor",
+        last_name="Tursunov",
+        password=LIBRARIAN_PASSWORD,
+        roles={Role.LIBRARIAN},
+    )
