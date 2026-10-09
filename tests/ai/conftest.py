@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
+from uuid import UUID
 
 from app.modules.ai.domain.assistant import Assistant
 from app.modules.ai.ports.turn_lock import TurnLock
@@ -72,11 +73,26 @@ class AiHarness:
     settings: Settings
 
     async def new_chat(
-        self, actor: Actor | None = None, assistant: Assistant = Assistant.STUDENT
+        self,
+        actor: Actor | None = None,
+        assistant: Assistant = Assistant.STUDENT,
+        course_id: UUID | None = None,
     ) -> Any:
-        """Create a chat and return its view."""
-        who = actor or (self.student if assistant is Assistant.STUDENT else self.admin)
-        return await self.services.create_chat.execute(actor=who, assistant=assistant)
+        """Create a chat and return its view.
+
+        An author chat (``lms_author``) belongs to a course: pass its ``course_id``;
+        it is started by the teacher unless an actor is given.
+        """
+        by_assistant = {
+            Assistant.STUDENT: self.student,
+            Assistant.ADMIN: self.admin,
+            Assistant.LMS_AUTHOR: self.teacher,
+        }
+        return await self.services.create_chat.execute(
+            actor=actor or by_assistant[assistant],
+            assistant=assistant,
+            course_id=course_id,
+        )
 
     async def say(
         self,
