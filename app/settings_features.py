@@ -34,7 +34,7 @@ class FeaturesSettings(BaseModel):
     """EMIS synchronization: the scheduled syncs and the `/v1/admin/sync` routes."""
 
     library: bool = True
-    """The library (`library.ihsu.uz`): its HTTP routes and cron jobs. UniLibrary has
+    """The library (`lib.ihsu.uz`): its HTTP routes and cron jobs. UniLibrary has
     its own switch, LIBRARY__UNILIBRARY_ENABLED."""
 
     web_search: bool = True

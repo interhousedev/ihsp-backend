@@ -252,8 +252,8 @@ def test_links_open_the_library_app(
 
 
 def test_the_library_origin_comes_from_the_urls_settings(i18n: I18nCore) -> None:
-    """LIB-5: in production the links start with https://library.ihsu.uz."""
-    urls = UrlsSettings(library="https://library.ihsu.uz")
+    """LIB-5: in production the links start with https://lib.ihsu.uz."""
+    urls = UrlsSettings(library="https://lib.ihsu.uz")
 
     result = describe(
         NotificationType.LIBRARY_ITEM_APPROVED,
@@ -263,7 +263,7 @@ def test_the_library_origin_comes_from_the_urls_settings(i18n: I18nCore) -> None
         urls=urls,
     )
 
-    assert result.link == f"https://library.ihsu.uz/item/?id={ITEM_ID}"
+    assert result.link == f"https://lib.ihsu.uz/item/?id={ITEM_ID}"
 
 
 def _registry(i18n: I18nCore) -> RendererRegistry:

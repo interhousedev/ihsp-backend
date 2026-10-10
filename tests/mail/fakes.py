@@ -84,6 +84,10 @@ class FakeIdentity:
         """Return the preferences (defaults for unknown users)."""
         return self.preferences.get(user_id, UserPreferences())
 
+    async def photo_urls(self, user_ids: Sequence[UUID]) -> dict[UUID, str]:
+        """No user has a photo in this fake."""
+        return {}
+
     async def user_by_telegram(self, telegram_user_id: int) -> UserRef | None:
         """Not used by the mail module."""
         return None

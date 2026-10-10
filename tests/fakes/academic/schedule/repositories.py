@@ -6,17 +6,22 @@ from collections.abc import Collection, Sequence
 from uuid import UUID
 
 from app.modules.academic.domain import audience as audience_keys
+from app.modules.academic.domain.curriculum.records import (
+    Curriculum,
+    SemesterSubject,
+)
 from app.modules.academic.domain.schedule.conflicts import LessonSlot, lesson_conflicts
 from app.modules.academic.domain.schedule.errors import RoomSlugTakenError
 from app.modules.academic.domain.schedule.group import Group
 from app.modules.academic.domain.schedule.lesson import Lesson
 from app.modules.academic.domain.schedule.room import Room
+from app.modules.academic.domain.schedule.school_days import SCHOOL_DAYS
 from app.modules.academic.domain.schedule.student import Student
 from app.modules.academic.domain.schedule.subject import LANGUAGES, Subject
 from app.modules.academic.domain.schedule.term import Term
 from app.modules.academic.domain.schedule.timetable_entry import TimetableEntry
 from app.shared.base_error import ConflictError
-from tests.fakes.academic.schedule.store import ScheduleStore
+from tests.fakes.academic.schedule.store import ScheduleStore, on_a_saturday
 
 
 def _copy[T](value: T) -> T:
@@ -255,6 +260,17 @@ class FakeSubjectRepository:
                 return _copy(subject)
         return None
 
+    async def get_by_emis_ids(
+        self, emis_subject_ids: Collection[int]
+    ) -> dict[int, Subject]:
+        """Return the subjects linked to the EMIS ids."""
+        return {
+            subject.emis_subject_id: _copy(subject)
+            for subject in self.store.subjects.values()
+            if subject.emis_subject_id is not None
+            and subject.emis_subject_id in emis_subject_ids
+        }
+
     async def add(self, subject: Subject) -> None:
         """Insert a subject."""
         self.store.subjects[subject.id] = _copy(subject)
@@ -279,6 +295,45 @@ class FakeSubjectRepository:
             )
         )
         return [_copy(s) for s in found]
+
+
+class FakeCurriculumRepository:
+    """Group curricula."""
+
+    def __init__(self, store: ScheduleStore) -> None:
+        """Bind to the store."""
+        self.store = store
+
+    async def get(self, group_id: UUID) -> Curriculum | None:
+        """Return a copy of the group's curriculum header."""
+        stored = self.store.curricula.get(group_id)
+        return _copy(stored) if stored else None
+
+    async def exists(self, group_id: UUID) -> bool:
+        """Return True if the group has a curriculum."""
+        return group_id in self.store.curricula
+
+    async def save(self, curriculum: Curriculum) -> None:
+        """Insert or replace the header."""
+        self.store.curricula[curriculum.group_id] = _copy(curriculum)
+
+    async def replace_subjects(
+        self, group_id: UUID, subjects: Sequence[SemesterSubject]
+    ) -> None:
+        """Replace the group's semester subjects."""
+        self.store.curriculum_subjects[group_id] = [_copy(s) for s in subjects]
+
+    async def list_subjects(self, group_id: UUID) -> list[SemesterSubject]:
+        """Return the group's semester subjects by semester and EMIS id."""
+        rows = self.store.curriculum_subjects.get(group_id, [])
+        return sorted(
+            (_copy(row) for row in rows),
+            key=lambda row: (row.semester_number, row.emis_subject_id),
+        )
+
+    async def group_ids(self) -> list[UUID]:
+        """Return the groups that have a curriculum."""
+        return sorted(self.store.curricula, key=str)
 
 
 class FakeRoomRepository:
@@ -355,8 +410,12 @@ class FakeTimetableEntryRepository:
                 lesson.timetable_entry_id = None
 
     async def list_for_term(self, term_id: UUID) -> list[TimetableEntry]:
-        """Return the term's entries."""
-        return [_copy(e) for e in self.store.entries.values() if e.term_id == term_id]
+        """Return the term's entries; Saturday ones are skipped like in SQL."""
+        return [
+            _copy(e)
+            for e in self.store.entries.values()
+            if e.term_id == term_id and e.weekday in SCHOOL_DAYS
+        ]
 
     async def search(
         self,
@@ -369,7 +428,7 @@ class FakeTimetableEntryRepository:
         """Return entries of a group, teacher or room."""
         found = []
         for entry in self.store.entries.values():
-            if entry.term_id != term_id:
+            if entry.term_id != term_id or entry.weekday not in SCHOOL_DAYS:
                 continue
             groups = audience_keys.group_ids(entry.audience)
             if group_id is not None and group_id not in groups:
@@ -388,7 +447,10 @@ class FakeTimetableEntryRepository:
         return [
             _copy(e)
             for e in self.store.entries.values()
-            if e.term_id == term_id and e.weekday == weekday and e.period == period
+            if e.term_id == term_id
+            and e.weekday in SCHOOL_DAYS
+            and e.weekday == weekday
+            and e.period == period
         ]
 
     async def clear_teacher(self, teacher_id: UUID) -> int:
@@ -480,6 +542,7 @@ class FakeLessonRepository:
             and lesson.timetable_entry_id is not None
             and lesson.origin_date is not None
             and start <= lesson.origin_date <= end
+            and not on_a_saturday(lesson.origin_date)
         ]
 
     async def in_audience(
@@ -492,6 +555,7 @@ class FakeLessonRepository:
             for lesson in self.store.lessons.values()
             if lesson.term_id == term_id
             and start <= lesson.date <= end
+            and not on_a_saturday(lesson.date)
             and wanted & set(lesson.audience)
         ]
         return sorted(found, key=lambda x: (x.date, x.period, str(x.id)))
@@ -558,6 +622,7 @@ class FakeLessonRepository:
                 lesson.room_id is not None
                 and lesson.status == "scheduled"
                 and start <= lesson.date <= end
+                and not on_a_saturday(lesson.date)
             ):
                 counts[lesson.room_id] = counts.get(lesson.room_id, 0) + 1
         return counts

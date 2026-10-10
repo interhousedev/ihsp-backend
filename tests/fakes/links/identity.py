@@ -56,6 +56,10 @@ class FakeIdentity:
         """Return default preferences."""
         return UserPreferences()
 
+    async def photo_urls(self, user_ids: Sequence[UUID]) -> dict[UUID, str]:
+        """No user has a photo in this fake."""
+        return {}
+
     async def user_by_telegram(self, telegram_user_id: int) -> UserRef | None:
         """Find nobody."""
         return None

@@ -17,6 +17,10 @@ Modality = Literal["text", "image", "audio", "video", "pdf"]
 ALL_MODALITIES: tuple[Modality, ...] = ("text", "image", "audio", "video", "pdf")
 
 SMART_MODEL: Final = "anthropic/claude-sonnet-5.5"
+# Notebook guides, summaries, labels and Studio outputs: the Claude Haiku 5.5 JSON
+# outputs scored best in the 2026-10 studio bench (ru, thin and long sources) at a
+# tenth of the price of Haiku 4.5; reasoning is switched off for them (below).
+NOTEBOOK_MODEL: Final = "anthropic/claude-haiku-5.5"
 SMART_BUDGET_WEIGHT: Final = 4
 SEARCH_MODEL: Final = "google/gemini-3.5-flash-lite"  # cheap; the search is the cost
 # Vectors for meaning-based retrieval (docs/reference/vector-search.md): multilingual
@@ -70,6 +74,7 @@ class TaskSpec:
     model: str | None = None  # None: the default model
     budget_weight: int | None = None  # None: the default weight
     data_collection: DataCollection | None = None  # None: the default
+    reasoning_effort: ReasoningEffort | None = None  # None: the default
     # Embedding tasks only (see `AiTask.EMBEDDING`):
     dimensions: int | None = None
     batch_size: int | None = None
@@ -78,6 +83,10 @@ class TaskSpec:
 
 
 _PRIVATE: Final = "deny"  # students' own documents never go to providers that train
+# Notebook outputs are JSON with a tight answer budget: models that reason by
+# default (Claude 5.5, GPT-5.x) would spend it on thinking, so reasoning is off
+# unless a task sets `AI__TASKS__<TASK>__REASONING_EFFORT`.
+_NO_REASONING: Final = "none"
 
 TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
     AiTask.STUDENT_CHAT: TaskSpec(
@@ -98,46 +107,85 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
         "notebooks",
         "Grounded notebook chat (answers with citations).",
         data_collection=_PRIVATE,
+        reasoning_effort=_NO_REASONING,
     ),
     AiTask.SOURCE_GUIDE: TaskSpec(
         "notebooks",
         "Source guide: summary, key topics and questions of one source.",
         data_collection=_PRIVATE,
+        model=NOTEBOOK_MODEL,
+        reasoning_effort=_NO_REASONING,
     ),
     AiTask.NOTEBOOK_SUMMARY: TaskSpec(
         "notebooks",
         "Summary and key topics of a whole notebook.",
         data_collection=_PRIVATE,
+        model=NOTEBOOK_MODEL,
+        reasoning_effort=_NO_REASONING,
     ),
     AiTask.SOURCE_LABELS: TaskSpec(
         "notebooks",
         "Auto labels: topic labels of a notebook's sources and which source gets "
         "which (titles, key topics and short summaries only).",
         data_collection=_PRIVATE,
+        model=NOTEBOOK_MODEL,
+        reasoning_effort=_NO_REASONING,
     ),
     AiTask.STUDIO_REPORT: TaskSpec(
-        "notebooks", "Studio report or conspect (Markdown).", data_collection=_PRIVATE
+        "notebooks",
+        "Studio report or conspect (Markdown).",
+        data_collection=_PRIVATE,
+        model=NOTEBOOK_MODEL,
+        reasoning_effort=_NO_REASONING,
     ),
     AiTask.STUDIO_MIND_MAP: TaskSpec(
-        "notebooks", "Studio mind map.", data_collection=_PRIVATE
+        "notebooks",
+        "Studio mind map.",
+        data_collection=_PRIVATE,
+        model=NOTEBOOK_MODEL,
+        reasoning_effort=_NO_REASONING,
     ),
     AiTask.STUDIO_FLASHCARDS: TaskSpec(
-        "notebooks", "Studio flash cards.", data_collection=_PRIVATE
+        "notebooks",
+        "Studio flash cards.",
+        data_collection=_PRIVATE,
+        model=NOTEBOOK_MODEL,
+        reasoning_effort=_NO_REASONING,
     ),
-    AiTask.STUDIO_QUIZ: TaskSpec("notebooks", "Studio quiz.", data_collection=_PRIVATE),
+    AiTask.STUDIO_QUIZ: TaskSpec(
+        "notebooks",
+        "Studio quiz.",
+        data_collection=_PRIVATE,
+        model=NOTEBOOK_MODEL,
+        reasoning_effort=_NO_REASONING,
+    ),
     AiTask.STUDIO_DATA_TABLE: TaskSpec(
-        "notebooks", "Studio data table.", data_collection=_PRIVATE
+        "notebooks",
+        "Studio data table.",
+        data_collection=_PRIVATE,
+        model=NOTEBOOK_MODEL,
+        reasoning_effort=_NO_REASONING,
     ),
     AiTask.STUDIO_SLIDES: TaskSpec(
-        "notebooks", "Studio slide deck.", data_collection=_PRIVATE
+        "notebooks",
+        "Studio slide deck.",
+        data_collection=_PRIVATE,
+        model=NOTEBOOK_MODEL,
+        reasoning_effort=_NO_REASONING,
     ),
     AiTask.STUDIO_SLIDES_REVISE: TaskSpec(
         "notebooks",
         "Revision of some slides of a deck (no sources, only the deck).",
         data_collection=_PRIVATE,
+        model=NOTEBOOK_MODEL,
+        reasoning_effort=_NO_REASONING,
     ),
     AiTask.STUDIO_INFOGRAPHIC: TaskSpec(
-        "notebooks", "Studio infographic.", data_collection=_PRIVATE
+        "notebooks",
+        "Studio infographic.",
+        data_collection=_PRIVATE,
+        model=NOTEBOOK_MODEL,
+        reasoning_effort=_NO_REASONING,
     ),
     AiTask.LMS_AUTHORING: TaskSpec(
         "lms", "The course author assistant (lms_author chats in a course workspace)."

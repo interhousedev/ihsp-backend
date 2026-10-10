@@ -2,7 +2,7 @@
 
 import datetime as dt
 import uuid
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Any
 from uuid import UUID
 
@@ -18,7 +18,7 @@ from app.modules.academic.domain.schedule.lesson_view import LessonView
 from app.modules.academic.domain.schedule.subject import LANGUAGES, subject_name
 from app.shared.contracts.academic import LessonRef, RoomRef, StudentRef
 from app.shared.lesson_kind import topic_source_of
-from tests.fakes.academic.schedule.store import ScheduleStore
+from tests.fakes.academic.schedule.store import ScheduleStore, on_a_saturday
 
 
 class FakeScheduleReader:
@@ -134,7 +134,9 @@ class FakeScheduleReader:
     async def lesson_view(self, lesson_id: UUID, locale: str) -> LessonView | None:
         """Return one lesson."""
         lesson = self.store.lessons.get(lesson_id)
-        return self._view(lesson, locale) if lesson else None
+        if lesson is None or on_a_saturday(lesson.date):
+            return None
+        return self._view(lesson, locale)
 
     async def lessons_for_student(
         self, user_id: UUID, start: dt.date, end: dt.date, locale: str
@@ -147,7 +149,9 @@ class FakeScheduleReader:
             [
                 lesson
                 for lesson in self.store.lessons.values()
-                if start <= lesson.date <= end and set(lesson.audience) & set(keys)
+                if start <= lesson.date <= end
+                and not on_a_saturday(lesson.date)
+                and set(lesson.audience) & set(keys)
             ],
             locale,
         )
@@ -160,7 +164,9 @@ class FakeScheduleReader:
             [
                 lesson
                 for lesson in self.store.lessons.values()
-                if lesson.teacher_id == teacher_id and start <= lesson.date <= end
+                if lesson.teacher_id == teacher_id
+                and start <= lesson.date <= end
+                and not on_a_saturday(lesson.date)
             ],
             locale,
         )
@@ -185,6 +191,7 @@ class FakeScheduleReader:
                 if lesson.kind in ("midterm", "final")
                 and lesson.status == "scheduled"
                 and start <= lesson.date <= end
+                and not on_a_saturday(lesson.date)
                 and keys & set(lesson.audience)
             ],
             locale,
@@ -198,6 +205,53 @@ class FakeScheduleReader:
         if keys is None:
             return []
         generated = await self.lessons_for_student(user_id, start, end, locale)
+        projected = self._project(
+            lambda entry: bool(set(entry.audience) & set(keys)), start, end, locale
+        )
+        merged = [*generated, *projected]
+        merged.sort(key=lambda view: (view.ref.starts_at, str(view.ref.id)))
+        return merged
+
+    async def projected_for_teacher(
+        self, teacher_id: UUID, start: dt.date, end: dt.date, locale: str
+    ) -> list[LessonView]:
+        """Return the teacher's generated and projected lessons of every group."""
+        generated = await self.lessons_for_teacher(teacher_id, start, end, locale)
+        projected = self._project(
+            lambda entry: entry.teacher_id == teacher_id, start, end, locale
+        )
+        merged = [*generated, *projected]
+        merged.sort(key=lambda view: (view.ref.starts_at, str(view.ref.id)))
+        return merged
+
+    async def teaches_student(self, teacher_id: UUID, user_id: UUID) -> bool:
+        """Return True if a lesson or entry of the teacher reaches the student."""
+        student = self.store.students.get(user_id)
+        if student is None or student.status != "active":
+            return False
+        keys = set(audience_keys.student_keys(student.group_id, student.subgroup))
+        audiences = [
+            *(
+                x.audience
+                for x in self.store.lessons.values()
+                if x.teacher_id == teacher_id
+            ),
+            *(
+                x.audience
+                for x in self.store.entries.values()
+                if x.teacher_id == teacher_id
+            ),
+        ]
+        return any(keys & set(audience) for audience in audiences)
+
+    async def student_keys(self, user_id: UUID) -> list[str] | None:
+        """Return the audience keys of the student, None for an unknown student."""
+        return self._keys(user_id)
+
+    def _project(
+        self, wanted: Callable[[Any], bool], start: dt.date, end: dt.date, locale: str
+    ) -> list[LessonView]:
+        """Project the wanted entries past the last generated lesson of each term."""
         projected: list[LessonView] = []
         for term in self.store.terms.values():
             if term.starts_on > end or term.ends_on < start:
@@ -211,13 +265,11 @@ class FakeScheduleReader:
             entries = [
                 e
                 for e in self.store.entries.values()
-                if e.term_id == term.id and set(e.audience) & set(keys)
+                if e.term_id == term.id and wanted(e)
             ]
             for planned in expand_entries(term, entries, first, end).planned.values():
                 projected.append(self._projected(planned, locale))
-        merged = [*generated, *projected]
-        merged.sort(key=lambda view: (view.ref.starts_at, str(view.ref.id)))
-        return merged
+        return projected
 
     def _projected(self, planned: Any, locale: str) -> LessonView:
         lesson = Lesson(
@@ -270,7 +322,9 @@ class FakeScheduleReader:
         lessons = [
             lesson
             for lesson in self.store.lessons.values()
-            if lesson.room_id == room_id and lesson.date == day
+            if lesson.room_id == room_id
+            and lesson.date == day
+            and not on_a_saturday(lesson.date)
         ]
         lessons.sort(key=lambda x: (x.period, x.starts_at, str(x.id)))
         return [self._view(lesson, locale) for lesson in lessons]
@@ -283,6 +337,8 @@ class FakeScheduleReader:
         needle = query.strip().casefold()
         found = []
         for lesson in self.store.lessons.values():
+            if on_a_saturday(lesson.date):
+                continue
             mine = lesson.teacher_id == user_id or (
                 keys is not None and set(lesson.audience) & set(keys)
             )
@@ -322,6 +378,7 @@ class FakeScheduleReader:
 
 def _matches(lesson: Lesson, filters: LessonFilters) -> bool:
     checks = [
+        not on_a_saturday(lesson.date),
         filters.start is None or lesson.date >= filters.start,
         filters.end is None or lesson.date <= filters.end,
         filters.group_id is None

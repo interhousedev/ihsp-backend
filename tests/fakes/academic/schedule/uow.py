@@ -8,6 +8,7 @@ from uuid import UUID
 from app.shared.db.uow import AfterCommit
 from app.shared.notifications import AuditDraft, NotificationDraft
 from tests.fakes.academic.schedule.repositories import (
+    FakeCurriculumRepository,
     FakeGroupRepository,
     FakeLessonRepository,
     FakeRoomRepository,
@@ -29,6 +30,7 @@ class FakeScheduleUnitOfWork:
         self.groups = FakeGroupRepository(store)
         self.students = FakeStudentRepository(store)
         self.subjects = FakeSubjectRepository(store)
+        self.curricula = FakeCurriculumRepository(store)
         self.rooms = FakeRoomRepository(store)
         self.entries = FakeTimetableEntryRepository(store)
         self.lessons = FakeLessonRepository(store)

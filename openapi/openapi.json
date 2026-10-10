@@ -483,6 +483,17 @@
             "title": "Password Change Required",
             "type": "boolean"
           },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
           "recent_audit": {
             "items": {
               "$ref": "#/components/schemas/app__interfaces__http__v1__id__schemas__AuditItemResponse"
@@ -3030,6 +3041,34 @@
           "file"
         ],
         "title": "Body_import_preview_v1_admin_students_import_post",
+        "type": "object"
+      },
+      "Body_put_my_photo_v1_staff_me_photo_put": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_put_my_photo_v1_staff_me_photo_put",
+        "type": "object"
+      },
+      "Body_put_photo_v1_admin_users__id__photo_put": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_put_photo_v1_admin_users__id__photo_put",
         "type": "object"
       },
       "BookActionBody": {
@@ -6869,6 +6908,417 @@
         "title": "CuratorStudentResponse",
         "type": "object"
       },
+      "CurriculumDirectionResponse": {
+        "description": "The education direction.",
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "emis_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emis Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "required": [
+          "emis_id",
+          "name",
+          "code"
+        ],
+        "title": "CurriculumDirectionResponse",
+        "type": "object"
+      },
+      "CurriculumExtraResponse": {
+        "description": "An exam or a vocational subject.",
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/CurriculumNameResponse"
+          },
+          "study_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Study Hours"
+          }
+        },
+        "required": [
+          "name",
+          "study_hours"
+        ],
+        "title": "CurriculumExtraResponse",
+        "type": "object"
+      },
+      "CurriculumNameResponse": {
+        "description": "A name in the three languages; a language EMIS left empty is ``\"\"``.",
+        "properties": {
+          "en": {
+            "title": "En",
+            "type": "string"
+          },
+          "ru": {
+            "title": "Ru",
+            "type": "string"
+          },
+          "uz": {
+            "title": "Uz",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uz",
+          "ru",
+          "en"
+        ],
+        "title": "CurriculumNameResponse",
+        "type": "object"
+      },
+      "CurriculumRatingScaleResponse": {
+        "description": "The rating scale of the curriculum.",
+        "properties": {
+          "max": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          }
+        },
+        "required": [
+          "min",
+          "max"
+        ],
+        "title": "CurriculumRatingScaleResponse",
+        "type": "object"
+      },
+      "CurriculumResponse": {
+        "description": "The EMIS curriculum of a group.",
+        "properties": {
+          "current_semester": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Semester"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CurriculumDirectionResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "edu_form": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edu Form"
+          },
+          "emis_curriculum_id": {
+            "title": "Emis Curriculum Id",
+            "type": "integer"
+          },
+          "exams": {
+            "items": {
+              "$ref": "#/components/schemas/CurriculumExtraResponse"
+            },
+            "title": "Exams",
+            "type": "array"
+          },
+          "fetched_at": {
+            "format": "date-time",
+            "title": "Fetched At",
+            "type": "string"
+          },
+          "language_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language Code"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "rating_scale": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CurriculumRatingScaleResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "semesters": {
+            "items": {
+              "$ref": "#/components/schemas/CurriculumSemesterResponse"
+            },
+            "title": "Semesters",
+            "type": "array"
+          },
+          "speciality": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CurriculumNameResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "vocational_subjects": {
+            "items": {
+              "$ref": "#/components/schemas/CurriculumExtraResponse"
+            },
+            "title": "Vocational Subjects",
+            "type": "array"
+          }
+        },
+        "required": [
+          "emis_curriculum_id",
+          "name",
+          "speciality",
+          "direction",
+          "edu_form",
+          "language_code",
+          "rating_scale",
+          "current_semester",
+          "fetched_at",
+          "semesters",
+          "exams",
+          "vocational_subjects"
+        ],
+        "title": "CurriculumResponse",
+        "type": "object"
+      },
+      "CurriculumSemesterResponse": {
+        "description": "A semester with its dates (null when only the subjects mention it).",
+        "properties": {
+          "ends_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends On"
+          },
+          "is_current": {
+            "title": "Is Current",
+            "type": "boolean"
+          },
+          "number": {
+            "title": "Number",
+            "type": "integer"
+          },
+          "starts_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts On"
+          },
+          "subjects": {
+            "items": {
+              "$ref": "#/components/schemas/CurriculumSubjectResponse"
+            },
+            "title": "Subjects",
+            "type": "array"
+          }
+        },
+        "required": [
+          "number",
+          "starts_on",
+          "ends_on",
+          "is_current",
+          "subjects"
+        ],
+        "title": "CurriculumSemesterResponse",
+        "type": "object"
+      },
+      "CurriculumSubjectResponse": {
+        "description": "A subject of a semester; ``subject_id`` is null while no subject row exists.",
+        "properties": {
+          "class_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class Hours"
+          },
+          "emis_subject_id": {
+            "title": "Emis Subject Id",
+            "type": "integer"
+          },
+          "independent_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Independent Hours"
+          },
+          "is_separated": {
+            "title": "Is Separated",
+            "type": "boolean"
+          },
+          "name": {
+            "$ref": "#/components/schemas/CurriculumNameResponse"
+          },
+          "study_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Study Hours"
+          },
+          "subject_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Id"
+          },
+          "subject_type_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Type Id"
+          }
+        },
+        "required": [
+          "subject_id",
+          "emis_subject_id",
+          "name",
+          "subject_type_id",
+          "study_hours",
+          "class_hours",
+          "independent_hours",
+          "is_separated"
+        ],
+        "title": "CurriculumSubjectResponse",
+        "type": "object"
+      },
+      "CurriculumSyncResponse": {
+        "description": "The result of POST /v1/admin/groups/{id}/curriculum/sync.",
+        "properties": {
+          "curriculum": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CurriculumResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "synced",
+              "no_student"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "curriculum"
+        ],
+        "title": "CurriculumSyncResponse",
+        "type": "object"
+      },
       "DashboardResponse": {
         "description": "The layout; version 0 is the default one (never saved).",
         "properties": {
@@ -7219,6 +7669,16 @@
         ],
         "title": "DayLessonResponse",
         "type": "object"
+      },
+      "DefaultMaterialKind": {
+        "description": "Where a default material's text comes from.",
+        "enum": [
+          "file",
+          "link",
+          "library_item"
+        ],
+        "title": "DefaultMaterialKind",
+        "type": "string"
       },
       "DeleteAccountBody": {
         "description": "Confirmation of an account deletion.",
@@ -7629,6 +8089,305 @@
         "title": "EmisClassResponse",
         "type": "object"
       },
+      "EmisCurriculumItemResponse": {
+        "description": "EmisCurriculumItem: an exam or a vocational subject.",
+        "properties": {
+          "emis_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emis Id"
+          },
+          "name": {
+            "$ref": "#/components/schemas/EmisNameResponse"
+          },
+          "study_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Study Hours"
+          }
+        },
+        "required": [
+          "emis_id",
+          "name",
+          "study_hours"
+        ],
+        "title": "EmisCurriculumItemResponse",
+        "type": "object"
+      },
+      "EmisCurriculumResponse": {
+        "description": "EmisCurriculum: the group's curriculum with ISO dates.",
+        "properties": {
+          "direction": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EmisDirectionResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "edu_form": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edu Form"
+          },
+          "emis_id": {
+            "title": "Emis Id",
+            "type": "integer"
+          },
+          "end_year": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EmisYearResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "exams": {
+            "items": {
+              "$ref": "#/components/schemas/EmisCurriculumItemResponse"
+            },
+            "title": "Exams",
+            "type": "array"
+          },
+          "language_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language Code"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "rating_max": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating Max"
+          },
+          "rating_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rating Min"
+          },
+          "semester_subjects": {
+            "items": {
+              "$ref": "#/components/schemas/EmisSemesterSubjectResponse"
+            },
+            "title": "Semester Subjects",
+            "type": "array"
+          },
+          "semesters": {
+            "items": {
+              "$ref": "#/components/schemas/EmisSemesterDatesResponse"
+            },
+            "title": "Semesters",
+            "type": "array"
+          },
+          "semesters_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Semesters Count"
+          },
+          "speciality": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EmisNameResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "start_year": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EmisYearResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "subjects": {
+            "items": {
+              "$ref": "#/components/schemas/EmisCurriculumSubjectResponse"
+            },
+            "title": "Subjects",
+            "type": "array"
+          },
+          "vocational_subjects": {
+            "items": {
+              "$ref": "#/components/schemas/EmisCurriculumItemResponse"
+            },
+            "title": "Vocational Subjects",
+            "type": "array"
+          }
+        },
+        "required": [
+          "emis_id",
+          "name",
+          "direction",
+          "speciality",
+          "edu_form",
+          "language_code",
+          "rating_min",
+          "rating_max",
+          "start_year",
+          "end_year",
+          "semesters_count",
+          "status",
+          "semesters",
+          "subjects",
+          "semester_subjects",
+          "exams",
+          "vocational_subjects"
+        ],
+        "title": "EmisCurriculumResponse",
+        "type": "object"
+      },
+      "EmisCurriculumSubjectResponse": {
+        "description": "EmisCurriculumSubject.",
+        "properties": {
+          "emis_subject_id": {
+            "title": "Emis Subject Id",
+            "type": "integer"
+          },
+          "name": {
+            "$ref": "#/components/schemas/EmisNameResponse"
+          },
+          "study_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Study Hours"
+          },
+          "subject_type_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Type Id"
+          }
+        },
+        "required": [
+          "emis_subject_id",
+          "name",
+          "subject_type_id",
+          "study_hours"
+        ],
+        "title": "EmisCurriculumSubjectResponse",
+        "type": "object"
+      },
+      "EmisDirectionResponse": {
+        "description": "EmisDirection.",
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "emis_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emis Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "required": [
+          "emis_id",
+          "name",
+          "code"
+        ],
+        "title": "EmisDirectionResponse",
+        "type": "object"
+      },
       "EmisMarkResponse": {
         "description": "EmisMark.",
         "properties": {
@@ -7662,6 +8421,30 @@
         ],
         "title": "EmisMarkType",
         "type": "string"
+      },
+      "EmisNameResponse": {
+        "description": "EmisName: a language EMIS left empty is ``\"\"``.",
+        "properties": {
+          "en": {
+            "title": "En",
+            "type": "string"
+          },
+          "ru": {
+            "title": "Ru",
+            "type": "string"
+          },
+          "uz": {
+            "title": "Uz",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uz",
+          "ru",
+          "en"
+        ],
+        "title": "EmisNameResponse",
+        "type": "object"
       },
       "EmisPasswordResponse": {
         "description": "The EMIS link state after the update.",
@@ -7754,6 +8537,108 @@
           "curriculum_id"
         ],
         "title": "EmisProfileResponse",
+        "type": "object"
+      },
+      "EmisSemesterDatesResponse": {
+        "description": "EmisSemesterDates: ``number`` is 1-based, the dates are ISO.",
+        "properties": {
+          "ends_on": {
+            "format": "date",
+            "title": "Ends On",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "integer"
+          },
+          "starts_on": {
+            "format": "date",
+            "title": "Starts On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "number",
+          "starts_on",
+          "ends_on"
+        ],
+        "title": "EmisSemesterDatesResponse",
+        "type": "object"
+      },
+      "EmisSemesterSubjectResponse": {
+        "description": "EmisSemesterSubject.",
+        "properties": {
+          "class_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class Hours"
+          },
+          "emis_subject_id": {
+            "title": "Emis Subject Id",
+            "type": "integer"
+          },
+          "independent_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Independent Hours"
+          },
+          "is_separated": {
+            "title": "Is Separated",
+            "type": "boolean"
+          },
+          "name": {
+            "$ref": "#/components/schemas/EmisNameResponse"
+          },
+          "semester_number": {
+            "title": "Semester Number",
+            "type": "integer"
+          },
+          "study_hours": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Study Hours"
+          },
+          "subject_type_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Type Id"
+          }
+        },
+        "required": [
+          "semester_number",
+          "emis_subject_id",
+          "name",
+          "subject_type_id",
+          "study_hours",
+          "class_hours",
+          "independent_hours",
+          "is_separated"
+        ],
+        "title": "EmisSemesterSubjectResponse",
         "type": "object"
       },
       "EmisSubjectRatingsResponse": {
@@ -7932,6 +8817,65 @@
           "video_url"
         ],
         "title": "EmisTopicResponse",
+        "type": "object"
+      },
+      "EmisYearResponse": {
+        "description": "EmisYear: the dates are ISO ``YYYY-MM-DD``.",
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "from_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Date"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "to_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Date"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "from_date",
+          "to_date"
+        ],
+        "title": "EmisYearResponse",
         "type": "object"
       },
       "ExcludedRefResponse": {
@@ -8539,7 +9483,8 @@
           "library_book",
           "library_cover",
           "library_material",
-          "lms_video"
+          "lms_video",
+          "user_photo"
         ],
         "title": "FilePurpose",
         "type": "string"
@@ -14047,6 +14992,24 @@
               }
             ]
           },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "subject_refs": {
+            "items": {
+              "$ref": "#/components/schemas/TeacherSubjectRefResponse"
+            },
+            "title": "Subject Refs",
+            "type": "array"
+          },
           "subjects": {
             "items": {
               "type": "string"
@@ -14057,6 +15020,13 @@
           "teaching_now": {
             "title": "Teaching Now",
             "type": "boolean"
+          },
+          "upcoming": {
+            "items": {
+              "$ref": "#/components/schemas/TeacherLessonResponse"
+            },
+            "title": "Upcoming",
+            "type": "array"
           },
           "week": {
             "items": {
@@ -14071,12 +15041,15 @@
           "first_name",
           "last_name",
           "middle_name",
+          "photo_url",
           "subjects",
+          "subject_refs",
           "contacts",
           "teaching_now",
           "current",
           "next",
-          "week"
+          "week",
+          "upcoming"
         ],
         "title": "MyTeacherResponse",
         "type": "object"
@@ -23839,6 +24812,30 @@
         "title": "SubjectLessonListResponse",
         "type": "object"
       },
+      "SubjectLessonMark": {
+        "description": "One mark placed on a lesson of the subject hub list.",
+        "properties": {
+          "type": {
+            "enum": [
+              "lesson",
+              "midterm",
+              "final"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "type",
+          "value"
+        ],
+        "title": "SubjectLessonMark",
+        "type": "object"
+      },
       "SubjectLessonRow": {
         "description": "One row of the subject hub lesson list.",
         "properties": {
@@ -23880,16 +24877,12 @@
             "title": "Lesson Id",
             "type": "string"
           },
-          "mark": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Mark"
+          "marks": {
+            "items": {
+              "$ref": "#/components/schemas/SubjectLessonMark"
+            },
+            "title": "Marks",
+            "type": "array"
           },
           "materials_count": {
             "title": "Materials Count",
@@ -23921,12 +24914,168 @@
           "date",
           "starts_at",
           "topic",
-          "mark",
+          "marks",
           "attendance",
           "materials_count",
           "past"
         ],
         "title": "SubjectLessonRow",
+        "type": "object"
+      },
+      "SubjectMaterialCreateBody": {
+        "description": "Body of POST /v1/admin/subject-materials/{edu_subject_id}.\n\nExactly the target that `kind` names is given: a file id, a link or a library\nitem id.",
+        "properties": {
+          "file_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DefaultMaterialKind"
+          },
+          "library_item_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Library Item Id"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "kind",
+          "title"
+        ],
+        "title": "SubjectMaterialCreateBody",
+        "type": "object"
+      },
+      "SubjectMaterialGroupResponse": {
+        "description": "The default materials of one EMIS subject id.",
+        "properties": {
+          "edu_subject_id": {
+            "title": "Edu Subject Id",
+            "type": "integer"
+          },
+          "materials": {
+            "items": {
+              "$ref": "#/components/schemas/SubjectMaterialResponse"
+            },
+            "title": "Materials",
+            "type": "array"
+          }
+        },
+        "required": [
+          "edu_subject_id",
+          "materials"
+        ],
+        "title": "SubjectMaterialGroupResponse",
+        "type": "object"
+      },
+      "SubjectMaterialResponse": {
+        "description": "One default material of an EMIS subject id.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "edu_subject_id": {
+            "title": "Edu Subject Id",
+            "type": "integer"
+          },
+          "file_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DefaultMaterialKind"
+          },
+          "library_item_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Library Item Id"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "id",
+          "edu_subject_id",
+          "kind",
+          "title",
+          "url",
+          "file_id",
+          "library_item_id",
+          "position",
+          "created_at"
+        ],
+        "title": "SubjectMaterialResponse",
         "type": "object"
       },
       "SubjectNameBody": {
@@ -24988,6 +26137,18 @@
             ],
             "title": "Group"
           },
+          "lesson_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lesson Id"
+          },
           "room": {
             "anyOf": [
               {
@@ -25008,6 +26169,11 @@
             "title": "Subject",
             "type": "string"
           },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
           "weekday": {
             "title": "Weekday",
             "type": "integer"
@@ -25018,9 +26184,11 @@
           "weekday",
           "starts_at",
           "ends_at",
+          "subject_id",
           "subject",
           "group",
-          "room"
+          "room",
+          "lesson_id"
         ],
         "title": "TeacherLessonResponse",
         "type": "object"
@@ -25117,6 +26285,117 @@
           "curated_groups"
         ],
         "title": "TeacherProfileResponse",
+        "type": "object"
+      },
+      "TeacherSlotResponse": {
+        "description": "One lesson in a teacher's timetable: no student data.",
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "ends_at": {
+            "format": "date-time",
+            "title": "Ends At",
+            "type": "string"
+          },
+          "group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lesson_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lesson Id"
+          },
+          "mine": {
+            "title": "Mine",
+            "type": "boolean"
+          },
+          "room": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Room"
+          },
+          "starts_at": {
+            "format": "date-time",
+            "title": "Starts At",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "subject_name": {
+            "title": "Subject Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "date",
+          "starts_at",
+          "ends_at",
+          "subject_id",
+          "subject_name",
+          "room",
+          "group",
+          "mine",
+          "status",
+          "lesson_id"
+        ],
+        "title": "TeacherSlotResponse",
+        "type": "object"
+      },
+      "TeacherSubjectRefResponse": {
+        "description": "A subject a teacher teaches the student.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "TeacherSubjectRefResponse",
         "type": "object"
       },
       "TelegramLinkedResponse": {
@@ -27774,6 +29053,17 @@
             "title": "Otp Via Email",
             "type": "boolean"
           },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
           "preferences": {
             "$ref": "#/components/schemas/UserPreferences"
           },
@@ -27820,6 +29110,7 @@
           "otp_via_email",
           "emis_status",
           "mailbox",
+          "photo_url",
           "preferences",
           "telegram"
         ],
@@ -27881,6 +29172,28 @@
           }
         },
         "title": "UserPatchBody",
+        "type": "object"
+      },
+      "UserPhotoResponse": {
+        "description": "The profile photo of a user after it was set or removed.",
+        "properties": {
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Link to the photo, valid for an hour; null when there is none.",
+            "title": "Photo Url"
+          }
+        },
+        "required": [
+          "photo_url"
+        ],
+        "title": "UserPhotoResponse",
         "type": "object"
       },
       "UserPreferences": {
@@ -29422,6 +30735,17 @@
             "default": false,
             "title": "Password Change Required",
             "type": "boolean"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
           },
           "recovery_email": {
             "anyOf": [
@@ -31597,7 +32921,7 @@
         "type": "object"
       },
       "app__interfaces__http__v1__me_marks__schemas__PersonRef": {
-        "description": "A person: id and names.",
+        "description": "A person: id, names and, for the teachers of a subject, a photo.",
         "properties": {
           "first_name": {
             "title": "First Name",
@@ -31611,6 +32935,17 @@
           "last_name": {
             "title": "Last Name",
             "type": "string"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
           }
         },
         "required": [
@@ -32185,7 +33520,7 @@
     }
   },
   "info": {
-    "title": "IHSP",
+    "title": "IHT",
     "version": "0.1.0"
   },
   "openapi": "3.1.0",
@@ -32276,6 +33611,50 @@
           }
         },
         "summary": "Get Class Hours",
+        "tags": [
+          "internal-emis"
+        ]
+      }
+    },
+    "/internal/emis/{user_id}/curriculum": {
+      "get": {
+        "description": "Return the student's whole curriculum: semesters, hours per subject, exams.",
+        "operationId": "get_curriculum_internal_emis__user_id__curriculum_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmisCurriculumResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Curriculum",
         "tags": [
           "internal-emis"
         ]
@@ -33851,6 +35230,102 @@
           }
         },
         "summary": "Update Group",
+        "tags": [
+          "admin-schedule"
+        ]
+      }
+    },
+    "/v1/admin/groups/{group_id}/curriculum": {
+      "get": {
+        "description": "Return the group's EMIS curriculum, or null when none is stored yet.",
+        "operationId": "get_curriculum_v1_admin_groups__group_id__curriculum_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Group Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/CurriculumResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Curriculum V1 Admin Groups  Group Id  Curriculum Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Curriculum",
+        "tags": [
+          "admin-schedule"
+        ]
+      }
+    },
+    "/v1/admin/groups/{group_id}/curriculum/sync": {
+      "post": {
+        "description": "Read the curriculum from EMIS now and return what is stored for the group.",
+        "operationId": "sync_curriculum_v1_admin_groups__group_id__curriculum_sync_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Group Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurriculumSyncResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sync Curriculum",
         "tags": [
           "admin-schedule"
         ]
@@ -35603,6 +37078,179 @@
         ]
       }
     },
+    "/v1/admin/subject-materials": {
+      "get": {
+        "description": "The default materials of every EMIS subject id, grouped, by id.",
+        "operationId": "list_all_default_materials_v1_admin_subject_materials_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SubjectMaterialGroupResponse"
+                  },
+                  "title": "Response List All Default Materials V1 Admin Subject Materials Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List All Default Materials",
+        "tags": [
+          "admin-subject-materials"
+        ]
+      }
+    },
+    "/v1/admin/subject-materials/{edu_subject_id}": {
+      "get": {
+        "description": "The default materials of one EMIS subject id, in their order.",
+        "operationId": "list_default_materials_v1_admin_subject_materials__edu_subject_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "edu_subject_id",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Edu Subject Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SubjectMaterialResponse"
+                  },
+                  "title": "Response List Default Materials V1 Admin Subject Materials  Edu Subject Id  Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Default Materials",
+        "tags": [
+          "admin-subject-materials"
+        ]
+      },
+      "post": {
+        "description": "Add a file, link or library item every student's subject notebook gets.",
+        "operationId": "add_default_material_v1_admin_subject_materials__edu_subject_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "edu_subject_id",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Edu Subject Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubjectMaterialCreateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubjectMaterialResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Default Material",
+        "tags": [
+          "admin-subject-materials"
+        ]
+      }
+    },
+    "/v1/admin/subject-materials/{edu_subject_id}/{material_id}": {
+      "delete": {
+        "description": "Remove a default material; the copies students have follow on their sync.",
+        "operationId": "remove_default_material_v1_admin_subject_materials__edu_subject_id___material_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "edu_subject_id",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "title": "Edu Subject Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "material_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Material Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Default Material",
+        "tags": [
+          "admin-subject-materials"
+        ]
+      }
+    },
     "/v1/admin/subjects": {
       "get": {
         "description": "List subjects, optionally filtered by a name fragment.",
@@ -37044,6 +38692,102 @@
           }
         },
         "summary": "Post Mail Suspend",
+        "tags": [
+          "admin-users"
+        ]
+      }
+    },
+    "/v1/admin/users/{id}/photo": {
+      "delete": {
+        "description": "Remove the user's photo; nothing happens when there is none.",
+        "operationId": "delete_photo_v1_admin_users__id__photo_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPhotoResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Photo",
+        "tags": [
+          "admin-users"
+        ]
+      },
+      "put": {
+        "description": "Replace the user's photo (JPEG or PNG, up to 5 MB).",
+        "operationId": "put_photo_v1_admin_users__id__photo_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_put_photo_v1_admin_users__id__photo_put"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPhotoResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Photo",
         "tags": [
           "admin-users"
         ]
@@ -46605,6 +48349,36 @@
         ]
       }
     },
+    "/v1/me/curriculum": {
+      "get": {
+        "description": "Return the curriculum of the student's group, or null when none is stored.",
+        "operationId": "get_curriculum_v1_me_curriculum_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/CurriculumResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Curriculum V1 Me Curriculum Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Curriculum",
+        "tags": [
+          "marks"
+        ]
+      }
+    },
     "/v1/me/dashboard": {
       "get": {
         "description": "Return the user's dashboard, or the default one at version 0.",
@@ -49165,6 +50939,132 @@
           }
         },
         "summary": "Get My Teachers",
+        "tags": [
+          "teachers"
+        ]
+      }
+    },
+    "/v1/me/teachers/{teacher_id}": {
+      "get": {
+        "description": "One teacher of the student: 404 if the teacher does not teach the caller.",
+        "operationId": "get_my_teacher_v1_me_teachers__teacher_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "teacher_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Teacher Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyTeacherResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get My Teacher",
+        "tags": [
+          "teachers"
+        ]
+      }
+    },
+    "/v1/me/teachers/{teacher_id}/timetable": {
+      "get": {
+        "description": "All lessons of the teacher between two dates (default: a week from today).",
+        "operationId": "get_my_teacher_timetable_v1_me_teachers__teacher_id__timetable_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "teacher_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Teacher Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TeacherSlotResponse"
+                  },
+                  "title": "Response Get My Teacher Timetable V1 Me Teachers  Teacher Id  Timetable Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get My Teacher Timetable",
         "tags": [
           "teachers"
         ]
@@ -54492,6 +56392,68 @@
         "summary": "Put My Contacts",
         "tags": [
           "teachers"
+        ]
+      }
+    },
+    "/v1/staff/me/photo": {
+      "delete": {
+        "description": "Remove the caller's photo; nothing happens when there is none.",
+        "operationId": "delete_my_photo_v1_staff_me_photo_delete",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPhotoResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Delete My Photo",
+        "tags": [
+          "photo"
+        ]
+      },
+      "put": {
+        "description": "Replace the caller's photo (JPEG or PNG, up to 5 MB).",
+        "operationId": "put_my_photo_v1_staff_me_photo_put",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_put_my_photo_v1_staff_me_photo_put"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPhotoResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put My Photo",
+        "tags": [
+          "photo"
         ]
       }
     },

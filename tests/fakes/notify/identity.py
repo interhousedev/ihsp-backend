@@ -53,6 +53,10 @@ class FakeIdentityDirectory:
         """Return stored preferences or the defaults."""
         return self.preferences.get(user_id, UserPreferences())
 
+    async def photo_urls(self, user_ids: Sequence[UUID]) -> dict[UUID, str]:
+        """No user has a photo in this fake."""
+        return {}
+
     async def telegram_accounts(self, user_id: UUID) -> list[TelegramAccountRef]:
         """Return the user's accounts."""
         return list(self.accounts.get(user_id, []))

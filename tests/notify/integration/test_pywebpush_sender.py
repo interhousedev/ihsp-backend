@@ -105,7 +105,7 @@ async def test_the_message_is_encrypted_for_the_device_and_signed_with_vapid(
     push_service: PushService, sender: PywebpushSender, keys: VapidKeys
 ) -> None:
     """The service worker can decrypt it, and the push service can verify us."""
-    payload = json.dumps({"title": "Новые оценки", "url": "https://sp.ihsu.uz/grades/"})
+    payload = json.dumps({"title": "Новые оценки", "url": "https://my.ihsu.uz/grades/"})
 
     await sender.send(push_service.subscription(), payload)
 

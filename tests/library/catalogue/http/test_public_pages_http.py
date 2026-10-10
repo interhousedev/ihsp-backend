@@ -55,9 +55,9 @@ async def test_public_book_page_has_open_graph_json_ld_and_a_read_link(
     assert response.headers["content-type"].startswith("text/html")
     assert "<h1>O&#39;tkan kunlar</h1>" in html
     assert 'property="og:title" content="O&#39;tkan kunlar"' in html
-    assert f'rel="canonical" href="https://library.ihsu.uz/b/{book.slug}"' in html
+    assert f'rel="canonical" href="https://lib.ihsu.uz/b/{book.slug}"' in html
     assert "noindex" not in html and "x-robots-tag" not in response.headers
-    assert f'href="https://library.ihsu.uz/item/?id={book.slug}"' in html
+    assert f'href="https://lib.ihsu.uz/item/?id={book.slug}"' in html
     assert "Read in the library" in html and "Abdulla Qodiriy" in html
     assert "public domain" in html
     block = re.search(r'<script type="application/ld\+json">(.*?)</script>', html, re.S)
@@ -179,19 +179,17 @@ async def test_sitemap_lists_public_pages_only(
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("application/xml")
     assert response.text.count("<url>") == 1
-    assert f"<loc>https://library.ihsu.uz/b/{open_book.slug}</loc>" in response.text
+    assert f"<loc>https://lib.ihsu.uz/b/{open_book.slug}</loc>" in response.text
     assert "<lastmod>2026-10-06</lastmod>" in response.text
 
 
 def test_library_robots_txt_allows_pages_and_points_at_the_sitemap() -> None:
     """LIB-14: crawlers may read `/b/` and the sitemap, not the app's own paths."""
-    text = library_robots_txt(
-        LibrarySettings(public_base_url="https://library.ihsu.uz/")
-    )
+    text = library_robots_txt(LibrarySettings(public_base_url="https://lib.ihsu.uz/"))
 
     assert "Allow: /b/" in text and "Allow: /sitemap.xml" in text
     assert "Disallow: /manage/" in text
-    assert text.endswith("Sitemap: https://library.ihsu.uz/sitemap.xml\n")
+    assert text.endswith("Sitemap: https://lib.ihsu.uz/sitemap.xml\n")
 
 
 def _request(host: str, forwarded: str | None = None) -> Request:
@@ -203,13 +201,13 @@ def _request(host: str, forwarded: str | None = None) -> Request:
 
 def test_library_host_is_recognised_behind_a_proxy() -> None:
     """LIB-14: `Host` or `X-Forwarded-Host`, with or without a port."""
-    settings = LibrarySettings(public_base_url="https://library.ihsu.uz")
+    settings = LibrarySettings(public_base_url="https://lib.ihsu.uz")
 
-    assert is_library_host(_request("library.ihsu.uz"), settings)
-    assert is_library_host(_request("LIBRARY.ihsu.uz:443"), settings)
-    assert is_library_host(_request("api:8000", forwarded="library.ihsu.uz"), settings)
+    assert is_library_host(_request("lib.ihsu.uz"), settings)
+    assert is_library_host(_request("LIB.ihsu.uz:443"), settings)
+    assert is_library_host(_request("api:8000", forwarded="lib.ihsu.uz"), settings)
     assert not is_library_host(_request("ihsu.uz"), settings)
-    assert not is_library_host(_request("sp.ihsu.uz"), settings)
+    assert not is_library_host(_request("my.ihsu.uz"), settings)
 
 
 def test_public_package_exports_its_routers() -> None:

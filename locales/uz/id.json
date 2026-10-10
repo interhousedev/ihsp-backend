@@ -41,5 +41,8 @@
   "id-mail-notice-link": "Xavfsizlik sozlamalarini ochish",
   "id-mail-notice-not-you": "Agar bu siz bo'lmasangiz, parolni o'zgartiring va barcha qurilmalardan chiqing.",
   "id-name-empty": "Ism boʻsh boʻlishi mumkin emas.",
-  "id-password-unchanged": "Yangi parol joriy paroldan farq qilishi kerak."
+  "id-password-unchanged": "Yangi parol joriy paroldan farq qilishi kerak.",
+  "id-photo-empty": "Rasm fayli bo'sh.",
+  "id-photo-too-large": "Rasm juda katta. Hajmi {max_mb} MB dan oshmasligi kerak.",
+  "id-photo-type-not-allowed": "Rasm JPG yoki PNG formatida bo'lishi kerak."
 }

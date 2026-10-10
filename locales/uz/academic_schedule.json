@@ -5,7 +5,7 @@
   "academic-term-dates-invalid": "Semestr tugashidan oldin boshlanishi kerak.",
   "academic-term-bells-invalid": "Qo‘ng‘iroqlar jadvali noto‘g‘ri: har bir juftlik hafta kuniga bir marta bo‘lishi va boshlanishidan keyin tugashi kerak.",
   "academic-term-non-study-day-invalid": "Dam olish kuni semestr ichida bo‘lishi kerak.",
-  "academic-term-moved-day-invalid": "Ko‘chirilgan kun dushanbadan shanbagacha bo‘lgan hafta kuniga ergashishi kerak.",
+  "academic-term-moved-day-invalid": "Ko‘chirilgan kun dushanbadan jumagacha bo‘lgan kunga to‘g‘ri kelishi va dushanbadan jumagacha bo‘lgan hafta kuniga ergashishi kerak.",
   "academic-no-term-for-date": "Bu sanani o‘z ichiga olgan semestr yo‘q.",
   "academic-no-bell": "Semestrda bu kuni {period}-juftlik uchun qo‘ng‘iroq yo‘q.",
   "academic-invalid-date-range": "Sanalar oralig‘i teskari yoki uch oydan uzun.",
@@ -28,7 +28,9 @@
   "academic-room-merge-invalid": "Xonani o‘ziga yoki arxivdagi xonaga birlashtirib bo‘lmaydi.",
   "academic-entry-not-found": "Jadval yozuvi topilmadi.",
   "academic-entry-invalid": "Jadval yozuvi noto‘g‘ri.",
+  "academic-entry-not-school-day": "Darslar dushanbadan jumagacha o‘tkaziladi. Dushanbadan jumagacha bo‘lgan hafta kunini tanlang.",
   "academic-lesson-not-found": "Dars topilmadi.",
+  "academic-teacher-not-found": "O‘qituvchi topilmadi.",
   "academic-import-invalid": "Fayl talabalar ro‘yxati sifatida o‘qilmadi.",
   "academic-import-expired": "Import ko‘rinishi eskirdi. Faylni qayta yuklang.",
   "academic-term-control-periods-invalid": "Nazorat davri noto‘g‘ri: u tugashidan oldin boshlanishi, semestr ichida bo‘lishi va oldingi nazoratdan keyin kelishi kerak (oraliq 1, oraliq 2, yakuniy)."

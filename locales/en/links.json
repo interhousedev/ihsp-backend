@@ -19,7 +19,7 @@
   "links-page-disabled-body": "Administration disabled this link.",
   "links-page-rate-limited-title": "Too many requests",
   "links-page-rate-limited-body": "Please wait {seconds} seconds and try again.",
-  "links-interstitial-title": "You are leaving IHSP",
+  "links-interstitial-title": "You are leaving IHT",
   "links-interstitial-body": "This short link leads to another site:",
   "links-interstitial-continue": "Continue",
   "links-report-link": "Report this link",

@@ -41,5 +41,8 @@
   "id-mail-notice-link": "Open security settings",
   "id-mail-notice-not-you": "If this was not you, change your password and log out everywhere.",
   "id-name-empty": "The name cannot be empty.",
-  "id-password-unchanged": "The new password must differ from the current one."
+  "id-password-unchanged": "The new password must differ from the current one.",
+  "id-photo-empty": "The photo file is empty.",
+  "id-photo-too-large": "The photo is too large. The limit is {max_mb} MB.",
+  "id-photo-type-not-allowed": "The photo must be a JPG or PNG image."
 }

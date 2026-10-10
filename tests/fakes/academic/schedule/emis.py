@@ -8,6 +8,7 @@ from app.shared.contracts.emis import (
     EmisAuthFailed,
     EmisClass,
     EmisClassHour,
+    EmisCurriculum,
     EmisProfile,
     EmisSubject,
     EmisSubjectRatings,
@@ -26,6 +27,9 @@ class FakeEmisSource:
         self.calls: list[tuple[str, UUID]] = []
         self.hours_error: Exception | None = None
         self.timetable_error: Exception | None = None
+        self.curriculum_result: EmisCurriculum | None = None
+        self.curriculum_errors: dict[UUID, Exception] = {}
+        self.curriculum_error: Exception | None = None
 
     async def class_hours(self, user_id: UUID) -> list[EmisClassHour]:
         """Return the scripted bells."""
@@ -43,6 +47,16 @@ class FakeEmisSource:
             raise self.timetable_error
         shown = self.by_user.get(user_id, self.classes)
         return [item for item in shown if begin <= item.date <= end]
+
+    async def curriculum(self, user_id: UUID) -> EmisCurriculum:
+        """Return the scripted curriculum, or the error scripted for the student."""
+        self.calls.append(("curriculum", user_id))
+        if user_id in self.curriculum_errors:
+            raise self.curriculum_errors[user_id]
+        if self.curriculum_error is not None:
+            raise self.curriculum_error
+        assert self.curriculum_result is not None, "curriculum not scripted"
+        return self.curriculum_result
 
     def down(self) -> None:
         """EMIS cannot be reached."""

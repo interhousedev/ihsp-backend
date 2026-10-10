@@ -5,7 +5,7 @@
   "academic-term-dates-invalid": "A term must start before it ends.",
   "academic-term-bells-invalid": "The bell schedule is invalid: each period may appear once per weekday and must end after it starts.",
   "academic-term-non-study-day-invalid": "A non-study day must fall inside the term.",
-  "academic-term-moved-day-invalid": "A moved day must follow a weekday from Monday to Saturday.",
+  "academic-term-moved-day-invalid": "A moved day must be a Monday-to-Friday date and follow a Monday-to-Friday weekday.",
   "academic-no-term-for-date": "No term contains this date.",
   "academic-no-bell": "The term has no bell for period {period} on this day.",
   "academic-invalid-date-range": "The date range is reversed or longer than three months.",
@@ -28,7 +28,9 @@
   "academic-room-merge-invalid": "A room cannot be merged into itself or into an archived room.",
   "academic-entry-not-found": "Timetable entry not found.",
   "academic-entry-invalid": "The timetable entry is not valid.",
+  "academic-entry-not-school-day": "Lessons are held Monday to Friday. Choose a weekday from Monday to Friday.",
   "academic-lesson-not-found": "Lesson not found.",
+  "academic-teacher-not-found": "Teacher not found.",
   "academic-import-invalid": "The file cannot be read as a student list.",
   "academic-import-expired": "The import preview has expired. Upload the file again.",
   "academic-term-control-periods-invalid": "A control period is invalid: it must start on or before its end, lie inside the term and come after the previous control (midterm 1, midterm 2, final)."

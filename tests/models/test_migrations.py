@@ -344,6 +344,39 @@ async def test_academic_0003_assessments_match_the_models_and_revert(
     )
 
 
+async def test_academic_0005_group_curriculum_matches_the_models_and_reverts(
+    new_database: DatabaseFactory,
+) -> None:
+    """The EMIS curriculum tables match the ORM, cascade with the group and revert."""
+    url = await new_database()
+    curriculum_tables = {
+        "academic.group_curriculum",
+        "academic.group_curriculum_subject",
+    }
+
+    await _alembic(url, "upgrade", "academic@head")
+    engine = create_async_engine(url)
+    try:
+        async with engine.connect() as conn:
+            assert await conn.run_sync(_compare_schemas, {"academic"}) == []
+    finally:
+        await engine.dispose()
+    assert curriculum_tables <= await _tables(url)
+    assert (
+        await _scalar(
+            url,
+            "SELECT count(*) FROM pg_constraint WHERE confdeltype = 'c' AND conname "
+            "IN ('fk_group_curriculum_group_id_groups', "
+            "'fk_group_curriculum_subject_group_id_groups')",
+        )
+        == 2
+    )
+
+    await _alembic(url, "downgrade", "academic_0004")
+
+    assert not curriculum_tables & await _tables(url)
+
+
 async def test_notify_0004_allows_the_assessment_reminder_type_and_reverts(
     new_database: DatabaseFactory,
 ) -> None:

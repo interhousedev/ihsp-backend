@@ -24,6 +24,9 @@ class StudentRef:
     # True when the group has no timetable in the current term: kick
     # `academic.sync_group_timetable` (after the student's account is committed).
     needs_timetable: bool = False
+    # True when the group has no stored EMIS curriculum: kick
+    # `academic.sync_group_curriculum`.
+    needs_curriculum: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,6 +100,10 @@ class ScheduleQueries(Protocol):
 
     async def get_lesson(self, lesson_id: UUID) -> LessonRef | None:
         """Return the lesson or None."""
+        ...
+
+    async def subject_emis_id(self, subject_id: UUID) -> int | None:
+        """The EMIS id of a subject; None when the subject has none (or is gone)."""
         ...
 
     async def lessons_for_student(

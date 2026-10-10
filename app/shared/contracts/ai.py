@@ -8,7 +8,9 @@ from uuid import UUID
 from app.shared.actor import Actor
 from app.shared.base_error import BaseError, ValidationFailedError
 
-ReasoningEffort = Literal["low", "medium", "high"]
+# `none` switches reasoning off for models that reason by default (Claude 5.5, GPT-5.x,
+# Gemini 3.x); the gateway sends `reasoning: {"enabled": false}` for it.
+ReasoningEffort = Literal["none", "minimal", "low", "medium", "high"]
 
 
 @dataclass(frozen=True, slots=True)

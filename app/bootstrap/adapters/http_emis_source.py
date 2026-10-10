@@ -10,14 +10,22 @@ from app.shared.contracts.emis import (
     EmisAuthFailed,
     EmisClass,
     EmisClassHour,
+    EmisCurriculum,
+    EmisCurriculumItem,
+    EmisCurriculumSubject,
+    EmisDirection,
     EmisMark,
     EmisMarkType,
+    EmisName,
     EmisProfile,
+    EmisSemesterDates,
+    EmisSemesterSubject,
     EmisSubject,
     EmisSubjectRatings,
     EmisTeacher,
     EmisTopic,
     EmisUnavailable,
+    EmisYear,
 )
 
 import httpx
@@ -81,6 +89,10 @@ class HttpEmisSource:
             for item in body
         ]
 
+    async def curriculum(self, user_id: UUID) -> EmisCurriculum:
+        """Return the whole curriculum of the student: semesters, hours, exams."""
+        return _emis_curriculum(await self._get(f"{user_id}/curriculum"))
+
     async def ratings(
         self, user_id: UUID, emis_subject_id: int, semester: int
     ) -> EmisSubjectRatings:
@@ -137,6 +149,89 @@ class HttpEmisSource:
         if response.status_code == 200:
             return response.json()
         raise _error_for(response)
+
+
+def _optional_date(value: str | None) -> date | None:
+    return date.fromisoformat(value) if value else None
+
+
+def _name(body: dict[str, str]) -> EmisName:
+    return EmisName(uz=body["uz"], ru=body["ru"], en=body["en"])
+
+
+def _year(body: dict[str, Any] | None) -> EmisYear | None:
+    if body is None:
+        return None
+    return EmisYear(
+        code=body["code"],
+        name=body["name"],
+        from_date=_optional_date(body["from_date"]),
+        to_date=_optional_date(body["to_date"]),
+    )
+
+
+def _semester_subject(item: dict[str, Any]) -> EmisSemesterSubject:
+    return EmisSemesterSubject(
+        semester_number=item["semester_number"],
+        emis_subject_id=item["emis_subject_id"],
+        name=_name(item["name"]),
+        subject_type_id=item["subject_type_id"],
+        study_hours=item["study_hours"],
+        class_hours=item["class_hours"],
+        independent_hours=item["independent_hours"],
+        is_separated=item["is_separated"],
+    )
+
+
+def _curriculum_items(items: list[dict[str, Any]]) -> tuple[EmisCurriculumItem, ...]:
+    return tuple(
+        EmisCurriculumItem(item["emis_id"], _name(item["name"]), item["study_hours"])
+        for item in items
+    )
+
+
+def _emis_curriculum(body: dict[str, Any]) -> EmisCurriculum:
+    direction, speciality = body["direction"], body["speciality"]
+    return EmisCurriculum(
+        emis_id=body["emis_id"],
+        name=body["name"],
+        direction=(
+            EmisDirection(direction["emis_id"], direction["name"], direction["code"])
+            if direction
+            else None
+        ),
+        speciality=_name(speciality) if speciality else None,
+        edu_form=body["edu_form"],
+        language_code=body["language_code"],
+        rating_min=body["rating_min"],
+        rating_max=body["rating_max"],
+        start_year=_year(body["start_year"]),
+        end_year=_year(body["end_year"]),
+        semesters_count=body["semesters_count"],
+        status=body["status"],
+        semesters=tuple(
+            EmisSemesterDates(
+                number=item["number"],
+                starts_on=date.fromisoformat(item["starts_on"]),
+                ends_on=date.fromisoformat(item["ends_on"]),
+            )
+            for item in body["semesters"]
+        ),
+        subjects=tuple(
+            EmisCurriculumSubject(
+                emis_subject_id=item["emis_subject_id"],
+                name=_name(item["name"]),
+                subject_type_id=item["subject_type_id"],
+                study_hours=item["study_hours"],
+            )
+            for item in body["subjects"]
+        ),
+        semester_subjects=tuple(
+            _semester_subject(i) for i in body["semester_subjects"]
+        ),
+        exams=_curriculum_items(body["exams"]),
+        vocational_subjects=_curriculum_items(body["vocational_subjects"]),
+    )
 
 
 def _emis_class(item: dict[str, Any]) -> EmisClass:

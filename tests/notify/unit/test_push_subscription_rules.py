@@ -81,7 +81,7 @@ def _payload(**overrides: str) -> PushPayload:
     values = {
         "title": "New marks",
         "body": "Algebra: 5",
-        "url": "https://sp.ihsu.uz/grades/",
+        "url": "https://my.ihsu.uz/grades/",
         "tag": "n1",
         "notification_id": "n1",
         "type": "marks",
@@ -96,7 +96,7 @@ def test_payload_json_has_exactly_the_contract_keys() -> None:
     assert data == {
         "title": "New marks",
         "body": "Algebra: 5",
-        "url": "https://sp.ihsu.uz/grades/",
+        "url": "https://my.ihsu.uz/grades/",
         "tag": "n1",
         "notification_id": "n1",
         "type": "marks",
@@ -124,7 +124,7 @@ def test_long_text_is_cut_to_the_byte_limit(char: str) -> None:
 
 def test_a_huge_url_still_leaves_valid_json_within_the_limit() -> None:
     """Title and body shrink before the payload breaks the limit."""
-    text = _payload(url="https://sp.ihsu.uz/x?" + "q" * 2500, body="b" * 900).to_json()
+    text = _payload(url="https://my.ihsu.uz/x?" + "q" * 2500, body="b" * 900).to_json()
 
     assert len(text.encode("utf-8")) <= MAX_PAYLOAD_BYTES
     assert json.loads(text)["tag"] == "n1"

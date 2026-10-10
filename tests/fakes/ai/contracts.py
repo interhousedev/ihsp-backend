@@ -193,6 +193,10 @@ class FakeSchedule:
         """Return the lessons inside the range."""
         return [x for x in self.lessons if start <= x.date <= end]
 
+    async def subject_emis_id(self, subject_id: UUID) -> int | None:
+        """No subject has an EMIS id in these fakes."""
+        return None
+
 
 class FakeFiles:
     """FilesApi with files owned by users; check_access = ownership."""

@@ -15,6 +15,15 @@ class FakeLessonSchedule(FakeSchedule):
         """Start with no students; every student gets one group on demand."""
         super().__init__()
         self.group_id = new_id()
+        self.emis_ids: dict[UUID, int] = {}  # subject id -> EMIS subject id
+
+    def set_emis_id(self, subject_id: UUID, edu_subject_id: int) -> None:
+        """The subject has this EMIS id (default materials are kept under it)."""
+        self.emis_ids[subject_id] = edu_subject_id
+
+    async def subject_emis_id(self, subject_id: UUID) -> int | None:
+        """The EMIS id of the subject, None when it has none."""
+        return self.emis_ids.get(subject_id)
 
     def attend(self, user_id: UUID, lesson: LessonRef) -> LessonRef:
         """Register the lesson and put the student in its audience."""

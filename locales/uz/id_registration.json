@@ -2,7 +2,7 @@
   "emis-auth-failed": "EMIS login yoki paroli noto'g'ri.",
   "emis-unavailable": "EMIS javob bermayapti. Keyinroq urinib ko'ring.",
   "id-wrong-institution": "Faqat International House Tashkent o'quvchilari ro'yxatdan o'ta oladi.",
-  "id-emis-already-linked": "Bu EMIS akkauntiga allaqachon IHSP akkaunti ulangan. Tizimga kiring, parolni tiklang yoki EMIS ma'lumotlari bilan akkauntni qaytarib oling.",
+  "id-emis-already-linked": "Bu EMIS akkauntiga allaqachon IHT akkaunti ulangan. Tizimga kiring, parolni tiklang yoki EMIS ma'lumotlari bilan akkauntni qaytarib oling.",
   "id-registration-expired": "Sessiya muddati tugadi. Qaytadan boshlang.",
   "id-email-in-use": "Bu elektron pochta manzili boshqa akkaunt tomonidan ishlatilmoqda.",
   "id-email-not-set": "Avval elektron pochta manzilingizni kiriting va kod so'rang.",
