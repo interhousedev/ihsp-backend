@@ -1,4 +1,4 @@
-"""Set a group's curator and head student, or archive it (UF-ADM-04)."""
+"""Rename a group, set its semester, curator and head student, or archive it."""
 
 from uuid import UUID
 
@@ -15,14 +15,14 @@ from app.modules.academic.domain.schedule.errors import (
     GroupNotFoundError,
     HeadStudentInvalidError,
 )
-from app.modules.academic.domain.schedule.group import Group
+from app.modules.academic.domain.schedule.group import Group, clean_group_name
 from app.shared.actor import Actor, Role
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.notifications import AuditDraft
 
 
 class UpdateGroup:
-    """Change the curator, head student or status of a group."""
+    """Change the name, semester, curator, head student or status of a group."""
 
     def __init__(self, uow_factory: UowFactory, identity: IdentityDirectory) -> None:
         """Store the dependencies."""
@@ -37,12 +37,18 @@ class UpdateGroup:
         curator_id: UUID | None | Unset = UNSET,
         head_student_id: UUID | None | Unset = UNSET,
         status: str | None = None,
+        name: str | None = None,
+        current_semester: int | None = None,
     ) -> GroupDetailData:
         """Apply the fields that were sent; None clears curator or head student."""
         async with self.uow_factory() as uow:
             group = await uow.groups.get(group_id)
             if group is None:
                 raise GroupNotFoundError()
+            if name is not None:
+                await self._rename(uow, group, name)
+            if current_semester is not None:
+                group.current_semester = current_semester
             if not isinstance(curator_id, Unset):
                 await self._set_curator(uow, actor, group, curator_id)
             if not isinstance(head_student_id, Unset):
@@ -53,6 +59,16 @@ class UpdateGroup:
             detail = await build_group_detail(uow, self.identity, group)
             await uow.commit()
         return detail
+
+    @staticmethod
+    async def _rename(uow: ScheduleUnitOfWork, group: Group, raw: str) -> None:
+        clean, slug = clean_group_name(raw)
+        if clean == group.name:
+            return
+        clash = await uow.groups.find_active_by_slug(slug)
+        if clash is not None and clash.id != group.id:
+            raise GroupNameTakenError(params={"name": clean})
+        group.name, group.slug = clean, slug
 
     async def _set_curator(
         self,

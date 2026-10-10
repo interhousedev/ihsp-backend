@@ -26,14 +26,18 @@ HourMinute = Annotated[
 ]
 
 
-BellSource = Literal["manual", "emis"]
+BellSource = Literal["manual", "emis", "override"]
 
 
 class Bell(BaseModel):
     """Start and end of one period on some weekdays (jsonb of Term.bells).
 
-    ``source`` says who set the bell: Administration (``manual``) or the EMIS
-    ``class-hours`` sync (``emis``), which keeps its bells equal to EMIS.
+    ``source`` says who set the bell: the EMIS ``class-hours`` sync (``emis``, the
+    default, kept equal to EMIS), Administration for a period of their own
+    (``manual``; EMIS replaces it when it lists the period) or Administration
+    overriding an EMIS period (``override``: time and weekdays stay, the sync leaves
+    them alone). ``emis_start`` and ``emis_end`` remember what EMIS says for the
+    period, so an override can be reset.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -43,6 +47,8 @@ class Bell(BaseModel):
     end: HourMinute
     weekdays: list[int] = Field(min_length=1)
     source: BellSource = "manual"
+    emis_start: HourMinute | None = None
+    emis_end: HourMinute | None = None
 
 
 class MovedDay(BaseModel):

@@ -78,13 +78,13 @@ async def test_the_daily_limit_blocks_until_tashkent_midnight(
     assert (await h.say(chat.id, "three")).status is TurnStatus.DONE
 
 
-async def test_admin_assistant_has_its_own_limits(make_harness: HarnessFactory) -> None:
-    """AI-8: limits are set per role."""
+async def test_admin_assistant_has_no_limits(make_harness: HarnessFactory) -> None:
+    """Administration has no session or day cap; the student assistant keeps its caps."""
     h = make_harness()
 
     usage = await h.services.get_usage.execute(actor=h.admin, assistant=None)
 
-    assert (usage.session.limit, usage.day.limit) == (400_000, 1_200_000)
+    assert (usage.session.limit, usage.day.limit) == (None, None)
 
 
 async def test_usage_of_the_other_assistant_is_forbidden(

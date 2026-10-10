@@ -24,5 +24,7 @@ async def update_group(
         curator_id=body.curator_id if "curator_id" in sent else UNSET,
         head_student_id=body.head_student_id if "head_student_id" in sent else UNSET,
         status=body.status,
+        name=body.name,
+        current_semester=body.current_semester,
     )
     return GroupDetailResponse.model_validate(detail)

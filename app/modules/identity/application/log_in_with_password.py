@@ -1,4 +1,4 @@
-"""POST /v1/id/login: password login; an administrator who turned OTP on also enters a code."""
+"""POST /v1/id/login: password login; administrators with OTP on enter a code."""
 
 from dataclasses import dataclass
 
@@ -43,7 +43,7 @@ class LogInWithPassword:
         remember: bool,
         ctx: RequestContext,
     ) -> LoginResult:
-        """Return the redirect URL, or a second-factor ticket (an administrator with OTP on)."""
+        """Return the redirect URL, or a second-factor ticket (OTP on)."""
         await self.rate_limiter.hit(
             f"login-ip:{ctx.throttle_ip}", limit=IP_LIMIT_PER_HOUR, window_seconds=3600
         )

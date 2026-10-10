@@ -13,7 +13,6 @@
   "id-email-taken": "This email already belongs to another account.",
   "id-email-locked": "The email of an activated account cannot be changed here.",
   "id-otp-no-channel": "There is no channel to send a code to. Link Telegram or confirm your email.",
-  "id-otp-mandatory": "One-time codes cannot be turned off for Administration.",
   "id-self-action-forbidden": "You cannot do this to your own account.",
   "id-lms-admin-needs-admin": "The LMS admin role can only be given to a member of Administration.",
   "id-course-creator-not-staff": "Only a teacher or a member of Administration can create courses.",

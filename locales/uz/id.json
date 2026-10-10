@@ -13,7 +13,6 @@
   "id-email-taken": "Bu pochta boshqa hisobga tegishli.",
   "id-email-locked": "Faollashtirilgan hisobning pochtasini bu yerda o'zgartirib bo'lmaydi.",
   "id-otp-no-channel": "Kod yuboradigan kanal yo'q. Telegramni ulang yoki pochtani tasdiqlang.",
-  "id-otp-mandatory": "Ma'muriyat uchun bir martalik kodlarni o'chirib bo'lmaydi.",
   "id-self-action-forbidden": "Buni o'z hisobingiz bilan qilib bo'lmaydi.",
   "id-lms-admin-needs-admin": "LMS administratori rolini faqat Ma'muriyat a'zosiga berish mumkin.",
   "id-course-creator-not-staff": "Kurs yaratish huquqi faqat o'qituvchi yoki Ma'muriyat a'zosiga beriladi.",

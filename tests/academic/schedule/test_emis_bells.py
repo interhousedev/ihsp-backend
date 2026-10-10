@@ -45,17 +45,33 @@ def test_the_same_bells_change_nothing() -> None:
     assert merge_emis_bells(list(reversed(from_emis)), from_emis) is None
 
 
-def test_emis_replaces_manual_bells_of_the_periods_it_lists() -> None:
-    """ACA-4: EMIS wins for periods 1-5, including Saturday's own times."""
-    current = [
-        manual(1, dt.time(8, 30), dt.time(9, 15), [1, 2, 3, 4, 5]),
-        manual(1, dt.time(8, 30), dt.time(9, 5), [6]),
-    ]
+def test_a_manual_override_wins_over_emis_for_its_period() -> None:
+    """An override of time and weekdays survives the sync; EMIS stays the default elsewhere."""
+    override = manual(1, dt.time(8, 30), dt.time(9, 15), [1, 2, 3, 4, 5]).model_copy(
+        update={"source": "override"}
+    )
 
-    merged = merge_emis_bells(current, bells_from_class_hours(FAKE_CLASS_HOURS))
+    merged = merge_emis_bells([override], bells_from_class_hours(FAKE_CLASS_HOURS))
 
     assert merged is not None
-    assert [(b.period, b.source) for b in merged] == [(p, "emis") for p in range(1, 6)]
+    first, *rest = merged
+    assert (first.start, first.end, first.weekdays, first.source) == (
+        dt.time(8, 30),
+        dt.time(9, 15),
+        [1, 2, 3, 4, 5],
+        "override",
+    )
+    assert (first.emis_start, first.emis_end) == (dt.time(8, 30), dt.time(9, 50))
+    assert [(b.period, b.source) for b in rest] == [(p, "emis") for p in range(2, 6)]
+
+
+def test_an_override_with_current_emis_times_is_stable() -> None:
+    """A second sync of the same hours changes nothing."""
+    emis = bells_from_class_hours(FAKE_CLASS_HOURS)
+    first = merge_emis_bells([manual(1, dt.time(8, 30), dt.time(9, 15), [1, 2])], emis)
+    assert first is not None
+
+    assert merge_emis_bells(first, emis) is None
 
 
 def test_manual_bells_of_other_periods_stay() -> None:
@@ -91,3 +107,25 @@ def test_a_changed_time_is_a_change() -> None:
     merged = merge_emis_bells(current, bells_from_class_hours(moved))
 
     assert merged is not None and merged[1].start == dt.time(10, 20)
+
+
+def test_plain_manual_bells_of_listed_periods_are_replaced_by_emis() -> None:
+    """Only an explicit override survives; a hand-made bell of an EMIS period follows EMIS."""
+    current = [manual(1, dt.time(8, 30), dt.time(9, 15), [1, 2, 3, 4, 5])]
+
+    merged = merge_emis_bells(current, bells_from_class_hours(FAKE_CLASS_HOURS))
+
+    assert merged is not None
+    assert [(b.period, b.source) for b in merged] == [(p, "emis") for p in range(1, 6)]
+
+
+def test_an_override_of_a_period_that_left_emis_becomes_a_manual_bell() -> None:
+    """The admin's time is not thrown away when EMIS stops listing the period."""
+    override = manual(5, dt.time(15, 10), dt.time(16, 0), [1, 2]).model_copy(
+        update={"source": "override"}
+    )
+
+    merged = merge_emis_bells([override], bells_from_class_hours(FAKE_CLASS_HOURS[:4]))
+
+    assert merged is not None
+    assert (merged[-1].period, merged[-1].source) == (5, "manual")

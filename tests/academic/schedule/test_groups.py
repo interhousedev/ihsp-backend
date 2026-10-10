@@ -333,3 +333,27 @@ async def test_a_teacher_sees_only_the_groups_they_curate(env: Env) -> None:
     )
 
     assert [g.id for g in groups] == [mine.id]
+
+
+async def test_a_group_can_be_renamed_and_moved_to_another_semester(env: Env) -> None:
+    """The name and the semester of a group are editable; the slug follows the name."""
+    group = await env.group()
+    admin = make_actor(Role.ADMIN)
+
+    detail = await env.services.update_group.execute(
+        admin, group.id, name="1tn9", current_semester=3
+    )
+
+    assert (detail.name, detail.slug, detail.current_semester) == ("1TN9", "1tn9", 3)
+
+
+async def test_renaming_into_the_name_of_another_active_group_is_refused(
+    env: Env,
+) -> None:
+    """Two active groups never share a name."""
+    group = await env.group()
+    other = await env.group("2TN1")
+    admin = make_actor(Role.ADMIN)
+
+    with pytest.raises(GroupNameTakenError):
+        await env.services.update_group.execute(admin, group.id, name=other.name)

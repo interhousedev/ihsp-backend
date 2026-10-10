@@ -162,12 +162,14 @@ class CreateGroupArgs(ToolArgs):
 
 
 class UpdateGroupArgs(ToolArgs):
-    """Changes to a group: curator, head student, status."""
+    """Changes to a group: name, semester, curator, head student, status."""
 
     group_id: UUID
     curator_id: UUID | None = None
     head_student_id: UUID | None = None
     status: Literal["active", "archived"] | None = None
+    name: str | None = None
+    current_semester: int | None = None
 
 
 class CreateTimetableEntryArgs(ToolArgs):

@@ -21,6 +21,8 @@ TERM_BODY = {
             "end": "09:15",
             "weekdays": [1, 2, 3, 4, 5],
             "source": "manual",
+            "emis_start": None,
+            "emis_end": None,
         },
         {
             "period": 2,
@@ -28,6 +30,8 @@ TERM_BODY = {
             "end": "10:10",
             "weekdays": [1, 2, 3, 4, 5, 6],
             "source": "emis",
+            "emis_start": None,
+            "emis_end": None,
         },
     ],
     "non_study_days": ["2026-10-12"],

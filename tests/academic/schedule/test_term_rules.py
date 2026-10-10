@@ -92,6 +92,8 @@ def test_bells_are_stored_as_hours_and_minutes() -> None:
         "end": "09:15",
         "weekdays": [1, 2, 3, 4, 5],
         "source": "manual",
+        "emis_start": None,
+        "emis_end": None,
     }
     assert bells_from_json(stored) == default_bells()
 

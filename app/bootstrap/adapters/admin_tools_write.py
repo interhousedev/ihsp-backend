@@ -97,6 +97,8 @@ async def update_group(c: Container, args: Args, actor: Actor) -> dict[str, Any]
         curator_id=body.curator_id if "curator_id" in sent else UNSET,
         head_student_id=body.head_student_id if "head_student_id" in sent else UNSET,
         status=body.status,
+        name=body.name,
+        current_semester=body.current_semester,
     )
     return to_jsonable_dict(detail)
 

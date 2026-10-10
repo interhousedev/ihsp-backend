@@ -22,8 +22,8 @@ class AssistantProfile:
     assistant: Assistant
     role: Role | None
     llm: ModelProfile  # the model and its parameters (`AI__TASKS__...`)
-    session_tokens: int
-    daily_tokens: int
+    session_tokens: int | None  # None: no cap (Administration)
+    daily_tokens: int | None
     max_tool_steps: int
     course_pool: bool = False
 
@@ -89,8 +89,8 @@ def profile_for(
         assistant,
         Role.ADMIN,
         llm,
-        limits.ai_session_tokens_admin,
-        limits.ai_daily_tokens_admin,
+        None,
+        None,
         limits.ai_max_tool_steps,
     )
 

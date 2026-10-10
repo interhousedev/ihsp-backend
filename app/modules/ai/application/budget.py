@@ -22,7 +22,7 @@ class UsagePart:
     """Tokens used against a limit, and when the counter resets."""
 
     used: int
-    limit: int
+    limit: int | None  # None: unlimited
     resets_at: datetime | None
 
 
@@ -104,9 +104,10 @@ class BudgetService:
             "lms" if profile_for(assistant, self.settings).course_pool else "ai"
         )
         hits: list[LimitHit] = []
-        if info.session.used + estimate > info.session.limit:
+        session_limit, day_limit = info.session.limit, info.day.limit
+        if session_limit is not None and info.session.used + estimate > session_limit:
             hits.append(LimitHit("session", self._session_reset(info), pool))
-        if info.day.used + estimate > info.day.limit:
+        if day_limit is not None and info.day.used + estimate > day_limit:
             hits.append(LimitHit("day", self._next_midnight(), pool))
         return max(hits, key=lambda hit: hit.resets_at) if hits else None
 

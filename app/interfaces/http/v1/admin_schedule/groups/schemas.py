@@ -25,6 +25,8 @@ class GroupPatchBody(BaseModel):
     curator_id: UUID | None = None
     head_student_id: UUID | None = None
     status: Literal["active", "archived"] | None = None
+    name: str | None = Field(default=None, min_length=1, max_length=64)
+    current_semester: int | None = Field(default=None, ge=1, le=12)
 
 
 class SubgroupAssignmentBody(BaseModel):

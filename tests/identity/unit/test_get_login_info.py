@@ -1,8 +1,5 @@
-"""ID-11, ID-16: single sign-on and the admin 12-hour rule."""
+"""ID-16: single sign-on."""
 
-from datetime import timedelta
-
-from app.shared.actor import Role
 from app.shared.contracts.identity import UserStatus
 from tests.identity.support import World
 
