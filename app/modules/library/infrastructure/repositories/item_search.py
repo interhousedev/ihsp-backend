@@ -26,7 +26,7 @@ from app.modules.library.domain.enums import (
     Visibility,
 )
 from app.modules.library.domain.name_keys import name_key
-from app.modules.library.domain.search_query import ParsedQuery
+from app.modules.library.domain.search_query import ParsedQuery, spellings
 from app.modules.library.infrastructure.orm import CollectionItem as CollectionRow
 from app.modules.library.infrastructure.orm import ExternalDetails as ExternalRow
 from app.modules.library.infrastructure.orm import Item as ItemRow
@@ -206,7 +206,7 @@ def _link_clauses(filters: ItemFilters) -> list[ColumnElement[bool]]:
 
 
 def _tsquery(query: ParsedQuery) -> ColumnElement[str]:
-    return func.to_tsquery(CONFIG, query.tsquery)
+    return func.to_tsquery(CONFIG, query.match)
 
 
 def _page_match(query: ParsedQuery) -> ColumnElement[bool]:
@@ -360,8 +360,9 @@ def books_statement(
             or_(
                 ItemRow.title.icontains(query, autoescape=True),
                 ItemRow.author_label.icontains(query, autoescape=True),
-                ItemRow.search_text.icontains(
-                    search_normalize(query, "uz"), autoescape=True
+                *(
+                    ItemRow.search_text.icontains(spelling, autoescape=True)
+                    for spelling in spellings(search_normalize(query, "uz"), limit=64)
                 ),
             )
         )
