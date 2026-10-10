@@ -405,9 +405,9 @@ async def test_an_invalid_body_is_a_validation_error(
     assert problem_type(response, 422) == "common/request-validation"
 
 
-@pytest.mark.parametrize("text", ["   \n ", "x" * 4001])
+@pytest.mark.parametrize("text", ["x" * 4001])
 @pytest.mark.parametrize("headers", JSON_AND_SSE)
-async def test_a_blank_or_too_long_question_is_refused_by_the_use_case(
+async def test_a_too_long_question_is_refused_by_the_use_case(
     api: AsyncClient,
     notebook: Notebook,
     source: Source,
@@ -415,7 +415,8 @@ async def test_a_blank_or_too_long_question_is_refused_by_the_use_case(
     headers: dict[str, str],
     text: str,
 ) -> None:
-    """NB-6: after trimming, 1 to 4 000 characters (`notebooks/invalid-options`)."""
+    """NB-6: after trimming, at most 4 000 characters (`notebooks/invalid-options`);
+    a blank text without a command is refused by the schema instead."""
     response = await api.post(
         chat_url(notebook, "/messages"), json={"text": text}, headers=headers
     )

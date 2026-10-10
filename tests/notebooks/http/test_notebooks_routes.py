@@ -392,7 +392,8 @@ async def test_only_students_may_use_notebooks(
     student: Actor,
     role: Role,
 ) -> None:
-    """NB-1, LMS-AI 3.1: staff get `403` on the student routes and `404` on a
+    """NB-1, LMS-AI 3.1: admins get `403` on the student routes (teachers own
+    notebooks too) and `404` on a
     student's notebook (the routes of one notebook are open to course staff, whose
     access is checked per notebook)."""
     notebook = await make_notebook(uow_factory, student.user_id)
@@ -411,8 +412,11 @@ async def test_only_students_may_use_notebooks(
         await api.get(f"{url}/usage"),
     ]
 
-    assert [r.status_code for r in student_only] == [403] * 3
-    assert {problem_type(r) for r in student_only} == {"common/forbidden"}
+    if role is Role.TEACHER:  # teachers own notebooks too
+        assert [r.status_code for r in student_only] == [200, 201, 200]
+    else:
+        assert [r.status_code for r in student_only] == [403] * 3
+        assert {problem_type(r) for r in student_only} == {"common/forbidden"}
     assert [r.status_code for r in one_notebook] == [404] * 4
     assert {problem_type(r) for r in one_notebook} == {"notebooks/not-found"}
 

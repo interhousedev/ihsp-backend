@@ -143,7 +143,7 @@ async def test_a_subject_with_only_lesson_marks_has_both_kinds_remaining(
 async def test_bad_what_if_values_are_a_validation_error(
     http_client: Any, services: MarksServices, env: Env, make_actor: Any
 ) -> None:
-    """422 for an unknown type, a mark outside 2..5 or too many marks."""
+    """422 for an unknown type, a mark outside 2..5 or over 500 marks."""
     actor = make_actor(Role.STUDENT, user_id=env.world.user_id)
 
     for raw in ("exam:4", "lesson:6", "lesson", "lesson:x"):
@@ -152,7 +152,7 @@ async def test_bad_what_if_values_are_a_validation_error(
         )
         assert response.status_code == 422, raw
         assert response.json()["type"] == "academic/invalid-what-if"
-    too_many = [("what_if", "lesson:5")] * 21
+    too_many = [("what_if", "lesson:5")] * 501
     response = await _get(http_client, services, actor, env.world.math_id, too_many)
     assert response.status_code == 422
 

@@ -22,7 +22,7 @@ STATUS_KEYS = {
     "max_results",
     "deep_cost",
 }
-WEB_KEYS = {"n", "title", "url", "site", "snippet", "why", "cited"}
+WEB_KEYS = {"n", "title", "url", "site", "snippet", "why", "cited", "origin"}
 
 
 @pytest.fixture

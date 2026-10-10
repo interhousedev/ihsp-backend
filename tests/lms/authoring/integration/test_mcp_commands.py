@@ -277,10 +277,16 @@ async def test_attempts_query_needs_review_and_reads_the_attempts_table(
 def test_the_mcp_contract_has_no_edit_delete_or_publish_methods(
     services: AuthoringServices,
 ) -> None:
-    """MCP-6: add-only."""
+    """MCP-6: course CRUD on drafts is there, but nothing publishes or approves."""
     names = {n for n in dir(services.draft_commands) if not n.startswith("_")}
 
-    assert names == {"create_section", "create_step", "add_block", "add_question"}
+    assert names == {
+        *("create_course", "update_course", "delete_course"),
+        *("create_section", "update_module", "delete_module"),
+        *("create_step", "update_step", "delete_step"),
+        *("add_block", "add_question"),
+    }
+    assert not [n for n in names if "publish" in n or "approve" in n]
 
 
 async def test_mcp_tools_send_empty_ids_for_new_things_and_the_server_assigns_them(

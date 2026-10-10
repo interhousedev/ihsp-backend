@@ -22,7 +22,17 @@ from tests.notebooks.http.test_chat_routes import (
 import pytest
 from httpx import AsyncClient
 
-RESULT_KEYS = {"title", "url", "site", "snippet", "why", "already_added"}
+RESULT_KEYS = {
+    "title",
+    "url",
+    "site",
+    "snippet",
+    "why",
+    "already_added",
+    "origin",
+    "ref_kind",
+    "ref_id",
+}
 QUOTA_KEYS = {
     "enabled",
     "used",
@@ -32,7 +42,17 @@ QUOTA_KEYS = {
     "max_results",
     "deep_cost",
 }
-WEB_KEYS = {"n", "title", "url", "site", "snippet", "why", "cited"}
+WEB_KEYS = {
+    "n",
+    "title",
+    "url",
+    "site",
+    "snippet",
+    "why",
+    "cited",
+    "origin",
+}
+EVENT_KEYS = WEB_KEYS | {"ref_kind", "ref_id"}  # the stream event also names the ref
 
 
 @pytest.fixture
@@ -227,7 +247,7 @@ async def test_a_stream_sends_a_web_event_before_the_text(
     assert event_names(events)[:2] == ["message", "web"]
     assert event_names(events)[-1] == "done"
     web_event = dict(events[1][1])
-    assert [set(item) for item in web_event["results"]] == [WEB_KEYS] * 3
+    assert [set(item) for item in web_event["results"]] == [EVENT_KEYS] * 3
     assert streamed_text(events) == "Sugar ⟦w1⟧ and oxygen."
     done = events[-1][1]["assistant_message"]
     assert [item["cited"] for item in done["web"]] == [True, False, False]
