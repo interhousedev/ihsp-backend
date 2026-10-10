@@ -12,6 +12,7 @@ async def toggle_journal_cell(
         lesson_id=body.lesson_id,
         student_id=body.student_id,
         absent=body.absent,
+        late=body.late,
         base_version=body.base_version,
         actor=actor,
     )

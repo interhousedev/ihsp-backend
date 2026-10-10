@@ -36,6 +36,7 @@ class AttendanceSheetBuilder:
             if visible_groups is None or student.group_id in visible_groups
         ]
         absent = set(lesson.attendance_absent or ())
+        late = set(lesson.attendance_late or ())
         saved = set(lesson.attendance_roster or ())
         expected = roster.expected_ids()
         excused = lesson.attendance_excused or {}
@@ -52,6 +53,7 @@ class AttendanceSheetBuilder:
                     "group_name": student.group_name,
                     "subgroup_unset": student.user_id not in expected,
                     "absent": is_absent,
+                    "late": student.user_id in late,
                     "excused": is_absent and mark is not None,
                     "excuse_comment": mark.get("comment") if mark else None,
                     # Unassigned students count only once the teacher marked them.

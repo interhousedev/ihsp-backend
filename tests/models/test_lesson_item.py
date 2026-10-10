@@ -70,6 +70,7 @@ def test_lesson_item_has_exactly_the_contract_fields() -> None:
         "has_homework",
         "attendance_submitted",
         "absent_count",
+        "late_count",
     }
 
 

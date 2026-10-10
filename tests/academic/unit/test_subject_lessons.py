@@ -19,7 +19,7 @@ NOW = dt.datetime(2026, 10, 6, 9, 0, tzinfo=dt.UTC)
 ME = UUID(int=1)
 
 
-def _lesson(day_offset: int, *, absent: bool = False) -> LessonRow:
+def _lesson(day_offset: int, *, absent: bool = False, late: bool = False) -> LessonRow:
     start = NOW + dt.timedelta(days=day_offset, hours=1)
     return LessonRow(
         id=uuid4(),
@@ -41,6 +41,7 @@ def _lesson(day_offset: int, *, absent: bool = False) -> LessonRow:
         attendance_roster=(ME,),
         attendance_absent=(ME,) if absent else (),
         attendance_excused=None,
+        attendance_late=(ME,) if late else None,
     )
 
 
@@ -158,3 +159,10 @@ async def test_use_case_uses_the_frozen_clock() -> None:
     assert result["items"][0]["attendance"] == "absent"
     assert result["items"][1]["attendance"] is None
     assert result["has_more_past"] is False
+
+
+def test_late_lesson_result_is_late() -> None:
+    """A late student is present for the rates but shows as late."""
+    past = _lesson(-1, late=True)
+    (row,) = lesson_results([past], student_id=ME, now=NOW, marks={})
+    assert row[1] == "late"

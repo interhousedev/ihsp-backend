@@ -9,7 +9,7 @@ from app.shared.lesson_kind import LessonKind, TopicSource
 from pydantic import BaseModel
 
 MarkType = Literal["lesson", "midterm", "final"]
-AttendanceValue = Literal["present", "absent", "excused", "not_taken"]
+AttendanceValue = Literal["present", "late", "absent", "excused", "not_taken"]
 
 
 class PersonRef(BaseModel):
@@ -110,6 +110,7 @@ class SubjectCardResponse(BaseModel):
     semester_mark: float | None
     emis_rating: int | None
     absences: int
+    lates: int = 0
     next_lesson: LessonItem | None
 
 

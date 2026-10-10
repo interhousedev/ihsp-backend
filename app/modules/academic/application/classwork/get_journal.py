@@ -178,6 +178,7 @@ def _student_row(
             {
                 "lesson_id": str(lesson.id),
                 "absent": absent,
+                "late": student.user_id in (lesson.attendance_late or ()),
                 "excused": absent and str(student.user_id) in lesson.excused_ids(),
                 "marks": marks.get((lesson.id, student.user_id), []),
             }
@@ -188,5 +189,6 @@ def _student_row(
         "last_name": student.last_name,
         "cells": cells,
         "absences": sum(1 for cell in cells if cell["absent"]),
+        "lates": sum(1 for cell in cells if cell["late"]),
         "semester_mark": semester_mark,
     }

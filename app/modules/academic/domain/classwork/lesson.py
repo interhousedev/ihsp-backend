@@ -48,6 +48,8 @@ class Lesson:
     attendance_source: str | None
     kind: LessonKind = "other"
     topic_source: TopicSource | None = None
+    # Came late: present for every rate, a subset of the roster, never absent too
+    attendance_late: tuple[UUID, ...] | None = None
 
     @property
     def group_names(self) -> tuple[str, ...]:

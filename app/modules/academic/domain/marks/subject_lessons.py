@@ -41,9 +41,10 @@ def _attendance(student_id: UUID, lesson: LessonRow) -> str | None:
         lesson.attendance_roster,
         lesson.attendance_absent,
         lesson.attendance_excused,
+        lesson.attendance_late,
     )
-    if state == "present":
-        return "present"
+    if state in ("present", "late"):
+        return state
     if state in ("absent", "excused"):
         return "absent"
     return None

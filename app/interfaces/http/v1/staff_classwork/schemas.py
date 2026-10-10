@@ -43,6 +43,7 @@ class RosterItemResponse(BaseModel):
     group_name: str
     subgroup_unset: bool
     absent: bool
+    late: bool = False
     excused: bool
     excuse_comment: str | None
     counted: bool
@@ -94,6 +95,7 @@ class JournalCellResponse(BaseModel):
 
     lesson_id: UUID
     absent: bool
+    late: bool = False
     excused: bool
     marks: list[int]
 
@@ -106,6 +108,7 @@ class JournalStudentResponse(BaseModel):
     last_name: str
     cells: list[JournalCellResponse]
     absences: int
+    lates: int = 0
     semester_mark: float | None
 
 
@@ -186,6 +189,7 @@ class SubmitAttendanceBody(BaseModel):
     """Body of ``PUT /v1/staff/lessons/{id}/attendance``."""
 
     absent: list[UUID]
+    late: list[UUID] = Field(default_factory=list)
     present_unassigned: list[UUID] = Field(default_factory=list)
     base_version: int
 
@@ -204,4 +208,5 @@ class ToggleBody(BaseModel):
     lesson_id: UUID
     student_id: UUID
     absent: bool
+    late: bool = False
     base_version: int

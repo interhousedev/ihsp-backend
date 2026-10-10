@@ -84,6 +84,7 @@ class LessonRow:
     attendance_excused: dict[str, Any] | None
     kind: str = "other"
     emis_topic: str | None = None
+    attendance_late: tuple[UUID, ...] | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -92,3 +93,4 @@ class AttendanceCount:
 
     absences: int
     with_attendance: int
+    lates: int = 0

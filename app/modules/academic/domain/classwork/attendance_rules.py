@@ -59,12 +59,15 @@ def ensure_attendance_editable(
 
 
 def build_snapshot(
-    roster: Roster, absent: Sequence[UUID], present_unassigned: Sequence[UUID]
+    roster: Roster,
+    absent: Sequence[UUID],
+    present_unassigned: Sequence[UUID],
+    late: Sequence[UUID] = (),
 ) -> list[UUID]:
     """Return the audience saved with the list.
 
     It is the expected students, the unassigned students the teacher marked
-    present, and the unassigned students marked absent (ACA-2, ACA-11).
+    present or late, and the unassigned students marked absent (ACA-2, ACA-11).
 
     Raises:
         AbsentOutsideRosterError: someone outside the roster was marked, or a
@@ -73,11 +76,18 @@ def build_snapshot(
     expected = roster.expected_ids()
     unassigned = roster.unassigned_ids()
     absent_set = set(absent)
+    late_set = set(late)
     present_set = set(present_unassigned)
-    outside = (absent_set - expected - unassigned) | (present_set - unassigned)
-    clash = absent_set & present_set
+    outside = (
+        (absent_set - expected - unassigned)
+        | (late_set - expected - unassigned)
+        | (present_set - unassigned)
+    )
+    clash = (
+        (absent_set & present_set) | (absent_set & late_set) | (late_set & present_set)
+    )
     if outside or clash:
         bad = sorted(str(user_id) for user_id in outside | clash)
         raise AbsentOutsideRosterError(params={"user_ids": bad})
-    included = expected | present_set | (absent_set & unassigned)
+    included = expected | present_set | ((absent_set | late_set) & unassigned)
     return [s.user_id for s in roster.entries if s.user_id in included]

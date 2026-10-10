@@ -16,6 +16,7 @@ def lesson_item(
     is_overridden: bool,
     changes: dict[str, Any] | None,
     absent_count: int | None = None,
+    late_count: int | None = None,
 ) -> dict[str, Any]:
     """Build the ``LessonItem`` dict of a lesson.
 
@@ -29,6 +30,7 @@ def lesson_item(
         is_overridden: True when the lesson was changed by hand.
         changes: What was changed by hand, e.g. ``{"room": ["204", "310"]}``.
         absent_count: Students marked absent; None while no sheet was submitted.
+        late_count: Students marked late; None while no sheet was submitted.
     """
     room = (
         {"id": str(ref.room_id), "slug": ref.room_slug, "name": ref.room_name}
@@ -58,4 +60,5 @@ def lesson_item(
         "has_homework": has_homework,
         "attendance_submitted": attendance_submitted,
         "absent_count": absent_count,
+        "late_count": late_count,
     }

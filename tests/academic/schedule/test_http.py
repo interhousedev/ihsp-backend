@@ -674,6 +674,7 @@ async def test_student_profile_and_timetable(env: Env, api: Api) -> None:
         "has_homework",
         "attendance_submitted",
         "absent_count",
+        "late_count",
     }
 
 

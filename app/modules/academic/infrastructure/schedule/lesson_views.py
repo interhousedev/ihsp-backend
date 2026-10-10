@@ -95,6 +95,11 @@ async def build_views(
                     if row.attendance_absent is None
                     else len(row.attendance_absent)
                 ),
+                late_count=(
+                    None
+                    if row.attendance_absent is None
+                    else len(row.attendance_late or ())
+                ),
                 term_id=row.term_id,
                 audience_groups={
                     gid: names[gid]

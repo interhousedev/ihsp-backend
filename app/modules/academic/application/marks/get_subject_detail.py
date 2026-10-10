@@ -173,6 +173,7 @@ def _lesson(
         lesson.attendance_roster,
         lesson.attendance_absent,
         lesson.attendance_excused,
+        lesson.attendance_late,
     )
     item["homework_text"] = lesson.homework_text
     return item

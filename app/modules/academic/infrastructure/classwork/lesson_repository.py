@@ -26,6 +26,7 @@ _SAVE_ATTENDANCE = sa.text("""
     UPDATE academic.lessons SET
       attendance_roster = :roster,
       attendance_absent = :absent,
+      attendance_late = :late,
       attendance_excused = (
         SELECT NULLIF(COALESCE(jsonb_object_agg(e.key, e.value), '{}'::jsonb),
                       '{}'::jsonb)
@@ -42,6 +43,7 @@ _SAVE_ATTENDANCE = sa.text("""
     """).bindparams(
     sa.bindparam("roster", type_=_UUIDS),
     sa.bindparam("absent", type_=_UUIDS),
+    sa.bindparam("late", type_=_UUIDS),
     sa.bindparam("absent_text", type_=_TEXTS),
     sa.bindparam("by", type_=sa.Uuid),
     sa.bindparam("at", type_=sa.DateTime(timezone=True)),
@@ -62,6 +64,11 @@ _TOGGLE = sa.text("""
                array_remove(COALESCE(attendance_absent, '{}'::uuid[]), :sid), :sid)
         ELSE array_remove(COALESCE(attendance_absent, '{}'::uuid[]), :sid)
       END,
+      attendance_late = CASE WHEN :late
+        THEN array_append(
+               array_remove(COALESCE(attendance_late, '{}'::uuid[]), :sid), :sid)
+        ELSE array_remove(COALESCE(attendance_late, '{}'::uuid[]), :sid)
+      END,
       attendance_excused = CASE WHEN :absent THEN attendance_excused
         ELSE NULLIF(attendance_excused - :sid_text, '{}'::jsonb)
       END,
@@ -77,6 +84,7 @@ _TOGGLE = sa.text("""
     sa.bindparam("sid", type_=sa.Uuid),
     sa.bindparam("sid_text", type_=sa.String),
     sa.bindparam("absent", type_=sa.Boolean),
+    sa.bindparam("late", type_=sa.Boolean),
     sa.bindparam("by", type_=sa.Uuid),
     sa.bindparam("at", type_=sa.DateTime(timezone=True)),
     sa.bindparam("source", type_=sa.String),
@@ -138,6 +146,7 @@ class SqlLessonRepository:
         base_version: int,
         roster: Sequence[UUID],
         absent: Sequence[UUID],
+        late: Sequence[UUID] = (),
         source: str,
         by: UUID,
         at: dt.datetime,
@@ -148,6 +157,7 @@ class SqlLessonRepository:
             {
                 "roster": list(roster),
                 "absent": list(absent),
+                "late": list(late),
                 "absent_text": [str(user_id) for user_id in absent],
                 "by": by,
                 "at": at,
@@ -164,6 +174,7 @@ class SqlLessonRepository:
         *,
         student_id: UUID,
         absent: bool,
+        late: bool = False,
         base_version: int,
         initial_roster: Sequence[UUID],
         source: str,
@@ -178,6 +189,7 @@ class SqlLessonRepository:
                 "sid": student_id,
                 "sid_text": str(student_id),
                 "absent": absent,
+                "late": late,
                 "by": by,
                 "at": at,
                 "source": source,

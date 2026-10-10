@@ -59,13 +59,13 @@ class StudyDays:
 
 
 def attendance_state(lesson: Lesson, student_id: UUID) -> str:
-    """present, absent, excused or not_taken for one student (WEB-9)."""
+    """present, late, absent, excused or not_taken for one student (WEB-9)."""
     if lesson.attendance_absent is None:
         return "not_taken"
     if student_id in lesson.attendance_absent:
         return "excused" if str(student_id) in lesson.excused_ids() else "absent"
     if student_id in (lesson.attendance_roster or ()):
-        return "present"
+        return "late" if student_id in (lesson.attendance_late or ()) else "present"
     return "not_taken"
 
 

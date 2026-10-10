@@ -148,7 +148,7 @@ class StudentLessonResponse(BaseModel):
     attachments: list[ResourceItemResponse]
     homework: HomeworkItemResponse | None
     my_mark: list[MarkItemResponse]
-    my_attendance: Literal["present", "absent", "excused", "not_taken"]
+    my_attendance: Literal["present", "late", "absent", "excused", "not_taken"]
     can_attach: bool
 
 

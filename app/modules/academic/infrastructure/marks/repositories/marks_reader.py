@@ -48,6 +48,7 @@ _LESSON_COLUMNS = (
     Lesson.attendance_roster,
     Lesson.attendance_absent,
     Lesson.attendance_excused,
+    Lesson.attendance_late,
     Lesson.kind,
     Lesson.emis_topic,
 )
@@ -78,6 +79,9 @@ def _lesson_row(r: Any) -> LessonRow:
             None if r.attendance_absent is None else tuple(r.attendance_absent)
         ),
         attendance_excused=r.attendance_excused,
+        attendance_late=(
+            None if r.attendance_late is None else tuple(r.attendance_late)
+        ),
         kind=r.kind,
         emis_topic=r.emis_topic,
     )
@@ -279,6 +283,7 @@ class SqlMarksReader:
                 Lesson.subject_id,
                 sa.func.count().filter(has_uuid(Lesson.attendance_absent, student_id)),
                 sa.func.count(),
+                sa.func.count().filter(has_uuid(Lesson.attendance_late, student_id)),
             )
             .where(has_uuid(Lesson.attendance_roster, student_id))
             .group_by(Lesson.subject_id)
@@ -288,7 +293,9 @@ class SqlMarksReader:
         if end is not None:
             stmt = stmt.where(Lesson.date <= end)
         return {
-            row[0]: AttendanceCount(absences=row[1], with_attendance=row[2])
+            row[0]: AttendanceCount(
+                absences=row[1], with_attendance=row[2], lates=row[3]
+            )
             for row in (await self.session.execute(stmt)).all()
         }
 

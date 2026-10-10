@@ -20,6 +20,7 @@ async def submit_attendance(
         lesson_id=id,
         actor=actor,
         absent=body.absent,
+        late=body.late,
         present_unassigned=body.present_unassigned,
         base_version=body.base_version,
         source="staff",

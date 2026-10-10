@@ -357,3 +357,40 @@ async def test_students_who_left_the_group_stay_in_the_saved_sheet(env: Env) -> 
     assert any(i["user_id"] == str(w.bobur.id) for i in sheet["roster"])
     row = await lesson_row(env.maker, lesson_id)
     assert w.bobur.id in (row.attendance_roster or [])
+
+
+async def test_late_students_are_saved_apart_from_absent(env: Env) -> None:
+    """Late is its own list: present for every rate, shown on the sheet."""
+    w = env.world
+    lesson_id = await add_lesson(env.maker, w)
+
+    sheet = await env.services.submit_attendance.execute(
+        lesson_id=lesson_id,
+        actor=env.teacher,
+        absent=[w.bobur.id],
+        late=[w.aziz.id],
+        base_version=0,
+        source="staff",
+    )
+
+    row = await lesson_row(env.maker, lesson_id)
+    assert row.attendance_absent == [w.bobur.id]
+    assert row.attendance_late == [w.aziz.id]
+    assert [item["late"] for item in sheet["roster"]] == [True, False, False]
+    assert [item["absent"] for item in sheet["roster"]] == [False, True, False]
+
+
+async def test_a_student_cannot_be_absent_and_late(env: Env) -> None:
+    """The lists are disjoint."""
+    w = env.world
+    lesson_id = await add_lesson(env.maker, w)
+
+    with pytest.raises(AbsentOutsideRosterError):
+        await env.services.submit_attendance.execute(
+            lesson_id=lesson_id,
+            actor=env.teacher,
+            absent=[w.aziz.id],
+            late=[w.aziz.id],
+            base_version=0,
+            source="staff",
+        )

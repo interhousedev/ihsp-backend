@@ -47,6 +47,7 @@ def lesson_select() -> sa.Select[Any]:
             row.attendance_roster,
             row.attendance_absent,
             row.attendance_excused,
+            row.attendance_late,
             row.attendance_version,
             row.attendance_by,
             row.attendance_at,
@@ -104,6 +105,9 @@ def _to_lesson(row: Any, names_by_id: dict[UUID, str]) -> Lesson:
             None if row.attendance_absent is None else tuple(row.attendance_absent)
         ),
         attendance_excused=row.attendance_excused,
+        attendance_late=(
+            None if row.attendance_late is None else tuple(row.attendance_late)
+        ),
         attendance_version=row.attendance_version,
         attendance_by=row.attendance_by,
         attendance_at=row.attendance_at,

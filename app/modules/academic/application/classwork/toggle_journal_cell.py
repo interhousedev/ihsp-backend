@@ -50,6 +50,7 @@ class ToggleJournalCell:
         lesson_id: UUID,
         student_id: UUID,
         absent: bool,
+        late: bool = False,
         base_version: int,
         actor: Actor,
     ) -> int:
@@ -57,18 +58,23 @@ class ToggleJournalCell:
         today = local_today(self.clock)
         async with self.uow_factory() as uow:
             lesson = await require_lesson(uow, lesson_id)
-            late = ensure_attendance_editable(lesson, actor, today, self.edit_days)
+            after_window = ensure_attendance_editable(
+                lesson, actor, today, self.edit_days
+            )
+            if absent and late:
+                raise AbsentOutsideRosterError(params={"user_ids": [str(student_id)]})
             roster = await self.roster_loader.load(uow, lesson)
             expected, unassigned = roster.expected_ids(), roster.unassigned_ids()
             if student_id not in expected | unassigned:
                 raise AbsentOutsideRosterError(params={"user_ids": [str(student_id)]})
             initial = [s.user_id for s in roster.expected]
-            if absent and student_id in unassigned:
+            if (absent or late) and student_id in unassigned:
                 initial.append(student_id)
             version = await uow.lessons.toggle_absent(
                 lesson_id,
                 student_id=student_id,
                 absent=absent,
+                late=late,
                 base_version=base_version,
                 initial_roster=initial,
                 source=effective_source("staff", lesson, actor),
@@ -80,7 +86,7 @@ class ToggleJournalCell:
                 raise conflict_with(
                     await self.sheets.build(fresh, roster, actor, today)
                 )
-            if late:
+            if after_window:
                 uow.audit(
                     AuditDraft(
                         type="attendance.late_edit",

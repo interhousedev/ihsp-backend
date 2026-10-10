@@ -176,3 +176,29 @@ async def test_administration_toggle_after_the_window_is_audited(env: Env) -> No
     row = await lesson_row(env.maker, lesson_id)
     assert row.attendance_source == "admin"
     assert [a.type for a in env.outbox.audits] == ["attendance.late_edit"]
+
+
+async def test_toggle_late_marks_the_student_late_not_absent(env: Env) -> None:
+    """A late cell is saved in the late list and clears the absence."""
+    w = env.world
+    lesson_id = await add_lesson(env.maker, w)
+    await env.services.toggle_journal_cell.execute(
+        lesson_id=lesson_id,
+        student_id=w.aziz.id,
+        absent=True,
+        base_version=0,
+        actor=env.teacher,
+    )
+
+    await env.services.toggle_journal_cell.execute(
+        lesson_id=lesson_id,
+        student_id=w.aziz.id,
+        absent=False,
+        late=True,
+        base_version=1,
+        actor=env.teacher,
+    )
+
+    row = await lesson_row(env.maker, lesson_id)
+    assert row.attendance_absent == []
+    assert row.attendance_late == [w.aziz.id]

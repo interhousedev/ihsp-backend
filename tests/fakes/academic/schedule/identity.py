@@ -5,7 +5,7 @@ from typing import Any, Literal
 from uuid import UUID
 
 from app.shared.actor import Role
-from app.shared.contracts.identity import UserRef, UserStatus
+from app.shared.contracts.identity import UserPreferences, UserRef, UserStatus
 from app.shared.ids import new_id
 
 
@@ -41,6 +41,7 @@ class FakeIdentity:
     def __init__(self) -> None:
         """Start empty."""
         self.users: dict[UUID, UserRef] = {}
+        self.prefs: dict[UUID, UserPreferences] = {}
 
     def add(self, user: UserRef) -> UserRef:
         """Register a user."""
@@ -54,6 +55,10 @@ class FakeIdentity:
     async def get_users(self, user_ids: Sequence[UUID]) -> dict[UUID, UserRef]:
         """Return the known users among the ids."""
         return {uid: self.users[uid] for uid in user_ids if uid in self.users}
+
+    async def get_preferences(self, user_id: UUID) -> UserPreferences:
+        """Return stored or default preferences."""
+        return self.prefs.get(user_id, UserPreferences())
 
     async def user_ids_with_roles(self, roles: Sequence[Role]) -> list[UUID]:
         """Return users holding any of the roles."""
@@ -69,6 +74,17 @@ class FakeIdentityCommands:
         self.created: list[dict[str, Any]] = []
         self.teachers: list[dict[str, Any]] = []
         self._emis_teachers: dict[int, UserRef] = {}
+
+    async def update_preferences(
+        self, user_id: UUID, patch: dict[str, Any]
+    ) -> UserPreferences:
+        """Merge a preferences patch into the directory."""
+        current = self.directory.prefs.get(user_id, UserPreferences())
+        merged = UserPreferences.model_validate(
+            {**current.model_dump(mode="json"), **patch}
+        )
+        self.directory.prefs[user_id] = merged
+        return merged
 
     async def create_unregistered_student(
         self,

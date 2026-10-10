@@ -62,6 +62,7 @@ class SubmitAttendance:
         lesson_id: UUID,
         actor: Actor,
         absent: Sequence[UUID],
+        late: Sequence[UUID] = (),
         present_unassigned: Sequence[UUID] = (),
         base_version: int,
         source: Source,
@@ -74,17 +75,20 @@ class SubmitAttendance:
         today = local_today(self.clock)
         async with self.uow_factory() as uow:
             lesson = await require_lesson(uow, lesson_id)
-            late = ensure_attendance_editable(lesson, actor, today, self.edit_days)
+            after_window = ensure_attendance_editable(
+                lesson, actor, today, self.edit_days
+            )
             roster = await self.roster_loader.load(uow, lesson)
             if base_version != lesson.attendance_version:
                 sheet = await self.sheets.build(lesson, roster, actor, today)
                 raise conflict_with(sheet)
-            snapshot = build_snapshot(roster, absent, present_unassigned)
+            snapshot = build_snapshot(roster, absent, present_unassigned, late)
             version = await uow.lessons.save_attendance(
                 lesson_id,
                 base_version=base_version,
                 roster=snapshot,
                 absent=list(absent),
+                late=list(late),
                 source=effective_source(source, lesson, actor),
                 by=actor.user_id,
                 at=self.clock.now(),
@@ -93,7 +97,7 @@ class SubmitAttendance:
                 fresh = await require_lesson(uow, lesson_id)
                 sheet = await self.sheets.build(fresh, roster, actor, today)
                 raise conflict_with(sheet)
-            if late:
+            if after_window:
                 uow.audit(
                     AuditDraft(
                         type="attendance.late_edit",

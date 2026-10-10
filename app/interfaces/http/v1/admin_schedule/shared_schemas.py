@@ -76,3 +76,4 @@ class LessonItemResponse(ApiModel):
     has_homework: bool
     attendance_submitted: bool
     absent_count: int | None = None
+    late_count: int | None = None

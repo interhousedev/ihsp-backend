@@ -50,6 +50,13 @@ class Lesson(IdMixin, TimestampMixin, Base):
         CheckConstraint(
             "attendance_absent <@ attendance_roster", name="attendance_subset"
         ),
+        CheckConstraint(
+            "attendance_late <@ attendance_roster", name="attendance_late_subset"
+        ),
+        CheckConstraint(
+            "NOT (attendance_late && attendance_absent)",
+            name="attendance_late_not_absent",
+        ),
         CheckConstraint("ends_at > starts_at", name="time_range"),
         ExcludeConstraint(
             ("teacher_id", "="),
@@ -133,6 +140,7 @@ class Lesson(IdMixin, TimestampMixin, Base):
     )
     attendance_roster: Mapped[list[UUID] | None] = mapped_column(ARRAY(Uuid))
     attendance_absent: Mapped[list[UUID] | None] = mapped_column(ARRAY(Uuid))
+    attendance_late: Mapped[list[UUID] | None] = mapped_column(ARRAY(Uuid))
     attendance_excused: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
     attendance_version: Mapped[int] = mapped_column(Integer, server_default=text("0"))
     attendance_by: Mapped[UUID | None] = mapped_column(Uuid)

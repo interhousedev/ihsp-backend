@@ -101,5 +101,6 @@ def _card(
         "semester_mark": None if row is None else num(row.value),
         "emis_rating": None if row is None else row.emis_rating,
         "absences": 0 if count is None else count.absences,
+        "lates": 0 if count is None else count.lates,
         "next_lesson": None if lesson is None else view.lesson_item(lesson),
     }
