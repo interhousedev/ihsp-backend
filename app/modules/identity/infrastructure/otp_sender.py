@@ -41,7 +41,7 @@ class ChannelOtpSender:
         redis: Redis,
         clock: Clock,
         id_app_url: str,
-        app_name: str = "IHSP",
+        app_name: str = "IHT",
     ) -> None:
         """Keep the collaborators; ``telegram`` is None until the sender is wired."""
         self._uow_factory = uow_factory

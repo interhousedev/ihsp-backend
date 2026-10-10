@@ -17,6 +17,7 @@ ADMIN_USER_FIELDS = {
     "recovery_email",
     "mail_suspended",
     "password_change_required",
+    "photo_url",
     "created_at",
     "last_login_at",
 }
@@ -58,7 +59,12 @@ async def test_users_list_and_detail(api: Api) -> None:
     assert [u["login"] for u in listed.json()["items"]] == ["s.tudent"]
     assert set(listed.json()["items"][0]) == ADMIN_USER_FIELDS
     body = detail.json()
-    assert set(body) == ADMIN_USER_FIELDS | {"telegram", "sessions", "recent_audit"}
+    assert set(body) == ADMIN_USER_FIELDS | {
+        "telegram",
+        "sessions",
+        "recent_audit",
+        "mailbox",
+    }
     assert len(body["sessions"]) == 1 and body["telegram"][0]["username"] == "stud"
 
 

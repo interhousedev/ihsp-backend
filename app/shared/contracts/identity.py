@@ -153,6 +153,7 @@ class UserRef:
     status: UserStatus
     locale: str
     emis_status: Literal["active", "needs_reauth"] | None
+    photo_file_id: UUID | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -179,6 +180,10 @@ class IdentityDirectory(Protocol):
 
     async def get_preferences(self, user_id: UUID) -> UserPreferences:
         """Return the user's preferences with defaults filled in."""
+        ...
+
+    async def photo_urls(self, user_ids: Sequence[UUID]) -> dict[UUID, str]:
+        """Return short-lived photo URLs; users without a photo are left out."""
         ...
 
     async def user_by_telegram(self, telegram_user_id: int) -> UserRef | None:

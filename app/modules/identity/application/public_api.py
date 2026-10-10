@@ -8,6 +8,7 @@ from uuid import UUID
 from app.modules.identity.application.audit_drafts import make_audit
 from app.modules.identity.application.ensure_teacher import ensure_teacher
 from app.modules.identity.application.load_user import require_user
+from app.modules.identity.application.photo_files import PhotoUrls
 from app.modules.identity.application.revoke_access import AccessRevoker
 from app.modules.identity.application.update_preferences import UpdatePreferences
 from app.modules.identity.domain.audit_event import TELEGRAM_UNLINKED
@@ -35,6 +36,7 @@ class IdentityDirectoryImpl:
 
     uow_factory: UowFactory
     clock: Clock
+    photos: PhotoUrls
 
     async def get_user(self, user_id: UUID) -> UserRef | None:
         """Return the user or None."""
@@ -53,6 +55,14 @@ class IdentityDirectoryImpl:
         async with self.uow_factory() as uow:
             user = await uow.users.get(user_id)
         return UserPreferences.model_validate(user.preferences if user else {})
+
+    async def photo_urls(self, user_ids: Sequence[UUID]) -> dict[UUID, str]:
+        """Return short-lived photo URLs; users without a photo are left out."""
+        if not user_ids:
+            return {}
+        async with self.uow_factory() as uow:
+            users = await uow.users.get_many(user_ids)
+        return await self.photos.of_users(users.values())
 
     async def user_by_telegram(self, telegram_user_id: int) -> UserRef | None:
         """Return the user a Telegram account is linked to."""

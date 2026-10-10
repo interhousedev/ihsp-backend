@@ -10,6 +10,7 @@ from app.shared.i18n.core import I18nCore
 from app.shared.rate_limit import RateLimiter
 from app.shared.wiring import ModuleDeps
 from tests.fakes.clock import FixedClock
+from tests.fakes.files.services import build_files_fakes
 from tests.fakes.identity.hydra import FakeHydra
 from tests.fakes.identity.senders import (
     FakeEmailSender,
@@ -36,6 +37,7 @@ def build_world(
     otp = FakeOtpSender()
     email = FakeEmailSender()
     telegram = FakeTelegramSender()
+    files = build_files_fakes(clock, kicker)
     deps = ModuleDeps(
         settings=settings,
         clock=clock,
@@ -51,6 +53,7 @@ def build_world(
     auth = build_auth(
         deps,
         hydra=hydra,
+        files=files.services.public,
         telegram_sender=telegram,
         email_sender=email,
         otp_sender=otp,
@@ -67,4 +70,5 @@ def build_world(
         redis=redis,
         kicker=kicker,
         telegram=telegram,
+        files=files,
     )

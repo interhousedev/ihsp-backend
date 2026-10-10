@@ -4,6 +4,9 @@ from app.interfaces.http.v1.admin_users.schemas import (
     AdminUserDetailResponse,
     AdminUserResponse,
 )
+from app.interfaces.http.v1.admin_users.users.handlers.delete_photo import (
+    delete_photo,
+)
 from app.interfaces.http.v1.admin_users.users.handlers.get_user import get_user
 from app.interfaces.http.v1.admin_users.users.handlers.get_users import get_users
 from app.interfaces.http.v1.admin_users.users.handlers.patch_user import patch_user
@@ -30,7 +33,11 @@ from app.interfaces.http.v1.admin_users.users.handlers.post_set_password import 
 from app.interfaces.http.v1.admin_users.users.handlers.post_unblock import (
     post_unblock,
 )
-from app.interfaces.http.v1.admin_users.users.schemas import ActivationUrlResponse
+from app.interfaces.http.v1.admin_users.users.handlers.put_photo import put_photo
+from app.interfaces.http.v1.admin_users.users.schemas import (
+    ActivationUrlResponse,
+    UserPhotoResponse,
+)
 from app.shared.pagination import Page
 
 from fastapi import APIRouter, Response
@@ -93,4 +100,10 @@ router.add_api_route(
     post_mail_resume,
     methods=["POST"],
     response_model=AdminUserResponse,
+)
+router.add_api_route(
+    "/{id}/photo", put_photo, methods=["PUT"], response_model=UserPhotoResponse
+)
+router.add_api_route(
+    "/{id}/photo", delete_photo, methods=["DELETE"], response_model=UserPhotoResponse
 )

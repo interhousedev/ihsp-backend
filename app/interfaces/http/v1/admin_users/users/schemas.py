@@ -48,3 +48,11 @@ class SetPasswordBody(BaseModel):
         description="Ask the user to change it at the next login "
         "(when IHSP_FEATURES__CHANGE_PASSWORD_ON_LOGIN is on).",
     )
+
+
+class UserPhotoResponse(BaseModel):
+    """The profile photo of a user after it was set or removed."""
+
+    photo_url: str | None = Field(
+        description="Link to the photo, valid for an hour; null when there is none."
+    )

@@ -15,6 +15,7 @@ from app.shared.i18n.core import I18nCore
 from app.shared.rate_limit import RateLimiter
 from app.shared.wiring import ModuleDeps
 from tests.fakes.clock import FixedClock
+from tests.fakes.files.services import build_files_fakes
 from tests.fakes.identity.hydra import FakeHydra
 from tests.fakes.identity.senders import FakeEmailSender, FakeOtpSender
 from tests.fakes.outbox import InMemoryOutbox
@@ -70,6 +71,7 @@ def sql_auth(
     auth = build_auth(
         deps,
         hydra=hydra,
+        files=build_files_fakes(clock, kicker).services.public,
         email_sender=email,
         otp_sender=otp,
         hasher=Argon2PasswordHasher(PasswordHasher.from_parameters(profiles.CHEAPEST)),

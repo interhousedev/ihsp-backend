@@ -109,3 +109,5 @@ class User(IdMixin, TimestampMixin, Base):
     )
     otp_reset_request_id: Mapped[UUID | None] = mapped_column(Uuid)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Profile photo: a file of the files module (a plain id, no foreign key).
+    photo_file_id: Mapped[UUID | None] = mapped_column(Uuid)

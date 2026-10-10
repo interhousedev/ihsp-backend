@@ -15,6 +15,7 @@ from app.modules.identity.ports.hydra_gateway import HydraGateway
 from app.modules.identity.wiring_auth import AuthServices, build_auth
 from app.modules.identity.wiring_emis import EmisServices, build_emis
 from app.shared.contracts.academic import AcademicEnrollment
+from app.shared.contracts.files import FilesApi
 from app.shared.contracts.identity import IdentityCommands, IdentityDirectory
 from app.shared.contracts.notify import TelegramSender
 from app.shared.wiring import ModuleDeps
@@ -65,6 +66,7 @@ class IdentityModule:
 def build(
     deps: ModuleDeps,
     *,
+    files: FilesApi,
     hydra: HydraGateway | None = None,
     telegram_sender: TelegramSender | None = None,
     email_sender: EmailSender | None = None,
@@ -74,9 +76,12 @@ def build(
 
     Without ``academic_enrollment`` the EMIS part is left out; call
     ``attach_emis`` after the academic schedule exists (processes that need it).
+    ``files`` stores the profile photos; the composition root passes a late-bound
+    proxy because the files module is built after identity.
     """
     auth = build_auth(
         deps,
+        files=files,
         hydra=hydra or build_hydra_admin(deps.settings),
         telegram_sender=telegram_sender,
         email_sender=email_sender,

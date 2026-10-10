@@ -21,6 +21,7 @@ from app.shared.contracts.emis import (
     EmisAuthFailed,
     EmisClass,
     EmisClassHour,
+    EmisCurriculum,
     EmisProfile,
     EmisSubject,
     EmisSubjectRatings,
@@ -56,6 +57,10 @@ class EmisGatewayImpl:
     async def subjects(self, user_id: UUID) -> list[EmisSubject]:
         """Return the student's curriculum."""
         return await self._call(user_id, self._emis.curriculum)
+
+    async def curriculum(self, user_id: UUID) -> EmisCurriculum:
+        """Return the whole curriculum of the student: semesters, hours, exams."""
+        return await self._call(user_id, self._emis.curriculum_detail)
 
     async def ratings(
         self, user_id: UUID, emis_subject_id: int, semester: int

@@ -18,6 +18,7 @@ from app.shared.actor import Role
 from app.shared.contracts.identity import UserStatus
 from app.shared.ids import new_id
 from tests.fakes.clock import FixedClock
+from tests.fakes.files.services import FilesFakes
 from tests.fakes.identity.hydra import FakeHydra
 from tests.fakes.identity.senders import (
     FakeEmailSender,
@@ -43,6 +44,7 @@ class World:
     redis: Any
     kicker: Any
     telegram: FakeTelegramSender
+    files: FilesFakes
 
     def uow(self) -> FakeIdentityUnitOfWork:
         """A unit of work over the same store."""

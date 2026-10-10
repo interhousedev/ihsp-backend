@@ -1,16 +1,20 @@
 """Handlers of the teacher pages and teacher contacts."""
 
+import datetime as dt
 from typing import Annotated
 from uuid import UUID
 
 from app.bootstrap.container import Container
 from app.interfaces.http.dependencies import get_container, require_roles
-from app.interfaces.http.v1.me_teachers.schemas import MyTeacherResponse
+from app.interfaces.http.v1.me_teachers.schemas import (
+    MyTeacherResponse,
+    TeacherSlotResponse,
+)
 from app.shared.actor import Actor, Role
 from app.shared.base_error import NotFoundError
 from app.shared.contracts.identity import TeacherContacts
 
-from fastapi import Depends
+from fastapi import Depends, Query
 
 ContainerDep = Annotated[Container, Depends(get_container)]
 StudentActor = Annotated[Actor, Depends(require_roles(Role.STUDENT))]
@@ -24,6 +28,28 @@ async def get_my_teachers(
     """Teachers of the student's groups with contacts, status and the week."""
     data = await container.academic.schedule.get_my_teachers.execute(actor)
     return [MyTeacherResponse.of(item) for item in data]
+
+
+async def get_my_teacher(
+    teacher_id: UUID, container: ContainerDep, actor: StudentActor
+) -> MyTeacherResponse:
+    """One teacher of the student: 404 if the teacher does not teach the caller."""
+    data = await container.academic.schedule.get_my_teacher.execute(actor, teacher_id)
+    return MyTeacherResponse.of(data)
+
+
+async def get_my_teacher_timetable(
+    teacher_id: UUID,
+    container: ContainerDep,
+    actor: StudentActor,
+    from_: Annotated[dt.date | None, Query(alias="from")] = None,
+    to: Annotated[dt.date | None, Query()] = None,
+) -> list[TeacherSlotResponse]:
+    """All lessons of the teacher between two dates (default: a week from today)."""
+    slots = await container.academic.schedule.get_teacher_timetable.execute(
+        actor, teacher_id, from_, to
+    )
+    return [TeacherSlotResponse.of(slot) for slot in slots]
 
 
 async def _read(container: Container, user_id: UUID) -> TeacherContacts:

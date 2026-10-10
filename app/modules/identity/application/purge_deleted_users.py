@@ -24,6 +24,7 @@ def anonymize(user: User) -> None:
     user.recovery_email = None
     user.recovery_email_verified_at = None
     user.preferences = {}
+    user.photo_file_id = None  # the file goes with the owner's other files
     user.emis_student_id = None
     user.emis_vault_ref = None
     user.emis_status = None

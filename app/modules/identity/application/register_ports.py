@@ -15,6 +15,7 @@ from app.modules.identity.application.register_models import (
 from app.shared.contracts.emis import (
     EmisClass,
     EmisClassHour,
+    EmisCurriculum,
     EmisProfile,
     EmisSubject,
     EmisSubjectRatings,
@@ -50,6 +51,10 @@ class EmisApi(EmisTimetableSource, Protocol):
 
     async def curriculum(self, token: str) -> list[EmisSubject]:
         """Return the subjects of the student's curriculum."""
+        ...
+
+    async def curriculum_detail(self, token: str) -> EmisCurriculum:
+        """Return the whole curriculum: semesters, hours per subject, exams."""
         ...
 
     async def ratings(

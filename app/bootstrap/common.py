@@ -64,6 +64,7 @@ from app.settings import Settings
 from app.shared.clock import Clock
 from app.shared.contracts.ai import AiQueries, LlmGateway
 from app.shared.contracts.embeddings import EmbeddingIndex
+from app.shared.contracts.files import FilesApi
 from app.shared.contracts.notebooks import NotebooksQueries
 from app.shared.contracts.notify import TelegramSender
 from app.shared.features import Feature, is_enabled
@@ -96,7 +97,8 @@ class ProcessPlan:
 PLANS: dict[str, ProcessPlan] = {
     "all": ProcessPlan(True, True, True, True, True, True),
     "cli": ProcessPlan(True, True, True, True, True, True),
-    "identity": ProcessPlan(True, True, False, False, False, False),
+    # Files too: Administration sets profile photos (`/v1/admin/users/{id}/photo`).
+    "identity": ProcessPlan(True, True, True, False, False, False),
     "api": ProcessPlan(False, False, True, True, True, True),
     "bot": ProcessPlan(False, False, True, True, True, False),
     "mail": ProcessPlan(False, False, True, True, False, False),
@@ -158,6 +160,8 @@ class _Assembler:
         self.notebooks_proxy: LazyProxy[NotebooksQueries] = LazyProxy(
             "notebooks (links)"
         )
+        # Identity stores profile photos in files, which needs the academic terms.
+        self.files_proxy: LazyProxy[FilesApi] = LazyProxy("files (identity photos)")
         self.llm: LlmGateway | None = overrides.llm
         self.deps = make_deps(container)
 
@@ -209,6 +213,7 @@ class _Assembler:
             hydra = admin
         identity = build_identity(
             self.deps,
+            files=self.files_proxy.view,
             hydra=hydra,
             telegram_sender=c.telegram,
             email_sender=self.overrides.email_sender,
@@ -248,6 +253,7 @@ class _Assembler:
             sniffer=self.make_sniffer(),
         )
         c.files = files
+        self.files_proxy.bind(files.public)
         self.add_closer(files.close)
 
     def make_sniffer(self) -> ContentSniffer | None:
@@ -302,6 +308,7 @@ class _Assembler:
             self.deps,
             schedule=schedule,
             emis=source,
+            identity=identity.directory,
             identity_commands=identity.commands,
             urls=links.public,
         )

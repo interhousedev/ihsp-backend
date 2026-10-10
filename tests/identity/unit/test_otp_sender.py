@@ -16,7 +16,7 @@ def build(world: World, i18n: I18nCore, *, telegram: bool = True) -> ChannelOtpS
         redis=world.redis,
         clock=world.clock,
         id_app_url="https://id.example",
-        app_name="IHSP",
+        app_name="IHT",
     )
 
 

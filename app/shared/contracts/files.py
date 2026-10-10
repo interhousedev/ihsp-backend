@@ -30,6 +30,7 @@ class FilePurpose(StrEnum):
     LIBRARY_COVER = "library_cover"
     LIBRARY_MATERIAL = "library_material"
     LMS_VIDEO = "lms_video"
+    USER_PHOTO = "user_photo"
 
 
 @dataclass(frozen=True, slots=True)

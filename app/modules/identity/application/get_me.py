@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from app.modules.identity.application.load_user import require_user
+from app.modules.identity.application.photo_files import PhotoUrls
 from app.modules.identity.domain.telegram_link import TelegramLink
 from app.modules.identity.domain.user import User
 from app.modules.identity.ports.unit_of_work import UowFactory
@@ -16,6 +17,7 @@ class MeView:
     user: User
     telegram: list[TelegramLink]
     mailbox: str | None
+    photo_url: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,13 +26,19 @@ class GetMe:
 
     uow_factory: UowFactory
     mail_domain: str
+    photos: PhotoUrls
 
     async def execute(self, actor: Actor) -> MeView:
         """Return the account view."""
         async with self.uow_factory() as uow:
             user = await require_user(uow, actor.user_id)
             links = await uow.telegram_links.list_for_user(user.id)
-        return MeView(user=user, telegram=links, mailbox=self.mailbox_of(user))
+        return MeView(
+            user=user,
+            telegram=links,
+            mailbox=self.mailbox_of(user),
+            photo_url=await self.photos.url(user.photo_file_id),
+        )
 
     def mailbox_of(self, user: User) -> str | None:
         """Students get {login}@mail domain (MAIL-1)."""

@@ -27,6 +27,7 @@ class UserMeResponse(BaseModel):
     otp_via_email: bool
     emis_status: Literal["active", "needs_reauth"] | None
     mailbox: str | None
+    photo_url: str | None
     preferences: UserPreferences
     telegram: list[TelegramAccountResponse]
 
@@ -47,6 +48,7 @@ class UserMeResponse(BaseModel):
             otp_via_email=user.otp_via_email,
             emis_status=user.emis_status,
             mailbox=view.mailbox,
+            photo_url=view.photo_url,
             preferences=UserPreferences.model_validate(user.preferences),
             telegram=[TelegramAccountResponse.of(link) for link in view.telegram],
         )

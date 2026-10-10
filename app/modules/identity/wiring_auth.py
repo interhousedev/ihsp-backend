@@ -68,12 +68,14 @@ from app.modules.identity.application.password_authenticator import (
     PasswordAuthenticator,
 )
 from app.modules.identity.application.passwordless_otp_check import PasswordlessOtpCheck
+from app.modules.identity.application.photo_files import PhotoUrls
 from app.modules.identity.application.public_api import (
     IdentityCommandsImpl,
     IdentityDirectoryImpl,
 )
 from app.modules.identity.application.purge_deleted_users import PurgeDeletedUsers
 from app.modules.identity.application.refresh_tokens import RefreshTokens
+from app.modules.identity.application.remove_user_photo import RemoveUserPhoto
 from app.modules.identity.application.request_email_change import RequestEmailChange
 from app.modules.identity.application.request_login_otp import RequestLoginOtp
 from app.modules.identity.application.request_otp_reset import RequestOtpReset
@@ -92,6 +94,7 @@ from app.modules.identity.application.route_login_request import RouteLoginReque
 from app.modules.identity.application.route_logout_request import RouteLogoutRequest
 from app.modules.identity.application.send_consent_otp import SendConsentOtp
 from app.modules.identity.application.send_login_reminder import SendLoginReminder
+from app.modules.identity.application.set_user_photo import SetUserPhoto
 from app.modules.identity.application.start_login_session import LoginSessionStarter
 from app.modules.identity.application.step_up import StepUp
 from app.modules.identity.application.suspend_mail import SuspendMail
@@ -136,6 +139,7 @@ from app.modules.identity.ports.init_data_verifier import InitDataVerifier
 from app.modules.identity.ports.otp_sender import OtpSender
 from app.modules.identity.ports.password_hasher import PasswordHasher
 from app.modules.identity.ports.unit_of_work import UowFactory
+from app.shared.contracts.files import FilesApi
 from app.shared.contracts.notify import TelegramSender
 from app.shared.features import Feature, is_enabled
 from app.shared.wiring import ModuleDeps
@@ -158,6 +162,7 @@ class AuthServices:
     hasher: PasswordHasher
     signer: JoseAssertionSigner
     uow_factory: UowFactory
+    photo_urls: PhotoUrls
     # - - - Login app - - -
     get_login_info: GetLoginInfo
     log_in_with_password: LogInWithPassword
@@ -229,6 +234,8 @@ class AuthServices:
     admin_reset_password: AdminResetPassword
     admin_set_password: AdminSetPassword
     update_user: UpdateUser
+    set_user_photo: SetUserPhoto
+    remove_user_photo: RemoveUserPhoto
     admin_reset_otp: AdminResetOtp
     suspend_mail: SuspendMail
     resume_mail: ResumeMail
@@ -244,6 +251,7 @@ def build_auth(
     deps: ModuleDeps,
     *,
     hydra: HydraGateway,
+    files: FilesApi,
     telegram_sender: TelegramSender | None = None,
     email_sender: EmailSender | None = None,
     hasher: PasswordHasher | None = None,
@@ -255,6 +263,8 @@ def build_auth(
 
     ``telegram_sender`` (B8's aiogram sender) is wired by I1; without it codes go
     to email only. The other optional arguments replace infrastructure in tests.
+    ``files`` holds the profile photos; it may be a late-bound proxy (the files
+    module needs the academic terms, which need identity).
     """
     settings, clock, redis = deps.settings, deps.clock, deps.redis
     uow_factory = uow_factory or make_uow_factory(deps)
@@ -305,6 +315,7 @@ def build_auth(
     change_roles = ChangeRoles(uow_factory=uow_factory, revoker=revoker)
     update_prefs = UpdatePreferences(uow_factory=uow_factory)
     creator = CreateStaffAccount(uow_factory=uow_factory, links=links)
+    photo_urls = PhotoUrls(files=files)
 
     async def load_epoch(user_id: UUID) -> int | None:
         async with uow_factory() as uow:
@@ -336,7 +347,9 @@ def build_auth(
         failures_per_day=limits.otp_failures_per_day,
     )
     return AuthServices(
-        directory=IdentityDirectoryImpl(uow_factory=uow_factory, clock=clock),
+        directory=IdentityDirectoryImpl(
+            uow_factory=uow_factory, clock=clock, photos=photo_urls
+        ),
         commands=IdentityCommandsImpl(
             uow_factory=uow_factory,
             clock=clock,
@@ -358,6 +371,7 @@ def build_auth(
         hasher=hasher,
         signer=signer,
         uow_factory=uow_factory,
+        photo_urls=photo_urls,
         get_login_info=login_info,
         log_in_with_password=LogInWithPassword(
             uow_factory=uow_factory,
@@ -448,7 +462,9 @@ def build_auth(
             max_age=init_max_age,
         ),
         get_me=GetMe(
-            uow_factory=uow_factory, mail_domain=settings.smtp_out.mail_domain
+            uow_factory=uow_factory,
+            mail_domain=settings.smtp_out.mail_domain,
+            photos=photo_urls,
         ),
         update_preferences=update_prefs,
         change_password=ChangePassword(
@@ -555,6 +571,10 @@ def build_auth(
             uow_factory=uow_factory, hasher=hasher, revoker=revoker
         ),
         update_user=UpdateUser(uow_factory=uow_factory, links=links, clock=clock),
+        set_user_photo=SetUserPhoto(
+            uow_factory=uow_factory, files=files, urls=photo_urls
+        ),
+        remove_user_photo=RemoveUserPhoto(uow_factory=uow_factory, files=files),
         admin_reset_otp=AdminResetOtp(uow_factory=uow_factory),
         suspend_mail=SuspendMail(uow_factory=uow_factory, clock=clock),
         resume_mail=ResumeMail(uow_factory=uow_factory),

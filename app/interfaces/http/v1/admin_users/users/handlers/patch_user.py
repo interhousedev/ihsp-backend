@@ -2,6 +2,7 @@
 
 from uuid import UUID
 
+from app.interfaces.http.v1.admin_users.photos import user_response
 from app.interfaces.http.v1.admin_users.schemas import AdminUserResponse
 from app.interfaces.http.v1.admin_users.users.schemas import UserPatchBody
 from app.interfaces.http.v1.id.dependencies import AdminDep, AuthDep, CtxDep
@@ -20,4 +21,4 @@ async def patch_user(
         email=str(body.email) if body.email else None,
         ctx=ctx,
     )
-    return AdminUserResponse.of(user)
+    return await user_response(auth, user)

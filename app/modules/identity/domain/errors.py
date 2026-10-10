@@ -192,3 +192,26 @@ class LoginTakenError(ConflictError):
 
     code = "id/login-taken"
     message_key = "id-login-taken"
+
+
+class PhotoEmptyError(ValidationFailedError):
+    """The uploaded photo has no content."""
+
+    code = "id/photo-empty"
+    message_key = "id-photo-empty"
+
+
+class PhotoTooLargeError(ValidationFailedError):
+    """The photo is bigger than the limit; ``params.max_mb`` says how much."""
+
+    code = "id/photo-too-large"
+    status = 413
+    message_key = "id-photo-too-large"
+
+
+class PhotoTypeNotAllowedError(ValidationFailedError):
+    """The photo is neither a JPEG nor a PNG image."""
+
+    code = "id/photo-type-not-allowed"
+    status = 422
+    message_key = "id-photo-type-not-allowed"

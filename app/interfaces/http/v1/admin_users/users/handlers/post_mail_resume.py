@@ -2,6 +2,7 @@
 
 from uuid import UUID
 
+from app.interfaces.http.v1.admin_users.photos import user_response
 from app.interfaces.http.v1.admin_users.schemas import AdminUserResponse
 from app.interfaces.http.v1.id.dependencies import AdminDep, AuthDep, CtxDep
 
@@ -11,4 +12,4 @@ async def post_mail_resume(
 ) -> AdminUserResponse:
     """Allow the mailbox to send again."""
     user = await auth.resume_mail.execute(admin, id, ctx)
-    return AdminUserResponse.of(user)
+    return await user_response(auth, user)

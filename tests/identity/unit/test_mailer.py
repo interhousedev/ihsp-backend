@@ -16,7 +16,7 @@ def sender(
 ) -> SmtpEmailSender:
     """A sender with an in-memory transport."""
     return SmtpEmailSender(
-        settings=settings.smtp_out, i18n=i18n, app_name="IHSP", transport=transport
+        settings=settings.smtp_out, i18n=i18n, app_name="IHT", transport=transport
     )
 
 
@@ -37,7 +37,7 @@ def test_otp_email_contains_the_code_in_both_parts(
 
     assert message["To"] == "ali@example.org"
     assert message["From"] == settings.smtp_out.system_from
-    assert message["Subject"] == "Your IHSP code"
+    assert message["Subject"] == "Your IHT code"
     assert "123456" in body_of(message)
     text = message.get_body(("plain",))
     assert text is not None and "123456" in text.get_content()
@@ -48,8 +48,8 @@ def test_subject_follows_the_locale(settings: Settings, i18n: I18nCore) -> None:
     ru = sender(settings, i18n).render("a@b.co", "otp", {"code": "1"}, "ru")
     uz = sender(settings, i18n).render("a@b.co", "otp", {"code": "1"}, "uz")
 
-    assert ru["Subject"] == "Ваш код IHSP"
-    assert uz["Subject"] == "IHSP kodingiz"
+    assert ru["Subject"] == "Ваш код IHT"
+    assert uz["Subject"] == "IHT kodingiz"
 
 
 def test_activation_email_carries_the_link_and_login(
@@ -106,7 +106,7 @@ def test_notice_email_uses_the_given_text_key(
     )
 
     assert "new@example.org" in body_of(message)
-    assert message["Subject"] == "IHSP security notice"
+    assert message["Subject"] == "IHT security notice"
 
 
 def test_login_reminder_names_the_login(settings: Settings, i18n: I18nCore) -> None:
@@ -116,7 +116,7 @@ def test_login_reminder_names_the_login(settings: Settings, i18n: I18nCore) -> N
     )
 
     assert "brastilov.aleksey" in body_of(message)
-    assert message["Subject"] == "Your IHSP login"
+    assert message["Subject"] == "Your IHT login"
 
 
 async def test_send_hands_the_message_to_the_transport(

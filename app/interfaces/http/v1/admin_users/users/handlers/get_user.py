@@ -11,4 +11,5 @@ async def get_user(
 ) -> AdminUserDetailResponse:
     """Opening a student profile is audited."""
     detail = await auth.get_user_detail.execute(admin, id, ctx)
-    return AdminUserDetailResponse.detail(detail)
+    photo_url = await auth.photo_urls.url(detail.user.photo_file_id)
+    return AdminUserDetailResponse.detail(detail, photo_url)

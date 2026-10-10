@@ -30,12 +30,13 @@ class AdminUserResponse(BaseModel):
     recovery_email: str | None
     mail_suspended: bool
     password_change_required: bool = False
+    photo_url: str | None = None
     created_at: datetime | None
     last_login_at: datetime | None
 
     @classmethod
-    def of(cls, user: User) -> "AdminUserResponse":
-        """Map a user."""
+    def of(cls, user: User, photo_url: str | None = None) -> "AdminUserResponse":
+        """Map a user; ``photo_url`` is the short-lived link to their photo."""
         return cls(
             id=user.id,
             login=user.login,
@@ -48,6 +49,7 @@ class AdminUserResponse(BaseModel):
             recovery_email=user.recovery_email,
             mail_suspended=user.mail_suspended_at is not None,
             password_change_required=user.password_change_required,
+            photo_url=photo_url,
             created_at=user.created_at,
             last_login_at=user.last_login_at,
         )
@@ -62,9 +64,11 @@ class AdminUserDetailResponse(AdminUserResponse):
     mailbox: str | None = None
 
     @classmethod
-    def detail(cls, detail: UserDetail) -> "AdminUserDetailResponse":
+    def detail(
+        cls, detail: UserDetail, photo_url: str | None = None
+    ) -> "AdminUserDetailResponse":
         """Map the detail view."""
-        base = AdminUserResponse.of(detail.user)
+        base = AdminUserResponse.of(detail.user, photo_url)
         return cls(
             **base.model_dump(),
             mailbox=detail.mailbox,

@@ -2,6 +2,7 @@
 
 from uuid import UUID
 
+from app.interfaces.http.v1.admin_users.photos import user_response
 from app.interfaces.http.v1.admin_users.schemas import AdminUserResponse
 from app.interfaces.http.v1.admin_users.users.schemas import RolesBody
 from app.interfaces.http.v1.id.dependencies import AdminDep, AuthDep, CtxDep
@@ -14,4 +15,4 @@ async def post_roles(
     user = await auth.change_roles.execute(
         admin, id, grant=body.grant, revoke=body.revoke, ctx=ctx
     )
-    return AdminUserResponse.of(user)
+    return await user_response(auth, user)

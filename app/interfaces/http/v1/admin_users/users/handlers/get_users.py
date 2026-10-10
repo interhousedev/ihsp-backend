@@ -2,6 +2,7 @@
 
 from typing import Annotated
 
+from app.interfaces.http.v1.admin_users.photos import user_responses
 from app.interfaces.http.v1.admin_users.schemas import AdminUserResponse
 from app.interfaces.http.v1.id.dependencies import AdminDep, AuthDep
 from app.shared.actor import Role
@@ -24,5 +25,5 @@ async def get_users(
     page = await auth.list_users.execute(
         query=query, role=role, status=status, cursor=cursor, limit=limit
     )
-    items = [AdminUserResponse.of(user) for user in page.items]
+    items = await user_responses(auth, page.items)
     return Page[AdminUserResponse](items=items, next_cursor=page.next_cursor)

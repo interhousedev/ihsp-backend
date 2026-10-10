@@ -49,6 +49,7 @@ class User:
     otp_reset_effective_at: datetime | None = None
     otp_reset_request_id: UUID | None = None
     deleted_at: datetime | None = None
+    photo_file_id: UUID | None = None
     created_at: datetime | None = None
 
     @property
@@ -151,4 +152,5 @@ class User:
             status=self.status,
             locale=self.locale,
             emis_status=self.emis_status,
+            photo_file_id=self.photo_file_id,
         )

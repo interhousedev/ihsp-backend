@@ -46,6 +46,7 @@ async def test_get_me_returns_the_user_me_shape(api: Api) -> None:
         "otp_via_email",
         "emis_status",
         "mailbox",
+        "photo_url",
         "preferences",
         "telegram",
     }
