@@ -103,7 +103,7 @@ def test_invalid_options_raise_invalid_options_error(bad: dict[str, Any]) -> Non
 
 
 @pytest.mark.parametrize(
-    ("count", "tokens"), [("fewer", 2000), ("standard", 3500), ("more", 6000)]
+    ("count", "tokens"), [("fewer", 3500), ("standard", 6500), ("more", 11000)]
 )
 def test_max_tokens_by_count(count: str, tokens: int) -> None:
     """NB-24: § 3.4.0 table."""
@@ -155,7 +155,8 @@ def test_task_block_states_the_card_rules() -> None:
     assert "No duplicates" in task
     assert "`topic` is a 1-3 word group name" in task
     assert "must not give the answer away" in task
-    assert task.endswith("Cover the sources evenly.")
+    assert "Cover the sources evenly, then add the standard facts of the topic" in task
+    assert "Never ask what a heading says" in task
 
 
 def test_task_block_appends_the_focus() -> None:
@@ -345,16 +346,17 @@ def test_process_keeps_good_cards_when_others_are_unreadable() -> None:
 # - - - process: refs - - -
 
 
-def test_process_drops_cards_without_a_valid_ref() -> None:
-    """NB-24: all refs invalid -> dropped (enough valid ones remain)."""
+def test_process_drops_cards_with_invented_refs_but_keeps_honest_ones() -> None:
+    """NB-24: all refs invalid -> dropped (enough valid ones remain); [] is honest."""
     good = numbered(6, refs=["S1:P2"])
     bad = [card("Invented?", "Yes.", refs=["S7:P7"]), card("No refs?", "No.", refs=[])]
 
     result = process([*bad, *good])
 
     fronts = [c["front"] for c in result.content["cards"]]
-    assert len(fronts) == 6
-    assert "Invented?" not in fronts and "No refs?" not in fronts
+    assert len(fronts) == 7
+    assert "Invented?" not in fronts and "No refs?" in fronts
+    assert result.content["cards"][0]["refs"] == []
 
 
 def test_process_keeps_every_card_when_dropping_would_leave_under_half() -> None:

@@ -13,6 +13,7 @@ from app.shared.contracts.academic import (
     LessonRef,
     ScheduleQueries,
 )
+from app.shared.contracts.files import FilesApi
 from app.shared.contracts.links import LinksApi
 from tests.fakes.ai.contracts import make_file, make_lesson
 from tests.fakes.notebooks.links import make_resource
@@ -46,6 +47,7 @@ def auto(core: NotebooksCore, sources: SourcesServices, world: World) -> AutoSer
         schedule=cast(ScheduleQueries, world.schedule),
         classwork=cast(ClassworkQueries, world.classwork),
         terms=world.terms,
+        files=cast(FilesApi, world.files),
     )
 
 

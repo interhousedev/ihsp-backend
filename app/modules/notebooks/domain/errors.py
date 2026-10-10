@@ -52,6 +52,34 @@ class AutoNotebookLimitError(ConflictError):
     message_key = "notebooks-auto-limit"
 
 
+class DefaultMaterialNotFoundError(NotFoundError):
+    """No default material with this id for the subject."""
+
+    code = "notebooks/default-material-not-found"
+    message_key = "notebooks-default-material-not-found"
+
+
+class DefaultMaterialExistsError(ConflictError):
+    """The subject already has this file, link or library item as a default material."""
+
+    code = "notebooks/default-material-exists"
+    message_key = "notebooks-default-material-exists"
+
+
+class DefaultMaterialLimitError(ConflictError):
+    """The subject has the maximum number of default materials."""
+
+    code = "notebooks/default-material-limit"
+    message_key = "notebooks-default-material-limit"
+
+
+class DefaultMaterialInvalidError(ValidationFailedError):
+    """The file, link or library item cannot be a default material."""
+
+    code = "notebooks/default-material-invalid"
+    message_key = "notebooks-default-material-invalid"
+
+
 class SourceLimitError(ConflictError):
     """The notebook has the maximum number of sources or the text cap is reached."""
 

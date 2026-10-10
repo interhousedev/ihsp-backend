@@ -445,7 +445,7 @@ async def test_chat_settings_change_the_system_prompt_and_the_token_cap(
 
     request = scripted_llm.text_requests[-1]
     assert request["system"].startswith(
-        "You are the notebook assistant of the IHSP student platform"
+        "You are the notebook assistant of the IHT student platform"
     )
     assert needle in request["system"]
     assert request["max_tokens"] == max_tokens

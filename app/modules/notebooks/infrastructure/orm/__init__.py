@@ -5,6 +5,9 @@ from app.modules.notebooks.infrastructure.orm.artifact_asset import ArtifactAsse
 from app.modules.notebooks.infrastructure.orm.artifact_progress import (
     ArtifactProgress,
 )
+from app.modules.notebooks.infrastructure.orm.default_material import (
+    SubjectDefaultMaterial,
+)
 from app.modules.notebooks.infrastructure.orm.document import (
     Document,
     DocumentAlias,
@@ -37,6 +40,7 @@ __all__ = [
     "SharedArtifact",
     "SharedSummary",
     "Source",
+    "SubjectDefaultMaterial",
     "SourceLabel",
     "SourceLabelLink",
     "SourceLabelRun",

@@ -40,9 +40,7 @@ def test_prompt_starts_with_the_assistant_sentence() -> None:
     """NB-6: the fake LLM keys off this prefix."""
     text = prompt()
 
-    assert text.startswith(
-        "You are the notebook assistant of the IHSP student platform"
-    )
+    assert text.startswith("You are the notebook assistant of the IHT student platform")
 
 
 def test_prompt_has_the_seven_rules_in_order() -> None:

@@ -98,8 +98,8 @@ def test_invalid_options_raise_invalid_options_error(bad: dict[str, Any]) -> Non
 
 def test_tokens_and_input_cap() -> None:
     """NB-23: 3 000 output tokens; the Studio cap for input."""
-    assert HANDLER.max_tokens(options()) == 3000
-    assert HANDLER.max_tokens(options(detail="detailed")) == 3000
+    assert HANDLER.max_tokens(options()) == 6000
+    assert HANDLER.max_tokens(options(detail="detailed")) == 6000
     assert HANDLER.input_cap_tokens(150_000) == 150_000
     assert HANDLER.report_format(options()) is None
 
@@ -122,7 +122,8 @@ def test_task_block_for_an_overview() -> None:
     assert "3 levels below the root" in task
     assert "at most 7 children per node" in task
     assert "at most 30 nodes" in task
-    assert "Every non-root node has refs." in task
+    assert "A node taken from the sources has refs" in task
+    assert "a node from your own knowledge has empty refs" in task
 
 
 def test_task_block_for_a_detailed_map_and_a_focus() -> None:

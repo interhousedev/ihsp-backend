@@ -2,7 +2,8 @@
 
 Listing, creating, copying and the usage are for students and teachers; the
 subject/lesson routes are for students. The routes of one notebook
-(`/v1/notebooks/{id}/...`) take any signed-in user: the use case decides (a student's own notebook, or the workspace of a course the user is staff of).
+(`/v1/notebooks/{id}/...`) take any signed-in user: the use case decides (a
+student's own notebook, or the workspace of a course the user is staff of).
 """
 
 from typing import Annotated
@@ -20,6 +21,7 @@ from fastapi import Depends
 
 _student = require_roles(Role.STUDENT)
 _owner = require_roles(Role.STUDENT, Role.TEACHER)
+_admin = require_roles(Role.ADMIN)
 
 
 async def get_notebooks(
@@ -47,6 +49,7 @@ async def get_workspace_notebooks(
 
 
 StudentActor = Annotated[Actor, Depends(_student)]
+AdminActor = Annotated[Actor, Depends(_admin)]
 OwnerActor = Annotated[Actor, Depends(_owner)]  # students and teachers own notebooks
 MemberActor = Annotated[Actor, Depends(get_actor)]  # access is checked per notebook
 Notebooks = Annotated[NotebooksServices, Depends(get_notebooks)]

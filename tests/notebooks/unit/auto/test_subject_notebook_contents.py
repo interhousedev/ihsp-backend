@@ -16,6 +16,7 @@ from app.shared.contracts.academic import (
     LessonRef,
     ScheduleQueries,
 )
+from app.shared.contracts.files import FilesApi
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.contracts.library import LessonItemRefView, LibraryQueries
 from app.shared.contracts.links import LinksApi
@@ -98,6 +99,7 @@ def auto(  # type: ignore[override]
         terms=world.terms,
         library=cast(LibraryQueries, book_links),
         identity=cast(IdentityDirectory, roster),
+        files=cast(FilesApi, world.files),
     )
 
 

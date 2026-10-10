@@ -4,6 +4,7 @@ from uuid import UUID
 
 from app.modules.notebooks.application.access import load_notebook, load_source
 from app.modules.notebooks.application.notebook_state import sources_changed
+from app.modules.notebooks.domain.default_materials import is_default_copy
 from app.modules.notebooks.domain.enums import SourceKind
 from app.modules.notebooks.domain.errors import AutoNotebookReadOnlyError
 from app.modules.notebooks.ports.unit_of_work import UowFactory
@@ -24,8 +25,9 @@ class RemoveSource:
 
         Raises:
             NotebookNotFoundError: Notebook or source is not the caller's.
-            AutoNotebookReadOnlyError: A lesson material of a subject or lesson
-                notebook; exclude it instead (it would come back otherwise).
+            AutoNotebookReadOnlyError: A lesson material or a default material copy
+                of a subject or lesson notebook; exclude it instead (it would come
+                back otherwise).
         """
         async with self.uow_factory() as uow:
             notebook = await load_notebook(
@@ -34,7 +36,10 @@ class RemoveSource:
             source = await load_source(
                 uow, actor.user_id, notebook_id, source_id, for_update=True
             )
-            if notebook.is_auto and source.kind is SourceKind.LESSON_RESOURCE:
+            kept_by_sync = source.kind is SourceKind.LESSON_RESOURCE or is_default_copy(
+                source
+            )
+            if notebook.is_auto and kept_by_sync:
                 raise AutoNotebookReadOnlyError()
             await uow.sources.delete(source_id)
             await sources_changed(uow, notebook, self.clock.now())

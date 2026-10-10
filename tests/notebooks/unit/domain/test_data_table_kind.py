@@ -243,9 +243,19 @@ def test_rows_without_valid_refs_are_dropped_when_most_rows_have_them() -> None:
     assert [r["cells"]["year"] for r in out.content["rows"]] == ["1", "2"]
 
 
-def test_rows_are_kept_when_less_than_half_have_valid_refs() -> None:
-    """NB-18: thin sources keep every row."""
+def test_rows_without_refs_are_honest_and_kept_while_invented_ones_go() -> None:
+    """NB-18: [] means own knowledge (kept); an invented label is dropped."""
     rows = [row("1", "a"), row("2", "b", refs=[]), row("3", "c", refs=["S7:P7"])]
+
+    out = run([YEAR, EVENT], rows)
+
+    assert [r["cells"]["year"] for r in out.content["rows"]] == ["1", "2"]
+    assert out.content["rows"][1]["refs"] == []
+
+
+def test_rows_are_kept_when_less_than_half_are_trusted() -> None:
+    """NB-18: thin sources keep every row."""
+    rows = [row("1", "a"), row("2", "b", refs=["S8:P8"]), row("3", "c", refs=["S7:P7"])]
 
     out = run([YEAR, EVENT], rows)
 

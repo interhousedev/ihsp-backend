@@ -123,7 +123,7 @@ def test_report_format_is_the_format_value(fmt: str) -> None:
 
 
 @pytest.mark.parametrize(
-    ("detail", "tokens"), [("short", 3000), ("standard", 5000), ("long", 8000)]
+    ("detail", "tokens"), [("short", 4500), ("standard", 8000), ("long", 12000)]
 )
 def test_max_tokens_by_detail(detail: str, tokens: int) -> None:
     """NB-22: § 3.4.0 table."""
@@ -250,7 +250,10 @@ def test_every_task_ends_with_the_citation_instruction(fmt: str) -> None:
 
     assert task.endswith(
         "Put the citation `[[S1:P4]]` right after every sentence or bullet that"
-        " states something from the sources. Put the report in `markdown`."
+        " states something from the sources, and no citation after what you add"
+        " from your own knowledge. Write the section headings in the output"
+        " language too (the English names above only describe the structure)."
+        " Put the report in `markdown`."
     )
 
 

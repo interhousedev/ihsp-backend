@@ -66,6 +66,7 @@ class SourceReaders:
         """
         self.file_reader = FileReader(files)
         url_reader = UrlReader(fetcher, blocked_domains)
+        self.url_reader = url_reader
         self.lesson_reader = LessonResourceReader(
             links=links,
             schedule=schedule,

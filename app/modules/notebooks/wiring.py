@@ -3,6 +3,7 @@
 import asyncio
 from dataclasses import dataclass
 
+from app.modules.notebooks.application.add_default_material import AddDefaultMaterial
 from app.modules.notebooks.application.add_sources import AddSources
 from app.modules.notebooks.application.apply_course_artifact import ApplyCourseArtifact
 from app.modules.notebooks.application.ask_notebook import AskNotebook
@@ -32,6 +33,9 @@ from app.modules.notebooks.application.label_sources import LabelSources
 from app.modules.notebooks.application.light_json import Sleep
 from app.modules.notebooks.application.list_artifacts import ListArtifacts
 from app.modules.notebooks.application.list_course_steps import ListCourseSteps
+from app.modules.notebooks.application.list_default_materials import (
+    ListDefaultMaterials,
+)
 from app.modules.notebooks.application.list_labels import ListLabels
 from app.modules.notebooks.application.list_notebooks import ListNotebooks
 from app.modules.notebooks.application.list_passages import ListPassages
@@ -56,6 +60,9 @@ from app.modules.notebooks.application.purge_deleted import PurgeDeleted
 from app.modules.notebooks.application.purge_shared import PurgeShared
 from app.modules.notebooks.application.refresh_summaries import RefreshSummaries
 from app.modules.notebooks.application.regenerate_chat import RegenerateChat
+from app.modules.notebooks.application.remove_default_material import (
+    RemoveDefaultMaterial,
+)
 from app.modules.notebooks.application.remove_source import RemoveSource
 from app.modules.notebooks.application.rename_artifact import RenameArtifact
 from app.modules.notebooks.application.request_artifact import RequestArtifact
@@ -152,6 +159,9 @@ class NotebooksServices:
     sweep_auto_notebooks: SweepAutoNotebooks
     provision_student_notebooks: ProvisionStudentNotebooks
     backfill_subject_notebooks: BackfillSubjectNotebooks
+    list_default_materials: ListDefaultMaterials
+    add_default_material: AddDefaultMaterial
+    remove_default_material: RemoveDefaultMaterial
     provision_course_notebook: ProvisionCourseNotebook
     sync_course_notebook: SyncCourseNotebook
     sync_course_notebooks: SyncCourseNotebooks
@@ -263,6 +273,7 @@ def build(
         terms=terms,
         library=library_queries,
         identity=identity,
+        files=files,
     )
     course = build_course(core, readers=sources.readers, lms=lms, files=files)
     chat = build_chat(core)
@@ -309,6 +320,9 @@ def build(
         sweep_auto_notebooks=auto.sweep_auto_notebooks,
         provision_student_notebooks=auto.provision_student_notebooks,
         backfill_subject_notebooks=auto.backfill_subject_notebooks,
+        list_default_materials=auto.list_default_materials,
+        add_default_material=auto.add_default_material,
+        remove_default_material=auto.remove_default_material,
         provision_course_notebook=course.provision_course_notebook,
         sync_course_notebook=course.sync_course_notebook,
         sync_course_notebooks=course.sync_course_notebooks,

@@ -9,6 +9,9 @@ from app.modules.notebooks.ports.artifact_repository import (
     ProgressRepository,
 )
 from app.modules.notebooks.ports.course_gate import CourseGate
+from app.modules.notebooks.ports.default_material_repository import (
+    DefaultMaterialRepository,
+)
 from app.modules.notebooks.ports.document_repository import DocumentRepository
 from app.modules.notebooks.ports.label_repository import LabelRepository
 from app.modules.notebooks.ports.message_repository import MessageRepository
@@ -70,6 +73,11 @@ class NotebooksUnitOfWork(Protocol):
     @property
     def course_gate(self) -> CourseGate:
         """Course permissions for the shared workspace of an LMS course."""
+        ...
+
+    @property
+    def default_materials(self) -> DefaultMaterialRepository:
+        """Default materials of EMIS subject ids (copied into subject notebooks)."""
         ...
 
     async def __aenter__(self) -> Self:

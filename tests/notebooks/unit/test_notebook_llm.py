@@ -74,8 +74,10 @@ async def test_json_calls_use_the_model_and_options_of_their_task(
 
     quiz, slides = gateway.json_requests
     assert (quiz["model"], slides["model"]) == ("x/quiz", "x/slides")
-    assert quiz["tuning"] == LlmTuning(temperature=0.4)
-    assert slides["tuning"] == LlmTuning(temperature=0.2, fallbacks=("x/backup",))
+    assert quiz["tuning"] == LlmTuning(temperature=0.4, reasoning_effort="none")
+    assert slides["tuning"] == LlmTuning(
+        temperature=0.2, reasoning_effort="none", fallbacks=("x/backup",)
+    )
     for request in (quiz, slides):
         assert request["provider"] == {
             "require_parameters": True,

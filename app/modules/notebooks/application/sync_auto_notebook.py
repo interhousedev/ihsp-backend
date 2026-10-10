@@ -6,6 +6,9 @@ from functools import partial
 from uuid import UUID
 
 from app.modules.notebooks.application.auto_targets import AutoTargets
+from app.modules.notebooks.application.default_material_sources import (
+    DefaultMaterialSources,
+)
 from app.modules.notebooks.application.notebook_state import sources_changed
 from app.modules.notebooks.application.readers.base import ResolvedSource
 from app.modules.notebooks.application.readers.registry import SourceReaders
@@ -13,8 +16,13 @@ from app.modules.notebooks.domain.auto_notebook import (
     AutoCandidate,
     rank_candidates,
 )
+from app.modules.notebooks.domain.default_materials import (
+    DefaultMaterial,
+    default_material_of,
+    is_default_copy,
+)
 from app.modules.notebooks.domain.entities import AutoSettings, Notebook, Source
-from app.modules.notebooks.domain.enums import SourceKind, SourceStatus
+from app.modules.notebooks.domain.enums import NotebookOrigin, SourceKind, SourceStatus
 from app.modules.notebooks.domain.errors import (
     SourceForbiddenError,
     SourceUnsupportedError,
@@ -62,18 +70,25 @@ def book_ident(item_id: object, page_from: int | None, page_to: int | None) -> s
     return f"{item_id}:{page_from or ''}:{page_to or ''}"
 
 
-def is_managed(source: Source) -> bool:
-    """A source the sync owns: a lesson material or a book linked to a lesson.
-
-    Notes, pasted texts and books the student added themselves are their own.
-    """
-    if source.ref_key is None:
-        return False
-    if source.kind is SourceKind.LESSON_RESOURCE:
-        return True
+def is_lesson_book(source: Source) -> bool:
+    """A book the sync added because a lesson follows it."""
     return source.kind is SourceKind.LIBRARY_ITEM and bool(
         (source.origin or {}).get(BOOK_MARK)
     )
+
+
+def is_managed(source: Source) -> bool:
+    """A source the sync owns.
+
+    That is a lesson material, a book a lesson follows, or a copy of a default
+    material of the subject. Notes, pasted texts and books the student added
+    themselves are their own.
+    """
+    if source.ref_key is None:
+        return False
+    if source.kind is SourceKind.LESSON_RESOURCE or is_default_copy(source):
+        return True
+    return is_lesson_book(source)
 
 
 class SyncAutoNotebook:
@@ -81,9 +96,10 @@ class SyncAutoNotebook:
 
     The sources of a subject or lesson notebook are exactly the lesson materials of
     that subject (this term) or lesson that the student can see, minus the ones they
-    excluded, plus classmates' files when switched on. Anything else in the
-    notebook (notes, saved outputs) is left alone. Safe to run twice and from
-    several places at once: the notebook row is locked for the write.
+    excluded, plus classmates' files when switched on, plus the copies of the default
+    materials of the subject (its EMIS id). Anything else in the notebook (notes,
+    saved outputs) is left alone. Safe to run twice and from several places at once:
+    the notebook row is locked for the write.
     """
 
     def __init__(
@@ -96,10 +112,12 @@ class SyncAutoNotebook:
         links: LinksApi,
         targets: AutoTargets,
         kicker: TaskKicker,
+        defaults: DefaultMaterialSources,
         library: LibraryQueries | None = None,
     ) -> None:
         """Store the collaborators (`library` may be missing: no books then)."""
         self.library = library
+        self.defaults = defaults
         self.uow_factory = uow_factory
         self.clock = clock
         self.settings = settings
@@ -117,10 +135,31 @@ class SyncAutoNotebook:
             existing = await uow.sources.list_for_notebook(notebook_id)
         lessons = await self.targets.lessons_of(notebook)
         candidates = await self._candidates(notebook, lessons)
-        plan = await self._plan(notebook, existing, lessons, candidates)
+        defaults = await self._defaults_of(notebook, lessons)
+        plan = await self._plan(notebook, existing, lessons, candidates, defaults)
         return await self._apply(notebook, plan)
 
     # - - - Steps - - -
+
+    async def _defaults_of(
+        self, notebook: Notebook, lessons: list[LessonRef]
+    ) -> list[DefaultMaterial]:
+        """The default materials of the notebook's subject (subject notebooks only).
+
+        Only while the student still has lessons of the subject this term: otherwise
+        the sync takes the copies out, as it does with the lesson materials.
+        """
+        if (
+            notebook.origin is not NotebookOrigin.SUBJECT_AUTO
+            or notebook.subject_id is None
+            or not lessons
+        ):
+            return []
+        edu_subject_id = await self.targets.emis_subject_id(notebook.subject_id)
+        if edu_subject_id is None:
+            return []
+        async with self.uow_factory() as uow:
+            return await uow.default_materials.list_for_subject(edu_subject_id)
 
     async def _candidates(
         self, notebook: Notebook, lessons: list[LessonRef]
@@ -152,8 +191,12 @@ class SyncAutoNotebook:
         existing: list[Source],
         lessons: list[LessonRef],
         candidates: list[tuple[AutoCandidate, ResourceRef]],
+        defaults: list[DefaultMaterial],
     ) -> _Plan:
-        """Walk the wanted materials best first until the notebook is full."""
+        """Walk the wanted materials best first until the notebook is full.
+
+        The default materials come first: they are kept whatever the room is.
+        """
         settings = notebook.auto_settings
         assert settings is not None  # an auto notebook always has settings
         by_key = {item.ref_key: (item, resource) for item, resource in candidates}
@@ -168,6 +211,7 @@ class SyncAutoNotebook:
         )
         lesson_by_id = {lesson.id: lesson for lesson in lessons}
         plan = _Plan(keep=set(), new=[])
+        await self._plan_defaults(notebook, existing, defaults, settings, plan)
         for item in ranked:
             if len(plan.keep) >= room:
                 break
@@ -183,6 +227,37 @@ class SyncAutoNotebook:
             plan.new.append(resolved)
         await self._plan_books(notebook, existing, lessons, room, plan)
         return plan
+
+    async def _plan_defaults(
+        self,
+        notebook: Notebook,
+        existing: list[Source],
+        defaults: list[DefaultMaterial],
+        settings: AutoSettings,
+        plan: _Plan,
+    ) -> None:
+        """Keep the copy of each default material, or make it; excluded ones stay out.
+
+        A copy that is there is kept without reading its material again.
+        """
+        copies = {default_material_of(s): s for s in existing if is_default_copy(s)}
+        for material in defaults:
+            copy = copies.get(str(material.id))
+            if copy is not None:
+                if copy.ref_key and copy.ref_key not in settings.excluded_keys:
+                    plan.keep.add(copy.ref_key)
+                continue
+            if len(plan.keep) >= self.settings.notebooks.max_sources:
+                plan.skipped += 1  # the notebook is full
+                continue
+            resolved = await self.defaults.resolve(notebook.owner_id, material)
+            if resolved is None:
+                plan.skipped += 1  # not ready or not readable yet: a later sync
+                continue
+            if resolved.ref_key is None or resolved.ref_key in settings.excluded_keys:
+                continue
+            plan.keep.add(resolved.ref_key)
+            plan.new.append(resolved)
 
     async def _plan_books(
         self,
@@ -205,10 +280,7 @@ class SyncAutoNotebook:
         stored = {
             str(s.origin[BOOK_MARK]): s.ref_key
             for s in existing
-            if is_managed(s)
-            and s.origin
-            and s.ref_key
-            and s.kind is SourceKind.LIBRARY_ITEM
+            if is_managed(s) and s.ref_key and s.origin and is_lesson_book(s)
         }
         by_lesson = await self.library.lesson_item_refs([x.id for x in lessons])
         # Newest lesson first: its books win when the notebook is full.

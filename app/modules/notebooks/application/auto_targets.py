@@ -71,6 +71,10 @@ class AutoTargets:
             return await self._subject(user_id, target_id)
         return await self._lesson(user_id, target_id)
 
+    async def emis_subject_id(self, subject_id: UUID) -> int | None:
+        """The EMIS id of a subject; the default materials are kept under it."""
+        return await self.schedule.subject_emis_id(subject_id)
+
     async def lessons_of(self, notebook: Notebook) -> list[LessonRef]:
         """The lessons feeding a notebook now (empty when the student lost access)."""
         if notebook.origin is NotebookOrigin.SUBJECT_AUTO and notebook.subject_id:

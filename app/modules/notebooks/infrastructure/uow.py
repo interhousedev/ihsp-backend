@@ -4,6 +4,9 @@ from app.modules.notebooks.infrastructure.lms_course_gate import NO_COURSES
 from app.modules.notebooks.infrastructure.repositories.artifact_repository import (
     SqlArtifactRepository,
 )
+from app.modules.notebooks.infrastructure.repositories.default_material_repository import (  # noqa: E501
+    SqlDefaultMaterialRepository,
+)
 from app.modules.notebooks.infrastructure.repositories.document_repository import (
     SqlDocumentRepository,
 )
@@ -51,6 +54,7 @@ class SqlNotebooksUnitOfWork(SqlUnitOfWork):
     artifacts: SqlArtifactRepository
     progress: SqlProgressRepository
     labels: SqlLabelRepository
+    default_materials: SqlDefaultMaterialRepository
 
     def __init__(
         self,
@@ -78,3 +82,4 @@ class SqlNotebooksUnitOfWork(SqlUnitOfWork):
         self.artifacts = SqlArtifactRepository(self.session)
         self.progress = SqlProgressRepository(self.session)
         self.labels = SqlLabelRepository(self.session)
+        self.default_materials = SqlDefaultMaterialRepository(self.session)

@@ -121,7 +121,7 @@ def test_repeated_types_are_deduplicated() -> None:
 
 
 @pytest.mark.parametrize(
-    ("count", "tokens"), [("fewer", 2500), ("standard", 4500), ("more", 8000)]
+    ("count", "tokens"), [("fewer", 4000), ("standard", 7500), ("more", 14000)]
 )
 def test_max_tokens_follow_the_count(count: str, tokens: int) -> None:
     """NB-14: § 3.4.0 token table."""
@@ -249,7 +249,7 @@ def test_option_count_outside_two_to_six_drops_the_question(count: int) -> None:
 
 def test_six_options_are_accepted_and_get_letter_ids() -> None:
     """NB-17: six options are the maximum; ids go up to f."""
-    options = [{"id": f"o{i}", "text": f"Option {i}"} for i in range(6)]
+    options = [{"id": f"o{i}", "text": f"Value {i}"} for i in range(6)]
 
     out = run([single(1, options=options, correct=["o3"])])
 
@@ -453,3 +453,69 @@ def test_long_texts_are_capped() -> None:
     stored = out.content["questions"][0]
     assert len(stored["prompt"]) <= 400
     assert all(len(o["text"]) <= 200 for o in stored["options"])
+
+
+# - - - Placeholders and honesty (the Derivatives 101 regression) - - -
+
+
+@pytest.mark.parametrize(
+    "filler",
+    [
+        "Option D",
+        "option b",
+        "Вариант Г",
+        "Javob A",
+        "Variant 3",
+        "# What is a derivative?",
+        "   ",
+    ],
+)
+def test_a_placeholder_option_drops_the_question(filler: str) -> None:
+    """A filler such as "Option D" or a heading is never shown as an answer."""
+    question = single(1)
+    question["options"][3]["text"] = filler
+
+    with pytest.raises(OutputInvalidError) as caught:
+        run([question], count="fewer")
+
+    assert "no placeholders such as 'Option D'" in caught.value.problems[0]
+
+
+def test_two_options_with_the_same_text_drop_the_question() -> None:
+    """Distinct answers only: "2x" twice is not a quiz question."""
+    question = single(1)
+    question["options"][1]["text"] = "right 1."
+
+    with pytest.raises(OutputInvalidError):
+        run([question], count="fewer")
+
+
+def test_real_options_that_merely_mention_a_variant_are_kept() -> None:
+    """The placeholder rule matches whole fillers only."""
+    question = single(1)
+    question["options"][1]["text"] = "Option pricing uses derivatives"
+
+    assert len(run([question], count="fewer").content["questions"]) == 1
+
+
+def test_questions_with_empty_refs_are_honest_and_kept() -> None:
+    """A question from the model's own knowledge (refs []) stays; invented labels go."""
+    questions = [single(n) for n in range(1, 5)]
+    questions += [single(5, refs=[]), single(6, refs=["S9:P9"])]
+
+    out = run(questions, count="standard")
+
+    kept = out.content["questions"]
+    assert len(kept) == 5
+    assert kept[4]["refs"] == [] and "Question number 6" not in [
+        q["prompt"] for q in kept
+    ]
+
+
+def test_task_block_forbids_fillers_and_letter_references() -> None:
+    """The options are shuffled after the answer, so explanations name content."""
+    task = HANDLER.task_block(HANDLER.parse_options({}), None)
+
+    assert "never use fillers such as 'Option D'" in task
+    assert "never refer to an option by its letter or position" in task
+    assert "never what a heading says" in task

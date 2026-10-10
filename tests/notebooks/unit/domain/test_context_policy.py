@@ -562,3 +562,25 @@ def test_pack_token_estimate_matches_the_estimate_of_the_text() -> None:
     pack = build_pack([source], {source.id: [passage]}, "full")
 
     assert pack.token_estimate == estimate_tokens(280) == 100
+
+
+def test_small_sources_go_to_the_studio_whole() -> None:
+    """Three short course steps (the Derivatives 101 case) are sent in full."""
+    steps = [
+        make_source("What is a derivative", position=0),
+        make_source("Check yourself", position=1),
+        make_source("Flash cards", position=2),
+    ]
+    texts = [
+        "# What is a derivative?\n\nThe derivative measures how fast it changes.",
+        "Test: 2 questions.\n\nQuestion 1 (single choice): Derivative of x^2?",
+        "Flash cards: 1 card.\n\nCard 1\nFront: (c)'\nBack: 0",
+    ]
+    by_source = {s.id: [make_passage(s.id, 1, text)] for s, text in zip(steps, texts)}
+    total = sum(p.token_estimate for ps in by_source.values() for p in ps)
+
+    assert choose_studio_mode(total, 150_000) == "full"
+    pack = build_pack(steps, by_source, "full")
+    assert [s.title for s in pack.sources] == [s.title for s in steps]
+    assert [p.text for s in pack.sources for p in s.passages] == texts
+    assert set(pack.labels) == {"S1:P1", "S2:P1", "S3:P1"}
