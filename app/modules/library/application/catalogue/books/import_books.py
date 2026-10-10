@@ -164,6 +164,8 @@ class ImportBooks:
         await uow.items.add(item)
         await uow.items.set_subject_links(item.id, row.data.subjects)
         await uow.items.set_topic_links(item.id, row.data.topics)
+        await uow.labels.set_item_authors(item.id, row.data.authors)
+        await uow.labels.set_item_tags(item.id, row.data.tags)
         await uow.events.append(
             item.id,
             EventKind.CREATED,

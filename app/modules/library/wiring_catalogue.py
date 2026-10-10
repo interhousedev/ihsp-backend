@@ -26,6 +26,10 @@ from app.modules.library.application.catalogue.public_pages import (
     GetPublicItemPage,
     ListSitemap,
 )
+from app.modules.library.application.catalogue.search_labels import (
+    SearchAuthors,
+    SearchTags,
+)
 from app.modules.library.wiring_core import LibraryCore
 
 
@@ -38,6 +42,8 @@ class CatalogueServices:
     get_file_url: GetFileUrl
     get_item_text: GetItemText
     list_subjects: ListSubjects
+    search_authors: SearchAuthors
+    search_tags: SearchTags
     create_book: CreateBook
     update_book: UpdateBook
     get_book_draft: GetBookDraft
@@ -88,11 +94,10 @@ def build_catalogue(core: LibraryCore) -> CatalogueServices:
             uow_factory=uow_factory, files=core.files, settings=core.settings
         ),
         list_subjects=ListSubjects(
-            uow_factory=uow_factory,
-            academic=core.academic,
-            identity=core.identity,
-            settings=core.settings,
+            uow_factory=uow_factory, identity=core.identity, settings=core.settings
         ),
+        search_authors=SearchAuthors(uow_factory=uow_factory),
+        search_tags=SearchTags(uow_factory=uow_factory),
         create_book=CreateBook(uow_factory=uow_factory, support=support),
         update_book=UpdateBook(uow_factory=uow_factory, support=support),
         get_book_draft=GetBookDraft(uow_factory=uow_factory, support=support),

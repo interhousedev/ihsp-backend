@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from app.modules.library.domain.enums import (
@@ -69,6 +70,7 @@ class BookSuggestion:
     note: str | None = None
     status: SuggestionStatus = SuggestionStatus.NEW
     handled_by: UUID | None = None
+    details: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True, slots=True)

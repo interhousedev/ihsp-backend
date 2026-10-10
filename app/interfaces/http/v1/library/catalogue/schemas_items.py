@@ -364,6 +364,7 @@ class ItemDetailSchema(ItemCardBase):
     topics: list[TopicRefSchema]
     lists: list[ListRefSchema]
     can: CanSchema
+    tags: list[str]
     rights_box: RightsBoxSchema | None = None
     external_keywords: list[str] | None = None
     external_isbn: str | None = None
@@ -387,6 +388,7 @@ class ItemDetailSchema(ItemCardBase):
                 "topics": [TopicRefSchema.from_view(t) for t in view.topics],
                 "lists": [ListRefSchema.from_view(x) for x in view.lists],
                 "can": CanSchema.from_view(view.can),
+                "tags": list(view.tags),
                 "rights_box": (
                     RightsBoxSchema.from_view(view.rights_box)
                     if view.rights_box

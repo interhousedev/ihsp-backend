@@ -5,7 +5,7 @@ from uuid import UUID
 from app.modules.library.application.locale import resolve_locale
 from app.modules.library.application.taxonomy.topic_views import topic_views
 from app.modules.library.application.taxonomy.views import TopicView
-from app.modules.library.domain.taxonomy_topics import build_tree
+from app.modules.library.domain.taxonomy_topics import build_tree, visible_topics
 from app.modules.library.ports.unit_of_work import UowFactory
 from app.shared.actor import Actor
 from app.shared.contracts.identity import IdentityDirectory
@@ -30,4 +30,4 @@ class ListTopics:
         locale = await resolve_locale(self.identity, viewer, accept_language)
         async with self.uow_factory() as uow:
             topics = await uow.taxonomy.topics(subject_id)
-        return topic_views(build_tree(topics), locale)
+        return topic_views(build_tree(visible_topics(topics)), locale)

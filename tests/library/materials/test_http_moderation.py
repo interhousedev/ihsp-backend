@@ -7,6 +7,7 @@ from uuid import UUID
 from app.modules.library.domain.enums import ItemStatus, ReportReason, UploaderRole
 from app.modules.library.domain.moderation_entities import Report
 from app.modules.library.ports.unit_of_work import UowFactory
+from app.modules.library.wiring import LibraryServices
 from app.shared.actor import Actor
 from app.shared.ids import new_id
 from tests.fakes.clock import FixedClock
@@ -99,8 +100,52 @@ async def test_suggestion_rows_have_a_card_without_an_id(
     assert row["kind"] == "suggestion"
     assert row["suggestion"]["title"] == "Atom physics"
     assert row["suggestion"]["user_name"] == "Aziza K., 2025"
-    assert set(row["suggestion"]) == {"id", "title", "url", "note", "user_name"}
+    assert set(row["suggestion"]) == {
+        "id", "title", "url", "note", "user_name", "book",
+    }  # fmt: skip
     assert "report_ids" not in row
+
+
+async def test_a_suggestion_from_the_editor_shows_its_form_to_librarians(
+    api: Api, student: Actor, other_librarian: Actor, library: LibraryServices
+) -> None:
+    """The queue row names the authors; `GET .../suggestions/{id}` returns the form."""
+    subject = (
+        await library.taxonomy.create_subject.execute(
+            other_librarian, name={"en": "Economics"}
+        )
+    ).id
+    form = {
+        "title": "Money and banks",
+        "authors": ["Paul Samuelson"],
+        "tags": ["economics"],
+        "language": "en",
+        "type": "textbook",
+        "subjects": [{"subject_id": str(subject), "role": "textbook"}],
+    }
+    created = await (await api(student)).post(
+        "/v1/library/suggestions",
+        json={"title": "Money and banks", "note": "Please", "book": form},
+    )
+    librarian_client = await api(other_librarian)
+
+    queue = await librarian_client.get(
+        "/v1/manage/library/queue", params={"tab": "suggestions"}
+    )
+    (row,) = queue.json()["items"]
+    one = await librarian_client.get(
+        f"/v1/manage/library/suggestions/{row['suggestion']['id']}"
+    )
+    refused = await (await api(student)).get(
+        f"/v1/manage/library/suggestions/{row['suggestion']['id']}"
+    )
+
+    assert created.status_code == 201
+    assert row["item"]["author_label"] == "Paul Samuelson"
+    assert row["suggestion"]["book"]["tags"] == ["economics"]
+    assert one.json()["status"] == "new" and one.json()["note"] == "Please"
+    assert one.json()["book"]["authors"] == ["Paul Samuelson"]
+    assert refused.status_code == 403
 
 
 async def test_an_unknown_tab_is_422(api: Api, other_librarian: Actor) -> None:

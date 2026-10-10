@@ -10,6 +10,9 @@ from app.modules.library.infrastructure.repositories.item_repository import (
     SqlEventRepository,
     SqlItemRepository,
 )
+from app.modules.library.infrastructure.repositories.label_repository import (
+    SqlLabelRepository,
+)
 from app.modules.library.infrastructure.repositories.moderation_repository import (
     SqlModerationRepository,
 )
@@ -42,6 +45,7 @@ class LibrarySqlUnitOfWork(SqlUnitOfWork):
 
     items: SqlItemRepository
     events: SqlEventRepository
+    labels: SqlLabelRepository
     pages: SqlPageRepository
     taxonomy: SqlTaxonomyRepository
     lists: SqlReadingListRepository
@@ -58,6 +62,7 @@ class LibrarySqlUnitOfWork(SqlUnitOfWork):
         session = self.session
         self.items = SqlItemRepository(session)
         self.events = SqlEventRepository(session)
+        self.labels = SqlLabelRepository(session)
         self.pages = SqlPageRepository(session)
         self.taxonomy = SqlTaxonomyRepository(session)
         self.lists = SqlReadingListRepository(session)

@@ -23,5 +23,8 @@ async def update_topic(
         parent_id=sent(body, "parent_id", body.parent_id),
         year_of_study=sent(body, "year_of_study", body.year_of_study),
         subject_id=body.subject_id if body.subject_id is not None else UNSET,
+        code=sent(body, "code", body.code),
+        archived=body.archived if body.archived is not None else UNSET,
+        position=body.position if body.position is not None else UNSET,
     )
     return ManageTopicResponse.from_view(view)

@@ -6,6 +6,7 @@ from typing import Protocol
 from uuid import UUID
 
 from app.modules.library.domain.taxonomy_collections import Collection
+from app.modules.library.domain.taxonomy_subjects import Subject
 from app.modules.library.domain.taxonomy_topics import Topic
 
 
@@ -16,6 +17,42 @@ class TaxonomyRepository(Protocol):
         self, topic_ids: Sequence[UUID]
     ) -> dict[UUID, dict[str, str]]:
         """Names `{uz, ru, en}` of the existing topics (unknown ids are absent)."""
+        ...
+
+    # - - - Subjects - - -
+
+    async def subjects(self, *, include_archived: bool = True) -> list[Subject]:
+        """Every subject by parent and position (without the archived when asked)."""
+        ...
+
+    async def get_subject(self, subject_id: UUID) -> Subject | None:
+        """The subject or None."""
+        ...
+
+    async def subject_names(
+        self, subject_ids: Sequence[UUID]
+    ) -> dict[UUID, dict[str, str]]:
+        """Names `{uz, ru, en}` of the existing subjects (unknown ids are absent)."""
+        ...
+
+    async def add_subject(self, subject: Subject) -> None:
+        """Insert a subject."""
+        ...
+
+    async def save_subject(self, subject: Subject) -> None:
+        """Update names, slug, code, parent, position and the archive flag."""
+        ...
+
+    async def delete_subject(self, subject_id: UUID) -> None:
+        """Delete the subject (children go with it; callers check it is unused)."""
+        ...
+
+    async def count_subject_items(self, subject_ids: AbstractCollection[UUID]) -> int:
+        """How many item-to-subject links the subjects have."""
+        ...
+
+    async def count_subject_topics(self, subject_ids: AbstractCollection[UUID]) -> int:
+        """How many topics hang under the subjects."""
         ...
 
     # - - - Topics - - -

@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
 from app.modules.library.application.views import ItemCardView
@@ -69,6 +69,7 @@ class SuggestionView:
     url: str | None
     note: str | None
     user_name: str
+    details: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True, slots=True)

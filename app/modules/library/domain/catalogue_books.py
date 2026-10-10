@@ -8,6 +8,7 @@ from collections.abc import Mapping, Sequence
 from datetime import datetime
 from uuid import UUID
 
+from app.modules.library.domain.catalogue_labels import MAX_TAGS
 from app.modules.library.domain.entities import (
     BookDetails,
     Item,
@@ -54,6 +55,7 @@ class BookData(BaseModel):
     years_of_study: list[int] = Field(default_factory=list, max_length=4)
     subjects: list[SubjectLink] = Field(default_factory=list, max_length=20)
     topics: list[TopicLink] = Field(default_factory=list, max_length=100)
+    tags: list[str] = Field(default_factory=list, max_length=MAX_TAGS)
     rights: Rights = Rights.OFFICIAL
     licence: str | None = Field(default=None, max_length=40)
     rights_basis: dict[str, object] = Field(default_factory=dict)
@@ -134,7 +136,10 @@ def new_book(data: BookData, *, item_id: UUID, owner_id: UUID, now: datetime) ->
 
 
 def book_data_from(
-    item: Item, subjects: Sequence[SubjectLink], topics: Sequence[TopicLink]
+    item: Item,
+    subjects: Sequence[SubjectLink],
+    topics: Sequence[TopicLink],
+    tags: Sequence[str] = (),
 ) -> BookData:
     """The form data of a stored book (the editor shows it)."""
     details = item.book
@@ -154,6 +159,7 @@ def book_data_from(
         years_of_study=list(item.years_of_study),
         subjects=list(subjects),
         topics=list(topics),
+        tags=list(tags),
         rights=details.rights,
         licence=details.licence,
         rights_basis=dict(details.rights_basis),

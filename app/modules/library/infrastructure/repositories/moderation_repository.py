@@ -92,6 +92,7 @@ def _suggestion_from(row: SuggestionRow) -> BookSuggestion:
         note=row.note,
         status=SuggestionStatus(row.status),
         handled_by=row.handled_by,
+        details=dict(row.details) if row.details is not None else None,
     )
 
 
@@ -269,6 +270,7 @@ class SqlModerationRepository:
                 note=suggestion.note,
                 status=suggestion.status.value,
                 handled_by=suggestion.handled_by,
+                details=suggestion.details,
                 created_at=suggestion.created_at,
             )
         )

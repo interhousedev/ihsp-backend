@@ -13,6 +13,7 @@ from app.modules.library.application.taxonomy.views import (
     CollectionView,
     LibraryStatsView,
     ManageCollectionView,
+    ManageSubjectView,
     ManageTopicView,
     SearchMissView,
     TopicView,
@@ -98,6 +99,8 @@ class ManageTopicResponse(BaseModel):
     slug: str
     position: int
     year_of_study: int | None
+    code: str | None = None
+    archived: bool = False
 
     @classmethod
     def from_view(cls, view: ManageTopicView) -> Self:
@@ -110,6 +113,8 @@ class ManageTopicResponse(BaseModel):
             slug=view.slug,
             position=view.position,
             year_of_study=view.year_of_study,
+            code=view.code,
+            archived=view.archived,
         )
 
 
@@ -123,6 +128,7 @@ class CreateTopicBody(BaseModel):
     parent_id: UUID | None = None
     slug: Annotated[str, StringConstraints(max_length=80)] | None = None
     year_of_study: Annotated[int, Field(ge=1, le=4)] | None = None
+    code: Annotated[str, StringConstraints(max_length=40)] | None = None
 
 
 class UpdateTopicBody(BaseModel):
@@ -135,6 +141,61 @@ class UpdateTopicBody(BaseModel):
     parent_id: UUID | None = None
     slug: Annotated[str, StringConstraints(max_length=80)] | None = None
     year_of_study: Annotated[int, Field(ge=1, le=4)] | None = None
+    code: Annotated[str, StringConstraints(max_length=40)] | None = None
+    archived: bool | None = None
+    position: Annotated[int, Field(ge=0, le=10000)] | None = None
+
+
+# - - - Subjects - - -
+
+
+class ManageSubjectResponse(BaseModel):
+    """`ManageSubject`: a node of the librarian's subject tree (flat, `parent_id`)."""
+
+    id: UUID
+    parent_id: UUID | None
+    name: NamesResponse
+    slug: str
+    code: str | None
+    position: int
+    archived: bool
+
+    @classmethod
+    def from_view(cls, view: ManageSubjectView) -> Self:
+        """Map the read model."""
+        return cls(
+            id=view.id,
+            parent_id=view.parent_id,
+            name=NamesResponse.from_names(view.name),
+            slug=view.slug,
+            code=view.code,
+            position=view.position,
+            archived=view.archived,
+        )
+
+
+class CreateSubjectBody(BaseModel):
+    """`SubjectInput`."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: NamesBody
+    parent_id: UUID | None = None
+    code: Annotated[str, StringConstraints(max_length=40)] | None = None
+    slug: Annotated[str, StringConstraints(max_length=80)] | None = None
+
+
+class UpdateSubjectBody(BaseModel):
+    """`Partial<SubjectInput>` with the archive flag and the position among siblings."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: NamesBody | None = None
+    parent_id: UUID | None = None
+    code: Annotated[str, StringConstraints(max_length=40)] | None = None
+    slug: Annotated[str, StringConstraints(max_length=80)] | None = None
+    archived: bool | None = None
+    position: Annotated[int, Field(ge=0, le=10000)] | None = None
 
 
 # - - - Collections - - -

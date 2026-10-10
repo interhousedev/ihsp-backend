@@ -35,6 +35,8 @@ class CreateBook:
             await uow.items.add(item)
             await uow.items.set_subject_links(item.id, data.subjects)
             await uow.items.set_topic_links(item.id, data.topics)
+            await uow.labels.set_item_authors(item.id, data.authors)
+            await uow.labels.set_item_tags(item.id, data.tags)
             await uow.events.append(
                 item.id, EventKind.CREATED, at=now, actor_id=actor.user_id
             )

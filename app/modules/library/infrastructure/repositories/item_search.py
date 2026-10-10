@@ -25,15 +25,18 @@ from app.modules.library.domain.enums import (
     ItemStatus,
     Visibility,
 )
+from app.modules.library.domain.name_keys import name_key
 from app.modules.library.domain.search_query import ParsedQuery
 from app.modules.library.infrastructure.orm import CollectionItem as CollectionRow
 from app.modules.library.infrastructure.orm import ExternalDetails as ExternalRow
 from app.modules.library.infrastructure.orm import Item as ItemRow
 from app.modules.library.infrastructure.orm import ItemPage as PageRow
 from app.modules.library.infrastructure.orm import ItemSubject as SubjectRow
+from app.modules.library.infrastructure.orm import ItemTag as TagLinkRow
 from app.modules.library.infrastructure.orm import ItemTopic as TopicRow
 from app.modules.library.infrastructure.orm import MaterialDetails as MaterialRow
 from app.modules.library.infrastructure.orm import ShelfEntry as ShelfRow
+from app.modules.library.infrastructure.orm import Tag as TagRow
 from app.shared.text import search_normalize
 
 from sqlalchemy import (
@@ -148,11 +151,12 @@ def filter_clauses(filters: ItemFilters, viewer: Viewer) -> list[ColumnElement[b
 def _link_clauses(filters: ItemFilters) -> list[ColumnElement[bool]]:
     clauses: list[ColumnElement[bool]] = []
     if filters.subject_id is not None:
+        wanted = filters.subject_ids or (filters.subject_id,)
         clauses.append(
             exists(
                 select(1).where(
                     SubjectRow.item_id == ItemRow.id,
-                    SubjectRow.subject_id == filters.subject_id,
+                    SubjectRow.subject_id.in_(wanted),
                 )
             )
         )
@@ -163,6 +167,16 @@ def _link_clauses(filters: ItemFilters) -> list[ColumnElement[bool]]:
                     TopicRow.item_id == ItemRow.id,
                     TopicRow.topic_id == filters.topic_id,
                 )
+            )
+        )
+    if filters.tag:
+        key = name_key(filters.tag)
+        clauses.append(
+            exists(
+                select(1)
+                .select_from(TagLinkRow)
+                .join(TagRow, TagRow.id == TagLinkRow.tag_id)
+                .where(TagLinkRow.item_id == ItemRow.id, TagRow.name_key == key)
             )
         )
     if filters.collection_id is not None:

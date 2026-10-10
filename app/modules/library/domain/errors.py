@@ -24,6 +24,13 @@ class ListNotFoundError(NotFoundError):
     message_key = "library-list-not-found"
 
 
+class SubjectNotFoundError(NotFoundError):
+    """Subject missing."""
+
+    code = "library/subject-not-found"
+    message_key = "library-subject-not-found"
+
+
 class TopicNotFoundError(NotFoundError):
     """Topic missing."""
 

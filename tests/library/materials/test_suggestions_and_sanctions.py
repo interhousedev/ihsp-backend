@@ -12,7 +12,7 @@ from app.modules.library.domain.errors import (
 )
 from app.modules.library.ports.unit_of_work import UowFactory
 from app.modules.library.wiring import LibraryServices
-from app.shared.actor import Actor
+from app.shared.actor import Actor, Role
 from app.shared.base_error import ForbiddenError, ValidationFailedError
 from app.shared.ids import new_id
 from app.shared.notifications import AuditDraft
@@ -47,6 +47,110 @@ async def test_a_suggestion_waits_in_the_queue(
     assert stored.note == "For the olympiad group"
     assert stored.status is SuggestionStatus.NEW
     assert stored.created_at == clock.now()
+
+
+async def test_a_suggestion_keeps_the_whole_form(
+    library: LibraryServices,
+    student: Actor,
+    librarian: Actor,
+    uow_factory: UowFactory,
+) -> None:
+    """The editor in suggest mode sends authors, tags, subjects and topics too."""
+    subject = (
+        await library.taxonomy.create_subject.execute(
+            librarian, name={"en": "Economics"}
+        )
+    ).id
+    topic = (
+        await library.taxonomy.create_topic.execute(
+            librarian, subject_id=subject, name={"en": "Money"}
+        )
+    ).id
+    form = {
+        "title": "Money and banks",
+        "authors": ["Paul Samuelson", "Пол Самуэльсон"],
+        "tags": ["economics", "classic"],
+        "language": "en",
+        "type": "textbook",
+        "subjects": [{"subject_id": str(subject), "role": "textbook"}],
+        "topics": [{"topic_id": str(topic)}],
+    }
+
+    await library.materials.create_suggestion.execute(
+        student,
+        title="Money and banks",
+        url=None,
+        file_id=None,
+        note=None,
+        details=form,
+    )
+
+    async with uow_factory() as uow:
+        (stored,) = await uow.moderation.new_suggestions(limit=10, offset=0)
+        assert stored.details == form
+        # Nothing was added to the catalogue: a librarian decides first.
+        assert await uow.labels.search_authors("Samuelson", limit=5) == []
+        assert await uow.labels.search_tags("economics", limit=5) == []
+    seen = await library.materials.get_suggestion.execute(librarian, stored.id)
+    assert seen.details == form
+
+
+async def test_a_suggestion_with_unknown_subjects_or_foreign_cover_is_refused(
+    library: LibraryServices,
+    student: Actor,
+    other_student: Actor,
+    files_api: MaterialFilesApi,
+) -> None:
+    """Subjects and topics must exist; the cover must be the suggester's file."""
+    base = {"title": "X", "language": "en", "type": "textbook"}
+    with pytest.raises(ValidationFailedError):
+        await library.materials.create_suggestion.execute(
+            student,
+            title="X",
+            url=None,
+            file_id=None,
+            note=None,
+            details={
+                **base,
+                "subjects": [{"subject_id": str(new_id()), "role": "core"}],
+            },
+        )
+    with pytest.raises(ValidationFailedError):
+        await library.materials.create_suggestion.execute(
+            student,
+            title="X",
+            url=None,
+            file_id=None,
+            note=None,
+            details={**base, "topics": [{"topic_id": str(new_id())}]},
+        )
+    cover = files_api.upload(other_student.user_id, name="cover.png")
+    with pytest.raises(ValidationFailedError):
+        await library.materials.create_suggestion.execute(
+            student,
+            title="X",
+            url=None,
+            file_id=None,
+            note=None,
+            details={**base, "cover_file_id": str(cover)},
+        )
+
+
+async def test_students_cannot_read_a_suggestion_back(
+    library: LibraryServices, student: Actor, uow_factory: UowFactory
+) -> None:
+    """Only librarians open a suggestion."""
+    await library.materials.create_suggestion.execute(
+        student, title="X", url=None, file_id=None, note=None
+    )
+    async with uow_factory() as uow:
+        (stored,) = await uow.moderation.new_suggestions(limit=10, offset=0)
+    with pytest.raises(ForbiddenError):
+        await library.materials.get_suggestion.execute(student, stored.id)
+    with pytest.raises(SuggestionNotFoundError):
+        await library.materials.get_suggestion.execute(
+            Actor(student.user_id, frozenset({Role.LIBRARIAN})), new_id()
+        )
 
 
 async def test_a_suggestion_may_carry_the_uploaded_file(

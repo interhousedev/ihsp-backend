@@ -41,6 +41,21 @@ class ManageTopicView:
     slug: str
     position: int
     year_of_study: int | None
+    code: str | None = None
+    archived: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class ManageSubjectView:
+    """`ManageSubject`: all three names, the code and the archive flag."""
+
+    id: UUID
+    parent_id: UUID | None
+    name: dict[str, str]
+    slug: str
+    code: str | None
+    position: int
+    archived: bool
 
 
 # - - - Collections - - -

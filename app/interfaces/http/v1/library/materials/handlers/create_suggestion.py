@@ -11,6 +11,11 @@ async def create_suggestion(
 ) -> Response:
     """Suggest a book; it waits in the librarian queue."""
     await library.materials.create_suggestion.execute(
-        actor, title=body.title, url=body.url, file_id=body.file_id, note=body.note
+        actor,
+        title=body.title,
+        url=body.url,
+        file_id=body.file_id,
+        note=body.note,
+        details=body.book.model_dump(mode="json") if body.book else None,
     )
     return Response(status_code=status.HTTP_201_CREATED)

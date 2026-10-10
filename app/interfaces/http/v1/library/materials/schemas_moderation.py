@@ -5,6 +5,7 @@ from typing import Self
 from uuid import UUID
 
 from app.interfaces.http.v1.library.catalogue.schemas_items import ItemCardSchema
+from app.interfaces.http.v1.library.materials.schemas_materials import SuggestedBookBody
 from app.modules.library.application.materials.views import (
     QueueKind,
     QueueRowView,
@@ -13,7 +14,11 @@ from app.modules.library.application.materials.views import (
     SuggestionView,
     UploaderView,
 )
-from app.modules.library.domain.enums import ReportReason, SanctionKind
+from app.modules.library.domain.enums import (
+    ReportReason,
+    SanctionKind,
+    SuggestionStatus,
+)
 from app.modules.library.domain.material_flow import ResolveAction
 from app.modules.library.domain.moderation_entities import Sanction
 
@@ -83,6 +88,7 @@ class SuggestionResponse(BaseModel):
     url: str | None
     note: str | None
     user_name: str
+    book: SuggestedBookBody | None = None
 
     @classmethod
     def from_view(cls, view: SuggestionView) -> Self:
@@ -93,7 +99,21 @@ class SuggestionResponse(BaseModel):
             url=view.url,
             note=view.note,
             user_name=view.user_name,
+            book=(
+                SuggestedBookBody.model_validate(view.details) if view.details else None
+            ),
         )
+
+
+class SuggestionDetailResponse(BaseModel):
+    """`SuggestionDetail`: one suggestion as the editor prefills a book from it."""
+
+    id: UUID
+    title: str
+    url: str | None
+    note: str | None
+    status: SuggestionStatus
+    book: SuggestedBookBody | None = None
 
 
 class QueueRowResponse(BaseModel):

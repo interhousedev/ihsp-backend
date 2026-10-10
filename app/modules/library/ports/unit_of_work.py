@@ -7,6 +7,7 @@ from typing import Protocol, Self
 from app.modules.library.ports.annotation_repository import AnnotationRepository
 from app.modules.library.ports.external_repository import ExternalRepository
 from app.modules.library.ports.item_repository import EventRepository, ItemRepository
+from app.modules.library.ports.label_repository import LabelRepository
 from app.modules.library.ports.moderation_repository import ModerationRepository
 from app.modules.library.ports.page_repository import PageRepository
 from app.modules.library.ports.plan_repository import PlanRepository
@@ -30,6 +31,11 @@ class LibraryUnitOfWork(Protocol):
     @property
     def events(self) -> EventRepository:
         """History of items."""
+        ...
+
+    @property
+    def labels(self) -> LabelRepository:
+        """Authors and tags."""
         ...
 
     @property

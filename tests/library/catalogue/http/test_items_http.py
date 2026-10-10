@@ -181,7 +181,7 @@ async def test_item_detail_shape_for_a_book(
     assert set(body) == CARD_KEYS | {
         "book", "status", "status_reason", "status_note", "visibility", "subtitle",
         "description", "publisher", "isbn", "files", "topics", "lists", "can",
-        "rights_box", "progress",
+        "rights_box", "progress", "tags",
     }  # fmt: skip
     assert body["status"] == "published" and body["visibility"] == "lyceum"
     assert body["files"][0]["format"] == "pdf" and body["files"][0]["toc"] == []
@@ -351,12 +351,18 @@ async def test_subjects_endpoint_with_and_without_all(
     api: Api,
     library: LibraryServices,
     store_item: StoreItem,
-    academic: FakeAcademicDirectory,
+    librarian: Actor,
     student: Actor,
 ) -> None:
     """LIB-1: `[{id, name, item_count}]`; `?all=1` adds empty subjects."""
-    physics = academic.add_subject(new_id(), "Physics")
-    astronomy = academic.add_subject(new_id(), "Astronomy")
+    physics = (
+        await library.taxonomy.create_subject.execute(librarian, name={"en": "Physics"})
+    ).id
+    astronomy = (
+        await library.taxonomy.create_subject.execute(
+            librarian, name={"en": "Astronomy"}
+        )
+    ).id
     await put(
         library.core.uow_factory,
         store_item,
@@ -368,7 +374,15 @@ async def test_subjects_endpoint_with_and_without_all(
     shelves = (await client.get("/v1/library/subjects")).json()
     everything = (await client.get("/v1/library/subjects?all=1")).json()
 
-    assert shelves == [{"id": str(physics), "name": "Physics", "item_count": 1}]
+    assert shelves == [
+        {
+            "id": str(physics),
+            "name": "Physics",
+            "item_count": 1,
+            "parent_id": None,
+            "code": None,
+        }
+    ]
     assert {s["id"]: s["item_count"] for s in everything} == {
         str(physics): 1,
         str(astronomy): 0,

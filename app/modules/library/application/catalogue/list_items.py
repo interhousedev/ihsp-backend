@@ -1,6 +1,6 @@
 """List and search catalogue items (GET /library/items)."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Literal
 from uuid import UUID
 
@@ -20,6 +20,7 @@ from app.modules.library.domain.catalogue_search import (
 )
 from app.modules.library.domain.enums import ItemType, ShelfState, UploaderRole
 from app.modules.library.domain.search_query import parse_query
+from app.modules.library.domain.taxonomy_subjects import subject_descendants
 from app.modules.library.ports.stats_recorder import StatsRecorder
 from app.modules.library.ports.unit_of_work import UowFactory
 from app.settings import LibrarySettings
@@ -35,6 +36,7 @@ class ListItemsQuery:
     source: ItemSource = ItemSource.ALL
     subject_id: UUID | None = None
     topic_id: UUID | None = None
+    tag: str | None = None
     year_of_study: int | None = None
     type: ItemType | None = None
     language: str | None = None
@@ -90,6 +92,7 @@ class ListItems:
             source=query.source,
             subject_id=query.subject_id,
             topic_id=query.topic_id,
+            tag=query.tag,
             year_of_study=query.year_of_study,
             type=query.type,
             language=query.language,
@@ -106,6 +109,13 @@ class ListItems:
         offset = read_offset(query.cursor)
         locale = await resolve_locale(self.identity, actor, accept_language)
         async with self.uow_factory() as uow:
+            if query.subject_id is not None:
+                # A subject also shows what is filed under its sub-subjects.
+                tree = await uow.taxonomy.subjects()
+                wanted = {query.subject_id} | subject_descendants(
+                    tree, query.subject_id
+                )
+                filters = replace(filters, subject_ids=tuple(sorted(wanted)))
             found = await uow.items.search(
                 filters, viewer, limit=limit + 1, offset=offset
             )

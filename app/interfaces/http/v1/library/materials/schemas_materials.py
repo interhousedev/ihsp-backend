@@ -3,6 +3,10 @@
 from typing import Annotated, Self
 from uuid import UUID
 
+from app.interfaces.http.v1.library.catalogue.schemas_catalogue import (
+    BookSubjectInput,
+    BookTopicInput,
+)
 from app.interfaces.http.v1.library.catalogue.schemas_items import ItemCardSchema
 from app.modules.library.application.materials.inputs import MaterialData, MaterialPatch
 from app.modules.library.application.materials.views import UploadRowView
@@ -106,13 +110,34 @@ class UploadsParams(BaseModel):
     limit: int = Field(default=20, ge=1, le=100)
 
 
+class SuggestedBookBody(BaseModel):
+    """`SuggestedBook`: the book form without the librarian-only fields."""
+
+    title: str = Field(min_length=1, max_length=255)
+    subtitle: str | None = Field(default=None, max_length=255)
+    authors: list[str] = Field(default_factory=list, max_length=20)
+    translators: list[str] = Field(default_factory=list, max_length=20)
+    language: ItemLanguage
+    year_published: int | None = Field(default=None, ge=-3000, le=2200)
+    publisher: str | None = Field(default=None, max_length=255)
+    isbn: str | None = Field(default=None, max_length=32)
+    type: ItemType
+    description: str | None = Field(default=None, max_length=2000)
+    years_of_study: list[int] = Field(default_factory=list, max_length=4)
+    subjects: list[BookSubjectInput] = Field(default_factory=list, max_length=20)
+    topics: list[BookTopicInput] = Field(default_factory=list, max_length=100)
+    tags: list[str] = Field(default_factory=list, max_length=20)
+    cover_file_id: UUID | None = None
+
+
 class SuggestionBody(BaseModel):
-    """`POST /library/suggestions`."""
+    """`POST /library/suggestions`: a title and, from the editor, the whole form."""
 
     title: str = Field(min_length=1, max_length=255)
     url: str | None = Field(default=None, max_length=2000)
     file_id: UUID | None = None
     note: str | None = Field(default=None, max_length=1000)
+    book: SuggestedBookBody | None = None
 
 
 class LibraryReportBody(BaseModel):

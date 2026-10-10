@@ -46,6 +46,7 @@ class ItemsParams(BaseModel):
     source: ItemSource = ItemSource.ALL
     subject_id: UUID | None = None
     topic_id: UUID | None = None
+    tag: str | None = Field(default=None, max_length=40)
     year_of_study: int | None = Field(default=None, ge=1, le=12)
     type: ItemType | None = None
     language: str | None = Field(default=None, max_length=10)
@@ -104,11 +105,26 @@ class LibrarySubjectSchema(BaseModel):
     id: UUID
     name: str
     item_count: int
+    parent_id: UUID | None = None
+    code: str | None = None
 
     @classmethod
     def from_view(cls, view: SubjectCountView) -> Self:
         """Build from the use case result."""
-        return cls(id=view.id, name=view.name, item_count=view.item_count)
+        return cls(
+            id=view.id,
+            name=view.name,
+            item_count=view.item_count,
+            parent_id=view.parent_id,
+            code=view.code,
+        )
+
+
+class TagSuggestionSchema(BaseModel):
+    """`TagSuggestion`: an existing tag and how many published items carry it."""
+
+    name: str
+    item_count: int
 
 
 # - - - Book input - - -
@@ -171,6 +187,7 @@ class BookInputBody(BaseModel):
     years_of_study: list[int] = Field(max_length=4)
     subjects: list[BookSubjectInput] = Field(max_length=20)
     topics: list[BookTopicInput] = Field(max_length=100)
+    tags: list[str] = Field(default_factory=list, max_length=20)
     rights: Rights
     licence: str | None = Field(default=None, max_length=40)
     rights_basis: RightsBasisSchema = Field(default_factory=RightsBasisSchema)
@@ -195,6 +212,7 @@ class BookInputBody(BaseModel):
             years_of_study=self.years_of_study,
             subjects=[s.to_link() for s in self.subjects],
             topics=[t.to_link(i) for i, t in enumerate(self.topics)],
+            tags=self.tags,
             rights=self.rights,
             licence=self.licence,
             rights_basis=self.rights_basis.to_basis(),
@@ -231,6 +249,7 @@ class BookInputBody(BaseModel):
                 )
                 for t in data.topics
             ],
+            tags=list(data.tags),
             rights=data.rights,
             licence=data.licence,
             rights_basis=_basis_schema(data.rights_basis),
@@ -258,6 +277,7 @@ NOT_NULLABLE = frozenset(
         "years_of_study",
         "subjects",
         "topics",
+        "tags",
         "rights",
         "rights_basis",
         "visibility",
@@ -282,6 +302,7 @@ class BookPatchBody(BaseModel):
     years_of_study: list[int] | None = Field(default=None, max_length=4)
     subjects: list[BookSubjectInput] | None = Field(default=None, max_length=20)
     topics: list[BookTopicInput] | None = Field(default=None, max_length=100)
+    tags: list[str] | None = Field(default=None, max_length=20)
     rights: Rights | None = None
     licence: str | None = Field(default=None, max_length=40)
     rights_basis: RightsBasisSchema | None = None

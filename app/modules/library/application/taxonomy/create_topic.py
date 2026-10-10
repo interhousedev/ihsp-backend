@@ -10,6 +10,7 @@ from app.modules.library.domain.taxonomy_errors import (
     TopicSlugTakenError,
     UnknownSubjectError,
 )
+from app.modules.library.domain.taxonomy_subjects import clean_code
 from app.modules.library.domain.taxonomy_topics import (
     Topic,
     check_parent,
@@ -46,6 +47,7 @@ class CreateTopic:
         parent_id: UUID | None = None,
         slug: str | None = None,
         year_of_study: int | None = None,
+        code: str | None = None,
     ) -> ManageTopicView:
         """Create the topic last among its siblings.
 
@@ -79,6 +81,7 @@ class CreateTopic:
                 year_of_study=year_of_study,
                 created_at=now,
                 updated_at=now,
+                code=clean_code(code),
             )
             await uow.taxonomy.add_topic(topic)
             uow.audit(

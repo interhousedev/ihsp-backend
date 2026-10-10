@@ -418,12 +418,14 @@ async def test_text_of_external_and_held_items_is_refused(
 async def test_subjects_list_counts_and_hides_empty_ones_by_default(
     library: LibraryServices,
     store_item: StoreItem,
-    academic: FakeAcademicDirectory,
+    librarian: Actor,
     student: Actor,
 ) -> None:
     """LIB-1: subjects with visible items; `all` adds the empty ones."""
-    physics = academic.add_subject(new_id(), "Physics")
-    academic.add_subject(new_id(), "Astronomy")
+    physics = (
+        await library.taxonomy.create_subject.execute(librarian, name={"en": "Physics"})
+    ).id
+    await library.taxonomy.create_subject.execute(librarian, name={"en": "Astronomy"})
     await put(
         library.core.uow_factory,
         store_item,
@@ -444,6 +446,6 @@ async def test_subjects_list_counts_and_hides_empty_ones_by_default(
 
     assert [(s.name, s.item_count) for s in shelves] == [("Physics", 1)]
     assert [(s.name, s.item_count) for s in everything] == [
-        ("Astronomy", 0),
         ("Physics", 1),
+        ("Astronomy", 0),
     ]

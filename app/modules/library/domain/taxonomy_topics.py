@@ -35,6 +35,13 @@ class Topic:
     year_of_study: int | None
     created_at: datetime
     updated_at: datetime
+    code: str | None = None
+    archived_at: datetime | None = None
+
+    @property
+    def archived(self) -> bool:
+        """True when the topic is hidden from the catalogue (its links stay)."""
+        return self.archived_at is not None
 
 
 @dataclass(frozen=True, slots=True)
@@ -131,6 +138,16 @@ def descendant_ids(topics: Sequence[Topic], topic_id: UUID) -> set[UUID]:
                 found.add(child)
                 stack.append(child)
     return found
+
+
+def visible_topics(topics: Sequence[Topic]) -> list[Topic]:
+    """The topics readers see: archived ones and everything below them are left out."""
+    hidden: set[UUID] = set()
+    for topic in topics:
+        if topic.archived:
+            hidden.add(topic.id)
+            hidden |= descendant_ids(topics, topic.id)
+    return [t for t in topics if t.id not in hidden]
 
 
 def check_parent(

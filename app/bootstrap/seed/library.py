@@ -172,6 +172,61 @@ async def _store_pdf(
     return ref.id
 
 
+# Slugs of the default tree (migration `library_0002`) the demo books are filed under.
+LIBRARY_SUBJECT_SLUGS = {MATH: "mathematics", UZBEK: "uzbek"}
+# Subjects the demo adds to the default tree: (slug, parent slug, names, ББК/УДК code).
+EXTRA_SUBJECTS: tuple[tuple[str, str | None, dict[str, str], str], ...] = (
+    (
+        "business",
+        None,
+        {
+            "uz": "Biznes va tadbirkorlik",
+            "ru": "Бизнес и предпринимательство",
+            "en": "Business and Entrepreneurship",
+        },
+        "ББК 65.290 · УДК 658",
+    ),
+    (
+        "marketing",
+        "business",
+        {"uz": "Marketing", "ru": "Маркетинг", "en": "Marketing"},
+        "ББК 65.290-2 · УДК 658.8",
+    ),
+    (
+        "academic-writing",
+        "english",
+        {
+            "uz": "Akademik yozuv",
+            "ru": "Академическое письмо",
+            "en": "Academic Writing",
+        },
+        "ББК 81.2Англ · УДК 811.111'42",
+    ),
+)
+
+
+async def _ensure_library_subjects(
+    container: Container, librarian: Actor
+) -> dict[int, UUID]:
+    """The tree's subjects for the demo books; adds the demo's extra subjects."""
+    taxonomy = container.library.taxonomy
+    existing = await taxonomy.list_manage_subjects.execute(librarian)
+    by_slug = {s.slug: s.id for s in existing}
+    for slug, parent, names, code in EXTRA_SUBJECTS:
+        if slug in by_slug:
+            continue
+        created = await taxonomy.create_subject.execute(
+            librarian,
+            name=names,
+            parent_id=by_slug.get(parent) if parent else None,
+            code=code,
+            slug=slug,
+        )
+        by_slug[slug] = created.id
+        log.info("seed_library_subject_created", slug=slug)
+    return {emis: by_slug[slug] for emis, slug in LIBRARY_SUBJECT_SLUGS.items()}
+
+
 async def _ensure_topics(
     container: Container, librarian: Actor, subjects: dict[int, UUID]
 ) -> dict[int, UUID]:
@@ -342,7 +397,7 @@ async def seed_library(
     )
     teacher = Actor(user_id=teacher_user.id, roles=frozenset({Role.TEACHER}))
     student = Actor(user_id=student_user.id, roles=frozenset({Role.STUDENT}))
-    subjects = {MATH: subject_ids[MATH], UZBEK: subject_ids[UZBEK]}
+    subjects = await _ensure_library_subjects(container, librarian)
 
     topics = await _ensure_topics(container, librarian, subjects)
     book_ids = [

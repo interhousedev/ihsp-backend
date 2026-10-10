@@ -17,6 +17,8 @@ def manage_topic_view(topic: Topic) -> ManageTopicView:
         slug=topic.slug,
         position=topic.position,
         year_of_study=topic.year_of_study,
+        code=topic.code,
+        archived=topic.archived,
     )
 
 

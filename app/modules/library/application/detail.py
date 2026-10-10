@@ -112,6 +112,7 @@ class ItemDetailView:
     external_keywords: tuple[str, ...] | None = None
     external_isbn: str | None = None
     progress: ProgressView | None = None
+    tags: tuple[str, ...] = ()
 
 
 def file_view(item_file: ItemFile) -> ItemFileView:
@@ -170,6 +171,7 @@ class DetailBuilder:
             if viewer is not None and item.kind is not ItemKind.EXTERNAL
             else None
         )
+        tags = (await uow.labels.item_tags([item.id])).get(item.id, [])
         external = item.external
         snapshot = external.snapshot if external else {}
         keywords = snapshot.get("keywords")
@@ -207,6 +209,7 @@ class DetailBuilder:
                 tuple(str(k) for k in keywords) if isinstance(keywords, list) else None
             ),
             external_isbn=(str(snapshot["isbn"]) if snapshot.get("isbn") else None),
+            tags=tuple(tags),
             progress=(
                 ProgressView(
                     file_id=saved.file_id,

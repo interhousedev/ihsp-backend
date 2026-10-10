@@ -26,6 +26,7 @@ async def list_items(
             source=params.source,
             subject_id=params.subject_id,
             topic_id=params.topic_id,
+            tag=params.tag,
             year_of_study=params.year_of_study,
             type=params.type,
             language=params.language,

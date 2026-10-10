@@ -36,6 +36,12 @@ from app.modules.library.application.taxonomy.list_reading_lists import (
     ListReadingLists,
 )
 from app.modules.library.application.taxonomy.list_topics import ListTopics
+from app.modules.library.application.taxonomy.manage_subjects import (
+    CreateSubject,
+    DeleteSubject,
+    ListManageSubjects,
+    UpdateSubject,
+)
 from app.modules.library.application.taxonomy.reading_list_builder import (
     ReadingListBuilder,
 )
@@ -58,6 +64,10 @@ from app.modules.library.wiring_core import LibraryCore
 class TaxonomyServices:
     """Use cases of the taxonomy area."""
 
+    list_manage_subjects: ListManageSubjects
+    create_subject: CreateSubject
+    update_subject: UpdateSubject
+    delete_subject: DeleteSubject
     list_topics: ListTopics
     list_manage_topics: ListManageTopics
     create_topic: CreateTopic
@@ -95,6 +105,10 @@ def build_taxonomy(core: LibraryCore) -> TaxonomyServices:
     )
     counters = RedisStatsCounters(core.deps.redis)
     return TaxonomyServices(
+        list_manage_subjects=ListManageSubjects(uow_factory=core.uow_factory),
+        create_subject=CreateSubject(uow_factory=core.uow_factory, clock=core.clock),
+        update_subject=UpdateSubject(uow_factory=core.uow_factory, clock=core.clock),
+        delete_subject=DeleteSubject(uow_factory=core.uow_factory),
         list_topics=ListTopics(uow_factory=core.uow_factory, identity=core.identity),
         list_manage_topics=ListManageTopics(uow_factory=core.uow_factory),
         create_topic=CreateTopic(

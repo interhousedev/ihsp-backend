@@ -20,6 +20,7 @@ from app.modules.library.application.materials.delete_owner import (
     DeleteOwnerMaterials,
 )
 from app.modules.library.application.materials.drafts import MaterialDrafts
+from app.modules.library.application.materials.get_suggestion import GetSuggestion
 from app.modules.library.application.materials.list_my_uploads import ListMyUploads
 from app.modules.library.application.materials.list_queue import ListQueue
 from app.modules.library.application.materials.purge_files import PurgeFiles
@@ -59,6 +60,7 @@ class MaterialsServices:
     list_queue: ListQueue
     create_suggestion: CreateSuggestion
     decide_suggestion: DecideSuggestion
+    get_suggestion: GetSuggestion
     create_sanction: CreateSanction
     list_sanctions: ListSanctions
     remind_queue: RemindQueue
@@ -141,9 +143,13 @@ def build_materials(core: LibraryCore) -> MaterialsServices:
             academic=core.academic,
         ),
         create_suggestion=CreateSuggestion(
-            uow_factory=core.uow_factory, clock=core.clock, files=core.files
+            uow_factory=core.uow_factory,
+            clock=core.clock,
+            files=core.files,
+            academic=core.academic,
         ),
         decide_suggestion=DecideSuggestion(uow_factory=core.uow_factory),
+        get_suggestion=GetSuggestion(uow_factory=core.uow_factory),
         create_sanction=CreateSanction(
             uow_factory=core.uow_factory, clock=core.clock, identity=core.identity
         ),

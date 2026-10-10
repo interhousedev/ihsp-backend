@@ -18,5 +18,6 @@ async def create_topic(
         parent_id=body.parent_id,
         slug=body.slug,
         year_of_study=body.year_of_study,
+        code=body.code,
     )
     return ManageTopicResponse.from_view(view)

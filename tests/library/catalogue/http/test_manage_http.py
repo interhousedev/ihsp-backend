@@ -294,12 +294,12 @@ async def test_a_file_of_another_user_cannot_be_attached(
 
 async def test_import_over_http(
     api: Api,
+    library: LibraryServices,
     librarian: Actor,
-    academic: FakeAcademicDirectory,
     files_api: FakeFilesApi,
 ) -> None:
     """LIB-3: `{created, errors: [{row, message}]}`."""
-    academic.add_subject(new_id(), "Physics")
+    await library.taxonomy.create_subject.execute(librarian, name={"en": "Physics"})
     csv_file = files_api.add_file(
         owner_id=librarian.user_id,
         name="books.csv",

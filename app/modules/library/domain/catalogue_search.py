@@ -36,7 +36,9 @@ class ItemFilters:
     query: ParsedQuery | None = None
     source: ItemSource = ItemSource.ALL
     subject_id: UUID | None = None
+    subject_ids: tuple[UUID, ...] = ()
     topic_id: UUID | None = None
+    tag: str | None = None
     year_of_study: int | None = None
     type: ItemType | None = None
     language: str | None = None

@@ -38,10 +38,11 @@ class GetBookDraft:
             item = await self.support.get_book(uow, book_id)
             subjects = (await uow.items.subject_links([item.id])).get(item.id, [])
             topics = (await uow.items.topic_links([item.id])).get(item.id, [])
+            tags = (await uow.labels.item_tags([item.id])).get(item.id, [])
             facts = await self.support.facts(uow, item)
             detail = await self.support.detail_view(uow, item, actor, accept_language)
         return BookDraftView(
             item=detail,
-            data=book_data_from(item, subjects, topics),
+            data=book_data_from(item, subjects, topics, tags),
             checklist=publish_checklist(facts, today=self.support.today()),
         )

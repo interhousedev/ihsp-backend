@@ -1,6 +1,7 @@
 """Rename, re-slug, re-date or move a topic (LIB-4, LIB-2)."""
 
 from collections.abc import Mapping
+from datetime import datetime
 from uuid import UUID
 
 from app.modules.library.application.taxonomy.topic_views import manage_topic_view
@@ -11,6 +12,7 @@ from app.modules.library.domain.taxonomy_errors import (
     TopicSlugTakenError,
     TopicSubjectFixedError,
 )
+from app.modules.library.domain.taxonomy_subjects import clean_code
 from app.modules.library.domain.taxonomy_topics import (
     Topic,
     check_parent,
@@ -18,7 +20,7 @@ from app.modules.library.domain.taxonomy_topics import (
     validate_slug,
 )
 from app.modules.library.domain.taxonomy_unset import UNSET, Unset
-from app.modules.library.ports.unit_of_work import UowFactory
+from app.modules.library.ports.unit_of_work import LibraryUnitOfWork, UowFactory
 from app.shared.actor import Actor, Role
 from app.shared.clock import Clock
 from app.shared.notifications import AuditDraft
@@ -42,6 +44,9 @@ class UpdateTopic:
         parent_id: UUID | None | Unset = UNSET,
         year_of_study: int | None | Unset = UNSET,
         subject_id: UUID | Unset = UNSET,
+        code: str | None | Unset = UNSET,
+        archived: bool | Unset = UNSET,
+        position: int | Unset = UNSET,
     ) -> ManageTopicView:
         """Apply the given changes; `None` clears the year or moves to the root.
 
@@ -62,10 +67,14 @@ class UpdateTopic:
                 topic.year_of_study = year_of_study
             if not isinstance(parent_id, Unset):
                 self._move(topic, topics, parent_id)
+            now = self.clock.now()
+            _apply_flags(topic, code, archived, now)
+            if not isinstance(position, Unset):
+                await self._reorder(uow, topic, topics, position, now)
             if not isinstance(slug, Unset):
                 topic.slug = validate_slug(slug)
             self._check_slug(topic, topics)
-            topic.updated_at = self.clock.now()
+            topic.updated_at = now
             await uow.taxonomy.save_topic(topic)
             uow.audit(
                 AuditDraft(
@@ -76,6 +85,27 @@ class UpdateTopic:
             )
             await uow.commit()
         return manage_topic_view(topic)
+
+    @staticmethod
+    async def _reorder(
+        uow: LibraryUnitOfWork,
+        topic: Topic,
+        topics: list[Topic],
+        position: int,
+        now: datetime,
+    ) -> None:
+        """Put the topic at `position` among its siblings, renumbering them 0..n."""
+        siblings = sorted(
+            (t for t in topics if t.parent_id == topic.parent_id and t.id != topic.id),
+            key=lambda t: (t.position, t.slug),
+        )
+        siblings.insert(max(0, min(position, len(siblings))), topic)
+        for index, sibling in enumerate(siblings):
+            if sibling.position != index:
+                sibling.position = index
+                if sibling.id != topic.id:
+                    sibling.updated_at = now
+                    await uow.taxonomy.save_topic(sibling)
 
     @staticmethod
     def _move(topic: Topic, topics: list[Topic], parent_id: UUID | None) -> None:
@@ -101,3 +131,13 @@ class UpdateTopic:
             for t in topics
         ):
             raise TopicSlugTakenError(params={"slug": topic.slug})
+
+
+def _apply_flags(
+    topic: Topic, code: str | None | Unset, archived: bool | Unset, now: datetime
+) -> None:
+    """The classification code and the archive flag, when they were sent."""
+    if not isinstance(code, Unset):
+        topic.code = clean_code(code)
+    if not isinstance(archived, Unset):
+        topic.archived_at = (topic.archived_at or now) if archived else None

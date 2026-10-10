@@ -13,6 +13,12 @@ from app.modules.library.infrastructure.orm.item import (
     ItemStat,
     MaterialDetails,
 )
+from app.modules.library.infrastructure.orm.labels import (
+    Author,
+    ItemAuthor,
+    ItemTag,
+    Tag,
+)
 from app.modules.library.infrastructure.orm.moderation import (
     BookSuggestion,
     ItemEvent,
@@ -33,11 +39,13 @@ from app.modules.library.infrastructure.orm.taxonomy import (
     ItemTopic,
     ReadingList,
     ReadingListItem,
+    Subject,
     Topic,
 )
 
 __all__ = [
     "Annotation",
+    "Author",
     "BookDetails",
     "BookPlan",
     "BookSuggestion",
@@ -47,11 +55,13 @@ __all__ = [
     "ExternalFeed",
     "ExternalFieldMap",
     "Item",
+    "ItemAuthor",
     "ItemEvent",
     "ItemFile",
     "ItemPage",
     "ItemReport",
     "ItemStat",
+    "ItemTag",
     "ItemSubject",
     "ItemTopic",
     "LessonItemRef",
@@ -61,5 +71,7 @@ __all__ = [
     "ReadingProgress",
     "Sanction",
     "ShelfEntry",
+    "Subject",
+    "Tag",
     "Topic",
 ]

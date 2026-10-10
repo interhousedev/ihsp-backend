@@ -9,7 +9,6 @@ from app.shared.actor import Actor
 from app.shared.base_error import ForbiddenError
 from app.shared.contracts.files import FilePurpose, FileScope
 from app.shared.ids import new_id
-from tests.fakes.library.academic import FakeAcademicDirectory
 from tests.fakes.library.catalogue_files import FakeScanFilesApi
 from tests.fakes.tasks import FakeTaskKicker
 
@@ -32,12 +31,11 @@ def _upload(files: FakeScanFilesApi, owner: Actor, name: str, data: bytes) -> UU
 async def test_good_rows_become_drafts_with_files_and_bad_rows_are_listed(
     library: LibraryServices,
     files_api: FakeScanFilesApi,
-    academic: FakeAcademicDirectory,
     librarian: Actor,
     kicker: FakeTaskKicker,
 ) -> None:
     """LIB-3: drafts for good rows (file attached, scan queued); errors by row."""
-    academic.add_subject(new_id(), "Physics")
+    await library.taxonomy.create_subject.execute(librarian, name={"en": "Physics"})
     pdf = _upload(files_api, librarian, "physics10.pdf", b"%PDF-1.4")
     csv_file = _upload(
         files_api,

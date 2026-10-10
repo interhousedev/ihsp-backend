@@ -2,6 +2,7 @@
 
 from app.interfaces.http.v1.library.materials.handlers import (
     decide_suggestion,
+    get_suggestion,
     list_queue,
     resolve_report,
     review_item,
@@ -26,4 +27,7 @@ router.add_api_route(
     decide_suggestion.decide_suggestion,
     methods=["POST"],
     status_code=status.HTTP_204_NO_CONTENT,
+)
+router.add_api_route(
+    "/suggestions/{suggestion_id}", get_suggestion.get_suggestion, methods=["GET"]
 )

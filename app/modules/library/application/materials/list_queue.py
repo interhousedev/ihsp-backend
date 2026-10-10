@@ -215,7 +215,9 @@ def _suggestion_row(suggestion: BookSuggestion, user_name: str) -> QueueRowView:
         kind=ItemKind.BOOK,
         type=ItemType.OTHER,
         title=suggestion.title,
-        author_label="",
+        author_label=", ".join(
+            str(a) for a in (suggestion.details or {}).get("authors", [])
+        ),
         language="other",
         year_published=None,
         cover_url=None,
@@ -241,5 +243,6 @@ def _suggestion_row(suggestion: BookSuggestion, user_name: str) -> QueueRowView:
             url=suggestion.url,
             note=suggestion.note,
             user_name=user_name,
+            details=suggestion.details,
         ),
     )

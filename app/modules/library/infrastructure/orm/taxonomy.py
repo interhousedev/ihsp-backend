@@ -1,6 +1,6 @@
 """ORM models of subjects/topics tagging, collections and reading lists."""
 
-from datetime import date
+from datetime import date, datetime
 from typing import Any
 from uuid import UUID
 
@@ -57,6 +57,34 @@ class Topic(IdMixin, TimestampMixin, Base):
     slug: Mapped[str] = mapped_column(String(80))
     position: Mapped[int] = mapped_column(Integer, server_default=text("0"))
     year_of_study: Mapped[int | None] = mapped_column(SmallInteger)
+    code: Mapped[str | None] = mapped_column(String(40))
+    archived_at: Mapped[datetime | None] = mapped_column()
+
+
+class Subject(IdMixin, TimestampMixin, Base):
+    """A subject of the library: a librarian-managed tree (names in uz/ru/en)."""
+
+    __tablename__ = "subjects"
+    __table_args__ = (
+        UniqueConstraint(
+            "parent_id",
+            "slug",
+            name="uq_subjects_parent_id",
+            postgresql_nulls_not_distinct=True,
+        ),
+        {"schema": "library"},
+    )
+
+    parent_id: Mapped[UUID | None] = mapped_column(
+        Uuid, ForeignKey("library.subjects.id", ondelete="CASCADE")
+    )
+    name: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, server_default=text("'{}'::jsonb")
+    )
+    slug: Mapped[str] = mapped_column(String(80))
+    code: Mapped[str | None] = mapped_column(String(40))
+    position: Mapped[int] = mapped_column(Integer, server_default=text("0"))
+    archived_at: Mapped[datetime | None] = mapped_column()
 
 
 class ItemSubject(TimestampMixin, Base):

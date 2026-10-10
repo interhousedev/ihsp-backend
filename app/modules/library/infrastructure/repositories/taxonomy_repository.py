@@ -6,10 +6,13 @@ from typing import Any
 from uuid import UUID
 
 from app.modules.library.domain.taxonomy_collections import Collection
+from app.modules.library.domain.taxonomy_subjects import Subject
 from app.modules.library.domain.taxonomy_topics import Topic
 from app.modules.library.infrastructure.orm import Collection as CollectionRow
 from app.modules.library.infrastructure.orm import CollectionItem as CollectionItemRow
+from app.modules.library.infrastructure.orm import ItemSubject as ItemSubjectRow
 from app.modules.library.infrastructure.orm import ItemTopic as ItemTopicRow
+from app.modules.library.infrastructure.orm import Subject as SubjectRow
 from app.modules.library.infrastructure.orm import Topic as TopicRow
 
 from sqlalchemy import delete, func, select
@@ -29,7 +32,33 @@ def _topic_from(row: TopicRow) -> Topic:
         year_of_study=row.year_of_study,
         created_at=row.created_at,
         updated_at=row.updated_at,
+        code=row.code,
+        archived_at=row.archived_at,
     )
+
+
+def _subject_from(row: SubjectRow) -> Subject:
+    return Subject(
+        id=row.id,
+        parent_id=row.parent_id,
+        name={k: str(v) for k, v in row.name.items()},
+        slug=row.slug,
+        position=row.position,
+        created_at=row.created_at,
+        updated_at=row.updated_at,
+        code=row.code,
+        archived_at=row.archived_at,
+    )
+
+
+def _apply_subject(row: SubjectRow, subject: Subject) -> None:
+    row.parent_id = subject.parent_id
+    row.name = dict(subject.name)
+    row.slug = subject.slug
+    row.code = subject.code
+    row.position = subject.position
+    row.archived_at = subject.archived_at
+    row.updated_at = subject.updated_at
 
 
 def _apply_topic(row: TopicRow, topic: Topic) -> None:
@@ -39,6 +68,8 @@ def _apply_topic(row: TopicRow, topic: Topic) -> None:
     row.slug = topic.slug
     row.position = topic.position
     row.year_of_study = topic.year_of_study
+    row.code = topic.code
+    row.archived_at = topic.archived_at
     row.updated_at = topic.updated_at
 
 
@@ -86,6 +117,79 @@ class SqlTaxonomyRepository:
         return {
             tid: {k: str(v) for k, v in name.items()} for tid, name in names.items()
         }
+
+    # - - - Subjects - - -
+
+    async def subjects(self, *, include_archived: bool = True) -> list[Subject]:
+        """Every subject by parent and position (without the archived when asked)."""
+        query = select(SubjectRow).order_by(
+            SubjectRow.parent_id.nulls_first(), SubjectRow.position, SubjectRow.slug
+        )
+        if not include_archived:
+            query = query.where(SubjectRow.archived_at.is_(None))
+        rows = await self.session.execute(query)
+        return [_subject_from(row) for row in rows.scalars()]
+
+    async def get_subject(self, subject_id: UUID) -> Subject | None:
+        """The subject or None."""
+        row = await self.session.get(SubjectRow, subject_id)
+        return _subject_from(row) if row else None
+
+    async def subject_names(
+        self, subject_ids: Sequence[UUID]
+    ) -> dict[UUID, dict[str, str]]:
+        """Names `{uz, ru, en}` of the existing subjects (unknown ids are absent)."""
+        if not subject_ids:
+            return {}
+        rows = await self.session.execute(
+            select(SubjectRow.id, SubjectRow.name).where(
+                SubjectRow.id.in_(set(subject_ids))
+            )
+        )
+        return {sid: {k: str(v) for k, v in name.items()} for sid, name in rows.all()}
+
+    async def add_subject(self, subject: Subject) -> None:
+        """Insert a subject."""
+        row = SubjectRow(id=subject.id, created_at=subject.created_at)
+        _apply_subject(row, subject)
+        self.session.add(row)
+        await self.session.flush()
+
+    async def save_subject(self, subject: Subject) -> None:
+        """Update names, slug, code, parent, position and the archive flag."""
+        row = await self.session.get(SubjectRow, subject.id)
+        if row is None:
+            raise LookupError(f"subject {subject.id} is not stored")
+        _apply_subject(row, subject)
+        await self.session.flush()
+
+    async def delete_subject(self, subject_id: UUID) -> None:
+        """Delete the subject (children go with it; callers check it is unused)."""
+        await self.session.execute(
+            delete(SubjectRow).where(SubjectRow.id == subject_id)
+        )
+
+    async def count_subject_items(self, subject_ids: AbstractCollection[UUID]) -> int:
+        """How many item-to-subject links the subjects have."""
+        if not subject_ids:
+            return 0
+        count = await self.session.scalar(
+            select(func.count())
+            .select_from(ItemSubjectRow)
+            .where(ItemSubjectRow.subject_id.in_(set(subject_ids)))
+        )
+        return int(count or 0)
+
+    async def count_subject_topics(self, subject_ids: AbstractCollection[UUID]) -> int:
+        """How many topics hang under the subjects."""
+        if not subject_ids:
+            return 0
+        count = await self.session.scalar(
+            select(func.count())
+            .select_from(TopicRow)
+            .where(TopicRow.subject_id.in_(set(subject_ids)))
+        )
+        return int(count or 0)
 
     # - - - Topics - - -
 

@@ -116,3 +116,5 @@ class BookSuggestion(IdMixin, TimestampMixin, Base):
         str_enum(SuggestionStatus, "status"), server_default="new"
     )
     handled_by: Mapped[UUID | None] = mapped_column(Uuid)
+    # The whole suggest form (authors, tags, subjects, ...) as JSON; None for old rows.
+    details: Mapped[dict[str, Any] | None] = mapped_column(JSONB)

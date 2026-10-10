@@ -93,3 +93,24 @@ class StatsRangeError(ValidationFailedError):
 
     code = "library/stats-range-invalid"
     message_key = "library-stats-range-invalid"
+
+
+class SubjectSlugTakenError(ConflictError):
+    """Another subject with the same parent already has this slug."""
+
+    code = "library/subject-slug-taken"
+    message_key = "library-subject-slug-taken"
+
+
+class SubjectParentInvalidError(ValidationFailedError):
+    """The parent is missing, or the subject itself or one of its children."""
+
+    code = "library/subject-parent-invalid"
+    message_key = "library-subject-parent-invalid"
+
+
+class SubjectInUseError(ConflictError):
+    """A subject with books, topics or children cannot be deleted; archive it."""
+
+    code = "library/subject-in-use"
+    message_key = "library-subject-in-use"

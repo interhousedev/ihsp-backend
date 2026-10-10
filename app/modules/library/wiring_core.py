@@ -6,6 +6,9 @@ from dataclasses import dataclass
 from app.modules.library.application.cards import CardBuilder
 from app.modules.library.application.detail import DetailBuilder
 from app.modules.library.infrastructure.redis_stats import RedisStatsRecorder
+from app.modules.library.infrastructure.subject_directory import (
+    LibrarySubjectDirectory,
+)
 from app.modules.library.infrastructure.uow import LibrarySqlUnitOfWork
 from app.modules.library.ports.directories import AcademicDirectory
 from app.modules.library.ports.stats_recorder import StatsRecorder
@@ -71,6 +74,8 @@ def build_core(
 ) -> LibraryCore:
     """Assemble the shared services."""
     given = overrides or CoreOverrides()
+    uow_factory = given.uow_factory or make_uow_factory(deps)
+    academic = LibrarySubjectDirectory(academic, uow_factory)
     settings = deps.settings.library
     cards = CardBuilder(
         academic=academic, files=files, cover_ttl_seconds=settings.reader_url_seconds
@@ -82,7 +87,7 @@ def build_core(
         kicker=deps.kicker,
         rate_limiter=deps.rate_limiter,
         i18n=deps.i18n,
-        uow_factory=given.uow_factory or make_uow_factory(deps),
+        uow_factory=uow_factory,
         identity=identity,
         files=files,
         academic=academic,
