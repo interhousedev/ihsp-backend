@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from uuid import UUID, uuid5
 
 from app.modules.dashboard.domain.errors import InvalidLayoutError
-from app.modules.dashboard.domain.widget import MAX_WIDGETS, Widget
+from app.modules.dashboard.domain.widget import LAYOUT_MARK, MAX_WIDGETS, Widget
 
 _NAMESPACE = UUID("6f1d3c8e-2a4b-4c57-9d0e-5b7a1c2e9f40")
 
@@ -29,13 +29,18 @@ def validate_widgets(widgets: list[Widget]) -> None:
 def default_widgets(user_id: UUID) -> list[Widget]:
     """The layout of a user who never edited the dashboard."""
     rows: list[tuple[str, str, int, int]] = [
-        ("clock_next_lesson", "2x1", 0, 0),
-        ("homework", "1x1", 2, 0),
-        ("marks", "1x1", 3, 0),
-        ("timetable", "2x2", 0, 1),
-        ("flashcards_due", "1x1", 2, 1),
-        ("exams", "1x1", 3, 1),
-        ("notebook_prompt", "2x1", 2, 2),
+        ("next_lesson", "2x1", 0, 0),
+        ("upcoming_controls", "2x1", 2, 0),
+        ("today_lessons", "2x2", 0, 1),
+        ("homework", "2x1", 2, 1),
+        ("semester_summary", "1x1", 2, 2),
+        ("new_marks", "1x1", 3, 2),
+        ("announcements", "2x1", 0, 3),
+        ("alerts", "2x1", 2, 3),
+        ("get_started", "2x1", 0, 4),
+        ("flashcards_due", "1x1", 2, 4),
+        ("attendance", "1x1", 3, 4),
+        ("notebook_prompt", "2x1", 0, 5),
     ]
     return [
         Widget.model_validate(
@@ -45,6 +50,7 @@ def default_widgets(user_id: UUID) -> list[Widget]:
                 "size": size,
                 "x": x,
                 "y": y,
+                "config": {LAYOUT_MARK[0]: LAYOUT_MARK[1]},
             }
         )
         for kind, size, x, y in rows

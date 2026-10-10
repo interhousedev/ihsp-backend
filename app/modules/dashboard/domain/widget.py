@@ -15,6 +15,14 @@ WidgetKind = Literal[
     "notebook_prompt",
     "attendance",
     "clock_next_lesson",
+    "upcoming_controls",
+    "next_lesson",
+    "today_lessons",
+    "semester_summary",
+    "announcements",
+    "new_marks",
+    "alerts",
+    "get_started",
 ]
 WidgetSize = Literal["1x1", "1x2", "2x1", "2x2", "2x4"]
 
@@ -28,7 +36,17 @@ WIDGET_SIZES: dict[str, set[str]] = {
     "notebook_prompt": {"2x1", "2x2"},
     "attendance": {"1x1", "2x1"},
     "clock_next_lesson": {"1x1", "2x1", "2x2"},
+    "upcoming_controls": {"1x1", "2x1", "2x2"},
+    "next_lesson": {"1x1", "2x1", "2x2"},
+    "today_lessons": {"2x1", "2x2", "2x4"},
+    "semester_summary": {"1x1", "2x1", "2x2"},
+    "announcements": {"2x1", "2x2", "2x4"},
+    "new_marks": {"1x1", "2x1", "2x2"},
+    "alerts": {"1x1", "2x1", "2x2"},
+    "get_started": {"2x1", "2x2"},
 }
+# Stored on every widget of a layout that already has the Today widget kinds.
+LAYOUT_MARK = ("layout", "2")
 GRID_COLUMNS = 4
 MAX_WIDGETS = 24
 MAX_ROW = 200

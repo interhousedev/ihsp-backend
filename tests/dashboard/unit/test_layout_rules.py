@@ -87,3 +87,43 @@ async def test_save_bumps_the_version_and_stale_version_conflicts(
 
     with pytest.raises(LayoutVersionConflictError):
         await dashboard.save_layout.execute(user_id=user, version=0, widgets=[])
+
+
+TODAY_KINDS = {
+    "upcoming_controls",
+    "next_lesson",
+    "today_lessons",
+    "semester_summary",
+    "announcements",
+    "new_marks",
+    "alerts",
+    "get_started",
+}
+
+
+def test_today_sections_are_widget_kinds_with_sizes() -> None:
+    """Every former fixed section of Today is a widget kind with allowed sizes."""
+    assert TODAY_KINDS <= set(WIDGET_SIZES)
+    assert all(WIDGET_SIZES[kind] for kind in TODAY_KINDS)
+    assert "1x1" in WIDGET_SIZES["next_lesson"]
+    assert "2x4" in WIDGET_SIZES["today_lessons"]
+    with pytest.raises(ValidationError):
+        widget("today_lessons", "1x1")
+
+
+def test_default_layout_has_the_today_widgets_without_overlap() -> None:
+    """The default layout holds the new kinds once each and no two tiles overlap."""
+    from app.modules.dashboard.domain.layout import default_widgets
+    from app.modules.dashboard.domain.widget import size_span
+
+    widgets = default_widgets(uuid4())
+    kinds = [w.kind for w in widgets]
+    assert TODAY_KINDS <= set(kinds)
+    assert len(kinds) == len(set(kinds))
+    cells: set[tuple[int, int]] = set()
+    for w in widgets:
+        cols, rows = size_span(w.size)
+        for dx in range(cols):
+            for dy in range(rows):
+                assert (w.x + dx, w.y + dy) not in cells
+                cells.add((w.x + dx, w.y + dy))
