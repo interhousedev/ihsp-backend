@@ -53,6 +53,9 @@ class WebHit(BaseModel):
     snippet: str
     why: str = ""
     origin: Literal["web", "db"] = "web"
+    ref_kind: Literal["library_item", "notebook_source"] | None = None
+    """What a `db` hit is, so Discover can add it by reference instead of by URL."""
+    ref_id: str | None = None
     """`db`: found in the platform's own database ("из базы"), not on the web."""
 
 
@@ -153,6 +156,8 @@ class PlatformPassage:
     url: str
     text: str
     site: str = "IHSP"
+    ref_kind: Literal["library_item", "notebook_source"] | None = None
+    ref_id: str | None = None
 
 
 class PlatformSearch(Protocol):

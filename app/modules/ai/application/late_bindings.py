@@ -18,6 +18,7 @@ from app.shared.contracts.lms import (
     LmsWorkspaceCommands,
 )
 from app.shared.contracts.notebooks import NotebooksCommands, NotebooksQueries
+from app.shared.contracts.web_search import PlatformSearch
 
 
 @dataclass(slots=True)
@@ -27,6 +28,7 @@ class LateBindings:
     links: LinksApi | None = None
     share_lookup: ChatShareLookup | None = None
     notebooks: NotebooksQueries | None = None
+    library_search: PlatformSearch | None = None
     notebooks_commands: NotebooksCommands | None = None
     documents: DocumentRenderer | None = None
     # The course author assistant (lms_author); all four are needed for it.

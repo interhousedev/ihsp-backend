@@ -337,6 +337,8 @@ def _db_hit(passage: PlatformPassage) -> WebHit:
         site=passage.site,
         snippet=clean_text(passage.text, 1200),
         origin="db",
+        ref_kind=passage.ref_kind,
+        ref_id=passage.ref_id,
     )
 
 

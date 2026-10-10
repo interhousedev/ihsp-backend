@@ -64,6 +64,8 @@ from app.modules.ai.domain.tool_call import ToolAccess
 from app.modules.ai.infrastructure.author_gate import LateAuthorGate
 from app.modules.ai.infrastructure.fake_search import FakeWebSearch
 from app.modules.ai.infrastructure.notebook_platform_search import (
+    CompositePlatformSearch,
+    LateLibrarySearch,
     NotebookPlatformSearch,
 )
 from app.modules.ai.infrastructure.redis_budget_store import (
@@ -256,7 +258,9 @@ def build(
         llm=llm,
         clock=deps.clock,
         settings=settings,
-        platform=NotebookPlatformSearch(bindings),
+        platform=CompositePlatformSearch(
+            [NotebookPlatformSearch(bindings), LateLibrarySearch(bindings)]
+        ),
     )
     return AiServices(
         create_chat=CreateChat(

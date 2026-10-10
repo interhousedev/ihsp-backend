@@ -102,3 +102,26 @@ def test_judge_respects_the_thresholds() -> None:
     ok = judge(passages, QUERY, min_density=0.2, min_coverage=0.7, min_passages=3)
     no = judge(passages, QUERY, min_density=0.2, min_coverage=0.7, min_passages=4)
     assert ok.sufficient and not no.sufficient
+
+
+async def test_composite_merges_and_dedupes_with_references() -> None:
+    """Two searches with the same library passage give it once, with its reference."""
+    from app.modules.ai.infrastructure.notebook_platform_search import (
+        CompositePlatformSearch,
+    )
+
+    lib = PlatformPassage(
+        "Book", "/library/b", "Photosynthesis text", ref_kind="library_item", ref_id="1"
+    )
+    other = PlatformPassage("Nb", "/n", "Chlorophyll text", ref_kind="notebook_source")
+    both = CompositePlatformSearch([FakePlatform([lib, other]), FakePlatform([lib])])
+    found = await both.search(make_actor(Role.STUDENT), "x", 5)
+    assert [p.ref_kind for p in found] == ["library_item", "notebook_source"]
+
+
+async def test_db_hits_carry_the_reference() -> None:
+    """A dense library hit reaches Discover with its kind and id."""
+    p = PlatformPassage("B", "/l", dense(1).text, ref_kind="library_item", ref_id="abc")
+    service, _ = rig([p, dense(2), dense(3)])
+    out = await service.search(make_actor(Role.STUDENT), query=QUERY, locale="en")
+    assert (out.hits[0].ref_kind, out.hits[0].ref_id) == ("library_item", "abc")
