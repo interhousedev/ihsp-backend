@@ -27,18 +27,24 @@ from app.modules.lms.ports.authoring.unit_of_work import AuthoringUnitOfWork
 from app.shared.actor import Actor
 from app.shared.clock import Clock
 from app.shared.ids import new_id
+from app.shared.tasks import TaskKicker
 
 
 class PublishCourse:
     """Freeze changed steps, write a version manifest and point the course at it."""
 
     def __init__(
-        self, uow_factory: UowFactory, clock: Clock, presenter: Presenter
+        self,
+        uow_factory: UowFactory,
+        clock: Clock,
+        presenter: Presenter,
+        kicker: TaskKicker | None = None,
     ) -> None:
-        """Store collaborators."""
+        """Store collaborators (`kicker` syncs the students' course notebooks)."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.presenter = presenter
+        self.kicker = kicker
 
     async def execute(
         self, actor: Actor, course_id: UUID, *, draft_seq: int, note: str | None
@@ -61,6 +67,10 @@ class PublishCourse:
                 raise NothingToPublishError()
             version = await self._publish(uow, course, context, actor, note, now)
             await uow.commit()
+        if self.kicker is not None:
+            await self.kicker.kick(
+                "notebooks.sync_course_notebooks", course_id=str(course_id)
+            )
         author = (await self.presenter.people([actor.user_id]))[actor.user_id]
         return version_item(version, author)
 

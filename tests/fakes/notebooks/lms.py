@@ -5,7 +5,11 @@ from typing import Any
 from uuid import UUID
 
 from app.shared.base_error import ForbiddenError, NotFoundError
-from app.shared.contracts.lms import LmsStepText
+from app.shared.contracts.lms import (
+    LmsCourseMaterials,
+    LmsMaterialStep,
+    LmsStepText,
+)
 from app.shared.ids import new_id
 
 SEPARATOR = "\n\n"
@@ -29,6 +33,7 @@ class FakeCourse:
     title: str
     steps: dict[UUID, FakeStep] = field(default_factory=dict)
     enrolled: set[UUID] = field(default_factory=set)
+    published: bool = True
 
 
 class FakeLms:
@@ -105,3 +110,27 @@ class FakeLms:
             text=SEPARATOR.join(parts),
             block_starts=tuple(starts),
         )
+
+    async def course_materials(
+        self, user_id: UUID, course_id: UUID
+    ) -> LmsCourseMaterials | None:
+        """The live steps of a published course the user is enrolled in."""
+        self.calls.append("course_materials")
+        course = self.courses.get(course_id)
+        if course is None or not course.published or user_id not in course.enrolled:
+            return None
+        steps = tuple(
+            LmsMaterialStep(s.id, s.title, f"rev-{s.revision}")
+            for s in course.steps.values()
+        )
+        return LmsCourseMaterials(course.id, course.title, steps=steps)
+
+    async def enrollment_pairs(self) -> list[tuple[UUID, UUID]]:
+        """Every (course, user) enrollment of a published course."""
+        self.calls.append("enrollment_pairs")
+        return [
+            (course.id, user_id)
+            for course in self.courses.values()
+            if course.published
+            for user_id in sorted(course.enrolled, key=str)
+        ]

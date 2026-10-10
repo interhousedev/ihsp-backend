@@ -7,15 +7,22 @@ from app.modules.lms.application.learning.types import UowFactory
 from app.modules.lms.application.learning.views import LearningCoursePageView
 from app.modules.lms.domain.learning.errors import CourseNotFoundError
 from app.shared.actor import Actor
+from app.shared.tasks import TaskKicker
 
 
 class EnrollInCourse:
     """Enroll the actor in a published, active, public course."""
 
-    def __init__(self, uow_factory: UowFactory, builder: CoursePageBuilder) -> None:
-        """Store collaborators."""
+    def __init__(
+        self,
+        uow_factory: UowFactory,
+        builder: CoursePageBuilder,
+        kicker: TaskKicker | None = None,
+    ) -> None:
+        """Store collaborators (`kicker` starts the student's course notebook)."""
         self.uow_factory = uow_factory
         self.builder = builder
+        self.kicker = kicker
 
     async def execute(self, actor: Actor, course_id: UUID) -> LearningCoursePageView:
         """Enroll (once) and return the course page; other courses look missing."""
@@ -32,4 +39,10 @@ class EnrollInCourse:
             )
             page = await self.builder.build(uow, actor, course, enrollment)
             await uow.commit()
+        if self.kicker is not None:
+            await self.kicker.kick(
+                "notebooks.provision_course_notebook",
+                user_id=str(actor.user_id),
+                course_id=str(course_id),
+            )
         return page
