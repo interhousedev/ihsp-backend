@@ -3198,7 +3198,8 @@
             "title": "Publisher"
           },
           "rights": {
-            "$ref": "#/components/schemas/Rights"
+            "$ref": "#/components/schemas/Rights",
+            "default": "official"
           },
           "rights_basis": {
             "$ref": "#/components/schemas/RightsBasisSchema"
@@ -3301,7 +3302,6 @@
           "years_of_study",
           "subjects",
           "topics",
-          "rights",
           "visibility",
           "download_allowed"
         ],
