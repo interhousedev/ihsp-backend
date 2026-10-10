@@ -201,6 +201,7 @@ class FakeFiles:
         """Start empty."""
         self.files: dict[UUID, FileRef] = {}
         self.pages: dict[UUID, list[str]] = {}
+        self.stored: dict[UUID, bytes] = {}
 
     def add(self, ref: FileRef, *pages: str) -> FileRef:
         """Register a file and its text pages."""
@@ -215,6 +216,32 @@ class FakeFiles:
     async def get_many(self, file_ids: Sequence[UUID]) -> dict[UUID, FileRef]:
         """Return the known files."""
         return {f: self.files[f] for f in file_ids if f in self.files}
+
+    async def store_bytes(
+        self,
+        *,
+        owner_id: UUID,
+        scope: FileScope,
+        purpose: FilePurpose,
+        name: str,
+        data: bytes,
+        expires_days: int | None = None,
+    ) -> FileRef:
+        """Keep the bytes next to the registered ref."""
+        ref = FileRef(
+            id=new_id(),
+            owner_id=owner_id,
+            scope=scope,
+            purpose=purpose,
+            name=name,
+            content_type="application/octet-stream",
+            byte_size=len(data),
+            status="ready",
+            text_bytes=None,
+        )
+        self.files[ref.id] = ref
+        self.stored[ref.id] = data
+        return ref
 
     async def check_access(self, file_id: UUID, actor: Actor) -> bool:
         """Only the owner has access."""
