@@ -1,0 +1,4 @@
+{
+  "dashboard-invalid-layout": "A dashboard holds at most {max} widgets with distinct ids.",
+  "dashboard-version-conflict": "The dashboard was changed elsewhere. Reload it and try again."
+}

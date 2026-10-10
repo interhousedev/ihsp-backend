@@ -30,6 +30,7 @@ SCHEMAS = (
     "lms",
     "notebooks",
     "library",
+    "dashboard",
 )
 
 ContainerFactory = Callable[..., Coroutine[Any, Any, Container]]

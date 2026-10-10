@@ -18,6 +18,7 @@ MODULES = (
     "notebooks",
     "library",
     "vectors",
+    "dashboard",
 )
 
 

@@ -91,6 +91,8 @@ EXPECTED_TABLES = {
     "library.item_stats",
     # vectors (1)
     "vectors.embeddings",
+    # dashboard (1)
+    "dashboard.layouts",
 }
 
 
@@ -98,7 +100,7 @@ def test_metadata_contains_every_table_of_the_models_readme() -> None:
     """README -> Models plus notebooks, push, exams, documents, library, vectors: 77."""
     actual = {table.fullname for table in Base.metadata.tables.values()}
 
-    assert len(EXPECTED_TABLES) == 77
+    assert len(EXPECTED_TABLES) == 78
     assert actual == EXPECTED_TABLES
 
 

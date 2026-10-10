@@ -31,6 +31,7 @@ SCHEMAS = {
     "notebooks",
     "library",
     "vectors",
+    "dashboard",
 }
 AI_TABLES = {"ai.chats", "ai.chat_messages"}
 FLASHCARD_TABLES = {"ai.flashcard_sets", "ai.flashcards", "ai.flashcard_reviews"}
