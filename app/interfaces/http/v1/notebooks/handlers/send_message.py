@@ -25,12 +25,13 @@ async def send_message(
 ) -> NotebookTurnResponse | StreamingResponse:
     """Answer a question: one JSON turn, or events with `Accept: text/event-stream`."""
     ask = notebooks.ask_notebook
+    question = body.question()
     if wants_stream(request):
         events = ask.stream(
-            actor, notebook_id, body.text, body.source_ids, body.anchor, body.web_search
+            actor, notebook_id, question, body.source_ids, body.anchor, body.web_search
         )
         return await stream_response(events)
     view = await ask.execute(
-        actor, notebook_id, body.text, body.source_ids, body.anchor, body.web_search
+        actor, notebook_id, question, body.source_ids, body.anchor, body.web_search
     )
     return NotebookTurnResponse.from_view(view)

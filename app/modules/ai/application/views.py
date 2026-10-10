@@ -50,6 +50,16 @@ class PreviewView:
 
 
 @dataclass(frozen=True, slots=True)
+class DocumentCardView:
+    """A document the assistant made: shown as a file card with a download."""
+
+    file_id: UUID
+    name: str
+    kind: Literal["docx", "xlsx", "pptx"]
+    size: int
+
+
+@dataclass(frozen=True, slots=True)
 class ToolCallView:
     """A tool call as shown in the chat."""
 
@@ -61,6 +71,7 @@ class ToolCallView:
     preview: PreviewView | None
     reject_reason: str | None
     expires_at: datetime | None
+    document: DocumentCardView | None = None
 
 
 @dataclass(frozen=True, slots=True)

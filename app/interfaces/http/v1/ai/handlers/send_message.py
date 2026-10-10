@@ -22,6 +22,8 @@ async def send_message(
         actor=actor,
         chat_id=chat_id,
         text=body.text,
+        command=body.command,
+        args=body.args,
         file_ids=body.file_ids,
         web_search=body.web_search,
     )

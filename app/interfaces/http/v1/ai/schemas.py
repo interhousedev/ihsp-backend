@@ -12,7 +12,7 @@ from app.modules.ai.application.views import (
     TurnResultView,
 )
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 AssistantName = Literal["student", "admin", "lms_author"]
 TierName = Literal["fast", "smart"]
@@ -37,11 +37,22 @@ class RenameChatBody(BaseModel):
 class SendMessageBody(BaseModel):
     """POST /v1/ai/chats/{id}/messages."""
 
-    text: str = Field(min_length=1, max_length=8000)
+    text: str = Field(default="", max_length=8000)
+    command: str | None = Field(default=None, min_length=1, max_length=32)
+    """A slash command (`cards`, `quiz`, ...) with its `args`; the agent maps it to a
+    prompt or tool (422 `ai/unknown-command` for a name it does not know). Typed
+    `/cards topic` in `text` works the same."""
+    args: str = Field(default="", max_length=8000)
     file_ids: list[UUID] = Field(default_factory=list, max_length=5)
     web_search: bool = False
     """Answer with a web search: spends one of today's searches (404 when the feature
     is off, 429 when they are used up, 503 when the provider fails)."""
+
+    @model_validator(mode="after")
+    def _needs_text_or_command(self) -> Self:
+        if not self.text.strip() and not self.command:
+            raise ValueError("text or command is required")
+        return self
 
 
 class RejectToolCallBody(BaseModel):
@@ -95,6 +106,15 @@ class PreviewResponse(_Response):
     items: list[str]
 
 
+class DocumentCardResponse(_Response):
+    """A document the assistant made (shown as a file card)."""
+
+    file_id: UUID
+    name: str
+    kind: Literal["docx", "xlsx", "pptx"]
+    size: int
+
+
 class ToolCallViewResponse(_Response):
     """ToolCallView."""
 
@@ -114,6 +134,7 @@ class ToolCallViewResponse(_Response):
     preview: PreviewResponse | None
     reject_reason: str | None
     expires_at: datetime | None
+    document: DocumentCardResponse | None = None
 
 
 class ChatMessageViewResponse(_Response):
@@ -134,7 +155,8 @@ class UsagePartResponse(_Response):
     """Tokens used against a limit."""
 
     used: int
-    limit: int
+    limit: int | None
+    """None: the assistant has no cap (Administration)."""
     resets_at: datetime | None
 
 

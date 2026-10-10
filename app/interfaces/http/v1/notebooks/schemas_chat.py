@@ -10,8 +10,9 @@ from app.modules.notebooks.application.views import TurnView
 from app.modules.notebooks.domain.entities import Anchor, Citation, NotebookMessage
 from app.modules.notebooks.domain.enums import MessageRole
 from app.modules.notebooks.domain.limits import SOURCE_TITLE_MAX_CHARS
+from app.shared.slash_commands import expand, stored_text
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 Rating = Literal["up", "down"]
 
@@ -23,7 +24,12 @@ class SendMessageBody(BaseModel):
     have 4 000 characters after trimming (the use case answers 422 above that).
     """
 
-    text: str = Field(min_length=1, max_length=8000)
+    text: str = Field(default="", max_length=8000)
+    command: str | None = Field(default=None, min_length=1, max_length=32)
+    """A slash command (`cards`, `quiz`, ...) with its `args`: the question becomes the
+    command's prompt (422 `ai/unknown-command` for an unknown name). Typed
+    `/cards topic` in `text` works the same."""
+    args: str = Field(default="", max_length=8000)
     source_ids: list[UUID] | None = Field(default=None, max_length=200)
     anchor: Anchor | None = None
     web_search: bool = False
@@ -31,6 +37,16 @@ class SendMessageBody(BaseModel):
     `web-search/disabled`, 429 `web-search/quota-exceeded`, 503
     `web-search/unavailable`;
     nothing is stored then). The pages come back in `web` and as the `web` event."""
+
+    @model_validator(mode="after")
+    def _needs_text_or_command(self) -> Self:
+        if not self.text.strip() and not self.command:
+            raise ValueError("text or command is required")
+        return self
+
+    def question(self) -> str:
+        """The question to ask: the prompt of a slash command, else the text."""
+        return expand(stored_text(self.command, self.args, self.text))
 
 
 class FeedbackBody(BaseModel):

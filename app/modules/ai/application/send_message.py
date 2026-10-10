@@ -32,6 +32,7 @@ from app.shared.clock import Clock
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.web_search import WebResult, WebSearchApi
 from app.shared.ids import new_id
+from app.shared.slash_commands import stored_text
 from app.shared.web_citations import numbered
 
 
@@ -72,12 +73,18 @@ class SendMessage:
         text: str,
         file_ids: list[UUID],
         web_search: bool = False,
+        command: str | None = None,
+        args: str = "",
     ) -> TurnResultView:
         """Run the turn for a new user message.
 
         With `web_search` one search of the day is spent and its pages go with the
-        message (nothing is stored when the search is refused or fails).
+        message (nothing is stored when the search is refused or fails). A slash
+        command (`command` + `args`, or `/name args` typed in `text`) is stored in its
+        short form and expanded for the model; an unknown name raises
+        `UnknownCommandError` before anything is stored.
         """
+        text = stored_text(command, args, text)
         locale = await self.locale.locale_of(actor.user_id)
         async with self.locks.hold(chat_id):
             async with self.uow_factory() as uow:

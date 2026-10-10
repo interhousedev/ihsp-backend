@@ -66,6 +66,7 @@
   "ai-note-attendance-stats": "Davomat statistikasini ko'rib chiqdi",
   "ai-note-audit-log": "Audit jurnalini ko'rib chiqdi",
   "ai-note-create-artifact": "O'quv materiali",
+  "ai-note-make-document": "Hujjat tayyorladi",
   "ai-note-create-broadcast-draft": "Xabarnoma qoralamasi",
   "ai-note-create-flashcard-set": "Kartochka to'plami",
   "ai-note-create-group": "Yangi guruh",
@@ -157,6 +158,7 @@
   "ai-tool-call-not-pending": "Yordamchining bu harakati bo'yicha qaror allaqachon qabul qilingan.",
   "ai-tool-failed": "Yordamchi vositasi so'rovni bajara olmadi.",
   "ai-turn-in-progress": "Yordamchi bu chatda hali javob yozmoqda.",
+  "ai-unknown-command": "Noma'lum buyruq /{command}. Mavjud: {known}.",
   "ai-value-yes": "Ha",
   "ai-wrong-assistant": "Bu yordamchidan foydalana olmaysiz."
 }

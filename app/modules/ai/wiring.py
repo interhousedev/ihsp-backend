@@ -51,6 +51,7 @@ from app.modules.ai.application.tools.list_notebook_artifacts import (
 )
 from app.modules.ai.application.tools.list_notebooks import ListNotebooks
 from app.modules.ai.application.tools.lms_catalog import make_author_tools
+from app.modules.ai.application.tools.make_document import MakeDocument
 from app.modules.ai.application.tools.read_file import ReadFile
 from app.modules.ai.application.tools.read_notebook_source import ReadNotebookSource
 from app.modules.ai.application.tools.registry import ToolRegistry
@@ -156,6 +157,7 @@ def make_student_tools(
         CreateNotebook(files, bindings),
         AddNotebookSources(files, bindings),
         CreateArtifact(bindings),
+        MakeDocument(files, bindings),
     ]
 
 

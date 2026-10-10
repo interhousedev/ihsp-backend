@@ -25,8 +25,7 @@ from pydantic import Field
 APPLICABLE = ("course_plan", "lesson_draft", "quiz", "flashcards")
 NEEDS_STEP = ("quiz", "flashcards")
 NOT_READY = (
-    "the output is not ready or not found: check its status with "
-    "list_workspace_outputs"
+    "the output is not ready or not found: check its status with list_workspace_outputs"
 )
 
 

@@ -66,6 +66,7 @@
   "ai-note-attendance-stats": "Looked up attendance statistics",
   "ai-note-audit-log": "Looked up the audit log",
   "ai-note-create-artifact": "Study material",
+  "ai-note-make-document": "Made a document",
   "ai-note-create-broadcast-draft": "Broadcast draft",
   "ai-note-create-flashcard-set": "Flash card set",
   "ai-note-create-group": "New group",
@@ -157,6 +158,7 @@
   "ai-tool-call-not-pending": "This assistant action was already decided.",
   "ai-tool-failed": "The assistant tool could not complete the request.",
   "ai-turn-in-progress": "The assistant is still answering in this chat.",
+  "ai-unknown-command": "Unknown command /{command}. Available: {known}.",
   "ai-value-yes": "Yes",
   "ai-wrong-assistant": "You cannot use this assistant."
 }

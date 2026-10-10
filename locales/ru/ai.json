@@ -66,6 +66,7 @@
   "ai-note-attendance-stats": "Посмотрел статистику посещаемости",
   "ai-note-audit-log": "Посмотрел журнал аудита",
   "ai-note-create-artifact": "Учебный материал",
+  "ai-note-make-document": "Подготовил документ",
   "ai-note-create-broadcast-draft": "Черновик рассылки",
   "ai-note-create-flashcard-set": "Набор карточек",
   "ai-note-create-group": "Новая группа",
@@ -157,6 +158,7 @@
   "ai-tool-call-not-pending": "По этому действию помощника уже принято решение.",
   "ai-tool-failed": "Инструмент помощника не смог выполнить запрос.",
   "ai-turn-in-progress": "Помощник ещё отвечает в этом чате.",
+  "ai-unknown-command": "Неизвестная команда /{command}. Доступны: {known}.",
   "ai-value-yes": "Да",
   "ai-wrong-assistant": "Вам недоступен этот помощник."
 }

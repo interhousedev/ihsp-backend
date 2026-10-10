@@ -1,10 +1,13 @@
 """Builds localized views from chats and messages."""
 
 from datetime import datetime
+from typing import Any
+from uuid import UUID
 
 from app.modules.ai.application.views import (
     ChatItemView,
     ChatMessageView,
+    DocumentCardView,
     PreviewFieldView,
     PreviewView,
     ToolCallView,
@@ -66,6 +69,22 @@ class ChatViews:
             preview=self._preview(call.preview, locale),
             reject_reason=call.reject_reason,
             expires_at=call.expires_at,
+            document=self._document(call),
+        )
+
+    @staticmethod
+    def _document(call: ToolCall) -> DocumentCardView | None:
+        """The file card of a finished ``make_document`` call."""
+        result: dict[str, Any] | None = call.result
+        if call.tool != "make_document" or call.status is not ToolStatus.DONE:
+            return None
+        if not result or result.get("kind") not in ("docx", "xlsx", "pptx"):
+            return None
+        return DocumentCardView(
+            file_id=UUID(str(result["file_id"])),
+            name=str(result["name"]),
+            kind=result["kind"],
+            size=int(result.get("size") or 0),
         )
 
     def message(

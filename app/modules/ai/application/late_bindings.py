@@ -9,6 +9,7 @@ and the course author assistant reach them through these bindings too.
 from dataclasses import dataclass
 
 from app.modules.ai.ports.share_lookup import ChatShareLookup
+from app.shared.contracts.documents import DocumentRenderer
 from app.shared.contracts.links import LinksApi
 from app.shared.contracts.lms import (
     LmsDraftCommands,
@@ -27,6 +28,7 @@ class LateBindings:
     share_lookup: ChatShareLookup | None = None
     notebooks: NotebooksQueries | None = None
     notebooks_commands: NotebooksCommands | None = None
+    documents: DocumentRenderer | None = None
     # The course author assistant (lms_author); all four are needed for it.
     lms_workspace: LmsWorkspace | None = None
     lms_workspace_commands: LmsWorkspaceCommands | None = None

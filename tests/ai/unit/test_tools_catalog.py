@@ -23,7 +23,7 @@ STUDENT_TOOLS = {
     "search_files", "list_notebooks", "get_notebook", "search_notebook",
     "read_notebook_source", "list_notebook_artifacts", "list_flashcard_sets",
     "get_flashcard_set", "create_flashcard_set", "add_flashcards", "create_notebook",
-    "add_notebook_sources", "create_artifact",
+    "add_notebook_sources", "create_artifact", "make_document",
 }  # fmt: skip
 NOTEBOOK_READ_TOOLS = [
     "list_notebooks", "get_notebook", "search_notebook", "read_notebook_source",
@@ -67,7 +67,10 @@ async def test_notebook_tools_sit_after_the_file_tools_and_the_flash_card_writes
     names = [t["function"]["name"] for t in tools]
     reads = names.index("search_files") + 1
     assert names[reads : reads + 5] == NOTEBOOK_READ_TOOLS
-    assert names[names.index("add_flashcards") + 1 :] == NOTEBOOK_WRITE_TOOLS
+    assert names[names.index("add_flashcards") + 1 :] == [
+        *NOTEBOOK_WRITE_TOOLS,
+        "make_document",
+    ]
 
 
 async def test_the_administration_assistant_gets_no_notebook_tools(

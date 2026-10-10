@@ -7,6 +7,7 @@ from typing import Any
 from app.modules.ai.domain.chat import ChatMessage, MessageRole
 from app.modules.ai.domain.tool_call import ToolCall, ToolStatus
 from app.modules.ai.domain.tools import MAX_RESULT_CHARS
+from app.shared.slash_commands import expand
 from app.shared.web_citations import render_web_block
 
 WINDOW_MESSAGES = 30
@@ -52,7 +53,7 @@ def _wrapped(result: dict[str, Any]) -> str:
 
 
 def _user_text(message: ChatMessage, *, full_web: bool = True) -> str:
-    lines = [message.text]
+    lines = [expand(message.text)]
     lines.extend(
         f"[attached: {a.name} ({a.file_id})]" for a in message.content.attachments
     )
