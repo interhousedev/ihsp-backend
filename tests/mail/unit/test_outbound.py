@@ -2,6 +2,7 @@
 
 from email.message import EmailMessage
 
+from app.modules.mail.application.list_sent_mail import ListSentMail
 from app.modules.mail.application.send_outbound import AUDIT_TYPE, SendOutbound
 from app.modules.mail.domain.errors import (
     AttachmentNotFoundError,
@@ -11,6 +12,7 @@ from app.modules.mail.domain.errors import (
     OutboundMailDisabledError,
     TooManyRecipientsError,
 )
+from app.modules.mail.domain.mail_status import MailStatus
 from app.settings import MailOutboundSettings
 from app.shared.actor import Role
 from app.shared.contracts.files import FilePurpose, FileScope
@@ -184,3 +186,26 @@ async def test_nothing_is_sent_while_the_feature_is_off(
     with pytest.raises(OutboundMailDisabledError):
         await send.execute(student.id, to=["a@example.org"], subject="s", body="b")
     assert smtp.sent == []
+
+
+async def test_sent_mail_is_listed_newest_first_and_only_for_the_sender(
+    world: MailWorld, redis: Redis, student: UserRef
+) -> None:
+    """The Email page lists what the user sent, paged by time."""
+    send, _ = build(world, redis)
+    list_sent = ListSentMail(uow_factory=lambda: FakeMailUnitOfWork(world.store))
+    for subject in ("First", "Second", "Third"):
+        await send.execute(
+            student.id, to=["t@example.org"], subject=subject, body="Hello  there"
+        )
+        world.clock.advance(minutes=1)
+
+    page = await list_sent.execute(student.id, limit=2)
+    assert [item.subject for item in page.items] == ["Third", "Second"]
+    assert page.items[0].snippet == "Hello there"
+    assert page.items[0].status == MailStatus.SENT
+    assert page.next_before is not None
+    rest = await list_sent.execute(student.id, limit=2, before=page.next_before)
+    assert [item.subject for item in rest.items] == ["First"]
+    assert rest.next_before is None
+    assert (await list_sent.execute(new_id())).items == []

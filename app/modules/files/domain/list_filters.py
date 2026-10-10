@@ -2,9 +2,9 @@
 
 from typing import Literal
 
-from app.modules.files.domain.policy import DOCX, PDF, PPTX, XLSX
+from app.modules.files.domain.policy import DOCX, MOV, MP4, PDF, PPTX, WEBM, XLSX
 
-FileTypeFilter = Literal["pdf", "doc", "sheet", "slides", "text", "image"]
+FileTypeFilter = Literal["pdf", "doc", "sheet", "slides", "text", "image", "video"]
 FileSort = Literal["recent", "older"]
 
 _TYPES: dict[str, tuple[str, ...]] = {
@@ -14,6 +14,7 @@ _TYPES: dict[str, tuple[str, ...]] = {
     "slides": (PPTX,),
     "text": ("text/plain", "text/markdown"),
     "image": ("image/png", "image/jpeg"),
+    "video": (MP4, WEBM, MOV, "video/x-m4v", "video/x-matroska"),
 }
 
 

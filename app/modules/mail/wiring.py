@@ -7,6 +7,7 @@ from app.modules.mail.application.check_bounces import CheckBounces
 from app.modules.mail.application.config import MailConfig
 from app.modules.mail.application.deliver_outbound import DeliverOutbound, Sleep
 from app.modules.mail.application.forward_mail import ForwardMail
+from app.modules.mail.application.list_sent_mail import ListSentMail
 from app.modules.mail.application.mark_spam import MarkSpam
 from app.modules.mail.application.original_mail import LoadOriginal
 from app.modules.mail.application.parse_inbound import ParseInbound
@@ -52,6 +53,7 @@ class MailServices:
     purge_mail: PurgeMail
     sweep_mail: SweepMail
     recent_mail: RecentMail
+    list_sent_mail: ListSentMail
     view_mail: ViewMail
     mark_spam: MarkSpam
     public: MailApiImpl
@@ -172,6 +174,7 @@ def build(
             uow_factory=uow_factory, kicker=deps.kicker, clock=deps.clock
         ),
         recent_mail=recent_mail,
+        list_sent_mail=ListSentMail(uow_factory=uow_factory),
         view_mail=view_mail,
         mark_spam=mark_spam,
         public=public,

@@ -388,6 +388,20 @@ class InMemoryMailRepository:
         rows.sort(key=lambda r: (r.occurred_at, r.id), reverse=True)
         return [copy.deepcopy(r) for r in rows[:limit]]
 
+    async def sent(
+        self, user_id: UUID, *, limit: int, before: datetime | None
+    ) -> list[MailMessage]:
+        """The user's sent rows, newest first."""
+        rows = [
+            r
+            for r in self._rows.values()
+            if r.user_id == user_id
+            and r.direction == MailDirection.OUT
+            and (before is None or r.occurred_at < before)
+        ]
+        rows.sort(key=lambda r: (r.occurred_at, r.id), reverse=True)
+        return [copy.deepcopy(r) for r in rows[:limit]]
+
     async def find_outbound(
         self, user_id: UUID, message_ids: Sequence[str]
     ) -> MailMessage | None:

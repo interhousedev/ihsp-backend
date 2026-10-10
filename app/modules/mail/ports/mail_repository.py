@@ -37,6 +37,12 @@ class MailRepository(Protocol):
         """List non-spam mails, newest first, strictly older than ``before``."""
         ...
 
+    async def sent(
+        self, user_id: UUID, *, limit: int, before: datetime | None
+    ) -> list[MailMessage]:
+        """List the user's sent mails, newest first, strictly older than ``before``."""
+        ...
+
     async def find_outbound(
         self, user_id: UUID, message_ids: Sequence[str]
     ) -> MailMessage | None:

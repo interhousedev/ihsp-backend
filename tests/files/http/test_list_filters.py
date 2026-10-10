@@ -74,3 +74,14 @@ async def test_sorts_and_pages_six_at_a_time(
     assert first["items"][0]["name"] == "pic.png"
     assert len(second["items"]) == 4 and second["next_cursor"] is None
     assert oldest["items"][0]["name"] == "notes-0.txt"
+
+
+def test_the_video_group_covers_the_allowed_video_types() -> None:
+    """`type=video` matches mp4, webm and mov; an unknown group matches nothing."""
+    from app.modules.files.domain.list_filters import content_types_of
+
+    types = content_types_of("video")
+    assert types is not None
+    assert {"video/mp4", "video/webm", "video/quicktime"} <= set(types)
+    assert content_types_of(None) is None
+    assert content_types_of("nope") == ()

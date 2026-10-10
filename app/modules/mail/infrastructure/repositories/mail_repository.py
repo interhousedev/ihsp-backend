@@ -130,6 +130,21 @@ class SqlMailRepository:
         ).limit(limit)
         return [_to_entity(row) for row in await self._session.scalars(stmt)]
 
+    async def sent(
+        self, user_id: UUID, *, limit: int, before: datetime | None
+    ) -> list[MailMessage]:
+        """List the user's sent mails, newest first, strictly older than ``before``."""
+        stmt = select(MailMessageRow).where(
+            MailMessageRow.user_id == user_id,
+            MailMessageRow.direction == MailDirection.OUT.value,
+        )
+        if before is not None:
+            stmt = stmt.where(MailMessageRow.occurred_at < before)
+        stmt = stmt.order_by(
+            MailMessageRow.occurred_at.desc(), MailMessageRow.id.desc()
+        ).limit(limit)
+        return [_to_entity(row) for row in await self._session.scalars(stmt)]
+
     async def find_outbound(
         self, user_id: UUID, message_ids: Sequence[str]
     ) -> MailMessage | None:

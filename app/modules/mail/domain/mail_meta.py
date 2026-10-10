@@ -24,6 +24,7 @@ class MailMeta(BaseModel):
     failed_reason: str | None = None
     refused_recipients: list[str] = Field(default_factory=list)
     suspension_counted: bool = False
+    attachment_name: str | None = None
 
     def to_json(self) -> dict[str, Any]:
         """Return the JSON-compatible dict stored in the column (no empty values)."""

@@ -1,5 +1,6 @@
 """Request and response models of outbound email."""
 
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -20,3 +21,22 @@ class SendOutboundResponse(BaseModel):
     message_id: str
     to: list[str]
     attachment_name: str | None
+
+
+class SentMailItemOut(BaseModel):
+    """`SentMailItem`: one email the user sent."""
+
+    id: UUID
+    to: list[str]
+    subject: str
+    snippet: str
+    sent_at: datetime
+    status: str
+    attachment_name: str | None
+
+
+class SentMailPageOut(BaseModel):
+    """`SentMailPage`: sent emails; `next_before` is the `before` of the next page."""
+
+    items: list[SentMailItemOut]
+    next_before: datetime | None

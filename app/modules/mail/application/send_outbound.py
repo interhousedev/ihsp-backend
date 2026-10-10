@@ -13,6 +13,9 @@ from app.modules.mail.domain.errors import (
     MailTooLargeError,
     OutboundMailDisabledError,
 )
+from app.modules.mail.domain.mail_message import SNIPPET_LENGTH, MailMessage
+from app.modules.mail.domain.mail_meta import MailMeta
+from app.modules.mail.domain.mail_status import MailDirection, MailStatus
 from app.modules.mail.domain.outbound_message import MAX_OUTBOUND_BYTES
 from app.modules.mail.ports.outbound_smtp import OutboundSmtp
 from app.modules.mail.ports.unit_of_work import UowFactory
@@ -21,6 +24,7 @@ from app.shared.base_error import RateLimitedError
 from app.shared.clock import Clock, local_today
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.identity import IdentityDirectory, UserStatus
+from app.shared.ids import new_id
 from app.shared.notifications import AuditDraft
 from app.shared.rate_limit import RateLimiter
 
@@ -91,7 +95,23 @@ class SendOutbound:
             raise MailTooLargeError()
         await self._count(user_id)
         await self._smtp.send(message)
+        now = self._clock.now()
         async with self._uow_factory() as uow:
+            await uow.mail.add(
+                MailMessage(
+                    id=new_id(),
+                    user_id=user_id,
+                    direction=MailDirection.OUT,
+                    message_id=str(message["Message-ID"]),
+                    from_address=settings.from_address,
+                    occurred_at=now,
+                    status=MailStatus.SENT,
+                    to=list(recipients),
+                    subject=str(message["Subject"]),
+                    snippet=" ".join(body.split())[:SNIPPET_LENGTH],
+                    meta=MailMeta(sent_at=now, attachment_name=attachment_name),
+                )
+            )
             uow.audit(
                 AuditDraft(
                     type=AUDIT_TYPE,
