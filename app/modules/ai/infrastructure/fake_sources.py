@@ -72,16 +72,29 @@ def find_passages(messages: Sequence[dict[str, Any]]) -> list[FakePassage]:
 
 
 def plain_passages(messages: Sequence[dict[str, Any]]) -> list[FakePassage]:
-    """Return the paragraphs of the user messages (tags removed, no labels)."""
+    """Return the paragraphs of the user messages (tags removed, no labels).
+
+    Lines are kept (only trimmed), so ``Front:``/``Back:`` cards, ``Question n``
+    lines and Markdown list items are still recognisable in a paragraph.
+    """
     paragraphs: list[FakePassage] = []
     for message in messages:
         if message.get("role") != "user":
             continue
         for block in re.split(r"\n[ \t]*\n", _TAG.sub("\n\n", message_text(message))):
-            flat = " ".join(block.split())
-            if flat:
-                paragraphs.append(FakePassage("", flat))
+            lines = [line.strip() for line in block.splitlines() if line.strip()]
+            if lines:
+                paragraphs.append(FakePassage("", "\n".join(lines)))
     return paragraphs
+
+
+_TITLED_TAG = re.compile(r'<(?:source|guide)\b[^>\n]*?\btitle="([^"\n]*)"')
+
+
+def source_titles(messages: Sequence[dict[str, Any]]) -> list[str]:
+    """The ``title="..."`` of every ``<source>`` or ``<guide>`` tag, in order."""
+    text = "\n".join(message_text(m) for m in messages if m.get("role") == "user")
+    return [" ".join(title.split()) for title in _TITLED_TAG.findall(text)]
 
 
 def document_passages(messages: Sequence[dict[str, Any]]) -> list[FakePassage]:

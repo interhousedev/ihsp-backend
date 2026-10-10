@@ -7,9 +7,10 @@ of the shape in the notebooks spec (§ 3.2.5, § 3.2.6, § 3.4). Without labels 
 
 The content is demo content and says so: it is made of the real sentences of the
 sources (Markdown headings, list markers, ``Front:/Back:`` and ``Question n`` lines
-are turned into plain statements first), the titles come from the headings, and no
-item is ever a filler such as "Option D". A quiz with too few statements for
-distractors asks true/false questions instead.
+are turned into plain statements first), the titles come from the headings or the
+source title, key topics are whole phrases, and no item is ever a filler such as
+"Option D" or a cut fragment. A quiz asks for the right-hand side of a formula or
+card with the other formulas as (false) distractors, and true/false otherwise.
 """
 
 import json
@@ -23,17 +24,19 @@ from app.modules.ai.infrastructure.fake_sources import (
     FakePassage,
     document_passages,
     last_user_text,
+    source_titles,
 )
 
 Document = dict[str, Any]
 
 EMOJI = "📘"
 MAX_CARDS = 10
-MAX_QUESTIONS = 5
+MAX_QUESTIONS = 10
 MAX_ROWS = 10
 LETTERS = "abcd"
 TOPIC_WORDS = 5  # guides and summaries want 2 to 5 word topics
 TOPIC_CHARS = 60
+LABEL_CHARS = 60
 DEMO = "Demo content"
 DEMO_NOTE = (
     "Demo content: this notebook runs without a language model, so the items below "
@@ -45,6 +48,27 @@ SUMMARY_FILLER = (
     "check the page."
 )
 REPORT_INTRO = "Statements of this part of the sources, as the sources put them."
+# Generic study topics that fill a short list (2 to 5 words each, never a fragment).
+GENERIC_TOPICS = (
+    "Key facts",
+    "Worked examples",
+    "Self-check questions",
+    "Terms to remember",
+    "Typical mistakes",
+    "Main idea",
+    "Short summary",
+    "Study plan",
+    "Open questions",
+    "Further reading",
+)
+GENERIC_QUESTIONS = (
+    "What is the main idea of this source?",
+    "Which facts should I remember from this source?",
+    "Which examples does this source give?",
+    "Which terms does this source define?",
+    "What could a test ask about this source?",
+    "How does this source connect to the other sources?",
+)
 
 _SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
 _WORD = re.compile(r"[^\W_][\w'ʻʼ’-]*")
@@ -53,13 +77,18 @@ _LIST_MARK = re.compile(r"^(?:[-*+]|\d+[.)])[ \t]+")
 _SKIPPED_LINE = re.compile(
     r"^(?:Test: \d+ questions?\.|Flash cards: \d+ cards?\.|Card \d+|Options?:.*|"
     r"Items \(in random order\):.*|Left:.*|Right \(in random order\):.*|Rows:.*|"
-    r"Columns:.*|Variables:.*|Language:.*)$"
+    r"Columns:.*|Variables:.*|Language:.*|Key topics:.*|Questions:.*)$"
 )
 _QUESTION = re.compile(r"^Question \d+ \([^)]*\): (.+)$")
 _CARD_FRONT = re.compile(r"^(?:Front|Q): (.+)$")
 _CARD_BACK = re.compile(r"^(?:Back|A): (.+)$")
+_SUMMARY_LINE = re.compile(r"^Summary: (.+)$")
 _MATH = re.compile(r"\$+")
 _INLINE = re.compile(r"[*_`]{1,3}")
+_GUIDE_BLOCK = re.compile(
+    r'<guide\b[^>]*\btitle="([^"]*)"[^>]*>(.*?)</guide>', re.DOTALL
+)
+_LIST_ITEM = re.compile(r"^Key topics: (.+)$|^Questions: (.+)$")
 
 
 # - - - Text helpers - - -
@@ -93,6 +122,15 @@ def clip_words(text: str, limit: int) -> str:
     return " ".join(text.split()[:limit])
 
 
+def phrase(text: str, limit: int = LABEL_CHARS) -> str:
+    """A whole text when it fits, else its first words with an ellipsis."""
+    flat = " ".join(text.split())
+    if len(flat) <= limit:
+        return flat
+    cut = flat[: limit - 1]
+    return cut[: cut.rfind(" ")].rstrip(",;:.-") + "…" if " " in cut else cut + "…"
+
+
 def plain(text: str) -> str:
     """One line without Markdown emphasis, ``$`` math fences or list markers."""
     flat = " ".join(_INLINE.sub("", _MATH.sub("", text)).split())
@@ -106,16 +144,27 @@ def heading_of(text: str) -> str | None:
         if not stripped:
             continue
         match = _HEADING.match(stripped)
-        return plain(match.group(1)).rstrip("?:.!") if match else None
+        return plain(match.group(1)).rstrip(":.!") if match else None
     return None
+
+
+def labels_of(text: str) -> list[str]:
+    """Short label lines such as ``Rules to remember:`` (without the colon)."""
+    found: list[str] = []
+    for raw in text.splitlines():
+        line = plain(raw.strip())
+        if line.endswith(":") and 1 <= len(line.split()) <= TOPIC_WORDS + 1:
+            found.append(line.rstrip(":"))
+    return found
 
 
 def statements(text: str) -> list[str]:
     """The sentences of a passage, in order, as plain statements.
 
     Headings, ``Card n``/``Options:`` lines and the like are dropped; a flash card
-    becomes ``front — back``; a test question keeps its prompt. Statements shorter
-    than two words are dropped unless they hold a formula (``=``).
+    becomes ``front — back``; a test question keeps its prompt; a guide's
+    ``Summary:`` line gives its sentences. Statements shorter than two words are
+    dropped unless they hold a formula (``=``).
     """
     found: list[str] = []
     front: str | None = None
@@ -131,8 +180,12 @@ def statements(text: str) -> list[str]:
                 found.append(f"{front} — {plain(back.group(1))}")
             front = None
             continue
-        question = _QUESTION.match(line)
-        body = plain(question.group(1) if question else line)
+        if (asked := _QUESTION.match(line)) is not None:
+            prompt = plain(asked.group(1))
+            found.append(prompt if prompt.endswith("?") else prompt.rstrip(".!") + "?")
+            continue
+        summary = _SUMMARY_LINE.match(line)
+        body = plain(summary.group(1) if summary else line)
         found.extend(s for s in sentences(body) if _is_statement(s))
     return unique(found)
 
@@ -144,10 +197,49 @@ def _is_statement(sentence: str) -> bool:
     return len(sentence.split()) >= 2 or "=" in sentence
 
 
-def teachable(found: Sequence["Statement"]) -> list["Statement"]:
+@dataclass(frozen=True, slots=True)
+class Statement:
+    """One plain statement and the passage it comes from."""
+
+    text: str
+    passage: FakePassage
+
+    @property
+    def sides(self) -> tuple[str, str] | None:
+        """``(left, right)`` of a card (``front — back``) or a formula (``x = y``)."""
+        if " — " in self.text:
+            left, right = self.text.split(" — ", 1)
+        elif self.text.count("=") == 1 and len(self.text.split()) < 10:
+            left, right = self.text.split("=", 1)
+        else:
+            return None
+        left, right = left.strip(), right.strip()
+        return (left, right) if left and right else None
+
+    @property
+    def is_question(self) -> bool:
+        """A question of a test (never an answer or a card)."""
+        return self.text.endswith("?")
+
+
+def teachable(found: Sequence[Statement]) -> list[Statement]:
     """Statements that can be a card or an answer: not questions of a test."""
-    kept = [s for s in found if not s.text.endswith("?")]
+    kept = [s for s in found if not s.is_question]
     return kept or list(found)
+
+
+def all_statements(passages: Sequence[FakePassage]) -> list[Statement]:
+    """Every statement of every passage, in order, without repeats."""
+    seen: set[str] = set()
+    found: list[Statement] = []
+    for passage in passages:
+        for text in statements(passage.text):
+            if text.casefold() not in seen:
+                seen.add(text.casefold())
+                found.append(Statement(text, passage))
+    if not found:
+        found.append(Statement(first_sentence(passages[0].text), passages[0]))
+    return found
 
 
 def topic(text: str) -> str:
@@ -159,8 +251,13 @@ def topic(text: str) -> str:
     return clip(label, TOPIC_CHARS)
 
 
-def title_of(passages: Sequence[FakePassage]) -> str:
-    """Return the title of a document: the topic of the first passage."""
+def title_of(passages: Sequence[FakePassage], titles: Sequence[str] = ()) -> str:
+    """The title of a document: the first heading, else the source title."""
+    heading = heading_of(passages[0].text)
+    if heading:
+        return phrase(heading.rstrip("?"), TOPIC_CHARS)
+    if titles and titles[0]:
+        return phrase(titles[0], TOPIC_CHARS)
     return topic(passages[0].text)
 
 
@@ -186,55 +283,105 @@ def cycle(passages: Sequence[FakePassage], index: int) -> FakePassage:
     return passages[index % len(passages)]
 
 
-@dataclass(frozen=True, slots=True)
-class Statement:
-    """One plain statement and the passage it comes from."""
+def _pad(found: list[str], low: int, high: int, generic: Sequence[str]) -> list[str]:
+    """``low`` to ``high`` items: the found ones, then generic ones."""
+    result = unique(found)[:high]
+    for item in generic:
+        if len(result) >= low:
+            break
+        if item.casefold() not in {r.casefold() for r in result}:
+            result.append(item)
+    return result
 
-    text: str
-    passage: FakePassage
+
+def _word_count_ok(text: str) -> bool:
+    return 2 <= len(text.split()) <= TOPIC_WORDS
 
 
-def all_statements(passages: Sequence[FakePassage]) -> list[Statement]:
-    """Every statement of every passage, in order, without repeats."""
-    seen: set[str] = set()
-    found: list[Statement] = []
+def key_phrases(
+    passages: Sequence[FakePassage], titles: Sequence[str] = ()
+) -> list[str]:
+    """Whole phrases a student would call the topics of the passages.
+
+    Headings, label lines (``Rules to remember``), cards and formulas as ``x = y``
+    and short whole statements; each 2 to 5 words, never a cut fragment.
+    """
+    found: list[str] = []
     for passage in passages:
-        for text in statements(passage.text):
-            if text.casefold() not in seen:
-                seen.add(text.casefold())
-                found.append(Statement(text, passage))
-    if not found:
-        found.append(Statement(first_sentence(passages[0].text), passages[0]))
-    return found
+        heading = heading_of(passage.text)
+        if heading:
+            found.append(heading.rstrip("?"))
+        found.extend(labels_of(passage.text))
+    for title in titles:
+        found.append(title)
+    for statement in all_statements(passages):
+        sides = statement.sides
+        if sides is not None:
+            found.append(f"{sides[0]} = {sides[1]}")
+        elif not statement.is_question:
+            found.append(statement.text.rstrip(".!"))
+    return [p for p in unique(found) if _word_count_ok(p)]
+
+
+def _sentence(text: str) -> str:
+    """A statement as a sentence: a full stop after a formula or a card."""
+    return text if text[-1] in ".!?" else f"{text}."
 
 
 def summary_text(passages: Sequence[FakePassage], low: int, high: int) -> str:
-    """Return ``low`` to ``high`` words made from the statements (padded if short)."""
+    """Return ``low`` to ``high`` words made from the statements (padded if short).
+
+    Prose and formulas come first; a source that holds only test questions is
+    described by its questions.
+    """
+    found = all_statements(passages)
     words: list[str] = []
-    for statement in all_statements(passages):
-        words.extend(statement.text.split())
+    for statement in [s for s in found if not s.is_question]:
+        words.extend(_sentence(statement.text).split())
         if len(words) >= low:
             break
+    asked = [s.text for s in found if s.is_question]
+    if len(words) < low and asked:
+        words.extend(f"The source asks: {' '.join(asked)}".split())
     while len(words) < low:
         words.extend(SUMMARY_FILLER.split())
     return " ".join(words[:high])
 
 
-def topics(passages: Sequence[FakePassage], low: int, high: int) -> list[str]:
-    """Return ``low`` to ``high`` distinct 2 to 6 word topics."""
-    found = unique([topic(p.text) for p in passages])[:high]
-    while len(found) < low:
-        found.append(f"Key topic {len(found) + 1}")
-    return found
+def topics(
+    passages: Sequence[FakePassage], low: int, high: int, titles: Sequence[str] = ()
+) -> list[str]:
+    """``low`` to ``high`` distinct 2 to 5 word topics; generic ones fill the list."""
+    return _pad(key_phrases(passages, titles), low, high, GENERIC_TOPICS)
 
 
-def questions(passages: Sequence[FakePassage], count: int) -> list[str]:
-    """Return ``count`` questions a student could ask."""
-    asked = unique([f"What should I remember about {topic(p.text)}?" for p in passages])
-    asked = asked[:count]
-    while len(asked) < count:
-        asked.append(f"What is the main idea of part {len(asked) + 1}?")
-    return asked
+def _question_of(statement: Statement) -> str | None:
+    """A natural question a student could ask about one statement."""
+    if statement.is_question:
+        return statement.text
+    sides = statement.sides
+    if sides is not None:
+        return f"What does {sides[0]} equal?"
+    body = statement.text.rstrip(".!")
+    if len(body.split()) > 14:
+        return None
+    return f"How would you explain that {body[0].lower()}{body[1:]}?"
+
+
+def questions(
+    passages: Sequence[FakePassage], count: int, titles: Sequence[str] = ()
+) -> list[str]:
+    """Return ``count`` natural questions a student could ask about the passages."""
+    found: list[str] = []
+    for passage in passages:
+        heading = heading_of(passage.text)
+        if heading and heading.endswith("?"):
+            found.append(heading)
+        found.extend(
+            f"What are the {label.lower()}?" for label in labels_of(passage.text)
+        )
+    found.extend(q for s in all_statements(passages) if (q := _question_of(s)))
+    return _pad(found, count, count, GENERIC_QUESTIONS)
 
 
 # - - - Guides and summaries - - -
@@ -249,17 +396,83 @@ def build_guide(passages: Sequence[FakePassage], _: str) -> Document:
     }
 
 
+def build_guide_document(
+    passages: Sequence[FakePassage], messages: Sequence[dict[str, Any]]
+) -> Document:
+    """The source guide, with the ``<source title>`` as a topic of last resort."""
+    titles = source_titles(messages)
+    return {
+        "summary": summary_text(passages, 70, 100),
+        "key_topics": topics(passages, 5, 8, titles),
+        "questions": questions(passages, 3, titles),
+    }
+
+
+@dataclass(frozen=True, slots=True)
+class _Guide:
+    """One ``<guide>`` of the summary prompt, parsed."""
+
+    title: str
+    summary: str
+    key_topics: list[str]
+    questions: list[str]
+
+
+def _parse_guides(text: str) -> list[_Guide]:
+    guides: list[_Guide] = []
+    for title, body in _GUIDE_BLOCK.findall(text):
+        summary, key_topics, asked = "", [], []
+        for raw in body.strip().splitlines():
+            line = raw.strip()
+            if (match := _SUMMARY_LINE.match(line)) is not None:
+                summary = plain(match.group(1))
+            elif line.startswith("Key topics: "):
+                key_topics = [t.strip() for t in line[12:].split(";") if t.strip()]
+            elif line.startswith("Questions: "):
+                asked = [q.strip() for q in line[11:].split(" | ") if q.strip()]
+        guides.append(_Guide(" ".join(title.split()), summary, key_topics, asked))
+    return guides
+
+
+def _bold_summary(words: list[str]) -> str:
+    bold = " ".join(words[:3])
+    return f"**{bold}** {' '.join(words[3:])}"
+
+
 def build_summary(passages: Sequence[FakePassage], _: str) -> Document:
-    """The notebook title, emoji and overview (§ 3.2.6)."""
-    text = summary_text(passages, 90, 130).split()
-    bold = " ".join(text[:3])
-    rest = " ".join(text[3:])
+    """The notebook title, emoji and overview (§ 3.2.6) from labelled passages."""
+    words = summary_text(passages, 90, 130).split()
     return {
         "title": title_of(passages),
         "emoji": EMOJI,
-        "summary": f"**{bold}** {rest}",
+        "summary": _bold_summary(words),
         "key_topics": topics(passages, 6, 10),
         "suggested_questions": questions(passages, 4),
+    }
+
+
+def build_summary_document(
+    passages: Sequence[FakePassage], messages: Sequence[dict[str, Any]]
+) -> Document:
+    """The notebook overview from the ``<guides>`` of its sources (§ 3.2.6)."""
+    guides = _parse_guides(last_user_text(messages))
+    if not guides:
+        return build_summary(passages, "")
+    words = ["Demo", "overview", "without", "a", "language", "model."]
+    for guide in guides:
+        words.extend(_sentence(guide.summary).split() if guide.summary else [])
+        if len(words) >= 90:
+            break
+    while len(words) < 90:
+        words.extend(SUMMARY_FILLER.split())
+    found_topics = [t for g in guides for t in g.key_topics if _word_count_ok(t)]
+    asked = [q for g in guides for q in g.questions]
+    return {
+        "title": phrase(guides[0].title, TOPIC_CHARS),
+        "emoji": EMOJI,
+        "summary": _bold_summary(words[:130]),
+        "key_topics": _pad(found_topics, 6, 10, GENERIC_TOPICS),
+        "suggested_questions": _pad(asked, 4, 6, GENERIC_QUESTIONS),
     }
 
 
@@ -289,36 +502,68 @@ def build_report(passages: Sequence[FakePassage], _: str) -> Document:
     return {"title": f"{title}: demo conspect", "markdown": "\n".join(lines).strip()}
 
 
+LABEL_WORDS = 6  # a mind map label is a noun phrase of at most 6 words (§ 3.4.2)
+_CLAUSE_END = re.compile(r"[,;:]| — ")
+
+
+def short_label(text: str) -> str:
+    """A whole phrase of at most 6 words: the text, its first clause, or a cut + "…"."""
+    flat = " ".join(text.split()).rstrip(".!")
+    if len(flat.split()) <= LABEL_WORDS:
+        return flat
+    head = _CLAUSE_END.split(flat, 1)[0].strip()
+    if 2 <= len(head.split()) <= LABEL_WORDS:
+        return head
+    return " ".join(flat.split()[:LABEL_WORDS]).rstrip(",;:.-") + "…"
+
+
+def _short_first(texts: Sequence[str]) -> list[str]:
+    """Whole phrases that fit a label come before the ones that must be cut."""
+    return sorted(texts, key=lambda t: len(t.split()) > LABEL_WORDS)
+
+
+def _concept_label(passage: FakePassage, taken: set[str]) -> str:
+    """A level-1 label: the heading, a label line, else a whole short statement."""
+    candidates = [heading_of(passage.text) or "", *labels_of(passage.text)]
+    candidates += _short_first([s.text for s in all_statements([passage])])
+    for candidate in candidates:
+        label = short_label(candidate.rstrip("?")) if candidate else ""
+        if label and not any(_same_phrase(label, done) for done in taken):
+            return label
+    return short_label(first_sentence(passage.text))
+
+
 def build_mind_map(passages: Sequence[FakePassage], _: str) -> Document:
-    """A root, up to four main concepts and one detail under each (§ 3.4.2)."""
+    """A root, up to four main concepts and their details, whole phrases (§ 3.4.2)."""
     root = passages[0]
     title = title_of(passages)
     nodes = [_node(1, None, title, root, DEMO_NOTE)]
+    taken = {title.casefold()}
     main = passages[:4]
     for index, passage in enumerate(main):
-        label = topic(passage.text)
-        if label == title:  # the first concept must not repeat the root
-            label = clip_words(first_sentence(passage.text), TOPIC_WORDS).rstrip(",;:.")
+        label = _concept_label(passage, taken)
+        taken.add(label.casefold())
         nodes.append(_node(2 + index, 1, label, passage, first_sentence(passage.text)))
     for index, passage in enumerate(main):
-        detail = _detail(passage.text)
+        detail = _detail(passage.text, nodes[1 + index]["label"])
         nodes.append(
             _node(
-                2 + len(main) + index,
-                2 + index,
-                clip_words(detail, TOPIC_WORDS).rstrip(",;:."),
-                passage,
-                detail,
+                2 + len(main) + index, 2 + index, short_label(detail), passage, detail
             )
         )
-    return {"title": title_of(passages), "nodes": nodes}
+    return {"title": f"{title}: demo mind map", "nodes": nodes}
 
 
-def _detail(text: str) -> str:
-    """Return the second statement, else the first one."""
+def _same_phrase(first: str, second: str) -> bool:
+    return first.rstrip("?.!…").casefold() == second.rstrip("?.!…").casefold()
+
+
+def _detail(text: str, parent_label: str) -> str:
+    """A statement other than the parent's label (short ones first), else the first."""
     parts = statements(text)
-    if len(parts) > 1:
-        return parts[1]
+    for part in _short_first(parts):
+        if not _same_phrase(short_label(part), parent_label):
+            return part
     return parts[0] if parts else first_sentence(text)
 
 
@@ -343,12 +588,11 @@ def _card_sides(statement: str) -> tuple[str, str]:
     A short formula asks for its right-hand side (``(c)' = ?``); a sentence asks to
     finish its first half.
     """
-    if " — " in statement:
-        front, back = statement.split(" — ", 1)
-        return front.strip(), back.strip()
+    sides = Statement(statement, FakePassage("", "")).sides
+    if sides is not None:
+        front, back = sides
+        return (front, back) if " — " in statement else (f"{front} = ?", statement)
     words = statement.split()
-    if "=" in statement and len(words) < 8:
-        return f"{statement.split('=', 1)[0].strip()} = ?", statement
     if len(words) < 4:
         return f"What does the source say here: {statement}", statement
     half = max(2, len(words) // 2)
@@ -378,26 +622,22 @@ def build_flashcards(passages: Sequence[FakePassage], _: str) -> Document:
     return {"title": f"{title_of(passages)}: demo cards", "cards": cards}
 
 
-def _choice_question(
-    index: int, statement: Statement, others: Sequence[str]
+def _question(
+    number: int,
+    kind: str,
+    prompt: str,
+    options: list[tuple[str, str]],
+    correct: str,
+    explanation: str,
+    statement: Statement,
 ) -> Document:
-    """A single choice question whose right answer is the statement."""
-    wrong = [text for text in others if text.casefold() != statement.text.casefold()]
-    wrong = wrong[: len(LETTERS) - 1]
-    slot = (index - 1) % (len(wrong) + 1)
-    texts = [*wrong[:slot], statement.text, *wrong[slot:]]
     return {
-        "id": f"q{index}",
-        "type": "single",
-        "prompt": (
-            f"Which statement about «{topic(statement.passage.text)}» "
-            "matches the sources?"
-        ),
-        "options": [
-            {"id": LETTERS[n], "text": clip(t, 200)} for n, t in enumerate(texts)
-        ],
-        "correct": [LETTERS[slot]],
-        "explanation": f"{DEMO}: the source says «{clip_words(statement.text, 40)}».",
+        "id": f"q{number}",
+        "type": kind,
+        "prompt": clip(prompt, 400),
+        "options": [{"id": i, "text": clip(t, 200)} for i, t in options],
+        "correct": [correct],
+        "explanation": explanation,
         "hint": f"{DEMO}: re-read «{topic(statement.passage.text)}».",
         "difficulty": "easy",
         "topic": clip(topic(statement.passage.text), 40),
@@ -405,35 +645,107 @@ def _choice_question(
     }
 
 
-def _true_false_question(index: int, statement: Statement) -> Document:
-    """A true/false question about one statement (always true: it is quoted)."""
-    return {
-        "id": f"q{index}",
-        "type": "true_false",
-        "prompt": f"True or false: {clip(statement.text, 300)}",
-        "options": [{"id": "true", "text": "True"}, {"id": "false", "text": "False"}],
-        "correct": ["true"],
-        "explanation": f"{DEMO}: the source says exactly this.",
-        "hint": f"{DEMO}: re-read «{topic(statement.passage.text)}».",
-        "difficulty": "easy",
-        "topic": clip(topic(statement.passage.text), 40),
-        "refs": statement.passage.refs,
-    }
+def _pairs(found: Sequence[Statement]) -> list[tuple[str, str, Statement]]:
+    """``(left, right, statement)`` of every card or formula, one per left side."""
+    pairs: list[tuple[str, str, Statement]] = []
+    seen: set[str] = set()
+    for statement in found:
+        sides = statement.sides
+        if sides is None or sides[0].casefold() in seen:
+            continue
+        seen.add(sides[0].casefold())
+        pairs.append((sides[0], sides[1], statement))
+    return pairs
+
+
+def _choice_questions(pairs: Sequence[tuple[str, str, Statement]]) -> list[Document]:
+    """``What does X equal?`` with the other right-hand sides as false options."""
+    items: list[Document] = []
+    for index, (left, right, statement) in enumerate(pairs):
+        wrong = unique(
+            [r for other_left, r, _ in pairs if r.casefold() != right.casefold()]
+        )[: len(LETTERS) - 1]
+        if not wrong:
+            continue
+        slot = index % (len(wrong) + 1)
+        texts = [*wrong[:slot], right, *wrong[slot:]]
+        items.append(
+            _question(
+                0,
+                "single",
+                f"What does {left} equal?",
+                [(LETTERS[n], t) for n, t in enumerate(texts)],
+                LETTERS[slot],
+                f"{DEMO}: the source says «{left} = {right}»; the other options "
+                "belong to other formulas or cards.",
+                statement,
+            )
+        )
+    return items
+
+
+def _true_false_questions(
+    found: Sequence[Statement], pairs: Sequence[tuple[str, str, Statement]]
+) -> list[Document]:
+    """True statements as written, and false ones made of a mismatched pair."""
+    options = [("true", "True"), ("false", "False")]
+    items: list[Document] = []
+    prose = [s for s in found if s.sides is None]
+    for index, statement in enumerate(prose):
+        items.append(
+            _question(
+                0,
+                "true_false",
+                f"True or false: {statement.text}",
+                options,
+                "true",
+                f"{DEMO}: the source says exactly this.",
+                statement,
+            )
+        )
+        if index < len(pairs) and len(pairs) > 1:
+            left, right, origin = pairs[index]
+            wrong = next(r for _, r, _ in pairs if r.casefold() != right.casefold())
+            items.append(
+                _question(
+                    0,
+                    "true_false",
+                    f"True or false: {left} = {wrong}",
+                    options,
+                    "false",
+                    f"{DEMO}: the source says «{left} = {right}», not «{wrong}».",
+                    origin,
+                )
+            )
+    return items
 
 
 def build_quiz(passages: Sequence[FakePassage], _: str) -> Document:
-    """Single choice questions over the statements; true/false when they are few."""
+    """Single choice over formulas and cards, true/false over sentences (§ 3.4.4).
+
+    Every single choice question has exactly one true option: the right-hand side of
+    its own formula or card; the distractors are the right-hand sides of the others.
+    Sentences become true/false questions, mixed with false formula statements.
+    """
     found = teachable(all_statements(passages))
-    chosen = found[:MAX_QUESTIONS]
-    pool = unique([s.text for s in found])
-    items: list[Document] = []
-    for index, statement in enumerate(chosen, start=1):
-        others = [t for t in pool if t.casefold() != statement.text.casefold()]
-        if len(others) >= 1 and index % 3:
-            items.append(_choice_question(index, statement, others))
-        else:
-            items.append(_true_false_question(index, statement))
-    return {"title": f"{title_of(passages)}: demo quiz", "questions": items}
+    pairs = _pairs(found)
+    items = [*_choice_questions(pairs), *_true_false_questions(found, pairs)]
+    if not items:
+        items = [
+            _question(
+                0,
+                "true_false",
+                f"True or false: {found[0].text}",
+                [("true", "True"), ("false", "False")],
+                "true",
+                f"{DEMO}: the source says exactly this.",
+                found[0],
+            )
+        ]
+    numbered = [
+        {**item, "id": f"q{n}"} for n, item in enumerate(items[:MAX_QUESTIONS], 1)
+    ]
+    return {"title": f"{title_of(passages)}: demo quiz", "questions": numbered}
 
 
 def build_data_table(passages: Sequence[FakePassage], _: str) -> Document:
@@ -468,8 +780,8 @@ def _bullets(text: str, limit: int = 3) -> list[str]:
 
 
 def _slide_notes(text: str) -> str:
-    gist = clip(first_sentence(text), 180)
-    return f"{DEMO}. Explain this slide in your own words: {gist}"
+    opening = clip(first_sentence(text), 180)
+    return f"{DEMO}. Explain this slide in your own words: {opening}"
 
 
 def _both_refs(first: FakePassage, second: FakePassage) -> list[str]:
@@ -646,7 +958,10 @@ def label_language(messages: Sequence[dict[str, Any]]) -> str:
 def build_labels(
     passages: Sequence[FakePassage], text: str, language: str = "en"
 ) -> Document:
-    """Up to 3 topic labels over the <source> tags, in ``language``."""
+    """Up to 3 topic labels over the ``<source key=... title=...>`` tags.
+
+    The names are in ``language``.
+    """
     word = _TOPIC_WORD.get(language, "Topic")
     sources = _SOURCE_KEY.findall(text)
     count = max(1, min(3, len(sources)))
@@ -687,10 +1002,13 @@ def build_document(schema_name: str, messages: Sequence[dict[str, Any]]) -> Docu
     builder = BUILDERS.get(schema_name)
     if builder is None:
         raise AiInvalidOutputError(support_details=f"unknown schema {schema_name}")
+    passages = document_passages(messages)
     if builder is build_labels:
         return build_labels(
-            document_passages(messages),
-            last_user_text(messages),
-            label_language(messages),
+            passages, last_user_text(messages), label_language(messages)
         )
-    return builder(document_passages(messages), last_user_text(messages))
+    if builder is build_guide:
+        return build_guide_document(passages, messages)
+    if builder is build_summary:
+        return build_summary_document(passages, messages)
+    return builder(passages, last_user_text(messages))

@@ -441,30 +441,23 @@ async def test_flashcard_fronts_stay_unique_when_passages_start_alike() -> None:
     assert len({f.casefold() for f in fronts}) == 3
 
 
-async def test_quiz_mixes_single_choice_over_statements_with_true_false() -> None:
-    """§ 3.4.4: up to 5 questions; options are real statements, one correct id."""
+async def test_quiz_over_prose_asks_true_false_about_whole_sentences() -> None:
+    """§ 3.4.4: up to 10 questions; a sentence cannot give a false option, so t/f."""
     data = await document("nb_quiz", context(BIOLOGY, CELLS), user("Quiz"))
 
     questions = data["questions"]
-    assert len(questions) == 5
+    assert len(questions) == 10
     for index, q in enumerate(questions):
         texts = {o["id"]: o["text"] for o in q["options"]}
-        assert len({t.casefold() for t in texts.values()}) == len(texts)
-        assert len(q["correct"]) == 1 and q["correct"][0] in texts
+        assert q["type"] == "true_false" and list(texts) == ["true", "false"]
+        assert q["correct"] == ["true"]
         assert q["explanation"] and q["refs"] and q["id"] == f"q{index + 1}"
         assert words(q["explanation"]) <= 60
-        if q["type"] == "true_false":
-            assert list(texts) == ["true", "false"]
-        else:
-            assert q["type"] == "single" and 2 <= len(texts) <= 4
-    assert {q["type"] for q in questions} == {"single", "true_false"}
-    first = questions[0]
-    assert {o["id"]: o["text"] for o in first["options"]}[first["correct"][0]] == (
-        "Photosynthesis is the process by which plants convert light energy into "
-        "chemical energy."
+    assert questions[0]["prompt"] == (
+        "True or false: Photosynthesis is the process by which plants convert light "
+        "energy into chemical energy."
     )
-    singles = [q for q in questions if q["type"] == "single"]
-    assert len({q["correct"][0] for q in singles}) > 1  # the answer moves around
+    assert len({q["prompt"] for q in questions}) == 10  # the handler dedupes prompts
 
 
 async def test_quiz_with_one_statement_asks_true_false_and_never_pads() -> None:
@@ -530,21 +523,158 @@ async def test_derivatives_title_is_the_whole_heading() -> None:
 
     assert quiz["title"] == "What is a derivative: demo quiz"
     assert cards["title"] == "What is a derivative: demo cards"
-    assert mind_map["title"] == "What is a derivative"
+    assert mind_map["title"] == "What is a derivative: demo mind map"
     assert mind_map["nodes"][0]["label"] == "What is a derivative"
     assert mind_map["nodes"][1]["label"] != "What is a derivative"
 
 
-async def test_derivatives_quiz_options_are_statements_of_the_lesson() -> None:
-    """Regression: the passage is read past its blank lines; options are sentences."""
+async def test_derivatives_quiz_has_one_true_option_and_false_distractors() -> None:
+    """Regression: single choice asks for a formula's right side; the rest is false."""
     data = await document("nb_quiz", derivatives_context(), user("Quiz"))
 
-    first = data["questions"][0]
-    texts = [o["text"] for o in first["options"]]
-    assert "The derivative of a function measures how fast it changes." in texts
-    assert "For f(x) = x^2 the derivative is f'(x) = 2x." in texts
-    assert first["refs"] == ["S1:P1"]
-    assert first["explanation"].startswith("Demo content")
+    questions = data["questions"]
+    assert len(questions) >= 5
+    assert len({q["prompt"] for q in questions}) == len(questions)
+    singles = [q for q in questions if q["type"] == "single"]
+    assert len(singles) >= 4
+    by_prompt = {q["prompt"]: q for q in singles}
+    constant = by_prompt["What does (c)' equal?"]
+    texts = {o["id"]: o["text"] for o in constant["options"]}
+    assert texts[constant["correct"][0]] == "0"
+    assert len(constant["correct"]) == 1
+    assert set(texts.values()) - {"0"} <= {"n x^{n-1}", "f' + g'", "cos x", "e^x"}
+    assert constant["refs"] == ["S1:P1"]
+    assert constant["explanation"].startswith("Demo content")
+    power = by_prompt["What does (x^n)' equal?"]
+    power_texts = {o["id"]: o["text"] for o in power["options"]}
+    assert power_texts[power["correct"][0]] == "n x^{n-1}"
+    false_items = [q for q in questions if q["correct"] == ["false"]]
+    assert false_items and false_items[0]["prompt"].startswith("True or false: (c)' = ")
+    assert "= 0" not in false_items[0]["prompt"]
+    assert not any(q["prompt"].startswith("True or false: Name the") for q in questions)
+
+
+def _guide_messages(title: str, text: str) -> list[dict[str, Any]]:
+    """The guide prompt as `build_source_guide` sends it (no passage labels)."""
+    return [user(f'<source title="{title}">\n{text}\n</source>')]
+
+
+async def test_derivatives_lesson_guide_is_made_of_whole_phrases() -> None:
+    """Regression: topics are headings, labels and formulas; questions are natural."""
+    data = await document(
+        "nb_guide", *_guide_messages("What is a derivative", DERIVATIVES_LESSON)
+    )
+
+    assert data["summary"].startswith(
+        "The derivative of a function measures how fast it changes. For f(x) = x^2 "
+        "the derivative is f'(x) = 2x. (c)' = 0. (x^n)' = n x^{n-1}."
+    )
+    assert data["key_topics"][:4] == [
+        "What is a derivative",
+        "Rules to remember",
+        "(c)' = 0",
+        "(x^n)' = n x^{n-1}",
+    ]
+    assert all(2 <= words(t) <= 5 and "#" not in t for t in data["key_topics"])
+    assert data["questions"] == [
+        "What is a derivative?",
+        "What are the rules to remember?",
+        "How would you explain that the derivative of a function measures how fast it "
+        "changes?",
+    ]
+    for garbage in (*GARBAGE, "Key topic", "What should I remember about"):
+        assert garbage not in json.dumps(data), garbage
+
+
+async def test_derivatives_test_guide_quotes_the_questions_of_the_test() -> None:
+    """Regression: a test-only step is described by its questions, not "Test: 5"."""
+    data = await document(
+        "nb_guide", *_guide_messages("Check yourself", DERIVATIVES_TEST)
+    )
+
+    assert data["summary"].startswith(
+        "The source asks: What is the derivative of x^2? Value of (3x)' at any x?"
+    )
+    assert data["key_topics"][0] == "Check yourself"
+    assert data["questions"] == [
+        "What is the derivative of x^2?",
+        "Value of (3x)' at any x?",
+        "What is the main idea of this source?",
+    ]
+    assert "Test: 2 questions" not in json.dumps(data)
+
+
+async def test_derivatives_cards_guide_lists_the_cards_as_formulas() -> None:
+    """Regression: no "Card 1 Front: … Back" fragments, no "Q:/A:"."""
+    data = await document(
+        "nb_guide", *_guide_messages("Flash cards", DERIVATIVES_CARDS)
+    )
+
+    assert data["summary"].startswith("(c)' — 0. (sin x)' — cos x.")
+    assert data["key_topics"][:3] == ["Flash cards", "(c)' = 0", "(sin x)' = cos x"]
+    assert data["questions"][:2] == [
+        "What does (c)' equal?",
+        "What does (sin x)' equal?",
+    ]
+    assert "Card 1" not in json.dumps(data) and "Front" not in json.dumps(data)
+
+
+async def test_derivatives_summary_is_built_from_the_guides_and_labelled_demo() -> None:
+    """Regression: the overview reads the <guides>; no "Summary:" echo in questions."""
+    guides = (
+        '<guides>\n<guide n="1" title="What is a derivative">\n'
+        "Summary: The derivative of a function measures how fast it changes. "
+        "(c)' = 0.\nKey topics: What is a derivative; Rules to remember; (c)' = 0\n"
+        "Questions: What is a derivative? | What are the rules to remember?\n</guide>\n"
+        '<guide n="2" title="Check yourself">\nSummary: The source asks: What is the '
+        "derivative of x^2?\nKey topics: Check yourself; Key facts\n"
+        "Questions: What is the derivative of x^2? | What is the derivative of a "
+        "constant?\n</guide>\n</guides>"
+    )
+
+    data = await document("nb_summary", user(guides))
+
+    assert data["title"] == "What is a derivative" and data["emoji"] == "📘"
+    assert data["summary"].startswith(
+        "**Demo overview without** a language model. The derivative"
+    )
+    assert 80 <= words(data["summary"]) <= 160
+    assert data["key_topics"][:5] == [
+        "What is a derivative",
+        "Rules to remember",
+        "(c)' = 0",
+        "Check yourself",
+        "Key facts",
+    ]
+    assert data["suggested_questions"] == [
+        "What is a derivative?",
+        "What are the rules to remember?",
+        "What is the derivative of x^2?",
+        "What is the derivative of a constant?",
+    ]
+    dumped = json.dumps(data)
+    assert "Summary:" not in dumped and "Key topic " not in dumped
+
+
+async def test_derivatives_mind_map_uses_whole_phrases_and_is_labelled_demo() -> None:
+    """Regression: no "What is the derivative of" fragments; details differ from parents."""  # noqa: E501
+    data = await document("nb_mind_map", derivatives_context(), user("Map"))
+
+    nodes = data["nodes"]
+    by_id = {n["id"]: n for n in nodes}
+    assert data["title"].endswith(": demo mind map")
+    assert nodes[0]["note"].startswith("Demo content")
+    labels = [n["label"] for n in nodes]
+    assert "Rules to remember" in labels and "(c)' — 0" in labels
+    assert all(words(label) <= 6 for label in labels)
+    assert all(not label.endswith((" of", " the", " a", " is")) for label in labels)
+    for node in nodes[1:]:
+        parent = by_id[node["parent_id"]]
+        assert (
+            node["label"].rstrip("?").casefold()
+            != parent["label"].rstrip("?").casefold()
+        )
+        assert node["refs"]
 
 
 async def test_derivatives_cards_come_from_formulas_and_cards() -> None:
