@@ -405,3 +405,33 @@ async def test_room_resource_changes_are_visible_in_the_room_page(
 
     assert "Aleksey - " not in before.text
     assert "Aleksey - " in after.text
+
+
+async def test_artifact_share_is_public_and_revoked_is_404(
+    world: LinksWorld, api: Api
+) -> None:
+    """A Studio output link is read without login; once revoked it is a 404."""
+    ann = world.person("Ann")
+    content = {"cards": [{"id": "1", "front": "hola", "back": "hello"}]}
+    artifact = world.notebooks.add_artifact(ann.user_id, "flashcards", content)
+    owner = await api(ann)
+    share = (
+        await owner.post(
+            "/v1/shares", json={"kind": "artifact", "target_id": str(artifact)}
+        )
+    ).json()
+    anonymous = await api(None)
+
+    public = await anonymous.get(f"/v1/public/shares/{share['slug']}")
+
+    assert share["slug"].startswith("a-")
+    assert public.status_code == 200
+    assert public.json()["kind"] == "artifact"
+    assert public.json()["artifact"] == {
+        "kind": "flashcards",
+        "content": content,
+        "options": {},
+    }
+    await owner.post(f"/v1/links/{share['id']}/revoke")
+    revoked = await anonymous.get(f"/v1/public/shares/{share['slug']}")
+    assert revoked.status_code == 404

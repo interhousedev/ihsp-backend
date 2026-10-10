@@ -88,6 +88,8 @@ def new_slug(
         return f"c-{_uuid4(rng)}"
     if kind is LinkKind.FLASHCARD_SET:
         return f"f-{_uuid4(rng)}"
+    if kind is LinkKind.ARTIFACT:
+        return f"a-{_uuid4(rng)}"
     length = base_length(kind, requested_length=requested_length, is_admin=is_admin)
     return generate(length + failures // GROW_AFTER_FAILURES, rng)
 

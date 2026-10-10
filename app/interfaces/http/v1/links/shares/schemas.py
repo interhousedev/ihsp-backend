@@ -9,7 +9,7 @@ from pydantic import AwareDatetime, BaseModel
 class CreateShareBody(BaseModel):
     """Share a chat or a flash card set."""
 
-    kind: Literal["chat", "flashcard_set"]
+    kind: Literal["chat", "flashcard_set", "artifact"]
     target_id: UUID
     share_mode: Literal["snapshot", "live"] | None = None
     expires_at: AwareDatetime | None = None

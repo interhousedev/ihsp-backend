@@ -132,3 +132,35 @@ class FakeFlashcards:
         """Return the owner of the set."""
         found = self.sets.get(set_id)
         return found["owner"] if found else None
+
+
+class FakeNotebooks:
+    """Ready Studio outputs with an owner."""
+
+    def __init__(self) -> None:
+        """Start with no outputs."""
+        self.artifacts: dict[UUID, dict[str, Any]] = {}
+
+    def add_artifact(
+        self,
+        owner_id: UUID,
+        kind: str,
+        content: dict[str, Any],
+        *,
+        title: str = "Cells",
+    ) -> UUID:
+        """Create a ready output."""
+        artifact_id = new_id()
+        self.artifacts[artifact_id] = {
+            "id": str(artifact_id),
+            "owner_id": owner_id,
+            "kind": kind,
+            "title": title,
+            "options": {},
+            "content": content,
+        }
+        return artifact_id
+
+    async def shared_artifact(self, artifact_id: UUID) -> dict[str, Any] | None:
+        """Return the output or None."""
+        return self.artifacts.get(artifact_id)

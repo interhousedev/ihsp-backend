@@ -28,7 +28,7 @@ class Link(IdMixin, TimestampMixin, Base):
         CheckConstraint("(kind = 'url') = (target_url IS NOT NULL)", name="url_target"),
         CheckConstraint("(kind = 'file') = (file_id IS NOT NULL)", name="file_target"),
         CheckConstraint(
-            "(kind IN ('chat', 'flashcard_set')) = (target_id IS NOT NULL)",
+            "(kind IN ('chat', 'flashcard_set', 'artifact')) = (target_id IS NOT NULL)",
             name="share_target",
         ),
         CheckConstraint(
@@ -62,6 +62,7 @@ class Link(IdMixin, TimestampMixin, Base):
             "file",
             "chat",
             "flashcard_set",
+            "artifact",
             name="kind",
             native_enum=False,
             create_constraint=True,

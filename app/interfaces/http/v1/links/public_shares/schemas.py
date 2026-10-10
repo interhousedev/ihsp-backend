@@ -1,7 +1,7 @@
 """JSON shapes of the public share endpoints."""
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from app.modules.links.application.views import PublicShareView
 
@@ -36,15 +36,24 @@ class SharedCards(BaseModel):
     cards: list[SharedCard]
 
 
+class SharedArtifact(BaseModel):
+    """A shared Studio output: its kind and the content the viewers render."""
+
+    kind: str
+    content: dict[str, Any]
+    options: dict[str, Any]
+
+
 class PublicShare(BaseModel):
     """What anyone with the share link sees."""
 
-    kind: Literal["chat", "flashcard_set"]
+    kind: Literal["chat", "flashcard_set", "artifact"]
     title: str
     author_first_name: str
     created_at: datetime
     chat: SharedChat | None
     flashcards: SharedCards | None
+    artifact: SharedArtifact | None = None
 
 
 class ReportBody(BaseModel):
@@ -79,4 +88,13 @@ def public_share(view: PublicShareView) -> PublicShare:
         created_at=view.created_at,
         chat=chat,
         flashcards=cards,
+        artifact=(
+            SharedArtifact(
+                kind=view.artifact.kind,
+                content=view.artifact.content,
+                options=view.artifact.options,
+            )
+            if view.artifact is not None
+            else None
+        ),
     )

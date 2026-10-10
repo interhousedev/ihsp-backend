@@ -13,6 +13,7 @@ class LinkKind(StrEnum):
     FILE = "file"
     CHAT = "chat"
     FLASHCARD_SET = "flashcard_set"
+    ARTIFACT = "artifact"
 
 
 class LessonRole(StrEnum):
@@ -39,7 +40,7 @@ class LinkState(StrEnum):
 
 
 SHORT_KINDS = (LinkKind.URL, LinkKind.FILE)
-SHARE_KINDS = (LinkKind.CHAT, LinkKind.FLASHCARD_SET)
+SHARE_KINDS = (LinkKind.CHAT, LinkKind.FLASHCARD_SET, LinkKind.ARTIFACT)
 
 
 @dataclass(slots=True)

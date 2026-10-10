@@ -13,7 +13,7 @@ from app.shared.i18n.core import I18nCore
 from app.shared.rate_limit import RateLimiter
 from app.shared.wiring import ModuleDeps
 from tests.factories import make_actor
-from tests.fakes.links.ai import FakeAi, FakeFlashcards
+from tests.fakes.links.ai import FakeAi, FakeFlashcards, FakeNotebooks
 from tests.fakes.links.files import FakeFiles
 from tests.fakes.links.identity import FakeIdentity
 from tests.fakes.links.schedule import FakeSchedule
@@ -36,6 +36,7 @@ class LinksWorld:
     identity: FakeIdentity
     ai: FakeAi
     flashcards: FakeFlashcards
+    notebooks: FakeNotebooks
     titles: FakeTitleFetcher
     redis: Redis
     kicker: FakeTaskKicker
@@ -65,6 +66,7 @@ def build_world(
     """Wire the module on fakes; Redis and the page renderer are real."""
     files, schedule, identity = FakeFiles(), FakeSchedule(), FakeIdentity()
     ai, flashcards, titles = FakeAi(), FakeFlashcards(), FakeTitleFetcher()
+    notebooks = FakeNotebooks()
     uow = FakeUowFactory()
     kicker = FakeTaskKicker()
     deps = ModuleDeps(
@@ -86,6 +88,7 @@ def build_world(
         identity=identity,
         ai=ai,
         flashcards=flashcards,
+        notebooks=notebooks,
         overrides=LinksOverrides(
             uow_factory=uow,
             title_fetcher=titles,
@@ -94,5 +97,15 @@ def build_world(
         ),
     )
     return LinksWorld(
-        services, uow, files, schedule, identity, ai, flashcards, titles, redis, kicker
+        services,
+        uow,
+        files,
+        schedule,
+        identity,
+        ai,
+        flashcards,
+        notebooks,
+        titles,
+        redis,
+        kicker,
     )

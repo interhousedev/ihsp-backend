@@ -1,5 +1,6 @@
 """Office exporters: each file is opened again with its own library."""
 
+import csv
 import io
 from typing import Any
 
@@ -7,7 +8,9 @@ from app.modules.notebooks.application.export.docx import markdown_to_docx
 from app.modules.notebooks.application.export.pptx import deck_to_pptx
 from app.modules.notebooks.application.export.render import (
     DocumentExporter,
+    default_format,
     export_artifact,
+    export_as,
     file_name,
     parse_slides,
     parse_table,
@@ -139,3 +142,71 @@ def test_file_name_drops_unsafe_characters() -> None:
     """Slashes and colons never reach the storage key."""
     assert file_name('a/b:c"', "xlsx") == "a b c.xlsx"
     assert file_name("", "pptx") == "document.pptx"
+
+
+QUIZ: dict[str, Any] = {
+    "questions": [
+        {
+            "prompt": "Which organelle makes energy?",
+            "options": [
+                {"id": "a", "text": "Nucleus"},
+                {"id": "b", "text": "Mitochondrion"},
+            ],
+            "correct": ["b"],
+            "explanation": "It runs respiration.",
+        },
+        {
+            "prompt": "Pick the membranes",
+            "options": [
+                {"id": "a", "text": "Plasma"},
+                {"id": "b", "text": "Rock"},
+                {"id": "c", "text": "Nuclear"},
+            ],
+            "correct": ["a", "c"],
+        },
+    ]
+}
+
+
+def test_quiz_docx_lists_questions_then_an_answer_key() -> None:
+    """The quiz is a .docx: questions with lettered options, the key at the end."""
+    rendered = export_as(ArtifactKind.QUIZ, "Cells quiz", QUIZ, "docx")
+
+    texts = [p.text for p in Document(io.BytesIO(rendered.data)).paragraphs]
+    assert rendered.name == "Cells quiz.docx"
+    assert "1. Which organelle makes energy?" in texts
+    assert "B) Mitochondrion" in texts
+    key_at = texts.index("Answer key")
+    assert key_at > texts.index("C) Nuclear")
+    assert texts[key_at + 1 :] == [
+        "1. B",
+        "It runs respiration.",
+        "2. A, C",
+    ]
+
+
+def test_flashcards_csv_is_front_semicolon_back() -> None:
+    """Flash cards are a header-less ``front;back`` CSV Anki can import."""
+    content = {
+        "cards": [
+            {"id": "1", "front": "hola", "back": "hello"},
+            {"id": "2", "front": "a; b", "back": "line\nbreak"},
+        ]
+    }
+
+    rendered = export_as(ArtifactKind.FLASHCARDS, "Verbs", content, "csv")
+
+    assert rendered.name == "Verbs.csv"
+    assert rendered.content_type.startswith("text/csv")
+    rows = list(csv.reader(io.StringIO(rendered.data.decode()), delimiter=";"))
+    assert rows == [["hola", "hello"], ["a; b", "line\nbreak"]]
+
+
+def test_default_formats_per_kind() -> None:
+    """One native file per kind; pictures have only the Markdown fallback."""
+    assert default_format(ArtifactKind.REPORT) == "docx"
+    assert default_format(ArtifactKind.SLIDES) == "pptx"
+    assert default_format(ArtifactKind.DATA_TABLE) == "xlsx"
+    assert default_format(ArtifactKind.QUIZ) == "docx"
+    assert default_format(ArtifactKind.FLASHCARDS) == "csv"
+    assert default_format(ArtifactKind.MIND_MAP) == "md"

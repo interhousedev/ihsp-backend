@@ -18,6 +18,7 @@ from app.shared.actor import Actor
 from app.shared.clock import Clock
 from app.shared.contracts.ai import AiQueries
 from app.shared.contracts.flashcards import FlashcardsApi
+from app.shared.contracts.notebooks import NotebooksQueries
 from app.shared.ids import new_id
 
 
@@ -31,7 +32,7 @@ def last_seq(messages: list[dict[str, object]]) -> int:
 
 
 class CreateShare:
-    """Create `c-{uuid}` or `f-{uuid}` for the owner's chat or set."""
+    """Create `c-`, `f-` or `a-{uuid}` for the owner's chat, set or Studio output."""
 
     def __init__(
         self,
@@ -39,6 +40,7 @@ class CreateShare:
         uow_factory: UowFactory,
         ai: AiQueries,
         flashcards: FlashcardsApi,
+        notebooks: NotebooksQueries,
         allocator: SlugAllocator,
         limit: LinkCreationLimit,
         clock: Clock,
@@ -48,6 +50,7 @@ class CreateShare:
         self.uow_factory = uow_factory
         self.ai = ai
         self.flashcards = flashcards
+        self.notebooks = notebooks
         self.allocator = allocator
         self.limit = limit
         self.clock = clock
@@ -70,6 +73,7 @@ class CreateShare:
             raise InvalidExpiryError()
         await self.limit.hit(actor.user_id)
         mode, snapshot = await self._check_target(actor, kind, target_id, share_mode)
+        title = await self._artifact_title(kind, target_id)
 
         def build(slug: str) -> Link:
             return Link(
@@ -82,6 +86,7 @@ class CreateShare:
                 share_mode=mode,
                 snapshot_seq=snapshot,
                 expires_at=expires_at,
+                title=title,
             )
 
         async with self.uow_factory() as uow:
@@ -94,10 +99,21 @@ class CreateShare:
     ) -> tuple[ShareMode | None, int | None]:
         if kind is LinkKind.CHAT:
             return await self._check_chat(actor, target_id, mode)
+        if kind is LinkKind.ARTIFACT:
+            found = await self.notebooks.shared_artifact(target_id)
+            if found is None or found["owner_id"] != actor.user_id:
+                raise ShareNotAllowedError(params={"target_id": str(target_id)})
+            return None, None
         owner = await self.flashcards.set_owner(target_id)
         if owner != actor.user_id:
             raise ShareNotAllowedError(params={"target_id": str(target_id)})
         return None, None
+
+    async def _artifact_title(self, kind: LinkKind, target_id: UUID) -> str | None:
+        if kind is not LinkKind.ARTIFACT:
+            return None
+        found = await self.notebooks.shared_artifact(target_id)
+        return str(found["title"])[:500] if found else None
 
     async def _check_chat(
         self, actor: Actor, chat_id: UUID, mode: ShareMode | None

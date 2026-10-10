@@ -7,6 +7,7 @@ from app.modules.links.domain.errors import (
     LinkDisabledError,
     LinkGoneError,
     LinkNotFoundError,
+    ShareNotAllowedError,
 )
 from app.modules.links.domain.link import Link, LinkKind, ShareMode
 from app.shared.actor import Actor, Role
@@ -189,3 +190,45 @@ async def test_404s_on_the_share_api_use_the_same_ip_budget(world: LinksWorld) -
 
     with pytest.raises(RateLimitedError):
         await world.services.get_public_share.execute(f"c-{new_id()}", ip=IP)
+
+
+async def test_artifact_share_is_read_without_login_and_revoked_is_404(
+    world: LinksWorld,
+) -> None:
+    """A Studio output share opens read-only for anyone; revoking makes it a 404."""
+    ann = world.person("Ann")
+    content = {"cards": [{"id": "1", "front": "hola", "back": "hello"}]}
+    artifact = world.notebooks.add_artifact(ann.user_id, "flashcards", content)
+    view = await world.services.create_share.execute(
+        ann, kind=LinkKind.ARTIFACT, target_id=artifact
+    )
+    assert view.link.slug.startswith("a-")
+    assert view.link.title == "Cells"
+
+    shared = await world.services.get_public_share.execute(view.link.slug, ip=IP)
+
+    assert shared.kind == "artifact"
+    assert shared.author_first_name == "Ann"
+    assert shared.artifact is not None
+    assert shared.artifact.kind == "flashcards"
+    assert shared.artifact.content == content
+
+    await world.services.revoke_link.execute(ann, view.link.id)
+    with pytest.raises(LinkNotFoundError) as error:
+        await world.services.get_public_share.execute(view.link.slug, ip=IP)
+    assert error.value.status == 404
+
+
+async def test_only_the_owner_shares_an_output(world: LinksWorld) -> None:
+    """Someone else's or a missing output cannot be shared."""
+    ann, bob = world.person("Ann"), world.person("Bob")
+    artifact = world.notebooks.add_artifact(ann.user_id, "quiz", {"questions": []})
+
+    with pytest.raises(ShareNotAllowedError):
+        await world.services.create_share.execute(
+            bob, kind=LinkKind.ARTIFACT, target_id=artifact
+        )
+    with pytest.raises(ShareNotAllowedError):
+        await world.services.create_share.execute(
+            ann, kind=LinkKind.ARTIFACT, target_id=new_id()
+        )

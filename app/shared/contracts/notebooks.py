@@ -68,6 +68,14 @@ class NotebooksQueries(Protocol):
         """
         ...
 
+    async def shared_artifact(self, artifact_id: UUID) -> dict[str, Any] | None:
+        """Return ``{id, owner_id, kind, title, options, content}`` of a ready output.
+
+        For public shares: no access check. None when it is missing, deleted or not
+        ready.
+        """
+        ...
+
 
 class NotebooksCommands(Protocol):
     """Writes the assistant may perform for a student after an approval."""

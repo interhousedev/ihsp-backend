@@ -1,9 +1,10 @@
-"""Read a shared chat or flash card set without logging in (SHR-2, SHR-4, SHR-6)."""
+"""Read a shared chat, card set or Studio output without logging in (SHR-2..6)."""
 
 from typing import Any
 
 from app.modules.links.application.not_found_counter import NotFoundCounter
 from app.modules.links.application.views import (
+    ArtifactShareView,
     CardShareView,
     ChatShareView,
     PublicShareView,
@@ -20,8 +21,13 @@ from app.shared.clock import Clock
 from app.shared.contracts.ai import AiQueries
 from app.shared.contracts.flashcards import FlashcardsApi
 from app.shared.contracts.identity import IdentityDirectory
+from app.shared.contracts.notebooks import NotebooksQueries
 
-SHARE_PREFIXES = {"c-": LinkKind.CHAT, "f-": LinkKind.FLASHCARD_SET}
+SHARE_PREFIXES = {
+    "c-": LinkKind.CHAT,
+    "f-": LinkKind.FLASHCARD_SET,
+    "a-": LinkKind.ARTIFACT,
+}
 
 
 class GetPublicShare:
@@ -33,6 +39,7 @@ class GetPublicShare:
         uow_factory: UowFactory,
         ai: AiQueries,
         flashcards: FlashcardsApi,
+        notebooks: NotebooksQueries,
         identity: IdentityDirectory,
         hits: HitCounter,
         not_found: NotFoundCounter,
@@ -42,6 +49,7 @@ class GetPublicShare:
         self.uow_factory = uow_factory
         self.ai = ai
         self.flashcards = flashcards
+        self.notebooks = notebooks
         self.identity = identity
         self.hits = hits
         self.not_found = not_found
@@ -51,6 +59,9 @@ class GetPublicShare:
         """Return the share; 404 for unknown slugs, 410 for removed ones."""
         link = await self._find(slug, ip)
         state = link.state(self.clock.now())
+        if link.kind is LinkKind.ARTIFACT and state is not LinkState.ACTIVE:
+            await self.not_found.count(ip)
+            raise LinkNotFoundError()
         if state is LinkState.DISABLED:
             raise LinkDisabledError()
         if state is LinkState.GONE:
@@ -88,6 +99,23 @@ class GetPublicShare:
             if data is None:
                 raise LinkGoneError()
             return _chat_view(link, author, data)
+        if link.kind is LinkKind.ARTIFACT:
+            output = await self.notebooks.shared_artifact(link.target_id)
+            if output is None:
+                raise LinkNotFoundError()
+            return PublicShareView(
+                kind="artifact",
+                title=str(output["title"]),
+                author_first_name=author,
+                created_at=link.created_at,
+                chat=None,
+                flashcards=None,
+                artifact=ArtifactShareView(
+                    kind=str(output["kind"]),
+                    content=dict(output["content"]),
+                    options=dict(output.get("options") or {}),
+                ),
+            )
         found = await self.flashcards.get_set(link.target_id, None)
         if found is None:
             raise LinkGoneError()

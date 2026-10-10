@@ -54,7 +54,7 @@ class LinkItem(BaseModel):
 
     id: UUID
     slug: str
-    kind: Literal["url", "file", "chat", "flashcard_set"]
+    kind: Literal["url", "file", "chat", "flashcard_set", "artifact"]
     url: str
     target_url: str | None
     file: FileItem | None

@@ -56,6 +56,7 @@ from app.shared.contracts.ai import AiQueries
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.flashcards import FlashcardsApi
 from app.shared.contracts.identity import IdentityDirectory
+from app.shared.contracts.notebooks import NotebooksQueries
 from app.shared.wiring import ModuleDeps
 
 
@@ -109,6 +110,7 @@ def build(
     identity: IdentityDirectory,
     ai: AiQueries,
     flashcards: FlashcardsApi,
+    notebooks: NotebooksQueries,
     overrides: LinksOverrides | None = None,
 ) -> LinksServices:
     """Wire the use cases of the links module."""
@@ -181,6 +183,7 @@ def build(
             uow_factory=uow_factory,
             ai=ai,
             flashcards=flashcards,
+            notebooks=notebooks,
             allocator=allocator,
             limit=limit,
             clock=deps.clock,
@@ -216,6 +219,7 @@ def build(
             uow_factory=uow_factory,
             ai=ai,
             flashcards=flashcards,
+            notebooks=notebooks,
             identity=identity,
             hits=hits,
             not_found=not_found,

@@ -7,6 +7,10 @@ from typing import Any, Final
 
 from app.modules.notebooks.application.export.docx import markdown_to_docx
 from app.modules.notebooks.application.export.pptx import deck_to_pptx, slides_to_pptx
+from app.modules.notebooks.application.export.quiz import (
+    flashcards_to_csv,
+    quiz_to_docx,
+)
 from app.modules.notebooks.application.export.text import (
     TEXT_KINDS,
     to_json,
@@ -23,12 +27,16 @@ CONTENT_TYPES: Final[dict[str, str]] = {
     "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "csv": "text/csv; charset=utf-8",
 }
-# The one format each exportable kind has (summary, report and study guide are reports).
-KIND_FORMATS: Final[dict[ArtifactKind, DocumentKind]] = {
+# The native file of each kind (summary, report and study guide are reports). Mind maps
+# and infographics are pictures the web client renders to PNG; they have none here.
+KIND_FORMATS: Final[dict[ArtifactKind, str]] = {
     ArtifactKind.REPORT: "docx",
     ArtifactKind.DATA_TABLE: "xlsx",
     ArtifactKind.SLIDES: "pptx",
+    ArtifactKind.QUIZ: "docx",
+    ArtifactKind.FLASHCARDS: "csv",
 }
 _UNSAFE_NAME: Final = re.compile(r'[\x00-\x1f\x7f/\\:*?"<>|]+')
 _SEPARATOR: Final = re.compile(r"^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$")
@@ -47,7 +55,7 @@ def file_name(title: str, kind: str) -> str:
     return f"{clean or 'document'}.{kind}"
 
 
-def format_for(kind: ArtifactKind) -> DocumentKind | None:
+def format_for(kind: ArtifactKind) -> str | None:
     """The export format of an output kind, or None if it has none."""
     return KIND_FORMATS.get(kind)
 
@@ -84,7 +92,11 @@ def export_artifact(
 ) -> RenderedDocument:
     """Render a ready Studio output in the format of its kind."""
     fmt = KIND_FORMATS[kind]
-    if fmt == "docx":
+    if kind is ArtifactKind.QUIZ:
+        data = quiz_to_docx(title, content)
+    elif kind is ArtifactKind.FLASHCARDS:
+        data = flashcards_to_csv(content)
+    elif fmt == "docx":
         data = markdown_to_docx(
             str(content.get("title") or title), str(content.get("markdown") or "")
         )

@@ -306,3 +306,27 @@ class NotebooksQueriesImpl:
             "status": artifact.status.value,
             "content": artifact.content,
         }
+
+    async def shared_artifact(self, artifact_id: UUID) -> dict[str, Any] | None:
+        """Return ``{id, owner_id, kind, title, content}`` of a ready output.
+
+        For public shares: no access check. None when it is missing, deleted or not
+        ready.
+        """
+        async with self.uow_factory() as uow:
+            artifact = await uow.artifacts.get(artifact_id)
+        if (
+            artifact is None
+            or artifact.deleted_at is not None
+            or artifact.status is not ArtifactStatus.READY
+            or artifact.content is None
+        ):
+            return None
+        return {
+            "id": str(artifact.id),
+            "owner_id": artifact.owner_id,
+            "kind": artifact.kind.value,
+            "title": artifact.title,
+            "options": artifact.options,
+            "content": artifact.content,
+        }

@@ -14,7 +14,11 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 SLUG_INDEX = "ix_links_slug_active"
-SHARE_KINDS = (LinkKind.CHAT.value, LinkKind.FLASHCARD_SET.value)
+SHARE_KINDS = (
+    LinkKind.CHAT.value,
+    LinkKind.FLASHCARD_SET.value,
+    LinkKind.ARTIFACT.value,
+)
 
 
 def _to_entity(row: LinkRow) -> Link:

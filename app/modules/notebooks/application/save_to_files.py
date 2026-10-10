@@ -43,6 +43,8 @@ class SaveArtifactToFiles:
         async with self.uow_factory() as uow:
             artifact = await load_artifact(uow, actor.user_id, notebook_id, artifact_id)
         wanted = fmt or default_format(artifact.kind)
+        if wanted == "csv":  # not an allowed file type: flash cards go as Markdown
+            wanted = "md"
         if wanted is None or wanted == "json":
             raise InvalidOptionsError(
                 params={"kind": artifact.kind.value, "format": fmt or ""}

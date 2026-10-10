@@ -16,7 +16,7 @@ from fastapi import Depends, Query
 async def list_my_links(
     actor: Annotated[Actor, Depends(get_actor)],
     container: Annotated[Container, Depends(get_container)],
-    kind: Literal["url", "file", "chat", "flashcard_set"] | None = None,
+    kind: Literal["url", "file", "chat", "flashcard_set", "artifact"] | None = None,
     target_id: UUID | None = None,
     cursor: str | None = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,

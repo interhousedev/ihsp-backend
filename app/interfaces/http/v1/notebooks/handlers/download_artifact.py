@@ -24,10 +24,12 @@ async def download_artifact(
     notebooks: Notebooks,
     actor: MemberActor,
     format: Annotated[  # noqa: A002 - the query parameter is called "format"
-        Literal["docx", "xlsx", "pptx", "md", "json"] | None, Query()
+        Literal["docx", "xlsx", "pptx", "csv", "md", "json"] | None, Query()
     ] = None,
 ) -> Response:
-    """Download a ready output: report .docx, table .xlsx, slides .pptx, the rest .md.
+    """Download a ready output in its native file.
+
+    Report and quiz .docx, table .xlsx, slides .pptx, flash cards .csv, the rest .md.
 
     Every kind can also be asked for as ``json``.
     """

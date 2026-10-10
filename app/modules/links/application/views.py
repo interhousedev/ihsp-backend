@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
 from app.modules.links.domain.link import Link
@@ -81,15 +81,25 @@ class CardShareView:
 
 
 @dataclass(frozen=True, slots=True)
+class ArtifactShareView:
+    """A shared Studio output: its kind and content."""
+
+    kind: str
+    content: dict[str, Any]
+    options: dict[str, Any]
+
+
+@dataclass(frozen=True, slots=True)
 class PublicShareView:
     """What anyone with a share link sees."""
 
-    kind: Literal["chat", "flashcard_set"]
+    kind: Literal["chat", "flashcard_set", "artifact"]
     title: str
     author_first_name: str
     created_at: datetime
     chat: tuple[ChatShareView, ...] | None
     flashcards: tuple[CardShareView, ...] | None
+    artifact: ArtifactShareView | None = None
 
 
 @dataclass(frozen=True, slots=True)

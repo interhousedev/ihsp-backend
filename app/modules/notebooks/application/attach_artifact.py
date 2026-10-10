@@ -10,6 +10,8 @@ from app.modules.notebooks.application.export.render import (
     export_artifact,
 )
 from app.modules.notebooks.domain.entities import Artifact
+from app.modules.notebooks.domain.enums import ArtifactKind
+from app.modules.notebooks.domain.errors import InvalidOptionsError
 from app.modules.notebooks.ports.unit_of_work import UowFactory
 from app.shared.actor import Actor, Role
 from app.shared.contracts.files import FilePurpose, FilesApi, FileScope
@@ -46,6 +48,8 @@ class AttachArtifactToLesson:
         actor.require(Role.TEACHER)
         async with self.uow_factory() as uow:
             artifact = await load_artifact(uow, actor.user_id, notebook_id, artifact_id)
+        if artifact.kind is ArtifactKind.FLASHCARDS:
+            raise InvalidOptionsError(params={"kind": artifact.kind.value})
         content = require_ready(artifact, *KIND_FORMATS)
         rendered = export_artifact(artifact.kind, _title(artifact), content)
         stored = await self.files.store_bytes(
