@@ -60,7 +60,10 @@ x-backend-env: &backend-env
   IHSP_HYDRA__ADMIN_URL: http://hydra:4445
   IHSP_HYDRA__ISSUER: http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}/
   IHSP_JWT_BEARER__PRIVATE_KEY_PATH: /run/secrets/jwt_bearer
-  IHSP_TOKENS__REFRESH_COOKIE_SECURE: "false"
+  # *.localhost hosts are different sites: the cross-site fetch needs None+Secure
+  # (browsers accept Secure cookies on localhost over http).
+  IHSP_TOKENS__REFRESH_COOKIE_SECURE: "true"
+  IHSP_TOKENS__REFRESH_COOKIE_SAMESITE: none
   IHSP_TOKENS__SERVICE_TOKEN: dev-service-token
   IHSP_TELEGRAM__BOT_TOKEN: ${IHSP_TELEGRAM__BOT_TOKEN:-000:dev}
   IHSP_TELEGRAM__BOT_USERNAME: ${IHSP_TELEGRAM__BOT_USERNAME:-ihspbot}

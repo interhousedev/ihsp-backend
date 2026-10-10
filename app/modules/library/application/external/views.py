@@ -46,6 +46,7 @@ class TaxonomyView:
     languages: tuple[TaxonomyEntry, ...]
     access: tuple[AccessOption, ...]
     stale: bool = False
+    enabled: bool = True
 
 
 @dataclass(frozen=True, slots=True)

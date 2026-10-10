@@ -1,9 +1,6 @@
 """LIB-5, LIB-12: the filter lists of the UniLibrary search."""
 
-from app.modules.library.domain.errors import (
-    ExternalDisabledError,
-    ExternalUnavailableError,
-)
+from app.modules.library.domain.errors import ExternalUnavailableError
 from app.modules.library.ports.external_catalog import ExternalTaxonomies
 from app.modules.library.wiring_external import ExternalServices
 from app.shared.actor import Actor
@@ -77,11 +74,11 @@ async def test_taxonomies_are_unavailable_without_cache_and_source(
         await external.get_taxonomies.execute(student)
 
 
-async def test_switched_off_answers_not_found(
+async def test_switched_off_answers_empty_lists(
     external_off: ExternalServices, catalog: FakeExternalCatalog, student: Actor
 ) -> None:
-    """LIB-12: flag off."""
-    with pytest.raises(ExternalDisabledError):
-        await external_off.get_taxonomies.execute(student)
+    """LIB-12: flag off -> empty lists, no call to UniLibrary."""
+    view = await external_off.get_taxonomies.execute(student)
 
+    assert (view.types, view.fields, view.languages, view.access) == ((), (), (), ())
     assert catalog.calls == 0

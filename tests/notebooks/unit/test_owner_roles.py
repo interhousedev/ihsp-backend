@@ -2,11 +2,11 @@
 
 from uuid import uuid4
 
-import pytest
-
 from app.interfaces.http.v1.notebooks import deps
 from app.shared.actor import Actor, Role
 from app.shared.base_error import ForbiddenError
+
+import pytest
 
 
 def _actor(*roles: Role) -> Actor:

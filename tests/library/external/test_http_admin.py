@@ -128,9 +128,7 @@ async def test_switching_on_opens_the_user_routes(
 ) -> None:
     """LIB-12: off, `404`; after the admin PUT, `200`."""
     user = await api(student)
-    assert (
-        await user.get("/v1/library/external/unilibrary/taxonomies")
-    ).status_code == 404
+    assert (await user.get("/v1/library/external/unilibrary/355186")).status_code == 404
 
     await (await api(admin)).put(
         f"{ADMIN}/settings", json={"enabled": True, "anonymous_cards": False}

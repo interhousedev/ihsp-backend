@@ -54,7 +54,7 @@ async def test_token_exchange_for_app_sets_a_90_day_rt_app_cookie(api: Api) -> N
     cookie = refresh_cookie(response)
     attributes = {part.strip().lower() for part in cookie.split(";")}
     assert cookie.startswith("rt_app=refresh-1;")
-    assert {"httponly", "samesite=strict", "path=/v1/oauth"} <= attributes
+    assert {"httponly", "samesite=lax", "path=/v1/oauth"} <= attributes
     assert max_age(cookie) == NINETY_DAYS == 7776000
     assert max_age(cookie) == refresh_days("app") * 24 * 3600
     assert "refresh-1" not in response.text

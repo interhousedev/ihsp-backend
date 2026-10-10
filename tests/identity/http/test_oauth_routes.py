@@ -26,7 +26,7 @@ def set_cookies(response: Response) -> list[str]:
 async def test_token_exchange_sets_the_refresh_cookie_with_the_exact_attributes(
     api: Api,
 ) -> None:
-    """GEN-7: HttpOnly, SameSite=Strict, Path=/v1/oauth, host-only, 30 days."""
+    """GEN-7: HttpOnly, SameSite=Lax, Path=/v1/oauth, host-only, 30 days."""
     response = await api.client.post(
         "/v1/oauth/token", json=TOKEN_BODY, headers=APP_HEADERS
     )
@@ -42,7 +42,7 @@ async def test_token_exchange_sets_the_refresh_cookie_with_the_exact_attributes(
     assert cookie.startswith("rt_sp=refresh-1;")
     assert {
         "httponly",
-        "samesite=strict",
+        "samesite=lax",
         "path=/v1/oauth",
         "max-age=2592000",
     } <= attributes

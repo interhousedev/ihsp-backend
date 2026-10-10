@@ -1,4 +1,4 @@
-"""The refresh token cookie: HttpOnly, SameSite=Strict, host-only (GEN-7)."""
+"""The refresh token cookie: HttpOnly, SameSite from settings, host-only (GEN-7)."""
 
 from app.modules.identity.domain.client_policy import refresh_days
 from app.settings import Settings
@@ -30,7 +30,7 @@ def set_refresh_cookie(
         path=COOKIE_PATH,
         secure=settings.tokens.refresh_cookie_secure,
         httponly=True,
-        samesite="strict",
+        samesite=settings.tokens.refresh_cookie_samesite,
     )
 
 
@@ -43,7 +43,7 @@ def clear_refresh_cookie(
         path=COOKIE_PATH,
         secure=settings.tokens.refresh_cookie_secure,
         httponly=True,
-        samesite="strict",
+        samesite=settings.tokens.refresh_cookie_samesite,
     )
 
 

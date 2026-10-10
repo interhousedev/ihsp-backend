@@ -11,7 +11,6 @@ from app.shared.ai_tasks import AiTask
 from app.shared.contracts.ai import AiInvalidOutputError, AiProviderError
 from tests.factories.notebooks import make_source
 from tests.fakes.clock import FixedClock
-from tests.notebooks.unit.sources.support import HookedLlm
 from tests.notebooks.unit.labels.conftest import GUIDE
 from tests.notebooks.unit.labels.support import (
     answer,
@@ -22,6 +21,7 @@ from tests.notebooks.unit.labels.support import (
     store_label,
     store_link,
 )
+from tests.notebooks.unit.sources.support import HookedLlm
 
 import pytest
 

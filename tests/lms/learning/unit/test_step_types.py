@@ -19,8 +19,8 @@ from app.modules.lms.domain.step_content import (
     StepContent,
     TableSpec,
     TestBlock,
-    VideoBlock,
     Variable,
+    VideoBlock,
     assign_ids,
 )
 from app.modules.lms.domain.student_render import render_questions, render_step

@@ -288,11 +288,30 @@ async def test_taxonomies_answer_the_contract_shape(api: Api, student: Actor) ->
 # - - - The flag - - -
 
 
+async def test_taxonomies_are_empty_200_while_switched_off(
+    api_off: Api, catalog: FakeExternalCatalog, student: Actor
+) -> None:
+    """LIB-12: the filter probe answers 200 with empty lists; no UniLibrary call."""
+    client = await api_off(student)
+
+    response = await client.get(f"{BASE}/taxonomies")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["enabled"] is False
+    assert (body["types"], body["fields"], body["languages"], body["access"]) == (
+        [],
+        [],
+        [],
+        [],
+    )
+    assert catalog.calls == 0
+
+
 @pytest.mark.parametrize(
     ("method", "path"),
     [
         ("GET", "/search"),
-        ("GET", "/taxonomies"),
         ("GET", "/355186"),
         ("POST", "/355186/item"),
     ],

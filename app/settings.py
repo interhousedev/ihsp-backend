@@ -194,6 +194,12 @@ class TokensSettings(BaseModel):
     refresh_cookie_secure: bool = False  # dev
     """Mark the refresh cookie `Secure`. REQUIRED IN PROD (must be true)."""
 
+    refresh_cookie_samesite: Literal["lax", "strict", "none"] = "lax"
+    """`SameSite` of the refresh cookie. `lax` suits the apps and the API on
+    subdomains of one site (prod: *.ihsu.uz). `none` (needs `Secure`) is only for
+    local development, where `*.localhost` hosts count as different sites; refused
+    in prod."""
+
     cookie_prefix: str = "rt_"
     """Name prefix of the refresh cookie (followed by the client id)."""
 
@@ -926,6 +932,8 @@ def _production_problems(settings: Settings) -> list[str]:
         "TOKENS__SERVICE_TOKEN": settings.tokens.service_token.get_secret_value()
         == DEV_SERVICE_TOKEN,
         "TOKENS__REFRESH_COOKIE_SECURE=true": not settings.tokens.refresh_cookie_secure,
+        "TOKENS__REFRESH_COOKIE_SAMESITE=lax": settings.tokens.refresh_cookie_samesite
+        == "none",
         "S3__SECRET_KEY": settings.s3.secret_key.get_secret_value() == DEV_S3_SECRET,
     }
     return [name for name, is_default in checks.items() if is_default]

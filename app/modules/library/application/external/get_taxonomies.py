@@ -31,8 +31,15 @@ class GetTaxonomies:
     async def execute(
         self, actor: Actor, accept_language: str | None = None
     ) -> TaxonomyView:
-        """The lists in the user's language (cached by the catalogue)."""
-        await self.gate.ensure_enabled()
+        """The lists in the user's language (cached by the catalogue).
+
+        While UniLibrary is off the lists are empty (200), not a 404: the filters
+        are a probe the pages make on load.
+        """
+        if not (await self.gate.flags()).enabled:
+            return TaxonomyView(
+                types=(), fields=(), languages=(), access=(), enabled=False
+            )
         locale = await resolve_locale(self.identity, actor, accept_language)
         taxonomies = await self.catalog.taxonomies(locale)
         return TaxonomyView(

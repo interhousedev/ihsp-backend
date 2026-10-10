@@ -117,11 +117,14 @@ class UniLibraryTaxonomyResponse(BaseModel):
     fields: list[TaxonomyEntryResponse]
     languages: list[TaxonomyEntryResponse]
     access: list[AccessOptionResponse]
+    enabled: bool
+    """False while UniLibrary is off: the lists are then empty."""
 
     @classmethod
     def from_view(cls, view: TaxonomyView) -> Self:
         """Build from the taxonomy view."""
         return cls(
+            enabled=view.enabled,
             types=[TaxonomyEntryResponse.from_entry(e) for e in view.types],
             fields=[TaxonomyEntryResponse.from_entry(e) for e in view.fields],
             languages=[TaxonomyEntryResponse.from_entry(e) for e in view.languages],

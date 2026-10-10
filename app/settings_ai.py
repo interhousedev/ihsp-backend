@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING
 
 from app.shared.ai_tasks import (
     ALL_MODALITIES,
-    Modality,
     EMBEDDING_BATCH_SIZE,
     EMBEDDING_DIMENSIONS,
     LIGHT_NOTEBOOK_TASKS,
@@ -22,6 +21,7 @@ from app.shared.ai_tasks import (
     TASK_SPECS,
     AiTask,
     DataCollection,
+    Modality,
     ModelProfile,
 )
 from app.shared.contracts.ai import ReasoningEffort

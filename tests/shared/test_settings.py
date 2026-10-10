@@ -245,3 +245,24 @@ def test_dev_env_loads(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     assert settings.s3.endpoint_url == "http://localhost:9000"
     assert settings.tokens.service_token.get_secret_value() == "dev-service-token"
     assert settings.jwt_bearer.private_key_pem.get_secret_value() == PEM
+
+
+def test_refresh_cookie_defaults_to_lax() -> None:
+    """Same-site subdomains (prod) work with Lax; Strict is not the default."""
+    assert Settings().tokens.refresh_cookie_samesite == "lax"
+
+
+def test_production_refuses_samesite_none_for_the_refresh_cookie() -> None:
+    """`none` is a local-development workaround for *.localhost, never prod."""
+    with pytest.raises(ValueError, match="REFRESH_COOKIE_SAMESITE"):
+        Settings(
+            env="prod",
+            tokens={  # type: ignore[arg-type]
+                "service_token": "x" * 40,
+                "refresh_cookie_secure": True,
+                "refresh_cookie_samesite": "none",
+            },
+            jwt_bearer={"private_key_pem": PEM},  # type: ignore[arg-type]
+            s3={"secret_key": "y" * 30},  # type: ignore[arg-type]
+            vault={"role_id": "r", "secret_id": "s"},  # type: ignore[arg-type]
+        )

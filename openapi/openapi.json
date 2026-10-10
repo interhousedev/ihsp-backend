@@ -25580,6 +25580,10 @@
             "title": "Access",
             "type": "array"
           },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
           "fields": {
             "items": {
               "$ref": "#/components/schemas/TaxonomyEntryResponse"
@@ -25606,7 +25610,8 @@
           "types",
           "fields",
           "languages",
-          "access"
+          "access",
+          "enabled"
         ],
         "title": "UniLibraryTaxonomyResponse",
         "type": "object"
