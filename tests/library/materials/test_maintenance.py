@@ -99,17 +99,17 @@ async def test_a_rerun_the_same_day_uses_the_same_keys(
     assert len(set(keys)) > len(first)
 
 
-async def test_sundays_do_not_count_towards_the_wait(
+async def test_the_weekend_does_not_count_towards_the_wait(
     library: LibraryServices,
     student: Actor,
     make_pending: MakePending,
     clock: FixedClock,
     outbox: list[NotificationDraft],
 ) -> None:
-    """LIB-13: submitted Friday, checked on Monday at the same hour: 48 school hours."""
+    """LIB-13: submitted Friday, checked on Tuesday, same hour: 48 school hours."""
     clock.set(dt.datetime(2026, 10, 2, 9, 0, tzinfo=dt.UTC))
     await make_pending(student)
-    clock.set(dt.datetime(2026, 10, 5, 9, 0, tzinfo=dt.UTC))
+    clock.set(dt.datetime(2026, 10, 6, 9, 0, tzinfo=dt.UTC))
     outbox.clear()
 
     assert await library.materials.remind_queue.execute() == 0

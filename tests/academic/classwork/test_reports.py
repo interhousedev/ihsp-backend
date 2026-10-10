@@ -40,7 +40,7 @@ async def test_student_attendance_counts_only_lessons_with_taken_attendance(
     ]
     assert page["summary"][0]["subject"]["name"] == "Physics"
     assert page["days"] == [
-        {"date": "2026-10-03", "absences": 1},
+        {"date": "2026-10-01", "absences": 1},
         {"date": "2026-10-04", "absences": 1},
     ]
     assert page["not_taken"] == 2  # yesterday's math and today's first physics
@@ -127,13 +127,13 @@ async def test_curator_report_per_subject_day_and_lesson(env: Env) -> None:
     assert subjects["Matematika"]["lessons"] == 0
     assert subjects["Matematika"]["not_taken"] == 1
     assert [(r["key"], r["absences"]) for r in days["rows"][:3]] == [
-        ("2026-10-03", 1),
+        ("2026-10-01", 1),
         ("2026-10-04", 2),
         ("2026-10-05", 0),
     ]
     first = lessons["rows"][0]
     assert first["key"] == str(ids["l1"])
-    assert first["label"] == "2026-10-03 · 1 · Physics"
+    assert first["label"] == "2026-10-01 · 1 · Physics"
     assert first["absences"] == 1
 
 

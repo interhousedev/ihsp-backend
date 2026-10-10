@@ -139,7 +139,7 @@ async def test_journal_exports_to_csv(env: Env) -> None:
     assert data.startswith(b"\xef\xbb\xbf")
     lines = data.decode("utf-8-sig").splitlines()
     assert lines[0] == (
-        "Last name;First name;2026-10-03 Waves;2026-10-04;2026-10-05;2026-10-06;"
+        "Last name;First name;2026-10-01 Waves;2026-10-04;2026-10-05;2026-10-06;"
         "Absences;Semester mark"
     )
     assert lines[1] == "Abdullaev;Aziz;E;A;5;;2;"

@@ -15,6 +15,7 @@ from app.modules.academic.infrastructure.orm import Lesson as LessonRow
 from app.modules.academic.infrastructure.orm import Room as RoomRow
 from app.modules.academic.infrastructure.orm import Subject as SubjectRow
 from app.modules.academic.infrastructure.schedule.mappers import subject_to_entity
+from app.modules.academic.infrastructure.school_days import not_on_saturday
 from app.shared.contracts.academic import LessonRef
 from app.shared.lesson_kind import topic_source_of
 
@@ -23,11 +24,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def lesson_select() -> Select[tuple[LessonRow, SubjectRow, RoomRow]]:
-    """Return a select of lessons joined with subjects and (optional) rooms."""
+    """Return a select of lessons joined with subjects and (optional) rooms.
+
+    Lessons dated on a Saturday (kept from before the school week was cut) are skipped.
+    """
     return (
         select(LessonRow, SubjectRow, RoomRow)
         .join(SubjectRow, SubjectRow.id == LessonRow.subject_id)
         .outerjoin(RoomRow, RoomRow.id == LessonRow.room_id)
+        .where(not_on_saturday(LessonRow.date))
     )
 
 
@@ -152,4 +157,5 @@ def projected_view(
         audience_groups={
             gid: names[gid] for gid in audience_keys.group_ids(keys) if gid in names
         },
+        persisted=False,
     )

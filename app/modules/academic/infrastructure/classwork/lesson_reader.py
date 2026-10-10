@@ -18,6 +18,7 @@ from app.modules.academic.infrastructure.classwork.sql_helpers import (
 )
 from app.modules.academic.infrastructure.orm.homework_todo import HomeworkTodo
 from app.modules.academic.infrastructure.orm.lesson import Lesson as LessonRow
+from app.modules.academic.infrastructure.school_days import on_school_day
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -77,11 +78,12 @@ class SqlLessonReader:
     async def next_study_day(
         self, keys: Sequence[str], after: dt.date
     ) -> dt.date | None:
-        """Earliest date after ``after`` with a scheduled lesson for the keys."""
+        """Earliest date after ``after`` with a scheduled lesson (Monday to Friday)."""
         stmt = sa.select(sa.func.min(LessonRow.date)).where(
             overlaps(LessonRow.audience, keys),
             LessonRow.status == "scheduled",
             LessonRow.date > after,
+            on_school_day(LessonRow.date),
         )
         found: dt.date | None = (await self.session.execute(stmt)).scalar_one()
         return found

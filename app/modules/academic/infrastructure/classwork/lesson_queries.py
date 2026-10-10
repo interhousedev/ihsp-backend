@@ -10,6 +10,7 @@ from app.modules.academic.infrastructure.orm.group import Group
 from app.modules.academic.infrastructure.orm.lesson import Lesson as LessonRow
 from app.modules.academic.infrastructure.orm.room import Room
 from app.modules.academic.infrastructure.orm.subject import Subject
+from app.modules.academic.infrastructure.school_days import not_on_saturday
 from app.shared.lesson_kind import LessonKind, topic_source_of
 
 import sqlalchemy as sa
@@ -17,7 +18,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def lesson_select() -> sa.Select[Any]:
-    """SELECT of every lesson column with subject and room names joined in."""
+    """SELECT of every lesson column with subject and room names joined in.
+
+    Lessons dated on a Saturday (kept from before the school week was cut) are skipped.
+    """
     row = LessonRow
     return (
         sa.select(
@@ -58,6 +62,7 @@ def lesson_select() -> sa.Select[Any]:
         .select_from(row)
         .join(Subject, Subject.id == row.subject_id)
         .outerjoin(Room, Room.id == row.room_id)
+        .where(not_on_saturday(row.date))
     )
 
 

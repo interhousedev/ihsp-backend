@@ -13,10 +13,12 @@ from app.modules.academic.domain.schedule.errors import (
     TermMovedDayInvalidError,
     TermNonStudyDayInvalidError,
 )
+from app.modules.academic.domain.schedule.school_days import (
+    SATURDAY,
+    SCHOOL_DAYS,
+)
 
 from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, TypeAdapter
-
-STUDY_WEEKDAYS = (1, 2, 3, 4, 5, 6)
 
 HourMinute = Annotated[
     dt.time,
@@ -102,8 +104,17 @@ _MOVED_DAYS = TypeAdapter(list[MovedDay])
 
 
 def bells_from_json(raw: Any) -> list[Bell]:
-    """Validate the jsonb stored in Term.bells."""
-    return _BELLS.validate_python(raw or [])
+    """Validate the jsonb stored in Term.bells.
+
+    A Saturday kept from before the lyceum dropped Saturday lessons is left out: a
+    bell held only on Saturdays vanishes, one held on more days loses that day.
+    """
+    bells: list[Bell] = []
+    for bell in _BELLS.validate_python(raw or []):
+        days = [day for day in bell.weekdays if day != SATURDAY]
+        if days:
+            bells.append(bell.model_copy(update={"weekdays": days}))
+    return bells
 
 
 def bells_to_json(bells: Sequence[Bell]) -> list[dict[str, Any]]:
@@ -123,8 +134,13 @@ def control_periods_to_json(periods: ControlPeriods) -> dict[str, Any]:
 
 
 def moved_days_from_json(raw: Any) -> list[MovedDay]:
-    """Validate the jsonb stored in Term.moved_days."""
-    return _MOVED_DAYS.validate_python(raw or [])
+    """Validate the jsonb stored in Term.moved_days, leaving out weekend dates.
+
+    A moved day on a Saturday or Sunday kept from before is skipped, so the term can
+    be saved again. Only Monday to Friday can be a moved day.
+    """
+    moved = _MOVED_DAYS.validate_python(raw or [])
+    return [day for day in moved if day.date.isoweekday() in SCHOOL_DAYS]
 
 
 def moved_days_to_json(days: Sequence[MovedDay]) -> list[dict[str, Any]]:
@@ -161,7 +177,9 @@ def validate_term(term: Term) -> None:
         if not term.contains(day):
             raise TermNonStudyDayInvalidError(params={"date": day.isoformat()})
     for moved in term.moved_days:
-        if moved.follows_weekday not in STUDY_WEEKDAYS:
+        follows_school_day = moved.follows_weekday in SCHOOL_DAYS
+        is_school_day = moved.date.isoweekday() in SCHOOL_DAYS
+        if not (follows_school_day and is_school_day):
             raise TermMovedDayInvalidError(params={"date": moved.date.isoformat()})
     _validate_control_periods(term)
 
@@ -184,7 +202,7 @@ def _validate_bells(bells: Sequence[Bell]) -> None:
             raise TermBellsInvalidError(params={"period": bell.period})
         for weekday in bell.weekdays:
             slot = (bell.period, weekday)
-            if weekday not in STUDY_WEEKDAYS or slot in seen:
+            if weekday not in SCHOOL_DAYS or slot in seen:
                 raise TermBellsInvalidError(
                     params={"period": bell.period, "weekday": weekday}
                 )

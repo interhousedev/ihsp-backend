@@ -15,8 +15,8 @@ def manual(period: int, start: dt.time, end: dt.time, weekdays: list[int]) -> Be
     return Bell(period=period, start=start, end=end, weekdays=weekdays)
 
 
-def test_pair_zero_is_period_one_on_every_study_weekday() -> None:
-    """ACA-4: the five EMIS pairs become periods 1-5, Monday to Saturday."""
+def test_pair_zero_is_period_one_on_every_school_day() -> None:
+    """ACA-4: the five EMIS pairs become periods 1-5, Monday to Friday."""
     bells = bells_from_class_hours(FAKE_CLASS_HOURS)
 
     assert [(b.period, b.start, b.end) for b in bells] == [
@@ -26,7 +26,7 @@ def test_pair_zero_is_period_one_on_every_study_weekday() -> None:
         (4, dt.time(13, 40), dt.time(15, 0)),
         (5, dt.time(15, 10), dt.time(16, 30)),
     ]
-    assert all(b.weekdays == [1, 2, 3, 4, 5, 6] for b in bells)
+    assert all(b.weekdays == [1, 2, 3, 4, 5] for b in bells)
     assert {b.source for b in bells} == {"emis"}
 
 
@@ -46,7 +46,7 @@ def test_the_same_bells_change_nothing() -> None:
 
 
 def test_a_manual_override_wins_over_emis_for_its_period() -> None:
-    """An override of time and weekdays survives the sync; EMIS stays the default elsewhere."""
+    """A time and weekday override survives the sync; elsewhere EMIS stays default."""
     override = manual(1, dt.time(8, 30), dt.time(9, 15), [1, 2, 3, 4, 5]).model_copy(
         update={"source": "override"}
     )
@@ -110,7 +110,7 @@ def test_a_changed_time_is_a_change() -> None:
 
 
 def test_plain_manual_bells_of_listed_periods_are_replaced_by_emis() -> None:
-    """Only an explicit override survives; a hand-made bell of an EMIS period follows EMIS."""
+    """Only an explicit override survives; a hand-made EMIS-period bell follows EMIS."""
     current = [manual(1, dt.time(8, 30), dt.time(9, 15), [1, 2, 3, 4, 5])]
 
     merged = merge_emis_bells(current, bells_from_class_hours(FAKE_CLASS_HOURS))

@@ -128,7 +128,8 @@ class SyncStudent:
 
         The daily profile run also asks for the timetable of a group that has none
         (ACA-1); after a registration the backfill leaves that to its own task. The
-        timetables of the other groups are refreshed by the run itself.
+        timetables of the other groups are refreshed by the run itself. A group with no
+        stored curriculum asks for it in any profile refresh, a registration's included.
         """
         user_id = state.user_id
         counters.emis_requests += 1
@@ -152,6 +153,10 @@ class SyncStudent:
         counters.emis_requests += 1
         subjects = await self._emis.subjects(user_id)
         await self._enrollment.sync_subjects(group_id=ref.group_id, subjects=subjects)
+        if ref.needs_curriculum:  # a registration or a group seen for the first time
+            await self._kicker.kick(
+                "academic.sync_group_curriculum", group_id=str(ref.group_id)
+            )
         if import_timetable and ref.needs_timetable:
             await self._kicker.kick(
                 "academic.sync_group_timetable",

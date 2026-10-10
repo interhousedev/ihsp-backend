@@ -23,7 +23,9 @@ SERIOUS_REASONS = frozenset(
 STAFF_REPORTERS = frozenset(
     {UploaderRole.TEACHER, UploaderRole.LIBRARIAN, UploaderRole.ADMIN}
 )
-SUNDAY = 6
+# School days are Monday to Friday: `date.weekday()` 0 to 4. The academic module owns
+# the school week; a module never imports another module's domain, so this repeats it.
+LAST_SCHOOL_DAY = 4
 DAY = timedelta(days=1)
 WEEK = timedelta(days=7)
 
@@ -111,7 +113,7 @@ def window_resets_at(
 
 
 def school_time_waited(start: datetime, end: datetime) -> timedelta:
-    """Time from `start` to `end` without Sundays (school days: Monday to Saturday)."""
+    """Time from `start` to `end` on school days only (Monday to Friday)."""
     if end <= start:
         return timedelta(0)
     cursor, stop = to_local(start), to_local(end)
@@ -119,7 +121,7 @@ def school_time_waited(start: datetime, end: datetime) -> timedelta:
     while cursor < stop:
         midnight = datetime.combine(cursor.date() + DAY, time.min, tzinfo=TASHKENT)
         segment_end = min(midnight, stop)
-        if cursor.weekday() != SUNDAY:
+        if cursor.weekday() <= LAST_SCHOOL_DAY:
             total += segment_end - cursor
         cursor = segment_end
     return total

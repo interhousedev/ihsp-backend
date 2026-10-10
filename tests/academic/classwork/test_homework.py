@@ -176,6 +176,21 @@ async def test_a_newly_generated_lesson_pulls_the_due_date_forward(env: Env) -> 
     assert due == DAY + dt.timedelta(days=3)
 
 
+async def test_the_due_date_skips_a_saturday_lesson_from_before(env: Env) -> None:
+    """Nobody studies on a Saturday: the next lesson after Friday is on Monday."""
+    w = env.world
+    friday = DAY + dt.timedelta(days=3)
+    given = await add_lesson(env.maker, w, day=friday)
+    await add_lesson(env.maker, w, day=friday + dt.timedelta(days=1))  # Saturday
+    monday = await add_lesson(env.maker, w, day=friday + dt.timedelta(days=3))
+
+    await env.services.set_homework.execute(given, env.teacher, "Task", None)
+
+    assert friday.isoweekday() == 5
+    due = (await lesson_row(env.maker, given)).homework_due_date
+    assert due == (await lesson_row(env.maker, monday)).date
+
+
 async def test_recompute_leaves_manual_due_dates_alone(env: Env) -> None:
     """ACA-10: only automatic dates are recalculated."""
     w = env.world

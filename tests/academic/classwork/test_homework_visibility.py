@@ -29,7 +29,7 @@ STATUSES = ("overdue", "upcoming", "later", "done")
 DAY_1 = dt.timedelta(days=1)
 WEDNESDAY = DAY + DAY_1
 FRIDAY = DAY + 3 * DAY_1
-SATURDAY_BEFORE = DAY - 3 * DAY_1
+FRIDAY_BEFORE = DAY - 4 * DAY_1
 MONDAY_BEFORE = DAY - DAY_1
 
 
@@ -105,9 +105,9 @@ async def _tuesday_physics(env: Env, audience: list[str] | None = None) -> UUID:
 
 
 async def _late_homework_world(env: Env) -> UUID:
-    """Saturday physics, next physics on Monday, and both are over by now (Tuesday)."""
+    """Friday physics, next physics on Monday, and both are over by now (Tuesday)."""
     w = env.world
-    given = await add_lesson(env.maker, w, day=SATURDAY_BEFORE)
+    given = await add_lesson(env.maker, w, day=FRIDAY_BEFORE)
     await add_lesson(env.maker, w, day=MONDAY_BEFORE)
     await add_lesson(env.maker, w, day=WEDNESDAY, subject_id=w.math_id)
     return given

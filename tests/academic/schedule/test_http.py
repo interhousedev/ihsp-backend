@@ -28,14 +28,14 @@ TERM_BODY = {
             "period": 2,
             "start": "09:25",
             "end": "10:10",
-            "weekdays": [1, 2, 3, 4, 5, 6],
+            "weekdays": [1, 2, 3, 4, 5],
             "source": "emis",
             "emis_start": None,
             "emis_end": None,
         },
     ],
     "non_study_days": ["2026-10-12"],
-    "moved_days": [{"date": "2026-11-14", "follows_weekday": 1}],
+    "moved_days": [{"date": "2026-11-13", "follows_weekday": 1}],
 }
 
 
@@ -434,6 +434,29 @@ async def test_timetable_routes(env: Env, api: Api) -> None:
     assert patched.json()["period"] == 2 and patched.json()["room"] is None
     assert copied.json() == {"created": 1}
     assert deleted.status_code == 204 and deleted.content == b""
+
+
+async def test_a_saturday_entry_answers_422_not_a_school_day(
+    env: Env, api: Api
+) -> None:
+    """The lyceum has no Saturday lessons: create, check and patch refuse weekday 6."""
+    term = await env.term()
+    subject = await env.subject()
+    group = await env.group()
+    saturday = entry_body(term.id, subject.id, group.id, weekday=6)
+    created = await api.client.post("/v1/admin/timetable", json=saturday)
+    checked = await api.client.post("/v1/admin/timetable/check", json=saturday)
+    friday = await api.client.post(
+        "/v1/admin/timetable", json=entry_body(term.id, subject.id, group.id, weekday=5)
+    )
+    patched = await api.client.patch(
+        f"/v1/admin/timetable/{friday.json()['id']}", json={"weekday": 6}
+    )
+
+    for refused in (created, checked, patched):
+        assert refused.status_code == 422
+        assert refused.json()["type"] == "academic/entry-not-school-day"
+    assert friday.status_code == 200
 
 
 async def test_a_conflicting_entry_answers_409_with_the_conflicts(

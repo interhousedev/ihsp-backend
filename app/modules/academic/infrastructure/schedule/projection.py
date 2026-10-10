@@ -22,8 +22,9 @@ from app.modules.academic.infrastructure.schedule.mappers import (
     entry_to_entity,
     term_to_entity,
 )
+from app.modules.academic.infrastructure.school_days import entry_on_school_day
 
-from sqlalchemy import func, select
+from sqlalchemy import ColumnElement, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -47,6 +48,31 @@ async def projected_views(
     locale: str,
 ) -> list[LessonView]:
     """Project lessons for audience keys on dates after the last generated lesson."""
+    return await _projected(
+        session, overlaps(EntryRow.audience, keys), start, end, locale
+    )
+
+
+async def projected_views_for_teacher(
+    session: AsyncSession,
+    teacher_id: UUID,
+    start: dt.date,
+    end: dt.date,
+    locale: str,
+) -> list[LessonView]:
+    """Project a teacher's lessons (all groups) after the last generated lesson."""
+    return await _projected(
+        session, EntryRow.teacher_id == teacher_id, start, end, locale
+    )
+
+
+async def _projected(
+    session: AsyncSession,
+    entry_filter: ColumnElement[bool],
+    start: dt.date,
+    end: dt.date,
+    locale: str,
+) -> list[LessonView]:
     term_rows = await session.scalars(
         select(TermRow).where(TermRow.starts_on <= end, TermRow.ends_on >= start)
     )
@@ -57,21 +83,25 @@ async def projected_views(
         first = max(start, last + dt.timedelta(days=1)) if last else start
         if first > min(end, term.ends_on):
             continue
-        views.extend(await _project_term(session, term, keys, first, end, locale))
+        views.extend(
+            await _project_term(session, term, entry_filter, first, end, locale)
+        )
     return views
 
 
 async def _project_term(
     session: AsyncSession,
     term: Term,
-    keys: Sequence[str],
+    entry_filter: ColumnElement[bool],
     first: dt.date,
     end: dt.date,
     locale: str,
 ) -> list[LessonView]:
     rows = await session.scalars(
         select(EntryRow).where(
-            EntryRow.term_id == term.id, overlaps(EntryRow.audience, keys)
+            EntryRow.term_id == term.id,
+            entry_on_school_day(EntryRow.weekday),
+            entry_filter,
         )
     )
     entries = [entry_to_entity(row) for row in rows]

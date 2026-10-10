@@ -31,12 +31,8 @@ import pytest
 TERM_START = dt.date(2026, 9, 2)
 TERM_END = dt.date(2026, 12, 30)
 OLD_BELLS = [
-    Bell(
-        period=1, start=dt.time(8, 30), end=dt.time(9, 15), weekdays=[1, 2, 3, 4, 5, 6]
-    ),
-    Bell(
-        period=2, start=dt.time(9, 25), end=dt.time(10, 10), weekdays=[1, 2, 3, 4, 5, 6]
-    ),
+    Bell(period=1, start=dt.time(8, 30), end=dt.time(9, 15), weekdays=[1, 2, 3, 4, 5]),
+    Bell(period=2, start=dt.time(9, 25), end=dt.time(10, 10), weekdays=[1, 2, 3, 4, 5]),
 ]
 EMIS_STARTS = {hour.begin_time for hour in FAKE_CLASS_HOURS}
 TODAY = dt.date(2026, 10, 6)  # the test clock's day
@@ -131,8 +127,7 @@ async def test_registering_a_student_fills_the_group_with_a_timetable_from_emis(
         SYSTEM_ACTOR, term_id=term.id, group_id=group_id
     )
     assert {e.source for e in entries} == {"emis"}
-    saturdays = [e for e in entries if e.weekday == 6]
-    assert sorted(e.week_parity for e in saturdays) == ["even", "odd"]
+    assert {e.weekday for e in entries} == {1, 2, 3, 4, 5}  # no Saturday entries
     assert {a.subgroup for e in entries for a in e.audience} == {None, 1}
     made = await teachers(container)
     assert {t.last_name for t in made} == {
@@ -146,13 +141,7 @@ async def test_registering_a_student_fills_the_group_with_a_timetable_from_emis(
     lessons = await lessons_of(container, user_id)
     assert {x.starts_at.astimezone(TASHKENT).time() for x in lessons} <= EMIS_STARTS
     assert {x.ends_at - x.starts_at for x in lessons} == {LESSON_LENGTH}
-    odd = {x.date for x in lessons if x.date.isoweekday() == 6}
-    assert odd == {
-        dt.date(2026, 10, 10),
-        dt.date(2026, 10, 17),
-        dt.date(2026, 10, 24),
-        dt.date(2026, 10, 31),
-    }
+    assert {x.date.isoweekday() for x in lessons} == {1, 2, 3, 4, 5}  # no Saturday
     [stored] = await container.academic.schedule.list_terms.execute()
     assert {b.source for b in stored.bells} == {"emis"}
 

@@ -21,6 +21,7 @@ import pytest
 FRIDAY = dt.date(2026, 10, 9)
 SATURDAY = dt.date(2026, 10, 10)
 MONDAY = dt.date(2026, 10, 12)
+TUESDAY = dt.date(2026, 10, 13)
 THURSDAY = dt.date(2026, 10, 8)
 NOON = dt.datetime(2026, 10, 9, 7, 0, tzinfo=dt.UTC)
 
@@ -30,25 +31,26 @@ NOON = dt.datetime(2026, 10, 9, 7, 0, tzinfo=dt.UTC)
     [
         (None, SATURDAY, "upcoming"),
         (None, FRIDAY, "upcoming"),
-        (None, MONDAY, "later"),
+        (None, MONDAY, "upcoming"),
+        (None, TUESDAY, "later"),
         (None, None, "later"),
         (None, THURSDAY, "overdue"),
-        (NOON, SATURDAY, "done"),
+        (NOON, MONDAY, "done"),
         (NOON, None, "done"),
     ],
 )
-def test_friday_with_a_saturday_study_day_sorts_items_into_lists(
+def test_friday_with_monday_as_the_next_study_day_sorts_items_into_lists(
     done_at: dt.datetime | None, due: dt.date | None, expected: str
 ) -> None:
     """WEB-18: Upcoming is due next study day, Later is the rest, Done is ticked."""
-    assert bucket(done_at, due, FRIDAY, SATURDAY) == expected
+    assert bucket(done_at, due, FRIDAY, MONDAY) == expected
 
 
 def test_every_open_item_is_in_exactly_one_list_even_when_long_overdue() -> None:
     """WEB-18: past due items are never dropped."""
     long_ago = FRIDAY - dt.timedelta(days=80)
 
-    assert bucket(None, long_ago, FRIDAY, SATURDAY) == "overdue"
+    assert bucket(None, long_ago, FRIDAY, MONDAY) == "overdue"
     assert bucket(None, THURSDAY, FRIDAY, None) == "overdue"
 
 

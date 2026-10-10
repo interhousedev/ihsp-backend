@@ -3,6 +3,7 @@
 from uuid import UUID
 
 from app.modules.academic.infrastructure.schedule.repositories import (
+    SqlCurriculumRepository,
     SqlGroupRepository,
     SqlLessonRepository,
     SqlRoomRepository,
@@ -17,12 +18,13 @@ from sqlalchemy import text
 
 
 class SqlScheduleUnitOfWork(SqlUnitOfWork):
-    """One transaction over terms, groups, students, rooms, entries and lessons."""
+    """One transaction over terms, groups, students, curricula, rooms and lessons."""
 
     terms: SqlTermRepository
     groups: SqlGroupRepository
     students: SqlStudentRepository
     subjects: SqlSubjectRepository
+    curricula: SqlCurriculumRepository
     rooms: SqlRoomRepository
     entries: SqlTimetableEntryRepository
     lessons: SqlLessonRepository
@@ -33,6 +35,7 @@ class SqlScheduleUnitOfWork(SqlUnitOfWork):
         self.groups = SqlGroupRepository(self.session)
         self.students = SqlStudentRepository(self.session)
         self.subjects = SqlSubjectRepository(self.session)
+        self.curricula = SqlCurriculumRepository(self.session)
         self.rooms = SqlRoomRepository(self.session)
         self.entries = SqlTimetableEntryRepository(self.session)
         self.lessons = SqlLessonRepository(self.session)

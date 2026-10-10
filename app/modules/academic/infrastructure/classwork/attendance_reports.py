@@ -31,6 +31,10 @@ from app.modules.academic.infrastructure.classwork.sql_helpers import (
 from app.modules.academic.infrastructure.orm.group import Group
 from app.modules.academic.infrastructure.orm.lesson import Lesson as LessonRow
 from app.modules.academic.infrastructure.orm.subject import Subject
+from app.modules.academic.infrastructure.school_days import (
+    NOT_SATURDAY_SQL,
+    not_on_saturday,
+)
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -69,7 +73,8 @@ GROUP BY 1
 
 _NOT_TAKEN_BASE = (
     "l.status = 'scheduled' AND l.attendance_absent IS NULL "
-    "AND l.starts_at < :now AND l.date >= :start AND l.date <= :end"
+    "AND l.starts_at < :now AND l.date >= :start AND l.date <= :end "
+    f"AND {NOT_SATURDAY_SQL}"
 )
 
 _NOT_TAKEN_SIMPLE = (
@@ -179,6 +184,7 @@ class SqlAttendanceReports:
             overlaps(LessonRow.audience, keys),
             LessonRow.attendance_absent.is_(None),
             LessonRow.starts_at < now,
+            not_on_saturday(LessonRow.date),
         )
         data = StudentAttendanceData()
         for row in (await self.session.execute(per_subject)).all():

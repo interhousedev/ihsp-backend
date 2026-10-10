@@ -62,19 +62,19 @@ def test_a_class_in_every_week_is_a_weekly_entry() -> None:
 
 def test_a_class_in_odd_weeks_only_is_an_odd_entry() -> None:
     """ACA-5: weeks 7 and 9 of the term are odd."""
-    assert derive(weekly(6, weeks=(1, 3))) == [(6, 1, "odd", None, 101)]
+    assert derive(weekly(4, weeks=(1, 3))) == [(4, 1, "odd", None, 101)]
 
 
 def test_a_class_in_even_weeks_only_is_an_even_entry() -> None:
     """ACA-5: weeks 6 and 8 of the term are even."""
-    assert derive(weekly(6, weeks=(0, 2))) == [(6, 1, "even", None, 101)]
+    assert derive(weekly(4, weeks=(0, 2))) == [(4, 1, "even", None, 101)]
 
 
 def test_the_same_weeks_count_differently_from_a_later_anchor() -> None:
     """ACA-5: a term that starts a week later turns odd into even."""
     later = make_term(starts_on=dt.date(2026, 9, 7))
 
-    assert derive(weekly(6, weeks=(1, 3)), later) == [(6, 1, "even", None, 101)]
+    assert derive(weekly(4, weeks=(1, 3)), later) == [(4, 1, "even", None, 101)]
 
 
 def test_two_subjects_alternating_in_one_slot_are_an_odd_and_an_even_entry() -> None:
@@ -129,18 +129,29 @@ def test_halves_and_teachers_make_separate_slots() -> None:
 
 
 def test_a_moved_study_day_counts_as_the_weekday_it_follows() -> None:
-    """ACA-4: Saturday 10 Oct follows Monday, so its classes are Monday's."""
+    """ACA-4: Friday 9 Oct follows Monday, so its classes are Monday's."""
     moved = make_term(
         starts_on=dt.date(2026, 9, 1),
-        moved_days=[MovedDay(date=day(0, 6), follows_weekday=1)],
+        moved_days=[MovedDay(date=day(0, 5), follows_weekday=1)],
     )
 
-    assert class_weekday(day(0, 6), moved) == 1
-    assert class_weekday(day(0, 6), TERM) == 6
-    # Monday's class of week 8 and the moved Saturday of week 6 are one even slot.
-    classes = [klass(0, 6), klass(2, 1)]
+    assert class_weekday(day(0, 5), moved) == 1
+    assert class_weekday(day(0, 5), TERM) == 5
+    # Monday's class of week 8 and the moved Friday of week 6 are one even slot.
+    classes = [klass(0, 5), klass(2, 1)]
     assert derive(classes, moved) == [(1, 1, "even", None, 101)]
-    assert derive(classes, TERM) == []  # two unrelated one-offs without the move
+
+
+def test_a_moved_sunday_is_not_a_study_day_for_classes() -> None:
+    """Only Monday to Friday are school days: classes on a moved Sunday are ignored."""
+    moved = make_term(
+        starts_on=dt.date(2026, 9, 1),
+        moved_days=[MovedDay(date=day(0, 7), follows_weekday=1)],
+    )
+
+    assert class_weekday(day(0, 7), moved) is None
+    # The Sunday class is ignored, exactly as without the rule: no slot comes from it.
+    assert derive([klass(0, 7), klass(2, 1)], moved) == []
 
 
 def test_a_class_on_a_non_study_day_keeps_its_calendar_weekday() -> None:
@@ -154,6 +165,18 @@ def test_sundays_have_no_slot() -> None:
     """ACA-5: there are no Sunday lessons."""
     assert class_weekday(day(0, 7), TERM) is None
     assert derive([klass(0, 7)]) == []
+
+
+def test_saturdays_have_no_slot() -> None:
+    """The lyceum does not study on Saturdays: EMIS classes of that day are ignored."""
+    assert class_weekday(day(0, 6), TERM) is None
+    assert derive([klass(week, 6) for week in range(4)]) == []
+    # Even a rule that moves the Saturday onto Monday's timetable is not honoured.
+    moved = make_term(
+        starts_on=dt.date(2026, 9, 1),
+        moved_days=[MovedDay(date=day(0, 6), follows_weekday=1)],
+    )
+    assert class_weekday(day(0, 6), moved) is None
 
 
 def test_classes_outside_the_term_are_ignored() -> None:

@@ -276,6 +276,50 @@ async def test_profile_run_leaves_a_group_with_a_timetable_alone(env: Env) -> No
     assert env.kicker.calls == []
 
 
+async def test_a_group_without_a_curriculum_asks_for_it_in_a_profile_run(
+    env: Env,
+) -> None:
+    """The first sync of a group with no stored curriculum starts the one-time fetch."""
+    env.enrollment.ref = replace(env.enrollment.ref, needs_curriculum=True)
+    env.emis.profile_result = EmisProfile(
+        1, "Aliya", "Karimova", None, 10815, 3292, "2TN2", 3, 1
+    )
+
+    await env.sync.execute(env.world.user_id, mode="profile")
+
+    assert env.kicker.calls == [
+        (
+            "academic.sync_group_curriculum",
+            {"group_id": str(env.enrollment.ref.group_id)},
+        )
+    ]
+
+
+async def test_a_registration_backfill_asks_for_the_curriculum_too(env: Env) -> None:
+    """A registration runs the backfill, which refreshes the profile the same way."""
+    env.enrollment.ref = replace(env.enrollment.ref, needs_curriculum=True)
+    env.emis.profile_result = EmisProfile(
+        1, "Aliya", "Karimova", None, 10815, 3292, "2TN2", 3, 1
+    )
+
+    await env.sync.execute(env.world.user_id, mode="backfill")
+
+    assert [name for name, _ in env.kicker.calls] == ["academic.sync_group_curriculum"]
+
+
+async def test_a_group_with_a_curriculum_is_not_asked_again(env: Env) -> None:
+    """No task once the curriculum is stored: Administration refreshes it by hand."""
+    assert env.enrollment.ref.needs_curriculum is False
+    env.emis.profile_result = EmisProfile(
+        1, "Aliya", "Karimova", None, 10815, 3292, "2TN2", 3, 1
+    )
+
+    await env.sync.execute(env.world.user_id, mode="profile")
+    await env.sync.execute(env.world.user_id, mode="regular")
+
+    assert env.kicker.calls == []
+
+
 async def test_a_backfill_does_not_start_the_sync_the_registration_did(
     env: Env,
 ) -> None:

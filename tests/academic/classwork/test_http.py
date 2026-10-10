@@ -135,7 +135,7 @@ async def test_get_attendance_uses_from_and_to(
     assert body["to"] == "2026-10-06"
     assert body["summary"][0]["absences"] == 2
     assert body["summary"][0]["rate"] == 0.6667
-    assert [d["date"] for d in body["days"]] == ["2026-10-03", "2026-10-04"]
+    assert [d["date"] for d in body["days"]] == ["2026-10-01", "2026-10-04"]
     assert len(body["missed"]) == 2
     assert body["not_taken"] == 2
 

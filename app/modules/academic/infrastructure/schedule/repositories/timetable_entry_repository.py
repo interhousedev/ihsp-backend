@@ -10,6 +10,7 @@ from app.modules.academic.infrastructure.schedule.mappers import (
     entry_new_row,
     entry_to_entity,
 )
+from app.modules.academic.infrastructure.school_days import entry_on_school_day
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -48,9 +49,11 @@ class SqlTimetableEntryRepository:
             await self.session.flush()
 
     async def list_for_term(self, term_id: UUID) -> list[TimetableEntry]:
-        """Return every entry of the term."""
+        """Return every entry of the term; Saturday entries are skipped."""
         rows = await self.session.scalars(
-            select(EntryRow).where(EntryRow.term_id == term_id)
+            select(EntryRow).where(
+                EntryRow.term_id == term_id, entry_on_school_day(EntryRow.weekday)
+            )
         )
         return [entry_to_entity(row) for row in rows]
 
@@ -62,8 +65,13 @@ class SqlTimetableEntryRepository:
         teacher_id: UUID | None = None,
         room_id: UUID | None = None,
     ) -> list[TimetableEntry]:
-        """Return the term's entries of a group, a teacher or a room."""
-        stmt = select(EntryRow).where(EntryRow.term_id == term_id)
+        """Return the term's entries of a group, a teacher or a room.
+
+        Saturday entries are skipped.
+        """
+        stmt = select(EntryRow).where(
+            EntryRow.term_id == term_id, entry_on_school_day(EntryRow.weekday)
+        )
         if group_id is not None:
             keys = [str(group_id), f"{group_id}:1", f"{group_id}:2"]
             stmt = stmt.where(overlaps(EntryRow.audience, keys))
@@ -76,9 +84,10 @@ class SqlTimetableEntryRepository:
     async def same_slot(
         self, term_id: UUID, weekday: int, period: int
     ) -> list[TimetableEntry]:
-        """Return entries of the term at one weekday and period."""
+        """Return entries of the term at one weekday and period (none on Saturday)."""
         stmt = select(EntryRow).where(
             EntryRow.term_id == term_id,
+            entry_on_school_day(EntryRow.weekday),
             EntryRow.weekday == weekday,
             EntryRow.period == period,
         )

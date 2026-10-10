@@ -1,5 +1,8 @@
 """SQL repositories of the academic schedule."""
 
+from app.modules.academic.infrastructure.schedule.repositories.curriculum_repository import (  # noqa: E501
+    SqlCurriculumRepository,
+)
 from app.modules.academic.infrastructure.schedule.repositories.group_repository import (  # noqa: E501
     SqlGroupRepository,
 )
@@ -23,6 +26,7 @@ from app.modules.academic.infrastructure.schedule.repositories.timetable_entry_r
 )
 
 __all__ = [
+    "SqlCurriculumRepository",
     "SqlGroupRepository",
     "SqlLessonRepository",
     "SqlRoomRepository",

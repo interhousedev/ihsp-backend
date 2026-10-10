@@ -18,6 +18,7 @@ from app.modules.academic.domain.schedule.calendar import (
     parity_of_week,
     term_week,
 )
+from app.modules.academic.domain.schedule.school_days import SCHOOL_DAYS
 from app.modules.academic.domain.schedule.term import Term
 from app.modules.academic.domain.schedule.timetable_entry import WeekParity
 from app.shared.contracts.emis import EmisClass
@@ -40,10 +41,11 @@ def class_weekday(day: dt.date, term: Term) -> int | None:
     """The weekday whose timetable the class belongs to (a moved day follows another).
 
     EMIS may list a class on a date the term calls a non-study day; the class then
-    keeps its calendar weekday. None for Sundays that follow no weekday.
+    keeps its calendar weekday. None for a Saturday or a Sunday that follows no
+    weekday: the lyceum has no lessons then, so EMIS classes on those days are ignored.
     """
     weekday = effective_weekday(day, term) or day.isoweekday()
-    return weekday if weekday <= 6 else None
+    return weekday if weekday in SCHOOL_DAYS else None
 
 
 def derive_slots(

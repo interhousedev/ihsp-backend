@@ -46,7 +46,7 @@ async def test_the_bells_of_the_current_term_become_the_emis_class_hours(
         (5, dt.time(15, 10), dt.time(16, 30)),
     ]
     assert {b.source for b in bells} == {"emis"}
-    assert all(b.weekdays == [1, 2, 3, 4, 5, 6] for b in bells)
+    assert all(b.weekdays == [1, 2, 3, 4, 5] for b in bells)
     assert env.emis.calls == [("class_hours", STUDENT)]
 
 

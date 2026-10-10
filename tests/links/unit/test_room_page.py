@@ -186,10 +186,10 @@ async def test_every_resource_has_a_report_link(
     assert "/s/" in result.html and "/report" in result.html
 
 
-async def test_previous_days_skip_sundays_and_keep_the_pin(
+async def test_previous_days_skip_weekends_and_keep_the_pin(
     world: LinksWorld, clock: FixedClock
 ) -> None:
-    """ROOM-4: the last seven study days (Mon-Sat) link back with ?pin=&date=."""
+    """ROOM-4: the last seven study days (Mon-Fri) link back with ?pin=&date=."""
     await _classroom(world, clock)
 
     result = await _page(world)
@@ -199,15 +199,29 @@ async def test_previous_days_skip_sundays_and_keep_the_pin(
     shown = re.findall(r"date=(\d{4}-\d{2}-\d{2})\">", html)
     assert shown == [
         "2026-10-05",
-        "2026-10-03",  # 2026-10-04 is a Sunday
-        "2026-10-02",
+        "2026-10-02",  # 2026-10-03 and 2026-10-04 are a Saturday and a Sunday
         "2026-10-01",
         "2026-09-30",
         "2026-09-29",
         "2026-09-28",
+        "2026-09-25",  # 2026-09-26 and 2026-09-27 are a weekend
     ]
     assert html.count(f"?pin={PIN}&amp;date=") == 7
     assert "__PIN__" not in html
+
+
+async def test_a_saturday_shows_its_date_without_a_weekday_name(
+    world: LinksWorld, clock: FixedClock
+) -> None:
+    """ROOM-4: the lyceum does not study on Saturday; an old link still opens."""
+    await _classroom(world, clock)
+
+    result = await _page(world, day="2026-10-03")
+
+    assert result.status_code == 200
+    assert result.html is not None
+    assert "Saturday" not in result.html
+    assert "No lessons in room 102 on 03.10" in result.html
 
 
 async def test_a_past_day_has_no_now_marker_and_links_back_to_today(

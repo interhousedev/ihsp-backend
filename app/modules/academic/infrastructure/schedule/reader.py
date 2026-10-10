@@ -16,13 +16,17 @@ from app.modules.academic.infrastructure.orm import Lesson as LessonRow
 from app.modules.academic.infrastructure.orm import Room as RoomRow
 from app.modules.academic.infrastructure.orm import Student as StudentRow
 from app.modules.academic.infrastructure.orm import Subject as SubjectRow
+from app.modules.academic.infrastructure.orm import TimetableEntry as EntryRow
 from app.modules.academic.infrastructure.schedule.array_ops import overlaps
 from app.modules.academic.infrastructure.schedule.lesson_views import (
     build_views,
     lesson_select,
 )
 from app.modules.academic.infrastructure.schedule.like import ESCAPE, like_pattern
-from app.modules.academic.infrastructure.schedule.projection import projected_views
+from app.modules.academic.infrastructure.schedule.projection import (
+    projected_views,
+    projected_views_for_teacher,
+)
 from app.shared.contracts.academic import RoomRef, StudentRef
 
 from sqlalchemy import ColumnElement, exists, literal, or_, select, tuple_
@@ -37,6 +41,12 @@ class SqlScheduleReader:
     def __init__(self, sessionmaker: async_sessionmaker[AsyncSession]) -> None:
         """Store the session factory."""
         self.sessionmaker = sessionmaker
+
+    async def subject_emis_id(self, subject_id: UUID) -> int | None:
+        """The EMIS id of a subject, None when it has none (or does not exist)."""
+        stmt = select(SubjectRow.emis_subject_id).where(SubjectRow.id == subject_id)
+        async with self.sessionmaker() as session:
+            return (await session.execute(stmt)).scalar_one_or_none()
 
     # - - - Students and rooms - - -
 
@@ -198,6 +208,45 @@ class SqlScheduleReader:
         merged = [*generated, *projected]
         merged.sort(key=lambda view: (view.ref.starts_at, str(view.ref.id)))
         return merged
+
+    async def projected_for_teacher(
+        self, teacher_id: UUID, start: dt.date, end: dt.date, locale: str
+    ) -> list[LessonView]:
+        """Return the teacher's generated and projected lessons of every group."""
+        async with self.sessionmaker() as session:
+            projected = await projected_views_for_teacher(
+                session, teacher_id, start, end, locale
+            )
+        generated = await self.lessons_for_teacher(teacher_id, start, end, locale)
+        merged = [*generated, *projected]
+        merged.sort(key=lambda view: (view.ref.starts_at, str(view.ref.id)))
+        return merged
+
+    async def teaches_student(self, teacher_id: UUID, user_id: UUID) -> bool:
+        """Return True if a lesson or entry of the teacher reaches the student."""
+        async with self.sessionmaker() as session:
+            student = await session.get(StudentRow, user_id)
+            if student is None or student.status != "active":
+                return False
+            keys = audience_keys.student_keys(student.group_id, student.subgroup)
+            stmt = select(
+                or_(
+                    exists().where(
+                        LessonRow.teacher_id == teacher_id,
+                        overlaps(LessonRow.audience, keys),
+                    ),
+                    exists().where(
+                        EntryRow.teacher_id == teacher_id,
+                        overlaps(EntryRow.audience, keys),
+                    ),
+                )
+            )
+            return bool((await session.execute(stmt)).scalar_one())
+
+    async def student_keys(self, user_id: UUID) -> list[str] | None:
+        """Return the audience keys of the student, None for an unknown student."""
+        async with self.sessionmaker() as session:
+            return await self._keys(session, user_id)
 
     async def is_in_audience(self, user_id: UUID, lesson_id: UUID) -> bool:
         """Return True if the active student attends the lesson."""

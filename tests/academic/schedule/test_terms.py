@@ -8,6 +8,7 @@ from app.modules.academic.domain.schedule.errors import (
     TermBellsInvalidError,
     TermControlPeriodsInvalidError,
     TermDuplicateError,
+    TermMovedDayInvalidError,
     TermNotFoundError,
     TermOverlapError,
 )
@@ -116,13 +117,22 @@ async def test_updating_a_term_changes_bells_and_regenerates_lessons(env: Env) -
 
 
 async def test_a_moved_day_can_be_added_later(env: Env) -> None:
-    """ADM-18: 'Saturday 14.11 follows Monday'."""
+    """ADM-18: 'Friday 13.11 follows Monday'."""
     term = await create(env)
-    moved = [MovedDay(date=dt.date(2026, 11, 14), follows_weekday=1)]
+    moved = [MovedDay(date=dt.date(2026, 11, 13), follows_weekday=1)]
 
     updated = await env.services.update_term.execute(term.id, moved_days=moved)
 
     assert updated.moved_days == moved
+
+
+async def test_a_moved_day_cannot_be_a_saturday(env: Env) -> None:
+    """The lyceum does not study on Saturdays, not even on a moved day."""
+    term = await create(env)
+    moved = [MovedDay(date=dt.date(2026, 11, 14), follows_weekday=1)]
+
+    with pytest.raises(TermMovedDayInvalidError):
+        await env.services.update_term.execute(term.id, moved_days=moved)
 
 
 async def test_control_periods_are_set_on_create_and_changed_on_update(

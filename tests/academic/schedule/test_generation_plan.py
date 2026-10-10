@@ -60,13 +60,44 @@ def test_non_study_days_produce_no_lessons() -> None:
     ]
 
 
-def test_a_moved_saturday_uses_the_timetable_of_monday() -> None:
-    """ACA-4: Saturday 10.10 follows Monday, so Monday's entry also runs on it."""
-    moved = [MovedDay(date=dt.date(2026, 10, 10), follows_weekday=1)]
+def test_a_moved_friday_uses_the_timetable_of_monday() -> None:
+    """ACA-4: Friday 16.10 follows Monday, so Monday's entry also runs on it."""
+    moved = [MovedDay(date=dt.date(2026, 10, 16), follows_weekday=1)]
 
     days = dates_of(monday_entry(), moved_days=moved)
 
-    assert days == [dt.date(2026, 10, 10), dt.date(2026, 10, 12), dt.date(2026, 10, 19)]
+    assert days == [
+        dt.date(2026, 10, 12),
+        dt.date(2026, 10, 16),
+        dt.date(2026, 10, 19),
+    ]
+
+
+def test_a_moved_sunday_makes_no_lessons() -> None:
+    """Sunday is not a school day, so a moved-day rule for it is ignored."""
+    moved = [MovedDay(date=dt.date(2026, 10, 11), follows_weekday=1)]
+
+    assert dates_of(monday_entry(), moved_days=moved) == [
+        dt.date(2026, 10, 12),
+        dt.date(2026, 10, 19),
+    ]
+
+
+def test_a_moved_saturday_makes_no_lessons() -> None:
+    """A moved-day rule kept for a Saturday is ignored: nobody studies on Saturday."""
+    moved = [MovedDay(date=dt.date(2026, 10, 10), follows_weekday=1)]
+
+    assert dates_of(monday_entry(), moved_days=moved) == [
+        dt.date(2026, 10, 12),
+        dt.date(2026, 10, 19),
+    ]
+
+
+def test_a_saturday_entry_kept_from_before_makes_no_lessons() -> None:
+    """Weekday 6 may still be stored on an old entry; nothing is generated for it."""
+    saturday = monday_entry(weekday=6)
+
+    assert dates_of(saturday) == []
 
 
 def test_odd_week_entries_run_every_other_week() -> None:

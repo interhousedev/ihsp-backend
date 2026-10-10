@@ -17,6 +17,7 @@ from app.modules.academic.infrastructure.orm.lesson import Lesson as LessonRow
 from app.modules.academic.infrastructure.orm.mark import Mark
 from app.modules.academic.infrastructure.orm.result import Result
 from app.modules.academic.infrastructure.orm.subject import Subject
+from app.modules.academic.infrastructure.school_days import not_on_saturday
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -47,6 +48,7 @@ class SqlJournalReader:
                 LessonRow.status == "scheduled",
                 LessonRow.date >= start,
                 LessonRow.date <= end,
+                not_on_saturday(LessonRow.date),
             )
         )
         rows = (await self.session.execute(stmt)).all()

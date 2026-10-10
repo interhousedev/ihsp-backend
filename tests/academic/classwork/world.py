@@ -241,15 +241,17 @@ async def add_result(
 async def seed_attendance(maker: Maker, world: World) -> dict[str, UUID]:
     """Three physics lessons with attendance, one math and one physics without.
 
-    l1: Aziz absent and excused; l2: Aziz and Bobur absent; l3: everyone present;
-    math: not taken (yesterday, Yusupov); today: not taken (08:30, started).
+    l1 (Thursday): Aziz absent and excused; l2 (Sunday, a moved study day): Aziz
+    and Bobur absent; l3 (Monday): everyone present; math: not taken (yesterday,
+    Yusupov); today: not taken (08:30, started). Nothing is seeded on a Saturday:
+    lessons dated then are never read.
     """
     everyone = [world.aziz.id, world.bobur.id, world.camila.id]
     day = dt.timedelta
     l1 = await add_lesson(
         maker,
         world,
-        day=DAY - day(days=3),
+        day=DAY - day(days=5),
         topic="Waves",
         attendance_roster=everyone,
         attendance_absent=[world.aziz.id],

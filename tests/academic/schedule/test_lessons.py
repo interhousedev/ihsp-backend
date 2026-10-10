@@ -199,6 +199,7 @@ async def test_an_extra_lesson_cannot_double_book_a_group(env: Env) -> None:
         (dt.date(2027, 3, 3), 1, NoTermForDateError),
         (WEDNESDAY, 9, NoBellError),
         (dt.date(2026, 10, 18), 1, NoBellError),  # Sunday
+        (dt.date(2026, 10, 17), 1, NoBellError),  # Saturday: no bells, no lessons
     ],
 )
 async def test_an_extra_lesson_needs_a_term_and_a_bell(

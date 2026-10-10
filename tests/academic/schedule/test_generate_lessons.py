@@ -87,10 +87,10 @@ async def test_running_twice_creates_nothing_new(env: Env) -> None:
     assert {x.id for x in await env.lessons()} == before
 
 
-async def test_a_moved_study_day_uses_the_timetable_it_follows(env: Env) -> None:
-    """ACA-4: Saturday 10.10 follows Monday, so Monday's lessons run on it."""
+async def test_a_moved_friday_uses_the_timetable_it_follows(env: Env) -> None:
+    """ACA-4: Friday 16.10 follows Monday, so Monday's lessons run on it."""
     term = await env.term(
-        moved_days=[MovedDay(date=dt.date(2026, 10, 10), follows_weekday=1)]
+        moved_days=[MovedDay(date=dt.date(2026, 10, 16), follows_weekday=1)]
     )
     subject = await env.subject()
     group = await env.group()
@@ -101,8 +101,8 @@ async def test_a_moved_study_day_uses_the_timetable_it_follows(env: Env) -> None
     await generate(env)
 
     assert [x.date for x in await env.lessons()] == [
-        dt.date(2026, 10, 10),
         dt.date(2026, 10, 12),
+        dt.date(2026, 10, 16),
         dt.date(2026, 10, 19),
     ]
 

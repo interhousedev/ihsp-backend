@@ -3,11 +3,11 @@
 import datetime as dt
 from typing import Literal
 
+from app.modules.academic.domain.schedule.school_days import SCHOOL_DAYS
 from app.modules.academic.domain.schedule.term import Term
 from app.shared.clock import TASHKENT
 
 Parity = Literal["odd", "even"]
-SUNDAY = 7
 
 
 def monday_of(day: dt.date) -> dt.date:
@@ -16,17 +16,22 @@ def monday_of(day: dt.date) -> dt.date:
 
 
 def effective_weekday(day: dt.date, term: Term) -> int | None:
-    """Return the weekday (1-6) whose timetable applies on the day, or None.
+    """Return the weekday (1-5) whose timetable applies on the day, or None.
 
-    None means no lessons: a non-study day, or a Sunday without a moved-day rule.
+    None means no lessons: a non-study day, or a Saturday or Sunday. Only Monday to
+    Friday can be a study day; a moved-day rule on a weekend (kept from before) is
+    ignored, and a moved day follows another Monday-to-Friday weekday.
     """
     if day in term.non_study_days:
         return None
+    weekday = day.isoweekday()
+    if weekday not in SCHOOL_DAYS:
+        return None
     for moved in term.moved_days:
         if moved.date == day:
-            return moved.follows_weekday
-    weekday = day.isoweekday()
-    return None if weekday == SUNDAY else weekday
+            follows = moved.follows_weekday
+            return follows if follows in SCHOOL_DAYS else None
+    return weekday
 
 
 def term_week(day: dt.date, term: Term) -> int:

@@ -20,6 +20,7 @@ class LessonView:
     late_count: int | None = None
     term_id: UUID | None = None
     audience_groups: dict[UUID, str] = field(default_factory=dict)
+    persisted: bool = True
 
     @property
     def has_homework(self) -> bool:

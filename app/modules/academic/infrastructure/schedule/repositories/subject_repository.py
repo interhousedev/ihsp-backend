@@ -43,6 +43,23 @@ class SqlSubjectRepository:
         row = (await self.session.scalars(stmt.limit(1))).first()
         return subject_to_entity(row) if row else None
 
+    async def get_by_emis_ids(
+        self, emis_subject_ids: Collection[int]
+    ) -> dict[int, Subject]:
+        """Return the subjects linked to EMIS subjects, by EMIS id."""
+        if not emis_subject_ids:
+            return {}
+        rows = await self.session.scalars(
+            select(SubjectRow).where(
+                SubjectRow.emis_subject_id.in_(list(emis_subject_ids))
+            )
+        )
+        return {
+            row.emis_subject_id: subject_to_entity(row)
+            for row in rows
+            if row.emis_subject_id is not None
+        }
+
     async def add(self, subject: Subject) -> None:
         """Insert a subject."""
         self.session.add(subject_new_row(subject))

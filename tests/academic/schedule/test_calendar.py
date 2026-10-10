@@ -27,28 +27,53 @@ def test_sunday_has_no_weekday_without_a_moved_day_rule() -> None:
     assert effective_weekday(dt.date(2026, 10, 4), make_term()) is None
 
 
-def test_a_moved_saturday_follows_monday() -> None:
-    """ACA-4: 'Saturday 14.11 follows Monday' uses Monday's timetable."""
+def test_saturday_has_no_weekday_without_a_moved_day_rule() -> None:
+    """The lyceum does not study on Saturdays."""
+    assert dt.date(2026, 10, 10).isoweekday() == 6
+    assert effective_weekday(dt.date(2026, 10, 10), make_term()) is None
+
+
+def test_a_moved_day_rule_on_a_saturday_is_ignored() -> None:
+    """A rule kept from before Saturday was dropped does not bring lessons back."""
     term = make_term(
         moved_days=[MovedDay(date=dt.date(2026, 11, 14), follows_weekday=1)]
     )
 
     assert dt.date(2026, 11, 14).isoweekday() == 6
-    assert effective_weekday(dt.date(2026, 11, 14), term) == 1
+    assert effective_weekday(dt.date(2026, 11, 14), term) is None
 
 
-def test_a_moved_sunday_is_a_study_day() -> None:
-    """ACA-4: a moved-day rule makes even a Sunday a study day."""
+def test_a_moved_day_may_not_follow_a_saturday_timetable() -> None:
+    """A rule kept from before Saturday was dropped gives no lessons either."""
+    term = make_term(
+        moved_days=[MovedDay(date=dt.date(2026, 11, 16), follows_weekday=6)]
+    )
+
+    assert effective_weekday(dt.date(2026, 11, 16), term) is None
+
+
+def test_a_moved_friday_follows_monday() -> None:
+    """ACA-4: 'Friday 13.11 follows Monday' uses Monday's timetable."""
+    term = make_term(
+        moved_days=[MovedDay(date=dt.date(2026, 11, 13), follows_weekday=1)]
+    )
+
+    assert dt.date(2026, 11, 13).isoweekday() == 5
+    assert effective_weekday(dt.date(2026, 11, 13), term) == 1
+
+
+def test_a_moved_sunday_is_not_a_study_day() -> None:
+    """Only Monday to Friday are school days, so a moved Sunday gives no lessons."""
     term = make_term(
         moved_days=[MovedDay(date=dt.date(2026, 10, 4), follows_weekday=3)]
     )
 
-    assert effective_weekday(dt.date(2026, 10, 4), term) == 3
+    assert effective_weekday(dt.date(2026, 10, 4), term) is None
 
 
 def test_a_non_study_day_wins_over_a_moved_day() -> None:
     """ACA-4: a holiday stays a holiday."""
-    day = dt.date(2026, 11, 14)
+    day = dt.date(2026, 11, 13)
     term = make_term(
         non_study_days=[day], moved_days=[MovedDay(date=day, follows_weekday=1)]
     )
@@ -58,7 +83,7 @@ def test_a_non_study_day_wins_over_a_moved_day() -> None:
 
 @pytest.mark.parametrize(
     ("day", "weekday"),
-    [(dt.date(2026, 10, 5), 1), (dt.date(2026, 10, 6), 2), (dt.date(2026, 10, 10), 6)],
+    [(dt.date(2026, 10, 5), 1), (dt.date(2026, 10, 6), 2), (dt.date(2026, 10, 9), 5)],
 )
 def test_an_ordinary_day_keeps_its_weekday(day: dt.date, weekday: int) -> None:
     """ACA-5: ordinary study days use their own weekday."""
@@ -87,12 +112,13 @@ def test_monday_of_returns_the_start_of_the_iso_week() -> None:
     assert monday_of(dt.date(2026, 9, 6)) == dt.date(2026, 8, 31)
 
 
-def test_bell_for_uses_the_saturday_row() -> None:
-    """ACA-4: Saturday can have different times."""
+def test_bell_for_finds_the_bell_of_a_school_day_and_none_for_saturday() -> None:
+    """ACA-4: bells are held Monday to Friday, never on Saturday."""
     term = make_term()
 
     assert bell_for(term, 1, 2) == (dt.time(8, 30), dt.time(9, 15))
-    assert bell_for(term, 1, 6) == (dt.time(8, 30), dt.time(9, 5))
+    assert bell_for(term, 1, 5) == (dt.time(8, 30), dt.time(9, 15))
+    assert bell_for(term, 1, 6) is None
 
 
 def test_bell_for_returns_none_for_an_unknown_period() -> None:

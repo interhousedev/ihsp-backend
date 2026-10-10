@@ -24,6 +24,7 @@ from app.modules.academic.infrastructure.orm.room import Room
 from app.modules.academic.infrastructure.orm.student import Student
 from app.modules.academic.infrastructure.orm.subject import Subject
 from app.modules.academic.infrastructure.orm.term import Term
+from app.modules.academic.infrastructure.school_days import not_on_saturday
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -233,7 +234,7 @@ class SqlMarksReader:
             sa.select(*_LESSON_COLUMNS)
             .select_from(Lesson)
             .outerjoin(Room, Room.id == Lesson.room_id)
-            .where(overlaps(Lesson.audience, keys))
+            .where(overlaps(Lesson.audience, keys), not_on_saturday(Lesson.date))
         )
 
     async def lessons(

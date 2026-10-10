@@ -54,6 +54,10 @@ class ScheduleQueriesImpl:
         view = await self.reader.lesson_view(lesson_id, self.locale)
         return view.ref if view else None
 
+    async def subject_emis_id(self, subject_id: UUID) -> int | None:
+        """The EMIS id of a subject; None when the subject has none (or is gone)."""
+        return await self.reader.subject_emis_id(subject_id)
+
     async def lessons_for_student(
         self, user_id: UUID, start: dt.date, end: dt.date
     ) -> list[LessonRef]:
@@ -169,6 +173,7 @@ class AcademicEnrollmentImpl:
                 student.move_to(group.id)
                 await uow.students.save(student)
             needs_timetable = await self._lacks_timetable(uow, group.id)
+            needs_curriculum = not await uow.curricula.exists(group.id)
             await uow.commit()
         return StudentRef(
             user_id=student.user_id,
@@ -178,6 +183,7 @@ class AcademicEnrollmentImpl:
             status=student.status,
             synced_at=student.synced_at,
             needs_timetable=needs_timetable,
+            needs_curriculum=needs_curriculum,
         )
 
     async def _lacks_timetable(self, uow: ScheduleUnitOfWork, group_id: UUID) -> bool:

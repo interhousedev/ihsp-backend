@@ -29,6 +29,7 @@ async def test_subject_cards(
     """WEB-7: cards sorted by name with marks, teacher, absences and the next lesson."""
     actor = make_actor(Role.STUDENT, user_id=env.world.user_id)
     client = await _client(http_client, services, actor, MARKS_ROUTERS)
+    env.identity.photos[env.world.teacher_id] = "https://photos.test/bobur.jpg"
 
     response = await client.get("/v1/me/subjects")
 
@@ -46,8 +47,14 @@ async def test_subject_cards(
     assert math["emis_rating"] == 90
     assert math["absences"] == 1
     assert math["teachers"] == [
-        {"id": str(env.world.teacher_id), "first_name": "Bobur", "last_name": "Aliev"}
+        {
+            "id": str(env.world.teacher_id),
+            "first_name": "Bobur",
+            "last_name": "Aliev",
+            "photo_url": "https://photos.test/bobur.jpg",
+        }
     ]
+    assert len(env.identity.photo_calls) == 1  # one batch for the whole page
     assert math["next_lesson"]["id"] == str(env.world.math_next)
     assert math["next_lesson"]["audience"] == [
         {"group_id": str(env.world.group_id), "group_name": "2TN2", "subgroup": None}
@@ -66,11 +73,18 @@ async def test_subject_detail(
         MARKS_ROUTERS,
     )
 
+    env.identity.photos[w.teacher_id] = "https://photos.test/bobur.jpg"
+
     response = await client.get(f"/v1/me/subjects/{w.math_id}")
 
     assert response.status_code == 200
     body = response.json()
     assert body["semester"] == 3
+    assert [t["photo_url"] for t in body["teachers"]] == [
+        "https://photos.test/bobur.jpg"
+    ]
+    assert body["lessons"][0]["teacher"]["photo_url"] is None  # lesson items: no photo
+    assert len(env.identity.photo_calls) == 1
     assert body["averages"] == {"lesson": 4.0, "midterm": 5.0, "final": None}
     assert body["absence_rate"] == 1.0
     lessons = {item["id"]: item for item in body["lessons"]}

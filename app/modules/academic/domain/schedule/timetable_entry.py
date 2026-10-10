@@ -5,11 +5,14 @@ from dataclasses import dataclass, field
 from typing import Literal
 from uuid import UUID
 
-from app.modules.academic.domain.schedule.errors import EntryInvalidError
+from app.modules.academic.domain.schedule.errors import (
+    EntryInvalidError,
+    EntryNotSchoolDayError,
+)
+from app.modules.academic.domain.schedule.school_days import SATURDAY, SCHOOL_DAYS
 
 WeekParity = Literal["every", "odd", "even"]
 EntrySource = Literal["manual", "emis"]
-WEEKDAYS = (1, 2, 3, 4, 5, 6)
 
 
 @dataclass(slots=True)
@@ -38,7 +41,9 @@ class TimetableEntry:
 
 def validate_entry(entry: TimetableEntry) -> None:
     """Check ranges and that the entry has an audience."""
-    if entry.weekday not in WEEKDAYS or entry.period < 1:
+    if entry.weekday == SATURDAY:
+        raise EntryNotSchoolDayError()
+    if entry.weekday not in SCHOOL_DAYS or entry.period < 1:
         raise EntryInvalidError(params={"reason": "slot"})
     if not entry.audience:
         raise EntryInvalidError(params={"reason": "audience"})

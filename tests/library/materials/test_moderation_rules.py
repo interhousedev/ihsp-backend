@@ -173,7 +173,7 @@ def test_window_over_the_limit_waits_for_enough_uploads_to_age_out() -> None:
     assert window_resets_at(day, times) == times[2] + dt.timedelta(days=1)
 
 
-# - - - School days (Mon to Sat) - - -
+# - - - School days (Mon to Fri) - - -
 
 
 def local(day: int, hour: int) -> dt.datetime:
@@ -186,14 +186,16 @@ def test_waiting_on_school_days_is_plain_elapsed_time() -> None:
     assert school_time_waited(local(5, 10), local(7, 10)) == dt.timedelta(hours=48)
 
 
-def test_sundays_do_not_count() -> None:
-    """LIB-14: Saturday noon to Monday noon skips the Sunday."""
-    assert school_time_waited(local(3, 12), local(5, 12)) == dt.timedelta(hours=24)
+def test_saturdays_and_sundays_do_not_count() -> None:
+    """LIB-14: Friday noon to Monday noon skips the Saturday and the Sunday."""
+    assert school_time_waited(local(2, 12), local(5, 12)) == dt.timedelta(hours=24)
 
 
-def test_a_wait_inside_a_sunday_is_zero() -> None:
-    """LIB-14: nothing waits on a Sunday."""
+def test_a_wait_inside_a_saturday_or_sunday_is_zero() -> None:
+    """LIB-14: nothing waits on a Saturday or a Sunday."""
+    assert school_time_waited(local(3, 8), local(3, 20)) == dt.timedelta(0)
     assert school_time_waited(local(4, 8), local(4, 20)) == dt.timedelta(0)
+    assert school_time_waited(local(3, 8), local(4, 20)) == dt.timedelta(0)
 
 
 def test_time_runs_backwards_to_zero() -> None:
@@ -210,8 +212,14 @@ def test_overdue_needs_more_than_the_sla() -> None:
 
 
 def test_a_weekend_does_not_make_a_friday_upload_overdue() -> None:
-    """LIB-14: Friday 15:00 is still fresh on Monday 09:00 (Sunday is skipped)."""
+    """LIB-14: Friday 15:00 is still fresh on Monday 09:00 (the weekend is skipped)."""
     assert is_overdue(local(2, 15), local(5, 9), sla_school_days=2) is False
+
+
+def test_a_friday_upload_is_overdue_two_school_days_after_the_weekend() -> None:
+    """LIB-14: Friday 15:00 is exactly 48 school hours old on Tuesday 15:00."""
+    assert is_overdue(local(2, 15), local(6, 15), sla_school_days=2) is False
+    assert is_overdue(local(2, 15), local(6, 16), sla_school_days=2) is True
 
 
 # - - - Rights that need a look - - -

@@ -2,6 +2,10 @@
 
 from dataclasses import dataclass
 
+from app.modules.academic.application.curriculum.get_curriculum import (
+    GetGroupCurriculum,
+    GetMyCurriculum,
+)
 from app.modules.academic.application.public_schedule import (
     AcademicEnrollmentImpl,
     ScheduleQueriesImpl,
@@ -27,12 +31,18 @@ from app.modules.academic.application.schedule.delete_entry import DeleteEntry
 from app.modules.academic.application.schedule.ensure_room import EnsureRoom
 from app.modules.academic.application.schedule.generate_lessons import GenerateLessons
 from app.modules.academic.application.schedule.get_group_detail import GetGroupDetail
-from app.modules.academic.application.schedule.get_my_teachers import GetMyTeachers
+from app.modules.academic.application.schedule.get_my_teachers import (
+    GetMyTeacher,
+    GetMyTeachers,
+)
 from app.modules.academic.application.schedule.get_staff_timetable import (
     GetStaffTimetable,
 )
 from app.modules.academic.application.schedule.get_student_timetable import (
     GetStudentTimetable,
+)
+from app.modules.academic.application.schedule.get_teacher_timetable import (
+    GetTeacherTimetable,
 )
 from app.modules.academic.application.schedule.import_confirm import ImportConfirm
 from app.modules.academic.application.schedule.import_preview import ImportPreview
@@ -91,6 +101,8 @@ class ScheduleServices:
     update_group: UpdateGroup
     assign_subgroups: AssignSubgroups
     get_group_detail: GetGroupDetail
+    get_group_curriculum: GetGroupCurriculum
+    get_my_curriculum: GetMyCurriculum
     list_groups: ListGroups
     list_curated_groups: ListCuratedGroups
     list_subjects: ListSubjects
@@ -119,6 +131,8 @@ class ScheduleServices:
     get_student_profile: GetStudentProfile
     get_student_timetable: GetStudentTimetable
     get_my_teachers: GetMyTeachers
+    get_my_teacher: GetMyTeacher
+    get_teacher_timetable: GetTeacherTimetable
     get_staff_timetable: GetStaffTimetable
     rotate_calendar_token: RotateCalendarToken
     user_for_calendar_token: UserForCalendarToken
@@ -149,6 +163,8 @@ def assemble_schedule(
         update_group=UpdateGroup(uow_factory, identity),
         assign_subgroups=AssignSubgroups(uow_factory, identity, clock),
         get_group_detail=GetGroupDetail(uow_factory, identity),
+        get_group_curriculum=GetGroupCurriculum(uow_factory, clock),
+        get_my_curriculum=GetMyCurriculum(uow_factory, clock),
         list_groups=ListGroups(uow_factory, identity),
         list_curated_groups=ListCuratedGroups(uow_factory, identity),
         list_subjects=ListSubjects(uow_factory),
@@ -183,6 +199,8 @@ def assemble_schedule(
         get_student_profile=GetStudentProfile(uow_factory, identity, mail_domain),
         get_student_timetable=GetStudentTimetable(reader, identity, clock),
         get_my_teachers=GetMyTeachers(reader, identity, clock),
+        get_my_teacher=GetMyTeacher(reader, identity, clock),
+        get_teacher_timetable=GetTeacherTimetable(reader, identity, clock),
         get_staff_timetable=GetStaffTimetable(reader, identity, clock),
         rotate_calendar_token=RotateCalendarToken(uow_factory),
         user_for_calendar_token=UserForCalendarToken(uow_factory),

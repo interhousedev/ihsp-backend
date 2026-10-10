@@ -64,23 +64,22 @@ EnvKind = Literal["fake", "sql"]
 
 
 def default_bells() -> list[Bell]:
-    """Three periods; Saturday's first period is shorter."""
+    """Three periods, Monday to Friday; period 1 is the longest."""
     return [
         Bell(
             period=1, start=dt.time(8, 30), end=dt.time(9, 15), weekdays=[1, 2, 3, 4, 5]
         ),
-        Bell(period=1, start=dt.time(8, 30), end=dt.time(9, 5), weekdays=[6]),
         Bell(
             period=2,
             start=dt.time(9, 25),
             end=dt.time(10, 10),
-            weekdays=[1, 2, 3, 4, 5, 6],
+            weekdays=[1, 2, 3, 4, 5],
         ),
         Bell(
             period=3,
             start=dt.time(10, 20),
             end=dt.time(11, 5),
-            weekdays=[1, 2, 3, 4, 5, 6],
+            weekdays=[1, 2, 3, 4, 5],
         ),
     ]
 
@@ -437,6 +436,7 @@ def build_env(
     emis_import = assemble_emis_import(
         uow_factory=uow_factory,
         emis=emis,
+        identity=identity,  # type: ignore[arg-type]
         identity_commands=commands,  # type: ignore[arg-type]
         generate=services.generate_lessons,
         urls=urls,

@@ -22,6 +22,11 @@ def display_names(keys: Iterable[str], names: Mapping[UUID, str]) -> tuple[str, 
     return tuple(labels)
 
 
+def group_label(keys: Iterable[str], names: Mapping[UUID, str]) -> str | None:
+    """Return the labels joined with commas, None for an empty audience."""
+    return ", ".join(display_names(keys, names)) or None
+
+
 def audience_items(
     keys: Iterable[str], names: Mapping[UUID, str]
 ) -> list[dict[str, Any]]:

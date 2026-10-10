@@ -3,21 +3,22 @@
 from collections import Counter
 from collections.abc import Iterable, Sequence
 
-from app.modules.academic.domain.schedule.term import STUDY_WEEKDAYS, Bell
+from app.modules.academic.domain.schedule.school_days import SCHOOL_DAYS
+from app.modules.academic.domain.schedule.term import Bell
 from app.shared.contracts.emis import EmisClassHour
 
 
 def bells_from_class_hours(hours: Iterable[EmisClassHour]) -> list[Bell]:
-    """EMIS pair ``n`` (0-based) is period ``n + 1`` on every study weekday.
+    """EMIS pair ``n`` (0-based) is period ``n + 1`` on every school day.
 
-    EMIS has no weekday in ``class-hours``, so Saturday gets the same bells.
+    EMIS has no weekday in ``class-hours``, so Monday to Friday get the same bells.
     """
     return [
         Bell(
             period=hour.pair_number + 1,
             start=hour.begin_time,
             end=hour.end_time,
-            weekdays=list(STUDY_WEEKDAYS),
+            weekdays=list(SCHOOL_DAYS),
             source="emis",
         )
         for hour in sorted(hours, key=lambda item: item.pair_number)

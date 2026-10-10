@@ -39,6 +39,8 @@ class FakeIdentity:
         """Start empty."""
         self.users: dict[UUID, UserRef] = {}
         self.prefs: dict[UUID, UserPreferences] = {}
+        self.photos: dict[UUID, str] = {}
+        self.photo_calls: list[list[UUID]] = []
 
     def add(self, user: UserRef, prefs: UserPreferences | None = None) -> UserRef:
         """Register a user (and optionally their preferences)."""
@@ -58,6 +60,11 @@ class FakeIdentity:
     async def get_preferences(self, user_id: UUID) -> UserPreferences:
         """Return stored or default preferences."""
         return self.prefs.get(user_id, UserPreferences())
+
+    async def photo_urls(self, user_ids: Sequence[UUID]) -> dict[UUID, str]:
+        """Return the photo URLs of the users that have one (records each call)."""
+        self.photo_calls.append(list(user_ids))
+        return {uid: self.photos[uid] for uid in user_ids if uid in self.photos}
 
     async def user_ids_with_roles(self, roles: Sequence[Role]) -> list[UUID]:
         """Return users holding any of the roles."""

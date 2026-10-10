@@ -101,6 +101,7 @@ class GetSubjectDetail:
                 subject_ids=[subject_id],
                 user_ids={r.author_id for rs in resources.values() for r in rs},
                 lessons=lessons,
+                with_photos=True,
             )
         if not known or subject_id not in view.subjects:
             raise SubjectNotFoundError(params={"subject_id": str(subject_id)})
@@ -135,7 +136,8 @@ def _detail(
     teacher_ids = list(
         dict.fromkeys(lesson.teacher_id for lesson in lessons if lesson.teacher_id)
     )
-    teachers = [p for p in (view.person(t) for t in teacher_ids) if p is not None]
+    people = (view.person(t, photo=True) for t in teacher_ids)
+    teachers = [p for p in people if p is not None]
     return {
         "subject": view.subject_ref(subject_id),
         "semester": semester,

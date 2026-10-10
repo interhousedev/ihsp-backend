@@ -46,9 +46,9 @@ def test_web_clients_have_names_that_read_well_on_the_login_form(
         for app in bootstrap.WEB_APPS
     }
 
-    assert names["sp"] == "IHSP Student Portal"
-    assert names["admin"] == "IHSP Administration"
-    assert names["app"] == "IHSP App"
+    assert names["sp"] == "my.iht"
+    assert names["admin"] == "admin.iht"
+    assert names["app"] == "IHT App"
     assert len(set(names.values())) == len(names)
 
 
@@ -96,7 +96,7 @@ def test_the_library_is_a_web_client_with_its_own_callback(
 
     assert "library" in bootstrap.WEB_APPS
     assert client["client_id"] == "library"
-    assert client["client_name"] == "IHSP Library"
+    assert client["client_name"] == "library.iht"
     assert client["token_endpoint_auth_method"] == "none"
     assert client["skip_consent"] is True
     assert client["grant_types"] == ["authorization_code", "refresh_token"]

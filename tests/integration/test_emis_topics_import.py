@@ -29,9 +29,7 @@ WINDOW_END = dt.date(2026, 11, 1)
 TERM_START = dt.date(2026, 9, 2)
 TERM_END = dt.date(2026, 12, 30)
 OLD_BELLS = [
-    Bell(
-        period=1, start=dt.time(8, 30), end=dt.time(9, 15), weekdays=[1, 2, 3, 4, 5, 6]
-    ),
+    Bell(period=1, start=dt.time(8, 30), end=dt.time(9, 15), weekdays=[1, 2, 3, 4, 5]),
 ]
 
 

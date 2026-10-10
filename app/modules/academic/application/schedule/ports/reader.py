@@ -42,6 +42,10 @@ class ScheduleReader(Protocol):
         """Return one lesson."""
         ...
 
+    async def subject_emis_id(self, subject_id: UUID) -> int | None:
+        """The EMIS id of a subject, None when it has none (or does not exist)."""
+        ...
+
     async def lessons_for_student(
         self, user_id: UUID, start: dt.date, end: dt.date, locale: str
     ) -> list[LessonView]:
@@ -68,6 +72,26 @@ class ScheduleReader(Protocol):
         self, user_id: UUID, start: dt.date, end: dt.date, locale: str
     ) -> list[LessonView]:
         """Return generated lessons plus lessons projected from entries."""
+        ...
+
+    async def projected_for_teacher(
+        self, teacher_id: UUID, start: dt.date, end: dt.date, locale: str
+    ) -> list[LessonView]:
+        """Return the teacher's generated and projected lessons of every group.
+
+        Any status, ordered by start.
+        """
+        ...
+
+    async def teaches_student(self, teacher_id: UUID, user_id: UUID) -> bool:
+        """Return True if a lesson or entry of the teacher reaches the student.
+
+        The student must exist and be active; any date counts.
+        """
+        ...
+
+    async def student_keys(self, user_id: UUID) -> list[str] | None:
+        """Return the audience keys of the student, None for an unknown student."""
         ...
 
     async def is_in_audience(self, user_id: UUID, lesson_id: UUID) -> bool:

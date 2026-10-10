@@ -31,6 +31,7 @@ class ViewContext:
     subjects: Mapping[UUID, SubjectInfo]
     users: Mapping[UUID, UserRef]
     group_names: Mapping[UUID, str] = field(default_factory=dict)
+    photos: Mapping[UUID, str] = field(default_factory=dict)
 
     def subject_ref(self, subject_id: UUID) -> dict[str, Any]:
         """Return `SubjectRef`: the name in the caller's locale, fallback uz, ru, en."""
@@ -48,16 +49,27 @@ class ViewContext:
         """Return the subject's name in the caller's locale."""
         return str(self.subject_ref(subject_id)["name"])
 
-    def person(self, user_id: UUID | None) -> dict[str, Any] | None:
-        """Return `PersonRef` or None for an unknown or missing user."""
+    def person(
+        self, user_id: UUID | None, *, photo: bool = False
+    ) -> dict[str, Any] | None:
+        """Return `PersonRef` or None for an unknown or missing user.
+
+        Args:
+            user_id: The person.
+            photo: Add `photo_url` (None without a photo); needs a context built
+                with `with_photos`.
+        """
         user = None if user_id is None else self.users.get(user_id)
         if user is None:
             return None
-        return {
+        ref: dict[str, Any] = {
             "id": user.id,
             "first_name": user.first_name,
             "last_name": user.last_name,
         }
+        if photo:
+            ref["photo_url"] = self.photos.get(user.id)
+        return ref
 
     def mark_item(self, row: MarkRow) -> dict[str, Any]:
         """Return `MarkItem`."""
@@ -122,17 +134,27 @@ async def build_context(
     subject_ids: Collection[UUID] = (),
     user_ids: Collection[UUID] = (),
     lessons: Iterable[LessonRow] = (),
+    with_photos: bool = False,
 ) -> ViewContext:
-    """Load the subjects, people and group names a response needs."""
+    """Load the subjects, people and group names a response needs.
+
+    With `with_photos` the photo URLs of all the people come in one batch call.
+    """
     rows = list(lessons)
     people = {uid for uid in user_ids if uid is not None}
     people |= {r.teacher_id for r in rows if r.teacher_id is not None}
     subjects = set(subject_ids) | {r.subject_id for r in rows}
+    users = await identity.get_users(sorted(people, key=str)) if people else {}
     return ViewContext(
         locale=locale,
         subjects=await reader.subjects(subjects) if subjects else {},
-        users=await identity.get_users(sorted(people, key=str)) if people else {},
+        users=users,
         group_names=await reader.group_names(lesson_group_ids(rows)) if rows else {},
+        photos=(
+            await identity.photo_urls(sorted(users, key=str))
+            if with_photos and users
+            else {}
+        ),
     )
 
 

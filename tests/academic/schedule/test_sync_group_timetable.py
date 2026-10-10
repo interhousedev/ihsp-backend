@@ -116,23 +116,35 @@ async def test_the_bells_can_be_left_to_the_caller(env: Env) -> None:
 async def test_odd_and_even_slots_become_parity_entries_and_lessons_follow(
     env: Env,
 ) -> None:
-    """ACA-5: Saturday pair 1 is History in odd weeks and Physics in even weeks."""
+    """ACA-5: Friday pair 1 is History in odd weeks and Physics in even weeks."""
     term, group, user = await set_up(env)
     env.emis.classes = (
         weekly(2, 0)
-        + weekly(6, 0, weeks=(1, 3), subject=HISTORY)
-        + weekly(6, 0, weeks=(0, 2), subject=PHYSICS)
+        + weekly(5, 0, weeks=(1, 3), subject=HISTORY)
+        + weekly(5, 0, weeks=(0, 2), subject=PHYSICS)
     )
 
     await run(env, group.id, user.id)
 
     entries = await entries_of(env, term.id)
-    saturdays = [e for e in entries if e.weekday == 6]
-    assert sorted(e.week_parity for e in saturdays) == ["even", "odd"]
-    by_date = {x.date: x for x in await lessons_of(env) if x.date.isoweekday() == 6}
-    assert sorted(by_date) == [day(0, 6), day(1, 6), day(2, 6), day(3, 6)]
+    fridays = [e for e in entries if e.weekday == 5]
+    assert sorted(e.week_parity for e in fridays) == ["even", "odd"]
+    by_date = {x.date: x for x in await lessons_of(env) if x.date.isoweekday() == 5}
+    assert sorted(by_date) == [day(0, 5), day(1, 5), day(2, 5), day(3, 5)]
     names = {x.date: x.subject_id for x in by_date.values()}
-    assert names[day(0, 6)] == names[day(2, 6)] != names[day(1, 6)] == names[day(3, 6)]
+    assert names[day(0, 5)] == names[day(2, 5)] != names[day(1, 5)] == names[day(3, 5)]
+
+
+async def test_classes_on_a_saturday_are_ignored(env: Env) -> None:
+    """The lyceum does not study on Saturdays: no entry, no lesson for them."""
+    term, group, user = await set_up(env)
+    env.emis.classes = weekly(2, 0) + weekly(6, 0, subject=HISTORY)
+
+    await run(env, group.id, user.id)
+
+    entries = await entries_of(env, term.id)
+    assert [(e.weekday, e.period) for e in entries] == [(2, 1)]
+    assert {x.date.isoweekday() for x in await lessons_of(env)} == {2}
 
 
 # - - - halves - - -

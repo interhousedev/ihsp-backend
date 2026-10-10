@@ -82,6 +82,42 @@ async def test_after_the_last_lesson_the_card_shows_the_next_study_day(
     assert [item["state"] for item in today["lessons"]] == ["done"]
 
 
+async def test_after_friday_the_next_study_day_is_monday(env: Env) -> None:
+    """Nobody studies on a weekend: Friday evening points at Monday's first lesson."""
+    friday = DAY + dt.timedelta(days=3)
+    env.clock.set(local(friday, 20))
+    await add_lesson(env.maker, env.world, day=friday, period=1)
+    await add_lesson(env.maker, env.world, day=friday + dt.timedelta(days=1))
+    monday = await add_lesson(
+        env.maker, env.world, day=friday + dt.timedelta(days=3), period=1
+    )
+
+    today = await env.services.student_today.execute(env.student("aziz"))
+
+    assert (friday.isoweekday(), friday.isoformat()) == (5, "2026-10-09")
+    assert today["next_study_day"] == "2026-10-12"
+    assert today["now_or_next"]["id"] == str(monday)
+
+
+async def test_on_a_saturday_there_is_no_lesson_today_and_monday_is_next(
+    env: Env,
+) -> None:
+    """A Saturday lesson kept from before is not shown; Monday comes next."""
+    saturday = DAY + dt.timedelta(days=4)
+    env.clock.set(local(saturday, 10))
+    await add_lesson(env.maker, env.world, day=saturday, period=1)
+    monday = await add_lesson(
+        env.maker, env.world, day=saturday + dt.timedelta(days=2), period=1
+    )
+
+    today = await env.services.student_today.execute(env.student("aziz"))
+
+    assert saturday.isoweekday() == 6
+    assert today["lessons"] == []
+    assert today["next_study_day"] == "2026-10-12"
+    assert today["now_or_next"]["id"] == str(monday)
+
+
 async def test_holiday_shows_the_projected_next_study_day(env: Env) -> None:
     """UF-WEB-02 1b: beyond the generated lessons the schedule projects them."""
     projected = LessonRef(

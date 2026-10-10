@@ -5,6 +5,10 @@ from collections.abc import Collection, Sequence
 from typing import Protocol
 from uuid import UUID
 
+from app.modules.academic.domain.curriculum.records import (
+    Curriculum,
+    SemesterSubject,
+)
 from app.modules.academic.domain.schedule.group import Group
 from app.modules.academic.domain.schedule.lesson import Lesson
 from app.modules.academic.domain.schedule.room import Room
@@ -143,6 +147,12 @@ class SubjectRepository(Protocol):
         """Return the subject linked to an EMIS subject."""
         ...
 
+    async def get_by_emis_ids(
+        self, emis_subject_ids: Collection[int]
+    ) -> dict[int, Subject]:
+        """Return the subjects linked to EMIS subjects, by EMIS id."""
+        ...
+
     async def add(self, subject: Subject) -> None:
         """Insert a subject."""
         ...
@@ -153,6 +163,36 @@ class SubjectRepository(Protocol):
 
     async def search(self, query: str | None) -> list[Subject]:
         """Return subjects whose names contain the query, ordered by name."""
+        ...
+
+
+class CurriculumRepository(Protocol):
+    """The EMIS curriculum of each group."""
+
+    async def get(self, group_id: UUID) -> Curriculum | None:
+        """Return the group's stored curriculum header or None."""
+        ...
+
+    async def exists(self, group_id: UUID) -> bool:
+        """Return True if the group has a stored curriculum."""
+        ...
+
+    async def save(self, curriculum: Curriculum) -> None:
+        """Insert the group's curriculum header or replace the stored one."""
+        ...
+
+    async def replace_subjects(
+        self, group_id: UUID, subjects: Sequence[SemesterSubject]
+    ) -> None:
+        """Replace every semester subject of the group with the given ones."""
+        ...
+
+    async def list_subjects(self, group_id: UUID) -> list[SemesterSubject]:
+        """Return the group's semester subjects ordered by semester and EMIS id."""
+        ...
+
+    async def group_ids(self) -> list[UUID]:
+        """Return the ids of the groups that have a stored curriculum."""
         ...
 
 

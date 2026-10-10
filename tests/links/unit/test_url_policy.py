@@ -55,7 +55,7 @@ def test_similar_domain_is_not_blocked() -> None:
     "url",
     [
         "https://ihsu.uz/r/102",
-        "https://sp.ihsu.uz/x",
+        "https://my.ihsu.uz/x",
         "https://docs.google.com/document/d/1",
         "https://drive.google.com/file/d/1",
         "https://youtube.com/watch?v=1",

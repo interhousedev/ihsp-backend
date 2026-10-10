@@ -5,6 +5,7 @@ from typing import Protocol, Self
 from uuid import UUID
 
 from app.modules.academic.application.schedule.ports.repositories import (
+    CurriculumRepository,
     GroupRepository,
     LessonRepository,
     RoomRepository,
@@ -38,6 +39,11 @@ class ScheduleUnitOfWork(Protocol):
     @property
     def subjects(self) -> SubjectRepository:
         """Subjects."""
+        ...
+
+    @property
+    def curricula(self) -> CurriculumRepository:
+        """Group curricula from EMIS."""
         ...
 
     @property

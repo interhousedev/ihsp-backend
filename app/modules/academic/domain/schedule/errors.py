@@ -61,7 +61,7 @@ class TermNonStudyDayInvalidError(ValidationFailedError):
 
 
 class TermMovedDayInvalidError(ValidationFailedError):
-    """A moved day follows a weekday outside 1-6."""
+    """A moved day falls on a weekend, or follows a weekday outside Monday-Friday."""
 
     code = "academic/term-moved-day-invalid"
     message_key = "academic-term-moved-day-invalid"
@@ -223,11 +223,25 @@ class EntryInvalidError(ValidationFailedError):
     message_key = "academic-entry-invalid"
 
 
+class EntryNotSchoolDayError(ValidationFailedError):
+    """Lessons are held Monday to Friday; a Saturday slot is not allowed."""
+
+    code = "academic/entry-not-school-day"
+    message_key = "academic-entry-not-school-day"
+
+
 class LessonNotFoundError(NotFoundError):
     """The lesson does not exist."""
 
     code = "academic/lesson-not-found"
     message_key = "academic-lesson-not-found"
+
+
+class TeacherNotFoundError(NotFoundError):
+    """The user is not a teacher of the student (or does not exist)."""
+
+    code = "academic/teacher-not-found"
+    message_key = "academic-teacher-not-found"
 
 
 # - - - Import - - -

@@ -18,17 +18,17 @@ from app.shared.clock import to_local
 from app.shared.contracts.academic import LessonRef, RoomRef
 from app.shared.contracts.identity import UserRef
 
+# School days are Monday to Friday: `date.weekday()` 0 to 4. The academic module owns
+# the school week; a module never imports another module's domain, so this repeats it.
 WEEKDAYS = (
     "Monday",
     "Tuesday",
     "Wednesday",
     "Thursday",
     "Friday",
-    "Saturday",
-    "Sunday",
 )
 PREVIOUS_DAYS = 7
-SUNDAY = 6
+LAST_SCHOOL_DAY = 4
 PIN_PLACEHOLDER = "__PIN__"
 
 
@@ -65,7 +65,11 @@ class RoomDayBuilder:
         teachers: Mapping[UUID, UserRef],
     ) -> RoomDay:
         """Build the day: the heading, lesson blocks and previous day links."""
-        label = f"{WEEKDAYS[day.weekday()]} {day:%d.%m}"
+        # A Saturday or Sunday (no lessons) shows the bare date.
+        school_day = day.weekday() <= LAST_SCHOOL_DAY
+        label = (
+            f"{WEEKDAYS[day.weekday()]} {day:%d.%m}" if school_day else f"{day:%d.%m}"
+        )
         heading = f"{strip_scheme(self.rooms_url)}/{room.slug} · {label}"
         ordered = sorted(lessons, key=lambda item: (item.period, item.starts_at))
         blocks = tuple(
@@ -100,7 +104,7 @@ class RoomDayBuilder:
         cursor = day
         while len(found) < PREVIOUS_DAYS:
             cursor -= timedelta(days=1)
-            if cursor.weekday() != SUNDAY:
+            if cursor.weekday() <= LAST_SCHOOL_DAY:
                 found.append(PreviousDay(f"{cursor:%d.%m}", self._href(room, cursor)))
         return tuple(found)
 

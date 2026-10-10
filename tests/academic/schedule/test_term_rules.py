@@ -18,6 +18,7 @@ from app.modules.academic.domain.schedule.term import (
     bells_to_json,
     control_periods_from_json,
     control_periods_to_json,
+    moved_days_from_json,
     pick_current_term,
     validate_term,
 )
@@ -59,9 +60,10 @@ def test_a_bell_must_end_after_it_starts() -> None:
         validate_term(make_term(bells=bad))
 
 
-def test_a_bell_cannot_be_on_sunday() -> None:
-    """ADM-8: bells apply to weekdays 1-6."""
-    bad = [Bell(period=1, start=dt.time(8, 0), end=dt.time(9, 0), weekdays=[7])]
+@pytest.mark.parametrize("weekday", [0, 6, 7])
+def test_a_bell_must_be_on_a_school_day(weekday: int) -> None:
+    """ADM-8: bells apply to weekdays 1-5; there are no Saturday bells."""
+    bad = [Bell(period=1, start=dt.time(8, 0), end=dt.time(9, 0), weekdays=[weekday])]
 
     with pytest.raises(TermBellsInvalidError):
         validate_term(make_term(bells=bad))
@@ -73,10 +75,35 @@ def test_non_study_days_must_be_inside_the_term() -> None:
         validate_term(make_term(non_study_days=[dt.date(2027, 1, 1)]))
 
 
-@pytest.mark.parametrize("weekday", [0, 7])
-def test_a_moved_day_must_follow_a_weekday_from_one_to_six(weekday: int) -> None:
-    """ADM-18: follows_weekday is 1-6."""
-    moved = [MovedDay(date=dt.date(2026, 11, 14), follows_weekday=weekday)]
+@pytest.mark.parametrize("weekday", [0, 6, 7])
+def test_a_moved_day_must_follow_a_weekday_from_one_to_five(weekday: int) -> None:
+    """ADM-18: follows_weekday is 1-5; Saturday has no timetable to follow."""
+    moved = [MovedDay(date=dt.date(2026, 11, 13), follows_weekday=weekday)]
+
+    with pytest.raises(TermMovedDayInvalidError):
+        validate_term(make_term(moved_days=moved))
+
+
+def test_a_moved_day_cannot_fall_on_a_saturday() -> None:
+    """ADM-18: no study day is moved onto a Saturday."""
+    moved = [MovedDay(date=dt.date(2026, 11, 14), follows_weekday=1)]
+
+    assert moved[0].date.isoweekday() == 6
+    with pytest.raises(TermMovedDayInvalidError):
+        validate_term(make_term(moved_days=moved))
+
+
+def test_a_moved_friday_is_a_valid_moved_day() -> None:
+    """ADM-18: a Monday-to-Friday date can be moved onto another weekday's timetable."""
+    moved = [MovedDay(date=dt.date(2026, 11, 13), follows_weekday=1)]
+
+    validate_term(make_term(moved_days=moved))
+
+
+@pytest.mark.parametrize("day", [dt.date(2026, 11, 14), dt.date(2026, 11, 15)])
+def test_a_moved_day_cannot_fall_on_a_weekend(day: dt.date) -> None:
+    """ADM-18: Saturday and Sunday are not school days, so nothing moves there."""
+    moved = [MovedDay(date=day, follows_weekday=1)]
 
     with pytest.raises(TermMovedDayInvalidError):
         validate_term(make_term(moved_days=moved))
@@ -96,6 +123,32 @@ def test_bells_are_stored_as_hours_and_minutes() -> None:
         "emis_end": None,
     }
     assert bells_from_json(stored) == default_bells()
+
+
+def test_saturday_bells_kept_from_before_are_left_out_on_read() -> None:
+    """A Saturday bell stored earlier is skipped; the other days of it stay."""
+    stored = [
+        {"period": 1, "start": "08:30", "end": "09:15", "weekdays": [1, 2, 6]},
+        {"period": 1, "start": "08:30", "end": "09:05", "weekdays": [6]},
+    ]
+
+    bells = bells_from_json(stored)
+
+    assert [(b.period, b.weekdays) for b in bells] == [(1, [1, 2])]
+    validate_term(make_term(bells=bells))
+
+
+def test_moved_days_on_a_weekend_kept_from_before_are_left_out_on_read() -> None:
+    """A moved Saturday or Sunday stored earlier is skipped, so the term saves again."""
+    stored = [
+        {"date": "2026-11-14", "follows_weekday": 1},
+        {"date": "2026-11-15", "follows_weekday": 1},
+        {"date": "2026-11-13", "follows_weekday": 1},
+    ]
+
+    moved = moved_days_from_json(stored)
+
+    assert [m.date for m in moved] == [dt.date(2026, 11, 13)]
 
 
 def test_stored_bells_are_validated_on_read() -> None:

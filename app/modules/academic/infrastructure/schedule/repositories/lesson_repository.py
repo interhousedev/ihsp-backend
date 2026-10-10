@@ -13,6 +13,7 @@ from app.modules.academic.infrastructure.schedule.mappers import (
     lesson_new_row,
     lesson_to_entity,
 )
+from app.modules.academic.infrastructure.school_days import not_on_saturday
 from app.shared.base_error import ConflictError
 
 import structlog
@@ -129,11 +130,16 @@ class SqlLessonRepository:
     async def generated_in_range(
         self, term_id: UUID, start: dt.date, end: dt.date
     ) -> list[Lesson]:
-        """Return lessons made from entries whose origin date is in the range."""
+        """Return lessons made from entries whose origin date is in the range.
+
+        Lessons that originate on a Saturday are left out, so regeneration never
+        deletes or cancels them; they stay in the table, unread.
+        """
         stmt = select(LessonRow, has_content_clause()).where(
             LessonRow.term_id == term_id,
             LessonRow.timetable_entry_id.is_not(None),
             LessonRow.origin_date.between(start, end),
+            not_on_saturday(LessonRow.origin_date),
         )
         rows = (await self.session.execute(stmt)).all()
         return [lesson_to_entity(row, has_content=bool(flag)) for row, flag in rows]
@@ -141,7 +147,10 @@ class SqlLessonRepository:
     async def in_audience(
         self, term_id: UUID, start: dt.date, end: dt.date, keys: Collection[str]
     ) -> list[Lesson]:
-        """Return the term's lessons dated start..end whose audience holds a key."""
+        """Return the term's lessons dated start..end whose audience holds a key.
+
+        Saturday lessons are left out, so an EMIS sync never cancels them.
+        """
         if not keys:
             return []
         stmt = (
@@ -149,6 +158,7 @@ class SqlLessonRepository:
             .where(
                 LessonRow.term_id == term_id,
                 LessonRow.date.between(start, end),
+                not_on_saturday(LessonRow.date),
                 overlaps(LessonRow.audience, list(keys)),
             )
             .order_by(LessonRow.date, LessonRow.period, LessonRow.id)
@@ -219,6 +229,7 @@ class SqlLessonRepository:
                 LessonRow.room_id.is_not(None),
                 LessonRow.status == "scheduled",
                 LessonRow.date.between(start, end),
+                not_on_saturday(LessonRow.date),
             )
             .group_by(LessonRow.room_id)
         )

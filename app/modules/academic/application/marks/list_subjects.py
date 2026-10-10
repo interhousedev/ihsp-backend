@@ -76,6 +76,7 @@ class ListSubjects:
                 subject_ids=subject_ids,
                 user_ids={t for ids in teachers.values() for t in ids},
                 lessons=upcoming.values(),
+                with_photos=True,
             )
         cards = [
             _card(view, sid, rows.get(sid), counts, teachers, upcoming)
@@ -92,7 +93,7 @@ def _card(
     teachers: dict[UUID, list[UUID]],
     upcoming: dict[UUID, LessonRow],
 ) -> dict[str, Any]:
-    people = (view.person(t) for t in teachers.get(subject_id, []))
+    people = (view.person(t, photo=True) for t in teachers.get(subject_id, []))
     count = counts.get(subject_id)
     lesson = upcoming.get(subject_id)
     return {

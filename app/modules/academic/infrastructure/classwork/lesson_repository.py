@@ -13,6 +13,7 @@ from app.modules.academic.infrastructure.classwork.lesson_queries import (
 )
 from app.modules.academic.infrastructure.classwork.sql_helpers import overlaps
 from app.modules.academic.infrastructure.orm.lesson import Lesson as LessonRow
+from app.modules.academic.infrastructure.school_days import not_on_saturday
 
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -293,6 +294,7 @@ class SqlLessonRepository:
             LessonRow.subject_id == subject_id,
             LessonRow.status == "scheduled",
             LessonRow.date > after,
+            not_on_saturday(LessonRow.date),
             overlaps(LessonRow.audience, expand_for_overlap(audience)),
         )
         found: dt.date | None = (await self.session.execute(stmt)).scalar_one()
