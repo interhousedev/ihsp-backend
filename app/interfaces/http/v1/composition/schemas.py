@@ -66,6 +66,36 @@ class FlashcardSetItemResponse(BaseModel):
     new_today: int
 
 
+class NotebookSearchItemResponse(BaseModel):
+    """`NotebookSearchItem`: a notebook whose title or a source title matched."""
+
+    id: UUID
+    title: str
+    emoji: str | None
+    source_count: int
+    matched_sources: list[str]
+
+
+class MarkSearchItemResponse(BaseModel):
+    """`MarkSearchItem`: a recent mark of a subject whose name matched."""
+
+    subject: SubjectRefResponse
+    type: str
+    value: int
+    date: dt.date
+    lesson_id: UUID | None
+
+
+class LibrarySearchItemResponse(BaseModel):
+    """`LibrarySearchItem`: a library item the user may see."""
+
+    id: UUID
+    slug: str | None
+    title: str
+    author_label: str
+    kind: str
+
+
 class SearchResultsResponse(BaseModel):
     """`SearchResults`: at most five items per group."""
 
@@ -74,6 +104,9 @@ class SearchResultsResponse(BaseModel):
     homework: list[HomeworkItemResponse]
     files: list[FileItemResponse]
     flashcard_sets: list[FlashcardSetItemResponse]
+    notebooks: list[NotebookSearchItemResponse]
+    marks: list[MarkSearchItemResponse]
+    library_items: list[LibrarySearchItemResponse]
 
 
 class CalendarTokenResponse(BaseModel):

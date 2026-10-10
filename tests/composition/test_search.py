@@ -180,6 +180,9 @@ async def test_every_group_holds_at_most_five_results(world: World) -> None:
         "homework": 5,
         "files": 5,
         "flashcard_sets": 5,
+        "notebooks": 0,
+        "marks": 0,
+        "library_items": 0,
     }
 
 
@@ -212,7 +215,16 @@ async def test_endpoint_returns_search_results_with_contract_fields(
 
     assert response.status_code == 200
     body = response.json()
-    assert set(body) == {"subjects", "lessons", "homework", "files", "flashcard_sets"}
+    assert set(body) == {
+        "subjects",
+        "lessons",
+        "homework",
+        "files",
+        "flashcard_sets",
+        "notebooks",
+        "marks",
+        "library_items",
+    }
     assert set(body["subjects"][0]) == {"id", "name", "short_name"}
     assert body["files"][0]["name"] == "calculus.pdf"
 

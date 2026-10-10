@@ -27,6 +27,7 @@ from tests.composition.fakes import (
     FakeMarks,
     FakeOverview,
     FakeSchedule,
+    FakeSearchSources,
     FakeStudentViews,
     FakeSync,
     FakeTeacherViews,
@@ -54,6 +55,7 @@ class World:
     marks: FakeMarks = field(default_factory=FakeMarks)
     ai: FakeAi = field(default_factory=FakeAi)
     flashcards: FakeFlashcards = field(default_factory=FakeFlashcards)
+    sources: FakeSearchSources = field(default_factory=FakeSearchSources)
     files: FakeFiles = field(default_factory=FakeFiles)
     sync: FakeSync = field(default_factory=FakeSync)
     tokens: FakeCalendarTokens = field(default_factory=FakeCalendarTokens)
@@ -107,8 +109,10 @@ def _build_world(settings: Settings, clock: FixedClock) -> World:
     overview, attendance = FakeOverview(), FakeAttendance()
     students, teachers = FakeStudentViews(), FakeTeacherViews()
     accounts, broadcasts = FakeAccounts(), FakeBroadcasts()
+    search_sources = FakeSearchSources()
     ports = CompositionPorts(
         files=files,
+        search_sources=search_sources,
         sync=sync,
         calendar_tokens=tokens,
         schedule_overview=overview,
@@ -140,6 +144,7 @@ def _build_world(settings: Settings, clock: FixedClock) -> World:
         marks=marks,
         ai=ai,
         flashcards=flashcards,
+        sources=search_sources,
         files=files,
         sync=sync,
         tokens=tokens,

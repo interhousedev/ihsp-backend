@@ -1,6 +1,7 @@
 """Typed errors of the mail module."""
 
 from app.shared.base_error import (
+    BaseError,
     ForbiddenError,
     GoneError,
     NotFoundError,
@@ -85,3 +86,25 @@ class NotAnInboundMailError(ValidationFailedError):
 
     code = "mail/not-inbound"
     message_key = "mail-not-inbound"
+
+
+class OutboundMailDisabledError(ForbiddenError):
+    """Sending email from the platform is switched off."""
+
+    code = "mail/outbound-disabled"
+    message_key = "mail-outbound-disabled"
+
+
+class OutboundMailFailedError(BaseError):
+    """The SMTP server did not take the email."""
+
+    code = "mail/outbound-failed"
+    status = 502
+    message_key = "mail-outbound-failed"
+
+
+class AttachmentNotFoundError(NotFoundError):
+    """The attached file is not among the user's files."""
+
+    code = "mail/attachment-not-found"
+    message_key = "mail-attachment-not-found"

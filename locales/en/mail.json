@@ -9,5 +9,8 @@
   "mail-no-recipients": "Add at least one recipient.",
   "mail-too-many-recipients": "An email can have at most {limit} recipients.",
   "mail-too-large": "The email is too large to send. The limit is 25 MB.",
-  "mail-not-inbound": "Only received emails can be marked as spam."
+  "mail-not-inbound": "Only received emails can be marked as spam.",
+  "mail-outbound-disabled": "Sending email from the platform is switched off.",
+  "mail-outbound-failed": "The email could not be sent. Try again later.",
+  "mail-attachment-not-found": "The attached file was not found in your files."
 }

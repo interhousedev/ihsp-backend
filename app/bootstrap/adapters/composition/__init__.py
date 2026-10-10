@@ -17,6 +17,7 @@ from app.bootstrap.adapters.composition.calendar_token_store import (
 )
 from app.bootstrap.adapters.composition.files_views import FilesViewsAdapter
 from app.bootstrap.adapters.composition.schedule_overview import ScheduleOverviewAdapter
+from app.bootstrap.adapters.composition.search_sources import SearchSourcesAdapter
 from app.bootstrap.adapters.composition.student_views import StudentViewsAdapter
 from app.bootstrap.adapters.composition.sync_views import SyncViewsAdapter
 from app.bootstrap.adapters.composition.teacher_views import TeacherViewsAdapter
@@ -30,6 +31,7 @@ __all__ = [
     "CalendarTokenStoreAdapter",
     "FilesViewsAdapter",
     "ScheduleOverviewAdapter",
+    "SearchSourcesAdapter",
     "StudentViewsAdapter",
     "SyncViewsAdapter",
     "TeacherViewsAdapter",
@@ -54,8 +56,13 @@ def build_composition_ports(container: Container) -> CompositionPorts:
     files = _built(container.files, "files")
     identity = _built(container.identity, "identity")
     admin = _built(container.admin, "admin")
+    notebooks = _built(container.notebooks, "notebooks")
+    library = _built(container.library, "library")
     return CompositionPorts(
         files=FilesViewsAdapter(files.list_my_files, files.public),
+        search_sources=SearchSourcesAdapter(
+            notebooks.public, library.catalogue.list_items
+        ),
         sync=SyncViewsAdapter(marks.get_sync_failures, marks.list_sync_runs),
         calendar_tokens=CalendarTokenStoreAdapter(
             schedule.rotate_calendar_token, schedule.user_for_calendar_token

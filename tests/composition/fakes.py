@@ -275,6 +275,7 @@ class FakeMarks:
     def __init__(self) -> None:
         """Start empty."""
         self.summaries: list[SubjectSummary] = []
+        self.mark_rows: list[MarkRef] = []
         self.gpas: dict[UUID, float | None] = {}
         self.gpa_calls: list[list[UUID]] = []
 
@@ -290,7 +291,7 @@ class FakeMarks:
         start: dt.date | None,
         end: dt.date | None,
     ) -> list[MarkRef]:
-        return []
+        return [m for m in self.mark_rows if subject_id in (None, m.subject_id)]
 
     async def results(self, user_id: UUID, semester: int | None) -> dict[str, Any]:
         return {}
@@ -391,6 +392,34 @@ class FakeFiles:
     ) -> list[JsonObject]:
         self.search_calls.append((owner_id, query, limit))
         return list(self.found)
+
+
+class FakeSearchSources:
+    """SearchSources with canned notebooks and library items."""
+
+    def __init__(self) -> None:
+        """Start empty."""
+        self.notebook_rows: list[JsonObject] = []
+        self.library_rows: list[JsonObject] = []
+        self.library_actors: list[Actor] = []
+
+    async def notebooks(
+        self, user_id: UUID, query: str, limit: int
+    ) -> list[JsonObject]:
+        needle = query.casefold()
+        return [
+            r
+            for r in self.notebook_rows
+            if needle in r["title"].casefold()
+            or any(needle in t.casefold() for t in r["matched_sources"])
+        ][:limit]
+
+    async def library_items(
+        self, actor: Actor, query: str, limit: int
+    ) -> list[JsonObject]:
+        self.library_actors.append(actor)
+        needle = query.casefold()
+        return [r for r in self.library_rows if needle in r["title"].casefold()][:limit]
 
 
 class FakeSync:

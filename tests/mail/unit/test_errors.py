@@ -19,7 +19,7 @@ MAIL_ERRORS = [
 
 def test_the_module_defines_its_errors() -> None:
     """Sanity: the collection above found them."""
-    assert len(MAIL_ERRORS) == 11
+    assert len(MAIL_ERRORS) == 14
 
 
 @pytest.mark.parametrize("locale", ["en", "ru", "uz"])

@@ -18,14 +18,17 @@ from app.modules.mail.application.recent_mail import RecentMail
 from app.modules.mail.application.reply_mail import ReplyMail
 from app.modules.mail.application.resolve_mailbox import ResolveMailbox
 from app.modules.mail.application.send_mail import SendMail
+from app.modules.mail.application.send_outbound import SendOutbound
 from app.modules.mail.application.sweep_mail import SweepMail
 from app.modules.mail.application.view_mail import ViewMail
 from app.modules.mail.infrastructure.auth.authenticator import DnsInboundAuthenticator
 from app.modules.mail.infrastructure.auth.dns_txt_resolver import DnsTxtResolver
 from app.modules.mail.infrastructure.relay.aiosmtplib_relay import AiosmtplibRelay
+from app.modules.mail.infrastructure.relay.smtp_outbound import AiosmtplibOutbound
 from app.modules.mail.infrastructure.uow import SqlMailUnitOfWork
 from app.modules.mail.ports.inbound_authenticator import InboundAuthenticator
 from app.modules.mail.ports.outbound_relay import OutboundRelay
+from app.modules.mail.ports.outbound_smtp import OutboundSmtp
 from app.modules.mail.ports.suspension import MailSuspension
 from app.modules.mail.ports.txt_resolver import TxtResolver
 from app.shared.contracts.files import FilesApi
@@ -41,6 +44,7 @@ class MailServices:
     receive_inbound: ReceiveInbound
     parse_inbound: ParseInbound
     send_mail: SendMail
+    send_outbound: SendOutbound
     reply_mail: ReplyMail
     forward_mail: ForwardMail
     deliver_outbound: DeliverOutbound
@@ -63,6 +67,7 @@ def build(
     resolver: TxtResolver | None = None,
     authenticator: InboundAuthenticator | None = None,
     relay: OutboundRelay | None = None,
+    smtp: OutboundSmtp | None = None,
     sleep: Sleep = asyncio.sleep,
 ) -> MailServices:
     """Build the module; I1 passes identity, files and the suspension adapter.
@@ -140,6 +145,15 @@ def build(
             config=config,
         ),
         send_mail=send_mail,
+        send_outbound=SendOutbound(
+            smtp=smtp or AiosmtplibOutbound(settings.mail.outbound),
+            identity=identity,
+            files=files,
+            rate_limiter=deps.rate_limiter,
+            uow_factory=uow_factory,
+            clock=deps.clock,
+            settings=settings.mail.outbound,
+        ),
         reply_mail=reply_mail,
         forward_mail=forward_mail,
         deliver_outbound=DeliverOutbound(

@@ -76,6 +76,8 @@ def build_composition(
             marks=marks,
             files=ports.files,
             flashcards=flashcards,
+            sources=ports.search_sources,
+            clock=clock,
         ),
         issue_calendar_token=IssueCalendarToken(
             tokens=ports.calendar_tokens, api_url=settings.urls.api

@@ -58,6 +58,29 @@ class FilesViews(Protocol):
         ...
 
 
+class SearchSources(Protocol):
+    """Search sources owned by other modules: notebooks and the library."""
+
+    async def notebooks(
+        self, user_id: UUID, query: str, limit: int
+    ) -> list[JsonObject]:
+        """Return `NotebookSearchItem` dicts: title or source title matches.
+
+        Natural source: `NotebooksQueries.list_notebooks` plus `get_notebook`
+        for the source titles.
+        """
+        ...
+
+    async def library_items(
+        self, actor: Actor, query: str, limit: int
+    ) -> list[JsonObject]:
+        """Return `LibrarySearchItem` dicts: catalogue items the actor may see.
+
+        Natural source: the library catalogue's `ListItems`.
+        """
+        ...
+
+
 class SyncViews(Protocol):
     """EMIS sync facts (provider: academic marks and sync)."""
 
@@ -200,6 +223,7 @@ class CompositionPorts:
     """Everything `build_composition` needs beyond the cross-module contracts."""
 
     files: FilesViews
+    search_sources: SearchSources
     sync: SyncViews
     calendar_tokens: CalendarTokenStore
     schedule_overview: ScheduleOverview
