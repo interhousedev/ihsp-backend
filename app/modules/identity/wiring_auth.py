@@ -536,7 +536,11 @@ def build_auth(
         ),
         list_users=users,
         list_teachers=ListTeachers(users=users),
-        get_user_detail=GetUserDetail(uow_factory=uow_factory, clock=clock),
+        get_user_detail=GetUserDetail(
+            uow_factory=uow_factory,
+            clock=clock,
+            mail_domain=settings.smtp_out.mail_domain,
+        ),
         block_user=BlockUser(uow_factory=uow_factory, revoker=revoker),
         unblock_user=UnblockUser(uow_factory=uow_factory),
         change_roles=change_roles,

@@ -456,6 +456,17 @@
             "title": "Mail Suspended",
             "type": "boolean"
           },
+          "mailbox": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mailbox"
+          },
           "middle_name": {
             "anyOf": [
               {

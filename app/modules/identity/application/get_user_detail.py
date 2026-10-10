@@ -26,6 +26,7 @@ class UserDetail:
     sessions: list[LoginSession]
     recent_audit: list[AuditEventRecord]
     actors: dict[UUID, User]
+    mailbox: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,6 +35,7 @@ class GetUserDetail:
 
     uow_factory: UowFactory
     clock: Clock
+    mail_domain: str
 
     async def execute(
         self, actor: Actor, user_id: UUID, ctx: RequestContext
@@ -54,4 +56,9 @@ class GetUserDetail:
                     )
                 )
                 await uow.commit()
-        return UserDetail(user, links, sessions, events, actors)
+        mailbox = (
+            f"{user.login}@{self.mail_domain}"
+            if user.login and Role.STUDENT in user.roles
+            else None
+        )
+        return UserDetail(user, links, sessions, events, actors, mailbox)

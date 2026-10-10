@@ -803,6 +803,28 @@ async def test_opening_a_student_profile_is_audited(auth_world: World) -> None:
     assert (event.user_id, event.actor_id) == (student.id, admin.user_id)
 
 
+async def test_student_detail_shows_the_full_mailbox_address(
+    auth_world: World,
+) -> None:
+    """MAIL-1: the admin sees {login}@<mail domain>, never a bare login@mail."""
+    admin = await admin_of(auth_world)
+    student = await auth_world.add_user()
+
+    detail = await auth_world.auth.get_user_detail.execute(admin, student.id, CTX)
+
+    assert detail.mailbox == f"{student.login}@mail.ihsu.uz"
+
+
+async def test_teacher_detail_has_no_mailbox(auth_world: World) -> None:
+    """MAIL-1: only students get a mailbox."""
+    admin = await admin_of(auth_world)
+    teacher = await auth_world.add_user(roles={Role.TEACHER})
+
+    detail = await auth_world.auth.get_user_detail.execute(admin, teacher.id, CTX)
+
+    assert detail.mailbox is None
+
+
 async def test_user_detail_of_an_unknown_user_is_404(auth_world: World) -> None:
     """id/user-not-found."""
     from app.modules.identity.domain.errors import UserNotFoundError

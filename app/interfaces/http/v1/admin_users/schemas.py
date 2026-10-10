@@ -59,6 +59,7 @@ class AdminUserDetailResponse(AdminUserResponse):
     telegram: list[TelegramAccountResponse]
     sessions: list[SessionItemResponse]
     recent_audit: list[AuditItemResponse]
+    mailbox: str | None = None
 
     @classmethod
     def detail(cls, detail: UserDetail) -> "AdminUserDetailResponse":
@@ -66,6 +67,7 @@ class AdminUserDetailResponse(AdminUserResponse):
         base = AdminUserResponse.of(detail.user)
         return cls(
             **base.model_dump(),
+            mailbox=detail.mailbox,
             telegram=[TelegramAccountResponse.of(link) for link in detail.telegram],
             sessions=[
                 SessionItemResponse.of(SessionView(session, current=False))
