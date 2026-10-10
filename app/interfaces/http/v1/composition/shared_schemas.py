@@ -214,6 +214,7 @@ class AdminUserResponse(BaseModel):
     mail_suspended: bool
     created_at: dt.datetime
     last_login_at: dt.datetime | None
+    photo_url: str | None = None
 
 
 class GroupItemResponse(BaseModel):

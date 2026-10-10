@@ -57,6 +57,24 @@ async def test_the_profile_carries_the_teachers_photo_link(world: World) -> None
     assert without["user"]["photo_url"] is None
 
 
+async def test_the_photo_link_survives_the_response_schema(
+    world: World, client_for: ClientFor
+) -> None:
+    """ADM-4: the route answers with the photo link, not only the use case."""
+    admin = world.add_user(Role.ADMIN)
+    teacher = world.add_user(Role.TEACHER)
+    fill_pages(world, teacher)
+    world.identity.photos[teacher.id] = "https://files.example.test/photos/teacher.jpg"
+    client = await client_for(actor_of(admin))
+
+    response = await client.get(f"/v1/admin/teachers/{teacher.id}/profile")
+
+    assert response.status_code == 200
+    assert response.json()["user"]["photo_url"] == (
+        "https://files.example.test/photos/teacher.jpg"
+    )
+
+
 async def test_week_and_missing_attendance_windows(world: World) -> None:
     """ADM-4: this week Monday-Sunday; missing attendance of the last 7 days."""
     admin = world.add_user(Role.ADMIN)

@@ -31045,6 +31045,17 @@
             ],
             "title": "Middle Name"
           },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
           "recovery_email": {
             "anyOf": [
               {
