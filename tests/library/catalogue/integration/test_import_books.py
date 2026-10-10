@@ -47,7 +47,7 @@ async def test_good_rows_become_drafts_with_files_and_bad_rows_are_listed(
             HEADER
             + "physics10.pdf,Physics 10,A,uz_latn,textbook,Physics,official,Order 1\n"
             + "missing.pdf,Lost book,B,uz_latn,textbook,Physics,official,Order 2\n"
-            + ",No rights,C,uz_latn,textbook,Physics,,\n"
+            + ",,C,uz_latn,textbook,Physics,,\n"
             + ",Chemistry,D,uz_latn,textbook,Chemistry,official,Order 3\n"
         ).encode(),
     )

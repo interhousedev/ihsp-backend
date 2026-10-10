@@ -3,16 +3,17 @@
 Extracts the text of a file page by page, indexes it for full-text hits, records the
 outline, page count and hashes, and looks for duplicates, personal data and exam-paper
 markers. Findings are shown to librarians; no status changes, so a teacher's
-published material stays published. The cover from page 1 is not made here: the
-platform has no PDF renderer yet, and the reader shows page 1 for a PDF without a
-cover (see the publish checklist).
+published material stays published. A primary file of a book without a cover also
+gives it one (PDF first page, EPUB cover image); the user can replace it later.
 """
 
+import asyncio
 from collections.abc import Awaitable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from uuid import UUID
 
+from app.modules.library.application.catalogue.cover_extract import extract_cover
 from app.modules.library.domain.catalogue_text import (
     content_hash,
     split_pages,
@@ -29,7 +30,12 @@ from app.modules.library.ports.page_repository import IndexedPage
 from app.modules.library.ports.unit_of_work import LibraryUnitOfWork, UowFactory
 from app.shared.base_error import BaseError
 from app.shared.clock import Clock
-from app.shared.contracts.files import FilesApi, OutlineEntry
+from app.shared.contracts.files import (
+    FilePurpose,
+    FilesApi,
+    FileScope,
+    OutlineEntry,
+)
 from app.shared.text import search_normalize
 
 import structlog
@@ -95,7 +101,36 @@ class ProcessItemFile:
                 log.info("library_scan_skipped", item_id=str(item_id))
                 return
             await self._apply(uow, item, stored, extracted)
+            await self._make_cover(item, stored)
+            await uow.items.save(item)
             await uow.commit()
+
+    async def _make_cover(self, item: Item, stored: ItemFile) -> None:
+        """Give a book without a cover one from its primary file; never fails."""
+        if (
+            not stored.is_primary
+            or item.kind is not ItemKind.BOOK
+            or item.cover_file_id
+            or item.cover_url
+            or item.owner_id is None
+        ):
+            return
+        try:
+            data = await self.files.read_bytes(stored.file_id)
+            found = await asyncio.to_thread(extract_cover, data, stored.format)
+            if found is None:
+                return
+            image, name = found
+            ref = await self.files.store_bytes(
+                owner_id=item.owner_id,
+                scope=FileScope.LIBRARY,
+                purpose=FilePurpose.LIBRARY_COVER,
+                name=name,
+                data=image,
+            )
+            item.cover_file_id = ref.id
+        except BaseError as error:
+            log.warning("library_cover_failed", code=error.code)
 
     async def _extract(self, file_id: UUID) -> Extracted:
         result = Extracted()

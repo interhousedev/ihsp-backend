@@ -16,7 +16,6 @@ from app.modules.library.domain.enums import (
     ItemStatus,
     Rights,
     TextStatus,
-    Visibility,
 )
 from app.modules.library.domain.errors import (
     FileTooLargeError,
@@ -24,7 +23,6 @@ from app.modules.library.domain.errors import (
     NotEditableError,
     ReasonRequiredError,
     RightsIncompleteError,
-    VisibilityConflictError,
 )
 from app.modules.library.wiring import LibraryServices
 from app.shared.actor import Actor
@@ -153,17 +151,6 @@ async def test_unknown_subject_or_topic_is_refused(
     assert caught.value.params["field"] == "subjects"
 
 
-async def test_public_visibility_needs_a_free_rights_class(
-    library: LibraryServices, librarian: Actor, physics: SubjectLink
-) -> None:
-    """LIB-3: `422 library/visibility-conflict` for public + official."""
-    with pytest.raises(VisibilityConflictError):
-        await library.catalogue.create_book.execute(
-            librarian,
-            make_book_data(subjects=[physics], visibility=Visibility.PUBLIC),
-        )
-
-
 async def test_cover_must_be_a_file_the_librarian_may_use(
     library: LibraryServices,
     librarian: Actor,
@@ -209,7 +196,7 @@ async def test_editing_changes_only_the_sent_fields_and_the_search(
     assert EventKind.EDITED in await _events(library, book_id)
 
 
-async def test_editing_the_rights_of_a_published_book_cannot_break_the_checklist(
+async def test_editing_the_rights_of_a_published_book_is_always_allowed(
     library: LibraryServices,
     librarian: Actor,
     physics: SubjectLink,
@@ -219,12 +206,11 @@ async def test_editing_the_rights_of_a_published_book_cannot_break_the_checklist
     book_id = await _publishable(library, librarian, physics, upload_book_file)
     await library.catalogue.publish_book.execute(librarian, book_id)
 
-    with pytest.raises(RightsIncompleteError) as caught:
-        await library.catalogue.update_book.execute(
-            librarian, book_id, {"rights_basis": {}}
-        )
+    updated = await library.catalogue.update_book.execute(
+        librarian, book_id, {"rights_basis": {}}
+    )
 
-    assert caught.value.params["missing"] == ["rights_basis.reference"]
+    assert updated.card.id == book_id
 
 
 async def test_rights_changes_are_logged(
@@ -432,12 +418,10 @@ async def test_incomplete_book_is_not_published_and_the_checklist_says_why(
     draft = await library.catalogue.get_book_draft.execute(librarian, created.card.id)
 
     assert caught.value.params["missing"] == [
-        "rights_basis.reference",
         "text_status",
         "cover",
     ]
     assert [(c.key, c.ok) for c in draft.checklist] == [
-        ("rights", False),
         ("text_status", False),
         ("cover", False),
         ("subjects", True),

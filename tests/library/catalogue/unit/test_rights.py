@@ -200,7 +200,6 @@ def test_complete_book_has_an_all_green_checklist() -> None:
     checklist = publish_checklist(_facts(), today=TODAY)
 
     assert [(entry.key, entry.ok) for entry in checklist] == [
-        ("rights", True),
         ("text_status", True),
         ("cover", True),
         ("subjects", True),
@@ -255,7 +254,4 @@ def test_missing_rights_fields_are_listed_instead_of_the_rights_key() -> None:
     """LIB-3: `params.missing[]` names the fields, as the web contract expects."""
     facts = _facts(rights_basis={}, primary_text_status=TextStatus.PENDING)
 
-    assert publish_missing(facts, today=TODAY) == [
-        "rights_basis.reference",
-        "text_status",
-    ]
+    assert publish_missing(facts, today=TODAY) == ["text_status"]

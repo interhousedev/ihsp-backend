@@ -323,3 +323,30 @@ async def test_book_duplicates_are_logged_as_an_event(
     async with library.core.uow_factory() as uow:
         events = await uow.events.history(copy.id)
     assert events[-1].data["scan"]["findings"] == ["duplicate"]
+
+
+async def test_book_without_cover_gets_one_from_its_pdf(
+    library: LibraryServices,
+    store_item: StoreItem,
+    files_api: FakeScanFilesApi,
+) -> None:
+    """The first PDF page is stored as the cover; a set cover is kept."""
+    import io
+
+    import pypdfium2
+
+    document = pypdfium2.PdfDocument.new()
+    document.new_page(100, 150)
+    out = io.BytesIO()
+    document.save(out)
+    owner = new_id()
+    file_id = files_api.add_file(owner_id=owner, pages=[LOREM], data=out.getvalue())
+    book = _book(file_id, cover_file_id=None, cover_url=None, owner_id=owner)
+    await put(library.core.uow_factory, store_item, book)
+
+    scanned = await _run(library, book)
+
+    assert scanned.cover_file_id is not None
+    cover = files_api.files[scanned.cover_file_id]
+    assert cover.data[:2] == b"\xff\xd8"
+    assert cover.ref.purpose.value == "library_cover"

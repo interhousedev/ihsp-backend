@@ -43,7 +43,7 @@ _BASIS_TEXT = (
     "permission_expires_on",
     "reference",
 )
-_REQUIRED = ("title", "rights")
+_REQUIRED = ("title",)
 
 
 class ProblemCode(StrEnum):
@@ -140,7 +140,7 @@ def _to_row(
             years_of_study=_years(values.get("years_of_study")),
             subjects=_subjects(values.get("subjects"), subjects),
             topics=_topics(values.get("topics")),
-            rights=_enum(Rights, values, "rights", None),
+            rights=_enum(Rights, values, "rights", Rights.OFFICIAL),
             licence=values.get("licence") or None,
             rights_basis=_basis(values),
             visibility=_enum(Visibility, values, "visibility", Visibility.LYCEUM),

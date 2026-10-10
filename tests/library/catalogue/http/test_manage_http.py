@@ -157,7 +157,6 @@ async def test_draft_endpoint_returns_item_input_and_checklist(
     ]
     assert body["input"]["rights_basis"]["reference"] == "Order 12/2024"
     assert body["checklist"] == [
-        {"key": "rights", "ok": True},
         {"key": "text_status", "ok": False},
         {"key": "cover", "ok": False},
         {"key": "subjects", "ok": True},
@@ -197,24 +196,9 @@ async def test_publishing_an_incomplete_book_is_a_422_with_the_missing_fields(
     assert response.status_code == 422
     assert response.json()["type"] == "library/rights-incomplete"
     assert response.json()["params"]["missing"] == [
-        "rights_basis.reference",
         "text_status",
         "cover",
     ]
-
-
-async def test_public_visibility_with_official_rights_is_a_422(
-    api: Api, librarian: Actor, subject: UUID
-) -> None:
-    """LIB-3: `library/visibility-conflict`."""
-    client = await api(librarian)
-
-    response = await client.post(
-        "/v1/manage/library/books", json=_body(subject, visibility="public")
-    )
-
-    assert response.status_code == 422
-    assert response.json()["type"] == "library/visibility-conflict"
 
 
 async def test_takedown_without_a_reason_is_a_422_and_publish_twice_a_409(

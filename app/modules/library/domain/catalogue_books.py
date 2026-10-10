@@ -24,7 +24,6 @@ from app.modules.library.domain.enums import (
     Visibility,
 )
 from app.modules.library.domain.errors import NotEditableError
-from app.modules.library.domain.rights import check_visibility
 from app.modules.library.domain.search_query import build_search_text
 from app.modules.library.domain.slugs import make_slug
 
@@ -55,7 +54,7 @@ class BookData(BaseModel):
     years_of_study: list[int] = Field(default_factory=list, max_length=4)
     subjects: list[SubjectLink] = Field(default_factory=list, max_length=20)
     topics: list[TopicLink] = Field(default_factory=list, max_length=100)
-    rights: Rights
+    rights: Rights = Rights.OFFICIAL
     licence: str | None = Field(default=None, max_length=40)
     rights_basis: dict[str, object] = Field(default_factory=dict)
     rights_proof_file_id: UUID | None = None
@@ -75,8 +74,8 @@ def author_label(authors: Sequence[str]) -> str:
 
 
 def check_book_data(data: BookData) -> None:
-    """Rules that need no lookup: visibility against the rights class."""
-    check_visibility(data.rights, data.visibility)
+    """Rules that need no lookup: none now (rights no longer constrain visibility)."""
+    del data
 
 
 def apply_book_data(item: Item, data: BookData, *, now: datetime) -> None:

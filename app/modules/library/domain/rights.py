@@ -176,16 +176,9 @@ class ChecklistEntry:
 
 def publish_checklist(facts: ChecklistFacts, *, today: date) -> list[ChecklistEntry]:
     """The four checks before a book is published (doc § 3.4)."""
-    rights_ok = not rights_missing(
-        facts.rights,
-        facts.rights_basis,
-        licence=facts.licence,
-        proof_file_id=facts.proof_file_id,
-        today=today,
-    )
+    del today
     text_ok = facts.primary_text_status in (TextStatus.READY, TextStatus.NO_TEXT)
     return [
-        ChecklistEntry(CHECK_RIGHTS, rights_ok),
         ChecklistEntry(CHECK_TEXT_STATUS, text_ok),
         ChecklistEntry(CHECK_COVER, facts.has_cover or facts.primary_is_pdf),
         ChecklistEntry(

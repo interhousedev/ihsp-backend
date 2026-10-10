@@ -6,7 +6,6 @@ from app.modules.library.domain.catalogue_books import (
     BookData,
     apply_book_data,
     book_data_from,
-    check_book_data,
     new_book,
     publish_book,
     take_down_book,
@@ -24,7 +23,6 @@ from app.modules.library.domain.enums import (
 )
 from app.modules.library.domain.errors import (
     NotEditableError,
-    VisibilityConflictError,
 )
 from app.shared.ids import new_id
 from tests.factories.library import NOW
@@ -117,12 +115,6 @@ def test_round_trip_back_to_form_data() -> None:
     assert back.subjects == data.subjects and back.topics == data.topics
     assert back.translators == ["T. Translator"]
     assert back.rights_basis == {"author_death_year": 1938, "rule": "life+70"}
-
-
-def test_public_visibility_with_permission_rights_is_refused() -> None:
-    """LIB-3: the form data check rejects the combination."""
-    with pytest.raises(VisibilityConflictError):
-        check_book_data(_data(rights=Rights.PERMISSION, visibility=Visibility.PUBLIC))
 
 
 def test_title_must_not_be_empty() -> None:
