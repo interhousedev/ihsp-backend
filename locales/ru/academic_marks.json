@@ -2,5 +2,5 @@
   "academic-student-not-found": "Запись студента не найдена",
   "academic-subject-not-found": "Этого предмета нет в вашем учебном плане",
   "academic-sync-running": "Синхронизация с EMIS уже выполняется",
-  "academic-invalid-what-if": "Пробная оценка записывается как lesson:5, midterm:4 или final:3 (оценки от 2 до 5, не больше 20)"
+  "academic-invalid-what-if": "Пробная оценка записывается как lesson:5, midterm:4 или final:3 (оценки от 2 до 5)"
 }

@@ -32,7 +32,7 @@ Assumption = Literal[
 
 MIN_MARK = 2
 MAX_MARK = 5
-MAX_WHAT_IF = 20
+MAX_WHAT_IF = 500  # a safety limit only; the planner is not capped for real use
 MIDTERMS_PER_SEMESTER = 2
 FINALS_PER_SEMESTER = 1
 TARGET_GRADES: tuple[int, ...] = (5, 4, 3)

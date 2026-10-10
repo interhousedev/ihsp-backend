@@ -101,7 +101,7 @@
   "bot-mail-too-many": "Не больше {limit} получателей.",
   "bot-mark-type-final": "итоговая",
   "bot-mark-type-lesson": "урок",
-  "bot-mark-type-midterm": "рубежная",
+  "bot-mark-type-midterm": "промежуточная",
   "bot-marks-gpa": "GPA: {gpa}",
   "bot-marks-none": "За последние 7 дней оценок нет.",
   "bot-marks-recent": "Последние 7 дней",

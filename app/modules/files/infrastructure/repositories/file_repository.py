@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
+from app.modules.files.domain.list_filters import escape_like
 from app.modules.files.domain.status import FileStatus
 from app.modules.files.domain.stored_file import StoredFile
 from app.modules.files.infrastructure.orm.file import File
@@ -149,6 +150,10 @@ class SqlFileRepository:
         purpose: FilePurpose | None,
         after: tuple[datetime, UUID] | None,
         limit: int,
+        name_query: str | None = None,
+        content_types: Sequence[str] | None = None,
+        oldest_first: bool = False,
+        offset: int = 0,
     ) -> list[StoredFile]:
         """List the owner's files, newest first; pending and deleted are hidden."""
         stmt = select(File).where(
@@ -166,7 +171,17 @@ class SqlFileRepository:
                     and_(File.created_at == created, File.id < last_id),
                 )
             )
-        stmt = stmt.order_by(File.created_at.desc(), File.id.desc()).limit(limit)
+        if name_query:
+            stmt = stmt.where(
+                File.name.ilike(f"%{escape_like(name_query)}%", escape="\\")
+            )
+        if content_types is not None:
+            stmt = stmt.where(File.content_type.in_(tuple(content_types)))
+        if oldest_first:
+            stmt = stmt.order_by(File.created_at.asc(), File.id.asc())
+        else:
+            stmt = stmt.order_by(File.created_at.desc(), File.id.desc())
+        stmt = stmt.offset(offset).limit(limit)
         return [_to_entity(row) for row in await self._session.scalars(stmt)]
 
     async def list_ready(self, owner_id: UUID, limit: int) -> list[StoredFile]:

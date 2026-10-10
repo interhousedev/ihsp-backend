@@ -5,6 +5,11 @@ from datetime import datetime
 from uuid import UUID
 
 from app.modules.files.application.file_views import FileView, FileViewBuilder
+from app.modules.files.domain.list_filters import (
+    FileSort,
+    FileTypeFilter,
+    content_types_of,
+)
 from app.modules.files.ports.unit_of_work import UowFactory
 from app.shared.actor import Actor
 from app.shared.contracts.files import FilePurpose
@@ -44,18 +49,43 @@ class ListMyFiles:
         purpose: FilePurpose | None = None,
         cursor: str | None = None,
         limit: int = DEFAULT_LIMIT,
+        q: str | None = None,
+        type: FileTypeFilter | None = None,  # noqa: A002
+        sort: FileSort = "recent",
+        page: int | None = None,
+        page_size: int | None = None,
     ) -> FilePage:
-        """Return up to ``limit`` files and a cursor when there are more."""
-        size = max(1, min(limit, MAX_LIMIT))
+        """Return up to ``limit`` files and a cursor when there are more.
+
+        With `page` the list is offset-paged (`page_size` rows, 1-based) and
+        `next_cursor` is the number of the next page.
+        """
+        paged = page is not None
+        size = max(1, min(page_size if paged and page_size else limit, MAX_LIMIT))
+        number = max(1, page or 1)
         async with self._uow_factory() as uow:
             rows = await uow.files.list_for_owner(
-                actor.user_id, purpose=purpose, after=_after(cursor), limit=size + 1
+                actor.user_id,
+                purpose=purpose,
+                after=None if paged else _after(cursor),
+                limit=size + 1,
+                name_query=(q or "").strip() or None,
+                content_types=content_types_of(type),
+                oldest_first=sort == "older",
+                offset=(number - 1) * size if paged else 0,
             )
-        page, more = rows[:size], len(rows) > size
+        page_rows, more = rows[:size], len(rows) > size
+        if paged:
+            return FilePage(
+                items=await self._views.build(page_rows),
+                next_cursor=str(number + 1) if more else None,
+            )
         next_cursor = None
         if more:
-            last = page[-1]
+            last = page_rows[-1]
             next_cursor = encode_cursor(
                 {"t": last.created_at.isoformat(), "id": str(last.id)}
             )
-        return FilePage(items=await self._views.build(page), next_cursor=next_cursor)
+        return FilePage(
+            items=await self._views.build(page_rows), next_cursor=next_cursor
+        )

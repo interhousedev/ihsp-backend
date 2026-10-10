@@ -48,8 +48,16 @@ class FileRepository(Protocol):
         purpose: FilePurpose | None,
         after: tuple[datetime, UUID] | None,
         limit: int,
+        name_query: str | None = None,
+        content_types: Sequence[str] | None = None,
+        oldest_first: bool = False,
+        offset: int = 0,
     ) -> list[StoredFile]:
-        """List non-deleted files, newest first, after a (created_at, id) cursor."""
+        """List non-deleted files, newest first, after a (created_at, id) cursor.
+
+        `name_query` matches the name (case-insensitive substring), `content_types`
+        keeps only those types, `offset` pages without a cursor.
+        """
         ...
 
     async def list_ready(self, owner_id: UUID, limit: int) -> list[StoredFile]:

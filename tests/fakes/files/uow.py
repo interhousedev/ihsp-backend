@@ -81,6 +81,10 @@ class InMemoryFileRepository:
         purpose: FilePurpose | None,
         after: tuple[datetime, UUID] | None,
         limit: int,
+        name_query: str | None = None,
+        content_types: Sequence[str] | None = None,
+        oldest_first: bool = False,
+        offset: int = 0,
     ) -> list[StoredFile]:
         """Newest first; pending and deleted are hidden."""
         rows = [
@@ -90,11 +94,13 @@ class InMemoryFileRepository:
             and _study_file(f)
             and f.status not in {FileStatus.PENDING, FileStatus.DELETED}
             and (purpose is None or f.purpose == purpose)
+            and (not name_query or name_query.lower() in f.name.lower())
+            and (content_types is None or f.content_type in content_types)
         ]
-        rows.sort(key=lambda f: (f.created_at, f.id), reverse=True)
+        rows.sort(key=lambda f: (f.created_at, f.id), reverse=not oldest_first)
         if after is not None:
             rows = [f for f in rows if (f.created_at, f.id) < after]
-        return [copy.deepcopy(f) for f in rows[:limit]]
+        return [copy.deepcopy(f) for f in rows[offset : offset + limit]]
 
     async def list_ready(self, owner_id: UUID, limit: int) -> list[StoredFile]:
         """Ready files of the owner, newest first."""

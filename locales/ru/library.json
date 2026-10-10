@@ -46,7 +46,7 @@
   "library-finding-phone_number": "В тексте найден номер телефона.",
   "library-finding-email": "В тексте найден адрес электронной почты.",
   "library-finding-handle": "В тексте найден ник из соцсети (@имя).",
-  "library-finding-exam_marker": "Текст похож на работу по контролю (рубежный, итоговый, вариант ...).",
+  "library-finding-exam_marker": "Текст похож на работу по контролю (промежуточный, итоговый, вариант ...).",
   "library-finding-duplicate": "Такой файл или текст уже есть в библиотеке.",
   "library-language-uz_latn": "Узбекский (латиница)",
   "library-language-uz_cyrl": "Узбекский (кириллица)",

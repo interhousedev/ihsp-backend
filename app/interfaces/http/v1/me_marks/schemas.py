@@ -192,3 +192,32 @@ class RecordBookResponse(BaseModel):
     """All semesters with results."""
 
     semesters: list[RecordBookSemester]
+
+
+class SubjectLessonRow(BaseModel):
+    """One row of the subject hub lesson list."""
+
+    lesson_id: UUID
+    date: dt.date
+    starts_at: dt.datetime
+    kind: LessonKind = "other"
+    topic: str | None
+    mark: int | None
+    attendance: Literal["present", "absent", "late"] | None
+    materials_count: int
+    past: bool
+
+
+class SubjectLessonListResponse(BaseModel):
+    """Latest past lessons first, then the upcoming ones."""
+
+    items: list[SubjectLessonRow]
+    has_more_past: bool
+
+
+class LessonResultRow(BaseModel):
+    """Attendance and mark of one lesson that has started (calendar dot)."""
+
+    lesson_id: UUID
+    attendance: Literal["present", "absent", "late"] | None
+    mark: int | None

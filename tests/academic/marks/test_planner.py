@@ -372,13 +372,14 @@ def test_hypothetical_marks_are_added_to_their_type() -> None:
     assert (lesson, midterm, final) == ([5], [], [3])
 
 
-def test_too_many_hypothetical_marks_are_refused() -> None:
-    """A what-if is a small experiment, not a data upload."""
-    many = [HypotheticalMark("lesson", 5)] * (planner.MAX_WHAT_IF + 1)
+def test_fifty_hypothetical_marks_are_accepted() -> None:
+    """No small cap: only a high safety limit refuses a what-if list."""
+    fifty = [HypotheticalMark("lesson", 5)] * 50
+    assert len(add_hypothetical([], [], [], fifty)[0]) == 50
 
+    too_many = [HypotheticalMark("lesson", 5)] * (planner.MAX_WHAT_IF + 1)
     with pytest.raises(InvalidWhatIfError):
-        add_hypothetical([], [], [], many)
-    assert len(add_hypothetical([], [], [], many[:-1])[0]) == planner.MAX_WHAT_IF
+        add_hypothetical([], [], [], too_many)
 
 
 LESSON_SETS = [[], [2], [3], [4], [5], [5, 4], [4, 4, 5], [2, 3], [3, 3, 4, 4], [5] * 6]

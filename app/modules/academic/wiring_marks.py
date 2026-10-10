@@ -16,6 +16,12 @@ from app.modules.academic.application.marks.get_subject_planner import (
     GetSubjectPlanner,
 )
 from app.modules.academic.application.marks.get_sync_failures import GetSyncFailures
+from app.modules.academic.application.marks.list_lesson_results import (
+    ListLessonResults,
+)
+from app.modules.academic.application.marks.list_subject_lessons import (
+    ListSubjectLessons,
+)
 from app.modules.academic.application.marks.list_subjects import ListSubjects
 from app.modules.academic.application.marks.list_sync_runs import ListSyncRuns
 from app.modules.academic.application.marks.ports.bell_sync import BellSync
@@ -43,6 +49,8 @@ class MarksServices:
     list_sync_runs: ListSyncRuns
     list_subjects: ListSubjects
     get_subject_detail: GetSubjectDetail
+    list_subject_lessons: ListSubjectLessons
+    list_lesson_results: ListLessonResults
     get_subject_planner: GetSubjectPlanner
     get_semester_grades: GetSemesterGrades
     get_day_grades: GetDayGrades
@@ -107,6 +115,12 @@ def build_marks(
         ),
         get_subject_detail=GetSubjectDetail(
             uow_factory=uow_factory, identity=identity, links=links, clock=deps.clock
+        ),
+        list_lesson_results=ListLessonResults(
+            uow_factory=uow_factory, clock=deps.clock
+        ),
+        list_subject_lessons=ListSubjectLessons(
+            uow_factory=uow_factory, links=links, clock=deps.clock
         ),
         get_subject_planner=GetSubjectPlanner(
             uow_factory=uow_factory, identity=identity
