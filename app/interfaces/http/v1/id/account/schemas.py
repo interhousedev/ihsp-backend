@@ -73,6 +73,7 @@ class PreferencesPatchBody(BaseModel):
     notify_push: bool | None = None
     today_cards: list[str] | None = None
     onboarding_dismissed: list[str] | None = None
+    bottom_nav: list[str] | None = None
     seen_marks_at: datetime | None = None
 
 

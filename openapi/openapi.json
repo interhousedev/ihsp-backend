@@ -16304,6 +16304,20 @@
             ],
             "title": "Alerts Semester Mark Below"
           },
+          "bottom_nav": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bottom Nav"
+          },
           "lessons_links_lead_min": {
             "anyOf": [
               {
@@ -26690,6 +26704,20 @@
               }
             ],
             "title": "Alerts Semester Mark Below"
+          },
+          "bottom_nav": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bottom Nav"
           },
           "lessons_links_lead_min": {
             "default": 5,

@@ -9,7 +9,25 @@ from uuid import UUID
 
 from app.shared.actor import Role
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+
+BOTTOM_NAV_MAX = 4
+SP_BOTTOM_NAV_IDS: tuple[str, ...] = (
+    "today",
+    "timetable",
+    "subjects",
+    "grades",
+    "attendance",
+    "homework",
+    "exams",
+    "assistant",
+    "notebooks",
+    "flashcards",
+    "files",
+    "links",
+    "notifications",
+    "settings",
+)
 
 
 class UserStatus(StrEnum):
@@ -54,7 +72,20 @@ class UserPreferences(BaseModel):
         "alerts",
     ]
     onboarding_dismissed: list[str] = []
+    bottom_nav: list[str] | None = None  # sp phone bottom bar: up to 4 destination ids
     seen_marks_at: datetime | None = None
+
+    @field_validator("bottom_nav")
+    @classmethod
+    def _check_bottom_nav(cls, value: list[str] | None) -> list[str] | None:
+        """At most 4 distinct ids, all from SP_BOTTOM_NAV_IDS."""
+        if value is None:
+            return None
+        if len(value) > BOTTOM_NAV_MAX or len(set(value)) != len(value):
+            raise ValueError("bottom_nav: up to 4 distinct ids")
+        if not set(value) <= set(SP_BOTTOM_NAV_IDS):
+            raise ValueError("bottom_nav: unknown destination")
+        return value
 
 
 @dataclass(frozen=True, slots=True)

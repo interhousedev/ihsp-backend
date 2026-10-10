@@ -131,3 +131,19 @@ def test_configure_logging_routes_stdlib_records_through_structlog(
 
     assert '"event": "hello"' in out and '"user_id": "u1"' in out
     assert "from uvicorn" in out
+
+
+def test_bottom_nav_is_validated() -> None:
+    """Up to 4 distinct whitelisted sp destinations, or None."""
+    assert UserPreferences().bottom_nav is None
+    assert UserPreferences(bottom_nav=["today", "grades"]).bottom_nav == [
+        "today",
+        "grades",
+    ]
+    for bad in (
+        ["nope"],
+        ["today"] * 2,
+        ["today", "timetable", "subjects", "grades", "exams"],
+    ):
+        with pytest.raises(ValueError):
+            UserPreferences(bottom_nav=bad)

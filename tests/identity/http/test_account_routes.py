@@ -342,3 +342,19 @@ async def test_invalid_connector_is_422(api: Api) -> None:
 
     assert response.status_code == 422
     assert response.json()["type"] == "id/connector-invalid"
+
+
+async def test_patch_preferences_stores_and_validates_bottom_nav(api: Api) -> None:
+    """The sp bottom bar: whitelisted ids, at most four."""
+    user = await api.world.add_user()
+    api.login_as(user)
+
+    ok = await api.client.patch(
+        f"{ME}/preferences", json={"bottom_nav": ["today", "grades"]}
+    )
+    bad = await api.client.patch(f"{ME}/preferences", json={"bottom_nav": ["nope"]})
+    after = await api.client.get(ME)
+
+    assert ok.status_code == 200 and ok.json()["bottom_nav"] == ["today", "grades"]
+    assert bad.status_code == 422
+    assert after.json()["preferences"]["bottom_nav"] == ["today", "grades"]
