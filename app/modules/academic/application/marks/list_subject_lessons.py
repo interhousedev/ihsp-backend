@@ -70,7 +70,7 @@ class ListSubjectLessons:
             lessons,
             student_id=actor.user_id,
             now=now,
-            marks={m.lesson_id: m.value for m in marks if m.lesson_id is not None},
+            marks=marks,
             materials={
                 lid: sum(1 for r in refs if not r.hidden)
                 for lid, refs in resources.items()
@@ -87,7 +87,7 @@ class ListSubjectLessons:
                     "starts_at": v.starts_at,
                     "kind": v.kind,
                     "topic": v.topic,
-                    "mark": v.mark,
+                    "marks": [{"type": m.type, "value": m.value} for m in v.marks],
                     "attendance": v.attendance,
                     "materials_count": v.materials_count,
                     "past": v.past,

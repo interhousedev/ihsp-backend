@@ -6,10 +6,20 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from app.modules.academic.domain.marks.attendance import attendance_state
-from app.modules.academic.domain.marks.read_models import LessonRow
+from app.modules.academic.domain.marks.read_models import LessonRow, MarkRow
 
 UPCOMING_DAYS = 14
 PAST_PAGE = 10
+
+_TYPE_ORDER = {"lesson": 0, "midterm": 1, "final": 2}
+
+
+@dataclass(frozen=True, slots=True)
+class LessonMarkValue:
+    """One mark placed on a lesson of the list."""
+
+    type: str
+    value: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,7 +31,7 @@ class SubjectLessonView:
     starts_at: dt.datetime
     kind: str
     topic: str | None
-    mark: int | None
+    marks: tuple[LessonMarkValue, ...]
     attendance: str | None
     materials_count: int
     past: bool
@@ -50,12 +60,47 @@ def _attendance(student_id: UUID, lesson: LessonRow) -> str | None:
     return None
 
 
+def lesson_marks(
+    lessons: Sequence[LessonRow], marks: Sequence[MarkRow]
+) -> dict[UUID, tuple[LessonMarkValue, ...]]:
+    """Place each mark on a lesson: by lesson id, else on the first lesson of its date.
+
+    A mark gets its lesson id only when it is synced, so a mark synced before its lesson
+    was in the timetable has none. Such a mark goes to the earliest scheduled lesson of
+    the subject on its date, the rule the sync uses for a new mark. Marks linked to a
+    lesson outside `lessons` are left out.
+    """
+    lesson_ids = {x.id for x in lessons}
+    first_on_day: dict[dt.date, UUID] = {}
+    for lesson in sorted(lessons, key=lambda x: (x.date, x.period, x.starts_at)):
+        if lesson.status == "scheduled":
+            first_on_day.setdefault(lesson.date, lesson.id)
+    placed: dict[UUID, list[MarkRow]] = {}
+    for mark in marks:
+        if mark.lesson_id is not None:
+            target = mark.lesson_id if mark.lesson_id in lesson_ids else None
+        else:
+            target = first_on_day.get(mark.date)
+        if target is not None:
+            placed.setdefault(target, []).append(mark)
+    return {
+        lesson_id: tuple(
+            LessonMarkValue(type=m.type, value=m.value)
+            for m in sorted(
+                group,
+                key=lambda m: (_TYPE_ORDER.get(m.type, len(_TYPE_ORDER)), m.ordinal),
+            )
+        )
+        for lesson_id, group in placed.items()
+    }
+
+
 def build_subject_lessons(
     lessons: Sequence[LessonRow],
     *,
     student_id: UUID,
     now: dt.datetime,
-    marks: Mapping[UUID, int],
+    marks: Sequence[MarkRow],
     materials: Mapping[UUID, int],
     past_limit: int = PAST_PAGE,
     past_offset: int = 0,
@@ -72,6 +117,7 @@ def build_subject_lessons(
         (x for x in lessons if now <= x.starts_at <= horizon), key=lambda x: x.starts_at
     )
     shown_past = past[past_offset : past_offset + past_limit]
+    placed = lesson_marks(lessons, marks)
 
     def view(lesson: LessonRow, is_past: bool) -> SubjectLessonView:
         return SubjectLessonView(
@@ -80,7 +126,7 @@ def build_subject_lessons(
             starts_at=lesson.starts_at,
             kind=lesson.kind,
             topic=lesson.topic,
-            mark=marks.get(lesson.id) if is_past else None,
+            marks=placed.get(lesson.id, ()) if is_past else (),
             attendance=_attendance(student_id, lesson) if is_past else None,
             materials_count=materials.get(lesson.id, 0),
             past=is_past,

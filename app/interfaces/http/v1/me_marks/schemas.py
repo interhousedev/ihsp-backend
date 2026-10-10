@@ -13,11 +13,12 @@ AttendanceValue = Literal["present", "late", "absent", "excused", "not_taken"]
 
 
 class PersonRef(BaseModel):
-    """A person: id and names."""
+    """A person: id, names and, for the teachers of a subject, a photo."""
 
     id: UUID
     first_name: str
     last_name: str
+    photo_url: str | None = None
 
 
 class SubjectRef(BaseModel):
@@ -195,6 +196,13 @@ class RecordBookResponse(BaseModel):
     semesters: list[RecordBookSemester]
 
 
+class SubjectLessonMark(BaseModel):
+    """One mark placed on a lesson of the subject hub list."""
+
+    type: Literal["lesson", "midterm", "final"]
+    value: int
+
+
 class SubjectLessonRow(BaseModel):
     """One row of the subject hub lesson list."""
 
@@ -203,7 +211,7 @@ class SubjectLessonRow(BaseModel):
     starts_at: dt.datetime
     kind: LessonKind = "other"
     topic: str | None
-    mark: int | None
+    marks: list[SubjectLessonMark]
     attendance: Literal["present", "absent", "late"] | None
     materials_count: int
     past: bool
