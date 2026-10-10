@@ -49,7 +49,20 @@ def strip_empty_ids(value: Any) -> Any:  # noqa: ANN401 - any JSON value
 def extract_file_ids(content: dict[str, Any]) -> list[UUID]:
     """Return the IDs of files referenced as `/files/{uuid}` anywhere in the content."""
     text = json.dumps(content, ensure_ascii=False)
-    return sorted({UUID(match) for match in FILE_REFERENCE.findall(text)})
+    found = {UUID(match) for match in FILE_REFERENCE.findall(text)}
+    return sorted(found | set(video_file_ids(content)))
+
+
+def video_file_ids(content: dict[str, Any]) -> list[UUID]:
+    """Return the IDs of the files of uploaded video blocks."""
+    ids: list[UUID] = []
+    for block in content.get("blocks", []):
+        if block.get("type") == "video" and block.get("source") == "upload":
+            try:
+                ids.append(UUID(str(block.get("file_id"))))
+            except ValueError:
+                continue
+    return ids
 
 
 def with_block_appended(

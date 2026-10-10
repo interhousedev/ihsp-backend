@@ -20,5 +20,6 @@
   "lms-file-missing": "The step refers to a file that does not exist.",
   "lms-nothing-to-publish": "There are no changes to publish.",
   "lms-no-live-version": "There is no published version to go back to.",
-  "lms-invite-not-applicable": "Only invite-only courses have an invite code."
+  "lms-invite-not-applicable": "Only invite-only courses have an invite code.",
+  "lms-video-block-not-found": "This block is not an uploaded video."
 }

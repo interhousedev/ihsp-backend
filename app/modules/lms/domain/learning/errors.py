@@ -31,6 +31,13 @@ class BlockNotFoundError(NotFoundError):
     message_key = "lms-learn-block-not-found"
 
 
+class VideoNotFoundError(NotFoundError):
+    """The block is not an uploaded video."""
+
+    code = "lms/video-not-found"
+    message_key = "lms-learn-video-not-found"
+
+
 class CardNotFoundError(NotFoundError):
     """The flash card does not exist (any more) in the step."""
 

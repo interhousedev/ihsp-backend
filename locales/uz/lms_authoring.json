@@ -20,5 +20,6 @@
   "lms-file-missing": "Qadam mavjud bo'lmagan faylga havola qilmoqda.",
   "lms-nothing-to-publish": "Nashr qilish uchun o'zgarishlar yo'q.",
   "lms-no-live-version": "Qaytish mumkin bo'lgan nashr qilingan versiya yo'q.",
-  "lms-invite-not-applicable": "Taklif kodi faqat taklif bo'yicha kurslarda bor."
+  "lms-invite-not-applicable": "Taklif kodi faqat taklif bo'yicha kurslarda bor.",
+  "lms-video-block-not-found": "Bu blok yuklangan video emas."
 }

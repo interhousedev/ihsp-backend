@@ -8,9 +8,11 @@ from app.modules.files.domain.errors import QuotaExceededError, TypeNotAllowedEr
 from app.modules.files.domain.policy import (
     LIBRARY_PURPOSES,
     PRESIGN_PUT_SECONDS,
+    VIDEO_PURPOSES,
     FilesLimits,
     check_checksum,
     check_declared,
+    check_purpose_extension,
     check_size,
     check_upload_role,
     key_extension,
@@ -30,7 +32,9 @@ from app.shared.contracts.files import FilePurpose, FileScope
 from app.shared.ids import new_id
 
 UPLOAD_PURPOSES = (
-    frozenset({FilePurpose.AI_UPLOAD, FilePurpose.LINK}) | LIBRARY_PURPOSES
+    frozenset({FilePurpose.AI_UPLOAD, FilePurpose.LINK})
+    | LIBRARY_PURPOSES
+    | VIDEO_PURPOSES
 )
 
 
@@ -78,9 +82,10 @@ class RequestUpload:
             raise TypeNotAllowedError(params={"purpose": purpose.value})
         check_upload_role(purpose, actor)
         clean = normalize_name(name)
+        check_purpose_extension(purpose, clean)
         _, signed_type = check_declared(clean, content_type)
         scope = scope_for_purpose(purpose, actor)
-        check_size(size, self._limits.max_bytes_for(scope))
+        check_size(size, self._limits.max_bytes_for_purpose(purpose, scope))
         checksum = check_checksum(sha256_b64)
         term_id = await self._term_for(scope)
         now = self._clock.now()

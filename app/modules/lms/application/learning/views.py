@@ -171,6 +171,13 @@ class LearningVideoBlockView(BaseModel):
     passed: bool = False
 
 
+class VideoStreamView(BaseModel):
+    """A short-lived URL that streams an uploaded video (supports ``Range``)."""
+
+    url: str
+    expires_in: int
+
+
 class LearningQuizRulesView(BaseModel):
     """What a student sees before starting a test."""
 

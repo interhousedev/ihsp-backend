@@ -92,6 +92,13 @@ class PreviewStepView(BaseModel):
     points_earned: float = 0.0
 
 
+class VideoStreamView(BaseModel):
+    """A short-lived URL that streams an uploaded video (supports ``Range``)."""
+
+    url: str
+    expires_in: int
+
+
 # - - - Revisions, pending changes, versions - - -
 
 

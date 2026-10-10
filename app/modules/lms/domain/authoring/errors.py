@@ -24,6 +24,13 @@ class StepNotFoundError(NotFoundError):
     message_key = "lms-step-not-found"
 
 
+class VideoBlockNotFoundError(NotFoundError):
+    """The step has no uploaded video block with this ID."""
+
+    code = "lms/video-not-found"
+    message_key = "lms-video-block-not-found"
+
+
 class RevisionNotFoundError(NotFoundError):
     """The step revision does not exist."""
 

@@ -8,6 +8,7 @@ from uuid import UUID
 from app.modules.lms.domain.authoring.content_edit import (
     collect_ids,
     extract_file_ids,
+    video_file_ids,
 )
 from app.modules.lms.domain.authoring.entities import CourseStep, StepRevision
 from app.modules.lms.domain.authoring.enums import StepVia
@@ -22,9 +23,10 @@ from app.modules.lms.domain.step_content import (
     canonical_hash,
 )
 from app.modules.lms.ports.authoring.unit_of_work import AuthoringUnitOfWork
-from app.shared.contracts.files import FilesApi
+from app.shared.contracts.files import FilePurpose, FilesApi
 
 UNUSABLE_FILE_STATUSES = frozenset({"deleted", "rejected"})
+VIDEO_FILE_STATUSES = frozenset({"processing", "ready"})
 MAX_CONTENT_BYTES = 1_000_000  # a step is 5-20 KB; this only stops abuse
 
 
@@ -91,6 +93,7 @@ class StepDraftWriter:
             )
         file_ids = extract_file_ids(data)
         await self.require_files(file_ids)
+        await self.require_videos(video_file_ids(data))
         return PreparedContent(data, canonical_hash(assigned), file_ids)
 
     async def require_files(self, file_ids: list[UUID]) -> None:
@@ -105,6 +108,23 @@ class StepDraftWriter:
         ]
         if missing:
             raise FileMissingError(params={"file_ids": missing})
+
+    async def require_videos(self, file_ids: list[UUID]) -> None:
+        """Raise ContentInvalidError unless each file is a finished lesson video."""
+        if not file_ids:
+            return
+        found = await self.files.get_many(file_ids)
+        wrong = [
+            str(fid)
+            for fid in file_ids
+            if fid not in found
+            or found[fid].purpose != FilePurpose.LMS_VIDEO
+            or found[fid].status not in VIDEO_FILE_STATUSES
+        ]
+        if wrong:
+            raise ContentInvalidError(
+                params={"reason": "video-file", "file_ids": wrong}
+            )
 
     @staticmethod
     def apply(

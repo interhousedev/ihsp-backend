@@ -6,6 +6,7 @@ import json
 import secrets
 from collections.abc import Iterator
 from typing import Annotated, Literal
+from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -203,6 +204,19 @@ class VideoBlock(BaseModel):
     url: str = Field(default="", max_length=2000)
     file_id: str | None = None
     caption: str = Field(default="", max_length=500)
+
+    @model_validator(mode="after")
+    def _source_matches_fields(self) -> "VideoBlock":
+        """An upload needs a file ID (and has no link); a link has no file."""
+        if self.source == "upload":
+            try:
+                UUID(self.file_id or "")
+            except ValueError as exc:
+                raise ValueError("an uploaded video needs a valid file_id") from exc
+            self.url = ""
+        else:
+            self.file_id = None
+        return self
 
 
 class FlashcardsBlock(BaseModel):

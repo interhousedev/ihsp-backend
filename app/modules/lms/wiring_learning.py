@@ -8,6 +8,7 @@ from app.modules.lms.application.learning.enroll_in_course import EnrollInCourse
 from app.modules.lms.application.learning.get_attempt import GetAttempt
 from app.modules.lms.application.learning.get_course_page import GetCoursePage
 from app.modules.lms.application.learning.get_step_view import GetStepView
+from app.modules.lms.application.learning.get_video_stream import GetVideoStream
 from app.modules.lms.application.learning.join_course import JoinCourse
 from app.modules.lms.application.learning.list_broadcast_audience import (
     ListBroadcastAudience,
@@ -31,6 +32,7 @@ from app.modules.lms.infrastructure.learning.daily_counters import RedisDailyCou
 from app.modules.lms.infrastructure.learning.uow import SqlLearningUnitOfWork
 from app.modules.lms.ports.learning.unit_of_work import LearningUnitOfWork
 from app.modules.lms.ports.preview_revisions import PreviewRevisions
+from app.shared.contracts.files import FilesApi
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.wiring import ModuleDeps
 
@@ -45,6 +47,7 @@ class LearningServices:
     enroll_in_course: EnrollInCourse
     join_course: JoinCourse
     get_step_view: GetStepView
+    get_video_stream: GetVideoStream
     mark_step_viewed: MarkStepViewed
     start_attempt: StartAttempt
     save_answers: SaveAnswers
@@ -63,11 +66,13 @@ def build_learning(
     *,
     identity: IdentityDirectory,
     preview_revisions: PreviewRevisions,
+    files: FilesApi | None = None,
 ) -> LearningServices:
     """Build the learning use cases.
 
     ``preview_revisions`` is the authoring side's `ensure_preview_revision`
-    (I1 passes `container.lms.authoring.ensure_preview_revision`).
+    (I1 passes `container.lms.authoring.ensure_preview_revision`); ``files`` signs
+    the URLs of uploaded videos.
     """
 
     def uow_factory() -> LearningUnitOfWork:
@@ -91,6 +96,7 @@ def build_learning(
         enroll_in_course=EnrollInCourse(uow_factory, pages),
         join_course=JoinCourse(uow_factory, pages, deps.rate_limiter),
         get_step_view=GetStepView(uow_factory, clock, cache, finisher, counters),
+        get_video_stream=GetVideoStream(uow_factory, cache, files),
         mark_step_viewed=MarkStepViewed(uow_factory, clock, cache),
         start_attempt=StartAttempt(uow_factory, clock, finisher, preview_revisions),
         save_answers=SaveAnswers(uow_factory, clock, finisher),

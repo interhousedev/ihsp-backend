@@ -43,7 +43,12 @@ class RequestUploadBody(BaseModel):
     content_type: str = Field(max_length=255)
     sha256_b64: str = Field(min_length=1, max_length=128)
     purpose: Literal[
-        "ai_upload", "link", "library_book", "library_cover", "library_material"
+        "ai_upload",
+        "link",
+        "library_book",
+        "library_cover",
+        "library_material",
+        "lms_video",
     ]
 
 

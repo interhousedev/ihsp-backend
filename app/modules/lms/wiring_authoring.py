@@ -37,6 +37,7 @@ from app.modules.lms.application.authoring.list_versions import ListVersions
 from app.modules.lms.application.authoring.outline_editor import OutlineEditor
 from app.modules.lms.application.authoring.presenter import Presenter
 from app.modules.lms.application.authoring.preview_step import PreviewStep
+from app.modules.lms.application.authoring.preview_video import PreviewVideo
 from app.modules.lms.application.authoring.prune_revisions import PruneRevisions
 from app.modules.lms.application.authoring.publish_course import PublishCourse
 from app.modules.lms.application.authoring.remove_course_staff import (
@@ -100,6 +101,7 @@ class AuthoringServices:
     compare_versions: CompareVersions
     restore_version: RestoreVersion
     preview_step: PreviewStep
+    preview_video: PreviewVideo
     ensure_preview_revision: EnsurePreviewRevision
     prune_revisions: PruneRevisions
     queries: LmsQueriesImpl
@@ -175,6 +177,7 @@ def assemble_authoring(
         compare_versions=CompareVersions(uow_factory),
         restore_version=RestoreVersion(uow_factory, clock, presenter),
         preview_step=PreviewStep(uow_factory),
+        preview_video=PreviewVideo(uow_factory, files),
         ensure_preview_revision=EnsurePreviewRevision(uow_factory, clock),
         prune_revisions=PruneRevisions(uow_factory, clock),
         queries=LmsQueriesImpl(

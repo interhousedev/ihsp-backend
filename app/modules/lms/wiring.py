@@ -23,6 +23,9 @@ def build(
     """Build authoring first; learning freezes step previews through authoring."""
     authoring = build_authoring(deps, identity=identity, files=files)
     learning = build_learning(
-        deps, identity=identity, preview_revisions=authoring.ensure_preview_revision
+        deps,
+        identity=identity,
+        preview_revisions=authoring.ensure_preview_revision,
+        files=files,
     )
     return LmsModule(authoring=authoring, learning=learning)

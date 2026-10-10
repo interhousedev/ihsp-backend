@@ -4,6 +4,9 @@ from app.interfaces.http.v1.lms_learning.handlers.enroll import enroll
 from app.interfaces.http.v1.lms_learning.handlers.get_attempt import get_attempt
 from app.interfaces.http.v1.lms_learning.handlers.get_course import get_course
 from app.interfaces.http.v1.lms_learning.handlers.get_step import get_step
+from app.interfaces.http.v1.lms_learning.handlers.get_video_stream import (
+    get_video_stream,
+)
 from app.interfaces.http.v1.lms_learning.handlers.join import join
 from app.interfaces.http.v1.lms_learning.handlers.list_courses import list_courses
 from app.interfaces.http.v1.lms_learning.handlers.list_my_courses import (
@@ -30,6 +33,11 @@ router.add_api_route("/courses/{slug}", get_course, methods=["GET"])
 router.add_api_route("/courses/{course_id}/enroll", enroll, methods=["POST"])
 router.add_api_route("/join", join, methods=["POST"])
 router.add_api_route("/courses/{course_id}/steps/{step_id}", get_step, methods=["GET"])
+router.add_api_route(
+    "/courses/{course_id}/steps/{step_id}/blocks/{block_id}/video",
+    get_video_stream,
+    methods=["GET"],
+)
 router.add_api_route("/steps/{step_id}/viewed", mark_viewed, methods=["POST"])
 router.add_api_route(
     "/steps/{step_id}/blocks/{block_id}/attempts", start_attempt, methods=["POST"]

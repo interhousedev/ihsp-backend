@@ -14,5 +14,6 @@
   "lms-learn-attempt-start-conflict": "The attempt could not be started. Try again.",
   "lms-learn-answer-invalid": "The answer to question {question_id} is not valid.",
   "lms-learn-score-invalid": "The score must be between 0 and {max_score}.",
-  "lms-learn-attempt-preview": "Preview attempts cannot be reviewed."
+  "lms-learn-attempt-preview": "Preview attempts cannot be reviewed.",
+  "lms-learn-video-not-found": "This block has no uploaded video."
 }

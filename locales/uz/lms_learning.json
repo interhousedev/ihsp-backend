@@ -14,5 +14,6 @@
   "lms-learn-attempt-start-conflict": "Urinishni boshlab bo'lmadi. Qayta urinib ko'ring.",
   "lms-learn-answer-invalid": "{question_id} savoliga javob yaroqsiz.",
   "lms-learn-score-invalid": "Baho 0 dan {max_score} gacha bo'lishi kerak.",
-  "lms-learn-attempt-preview": "Sinov urinishlarini tekshirib bo'lmaydi."
+  "lms-learn-attempt-preview": "Sinov urinishlarini tekshirib bo'lmaydi.",
+  "lms-learn-video-not-found": "Bu blokda yuklangan video yo'q."
 }

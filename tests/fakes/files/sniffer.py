@@ -12,11 +12,24 @@ class SignatureSniffer:
             return "image/png"
         if head.startswith(b"\xff\xd8\xff"):
             return "image/jpeg"
+        video = self._video_type(head)
+        if video:
+            return video
         if head.startswith(b"MZ"):
             return "application/x-dosexec"
         if head.startswith(b"PK\x03\x04"):
             return self._zip_type(head)
         return self._text_or_binary(head)
+
+    @staticmethod
+    def _video_type(head: bytes) -> str | None:
+        if head[4:12] in {b"ftypisom", b"ftypmp42", b"ftypiso2"}:
+            return "video/mp4"
+        if head[4:8] == b"ftyp" and head[8:10] == b"qt":
+            return "video/quicktime"
+        if head.startswith(b"\x1a\x45\xdf\xa3"):
+            return "video/webm"
+        return None
 
     @staticmethod
     def _zip_type(head: bytes) -> str:

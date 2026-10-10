@@ -35,7 +35,10 @@ DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 PPTX = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
 XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 EPUB = "application/epub+zip"
-INLINE_TYPES = frozenset({PDF, "image/png", "image/jpeg"})
+MP4 = "video/mp4"
+WEBM = "video/webm"
+MOV = "video/quicktime"
+INLINE_TYPES = frozenset({PDF, "image/png", "image/jpeg", MP4, WEBM, MOV})
 
 _ZIP_FALLBACKS = frozenset({"application/zip", "application/octet-stream"})
 _TEXT_EXTRA = frozenset({"application/json", "application/xml"})
@@ -52,6 +55,11 @@ LIBRARY_PURPOSES = frozenset(
 )
 LIBRARIAN_ONLY_PURPOSES = frozenset(
     {FilePurpose.LIBRARY_BOOK, FilePurpose.LIBRARY_COVER}
+)
+VIDEO_EXTENSIONS = frozenset({".mp4", ".webm", ".mov"})
+VIDEO_PURPOSES = frozenset({FilePurpose.LMS_VIDEO})
+VIDEO_UPLOAD_ROLES = frozenset(
+    {Role.TEACHER, Role.ADMIN, Role.LMS_ADMIN, Role.LMS_CREATOR}
 )
 _CONTROL = re.compile(r"[\x00-\x1f\x7f]")
 _SAFE_EXTENSION = re.compile(r"\.[a-z0-9]{1,10}")
@@ -97,6 +105,25 @@ RULES: dict[str, TypeRule] = {
     ".jpeg": TypeRule(
         "image/jpeg", frozenset({"image/jpeg"}), frozenset({"image/jpeg"})
     ),
+    # Videos are only accepted for ``VIDEO_PURPOSES`` (``check_purpose_extension``).
+    ".mp4": TypeRule(
+        MP4,
+        frozenset({MP4}),
+        frozenset({MP4, MOV, "video/x-m4v"}),
+        loose_declared=True,
+    ),
+    ".webm": TypeRule(
+        WEBM,
+        frozenset({WEBM}),
+        frozenset({WEBM, "video/x-matroska"}),
+        loose_declared=True,
+    ),
+    ".mov": TypeRule(
+        MOV,
+        frozenset({MOV, MP4}),
+        frozenset({MOV, MP4}),
+        loose_declared=True,
+    ),
 }
 
 
@@ -111,12 +138,19 @@ class FilesLimits:
     library_file_max_bytes: int = 300 * MB  # LIBRARY__FILE_MAX_BYTES
     library_student_quota_bytes: int = 300 * MB  # LIBRARY__STUDENT_QUOTA_BYTES
     library_teacher_quota_bytes: int = 2 * GB  # LIBRARY__TEACHER_QUOTA_BYTES
+    lms_video_max_bytes: int = 500 * MB  # FILES__LMS_VIDEO_MAX_MB
 
     def max_bytes_for(self, scope: FileScope) -> int:
         """Return the size limit of one file in the scope."""
         if scope == FileScope.LIBRARY:
             return self.library_file_max_bytes
         return self.file_max_bytes
+
+    def max_bytes_for_purpose(self, purpose: FilePurpose, scope: FileScope) -> int:
+        """Return the size limit of one file of the purpose."""
+        if purpose in VIDEO_PURPOSES:
+            return self.lms_video_max_bytes
+        return self.max_bytes_for(scope)
 
     def quota_for(self, scope: FileScope) -> int | None:
         """Return the quota of a scope, or None when the scope has no quota.
@@ -251,9 +285,20 @@ def scope_for_purpose(purpose: FilePurpose, actor: Actor) -> FileScope:
 
 
 def check_upload_role(purpose: FilePurpose, actor: Actor) -> None:
-    """Books and covers may only be uploaded by librarians and administrators."""
+    """Books and covers: librarians and administrators; lesson videos: course staff."""
     if purpose in LIBRARIAN_ONLY_PURPOSES and not is_librarian(actor):
         raise ForbiddenError(params={"purpose": purpose.value})
+    if purpose in VIDEO_PURPOSES and not (VIDEO_UPLOAD_ROLES & actor.roles):
+        raise ForbiddenError(params={"purpose": purpose.value})
+
+
+def check_purpose_extension(purpose: FilePurpose, name: str) -> None:
+    """Videos only for video purposes, and video purposes only take videos."""
+    is_video = extension_of(name) in VIDEO_EXTENSIONS
+    if is_video != (purpose in VIDEO_PURPOSES):
+        raise TypeNotAllowedError(
+            params={"extension": extension_of(name), "purpose": purpose.value}
+        )
 
 
 def check_scope_purpose(scope: FileScope, purpose: FilePurpose) -> None:

@@ -29,7 +29,7 @@ from app.modules.files.application.storage_usage import StorageUsage
 from app.modules.files.application.store_bytes import StoreBytes
 from app.modules.files.application.sweep_processing import SweepProcessing
 from app.modules.files.application.warn_expiring import WarnExpiring
-from app.modules.files.domain.policy import FilesLimits
+from app.modules.files.domain.policy import MB, FilesLimits
 from app.modules.files.infrastructure.extraction.extractor import FileTextExtractor
 from app.modules.files.infrastructure.null_resolvers import (
     NoTermResolver,
@@ -122,6 +122,7 @@ def build(
         library_file_max_bytes=settings.library.file_max_bytes,
         library_student_quota_bytes=settings.library.student_quota_bytes,
         library_teacher_quota_bytes=settings.library.teacher_quota_bytes,
+        lms_video_max_bytes=settings.files.lms_video_max_mb * MB,
     )
 
     def uow_factory() -> SqlFilesUnitOfWork:
