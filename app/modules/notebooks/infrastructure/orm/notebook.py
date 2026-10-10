@@ -33,8 +33,8 @@ AUTO_TARGET = (
     "OR (origin = 'lesson_auto' AND lesson_id IS NOT NULL "
     "AND subject_id IS NOT NULL AND auto_settings IS NOT NULL "
     "AND course_id IS NULL) "
-    "OR (origin = 'course' AND course_id IS NOT NULL AND subject_id IS NULL "
-    "AND lesson_id IS NULL AND auto_settings IS NULL)"
+    "OR (origin IN ('course', 'course_student') AND course_id IS NOT NULL "
+    "AND subject_id IS NULL AND lesson_id IS NULL AND auto_settings IS NULL)"
 )
 CHAT_CONFIG_DEFAULT = (
     '{"style": "default", "custom_prompt": null, "length": "default", '
@@ -96,6 +96,20 @@ class Notebook(IdMixin, TimestampMixin, Base):
             "course_id",
             unique=True,
             postgresql_where=text("origin = 'course' AND deleted_at IS NULL"),
+        ),
+        # One live course notebook per enrolled student and course.
+        Index(
+            "ix_notebooks_owner_id_course_id_student",
+            "owner_id",
+            "course_id",
+            unique=True,
+            postgresql_where=text("origin = 'course_student' AND deleted_at IS NULL"),
+        ),
+        # A new revision of a course finds the notebooks to bring up to date.
+        Index(
+            "ix_notebooks_course_id_student",
+            "course_id",
+            postgresql_where=text("origin = 'course_student' AND deleted_at IS NULL"),
         ),
         CheckConstraint(AUTO_TARGET, name="auto_target"),
         {"schema": "notebooks"},

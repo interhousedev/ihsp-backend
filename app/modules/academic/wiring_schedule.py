@@ -187,7 +187,7 @@ def assemble_schedule(
         rotate_calendar_token=RotateCalendarToken(uow_factory),
         user_for_calendar_token=UserForCalendarToken(uow_factory),
         queries=ScheduleQueriesImpl(reader),
-        enrollment=AcademicEnrollmentImpl(uow_factory, identity, clock),
+        enrollment=AcademicEnrollmentImpl(uow_factory, identity, clock, kicker),
     )
 
 

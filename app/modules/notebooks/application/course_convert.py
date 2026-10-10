@@ -19,6 +19,7 @@ from app.modules.notebooks.domain.artifacts.course_text import (
     strip_ref_labels,
 )
 from app.shared.contracts.lms_blocks import (
+    BlockInput,
     BlockInputError,
     CoursePlanInput,
     FlashcardInput,
@@ -28,7 +29,6 @@ from app.shared.contracts.lms_blocks import (
     PlanStepInput,
     QuestionInput,
     StepDraftInput,
-    TestBlockInput,
     TextBlockInput,
     build_flashcards_block,
     build_step_content,
@@ -154,7 +154,7 @@ def clean_draft(draft: StepDraftInput) -> StepDraftInput:
     Raises:
         BlockInputError: A block is empty once the labels are removed.
     """
-    blocks: list[TextBlockInput | TestBlockInput | FlashcardsBlockInput] = []
+    blocks: list[BlockInput] = []
     for block in draft.blocks:
         if isinstance(block, TextBlockInput):
             markdown = clean_lesson_markdown(block.markdown)

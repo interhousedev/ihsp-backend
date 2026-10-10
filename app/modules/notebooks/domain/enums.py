@@ -10,6 +10,7 @@ class NotebookOrigin(StrEnum):
     SUBJECT_AUTO = "subject_auto"
     LESSON_AUTO = "lesson_auto"
     COURSE = "course"  # the workspace of an LMS course, shared by its staff
+    COURSE_STUDENT = "course_student"  # an enrolled student's notebook of a course
 
     @property
     def is_auto(self) -> bool:

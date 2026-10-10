@@ -10,7 +10,6 @@ from app.modules.notebooks.domain.errors import (
     BusyError,
     InvalidOptionsError,
     LimitReachedError,
-    NoSourcesSelectedError,
     NotebookNotFoundError,
 )
 from app.modules.notebooks.wiring_chat import ChatServices, build_chat
@@ -269,16 +268,19 @@ async def test_an_invalid_question_is_raised_by_the_stream(
         await anext(chat.ask_notebook.stream(student, notebook.id, "   "))
 
 
-async def test_no_sources_is_raised_by_the_stream(
-    core: NotebooksCore, chat: ChatServices, student: Actor
+async def test_a_stream_without_sources_still_answers(
+    core: NotebooksCore, chat: ChatServices, student: Actor, scripted_llm: ScriptedLlm
 ) -> None:
-    """NB-5, NB-6: 422 `no-sources-selected` before anything is stored."""
+    """T6.3: no selected source is not an error; the answer is stored ungrounded."""
     notebook = await make_notebook(core.uow_factory, student.user_id)
+    scripted_llm.queue_text("A general answer.\n<followups>[]</followups>")
 
-    with pytest.raises(NoSourcesSelectedError):
-        await anext(chat.ask_notebook.stream(student, notebook.id, "Q?"))
+    events = [e async for e in chat.ask_notebook.stream(student, notebook.id, "Q?")]
 
-    assert await thread(core, student, notebook) == []
+    assert events
+    stored = await thread(core, student, notebook)
+    assert [m.role for m in stored] == [MessageRole.USER, MessageRole.ASSISTANT]
+    assert stored[1].content.grounded is False
 
 
 async def test_busy_is_raised_by_the_stream(

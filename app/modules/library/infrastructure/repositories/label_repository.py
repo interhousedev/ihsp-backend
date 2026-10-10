@@ -23,6 +23,7 @@ from app.shared.ids import new_id
 from sqlalchemy import ColumnElement, and_, case, delete, func, literal, or_, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import InstrumentedAttribute
 
 SIMILAR = 0.45
 """`word_similarity` from which a key counts as a near match (typos, other spelling)."""
@@ -32,14 +33,18 @@ def _escape_like(text: str) -> str:
     return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
-def _match(column: ColumnElement[str], key: str) -> ColumnElement[bool]:
+def _match(
+    column: ColumnElement[str] | InstrumentedAttribute[str], key: str
+) -> ColumnElement[bool]:
     """Every word of the key is contained, or the whole key is trigram-close."""
     words = [w for w in key.split() if w]
     contains = and_(*[column.ilike(f"%{_escape_like(w)}%", escape="\\") for w in words])
     return or_(contains, func.word_similarity(literal(key), column) >= SIMILAR)
 
 
-def _rank(column: ColumnElement[str], key: str) -> list[ColumnElement[float]]:
+def _rank(
+    column: ColumnElement[str] | InstrumentedAttribute[str], key: str
+) -> list[ColumnElement[float]]:
     starts = column.ilike(f"{_escape_like(key)}%", escape="\\")
     return [
         case((starts, 0), else_=1),

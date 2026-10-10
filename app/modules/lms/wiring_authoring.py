@@ -67,6 +67,7 @@ from app.modules.lms.ports.authoring.unit_of_work import AuthoringUnitOfWork
 from app.shared.clock import Clock
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.identity import IdentityDirectory
+from app.shared.tasks import TaskKicker
 from app.shared.wiring import ModuleDeps
 
 
@@ -124,7 +125,11 @@ def build_authoring(
         )
 
     return assemble_authoring(
-        uow_factory, clock=deps.clock, identity=identity, files=files
+        uow_factory,
+        clock=deps.clock,
+        identity=identity,
+        files=files,
+        kicker=deps.kicker,
     )
 
 
@@ -134,6 +139,7 @@ def assemble_authoring(
     clock: Clock,
     identity: IdentityDirectory,
     files: FilesApi,
+    kicker: TaskKicker | None = None,
 ) -> AuthoringServices:
     """Connect use cases to a unit of work factory (SQL, or fakes in tests)."""
     presenter = Presenter(identity)
@@ -171,7 +177,7 @@ def assemble_authoring(
         restore_revision=RestoreRevision(uow_factory, clock, presenter),
         get_step_diff=GetStepDiff(uow_factory),
         get_pending_changes=get_pending_changes,
-        publish_course=PublishCourse(uow_factory, clock, presenter),
+        publish_course=PublishCourse(uow_factory, clock, presenter, kicker),
         list_versions=list_versions,
         get_version=GetVersion(uow_factory, presenter),
         compare_versions=CompareVersions(uow_factory),

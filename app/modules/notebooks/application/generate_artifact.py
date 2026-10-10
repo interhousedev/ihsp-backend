@@ -44,7 +44,7 @@ from app.modules.notebooks.domain.artifacts.kind_support import expect_options
 from app.modules.notebooks.domain.artifacts.kinds.slides import SlidesOptions
 from app.modules.notebooks.domain.artifacts.registry import handler_for
 from app.modules.notebooks.domain.context import ContextPack
-from app.modules.notebooks.domain.entities import Artifact
+from app.modules.notebooks.domain.entities import Artifact, Notebook
 from app.modules.notebooks.domain.enums import (
     ArtifactFailure,
     ArtifactKind,
@@ -154,6 +154,18 @@ class _Revision:
     labels: frozenset[str]
     title: str
     refs_index: dict[str, Any]
+
+
+NO_SOURCES_TASK_NOTE = (
+    "No sources are selected. Make the output from the focus text, the notebook "
+    "title and general knowledge, and do not cite sources."
+)
+
+
+def _general_task(task: str, notebook: Notebook | None) -> str:
+    """The task of an output made without sources, with the notebook's topic."""
+    topic = f"Notebook title: {notebook.title}\n\n" if notebook is not None else ""
+    return f"{NO_SOURCES_TASK_NOTE}\n\n{topic}{task}"
 
 
 def _pack_language(kind: ArtifactKind, pack: ContextPack) -> str | None:
@@ -454,7 +466,8 @@ class GenerateArtifact:
                 and source.notebook_id == artifact.notebook_id
                 and readable_by(source, modalities)
             ]
-            if not sources:
+            general = not artifact.source_ids  # asked for without sources
+            if not sources and not general:
                 raise _Failure(ArtifactFailure.NO_CONTENT)
             pack = await self.context.for_studio(
                 uow,
@@ -464,7 +477,7 @@ class GenerateArtifact:
                 cap_tokens=cap,
             )
             notebook = await uow.notebooks.get(artifact.notebook_id)
-        if pack.token_estimate < MIN_CONTENT_TOKENS:
+        if not general and pack.token_estimate < MIN_CONTENT_TOKENS:
             raise _Failure(ArtifactFailure.NO_CONTENT)
         if notebook is not None:
             course = await self.course_context.load(
@@ -485,7 +498,10 @@ class GenerateArtifact:
             system=system_prompt_for(artifact.kind, language),
             messages=[
                 self.llm.context_message(render_sources_block(pack), ai_task),
-                {"role": "user", "content": task},
+                {
+                    "role": "user",
+                    "content": _general_task(task, notebook) if general else task,
+                },
             ],
             schema_name=handler.schema_name,
             schema=handler.strict_schema(),

@@ -120,7 +120,7 @@ class RequestArtifact:
             NotebookNotFoundError: Not the student's notebook.
             FeatureDisabledError: Audio overview is not built.
             InvalidOptionsError: Unknown kind, wrong options or a bad focus text.
-            NoSourcesSelectedError: No ready source is selected.
+            NoSourcesSelectedError: Sources are picked, but none is ready.
             ArtifactLimitError: The notebook already holds the maximum of outputs.
             LimitReachedError: The weighted-token budget is used up.
             QuotaExceededError: The daily count of the kind is used up.
@@ -153,8 +153,8 @@ class RequestArtifact:
                 sources=sources,
                 language=language,
             )
-            if notebook.is_course_workspace:  # the course context makes it unique
-                key = None
+            if notebook.is_course_workspace or not sources:
+                key = None  # a course context makes it unique, no sources: no sharing
             hit = await self._hit(uow, notebook, key, sources, stored_options)
             if hit is not None:
                 await uow.artifacts.add(hit)
@@ -208,7 +208,10 @@ class RequestArtifact:
     async def _pick_sources(
         self, uow: NotebooksUnitOfWork, notebook: Notebook, options: BaseModel
     ) -> list[Source]:
-        """The ready sources of the request: the given ids, else the selection."""
+        """The ready sources of the request: the given ids, else the selection.
+
+        Nothing selected gives an empty list: the output is made without sources.
+        """
         wanted = set(common_options(options).source_ids or [])
         sources = await uow.sources.list_for_notebook(notebook.id)
         chosen = [
@@ -216,8 +219,8 @@ class RequestArtifact:
             for source in sources
             if source.usable and (source.id in wanted if wanted else source.selected)
         ]
-        if not chosen:
-            raise NoSourcesSelectedError()
+        if not chosen and (wanted or any(source.selected for source in sources)):
+            raise NoSourcesSelectedError()  # asked for, or picked but not ready
         return chosen
 
     async def _ensure_room(self, uow: NotebooksUnitOfWork, notebook: Notebook) -> None:

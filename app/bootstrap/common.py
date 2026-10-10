@@ -8,6 +8,9 @@ from app.bootstrap.adapters.admin_tools import AdminToolBackendAdapter
 from app.bootstrap.adapters.composition.library_platform_search import (
     LibraryPlatformSearch,
 )
+from app.bootstrap.adapters.composition.shared_platform_search import (
+    SharedPlatformSearch,
+)
 from app.bootstrap.adapters.emis_source import make_emis_source
 from app.bootstrap.adapters.lazy_proxy import LazyProxy
 from app.bootstrap.adapters.library_academic import LibraryAcademicAdapter
@@ -61,6 +64,7 @@ from app.settings import Settings
 from app.shared.clock import Clock
 from app.shared.contracts.ai import AiQueries, LlmGateway
 from app.shared.contracts.embeddings import EmbeddingIndex
+from app.shared.contracts.notebooks import NotebooksQueries
 from app.shared.contracts.notify import TelegramSender
 from app.shared.features import Feature, is_enabled
 from app.shared.rate_limit import RateLimiter
@@ -151,6 +155,9 @@ class _Assembler:
         self.usage_ai: LazyProxy[Any] = LazyProxy("ai (files usage)")
         self.ai_proxy: LazyProxy[AiQueries] = LazyProxy("ai (links)")
         self.usage_notebooks: LazyProxy[Any] = LazyProxy("notebooks (files usage)")
+        self.notebooks_proxy: LazyProxy[NotebooksQueries] = LazyProxy(
+            "notebooks (links)"
+        )
         self.llm: LlmGateway | None = overrides.llm
         self.deps = make_deps(container)
 
@@ -271,6 +278,7 @@ class _Assembler:
             identity=identity.directory,
             ai=self.ai_proxy.view,
             flashcards=flashcards.public,
+            notebooks=self.notebooks_proxy.view,
         )
         flashcards_links.bind(links.public)
         self.usage_links.bind(links.public)
@@ -370,6 +378,7 @@ class _Assembler:
         tools = AdminToolBackendAdapter(c)
         c.admin_tools = tools
         self.llm = self.overrides.llm or make_llm_gateway(c.settings)
+        c.llm = self.llm
         ai = build_ai(
             self.deps,
             llm=self.llm,
@@ -432,6 +441,7 @@ class _Assembler:
             flashcards=c.flashcards.public,
             lms=c.lms.learning.source_reader if self.plan.lms else None,
             library=c.library.bridge.source_reader,
+            library_queries=c.library.reader.queries,
             fetcher=HttpWebFetcher(),
             classwork=c.academic.classwork.queries,
             terms=NotebookTermsAdapter(c.academic.schedule.current_term),
@@ -449,6 +459,7 @@ class _Assembler:
             ),
         )
         c.ai.bindings.notebooks = notebooks.public
+        c.ai.bindings.shared_search = SharedPlatformSearch(notebooks.shared_search)
         c.ai.bindings.notebooks_commands = notebooks.commands
         c.ai.bindings.documents = DocumentExporter()
         if self.plan.lms:  # the course author assistant (lms_author)
@@ -458,6 +469,7 @@ class _Assembler:
             c.ai.bindings.lms_queries = authoring.queries
             c.ai.bindings.lms_draft_commands = authoring.draft_commands
         self.usage_notebooks.bind(notebooks.public)
+        self.notebooks_proxy.bind(notebooks.public)
         c.notebooks = notebooks
 
     def build_mcp_ports(self) -> None:

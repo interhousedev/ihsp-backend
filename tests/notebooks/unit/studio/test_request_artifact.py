@@ -114,7 +114,7 @@ async def test_request_without_source_ids_uses_the_selection_in_position_order(
     assert artifact.source_map == {"S1": str(first.id), "S2": str(third.id)}
 
 
-async def test_request_needs_a_selected_source(
+async def test_request_without_a_selected_source_is_made_without_sources(
     studio: StudioServices,
     core: NotebooksCore,
     student: Actor,
@@ -122,16 +122,17 @@ async def test_request_needs_a_selected_source(
     uow_factory: UowFactory,
     kicker: FakeTaskKicker,
 ) -> None:
-    """NB-5: a ready source that is not checked cannot feed an output."""
+    """T6.3: a ready source that is not checked is left out; the output is general."""
     await make_source(uow_factory, notebook, texts=SOURCE_TEXTS, selected=False)
 
-    with pytest.raises(NoSourcesSelectedError):
-        await studio.request_artifact.execute(
-            student, notebook.id, ArtifactKind.QUIZ, {}, None
-        )
+    artifact = await studio.request_artifact.execute(
+        student, notebook.id, ArtifactKind.QUIZ, {}, None
+    )
 
-    assert kicker.calls == []
-    assert await used_today(core, student, "artifacts") == 0
+    assert artifact.source_ids == [] and artifact.cache_key is None
+    assert artifact.status is ArtifactStatus.QUEUED
+    assert kicker.calls != []
+    assert await used_today(core, student, "artifacts") == 1
 
 
 async def test_request_needs_a_ready_source(

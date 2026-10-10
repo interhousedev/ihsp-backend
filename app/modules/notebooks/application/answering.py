@@ -90,6 +90,12 @@ FEEDBACK_NAMES: Final = {1: "up", -1: "down"}
 _CHIP = re.compile(r"⟦([\d,]+)⟧")
 
 
+NO_SOURCES_NOTE = (
+    "No sources are selected. Answer from general knowledge, say briefly that the "
+    "answer is not based on the notebook's materials, and do not cite sources."
+)
+
+
 def clean_question(text: str) -> str:
     """Return the trimmed question; it must have 1 to 4 000 characters.
 
@@ -574,9 +580,9 @@ class AnswerPipeline:
             and readable_by(source, modalities)
             and (source.selected if wanted is None else source.id in wanted)
         ]
-        if not chosen:
-            raise NoSourcesSelectedError()
-        return chosen
+        if not chosen and (wanted or any(s.selected for s in everything)):
+            raise NoSourcesSelectedError()  # picked, but none is ready to read
+        return chosen  # empty: a general answer, not grounded in the materials
 
     def _system(
         self, config: ChatConfig, locale: str, course: CourseContext | None = None
@@ -602,6 +608,8 @@ class AnswerPipeline:
         anchor_text = turn.anchor.text if isinstance(turn.anchor, AnchorText) else None
         note = anchor_note(_anchor_labels(pack, turn.anchor), anchor_text)
         question = question_message(turn.text, note)
+        if not pack.sources:
+            question = f"{NO_SOURCES_NOTE}\n\n{question}"
         block = render_web_block(web, full=True, intro=WEB_INTRO)
         return [
             self.core.llm.context_message(render_sources_block(pack)),

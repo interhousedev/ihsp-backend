@@ -176,6 +176,28 @@ async def _store_pdf(
 LIBRARY_SUBJECT_SLUGS = {MATH: "mathematics", UZBEK: "uzbek"}
 # Subjects the demo adds to the default tree: (slug, parent slug, names, ББК/УДК code).
 EXTRA_SUBJECTS: tuple[tuple[str, str | None, dict[str, str], str], ...] = (
+    (  # also in the default tree; created only when the tree was emptied
+        "mathematics",
+        None,
+        {"uz": "Matematika", "ru": "Математика", "en": "Mathematics"},
+        "ББК 22.1 · УДК 51",
+    ),
+    (
+        "uzbek",
+        None,
+        {
+            "uz": "Oʻzbek tili va adabiyoti",
+            "ru": "Узбекский язык и литература",
+            "en": "Uzbek",
+        },
+        "ББК 81.2Уз · УДК 811.512.133",
+    ),
+    (
+        "english",
+        None,
+        {"uz": "Ingliz tili", "ru": "English", "en": "English"},
+        "ББК 81.2Англ · УДК 811.111",
+    ),
     (
         "business",
         None,

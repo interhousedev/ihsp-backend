@@ -42,6 +42,14 @@ from app.modules.notebooks.application.open_course_workspace import (
     OpenCourseWorkspace,
 )
 from app.modules.notebooks.application.process_source import ProcessSource
+from app.modules.notebooks.application.provision_course_notebook import (
+    BackfillCourseNotebooks,
+    ProvisionCourseNotebook,
+)
+from app.modules.notebooks.application.provision_student_notebooks import (
+    BackfillSubjectNotebooks,
+    ProvisionStudentNotebooks,
+)
 from app.modules.notebooks.application.public_api import NotebooksQueriesImpl
 from app.modules.notebooks.application.public_commands import NotebooksCommandsImpl
 from app.modules.notebooks.application.purge_deleted import PurgeDeleted
@@ -61,22 +69,33 @@ from app.modules.notebooks.application.save_to_files import SaveArtifactToFiles
 from app.modules.notebooks.application.search_sources import SearchSources
 from app.modules.notebooks.application.select_sources import SelectSources
 from app.modules.notebooks.application.set_source_labels import SetSourceLabels
+from app.modules.notebooks.application.shared_passage_search import (
+    SharedPassageSearch,
+)
 from app.modules.notebooks.application.start_labeling import StartLabeling
 from app.modules.notebooks.application.sweep_auto_notebooks import SweepAutoNotebooks
 from app.modules.notebooks.application.sweep_sources import SweepSources
 from app.modules.notebooks.application.sweep_stuck import SweepStuck
 from app.modules.notebooks.application.sync_auto_notebook import SyncAutoNotebook
+from app.modules.notebooks.application.sync_course_notebook import (
+    SyncCourseNotebook,
+    SyncCourseNotebooks,
+)
 from app.modules.notebooks.application.sync_lesson_notebooks import SyncLessonNotebooks
 from app.modules.notebooks.application.sync_source import SyncSource
 from app.modules.notebooks.application.update_auto_settings import UpdateAutoSettings
 from app.modules.notebooks.application.update_label import UpdateLabel
 from app.modules.notebooks.application.update_notebook import UpdateNotebook
 from app.modules.notebooks.application.update_source import UpdateSource
+from app.modules.notebooks.infrastructure.repositories.shared_passage_repository import (  # noqa: E501
+    SqlSharedPassageReader,
+)
 from app.modules.notebooks.ports.term_calendar import TermCalendar
 from app.modules.notebooks.ports.web_fetcher import WebFetcher
 from app.modules.notebooks.wiring_auto import build_auto
 from app.modules.notebooks.wiring_chat import build_chat
 from app.modules.notebooks.wiring_core import CoreOverrides, build_core
+from app.modules.notebooks.wiring_course import build_course
 from app.modules.notebooks.wiring_labels import build_labels
 from app.modules.notebooks.wiring_notebooks import build_notebooks
 from app.modules.notebooks.wiring_sources import build_sources
@@ -88,7 +107,7 @@ from app.shared.contracts.embeddings import EmbeddingIndex
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.flashcards import FlashcardsApi
 from app.shared.contracts.identity import IdentityDirectory
-from app.shared.contracts.library import LibrarySourceReader
+from app.shared.contracts.library import LibraryQueries, LibrarySourceReader
 from app.shared.contracts.links import LinksApi
 from app.shared.contracts.lms import LmsSourceReader, LmsWorkspace
 from app.shared.contracts.notebooks import NotebooksCommands, NotebooksQueries
@@ -131,6 +150,12 @@ class NotebooksServices:
     sync_auto_notebook: SyncAutoNotebook
     sync_lesson_notebooks: SyncLessonNotebooks
     sweep_auto_notebooks: SweepAutoNotebooks
+    provision_student_notebooks: ProvisionStudentNotebooks
+    backfill_subject_notebooks: BackfillSubjectNotebooks
+    provision_course_notebook: ProvisionCourseNotebook
+    sync_course_notebook: SyncCourseNotebook
+    sync_course_notebooks: SyncCourseNotebooks
+    backfill_course_notebooks: BackfillCourseNotebooks
     get_chat: GetChat
     ask_notebook: AskNotebook
     regenerate_chat: RegenerateChat
@@ -166,6 +191,7 @@ class NotebooksServices:
     label_sources: LabelSources
     public: NotebooksQueries
     commands: NotebooksCommands
+    shared_search: SharedPassageSearch
 
 
 def build(
@@ -189,6 +215,7 @@ def build(
     workspace: LmsWorkspace | None = None,
     embeddings: EmbeddingIndex | None = None,
     library: LibrarySourceReader | None = None,
+    library_queries: LibraryQueries | None = None,
 ) -> NotebooksServices:
     """Wire the module over the other modules' public APIs.
 
@@ -234,7 +261,10 @@ def build(
         schedule=schedule,
         classwork=classwork,
         terms=terms,
+        library=library_queries,
+        identity=identity,
     )
+    course = build_course(core, readers=sources.readers, lms=lms, files=files)
     chat = build_chat(core)
     labels = build_labels(core, sleep=sleep)
     studio = build_studio(
@@ -277,6 +307,12 @@ def build(
         sync_auto_notebook=auto.sync_auto_notebook,
         sync_lesson_notebooks=auto.sync_lesson_notebooks,
         sweep_auto_notebooks=auto.sweep_auto_notebooks,
+        provision_student_notebooks=auto.provision_student_notebooks,
+        backfill_subject_notebooks=auto.backfill_subject_notebooks,
+        provision_course_notebook=course.provision_course_notebook,
+        sync_course_notebook=course.sync_course_notebook,
+        sync_course_notebooks=course.sync_course_notebooks,
+        backfill_course_notebooks=course.backfill_course_notebooks,
         get_chat=chat.get_chat,
         ask_notebook=chat.ask_notebook,
         regenerate_chat=chat.regenerate_chat,
@@ -311,6 +347,12 @@ def build(
         start_labeling=labels.start_labeling,
         label_sources=labels.label_sources,
         public=NotebooksQueriesImpl(core.uow_factory, core.quota, core.embeddings),
+        shared_search=SharedPassageSearch(
+            reader=SqlSharedPassageReader(deps.sessionmaker),
+            library=library,
+            schedule=schedule,
+            embeddings=core.embeddings,
+        ),
         commands=NotebooksCommandsImpl(
             create_notebook=notebooks.create_notebook,
             add_sources=sources.add_sources,

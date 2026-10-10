@@ -207,6 +207,8 @@ class ProcessSource:
                 current.content_hash == chunked.content_hash
                 and current.document_id is not None
             )
+            # Before attaching: a live step's alias names the revision that was read.
+            current.ref = {**current.ref, **text.ref_update}
             if not unchanged:
                 document = await uow.documents.create(
                     chunked.content_hash,
@@ -218,7 +220,6 @@ class ProcessSource:
                 await self._attach(uow, current, document)
                 self._kick_embeddings(uow, document)
             current.upstream_version = text.upstream_version
-            current.ref = {**current.ref, **text.ref_update}
             await self._ready(uow, notebook, current, now, kick_guide=not unchanged)
             await uow.commit()
         log.info(
@@ -239,6 +240,8 @@ class ProcessSource:
                 return
             notebook, current = locked
             await self._attach(uow, current, document)
+            if source.kind is SourceKind.LMS_STEP and current.ref.get("revision_id"):
+                current.upstream_version = str(current.ref["revision_id"])
             await self._ready(uow, notebook, current, now, kick_guide=True)
             await uow.commit()
         log.info(
@@ -334,6 +337,8 @@ def alias_of(source: Source) -> str | None:
     """
     if source.kind is SourceKind.LIBRARY_NOTES:
         return None
+    if source.kind is SourceKind.LMS_STEP:
+        return lms_alias(source)
     file_id = file_id_of(source)
     if file_id is None:
         return None
@@ -344,6 +349,20 @@ def alias_of(source: Source) -> str | None:
             _page(source, "page_to"),
         )
     return f"file:{file_id}"
+
+
+def lms_alias(source: Source) -> str | None:
+    """The identity of a live course step (or one of its videos) at its revision.
+
+    Every enrolled student reads the same revision, so it is read and chunked once for
+    all course notebooks. Drafts and sources without a known revision have none.
+    """
+    revision = source.ref.get("revision_id")
+    if not revision or source.ref.get("draft"):
+        return None
+    block_id = source.ref.get("block_id")
+    suffix = f":{block_id}" if block_id else ""
+    return f"lms:{source.ref.get('step_id')}:{revision}{suffix}"
 
 
 def _page(source: Source, key: str) -> int | None:

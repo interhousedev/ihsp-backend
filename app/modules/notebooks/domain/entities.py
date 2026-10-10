@@ -158,6 +158,7 @@ class Notebook:
     auto_synced_at: datetime | None = None
     space_key: str | None = None  # the shared course space the notebook belongs to
     # Course workspace (`origin` is `course`): the LMS course whose staff share it.
+    # Student course notebook (`course_student`): the course the student is enrolled in.
     course_id: UUID | None = None
     # Not stored: counted by the repository when the notebook is read.
     ready_source_count: int = 0
@@ -179,6 +180,11 @@ class Notebook:
     def is_course_workspace(self) -> bool:
         """True for the workspace of an LMS course (shared by the course staff)."""
         return self.origin is NotebookOrigin.COURSE
+
+    @property
+    def is_course_student(self) -> bool:
+        """True for the student's own notebook of an LMS course they are enrolled in."""
+        return self.origin is NotebookOrigin.COURSE_STUDENT
 
 
 @dataclass(slots=True)

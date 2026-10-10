@@ -453,22 +453,23 @@ async def test_a_notebook_of_another_student_is_a_404(
 
 
 @pytest.mark.parametrize("headers", JSON_AND_SSE)
-async def test_no_selected_source_is_a_422(
+async def test_no_selected_source_answers_without_sources(
     api: AsyncClient,
     uow_factory: Any,
     notebook: Notebook,
     scripted_llm: ScriptedLlm,
     headers: dict[str, str],
 ) -> None:
-    """NB-5, NB-6: `notebooks/no-sources-selected`; nothing is stored."""
+    """T6.3: nothing selected is not an error; the model is called."""
     await make_source(uow_factory, notebook, texts=("Hidden.",), selected=False)
+    scripted_llm.queue_text("A general answer.\n<followups>[]</followups>")
 
     response = await api.post(
         chat_url(notebook, "/messages"), json={"text": "Q?"}, headers=headers
     )
 
-    assert problem_type(response, 422) == "notebooks/no-sources-selected"
-    assert scripted_llm.calls == 0 and await history(api, notebook) == []
+    assert response.status_code == 200
+    assert scripted_llm.calls == 1
 
 
 @pytest.mark.parametrize("headers", JSON_AND_SSE)

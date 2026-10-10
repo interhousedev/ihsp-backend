@@ -467,6 +467,11 @@
             ],
             "title": "Middle Name"
           },
+          "password_change_required": {
+            "default": false,
+            "title": "Password Change Required",
+            "type": "boolean"
+          },
           "recent_audit": {
             "items": {
               "$ref": "#/components/schemas/app__interfaces__http__v1__id__schemas__AuditItemResponse"
@@ -3230,6 +3235,14 @@
             ],
             "title": "Subtitle"
           },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Tags",
+            "type": "array"
+          },
           "title": {
             "maxLength": 255,
             "minLength": 1,
@@ -3452,6 +3465,21 @@
               }
             ],
             "title": "Subtitle"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
           },
           "title": {
             "anyOf": [
@@ -5519,6 +5547,40 @@
         "title": "CourseBroadcastBody",
         "type": "object"
       },
+      "CourseBroadcastPatch": {
+        "additionalProperties": false,
+        "description": "PATCH /v1/staff/lms/courses/{id}/broadcasts/{bid}: the fields to change.",
+        "properties": {
+          "body": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "CourseBroadcastPatch",
+        "type": "object"
+      },
       "CourseBroadcastResponse": {
         "description": "One sent course broadcast.",
         "properties": {
@@ -5561,6 +5623,19 @@
           "title": {
             "title": "Title",
             "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set once the broadcast was edited (the marker).",
+            "title": "Updated At"
           }
         },
         "required": [
@@ -6461,7 +6536,8 @@
           "kind": {
             "enum": [
               "chat",
-              "flashcard_set"
+              "flashcard_set",
+              "artifact"
             ],
             "title": "Kind",
             "type": "string"
@@ -6527,10 +6603,72 @@
         "title": "CreateStepBody",
         "type": "object"
       },
+      "CreateSubjectBody": {
+        "additionalProperties": false,
+        "description": "`SubjectInput`.",
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "name": {
+            "$ref": "#/components/schemas/NamesBody"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "CreateSubjectBody",
+        "type": "object"
+      },
       "CreateTopicBody": {
         "additionalProperties": false,
         "description": "`TopicInput`.",
         "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
           "name": {
             "$ref": "#/components/schemas/NamesBody"
           },
@@ -8389,7 +8527,8 @@
           "mail",
           "library_book",
           "library_cover",
-          "library_material"
+          "library_material",
+          "lms_video"
         ],
         "title": "FilePurpose",
         "type": "string"
@@ -9902,6 +10041,11 @@
             "title": "Excused",
             "type": "boolean"
           },
+          "late": {
+            "default": false,
+            "title": "Late",
+            "type": "boolean"
+          },
           "lesson_id": {
             "format": "uuid",
             "title": "Lesson Id",
@@ -10050,6 +10194,11 @@
           "last_name": {
             "title": "Last Name",
             "type": "string"
+          },
+          "lates": {
+            "default": 0,
+            "title": "Lates",
+            "type": "integer"
           },
           "semester_mark": {
             "anyOf": [
@@ -12449,6 +12598,17 @@
       "LibrarySubjectSchema": {
         "description": "`LibrarySubject`: a subject with its number of visible items.",
         "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -12461,6 +12621,18 @@
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
           }
         },
         "required": [
@@ -12519,7 +12691,8 @@
               "url",
               "file",
               "chat",
-              "flashcard_set"
+              "flashcard_set",
+              "artifact"
             ],
             "title": "Kind",
             "type": "string"
@@ -12822,8 +12995,18 @@
         "type": "object"
       },
       "LoginResultResponse": {
-        "description": "Either a redirect or a second factor.",
+        "description": "A redirect, a second factor, or a forced password change.",
         "properties": {
+          "password_change": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PasswordChangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "redirect_to": {
             "anyOf": [
               {
@@ -12929,9 +13112,84 @@
         "title": "ManageCollectionResponse",
         "type": "object"
       },
+      "ManageSubjectResponse": {
+        "description": "`ManageSubject`: a node of the librarian's subject tree (flat, `parent_id`).",
+        "properties": {
+          "archived": {
+            "title": "Archived",
+            "type": "boolean"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "$ref": "#/components/schemas/NamesResponse"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "parent_id",
+          "name",
+          "slug",
+          "code",
+          "position",
+          "archived"
+        ],
+        "title": "ManageSubjectResponse",
+        "type": "object"
+      },
       "ManageTopicResponse": {
         "description": "`ManageTopic`: all three names, for the editor.",
         "properties": {
+          "archived": {
+            "default": false,
+            "title": "Archived",
+            "type": "boolean"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -13728,6 +13986,90 @@
         "title": "MovedDay",
         "type": "object"
       },
+      "MyTeacherResponse": {
+        "description": "A teacher of the student.",
+        "properties": {
+          "contacts": {
+            "$ref": "#/components/schemas/TeacherContacts"
+          },
+          "current": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TeacherLessonResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "middle_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Middle Name"
+          },
+          "next": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TeacherLessonResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subjects": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Subjects",
+            "type": "array"
+          },
+          "teaching_now": {
+            "title": "Teaching Now",
+            "type": "boolean"
+          },
+          "week": {
+            "items": {
+              "$ref": "#/components/schemas/TeacherLessonResponse"
+            },
+            "title": "Week",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "first_name",
+          "last_name",
+          "middle_name",
+          "subjects",
+          "contacts",
+          "teaching_now",
+          "current",
+          "next",
+          "week"
+        ],
+        "title": "MyTeacherResponse",
+        "type": "object"
+      },
       "NamesBody": {
         "additionalProperties": false,
         "description": "Names in the three languages of the lyceum.",
@@ -13792,6 +14134,35 @@
           "token"
         ],
         "title": "NewConnectorResponse",
+        "type": "object"
+      },
+      "NewPasswordLoginBody": {
+        "description": "POST /v1/id/login/password: finish a login with a new password.",
+        "properties": {
+          "login_challenge": {
+            "minLength": 1,
+            "title": "Login Challenge",
+            "type": "string"
+          },
+          "new_password": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "New Password",
+            "type": "string"
+          },
+          "ticket": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Ticket",
+            "type": "string"
+          }
+        },
+        "required": [
+          "login_challenge",
+          "ticket",
+          "new_password"
+        ],
+        "title": "NewPasswordLoginBody",
         "type": "object"
       },
       "NextSectionResponse": {
@@ -14235,7 +14606,8 @@
           "manual",
           "subject_auto",
           "lesson_auto",
-          "course"
+          "course",
+          "course_student"
         ],
         "title": "NotebookOrigin",
         "type": "string"
@@ -15637,6 +16009,20 @@
         "title": "PassageSourceResponse",
         "type": "object"
       },
+      "PasswordChangeResponse": {
+        "description": "The password was set by an administrator: send a new one with the ticket.",
+        "properties": {
+          "ticket": {
+            "title": "Ticket",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticket"
+        ],
+        "title": "PasswordChangeResponse",
+        "type": "object"
+      },
       "PasswordConfirmBody": {
         "description": "POST /v1/id/recovery/password/confirm.",
         "properties": {
@@ -16256,6 +16642,89 @@
         "title": "PlannerWhatIf",
         "type": "object"
       },
+      "PlatformSettingsBody": {
+        "additionalProperties": false,
+        "description": "PUT /v1/admin/settings: every editable setting.",
+        "properties": {
+          "change_password_on_login": {
+            "title": "Change Password On Login",
+            "type": "boolean"
+          },
+          "default_language": {
+            "enum": [
+              "uz",
+              "ru",
+              "en"
+            ],
+            "title": "Default Language",
+            "type": "string"
+          },
+          "school_name": {
+            "maxLength": 120,
+            "title": "School Name",
+            "type": "string"
+          },
+          "support_contact": {
+            "maxLength": 255,
+            "title": "Support Contact",
+            "type": "string"
+          }
+        },
+        "required": [
+          "school_name",
+          "support_contact",
+          "change_password_on_login",
+          "default_language"
+        ],
+        "title": "PlatformSettingsBody",
+        "type": "object"
+      },
+      "PlatformSettingsResponse": {
+        "additionalProperties": false,
+        "description": "The editable settings plus the read-only feature flags.",
+        "properties": {
+          "change_password_on_login": {
+            "title": "Change Password On Login",
+            "type": "boolean"
+          },
+          "default_language": {
+            "enum": [
+              "uz",
+              "ru",
+              "en"
+            ],
+            "title": "Default Language",
+            "type": "string"
+          },
+          "features": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "description": "Feature flags of the deployment (IHSP_FEATURES__*); read-only.",
+            "title": "Features",
+            "type": "object"
+          },
+          "school_name": {
+            "maxLength": 120,
+            "title": "School Name",
+            "type": "string"
+          },
+          "support_contact": {
+            "maxLength": 255,
+            "title": "Support Contact",
+            "type": "string"
+          }
+        },
+        "required": [
+          "school_name",
+          "support_contact",
+          "change_password_on_login",
+          "default_language",
+          "features"
+        ],
+        "title": "PlatformSettingsResponse",
+        "type": "object"
+      },
       "PreferencesPatchBody": {
         "additionalProperties": false,
         "description": "PATCH /v1/id/me/preferences: any subset of UserPreferences.",
@@ -16790,6 +17259,16 @@
       "PublicShare": {
         "description": "What anyone with the share link sees.",
         "properties": {
+          "artifact": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SharedArtifact"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "author_first_name": {
             "title": "Author First Name",
             "type": "string"
@@ -16822,7 +17301,8 @@
           "kind": {
             "enum": [
               "chat",
-              "flashcard_set"
+              "flashcard_set",
+              "artifact"
             ],
             "title": "Kind",
             "type": "string"
@@ -18889,7 +19369,8 @@
               "link",
               "library_book",
               "library_cover",
-              "library_material"
+              "library_material",
+              "lms_video"
             ],
             "title": "Purpose",
             "type": "string"
@@ -19560,6 +20041,11 @@
           "last_name": {
             "title": "Last Name",
             "type": "string"
+          },
+          "late": {
+            "default": false,
+            "title": "Late",
+            "type": "boolean"
           },
           "position": {
             "title": "Position",
@@ -20324,6 +20810,92 @@
         "title": "SendRegistrationEmailBody",
         "type": "object"
       },
+      "SentMailItemOut": {
+        "description": "`SentMailItem`: one email the user sent.",
+        "properties": {
+          "attachment_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attachment Name"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "sent_at": {
+            "format": "date-time",
+            "title": "Sent At",
+            "type": "string"
+          },
+          "snippet": {
+            "title": "Snippet",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          },
+          "to": {
+            "items": {
+              "type": "string"
+            },
+            "title": "To",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "to",
+          "subject",
+          "snippet",
+          "sent_at",
+          "status",
+          "attachment_name"
+        ],
+        "title": "SentMailItemOut",
+        "type": "object"
+      },
+      "SentMailPageOut": {
+        "description": "`SentMailPage`: sent emails; `next_before` is the `before` of the next page.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SentMailItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_before": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Before"
+          }
+        },
+        "required": [
+          "items",
+          "next_before"
+        ],
+        "title": "SentMailPageOut",
+        "type": "object"
+      },
       "SentResponse": {
         "description": "Always the same answer, whether or not a code was sent.",
         "properties": {
@@ -20587,6 +21159,28 @@
         "title": "SetLessonRefsBody",
         "type": "object"
       },
+      "SetPasswordBody": {
+        "description": "POST /v1/admin/users/{id}/set-password.",
+        "properties": {
+          "password": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          },
+          "require_change": {
+            "default": true,
+            "description": "Ask the user to change it at the next login (when IHSP_FEATURES__CHANGE_PASSWORD_ON_LOGIN is on).",
+            "title": "Require Change",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "title": "SetPasswordBody",
+        "type": "object"
+      },
       "SetSourceLabelsBody": {
         "description": "PUT /v1/notebooks/{id}/sources/{sid}/labels: at most 3 labels (a typed error).",
         "properties": {
@@ -20656,6 +21250,32 @@
           }
         },
         "title": "SettingsBody",
+        "type": "object"
+      },
+      "SharedArtifact": {
+        "description": "A shared Studio output: its kind and the content the viewers render.",
+        "properties": {
+          "content": {
+            "additionalProperties": true,
+            "title": "Content",
+            "type": "object"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "options": {
+            "additionalProperties": true,
+            "title": "Options",
+            "type": "object"
+          }
+        },
+        "required": [
+          "kind",
+          "content",
+          "options"
+        ],
+        "title": "SharedArtifact",
         "type": "object"
       },
       "SharedCard": {
@@ -22454,6 +23074,7 @@
           "my_attendance": {
             "enum": [
               "present",
+              "late",
               "absent",
               "excused",
               "not_taken"
@@ -22826,6 +23447,11 @@
             ],
             "title": "Emis Rating"
           },
+          "lates": {
+            "default": 0,
+            "title": "Lates",
+            "type": "integer"
+          },
           "next_lesson": {
             "anyOf": [
               {
@@ -23006,6 +23632,7 @@
           "attendance": {
             "enum": [
               "present",
+              "late",
               "absent",
               "excused",
               "not_taken"
@@ -23625,6 +24252,14 @@
             "title": "Base Version",
             "type": "integer"
           },
+          "late": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Late",
+            "type": "array"
+          },
           "present_unassigned": {
             "items": {
               "format": "uuid",
@@ -23641,9 +24276,164 @@
         "title": "SubmitAttendanceBody",
         "type": "object"
       },
-      "SuggestionBody": {
-        "description": "`POST /library/suggestions`.",
+      "SuggestedBookBody": {
+        "description": "`SuggestedBook`: the book form without the librarian-only fields.",
         "properties": {
+          "authors": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Authors",
+            "type": "array"
+          },
+          "cover_file_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover File Id"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "isbn": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Isbn"
+          },
+          "language": {
+            "$ref": "#/components/schemas/ItemLanguage"
+          },
+          "publisher": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Publisher"
+          },
+          "subjects": {
+            "items": {
+              "$ref": "#/components/schemas/BookSubjectInput"
+            },
+            "maxItems": 20,
+            "title": "Subjects",
+            "type": "array"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subtitle"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Tags",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "topics": {
+            "items": {
+              "$ref": "#/components/schemas/BookTopicInput"
+            },
+            "maxItems": 100,
+            "title": "Topics",
+            "type": "array"
+          },
+          "translators": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Translators",
+            "type": "array"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ItemType"
+          },
+          "year_published": {
+            "anyOf": [
+              {
+                "maximum": 2200.0,
+                "minimum": -3000.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year Published"
+          },
+          "years_of_study": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 4,
+            "title": "Years Of Study",
+            "type": "array"
+          }
+        },
+        "required": [
+          "title",
+          "language",
+          "type"
+        ],
+        "title": "SuggestedBookBody",
+        "type": "object"
+      },
+      "SuggestionBody": {
+        "description": "`POST /library/suggestions`: a title and, from the editor, the whole form.",
+        "properties": {
+          "book": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SuggestedBookBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "file_id": {
             "anyOf": [
               {
@@ -23693,9 +24483,77 @@
         "title": "SuggestionBody",
         "type": "object"
       },
+      "SuggestionDetailResponse": {
+        "description": "`SuggestionDetail`: one suggestion as the editor prefills a book from it.",
+        "properties": {
+          "book": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SuggestedBookBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SuggestionStatus"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "url",
+          "note",
+          "status"
+        ],
+        "title": "SuggestionDetailResponse",
+        "type": "object"
+      },
       "SuggestionResponse": {
         "description": "A book suggestion in the queue.",
         "properties": {
+          "book": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SuggestedBookBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -23741,6 +24599,16 @@
         ],
         "title": "SuggestionResponse",
         "type": "object"
+      },
+      "SuggestionStatus": {
+        "description": "State of a book suggestion.",
+        "enum": [
+          "new",
+          "accepted",
+          "declined"
+        ],
+        "title": "SuggestionStatus",
+        "type": "string"
       },
       "SummaryStatus": {
         "description": "State of a notebook's automatic summary.",
@@ -23909,6 +24777,25 @@
         "title": "TableSpec",
         "type": "object"
       },
+      "TagSuggestionSchema": {
+        "description": "`TagSuggestion`: an existing tag and how many published items carry it.",
+        "properties": {
+          "item_count": {
+            "title": "Item Count",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "item_count"
+        ],
+        "title": "TagSuggestionSchema",
+        "type": "object"
+      },
       "TaxonomyEntryResponse": {
         "description": "A type, field or language of UniLibrary.",
         "properties": {
@@ -23926,6 +24813,85 @@
           "name"
         ],
         "title": "TaxonomyEntryResponse",
+        "type": "object"
+      },
+      "TeacherContacts": {
+        "description": "A teacher's public contacts, shown to the students they teach.",
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "format": "email",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "office": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Office"
+          },
+          "office_hours": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Office Hours"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "maxLength": 24,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "telegram": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telegram"
+          }
+        },
+        "title": "TeacherContacts",
         "type": "object"
       },
       "TeacherCreateBody": {
@@ -23985,6 +24951,67 @@
           "activation_url"
         ],
         "title": "TeacherCreatedResponse",
+        "type": "object"
+      },
+      "TeacherLessonResponse": {
+        "description": "One lesson of a teacher.",
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "ends_at": {
+            "format": "date-time",
+            "title": "Ends At",
+            "type": "string"
+          },
+          "group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group"
+          },
+          "room": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Room"
+          },
+          "starts_at": {
+            "format": "date-time",
+            "title": "Starts At",
+            "type": "string"
+          },
+          "subject": {
+            "title": "Subject",
+            "type": "string"
+          },
+          "weekday": {
+            "title": "Weekday",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "date",
+          "weekday",
+          "starts_at",
+          "ends_at",
+          "subject",
+          "group",
+          "room"
+        ],
+        "title": "TeacherLessonResponse",
         "type": "object"
       },
       "TeacherPatchBody": {
@@ -25121,6 +26148,11 @@
             "title": "Base Version",
             "type": "integer"
           },
+          "late": {
+            "default": false,
+            "title": "Late",
+            "type": "boolean"
+          },
           "lesson_id": {
             "format": "uuid",
             "title": "Lesson Id",
@@ -26149,10 +27181,33 @@
         "title": "UpdateStaffBody",
         "type": "object"
       },
-      "UpdateTopicBody": {
+      "UpdateSubjectBody": {
         "additionalProperties": false,
-        "description": "`Partial<TopicInput>`: only the keys that were sent are applied.",
+        "description": "`Partial<SubjectInput>` with the archive flag and the position among siblings.",
         "properties": {
+          "archived": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Archived"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
           "name": {
             "anyOf": [
               {
@@ -26174,6 +27229,97 @@
               }
             ],
             "title": "Parent Id"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          }
+        },
+        "title": "UpdateSubjectBody",
+        "type": "object"
+      },
+      "UpdateTopicBody": {
+        "additionalProperties": false,
+        "description": "`Partial<TopicInput>`: only the keys that were sent are applied.",
+        "properties": {
+          "archived": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Archived"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NamesBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
           },
           "slug": {
             "anyOf": [
@@ -26669,6 +27815,63 @@
         "title": "UserMeResponse",
         "type": "object"
       },
+      "UserPatchBody": {
+        "description": "PATCH /v1/admin/users/{id}: display name and email (omitted keeps).",
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "format": "email",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "first_name": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Name"
+          },
+          "last_name": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Name"
+          },
+          "middle_name": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Middle Name"
+          }
+        },
+        "title": "UserPatchBody",
+        "type": "object"
+      },
       "UserPreferences": {
         "description": "User settings (README → Models → User → preferences).",
         "properties": {
@@ -26723,6 +27926,10 @@
               }
             ],
             "title": "Bottom Nav"
+          },
+          "contacts": {
+            "$ref": "#/components/schemas/TeacherContacts",
+            "default": {}
           },
           "lessons_links_lead_min": {
             "default": 5,
@@ -27228,6 +28435,44 @@
         "title": "VideoBlockInput",
         "type": "object"
       },
+      "VideoStreamResponse": {
+        "description": "A short-lived URL that streams an uploaded video.",
+        "properties": {
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "expires_in"
+        ],
+        "title": "VideoStreamResponse",
+        "type": "object"
+      },
+      "VideoStreamView": {
+        "description": "A short-lived URL that streams an uploaded video (supports ``Range``).",
+        "properties": {
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "expires_in"
+        ],
+        "title": "VideoStreamView",
+        "type": "object"
+      },
       "Visibility-Output": {
         "description": "Who may see a published item.",
         "enum": [
@@ -27372,7 +28617,15 @@
               "flashcards_due",
               "notebook_prompt",
               "attendance",
-              "clock_next_lesson"
+              "clock_next_lesson",
+              "upcoming_controls",
+              "next_lesson",
+              "today_lessons",
+              "semester_summary",
+              "announcements",
+              "new_marks",
+              "alerts",
+              "get_started"
             ],
             "title": "Kind",
             "type": "string"
@@ -27442,7 +28695,15 @@
               "flashcards_due",
               "notebook_prompt",
               "attendance",
-              "clock_next_lesson"
+              "clock_next_lesson",
+              "upcoming_controls",
+              "next_lesson",
+              "today_lessons",
+              "semester_summary",
+              "announcements",
+              "new_marks",
+              "alerts",
+              "get_started"
             ],
             "title": "Kind",
             "type": "string"
@@ -27801,6 +29062,17 @@
             "title": "Kind",
             "type": "string"
           },
+          "late_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Late Count"
+          },
           "period": {
             "title": "Period",
             "type": "integer"
@@ -28134,6 +29406,11 @@
               }
             ],
             "title": "Middle Name"
+          },
+          "password_change_required": {
+            "default": false,
+            "title": "Password Change Required",
+            "type": "boolean"
           },
           "recovery_email": {
             "anyOf": [
@@ -33951,6 +35228,68 @@
         ]
       }
     },
+    "/v1/admin/settings": {
+      "get": {
+        "description": "Return the runtime settings and the feature flags.",
+        "operationId": "get_settings_v1_admin_settings_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformSettingsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Settings",
+        "tags": [
+          "admin-settings"
+        ]
+      },
+      "put": {
+        "description": "Save every editable setting.",
+        "operationId": "put_settings_v1_admin_settings_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlatformSettingsBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformSettingsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Settings",
+        "tags": [
+          "admin-settings"
+        ]
+      }
+    },
     "/v1/admin/students": {
       "get": {
         "description": "Search and filter students; names come from the identity module.",
@@ -34508,6 +35847,102 @@
         "summary": "List Runs",
         "tags": [
           "admin-sync"
+        ]
+      }
+    },
+    "/v1/admin/teacher-contacts/{id}": {
+      "get": {
+        "description": "A teacher's public contacts (admin).",
+        "operationId": "get_teacher_contacts_v1_admin_teacher_contacts__id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeacherContacts"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Teacher Contacts",
+        "tags": [
+          "teachers"
+        ]
+      },
+      "put": {
+        "description": "Replace a teacher's public contacts (admin).",
+        "operationId": "put_teacher_contacts_v1_admin_teacher_contacts__id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeacherContacts"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeacherContacts"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Teacher Contacts",
+        "tags": [
+          "teachers"
         ]
       }
     },
@@ -35397,6 +36832,58 @@
         "tags": [
           "admin-users"
         ]
+      },
+      "patch": {
+        "description": "Edit the display name and the email of any user.",
+        "operationId": "patch_user_v1_admin_users__id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserPatchBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__interfaces__http__v1__admin_users__schemas__AdminUserResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch User",
+        "tags": [
+          "admin-users"
+        ]
       }
     },
     "/v1/admin/users/{id}/block": {
@@ -35718,6 +37205,53 @@
           }
         },
         "summary": "Post Revoke Sessions",
+        "tags": [
+          "admin-users"
+        ]
+      }
+    },
+    "/v1/admin/users/{id}/set-password": {
+      "post": {
+        "description": "Set the password (initial password of a teacher); sessions end.",
+        "operationId": "post_set_password_v1_admin_users__id__set_password_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPasswordBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Set Password",
         "tags": [
           "admin-users"
         ]
@@ -37160,6 +38694,48 @@
           }
         },
         "summary": "Request Login Otp",
+        "tags": [
+          "id-login"
+        ]
+      }
+    },
+    "/v1/id/login/password": {
+      "post": {
+        "description": "Set the new password, then finish the login.",
+        "operationId": "post_login_password_v1_id_login_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewPasswordLoginBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResultResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Login Password",
         "tags": [
           "id-login"
         ]
@@ -38786,6 +40362,55 @@
         ]
       }
     },
+    "/v1/library/authors": {
+      "get": {
+        "description": "Existing author names that match `q` (Latin and Cyrillic spellings meet).",
+        "operationId": "search_authors_v1_library_authors_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 100,
+              "title": "Q",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Response Search Authors V1 Library Authors Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Authors",
+        "tags": [
+          "library"
+        ]
+      }
+    },
     "/v1/library/book-plans": {
       "get": {
         "description": "The textbook plan of the subject and year (`null` when there is none).",
@@ -39413,6 +41038,23 @@
                 }
               ],
               "title": "Topic Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tag",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 40,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tag"
             }
           },
           {
@@ -40770,6 +42412,67 @@
         ]
       }
     },
+    "/v1/library/tags": {
+      "get": {
+        "description": "Existing tags that match `q`, or the most used ones when `q` is empty.",
+        "operationId": "search_tags_v1_library_tags_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 100,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 8,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TagSuggestionSchema"
+                  },
+                  "title": "Response Search Tags V1 Library Tags Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Tags",
+        "tags": [
+          "library"
+        ]
+      }
+    },
     "/v1/library/topics": {
       "get": {
         "description": "The topic tree of a subject (of every subject without `subject_id`).",
@@ -41699,6 +43402,69 @@
         ]
       }
     },
+    "/v1/lms/courses/{course_id}/preview/steps/{step_id}/blocks/{block_id}/video": {
+      "get": {
+        "description": "Return a stream URL of the draft's uploaded video (needs `view_drafts`).",
+        "operationId": "preview_video_v1_lms_courses__course_id__preview_steps__step_id__blocks__block_id__video_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "step_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Step Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "block_id",
+            "required": true,
+            "schema": {
+              "title": "Block Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoStreamResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Video",
+        "tags": [
+          "lms-authoring"
+        ]
+      }
+    },
     "/v1/lms/courses/{course_id}/publish": {
       "post": {
         "description": "Publish a new version; `409 lms/draft-changed` if the draft moved.",
@@ -42119,6 +43885,69 @@
           }
         },
         "summary": "Get Step",
+        "tags": [
+          "lms"
+        ]
+      }
+    },
+    "/v1/lms/courses/{course_id}/steps/{step_id}/blocks/{block_id}/video": {
+      "get": {
+        "description": "Return a presigned GET URL of an uploaded video (enrolled or staff).",
+        "operationId": "get_video_stream_v1_lms_courses__course_id__steps__step_id__blocks__block_id__video_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "step_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Step Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "block_id",
+            "required": true,
+            "schema": {
+              "title": "Block Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoStreamView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Video Stream",
         "tags": [
           "lms"
         ]
@@ -44091,6 +45920,205 @@
         ]
       }
     },
+    "/v1/manage/library/subjects": {
+      "get": {
+        "description": "Every subject with all names, archived ones included.",
+        "operationId": "list_manage_subjects_v1_manage_library_subjects_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ManageSubjectResponse"
+                  },
+                  "title": "Response List Manage Subjects V1 Manage Library Subjects Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Manage Subjects",
+        "tags": [
+          "library"
+        ]
+      },
+      "post": {
+        "description": "Create a subject (librarians and Administration).",
+        "operationId": "create_subject_v1_manage_library_subjects_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSubjectBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManageSubjectResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Subject",
+        "tags": [
+          "library"
+        ]
+      }
+    },
+    "/v1/manage/library/subjects/{subject_id}": {
+      "delete": {
+        "description": "Delete an unused subject without children; others are archived.",
+        "operationId": "delete_subject_v1_manage_library_subjects__subject_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Subject",
+        "tags": [
+          "library"
+        ]
+      },
+      "patch": {
+        "description": "Change the sent fields: rename, re-code, nest, reorder, archive.",
+        "operationId": "update_subject_v1_manage_library_subjects__subject_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSubjectBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManageSubjectResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Subject",
+        "tags": [
+          "library"
+        ]
+      }
+    },
+    "/v1/manage/library/suggestions/{suggestion_id}": {
+      "get": {
+        "description": "One suggestion with the form the suggester filled in.",
+        "operationId": "get_suggestion_v1_manage_library_suggestions__suggestion_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "suggestion_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Suggestion Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestionDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Suggestion",
+        "tags": [
+          "library-manage"
+        ]
+      }
+    },
     "/v1/manage/library/suggestions/{suggestion_id}/{decision}": {
       "post": {
         "description": "Accept or decline a book suggestion.",
@@ -44707,7 +46735,8 @@
                     "sheet",
                     "slides",
                     "text",
-                    "image"
+                    "image",
+                    "video"
                   ],
                   "type": "string"
                 },
@@ -46419,7 +48448,8 @@
                     "url",
                     "file",
                     "chat",
-                    "flashcard_set"
+                    "flashcard_set",
+                    "artifact"
                   ],
                   "type": "string"
                 },
@@ -46505,6 +48535,67 @@
       }
     },
     "/v1/me/outbound-mail": {
+      "get": {
+        "description": "The emails the caller sent from the platform, newest first.",
+        "operationId": "list_sent_mail_v1_me_outbound_mail_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "before",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SentMailPageOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Sent Mail",
+        "tags": [
+          "mail"
+        ]
+      },
       "post": {
         "description": "Send an email to anyone from the platform; one attachment from My files.",
         "operationId": "send_outbound_mail_v1_me_outbound_mail_post",
@@ -47042,6 +49133,32 @@
         ]
       }
     },
+    "/v1/me/teachers": {
+      "get": {
+        "description": "Teachers of the student's groups with contacts, status and the week.",
+        "operationId": "get_my_teachers_v1_me_teachers_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MyTeacherResponse"
+                  },
+                  "title": "Response Get My Teachers V1 Me Teachers Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get My Teachers",
+        "tags": [
+          "teachers"
+        ]
+      }
+    },
     "/v1/me/timetable": {
       "get": {
         "description": "Return the student's lessons between two dates (default: this week).",
@@ -47184,6 +49301,22 @@
               "minimum": 1,
               "title": "Limit",
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "origin",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/NotebookOrigin"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Origin"
             }
           }
         ],
@@ -47464,6 +49597,50 @@
           }
         },
         "summary": "Open Course Workspace",
+        "tags": [
+          "notebooks"
+        ]
+      }
+    },
+    "/v1/notebooks/course/{course_id}": {
+      "post": {
+        "description": "Get or create the caller's notebook of a course they are enrolled in.\n\nThe course materials are its sources; a stranger or an unpublished course gets\nthe 404 of a missing notebook.",
+        "operationId": "open_course_notebook_v1_notebooks_course__course_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotebookItemResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Open Course Notebook",
         "tags": [
           "notebooks"
         ]
@@ -48217,7 +50394,7 @@
     },
     "/v1/notebooks/{notebook_id}/artifacts/{artifact_id}/download": {
       "get": {
-        "description": "Download a ready output: report .docx, table .xlsx, slides .pptx, the rest .md.\n\nEvery kind can also be asked for as ``json``.",
+        "description": "Download a ready output in its native file.\n\nReport and quiz .docx, table .xlsx, slides .pptx, flash cards .csv, the rest .md.\n\nEvery kind can also be asked for as ``json``.",
         "operationId": "download_artifact_v1_notebooks__notebook_id__artifacts__artifact_id__download_get",
         "parameters": [
           {
@@ -48251,6 +50428,7 @@
                     "docx",
                     "xlsx",
                     "pptx",
+                    "csv",
                     "md",
                     "json"
                   ],
@@ -52039,6 +54217,70 @@
         ]
       }
     },
+    "/v1/staff/lms/courses/{course_id}/broadcasts/{broadcast_id}": {
+      "patch": {
+        "description": "Change the title or text; the students' notifications update in place.",
+        "operationId": "patch_broadcast_v1_staff_lms_courses__course_id__broadcasts__broadcast_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "broadcast_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Broadcast Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourseBroadcastPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseBroadcastResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Broadcast",
+        "tags": [
+          "lms-authoring"
+        ]
+      }
+    },
     "/v1/staff/lms/creators": {
       "get": {
         "description": "Holders of `lms_creator`, newest first (LMS admins only).",
@@ -52177,6 +54419,68 @@
         "summary": "Add Creator",
         "tags": [
           "lms-authoring"
+        ]
+      }
+    },
+    "/v1/staff/me/contacts": {
+      "get": {
+        "description": "The caller's own public contacts.",
+        "operationId": "get_my_contacts_v1_staff_me_contacts_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeacherContacts"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get My Contacts",
+        "tags": [
+          "teachers"
+        ]
+      },
+      "put": {
+        "description": "Replace the caller's public contacts.",
+        "operationId": "put_my_contacts_v1_staff_me_contacts_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TeacherContacts"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeacherContacts"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put My Contacts",
+        "tags": [
+          "teachers"
         ]
       }
     },

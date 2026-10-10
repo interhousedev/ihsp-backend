@@ -11,6 +11,7 @@ from app.interfaces.http.v1.notebooks.handlers import (
     get_usage,
     list_course_steps,
     list_notebooks,
+    open_course_notebook,
     open_course_workspace,
     open_lesson_notebook,
     open_subject_notebook,
@@ -36,6 +37,10 @@ router.add_api_route(
     "/course-workspaces",
     open_course_workspace.open_course_workspace,
     methods=["POST"],
+)
+# The enrolled student's notebook of an LMS course (get-or-create).
+router.add_api_route(
+    "/course/{course_id}", open_course_notebook.open_course_notebook, methods=["POST"]
 )
 # Subject and lesson notebooks the system keeps up to date (get-or-create, lookup).
 router.add_api_route(

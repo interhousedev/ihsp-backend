@@ -25,6 +25,7 @@ class Feature(StrEnum):
     LIBRARY = "library"
     WEB_SEARCH = "web_search"
     VECTOR_SEARCH = "vector_search"
+    CHANGE_PASSWORD_ON_LOGIN = "change_password_on_login"  # opt-in, off by default
 
 
 def is_enabled(settings: "Settings", feature: Feature) -> bool:

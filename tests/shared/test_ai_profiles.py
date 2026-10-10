@@ -63,6 +63,7 @@ def test_the_catalog_lists_the_places_that_call_a_model() -> None:
         "lms_authoring",
         "web_search",
         "discover",
+        "subject_translate",
         "embedding",
     } == names
 

@@ -56,6 +56,9 @@ class SyncSource:
                 raise SourceNotReadyError()
             if source.kind is SourceKind.CHAT:
                 source.ref = latest_ref(source.ref)
+            if source.kind is SourceKind.LMS_STEP:
+                # The old revision alias would share the old text; the read sets it.
+                source.ref = {k: v for k, v in source.ref.items() if k != "revision_id"}
             source.status = SourceStatus.PENDING
             source.failure = None
             source.updated_at = self.clock.now()

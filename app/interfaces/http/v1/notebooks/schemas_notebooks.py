@@ -94,7 +94,7 @@ class NotebookItemResponse(BaseModel):
     origin: NotebookOrigin
     subject_id: UUID | None
     lesson_id: UUID | None
-    course_id: UUID | None  # set for the workspace of an LMS course
+    course_id: UUID | None  # a course workspace or a student course notebook
     can_write: bool  # False for a course member who may only read
 
     @classmethod

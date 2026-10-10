@@ -209,6 +209,22 @@ class InMemoryNotificationRepository:
                 changed += 1
         return changed
 
+    async def update_course_broadcast(
+        self, course_broadcast_id: UUID, *, title: str, text: str, edited_at: datetime
+    ) -> int:
+        """Rewrite the payload like the SQL repository does."""
+        changed = 0
+        for n in self.rows.values():
+            if n.payload.get("course_broadcast_id") == str(course_broadcast_id):
+                n.payload = {
+                    **n.payload,
+                    "title": title,
+                    "text": text,
+                    "edited_at": edited_at.isoformat(),
+                }
+                changed += 1
+        return changed
+
     async def purge_created_before(self, cutoff: datetime) -> int:
         """Delete old rows."""
         old = [nid for nid, n in self.rows.items() if n.created_at < cutoff]
@@ -227,6 +243,14 @@ class InMemoryCourseBroadcasts:
     async def add(self, broadcast: CourseBroadcast) -> None:
         """Keep the broadcast."""
         self.rows.append(broadcast)
+
+    async def get(self, broadcast_id: UUID) -> CourseBroadcast | None:
+        """The stored broadcast."""
+        return next((r for r in self.rows if r.id == broadcast_id), None)
+
+    async def update(self, broadcast: CourseBroadcast) -> None:
+        """Replace the stored copy."""
+        self.rows = [broadcast if r.id == broadcast.id else r for r in self.rows]
 
     async def list_for_course(
         self, course_id: UUID, *, limit: int

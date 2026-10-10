@@ -278,15 +278,14 @@ async def test_the_openapi_document_has_no_audio_or_video() -> None:
 # - - - Errors on create - - -
 
 
-async def test_a_notebook_without_a_ready_source_cannot_make_outputs(
+async def test_a_notebook_without_sources_still_queues_an_output(
     api: AsyncClient, notebook: Notebook, kicker: FakeTaskKicker
 ) -> None:
-    """NB-8: no ready selected source answers 422."""
+    """T6.3: nothing selected is allowed; the output is made without sources."""
     response = await api.post(base(notebook), json={"kind": "mind_map"})
 
-    assert response.status_code == 422
-    assert problem_type(response) == "notebooks/no-sources-selected"
-    assert kicker.calls == []
+    assert response.status_code == 202
+    assert kicker.calls != []
 
 
 async def test_the_daily_count_of_outputs_is_a_429_with_the_limit(

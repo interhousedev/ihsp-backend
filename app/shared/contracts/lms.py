@@ -150,6 +150,41 @@ class LmsStepText:
     block_starts: tuple[int, ...] = ()  # offset of each block in ``text``
 
 
+@dataclass(frozen=True, slots=True)
+class LmsMaterialStep:
+    """A step of the live version; ``revision_id`` is the version of its source."""
+
+    step_id: UUID
+    title: str
+    revision_id: str
+
+
+@dataclass(frozen=True, slots=True)
+class LmsMaterialVideo:
+    """A video block of a live step (``file_id`` set for an upload, else ``url``)."""
+
+    step_id: UUID
+    block_id: str
+    title: str
+    revision_id: str
+
+
+@dataclass(frozen=True, slots=True)
+class LmsCourseMaterials:
+    """Everything a student's course notebook is made of, by reference.
+
+    ``files`` are the attached files (``/files/{id}`` in the steps), ``library_items``
+    the library books and materials the steps link to; both without duplicates.
+    """
+
+    course_id: UUID
+    course_title: str
+    steps: tuple[LmsMaterialStep, ...] = ()
+    videos: tuple[LmsMaterialVideo, ...] = ()
+    files: tuple[UUID, ...] = ()
+    library_items: tuple[UUID, ...] = ()
+
+
 class LmsSourceReader(Protocol):
     """Course steps as notebook sources (provider: lms learning; consumer: notebooks).
 
@@ -168,6 +203,27 @@ class LmsSourceReader(Protocol):
         self, user_id: UUID, course_id: UUID, step_id: UUID
     ) -> LmsStepText:
         """Return the live revision's text; raises ForbiddenError when not enrolled."""
+        ...
+
+    async def course_materials(
+        self, user_id: UUID, course_id: UUID
+    ) -> LmsCourseMaterials | None:
+        """The materials of the live version; None when not enrolled or unpublished."""
+        ...
+
+    async def video_text(
+        self, user_id: UUID, course_id: UUID, step_id: UUID, block_id: str
+    ) -> LmsStepText:
+        """The text of one video block of the live step (transcript or title).
+
+        There is no transcript store yet, so the text is the caption (or the step
+        title) and the address; it will carry the transcript when one exists.
+        Raises ForbiddenError when not enrolled, NotFoundError for a missing block.
+        """
+        ...
+
+    async def enrollment_pairs(self) -> list[tuple[UUID, UUID]]:
+        """Every ``(course_id, user_id)`` enrollment of a published course."""
         ...
 
 

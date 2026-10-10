@@ -92,6 +92,8 @@ class ContextBuilder:
     ) -> ContextPack:
         """Full context up to the cap, else the best matches with neighbours."""
         ids = [s.id for s in sources]
+        if not ids:  # no sources picked: nothing to read or search
+            return build_pack([], {}, "full")
         total = sum(s.token_estimate for s in sources)
         cap = self.settings.notebooks.chat_full_context_tokens
         if choose_chat_mode(total, cap) == "full":

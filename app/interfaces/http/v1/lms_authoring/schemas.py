@@ -23,6 +23,7 @@ from app.modules.lms.application.authoring.views import (
     VersionDetailView,
     VersionItemView,
     VersionMetaView,
+    VideoStreamView,
 )
 from app.modules.lms.domain.authoring.enums import CourseStatus, Visibility
 from app.modules.lms.domain.authoring.outline import OutlineOp
@@ -61,6 +62,10 @@ class StepDiffResponse(StepDiffView):
 
 class PreviewStepResponse(PreviewStepView):
     """`StepView` of a draft render."""
+
+
+class VideoStreamResponse(VideoStreamView):
+    """A short-lived URL that streams an uploaded video."""
 
 
 class RevisionItemResponse(RevisionItemView):

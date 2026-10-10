@@ -188,7 +188,7 @@ class BookInputBody(BaseModel):
     subjects: list[BookSubjectInput] = Field(max_length=20)
     topics: list[BookTopicInput] = Field(max_length=100)
     tags: list[str] = Field(default_factory=list, max_length=20)
-    rights: Rights
+    rights: Rights = Rights.OFFICIAL
     licence: str | None = Field(default=None, max_length=40)
     rights_basis: RightsBasisSchema = Field(default_factory=RightsBasisSchema)
     rights_proof_file_id: UUID | None = None

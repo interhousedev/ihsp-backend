@@ -6,9 +6,11 @@ from uuid import UUID
 
 from app.modules.notebooks.application.access import load_notebook
 from app.modules.notebooks.application.notebook_fields import invalid
-from app.modules.notebooks.application.sync_auto_notebook import SyncAutoNotebook
+from app.modules.notebooks.application.sync_auto_notebook import (
+    SyncAutoNotebook,
+    is_managed,
+)
 from app.modules.notebooks.domain.entities import AutoSettings, ExcludedRef, Notebook
-from app.modules.notebooks.domain.enums import SourceKind
 from app.modules.notebooks.domain.limits import MAX_EXCLUDED_REFS
 from app.modules.notebooks.ports.unit_of_work import NotebooksUnitOfWork, UowFactory
 from app.shared.actor import Actor
@@ -91,7 +93,7 @@ class UpdateAutoSettings:
         excluded: list[ExcludedRef],
         source_ids: Sequence[UUID],
     ) -> list[ExcludedRef]:
-        """Add the lesson materials among `source_ids`.
+        """Add the lesson materials and books among `source_ids`.
 
         Ids of other notebooks and of other kinds of sources are ignored.
         """
@@ -100,7 +102,7 @@ class UpdateAutoSettings:
         for source in await uow.sources.get_many(source_ids):
             if (
                 source.notebook_id == notebook.id
-                and source.kind is SourceKind.LESSON_RESOURCE
+                and is_managed(source)
                 and source.ref_key is not None
                 and source.ref_key not in known
             ):

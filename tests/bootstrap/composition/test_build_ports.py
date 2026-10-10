@@ -48,6 +48,8 @@ def make_container(**missing: bool) -> Any:
         "files": SimpleNamespace(list_my_files=uc(), public=FakeFilesApi()),
         "identity": SimpleNamespace(auth=SimpleNamespace(get_user_detail=uc())),
         "admin": SimpleNamespace(list_broadcasts=uc()),
+        "notebooks": SimpleNamespace(public=object()),
+        "library": SimpleNamespace(catalogue=SimpleNamespace(list_items=uc())),
     }
     for name in missing:
         modules[name] = None  # type: ignore[assignment]

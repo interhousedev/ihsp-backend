@@ -171,7 +171,7 @@ async def test_not_ready_and_wrong_formats_are_refused() -> None:
 
     use_case, actor, artifact, files = _setup(ArtifactKind.QUIZ, QUIZ)
     with pytest.raises(InvalidOptionsError):
-        await use_case.execute(actor, artifact.notebook_id, artifact.id, "docx")
+        await use_case.execute(actor, artifact.notebook_id, artifact.id, "pdf")
     course = _setup(ArtifactKind.COURSE_PLAN, {"x": 1})
     with pytest.raises(InvalidOptionsError):
         await course[0].execute(course[1], course[2].notebook_id, course[2].id)

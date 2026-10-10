@@ -84,8 +84,8 @@ class FakeLlmGateway:
         if schema_name == SUBJECT_NAMES_SCHEMA:
             data: dict[str, Any] = subject_names_document(messages)
         else:
-            data = build_course_document(schema_name, messages, system)
-            data = data or build_document(schema_name, messages)
+            built = build_course_document(schema_name, messages, system)
+            data = built or build_document(schema_name, messages)
         text = json.dumps(data)
         usage = _usage(system, messages, text)
         return {"data": data, "text": text, "usage": {**usage, "cost_micro": None}}

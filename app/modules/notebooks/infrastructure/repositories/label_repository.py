@@ -11,9 +11,7 @@ from app.modules.notebooks.domain.labels import (
     SourceLabel,
 )
 from app.modules.notebooks.infrastructure.orm.label import SourceLabel as LabelRow
-from app.modules.notebooks.infrastructure.orm.label import (
-    SourceLabelLink as LinkRow,
-)
+from app.modules.notebooks.infrastructure.orm.label import SourceLabelLink as LinkRow
 from app.modules.notebooks.infrastructure.orm.label import SourceLabelRun as RunRow
 
 from sqlalchemy import Select, delete, func, select

@@ -150,7 +150,9 @@ async def test_an_output_that_is_not_ready_is_refused() -> None:
 
 async def test_a_kind_without_a_file_format_is_refused() -> None:
     use_case, teacher, artifact, files, _ = _setup(
-        kind=ArtifactKind.QUIZ, status=ArtifactStatus.READY, content={"questions": []}
+        kind=ArtifactKind.AUDIO_OVERVIEW,
+        status=ArtifactStatus.READY,
+        content={"questions": []},
     )
 
     with pytest.raises(InvalidOptionsError):

@@ -37,7 +37,7 @@ def quiz_to_docx(title: str, content: dict[str, Any]) -> bytes:
             if str(option.get("id")) in correct:
                 letters.append(letter)
         key.append(f"{number}. {', '.join(letters)}")
-    document.add_page_break()
+    document.add_page_break()  # type: ignore[no-untyped-call]
     document.add_heading("Answer key", level=1)
     for line, question in zip(key, questions, strict=True):
         document.add_paragraph(line)

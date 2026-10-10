@@ -39,3 +39,6 @@ AUTO_FANOUT_LIMIT: Final = 1000  # notebooks synced after one lesson changes
 MAX_EXCLUDED_REFS: Final = 500
 SHARED_DOCUMENT_GRACE_HOURS: Final = 24  # a new document may not have its source yet
 SHARED_CACHE_UNUSED_DAYS: Final = 90
+
+# Course notebooks of students: every material of the course is a source.
+COURSE_SOURCE_LIMIT: Final = 200

@@ -33,6 +33,7 @@ API_PACKAGES: tuple[str, ...] = (
     # Composition first: `/v1/admin/groups/stats` must win over `/v1/admin/groups/{id}`.
     f"{V1}.composition",
     f"{V1}.me_schedule",
+    f"{V1}.me_teachers",
     f"{V1}.dashboard",
     f"{V1}.me_classwork",
     f"{V1}.me_marks",
@@ -46,6 +47,7 @@ API_PACKAGES: tuple[str, ...] = (
     f"{V1}.admin_sync",
     f"{V1}.admin_insights",
     f"{V1}.admin_broadcasts",
+    f"{V1}.admin_settings",
     f"{V1}.admin_moderation",
     f"{V1}.files",
     f"{V1}.links",

@@ -60,6 +60,15 @@ def _replace_check(name: str, condition: str) -> None:
 
 def upgrade() -> None:
     """Upgrade schema."""
+    op.alter_column(
+        "notebooks",
+        "origin",
+        schema="notebooks",
+        existing_type=sa.String(length=12),
+        type_=sa.String(length=14),
+        existing_nullable=False,
+        existing_server_default=sa.text("'manual'"),
+    )
     _replace_check("ck_notebooks_origin", _in_list("origin", NEW_ORIGINS))
     _replace_check("ck_notebooks_auto_target", TARGET_HEAD + NEW_TARGET_TAIL)
     op.create_index(
@@ -95,3 +104,12 @@ def downgrade() -> None:
         )
     _replace_check("ck_notebooks_auto_target", TARGET_HEAD + OLD_TARGET_TAIL)
     _replace_check("ck_notebooks_origin", _in_list("origin", OLD_ORIGINS))
+    op.alter_column(
+        "notebooks",
+        "origin",
+        schema="notebooks",
+        existing_type=sa.String(length=14),
+        type_=sa.String(length=12),
+        existing_nullable=False,
+        existing_server_default=sa.text("'manual'"),
+    )

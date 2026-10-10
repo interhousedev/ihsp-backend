@@ -86,6 +86,10 @@ async def test_registration_creates_the_account_secret_and_student(
     assert world.kicker.calls == [
         ("academic.backfill_student", {"user_id": str(registered.user_id)}),
         (
+            "notebooks.provision_student_notebooks",
+            {"user_id": str(registered.user_id)},
+        ),
+        (
             "academic.sync_group_timetable",
             {
                 "user_id": str(registered.user_id),
@@ -298,9 +302,10 @@ async def test_every_new_student_syncs_the_timetable_of_their_group(
 
     assert world.kicker.names() == [
         "academic.backfill_student",
+        "notebooks.provision_student_notebooks",
         "academic.sync_group_timetable",
     ]
-    assert world.kicker.calls[1][1] == {
+    assert world.kicker.calls[2][1] == {
         "user_id": str(registered.user_id),
         "group_id": str(world.enrollment.group_id),
     }

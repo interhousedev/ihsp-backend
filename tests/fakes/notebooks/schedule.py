@@ -1,5 +1,6 @@
 """ScheduleQueries: audience, get_lesson and get_student for the notebooks tests."""
 
+import datetime as dt
 from uuid import UUID
 
 from app.shared.contracts.academic import LessonRef, StudentRef
@@ -21,6 +22,16 @@ class FakeLessonSchedule(FakeSchedule):
             self.lessons.append(lesson)
         self.audience.add((user_id, lesson.id))
         return lesson
+
+    async def lessons_for_student(
+        self, user_id: UUID, start: dt.date, end: dt.date
+    ) -> list[LessonRef]:
+        """The lessons the student attends between two dates."""
+        return [
+            lesson
+            for lesson in self.lessons
+            if (user_id, lesson.id) in self.audience and start <= lesson.date <= end
+        ]
 
     async def get_lesson(self, lesson_id: UUID) -> LessonRef | None:
         """Return the lesson."""

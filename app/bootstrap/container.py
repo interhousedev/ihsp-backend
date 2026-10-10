@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 from app.settings import Settings
 from app.shared.clock import Clock, SystemClock
-from app.shared.contracts.ai import AdminToolBackend
+from app.shared.contracts.ai import AdminToolBackend, LlmGateway
 from app.shared.contracts.notify import TelegramSender
 from app.shared.db.engine import make_engine, make_sessionmaker
 from app.shared.i18n.core import I18nCore
@@ -64,6 +64,7 @@ class Container:
     notebooks: "NotebooksServices" = NOT_BUILT
     library: "LibraryServices" = NOT_BUILT
     admin_tools: AdminToolBackend = NOT_BUILT
+    llm: LlmGateway = NOT_BUILT
     mcp_audit: "McpAuditPort" = NOT_BUILT
     mcp_connector_courses: "ConnectorCoursesPort" = NOT_BUILT
     closers: list[Callable[[], Awaitable[None]]] = field(default_factory=list)

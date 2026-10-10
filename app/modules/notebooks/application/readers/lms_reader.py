@@ -90,6 +90,7 @@ class LmsReader:
             text=step.text,
             unit_starts=tuple(step.block_starts),
             upstream_version=step.revision_id,
+            ref_update={} if is_draft(source) else {"revision_id": step.revision_id},
         )
 
     async def current_version(self, source: Source) -> str | None:
@@ -104,12 +105,22 @@ class LmsReader:
         step_id = UUID(str(source.ref["step_id"]))
         if is_draft(source):
             return await self._draft(course_id, step_id)
+        block_id = source.ref.get("block_id")
+        if block_id:  # a video of the step (course notebooks)
+            return await self._video(source.owner_id, course_id, step_id, str(block_id))
         return await self._live(source.owner_id, course_id, step_id)
 
     async def _live(self, user_id: UUID, course_id: UUID, step_id: UUID) -> LmsStepText:
         if self.lms is None:
             raise SourceUnsupportedError(params={"hint": "kind", "kind": "lms_step"})
         return await self.lms.step_text(user_id, course_id, step_id)
+
+    async def _video(
+        self, user_id: UUID, course_id: UUID, step_id: UUID, block_id: str
+    ) -> LmsStepText:
+        if self.lms is None:
+            raise SourceUnsupportedError(params={"hint": "kind", "kind": "lms_step"})
+        return await self.lms.video_text(user_id, course_id, step_id, block_id)
 
     async def _draft(self, course_id: UUID, step_id: UUID) -> LmsStepText:
         if self.workspace is None:

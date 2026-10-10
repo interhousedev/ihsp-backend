@@ -4,6 +4,7 @@ from datetime import datetime
 from uuid import UUID
 
 from app.modules.notebooks.domain.entities import Notebook
+from app.modules.notebooks.domain.enums import NotebookOrigin
 from app.modules.notebooks.domain.paging import Paged
 from app.modules.notebooks.ports.notebook_repository import NotebookCursor
 from app.modules.notebooks.ports.unit_of_work import UowFactory
@@ -63,11 +64,12 @@ class ListNotebooks:
         q: str | None = None,
         cursor: str | None = None,
         limit: int = DEFAULT_LIMIT,
+        origin: NotebookOrigin | None = None,
     ) -> Paged[Notebook]:
         """Return one page of the student's live notebooks.
 
-        `q` filters by title (case-insensitive substring); `limit` is kept within
-        1 to 100.
+        `q` filters by title (case-insensitive substring), `origin` by kind; `limit`
+        is kept within 1 to 100.
         """
         size = max(1, min(limit, MAX_LIMIT))
         after = decode_notebook_cursor(cursor)
@@ -77,6 +79,7 @@ class ListNotebooks:
                 query=(q or "").strip() or None,
                 after=after,
                 limit=size + 1,
+                origin=origin,
             )
         page = rows[:size]
         more = len(rows) > size

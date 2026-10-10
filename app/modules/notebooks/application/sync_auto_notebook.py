@@ -1,6 +1,7 @@
 """Job `notebooks.sync_auto_notebook`: keep an auto notebook's sources current."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from datetime import date
 from functools import partial
 from uuid import UUID
 
@@ -12,16 +13,19 @@ from app.modules.notebooks.domain.auto_notebook import (
     AutoCandidate,
     rank_candidates,
 )
-from app.modules.notebooks.domain.entities import Notebook, Source
+from app.modules.notebooks.domain.entities import AutoSettings, Notebook, Source
 from app.modules.notebooks.domain.enums import SourceKind, SourceStatus
 from app.modules.notebooks.domain.errors import (
     SourceForbiddenError,
     SourceUnsupportedError,
 )
+from app.modules.notebooks.domain.source_input import LibraryItemInput
 from app.modules.notebooks.ports.unit_of_work import NotebooksUnitOfWork, UowFactory
 from app.settings import Settings
+from app.shared.base_error import BaseError
 from app.shared.clock import Clock
 from app.shared.contracts.academic import LessonRef
+from app.shared.contracts.library import LessonItemRefView, LibraryQueries
 from app.shared.contracts.links import LinksApi, ResourceRef
 from app.shared.ids import new_id
 from app.shared.tasks import TaskKicker
@@ -30,7 +34,9 @@ import structlog
 
 log = structlog.get_logger(__name__)
 
-LESSON_ROLES = ("material", "attachment")
+LESSON_ROLES = ("material", "attachment", "homework")
+_EPOCH = date.min
+BOOK_MARK = "lesson_book"  # origin key of a book the sync added for a lesson
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,13 +53,27 @@ class _Plan:
     """What the notebook should hold: kept keys, and the new sources to describe."""
 
     keep: set[str]
-    new: list[tuple[AutoCandidate, ResolvedSource]]
+    new: list[ResolvedSource]
     skipped: int = 0
 
 
-def _is_managed(source: Source) -> bool:
-    """A source the sync owns: a lesson material (notes are the student's own)."""
-    return source.kind is SourceKind.LESSON_RESOURCE and source.ref_key is not None
+def book_ident(item_id: object, page_from: int | None, page_to: int | None) -> str:
+    """Names a book link of a lesson (item and asked-for pages), before it is read."""
+    return f"{item_id}:{page_from or ''}:{page_to or ''}"
+
+
+def is_managed(source: Source) -> bool:
+    """A source the sync owns: a lesson material or a book linked to a lesson.
+
+    Notes, pasted texts and books the student added themselves are their own.
+    """
+    if source.ref_key is None:
+        return False
+    if source.kind is SourceKind.LESSON_RESOURCE:
+        return True
+    return source.kind is SourceKind.LIBRARY_ITEM and bool(
+        (source.origin or {}).get(BOOK_MARK)
+    )
 
 
 class SyncAutoNotebook:
@@ -76,8 +96,10 @@ class SyncAutoNotebook:
         links: LinksApi,
         targets: AutoTargets,
         kicker: TaskKicker,
+        library: LibraryQueries | None = None,
     ) -> None:
-        """Store the collaborators."""
+        """Store the collaborators (`library` may be missing: no books then)."""
+        self.library = library
         self.uow_factory = uow_factory
         self.clock = clock
         self.settings = settings
@@ -140,9 +162,9 @@ class SyncAutoNotebook:
             include_classmates=settings.include_classmates,
             excluded=settings.excluded_keys,
         )
-        stored = {s.ref_key for s in existing if _is_managed(s)}
+        stored = {s.ref_key for s in existing if is_managed(s)}
         room = self.settings.notebooks.max_sources - sum(
-            1 for s in existing if not _is_managed(s)
+            1 for s in existing if not is_managed(s)
         )
         lesson_by_id = {lesson.id: lesson for lesson in lessons}
         plan = _Plan(keep=set(), new=[])
@@ -158,8 +180,91 @@ class SyncAutoNotebook:
                 plan.skipped += 1
                 continue
             plan.keep.add(item.ref_key)
-            plan.new.append((item, resolved))
+            plan.new.append(resolved)
+        await self._plan_books(notebook, existing, lessons, room, plan)
         return plan
+
+    async def _plan_books(
+        self,
+        notebook: Notebook,
+        existing: list[Source],
+        lessons: list[LessonRef],
+        room: int,
+        plan: _Plan,
+    ) -> None:
+        """Add the library books the lessons follow, after the materials.
+
+        A book already in the notebook is kept without reading it again; a new one
+        is read once to check access and text. The student's exclusions win.
+        """
+        reader = self.readers.library_reader
+        if self.library is None or reader is None or not lessons:
+            return
+        settings = notebook.auto_settings
+        assert settings is not None
+        stored = {
+            str(s.origin[BOOK_MARK]): s.ref_key
+            for s in existing
+            if is_managed(s)
+            and s.origin
+            and s.ref_key
+            and s.kind is SourceKind.LIBRARY_ITEM
+        }
+        by_lesson = await self.library.lesson_item_refs([x.id for x in lessons])
+        # Newest lesson first: its books win when the notebook is full.
+        order = {x.id: x.date for x in lessons}
+        seen: set[str] = set()
+        for lesson_id in sorted(
+            by_lesson, key=lambda i: order.get(i, _EPOCH), reverse=True
+        ):
+            if lesson_id not in order:
+                continue
+            for link in by_lesson[lesson_id]:
+                if len(plan.keep) >= room:
+                    return
+                ident = book_ident(link.item_id, link.page_from, link.page_to)
+                if ident in seen:
+                    continue
+                seen.add(ident)
+                await self._plan_book(notebook, link, ident, stored, settings, plan)
+
+    async def _plan_book(
+        self,
+        notebook: Notebook,
+        link: LessonItemRefView,
+        ident: str,
+        stored: dict[str, str],
+        settings: AutoSettings,
+        plan: _Plan,
+    ) -> None:
+        """Keep a stored book, or read a new one and queue it."""
+        kept = stored.get(ident)
+        if kept is not None:
+            if kept not in settings.excluded_keys:
+                plan.keep.add(kept)
+            return
+        reader = self.readers.library_reader
+        assert reader is not None
+        try:
+            resolved = await reader.resolve(
+                notebook.owner_id,
+                LibraryItemInput(
+                    item_id=link.item_id,
+                    page_from=link.page_from,
+                    page_to=link.page_to,
+                ),
+            )
+        except (BaseError, ValueError):
+            plan.skipped += 1  # no text yet, held back or too large: not now
+            return
+        key = resolved.ref_key
+        if key is None or key in settings.excluded_keys:
+            return
+        resolved = replace(
+            resolved, origin={**(resolved.origin or {}), BOOK_MARK: ident}
+        )
+        plan.keep.add(key)
+        plan.new.append(resolved)
 
     async def _describe(
         self,
@@ -189,7 +294,7 @@ class SyncAutoNotebook:
             ):
                 return AutoSyncResult()  # settings changed: that writer syncs itself
             current = await uow.sources.list_for_notebook(notebook.id)
-            gone = [s for s in current if _is_managed(s) and s.ref_key not in plan.keep]
+            gone = [s for s in current if is_managed(s) and s.ref_key not in plan.keep]
             for source in gone:
                 await uow.sources.delete(source.id)
             fresh = await self._add(uow, locked, current, plan)
@@ -218,7 +323,7 @@ class SyncAutoNotebook:
         position = await uow.sources.next_position(notebook.id)
         now = self.clock.now()
         added: list[Source] = []
-        for _item, resolved in plan.new:
+        for resolved in plan.new:
             if resolved.ref_key in have:
                 continue
             source = Source(

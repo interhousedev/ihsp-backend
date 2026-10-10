@@ -325,6 +325,7 @@ class SqlNotebookRepository:
         query: str | None,
         after: NotebookCursor | None,
         limit: int,
+        origin: NotebookOrigin | None = None,
     ) -> list[Notebook]:
         """Live notebooks: pinned first, then `last_opened_at` desc (nulls last).
 
@@ -337,6 +338,8 @@ class SqlNotebookRepository:
             NotebookRow.deleted_at.is_(None),
             NotebookRow.origin != _COURSE,
         )
+        if origin is not None:
+            stmt = stmt.where(NotebookRow.origin == origin.value)
         if query:
             stmt = stmt.where(NotebookRow.title.icontains(query, autoescape=True))
         if after is not None:
@@ -394,6 +397,37 @@ class SqlNotebookRepository:
             select(NotebookRow.id)
             .where(NotebookRow.deleted_at < cutoff)
             .order_by(NotebookRow.deleted_at, NotebookRow.id)
+            .limit(limit)
+        )
+        return list((await self.session.execute(stmt)).scalars().all())
+
+    async def find_course_student(
+        self, owner_id: UUID, course_id: UUID
+    ) -> Notebook | None:
+        """The student's live notebook of an LMS course, if they have one."""
+        stmt = _select_notebooks().where(
+            NotebookRow.owner_id == owner_id,
+            NotebookRow.course_id == course_id,
+            NotebookRow.origin == NotebookOrigin.COURSE_STUDENT.value,
+            NotebookRow.deleted_at.is_(None),
+        )
+        found = await self._entities(stmt)
+        return found[0] if found else None
+
+    async def add_course_student(self, notebook: Notebook) -> bool:
+        """Insert a student's course notebook unless they already have a live one."""
+        return await self._add_unique(notebook)
+
+    async def course_student_ids(self, course_id: UUID, limit: int) -> list[UUID]:
+        """Live student notebooks of a course (for the sync after a new revision)."""
+        stmt = (
+            select(NotebookRow.id)
+            .where(
+                NotebookRow.course_id == course_id,
+                NotebookRow.origin == NotebookOrigin.COURSE_STUDENT.value,
+                NotebookRow.deleted_at.is_(None),
+            )
+            .order_by(NotebookRow.id)
             .limit(limit)
         )
         return list((await self.session.execute(stmt)).scalars().all())

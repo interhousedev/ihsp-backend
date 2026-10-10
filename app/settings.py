@@ -365,6 +365,13 @@ class VectorsSettings(BaseModel):
     runs every 10 minutes until every passage has its vector)."""
 
 
+class FilesSettings(BaseModel):
+    """Files module: limits of single purposes."""
+
+    lms_video_max_mb: int = Field(default=500, ge=1)
+    """Largest lesson video uploaded to an LMS video block, in MiB (default 500)."""
+
+
 class LibrarySettings(BaseModel):
     """The library (`library.ihsu.uz`): sizes, quotas, limits and UniLibrary.
 
@@ -856,6 +863,7 @@ class Settings(BaseSettings):
     openrouter: OpenRouterSettings = Field(default_factory=OpenRouterSettings)
     notebooks: NotebooksSettings = Field(default_factory=NotebooksSettings)
     vectors: VectorsSettings = Field(default_factory=VectorsSettings)
+    files: FilesSettings = Field(default_factory=FilesSettings)
     library: LibrarySettings = Field(default_factory=LibrarySettings)
     push: PushSettings = Field(default_factory=PushSettings)
     smtp_out: SmtpOutSettings = Field(default_factory=SmtpOutSettings)

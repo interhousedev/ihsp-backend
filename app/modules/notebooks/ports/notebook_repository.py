@@ -60,6 +60,20 @@ class NotebookRepository(Protocol):
         """Insert a course workspace; False when the course already has a live one."""
         ...
 
+    async def find_course_student(
+        self, owner_id: UUID, course_id: UUID
+    ) -> Notebook | None:
+        """The student's live notebook of an LMS course, if they have one."""
+        ...
+
+    async def add_course_student(self, notebook: Notebook) -> bool:
+        """Insert a student's course notebook; False when they already have one."""
+        ...
+
+    async def course_student_ids(self, course_id: UUID, limit: int) -> list[UUID]:
+        """Live student notebooks of a course (for the sync after a new revision)."""
+        ...
+
     async def get_by_course(self, course_id: UUID) -> Notebook | None:
         """Return the live workspace of an LMS course, if it has one."""
         ...
@@ -83,8 +97,11 @@ class NotebookRepository(Protocol):
         query: str | None,
         after: NotebookCursor | None,
         limit: int,
+        origin: NotebookOrigin | None = None,
     ) -> list[Notebook]:
         """Live notebooks: pinned first, then `last_opened_at` desc (nulls last).
+
+        Only notebooks of one `origin` when it is given.
 
         `query` filters by title (case-insensitive substring). Course workspaces are
         not listed.

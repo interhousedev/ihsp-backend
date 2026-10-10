@@ -228,8 +228,8 @@ async def test_a_question_of_4000_characters_is_accepted(
     assert turn.user_message.content.text == "x" * 4000
 
 
-@pytest.mark.parametrize("case", ["empty", "deselected", "pending", "foreign"])
-async def test_no_usable_selected_source_is_refused_before_the_model(
+@pytest.mark.parametrize("case", ["pending", "foreign"])
+async def test_picked_sources_that_are_not_usable_are_refused_before_the_model(
     core: NotebooksCore,
     chat: ChatServices,
     student: Actor,
@@ -239,8 +239,6 @@ async def test_no_usable_selected_source_is_refused_before_the_model(
     """NB-5, NB-6: 422 `no-sources-selected`; nothing is called or stored."""
     notebook = await make_notebook(core.uow_factory, student.user_id)
     source_ids = None
-    if case == "deselected":
-        await make_source(core.uow_factory, notebook, selected=False)
     if case == "pending":
         await make_source(
             core.uow_factory, notebook, texts=(), status=SourceStatus.PENDING
@@ -657,3 +655,26 @@ async def test_the_lock_is_released_after_a_failed_question(
     turn = await chat.ask_notebook.execute(student, notebook.id, "Q?")
 
     assert turn.assistant_message.seq == 2
+
+
+@pytest.mark.parametrize("case", ["empty", "deselected"])
+async def test_no_selected_source_gives_a_general_answer_that_is_flagged(
+    core: NotebooksCore,
+    chat: ChatServices,
+    student: Actor,
+    scripted_llm: ScriptedLlm,
+    case: str,
+) -> None:
+    """T6.3: nothing selected still answers, ungrounded, with a note to the model."""
+    notebook = await make_notebook(core.uow_factory, student.user_id)
+    if case == "deselected":
+        await make_source(core.uow_factory, notebook, selected=False)
+    scripted_llm.queue_text("A general answer.\n<followups>[]</followups>")
+
+    turn = await chat.ask_notebook.execute(student, notebook.id, "Q?")
+
+    answer = turn.assistant_message.content
+    assert answer.text == "A general answer."
+    assert answer.grounded is False and answer.citations == []
+    assert answer.source_ids == []
+    assert scripted_llm.calls == 1

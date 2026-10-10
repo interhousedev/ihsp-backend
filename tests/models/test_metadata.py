@@ -38,6 +38,7 @@ EXPECTED_TABLES = {
     "notify.push_subscriptions",
     "notify.course_broadcasts",
     "admin.broadcasts",
+    "admin.platform_settings",
     "mail.mail_messages",
     # lms (8)
     "lms.courses",
@@ -65,6 +66,11 @@ EXPECTED_TABLES = {
     "notebooks.source_label_links",
     "notebooks.source_label_runs",
     # library (25)
+    "library.subjects",
+    "library.item_tags",
+    "library.tags",
+    "library.item_authors",
+    "library.authors",
     "library.items",
     "library.external_details",
     "library.book_details",
@@ -96,15 +102,12 @@ EXPECTED_TABLES = {
     "dashboard.layouts",
 }
 
-# Sent once and never edited, so they carry no updated_at.
-APPEND_ONLY_TABLES = {"notify.course_broadcasts"}
-
 
 def test_metadata_contains_every_table_of_the_models_readme() -> None:
-    """README -> Models plus notebooks, push, exams, documents, library, vectors: 77."""
+    """README -> Models plus notebooks, push, exams, documents, library, vectors: 85."""
     actual = {table.fullname for table in Base.metadata.tables.values()}
 
-    assert len(EXPECTED_TABLES) == 79
+    assert len(EXPECTED_TABLES) == 85
     assert actual == EXPECTED_TABLES
 
 
@@ -113,8 +116,7 @@ def test_every_table_has_a_primary_key_and_timestamps() -> None:
     for table in Base.metadata.tables.values():
         assert list(table.primary_key.columns), table.fullname
         assert "created_at" in table.c, table.fullname
-        if table.fullname not in APPEND_ONLY_TABLES:
-            assert "updated_at" in table.c, table.fullname
+        assert "updated_at" in table.c, table.fullname
 
 
 def test_students_primary_key_is_user_id() -> None:

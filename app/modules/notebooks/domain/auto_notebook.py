@@ -21,7 +21,8 @@ class AutoCandidate:
         link_id: The lesson resource (a link of the links module).
         lesson_id: The lesson it is attached to.
         lesson_date: When that lesson is held.
-        role: `material` (teacher or EMIS) or `attachment` (a student's file).
+        role: `material` (teacher or EMIS), `homework` (a file of the homework) or
+            `attachment` (a student's file).
         own: The student attached it themselves.
     """
 
@@ -43,8 +44,8 @@ class AutoCandidate:
 
     @property
     def priority(self) -> int:
-        """0 teacher material, 1 the student's own file, 2 a classmate's file."""
-        if self.role == "material":
+        """0 teacher material or homework, 1 the student's own file, 2 a classmate's."""
+        if self.role in ("material", "homework"):
             return 0
         return 1 if self.own else 2
 
