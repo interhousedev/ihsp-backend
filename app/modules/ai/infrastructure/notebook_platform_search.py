@@ -55,6 +55,21 @@ class LateLibrarySearch:
         return await inner.search(actor, query, limit) if inner else []
 
 
+class LateSharedSearch:
+    """The shared-passage search bound after notebooks is built (empty until then)."""
+
+    def __init__(self, bindings: LateBindings) -> None:
+        """Store the bindings."""
+        self.bindings = bindings
+
+    async def search(
+        self, actor: Actor, query: str, limit: int
+    ) -> list[PlatformPassage]:
+        """Shared passages the actor may read, or none while unbound."""
+        inner = self.bindings.shared_search
+        return await inner.search(actor, query, limit) if inner else []
+
+
 class CompositePlatformSearch:
     """Merges several platform searches and drops passages seen twice."""
 

@@ -29,6 +29,7 @@ class LateBindings:
     share_lookup: ChatShareLookup | None = None
     notebooks: NotebooksQueries | None = None
     library_search: PlatformSearch | None = None
+    shared_search: PlatformSearch | None = None
     notebooks_commands: NotebooksCommands | None = None
     documents: DocumentRenderer | None = None
     # The course author assistant (lms_author); all four are needed for it.

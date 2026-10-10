@@ -66,6 +66,7 @@ from app.modules.ai.infrastructure.fake_search import FakeWebSearch
 from app.modules.ai.infrastructure.notebook_platform_search import (
     CompositePlatformSearch,
     LateLibrarySearch,
+    LateSharedSearch,
     NotebookPlatformSearch,
 )
 from app.modules.ai.infrastructure.redis_budget_store import (
@@ -259,7 +260,11 @@ def build(
         clock=deps.clock,
         settings=settings,
         platform=CompositePlatformSearch(
-            [NotebookPlatformSearch(bindings), LateLibrarySearch(bindings)]
+            [
+                NotebookPlatformSearch(bindings),
+                LateLibrarySearch(bindings),
+                LateSharedSearch(bindings),
+            ]
         ),
     )
     return AiServices(
