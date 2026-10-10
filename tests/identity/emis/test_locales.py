@@ -7,7 +7,11 @@ from pathlib import Path
 from app.modules.identity.application import register_errors
 from app.modules.identity.domain.password_policy import check_password
 from app.shared.base_error import BaseError
-from app.shared.contracts.emis import EmisAuthFailed, EmisUnavailable
+from app.shared.contracts.emis import (
+    EmisAuthFailed,
+    EmisCredentialsMissing,
+    EmisUnavailable,
+)
 from app.shared.paths import LOCALES_DIR
 
 import pytest
@@ -23,7 +27,11 @@ def used_keys() -> set[str]:
         if issubclass(cls, BaseError) and cls.__module__ == register_errors.__name__
     ]
     keys = {cls.message_key for cls in errors}
-    keys |= {EmisAuthFailed.message_key, EmisUnavailable.message_key}
+    keys |= {
+        EmisAuthFailed.message_key,
+        EmisUnavailable.message_key,
+        EmisCredentialsMissing.message_key,
+    }
     keys |= set(check_password(""))
     keys |= set(NOTICE_KEYS)
     return keys

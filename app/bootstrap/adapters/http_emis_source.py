@@ -10,6 +10,7 @@ from app.shared.contracts.emis import (
     EmisAuthFailed,
     EmisClass,
     EmisClassHour,
+    EmisCredentialsMissing,
     EmisCurriculum,
     EmisCurriculumItem,
     EmisCurriculumSubject,
@@ -32,6 +33,7 @@ import httpx
 
 _TIMEOUT = httpx.Timeout(60.0, connect=5.0)  # the gateway may log in to EMIS first
 _AUTH_FAILED_TYPE = EmisAuthFailed.code
+_CREDENTIALS_MISSING_TYPE = EmisCredentialsMissing.code
 
 
 class HttpEmisSource:
@@ -274,7 +276,10 @@ def _emis_class(item: dict[str, Any]) -> EmisClass:
 
 
 def _error_for(response: httpx.Response) -> EmisAuthFailed | EmisUnavailable:
-    """401 with ``emis/auth-failed`` is the student's problem, all else is ours."""
+    """401 with ``emis/auth-failed`` is the student's problem, all else is ours.
+
+    ``emis/credentials-missing`` is a student without a stored login: not an outage.
+    """
     try:
         problem = response.json()
         problem_type = problem.get("type") if isinstance(problem, dict) else None
@@ -282,6 +287,8 @@ def _error_for(response: httpx.Response) -> EmisAuthFailed | EmisUnavailable:
         problem_type = None
     if response.status_code == 401 and problem_type == _AUTH_FAILED_TYPE:
         return EmisAuthFailed(support_details="EMIS rejected the credentials")
+    if problem_type == _CREDENTIALS_MISSING_TYPE:
+        return EmisCredentialsMissing(support_details="no stored EMIS login")
     return EmisUnavailable(
         support_details=f"gateway answered {response.status_code} {problem_type}"
     )

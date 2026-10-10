@@ -8,7 +8,11 @@ from app.interfaces.http.dependencies import get_actor
 from app.interfaces.http.v1.admin_schedule import ROUTERS as ADMIN_ROUTERS
 from app.interfaces.http.v1.me_curriculum import ROUTERS as CURRICULUM_ROUTERS
 from app.shared.actor import Role
-from app.shared.contracts.emis import EmisAuthFailed, EmisUnavailable
+from app.shared.contracts.emis import (
+    EmisAuthFailed,
+    EmisCredentialsMissing,
+    EmisUnavailable,
+)
 from app.shared.ids import new_id
 from tests.academic.schedule.conftest import Api
 from tests.academic.schedule.curriculum_builders import (
@@ -310,33 +314,56 @@ async def test_the_admin_sync_refreshes_a_curriculum_that_is_already_stored(
     assert len(env.emis.calls) == 1
 
 
-async def test_the_admin_sync_of_a_group_without_a_student_answers_no_student(
+async def test_the_admin_sync_of_a_group_without_a_student_is_409(
     env: Env, curriculum_api: Api
 ) -> None:
-    """Nobody to ask: no_student and a null curriculum."""
+    """Nobody to ask: a 409 problem, not a 503 and not a fake success."""
     group = await env.group()
 
     response = await curriculum_api.client.post(
         f"/v1/admin/groups/{group.id}/curriculum/sync"
     )
 
-    assert response.status_code == 200
-    assert response.json() == {"status": "no_student", "curriculum": None}
+    assert response.status_code == 409
+    assert response.json()["type"] == "academic/curriculum-no-emis-student"
+    assert env.emis.calls == []
 
 
 async def test_the_admin_sync_keeps_the_old_curriculum_when_no_link_works(
     env: Env, curriculum_api: Api
 ) -> None:
-    """Credentials rejected: no_student, and the stored curriculum is still shown."""
+    """Credentials rejected: 409, and the stored curriculum is still shown."""
     group, _, _ = await _synced_group(env)
     env.emis.curriculum_error = EmisAuthFailed()
 
     response = await curriculum_api.client.post(
         f"/v1/admin/groups/{group.id}/curriculum/sync"
     )
+    read = await curriculum_api.client.get(f"/v1/admin/groups/{group.id}/curriculum")
 
-    assert response.json()["status"] == "no_student"
-    assert response.json()["curriculum"]["emis_curriculum_id"] == 2124
+    assert response.status_code == 409
+    assert response.json()["type"] == "academic/curriculum-no-emis-student"
+    assert read.json()["emis_curriculum_id"] == 2124
+
+
+async def test_the_admin_sync_skips_a_student_without_a_stored_login(
+    env: Env, curriculum_api: Api
+) -> None:
+    """Vault has no login for the first student; the second one answers: 200."""
+    group = await env.group()
+    first = await env.student(group)
+    second = await env.student(group, first_name="Bobur", last_name="Aliev")
+    ordered = sorted([first.id, second.id])
+    env.emis.curriculum_errors[ordered[0]] = EmisCredentialsMissing()
+    env.emis.curriculum_result = make_curriculum()
+
+    response = await curriculum_api.client.post(
+        f"/v1/admin/groups/{group.id}/curriculum/sync"
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "synced"
+    assert env.emis.calls == [("curriculum", ordered[0]), ("curriculum", ordered[1])]
 
 
 async def test_the_admin_sync_answers_503_when_emis_is_down(

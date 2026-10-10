@@ -13,6 +13,7 @@
   "academic-group-name-invalid": "Guruh nomini kiriting.",
   "academic-group-name-taken": "{name} nomli faol guruh allaqachon mavjud.",
   "academic-group-emis-id-taken": "Boshqa guruh bu EMIS guruhi bilan allaqachon bog‘langan.",
+  "academic-curriculum-no-emis-student": "Bu guruh o‘quvchilarining hech birida hozircha ishlaydigan EMIS kirish ma’lumoti yo‘q.",
   "academic-curator-not-teacher": "Kurator o‘qituvchi bo‘lishi kerak.",
   "academic-head-student-invalid": "Guruh sardori shu guruhning faol talabasi bo‘lishi kerak.",
   "academic-not-group-curator": "Buni faqat guruh kuratori yoki ma’muriyat qila oladi.",

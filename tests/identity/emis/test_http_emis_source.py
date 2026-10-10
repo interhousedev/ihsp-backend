@@ -9,6 +9,7 @@ from app.interfaces.http.internal.emis.schemas import EmisCurriculumResponse
 from app.modules.identity.infrastructure.emis.fake import fake_curriculum
 from app.shared.contracts.emis import (
     EmisAuthFailed,
+    EmisCredentialsMissing,
     EmisCurriculum,
     EmisMarkType,
     EmisName,
@@ -165,6 +166,18 @@ async def test_a_curriculum_503_is_unavailable(
     )
 
     with pytest.raises(EmisUnavailable):
+        await source.curriculum(USER)
+
+
+async def test_a_503_without_a_stored_login_is_credentials_missing(
+    source: HttpEmisSource, gateway: respx.MockRouter
+) -> None:
+    """The sync skips this student: a missing login, not an outage."""
+    gateway.get(f"/{USER}/curriculum").respond(
+        503, json={"type": "emis/credentials-missing", "status": 503}
+    )
+
+    with pytest.raises(EmisCredentialsMissing):
         await source.curriculum(USER)
 
 

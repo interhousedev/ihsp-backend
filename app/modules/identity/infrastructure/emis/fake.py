@@ -158,6 +158,7 @@ def _build_students() -> tuple[FakeStudent, ...]:
 
 FAKE_STUDENTS: tuple[FakeStudent, ...] = _build_students()
 _BY_LOGIN = {student.login: student for student in FAKE_STUDENTS}
+_BY_EMIS_ID = {student.emis_student_id: student for student in FAKE_STUDENTS}
 
 
 def fake_curriculum_result() -> dict[str, Any]:
@@ -248,6 +249,11 @@ class FakeEmisClient:
         if name not in _BY_LOGIN or password != FAKE_PASSWORD:
             raise EmisAuthError()
         return f"{_TOKEN_PREFIX}{name}"
+
+    def token_for(self, emis_student_id: int) -> str | None:
+        """Return the token of the fake student with this EMIS id, without a login."""
+        student = _BY_EMIS_ID.get(emis_student_id)
+        return None if student is None else f"{_TOKEN_PREFIX}{student.login}"
 
     def _student(self, token: str) -> FakeStudent:
         login = token.removeprefix(_TOKEN_PREFIX)

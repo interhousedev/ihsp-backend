@@ -3,8 +3,16 @@
 from datetime import date
 from uuid import UUID
 
-from app.shared.contracts.emis import EmisAuthFailed, EmisUnavailable
+from app.modules.identity.application.emis_gateway import EmisGatewayImpl
+from app.modules.identity.infrastructure.emis.fake import FakeEmisClient
+from app.shared.contracts.emis import (
+    EmisAuthFailed,
+    EmisCredentialsMissing,
+    EmisUnavailable,
+)
 from app.shared.ids import new_id
+from tests.fakes.identity.vault import InMemoryCredentialStore
+from tests.identity.emis.fakes import FakeEmisUnitOfWork
 from tests.identity.emis.world import World
 
 import pytest
@@ -192,3 +200,64 @@ async def test_a_fresh_token_that_is_refused_is_unavailable_not_reauth(
         await world.gateway.profile(user_id)
 
     assert world.repo.accounts[user_id].emis_status == "active"
+
+
+async def test_a_missing_vault_secret_is_credentials_missing_not_an_outage(
+    world: World,
+) -> None:
+    """The sync skips such a student; the link itself is not flagged."""
+    user_id = await registered_user(world)
+    del world.store.secrets[world.secret_ref_of(user_id)]
+
+    with pytest.raises(EmisCredentialsMissing):
+        await world.gateway.curriculum(user_id)
+
+    assert world.emis.calls == []
+    assert world.repo.accounts[user_id].emis_status == "active"
+
+
+async def test_a_real_emis_link_without_a_vault_reference_is_auth_failed(
+    world: World,
+) -> None:
+    """Real mode needs the stored secret: no reference, no EMIS request."""
+    user_id = await registered_user(world)
+    world.repo.accounts[user_id].emis_vault_ref = None
+
+    with pytest.raises(EmisAuthFailed):
+        await world.gateway.profile(user_id)
+
+    assert world.emis.calls == []
+
+
+def fake_gateway(world: World, store: InMemoryCredentialStore) -> EmisGatewayImpl:
+    """The gateway as build_emis wires it in EMIS mode fake."""
+    fake = FakeEmisClient(world.clock)
+    return EmisGatewayImpl(
+        emis=fake,
+        store=store,
+        uow_factory=lambda: FakeEmisUnitOfWork(world.repo, world.ledger),
+        fake_tokens=fake,
+    )
+
+
+async def test_fake_emis_answers_without_any_stored_secret(world: World) -> None:
+    """EMIS mode fake: the token follows from the EMIS id; Vault is never read."""
+    user_id = await registered_user(world)
+    store = InMemoryCredentialStore()
+    gateway = fake_gateway(world, store)
+
+    profile = await gateway.profile(user_id)
+    curriculum = await gateway.curriculum(user_id)
+
+    assert profile.emis_student_id == 78201  # the fake EMIS student01
+    assert curriculum.semesters
+    assert store.calls == []
+
+
+async def test_fake_emis_refuses_an_emis_id_it_does_not_know(world: World) -> None:
+    """A linked account with an unknown EMIS id cannot be fetched, even in fake mode."""
+    user_id = await registered_user(world)
+    world.repo.accounts[user_id].emis_student_id = 1
+
+    with pytest.raises(EmisAuthFailed):
+        await fake_gateway(world, InMemoryCredentialStore()).profile(user_id)

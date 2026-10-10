@@ -13,6 +13,7 @@
   "academic-group-name-invalid": "Enter a group name.",
   "academic-group-name-taken": "An active group named {name} already exists.",
   "academic-group-emis-id-taken": "Another group is already linked to this EMIS group.",
+  "academic-curriculum-no-emis-student": "No student of this group has a working EMIS login yet.",
   "academic-curator-not-teacher": "The curator must be a teacher.",
   "academic-head-student-invalid": "The head student must be an active student of this group.",
   "academic-not-group-curator": "Only the curator of this group or Administration can do this.",

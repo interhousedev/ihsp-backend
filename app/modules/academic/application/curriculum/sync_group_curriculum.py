@@ -22,6 +22,7 @@ from app.modules.academic.domain.curriculum.semesters import (
     term_for_semester,
 )
 from app.modules.academic.domain.schedule.errors import (
+    CurriculumNoEmisStudentError,
     GroupNotFoundError,
     TermDatesInvalidError,
     TermDuplicateError,
@@ -31,6 +32,7 @@ from app.modules.academic.domain.schedule.term import Term
 from app.shared.clock import Clock
 from app.shared.contracts.emis import (
     EmisAuthFailed,
+    EmisCredentialsMissing,
     EmisCurriculum,
     EmisName,
     EmisSource,
@@ -42,7 +44,7 @@ import structlog
 
 log = structlog.get_logger(__name__)
 
-MAX_ATTEMPTS = 3  # students tried until one EMIS link answers
+MAX_ATTEMPTS = 5  # students tried until one EMIS link answers
 
 CurriculumStatus = Literal["synced", "no_student"]
 
@@ -88,13 +90,17 @@ class SyncGroupCurriculum:
         async with self.uow_factory() as uow:
             if await uow.curricula.exists(group_id):
                 return None
-        return await self.execute(group_id)
+        try:
+            return await self.execute(group_id)
+        except CurriculumNoEmisStudentError:
+            return CurriculumSyncResult("no_student", group_id)
 
     async def execute(self, group_id: UUID) -> CurriculumSyncResult:
         """Sync the group now, replacing the stored curriculum.
 
-        Raises GroupNotFoundError for an unknown group and EmisUnavailable when EMIS
-        cannot be read; a student whose credentials EMIS rejects is skipped.
+        Raises GroupNotFoundError for an unknown group, CurriculumNoEmisStudentError
+        when no student of the group has a working EMIS login, and EmisUnavailable when
+        EMIS cannot be read. Students without a working login are skipped on the way.
         """
         async with self.uow_factory() as uow:
             group = await uow.groups.get(group_id)
@@ -106,7 +112,7 @@ class SyncGroupCurriculum:
         source = await self._fetch(sorted(s.user_id for s in students))
         if source is None:
             log.info("curriculum_no_student", group_id=str(group_id))
-            return CurriculumSyncResult("no_student", group_id)
+            raise CurriculumNoEmisStudentError()
         async with self.uow_factory() as uow:
             subjects = await self._store(uow, group_id, source)
             filled = await self._fill_names(uow, source)
@@ -125,7 +131,11 @@ class SyncGroupCurriculum:
     # - - - EMIS - - -
 
     async def _fetch(self, user_ids: list[UUID]) -> EmisCurriculum | None:
-        """Ask students with a working link in turn; None when none answers."""
+        """Ask up to MAX_ATTEMPTS students in turn; None when none can answer.
+
+        A student whose EMIS login is rejected or not stored is skipped. An outage is
+        not a student's fault: it propagates, and the group is not synced.
+        """
         users = await self.identity.get_users(user_ids)
         usable = [
             uid
@@ -137,8 +147,12 @@ class SyncGroupCurriculum:
         for user_id in usable[:MAX_ATTEMPTS]:
             try:
                 return await self.emis.curriculum(user_id)
-            except EmisAuthFailed:
-                log.warning("curriculum_auth_failed", user_id=str(user_id))
+            except (EmisAuthFailed, EmisCredentialsMissing) as exc:
+                log.warning(
+                    "curriculum_student_skipped",
+                    user_id=str(user_id),
+                    reason=exc.code,
+                )
         return None
 
     # - - - storing - - -

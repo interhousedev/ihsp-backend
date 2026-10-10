@@ -16,7 +16,11 @@ from app.shared.base_error import (
     NotFoundError,
     ValidationFailedError,
 )
-from app.shared.contracts.emis import EmisAuthFailed, EmisUnavailable
+from app.shared.contracts.emis import (
+    EmisAuthFailed,
+    EmisCredentialsMissing,
+    EmisUnavailable,
+)
 
 
 class WrongInstitutionError(ForbiddenError):
@@ -127,6 +131,6 @@ def emis_errors() -> Iterator[None]:
     except EmisRequestError as exc:
         raise EmisUnavailable(support_details=f"EMIS: {exc}") from exc
     except CredentialNotFoundError as exc:
-        raise EmisUnavailable(support_details="Vault secret is missing") from exc
+        raise EmisCredentialsMissing(support_details="Vault secret is missing") from exc
     except CredentialStoreError as exc:
         raise EmisUnavailable(support_details=f"Vault: {exc}") from exc

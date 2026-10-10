@@ -2,7 +2,7 @@
 
 import datetime as dt
 from collections.abc import Awaitable, Callable
-from typing import TypeVar
+from typing import Protocol, TypeVar
 from uuid import UUID
 
 from app.modules.identity.application.register_errors import emis_errors
@@ -35,8 +35,30 @@ log = structlog.get_logger(__name__)
 T = TypeVar("T")
 
 
+class OfflineTokens(Protocol):
+    """Fake EMIS only: the token of a student, found from the EMIS student id."""
+
+    def token_for(self, emis_student_id: int) -> str | None:
+        """Return the token, or None for an id the fake EMIS does not know."""
+        ...
+
+
+def _usable(account: AccountSnapshot, stored_secret: bool) -> bool:
+    """Active, not flagged for reauth, and linked by Vault reference or EMIS id."""
+    link = account.emis_vault_ref if stored_secret else account.emis_student_id
+    return (
+        account.status is UserStatus.ACTIVE
+        and account.emis_status != "needs_reauth"
+        and link is not None
+    )
+
+
 class EmisGatewayImpl:
-    """Implements ``EmisSource`` in-process; only the identity process builds it."""
+    """Implements ``EmisSource`` in-process; only the identity process builds it.
+
+    With ``fake_tokens`` (EMIS mode fake) no Vault secret is needed: the token comes
+    from the student's EMIS id. The real client always goes through the stored secret.
+    """
 
     def __init__(
         self,
@@ -44,11 +66,13 @@ class EmisGatewayImpl:
         emis: EmisApi,
         store: CredentialStore,
         uow_factory: UnitOfWorkFactory,
+        fake_tokens: OfflineTokens | None = None,
     ) -> None:
-        """Store the EMIS client, Vault and the account unit of work."""
+        """Store the EMIS client, Vault, the account unit of work and fake tokens."""
         self._emis = emis
         self._store = store
         self._uow_factory = uow_factory
+        self._fake_tokens = fake_tokens
 
     async def profile(self, user_id: UUID) -> EmisProfile:
         """Return the student's EMIS profile."""
@@ -90,6 +114,8 @@ class EmisGatewayImpl:
 
     async def _call(self, user_id: UUID, fetch: Callable[[str], Awaitable[T]]) -> T:
         """Run an EMIS call with the stored token; re-login once on HTTP 401."""
+        if self._fake_tokens is not None:
+            return await self._call_fake(user_id, self._fake_tokens, fetch)
         account = await self._linked_account(user_id)
         ref = account.emis_vault_ref
         if ref is None:  # _linked_account rules this out
@@ -108,15 +134,29 @@ class EmisGatewayImpl:
                 # A token we just got was refused: EMIS misbehaves, not the password.
                 raise EmisUnavailable(support_details="fresh token rejected") from exc
 
-    async def _linked_account(self, user_id: UUID) -> AccountSnapshot:
+    async def _call_fake(
+        self,
+        user_id: UUID,
+        tokens: OfflineTokens,
+        fetch: Callable[[str], Awaitable[T]],
+    ) -> T:
+        """Fake EMIS: the token follows from the EMIS id; Vault is not read."""
+        account = await self._linked_account(user_id, stored_secret=False)
+        if account.emis_student_id is None:  # _linked_account rules this out
+            raise EmisAuthFailed(support_details="no EMIS link")
+        token = tokens.token_for(account.emis_student_id)
+        if token is None:
+            raise EmisAuthFailed(support_details="unknown EMIS student")
+        with emis_errors():
+            return await fetch(token)
+
+    async def _linked_account(
+        self, user_id: UUID, *, stored_secret: bool = True
+    ) -> AccountSnapshot:
+        """The account, if EMIS can be called for it (``stored_secret``: Vault link)."""
         async with self._uow_factory() as uow:
             account = await uow.accounts.get(user_id)
-        if (
-            account is None
-            or account.status is not UserStatus.ACTIVE
-            or account.emis_vault_ref is None
-            or account.emis_status == "needs_reauth"
-        ):
+        if account is None or not _usable(account, stored_secret):
             raise EmisAuthFailed(support_details="no usable EMIS link")
         return account
 

@@ -13,6 +13,7 @@
   "academic-group-name-invalid": "Введите название группы.",
   "academic-group-name-taken": "Активная группа {name} уже существует.",
   "academic-group-emis-id-taken": "Другая группа уже связана с этой группой EMIS.",
+  "academic-curriculum-no-emis-student": "Пока ни у одного ученика этой группы нет рабочего входа в EMIS.",
   "academic-curator-not-teacher": "Куратор должен быть преподавателем.",
   "academic-head-student-invalid": "Староста должен быть активным студентом этой группы.",
   "academic-not-group-curator": "Это может сделать только куратор группы или администрация.",

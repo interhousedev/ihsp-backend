@@ -125,7 +125,13 @@ def build_emis(
     )
     destroy_secret = DestroyEmisSecret(store=store, uow_factory=uow_factory)
     return EmisServices(
-        gateway=EmisGatewayImpl(emis=emis, store=store, uow_factory=uow_factory),
+        gateway=EmisGatewayImpl(
+            emis=emis,
+            store=store,
+            uow_factory=uow_factory,
+            # only the fake EMIS answers without a stored secret
+            fake_tokens=emis if isinstance(emis, FakeEmisClient) else None,
+        ),
         register_start=StartRegistration(
             verify=verify,
             emis=emis,

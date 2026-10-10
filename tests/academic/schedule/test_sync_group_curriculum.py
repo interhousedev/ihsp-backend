@@ -10,9 +10,17 @@ from app.interfaces.jobs.schedule import CRON_JOBS
 from app.interfaces.jobs.tasks.academic.sync_group_curriculum import (
     sync_group_curriculum,
 )
-from app.modules.academic.domain.schedule.errors import GroupNotFoundError
+from app.modules.academic.domain.schedule.errors import (
+    CurriculumNoEmisStudentError,
+    GroupNotFoundError,
+)
 from app.modules.academic.domain.schedule.term import Term
-from app.shared.contracts.emis import EmisAuthFailed, EmisName, EmisUnavailable
+from app.shared.contracts.emis import (
+    EmisAuthFailed,
+    EmisCredentialsMissing,
+    EmisName,
+    EmisUnavailable,
+)
 from app.shared.contracts.identity import UserStatus
 from app.shared.ids import new_id
 from tests.academic.schedule.curriculum_builders import (
@@ -265,7 +273,9 @@ async def test_a_semester_with_reversed_dates_is_skipped(env: Env) -> None:
 # - - - which student answers - - -
 
 
-async def test_a_group_without_a_usable_student_answers_no_student(env: Env) -> None:
+async def test_a_group_without_a_usable_student_has_no_curriculum_to_read(
+    env: Env,
+) -> None:
     """Left, unregistered and needs-reauth students cannot fetch the curriculum."""
     group = await env.group()
     await env.student(group, status="left")
@@ -279,17 +289,24 @@ async def test_a_group_without_a_usable_student_answers_no_student(env: Env) -> 
     env.identity.users[reauth.id] = replace(reauth, emis_status="needs_reauth")
     env.emis.curriculum_result = make_curriculum()
 
-    result = await env.emis_import.sync_group_curriculum.execute(group.id)
+    with pytest.raises(CurriculumNoEmisStudentError):
+        await env.emis_import.sync_group_curriculum.execute(group.id)
 
-    assert (result.status, result.subjects, result.terms_created) == (
-        "no_student",
-        0,
-        0,
-    )
     assert env.emis.calls == []
     async with env.uow_factory() as uow:
         assert await uow.curricula.get(group.id) is None
     assert await _terms(env) == []
+
+
+async def test_the_hook_path_answers_no_student_and_does_not_fail(env: Env) -> None:
+    """ensure runs in the profile refresh: no student is no_student, not an error."""
+    group = await env.group()
+
+    result = await env.emis_import.sync_group_curriculum.ensure(group.id)
+
+    assert result is not None
+    assert (result.status, result.subjects) == ("no_student", 0)
+    assert env.emis.calls == []
 
 
 async def test_a_student_whose_credentials_are_rejected_is_skipped(env: Env) -> None:
@@ -307,17 +324,34 @@ async def test_a_student_whose_credentials_are_rejected_is_skipped(env: Env) -> 
     assert env.emis.calls == [("curriculum", ordered[0]), ("curriculum", ordered[1])]
 
 
-async def test_when_every_credential_is_rejected_nothing_is_stored(env: Env) -> None:
-    """Three students at most are tried, then the group answers no_student."""
+async def test_a_student_without_a_stored_login_is_skipped(env: Env) -> None:
+    """Vault has no secret for the first student: the next student answers."""
     group = await env.group()
-    for index in range(5):
-        await env.student(group, first_name=f"Name{index}", last_name=f"Surname{index}")
-    env.emis.curriculum_error = EmisAuthFailed()
+    first = await env.student(group)
+    second = await env.student(group, first_name="Bobur", last_name="Aliev")
+    ordered = sorted([first.id, second.id])
+    env.emis.curriculum_errors[ordered[0]] = EmisCredentialsMissing()
+    env.emis.curriculum_result = make_curriculum()
 
     result = await env.emis_import.sync_group_curriculum.execute(group.id)
 
-    assert result.status == "no_student"
-    assert len(env.emis.calls) == 3
+    assert result.status == "synced"
+    assert env.emis.calls == [("curriculum", ordered[0]), ("curriculum", ordered[1])]
+
+
+async def test_no_usable_login_in_the_group_means_no_student_and_nothing_stored(
+    env: Env,
+) -> None:
+    """Five students at most are tried; then no student can be used (409)."""
+    group = await env.group()
+    for index in range(6):
+        await env.student(group, first_name=f"Name{index}", last_name=f"Surname{index}")
+    env.emis.curriculum_error = EmisCredentialsMissing()
+
+    with pytest.raises(CurriculumNoEmisStudentError):
+        await env.emis_import.sync_group_curriculum.execute(group.id)
+
+    assert len(env.emis.calls) == 5
     async with env.uow_factory() as uow:
         assert await uow.curricula.exists(group.id) is False
 

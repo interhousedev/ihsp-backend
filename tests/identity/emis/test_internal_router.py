@@ -387,6 +387,19 @@ async def test_an_emis_outage_is_a_503_problem(
     assert response.json()["type"] == "emis/unavailable"
 
 
+async def test_a_student_without_a_stored_login_is_a_503_credentials_problem(
+    world: World, api: tuple[AsyncClient, UUID, dict[str, str]]
+) -> None:
+    """The gateway reports the missing secret under its own type: the sync skips."""
+    client, user_id, headers = api
+    world.store.secrets.clear()
+
+    response = await client.get(f"/internal/emis/{user_id}/profile", headers=headers)
+
+    assert response.status_code == 503
+    assert response.json()["type"] == "emis/credentials-missing"
+
+
 async def test_http_source_and_router_work_together(
     world: World,
     api: tuple[AsyncClient, UUID, dict[str, str]],

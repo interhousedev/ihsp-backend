@@ -147,6 +147,13 @@ class StudentNotFoundError(NotFoundError):
     message_key = "academic-student-not-found"
 
 
+class CurriculumNoEmisStudentError(ConflictError):
+    """No student of the group has a working EMIS login to read the curriculum with."""
+
+    code = "academic/curriculum-no-emis-student"
+    message_key = "academic-curriculum-no-emis-student"
+
+
 # - - - Subjects and rooms - - -
 
 

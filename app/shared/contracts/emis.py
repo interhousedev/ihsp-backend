@@ -235,6 +235,18 @@ class EmisUnavailable(BaseError):
     message_key = "emis-unavailable"
 
 
+class EmisCredentialsMissing(EmisUnavailable):
+    """The student's EMIS login is not stored: this student cannot be used.
+
+    A 503 like EmisUnavailable for the student-facing calls, but under its own type so
+    that a caller reading a group (the curriculum sync) can skip the student and try the
+    next one. Only a real outage stays ``emis/unavailable``.
+    """
+
+    code = "emis/credentials-missing"
+    message_key = "emis-credentials-missing"
+
+
 class EmisSource(Protocol):
     """What academic sync uses to read EMIS."""
 
