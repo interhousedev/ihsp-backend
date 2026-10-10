@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from app.interfaces.http.v1.notebooks.deps import Notebooks, StudentActor
+from app.interfaces.http.v1.notebooks.deps import Notebooks, OwnerActor
 from app.interfaces.http.v1.notebooks.schemas_common import PageResponse
 from app.interfaces.http.v1.notebooks.schemas_notebooks import NotebookItemResponse
 from app.modules.notebooks.application.list_notebooks import DEFAULT_LIMIT, MAX_LIMIT
@@ -12,7 +12,7 @@ from fastapi import Query
 
 async def list_notebooks(
     notebooks: Notebooks,
-    actor: StudentActor,
+    actor: OwnerActor,
     q: Annotated[str | None, Query(max_length=200)] = None,
     cursor: str | None = None,
     limit: Annotated[int, Query(ge=1, le=MAX_LIMIT)] = DEFAULT_LIMIT,

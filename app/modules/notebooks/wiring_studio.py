@@ -5,6 +5,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from app.modules.notebooks.application.apply_course_artifact import ApplyCourseArtifact
+from app.modules.notebooks.application.attach_artifact import AttachArtifactToLesson
 from app.modules.notebooks.application.cancel_artifact import CancelArtifact
 from app.modules.notebooks.application.delete_artifact import DeleteArtifact
 from app.modules.notebooks.application.edit_slides import EditSlides
@@ -19,7 +20,9 @@ from app.modules.notebooks.application.save_as_source import SaveAsSource
 from app.modules.notebooks.application.save_flashcard_set import SaveFlashcardSet
 from app.modules.notebooks.application.save_progress import SaveProgress
 from app.modules.notebooks.wiring_core import NotebooksCore
+from app.shared.contracts.files import FilesApi
 from app.shared.contracts.flashcards import FlashcardsApi
+from app.shared.contracts.links import LinksApi
 from app.shared.contracts.lms import LmsDraftCommands, LmsQueries, LmsWorkspaceCommands
 
 
@@ -55,12 +58,15 @@ class StudioServices:
     edit_slides: EditSlides
     revise_slides: ReviseSlides
     apply_course_artifact: ApplyCourseArtifact
+    attach_artifact: AttachArtifactToLesson | None
 
 
 def build_studio(
     core: NotebooksCore,
     *,
     flashcards: FlashcardsApi,
+    files: FilesApi | None = None,
+    links: LinksApi | None = None,
     sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     lms_apply: LmsApplyPorts | None = None,
 ) -> StudioServices:
@@ -69,6 +75,8 @@ def build_studio(
     Args:
         core: The shared collaborators of the module.
         flashcards: Creates flash card sets for "Save as flash card set".
+        files: Stores the file of "Attach to lesson" (None: the route answers 404).
+        links: Adds that file to a lesson (with `files`).
         sleep: Waits between provider retries (replaced in tests).
         lms_apply: The LMS ports of "Apply to the course" (None: the routes answer
             feature-disabled).
@@ -136,5 +144,10 @@ def build_studio(
             workspace=ports.workspace,
             queries=ports.queries,
             drafts=ports.drafts,
+        ),
+        attach_artifact=(
+            AttachArtifactToLesson(uow_factory=uow_factory, files=files, links=links)
+            if files is not None and links is not None
+            else None
         ),
     )

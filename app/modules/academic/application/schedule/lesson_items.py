@@ -39,6 +39,7 @@ async def build_lesson_items(
                 has_homework=view.has_homework,
                 is_overridden=view.is_overridden,
                 changes=view.changes,
+                absent_count=view.absent_count,
             )
         )
     return items

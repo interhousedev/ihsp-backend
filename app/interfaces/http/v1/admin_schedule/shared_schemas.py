@@ -75,3 +75,4 @@ class LessonItemResponse(ApiModel):
     topic_source: TopicSource | None = None
     has_homework: bool
     attendance_submitted: bool
+    absent_count: int | None = None

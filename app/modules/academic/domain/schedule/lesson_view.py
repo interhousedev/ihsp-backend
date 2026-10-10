@@ -16,6 +16,7 @@ class LessonView:
     is_overridden: bool
     changes: dict[str, Any] | None
     attendance_submitted: bool
+    absent_count: int | None = None
     term_id: UUID | None = None
     audience_groups: dict[UUID, str] = field(default_factory=dict)
 

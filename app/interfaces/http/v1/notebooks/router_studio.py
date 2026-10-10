@@ -3,9 +3,11 @@
 from app.interfaces.http.v1.notebooks.handlers import (
     apply_artifact,
     apply_preview,
+    attach_artifact,
     cancel_artifact,
     create_artifact,
     delete_artifact,
+    download_artifact,
     edit_slides,
     get_artifact,
     list_artifacts,
@@ -17,7 +19,7 @@ from app.interfaces.http.v1.notebooks.handlers import (
     save_progress,
 )
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Response, status
 
 router = APIRouter(prefix="/v1/notebooks", tags=["notebooks"])
 
@@ -62,6 +64,12 @@ router.add_api_route(
     status_code=status.HTTP_201_CREATED,
 )
 router.add_api_route(
+    f"{_ONE}/attach-to-lesson",
+    attach_artifact.attach_artifact,
+    methods=["POST"],
+    status_code=status.HTTP_201_CREATED,
+)
+router.add_api_route(
     f"{_ONE}/flashcard-set", save_flashcard_set.save_flashcard_set, methods=["POST"]
 )
 router.add_api_route(f"{_ONE}/slides", edit_slides.edit_slides, methods=["PUT"])
@@ -75,3 +83,10 @@ router.add_api_route(
     f"{_ONE}/apply-preview", apply_preview.apply_preview, methods=["POST"]
 )
 router.add_api_route(f"{_ONE}/apply", apply_artifact.apply_artifact, methods=["POST"])
+router.add_api_route(
+    f"{_ONE}/download",
+    download_artifact.download_artifact,
+    methods=["GET"],
+    response_class=Response,
+    responses={200: {"content": {"application/octet-stream": {}}}},
+)

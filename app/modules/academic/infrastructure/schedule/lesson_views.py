@@ -90,6 +90,11 @@ async def build_views(
                 is_overridden=bool(row.is_overridden),
                 changes=dict(row.changes) if row.changes else None,
                 attendance_submitted=row.attendance_absent is not None,
+                absent_count=(
+                    None
+                    if row.attendance_absent is None
+                    else len(row.attendance_absent)
+                ),
                 term_id=row.term_id,
                 audience_groups={
                     gid: names[gid]

@@ -241,3 +241,19 @@ class ArtifactDetailResponse(_ArtifactBase):
             source_map=artifact.source_map,
             progress_state=view.progress_state,
         )
+
+
+class AttachArtifactBody(BaseModel):
+    """Attach a ready output to a lesson as a file."""
+
+    lesson_id: UUID
+    role: Literal["material", "attachment"] = "material"
+
+
+class AttachedResourceResponse(BaseModel):
+    """The lesson resource that was created from an output."""
+
+    link_id: UUID
+    lesson_id: UUID
+    title: str
+    short_url: str

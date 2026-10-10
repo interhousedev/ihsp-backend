@@ -69,6 +69,7 @@ def test_lesson_item_has_exactly_the_contract_fields() -> None:
         "topic_source",
         "has_homework",
         "attendance_submitted",
+        "absent_count",
     }
 
 
@@ -127,3 +128,8 @@ def test_kind_and_topic_source_come_from_the_lesson() -> None:
     assert (item["kind"], item["topic_source"]) == ("midterm", "emis")
     plain = _item(_ref())
     assert (plain["kind"], plain["topic_source"]) == ("other", None)
+
+
+def test_lesson_item_carries_the_absent_count() -> None:
+    assert _item(_ref())["absent_count"] is None
+    assert _item(_ref(), attendance_submitted=True, absent_count=3)["absent_count"] == 3

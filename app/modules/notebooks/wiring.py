@@ -52,6 +52,7 @@ from app.modules.notebooks.application.rename_artifact import RenameArtifact
 from app.modules.notebooks.application.request_artifact import RequestArtifact
 from app.modules.notebooks.application.retry_artifact import RetryArtifact
 from app.modules.notebooks.application.revise_slides import ReviseSlides
+from app.modules.notebooks.application.attach_artifact import AttachArtifactToLesson
 from app.modules.notebooks.application.save_as_source import SaveAsSource
 from app.modules.notebooks.application.save_flashcard_set import SaveFlashcardSet
 from app.modules.notebooks.application.save_note import SaveNote
@@ -145,6 +146,7 @@ class NotebooksServices:
     retry_artifact: RetryArtifact
     save_progress: SaveProgress
     save_as_source: SaveAsSource
+    attach_artifact: AttachArtifactToLesson | None
     save_flashcard_set: SaveFlashcardSet
     edit_slides: EditSlides
     revise_slides: ReviseSlides
@@ -233,7 +235,14 @@ def build(
     )
     chat = build_chat(core)
     labels = build_labels(core, sleep=sleep)
-    studio = build_studio(core, flashcards=flashcards, sleep=sleep, lms_apply=lms_apply)
+    studio = build_studio(
+        core,
+        flashcards=flashcards,
+        files=files,
+        links=links,
+        sleep=sleep,
+        lms_apply=lms_apply,
+    )
     return NotebooksServices(
         create_notebook=notebooks.create_notebook,
         list_notebooks=notebooks.list_notebooks,
@@ -282,6 +291,7 @@ def build(
         retry_artifact=studio.retry_artifact,
         save_progress=studio.save_progress,
         save_as_source=studio.save_as_source,
+        attach_artifact=studio.attach_artifact,
         save_flashcard_set=studio.save_flashcard_set,
         edit_slides=studio.edit_slides,
         revise_slides=studio.revise_slides,
