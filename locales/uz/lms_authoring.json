@@ -15,7 +15,7 @@
   "lms-staff-invalid": "Rol yoki huquqlar noto'g'ri ko'rsatilgan.",
   "lms-last-manager": "Kursda jamoani boshqara oladigan kamida bitta odam qolishi kerak.",
   "lms-outline-invalid": "Bu o'zgarish kursning joriy tuzilmasiga mos kelmaydi.",
-  "lms-plan-invalid": "Kurs rejasi yaroqsiz. 1 dan {max_sections} gacha bo'lim, har birida ko'pi bilan {max_steps} ta qadam va {max_brief} belgigacha bo'lgan qadam tavsiflaridan foydalaning.",
+  "lms-plan-invalid": "Kurs rejasi yaroqsiz. 1 dan {max_sections} gacha modul, har birida ko'pi bilan {max_steps} ta qadam va {max_brief} belgigacha bo'lgan qadam tavsiflaridan foydalaning.",
   "lms-content-invalid": "Qadam mazmuni yaroqsiz.",
   "lms-file-missing": "Qadam mavjud bo'lmagan faylga havola qilmoqda.",
   "lms-nothing-to-publish": "Nashr qilish uchun o'zgarishlar yo'q.",
