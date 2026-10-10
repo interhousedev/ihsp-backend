@@ -16,7 +16,7 @@ from app.modules.notebooks.ports.unit_of_work import UowFactory
 from app.shared.actor import Actor
 from app.shared.clock import Clock
 
-KINDS = (ArtifactKind.FLASHCARDS, ArtifactKind.QUIZ)
+KINDS = (ArtifactKind.FLASHCARDS, ArtifactKind.QUIZ, ArtifactKind.MIND_MAP)
 
 
 class SaveProgress:

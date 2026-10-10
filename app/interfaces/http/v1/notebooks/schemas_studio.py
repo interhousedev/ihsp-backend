@@ -257,3 +257,18 @@ class AttachedResourceResponse(BaseModel):
     lesson_id: UUID
     title: str
     short_url: str
+
+
+class SaveToFilesBody(BaseModel):
+    """Save a ready output into the caller's files."""
+
+    format: Literal["docx", "xlsx", "pptx", "md"] | None = None
+
+
+class SavedFileResponse(BaseModel):
+    """The file that was created from an output."""
+
+    id: UUID
+    name: str
+    content_type: str
+    byte_size: int

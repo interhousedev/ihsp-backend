@@ -19,6 +19,7 @@ from app.modules.notebooks.application.revise_slides import ReviseSlides
 from app.modules.notebooks.application.save_as_source import SaveAsSource
 from app.modules.notebooks.application.save_flashcard_set import SaveFlashcardSet
 from app.modules.notebooks.application.save_progress import SaveProgress
+from app.modules.notebooks.application.save_to_files import SaveArtifactToFiles
 from app.modules.notebooks.wiring_core import NotebooksCore
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.flashcards import FlashcardsApi
@@ -59,6 +60,7 @@ class StudioServices:
     revise_slides: ReviseSlides
     apply_course_artifact: ApplyCourseArtifact
     attach_artifact: AttachArtifactToLesson | None
+    save_to_files: SaveArtifactToFiles | None
 
 
 def build_studio(
@@ -148,6 +150,11 @@ def build_studio(
         attach_artifact=(
             AttachArtifactToLesson(uow_factory=uow_factory, files=files, links=links)
             if files is not None and links is not None
+            else None
+        ),
+        save_to_files=(
+            SaveArtifactToFiles(uow_factory=uow_factory, files=files)
+            if files is not None
             else None
         ),
     )

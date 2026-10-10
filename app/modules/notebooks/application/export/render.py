@@ -7,6 +7,11 @@ from typing import Any, Final
 
 from app.modules.notebooks.application.export.docx import markdown_to_docx
 from app.modules.notebooks.application.export.pptx import deck_to_pptx, slides_to_pptx
+from app.modules.notebooks.application.export.text import (
+    TEXT_KINDS,
+    to_json,
+    to_markdown,
+)
 from app.modules.notebooks.application.export.xlsx import (
     data_table_to_xlsx,
     table_to_xlsx,
@@ -45,6 +50,33 @@ def file_name(title: str, kind: str) -> str:
 def format_for(kind: ArtifactKind) -> DocumentKind | None:
     """The export format of an output kind, or None if it has none."""
     return KIND_FORMATS.get(kind)
+
+
+def default_format(kind: ArtifactKind) -> str | None:
+    """The download format when none is asked for: Office, else Markdown."""
+    office = KIND_FORMATS.get(kind)
+    if office is not None:
+        return office
+    return "md" if kind in TEXT_KINDS else None
+
+
+def export_as(
+    kind: ArtifactKind, title: str, content: dict[str, Any], fmt: str
+) -> RenderedDocument:
+    """Render a ready output as ``fmt``: its Office format, Markdown or JSON.
+
+    Raises:
+        ValueError: The kind has no such format.
+    """
+    if fmt == KIND_FORMATS.get(kind):
+        return export_artifact(kind, title, content)
+    if fmt == "json" and (kind in KIND_FORMATS or kind in TEXT_KINDS):
+        text, ctype = to_json(title, content), "application/json"
+    elif fmt == "md" and kind in TEXT_KINDS:
+        text, ctype = to_markdown(kind, title, content), "text/markdown"
+    else:
+        raise ValueError(f"{kind.value} has no {fmt} export")
+    return RenderedDocument(file_name(title, fmt), ctype, text.encode())
 
 
 def export_artifact(

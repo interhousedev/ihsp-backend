@@ -17,6 +17,7 @@ from app.interfaces.http.v1.notebooks.handlers import (
     save_as_source,
     save_flashcard_set,
     save_progress,
+    save_to_files,
 )
 
 from fastapi import APIRouter, Response, status
@@ -60,6 +61,12 @@ router.add_api_route(
 router.add_api_route(
     f"{_ONE}/save-as-source",
     save_as_source.save_as_source,
+    methods=["POST"],
+    status_code=status.HTTP_201_CREATED,
+)
+router.add_api_route(
+    f"{_ONE}/save-to-files",
+    save_to_files.save_to_files,
     methods=["POST"],
     status_code=status.HTTP_201_CREATED,
 )

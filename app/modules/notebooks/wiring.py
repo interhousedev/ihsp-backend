@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from app.modules.notebooks.application.add_sources import AddSources
 from app.modules.notebooks.application.apply_course_artifact import ApplyCourseArtifact
 from app.modules.notebooks.application.ask_notebook import AskNotebook
+from app.modules.notebooks.application.attach_artifact import AttachArtifactToLesson
 from app.modules.notebooks.application.build_source_guide import BuildSourceGuide
 from app.modules.notebooks.application.cancel_artifact import CancelArtifact
 from app.modules.notebooks.application.copy_notebook import CopyNotebook
@@ -52,11 +53,11 @@ from app.modules.notebooks.application.rename_artifact import RenameArtifact
 from app.modules.notebooks.application.request_artifact import RequestArtifact
 from app.modules.notebooks.application.retry_artifact import RetryArtifact
 from app.modules.notebooks.application.revise_slides import ReviseSlides
-from app.modules.notebooks.application.attach_artifact import AttachArtifactToLesson
 from app.modules.notebooks.application.save_as_source import SaveAsSource
 from app.modules.notebooks.application.save_flashcard_set import SaveFlashcardSet
 from app.modules.notebooks.application.save_note import SaveNote
 from app.modules.notebooks.application.save_progress import SaveProgress
+from app.modules.notebooks.application.save_to_files import SaveArtifactToFiles
 from app.modules.notebooks.application.search_sources import SearchSources
 from app.modules.notebooks.application.select_sources import SelectSources
 from app.modules.notebooks.application.set_source_labels import SetSourceLabels
@@ -147,6 +148,7 @@ class NotebooksServices:
     save_progress: SaveProgress
     save_as_source: SaveAsSource
     attach_artifact: AttachArtifactToLesson | None
+    save_to_files: SaveArtifactToFiles | None
     save_flashcard_set: SaveFlashcardSet
     edit_slides: EditSlides
     revise_slides: ReviseSlides
@@ -292,6 +294,7 @@ def build(
         save_progress=studio.save_progress,
         save_as_source=studio.save_as_source,
         attach_artifact=studio.attach_artifact,
+        save_to_files=studio.save_to_files,
         save_flashcard_set=studio.save_flashcard_set,
         edit_slides=studio.edit_slides,
         revise_slides=studio.revise_slides,
