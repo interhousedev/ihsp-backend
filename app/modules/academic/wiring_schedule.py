@@ -27,6 +27,7 @@ from app.modules.academic.application.schedule.delete_entry import DeleteEntry
 from app.modules.academic.application.schedule.ensure_room import EnsureRoom
 from app.modules.academic.application.schedule.generate_lessons import GenerateLessons
 from app.modules.academic.application.schedule.get_group_detail import GetGroupDetail
+from app.modules.academic.application.schedule.get_my_teachers import GetMyTeachers
 from app.modules.academic.application.schedule.get_staff_timetable import (
     GetStaffTimetable,
 )
@@ -117,6 +118,7 @@ class ScheduleServices:
     import_confirm: ImportConfirm
     get_student_profile: GetStudentProfile
     get_student_timetable: GetStudentTimetable
+    get_my_teachers: GetMyTeachers
     get_staff_timetable: GetStaffTimetable
     rotate_calendar_token: RotateCalendarToken
     user_for_calendar_token: UserForCalendarToken
@@ -180,6 +182,7 @@ def assemble_schedule(
         import_confirm=ImportConfirm(uow_factory, identity_commands, import_store),
         get_student_profile=GetStudentProfile(uow_factory, identity, mail_domain),
         get_student_timetable=GetStudentTimetable(reader, identity, clock),
+        get_my_teachers=GetMyTeachers(reader, identity, clock),
         get_staff_timetable=GetStaffTimetable(reader, identity, clock),
         rotate_calendar_token=RotateCalendarToken(uow_factory),
         user_for_calendar_token=UserForCalendarToken(uow_factory),

@@ -1,5 +1,6 @@
 """Identity contracts (provider: identity module)."""
 
+import re
 from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -9,7 +10,7 @@ from uuid import UUID
 
 from app.shared.actor import Role
 
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 BOTTOM_NAV_MAX = 4
 SP_BOTTOM_NAV_IDS: tuple[str, ...] = (
@@ -39,6 +40,56 @@ class UserStatus(StrEnum):
     BLOCKED = "blocked"
     DEACTIVATED = "deactivated"
     DELETED = "deleted"
+
+
+_TELEGRAM_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_]{4,31}$")
+_PHONE_RE = re.compile(r"^\+?[0-9 ()\-]{7,24}$")
+_PHONE_DIGITS = (7, 15)
+
+
+class TeacherContacts(BaseModel):
+    """A teacher's public contacts, shown to the students they teach."""
+
+    telegram: str | None = Field(default=None, max_length=32)
+    email: EmailStr | None = None
+    phone: str | None = Field(default=None, max_length=24)
+    office_hours: str | None = Field(default=None, max_length=200)
+    office: str | None = Field(default=None, max_length=100)
+    note: str | None = Field(default=None, max_length=500)
+
+    @field_validator(
+        "telegram", "email", "phone", "office_hours", "office", "note", mode="before"
+    )
+    @classmethod
+    def _blank_is_none(cls, value: object) -> object:
+        """Trim text; an empty string means "not set"."""
+        if isinstance(value, str):
+            return value.strip() or None
+        return value
+
+    @field_validator("telegram")
+    @classmethod
+    def _check_telegram(cls, value: str | None) -> str | None:
+        """Accept @name, t.me/name or name; store the bare username."""
+        if value is None:
+            return None
+        name = re.sub(r"^(https?://)?(t\.me/)?@?", "", value)
+        if not _TELEGRAM_RE.match(name):
+            raise ValueError("telegram: 5-32 letters, digits or underscores")
+        return name
+
+    @field_validator("phone")
+    @classmethod
+    def _check_phone(cls, value: str | None) -> str | None:
+        """7-15 digits with an optional leading plus."""
+        if value is None:
+            return None
+        digits = sum(ch.isdigit() for ch in value)
+        if not _PHONE_RE.match(value) or not (
+            _PHONE_DIGITS[0] <= digits <= _PHONE_DIGITS[1]
+        ):
+            raise ValueError("phone: 7-15 digits, optional leading +")
+        return value
 
 
 class UserPreferences(BaseModel):
@@ -74,6 +125,7 @@ class UserPreferences(BaseModel):
     onboarding_dismissed: list[str] = []
     bottom_nav: list[str] | None = None  # sp phone bottom bar: up to 4 destination ids
     seen_marks_at: datetime | None = None
+    contacts: TeacherContacts = TeacherContacts()  # teachers: shown to students
 
     @field_validator("bottom_nav")
     @classmethod
