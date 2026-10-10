@@ -40,24 +40,35 @@ STUDENT_TOOLS: dict[str, tuple[str, dict[str, Any]]] = {
     "update_flashcard": ("flashcards:write", {"card_id": ID, "front": "x"}),
 }
 LMS_TOOLS: dict[str, tuple[str, dict[str, Any]]] = {
-    "list_courses": ("courses:read", {}),
-    "get_course": ("courses:read", {"course_id": COURSE}),
-    "get_step": ("courses:read", {"step_id": STEP}),
-    "list_pending_changes": ("courses:read", {"course_id": COURSE}),
-    "list_versions": ("courses:read", {"course_id": COURSE}),
-    "list_attempts": ("courses:read", {"course_id": COURSE}),
-    "create_section": ("courses:draft", {"course_id": COURSE, "title": "t"}),
+    "list_courses": ("lms.courses.read", {}),
+    "get_course": ("lms.courses.read", {"course_id": COURSE}),
+    "get_step": ("lms.courses.read", {"step_id": STEP}),
+    "list_pending_changes": ("lms.courses.read", {"course_id": COURSE}),
+    "list_versions": ("lms.courses.read", {"course_id": COURSE}),
+    "list_attempts": ("lms.courses.read", {"course_id": COURSE}),
+    "create_course": ("lms.courses.write", {"title": "t"}),
+    "update_course": ("lms.courses.write", {"course_id": COURSE, "title": "t"}),
+    "delete_course": ("lms.courses.delete", {"course_id": COURSE}),
+    "create_module": ("lms.modules.write", {"course_id": COURSE, "title": "t"}),
+    "update_module": (
+        "lms.modules.write",
+        {"course_id": COURSE, "module_id": "s", "title": "t"},
+    ),
+    "delete_module": ("lms.modules.write", {"course_id": COURSE, "module_id": "s"}),
+    "create_section": ("lms.modules.write", {"course_id": COURSE, "title": "t"}),
     "create_step": (
-        "courses:draft",
+        "lms.modules.write",
         {"course_id": COURSE, "section_id": "s", "title": "t"},
     ),
-    "add_text_block": ("courses:draft", {"step_id": STEP, "markdown": "m"}),
-    "add_test_block": ("courses:draft", {"step_id": STEP}),
+    "update_step": ("lms.modules.write", {"step_id": STEP, "title": "t"}),
+    "delete_step": ("lms.modules.write", {"step_id": STEP}),
+    "add_text_block": ("lms.modules.write", {"step_id": STEP, "markdown": "m"}),
+    "add_test_block": ("lms.modules.write", {"step_id": STEP}),
     "add_question": (
-        "courses:draft",
+        "lms.modules.write",
         {"step_id": STEP, "block_id": "b", "question": QUESTION},
     ),
-    "add_flashcards_block": ("courses:draft", {"step_id": STEP, "cards": CARDS}),
+    "add_flashcards_block": ("lms.modules.write", {"step_id": STEP, "cards": CARDS}),
 }
 ADMIN_TOOLS: dict[str, tuple[str, dict[str, Any]]] = {
     "search_users": ("people:read", {"query": "x"}),
@@ -90,6 +101,7 @@ def _writers(tools: list[Tool]) -> set[str]:
 
 
 FORBIDDEN_VERBS = re.compile(r"delete|remove|publish|restore|discard|drop|destroy")
+LMS_FORBIDDEN_VERBS = re.compile(r"publish|restore|discard|drop|destroy")
 
 
 @pytest.mark.parametrize("server", ["student", "lms", "admin"])
@@ -106,22 +118,23 @@ async def test_server_offers_exactly_the_tools_of_mcp_8(
 
 
 @pytest.mark.parametrize("server", ["student", "lms", "admin"])
-async def test_no_server_has_a_delete_or_publish_tool(
+async def test_no_server_has_a_publish_tool_and_only_lms_deletes(
     world: World, server: ServerName
 ) -> None:
-    """MCP-6, UF-LMS-16 2a: nothing deletes, edits existing content or publishes."""
+    """MCP-6: nothing publishes; only the LMS server deletes."""
     token, _ = world.connector_token(server, *SCOPES_BY_SERVER[server])
 
     async with world.session(server, token) as session:
         listed = await session.list_tools()
 
     names = [tool.name for tool in listed.tools]
-    assert not [name for name in names if FORBIDDEN_VERBS.search(name)]
-    assert "create_course" not in names
+    forbidden = LMS_FORBIDDEN_VERBS if server == "lms" else FORBIDDEN_VERBS
+    assert not [name for name in names if forbidden.search(name)]
+    assert ("create_course" in names) == (server == "lms")
 
 
-async def test_lms_server_only_adds_to_drafts(world: World) -> None:
-    """MCP-6: the LMS write tools are the six additive ones."""
+async def test_lms_server_writes_drafts_only(world: World) -> None:
+    """MCP-6: the LMS write tools are the course and draft CRUD, never publishing."""
     token, _ = world.connector_token("lms", *SCOPES_BY_SERVER["lms"])
 
     async with world.session("lms", token) as session:
@@ -129,13 +142,27 @@ async def test_lms_server_only_adds_to_drafts(world: World) -> None:
 
     writers = _writers(listed.tools)
     assert writers == {
+        "create_course",
+        "update_course",
+        "delete_course",
+        "create_module",
+        "update_module",
+        "delete_module",
         "create_section",
         "create_step",
+        "update_step",
+        "delete_step",
         "add_text_block",
         "add_test_block",
         "add_question",
         "add_flashcards_block",
     }
+    destructive = {
+        t.name
+        for t in listed.tools
+        if t.annotations is not None and t.annotations.destructiveHint
+    }
+    assert destructive == {"delete_course", "delete_module", "delete_step"}
 
 
 async def test_students_server_flash_cards_can_be_created_and_edited_only(

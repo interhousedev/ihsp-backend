@@ -1,5 +1,6 @@
 """HTTP routes of course authoring (task B12)."""
 
+from app.interfaces.http.v1.lms_authoring.broadcasts.router import router as broadcasts
 from app.interfaces.http.v1.lms_authoring.courses.router import router as courses
 from app.interfaces.http.v1.lms_authoring.creators.router import router as creators
 from app.interfaces.http.v1.lms_authoring.draft.router import router as draft
@@ -13,6 +14,7 @@ from fastapi import APIRouter
 
 ROUTERS: list[APIRouter] = [
     courses,
+    broadcasts,
     creators,
     draft,
     steps,

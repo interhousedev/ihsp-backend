@@ -24,4 +24,5 @@ class GetStepDraft:
             step = await load_step(uow, step_id)
             access = await access_to(uow, actor, step.course_id)
             access.require(EDIT, VIEW_DRAFTS)
+            access.require_read_scope()
         return await self.presenter.step_draft(step)

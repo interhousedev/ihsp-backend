@@ -12,6 +12,7 @@ from app.modules.lms.domain.authoring.errors import TitleInvalidError
 from app.modules.lms.domain.authoring.permissions import EDIT
 from app.shared.actor import Actor
 from app.shared.clock import Clock
+from app.shared.lms_scopes import MODULES_WRITE
 
 LABEL_MAX_LENGTH = 120
 
@@ -38,6 +39,7 @@ class SaveCheckpoint:
             step = await load_step(uow, step_id)
             access = await access_to(uow, actor, step.course_id)
             access.require(EDIT)
+            access.require_scope(MODULES_WRITE)
             revision = await uow.revisions.ensure(
                 step_id=step.id,
                 content=step.draft,

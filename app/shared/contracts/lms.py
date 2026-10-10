@@ -41,7 +41,64 @@ class LmsQueries(Protocol):
 
 
 class LmsDraftCommands(Protocol):
-    """Add-only draft edits for MCP (MCP-6)."""
+    """Draft edits for MCP: create, update and delete under the scopes of the token.
+
+    Nothing here publishes. "Delete" of a course archives it; a module can be deleted
+    only when empty and a step only leaves the outline, so no student data is lost.
+    """
+
+    async def create_course(
+        self,
+        actor: Actor,
+        *,
+        title: str,
+        slug: str | None,
+        visibility: str,
+    ) -> dict[str, Any]:
+        """Create a course with an empty draft (needs `lms.courses.write`)."""
+        ...
+
+    async def update_course(
+        self,
+        actor: Actor,
+        course_id: UUID,
+        *,
+        title: str | None,
+        description: str | None,
+    ) -> dict[str, Any]:
+        """Change the draft title and description (needs `lms.courses.write`)."""
+        ...
+
+    async def delete_course(self, actor: Actor, course_id: UUID) -> dict[str, Any]:
+        """Archive a course (needs `lms.courses.delete`)."""
+        ...
+
+    async def update_module(
+        self, actor: Actor, course_id: UUID, section_id: str, title: str
+    ) -> dict[str, Any]:
+        """Rename a module (section) of the draft outline."""
+        ...
+
+    async def delete_module(
+        self, actor: Actor, course_id: UUID, section_id: str
+    ) -> dict[str, Any]:
+        """Remove an empty module from the draft outline."""
+        ...
+
+    async def update_step(
+        self,
+        actor: Actor,
+        step_id: UUID,
+        *,
+        title: str | None,
+        blocks: list[dict[str, Any]] | None,
+    ) -> dict[str, Any]:
+        """Rename a step and/or replace all its blocks in the draft."""
+        ...
+
+    async def delete_step(self, actor: Actor, step_id: UUID) -> dict[str, Any]:
+        """Take a step out of the draft outline (its history is kept)."""
+        ...
 
     async def create_section(
         self, actor: Actor, course_id: UUID, title: str, *, via_mcp: bool

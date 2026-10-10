@@ -23,6 +23,7 @@ from app.shared.contracts.lms_blocks import (
     FlashcardsBlockInput,
     TestBlockInput,
     TextBlockInput,
+    VideoBlockInput,
     build_block,
 )
 
@@ -39,7 +40,11 @@ class KeepBlockInput(BaseModel):
 
 
 StepBlockArg = Annotated[
-    TextBlockInput | TestBlockInput | FlashcardsBlockInput | KeepBlockInput,
+    TextBlockInput
+    | VideoBlockInput
+    | TestBlockInput
+    | FlashcardsBlockInput
+    | KeepBlockInput,
     Field(discriminator="type"),
 ]
 
@@ -68,8 +73,9 @@ class ReplaceStepContent(AuthorWriteTool[ReplaceStepContentArgs]):
     description = (
         "Rewrite a whole step of this course in ONE call (needs approval): its "
         "title and all its blocks in order. Call get_step_draft first and pass its "
-        "lock_version. Each block is new (type text, test or flashcards, as in "
-        'add_*) or an existing block kept unchanged: {"type": "keep", "block": N} '
+        "lock_version. Each block is new (type text, video {url, caption}, test or "
+        "flashcards, as in add_*) or an existing block kept unchanged: "
+        '{"type": "keep", "block": N} '
         "(N from get_step_draft; never copy a kept block's content). Existing "
         "blocks you leave out are REMOVED: say so in your proposal. Use it to write "
         "a lesson into an empty step or to restructure a step. On draft-conflict "

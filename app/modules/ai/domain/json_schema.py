@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from app.shared.contracts.lms_blocks import PLAIN_KEY
+
 from pydantic import BaseModel
 
 _SCHEMA_LISTS = ("anyOf", "allOf", "oneOf", "prefixItems")
@@ -37,11 +39,37 @@ def _closed(node: Any) -> Any:
 
 
 def tool_parameters(model: type[BaseModel]) -> dict[str, Any]:
-    """Return the model's JSON schema with `$ref`s inlined and titles removed."""
+    """Return the model's JSON schema with `$ref`s inlined and titles removed.
+
+    A property marked ``x-plain`` (see ``lms_blocks.PLAIN_KEY``) loses its ``null``
+    branch: strict providers refuse a tool with more than 16 nullable properties.
+    """
     schema = model.model_json_schema()
     definitions: dict[str, Any] = schema.pop("$defs", {})
     schema.pop("description", None)  # the model class docstring is not for the LLM
-    return _clean(_inline(schema, definitions))  # type: ignore[no-any-return]
+    return _clean(_plain(_inline(schema, definitions)))  # type: ignore[no-any-return]
+
+
+def _plain(node: Any) -> Any:
+    if isinstance(node, list):
+        return [_plain(item) for item in node]
+    if not isinstance(node, dict):
+        return node
+    cleaned = {key: _plain(value) for key, value in node.items()}
+    if cleaned.pop(PLAIN_KEY, None):
+        any_of = cleaned.pop("anyOf", None)
+        if isinstance(any_of, list):
+            kept = [
+                x
+                for x in any_of
+                if not (isinstance(x, dict) and x.get("type") == "null")
+            ]
+            if len(kept) == 1:
+                cleaned = {**cleaned, **kept[0]}
+            else:
+                cleaned["anyOf"] = kept
+        cleaned.pop("default", None)
+    return cleaned
 
 
 def _inline(node: Any, definitions: dict[str, Any]) -> Any:

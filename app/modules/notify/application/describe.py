@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, NamedTuple
+from urllib.parse import quote
 
 from app.modules.notify.application.format import (
     fmt_date,
@@ -190,7 +191,9 @@ def _mail_bounced(p: dict[str, Any], v: _View) -> Description:
 
 def _broadcast(p: dict[str, Any], v: _View) -> Description:
     title = str(p.get("title") or v.t("notify-broadcast-title"))
-    return Description(title, strip_html(str(p.get("text", ""))), None)
+    slug = p.get("course_slug")
+    link = f"{v.urls.lms}/course/?slug={quote(str(slug))}" if slug else None
+    return Description(title, strip_html(str(p.get("text", ""))), link)
 
 
 def _emis_reauth(p: dict[str, Any], v: _View) -> Description:

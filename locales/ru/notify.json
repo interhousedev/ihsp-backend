@@ -130,5 +130,6 @@
   "notify-library-reason-unreadable": "не читается",
   "notify-btn-open-library-item": "Открыть материал",
   "notify-btn-open-library-queue": "Открыть очередь проверки",
-  "notify-btn-open-library-list": "Открыть список чтения"
+  "notify-btn-open-library-list": "Открыть список чтения",
+  "notify-course-broadcast-invalid": "В рассылке нужны заголовок (до 120 символов) и текст (до 2000 символов)."
 }

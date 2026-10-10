@@ -14,6 +14,7 @@ from app.modules.lms.domain.authoring.permissions import EDIT
 from app.modules.lms.domain.step_content import StepContent
 from app.shared.actor import Actor
 from app.shared.clock import Clock
+from app.shared.lms_scopes import MODULES_WRITE
 
 
 class SaveStepDraft:
@@ -51,6 +52,7 @@ class SaveStepDraft:
             step = await load_step(uow, step_id)
             access = await access_to(uow, actor, step.course_id)
             access.require(EDIT)
+            access.require_scope(MODULES_WRITE)
             prepared = await self.writer.prepare(uow, step, content)
             if prepared.content_hash == step.draft_hash:
                 return await self.presenter.step_draft(step)

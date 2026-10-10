@@ -16,6 +16,7 @@ from app.modules.lms.domain.authoring.errors import VersionNotFoundError
 from app.modules.lms.domain.authoring.permissions import EDIT
 from app.shared.actor import Actor
 from app.shared.clock import Clock
+from app.shared.lms_scopes import COURSES_WRITE
 
 
 class RestoreVersion:
@@ -37,6 +38,7 @@ class RestoreVersion:
             course = await load_course_locked(uow, course_id)
             access = await access_to(uow, actor, course_id)
             access.require(EDIT)
+            access.require_scope(COURSES_WRITE)
             version = await uow.versions.get_by_number(course_id, number)
             if version is None:
                 raise VersionNotFoundError(params={"number": number})

@@ -30,3 +30,9 @@ def clean_title(title: str) -> str:
 def new_invite_code() -> str:
     """Return a random 10-character invite code (about 58 bits)."""
     return "".join(secrets.choice(SHORT_ID_ALPHABET) for _ in range(INVITE_CODE_LENGTH))
+
+
+def slug_from_title(title: str, suffix: str) -> str:
+    """Return a valid slug built from a title and a short unique suffix."""
+    base = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:40].strip("-")
+    return f"{base or 'course'}-{suffix}"[:60]

@@ -10,6 +10,7 @@ from app.modules.lms.domain.authoring.errors import (
     StaffInvalidError,
 )
 from app.shared.actor import Actor, Role
+from app.shared.lms_scopes import scope_allows, scope_allows_read
 
 EDIT: Final = "edit"
 PUBLISH: Final = "publish"
@@ -97,3 +98,18 @@ class CourseAccess:
         """Raise CoursePermissionError unless the actor is course staff."""
         if not self.is_staff:
             raise CoursePermissionError(params={"permission": "staff"})
+
+    def require_scope(self, scope: str) -> None:
+        """Raise CoursePermissionError unless the caller's token grants the scope.
+
+        Scopes narrow roles, they never widen them: an LMS admin whose connector
+        holds only `lms.modules.write` still cannot change a course title. A browser
+        session has no scopes and passes.
+        """
+        if not scope_allows(self.actor.scopes, scope):
+            raise CoursePermissionError(params={"permission": scope})
+
+    def require_read_scope(self) -> None:
+        """Raise CoursePermissionError unless the token holds any LMS scope."""
+        if not scope_allows_read(self.actor.scopes):
+            raise CoursePermissionError(params={"permission": "lms.courses.read"})

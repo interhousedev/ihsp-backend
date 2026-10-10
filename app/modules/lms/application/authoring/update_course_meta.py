@@ -15,6 +15,7 @@ from app.modules.lms.domain.authoring.course_rules import clean_title
 from app.modules.lms.domain.authoring.permissions import EDIT
 from app.shared.actor import Actor
 from app.shared.clock import Clock
+from app.shared.lms_scopes import COURSES_WRITE
 
 
 class UpdateCourseMeta:
@@ -43,6 +44,7 @@ class UpdateCourseMeta:
             course = await load_course_locked(uow, course_id)
             access = await access_to(uow, actor, course_id)
             access.require(EDIT)
+            access.require_scope(COURSES_WRITE)
             if course.lock_version != lock_version:
                 raise await course_conflict(self.presenter, uow, course, access)
             course.draft_meta = {"title": clean, "description": description}

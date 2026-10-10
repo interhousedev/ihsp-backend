@@ -19,6 +19,7 @@ from app.modules.lms.domain.authoring.errors import (
 from app.modules.lms.domain.authoring.permissions import EDIT
 from app.shared.actor import Actor
 from app.shared.clock import Clock
+from app.shared.lms_scopes import MODULES_WRITE
 
 
 class DiscardStep:
@@ -39,6 +40,7 @@ class DiscardStep:
             step = await load_step(uow, step_id)
             access = await access_to(uow, actor, step.course_id)
             access.require(EDIT)
+            access.require_scope(MODULES_WRITE)
             if step.live_revision_id is None:
                 raise NoLiveVersionError(params={"step_id": str(step_id)})
             if step.draft_hash == step.live_hash:

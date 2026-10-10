@@ -82,6 +82,8 @@ def model_block(
         shown["markdown"] = cut
         if len(cut) < len(markdown):
             shown.update(shortened=True, chars=len(markdown))
+    elif kind == "video":
+        shown.update(url=block.get("url"), caption=block.get("caption") or "")
     elif kind == "test":
         shown.update(_test(block, compact))
     elif kind == "flashcards":
@@ -111,6 +113,9 @@ def _question(question: dict[str, Any]) -> dict[str, Any]:
         for key in ("type", "prompt", "points", "explanation", "answer")
         if question.get(key) is not None
     }
+    for key in ("pairs", "table", "blanks", "random", "formula", "code"):
+        if question.get(key):
+            shown[key] = _without_ids(question[key])
     options = question.get("options")
     if isinstance(options, list):
         shown["options"] = [
@@ -120,6 +125,14 @@ def _question(question: dict[str, Any]) -> dict[str, Any]:
             if isinstance(o, dict)
         ]
     return shown
+
+
+def _without_ids(value: Any) -> Any:  # noqa: ANN401 - any JSON value
+    if isinstance(value, dict):
+        return {k: _without_ids(v) for k, v in value.items() if k != "id"}
+    if isinstance(value, list):
+        return [_without_ids(v) for v in value]
+    return value
 
 
 def _cards(block: dict[str, Any], compact: bool) -> dict[str, Any]:
@@ -140,8 +153,32 @@ def _cards(block: dict[str, Any], compact: bool) -> dict[str, Any]:
 # - - - Approval card lines - - -
 
 
+def _rich_answer(question: dict[str, Any]) -> str | None:
+    """The answer of the richer question types; None for text, number and choice."""
+    kind = question.get("type")
+    options = question.get("options") or []
+    if kind == "sorting":
+        return " → ".join(str(o["text"]) for o in options)
+    if kind == "matching":
+        pairs = question.get("pairs") or []
+        return "; ".join(f"{p['left']} = {p['right']}" for p in pairs)
+    if kind == "blanks":
+        found = (b.get("accepted") or [] for b in question.get("blanks") or [])
+        return "; ".join(" / ".join(map(str, accepted)) for accepted in found)
+    if kind == "formula":
+        return str((question.get("formula") or {}).get("expression", ""))
+    if kind == "random_number":
+        return str((question.get("random") or {}).get("formula", ""))
+    if kind in ("table", "code", "free"):
+        return ""
+    return None
+
+
 def answer_text(question: dict[str, Any]) -> str:
     """Return the right answer of a built question for an approval card."""
+    rich = _rich_answer(question)
+    if rich is not None:
+        return rich
     options = question.get("options")
     if isinstance(options, list):
         return "; ".join(str(o["text"]) for o in options if o.get("correct"))
@@ -185,6 +222,8 @@ def block_line(i18n: I18nCore, locale: str, block: dict[str, Any]) -> str:
         lines = first_lines(str(block.get("markdown") or ""), lines=1, chars=120)
         preview = lines[0] if lines else ""
         return i18n.t(locale, "ai-item-text", preview=preview)
+    if kind == "video":
+        return str(block.get("url") or "")[:120]
     if kind == "test":
         count = len(block.get("questions") or [])
         return i18n.t(locale, "ai-item-test", count=count)

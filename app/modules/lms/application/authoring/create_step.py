@@ -20,6 +20,7 @@ from app.modules.lms.domain.step_content import StepContent, canonical_hash
 from app.shared.actor import Actor
 from app.shared.clock import Clock
 from app.shared.ids import new_id
+from app.shared.lms_scopes import MODULES_WRITE
 
 
 class CreateStep:
@@ -50,6 +51,7 @@ class CreateStep:
             course = await load_course_locked(uow, course_id)
             access = await access_to(uow, actor, course_id)
             access.require(EDIT)
+            access.require_scope(MODULES_WRITE)
             if not has_section(course.draft_outline, section_id):
                 raise OutlineError(
                     params={"reason": "section-not-found", "section_id": section_id}

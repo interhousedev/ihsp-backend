@@ -130,5 +130,6 @@
   "notify-library-reason-unreadable": "o'qib bo'lmaydi",
   "notify-btn-open-library-item": "Materialni ochish",
   "notify-btn-open-library-queue": "Navbatni ochish",
-  "notify-btn-open-library-list": "Ro'yxatni ochish"
+  "notify-btn-open-library-list": "Ro'yxatni ochish",
+  "notify-course-broadcast-invalid": "Xabarda sarlavha (120 belgigacha) va matn (2000 belgigacha) boʻlishi kerak."
 }

@@ -6,10 +6,11 @@ from uuid import UUID
 from app.interfaces.mcp.guard import current_actor
 from app.interfaces.mcp.lms.course_scope import ensure_course
 from app.interfaces.mcp.toolkit import ToolKit
+from app.shared.lms_scopes import COURSES_READ
 
 from pydantic import Field
 
-SCOPE = "courses:read"
+SCOPE = COURSES_READ
 
 
 def register(kit: ToolKit) -> None:

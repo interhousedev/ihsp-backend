@@ -19,6 +19,7 @@ from app.modules.lms.domain.authoring.errors import (
 from app.modules.lms.domain.authoring.permissions import EDIT
 from app.shared.actor import Actor
 from app.shared.clock import Clock
+from app.shared.lms_scopes import COURSES_WRITE
 
 
 class DiscardCourse:
@@ -38,6 +39,7 @@ class DiscardCourse:
             course = await load_course_locked(uow, course_id)
             access = await access_to(uow, actor, course_id)
             access.require(EDIT)
+            access.require_scope(COURSES_WRITE)
             if course.live_version_id is None:
                 raise NoLiveVersionError(params={"course_id": str(course_id)})
             version = await uow.versions.get(course.live_version_id)

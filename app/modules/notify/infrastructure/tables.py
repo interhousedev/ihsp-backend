@@ -7,6 +7,7 @@ from sqlalchemy import Table
 
 NOTIFICATIONS_TABLE = "notify.notifications"
 PUSH_SUBSCRIPTIONS_TABLE = "notify.push_subscriptions"
+COURSE_BROADCASTS_TABLE = "notify.course_broadcasts"
 
 
 def notifications_table() -> Table:
@@ -17,3 +18,8 @@ def notifications_table() -> Table:
 def push_subscriptions_table() -> Table:
     """Return `notify.push_subscriptions`."""
     return Base.metadata.tables[PUSH_SUBSCRIPTIONS_TABLE]
+
+
+def course_broadcasts_table() -> Table:
+    """Return `notify.course_broadcasts`."""
+    return Base.metadata.tables[COURSE_BROADCASTS_TABLE]

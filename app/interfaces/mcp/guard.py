@@ -17,6 +17,7 @@ from app.interfaces.mcp.jsonable import to_jsonable, to_jsonable_dict
 from app.shared.actor import Actor
 from app.shared.base_error import BaseError, ForbiddenError, RateLimitedError
 from app.shared.ids import new_id
+from app.shared.lms_scopes import effective_scopes
 from app.shared.notifications import AuditDraft
 
 import structlog
@@ -113,7 +114,7 @@ class ToolGuard:
     async def _enforce(self, actor: Actor, tool: str, scope: str) -> None:
         try:
             await self._limit(actor)
-            if scope not in actor.scopes:
+            if scope not in effective_scopes(actor.scopes):
                 raise McpScopeError(params={"scope": scope})
         except (RateLimitedError, ForbiddenError) as error:
             await self._audit_denied(actor, tool, error.code, scope=scope)

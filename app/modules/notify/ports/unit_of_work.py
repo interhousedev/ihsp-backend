@@ -3,10 +3,14 @@
 from types import TracebackType
 from typing import Protocol, Self
 
+from app.modules.notify.ports.course_broadcast_repository import (
+    CourseBroadcastRepository,
+)
 from app.modules.notify.ports.notification_repository import NotificationRepository
 from app.modules.notify.ports.push_subscription_repository import (
     PushSubscriptionRepository,
 )
+from app.shared.notifications import NotificationDraft
 
 
 class NotifyUnitOfWork(Protocol):
@@ -20,6 +24,15 @@ class NotifyUnitOfWork(Protocol):
     @property
     def push_subscriptions(self) -> PushSubscriptionRepository:
         """Web Push subscription repository bound to this transaction."""
+        ...
+
+    @property
+    def course_broadcasts(self) -> CourseBroadcastRepository:
+        """Course broadcast history bound to this transaction."""
+        ...
+
+    def notify(self, *drafts: NotificationDraft) -> None:
+        """Queue notifications to insert at commit."""
         ...
 
     async def __aenter__(self) -> Self:

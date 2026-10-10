@@ -4,6 +4,13 @@ from dataclasses import dataclass
 from typing import Literal
 
 from app.shared.actor import Role
+from app.shared.lms_scopes import (
+    COURSES_DELETE,
+    COURSES_READ,
+    COURSES_WRITE,
+    LEGACY_ALIASES,
+    MODULES_WRITE,
+)
 
 Server = Literal["student", "lms", "admin"]
 SERVERS: tuple[Server, ...] = ("student", "lms", "admin")
@@ -60,7 +67,7 @@ SCOPE_CATALOG: dict[str, tuple[ScopeInfo, ...]] = {
     ),
     "lms": (
         ScopeInfo(
-            "courses:read",
+            COURSES_READ,
             (
                 "list_courses",
                 "get_course",
@@ -70,11 +77,18 @@ SCOPE_CATALOG: dict[str, tuple[ScopeInfo, ...]] = {
                 "list_attempts",
             ),
         ),
+        ScopeInfo(COURSES_WRITE, ("create_course", "update_course")),
+        ScopeInfo(COURSES_DELETE, ("delete_course",)),
         ScopeInfo(
-            "courses:draft",
+            MODULES_WRITE,
             (
+                "create_module",
+                "update_module",
+                "delete_module",
                 "create_section",
                 "create_step",
+                "update_step",
+                "delete_step",
                 "add_text_block",
                 "add_test_block",
                 "add_question",
@@ -102,8 +116,13 @@ PRESETS: dict[str, tuple[Preset, ...]] = {
         ),
     ),
     "lms": (
-        Preset("course-reviewer", ("courses:read",)),
-        Preset("course-author", ("courses:read", "courses:draft")),
+        Preset("course-reviewer", (COURSES_READ,)),
+        Preset("module-editor", (COURSES_READ, MODULES_WRITE)),
+        Preset("course-author", (COURSES_READ, COURSES_WRITE, MODULES_WRITE)),
+        Preset(
+            "course-manager",
+            (COURSES_READ, COURSES_WRITE, COURSES_DELETE, MODULES_WRITE),
+        ),
     ),
     "admin": (
         Preset("attendance-analyst", ("attendance:read", "groups:read")),
@@ -113,8 +132,9 @@ PRESETS: dict[str, tuple[Preset, ...]] = {
 
 
 def scope_names(server: str) -> frozenset[str]:
-    """All scopes of a server."""
-    return frozenset(info.scope for info in SCOPE_CATALOG.get(server, ()))
+    """All scopes of a server (the LMS also accepts its pre-split names)."""
+    names = frozenset(info.scope for info in SCOPE_CATALOG.get(server, ()))
+    return names | frozenset(LEGACY_ALIASES) if server == "lms" else names
 
 
 def role_may_use_server(roles: frozenset[Role] | set[Role], server: str) -> bool:

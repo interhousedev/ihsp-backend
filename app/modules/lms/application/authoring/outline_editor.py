@@ -20,6 +20,7 @@ from app.modules.lms.domain.authoring.permissions import EDIT, CourseAccess
 from app.modules.lms.ports.authoring.unit_of_work import AuthoringUnitOfWork
 from app.shared.actor import Actor
 from app.shared.clock import Clock
+from app.shared.lms_scopes import MODULES_WRITE
 
 
 def record_draft_change(
@@ -59,6 +60,7 @@ class OutlineEditor:
         course = await load_course_locked(uow, course_id)
         access = await access_to(uow, actor, course_id)
         access.require(EDIT)
+        access.require_scope(MODULES_WRITE)
         if lock_version is not None and course.lock_version != lock_version:
             raise await course_conflict(self.presenter, uow, course, access)
         known = set(step_ids_in(course.draft_outline))

@@ -26,5 +26,6 @@ class ListStepHistory:
             step = await load_step(uow, step_id)
             access = await access_to(uow, actor, step.course_id)
             access.require(EDIT)
+            access.require_read_scope()
             revisions = await uow.revisions.list_for_history(step_id, HISTORY_LIMIT)
         return await self.presenter.revision_items(revisions)

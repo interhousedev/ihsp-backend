@@ -10,7 +10,10 @@ from app.modules.lms.domain.authoring.course_rules import (
 )
 from app.modules.lms.domain.authoring.entities import Course, StaffMember
 from app.modules.lms.domain.authoring.enums import CourseStatus, Visibility
-from app.modules.lms.domain.authoring.errors import SlugTakenError
+from app.modules.lms.domain.authoring.errors import (
+    CoursePermissionError,
+    SlugTakenError,
+)
 from app.modules.lms.domain.authoring.hashing import outline_hash
 from app.modules.lms.domain.authoring.outline import empty_outline
 from app.modules.lms.domain.authoring.permissions import (
@@ -21,6 +24,7 @@ from app.modules.lms.domain.authoring.permissions import (
 from app.shared.actor import Actor, Role
 from app.shared.clock import Clock
 from app.shared.ids import new_id
+from app.shared.lms_scopes import COURSES_WRITE, scope_allows
 
 
 class CreateCourse:
@@ -43,6 +47,8 @@ class CreateCourse:
     ) -> CourseDraftView:
         """Create the course with an empty outline and no live version."""
         actor.require(Role.LMS_ADMIN, Role.LMS_CREATOR)
+        if not scope_allows(actor.scopes, COURSES_WRITE):
+            raise CoursePermissionError(params={"permission": COURSES_WRITE})
         clean = clean_title(title)
         validate_slug(slug)
         meta = {"title": clean, "description": ""}

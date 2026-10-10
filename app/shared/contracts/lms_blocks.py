@@ -7,7 +7,7 @@ the shape of the LMS ``Block`` contract. Ids are left empty: the server assigns 
 ids to blocks, questions, options and cards (LMS-23).
 """
 
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any, Final, Literal
 
 from pydantic import BaseModel, Field
 
@@ -17,6 +17,18 @@ class BlockInputError(ValueError):
 
 
 # - - - Argument models - - -
+
+
+PLAIN_KEY: Final = "x-plain"
+_plain: Final[dict[str, Any]] = {PLAIN_KEY: True}
+"""Marks an optional field that a tool schema shows without ``null``.
+
+Providers compile a strict tool schema only while at most 16 properties are
+nullable; the question model alone has more optional fields than that. In the tool
+schema (``strict_tool_parameters``) the model writes ``[]`` or ``""`` for "not used"
+and the builders treat both as absent, while Python callers may still pass ``None``
+and the HTTP API keeps the nullable schema.
+"""
 
 CardText = Annotated[str, Field(min_length=1, max_length=2000)]
 
@@ -64,7 +76,7 @@ class BlankInput(BaseModel):
     """One blank of a fill-in-the-blanks question (``{{1}}``, ``{{2}}`` in the prompt)."""
 
     accepted: list[str] = Field(default_factory=list, max_length=20)
-    regex: str | None = Field(default=None, max_length=200)
+    regex: str | None = Field(default=None, max_length=200, json_schema_extra=_plain)
 
 
 class VariableInput(BaseModel):
@@ -106,18 +118,28 @@ class QuestionInput(BaseModel):
         default=1, ge=1, le=100, description="Score for a right answer."
     )
     explanation: str | None = Field(
-        default=None, max_length=2000, description="Shown after answering, if allowed."
+        default=None,
+        max_length=2000,
+        description="Shown after answering, if allowed.",
+        json_schema_extra=_plain,
     )
     options: list[OptionInput] | None = Field(
         default=None,
         max_length=10,
         description="For single and multiple: at least two options.",
+        json_schema_extra=_plain,
     )
     accepted_answers: list[str] | None = Field(
-        default=None, max_length=20, description="For text: accepted exact answers."
+        default=None,
+        max_length=20,
+        description="For text: accepted exact answers.",
+        json_schema_extra=_plain,
     )
     regex: str | None = Field(
-        default=None, max_length=200, description="For text: a regular expression."
+        default=None,
+        max_length=200,
+        description="For text: a regular expression.",
+        json_schema_extra=_plain,
     )
     case_sensitive: bool = Field(
         default=False, description="For text: compare case-sensitively."
@@ -129,32 +151,58 @@ class QuestionInput(BaseModel):
         default=0.0, ge=0, description="For number: allowed difference."
     )
     items: list[str] | None = Field(
-        default=None, max_length=20, description="For sorting: items in order."
+        default=None,
+        max_length=20,
+        description="For sorting: items in order.",
+        json_schema_extra=_plain,
     )
     pairs: list[PairInput] | None = Field(
-        default=None, max_length=20, description="For matching: at least two pairs."
+        default=None,
+        max_length=20,
+        description="For matching: at least two pairs.",
+        json_schema_extra=_plain,
     )
     rows: list[str] | None = Field(
-        default=None, max_length=30, description="Table rows."
+        default=None, max_length=30, description="Table rows.", json_schema_extra=_plain
     )
     columns: list[str] | None = Field(
-        default=None, max_length=30, description="Table columns."
+        default=None,
+        max_length=30,
+        description="Table columns.",
+        json_schema_extra=_plain,
     )
     correct_cells: list[tuple[int, int]] | None = Field(
-        default=None, description="For table: the (row, column) cells to mark, 0-based."
+        default=None,
+        description="For table: the (row, column) cells to mark, 0-based.",
+        json_schema_extra=_plain,
     )
-    blanks: list[BlankInput] | None = Field(default=None, max_length=20)
+    blanks: list[BlankInput] | None = Field(
+        default=None, max_length=20, json_schema_extra=_plain
+    )
     variables: list[VariableInput] | None = Field(
-        default=None, max_length=10, description="For random_number."
+        default=None,
+        max_length=10,
+        description="For random_number.",
+        json_schema_extra=_plain,
     )
     formula: str | None = Field(
-        default=None, max_length=500, description="For random_number: answer formula."
+        default=None,
+        max_length=500,
+        description="For random_number: answer formula.",
+        json_schema_extra=_plain,
     )
     expression: str | None = Field(
-        default=None, max_length=500, description="For formula: the correct expression."
+        default=None,
+        max_length=500,
+        description="For formula: the correct expression.",
+        json_schema_extra=_plain,
     )
-    expression_variables: list[str] | None = Field(default=None, max_length=10)
-    expected_outputs: list[str] | None = Field(default=None, max_length=20)
+    expression_variables: list[str] | None = Field(
+        default=None, max_length=10, json_schema_extra=_plain
+    )
+    expected_outputs: list[str] | None = Field(
+        default=None, max_length=20, json_schema_extra=_plain
+    )
 
 
 class QuizSettingsInput(BaseModel):
@@ -188,6 +236,24 @@ QuestionList = Annotated[
 def build_text_block(markdown: str) -> dict[str, Any]:
     """Return a text block."""
     return {"id": "", "type": "text", "markdown": markdown}
+
+
+def build_video_block(url: str, caption: str = "") -> dict[str, Any]:
+    """Return a video block that plays a link.
+
+    Raises:
+        BlockInputError: The link is not an http(s) URL.
+    """
+    if not url.strip().lower().startswith(("https://", "http://")):
+        raise BlockInputError("a video block needs an http(s) link in `url`")
+    return {
+        "id": "",
+        "type": "video",
+        "source": "link",
+        "url": url.strip(),
+        "file_id": None,
+        "caption": caption,
+    }
 
 
 def build_flashcards_block(cards: list[FlashcardInput]) -> dict[str, Any]:
@@ -227,7 +293,7 @@ def build_question(question: QuestionInput) -> dict[str, Any]:
         "type": question.type,
         "prompt": question.prompt,
         "points": question.points,
-        "explanation": question.explanation,
+        "explanation": question.explanation or None,
     }
     if question.type in ("single", "multiple"):
         result["options"] = _options(question)
@@ -270,7 +336,8 @@ def _task_fields(question: QuestionInput) -> dict[str, Any]:
             raise BlockInputError("each blank needs accepted answers or a regex")
         return {
             "blanks": [
-                {"id": "", "accepted": b.accepted, "regex": b.regex} for b in blanks
+                {"id": "", "accepted": b.accepted, "regex": b.regex or None}
+                for b in blanks
             ]
         }
     if kind == "random_number":
@@ -323,7 +390,7 @@ def _text_answer(question: QuestionInput) -> dict[str, Any]:
         raise BlockInputError("a text question needs accepted_answers or a regex")
     return {
         "accepted": accepted,
-        "regex": question.regex,
+        "regex": question.regex or None,
         "case_sensitive": question.case_sensitive,
     }
 
@@ -360,6 +427,16 @@ class TestBlockInput(BaseModel):
     questions: Annotated[list[QuestionInput], Field(min_length=1, max_length=50)]
 
 
+class VideoBlockInput(BaseModel):
+    """A video block: a link (YouTube, Vimeo or a direct file URL)."""
+
+    type: Literal["video"] = "video"
+    url: str = Field(
+        min_length=1, max_length=2000, description="Video link, https only."
+    )
+    caption: str = Field(default="", max_length=500, description="Caption, optional.")
+
+
 class FlashcardsBlockInput(BaseModel):
     """A flash cards block."""
 
@@ -368,7 +445,7 @@ class FlashcardsBlockInput(BaseModel):
 
 
 BlockInput = Annotated[
-    TextBlockInput | TestBlockInput | FlashcardsBlockInput,
+    TextBlockInput | VideoBlockInput | TestBlockInput | FlashcardsBlockInput,
     Field(discriminator="type"),
 ]
 
@@ -393,6 +470,8 @@ def build_block(block: BlockInput) -> dict[str, Any]:
     """
     if isinstance(block, TextBlockInput):
         return build_text_block(block.markdown)
+    if isinstance(block, VideoBlockInput):
+        return build_video_block(block.url, block.caption)
     if isinstance(block, FlashcardsBlockInput):
         return build_flashcards_block(block.cards)
     return build_test_block(block.settings, block.questions)

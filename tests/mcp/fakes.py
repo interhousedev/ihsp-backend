@@ -401,7 +401,7 @@ class LmsCall:
     name: str
     actor: Actor
     args: tuple[Any, ...]
-    via_mcp: bool
+    via_mcp: bool = True
 
 
 @dataclass
@@ -428,6 +428,58 @@ class FakeLmsCommands:
         args = (course_id, section_id, title)
         self.calls.append(LmsCall("create_step", actor, args, via_mcp))
         return {"step_id": "st1", "title": title}
+
+    async def create_course(
+        self, actor: Actor, *, title: str, slug: str | None, visibility: str
+    ) -> dict[str, Any]:
+        self.calls.append(LmsCall("create_course", actor, (title, slug, visibility)))
+        return {"id": "c1", "title": title, "visibility": visibility}
+
+    async def update_course(
+        self,
+        actor: Actor,
+        course_id: UUID,
+        *,
+        title: str | None,
+        description: str | None,
+    ) -> dict[str, Any]:
+        self.calls.append(
+            LmsCall("update_course", actor, (course_id, title, description))
+        )
+        return {"id": str(course_id), "title": title}
+
+    async def delete_course(self, actor: Actor, course_id: UUID) -> dict[str, Any]:
+        self.calls.append(LmsCall("delete_course", actor, (course_id,)))
+        return {"course_id": str(course_id), "status": "archived"}
+
+    async def update_module(
+        self, actor: Actor, course_id: UUID, section_id: str, title: str
+    ) -> dict[str, Any]:
+        self.calls.append(
+            LmsCall("update_module", actor, (course_id, section_id, title))
+        )
+        return {"id": str(course_id)}
+
+    async def delete_module(
+        self, actor: Actor, course_id: UUID, section_id: str
+    ) -> dict[str, Any]:
+        self.calls.append(LmsCall("delete_module", actor, (course_id, section_id)))
+        return {"id": str(course_id)}
+
+    async def update_step(
+        self,
+        actor: Actor,
+        step_id: UUID,
+        *,
+        title: str | None,
+        blocks: list[dict[str, Any]] | None,
+    ) -> dict[str, Any]:
+        self.calls.append(LmsCall("update_step", actor, (step_id, title, blocks)))
+        return {"step_id": str(step_id)}
+
+    async def delete_step(self, actor: Actor, step_id: UUID) -> dict[str, Any]:
+        self.calls.append(LmsCall("delete_step", actor, (step_id,)))
+        return {"step_id": str(step_id)}
 
     async def add_block(
         self, actor: Actor, step_id: UUID, block: dict[str, Any], *, via_mcp: bool

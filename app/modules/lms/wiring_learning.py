@@ -9,6 +9,9 @@ from app.modules.lms.application.learning.get_attempt import GetAttempt
 from app.modules.lms.application.learning.get_course_page import GetCoursePage
 from app.modules.lms.application.learning.get_step_view import GetStepView
 from app.modules.lms.application.learning.join_course import JoinCourse
+from app.modules.lms.application.learning.list_broadcast_audience import (
+    ListBroadcastAudience,
+)
 from app.modules.lms.application.learning.list_catalog import ListCatalog
 from app.modules.lms.application.learning.list_course_students import (
     ListCourseStudents,
@@ -52,6 +55,7 @@ class LearningServices:
     get_attempt: GetAttempt
     override_score: OverrideScore
     source_reader: LmsSourceReaderImpl
+    list_broadcast_audience: ListBroadcastAudience
 
 
 def build_learning(
@@ -97,4 +101,5 @@ def build_learning(
         get_attempt=GetAttempt(uow_factory, clock, identity, finisher),
         override_score=OverrideScore(uow_factory, clock, identity, completion),
         source_reader=LmsSourceReaderImpl(uow_factory),
+        list_broadcast_audience=ListBroadcastAudience(uow_factory),
     )

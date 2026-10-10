@@ -91,12 +91,12 @@
   "notify-assessment-reminder-body-period": "Control week {start} – {end}",
   "notify-assessment-reminder-time": ", {time}",
   "notify-assessment-reminder-room": ", room {room}",
-  "notify-assessment-kind-midterm": "Midterm (PC)",
-  "notify-assessment-kind-final": "Final (FC)",
+  "notify-assessment-kind-midterm": "Midterm",
+  "notify-assessment-kind-final": "Final exam",
   "notify-assessment-kind-other": "Control",
   "notify-assessment-control-midterm_1": "Midterm 1",
   "notify-assessment-control-midterm_2": "Midterm 2",
-  "notify-assessment-control-final": "Final (FC)",
+  "notify-assessment-control-final": "Final exam",
   "notify-btn-open-exam": "Open exam prep",
   "notify-library-item-approved-title": "Material published",
   "notify-library-item-approved-body": "“{title}” passed review and is now in the library.",
@@ -130,5 +130,6 @@
   "notify-library-reason-unreadable": "cannot be read",
   "notify-btn-open-library-item": "Open item",
   "notify-btn-open-library-queue": "Open review queue",
-  "notify-btn-open-library-list": "Open reading list"
+  "notify-btn-open-library-list": "Open reading list",
+  "notify-course-broadcast-invalid": "The broadcast needs a title (up to 120 characters) and a text (up to 2000 characters)."
 }

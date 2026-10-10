@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 
 from app.modules.notify.application.count_unread import CountUnread
+from app.modules.notify.application.course_broadcast import CourseBroadcastService
 from app.modules.notify.application.dispatch_due import DispatchDue
 from app.modules.notify.application.get_push_config import GetPushConfig
 from app.modules.notify.application.list_notifications import ListNotifications
@@ -46,6 +47,7 @@ class NotifyServices:
     renderers: RendererRegistry
     public: NotifyApiImpl
     push_config: GetPushConfig
+    course_broadcasts: CourseBroadcastService
     register_push_subscription: RegisterPushSubscription
     remove_push_subscription: RemovePushSubscription
     closers: list[Callable[[], Awaitable[None]]] = field(default_factory=list)
@@ -143,5 +145,8 @@ def build(
             allowed_suffixes=push_settings.endpoint_suffixes,
         ),
         remove_push_subscription=RemovePushSubscription(uow_factory=uow_factory),
+        course_broadcasts=CourseBroadcastService(
+            uow_factory=uow_factory, clock=deps.clock
+        ),
         closers=closers,
     )

@@ -8,10 +8,11 @@ from app.interfaces.mcp.guard import current_actor
 from app.interfaces.mcp.lms.blocks import build_flashcards_block
 from app.interfaces.mcp.lms.course_scope import ensure_step
 from app.interfaces.mcp.toolkit import ToolKit
+from app.shared.lms_scopes import MODULES_WRITE
 
 from pydantic import Field
 
-SCOPE = "courses:draft"
+SCOPE = MODULES_WRITE
 
 
 def register(kit: ToolKit) -> None:

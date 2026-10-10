@@ -6,8 +6,9 @@ from uuid import UUID
 from app.interfaces.mcp.guard import current_actor
 from app.interfaces.mcp.lms.course_scope import allowed_courses
 from app.interfaces.mcp.toolkit import ToolKit
+from app.shared.lms_scopes import COURSES_READ
 
-SCOPE = "courses:read"
+SCOPE = COURSES_READ
 
 
 def _is_visible(course: dict[str, Any], allowed: frozenset[UUID] | None) -> bool:

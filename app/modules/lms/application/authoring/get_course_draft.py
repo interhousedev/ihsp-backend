@@ -24,6 +24,7 @@ class GetCourseDraft:
             course = await load_course(uow, course_id)
             access = await access_to(uow, actor, course_id)
             access.require(EDIT, VIEW_DRAFTS)
+            access.require_read_scope()
             return await self.presenter.course_draft(uow, course, access)
 
     async def unchecked(self, course_id: UUID) -> CourseDraftView | None:

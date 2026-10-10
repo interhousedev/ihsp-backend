@@ -9,6 +9,12 @@ from app.shared.contracts.auth import (
     AUDIENCE_MCP_LMS,
     AUDIENCE_MCP_STUDENT,
 )
+from app.shared.lms_scopes import (
+    COURSES_DELETE,
+    COURSES_READ,
+    COURSES_WRITE,
+    MODULES_WRITE,
+)
 
 ServerName = Literal["student", "lms", "admin"]
 
@@ -33,7 +39,7 @@ SCOPES_BY_SERVER: Final[Mapping[ServerName, tuple[str, ...]]] = {
         "flashcards:read",
         "flashcards:write",
     ),
-    "lms": ("courses:read", "courses:draft"),
+    "lms": (COURSES_READ, COURSES_WRITE, COURSES_DELETE, MODULES_WRITE),
     "admin": (
         "people:read",
         "groups:read",

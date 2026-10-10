@@ -18,6 +18,7 @@ from app.modules.lms.domain.authoring.errors import (
 from app.modules.lms.domain.authoring.permissions import EDIT
 from app.shared.actor import Actor
 from app.shared.clock import Clock
+from app.shared.lms_scopes import MODULES_WRITE
 
 
 class RestoreRevision:
@@ -40,6 +41,7 @@ class RestoreRevision:
             step = await load_step(uow, step_id)
             access = await access_to(uow, actor, step.course_id)
             access.require(EDIT)
+            access.require_scope(MODULES_WRITE)
             revision = await uow.revisions.get(revision_id)
             if revision is None or revision.step_id != step_id:
                 raise RevisionNotFoundError(params={"revision_id": str(revision_id)})

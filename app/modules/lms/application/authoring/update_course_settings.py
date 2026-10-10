@@ -15,6 +15,7 @@ from app.modules.lms.domain.authoring.enums import CourseStatus, Visibility
 from app.modules.lms.domain.authoring.permissions import EDIT
 from app.modules.lms.domain.authoring.unset import UNSET, Unset
 from app.shared.actor import Actor
+from app.shared.lms_scopes import COURSES_WRITE
 
 
 class UpdateCourseSettings:
@@ -45,6 +46,7 @@ class UpdateCourseSettings:
             course = await load_course_locked(uow, course_id)
             access = await access_to(uow, actor, course_id)
             access.require(EDIT)
+            access.require_scope(COURSES_WRITE)
             if visibility is not None and visibility != course.visibility:
                 course.visibility = visibility
                 course.invite_code = (

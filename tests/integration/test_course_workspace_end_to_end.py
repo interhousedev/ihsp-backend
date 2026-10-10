@@ -279,3 +279,56 @@ async def test_the_author_assistant_asks_before_it_writes(
 
     assert refused.status_code in (403, 404)
     assert UUID(chat.json()["id"])
+
+
+async def test_the_author_chat_ends_with_a_draft_step_and_a_test(
+    workspace_app: tuple[FastAPI, Container],
+) -> None:
+    """Fake mode: outline -> create_step -> add_test_block, each after approval.
+
+    Regression for the tool schemas that broke generation once the question model
+    grew its new types (more than 16 nullable fields).
+    """
+    app, _ = workspace_app
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        course = await client.post(
+            "/v1/lms/courses",
+            json={"title": "Algebra", "slug": "algebra-9", "visibility": "public"},
+        )
+        course_id = course.json()["id"]
+        chat = await client.post(
+            "/v1/ai/chats", json={"assistant": "lms_author", "course_id": course_id}
+        )
+        chat_id = chat.json()["id"]
+
+        async def approve(text: str, tool: str) -> None:
+            turn = await client.post(
+                f"/v1/ai/chats/{chat_id}/messages", json={"text": text, "file_ids": []}
+            )
+            assert turn.status_code == 200, turn.text
+            call = next(
+                call
+                for message in turn.json()["new_messages"]
+                for call in message["tool_calls"]
+                if call["status"] == "pending_approval"
+            )
+            assert call["tool"] == tool
+            done = await client.post(
+                f"/v1/ai/chats/{chat_id}/tool-calls/{call['id']}/approve"
+            )
+            assert done.status_code == 200, done.text
+
+        await approve("Make an outline of the course about acids", "apply_outline")
+        await approve("add a new step", "create_step")
+        draft = await client.get(f"/v1/lms/courses/{course_id}/draft")
+        steps = [s for sec in draft.json()["outline"] for s in sec["steps"]]
+        assert any(s["title"].endswith("(practice)") for s in steps)
+
+        await approve("write a test for this step", "add_test_block")
+        step_id = draft.json()["outline"][0]["steps"][0]["step_id"]
+        step = await client.get(f"/v1/lms/steps/{step_id}/draft")
+        kinds = {b["type"] for b in step.json()["content"]["blocks"]}
+        assert "test" in kinds
+        assert step.json()["updated_via"] == "ai"

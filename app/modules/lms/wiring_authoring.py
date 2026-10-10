@@ -7,6 +7,7 @@ from app.modules.lms.application.authoring.append_block import AppendBlock
 from app.modules.lms.application.authoring.append_question import AppendQuestion
 from app.modules.lms.application.authoring.apply_course_plan import ApplyCoursePlan
 from app.modules.lms.application.authoring.apply_outline_ops import ApplyOutlineOps
+from app.modules.lms.application.authoring.archive_course import ArchiveCourse
 from app.modules.lms.application.authoring.compare_versions import CompareVersions
 from app.modules.lms.application.authoring.create_course import CreateCourse
 from app.modules.lms.application.authoring.create_section import CreateSection
@@ -143,8 +144,11 @@ def assemble_authoring(
     save_step_draft = SaveStepDraft(uow_factory, clock, presenter, writer)
     create_section = CreateSection(uow_factory, editor)
     create_step = CreateStep(uow_factory, clock, presenter)
+    create_course = CreateCourse(uow_factory, clock, presenter)
+    update_course_meta = UpdateCourseMeta(uow_factory, clock, presenter)
+    apply_outline_ops = ApplyOutlineOps(uow_factory, editor, presenter)
     return AuthoringServices(
-        create_course=CreateCourse(uow_factory, clock, presenter),
+        create_course=create_course,
         update_course_settings=UpdateCourseSettings(uow_factory, presenter, writer),
         rotate_invite_code=RotateInviteCode(uow_factory),
         list_course_staff=ListCourseStaff(uow_factory, presenter),
@@ -152,8 +156,8 @@ def assemble_authoring(
         update_course_staff=UpdateCourseStaff(uow_factory, presenter),
         remove_course_staff=RemoveCourseStaff(uow_factory),
         get_course_draft=get_course_draft,
-        update_course_meta=UpdateCourseMeta(uow_factory, clock, presenter),
-        apply_outline_ops=ApplyOutlineOps(uow_factory, editor, presenter),
+        update_course_meta=update_course_meta,
+        apply_outline_ops=apply_outline_ops,
         create_section=create_section,
         create_step=create_step,
         get_step_draft=get_step_draft,
@@ -186,6 +190,13 @@ def assemble_authoring(
             create_step=create_step,
             append_block=AppendBlock(get_step_draft, save_step_draft),
             append_question=AppendQuestion(get_step_draft, save_step_draft),
+            create_course=create_course,
+            update_course_meta=update_course_meta,
+            archive_course=ArchiveCourse(uow_factory),
+            apply_outline_ops=apply_outline_ops,
+            get_course_draft=get_course_draft,
+            get_step_draft=get_step_draft,
+            save_step_draft=save_step_draft,
         ),
         workspace=LmsWorkspaceImpl(
             uow_factory=uow_factory,

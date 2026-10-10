@@ -18,12 +18,14 @@ class ToolKit:
     deps: McpDeps
     guard: ToolGuard
 
-    def tool(self, scope: str, *, read_only: bool = True) -> Callable[[ToolFn], ToolFn]:
+    def tool(
+        self, scope: str, *, read_only: bool = True, destructive: bool = False
+    ) -> Callable[[ToolFn], ToolFn]:
         """Register a tool that needs `scope` (guard first, then the SDK decorator)."""
         register = self.mcp.tool(
             annotations=ToolAnnotations(
                 readOnlyHint=read_only,
-                destructiveHint=False,
+                destructiveHint=destructive,
                 idempotentHint=read_only,
                 openWorldHint=False,
             )

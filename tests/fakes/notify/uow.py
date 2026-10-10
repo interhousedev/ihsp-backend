@@ -7,12 +7,13 @@ from types import TracebackType
 from typing import Self
 from uuid import UUID
 
+from app.modules.notify.domain.course_broadcast import CourseBroadcast
 from app.modules.notify.domain.notification import Notification
 from app.modules.notify.domain.notification_filter import NotificationFilter
 from app.modules.notify.domain.notification_status import NotificationStatus
 from app.modules.notify.domain.push_subscription import PushSubscription
 from app.shared.ids import new_id
-from app.shared.notifications import NotificationType
+from app.shared.notifications import NotificationDraft, NotificationType
 
 
 class InMemoryPushSubscriptions:
@@ -216,13 +217,48 @@ class InMemoryNotificationRepository:
         return len(old)
 
 
+class InMemoryCourseBroadcasts:
+    """Implements CourseBroadcastRepository."""
+
+    def __init__(self) -> None:
+        """Start empty."""
+        self.rows: list[CourseBroadcast] = []
+
+    async def add(self, broadcast: CourseBroadcast) -> None:
+        """Keep the broadcast."""
+        self.rows.append(broadcast)
+
+    async def list_for_course(
+        self, course_id: UUID, *, limit: int
+    ) -> list[CourseBroadcast]:
+        """Newest first."""
+        rows = [r for r in self.rows if r.course_id == course_id]
+        return sorted(rows, key=lambda r: r.created_at, reverse=True)[:limit]
+
+
 class FakeNotifyUnitOfWork:
     """Implements NotifyUnitOfWork over an in-memory repository."""
 
-    def __init__(self, repository: InMemoryNotificationRepository) -> None:
+    def __init__(
+        self,
+        repository: InMemoryNotificationRepository,
+        broadcasts: InMemoryCourseBroadcasts | None = None,
+        outbox: list[NotificationDraft] | None = None,
+    ) -> None:
         """Share the repository between units of work."""
         self._repository = repository
+        self._broadcasts = broadcasts or InMemoryCourseBroadcasts()
+        self.outbox: list[NotificationDraft] = [] if outbox is None else outbox
         self.commits = 0
+
+    @property
+    def course_broadcasts(self) -> InMemoryCourseBroadcasts:
+        """The shared broadcast history."""
+        return self._broadcasts
+
+    def notify(self, *drafts: NotificationDraft) -> None:
+        """Collect the drafts the way the outbox would."""
+        self.outbox.extend(drafts)
 
     @property
     def notifications(self) -> InMemoryNotificationRepository:
