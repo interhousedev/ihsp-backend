@@ -63,6 +63,9 @@ from app.modules.ai.domain.admin_tools import ADMIN_TOOLS
 from app.modules.ai.domain.tool_call import ToolAccess
 from app.modules.ai.infrastructure.author_gate import LateAuthorGate
 from app.modules.ai.infrastructure.fake_search import FakeWebSearch
+from app.modules.ai.infrastructure.notebook_platform_search import (
+    NotebookPlatformSearch,
+)
 from app.modules.ai.infrastructure.redis_budget_store import (
     COURSE_PREFIX,
     RedisBudgetStore,
@@ -253,6 +256,7 @@ def build(
         llm=llm,
         clock=deps.clock,
         settings=settings,
+        platform=NotebookPlatformSearch(bindings),
     )
     return AiServices(
         create_chat=CreateChat(

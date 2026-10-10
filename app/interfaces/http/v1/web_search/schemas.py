@@ -1,7 +1,7 @@
 """Response models of web search, shared by the assistant and notebook routes."""
 
 from datetime import datetime
-from typing import Self
+from typing import Literal, Self
 
 from app.shared.contracts.web_search import WebQuota, WebResult
 
@@ -20,6 +20,8 @@ class WebResultResponse(BaseModel):
     snippet: str
     why: str
     cited: bool
+    origin: Literal["web", "db"] = "web"
+    """`db`: from the platform's own database, shown as "Из базы IHSP"."""
 
     @classmethod
     def from_result(cls, result: WebResult) -> Self:

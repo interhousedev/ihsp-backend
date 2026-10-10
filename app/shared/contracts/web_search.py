@@ -52,6 +52,8 @@ class WebHit(BaseModel):
     site: str
     snippet: str
     why: str = ""
+    origin: Literal["web", "db"] = "web"
+    """`db`: found in the platform's own database ("из базы"), not on the web."""
 
 
 class WebResult(WebHit):
@@ -85,6 +87,7 @@ class WebSearchOutcome:
     hits: tuple[WebHit, ...]
     queries: tuple[str, ...]
     quota: WebQuota
+    web_skipped: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -139,4 +142,24 @@ class WebSearchApi(Protocol):
             WebSearchQuotaError: Not enough searches are left today.
             WebSearchUnavailableError: The provider failed.
         """
+        ...
+
+
+@dataclass(frozen=True, slots=True)
+class PlatformPassage:
+    """A passage of the platform's database (library, shared or the user's sources)."""
+
+    title: str
+    url: str
+    text: str
+    site: str = "IHSP"
+
+
+class PlatformSearch(Protocol):
+    """Hybrid (words and meaning) search over what the platform already holds."""
+
+    async def search(
+        self, actor: Actor, query: str, limit: int
+    ) -> list[PlatformPassage]:
+        """Passages the actor may read, best first (empty when nothing fits)."""
         ...

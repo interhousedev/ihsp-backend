@@ -36,6 +36,25 @@ def _domain_list(value: object) -> object:
     return value
 
 
+class DbFirstSettings(BaseModel):
+    """Look in the platform's database before the web (`WEB_SEARCH__DB_FIRST__...`)."""
+
+    enabled: bool = True
+    """Off: always search the web."""
+
+    min_coverage: float = Field(default=0.7, ge=0, le=1)
+    """Share of the query terms the dense passages must cover to skip the web."""
+
+    min_passages: int = Field(default=3, ge=1, le=20)
+    """Dense passages needed to skip the web."""
+
+    min_density: float = Field(default=0.2, gt=0, le=1)
+    """On-topic tokens / all tokens a passage needs to count as dense."""
+
+    candidates: int = Field(default=12, ge=1, le=50)
+    """Passages asked from the database."""
+
+
 class WebSearchSettings(BaseModel):
     """How a web search call is made; see docs/reference/notebooklm.md."""
 
@@ -62,6 +81,8 @@ class WebSearchSettings(BaseModel):
 
     timeout_seconds: int = Field(default=45, ge=5, le=180)
     """Timeout of one search call (the search engine runs inside it)."""
+
+    db_first: DbFirstSettings = Field(default_factory=DbFirstSettings)
 
     @field_validator("blocked_domains", mode="before")
     @classmethod

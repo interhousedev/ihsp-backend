@@ -32,6 +32,8 @@ class DiscoverResultResponse(BaseModel):
     site: str
     snippet: str
     why: str
+    origin: Literal["web", "db"] = "web"
+    """`db`: from the platform's own database, shown as "Из базы IHSP"."""
     already_added: bool
     """The notebook already has this page as a source."""
 

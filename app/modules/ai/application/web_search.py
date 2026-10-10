@@ -12,6 +12,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import UTC, datetime, time, timedelta
 
+from app.modules.ai.domain.db_first import judge
 from app.modules.ai.domain.web_prompts import (
     PLAN_SCHEMA,
     PLAN_SCHEMA_NAME,
@@ -29,6 +30,8 @@ from app.shared.ai_tasks import AiTask
 from app.shared.clock import TASHKENT, Clock, local_today
 from app.shared.contracts.ai import AiInvalidOutputError, AiProviderError, LlmGateway
 from app.shared.contracts.web_search import (
+    PlatformPassage,
+    PlatformSearch,
     SearchCall,
     SearchReply,
     WebHit,
@@ -80,8 +83,10 @@ class WebSearchService:
         llm: LlmGateway,
         clock: Clock,
         settings: Settings,
+        platform: PlatformSearch | None = None,
     ) -> None:
-        """Store the collaborators."""
+        """Store the collaborators; `platform` turns on database-first search."""
+        self.platform = platform
         self.store = store
         self.gateway = gateway
         self.llm = llm
@@ -151,6 +156,17 @@ class WebSearchService:
         """Take the quota, search, and give the quota back if the provider fails."""
         text = clean_text(query, QUERY_CHARS)
         units = self.cost_of(kind)
+        if not self._switched_on() or self.limit_of(actor) <= 0:
+            raise WebSearchDisabledError()
+        local, enough = await self._from_database(actor, text)
+        if enough:
+            log.info("web_search_skipped", kind=kind, db_hits=len(local))
+            return WebSearchOutcome(
+                hits=local,
+                queries=(text,),
+                quota=await self.quota(actor),
+                web_skipped=True,
+            )
         await self._take(actor, units)
         try:
             ran = await self._run(text, language_of(locale), kind)
@@ -165,8 +181,29 @@ class WebSearchService:
             hits=len(ran.hits),
         )
         return WebSearchOutcome(
-            hits=ran.hits, queries=ran.queries, quota=await self.quota(actor)
+            hits=local + ran.hits, queries=ran.queries, quota=await self.quota(actor)
         )
+
+    async def _from_database(
+        self, actor: Actor, query: str
+    ) -> tuple[tuple[WebHit, ...], bool]:
+        """Dense platform passages as hits, and whether they make the web needless."""
+        cfg = self.settings.web_search.db_first
+        if self.platform is None or not cfg.enabled:
+            return (), False
+        try:
+            found = await self.platform.search(actor, query, cfg.candidates)
+        except Exception:  # best effort: the web still answers
+            log.warning("web_search_db_first_failed")
+            return (), False
+        verdict = judge(
+            found,
+            query,
+            min_density=cfg.min_density,
+            min_coverage=cfg.min_coverage,
+            min_passages=cfg.min_passages,
+        )
+        return tuple(_db_hit(p) for p in verdict.dense), verdict.sufficient
 
     async def _run(self, query: str, language: str, kind: WebSearchKind) -> _Ran:
         limits = self.settings.limits
@@ -291,6 +328,16 @@ class WebSearchService:
             return tuple(pool[:keep])
         ranked = _apply_ranking(pool, reply["data"].get("results"), keep)
         return ranked or tuple(pool[:keep])
+
+
+def _db_hit(passage: PlatformPassage) -> WebHit:
+    return WebHit(
+        title=clean_text(passage.title, 200),
+        url=passage.url,
+        site=passage.site,
+        snippet=clean_text(passage.text, 1200),
+        origin="db",
+    )
 
 
 def _merge(groups: list[tuple[WebHit, ...]]) -> list[WebHit]:
