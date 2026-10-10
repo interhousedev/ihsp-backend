@@ -4,7 +4,12 @@ from dataclasses import dataclass, field
 from uuid import UUID, uuid5
 
 from app.modules.dashboard.domain.errors import InvalidLayoutError
-from app.modules.dashboard.domain.widget import LAYOUT_MARK, MAX_WIDGETS, Widget
+from app.modules.dashboard.domain.widget import (
+    LAYOUT_MARK,
+    MAX_WIDGETS,
+    REPEATABLE_KINDS,
+    Widget,
+)
 
 _NAMESPACE = UUID("6f1d3c8e-2a4b-4c57-9d0e-5b7a1c2e9f40")
 
@@ -24,6 +29,22 @@ def validate_widgets(widgets: list[Widget]) -> None:
         raise InvalidLayoutError(params={"max": MAX_WIDGETS})
     if len({w.id for w in widgets}) != len(widgets):
         raise InvalidLayoutError(params={"max": MAX_WIDGETS})
+
+
+def keep_one_tile_per_kind(widgets: list[Widget]) -> list[Widget]:
+    """Drop the repeats of a kind that takes one tile; the first tile of a kind stays.
+
+    The catalogue can add a kind already on the board, so a saved layout may repeat one.
+    """
+    seen: set[str] = set()
+    kept: list[Widget] = []
+    for widget in widgets:
+        if widget.kind not in REPEATABLE_KINDS:
+            if widget.kind in seen:
+                continue
+            seen.add(widget.kind)
+        kept.append(widget)
+    return kept
 
 
 def default_widgets(user_id: UUID) -> list[Widget]:

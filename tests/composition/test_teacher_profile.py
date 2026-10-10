@@ -36,6 +36,27 @@ async def test_the_profile_shows_the_week_the_gaps_and_the_curated_groups(
     assert world.accounts.calls == [(admin.id, teacher.id, "10.0.0.1", "pytest")]
 
 
+async def test_the_profile_carries_the_teachers_photo_link(world: World) -> None:
+    """ADM-4: the photo the teacher uploaded, as on My Teachers; no photo gives null."""
+    admin = world.add_user(Role.ADMIN)
+    teacher = world.add_user(Role.TEACHER)
+    other = world.add_user(Role.TEACHER)
+    fill_pages(world, teacher)
+    world.identity.photos[teacher.id] = "https://files.example.test/photos/teacher.jpg"
+
+    profile = await world.composition.build_teacher_profile.execute(
+        actor_of(admin), teacher.id, ip=None, user_agent=None
+    )
+    without = await world.composition.build_teacher_profile.execute(
+        actor_of(admin), other.id, ip=None, user_agent=None
+    )
+
+    assert profile["user"]["photo_url"] == (
+        "https://files.example.test/photos/teacher.jpg"
+    )
+    assert without["user"]["photo_url"] is None
+
+
 async def test_week_and_missing_attendance_windows(world: World) -> None:
     """ADM-4: this week Monday-Sunday; missing attendance of the last 7 days."""
     admin = world.add_user(Role.ADMIN)

@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from app.modules.dashboard.application.get_layout import GetLayout  # noqa: F401
 from app.modules.dashboard.domain.errors import LayoutVersionConflictError
+from app.modules.dashboard.domain.layout import keep_one_tile_per_kind
 from app.modules.dashboard.domain.widget import (
     WIDGET_SIZES,
     Widget,
@@ -127,3 +128,40 @@ def test_default_layout_has_the_today_widgets_without_overlap() -> None:
             for dy in range(rows):
                 assert (w.x + dx, w.y + dy) not in cells
                 cells.add((w.x + dx, w.y + dy))
+
+
+def test_a_repeated_kind_keeps_its_first_tile() -> None:
+    """The catalogue can add a kind already on the board; its first tile stays."""
+    first = widget("flashcards_due", "1x1")
+
+    kept = keep_one_tile_per_kind(
+        [widget("next_lesson", "2x1"), first, widget("flashcards_due", "2x1")]
+    )
+
+    assert [w.kind for w in kept] == ["next_lesson", "flashcards_due"]
+    assert kept[1].id == first.id
+
+
+def test_notebook_prompts_may_repeat() -> None:
+    """Each notebook prompt points at its own notebook, so they are not repeats."""
+    prompts = [
+        widget("notebook_prompt", "2x1", config={"notebook_id": str(uuid4())})
+        for _ in range(2)
+    ]
+
+    assert keep_one_tile_per_kind(prompts) == prompts
+
+
+async def test_save_stores_one_tile_per_kind(dashboard: DashboardServices) -> None:
+    """A save with a repeated kind stores its first tile; reads give the same layout."""
+    user = uuid4()
+    first = widget("homework", "1x1")
+
+    saved = await dashboard.save_layout.execute(
+        user_id=user, version=0, widgets=[first, widget("homework", "2x1")]
+    )
+    fetched = await dashboard.get_layout.execute(user_id=user)
+
+    assert [w.id for w in saved.widgets] == [first.id]
+    assert fetched.version == 1
+    assert [w.id for w in fetched.widgets] == [first.id]

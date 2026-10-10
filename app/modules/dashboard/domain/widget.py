@@ -47,6 +47,9 @@ WIDGET_SIZES: dict[str, set[str]] = {
 }
 # Stored on every widget of a layout that already has the Today widget kinds.
 LAYOUT_MARK = ("layout", "2")
+# A kind takes one tile, except the notebook prompt: each one points at its
+# own notebook (`config.notebook_id`).
+REPEATABLE_KINDS: frozenset[str] = frozenset({"notebook_prompt"})
 GRID_COLUMNS = 4
 MAX_WIDGETS = 24
 MAX_ROW = 200

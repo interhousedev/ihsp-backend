@@ -121,6 +121,7 @@ class FakeIdentity:
         """Start empty."""
         self.users: dict[UUID, UserRef] = {}
         self.get_users_calls: list[int] = []
+        self.photos: dict[UUID, str] = {}
 
     def add(self, user: UserRef) -> UserRef:
         """Add a user and return it."""
@@ -138,8 +139,8 @@ class FakeIdentity:
         return UserPreferences()
 
     async def photo_urls(self, user_ids: Sequence[UUID]) -> dict[UUID, str]:
-        """No user has a photo in this fake."""
-        return {}
+        """The links set in `photos`; users without one are left out."""
+        return {uid: self.photos[uid] for uid in user_ids if uid in self.photos}
 
     async def user_by_telegram(self, telegram_user_id: int) -> UserRef | None:
         return None

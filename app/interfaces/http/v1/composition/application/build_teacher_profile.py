@@ -48,8 +48,10 @@ class BuildTeacherProfile:
         account = await self.accounts.account(
             actor, user_id, ip=ip, user_agent=user_agent
         )
+        # The account view leaves the photo out; the link is the one My Teachers shows.
+        photos = await self.identity.photo_urls([user_id])
         return {
-            "user": account,
+            "user": {**account, "photo_url": photos.get(user_id)},
             "timetable_week": await self.teachers.timetable(
                 user_id, week_start, week_end
             ),

@@ -2,7 +2,11 @@
 
 from uuid import UUID
 
-from app.modules.dashboard.domain.layout import Layout, default_widgets
+from app.modules.dashboard.domain.layout import (
+    Layout,
+    default_widgets,
+    keep_one_tile_per_kind,
+)
 from app.modules.dashboard.ports.unit_of_work import UowFactory
 
 
@@ -19,4 +23,9 @@ class GetLayout:
             layout = await uow.layouts.get(user_id)
         if layout is None:
             return Layout(user_id=user_id, version=0, widgets=default_widgets(user_id))
-        return layout
+        # A layout saved before the normaliser may repeat a kind; saving drops them.
+        return Layout(
+            user_id=layout.user_id,
+            version=layout.version,
+            widgets=keep_one_tile_per_kind(layout.widgets),
+        )
