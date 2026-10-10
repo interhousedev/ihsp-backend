@@ -47,6 +47,15 @@ SUMMARY_FILLER = (
     "the source and repeats its main statements in short form so that a student can "
     "check the page."
 )
+# Each is used at most once, so a short source never repeats a sentence.
+SUMMARY_FILLERS = (
+    SUMMARY_FILLER,
+    "The statements keep the wording of the source, so a student can find them on "
+    "the page and read the full explanation there.",
+    "With a language model switched on, this overview explains the topic in the "
+    "student's own language instead of repeating the source.",
+)
+DEMO_OVERVIEW = "Demo overview without a language model."
 REPORT_INTRO = "Statements of this part of the sources, as the sources put them."
 # Generic study topics that fill a short list (2 to 5 words each, never a fragment).
 GENERIC_TOPICS = (
@@ -343,8 +352,10 @@ def summary_text(passages: Sequence[FakePassage], low: int, high: int) -> str:
     asked = [s.text for s in found if s.is_question]
     if len(words) < low and asked:
         words.extend(f"The source asks: {' '.join(asked)}".split())
-    while len(words) < low:
-        words.extend(SUMMARY_FILLER.split())
+    for filler in SUMMARY_FILLERS:  # each once: a repeated sentence reads as a glitch
+        if len(words) >= low:
+            break
+        words.extend(filler.split())
     return " ".join(words[:high])
 
 
@@ -458,19 +469,21 @@ def build_summary_document(
     guides = _parse_guides(last_user_text(messages))
     if not guides:
         return build_summary(passages, "")
-    words = ["Demo", "overview", "without", "a", "language", "model."]
+    words: list[str] = []
     for guide in guides:
         words.extend(_sentence(guide.summary).split() if guide.summary else [])
         if len(words) >= 90:
             break
-    while len(words) < 90:
-        words.extend(SUMMARY_FILLER.split())
+    for filler in SUMMARY_FILLERS:  # each once: a repeated sentence reads as a glitch
+        if len(words) >= 90:
+            break
+        words.extend(filler.split())
     found_topics = [t for g in guides for t in g.key_topics if _word_count_ok(t)]
     asked = [q for g in guides for q in g.questions]
     return {
         "title": phrase(guides[0].title, TOPIC_CHARS),
         "emoji": EMOJI,
-        "summary": _bold_summary(words[:130]),
+        "summary": f"**{DEMO_OVERVIEW}** {' '.join(words[:124])}",
         "key_topics": _pad(found_topics, 6, 10, GENERIC_TOPICS),
         "suggested_questions": _pad(asked, 4, 6, GENERIC_QUESTIONS),
     }

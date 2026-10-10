@@ -636,9 +636,11 @@ async def test_derivatives_summary_is_built_from_the_guides_and_labelled_demo() 
 
     assert data["title"] == "What is a derivative" and data["emoji"] == "📘"
     assert data["summary"].startswith(
-        "**Demo overview without** a language model. The derivative"
+        "**Demo overview without a language model.** The derivative"
     )
     assert 80 <= words(data["summary"]) <= 160
+    sentences = [x.strip() for x in data["summary"].split(". ") if x.strip()]
+    assert len(sentences) == len(set(sentences))  # no sentence repeats
     assert data["key_topics"][:5] == [
         "What is a derivative",
         "Rules to remember",
