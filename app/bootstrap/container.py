@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from app.modules.academic.wiring import AcademicModule
     from app.modules.admin.wiring import AdminServices
     from app.modules.ai.wiring import AiServices
+    from app.modules.dashboard.wiring import DashboardServices
     from app.modules.files.wiring import FilesServices
     from app.modules.flashcards.wiring import FlashcardsServices
     from app.modules.identity.wiring import IdentityModule
@@ -57,6 +58,7 @@ class Container:
     admin: "AdminServices" = NOT_BUILT
     ai: "AiServices" = NOT_BUILT
     flashcards: "FlashcardsServices" = NOT_BUILT
+    dashboard: "DashboardServices" = NOT_BUILT
     mail: "MailServices" = NOT_BUILT
     lms: "LmsModule" = NOT_BUILT
     notebooks: "NotebooksServices" = NOT_BUILT

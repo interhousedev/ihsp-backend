@@ -32,6 +32,7 @@ from app.modules.ai.infrastructure.gateway_factory import (
     make_web_search_gateway,
 )
 from app.modules.ai.wiring import build as build_ai
+from app.modules.dashboard.wiring import build as build_dashboard
 from app.modules.files.ports.content_sniffer import ContentSniffer
 from app.modules.files.wiring import build as build_files
 from app.modules.flashcards.ports.share_resolver import ShareResolver
@@ -45,6 +46,7 @@ from app.modules.identity.wiring import build as build_identity
 from app.modules.library.wiring import build as build_library
 from app.modules.links.wiring import build as build_links
 from app.modules.lms.wiring import build as build_lms
+from app.modules.notebooks.application.export.render import DocumentExporter
 from app.modules.notebooks.infrastructure.web_fetcher import HttpWebFetcher
 from app.modules.notebooks.wiring import build as build_notebooks
 from app.modules.notebooks.wiring_studio import LmsApplyPorts
@@ -270,6 +272,7 @@ class _Assembler:
         flashcards_links.bind(links.public)
         self.usage_links.bind(links.public)
         c.flashcards = flashcards
+        c.dashboard = build_dashboard(self.deps)
         c.links = links
         classwork = build_classwork(
             self.deps,
@@ -441,6 +444,7 @@ class _Assembler:
         )
         c.ai.bindings.notebooks = notebooks.public
         c.ai.bindings.notebooks_commands = notebooks.commands
+        c.ai.bindings.documents = DocumentExporter()
         if self.plan.lms:  # the course author assistant (lms_author)
             authoring = c.lms.authoring
             c.ai.bindings.lms_workspace = authoring.workspace

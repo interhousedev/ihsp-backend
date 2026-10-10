@@ -563,6 +563,43 @@ class SmtpOutSettings(BaseModel):
     """Sender of system emails (activation, reset)."""
 
 
+class MailOutboundSettings(BaseModel):
+    """People-to-people email sent from the platform (compose dialog)."""
+
+    enabled: bool = False
+    """Allow students and staff to send email from the platform."""
+
+    host: str = "localhost"
+    """SMTP host (Mailpit in development)."""
+
+    port: int = 1025
+    """SMTP port."""
+
+    user: str | None = None
+    """SMTP login; empty for none."""
+
+    password: SecretStr | None = None
+    """SMTP password; empty for none."""
+
+    from_address: str = "no-reply@ihsu.uz"
+    """Envelope and header sender; the user's name is shown as the display name."""
+
+    starttls: bool = False
+    """Use STARTTLS (port 465 uses implicit TLS)."""
+
+    per_user_per_day: int = 20
+    """Emails one user may send per day."""
+
+    max_recipients: int = 5
+    """Recipients in one email."""
+
+
+class MailSettings(BaseModel):
+    """Settings of the mail module that are not the mailbox relay."""
+
+    outbound: MailOutboundSettings = Field(default_factory=MailOutboundSettings)
+
+
 class SmtpInSettings(BaseModel):
     """Inbound SMTP server."""
 
@@ -684,12 +721,6 @@ class LimitsSettings(BaseModel):
 
     ai_daily_tokens_student: int = 600000
     """Student assistant tokens per day (Tashkent date)."""
-
-    ai_session_tokens_admin: int = 400000
-    """Administration assistant tokens per session window."""
-
-    ai_daily_tokens_admin: int = 1200000
-    """Administration assistant tokens per day."""
 
     ai_max_tool_steps: int = 8
     """Most model requests (tool rounds) in one assistant turn."""
@@ -822,6 +853,7 @@ class Settings(BaseSettings):
     library: LibrarySettings = Field(default_factory=LibrarySettings)
     push: PushSettings = Field(default_factory=PushSettings)
     smtp_out: SmtpOutSettings = Field(default_factory=SmtpOutSettings)
+    mail: MailSettings = Field(default_factory=MailSettings)
     smtp_in: SmtpInSettings = Field(default_factory=SmtpInSettings)
     urls: UrlsSettings = Field(default_factory=UrlsSettings)
     app: AppSettings = Field(default_factory=AppSettings)

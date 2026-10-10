@@ -2008,6 +2008,61 @@
         "title": "AssessmentSubject",
         "type": "object"
       },
+      "AttachArtifactBody": {
+        "description": "Attach a ready output to a lesson as a file.",
+        "properties": {
+          "lesson_id": {
+            "format": "uuid",
+            "title": "Lesson Id",
+            "type": "string"
+          },
+          "role": {
+            "default": "material",
+            "enum": [
+              "material",
+              "attachment"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lesson_id"
+        ],
+        "title": "AttachArtifactBody",
+        "type": "object"
+      },
+      "AttachedResourceResponse": {
+        "description": "The lesson resource that was created from an output.",
+        "properties": {
+          "lesson_id": {
+            "format": "uuid",
+            "title": "Lesson Id",
+            "type": "string"
+          },
+          "link_id": {
+            "format": "uuid",
+            "title": "Link Id",
+            "type": "string"
+          },
+          "short_url": {
+            "title": "Short Url",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "link_id",
+          "lesson_id",
+          "title",
+          "short_url"
+        ],
+        "title": "AttachedResourceResponse",
+        "type": "object"
+      },
       "AttendanceLessonResponse": {
         "description": "A lesson of today with attendance and homework badges.",
         "properties": {
@@ -2541,8 +2596,32 @@
         "type": "object"
       },
       "Bell-Input": {
-        "description": "Start and end of one period on some weekdays (jsonb of Term.bells).\n\n``source`` says who set the bell: Administration (``manual``) or the EMIS\n``class-hours`` sync (``emis``), which keeps its bells equal to EMIS.",
+        "description": "Start and end of one period on some weekdays (jsonb of Term.bells).\n\n``source`` says who set the bell: the EMIS ``class-hours`` sync (``emis``, the\ndefault, kept equal to EMIS), Administration for a period of their own\n(``manual``; EMIS replaces it when it lists the period) or Administration\noverriding an EMIS period (``override``: time and weekdays stay, the sync leaves\nthem alone). ``emis_start`` and ``emis_end`` remember what EMIS says for the\nperiod, so an override can be reset.",
         "properties": {
+          "emis_end": {
+            "anyOf": [
+              {
+                "format": "time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emis End"
+          },
+          "emis_start": {
+            "anyOf": [
+              {
+                "format": "time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emis Start"
+          },
           "end": {
             "format": "time",
             "title": "End",
@@ -2558,7 +2637,8 @@
             "default": "manual",
             "enum": [
               "manual",
-              "emis"
+              "emis",
+              "override"
             ],
             "title": "Source",
             "type": "string"
@@ -2587,8 +2667,30 @@
         "type": "object"
       },
       "Bell-Output": {
-        "description": "Start and end of one period on some weekdays (jsonb of Term.bells).\n\n``source`` says who set the bell: Administration (``manual``) or the EMIS\n``class-hours`` sync (``emis``), which keeps its bells equal to EMIS.",
+        "description": "Start and end of one period on some weekdays (jsonb of Term.bells).\n\n``source`` says who set the bell: the EMIS ``class-hours`` sync (``emis``, the\ndefault, kept equal to EMIS), Administration for a period of their own\n(``manual``; EMIS replaces it when it lists the period) or Administration\noverriding an EMIS period (``override``: time and weekdays stay, the sync leaves\nthem alone). ``emis_start`` and ``emis_end`` remember what EMIS says for the\nperiod, so an override can be reset.",
         "properties": {
+          "emis_end": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emis End"
+          },
+          "emis_start": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emis Start"
+          },
           "end": {
             "title": "End",
             "type": "string"
@@ -2603,7 +2705,8 @@
             "default": "manual",
             "enum": [
               "manual",
-              "emis"
+              "emis",
+              "override"
             ],
             "title": "Source",
             "type": "string"
@@ -2628,6 +2731,70 @@
           "weekdays"
         ],
         "title": "Bell",
+        "type": "object"
+      },
+      "Blank": {
+        "description": "One blank of a fill-in-the-blanks question, marked ``{{n}}`` (1-based) in the prompt.",
+        "properties": {
+          "accepted": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Accepted",
+            "type": "array"
+          },
+          "case_sensitive": {
+            "default": false,
+            "title": "Case Sensitive",
+            "type": "boolean"
+          },
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "regex": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regex"
+          }
+        },
+        "title": "Blank",
+        "type": "object"
+      },
+      "BlankInput": {
+        "description": "One blank of a fill-in-the-blanks question (``{{1}}``, ``{{2}}`` in the prompt).",
+        "properties": {
+          "accepted": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Accepted",
+            "type": "array"
+          },
+          "regex": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regex"
+          }
+        },
+        "title": "BlankInput",
         "type": "object"
       },
       "BlockAnswer": {
@@ -2813,7 +2980,15 @@
               "single",
               "multiple",
               "text",
-              "number"
+              "number",
+              "sorting",
+              "matching",
+              "table",
+              "blanks",
+              "random_number",
+              "formula",
+              "free",
+              "code"
             ],
             "title": "Type",
             "type": "string"
@@ -4575,6 +4750,33 @@
           "code"
         ],
         "title": "CodeBody",
+        "type": "object"
+      },
+      "CodeSpec": {
+        "description": "A code question: no execution; the output is compared or the answer is graded by hand.",
+        "properties": {
+          "expected_outputs": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Expected Outputs",
+            "type": "array"
+          },
+          "language": {
+            "default": "python",
+            "maxLength": 32,
+            "title": "Language",
+            "type": "string"
+          },
+          "starter": {
+            "default": "",
+            "maxLength": 10000,
+            "title": "Starter",
+            "type": "string"
+          }
+        },
+        "title": "CodeSpec",
         "type": "object"
       },
       "CollectionDetailResponse": {
@@ -6438,6 +6640,28 @@
         "title": "CuratorStudentResponse",
         "type": "object"
       },
+      "DashboardResponse": {
+        "description": "The layout; version 0 is the default one (never saved).",
+        "properties": {
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "widgets": {
+            "items": {
+              "$ref": "#/components/schemas/WidgetResponse"
+            },
+            "title": "Widgets",
+            "type": "array"
+          }
+        },
+        "required": [
+          "version",
+          "widgets"
+        ],
+        "title": "DashboardResponse",
+        "type": "object"
+      },
       "DataTableCreate": {
         "description": "A data table.",
         "properties": {
@@ -6510,6 +6734,26 @@
           }
         },
         "title": "DataTableOptions",
+        "type": "object"
+      },
+      "DayCount": {
+        "description": "One calendar day (Tashkent) and a count.",
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "count"
+        ],
+        "title": "DayCount",
         "type": "object"
       },
       "DayCountResponse": {
@@ -6925,6 +7169,41 @@
           "already_added"
         ],
         "title": "DiscoverResultResponse",
+        "type": "object"
+      },
+      "DocumentCardResponse": {
+        "description": "A document the assistant made (shown as a file card).",
+        "properties": {
+          "file_id": {
+            "format": "uuid",
+            "title": "File Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "docx",
+              "xlsx",
+              "pptx"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "file_id",
+          "name",
+          "kind",
+          "size"
+        ],
+        "title": "DocumentCardResponse",
         "type": "object"
       },
       "DownloadUrlResponse": {
@@ -8304,6 +8583,42 @@
         "title": "FlashcardsOptions",
         "type": "object"
       },
+      "FormulaSpec": {
+        "description": "The expected expression of a math formula question.",
+        "properties": {
+          "expression": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Expression",
+            "type": "string"
+          },
+          "mode": {
+            "default": "symbolic",
+            "enum": [
+              "symbolic",
+              "numeric"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "tolerance": {
+            "default": 1e-06,
+            "minimum": 0.0,
+            "title": "Tolerance",
+            "type": "number"
+          },
+          "variables": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "title": "Variables",
+            "type": "array"
+          }
+        },
+        "title": "FormulaSpec",
+        "type": "object"
+      },
       "GradeRow": {
         "description": "A subject row of the grade table.",
         "properties": {
@@ -8618,6 +8933,19 @@
             ],
             "title": "Curator Id"
           },
+          "current_semester": {
+            "anyOf": [
+              {
+                "maximum": 12.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Semester"
+          },
           "head_student_id": {
             "anyOf": [
               {
@@ -8629,6 +8957,19 @@
               }
             ],
             "title": "Head Student Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
           },
           "status": {
             "anyOf": [
@@ -9150,6 +9491,33 @@
           }
         },
         "title": "InfographicOptions",
+        "type": "object"
+      },
+      "InsightsResponse": {
+        "description": "GET /v1/admin/insights.",
+        "properties": {
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "marks": {
+            "$ref": "#/components/schemas/MarksInsights"
+          },
+          "system": {
+            "$ref": "#/components/schemas/SystemHealth"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/UsageInsights"
+          }
+        },
+        "required": [
+          "generated_at",
+          "system",
+          "usage",
+          "marks"
+        ],
+        "title": "InsightsResponse",
         "type": "object"
       },
       "IntervalsResponse": {
@@ -9716,6 +10084,21 @@
       "LearningAnswerBody": {
         "description": "`Answer`: the chosen options, a text or a number (one of them per question).",
         "properties": {
+          "cells": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 900,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cells"
+          },
           "number": {
             "anyOf": [
               {
@@ -9742,6 +10125,33 @@
             ],
             "title": "Option Ids"
           },
+          "output": {
+            "anyOf": [
+              {
+                "maxLength": 10000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output"
+          },
+          "pairs": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "maxProperties": 50,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pairs"
+          },
           "text": {
             "anyOf": [
               {
@@ -9753,6 +10163,21 @@
               }
             ],
             "title": "Text"
+          },
+          "texts": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 50,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Texts"
           }
         },
         "title": "LearningAnswerBody",
@@ -9761,9 +10186,49 @@
       "LearningAttemptQuestionView": {
         "description": "A question of an attempt, without any correctness data.",
         "properties": {
+          "blanks": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blanks"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
           "id": {
             "title": "Id",
             "type": "string"
+          },
+          "lefts": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lefts"
           },
           "options": {
             "anyOf": [
@@ -9790,9 +10255,57 @@
             "title": "Prompt",
             "type": "string"
           },
+          "rights": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rights"
+          },
+          "table": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Table"
+          },
           "type": {
             "title": "Type",
             "type": "string"
+          },
+          "variables": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Variables"
           }
         },
         "required": [
@@ -10877,13 +11390,17 @@
                 "mapping": {
                   "flashcards": "#/components/schemas/LearningFlashcardsBlockView",
                   "test": "#/components/schemas/LearningQuizBlockView",
-                  "text": "#/components/schemas/LearningTextBlockView"
+                  "text": "#/components/schemas/LearningTextBlockView",
+                  "video": "#/components/schemas/LearningVideoBlockView"
                 },
                 "propertyName": "type"
               },
               "oneOf": [
                 {
                   "$ref": "#/components/schemas/LearningTextBlockView"
+                },
+                {
+                  "$ref": "#/components/schemas/LearningVideoBlockView"
                 },
                 {
                   "$ref": "#/components/schemas/LearningQuizBlockView"
@@ -11025,6 +11542,61 @@
           "markdown"
         ],
         "title": "LearningTextBlockView",
+        "type": "object"
+      },
+      "LearningVideoBlockView": {
+        "description": "A video block of a step.",
+        "properties": {
+          "caption": {
+            "default": "",
+            "title": "Caption",
+            "type": "string"
+          },
+          "file_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "passed": {
+            "default": false,
+            "title": "Passed",
+            "type": "boolean"
+          },
+          "source": {
+            "enum": [
+              "link",
+              "upload"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "type": {
+            "const": "video",
+            "title": "Type",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "source",
+          "url"
+        ],
+        "title": "LearningVideoBlockView",
         "type": "object"
       },
       "LessonDraftCreate": {
@@ -11493,6 +12065,50 @@
         "title": "LessonResourceInput",
         "type": "object"
       },
+      "LessonResultRow": {
+        "description": "Attendance and mark of one lesson that has started (calendar dot).",
+        "properties": {
+          "attendance": {
+            "anyOf": [
+              {
+                "enum": [
+                  "present",
+                  "absent",
+                  "late"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attendance"
+          },
+          "lesson_id": {
+            "format": "uuid",
+            "title": "Lesson Id",
+            "type": "string"
+          },
+          "mark": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mark"
+          }
+        },
+        "required": [
+          "lesson_id",
+          "attendance",
+          "mark"
+        ],
+        "title": "LessonResultRow",
+        "type": "object"
+      },
       "LibraryItemInput": {
         "description": "A library book or material, or a page range of one of its files.\n\nWithout `file_id` the primary file is read. A whole textbook can be longer than\na source may be, so a chapter range (`page_from`, `page_to`, 1-based and\ninclusive) keeps it under the limit.",
         "properties": {
@@ -11594,6 +12210,48 @@
           "reason"
         ],
         "title": "LibraryReportBody",
+        "type": "object"
+      },
+      "LibrarySearchItemResponse": {
+        "description": "`LibrarySearchItem`: a library item the user may see.",
+        "properties": {
+          "author_label": {
+            "title": "Author Label",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "author_label",
+          "kind"
+        ],
+        "title": "LibrarySearchItemResponse",
         "type": "object"
       },
       "LibraryStatsResponse": {
@@ -12318,6 +12976,65 @@
           "lesson_id"
         ],
         "title": "MarkItemResponse",
+        "type": "object"
+      },
+      "MarkSearchItemResponse": {
+        "description": "`MarkSearchItem`: a recent mark of a subject whose name matched.",
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "lesson_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lesson Id"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/app__interfaces__http__v1__composition__shared_schemas__SubjectRefResponse"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "subject",
+          "type",
+          "value",
+          "date",
+          "lesson_id"
+        ],
+        "title": "MarkSearchItemResponse",
+        "type": "object"
+      },
+      "MarksInsights": {
+        "description": "How many marks of each value (2 to 5) exist.",
+        "properties": {
+          "distribution": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Distribution",
+            "type": "object"
+          }
+        },
+        "required": [
+          "distribution"
+        ],
+        "title": "MarksInsights",
         "type": "object"
       },
       "MaterialBlockSchema": {
@@ -13407,6 +14124,51 @@
         ],
         "title": "NotebookOrigin",
         "type": "string"
+      },
+      "NotebookSearchItemResponse": {
+        "description": "`NotebookSearchItem`: a notebook whose title or a source title matched.",
+        "properties": {
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "matched_sources": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Matched Sources",
+            "type": "array"
+          },
+          "source_count": {
+            "title": "Source Count",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "emoji",
+          "source_count",
+          "matched_sources"
+        ],
+        "title": "NotebookSearchItemResponse",
+        "type": "object"
       },
       "NotebookSummary": {
         "description": "`notebooks.summary` (§ 3.2.6).",
@@ -14605,6 +15367,53 @@
           "items"
         ],
         "title": "Page[UploadRowResponse]",
+        "type": "object"
+      },
+      "Pair": {
+        "description": "A left item and its right match of a matching question.",
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "left": {
+            "title": "Left",
+            "type": "string"
+          },
+          "right": {
+            "title": "Right",
+            "type": "string"
+          }
+        },
+        "required": [
+          "left",
+          "right"
+        ],
+        "title": "Pair",
+        "type": "object"
+      },
+      "PairInput": {
+        "description": "A matching pair: a left item and the right item that belongs to it.",
+        "properties": {
+          "left": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Left",
+            "type": "string"
+          },
+          "right": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Right",
+            "type": "string"
+          }
+        },
+        "required": [
+          "left",
+          "right"
+        ],
+        "title": "PairInput",
         "type": "object"
       },
       "PassageDetailResponse": {
@@ -16094,6 +16903,31 @@
               }
             ]
           },
+          "blanks": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Blank"
+                },
+                "maxItems": 50,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blanks"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CodeSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "explanation": {
             "anyOf": [
               {
@@ -16104,6 +16938,16 @@
               }
             ],
             "title": "Explanation"
+          },
+          "formula": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FormulaSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "id": {
             "default": "",
@@ -16124,6 +16968,21 @@
             ],
             "title": "Options"
           },
+          "pairs": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Pair"
+                },
+                "maxItems": 50,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pairs"
+          },
           "points": {
             "default": 1.0,
             "title": "Points",
@@ -16133,12 +16992,40 @@
             "title": "Prompt",
             "type": "string"
           },
+          "random": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RandomSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "table": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TableSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "type": {
             "enum": [
               "single",
               "multiple",
               "text",
-              "number"
+              "number",
+              "sorting",
+              "matching",
+              "table",
+              "blanks",
+              "random_number",
+              "formula",
+              "free",
+              "code"
             ],
             "title": "Type",
             "type": "string"
@@ -16170,11 +17057,82 @@
             "description": "For text: accepted exact answers.",
             "title": "Accepted Answers"
           },
+          "blanks": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/BlankInput"
+                },
+                "maxItems": 20,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blanks"
+          },
           "case_sensitive": {
             "default": false,
             "description": "For text: compare case-sensitively.",
             "title": "Case Sensitive",
             "type": "boolean"
+          },
+          "columns": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 30,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Table columns.",
+            "title": "Columns"
+          },
+          "correct_cells": {
+            "anyOf": [
+              {
+                "items": {
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "prefixItems": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "integer"
+                    }
+                  ],
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For table: the (row, column) cells to mark, 0-based.",
+            "title": "Correct Cells"
+          },
+          "expected_outputs": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Outputs"
           },
           "explanation": {
             "anyOf": [
@@ -16188,6 +17146,63 @@
             ],
             "description": "Shown after answering, if allowed.",
             "title": "Explanation"
+          },
+          "expression": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For formula: the correct expression.",
+            "title": "Expression"
+          },
+          "expression_variables": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 10,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expression Variables"
+          },
+          "formula": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For random_number: answer formula.",
+            "title": "Formula"
+          },
+          "items": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 20,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For sorting: items in order.",
+            "title": "Items"
           },
           "number": {
             "anyOf": [
@@ -16217,6 +17232,22 @@
             "description": "For single and multiple: at least two options.",
             "title": "Options"
           },
+          "pairs": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/PairInput"
+                },
+                "maxItems": 20,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For matching: at least two pairs.",
+            "title": "Pairs"
+          },
           "points": {
             "default": 1,
             "description": "Score for a right answer.",
@@ -16245,6 +17276,22 @@
             "description": "For text: a regular expression.",
             "title": "Regex"
           },
+          "rows": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 30,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Table rows.",
+            "title": "Rows"
+          },
           "tolerance": {
             "default": 0.0,
             "description": "For number: allowed difference.",
@@ -16253,15 +17300,39 @@
             "type": "number"
           },
           "type": {
-            "description": "single: one correct option; multiple: several; text; number.",
+            "description": "single: one correct option; multiple: several; text; number; sorting: `items` in the right order; matching: `pairs`; table: `rows`, `columns`, `correct_cells`; blanks: `blanks`; random_number: `variables` and `formula`; formula: `expression`; code: optional `expected_outputs`; free: graded by a teacher.",
             "enum": [
               "single",
               "multiple",
               "text",
-              "number"
+              "number",
+              "sorting",
+              "matching",
+              "table",
+              "blanks",
+              "random_number",
+              "formula",
+              "free",
+              "code"
             ],
             "title": "Type",
             "type": "string"
+          },
+          "variables": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/VariableInput"
+                },
+                "maxItems": 10,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For random_number.",
+            "title": "Variables"
           }
         },
         "required": [
@@ -16534,6 +17605,33 @@
           "resets_at"
         ],
         "title": "QuotaResponse",
+        "type": "object"
+      },
+      "RandomSpec": {
+        "description": "Variables and the formula of the answer; each attempt draws its own values.",
+        "properties": {
+          "formula": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Formula",
+            "type": "string"
+          },
+          "tolerance": {
+            "default": 0.01,
+            "minimum": 0.0,
+            "title": "Tolerance",
+            "type": "number"
+          },
+          "variables": {
+            "items": {
+              "$ref": "#/components/schemas/Variable"
+            },
+            "maxItems": 10,
+            "title": "Variables",
+            "type": "array"
+          }
+        },
+        "title": "RandomSpec",
         "type": "object"
       },
       "Rating": {
@@ -18476,6 +19574,30 @@
         "title": "SanctionResponse",
         "type": "object"
       },
+      "SaveDashboardRequest": {
+        "description": "Replace the layout if `version` is the stored one.",
+        "properties": {
+          "version": {
+            "minimum": 0.0,
+            "title": "Version",
+            "type": "integer"
+          },
+          "widgets": {
+            "items": {
+              "$ref": "#/components/schemas/Widget"
+            },
+            "maxItems": 24,
+            "title": "Widgets",
+            "type": "array"
+          }
+        },
+        "required": [
+          "version",
+          "widgets"
+        ],
+        "title": "SaveDashboardRequest",
+        "type": "object"
+      },
       "SaveNoteBody": {
         "description": "`POST /notebooks/{id}/chat/messages/{mid}/save-note`.",
         "properties": {
@@ -18679,6 +19801,27 @@
             "title": "Lessons",
             "type": "array"
           },
+          "library_items": {
+            "items": {
+              "$ref": "#/components/schemas/LibrarySearchItemResponse"
+            },
+            "title": "Library Items",
+            "type": "array"
+          },
+          "marks": {
+            "items": {
+              "$ref": "#/components/schemas/MarkSearchItemResponse"
+            },
+            "title": "Marks",
+            "type": "array"
+          },
+          "notebooks": {
+            "items": {
+              "$ref": "#/components/schemas/NotebookSearchItemResponse"
+            },
+            "title": "Notebooks",
+            "type": "array"
+          },
           "subjects": {
             "items": {
               "$ref": "#/components/schemas/app__interfaces__http__v1__composition__shared_schemas__SubjectRefResponse"
@@ -18692,7 +19835,10 @@
           "lessons",
           "homework",
           "files",
-          "flashcard_sets"
+          "flashcard_sets",
+          "notebooks",
+          "marks",
+          "library_items"
         ],
         "title": "SearchResultsResponse",
         "type": "object"
@@ -18853,6 +19999,85 @@
           }
         },
         "title": "SendBroadcastBody",
+        "type": "object"
+      },
+      "SendOutboundRequest": {
+        "description": "`SendOutboundMail`: an email composed in the dialog.",
+        "properties": {
+          "attachment_file_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attachment File Id"
+          },
+          "body": {
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Body",
+            "type": "string"
+          },
+          "subject": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Subject",
+            "type": "string"
+          },
+          "to": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "minItems": 1,
+            "title": "To",
+            "type": "array"
+          }
+        },
+        "required": [
+          "to",
+          "subject",
+          "body"
+        ],
+        "title": "SendOutboundRequest",
+        "type": "object"
+      },
+      "SendOutboundResponse": {
+        "description": "`OutboundMailSent`: what was sent.",
+        "properties": {
+          "attachment_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attachment Name"
+          },
+          "message_id": {
+            "title": "Message Id",
+            "type": "string"
+          },
+          "to": {
+            "items": {
+              "type": "string"
+            },
+            "title": "To",
+            "type": "array"
+          }
+        },
+        "required": [
+          "message_id",
+          "to",
+          "attachment_name"
+        ],
+        "title": "SendOutboundResponse",
         "type": "object"
       },
       "SendReclaimEmailBody": {
@@ -19484,6 +20709,10 @@
       "SourceDetailResponse": {
         "description": "`SourceDetail`: the item plus guide, text of a note and cited passages.",
         "properties": {
+          "ai_unsupported": {
+            "title": "Ai Unsupported",
+            "type": "boolean"
+          },
           "body_md": {
             "anyOf": [
               {
@@ -19550,6 +20779,10 @@
             },
             "title": "Label Ids",
             "type": "array"
+          },
+          "modality": {
+            "title": "Modality",
+            "type": "string"
           },
           "notebook_id": {
             "format": "uuid",
@@ -19631,6 +20864,8 @@
           "synced_at",
           "created_at",
           "label_ids",
+          "modality",
+          "ai_unsupported",
           "guide",
           "body_md",
           "editable",
@@ -19684,6 +20919,10 @@
       "SourceItemResponse": {
         "description": "`SourceItem`.",
         "properties": {
+          "ai_unsupported": {
+            "title": "Ai Unsupported",
+            "type": "boolean"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -19718,6 +20957,10 @@
             },
             "title": "Label Ids",
             "type": "array"
+          },
+          "modality": {
+            "title": "Modality",
+            "type": "string"
           },
           "notebook_id": {
             "format": "uuid",
@@ -19798,7 +21041,9 @@
           "has_guide",
           "synced_at",
           "created_at",
-          "label_ids"
+          "label_ids",
+          "modality",
+          "ai_unsupported"
         ],
         "title": "SourceItemResponse",
         "type": "object"
@@ -20261,13 +21506,17 @@
                 "mapping": {
                   "flashcards": "#/components/schemas/FlashcardsBlock-Input",
                   "test": "#/components/schemas/TestBlock-Input",
-                  "text": "#/components/schemas/TextBlock-Input"
+                  "text": "#/components/schemas/TextBlock-Input",
+                  "video": "#/components/schemas/VideoBlock-Input"
                 },
                 "propertyName": "type"
               },
               "oneOf": [
                 {
                   "$ref": "#/components/schemas/TextBlock-Input"
+                },
+                {
+                  "$ref": "#/components/schemas/VideoBlock-Input"
                 },
                 {
                   "$ref": "#/components/schemas/TestBlock-Input"
@@ -20300,13 +21549,17 @@
                 "mapping": {
                   "flashcards": "#/components/schemas/app__modules__lms__domain__step_content__FlashcardsBlock",
                   "test": "#/components/schemas/app__modules__lms__domain__step_content__TestBlock",
-                  "text": "#/components/schemas/app__modules__lms__domain__step_content__TextBlock"
+                  "text": "#/components/schemas/app__modules__lms__domain__step_content__TextBlock",
+                  "video": "#/components/schemas/app__modules__lms__domain__step_content__VideoBlock"
                 },
                 "propertyName": "type"
               },
               "oneOf": [
                 {
                   "$ref": "#/components/schemas/app__modules__lms__domain__step_content__TextBlock"
+                },
+                {
+                  "$ref": "#/components/schemas/app__modules__lms__domain__step_content__VideoBlock"
                 },
                 {
                   "$ref": "#/components/schemas/app__modules__lms__domain__step_content__TestBlock"
@@ -20485,13 +21738,17 @@
                     "mapping": {
                       "flashcards": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__FlashcardsBlock",
                       "test": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__TestBlock",
-                      "text": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__TextBlock"
+                      "text": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__TextBlock",
+                      "video": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__VideoBlock"
                     },
                     "propertyName": "type"
                   },
                   "oneOf": [
                     {
                       "$ref": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__TextBlock"
+                    },
+                    {
+                      "$ref": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__VideoBlock"
                     },
                     {
                       "$ref": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__TestBlock"
@@ -20534,13 +21791,17 @@
                 "mapping": {
                   "flashcards": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__FlashcardsBlock",
                   "test": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__TestBlock",
-                  "text": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__TextBlock"
+                  "text": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__TextBlock",
+                  "video": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__VideoBlock"
                 },
                 "propertyName": "type"
               },
               "oneOf": [
                 {
                   "$ref": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__TextBlock"
+                },
+                {
+                  "$ref": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__VideoBlock"
                 },
                 {
                   "$ref": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__TestBlock"
@@ -20624,6 +21885,33 @@
           "expires_on"
         ],
         "title": "StorageResponse",
+        "type": "object"
+      },
+      "StorageUsage": {
+        "description": "Bytes and files of ready uploads.",
+        "properties": {
+          "by_scope": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "By Scope",
+            "type": "object"
+          },
+          "bytes": {
+            "title": "Bytes",
+            "type": "integer"
+          },
+          "files": {
+            "title": "Files",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "bytes",
+          "files",
+          "by_scope"
+        ],
+        "title": "StorageUsage",
         "type": "object"
       },
       "Student360ProfileResponse": {
@@ -21689,6 +22977,118 @@
         "title": "SubjectLesson",
         "type": "object"
       },
+      "SubjectLessonListResponse": {
+        "description": "Latest past lessons first, then the upcoming ones.",
+        "properties": {
+          "has_more_past": {
+            "title": "Has More Past",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SubjectLessonRow"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items",
+          "has_more_past"
+        ],
+        "title": "SubjectLessonListResponse",
+        "type": "object"
+      },
+      "SubjectLessonRow": {
+        "description": "One row of the subject hub lesson list.",
+        "properties": {
+          "attendance": {
+            "anyOf": [
+              {
+                "enum": [
+                  "present",
+                  "absent",
+                  "late"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attendance"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "kind": {
+            "default": "other",
+            "enum": [
+              "lecture",
+              "practice",
+              "midterm",
+              "final",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "lesson_id": {
+            "format": "uuid",
+            "title": "Lesson Id",
+            "type": "string"
+          },
+          "mark": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mark"
+          },
+          "materials_count": {
+            "title": "Materials Count",
+            "type": "integer"
+          },
+          "past": {
+            "title": "Past",
+            "type": "boolean"
+          },
+          "starts_at": {
+            "format": "date-time",
+            "title": "Starts At",
+            "type": "string"
+          },
+          "topic": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic"
+          }
+        },
+        "required": [
+          "lesson_id",
+          "date",
+          "starts_at",
+          "topic",
+          "mark",
+          "attendance",
+          "materials_count",
+          "past"
+        ],
+        "title": "SubjectLessonRow",
+        "type": "object"
+      },
       "SubjectNameBody": {
         "description": "Names of a subject in the three languages (empty string = not set).",
         "properties": {
@@ -22219,6 +23619,92 @@
           "items"
         ],
         "title": "SyncRunPageResponse",
+        "type": "object"
+      },
+      "SystemHealth": {
+        "description": "What answers right now.",
+        "properties": {
+          "db": {
+            "title": "Db",
+            "type": "boolean"
+          },
+          "failed_logins_24h": {
+            "title": "Failed Logins 24H",
+            "type": "integer"
+          },
+          "logins_24h": {
+            "title": "Logins 24H",
+            "type": "integer"
+          },
+          "queue_lag": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Queue Lag"
+          },
+          "queue_pending": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Queue Pending"
+          },
+          "redis": {
+            "title": "Redis",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "db",
+          "redis",
+          "queue_pending",
+          "queue_lag",
+          "failed_logins_24h",
+          "logins_24h"
+        ],
+        "title": "SystemHealth",
+        "type": "object"
+      },
+      "TableSpec": {
+        "description": "A grid of a table question: the cells to mark are ``correct[row][column]``.",
+        "properties": {
+          "columns": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "Columns",
+            "type": "array"
+          },
+          "correct": {
+            "items": {
+              "items": {
+                "type": "boolean"
+              },
+              "type": "array"
+            },
+            "title": "Correct",
+            "type": "array"
+          },
+          "rows": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "title": "TableSpec",
         "type": "object"
       },
       "TaxonomyEntryResponse": {
@@ -23537,6 +25023,16 @@
             "title": "Access",
             "type": "string"
           },
+          "document": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DocumentCardResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "expires_at": {
             "anyOf": [
               {
@@ -24720,6 +26216,35 @@
         "title": "UsageInfoResponse",
         "type": "object"
       },
+      "UsageInsights": {
+        "description": "Daily activity of the last 14 days (zero-filled).",
+        "properties": {
+          "ai_tokens": {
+            "items": {
+              "$ref": "#/components/schemas/DayCount"
+            },
+            "title": "Ai Tokens",
+            "type": "array"
+          },
+          "sign_ins": {
+            "items": {
+              "$ref": "#/components/schemas/DayCount"
+            },
+            "title": "Sign Ins",
+            "type": "array"
+          },
+          "storage": {
+            "$ref": "#/components/schemas/StorageUsage"
+          }
+        },
+        "required": [
+          "sign_ins",
+          "ai_tokens",
+          "storage"
+        ],
+        "title": "UsageInsights",
+        "type": "object"
+      },
       "UsedBy": {
         "description": "Where a file is used.",
         "properties": {
@@ -25161,6 +26686,66 @@
         "title": "ValidationError",
         "type": "object"
       },
+      "Variable": {
+        "description": "A random variable of a generated numeric question.",
+        "properties": {
+          "integer": {
+            "default": true,
+            "title": "Integer",
+            "type": "boolean"
+          },
+          "max": {
+            "title": "Max",
+            "type": "number"
+          },
+          "min": {
+            "title": "Min",
+            "type": "number"
+          },
+          "name": {
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,15}$",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "min",
+          "max"
+        ],
+        "title": "Variable",
+        "type": "object"
+      },
+      "VariableInput": {
+        "description": "A random variable of a generated numeric question.",
+        "properties": {
+          "integer": {
+            "default": true,
+            "title": "Integer",
+            "type": "boolean"
+          },
+          "max": {
+            "title": "Max",
+            "type": "number"
+          },
+          "min": {
+            "title": "Min",
+            "type": "number"
+          },
+          "name": {
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]{0,15}$",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "min",
+          "max"
+        ],
+        "title": "VariableInput",
+        "type": "object"
+      },
       "VerifyBody": {
         "description": "POST /v1/admin/oauth-clients/{client_id}/verify.",
         "properties": {
@@ -25342,6 +26927,56 @@
         "title": "VersionResponse",
         "type": "object"
       },
+      "VideoBlock-Input": {
+        "description": "A video: a link (YouTube, Vimeo, direct file) or an uploaded file.",
+        "properties": {
+          "caption": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Caption",
+            "type": "string"
+          },
+          "file_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id"
+          },
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "source": {
+            "default": "link",
+            "enum": [
+              "link",
+              "upload"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "type": {
+            "const": "video",
+            "default": "video",
+            "title": "Type",
+            "type": "string"
+          },
+          "url": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "title": "VideoBlock",
+        "type": "object"
+      },
       "Visibility-Output": {
         "description": "Who may see a published item.",
         "enum": [
@@ -25439,6 +27074,159 @@
           "cited"
         ],
         "title": "WebResultResponse",
+        "type": "object"
+      },
+      "Widget": {
+        "description": "One tile of the dashboard grid.",
+        "properties": {
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "config": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "title": "Config",
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "timetable",
+              "homework",
+              "marks",
+              "exams",
+              "flashcards_due",
+              "notebook_prompt",
+              "attendance",
+              "clock_next_lesson"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "size": {
+            "enum": [
+              "1x1",
+              "1x2",
+              "2x1",
+              "2x2",
+              "2x4"
+            ],
+            "title": "Size",
+            "type": "string"
+          },
+          "x": {
+            "title": "X",
+            "type": "integer"
+          },
+          "y": {
+            "title": "Y",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "size",
+          "x",
+          "y"
+        ],
+        "title": "Widget",
+        "type": "object"
+      },
+      "WidgetResponse": {
+        "description": "A widget with the computed text colour.",
+        "properties": {
+          "color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "config": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Config",
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "timetable",
+              "homework",
+              "marks",
+              "exams",
+              "flashcards_due",
+              "notebook_prompt",
+              "attendance",
+              "clock_next_lesson"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "size": {
+            "enum": [
+              "1x1",
+              "1x2",
+              "2x1",
+              "2x2",
+              "2x4"
+            ],
+            "title": "Size",
+            "type": "string"
+          },
+          "text_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text Color"
+          },
+          "x": {
+            "title": "X",
+            "type": "integer"
+          },
+          "y": {
+            "title": "Y",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "size",
+          "x",
+          "y",
+          "text_color"
+        ],
+        "title": "WidgetResponse",
         "type": "object"
       },
       "app__interfaces__http__v1__admin_broadcasts__schemas__AudienceBody": {
@@ -25681,6 +27469,17 @@
       "app__interfaces__http__v1__admin_schedule__shared_schemas__LessonItemResponse": {
         "description": "LessonItem.",
         "properties": {
+          "absent_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Absent Count"
+          },
           "attendance_submitted": {
             "title": "Attendance Submitted",
             "type": "boolean"
@@ -26119,6 +27918,25 @@
       "app__interfaces__http__v1__ai__schemas__SendMessageBody": {
         "description": "POST /v1/ai/chats/{id}/messages.",
         "properties": {
+          "args": {
+            "default": "",
+            "maxLength": 8000,
+            "title": "Args",
+            "type": "string"
+          },
+          "command": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Command"
+          },
           "file_ids": {
             "items": {
               "format": "uuid",
@@ -26129,8 +27947,8 @@
             "type": "array"
           },
           "text": {
+            "default": "",
             "maxLength": 8000,
-            "minLength": 1,
             "title": "Text",
             "type": "string"
           },
@@ -26140,9 +27958,6 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "text"
-        ],
         "title": "SendMessageBody",
         "type": "object"
       },
@@ -26150,8 +27965,15 @@
         "description": "Tokens used against a limit.",
         "properties": {
           "limit": {
-            "title": "Limit",
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit"
           },
           "resets_at": {
             "anyOf": [
@@ -28493,6 +30315,55 @@
         "title": "TextBlock",
         "type": "object"
       },
+      "app__interfaces__http__v1__notebooks__schemas_apply__VideoBlock": {
+        "additionalProperties": true,
+        "description": "A video block (a link or an uploaded file).",
+        "properties": {
+          "caption": {
+            "default": "",
+            "title": "Caption",
+            "type": "string"
+          },
+          "file_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id"
+          },
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "source": {
+            "default": "link",
+            "enum": [
+              "link",
+              "upload"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "type": {
+            "const": "video",
+            "default": "video",
+            "title": "Type",
+            "type": "string"
+          },
+          "url": {
+            "default": "",
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "title": "VideoBlock",
+        "type": "object"
+      },
       "app__interfaces__http__v1__notebooks__schemas_chat__SendMessageBody": {
         "description": "`POST /notebooks/{id}/chat/messages`.\n\nThe 8 000 characters are a coarse cap on the payload; the question itself may\nhave 4 000 characters after trimming (the use case answers 422 above that).",
         "properties": {
@@ -28521,6 +30392,25 @@
             ],
             "title": "Anchor"
           },
+          "args": {
+            "default": "",
+            "maxLength": 8000,
+            "title": "Args",
+            "type": "string"
+          },
+          "command": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Command"
+          },
           "source_ids": {
             "anyOf": [
               {
@@ -28538,8 +30428,8 @@
             "title": "Source Ids"
           },
           "text": {
+            "default": "",
             "maxLength": 8000,
-            "minLength": 1,
             "title": "Text",
             "type": "string"
           },
@@ -28549,9 +30439,6 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "text"
-        ],
         "title": "SendMessageBody",
         "type": "object"
       },
@@ -28695,6 +30582,56 @@
           }
         },
         "title": "TextBlock",
+        "type": "object"
+      },
+      "app__modules__lms__domain__step_content__VideoBlock": {
+        "description": "A video: a link (YouTube, Vimeo, direct file) or an uploaded file.",
+        "properties": {
+          "caption": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Caption",
+            "type": "string"
+          },
+          "file_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id"
+          },
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "source": {
+            "default": "link",
+            "enum": [
+              "link",
+              "upload"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "type": {
+            "const": "video",
+            "default": "video",
+            "title": "Type",
+            "type": "string"
+          },
+          "url": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "title": "VideoBlock",
         "type": "object"
       }
     }
@@ -30422,6 +32359,28 @@
         "summary": "Assign Subgroups",
         "tags": [
           "admin-schedule"
+        ]
+      }
+    },
+    "/v1/admin/insights": {
+      "get": {
+        "description": "System health, daily usage and the marks histogram for the report pages.",
+        "operationId": "get_insights_v1_admin_insights_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InsightsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Insights",
+        "tags": [
+          "admin-insights"
         ]
       }
     },
@@ -42347,9 +44306,71 @@
         ]
       }
     },
+    "/v1/me/dashboard": {
+      "get": {
+        "description": "Return the user's dashboard, or the default one at version 0.",
+        "operationId": "get_dashboard_v1_me_dashboard_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Dashboard",
+        "tags": [
+          "dashboard"
+        ]
+      },
+      "put": {
+        "description": "Save the dashboard; 409 when the version is not the stored one.",
+        "operationId": "put_dashboard_v1_me_dashboard_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveDashboardRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Dashboard",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
     "/v1/me/files": {
       "get": {
-        "description": "Return one page of files, newest first.",
+        "description": "Return one page of files; `page`/`page_size` give numbered paging.",
         "operationId": "list_my_files_v1_me_files_get",
         "parameters": [
           {
@@ -42394,6 +44415,96 @@
               "minimum": 1,
               "title": "Limit",
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pdf",
+                    "doc",
+                    "sheet",
+                    "slides",
+                    "text",
+                    "image"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "recent",
+              "enum": [
+                "recent",
+                "older"
+              ],
+              "title": "Sort",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page Size"
             }
           }
         ],
@@ -43140,6 +45251,64 @@
         "summary": "Set Homework Note",
         "tags": [
           "me-classwork"
+        ]
+      }
+    },
+    "/v1/me/lesson-results": {
+      "get": {
+        "description": "Return attendance and the mark of each lesson that has already started.",
+        "operationId": "list_lesson_results_v1_me_lesson_results_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "title": "From",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": true,
+            "schema": {
+              "format": "date",
+              "title": "To",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LessonResultRow"
+                  },
+                  "title": "Response List Lesson Results V1 Me Lesson Results Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Lesson Results",
+        "tags": [
+          "marks"
         ]
       }
     },
@@ -44075,6 +46244,48 @@
         ]
       }
     },
+    "/v1/me/outbound-mail": {
+      "post": {
+        "description": "Send an email to anyone from the platform; one attachment from My files.",
+        "operationId": "send_outbound_mail_v1_me_outbound_mail_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendOutboundRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendOutboundResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Send Outbound Mail",
+        "tags": [
+          "mail"
+        ]
+      }
+    },
     "/v1/me/profile": {
       "get": {
         "description": "Return the student's group, subgroup, curator and mailbox.",
@@ -44379,6 +46590,114 @@
         ]
       }
     },
+    "/v1/me/subjects/{subject_id}/lessons": {
+      "get": {
+        "description": "Return the latest past lessons, then the next `upcoming_days` of lessons.",
+        "operationId": "list_subject_lessons_v1_me_subjects__subject_id__lessons_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "around",
+            "required": false,
+            "schema": {
+              "const": "now",
+              "default": "now",
+              "title": "Around",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "semester",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 4,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Semester"
+            }
+          },
+          {
+            "in": "query",
+            "name": "past_limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Past Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "past_offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Past Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "upcoming_days",
+            "required": false,
+            "schema": {
+              "default": 14,
+              "maximum": 60,
+              "minimum": 0,
+              "title": "Upcoming Days",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubjectLessonListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Subject Lessons",
+        "tags": [
+          "marks"
+        ]
+      }
+    },
     "/v1/me/subjects/{subject_id}/planner": {
       "get": {
         "description": "Return the predicted semester mark and what the controls must bring.",
@@ -44423,7 +46742,7 @@
                   "items": {
                     "type": "string"
                   },
-                  "maxItems": 20,
+                  "maxItems": 500,
                   "type": "array"
                 },
                 {
@@ -45518,6 +47837,70 @@
         ]
       }
     },
+    "/v1/notebooks/{notebook_id}/artifacts/{artifact_id}/attach-to-lesson": {
+      "post": {
+        "description": "Render a report, table or slides as a file and add it to the teacher's lesson.",
+        "operationId": "attach_artifact_v1_notebooks__notebook_id__artifacts__artifact_id__attach_to_lesson_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notebook_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notebook Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "artifact_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Artifact Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachArtifactBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttachedResourceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Attach Artifact",
+        "tags": [
+          "notebooks"
+        ]
+      }
+    },
     "/v1/notebooks/{notebook_id}/artifacts/{artifact_id}/cancel": {
       "post": {
         "description": "Stop an output that is queued or generating.",
@@ -45567,6 +47950,77 @@
           }
         },
         "summary": "Cancel Artifact",
+        "tags": [
+          "notebooks"
+        ]
+      }
+    },
+    "/v1/notebooks/{notebook_id}/artifacts/{artifact_id}/download": {
+      "get": {
+        "description": "Download a ready output as a file: report .docx, table .xlsx, slides .pptx.",
+        "operationId": "download_artifact_v1_notebooks__notebook_id__artifacts__artifact_id__download_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notebook_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notebook Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "artifact_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Artifact Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "docx",
+                    "xlsx",
+                    "pptx"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Format"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/octet-stream": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download Artifact",
         "tags": [
           "notebooks"
         ]
