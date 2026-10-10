@@ -85,7 +85,14 @@ def gateway() -> OpenRouterGateway:
     return OpenRouterGateway(
         api_key="sk-test",
         base_url="https://openrouter.ai/api/v1",
-        app_url="https://sp.ihsu.uz",
-        app_title="IHSP",
+        app_url="https://my.ihsu.uz",
+        app_title="IHT",
         timeout_seconds=5,
     )
+
+
+def test_reasoning_none_switches_reasoning_off() -> None:
+    """`none` sends `reasoning.enabled: false` (Claude 5.5 reasons by default)."""
+    assert payload(LlmTuning(reasoning_effort="none"))["reasoning"] == {
+        "enabled": False
+    }

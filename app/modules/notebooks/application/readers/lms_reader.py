@@ -1,10 +1,10 @@
 """Source kind `lms_step`: a step of an LMS course (§ 3.2.1, LMS-17).
 
 A student's notebook reads the live revision of a step of an enrolled course
-(`LmsSourceReader.step_text`). A course workspace reads the *draft* of its own
-course's steps (`LmsWorkspace.draft_step_text`, `ref.draft = true`); the draft hash
-is the version, so an edited draft makes the source outdated. Only text and flash
-card blocks are read, never the questions or answers of test blocks.
+(`LmsSourceReader.step_text`): text, flash cards and the questions of tests without
+their answers. A course workspace reads the *draft* of its own course's steps
+(`LmsWorkspace.draft_step_text`, `ref.draft = true`), answers included; the draft
+hash is the version, so an edited draft makes the source outdated.
 """
 
 from uuid import UUID

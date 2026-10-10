@@ -12,7 +12,7 @@ from datetime import date
 from app.modules.ai.domain.prompts import language_name
 from app.shared.contracts.lms import CourseBrief
 
-AUTHOR_MARKER = "You are the course author assistant of the IHSP LMS"
+AUTHOR_MARKER = "You are the course author assistant of the IHT LMS"
 CONTEXT_HEADING = "# COURSE CONTEXT"
 CONTEXT_MAX_CHARS = 8000
 DESCRIPTION_MAX_CHARS = 600

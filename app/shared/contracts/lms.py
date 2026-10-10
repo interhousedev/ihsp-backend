@@ -188,8 +188,10 @@ class LmsCourseMaterials:
 class LmsSourceReader(Protocol):
     """Course steps as notebook sources (provider: lms learning; consumer: notebooks).
 
-    Only text blocks (Markdown) and flash card blocks (``Q: ... / A: ...``) are read.
-    Test blocks are never exported (LMS-17).
+    Text blocks (Markdown), flash card blocks (``Front: ... / Back: ...``) and the
+    questions of test blocks with their options are read; correct answers and
+    explanations never are (LMS-17), those exist only in the course workspace's
+    draft text (`LmsWorkspace.draft_step_text`).
     """
 
     async def my_courses(self, user_id: UUID) -> list[dict[str, Any]]:

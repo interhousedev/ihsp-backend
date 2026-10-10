@@ -140,7 +140,7 @@ async def test_model_call_has_the_documented_shape(
     messages = request["messages"]
     assert request["schema_name"] == "nb_report"
     assert request["schema"]["additionalProperties"] is False
-    assert request["max_tokens"] == 5000
+    assert request["max_tokens"] == 8000
     assert request["provider"] == {
         "data_collection": "deny",
         "require_parameters": True,
@@ -522,3 +522,44 @@ async def test_every_call_is_counted_in_the_budget_with_its_cached_tokens(
     assert (artifact.tokens_in, artifact.tokens_out) == (1800, 150)
     assert artifact.tokens_cached == 500
     assert artifact.cost_micro == 2000
+
+
+# - - - Thin sources - - -
+
+
+async def test_thin_sources_get_the_teaching_note(
+    studio: StudioServices,
+    student: Actor,
+    notebook: Notebook,
+    source: Source,
+    uow_factory: UowFactory,
+    scripted_llm: HookedLlm,
+) -> None:
+    """A pack under 1 500 tokens tells the model to teach the whole topic."""
+    await generate(
+        studio, uow_factory, student, notebook, ArtifactKind.REPORT, CONSPECT
+    )
+
+    task = scripted_llm.json_requests[0]["messages"][1]["content"]
+    assert "The sources are short (" in task and "words in all:" in task
+    assert f"«{source.title}»" in task
+    assert 'items from your own knowledge leave "refs" empty' in task
+
+
+async def test_big_sources_get_no_thin_note(
+    build: Build,
+    student: Actor,
+    notebook: Notebook,
+    uow_factory: UowFactory,
+    scripted_llm: HookedLlm,
+) -> None:
+    """About 3 000 tokens of text is not thin."""
+    await make_source(uow_factory, notebook, texts=big_texts(), title="Big")
+    studio = build()
+
+    await generate(
+        studio, uow_factory, student, notebook, ArtifactKind.REPORT, CONSPECT
+    )
+
+    task = scripted_llm.json_requests[0]["messages"][1]["content"]
+    assert "The sources are short" not in task

@@ -29,6 +29,7 @@ from app.modules.notebooks.domain.artifacts.kind_support import (
 )
 from app.modules.notebooks.domain.artifacts.refs import (
     build_refs_index,
+    cites_honestly,
     keep_items_with_refs,
     valid_refs,
 )
@@ -88,6 +89,7 @@ class DataTableOut(BaseModel):
 class _Row:
     cells: dict[str, str]
     refs: list[str]
+    trusted: bool = True  # valid refs, or honestly none (see `cites_honestly`)
 
 
 def ascii_key(raw: str) -> str:
@@ -246,8 +248,10 @@ class DataTableHandler:
         parsed = validate_numbered(RowOut, raw_rows, problems, "row")
         rows = _rows(parsed, columns, key_map, problems)
         for row in rows:
-            row.refs = valid_refs(row.refs, ctx.pack)
-        kept = keep_items_with_refs(rows, lambda r: bool(r.refs), len(rows))
+            raw = row.refs
+            row.refs = valid_refs(raw, ctx.pack)
+            row.trusted = cites_honestly(raw, row.refs)
+        kept = keep_items_with_refs(rows, lambda r: r.trusted, len(rows))
         kept = kept[: opts.max_rows]
         if not kept:
             raise OutputInvalidError(problems or ["no rows"])

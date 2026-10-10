@@ -27,7 +27,7 @@ COURSE_STEP_TEXT_CHARS: Final = 12_000
 TOPIC_MAX_CHARS: Final = 200
 
 _COURSE_SYSTEM: Final = """\
-You are a course design assistant for the teachers of IHSP, a lyceum for students aged
+You are a course design assistant for the teachers of IHT, a lyceum for students aged
 15-18. A teacher builds a course in the school's learning platform and gives you source
 materials in <sources> and the state of the course in <course>.
 Use ONLY the information in <sources> for facts, definitions, formulas, numbers, dates

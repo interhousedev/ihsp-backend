@@ -5,7 +5,7 @@ import json
 import re
 from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable
 from contextlib import aclosing
-from typing import Any
+from typing import Any, NoReturn
 
 from app.modules.ai.domain.errors import AiInvalidOutputError, AiProviderError
 from app.shared.contracts.ai import LlmTuning
@@ -23,6 +23,14 @@ MAX_RETRY_SECONDS = 10.0
 TEMPERATURE = 0.2
 CONNECT_TIMEOUT_SECONDS = 10.0
 MICRO = 1_000_000
+# OpenRouter's 404 when `provider.require_parameters` finds no endpoint that takes
+# every parameter of the request (the newest models refuse `temperature`).
+UNSUPPORTED_PARAMETERS = "No endpoints found that can handle the requested parameters"
+# OpenRouter's 400 for `reasoning: {"enabled": false}` on a model that always reasons
+# (Claude Sonnet 5.5, Gemini 3.x); the smallest budget it takes is `effort: low`.
+REASONING_MANDATORY = "Reasoning is mandatory"
+REASONING_OFF: dict[str, Any] = {"enabled": False}
+REASONING_LEAST: dict[str, Any] = {"effort": "low"}
 
 
 class OpenRouterGateway:
@@ -52,6 +60,12 @@ class OpenRouterGateway:
         }
         self._base_url = base_url.rstrip("/")
         self._sleep = sleep
+        # Models whose endpoints refuse `temperature` (Claude 5.5, GPT-5.x): learned
+        # from one 404 and never sent again in this process.
+        self._no_temperature: set[str] = set()
+        # Models that cannot switch reasoning off (`reasoning: {"enabled": false}`
+        # answers 400): they get the smallest effort instead, learned the same way.
+        self._always_reason: set[str] = set()
 
     async def aclose(self) -> None:
         """Close the HTTP client."""
@@ -166,10 +180,60 @@ class OpenRouterGateway:
                     raise later.error from None
                 await self._sleep(later.seconds)
 
+    def _prepared(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """The body adjusted to what the model's endpoints are known to accept."""
+        model = payload.get("model")
+        if model in self._no_temperature and "temperature" in payload:
+            payload = {k: v for k, v in payload.items() if k != "temperature"}
+        if model in self._always_reason and payload.get("reasoning") == REASONING_OFF:
+            payload = {**payload, "reasoning": REASONING_LEAST}
+        return payload
+
+    def _learn_refusal(self, payload: dict[str, Any], status: int, error: Any) -> bool:
+        """Remember a parameter the model refuses; True when a retry makes sense.
+
+        A 404 "No endpoints found that can handle the requested parameters" (with
+        `provider.require_parameters`) means an endpoint does not take one of the
+        parameters: the newest models refuse `temperature`. A 400 "Reasoning is
+        mandatory" means `reasoning: {"enabled": false}` is not accepted: the model
+        gets the smallest effort instead.
+        """
+        model = str(payload.get("model", ""))
+        text = _error_text(error)
+        if (
+            status == 404
+            and "temperature" in payload
+            and UNSUPPORTED_PARAMETERS in text
+        ):
+            self._no_temperature.add(model)
+            log.warning("ai.openrouter_temperature_dropped", model=model)
+            return True
+        if (
+            status == 400
+            and payload.get("reasoning") == REASONING_OFF
+            and REASONING_MANDATORY in text
+        ):
+            self._always_reason.add(model)
+            log.warning("ai.openrouter_reasoning_kept", model=model)
+            return True
+        return False
+
+    async def _raise_stream_error(
+        self, response: httpx.Response, payload: dict[str, Any]
+    ) -> NoReturn:
+        """Raise the failure of a non-200 stream; a learned refusal retries at once."""
+        error = await _stream_status_error(response)
+        if isinstance(error, AiProviderError) and self._learn_refusal(
+            payload, response.status_code, error.support_details
+        ):
+            raise _RetryLater(0.0, error)
+        raise error
+
     async def _stream_once(
         self, payload: dict[str, Any], timeout_seconds: float | None
     ) -> AsyncGenerator[dict[str, Any], None]:
         url = f"{self._base_url}/chat/completions"
+        payload = self._prepared(payload)
         try:
             async with self._client.stream(
                 "POST",
@@ -179,7 +243,7 @@ class OpenRouterGateway:
                 **_timeout_args(timeout_seconds),
             ) as response:
                 if response.status_code != 200:
-                    raise await _stream_status_error(response)
+                    await self._raise_stream_error(response, payload)
                 parser = SseParser()
                 async for line in response.aiter_lines():
                     for item in parser.feed(line):
@@ -202,6 +266,7 @@ class OpenRouterGateway:
         path: str = "/chat/completions",
     ) -> dict[str, Any]:
         url = f"{self._base_url}{path}"
+        payload = self._prepared(payload)
         for attempt in (1, 2):
             try:
                 response = await self._client.post(
@@ -217,6 +282,11 @@ class OpenRouterGateway:
                 raise AiProviderError(support_details=f"transport: {exc!r}") from exc
             if response.status_code in RETRY_STATUSES and attempt == 1:
                 await self._sleep(_retry_after(response))
+                continue
+            if attempt == 1 and self._learn_refusal(
+                payload, response.status_code, _error_of(response)
+            ):
+                payload = self._prepared(payload)
                 continue
             return _checked(response)
         raise AiProviderError(support_details="unreachable")  # pragma: no cover
@@ -261,7 +331,9 @@ def _apply_tuning(payload: dict[str, Any], model: str, tuning: LlmTuning) -> Non
     """Add what the model profile sets; unset parts keep the gateway's defaults."""
     if tuning.temperature is not None:
         payload["temperature"] = tuning.temperature
-    if tuning.reasoning_effort is not None:
+    if tuning.reasoning_effort == "none":
+        payload["reasoning"] = dict(REASONING_OFF)
+    elif tuning.reasoning_effort is not None:
         payload["reasoning"] = {"effort": tuning.reasoning_effort}
     if tuning.fallbacks:
         payload["models"] = [model, *tuning.fallbacks]
@@ -312,6 +384,15 @@ def _error_text(error: Any) -> str:
     if isinstance(error, dict):
         return str(error.get("message", error))
     return str(error)
+
+
+def _error_of(response: httpx.Response) -> Any:
+    """The `error` object of a response body, or None when there is none."""
+    try:
+        data = response.json()
+    except ValueError:
+        return None
+    return data.get("error") if isinstance(data, dict) else None
 
 
 def _log_error(status: int, error: Any) -> None:

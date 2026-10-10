@@ -39,7 +39,8 @@ from app.modules.notebooks.domain.prompts.common import focus_clause
 from pydantic import BaseModel, Field, model_validator
 
 SCHEMA_NAME: Final = "nb_report"
-MAX_TOKENS: Final = {"short": 3000, "standard": 5000, "long": 8000}
+# About 4 tokens per word in Russian or Uzbek, plus tables and citation markers.
+MAX_TOKENS: Final = {"short": 4500, "standard": 8000, "long": 12000}
 WORDS: Final = {"short": 400, "standard": 800, "long": 1500}
 MARKDOWN_MIN_CHARS: Final = 200
 MARKDOWN_MAX_CHARS: Final = 40_000
@@ -56,7 +57,9 @@ _TITLE_PREFIX: Final = {
 }
 _CLOSING: Final = (
     "Put the citation `[[S1:P4]]` right after every sentence or bullet that states"
-    " something from the sources. Put the report in `markdown`."
+    " something from the sources, and no citation after what you add from your own"
+    " knowledge. Write the section headings in the output language too (the English"
+    " names above only describe the structure). Put the report in `markdown`."
 )
 _CONSPECT: Final = (
     "Write a conspect (structured lecture notes) of the sources for a student who"

@@ -21,6 +21,7 @@ from app.modules.notebooks.domain.artifacts.kind_support import (
 )
 from app.modules.notebooks.domain.artifacts.refs import (
     build_refs_index,
+    cites_honestly,
     keep_items_with_refs,
     valid_refs,
 )
@@ -34,7 +35,9 @@ from pydantic import BaseModel, Field
 
 SCHEMA_NAME: Final = "nb_flashcards"
 CARD_COUNTS: Final = {"fewer": 10, "standard": 20, "more": 35}
-MAX_TOKENS: Final = {"fewer": 2000, "standard": 3500, "more": 6000}
+# About 300 tokens per card in Russian or Uzbek (Cyrillic and formulas tokenize
+# worse than English), plus room for the title.
+MAX_TOKENS: Final = {"fewer": 3500, "standard": 6500, "more": 11000}
 FRONT_MAX_CHARS: Final = 160
 BACK_MAX_CHARS: Final = 300
 HINT_MAX_CHARS: Final = 200
@@ -73,6 +76,7 @@ class _Card:
     hint: str | None
     topic: str | None
     refs: list[str]
+    trusted: bool = True  # valid refs, or honestly none (see `cites_honestly`)
 
 
 def _card_input(raw: Any) -> Any:
@@ -100,6 +104,7 @@ def _tidy(item: CardOut, refs: list[str]) -> _Card | None:
         hint=fit_text(item.hint, chars=HINT_MAX_CHARS) or None,
         topic=fit_text(item.topic, chars=TOPIC_MAX_CHARS) or None,
         refs=refs,
+        trusted=cites_honestly(item.refs, refs),
     )
 
 
@@ -161,13 +166,17 @@ class FlashcardsHandler:
         opts = expect_options(options, FlashcardsOptions)
         return (
             f"Create {CARD_COUNTS[opts.count]} flash cards that help a student"
-            " memorize and understand the sources."
-            f" {difficulty_clause(opts.difficulty)} Each card is self-contained: the"
-            " front is a question or a term (at most 160 characters), the back is a"
-            " short answer (at most 300 characters); Markdown inline formatting and"
-            " `$formula$` are allowed. No duplicates, no 'see above', no 'all of the"
-            " above'. `topic` is a 1-3 word group name. `hint` is optional and must"
-            " not give the answer away. Cover the sources evenly."
+            " memorize and understand the topic of the sources."
+            f" {difficulty_clause(opts.difficulty)} Each card is atomic and"
+            " self-contained: the front is one question or one term (at most 160"
+            " characters), the back is a short, complete answer (at most 300"
+            " characters) that a student can check themselves against; Markdown"
+            " inline formatting and `$formula$` are allowed. Never ask what a"
+            " heading says or what 'the source' contains; ask about the subject"
+            " itself. No duplicates, no 'see above', no 'all of the above'. `topic`"
+            " is a 1-3 word group name. `hint` is optional and must not give the"
+            " answer away. Cover the sources evenly, then add the standard facts of"
+            " the topic a student needs."
             f"{focus_clause(prompt)}"
         )
 
@@ -191,7 +200,7 @@ class FlashcardsHandler:
         cards = _dedupe([card for card in tidied if card is not None])
         if not cards:
             raise OutputInvalidError(problems or ["`cards` has no usable card"])
-        cards = keep_items_with_refs(cards, lambda c: bool(c.refs), requested)
+        cards = keep_items_with_refs(cards, lambda c: c.trusted, requested)
         cards = cards[:requested]
         title = fit_text(data.get("title"), chars=ARTIFACT_TITLE_MAX_CHARS)
         content = {

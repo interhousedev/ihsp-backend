@@ -65,23 +65,28 @@ async def test_a_step_is_read_as_text_blocks_and_flash_cards(
     assert result.revision_id == str(step.revision_id)
     assert result.text == (
         "# Cells\n\nThe cell is the unit of life.\n\n"
-        "Q: Front 1\nA: Back 1\n\nQ: Front 2\nA: Back 2\n\n"
+        "Flash cards: 2 cards.\n\n"
+        "Card 1\nFront: Front 1\nBack: Back 1\n\n"
+        "Card 2\nFront: Front 2\nBack: Back 2\n\n"
+        "Test: 1 question.\n\n"
+        "Question 1 (single choice): Question q1?\n"
+        "Options: a) Option a; b) Option b; c) Option c\n\n"
         "Mitochondria make ATP."
     )
-    assert len(result.block_starts) == 3
     assert [result.text[s : s + 7] for s in result.block_starts] == [
         "# Cells",
-        "Q: Fron",
+        "Flash c",
+        "Test: 1",
         "Mitocho",
     ]
 
 
-async def test_test_blocks_and_their_correct_answers_never_leak(
+async def test_test_blocks_give_questions_but_never_correct_answers(
     maker: async_sessionmaker[AsyncSession],
     learning: LearningServices,
     student: Actor,
 ) -> None:
-    """LMS-17: nothing of a test block reaches the text, even as a substring."""
+    """LMS-17: questions and options reach the text; keys and explanations do not."""
     block = quiz(
         "quiz",
         [
@@ -101,19 +106,13 @@ async def test_test_blocks_and_their_correct_answers_never_leak(
         student.user_id, course.id, step.step_id
     )
 
-    assert result.text == "Read first."
-    for secret in (
-        "Question q1?",
-        "Option",
-        "Because option b",
-        "Tashkent",
-        "1991",
-        "q2",
-    ):
+    assert result.text.startswith("Read first.\n\nTest: 3 questions.")
+    assert "Question q1?" in result.text and "Option a" in result.text
+    for secret in ("Because option b", "Tashkent", "1991", "Correct answer"):
         assert secret not in result.text
 
 
-async def test_a_step_with_only_tests_gives_an_empty_text(
+async def test_a_step_with_only_tests_gives_the_questions_without_keys(
     maker: async_sessionmaker[AsyncSession],
     learning: LearningServices,
     student: Actor,
@@ -126,7 +125,8 @@ async def test_a_step_with_only_tests_gives_an_empty_text(
         student.user_id, course.id, course.step("s1").step_id
     )
 
-    assert result.text == "" and result.block_starts == ()
+    assert result.text.startswith("Test: 1 question.\n\nQuestion 1")
+    assert "Correct answer" not in result.text and result.block_starts == (0,)
     assert result.title == "Only test"
 
 

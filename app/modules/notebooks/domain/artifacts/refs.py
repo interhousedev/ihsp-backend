@@ -63,13 +63,24 @@ def build_refs_index(
     return index
 
 
+def cites_honestly(raw: Iterable[object] | None, valid: Sequence[str]) -> bool:
+    """True when an item cites valid labels or honestly cites nothing.
+
+    The system prompt asks for empty refs on items that rest on the model's own
+    knowledge, so an empty list is an honest answer; only labels that all turned out
+    invalid (invented or garbled) make an item suspect.
+    """
+    return bool(valid) or not any(str(label).strip() for label in raw or [])
+
+
 def keep_items_with_refs(
     items: Sequence[T], has_refs: Callable[[T], bool], requested: int
 ) -> list[T]:
     """Drop items whose refs are all invalid (§ 3.4.0).
 
-    The items are kept as they are when dropping would leave fewer than half of the
-    `requested` count (thin sources: a result with weak refs beats an empty one).
+    `has_refs` says whether an item is trusted (see `cites_honestly`). The items are
+    kept as they are when dropping would leave fewer than half of the `requested`
+    count (thin sources: a result with weak refs beats an empty one).
     """
     kept = [item for item in items if has_refs(item)]
     if len(kept) * 2 < requested:

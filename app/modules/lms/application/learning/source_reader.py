@@ -28,7 +28,8 @@ class LmsSourceReaderImpl:
     """Lists the courses of a student and reads their live steps as plain text.
 
     Reading is limited to the enrolled student: course staff get no special access
-    here, and test blocks are never part of the text (LMS-17).
+    here, and test blocks give only their questions and options, never the correct
+    answers or explanations (LMS-17).
     """
 
     def __init__(self, uow_factory: UowFactory) -> None:

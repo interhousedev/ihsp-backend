@@ -6,6 +6,7 @@ from typing import Any
 
 from app.modules.ai.domain.errors import AiProviderError
 from app.modules.ai.infrastructure.openrouter import OpenRouterGateway
+from app.shared.contracts.ai import LlmTuning
 
 import httpx
 import pytest
@@ -46,8 +47,8 @@ def gateway(sleeps: Sleeps) -> OpenRouterGateway:
     return OpenRouterGateway(
         api_key="sk-test",
         base_url="https://openrouter.ai/api/v1",
-        app_url="https://sp.ihsu.uz",
-        app_title="IHSP",
+        app_url="https://my.ihsu.uz",
+        app_title="IHT",
         timeout_seconds=5,
         sleep=sleeps,
     )
@@ -99,8 +100,8 @@ async def test_request_has_headers_tools_and_a_cache_breakpoint(
     request = route.calls.last.request
     body = json.loads(request.content)
     assert request.headers["authorization"] == "Bearer sk-test"
-    assert request.headers["http-referer"] == "https://sp.ihsu.uz"
-    assert request.headers["x-openrouter-title"] == "IHSP"
+    assert request.headers["http-referer"] == "https://my.ihsu.uz"
+    assert request.headers["x-openrouter-title"] == "IHT"
     assert body["model"] == "anthropic/claude-haiku-4.5" and body["max_tokens"] == 512
     assert body["tools"] == TOOLS and body["tool_choice"] == "auto"
     system = body["messages"][0]
@@ -230,3 +231,126 @@ async def test_network_failure_is_retried_then_reported(
         await ask(gateway)
 
     assert route.call_count == 2 and len(sleeps.seconds) == 1
+
+
+# - - - Parameters the newest models refuse - - -
+
+UNSUPPORTED = {
+    "error": {
+        "message": "No endpoints found that can handle the requested parameters. "
+        "To learn more about provider routing, visit: https://openrouter.ai/docs",
+        "code": 404,
+    }
+}
+MANDATORY = {
+    "error": {
+        "message": "Reasoning is mandatory for this endpoint and cannot be disabled.",
+        "code": 400,
+    }
+}
+
+
+def bodies(route: respx.Route) -> list[dict[str, Any]]:
+    """The JSON bodies of every request the route received."""
+    return [json.loads(call.request.content) for call in route.calls]
+
+
+@respx.mock
+async def test_temperature_is_dropped_and_remembered_after_a_parameter_404(
+    gateway: OpenRouterGateway, sleeps: Sleeps
+) -> None:
+    """Claude 5.5 and GPT-5.x refuse `temperature`: one retry without it, then never."""
+    route = respx.post(URL).mock(
+        side_effect=[
+            httpx.Response(404, json=UNSUPPORTED),
+            httpx.Response(200, json=fixture("completion_text")),
+            httpx.Response(200, json=fixture("completion_text")),
+        ]
+    )
+
+    first = await ask(gateway, model="anthropic/claude-haiku-5.5")
+    second = await ask(gateway, model="anthropic/claude-haiku-5.5")
+
+    assert first["text"] == second["text"] == "You have two marks: 5 and 4."
+    sent = bodies(route)
+    assert len(sent) == 3 and sleeps.seconds == []
+    assert "temperature" in sent[0]
+    assert "temperature" not in sent[1] and "temperature" not in sent[2]
+
+
+@respx.mock
+async def test_a_parameter_404_without_temperature_is_a_provider_error(
+    gateway: OpenRouterGateway,
+) -> None:
+    """Nothing left to drop: the error reaches the caller after one request."""
+    route = respx.post(URL).respond(404, json=UNSUPPORTED)
+    gateway._no_temperature.add("anthropic/claude-haiku-5.5")  # noqa: SLF001
+
+    with pytest.raises(AiProviderError) as caught:
+        await ask(gateway, model="anthropic/claude-haiku-5.5")
+
+    assert route.call_count == 1 and caught.value.params["status"] == 404
+
+
+@respx.mock
+async def test_reasoning_off_falls_back_to_the_lowest_effort_when_mandatory(
+    gateway: OpenRouterGateway,
+) -> None:
+    """Sonnet 5.5 and Gemini 3 always reason: `enabled: false` becomes `effort: low`."""
+    route = respx.post(URL).mock(
+        side_effect=[
+            httpx.Response(400, json=MANDATORY),
+            httpx.Response(200, json=fixture("completion_text")),
+            httpx.Response(200, json=fixture("completion_text")),
+        ]
+    )
+    tuning = LlmTuning(reasoning_effort="none")
+
+    for _ in range(2):
+        await gateway.complete(
+            model="google/gemini-3.8-flash",
+            system="s",
+            messages=[{"role": "user", "content": "hi"}],
+            tools=[],
+            max_tokens=100,
+            tuning=tuning,
+        )
+
+    sent = bodies(route)
+    assert [body["reasoning"] for body in sent] == [
+        {"enabled": False},
+        {"effort": "low"},
+        {"effort": "low"},
+    ]
+
+
+@respx.mock
+async def test_a_streamed_parameter_404_is_retried_without_temperature(
+    gateway: OpenRouterGateway,
+) -> None:
+    """The stream path learns the same way (one retry before the first delta)."""
+    stream_body = (
+        'data: {"choices":[{"delta":{"content":"Hi"}}]}\n\n'
+        'data: {"choices":[{"delta":{}}],"usage":{"prompt_tokens":1,'
+        '"completion_tokens":1}}\n\ndata: [DONE]\n\n'
+    )
+    route = respx.post(URL).mock(
+        side_effect=[
+            httpx.Response(404, json=UNSUPPORTED),
+            httpx.Response(200, text=stream_body),
+        ]
+    )
+
+    items = [
+        item
+        async for item in gateway.stream(
+            model="openai/gpt-5.4-mini",
+            system="s",
+            messages=[{"role": "user", "content": "hi"}],
+            max_tokens=50,
+        )
+    ]
+
+    assert [i.get("delta") for i in items if "delta" in i] == ["Hi"]
+    sent = bodies(route)
+    assert "temperature" in sent[0] and "temperature" not in sent[1]

@@ -236,12 +236,12 @@ async def _step(
     return step.step_id
 
 
-async def test_a_draft_step_is_read_as_text_blocks_and_flash_cards_never_tests(
+async def test_a_draft_step_is_read_as_text_cards_and_tests_with_their_keys(
     services: AuthoringServices,
     course: CourseFixture,
     sessionmaker_in_tx: async_sessionmaker[AsyncSession],
 ) -> None:
-    """LMS-17: the same text as for students; the quiz and its answers stay out."""
+    """The authors read their own draft whole: the quiz comes with its answers."""
     owner = course.team.owner
     step_id = await _step(services, owner, course.id)
     step = await services.get_step_draft.execute(owner, step_id)
@@ -261,13 +261,17 @@ async def test_a_draft_step_is_read_as_text_blocks_and_flash_cards_never_tests(
     assert (result.course_title, result.title) == ("Calculus", "Cells")
     assert result.text == (
         "# Cells\n\nThe cell is the unit of life.\n\n"
-        "Q: Power rule\nA: n·xⁿ⁻¹\n\n"
+        "Flash cards: 1 card.\n\nCard 1\nFront: Power rule\nBack: n·xⁿ⁻¹\n\n"
+        "Test: 1 question.\n\n"
+        "Question 1 (single choice): Secret quiz question?\n"
+        "Options: a) 2x; b) x; c) None of the above\n"
+        "Correct answer: a) 2x\nExplanation: Power rule.\n\n"
         "Mitochondria make ATP."
     )
-    assert "Secret" not in result.text and "None of the above" not in result.text
     assert [result.text[s : s + 7] for s in result.block_starts] == [
         "# Cells",
-        "Q: Powe",
+        "Flash c",
+        "Test: 1",
         "Mitocho",
     ]
     assert (
@@ -310,11 +314,11 @@ async def test_the_draft_text_is_the_draft_not_the_published_step(
 async def test_a_step_without_text_gives_an_empty_text(
     services: AuthoringServices, course: CourseFixture
 ) -> None:
-    """A step with only a test has nothing to export."""
+    """A step without any block has nothing to export."""
     owner = course.team.owner
     step_id = await _step(services, owner, course.id)
     step = await services.get_step_draft.execute(owner, step_id)
-    await set_blocks(services, owner, step, quiz_block(single_question()))
+    await set_blocks(services, owner, step)
 
     result = await services.workspace.draft_step_text(course.id, step_id)
 

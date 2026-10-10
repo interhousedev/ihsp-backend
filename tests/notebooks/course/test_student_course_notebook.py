@@ -60,11 +60,14 @@ async def test_enrollment_provisions_one_course_notebook(
     found = await _student_notebook(uow_factory, student.user_id, enrolled_course.id)
     assert found is not None and found.id == notebook.id
 
-    step_id = next(iter(enrolled_course.steps))
+    step_id, step = next(iter(enrolled_course.steps.items()))
     refs = _by_ref_key(await _sources(uow_factory, notebook.id))
     assert set(refs) == {f"lms:{step_id}"}
     assert refs[f"lms:{step_id}"].kind is SourceKind.LMS_STEP
     assert refs[f"lms:{step_id}"].ref["revision_id"] == "rev-1"
+    # The notebook is the course, so the source title is the step title alone.
+    assert refs[f"lms:{step_id}"].title == step.title
+    assert refs[f"lms:{step_id}"].origin["course_title"] == enrolled_course.title
     assert "notebooks.process_source" in kicker.names()
 
 

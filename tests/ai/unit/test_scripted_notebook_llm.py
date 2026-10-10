@@ -31,7 +31,7 @@ TEXT_ARGS: dict[str, Any] = {
 }
 STREAM_ARGS: dict[str, Any] = {
     "model": "m",
-    "system": "You are the notebook assistant of the IHSP student platform",
+    "system": "You are the notebook assistant of the IHT student platform",
     "messages": [
         {"role": "user", "content": SOURCES},
         {"role": "user", "content": "Q?"},

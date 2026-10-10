@@ -50,8 +50,8 @@ def adapter(dims: int = 3, **task: Any) -> OpenRouterEmbeddings:
     gateway = OpenRouterGateway(
         api_key="sk-test",
         base_url="https://openrouter.ai/api/v1",
-        app_url="https://sp.ihsu.uz",
-        app_title="IHSP",
+        app_url="https://my.ihsu.uz",
+        app_title="IHT",
         timeout_seconds=5,
         sleep=no_sleep,
     )

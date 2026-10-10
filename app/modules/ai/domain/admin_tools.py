@@ -15,7 +15,7 @@ from app.modules.ai.domain.tool_call import ToolAccess
 
 from pydantic import BaseModel, ConfigDict, Field
 
-Weekday = Annotated[int, Field(ge=1, le=6)]
+Weekday = Annotated[int, Field(ge=1, le=5)]  # Monday to Friday; no Saturday lessons
 Period = Annotated[int, Field(ge=1, le=12)]
 Short = Annotated[str, Field(min_length=1, max_length=200)]
 RoleName = Literal[

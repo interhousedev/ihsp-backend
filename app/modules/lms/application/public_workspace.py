@@ -105,7 +105,10 @@ class LmsWorkspaceImpl:
         )
 
     async def draft_step_text(self, course_id: UUID, step_id: UUID) -> LmsStepText:
-        """Return the text of a step's draft: text blocks and cards, never tests.
+        """Return the text of a step's draft: text, cards and tests with their keys.
+
+        The workspace belongs to the authors of the course, so the test questions
+        come with their correct answers and explanations.
 
         Raises:
             StepNotFoundError: The step does not belong to the course.
@@ -115,7 +118,9 @@ class LmsWorkspaceImpl:
             if step.course_id != course_id:
                 raise StepNotFoundError(params={"step_id": str(step_id)})
             course = await load_course(uow, course_id)
-        text, starts = export_text(StepContent.model_validate(step.draft))
+        text, starts = export_text(
+            StepContent.model_validate(step.draft), with_answers=True
+        )
         return LmsStepText(
             course_id=course_id,
             course_title=course.draft_meta.get("title", course.title),

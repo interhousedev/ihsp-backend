@@ -1,6 +1,7 @@
 """Quiz (§ 3.4.4): single, multiple and true/false questions with explanations."""
 
 import random
+import re
 import string
 from dataclasses import dataclass
 from typing import Any, Final, Literal
@@ -23,6 +24,7 @@ from app.modules.notebooks.domain.artifacts.kind_support import (
 )
 from app.modules.notebooks.domain.artifacts.refs import (
     build_refs_index,
+    cites_honestly,
     keep_items_with_refs,
     valid_refs,
 )
@@ -39,7 +41,9 @@ Level = Literal["easy", "medium", "hard"]
 Count = Literal["fewer", "standard", "more"]
 
 QUESTION_COUNTS: Final = {"fewer": 5, "standard": 10, "more": 20}
-MAX_TOKENS: Final = {"fewer": 2_500, "standard": 4_500, "more": 8_000}
+# About 700 tokens per question in Russian or Uzbek (prompt, 4 options, explanation
+# and hint), plus the title.
+MAX_TOKENS: Final = {"fewer": 4_000, "standard": 7_500, "more": 14_000}
 MIN_OPTIONS: Final = 2
 MAX_OPTIONS: Final = 6
 EXPLANATION_WORDS: Final = 60
@@ -48,6 +52,12 @@ OPTION_CHARS: Final = 200
 HINT_CHARS: Final = 200
 TOPIC_CHARS: Final = 60
 _OPTION_IDS: Final = string.ascii_lowercase
+# A filler instead of an answer: "Option D", "Вариант Б", "Variant 3", "Javob A"...
+_PLACEHOLDER: Final = re.compile(
+    r"^(?:option|variant|answer|choice|вариант|ответ|javob|variant)\s*"
+    r"[a-zа-я0-9]?[.)]?$",
+    re.IGNORECASE,
+)
 _TYPE_PHRASES: Final = {
     "single": "single choice with 4 options",
     "multiple": "multiple choice with 4 or 5 options and 2 or 3 correct ones",
@@ -114,17 +124,32 @@ class _Draft:
     difficulty: str
     topic: str | None
     refs: list[str]  # raw labels first, resolved by `valid_refs` later
+    trusted: bool = True  # valid refs, or honestly none (see `cites_honestly`)
+
+
+def is_placeholder(text: str) -> bool:
+    """True for a filler option: "Option D", a Markdown heading, no real words."""
+    flat = text.strip()
+    return (
+        not flat
+        or flat.startswith("#")
+        or _PLACEHOLDER.fullmatch(flat) is not None
+        or not norm_key(flat)
+    )
 
 
 def _clean_options(raw: list[OptionOut]) -> list[tuple[str, str]] | None:
-    """Options with unique ids and non-empty texts, 2 to 6 of them."""
+    """Options with unique ids and distinct, real texts, 2 to 6 of them."""
     options = [
         (fit_text(o.id, chars=20), fit_text(o.text, chars=OPTION_CHARS)) for o in raw
     ]
     ids = [option_id for option_id, _ in options]
     if not MIN_OPTIONS <= len(options) <= MAX_OPTIONS or len(set(ids)) != len(ids):
         return None
-    if any(not option_id or not text for option_id, text in options):
+    if any(not option_id or is_placeholder(text) for option_id, text in options):
+        return None
+    keys = [norm_key(text) for _, text in options]
+    if len(set(keys)) != len(keys):  # two options that say the same thing
         return None
     return options
 
@@ -179,7 +204,10 @@ def _rejection(
     if not has_text:
         return "prompt and explanation are required"
     if options is None:
-        return "need 2 to 6 options with unique ids and texts"
+        return (
+            "need 2 to 6 options with unique ids and distinct real texts "
+            "(no placeholders such as 'Option D', no headings, no repeats)"
+        )
     if answers is None:
         return f"wrong `correct` for type {item.type}"
     return None
@@ -283,12 +311,17 @@ class QuizHandler:
         return (
             f"Create {QUESTION_COUNTS[opts.count]} quiz questions. "
             f"{_mix_sentence(opts.types)} {difficulty_clause(opts.difficulty)} "
-            "Distractors must be plausible and of similar length to the correct "
-            "option; never use 'all of the above' or 'none of the above'. "
-            f"`explanation` (at most {EXPLANATION_WORDS} words) says why the correct "
-            "option is right and why the most tempting wrong option is wrong. "
-            "`hint` nudges without revealing the answer. Each question tests one "
-            "idea from the sources. `correct` lists the ids of the right options."
+            "Each question tests one idea of the subject (a definition, a rule, a "
+            "calculation, an application), never what a heading says or where "
+            "something is written. Every option is a real answer: distractors are "
+            "plausible, wrong for a clear reason (a typical mistake) and of similar "
+            "length to the correct option; never use fillers such as 'Option D', "
+            "'all of the above' or 'none of the above'. The options are shuffled "
+            "after you answer, so `explanation` and `hint` never refer to an option "
+            f"by its letter or position. `explanation` (at most {EXPLANATION_WORDS} "
+            "words) says why the correct answer is right and why the most tempting "
+            "wrong answer is wrong. `hint` nudges without revealing the answer. "
+            "`correct` lists the ids of the right options."
             f"{focus_clause(prompt)}"
         )
 
@@ -312,9 +345,11 @@ class QuizHandler:
         ]
         drafts = _without_duplicates(drafts)
         for draft in drafts:
-            draft.refs = valid_refs(draft.refs, ctx.pack)
+            raw = draft.refs
+            draft.refs = valid_refs(raw, ctx.pack)
+            draft.trusted = cites_honestly(raw, draft.refs)
         wanted = QUESTION_COUNTS[opts.count]
-        kept = keep_items_with_refs(drafts, lambda d: bool(d.refs), wanted)[:wanted]
+        kept = keep_items_with_refs(drafts, lambda d: d.trusted, wanted)[:wanted]
         if not kept:
             raise OutputInvalidError(problems or ["no valid questions"])
         questions = [_finalise(d, n, ctx.seed) for n, d in enumerate(kept, start=1)]

@@ -57,7 +57,10 @@ class AiDefaults(BaseModel):
     """Answer size limit; empty keeps each call site's own size (chat length, kind)."""
 
     reasoning_effort: ReasoningEffort | None = None
-    """Reasoning effort for models that support it (low, medium or high); empty: off."""
+    """Reasoning effort for models that support it (minimal, low, medium or high);
+    `none` switches reasoning off for models that reason by default; empty sends
+    nothing (the provider's default, which for Claude 5.5 and GPT-5.x means reasoning
+    inside the answer budget)."""
 
     fallbacks: tuple[str, ...] = ()
     """Comma list of models OpenRouter tries when the model or its providers fail."""
@@ -93,7 +96,7 @@ class AiTaskSettings(BaseModel):
     """Answer size limit; replaces the call site's own size (chat length too)."""
 
     reasoning_effort: ReasoningEffort | None = None
-    """Reasoning effort for this task (low, medium or high)."""
+    """Reasoning effort for this task (none, minimal, low, medium or high)."""
 
     fallbacks: tuple[str, ...] | None = None
     """Comma list of fallback models for this task."""
@@ -108,7 +111,8 @@ class AiTaskSettings(BaseModel):
     """Comma list of OpenRouter providers to try first for this task."""
 
     modalities: tuple[Modality, ...] | None = None
-    """Comma list of the inputs this task's model reads (text, image, audio, video, pdf)."""
+    """Comma list of the inputs this task's model reads (text, image, audio, video,
+    pdf)."""
 
     dimensions: int | None = Field(default=None, ge=1)
     """Embedding task only: vector size. It must equal the `vectors.embeddings`
@@ -162,7 +166,9 @@ class AiSettings(BaseModel):
             model=_first(own.model, spec.model, base.model),
             temperature=_first(own.temperature, base.temperature),
             max_output_tokens=own.max_output_tokens or base.max_output_tokens,
-            reasoning_effort=own.reasoning_effort or base.reasoning_effort,
+            reasoning_effort=own.reasoning_effort
+            or spec.reasoning_effort
+            or base.reasoning_effort,
             fallbacks=_first(own.fallbacks, base.fallbacks),
             data_collection=own.data_collection
             or spec.data_collection

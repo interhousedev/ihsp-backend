@@ -20,6 +20,7 @@ from app.modules.notebooks.domain.artifacts.kind_support import (
 )
 from app.modules.notebooks.domain.artifacts.refs import (
     build_refs_index,
+    cites_honestly,
     keep_items_with_refs,
     valid_refs,
 )
@@ -110,6 +111,7 @@ class _Block:
     items: list[dict[str, str]]
     columns: list[dict[str, Any]] | None
     refs: list[str]
+    trusted: bool = True  # valid refs, or honestly none (see `cites_honestly`)
 
     def stored(self) -> dict[str, Any]:
         """The block as stored: `columns` only on comparisons."""
@@ -238,9 +240,11 @@ class InfographicHandler:
         )
         blocks = _blocks(parsed, problems)
         for block in blocks:
-            block.refs = valid_refs(block.refs, ctx.pack)
+            raw = block.refs
+            block.refs = valid_refs(raw, ctx.pack)
+            block.trusted = cites_honestly(raw, block.refs)
         wanted = BLOCK_COUNTS[opts.detail][1]
-        kept = keep_items_with_refs(blocks, lambda b: bool(b.refs), wanted)[:wanted]
+        kept = keep_items_with_refs(blocks, lambda b: b.trusted, wanted)[:wanted]
         if len(kept) < MIN_BLOCKS:
             raise OutputInvalidError(problems or [f"fewer than {MIN_BLOCKS} blocks"])
         title = document_title(data, ctx.pack, "Infographic")

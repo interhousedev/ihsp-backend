@@ -1,7 +1,8 @@
 """Reads the ``<sources>`` block of a notebook prompt (for the fake model).
 
 The block is built by the notebooks module: ``[S1:P1] passage text`` at the start of
-a line, passages separated by blank lines, wrapped in ``<source ...>`` tags.
+a line, each passage running to the next label or tag (it may hold blank lines),
+wrapped in ``<source ...>`` tags.
 """
 
 import re
@@ -9,15 +10,17 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
-CHAT_SYSTEM_PREFIX = "You are the notebook assistant of the IHSP student platform"
+CHAT_SYSTEM_PREFIX = "You are the notebook assistant of the IHT student platform"
 NO_ANSWER = "(fake) The sources do not say.\n<followups>[]</followups>"
 FOLLOWUPS = '["First follow-up?","Second follow-up?","Third follow-up?"]'
 ANSWER_CHARS = 100
 PLACEHOLDER = "The sources do not contain any text."
 
+# A passage runs from its label to the next label or tag: it may hold blank lines
+# (a heading, a paragraph and a list are one passage of the chunker).
 _PASSAGE = re.compile(
     r"^\[(S\d+:P\d+)\] (.*?)"
-    r"(?=\n[ \t]*\n|\n</source|\n<source[ >]|\n\[S\d+:P\d+\] |\Z)",
+    r"(?=\n</source|\n<source[ >]|\n\[S\d+:P\d+\] |\n</?sources>|\Z)",
     re.MULTILINE | re.DOTALL,
 )
 _LABEL = re.compile(r"S\d+:P\d+")

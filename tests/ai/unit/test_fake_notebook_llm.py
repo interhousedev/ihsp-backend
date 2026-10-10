@@ -11,7 +11,7 @@ from app.modules.ai.infrastructure.fake_structured import BUILDERS
 import pytest
 
 CHAT_SYSTEM = (
-    "You are the notebook assistant of the IHSP student platform. A student asks "
+    "You are the notebook assistant of the IHT student platform. A student asks "
     "questions about the study sources inside <sources>. Example: [[S1:P4]]."
 )
 STUDIO_SYSTEM = "You turn study sources into learning materials for a lyceum student."
@@ -350,7 +350,8 @@ async def test_summary_follows_the_schema_limits() -> None:
         "key_topics",
         "suggested_questions",
     }
-    assert data["title"] == "Photosynthesis is the process"
+    assert data["title"].startswith("Photosynthesis is the process")
+    assert 2 <= words(data["title"]) <= 6
     assert data["emoji"] == "📘"
     assert 80 <= words(data["summary"]) <= 160
     assert "**" in data["summary"] and "[[" not in data["summary"]
@@ -400,18 +401,35 @@ async def test_mind_map_is_a_two_level_tree() -> None:
     assert all(words(n["label"]) <= 6 for n in nodes)
 
 
-async def test_flashcards_come_from_the_first_sentences_of_up_to_ten_passages() -> None:
-    """§ 3.4.3: front asks about the first three words, back is the sentence."""
+async def test_flashcards_are_clozes_of_the_statements_of_up_to_ten_passages() -> None:
+    """§ 3.4.3: the front asks to finish a statement, the back is the statement."""
     many = [f"Fact number {n} is stated here. More text follows." for n in range(12)]
     data = await document("nb_flashcards", context(many), user("Cards"))
 
     cards = data["cards"]
     assert len(cards) == 10
-    assert cards[0]["front"] == "What does the source say about Fact number 0?"
+    assert cards[0]["front"] == "Finish the statement: Fact number 0 …"
     assert cards[0]["back"] == "Fact number 0 is stated here."
     assert cards[0]["refs"] == ["S1:P1"] and cards[0]["id"] == "c1"
+    assert cards[0]["hint"].startswith("Demo content")
     assert len({c["front"].casefold() for c in cards}) == 10
     assert all(len(c["front"]) <= 160 and len(c["back"]) <= 300 for c in cards)
+
+
+async def test_flashcards_keep_the_cards_of_a_flash_card_source() -> None:
+    """A `Front: / Back:` source (LMS cards) gives the same cards back, not clozes."""
+    text = (
+        "Flash cards: 2 cards.\n\nCard 1\nFront: (c)'\nBack: 0\n\n"
+        "Card 2\nFront: (sin x)'\nBack: cos x"
+    )
+    data = await document("nb_flashcards", context([text]), user("Cards"))
+
+    cards = data["cards"]
+    assert [(c["front"], c["back"]) for c in cards] == [
+        ("(c)'", "0"),
+        ("(sin x)'", "cos x"),
+    ]
+    assert all(c["refs"] == ["S1:P1"] for c in cards)
 
 
 async def test_flashcard_fronts_stay_unique_when_passages_start_alike() -> None:
@@ -423,40 +441,128 @@ async def test_flashcard_fronts_stay_unique_when_passages_start_alike() -> None:
     assert len({f.casefold() for f in fronts}) == 3
 
 
-async def test_quiz_has_single_choice_questions_with_the_first_sentence_correct() -> (
-    None
-):
-    """§ 3.4.4: up to 5 questions, 4 unique options, one correct id."""
+async def test_quiz_mixes_single_choice_over_statements_with_true_false() -> None:
+    """§ 3.4.4: up to 5 questions; options are real statements, one correct id."""
     data = await document("nb_quiz", context(BIOLOGY, CELLS), user("Quiz"))
 
     questions = data["questions"]
     assert len(questions) == 5
     for index, q in enumerate(questions):
         texts = {o["id"]: o["text"] for o in q["options"]}
-        assert q["type"] == "single" and len(q["options"]) == 4
-        assert len({t.casefold() for t in texts.values()}) == 4
+        assert len({t.casefold() for t in texts.values()}) == len(texts)
         assert len(q["correct"]) == 1 and q["correct"][0] in texts
         assert q["explanation"] and q["refs"] and q["id"] == f"q{index + 1}"
         assert words(q["explanation"]) <= 60
+        if q["type"] == "true_false":
+            assert list(texts) == ["true", "false"]
+        else:
+            assert q["type"] == "single" and 2 <= len(texts) <= 4
+    assert {q["type"] for q in questions} == {"single", "true_false"}
     first = questions[0]
     assert {o["id"]: o["text"] for o in first["options"]}[first["correct"][0]] == (
         "Photosynthesis is the process by which plants convert light energy into "
         "chemical energy."
     )
-    assert len({q["correct"][0] for q in questions}) > 1  # the answer moves around
+    singles = [q for q in questions if q["type"] == "single"]
+    assert len({q["correct"][0] for q in singles}) > 1  # the answer moves around
 
 
-async def test_quiz_pads_with_option_fillers_for_a_single_passage() -> None:
-    """Not enough other sentences -> 'Option B/C/D' fillers."""
+async def test_quiz_with_one_statement_asks_true_false_and_never_pads() -> None:
+    """One sentence cannot give distractors: a true/false question, no fillers."""
     data = await document("nb_quiz", context(["Only one sentence."]), user("Quiz"))
 
-    options = data["questions"][0]["options"]
-    assert [o["text"] for o in options] == [
-        "Only one sentence.",
-        "Option B",
-        "Option C",
-        "Option D",
-    ]
+    question = data["questions"][0]
+    assert question["type"] == "true_false"
+    assert question["prompt"] == "True or false: Only one sentence."
+    assert [o["id"] for o in question["options"]] == ["true", "false"]
+    assert "Option" not in json.dumps(data)
+
+
+# - - - Documents: the Derivatives 101 regression - - -
+
+DERIVATIVES_LESSON = (
+    "# What is a derivative?\n\nThe derivative of a function measures how fast it "
+    "changes. For $f(x) = x^2$ the derivative is $f'(x) = 2x$.\n\n"
+    "Rules to remember:\n\n- $(c)' = 0$\n- $(x^n)' = n x^{n-1}$\n- $(f + g)' = f' + g'$"
+)
+DERIVATIVES_TEST = (
+    "Test: 2 questions.\n\nQuestion 1 (single choice): What is the derivative of "
+    "x^2?\nOptions: a) 2x; b) x; c) x^2; d) 2\n\nQuestion 2 (number): Value of (3x)' "
+    "at any x?"
+)
+DERIVATIVES_CARDS = (
+    "Flash cards: 2 cards.\n\nCard 1\nFront: (c)'\nBack: 0\n\nCard 2\nFront: (sin x)'"
+    "\nBack: cos x"
+)
+GARBAGE = (
+    "What does the source say about",
+    "Option D",
+    "Option C",
+    "Look at the beginning",
+    "Detail:",
+    "Q c A",
+    "# What is a derivative?",
+    "Rules to remember:",
+)
+
+
+def derivatives_context() -> dict[str, Any]:
+    """The three LMS step sources of the demo course, as the notebook renders them."""
+    return context([DERIVATIVES_LESSON], [DERIVATIVES_TEST], [DERIVATIVES_CARDS])
+
+
+@pytest.mark.parametrize("schema_name", ALL_SCHEMAS)
+async def test_derivatives_documents_hold_no_template_garbage(schema_name: str) -> None:
+    """Regression: headings, list markers and card labels never leak into items."""
+    data = await document(schema_name, derivatives_context(), user("Make it"))
+
+    dumped = json.dumps(data, ensure_ascii=False)
+    for garbage in GARBAGE:
+        assert garbage not in dumped, garbage
+    assert "$" not in dumped  # math fences are stripped
+
+
+async def test_derivatives_title_is_the_whole_heading() -> None:
+    """Regression: "What is a derivative", not the first three words "What is a"."""
+    quiz = await document("nb_quiz", derivatives_context(), user("Quiz"))
+    cards = await document("nb_flashcards", derivatives_context(), user("Cards"))
+    mind_map = await document("nb_mind_map", derivatives_context(), user("Map"))
+
+    assert quiz["title"] == "What is a derivative: demo quiz"
+    assert cards["title"] == "What is a derivative: demo cards"
+    assert mind_map["title"] == "What is a derivative"
+    assert mind_map["nodes"][0]["label"] == "What is a derivative"
+    assert mind_map["nodes"][1]["label"] != "What is a derivative"
+
+
+async def test_derivatives_quiz_options_are_statements_of_the_lesson() -> None:
+    """Regression: the passage is read past its blank lines; options are sentences."""
+    data = await document("nb_quiz", derivatives_context(), user("Quiz"))
+
+    first = data["questions"][0]
+    texts = [o["text"] for o in first["options"]]
+    assert "The derivative of a function measures how fast it changes." in texts
+    assert "For f(x) = x^2 the derivative is f'(x) = 2x." in texts
+    assert first["refs"] == ["S1:P1"]
+    assert first["explanation"].startswith("Demo content")
+
+
+async def test_derivatives_cards_come_from_formulas_and_cards() -> None:
+    """Regression: a formula asks for its right side; LMS cards stay cards."""
+    data = await document("nb_flashcards", derivatives_context(), user("Cards"))
+
+    pairs = {c["front"]: c["back"] for c in data["cards"]}
+    assert pairs["(c)' = ?"] == "(c)' = 0"
+    assert pairs["(x^n)' = ?"] == "(x^n)' = n x^{n-1}"
+    assert pairs["(c)'"] == "0" and pairs["(sin x)'"] == "cos x"
+
+
+async def test_documents_are_labelled_as_demo_content() -> None:
+    """The fake never passes for a model: titles or notes say "demo"."""
+    for schema_name in ("nb_quiz", "nb_flashcards", "nb_mind_map", "nb_report"):
+        data = await document(schema_name, derivatives_context(), user("Make it"))
+
+        assert "demo" in json.dumps(data, ensure_ascii=False).casefold(), schema_name
 
 
 async def test_data_table_has_term_and_definition_columns() -> None:
@@ -559,7 +665,8 @@ async def test_infographic_has_six_blocks_of_mixed_types() -> None:
 
 
 @pytest.mark.parametrize(
-    ("language", "word"), [("Russian", "Тема"), ("Uzbek (Latin script)", "Mavzu"), ("English", "Topic")]
+    ("language", "word"),
+    [("Russian", "Тема"), ("Uzbek (Latin script)", "Mavzu"), ("English", "Topic")],
 )
 def test_fake_label_names_follow_the_prompt_language(language: str, word: str) -> None:
     """The auto labels are named in the language the label prompt asks for."""

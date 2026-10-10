@@ -19,10 +19,10 @@ from app.modules.notebooks.domain.limits import (
 from app.modules.notebooks.domain.prompts.common import render_course_block
 
 _STUDENT_INTRO: Final = """\
-You are the notebook assistant of the IHSP student platform. A student (age 14-18)
+You are the notebook assistant of the IHT student platform. A student (age 14-18)
 asks questions about the study sources inside <sources>."""
 _COURSE_INTRO: Final = """\
-You are the assistant of a course workspace on the IHSP platform. A teacher who
+You are the assistant of a course workspace on the IHT platform. A teacher who
 writes the LMS course described in <course> asks questions about the sources inside
 <sources> (here "the student" in the rules means this teacher)."""
 _COURSE_RULES: Final = """\

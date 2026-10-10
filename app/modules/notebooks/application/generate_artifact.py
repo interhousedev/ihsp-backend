@@ -66,7 +66,11 @@ from app.modules.notebooks.domain.prompts.slides_revise import (
     revise_user_message,
 )
 from app.modules.notebooks.domain.prompts.slides_task import SlideFormat
-from app.modules.notebooks.domain.prompts.studio import repair_message
+from app.modules.notebooks.domain.prompts.studio import (
+    is_thin,
+    repair_message,
+    thin_sources_note,
+)
 from app.modules.notebooks.domain.sources_block import render_sources_block
 from app.modules.notebooks.domain.tokens import OUTPUT_WEIGHT, Usage
 from app.modules.notebooks.ports.unit_of_work import UowFactory
@@ -166,6 +170,15 @@ def _general_task(task: str, notebook: Notebook | None) -> str:
     """The task of an output made without sources, with the notebook's topic."""
     topic = f"Notebook title: {notebook.title}\n\n" if notebook is not None else ""
     return f"{NO_SOURCES_TASK_NOTE}\n\n{topic}{task}"
+
+
+def _with_thin_note(task: str, pack: ContextPack) -> str:
+    """Add the thin-sources note when the whole pack is about a page or less."""
+    if not is_thin(pack.token_estimate):
+        return task
+    words = sum(len(p.text.split()) for s in pack.sources for p in s.passages)
+    titles = [source.title for source in pack.sources]
+    return f"{task}\n\n{thin_sources_note(words, titles)}"
 
 
 def _pack_language(kind: ArtifactKind, pack: ContextPack) -> str | None:
@@ -492,6 +505,8 @@ class GenerateArtifact:
         task = task_with_course(
             artifact.kind, handler.task_block(options, artifact.prompt), pack.course
         )
+        if not general:
+            task = _with_thin_note(task, pack)
         max_tokens = self.llm.max_tokens(ai_task, handler.max_tokens(options))
         return _Plan(
             task=ai_task,

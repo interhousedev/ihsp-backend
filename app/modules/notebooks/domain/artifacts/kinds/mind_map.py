@@ -34,7 +34,7 @@ from app.modules.notebooks.domain.prompts.common import focus_clause
 from pydantic import BaseModel, Field
 
 SCHEMA_NAME: Final = "nb_mind_map"
-MAX_TOKENS: Final = 3000
+MAX_TOKENS: Final = 6000  # up to 60 nodes with a one-sentence note each, in Cyrillic
 MAX_DEPTH: Final = {"overview": 3, "detailed": 4}
 MAX_NODES: Final = {"overview": 30, "detailed": 60}
 MAX_CHILDREN: Final = 7
@@ -227,14 +227,16 @@ class MindMapHandler:
         levels = f"{depth} levels" if detail == "overview" else f"up to {depth} levels"
         return (
             "Create a mind map of the main topic of the sources. The root node is the"
-            " central topic. Level 1 has 4 to 7 main concepts; deeper levels hold"
-            " sub-concepts and key facts. Labels are short noun phrases of at most 6"
-            " words. Each `note` is one sentence (at most 200 characters) that"
-            " explains the node using the sources. Depth: "
+            " central topic (a clean noun phrase, never a heading copied verbatim)."
+            " Level 1 has 4 to 7 main concepts; deeper levels hold sub-concepts, key"
+            " facts, formulas and examples. Labels are short noun phrases of at most"
+            " 6 words, never 'Detail' or 'Part 1'. Each `note` is one sentence (at"
+            " most 200 characters) that explains the node to a student. Depth: "
             f"{levels} below the root; at most {MAX_CHILDREN} children per node; at"
             f" most {MAX_NODES[detail]} nodes. Give every node a unique `id` and set"
-            " `parent_id` to the id of its parent (null for the root only). Every"
-            f" non-root node has refs.{focus_clause(prompt)}"
+            " `parent_id` to the id of its parent (null for the root only). A node"
+            " taken from the sources has refs; a node from your own knowledge has"
+            f" empty refs.{focus_clause(prompt)}"
         )
 
     def default_title(self, notebook_title: str, options: BaseModel) -> str:

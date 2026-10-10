@@ -117,7 +117,7 @@ class SyncCourseNotebook:
                 plan,
                 SourceKind.LMS_STEP,
                 f"lms:{step.step_id}",
-                clean_title(f"{title} / {step.title}", "Course step"),
+                clean_title(step.title, "Course step"),  # the notebook is the course
                 {
                     "course_id": str(course),
                     "step_id": str(step.step_id),
@@ -131,7 +131,7 @@ class SyncCourseNotebook:
                 plan,
                 SourceKind.LMS_STEP,
                 f"lms-video:{video.step_id}:{video.block_id}",
-                clean_title(f"{title} / {video.title}", "Video"),
+                clean_title(video.title, "Video"),
                 {
                     "course_id": str(course),
                     "step_id": str(video.step_id),
