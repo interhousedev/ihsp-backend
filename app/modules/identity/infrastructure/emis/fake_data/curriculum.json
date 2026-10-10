@@ -1,0 +1,84 @@
+{
+  "id": 2124,
+  "name": "ТН, МТН, БТН 2025-2027",
+  "institution": {
+    "id": 10815,
+    "name": {"uz": "Akademik litsey", "ru": "Академический лицей", "en": "Academic lyceum"}
+  },
+  "edu_direction": {"id": 312, "name": "Umumiy o'rta ta'lim", "code": "3010100"},
+  "start_year": {"code": "2025", "name": "2025-2026", "from_date": "01.09.2025", "to_date": "31.08.2026"},
+  "end_year": {"code": "2026", "name": "2026-2027", "from_date": "01.09.2026", "to_date": "31.08.2027"},
+  "edu_form": {"id": 1, "name": "Kunduzgi"},
+  "curriculum_template": {"id": 55, "name": "Akademik litsey, 2 yillik", "number_of_semesters": 4},
+  "edu_subject": [
+    {"edu_subject_id": 101, "edu_subject": {"id": 101, "name": {"uz": "Matematika", "ru": "Математика", "en": "Mathematics"}, "edu_subject_type": {"id": 2, "name": "Chuqurlashtirilgan fanlar"}, "status": "ACTIVE", "parent_id": null}, "study_hours": 340},
+    {"edu_subject_id": 102, "edu_subject": {"id": 102, "name": {"uz": "Fizika", "ru": "Физика", "en": "Physics"}, "edu_subject_type": {"id": 2, "name": "Chuqurlashtirilgan fanlar"}, "status": "ACTIVE", "parent_id": null}, "study_hours": 272},
+    {"edu_subject_id": 103, "edu_subject": {"id": 103, "name": {"uz": "Ingliz tili", "ru": "Английский язык", "en": "English"}, "edu_subject_type": {"id": 1, "name": "Umumta'lim fanlar"}, "status": "ACTIVE", "parent_id": null}, "study_hours": 204},
+    {"edu_subject_id": 104, "edu_subject": {"id": 104, "name": {"uz": "Rus tili", "ru": "Русский язык", "en": "Russian"}, "edu_subject_type": {"id": 1, "name": "Umumta'lim fanlar"}, "status": "ACTIVE", "parent_id": null}, "study_hours": 136},
+    {"edu_subject_id": 105, "edu_subject": {"id": 105, "name": {"uz": "O'zbek tili", "ru": "", "en": ""}, "edu_subject_type": {"id": 1, "name": "Umumta'lim fanlar"}, "status": "ACTIVE", "parent_id": null}, "study_hours": 136},
+    {"edu_subject_id": 106, "edu_subject": {"id": 106, "name": {"uz": "Tarix", "ru": "История", "en": "History"}, "edu_subject_type": {"id": 1, "name": "Umumta'lim fanlar"}, "status": "ACTIVE", "parent_id": null}, "study_hours": 136},
+    {"edu_subject_id": 107, "edu_subject": {"id": 107, "name": {"uz": "Informatika", "ru": "Информатика", "en": "Informatics"}, "edu_subject_type": {"id": 3, "name": "Kasbiy fanlar"}, "status": "ACTIVE", "parent_id": null}, "study_hours": 204},
+    {"edu_subject_id": 108, "edu_subject": {"id": 108, "name": {"uz": "Kimyo", "ru": "Химия", "en": ""}, "edu_subject_type": {"id": 4, "name": "Unifikatsiya qilingan fanlar"}, "status": "ACTIVE", "parent_id": null}, "study_hours": 102}
+  ],
+  "semester_dates": [
+    {"start_date": "03.09.2025", "end_date": "20.01.2026"},
+    {"start_date": "26.01.2026", "end_date": "29.05.2026"},
+    {"start_date": "02.09.2026", "end_date": "22.01.2027"},
+    {"start_date": "01.02.2027", "end_date": "28.05.2027"}
+  ],
+  "semester_edu_subjects": [
+    [
+      {"semester_number": 1, "edu_subject_id": 101, "edu_subject": {"id": 101, "name": {"uz": "Matematika", "ru": "Математика", "en": "Mathematics"}, "edu_subject_type": {"id": 2, "name": "Chuqurlashtirilgan fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 85, "class_hours": 68, "independent_work_hours": 17},
+      {"semester_number": 1, "edu_subject_id": 102, "edu_subject": {"id": 102, "name": {"uz": "Fizika", "ru": "Физика", "en": "Physics"}, "edu_subject_type": {"id": 2, "name": "Chuqurlashtirilgan fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 68, "class_hours": 51, "independent_work_hours": 17},
+      {"semester_number": 1, "edu_subject_id": 103, "edu_subject": {"id": 103, "name": {"uz": "Ingliz tili", "ru": "Английский язык", "en": "English"}, "edu_subject_type": {"id": 1, "name": "Umumta'lim fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": true, "study_hours": 51, "class_hours": 34, "independent_work_hours": 17},
+      {"semester_number": 1, "edu_subject_id": 104, "edu_subject": {"id": 104, "name": {"uz": "Rus tili", "ru": "Русский язык", "en": "Russian"}, "edu_subject_type": {"id": 1, "name": "Umumta'lim fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 34, "class_hours": 34, "independent_work_hours": null},
+      {"semester_number": 1, "edu_subject_id": 105, "edu_subject": {"id": 105, "name": {"uz": "O'zbek tili", "ru": "", "en": ""}, "edu_subject_type": {"id": 1, "name": "Umumta'lim fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 34, "class_hours": 34, "independent_work_hours": 0},
+      {"semester_number": 1, "edu_subject_id": 106, "edu_subject": {"id": 106, "name": {"uz": "Tarix", "ru": "История", "en": "History"}, "edu_subject_type": {"id": 1, "name": "Umumta'lim fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 34, "class_hours": 34, "independent_work_hours": 0},
+      {"semester_number": 1, "edu_subject_id": 107, "edu_subject": {"id": 107, "name": {"uz": "Informatika", "ru": "Информатика", "en": "Informatics"}, "edu_subject_type": {"id": 3, "name": "Kasbiy fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": true, "study_hours": 51, "class_hours": 34, "independent_work_hours": 17},
+      {"semester_number": 1, "edu_subject_id": 108, "edu_subject": {"id": 108, "name": {"uz": "Kimyo", "ru": "Химия", "en": ""}, "edu_subject_type": {"id": 4, "name": "Unifikatsiya qilingan fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 34, "class_hours": 34, "independent_work_hours": 0}
+    ],
+    [
+      {"semester_number": 2, "edu_subject_id": 101, "edu_subject": {"id": 101, "name": {"uz": "Matematika", "ru": "Математика", "en": "Mathematics"}, "edu_subject_type": {"id": 2, "name": "Chuqurlashtirilgan fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 85, "class_hours": 68, "independent_work_hours": 17},
+      {"semester_number": 2, "edu_subject_id": 102, "edu_subject": {"id": 102, "name": {"uz": "Fizika", "ru": "Физика", "en": "Physics"}, "edu_subject_type": {"id": 2, "name": "Chuqurlashtirilgan fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 68, "class_hours": 51, "independent_work_hours": 17},
+      {"semester_number": 2, "edu_subject_id": 103, "edu_subject": {"id": 103, "name": {"uz": "Ingliz tili", "ru": "Английский язык", "en": "English"}, "edu_subject_type": {"id": 1, "name": "Umumta'lim fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": true, "study_hours": 51, "class_hours": 34, "independent_work_hours": 17},
+      {"semester_number": 2, "edu_subject_id": 104, "edu_subject": {"id": 104, "name": {"uz": "Rus tili", "ru": "Русский язык", "en": "Russian"}, "edu_subject_type": {"id": 1, "name": "Umumta'lim fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 34, "class_hours": 34, "independent_work_hours": null},
+      {"semester_number": 2, "edu_subject_id": 105, "edu_subject": {"id": 105, "name": {"uz": "O'zbek tili", "ru": "", "en": ""}, "edu_subject_type": {"id": 1, "name": "Umumta'lim fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 34, "class_hours": 34, "independent_work_hours": 0},
+      {"semester_number": 2, "edu_subject_id": 106, "edu_subject": {"id": 106, "name": {"uz": "Tarix", "ru": "История", "en": "History"}, "edu_subject_type": {"id": 1, "name": "Umumta'lim fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 34, "class_hours": 34, "independent_work_hours": 0},
+      {"semester_number": 2, "edu_subject_id": 107, "edu_subject": {"id": 107, "name": {"uz": "Informatika", "ru": "Информатика", "en": "Informatics"}, "edu_subject_type": {"id": 3, "name": "Kasbiy fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": true, "study_hours": 51, "class_hours": 34, "independent_work_hours": 17},
+      {"semester_number": 2, "edu_subject_id": 108, "edu_subject": {"id": 108, "name": {"uz": "Kimyo", "ru": "Химия", "en": ""}, "edu_subject_type": {"id": 4, "name": "Unifikatsiya qilingan fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 34, "class_hours": 34, "independent_work_hours": 0}
+    ],
+    [
+      {"semester_number": 3, "edu_subject_id": 101, "edu_subject": {"id": 101, "name": {"uz": "Matematika", "ru": "Математика", "en": "Mathematics"}, "edu_subject_type": {"id": 2, "name": "Chuqurlashtirilgan fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 85, "class_hours": 68, "independent_work_hours": 17},
+      {"semester_number": 3, "edu_subject_id": 102, "edu_subject": {"id": 102, "name": {"uz": "Fizika", "ru": "Физика", "en": "Physics"}, "edu_subject_type": {"id": 2, "name": "Chuqurlashtirilgan fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 68, "class_hours": 51, "independent_work_hours": 17},
+      {"semester_number": 3, "edu_subject_id": 103, "edu_subject": {"id": 103, "name": {"uz": "Ingliz tili", "ru": "Английский язык", "en": "English"}, "edu_subject_type": {"id": 1, "name": "Umumta'lim fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": true, "study_hours": 51, "class_hours": 34, "independent_work_hours": 17},
+      {"semester_number": 3, "edu_subject_id": 104, "edu_subject": {"id": 104, "name": {"uz": "Rus tili", "ru": "Русский язык", "en": "Russian"}, "edu_subject_type": {"id": 1, "name": "Umumta'lim fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 34, "class_hours": 34, "independent_work_hours": null},
+      {"semester_number": 3, "edu_subject_id": 105, "edu_subject": {"id": 105, "name": {"uz": "O'zbek tili", "ru": "", "en": ""}, "edu_subject_type": {"id": 1, "name": "Umumta'lim fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 34, "class_hours": 34, "independent_work_hours": 0},
+      {"semester_number": 3, "edu_subject_id": 106, "edu_subject": {"id": 106, "name": {"uz": "Tarix", "ru": "История", "en": "History"}, "edu_subject_type": {"id": 1, "name": "Umumta'lim fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 34, "class_hours": 34, "independent_work_hours": 0},
+      {"semester_number": 3, "edu_subject_id": 107, "edu_subject": {"id": 107, "name": {"uz": "Informatika", "ru": "Информатика", "en": "Informatics"}, "edu_subject_type": {"id": 3, "name": "Kasbiy fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": true, "study_hours": 51, "class_hours": 34, "independent_work_hours": 17},
+      {"semester_number": 3, "edu_subject_id": 108, "edu_subject": {"id": 108, "name": {"uz": "Kimyo", "ru": "Химия", "en": ""}, "edu_subject_type": {"id": 4, "name": "Unifikatsiya qilingan fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 17, "class_hours": 17, "independent_work_hours": 0}
+    ],
+    [
+      {"semester_number": 4, "edu_subject_id": 101, "edu_subject": {"id": 101, "name": {"uz": "Matematika", "ru": "Математика", "en": "Mathematics"}, "edu_subject_type": {"id": 2, "name": "Chuqurlashtirilgan fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 85, "class_hours": 68, "independent_work_hours": 17},
+      {"semester_number": 4, "edu_subject_id": 102, "edu_subject": {"id": 102, "name": {"uz": "Fizika", "ru": "Физика", "en": "Physics"}, "edu_subject_type": {"id": 2, "name": "Chuqurlashtirilgan fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 68, "class_hours": 51, "independent_work_hours": 17},
+      {"semester_number": 4, "edu_subject_id": 103, "edu_subject": {"id": 103, "name": {"uz": "Ingliz tili", "ru": "Английский язык", "en": "English"}, "edu_subject_type": {"id": 1, "name": "Umumta'lim fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": true, "study_hours": 51, "class_hours": 34, "independent_work_hours": 17},
+      {"semester_number": 4, "edu_subject_id": 104, "edu_subject": {"id": 104, "name": {"uz": "Rus tili", "ru": "Русский язык", "en": "Russian"}, "edu_subject_type": {"id": 1, "name": "Umumta'lim fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 34, "class_hours": 34, "independent_work_hours": null},
+      {"semester_number": 4, "edu_subject_id": 105, "edu_subject": {"id": 105, "name": {"uz": "O'zbek tili", "ru": "", "en": ""}, "edu_subject_type": {"id": 1, "name": "Umumta'lim fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 34, "class_hours": 34, "independent_work_hours": 0},
+      {"semester_number": 4, "edu_subject_id": 106, "edu_subject": {"id": 106, "name": {"uz": "Tarix", "ru": "История", "en": "History"}, "edu_subject_type": {"id": 1, "name": "Umumta'lim fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 34, "class_hours": 34, "independent_work_hours": 0},
+      {"semester_number": 4, "edu_subject_id": 107, "edu_subject": {"id": 107, "name": {"uz": "Informatika", "ru": "Информатика", "en": "Informatics"}, "edu_subject_type": {"id": 3, "name": "Kasbiy fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": true, "study_hours": 51, "class_hours": 34, "independent_work_hours": 17},
+      {"semester_number": 4, "edu_subject_id": 108, "edu_subject": {"id": 108, "name": {"uz": "Kimyo", "ru": "Химия", "en": ""}, "edu_subject_type": {"id": 4, "name": "Unifikatsiya qilingan fanlar"}, "status": "ACTIVE", "parent_id": null}, "is_seperated": false, "study_hours": 17, "class_hours": 17, "independent_work_hours": 0}
+    ]
+  ],
+  "rating_type": {"id": 1, "name": "Baholik", "min_rating": 3, "max_rating": 5},
+  "edu_language": {"id": 2, "name": {"uz": "Rus tili", "ru": "Русский", "en": "Russian"}, "code": "RU"},
+  "exams": [
+    {"id": 1, "name": {"uz": "Yakuniy imtihon", "ru": "Итоговый экзамен", "en": "Final exam"}, "study_hours": 24},
+    {"id": 2, "name": {"uz": "Oraliq imtihon", "ru": "Промежуточный экзамен", "en": ""}, "study_hours": 16},
+    {"id": 3, "name": {"uz": "Bitiruv malakaviy ishi", "ru": "", "en": ""}, "study_hours": 48}
+  ],
+  "vocational_subjects": [
+    {"id": 7001, "name": {"uz": "Dasturlash asoslari", "ru": "Основы программирования", "en": ""}, "study_hours": 68},
+    {"id": 7002, "name": {"uz": "Veb texnologiyalar", "ru": "", "en": ""}, "study_hours": 51}
+  ],
+  "status": "APPROVED",
+  "speciality": {"uz": "Texnologik yo'nalish", "ru": "Технологическое направление", "en": "Technology track"}
+}

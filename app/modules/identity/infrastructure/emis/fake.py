@@ -1,8 +1,13 @@
 """Fake EMIS for ``EMIS__MODE=fake``: 30 students, 8 subjects, marks, timetable."""
 
 import datetime as dt
-from dataclasses import dataclass
+import json
+import re
+from dataclasses import dataclass, replace
 from datetime import date, time, timedelta
+from functools import cache
+from pathlib import Path
+from typing import Any
 
 from app.modules.identity.application.register_models import (
     EmisAuthError,
@@ -10,29 +15,41 @@ from app.modules.identity.application.register_models import (
 )
 from app.modules.identity.infrastructure.emis.fake_schedule import (
     Cell,
-    Parity,
     cells_of,
     digest,
     week_body,
 )
-from app.modules.identity.infrastructure.emis.mapping import payload_hash, to_classes
+from app.modules.identity.infrastructure.emis.mapping import (
+    curriculum_subjects,
+    payload_hash,
+    to_classes,
+    to_curriculum,
+)
 from app.modules.identity.infrastructure.emis.models.responses.class_schedules import (
     ClassSchedulesV1DTO,
+)
+from app.modules.identity.infrastructure.emis.models.responses.curriculum import (
+    CurriculumV1DTO,
 )
 from app.shared.clock import Clock, local_today
 from app.shared.contracts.emis import (
     EmisClass,
     EmisClassHour,
+    EmisCurriculum,
     EmisMark,
     EmisMarkType,
     EmisProfile,
+    EmisSemesterDates,
     EmisSubject,
     EmisSubjectRatings,
     EmisTeacher,
+    EmisYear,
 )
 from app.shared.text import normalize_group_name, title_case
 
 FAKE_PASSWORD = "password"
+FAKE_CURRICULUM_PATH = Path(__file__).parent / "fake_data" / "curriculum.json"
+_YEAR = timedelta(weeks=52)  # the next cohort's semesters, on the same weekdays
 FAKE_INSTITUTION_ID = 10815
 _TOKEN_PREFIX = "fake-token:"
 _SEMESTER_START = date(2026, 9, 2)  # first day of the current semester
@@ -97,10 +114,6 @@ _TEACHERS_OF: dict[int, tuple[EmisTeacher, ...]] = {
     107: (_IT, _HUMANITIES),  # Informatics is taught by halves
     108: (_IT,),
 }
-_SATURDAY: tuple[tuple[int, EmisTeacher, Parity], ...] = (
-    (106, _HUMANITIES, "odd"),  # History on odd weeks
-    (105, _UZBEK, "even"),  # Uzbek on even weeks
-)
 
 
 @dataclass(frozen=True, slots=True)
@@ -147,8 +160,69 @@ FAKE_STUDENTS: tuple[FakeStudent, ...] = _build_students()
 _BY_LOGIN = {student.login: student for student in FAKE_STUDENTS}
 
 
+def fake_curriculum_result() -> dict[str, Any]:
+    """The ``result`` object of the fake ``curriculum/`` response (a fresh copy)."""
+    result: dict[str, Any] = json.loads(FAKE_CURRICULUM_PATH.read_text("utf-8"))
+    return result
+
+
+@cache
+def _base_curriculum() -> EmisCurriculum:
+    """The sample file through the same DTO and mapping the real client uses."""
+    return to_curriculum(CurriculumV1DTO.model_validate(fake_curriculum_result()))
+
+
+def _next_year(text: str | None) -> str | None:
+    """Add one to every four-digit year in the text: 2025-2027 becomes 2026-2028."""
+    if text is None:
+        return None
+    return re.sub(r"\d{4}", lambda match: str(int(match.group()) + 1), text)
+
+
+def _a_year_later(day: date | None) -> date | None:
+    return None if day is None else day.replace(year=day.year + 1)
+
+
+def _shifted(year: EmisYear | None) -> EmisYear | None:
+    if year is None:
+        return None
+    return EmisYear(
+        code=_next_year(year.code),
+        name=_next_year(year.name),
+        from_date=_a_year_later(year.from_date),
+        to_date=_a_year_later(year.to_date),
+    )
+
+
+def fake_curriculum(curriculum_id: int) -> EmisCurriculum:
+    """The curriculum of a group: the sample (2025-2027) for its own id, 2124.
+
+    The other group (the first-year one, 2123) studies a year later than the sample,
+    so its name and years are the sample's plus one and its semester dates are 52
+    weeks later (the same weekdays).
+    """
+    base = _base_curriculum()
+    if curriculum_id == base.emis_id:
+        return base
+    return replace(
+        base,
+        emis_id=curriculum_id,
+        name=_next_year(base.name) or "",
+        start_year=_shifted(base.start_year),
+        end_year=_shifted(base.end_year),
+        semesters=tuple(
+            EmisSemesterDates(
+                item.number,
+                item.starts_on + _YEAR,
+                item.ends_on + _YEAR,
+            )
+            for item in base.semesters
+        ),
+    )
+
+
 def _cells_of(group_emis_id: int) -> list[Cell]:
-    return cells_of(group_emis_id, FAKE_SUBJECTS, _TEACHERS_OF, _SATURDAY)
+    return cells_of(group_emis_id, FAKE_SUBJECTS, _TEACHERS_OF)
 
 
 def _semester_window(current: int, semester: int) -> tuple[date, date]:
@@ -198,9 +272,13 @@ class FakeEmisClient:
         )
 
     async def curriculum(self, token: str) -> list[EmisSubject]:
-        """Return the same 8 subjects for everyone."""
+        """Return the same 8 subjects for everyone (from the sample curriculum)."""
         self._student(token)
-        return list(FAKE_SUBJECTS)
+        return curriculum_subjects(_base_curriculum())
+
+    async def curriculum_detail(self, token: str) -> EmisCurriculum:
+        """Return the student's group curriculum, built from the sample file."""
+        return fake_curriculum(self._student(token).curriculum_id)
 
     async def ratings(
         self, token: str, subject_id: int, semester: int
@@ -266,7 +344,7 @@ class FakeEmisClient:
         day = start
         while day <= min(end, today):
             value = digest(student.login, subject_id, day.isoformat())
-            if day.weekday() < 6 and value % 4 == 0:  # Monday to Saturday
+            if day.weekday() < 5 and value % 4 == 0:  # Monday to Friday
                 marks.append(EmisMark(EmisMarkType.LESSON, day, 2 + (value >> 2) % 4))
             day += timedelta(days=1)
         if semester == student.current_semester and today >= _MIDTERM_DATE:

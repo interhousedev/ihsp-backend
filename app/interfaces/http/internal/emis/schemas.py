@@ -6,12 +6,20 @@ from typing import Literal
 from app.shared.contracts.emis import (
     EmisClass,
     EmisClassHour,
+    EmisCurriculum,
+    EmisCurriculumItem,
+    EmisCurriculumSubject,
+    EmisDirection,
     EmisMarkType,
+    EmisName,
     EmisProfile,
+    EmisSemesterDates,
+    EmisSemesterSubject,
     EmisSubject,
     EmisSubjectRatings,
     EmisTeacher,
     EmisTopic,
+    EmisYear,
 )
 
 from pydantic import BaseModel
@@ -184,4 +192,207 @@ class EmisClassResponse(BaseModel):
             subgroup=item.subgroup,
             kind=item.kind,
             topic=EmisTopicResponse.from_contract(item.topic) if item.topic else None,
+        )
+
+
+class EmisNameResponse(BaseModel):
+    """EmisName: a language EMIS left empty is ``""``."""
+
+    uz: str
+    ru: str
+    en: str
+
+    @classmethod
+    def from_contract(cls, name: EmisName) -> "EmisNameResponse":
+        """Build the response from the contract dataclass."""
+        return cls(uz=name.uz, ru=name.ru, en=name.en)
+
+
+class EmisDirectionResponse(BaseModel):
+    """EmisDirection."""
+
+    emis_id: int | None
+    name: str | None
+    code: str | None
+
+    @classmethod
+    def from_contract(cls, direction: EmisDirection) -> "EmisDirectionResponse":
+        """Build the response from the contract dataclass."""
+        return cls(emis_id=direction.emis_id, name=direction.name, code=direction.code)
+
+
+class EmisYearResponse(BaseModel):
+    """EmisYear: the dates are ISO ``YYYY-MM-DD``."""
+
+    code: str | None
+    name: str | None
+    from_date: date | None
+    to_date: date | None
+
+    @classmethod
+    def from_contract(cls, year: EmisYear) -> "EmisYearResponse":
+        """Build the response from the contract dataclass."""
+        return cls(
+            code=year.code,
+            name=year.name,
+            from_date=year.from_date,
+            to_date=year.to_date,
+        )
+
+
+class EmisSemesterDatesResponse(BaseModel):
+    """EmisSemesterDates: ``number`` is 1-based, the dates are ISO."""
+
+    number: int
+    starts_on: date
+    ends_on: date
+
+    @classmethod
+    def from_contract(cls, semester: EmisSemesterDates) -> "EmisSemesterDatesResponse":
+        """Build the response from the contract dataclass."""
+        return cls(
+            number=semester.number,
+            starts_on=semester.starts_on,
+            ends_on=semester.ends_on,
+        )
+
+
+class EmisCurriculumSubjectResponse(BaseModel):
+    """EmisCurriculumSubject."""
+
+    emis_subject_id: int
+    name: EmisNameResponse
+    subject_type_id: int | None
+    study_hours: int | None
+
+    @classmethod
+    def from_contract(
+        cls, subject: EmisCurriculumSubject
+    ) -> "EmisCurriculumSubjectResponse":
+        """Build the response from the contract dataclass."""
+        return cls(
+            emis_subject_id=subject.emis_subject_id,
+            name=EmisNameResponse.from_contract(subject.name),
+            subject_type_id=subject.subject_type_id,
+            study_hours=subject.study_hours,
+        )
+
+
+class EmisSemesterSubjectResponse(BaseModel):
+    """EmisSemesterSubject."""
+
+    semester_number: int
+    emis_subject_id: int
+    name: EmisNameResponse
+    subject_type_id: int | None
+    study_hours: int | None
+    class_hours: int | None
+    independent_hours: int | None
+    is_separated: bool
+
+    @classmethod
+    def from_contract(
+        cls, subject: EmisSemesterSubject
+    ) -> "EmisSemesterSubjectResponse":
+        """Build the response from the contract dataclass."""
+        return cls(
+            semester_number=subject.semester_number,
+            emis_subject_id=subject.emis_subject_id,
+            name=EmisNameResponse.from_contract(subject.name),
+            subject_type_id=subject.subject_type_id,
+            study_hours=subject.study_hours,
+            class_hours=subject.class_hours,
+            independent_hours=subject.independent_hours,
+            is_separated=subject.is_separated,
+        )
+
+
+class EmisCurriculumItemResponse(BaseModel):
+    """EmisCurriculumItem: an exam or a vocational subject."""
+
+    emis_id: int | None
+    name: EmisNameResponse
+    study_hours: int | None
+
+    @classmethod
+    def from_contract(cls, item: EmisCurriculumItem) -> "EmisCurriculumItemResponse":
+        """Build the response from the contract dataclass."""
+        return cls(
+            emis_id=item.emis_id,
+            name=EmisNameResponse.from_contract(item.name),
+            study_hours=item.study_hours,
+        )
+
+
+class EmisCurriculumResponse(BaseModel):
+    """EmisCurriculum: the group's curriculum with ISO dates."""
+
+    emis_id: int
+    name: str
+    direction: EmisDirectionResponse | None
+    speciality: EmisNameResponse | None
+    edu_form: str | None
+    language_code: str | None
+    rating_min: int | None
+    rating_max: int | None
+    start_year: EmisYearResponse | None
+    end_year: EmisYearResponse | None
+    semesters_count: int | None
+    status: str | None
+    semesters: list[EmisSemesterDatesResponse]
+    subjects: list[EmisCurriculumSubjectResponse]
+    semester_subjects: list[EmisSemesterSubjectResponse]
+    exams: list[EmisCurriculumItemResponse]
+    vocational_subjects: list[EmisCurriculumItemResponse]
+
+    @classmethod
+    def from_contract(cls, curriculum: EmisCurriculum) -> "EmisCurriculumResponse":
+        """Build the response from the contract dataclass."""
+        return cls(
+            emis_id=curriculum.emis_id,
+            name=curriculum.name,
+            direction=(
+                EmisDirectionResponse.from_contract(curriculum.direction)
+                if curriculum.direction
+                else None
+            ),
+            speciality=(
+                EmisNameResponse.from_contract(curriculum.speciality)
+                if curriculum.speciality
+                else None
+            ),
+            edu_form=curriculum.edu_form,
+            language_code=curriculum.language_code,
+            rating_min=curriculum.rating_min,
+            rating_max=curriculum.rating_max,
+            start_year=(
+                EmisYearResponse.from_contract(curriculum.start_year)
+                if curriculum.start_year
+                else None
+            ),
+            end_year=(
+                EmisYearResponse.from_contract(curriculum.end_year)
+                if curriculum.end_year
+                else None
+            ),
+            semesters_count=curriculum.semesters_count,
+            status=curriculum.status,
+            semesters=[
+                EmisSemesterDatesResponse.from_contract(s) for s in curriculum.semesters
+            ],
+            subjects=[
+                EmisCurriculumSubjectResponse.from_contract(s)
+                for s in curriculum.subjects
+            ],
+            semester_subjects=[
+                EmisSemesterSubjectResponse.from_contract(s)
+                for s in curriculum.semester_subjects
+            ],
+            exams=[
+                EmisCurriculumItemResponse.from_contract(e) for e in curriculum.exams
+            ],
+            vocational_subjects=[
+                EmisCurriculumItemResponse.from_contract(v)
+                for v in curriculum.vocational_subjects
+            ],
         )

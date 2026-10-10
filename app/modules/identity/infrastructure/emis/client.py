@@ -11,6 +11,7 @@ from app.modules.identity.application.register_models import (
 from app.modules.identity.infrastructure.emis.mapping import (
     to_class_hours,
     to_classes,
+    to_curriculum,
     to_profile,
     to_ratings,
     to_subjects,
@@ -37,6 +38,7 @@ from app.settings import EmisSettings
 from app.shared.contracts.emis import (
     EmisClass,
     EmisClassHour,
+    EmisCurriculum,
     EmisProfile,
     EmisSubject,
     EmisSubjectRatings,
@@ -155,6 +157,11 @@ class EmisClient:
         """Return the subjects of the curriculum."""
         result = await self._request("GET", CURRICULUM_PATH, token=token)
         return to_subjects(parse_result(CurriculumV1DTO, result))
+
+    async def curriculum_detail(self, token: str) -> EmisCurriculum:
+        """Return the whole curriculum: semesters, hours per subject, exams."""
+        result = await self._request("GET", CURRICULUM_PATH, token=token)
+        return to_curriculum(parse_result(CurriculumV1DTO, result))
 
     async def ratings(
         self, token: str, subject_id: int, semester: int

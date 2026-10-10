@@ -40,6 +40,46 @@ async def test_subjects_and_ratings_are_passed_through(world: World) -> None:
     assert ratings.marks
 
 
+async def test_curriculum_is_passed_through_with_the_stored_token(
+    world: World,
+) -> None:
+    """SYNC-3: the whole curriculum comes back normalized, no login needed."""
+    user_id = await registered_user(world)
+
+    curriculum = await world.gateway.curriculum(user_id)
+
+    assert curriculum.emis_id == 2124
+    assert [s.number for s in curriculum.semesters] == [1, 2, 3, 4]
+    assert len(curriculum.subjects) == 8
+    assert world.emis.calls == ["curriculum_detail"]
+
+
+async def test_a_stale_token_is_replaced_for_the_curriculum_too(world: World) -> None:
+    """ID-7: the same one-time re-login for the curriculum."""
+    user_id = await registered_user(world)
+    ref = world.secret_ref_of(user_id)
+    world.emis.revoke(world.store.secrets[ref].access_token)
+
+    curriculum = await world.gateway.curriculum(user_id)
+
+    assert len(curriculum.semester_subjects) == 32
+    assert world.emis.calls == ["curriculum_detail", "login", "curriculum_detail"]
+    assert [r for r, _ in world.store.updated_tokens] == [ref]
+
+
+async def test_a_curriculum_of_a_link_that_needs_reauth_fails_fast(
+    world: World,
+) -> None:
+    """SYNC-8: no EMIS request when the stored password is known to be wrong."""
+    user_id = await registered_user(world)
+    world.repo.accounts[user_id].emis_status = "needs_reauth"
+
+    with pytest.raises(EmisAuthFailed):
+        await world.gateway.curriculum(user_id)
+
+    assert world.emis.calls == []
+
+
 async def test_class_hours_and_timetable_use_the_stored_token(world: World) -> None:
     """ACA-1, ACA-4: the bells and the group's timetable go through the gateway."""
     user_id = await registered_user(world)

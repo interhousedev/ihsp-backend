@@ -113,6 +113,112 @@ class EmisClass:
     topic: EmisTopic | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class EmisName:
+    """A name in the three languages; a language EMIS left empty is ``""``."""
+
+    uz: str = ""
+    ru: str = ""
+    en: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class EmisYear:
+    """An academic year of the curriculum (``start_year`` / ``end_year``)."""
+
+    code: str | None
+    name: str | None
+    from_date: dt.date | None
+    to_date: dt.date | None
+
+
+@dataclass(frozen=True, slots=True)
+class EmisDirection:
+    """The education direction of the curriculum (``edu_direction``)."""
+
+    emis_id: int | None
+    name: str | None
+    code: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class EmisSemesterDates:
+    """One semester of the curriculum: 1-based number and its school dates."""
+
+    number: int
+    starts_on: dt.date
+    ends_on: dt.date
+
+
+@dataclass(frozen=True, slots=True)
+class EmisCurriculumSubject:
+    """A subject of the whole curriculum with its total hours (``edu_subject``).
+
+    ``subject_type_id``: 1 general, 2 advanced (in-depth), 3 vocational, 4 unified.
+    """
+
+    emis_subject_id: int
+    name: EmisName
+    subject_type_id: int | None
+    study_hours: int | None
+
+
+@dataclass(frozen=True, slots=True)
+class EmisSemesterSubject:
+    """A subject taught in one semester with its hours (``semester_edu_subjects``).
+
+    ``is_separated`` is EMIS's flag (sent as ``is_seperated``): the class is taught
+    in two halves.
+    """
+
+    semester_number: int
+    emis_subject_id: int
+    name: EmisName
+    subject_type_id: int | None
+    study_hours: int | None
+    class_hours: int | None
+    independent_hours: int | None
+    is_separated: bool
+
+
+@dataclass(frozen=True, slots=True)
+class EmisCurriculumItem:
+    """An exam or a vocational subject of the curriculum: name and hours."""
+
+    emis_id: int | None
+    name: EmisName
+    study_hours: int | None
+
+
+@dataclass(frozen=True, slots=True)
+class EmisCurriculum:
+    """The student's curriculum (``student-profiles/curriculum/``), group level.
+
+    ``rating_min`` and ``rating_max`` are the rating scale (``rating_type``).
+    ``semesters`` lists the dates by semester number; the per-semester subjects are in
+    ``semester_subjects``; ``subjects`` holds the totals over the whole curriculum.
+    Empty strings from EMIS are mapped to None (or to ``""`` inside ``EmisName``).
+    """
+
+    emis_id: int
+    name: str
+    direction: EmisDirection | None
+    speciality: EmisName | None
+    edu_form: str | None
+    language_code: str | None
+    rating_min: int | None
+    rating_max: int | None
+    start_year: EmisYear | None
+    end_year: EmisYear | None
+    semesters_count: int | None
+    status: str | None
+    semesters: tuple[EmisSemesterDates, ...]
+    subjects: tuple[EmisCurriculumSubject, ...]
+    semester_subjects: tuple[EmisSemesterSubject, ...]
+    exams: tuple[EmisCurriculumItem, ...]
+    vocational_subjects: tuple[EmisCurriculumItem, ...]
+
+
 class EmisAuthFailed(BaseError):
     """EMIS rejected the stored credentials."""
 
@@ -138,6 +244,10 @@ class EmisSource(Protocol):
 
     async def subjects(self, user_id: UUID) -> list[EmisSubject]:
         """Return the student's subjects."""
+        ...
+
+    async def curriculum(self, user_id: UUID) -> EmisCurriculum:
+        """Return the full curriculum of the student: semesters, hours, exams."""
         ...
 
     async def ratings(

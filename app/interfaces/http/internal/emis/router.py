@@ -1,6 +1,7 @@
 """Internal EMIS gateway routes (private network, service token)."""
 
 from app.interfaces.http.internal.emis.handlers.get_class_hours import get_class_hours
+from app.interfaces.http.internal.emis.handlers.get_curriculum import get_curriculum
 from app.interfaces.http.internal.emis.handlers.get_profile import get_profile
 from app.interfaces.http.internal.emis.handlers.get_ratings import get_ratings
 from app.interfaces.http.internal.emis.handlers.get_subjects import get_subjects
@@ -8,6 +9,7 @@ from app.interfaces.http.internal.emis.handlers.get_timetable import get_timetab
 from app.interfaces.http.internal.emis.schemas import (
     EmisClassHourResponse,
     EmisClassResponse,
+    EmisCurriculumResponse,
     EmisProfileResponse,
     EmisSubjectRatingsResponse,
     EmisSubjectResponse,
@@ -33,6 +35,12 @@ router.add_api_route(
     get_subjects,
     methods=["GET"],
     response_model=list[EmisSubjectResponse],
+)
+router.add_api_route(
+    "/{user_id}/curriculum",
+    get_curriculum,
+    methods=["GET"],
+    response_model=EmisCurriculumResponse,
 )
 router.add_api_route(
     "/{user_id}/ratings",

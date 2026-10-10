@@ -18,7 +18,15 @@ from app.modules.identity.infrastructure.emis.models.responses.class_schedules i
     TopicV1DTO,
 )
 from app.modules.identity.infrastructure.emis.models.responses.curriculum import (
+    CurriculumItemV1DTO,
     CurriculumV1DTO,
+    DirectionV1DTO,
+    EduSubjectV1DTO,
+    NamedItemV1DTO,
+    SemesterDatesV1DTO,
+    SemesterSubjectV1DTO,
+    SubjectNameV1DTO,
+    YearV1DTO,
 )
 from app.modules.identity.infrastructure.emis.models.responses.profile import (
     ProfileV1DTO,
@@ -29,13 +37,21 @@ from app.modules.identity.infrastructure.emis.models.responses.ratings import (
 from app.shared.contracts.emis import (
     EmisClass,
     EmisClassHour,
+    EmisCurriculum,
+    EmisCurriculumItem,
+    EmisCurriculumSubject,
+    EmisDirection,
     EmisMark,
     EmisMarkType,
+    EmisName,
     EmisProfile,
+    EmisSemesterDates,
+    EmisSemesterSubject,
     EmisSubject,
     EmisSubjectRatings,
     EmisTeacher,
     EmisTopic,
+    EmisYear,
 )
 from app.shared.lesson_kind import LessonKind
 from app.shared.text import normalize_group_name, title_case
@@ -68,26 +84,179 @@ def to_profile(dto: ProfileV1DTO) -> EmisProfile:
     )
 
 
+# - - - Curriculum - - -
+
+_EMIS_DATE = "%d.%m.%Y"
+
+
 def to_subjects(dto: CurriculumV1DTO) -> list[EmisSubject]:
-    """Map the curriculum; an empty name falls back to another language."""
+    """Map the curriculum to its subjects; an empty name falls back to another."""
+    return curriculum_subjects(to_curriculum(dto))
+
+
+def curriculum_subjects(curriculum: EmisCurriculum) -> list[EmisSubject]:
+    """The subjects of a curriculum: uz, else ru, else en, else "Subject <id>"."""
     subjects: list[EmisSubject] = []
-    for item in dto.edu_subject:
-        name = item.edu_subject.name
-        uz, ru, en = (
-            (name.uz or "").strip(),
-            (name.ru or "").strip(),
-            (name.en or "").strip(),
-        )
-        fallback = uz or ru or en or f"Subject {item.edu_subject_id}"
+    for item in curriculum.subjects:
+        name = item.name
+        fallback = name.uz or name.ru or name.en or f"Subject {item.emis_subject_id}"
         subjects.append(
             EmisSubject(
-                emis_subject_id=item.edu_subject_id,
-                name_uz=uz or fallback,
-                name_ru=ru or fallback,
-                name_en=en or fallback,
+                emis_subject_id=item.emis_subject_id,
+                name_uz=name.uz or fallback,
+                name_ru=name.ru or fallback,
+                name_en=name.en or fallback,
             )
         )
     return subjects
+
+
+def to_curriculum(dto: CurriculumV1DTO) -> EmisCurriculum:
+    """Map the whole curriculum; every part but the ids may be missing.
+
+    Empty strings are None (``""`` inside ``EmisName``); a semester whose dates
+    cannot be read is left out with a warning.
+    """
+    template = dto.curriculum_template
+    return EmisCurriculum(
+        emis_id=dto.id,
+        name=_text(dto.name) or "",
+        direction=_direction(dto.edu_direction),
+        speciality=_speciality(dto.speciality),
+        edu_form=_text(dto.edu_form.name) if dto.edu_form else None,
+        language_code=_text(dto.edu_language.code) if dto.edu_language else None,
+        rating_min=dto.rating_type.min_rating if dto.rating_type else None,
+        rating_max=dto.rating_type.max_rating if dto.rating_type else None,
+        start_year=_year(dto.start_year),
+        end_year=_year(dto.end_year),
+        semesters_count=template.number_of_semesters if template else None,
+        status=_text(dto.status),
+        semesters=_semesters(dto.semester_dates),
+        subjects=tuple(_curriculum_subject(item) for item in dto.edu_subject),
+        semester_subjects=_semester_subjects(dto.semester_edu_subjects),
+        exams=tuple(_curriculum_item(item) for item in dto.exams),
+        vocational_subjects=tuple(
+            _curriculum_item(item) for item in dto.vocational_subjects
+        ),
+    )
+
+
+def _text(value: str | None) -> str | None:
+    """Stripped text, None when empty."""
+    return (value or "").strip() or None
+
+
+def _emis_name(name: SubjectNameV1DTO | None) -> EmisName:
+    """The three languages as EMIS sent them, stripped; no fallback here."""
+    if name is None:
+        return EmisName()
+    return EmisName(
+        (name.uz or "").strip(), (name.ru or "").strip(), (name.en or "").strip()
+    )
+
+
+def _speciality(name: SubjectNameV1DTO | None) -> EmisName | None:
+    mapped = _emis_name(name)
+    return mapped if mapped != EmisName() else None
+
+
+def _direction(dto: DirectionV1DTO | None) -> EmisDirection | None:
+    if dto is None:
+        return None
+    direction = EmisDirection(dto.id, _text(dto.name), _text(dto.code))
+    return direction if direction != EmisDirection(None, None, None) else None
+
+
+def _optional_date(value: str | None) -> date | None:
+    """A date as ``DD.MM.YYYY`` or ISO; anything else is None."""
+    text = (value or "").strip()
+    for parse in (_emis_datetime, datetime.fromisoformat):
+        try:
+            return parse(text).date()
+        except ValueError:
+            continue
+    return None
+
+
+def _emis_datetime(text: str) -> datetime:
+    return datetime.strptime(text, _EMIS_DATE)
+
+
+def _year(dto: YearV1DTO | None) -> EmisYear | None:
+    if dto is None:
+        return None
+    year = EmisYear(
+        code=_text(dto.code),
+        name=_text(dto.name),
+        from_date=_optional_date(dto.from_date),
+        to_date=_optional_date(dto.to_date),
+    )
+    return year if year != EmisYear(None, None, None, None) else None
+
+
+def _semesters(items: list[SemesterDatesV1DTO | None]) -> tuple[EmisSemesterDates, ...]:
+    """Number the semesters by their place in the list; skip one with bad dates."""
+    semesters: list[EmisSemesterDates] = []
+    for number, item in enumerate(items, start=1):
+        starts = _optional_date(item.start_date) if item else None
+        ends = _optional_date(item.end_date) if item else None
+        if starts is None or ends is None or ends < starts:
+            log.warning(
+                "emis_semester_dates_skipped",
+                semester=number,
+                start_date=item.start_date if item else None,
+                end_date=item.end_date if item else None,
+            )
+            continue
+        semesters.append(EmisSemesterDates(number, starts, ends))
+    return tuple(semesters)
+
+
+def _type_id(subject: EduSubjectV1DTO | None) -> int | None:
+    if subject is None:
+        return None
+    if subject.edu_subject_type is not None and subject.edu_subject_type.id:
+        return subject.edu_subject_type.id
+    return subject.edu_subject_type_id
+
+
+def _curriculum_subject(item: CurriculumItemV1DTO) -> EmisCurriculumSubject:
+    name = item.edu_subject.name if item.edu_subject else None
+    return EmisCurriculumSubject(
+        emis_subject_id=item.edu_subject_id,
+        name=_emis_name(name),
+        subject_type_id=_type_id(item.edu_subject),
+        study_hours=item.study_hours,
+    )
+
+
+def _semester_subjects(
+    semesters: list[list[SemesterSubjectV1DTO]],
+) -> tuple[EmisSemesterSubject, ...]:
+    """The subjects semester by semester; a missing number is the list position."""
+    return tuple(
+        _semester_subject(item, position)
+        for position, items in enumerate(semesters, start=1)
+        for item in items
+    )
+
+
+def _semester_subject(item: SemesterSubjectV1DTO, position: int) -> EmisSemesterSubject:
+    name = item.edu_subject.name if item.edu_subject else None
+    return EmisSemesterSubject(
+        semester_number=item.semester_number or position,
+        emis_subject_id=item.edu_subject_id,
+        name=_emis_name(name),
+        subject_type_id=_type_id(item.edu_subject),
+        study_hours=item.study_hours,
+        class_hours=item.class_hours,
+        independent_hours=item.independent_work_hours,
+        is_separated=item.is_seperated,
+    )
+
+
+def _curriculum_item(item: NamedItemV1DTO) -> EmisCurriculumItem:
+    return EmisCurriculumItem(item.id, _emis_name(item.name), item.study_hours)
 
 
 def _mark_type(name: str) -> EmisMarkType | None:

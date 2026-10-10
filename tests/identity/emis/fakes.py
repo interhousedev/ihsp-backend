@@ -23,6 +23,7 @@ from app.shared.contracts.academic import StudentRef
 from app.shared.contracts.emis import (
     EmisClass,
     EmisClassHour,
+    EmisCurriculum,
     EmisProfile,
     EmisSubject,
     EmisSubjectRatings,
@@ -82,6 +83,12 @@ class ControlledEmis:
         self.calls.append("curriculum")
         self._check(token)
         return await self._inner.curriculum(token)
+
+    async def curriculum_detail(self, token: str) -> EmisCurriculum:
+        """Return the whole curriculum."""
+        self.calls.append("curriculum_detail")
+        self._check(token)
+        return await self._inner.curriculum_detail(token)
 
     async def ratings(
         self, token: str, subject_id: int, semester: int

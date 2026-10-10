@@ -57,15 +57,13 @@ def cells_of(
     group_emis_id: int,
     subjects: tuple[EmisSubject, ...],
     teachers_of: dict[int, tuple[EmisTeacher, ...]],
-    saturday: tuple[tuple[int, EmisTeacher, Parity], ...],
 ) -> list[Cell]:
-    """Four pairs a day, Monday to Friday; 2TN2 also has alternating Saturday pairs."""
+    """Four pairs a day, Monday to Friday; the lyceum does not study on Saturday."""
     rooms = _ROOMS_OF.get(group_emis_id)
     if rooms is None:
         return []
     shift = 0 if group_emis_id == 3292 else 3
     ordered = sorted(subjects, key=lambda subject: subject.emis_subject_id)
-    by_id = {subject.emis_subject_id: subject for subject in subjects}
     cells: list[Cell] = []
     for weekday in _WEEKDAYS:
         for pair in range(_PAIRS_PER_DAY):
@@ -76,11 +74,6 @@ def cells_of(
                 cells.append(Cell(weekday, pair, subject, teachers[1], rooms[1], 2))
             else:
                 cells.append(Cell(weekday, pair, subject, teachers[0], rooms[0]))
-    if group_emis_id == 3292:
-        for subject_id, teacher, parity in saturday:
-            cells.append(
-                Cell(6, 0, by_id[subject_id], teacher, rooms[0], parity=parity)
-            )
     return cells
 
 

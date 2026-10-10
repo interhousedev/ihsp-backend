@@ -1275,66 +1275,7 @@
     },
     {
       "date": "10.10.2026",
-      "classes": [
-        {
-          "id": 3835596,
-          "is_seperated": false,
-          "class_type_id": 0,
-          "class_type": null,
-          "edu_group_id": 3292,
-          "edu_group": null,
-          "pair_number": 0,
-          "teachers": [
-            {
-              "id": 4835596,
-              "edu_subject_id": 105,
-              "edu_subject": {
-                "id": 105,
-                "name": {
-                  "uz": "O'zbek tili",
-                  "ru": "Узбекский язык",
-                  "en": "Uzbek"
-                },
-                "status": "ACTIVE",
-                "can_be_divided": false,
-                "is_custom": false
-              },
-              "class_type_id": 1,
-              "class_type": {
-                "id": 1,
-                "name": "Ma'ruza",
-                "description": ""
-              },
-              "teacher_id": 9003,
-              "teacher": {
-                "id": 9003,
-                "citizen": {
-                  "id": 49003,
-                  "birth_date": "04.01.1969",
-                  "first_name": "MADINA",
-                  "middle_name": null,
-                  "last_name": "ISMOILOVA",
-                  "gender_id": 1,
-                  "gender": "Erkak"
-                },
-                "status": "ACTIVE"
-              },
-              "room_id": 2096,
-              "room": {
-                "id": 2096,
-                "name": "101",
-                "capacity": 30
-              },
-              "pair_number": 0,
-              "is_seperated": null,
-              "group_number": 1,
-              "topic_id": 0,
-              "topic": null,
-              "rating": null
-            }
-          ]
-        }
-      ]
+      "classes": null
     },
     {
       "date": "11.10.2026",

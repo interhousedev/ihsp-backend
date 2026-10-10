@@ -9,15 +9,23 @@ from app.modules.identity.application.register_models import (
 )
 from app.modules.identity.infrastructure.emis.fake import (
     FAKE_CLASS_HOURS,
+    FAKE_CURRICULUM_PATH,
     FAKE_STUDENTS,
     FAKE_SUBJECTS,
     FakeEmisClient,
     FakeStudent,
+    fake_curriculum_result,
 )
 from app.modules.identity.infrastructure.emis.fake_schedule import week_body
-from app.modules.identity.infrastructure.emis.mapping import to_class_hours
+from app.modules.identity.infrastructure.emis.mapping import (
+    to_class_hours,
+    to_curriculum,
+)
 from app.modules.identity.infrastructure.emis.models.responses.class_hours import (
     ClassHoursV1DTO,
+)
+from app.modules.identity.infrastructure.emis.models.responses.curriculum import (
+    CurriculumV1DTO,
 )
 from app.shared.contracts.emis import EmisClass, EmisMarkType
 from tests.fakes.clock import FixedClock
@@ -96,7 +104,7 @@ async def test_marks_are_deterministic_and_stop_at_today() -> None:
     assert one.marks
     assert all(m.date <= datetime(2026, 10, 6, tzinfo=UTC).date() for m in one.marks)
     assert all(2 <= m.value <= 5 for m in one.marks)
-    assert all(m.date.weekday() < 6 for m in one.marks)
+    assert all(m.date.weekday() < 5 for m in one.marks)
     assert one.semester_rating is not None
 
 
@@ -184,7 +192,7 @@ async def test_the_timetable_belongs_to_the_students_group() -> None:
     }
     assert teachers  # the same teachers teach both groups
     assert all(
-        1 <= c.date.isoweekday() <= 6 and c.pair_number >= 0 for c in second_year
+        1 <= c.date.isoweekday() <= 5 and c.pair_number >= 0 for c in second_year
     )
     assert len({c.class_id for c in second_year}) == len(second_year)
 
@@ -209,20 +217,15 @@ async def test_a_student_sees_only_the_slots_of_their_own_half() -> None:
     }
 
 
-async def test_saturday_alternates_between_two_subjects_week_by_week() -> None:
-    """ACA-5: History in odd weeks, Uzbek in even weeks (counted from 31 Aug)."""
+async def test_the_fake_makes_no_saturday_classes() -> None:
+    """ACA-5: the lyceum does not study on Saturday; classes are Monday to Friday."""
     client = make_client()
-    classes = await client.timetable(
-        await client.login("student01", "password"), *WINDOW
-    )
+    for login in ("student01", "student16"):
+        classes = await client.timetable(await client.login(login, "password"), *WINDOW)
 
-    saturdays = [c for c in classes if c.date.isoweekday() == 6]
-    assert [(c.date.day, c.subject.name_en) for c in saturdays] == [
-        (10, "Uzbek"),
-        (17, "History"),
-        (24, "Uzbek"),
-        (31, "History"),
-    ]
+        assert classes
+        assert not [c for c in classes if c.date.isoweekday() == 6]
+        assert {c.date.isoweekday() for c in classes} == {1, 2, 3, 4, 5}
 
 
 async def test_kinds_and_topics_follow_the_calendar() -> None:
@@ -250,3 +253,119 @@ async def test_the_timetable_needs_a_valid_token() -> None:
 
 def _student(login: str) -> FakeStudent:
     return next(s for s in FAKE_STUDENTS if s.login == login)
+
+
+async def test_the_fake_curriculum_is_the_sample_file_through_the_real_mapping() -> (
+    None
+):
+    """SYNC-3: curriculum_detail parses fake_data/curriculum.json like the client."""
+    client = make_client()
+    token = await client.login("student01", "password")
+
+    curriculum = await client.curriculum_detail(token)
+
+    assert FAKE_CURRICULUM_PATH.name == "curriculum.json"
+    assert curriculum == to_curriculum(
+        CurriculumV1DTO.model_validate(fake_curriculum_result())
+    )
+    assert curriculum.name == "ТН, МТН, БТН 2025-2027"
+    assert [s.number for s in curriculum.semesters] == [1, 2, 3, 4]
+    assert (curriculum.semesters[0].starts_on, curriculum.semesters[0].ends_on) == (
+        date(2025, 9, 3),
+        date(2026, 1, 20),
+    )
+    assert (curriculum.rating_min, curriculum.rating_max) == (3, 5)
+    assert curriculum.language_code == "RU" and curriculum.status == "APPROVED"
+    assert curriculum.exams and curriculum.vocational_subjects
+    assert {s.subject_type_id for s in curriculum.subjects} == {1, 2, 3, 4}
+    assert any(s.name.ru == "" and s.name.en == "" for s in curriculum.subjects)
+
+
+async def test_the_fake_curriculum_has_the_subjects_of_the_fake_timetable() -> None:
+    """ACA-1: same EMIS ids, and the same names wherever the sample names them."""
+    client = make_client()
+    detail = await client.curriculum_detail(await client.login("student01", "password"))
+
+    assert [s.emis_subject_id for s in detail.subjects] == [
+        s.emis_subject_id for s in FAKE_SUBJECTS
+    ]
+    for semester in (1, 2, 3, 4):
+        in_semester = [
+            s.emis_subject_id
+            for s in detail.semester_subjects
+            if s.semester_number == semester
+        ]
+        assert in_semester == [s.emis_subject_id for s in FAKE_SUBJECTS]
+    fake = {s.emis_subject_id: s for s in FAKE_SUBJECTS}
+    for item in detail.subjects:
+        assert item.name.uz == fake[item.emis_subject_id].name_uz
+        assert item.name.ru in ("", fake[item.emis_subject_id].name_ru)
+        assert item.name.en in ("", fake[item.emis_subject_id].name_en)
+
+
+async def test_curriculum_returns_the_subjects_list_of_the_same_curriculum() -> None:
+    """SYNC-3: curriculum(token) is the subject view with the name fallback."""
+    client = make_client()
+    token = await client.login("student01", "password")
+
+    subjects = await client.curriculum(token)
+    detail = await client.curriculum_detail(token)
+
+    assert [s.emis_subject_id for s in subjects] == [
+        s.emis_subject_id for s in detail.subjects
+    ]
+    assert (subjects[0].name_uz, subjects[0].name_ru, subjects[0].name_en) == (
+        "Matematika",
+        "Математика",
+        "Mathematics",
+    )
+    uzbek = next(s for s in subjects if s.emis_subject_id == 105)
+    assert (uzbek.name_ru, uzbek.name_en) == ("O'zbek tili", "O'zbek tili")
+
+
+async def test_the_first_year_group_studies_a_year_later() -> None:
+    """ID-1: curriculum 2123 has its own id, name and dates; the subjects match."""
+    client = make_client()
+    second_year = await client.curriculum_detail(
+        await client.login("student01", "password")
+    )
+
+    first_year = await client.curriculum_detail(
+        await client.login("student16", "password")
+    )
+
+    assert (second_year.emis_id, first_year.emis_id) == (2124, 2123)
+    assert first_year.name == "ТН, МТН, БТН 2026-2028"
+    assert first_year.semesters[0].starts_on == date(2026, 9, 2)
+    assert first_year.semesters[0].starts_on.weekday() == (
+        second_year.semesters[0].starts_on.weekday()
+    )
+    assert first_year.start_year is not None
+    assert (first_year.start_year.code, first_year.start_year.name) == (
+        "2026",
+        "2026-2027",
+    )
+    assert first_year.subjects == second_year.subjects
+    assert first_year.semester_subjects == second_year.semester_subjects
+
+
+async def test_curriculum_endpoints_need_a_valid_token() -> None:
+    """ID-7: like every data call, the curriculum is behind the student's token."""
+    client = make_client()
+
+    with pytest.raises(EmisAuthError):
+        await client.curriculum_detail("garbage")
+    with pytest.raises(EmisAuthError):
+        await client.curriculum("garbage")
+
+
+def test_the_sample_result_is_a_fresh_copy_every_time() -> None:
+    """SYNC-3: callers may change the dict without touching the fake's data."""
+    first = fake_curriculum_result()
+    first["name"] = "changed"
+    first["edu_subject"].clear()
+
+    second = fake_curriculum_result()
+
+    assert second["name"] == "ТН, МТН, БТН 2025-2027"
+    assert len(second["edu_subject"]) == 8

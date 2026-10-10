@@ -9,7 +9,10 @@ from app.modules.identity.application.register_models import (
     EmisRequestError,
 )
 from app.modules.identity.infrastructure.emis.client import EmisClient
-from app.modules.identity.infrastructure.emis.fake import FakeEmisClient
+from app.modules.identity.infrastructure.emis.fake import (
+    FakeEmisClient,
+    fake_curriculum_result,
+)
 from app.shared.contracts.emis import EmisMarkType, EmisTeacher, EmisTopic
 from tests.fakes.clock import FixedClock
 from tests.identity.emis.emis_fixtures import load_fixture
@@ -101,6 +104,86 @@ async def test_curriculum_fills_an_empty_name_from_another_language(
         "Geometry",
     )
     assert subjects[1].name_ru == "Английский язык"
+
+
+def _curriculum_body() -> dict[str, object]:
+    return {
+        "result": fake_curriculum_result(),
+        "code": 200,
+        "success": True,
+        "error": None,
+    }
+
+
+async def test_curriculum_detail_maps_the_whole_curriculum(
+    client: EmisClient, emis_http: respx.MockRouter
+) -> None:
+    """SYNC-3: one request returns semesters, hours per semester, exams and scale."""
+    route = emis_http.get(CURRICULUM).respond(200, json=_curriculum_body())
+
+    curriculum = await client.curriculum_detail("emis-token-1")
+
+    assert (curriculum.emis_id, curriculum.name) == (2124, "ТН, МТН, БТН 2025-2027")
+    assert route.calls.last.request.headers["Authorization"] == "emis-token-1"
+    assert [s.number for s in curriculum.semesters] == [1, 2, 3, 4]
+    assert curriculum.semesters[0].starts_on == date(2025, 9, 3)
+    assert len(curriculum.subjects) == 8
+    assert len(curriculum.semester_subjects) == 32
+    assert (curriculum.rating_min, curriculum.rating_max) == (3, 5)
+    assert curriculum.language_code == "RU"
+    assert len(curriculum.exams) == 3 and len(curriculum.vocational_subjects) == 2
+
+
+async def test_curriculum_and_curriculum_detail_describe_the_same_subjects(
+    client: EmisClient, emis_http: respx.MockRouter
+) -> None:
+    """SYNC-3: curriculum() still returns the subjects list, with name fallback."""
+    emis_http.get(CURRICULUM).respond(200, json=_curriculum_body())
+
+    subjects = await client.curriculum("emis-token-1")
+    detail = await client.curriculum_detail("emis-token-1")
+
+    assert [s.emis_subject_id for s in subjects] == [
+        s.emis_subject_id for s in detail.subjects
+    ]
+    uzbek = next(s for s in subjects if s.emis_subject_id == 105)
+    assert (uzbek.name_uz, uzbek.name_ru, uzbek.name_en) == ("O'zbek tili",) * 3
+
+
+async def test_curriculum_detail_reads_the_small_recorded_response(
+    client: EmisClient, emis_http: respx.MockRouter
+) -> None:
+    """SYNC-3: a response with only ids and names is a valid, bare curriculum."""
+    emis_http.get(CURRICULUM).respond(200, json=load_fixture("curriculum.json"))
+
+    curriculum = await client.curriculum_detail("emis-token-1")
+
+    assert curriculum.emis_id == 2124
+    assert [s.emis_subject_id for s in curriculum.subjects] == [35, 19]
+    assert curriculum.semesters == () and curriculum.semester_subjects == ()
+    assert curriculum.rating_min is None and curriculum.direction is None
+
+
+async def test_curriculum_detail_with_a_changed_shape_raises_request_error(
+    client: EmisClient, emis_http: respx.MockRouter
+) -> None:
+    """SYNC-3: a curriculum without an id means EMIS changed."""
+    emis_http.get(CURRICULUM).respond(
+        200, json={"result": {"edu_subject": []}, "code": 200, "success": True}
+    )
+
+    with pytest.raises(EmisRequestError):
+        await client.curriculum_detail("emis-token-1")
+
+
+async def test_curriculum_detail_401_raises_auth_error(
+    client: EmisClient, emis_http: respx.MockRouter
+) -> None:
+    """ID-7: a stale token is an auth error so the gateway can log in again."""
+    emis_http.get(CURRICULUM).respond(401, json=load_fixture("login_401.json"))
+
+    with pytest.raises(EmisAuthError):
+        await client.curriculum_detail("old-token")
 
 
 async def test_ratings_parse_all_three_mark_types(
@@ -279,13 +362,7 @@ async def test_four_weeks_take_four_requests_and_match_the_fake(
         token, dt.date(2026, 10, 5), dt.date(2026, 11, 1)
     )
     assert {c.kind for c in classes} == {"lecture", "practice", "midterm"}
-    saturdays = [c for c in classes if c.date.isoweekday() == 6]
-    assert [c.subject.name_en for c in saturdays] == [
-        "Uzbek",
-        "History",
-        "Uzbek",
-        "History",
-    ]
+    assert not [c for c in classes if c.date.isoweekday() == 6]  # no Saturday classes
 
 
 async def test_a_range_is_split_at_mondays(

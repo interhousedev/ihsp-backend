@@ -95,6 +95,122 @@ async def test_subjects_are_returned_as_a_list(
     }
 
 
+async def test_the_curriculum_is_returned_as_json_with_iso_dates(
+    api: tuple[AsyncClient, UUID, dict[str, str]],
+) -> None:
+    """SYNC-3: EmisCurriculum as snake_case JSON, dates as YYYY-MM-DD."""
+    client, user_id, headers = api
+
+    response = await client.get(f"/internal/emis/{user_id}/curriculum", headers=headers)
+
+    body = response.json()
+    assert response.status_code == 200
+    assert body.keys() == {
+        "emis_id",
+        "name",
+        "direction",
+        "speciality",
+        "edu_form",
+        "language_code",
+        "rating_min",
+        "rating_max",
+        "start_year",
+        "end_year",
+        "semesters_count",
+        "status",
+        "semesters",
+        "subjects",
+        "semester_subjects",
+        "exams",
+        "vocational_subjects",
+    }
+    assert (body["emis_id"], body["name"]) == (2124, "ТН, МТН, БТН 2025-2027")
+    assert body["direction"] == {
+        "emis_id": 312,
+        "name": "Umumiy o'rta ta'lim",
+        "code": "3010100",
+    }
+    assert body["speciality"] == {
+        "uz": "Texnologik yo'nalish",
+        "ru": "Технологическое направление",
+        "en": "Technology track",
+    }
+    assert (body["edu_form"], body["language_code"], body["status"]) == (
+        "Kunduzgi",
+        "RU",
+        "APPROVED",
+    )
+    assert (body["rating_min"], body["rating_max"], body["semesters_count"]) == (
+        3,
+        5,
+        4,
+    )
+    assert body["start_year"] == {
+        "code": "2025",
+        "name": "2025-2026",
+        "from_date": "2025-09-01",
+        "to_date": "2026-08-31",
+    }
+    assert body["end_year"]["from_date"] == "2026-09-01"
+    assert body["semesters"][0] == {
+        "number": 1,
+        "starts_on": "2025-09-03",
+        "ends_on": "2026-01-20",
+    }
+    assert len(body["semesters"]) == 4
+
+
+async def test_the_curriculum_lists_subjects_exams_and_semester_hours(
+    api: tuple[AsyncClient, UUID, dict[str, str]],
+) -> None:
+    """SYNC-3: nested names are {uz, ru, en}; the hours sit on every line."""
+    client, user_id, headers = api
+
+    response = await client.get(f"/internal/emis/{user_id}/curriculum", headers=headers)
+
+    body = response.json()
+    assert body["subjects"][0] == {
+        "emis_subject_id": 101,
+        "name": {"uz": "Matematika", "ru": "Математика", "en": "Mathematics"},
+        "subject_type_id": 2,
+        "study_hours": 340,
+    }
+    assert body["subjects"][4]["name"] == {"uz": "O'zbek tili", "ru": "", "en": ""}
+    assert len(body["semester_subjects"]) == 32
+    assert body["semester_subjects"][2] == {
+        "semester_number": 1,
+        "emis_subject_id": 103,
+        "name": {"uz": "Ingliz tili", "ru": "Английский язык", "en": "English"},
+        "subject_type_id": 1,
+        "study_hours": 51,
+        "class_hours": 34,
+        "independent_hours": 17,
+        "is_separated": True,
+    }
+    assert body["semester_subjects"][3]["independent_hours"] is None
+    assert body["exams"][1] == {
+        "emis_id": 2,
+        "name": {"uz": "Oraliq imtihon", "ru": "Промежуточный экзамен", "en": ""},
+        "study_hours": 16,
+    }
+    assert [v["emis_id"] for v in body["vocational_subjects"]] == [7001, 7002]
+
+
+async def test_the_curriculum_needs_the_service_token_and_a_valid_link(
+    world: World, api: tuple[AsyncClient, UUID, dict[str, str]]
+) -> None:
+    """ID-7, SYNC-8: as private as the other routes; reauth is a 401 problem."""
+    client, user_id, headers = api
+
+    anonymous = await client.get(f"/internal/emis/{user_id}/curriculum")
+    world.repo.accounts[user_id].emis_status = "needs_reauth"
+    blocked = await client.get(f"/internal/emis/{user_id}/curriculum", headers=headers)
+
+    assert anonymous.status_code == 401
+    assert blocked.status_code == 401
+    assert blocked.json()["type"] == "emis/auth-failed"
+
+
 async def test_ratings_take_subject_and_semester(
     api: tuple[AsyncClient, UUID, dict[str, str]],
 ) -> None:
@@ -290,6 +406,7 @@ async def test_http_source_and_router_work_together(
     assert await source.profile(user_id) == direct_profile
     assert await source.ratings(user_id, 101, 3) == direct_ratings
     assert await source.subjects(user_id) == await world.gateway.subjects(user_id)
+    assert await source.curriculum(user_id) == await world.gateway.curriculum(user_id)
     assert await source.class_hours(user_id) == await world.gateway.class_hours(user_id)
     begin, end = date(2026, 10, 5), date(2026, 11, 1)
     assert await source.timetable(user_id, begin, end) == await world.gateway.timetable(

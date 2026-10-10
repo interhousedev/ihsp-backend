@@ -5,9 +5,13 @@ from datetime import date, time
 from uuid import UUID
 
 from app.bootstrap.adapters.http_emis_source import HttpEmisSource
+from app.interfaces.http.internal.emis.schemas import EmisCurriculumResponse
+from app.modules.identity.infrastructure.emis.fake import fake_curriculum
 from app.shared.contracts.emis import (
     EmisAuthFailed,
+    EmisCurriculum,
     EmisMarkType,
+    EmisName,
     EmisTeacher,
     EmisTopic,
     EmisUnavailable,
@@ -78,6 +82,90 @@ async def test_subjects_are_parsed(
     subjects = await source.subjects(USER)
 
     assert [(s.emis_subject_id, s.name_en) for s in subjects] == [(35, "Geometry")]
+
+
+async def test_the_curriculum_survives_the_json_round_trip(
+    source: HttpEmisSource, gateway: respx.MockRouter
+) -> None:
+    """SYNC-3: what the gateway serializes is what the worker parses back."""
+    original = fake_curriculum(2124)
+    route = gateway.get(f"/{USER}/curriculum").respond(
+        200, json=EmisCurriculumResponse.from_contract(original).model_dump(mode="json")
+    )
+
+    curriculum = await source.curriculum(USER)
+
+    assert curriculum == original
+    assert route.calls.last.request.headers["Authorization"] == "Bearer svc-token"
+    assert curriculum.semesters[0].starts_on == date(2025, 9, 3)
+    assert curriculum.start_year is not None
+    assert curriculum.start_year.from_date == date(2025, 9, 1)
+
+
+async def test_a_bare_curriculum_keeps_its_nulls(
+    source: HttpEmisSource, gateway: respx.MockRouter
+) -> None:
+    """SYNC-3: null parts stay None, empty lists stay empty, "" names stay."""
+    gateway.get(f"/{USER}/curriculum").respond(
+        200,
+        json={
+            "emis_id": 9,
+            "name": "",
+            "direction": None,
+            "speciality": None,
+            "edu_form": None,
+            "language_code": None,
+            "rating_min": None,
+            "rating_max": None,
+            "start_year": {
+                "code": None,
+                "name": None,
+                "from_date": None,
+                "to_date": "2026-08-31",
+            },
+            "end_year": None,
+            "semesters_count": None,
+            "status": None,
+            "semesters": [],
+            "subjects": [
+                {
+                    "emis_subject_id": 5,
+                    "name": {"uz": "Fizika", "ru": "", "en": ""},
+                    "subject_type_id": None,
+                    "study_hours": None,
+                }
+            ],
+            "semester_subjects": [],
+            "exams": [],
+            "vocational_subjects": [],
+        },
+    )
+
+    curriculum = await source.curriculum(USER)
+
+    assert isinstance(curriculum, EmisCurriculum)
+    assert (curriculum.emis_id, curriculum.direction, curriculum.speciality) == (
+        9,
+        None,
+        None,
+    )
+    assert curriculum.start_year is not None
+    assert curriculum.start_year.from_date is None
+    assert curriculum.start_year.to_date == date(2026, 8, 31)
+    assert curriculum.subjects[0].name == EmisName("Fizika", "", "")
+    assert curriculum.semesters == () and curriculum.exams == ()
+
+
+async def test_a_curriculum_503_is_unavailable(
+    source: HttpEmisSource, gateway: respx.MockRouter
+) -> None:
+    """SYNC-8: a failing gateway is "EMIS unavailable" for the curriculum too."""
+    gateway.get(f"/{USER}/curriculum").respond(
+        503, json={"type": "emis/unavailable", "status": 503}
+    )
+
+    with pytest.raises(EmisUnavailable):
+        await source.curriculum(USER)
 
 
 async def test_ratings_send_subject_and_semester_and_parse_marks(
