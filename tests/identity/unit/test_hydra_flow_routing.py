@@ -212,6 +212,27 @@ async def test_first_party_consent_is_accepted_on_the_server(
     assert auth_world.hydra.last("accept_consent")["grant_audience"] == ["ihsp-api"]
 
 
+async def test_library_silent_sign_in_gets_its_consent_accepted(
+    auth_world: World,
+) -> None:
+    """Silent SSO (prompt=none) of the library: the first-party consent is accepted, not shown."""
+    user = await auth_world.add_user(roles={Role.STUDENT})
+    session = auth_world.add_session(user)
+    auth_world.hydra.add_consent(
+        "cc-1",
+        client_id="library",
+        subject=str(user.id),
+        request_url="https://hydra/oauth2/auth?client_id=library&prompt=none",
+        requested_scope=("openid", "offline_access"),
+        context={"session_id": str(session.id)},
+    )
+
+    target = await auth_world.auth.route_consent_request.execute("cc-1")
+
+    assert target == "https://hydra/code?consent_verifier=cc-1"
+    assert auth_world.hydra.last("accept_consent")["grant_audience"] == ["ihsp-api"]
+
+
 async def test_an_mcp_client_gets_the_consent_page(auth_world: World) -> None:
     """Only third-party clients are asked."""
     user = await auth_world.add_user()
