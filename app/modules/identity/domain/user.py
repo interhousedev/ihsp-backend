@@ -28,6 +28,7 @@ class User:
     middle_name: str | None = None
     login: str | None = None
     password_hash: str | None = None
+    password_change_required: bool = False
     roles: set[Role] = field(default_factory=set)
     recovery_email: str | None = None
     recovery_email_verified_at: datetime | None = None

@@ -21,6 +21,15 @@ class CourseBroadcastBody(BaseModel):
     body: str = Field(min_length=1, max_length=BODY_MAX_LENGTH)
 
 
+class CourseBroadcastPatch(BaseModel):
+    """PATCH /v1/staff/lms/courses/{id}/broadcasts/{bid}: the fields to change."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    title: str | None = Field(default=None, min_length=1, max_length=TITLE_MAX_LENGTH)
+    body: str | None = Field(default=None, min_length=1, max_length=BODY_MAX_LENGTH)
+
+
 class CourseBroadcastResponse(BaseModel):
     """One sent course broadcast."""
 
@@ -30,6 +39,9 @@ class CourseBroadcastResponse(BaseModel):
     title: str
     body: str
     created_at: datetime
+    updated_at: datetime | None = Field(
+        default=None, description="Set once the broadcast was edited (the marker)."
+    )
     recipients: int | None = Field(
         default=None, description="Students notified; only known right after sending."
     )
@@ -46,5 +58,6 @@ class CourseBroadcastResponse(BaseModel):
             title=broadcast.title,
             body=broadcast.body,
             created_at=broadcast.created_at,
+            updated_at=broadcast.updated_at,
             recipients=recipients,
         )

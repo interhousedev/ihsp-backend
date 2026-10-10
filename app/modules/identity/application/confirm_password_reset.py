@@ -43,6 +43,7 @@ class ConfirmPasswordReset:
                 raise OtpInvalidError(params={"attempts_left": 0})
             await self.otp.check("pw-reset", str(user.id), code)
             user.password_hash = await self.hasher.hash(new_password)
+            user.password_change_required = False
             await self.revoker.revoke_in(uow, user, keep_telegram=True)
             uow.audit(make_audit(PASSWORD_RESET, user_id=user.id, ctx=ctx))
             await uow.commit()

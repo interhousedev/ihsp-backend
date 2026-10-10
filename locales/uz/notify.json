@@ -37,6 +37,7 @@
   "notify-mail-bounced-title": "Xat yetkazilmadi",
   "notify-mail-bounced-body": "{to} manziliga yuborilgan xatingiz yetkazilmadi.",
   "notify-broadcast-title": "E'lon",
+  "notify-broadcast-edited": "tahrirlangan",
   "notify-broadcast-preview": "Ko'rib chiqish",
   "notify-emis-reauth-title": "EMIS paroli kerak",
   "notify-emis-reauth-body": "Baholar sinxronlanishda davom etishi uchun EMIS parolingizni qayta kiriting.",
@@ -131,5 +132,7 @@
   "notify-btn-open-library-item": "Materialni ochish",
   "notify-btn-open-library-queue": "Navbatni ochish",
   "notify-btn-open-library-list": "Ro'yxatni ochish",
-  "notify-course-broadcast-invalid": "Xabarda sarlavha (120 belgigacha) va matn (2000 belgigacha) boʻlishi kerak."
+  "notify-course-broadcast-invalid": "Xabarda sarlavha (120 belgigacha) va matn (2000 belgigacha) boʻlishi kerak.",
+  "notify-course-broadcast-not-found": "Xabar topilmadi.",
+  "notify-course-broadcast-forbidden": "Xabarni faqat muallifi yoki kurs administratori tahrirlay oladi."
 }

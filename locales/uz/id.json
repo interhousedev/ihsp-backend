@@ -39,5 +39,7 @@
   "id-mail-notice-telegram-linked": "Hisobingizga {telegram} Telegram akkaunti ulandi.",
   "id-mail-notice-otp-cancelled": "Bir martalik kodlarni tiklash so'rovi bekor qilindi. Agar bu siz bo'lmasangiz, parolni darhol o'zgartiring.",
   "id-mail-notice-link": "Xavfsizlik sozlamalarini ochish",
-  "id-mail-notice-not-you": "Agar bu siz bo'lmasangiz, parolni o'zgartiring va barcha qurilmalardan chiqing."
+  "id-mail-notice-not-you": "Agar bu siz bo'lmasangiz, parolni o'zgartiring va barcha qurilmalardan chiqing.",
+  "id-name-empty": "Ism boʻsh boʻlishi mumkin emas.",
+  "id-password-unchanged": "Yangi parol joriy paroldan farq qilishi kerak."
 }

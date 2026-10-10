@@ -191,6 +191,8 @@ def _mail_bounced(p: dict[str, Any], v: _View) -> Description:
 
 def _broadcast(p: dict[str, Any], v: _View) -> Description:
     title = str(p.get("title") or v.t("notify-broadcast-title"))
+    if p.get("edited_at"):
+        title = f"{title} ({v.t('notify-broadcast-edited')})"
     slug = p.get("course_slug")
     link = f"{v.urls.lms}/course/?slug={quote(str(slug))}" if slug else None
     return Description(title, strip_html(str(p.get("text", ""))), link)

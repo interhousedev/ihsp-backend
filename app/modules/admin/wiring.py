@@ -10,6 +10,7 @@ from app.modules.admin.application.deliver_broadcast import DeliverBroadcast
 from app.modules.admin.application.finish_broadcasts import FinishBroadcasts
 from app.modules.admin.application.get_broadcast import GetBroadcast
 from app.modules.admin.application.list_broadcasts import ListBroadcasts
+from app.modules.admin.application.platform_settings import PlatformSettingsService
 from app.modules.admin.application.preview_broadcast import PreviewBroadcast
 from app.modules.admin.application.resolve_audience import ResolveAudience
 from app.modules.admin.application.send_broadcast import SendBroadcast
@@ -17,6 +18,9 @@ from app.modules.admin.application.start_scheduled_broadcasts import (
     StartScheduledBroadcasts,
 )
 from app.modules.admin.application.update_broadcast import UpdateBroadcast
+from app.modules.admin.infrastructure.repositories.platform_settings_store import (
+    SqlPlatformSettingsStore,
+)
 from app.modules.admin.infrastructure.uow import SqlAdminUnitOfWork
 from app.shared.contracts.academic import ScheduleQueries
 from app.shared.contracts.identity import IdentityDirectory
@@ -38,6 +42,7 @@ class AdminServices:
     start_scheduled_broadcasts: StartScheduledBroadcasts
     finish_broadcasts: FinishBroadcasts
     resolve_audience: ResolveAudience
+    platform_settings: PlatformSettingsService
 
 
 def build(
@@ -83,4 +88,7 @@ def build(
             uow_factory=uow_factory, resolver=resolver, deliver=deliver
         ),
         resolve_audience=resolver,
+        platform_settings=PlatformSettingsService(
+            SqlPlatformSettingsStore(deps.sessionmaker)
+        ),
     )

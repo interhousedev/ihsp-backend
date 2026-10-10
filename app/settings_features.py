@@ -6,6 +6,8 @@ from pydantic import BaseModel
 class FeaturesSettings(BaseModel):
     """Switches for whole parts of the product; every feature is on by default.
 
+    The one exception is `change_password_on_login`, an opt-in behaviour that is off.
+
     A feature that is off loses its HTTP routes (they answer 404) and its scheduled
     jobs. Read them with `app.shared.features.is_enabled`.
     """
@@ -43,3 +45,7 @@ class FeaturesSettings(BaseModel):
     """Search by meaning: passage embeddings (jobs `notebooks.embed_passages`) and the
     hybrid retrieval of the notebook chat. Off: retrieval is lexical only, nothing is
     embedded and no embedding request is made. Needs the pgvector database image."""
+
+    change_password_on_login: bool = False
+    """Opt-in (default off): a user whose password an administrator set must choose a
+    new one right after signing in; the id app shows a change-password step."""

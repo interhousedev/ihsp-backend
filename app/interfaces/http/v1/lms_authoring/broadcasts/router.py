@@ -3,6 +3,9 @@
 from app.interfaces.http.v1.lms_authoring.broadcasts.handlers.list_broadcasts import (
     list_broadcasts,
 )
+from app.interfaces.http.v1.lms_authoring.broadcasts.handlers.patch_broadcast import (
+    patch_broadcast,
+)
 from app.interfaces.http.v1.lms_authoring.broadcasts.handlers.send_broadcast import (
     send_broadcast,
 )
@@ -24,4 +27,10 @@ router.add_api_route(
 )
 router.add_api_route(
     "", list_broadcasts, methods=["GET"], response_model=list[CourseBroadcastResponse]
+)
+router.add_api_route(
+    "/{broadcast_id}",
+    patch_broadcast,
+    methods=["PATCH"],
+    response_model=CourseBroadcastResponse,
 )

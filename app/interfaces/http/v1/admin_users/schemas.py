@@ -29,6 +29,7 @@ class AdminUserResponse(BaseModel):
     emis_status: str | None
     recovery_email: str | None
     mail_suspended: bool
+    password_change_required: bool = False
     created_at: datetime | None
     last_login_at: datetime | None
 
@@ -46,6 +47,7 @@ class AdminUserResponse(BaseModel):
             emis_status=user.emis_status,
             recovery_email=user.recovery_email,
             mail_suspended=user.mail_suspended_at is not None,
+            password_change_required=user.password_change_required,
             created_at=user.created_at,
             last_login_at=user.last_login_at,
         )

@@ -57,6 +57,7 @@ async def test_post_login_returns_the_redirect(api: Api) -> None:
     assert response.json() == {
         "redirect_to": "https://hydra/continue?login_verifier=lc-1",
         "second_factor": None,
+        "password_change": None,
     }
 
 
@@ -560,3 +561,35 @@ async def test_mcp_scope_catalog_is_public(api: Api) -> None:
     assert {"key": "grades", "scopes": ["marks:read", "attendance:read"]} in servers[
         "student"
     ]["presets"]
+
+
+async def test_post_login_password_finishes_a_forced_password_change(
+    api: Api,
+) -> None:
+    """POST /v1/id/login/password: ticket + new password -> redirect."""
+    user = await api.world.add_user(password_change_required=True)
+    api.world.hydra.add_login("lc-1")
+    ticket = "t-1"
+    await api.world.auth.log_in_with_password.tickets.put(
+        f"login-pwchange:{ticket}",
+        {"user_id": str(user.id), "challenge": "lc-1", "remember": False},
+        ttl=60,
+    )
+
+    weak = await api.client.post(
+        "/v1/id/login/password",
+        json={"login_challenge": "lc-1", "ticket": ticket, "new_password": "weak"},
+    )
+    ok = await api.client.post(
+        "/v1/id/login/password",
+        json={
+            "login_challenge": "lc-1",
+            "ticket": ticket,
+            "new_password": "Another-Pass-2",
+        },
+    )
+
+    assert weak.status_code == 422
+    assert ok.status_code == 200
+    assert ok.json()["redirect_to"] == "https://hydra/continue?login_verifier=lc-1"
+    assert api.world.user(user.id).password_change_required is False

@@ -7,12 +7,14 @@ the message is kept in the course's broadcast history.
 """
 
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from uuid import UUID
 
 from app.modules.notify.application.format import esc
 from app.modules.notify.domain.course_broadcast import (
     CourseBroadcast,
+    CourseBroadcastForbiddenError,
+    CourseBroadcastNotFoundError,
     clean_broadcast_text,
 )
 from app.modules.notify.ports.unit_of_work import NotifyUnitOfWork
@@ -67,6 +69,44 @@ class CourseBroadcastService:
             uow.notify(*(_draft(broadcast, course_slug, user_id) for user_id in users))
             await uow.commit()
         return SentCourseBroadcast(broadcast=broadcast, user_ids=users)
+
+    async def update(
+        self,
+        *,
+        course_id: UUID,
+        broadcast_id: UUID,
+        actor_id: UUID,
+        is_course_admin: bool,
+        title: str | None,
+        body: str | None,
+    ) -> CourseBroadcast:
+        """Edit the title and text; only the author or a course admin may.
+
+        The students' notifications are rewritten in place and carry an edit mark;
+        pushes and Telegram messages already delivered stay as they were.
+        """
+        async with self.uow_factory() as uow:
+            current = await uow.course_broadcasts.get(broadcast_id)
+            if current is None or current.course_id != course_id:
+                raise CourseBroadcastNotFoundError(
+                    params={"broadcast_id": str(broadcast_id)}
+                )
+            if current.author_id != actor_id and not is_course_admin:
+                raise CourseBroadcastForbiddenError()
+            clean_title, clean_body = clean_broadcast_text(
+                current.title if title is None else title,
+                current.body if body is None else body,
+            )
+            now = self.clock.now()
+            changed = replace(
+                current, title=clean_title, body=clean_body, updated_at=now
+            )
+            await uow.course_broadcasts.update(changed)
+            await uow.notifications.update_course_broadcast(
+                broadcast_id, title=clean_title, text=esc(clean_body), edited_at=now
+            )
+            await uow.commit()
+        return changed
 
     async def history(self, course_id: UUID) -> list[CourseBroadcast]:
         """Return the newest broadcasts of the course first."""

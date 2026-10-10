@@ -46,6 +46,7 @@ class ChangePassword:
             if errors:
                 raise PasswordPolicyError(params={"errors": errors})
             user.password_hash = await self.hasher.hash(new_password)
+            user.password_change_required = False
             await uow.users.save(user)
             await self.revoker.revoke_sessions_in(
                 uow, user.id, except_id=actor.session_id

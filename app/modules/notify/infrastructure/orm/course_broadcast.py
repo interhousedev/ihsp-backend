@@ -25,3 +25,5 @@ class CourseBroadcast(IdMixin, Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
+    # NULL until the first edit; set (never cleared) by every edit.
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

@@ -56,6 +56,7 @@ class ActivateAccount:
             if purpose == ActivationPurpose.ACTIVATE or not user.has_verified_email:
                 await self._verify_email(uow, user, token, email, email_code)
             user.password_hash = await self.hasher.hash(password)
+            user.password_change_required = False
             user.clear_activation()
             if user.status == UserStatus.PENDING_ACTIVATION:
                 user.status = UserStatus.ACTIVE

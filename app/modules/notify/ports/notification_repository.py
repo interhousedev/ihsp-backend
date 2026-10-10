@@ -47,6 +47,12 @@ class NotificationRepository(Protocol):
         """Set `read_at` on every unread visible row; return how many changed."""
         ...
 
+    async def update_course_broadcast(
+        self, course_broadcast_id: UUID, *, title: str, text: str, edited_at: datetime
+    ) -> int:
+        """Rewrite the title, text and edit mark of the notifications of a broadcast."""
+        ...
+
     async def purge_created_before(self, cutoff: datetime) -> int:
         """Delete notifications created before the cutoff; return how many."""
         ...

@@ -46,6 +46,10 @@ class User(IdMixin, TimestampMixin, Base):
 
     login: Mapped[str | None] = mapped_column(String(100))
     password_hash: Mapped[str | None] = mapped_column(Text)
+    # True while the password was set by an administrator and is not changed yet.
+    password_change_required: Mapped[bool] = mapped_column(
+        Boolean, server_default=text("false")
+    )
     first_name: Mapped[str] = mapped_column(String(255))
     last_name: Mapped[str] = mapped_column(String(255))
     middle_name: Mapped[str | None] = mapped_column(String(255))

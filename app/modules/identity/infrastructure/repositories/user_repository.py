@@ -27,6 +27,7 @@ def _to_entity(row: UserRow) -> User:
         middle_name=row.middle_name,
         login=row.login,
         password_hash=row.password_hash,
+        password_change_required=row.password_change_required,
         roles={Role(item) for item in row.roles or []},
         recovery_email=row.recovery_email,
         recovery_email_verified_at=row.recovery_email_verified_at,
@@ -61,6 +62,7 @@ def _apply(row: UserRow, user: User) -> None:
     row.middle_name = user.middle_name
     row.login = user.login
     row.password_hash = user.password_hash
+    row.password_change_required = user.password_change_required
     row.roles = sorted(role.value for role in user.roles)
     row.recovery_email = user.recovery_email
     row.recovery_email_verified_at = user.recovery_email_verified_at

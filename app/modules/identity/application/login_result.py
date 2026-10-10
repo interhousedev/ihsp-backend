@@ -13,8 +13,16 @@ class SecondFactor:
 
 
 @dataclass(frozen=True, slots=True)
+class PasswordChange:
+    """The password was set by an administrator; the client must choose a new one."""
+
+    ticket: str
+
+
+@dataclass(frozen=True, slots=True)
 class LoginResult:
-    """Either the URL to continue at, or a second factor to complete."""
+    """The URL to continue at, a second factor, or a forced password change."""
 
     redirect_to: str | None = None
     second_factor: SecondFactor | None = None
+    password_change: PasswordChange | None = None

@@ -16,6 +16,7 @@ ADMIN_USER_FIELDS = {
     "emis_status",
     "recovery_email",
     "mail_suspended",
+    "password_change_required",
     "created_at",
     "last_login_at",
 }
@@ -255,3 +256,63 @@ async def test_oauth_client_routes(api: Api) -> None:
     ]
     assert verified.json()["verified"] is True
     assert missing.status_code == 404
+
+
+async def test_patch_user_edits_name_and_email_and_checks_uniqueness(api: Api) -> None:
+    """PATCH /v1/admin/users/{id}: 200 with the new values, 409 for a taken email."""
+    await api.admin()
+    other = await api.world.add_user(recovery_email="taken@example.org")
+    student = await api.world.add_user(recovery_email="mine@example.org")
+
+    changed = await api.client.patch(
+        f"/v1/admin/users/{student.id}",
+        json={"first_name": "Dilnoza", "email": "New@Example.org"},
+    )
+    taken = await api.client.patch(
+        f"/v1/admin/users/{student.id}", json={"email": other.recovery_email}
+    )
+    invalid = await api.client.patch(
+        f"/v1/admin/users/{student.id}", json={"email": "not-an-email"}
+    )
+
+    assert changed.status_code == 200
+    assert changed.json()["first_name"] == "Dilnoza"
+    assert changed.json()["recovery_email"] == "new@example.org"
+    assert taken.status_code == 409
+    assert invalid.status_code == 422
+
+
+async def test_patch_user_is_admin_only(api: Api) -> None:
+    """A teacher cannot edit users."""
+    teacher = await api.world.add_user(roles={Role.TEACHER})
+    api.login_as(teacher)
+
+    response = await api.client.patch(
+        f"/v1/admin/users/{teacher.id}", json={"first_name": "X"}
+    )
+
+    assert response.status_code == 403
+
+
+async def test_set_password_activates_a_pending_teacher(api: Api) -> None:
+    """POST /v1/admin/users/{id}/set-password -> 204; a weak password -> 422."""
+    await api.admin()
+    teacher = await api.world.add_user(
+        roles={Role.TEACHER},
+        status=UserStatus.PENDING_ACTIVATION,
+        password_hash=None,
+        recovery_email=None,
+    )
+
+    weak = await api.client.post(
+        f"/v1/admin/users/{teacher.id}/set-password", json={"password": "weak"}
+    )
+    ok = await api.client.post(
+        f"/v1/admin/users/{teacher.id}/set-password",
+        json={"password": "Strong-Pass-1", "require_change": False},
+    )
+
+    assert weak.status_code == 422
+    assert ok.status_code == 204
+    assert api.world.user(teacher.id).status == UserStatus.ACTIVE
+    assert api.world.user(teacher.id).password_change_required is False

@@ -2,7 +2,11 @@
 
 from dataclasses import dataclass
 
-from app.modules.identity.application.login_result import LoginResult, SecondFactor
+from app.modules.identity.application.login_result import (
+    LoginResult,
+    PasswordChange,
+    SecondFactor,
+)
 from app.modules.identity.application.otp_service import OtpService
 from app.modules.identity.application.password_authenticator import (
     PasswordAuthenticator,
@@ -33,6 +37,7 @@ class LogInWithPassword:
     tickets: TicketStore
     otp: OtpService
     starter: LoginSessionStarter
+    change_password_on_login: bool = False
 
     async def execute(
         self,
@@ -54,6 +59,8 @@ class LogInWithPassword:
                 raise RoleMissingError(params={"client_id": request.client.client_id})
             if user.is_admin and user.otp_enabled:
                 return await self._second_factor(uow, user, request, remember, ctx)
+            if self.change_password_on_login and user.password_change_required:
+                return await self._password_change(user, request, remember)
             redirect = await self.starter.start(
                 uow, request, user, amr=["pwd"], mfa=False, ctx=ctx, remember=remember
             )
@@ -82,3 +89,18 @@ class LogInWithPassword:
             ttl=TICKET_TTL_SECONDS,
         )
         return LoginResult(second_factor=SecondFactor(ticket=ticket, channels=channels))
+
+    async def _password_change(
+        self, user: User, request: LoginRequest, remember: bool
+    ) -> LoginResult:
+        ticket = random_token(16)
+        await self.tickets.put(
+            f"login-pwchange:{ticket}",
+            {
+                "user_id": str(user.id),
+                "challenge": request.challenge,
+                "remember": remember,
+            },
+            ttl=TICKET_TTL_SECONDS,
+        )
+        return LoginResult(password_change=PasswordChange(ticket=ticket))

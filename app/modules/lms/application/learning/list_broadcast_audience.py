@@ -23,6 +23,7 @@ class BroadcastAudience:
     slug: str
     title: str
     user_ids: tuple[UUID, ...]
+    can_manage: bool = False
 
 
 class ListBroadcastAudience:
@@ -45,4 +46,5 @@ class ListBroadcastAudience:
             slug=course.slug,
             title=course.title,
             user_ids=tuple(dict.fromkeys(e.user_id for e in enrollments)),
+            can_manage=access.can(MANAGE_STAFF),
         )

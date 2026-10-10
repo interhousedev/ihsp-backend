@@ -38,11 +38,18 @@ class SecondFactorResponse(BaseModel):
     channels: list[str]
 
 
+class PasswordChangeResponse(BaseModel):
+    """The password was set by an administrator: send a new one with the ticket."""
+
+    ticket: str
+
+
 class LoginResultResponse(BaseModel):
-    """Either a redirect or a second factor."""
+    """A redirect, a second factor, or a forced password change."""
 
     redirect_to: str | None = None
     second_factor: SecondFactorResponse | None = None
+    password_change: PasswordChangeResponse | None = None
 
     @classmethod
     def of(cls, result: LoginResult) -> "LoginResultResponse":
@@ -55,6 +62,11 @@ class LoginResultResponse(BaseModel):
                 if factor
                 else None
             ),
+            password_change=(
+                PasswordChangeResponse(ticket=result.password_change.ticket)
+                if result.password_change
+                else None
+            ),
         )
 
 
@@ -65,6 +77,14 @@ class LoginBody(BaseModel):
     login: str = Field(min_length=1, max_length=100)
     password: str = Field(min_length=1, max_length=1000)
     remember: bool = False
+
+
+class NewPasswordLoginBody(BaseModel):
+    """POST /v1/id/login/password: finish a login with a new password."""
+
+    login_challenge: str = Field(min_length=1)
+    ticket: str = Field(min_length=1, max_length=200)
+    new_password: str = Field(min_length=1, max_length=1000)
 
 
 class OtpRequestBody(BaseModel):

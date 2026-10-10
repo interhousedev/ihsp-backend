@@ -11,5 +11,6 @@
   "common-no": "Нет",
   "common-cancel": "Отмена",
   "common-back": "Назад",
-  "common-save": "Сохранить"
+  "common-save": "Сохранить",
+  "admin-platform-settings-invalid": "Недопустимое значение настройки платформы."
 }

@@ -9,6 +9,9 @@ from app.interfaces.http.v1.id.login.handlers.post_consent_otp import (
 )
 from app.interfaces.http.v1.id.login.handlers.post_login import post_login
 from app.interfaces.http.v1.id.login.handlers.post_login_otp import post_login_otp
+from app.interfaces.http.v1.id.login.handlers.post_login_password import (
+    post_login_password,
+)
 from app.interfaces.http.v1.id.login.handlers.request_login_otp import (
     request_login_otp,
 )
@@ -39,6 +42,12 @@ router.add_api_route(
 )
 router.add_api_route(
     "/login/otp", post_login_otp, methods=["POST"], response_model=LoginResultResponse
+)
+router.add_api_route(
+    "/login/password",
+    post_login_password,
+    methods=["POST"],
+    response_model=LoginResultResponse,
 )
 router.add_api_route(
     "/consent", get_consent, methods=["GET"], response_model=ConsentInfoResponse

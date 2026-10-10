@@ -183,6 +183,22 @@ class SqlNotificationRepository:
         result = cast(CursorResult[Any], await self.session.execute(stmt))
         return int(result.rowcount)
 
+    async def update_course_broadcast(
+        self, course_broadcast_id: UUID, *, title: str, text: str, edited_at: datetime
+    ) -> int:
+        """Merge the new texts into the payload of the broadcast's notifications."""
+        payload = self.table.c.payload
+        patch = sa.func.jsonb_build_object(
+            "title", title, "text", text, "edited_at", edited_at.isoformat()
+        )
+        stmt = (
+            sa.update(self.table)
+            .where(payload["course_broadcast_id"].astext == str(course_broadcast_id))
+            .values(payload=payload.op("||")(patch))
+        )
+        result = cast(CursorResult[Any], await self.session.execute(stmt))
+        return int(result.rowcount)
+
     async def purge_created_before(self, cutoff: datetime) -> int:
         """Delete rows created before the cutoff."""
         stmt = sa.delete(self.table).where(self.table.c.created_at < cutoff)

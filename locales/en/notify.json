@@ -37,6 +37,7 @@
   "notify-mail-bounced-title": "Email not delivered",
   "notify-mail-bounced-body": "Your email to {to} could not be delivered.",
   "notify-broadcast-title": "Announcement",
+  "notify-broadcast-edited": "edited",
   "notify-broadcast-preview": "Preview",
   "notify-emis-reauth-title": "EMIS password needed",
   "notify-emis-reauth-body": "Enter your EMIS password again so that marks keep syncing.",
@@ -131,5 +132,7 @@
   "notify-btn-open-library-item": "Open item",
   "notify-btn-open-library-queue": "Open review queue",
   "notify-btn-open-library-list": "Open reading list",
-  "notify-course-broadcast-invalid": "The broadcast needs a title (up to 120 characters) and a text (up to 2000 characters)."
+  "notify-course-broadcast-invalid": "The broadcast needs a title (up to 120 characters) and a text (up to 2000 characters).",
+  "notify-course-broadcast-not-found": "Broadcast not found.",
+  "notify-course-broadcast-forbidden": "Only the author or a course admin can edit a broadcast."
 }

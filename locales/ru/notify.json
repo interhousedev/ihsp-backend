@@ -37,6 +37,7 @@
   "notify-mail-bounced-title": "Письмо не доставлено",
   "notify-mail-bounced-body": "Ваше письмо на {to} не удалось доставить.",
   "notify-broadcast-title": "Объявление",
+  "notify-broadcast-edited": "изменено",
   "notify-broadcast-preview": "Предпросмотр",
   "notify-emis-reauth-title": "Нужен пароль EMIS",
   "notify-emis-reauth-body": "Введите пароль EMIS ещё раз, чтобы оценки продолжили синхронизироваться.",
@@ -131,5 +132,7 @@
   "notify-btn-open-library-item": "Открыть материал",
   "notify-btn-open-library-queue": "Открыть очередь проверки",
   "notify-btn-open-library-list": "Открыть список чтения",
-  "notify-course-broadcast-invalid": "В рассылке нужны заголовок (до 120 символов) и текст (до 2000 символов)."
+  "notify-course-broadcast-invalid": "В рассылке нужны заголовок (до 120 символов) и текст (до 2000 символов).",
+  "notify-course-broadcast-not-found": "Рассылка не найдена.",
+  "notify-course-broadcast-forbidden": "Рассылку может изменить только её автор или администратор курса."
 }

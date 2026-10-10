@@ -5,7 +5,13 @@ from uuid import UUID
 
 from app.modules.notify.application.course_broadcast import CourseBroadcastService
 from app.modules.notify.application.describe import describe
-from app.modules.notify.domain.course_broadcast import CourseBroadcastInvalidError
+from app.modules.notify.domain.course_broadcast import (
+    CourseBroadcast,
+    CourseBroadcastForbiddenError,
+    CourseBroadcastInvalidError,
+    CourseBroadcastNotFoundError,
+)
+from app.modules.notify.domain.notification import Notification
 from app.settings import UrlsSettings
 from app.shared.i18n.core import I18nCore
 from app.shared.ids import new_id
@@ -134,3 +140,148 @@ async def test_empty_or_too_long_texts_are_refused(
             recipient_ids=[new_id()],
         )
     assert world.outbox == []
+
+
+def _stored(world: _World, broadcast_id: UUID, course: UUID, payload: dict) -> UUID:
+    """Keep the notification a student got for the broadcast."""
+    notification = Notification(
+        id=new_id(),
+        user_id=new_id(),
+        type=NotificationType.BROADCAST,
+        payload={**payload, "course_id": str(course)},
+        dedupe_key=f"course_broadcast:{broadcast_id}:x",
+        scheduled_at=NOW,
+        created_at=NOW,
+    )
+    world.repository.add(notification)
+    return notification.id
+
+
+async def _sent(world: _World, author: UUID, course: UUID) -> CourseBroadcast:
+    sent = await world.service.send(
+        course_id=course,
+        course_slug="algebra",
+        author_id=author,
+        title="Old",
+        body="Old text",
+        recipient_ids=[new_id()],
+    )
+    return sent.broadcast
+
+
+async def test_the_author_edits_and_the_notification_text_follows(
+    world: _World, i18n: I18nCore
+) -> None:
+    """Title and text change, updated_at is set, the student's row shows the mark."""
+    course, author = new_id(), new_id()
+    broadcast = await _sent(world, author, course)
+    row = _stored(
+        world,
+        broadcast.id,
+        course,
+        {"course_broadcast_id": str(broadcast.id), "title": "Old", "text": "Old text"},
+    )
+    world.clock.advance(minutes=5)
+
+    changed = await world.service.update(
+        course_id=course,
+        broadcast_id=broadcast.id,
+        actor_id=author,
+        is_course_admin=False,
+        title=" New ",
+        body="Fix <b>",
+    )
+
+    assert changed.title == "New"
+    assert changed.updated_at == world.clock.now()
+    assert changed.edited
+    (stored,) = await world.service.history(course)
+    assert (stored.title, stored.body) == ("New", "Fix <b>")
+    payload = world.repository.get(row).payload
+    assert payload["title"] == "New"
+    assert payload["text"] == "Fix &lt;b&gt;"
+    description = describe(
+        NotificationType.BROADCAST,
+        payload,
+        "en",
+        i18n=i18n,
+        urls=UrlsSettings(lms="https://lms.test"),
+    )
+    assert description.title == "New (edited)"
+
+
+async def test_a_new_broadcast_is_not_marked_edited(world: _World) -> None:
+    """updated_at stays empty until the first edit."""
+    broadcast = await _sent(world, new_id(), new_id())
+
+    assert broadcast.updated_at is None
+    assert not broadcast.edited
+
+
+async def test_only_one_field_can_change(world: _World) -> None:
+    """A missing title or text keeps the stored one."""
+    course, author = new_id(), new_id()
+    broadcast = await _sent(world, author, course)
+
+    changed = await world.service.update(
+        course_id=course,
+        broadcast_id=broadcast.id,
+        actor_id=author,
+        is_course_admin=False,
+        title=None,
+        body="Only text",
+    )
+
+    assert (changed.title, changed.body) == ("Old", "Only text")
+
+
+async def test_a_course_admin_may_edit_anothers_broadcast_but_a_stranger_not(
+    world: _World,
+) -> None:
+    """Author or course admin; any other staff member is refused."""
+    course = new_id()
+    broadcast = await _sent(world, new_id(), course)
+
+    with pytest.raises(CourseBroadcastForbiddenError):
+        await world.service.update(
+            course_id=course,
+            broadcast_id=broadcast.id,
+            actor_id=new_id(),
+            is_course_admin=False,
+            title="x",
+            body=None,
+        )
+    changed = await world.service.update(
+        course_id=course,
+        broadcast_id=broadcast.id,
+        actor_id=new_id(),
+        is_course_admin=True,
+        title="By admin",
+        body=None,
+    )
+    assert changed.title == "By admin"
+
+
+async def test_editing_validates_and_checks_the_course(world: _World) -> None:
+    """Another course's broadcast is not found; an empty title is refused."""
+    course, author = new_id(), new_id()
+    broadcast = await _sent(world, author, course)
+
+    with pytest.raises(CourseBroadcastNotFoundError):
+        await world.service.update(
+            course_id=new_id(),
+            broadcast_id=broadcast.id,
+            actor_id=author,
+            is_course_admin=True,
+            title="x",
+            body=None,
+        )
+    with pytest.raises(CourseBroadcastInvalidError):
+        await world.service.update(
+            course_id=course,
+            broadcast_id=broadcast.id,
+            actor_id=author,
+            is_course_admin=False,
+            title="  ",
+            body=None,
+        )

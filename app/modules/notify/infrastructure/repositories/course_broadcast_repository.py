@@ -18,6 +18,7 @@ def _to_entity(row: RowMapping) -> CourseBroadcast:
         title=row["title"],
         body=row["body"],
         created_at=row["created_at"],
+        updated_at=row["updated_at"],
     )
 
 
@@ -39,6 +40,31 @@ class SqlCourseBroadcastRepository:
                 title=broadcast.title,
                 body=broadcast.body,
                 created_at=broadcast.created_at,
+            )
+        )
+
+    async def get(self, broadcast_id: UUID) -> CourseBroadcast | None:
+        """Return the broadcast, or None."""
+        row = (
+            (
+                await self.session.execute(
+                    sa.select(self.table).where(self.table.c.id == broadcast_id)
+                )
+            )
+            .mappings()
+            .first()
+        )
+        return _to_entity(row) if row else None
+
+    async def update(self, broadcast: CourseBroadcast) -> None:
+        """Store the new title, text and edit time."""
+        await self.session.execute(
+            sa.update(self.table)
+            .where(self.table.c.id == broadcast.id)
+            .values(
+                title=broadcast.title,
+                body=broadcast.body,
+                updated_at=broadcast.updated_at,
             )
         )
 

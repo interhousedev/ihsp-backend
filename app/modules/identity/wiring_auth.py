@@ -16,6 +16,7 @@ from app.modules.identity.application.activation_send_email_code import (
 )
 from app.modules.identity.application.admin_reset_otp import AdminResetOtp
 from app.modules.identity.application.admin_reset_password import AdminResetPassword
+from app.modules.identity.application.admin_set_password import AdminSetPassword
 from app.modules.identity.application.apply_otp_resets import ApplyOtpResets
 from app.modules.identity.application.auto_accept_consent import AutoAcceptConsent
 from app.modules.identity.application.block_user import BlockUser
@@ -56,6 +57,9 @@ from app.modules.identity.application.list_telegram_accounts import (
     ListTelegramAccounts,
 )
 from app.modules.identity.application.list_users import ListUsers
+from app.modules.identity.application.log_in_with_new_password import (
+    LogInWithNewPassword,
+)
 from app.modules.identity.application.log_in_with_otp import LogInWithOtp
 from app.modules.identity.application.log_in_with_password import LogInWithPassword
 from app.modules.identity.application.log_out_client import LogOutClient
@@ -102,6 +106,7 @@ from app.modules.identity.application.update_teacher import UpdateTeacher
 from app.modules.identity.application.update_telegram_account import (
     UpdateTelegramAccount,
 )
+from app.modules.identity.application.update_user import UpdateUser
 from app.modules.identity.application.verify_oauth_client import VerifyOAuthClient
 from app.modules.identity.infrastructure.access_token_verifier import (
     HydraAccessTokenVerifier,
@@ -132,6 +137,7 @@ from app.modules.identity.ports.otp_sender import OtpSender
 from app.modules.identity.ports.password_hasher import PasswordHasher
 from app.modules.identity.ports.unit_of_work import UowFactory
 from app.shared.contracts.notify import TelegramSender
+from app.shared.features import Feature, is_enabled
 from app.shared.wiring import ModuleDeps
 
 
@@ -155,6 +161,7 @@ class AuthServices:
     # - - - Login app - - -
     get_login_info: GetLoginInfo
     log_in_with_password: LogInWithPassword
+    log_in_with_new_password: LogInWithNewPassword
     request_login_otp: RequestLoginOtp
     log_in_with_otp: LogInWithOtp
     get_consent_info: GetConsentInfo
@@ -220,6 +227,8 @@ class AuthServices:
     manage_course_creators: ManageCourseCreators
     revoke_user_sessions: RevokeUserSessions
     admin_reset_password: AdminResetPassword
+    admin_set_password: AdminSetPassword
+    update_user: UpdateUser
     admin_reset_otp: AdminResetOtp
     suspend_mail: SuspendMail
     resume_mail: ResumeMail
@@ -357,6 +366,16 @@ def build_auth(
             rate_limiter=limiter,
             tickets=tickets,
             otp=otp,
+            starter=starter,
+            change_password_on_login=is_enabled(
+                settings, Feature.CHANGE_PASSWORD_ON_LOGIN
+            ),
+        ),
+        log_in_with_new_password=LogInWithNewPassword(
+            uow_factory=uow_factory,
+            hydra=hydra,
+            hasher=hasher,
+            tickets=tickets,
             starter=starter,
         ),
         request_login_otp=request_login_otp,
@@ -528,6 +547,10 @@ def build_auth(
             uow_factory=uow_factory, revoker=revoker
         ),
         admin_reset_password=AdminResetPassword(uow_factory=uow_factory, links=links),
+        admin_set_password=AdminSetPassword(
+            uow_factory=uow_factory, hasher=hasher, revoker=revoker
+        ),
+        update_user=UpdateUser(uow_factory=uow_factory, links=links, clock=clock),
         admin_reset_otp=AdminResetOtp(uow_factory=uow_factory),
         suspend_mail=SuspendMail(uow_factory=uow_factory, clock=clock),
         resume_mail=ResumeMail(uow_factory=uow_factory),

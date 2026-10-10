@@ -11,5 +11,6 @@
   "common-no": "Yo'q",
   "common-cancel": "Bekor qilish",
   "common-back": "Orqaga",
-  "common-save": "Saqlash"
+  "common-save": "Saqlash",
+  "admin-platform-settings-invalid": "Platforma sozlamasining qiymati notoʻgʻri."
 }

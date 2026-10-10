@@ -4,7 +4,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from app.shared.base_error import ValidationFailedError
+from app.shared.base_error import (
+    ForbiddenError,
+    NotFoundError,
+    ValidationFailedError,
+)
 
 TITLE_MAX_LENGTH = 120
 BODY_MAX_LENGTH = 2000
@@ -17,6 +21,20 @@ class CourseBroadcastInvalidError(ValidationFailedError):
     message_key = "notify-course-broadcast-invalid"
 
 
+class CourseBroadcastNotFoundError(NotFoundError):
+    """The course has no such broadcast."""
+
+    code = "notify/course-broadcast-not-found"
+    message_key = "notify-course-broadcast-not-found"
+
+
+class CourseBroadcastForbiddenError(ForbiddenError):
+    """Only the author or a course admin may edit a broadcast."""
+
+    code = "notify/course-broadcast-forbidden"
+    message_key = "notify-course-broadcast-forbidden"
+
+
 @dataclass(frozen=True, slots=True)
 class CourseBroadcast:
     """One sent course broadcast (a row of the history)."""
@@ -27,6 +45,12 @@ class CourseBroadcast:
     title: str
     body: str
     created_at: datetime
+    updated_at: datetime | None = None
+
+    @property
+    def edited(self) -> bool:
+        """True once the author or a course admin changed the text."""
+        return self.updated_at is not None
 
 
 def clean_broadcast_text(title: str, body: str) -> tuple[str, str]:

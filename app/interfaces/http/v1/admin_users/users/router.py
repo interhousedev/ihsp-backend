@@ -6,6 +6,7 @@ from app.interfaces.http.v1.admin_users.schemas import (
 )
 from app.interfaces.http.v1.admin_users.users.handlers.get_user import get_user
 from app.interfaces.http.v1.admin_users.users.handlers.get_users import get_users
+from app.interfaces.http.v1.admin_users.users.handlers.patch_user import patch_user
 from app.interfaces.http.v1.admin_users.users.handlers.post_block import post_block
 from app.interfaces.http.v1.admin_users.users.handlers.post_mail_resume import (
     post_mail_resume,
@@ -23,6 +24,9 @@ from app.interfaces.http.v1.admin_users.users.handlers.post_revoke_sessions impo
     post_revoke_sessions,
 )
 from app.interfaces.http.v1.admin_users.users.handlers.post_roles import post_roles
+from app.interfaces.http.v1.admin_users.users.handlers.post_set_password import (
+    post_set_password,
+)
 from app.interfaces.http.v1.admin_users.users.handlers.post_unblock import (
     post_unblock,
 )
@@ -38,6 +42,16 @@ router.add_api_route(
 )
 router.add_api_route(
     "/{id}", get_user, methods=["GET"], response_model=AdminUserDetailResponse
+)
+router.add_api_route(
+    "/{id}", patch_user, methods=["PATCH"], response_model=AdminUserResponse
+)
+router.add_api_route(
+    "/{id}/set-password",
+    post_set_password,
+    methods=["POST"],
+    status_code=204,
+    response_class=Response,
 )
 router.add_api_route(
     "/{id}/block", post_block, methods=["POST"], response_model=AdminUserResponse

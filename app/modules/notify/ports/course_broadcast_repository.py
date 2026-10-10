@@ -13,6 +13,14 @@ class CourseBroadcastRepository(Protocol):
         """Store one sent broadcast."""
         ...
 
+    async def get(self, broadcast_id: UUID) -> CourseBroadcast | None:
+        """Return one broadcast, or None."""
+        ...
+
+    async def update(self, broadcast: CourseBroadcast) -> None:
+        """Store the changed title, text and ``updated_at``."""
+        ...
+
     async def list_for_course(
         self, course_id: UUID, *, limit: int
     ) -> list[CourseBroadcast]:

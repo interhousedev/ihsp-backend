@@ -11,5 +11,6 @@
   "common-no": "No",
   "common-cancel": "Cancel",
   "common-back": "Back",
-  "common-save": "Save"
+  "common-save": "Save",
+  "admin-platform-settings-invalid": "Invalid platform setting value."
 }

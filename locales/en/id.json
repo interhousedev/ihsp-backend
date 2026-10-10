@@ -39,5 +39,7 @@
   "id-mail-notice-telegram-linked": "Telegram account {telegram} was linked to your account.",
   "id-mail-notice-otp-cancelled": "A request to reset one-time codes was cancelled. If it was not you, change your password now.",
   "id-mail-notice-link": "Open security settings",
-  "id-mail-notice-not-you": "If this was not you, change your password and log out everywhere."
+  "id-mail-notice-not-you": "If this was not you, change your password and log out everywhere.",
+  "id-name-empty": "The name cannot be empty.",
+  "id-password-unchanged": "The new password must differ from the current one."
 }

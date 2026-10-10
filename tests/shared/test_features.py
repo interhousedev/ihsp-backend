@@ -28,14 +28,27 @@ def test_every_feature_has_a_flag_and_every_flag_a_feature() -> None:
     assert {feature.value for feature in Feature} == set(FeaturesSettings.model_fields)
 
 
-def test_every_feature_is_on_by_default() -> None:
-    """Nothing is switched off until someone says so."""
+OPT_IN = {Feature.CHANGE_PASSWORD_ON_LOGIN}
+
+
+def test_every_feature_is_on_by_default_except_the_opt_in_ones() -> None:
+    """Nothing is switched off until someone says so; opt-in behaviour is off."""
     settings = Settings()
 
-    assert all(is_enabled(settings, feature) for feature in Feature)
+    assert all(is_enabled(settings, f) for f in Feature if f not in OPT_IN)
+    assert not any(is_enabled(settings, f) for f in OPT_IN)
 
 
-@pytest.mark.parametrize("feature", list(Feature))
+def test_the_environment_switches_the_opt_in_feature_on(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """IHSP_FEATURES__CHANGE_PASSWORD_ON_LOGIN=true turns the forced change on."""
+    monkeypatch.setenv("IHSP_FEATURES__CHANGE_PASSWORD_ON_LOGIN", "true")
+
+    assert is_enabled(Settings(), Feature.CHANGE_PASSWORD_ON_LOGIN)
+
+
+@pytest.mark.parametrize("feature", [f for f in Feature if f not in OPT_IN])
 def test_the_environment_switches_one_feature(
     feature: Feature, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -45,7 +58,8 @@ def test_the_environment_switches_one_feature(
     settings = Settings()
 
     assert not is_enabled(settings, feature)
-    assert [f for f in Feature if not is_enabled(settings, f)] == [feature]
+    off = {f for f in Feature if not is_enabled(settings, f)}
+    assert off == {feature} | OPT_IN
 
 
 def test_the_older_notebooks_switch_still_turns_notebooks_off() -> None:
