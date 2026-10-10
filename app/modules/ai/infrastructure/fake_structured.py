@@ -481,12 +481,30 @@ _SOURCE_KEY = re.compile(r'<source key="(s\d+)" title="([^"]*)"')
 LABEL_EMOJIS = ("📘", "🧪", "🌍", "🧮")
 
 
-def build_labels(passages: Sequence[FakePassage], text: str) -> Document:
-    """Up to 3 topic labels over the ``<source key=... title=...>`` tags."""
+_TOPIC_WORD = {"ru": "Тема", "uz": "Mavzu", "en": "Topic"}
+
+
+def label_language(messages: Sequence[dict[str, Any]]) -> str:
+    """The language the label prompt asks for (``Write the label names in Russian``)."""
+    for message in messages:
+        content = message.get("content")
+        if message.get("role") == "system" and isinstance(content, str):
+            if "label names in Russian" in content:
+                return "ru"
+            if "label names in Uzbek" in content:
+                return "uz"
+    return "en"
+
+
+def build_labels(
+    passages: Sequence[FakePassage], text: str, language: str = "en"
+) -> Document:
+    """Up to 3 topic labels over the ``<source key=... title=...>`` tags, named in ``language``."""
+    word = _TOPIC_WORD.get(language, "Topic")
     sources = _SOURCE_KEY.findall(text)
     count = max(1, min(3, len(sources)))
     labels = [
-        {"key": f"l{n + 1}", "name": f"Topic {n + 1}", "emoji": LABEL_EMOJIS[n]}
+        {"key": f"l{n + 1}", "name": f"{word} {n + 1}", "emoji": LABEL_EMOJIS[n]}
         for n in range(count)
     ]
     assignments = [
@@ -522,4 +540,10 @@ def build_document(schema_name: str, messages: Sequence[dict[str, Any]]) -> Docu
     builder = BUILDERS.get(schema_name)
     if builder is None:
         raise AiInvalidOutputError(support_details=f"unknown schema {schema_name}")
+    if builder is build_labels:
+        return build_labels(
+            document_passages(messages),
+            last_user_text(messages),
+            label_language(messages),
+        )
     return builder(document_passages(messages), last_user_text(messages))

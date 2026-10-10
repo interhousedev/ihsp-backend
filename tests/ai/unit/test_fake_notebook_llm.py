@@ -556,3 +556,19 @@ async def test_infographic_has_six_blocks_of_mixed_types() -> None:
     comparison = next(b for b in blocks if b["type"] == "comparison")
     assert len(comparison["columns"]) == 2
     assert all(c["title"] and c["points"] for c in comparison["columns"])
+
+
+@pytest.mark.parametrize(
+    ("language", "word"), [("Russian", "Тема"), ("Uzbek (Latin script)", "Mavzu"), ("English", "Topic")]
+)
+def test_fake_label_names_follow_the_prompt_language(language: str, word: str) -> None:
+    """The auto labels are named in the language the label prompt asks for."""
+    from app.modules.ai.infrastructure.fake_structured import build_document
+
+    system = f"Sort sources into topic labels. Write the label names in {language}."
+    user = '<sources><source key="s1" title="A"/><source key="s2" title="B"/></sources>'
+    document = build_document(
+        "nb_labels",
+        [{"role": "system", "content": system}, {"role": "user", "content": user}],
+    )
+    assert [label["name"] for label in document["labels"]] == [f"{word} 1", f"{word} 2"]
