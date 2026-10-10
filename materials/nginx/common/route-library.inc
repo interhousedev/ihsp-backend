@@ -1,4 +1,4 @@
-# library.<domain>: the static library app from the web container (it routes by Host, so the Host
+# lib.<domain>: the static library app from the web container (it routes by Host, so the Host
 # header goes through unchanged), except the public server-rendered pages. The api process serves
 # those like the room pages, from the same host:
 #   /b/<slug>      a book or a material (HTML with Open Graph and JSON-LD)

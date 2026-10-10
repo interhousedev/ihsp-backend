@@ -48,7 +48,7 @@ def build_student_server(deps: McpDeps) -> FastMCP:
     kit = make_toolkit(
         deps,
         "student",
-        title="IHSP Students",
+        title="IHT Students",
         instructions_key="mcp-instructions-student",
     )
     for module in TOOL_MODULES:

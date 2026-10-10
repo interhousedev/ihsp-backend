@@ -43,13 +43,13 @@ SCOPE = "openid offline_access"
 WEB_APPS = ("id", "sp", "staff", "admin", "lms", "app", "library")
 # Shown on the login form ("to continue to ..."), so they read like product names.
 CLIENT_NAMES = {
-    "id": "IHSP Account",
-    "sp": "IHSP Student Portal",
-    "staff": "IHSP Staff Portal",
-    "admin": "IHSP Administration",
-    "lms": "IHSP Learning",
-    "app": "IHSP App",
-    "library": "IHSP Library",
+    "id": "IHT ID",
+    "sp": "my.iht",
+    "staff": "IHT Учителям",
+    "admin": "admin.iht",
+    "lms": "lms.iht",
+    "app": "IHT App",
+    "library": "library.iht",
 }
 MINIAPP = "miniapp"
 DEV_MINIAPP_SECRET = "dev-miniapp-secret"  # default of identity's own setting
@@ -71,7 +71,7 @@ def web_client(app: str, base_url: str) -> dict[str, Any]:
     base = base_url.rstrip("/")
     client: dict[str, Any] = {
         "client_id": app,
-        "client_name": CLIENT_NAMES.get(app, f"IHSP {app}"),
+        "client_name": CLIENT_NAMES.get(app, f"IHT {app}"),
         "token_endpoint_auth_method": "none",
         "grant_types": ["authorization_code", "refresh_token"],
         "response_types": ["code"],
@@ -109,7 +109,7 @@ def miniapp_client(secret: str | None) -> dict[str, Any]:
     """The confidential client of the JWT-bearer grant (secret optional on update)."""
     client: dict[str, Any] = {
         "client_id": MINIAPP,
-        "client_name": "IHSP Telegram mini app",
+        "client_name": "IHT Telegram mini app",
         "token_endpoint_auth_method": "client_secret_basic",
         "grant_types": [JWT_BEARER_GRANT],
         "response_types": [],

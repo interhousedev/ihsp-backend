@@ -83,16 +83,16 @@ x-backend-env: &backend-env
   IHSP_FEATURES__MAIL: ${IHSP_FEATURES__MAIL:-true}
   IHSP_FEATURES__PUSH: ${IHSP_FEATURES__PUSH:-true}
   IHSP_FEATURES__EMIS_SYNC: ${IHSP_FEATURES__EMIS_SYNC:-true}
-  IHSP_OPENROUTER__APP_URL: https://sp.${DOMAIN}
+  IHSP_OPENROUTER__APP_URL: https://my.${DOMAIN}
   IHSP_SMTP_OUT__MAIL_DOMAIN: mail.${DOMAIN}
   IHSP_SMTP_OUT__SYSTEM_FROM: no-reply@${DOMAIN}
   IHSP_URLS__ID: https://id.${DOMAIN}
-  IHSP_URLS__SP: https://sp.${DOMAIN}
+  IHSP_URLS__SP: https://my.${DOMAIN}
   IHSP_URLS__APP: https://app.${DOMAIN}
   IHSP_URLS__STAFF: https://staff.${DOMAIN}
   IHSP_URLS__ADMIN: https://admin.${DOMAIN}
   IHSP_URLS__LMS: https://lms.${DOMAIN}
-  IHSP_URLS__LIBRARY: https://library.${DOMAIN}
+  IHSP_URLS__LIBRARY: https://lib.${DOMAIN}
   IHSP_URLS__SHARE: https://s.${DOMAIN}
   IHSP_URLS__SHORT_LINKS: https://s.${DOMAIN}
   IHSP_URLS__ROOMS: https://${DOMAIN}/r
@@ -125,7 +125,7 @@ x-openrouter-env: &openrouter-env
   IHSP_OPENROUTER__API_KEY: ${IHSP_OPENROUTER__API_KEY:?}
 
 # The same S3 settings feed the bucket bootstrap job.
-x-cors-origins: &cors-origins https://id.${DOMAIN},https://sp.${DOMAIN},https://app.${DOMAIN},https://staff.${DOMAIN},https://admin.${DOMAIN},https://lms.${DOMAIN},https://library.${DOMAIN}
+x-cors-origins: &cors-origins https://id.${DOMAIN},https://my.${DOMAIN},https://app.${DOMAIN},https://staff.${DOMAIN},https://admin.${DOMAIN},https://lms.${DOMAIN},https://lib.${DOMAIN}
 
 services:
   # ---------------------------------------------------------------- data stores
@@ -425,12 +425,12 @@ services:
     environment:
       APP_ENV: prod
       APP_HOST_ID: id.${DOMAIN}
-      APP_HOST_SP: sp.${DOMAIN}
+      APP_HOST_SP: my.${DOMAIN}
       APP_HOST_APP: app.${DOMAIN}
       APP_HOST_STAFF: staff.${DOMAIN}
       APP_HOST_ADMIN: admin.${DOMAIN}
       APP_HOST_LMS: lms.${DOMAIN}
-      APP_HOST_LIBRARY: library.${DOMAIN}
+      APP_HOST_LIBRARY: lib.${DOMAIN}
       PWA_APPS: "${PWA_APPS:-lms library staff admin}"
       APP_HOST_SHARE: s.${DOMAIN}
       API_HOST: api.${DOMAIN}
@@ -448,12 +448,12 @@ services:
       IHSP_WEB_API_URL: https://api.${DOMAIN}
       IHSP_WEB_ID_URL: https://id.${DOMAIN}
       IHSP_WEB_HYDRA_URL: https://id.${DOMAIN}
-      IHSP_WEB_SP_URL: https://sp.${DOMAIN}
+      IHSP_WEB_SP_URL: https://my.${DOMAIN}
       IHSP_WEB_APP_URL: https://app.${DOMAIN}
       IHSP_WEB_STAFF_URL: https://staff.${DOMAIN}
       IHSP_WEB_ADMIN_URL: https://admin.${DOMAIN}
       IHSP_WEB_LMS_URL: https://lms.${DOMAIN}
-      IHSP_WEB_LIBRARY_URL: https://library.${DOMAIN}
+      IHSP_WEB_LIBRARY_URL: https://lib.${DOMAIN}
       IHSP_WEB_SHARE_URL: https://s.${DOMAIN}/ai
       IHSP_WEB_SHORT_LINKS_URL: https://s.${DOMAIN}
       IHSP_WEB_ROOMS_URL: https://${DOMAIN}
@@ -480,12 +480,12 @@ services:
       NGINX_ENVSUBST_FILTER: ^(HOST|CERT)_
       CERT_NAME: ${DOMAIN:?}
       HOST_ID: id.${DOMAIN}
-      HOST_SP: sp.${DOMAIN}
+      HOST_SP: my.${DOMAIN}
       HOST_APP: app.${DOMAIN}
       HOST_STAFF: staff.${DOMAIN}
       HOST_ADMIN: admin.${DOMAIN}
       HOST_LMS: lms.${DOMAIN}
-      HOST_LIBRARY: library.${DOMAIN}
+      HOST_LIBRARY: lib.${DOMAIN}
       HOST_S: s.${DOMAIN}
       HOST_API: api.${DOMAIN}
       HOST_MCP: mcp.${DOMAIN}

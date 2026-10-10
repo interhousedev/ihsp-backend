@@ -293,10 +293,10 @@ class OpenRouterSettings(BaseModel):
     notebook_data_collection: Literal["deny", "allow"] | None = None
     """Deprecated: use `AI__TASKS__<TASK>__DATA_COLLECTION` (notebook tasks)."""
 
-    app_url: str = "https://sp.ihsu.uz"
+    app_url: str = "https://my.ihsu.uz"
     """Sent to OpenRouter as the referring site (HTTP-Referer)."""
 
-    app_title: str = "IHSP"
+    app_title: str = "IHT"
     """Sent to OpenRouter as the application name (X-Title)."""
 
     timeout_seconds: int = 90
@@ -373,7 +373,7 @@ class FilesSettings(BaseModel):
 
 
 class LibrarySettings(BaseModel):
-    """The library (`library.ihsu.uz`): sizes, quotas, limits and UniLibrary.
+    """The library (`lib.ihsu.uz`): sizes, quotas, limits and UniLibrary.
 
     See docs/reference/study-library.md, section 8.2. UniLibrary is a switched-off
     base: it stays off until Administration enables it.
@@ -480,7 +480,7 @@ class LibrarySettings(BaseModel):
     unilibrary_description_max: int = 600
     """Characters of a UniLibrary description kept in a card."""
 
-    public_base_url: str = "https://library.ihsu.uz"
+    public_base_url: str = "https://lib.ihsu.uz"
     """Public origin of the library; links in notifications and pages start with it."""
 
     taxonomy_cache_ttl: int = 604_800
@@ -663,7 +663,7 @@ class UrlsSettings(BaseModel):
     """Origin of the installable app (PWA), a second build of the student app."""
 
     library: str = "http://localhost:3008"
-    """Origin of the library app (prod https://library.ihsu.uz)."""
+    """Origin of the library app (prod https://lib.ihsu.uz)."""
 
     short_links: str = "http://localhost:8000/s"  # prod https://s.ihsu.uz
     """Base of short links (production: its own host)."""
@@ -848,7 +848,7 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     """Log level of every process (DEBUG, INFO, WARNING or ERROR)."""
 
-    public_app_name: str = "IHSP"
+    public_app_name: str = "IHT"
     """Product name shown in emails, Telegram messages and the apps."""
 
     database: DatabaseSettings = Field(default_factory=DatabaseSettings)

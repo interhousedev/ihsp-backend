@@ -83,7 +83,7 @@ async def ensure_admin(container: Container) -> UUID:
         container,
         login=ADMIN_LOGIN,
         first_name="Admin",
-        last_name="IHSP",
+        last_name="IHT",
         password=ADMIN_PASSWORD,
         roles={Role.ADMIN, Role.LMS_ADMIN},
     )

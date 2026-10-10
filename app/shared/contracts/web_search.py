@@ -155,7 +155,7 @@ class PlatformPassage:
     title: str
     url: str
     text: str
-    site: str = "IHSP"
+    site: str = "IHT"
     ref_kind: Literal["library_item", "notebook_source"] | None = None
     ref_id: str | None = None
 

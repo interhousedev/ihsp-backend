@@ -284,7 +284,7 @@ async def _ensure_book(
     basis: dict[str, object] = (
         {"rule": "author_life", "author_death_year": spec.death_year}
         if public
-        else {"reference": "Demo catalogue of IHSP"}
+        else {"reference": "Demo catalogue of IHT"}
     )
     data = BookData(
         title=spec.title,
@@ -307,7 +307,7 @@ async def _ensure_book(
         librarian.user_id,
         FilePurpose.LIBRARY_BOOK,
         f"{book.card.slug}.pdf",
-        f"IHSP library demo copy of book {spec.year}",
+        f"IHT library demo copy of book {spec.year}",
     )
     await catalogue.attach_book_file.execute(
         librarian,
@@ -469,7 +469,7 @@ async def seed_library(
             ItemType.WORKSHEET,
             MaterialLicence.CC_BY_NC,
         ),
-        "IHSP library demo worksheet on derivatives",
+        "IHT library demo worksheet on derivatives",
     )
     await _ensure_material(
         container,
@@ -480,5 +480,5 @@ async def seed_library(
             ItemType.FORMULA_SHEET,
             MaterialLicence.ALL_RIGHTS_RESERVED,
         ),
-        "IHSP library demo formula sheet on integrals",
+        "IHT library demo formula sheet on integrals",
     )

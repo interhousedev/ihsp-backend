@@ -26,6 +26,6 @@ def request_host(request: Request) -> str:
 
 
 def is_library_host(request: Request, settings: LibrarySettings) -> bool:
-    """True when the request is for `library.ihsu.uz` (the configured public host)."""
+    """True when the request is for `lib.ihsu.uz` (the configured public host)."""
     expected = (urlparse(settings.public_base_url).hostname or "").lower()
     return bool(expected) and request_host(request) == expected

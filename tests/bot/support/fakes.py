@@ -1,6 +1,7 @@
 """In-memory fakes of the contracts the bot consumes (only what it calls)."""
 
 import copy
+from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime, timedelta
 from types import SimpleNamespace
@@ -145,6 +146,10 @@ class FakeDirectory:
     async def get_preferences(self, user_id: UUID) -> UserPreferences:
         """Return stored preferences or defaults."""
         return self.preferences.get(user_id, UserPreferences())
+
+    async def photo_urls(self, user_ids: Sequence[UUID]) -> dict[UUID, str]:
+        """No user has a photo in this fake."""
+        return {}
 
     async def set_telegram_blocked(self, telegram_user_id: int, blocked: bool) -> None:
         """Record the call and update the account."""

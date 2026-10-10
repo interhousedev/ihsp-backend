@@ -40,7 +40,7 @@ def build_admin_server(deps: McpDeps) -> FastMCP:
     kit = make_toolkit(
         deps,
         "admin",
-        title="IHSP Administration",
+        title="IHT Administration",
         instructions_key="mcp-instructions-admin",
     )
     for module in TOOL_MODULES:

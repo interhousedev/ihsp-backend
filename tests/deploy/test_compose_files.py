@@ -261,7 +261,7 @@ def test_the_library_host_is_wired_through_the_stack(
     host = web["APP_HOST_LIBRARY"]
     origin = web["IHSP_WEB_LIBRARY_URL"]
 
-    assert host.startswith("library.")
+    assert host.startswith("lib." if which == "prod" else "library.")
     assert services["nginx"]["environment"]["HOST_LIBRARY"] == host
     assert origin.endswith(host)
     assert services["api"]["environment"]["IHSP_URLS__LIBRARY"] == origin

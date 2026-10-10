@@ -56,7 +56,7 @@ def build_lms_server(deps: McpDeps) -> FastMCP:
     kit = make_toolkit(
         deps,
         "lms",
-        title="IHSP LMS Course",
+        title="IHT LMS Course",
         instructions_key="mcp-instructions-lms",
     )
     for module in TOOL_MODULES:

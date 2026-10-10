@@ -53,7 +53,7 @@ def test_public_links_and_the_taxonomy_cache_have_defaults() -> None:
     """LIB-1: notifications link to the library host; topics are cached a week."""
     library = Settings().library
 
-    assert library.public_base_url == "https://library.ihsu.uz"
+    assert library.public_base_url == "https://lib.ihsu.uz"
     assert library.taxonomy_cache_ttl == 604800
 
 

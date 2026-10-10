@@ -13,12 +13,12 @@ pytestmark = requires_compose
 NGINX_IMAGE = "nginx:1.27-alpine"
 HOST_ENV = {
     "HOST_ID": "id.ihsu.test",
-    "HOST_SP": "sp.ihsu.test",
+    "HOST_SP": "my.ihsu.test",
     "HOST_APP": "app.ihsu.test",
     "HOST_STAFF": "staff.ihsu.test",
     "HOST_ADMIN": "admin.ihsu.test",
     "HOST_LMS": "lms.ihsu.test",
-    "HOST_LIBRARY": "library.ihsu.test",
+    "HOST_LIBRARY": "lib.ihsu.test",
     "HOST_S": "s.ihsu.test",
     "HOST_API": "api.ihsu.test",
     "HOST_MCP": "mcp.ihsu.test",
@@ -142,7 +142,7 @@ def test_the_library_host_has_its_own_route(mode: str, tmp_path: Path) -> None:
         mounts = [f"{tmp_path}:/etc/letsencrypt:ro"]
     dump = _nginx(mode, mounts, "-T").stdout
     servers = dump.split("\nserver {")
-    library = next(s for s in servers if "server_name library.ihsu.test;" in s)
+    library = next(s for s in servers if "server_name lib.ihsu.test;" in s)
     assert "include /etc/nginx/ihsp/route-library.inc;" in library
     # nginx -T appends the included files: the library route is in the tested config
     assert "location ^~ /opds/ {" in dump

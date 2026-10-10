@@ -17,12 +17,12 @@ serve:
       # Overridden by SERVE_PUBLIC_CORS_ALLOWED_ORIGINS from DOMAIN.
       allowed_origins:
         - https://id.ihsu.uz
-        - https://sp.ihsu.uz
+        - https://my.ihsu.uz
         - https://app.ihsu.uz
         - https://staff.ihsu.uz
         - https://admin.ihsu.uz
         - https://lms.ihsu.uz
-        - https://library.ihsu.uz
+        - https://lib.ihsu.uz
   cookies:
     same_site_mode: Lax # plain top-level redirects; `None` would need more than we use
 

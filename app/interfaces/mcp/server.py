@@ -84,7 +84,7 @@ def protected_resource_routes(settings: Settings) -> list[Route]:
             resource_url=url,
             authorization_servers=[issuer],
             scopes_supported=list(SCOPES_BY_SERVER[server]),
-            resource_name=f"IHSP {server}",
+            resource_name=f"IHT {server}",
         )
         routes.extend(created)
         routes.extend(_prefixed(created, url))

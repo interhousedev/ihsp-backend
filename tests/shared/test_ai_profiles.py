@@ -73,7 +73,7 @@ def test_every_task_falls_back_to_the_default_model() -> None:
     ai = AiSettings()
 
     for task in AiTask:
-        if TASK_SPECS[task].model is not None:  # the smart tier and the search tasks
+        if TASK_SPECS[task].model is not None:  # smart tier, search, Studio
             continue
         profile = ai.profile(task)
         assert profile.model == DEFAULT_MODEL
@@ -81,7 +81,7 @@ def test_every_task_falls_back_to_the_default_model() -> None:
         assert profile.budget_weight == 1
         assert profile.fallbacks == ()
         assert profile.max_output_tokens is None
-        assert profile.reasoning_effort is None
+        assert profile.reasoning_effort == TASK_SPECS[task].reasoning_effort
 
 
 def test_the_search_tasks_ship_with_the_cheap_model_and_deny_collection() -> None:
@@ -116,7 +116,7 @@ def test_the_default_changes_every_task_without_its_own_value() -> None:
         }
     )
 
-    for task in (AiTask.STUDENT_CHAT, AiTask.STUDIO_QUIZ, AiTask.LMS_AUTHORING):
+    for task in (AiTask.STUDENT_CHAT, AiTask.ADMIN_CHAT, AiTask.LMS_AUTHORING):
         profile = ai.profile(task)
         assert (profile.model, profile.temperature) == ("x/default", 0.9)
         assert profile.max_output_tokens == 999
@@ -140,7 +140,7 @@ def test_a_task_override_beats_the_default_and_leaves_other_tasks_alone() -> Non
     )
 
     quiz = ai.profile(AiTask.STUDIO_QUIZ)
-    other = ai.profile(AiTask.STUDIO_REPORT)
+    other = ai.profile(AiTask.ADMIN_CHAT)
 
     assert (quiz.model, quiz.temperature, quiz.max_output_tokens) == (
         "x/quiz",
@@ -266,7 +266,7 @@ def test_the_environment_sets_the_default_and_the_task_overrides(
     assert (quiz.model, quiz.temperature) == ("x/quiz", 0.3)
     assert quiz.fallbacks == ("x/a", "x/b")
     assert settings.ai_profile(AiTask.STUDIO_SLIDES).max_output_tokens == 16000
-    assert settings.ai_profile(AiTask.STUDIO_SLIDES).model == "x/default"
+    assert settings.ai_profile(AiTask.ADMIN_CHAT).model == "x/default"
     assert settings.ai_profile(AiTask.STUDENT_CHAT_SMART).budget_weight == 2
 
 

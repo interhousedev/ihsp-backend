@@ -23,7 +23,7 @@ log = structlog.get_logger(__name__)
 
 COURSE_SLUG = "derivatives-101"
 COURSE_TITLE = "Derivatives 101"
-BROADCAST_TITLE = "Welcome to IHSP"
+BROADCAST_TITLE = "Welcome to IHT"
 FLASHCARD_SET_TITLE = "Derivative rules"
 
 LESSON_TEXT = (
