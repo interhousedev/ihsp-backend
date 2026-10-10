@@ -37,6 +37,8 @@ ITEM_KEYS = {
     "synced_at",
     "created_at",
     "label_ids",
+    "modality",
+    "ai_unsupported",
 }
 DETAIL_KEYS = ITEM_KEYS | {"guide", "body_md", "editable", "citations"}
 PASSAGE_KEYS = {"id", "seq", "text", "page", "heading"}
@@ -111,7 +113,7 @@ async def test_add_stores_every_kind_as_pending_and_starts_the_processing(
     assert {item["status"] for item in body["items"]} == {"pending"}
     assert all(item["selected"] and not item["stale"] for item in body["items"])
     assert all(item["notebook_id"] == str(notebook.id) for item in body["items"])
-    assert body["items"][0]["ref"] == {"file_id": str(file.id)}
+    assert body["items"][0]["ref"]["file_id"] == str(file.id)
     assert kicker.calls == [
         (PROCESS_TASK, {"source_id": item["id"]}) for item in body["items"]
     ]

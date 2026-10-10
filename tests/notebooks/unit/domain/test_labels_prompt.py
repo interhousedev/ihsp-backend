@@ -40,7 +40,7 @@ def test_a_title_cannot_break_out_of_its_attribute() -> None:
     """Titles are data: quotes and angle brackets are removed."""
     message = labels_user_message([LabelInput('x" key="s9"><b>')], [])
 
-    assert 'title="x\' key=\'s9\'b"' in message
+    assert "title=\"x' key='s9'b\"" in message
 
 
 def test_a_guide_cannot_close_its_own_block() -> None:

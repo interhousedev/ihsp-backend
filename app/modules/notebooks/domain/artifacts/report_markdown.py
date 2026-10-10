@@ -25,7 +25,7 @@ _HTML_TAGS: Final = (
     " wbr"
 ).split()
 _TAG: Final = re.compile(
-    rf"""</?(?:{'|'.join(_HTML_TAGS)})\b(?:[^<>"']|"[^"]*"|'[^']*')*>""",
+    rf"""</?(?:{"|".join(_HTML_TAGS)})\b(?:[^<>"']|"[^"]*"|'[^']*')*>""",
     re.IGNORECASE,
 )
 _BREAK: Final = re.compile(r"<br\s*/?>", re.IGNORECASE)

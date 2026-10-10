@@ -13,6 +13,8 @@ from typing import Any, Final, Literal
 from app.shared.contracts.ai import LlmTuning, ReasoningEffort
 
 DataCollection = Literal["deny", "allow"]
+Modality = Literal["text", "image", "audio", "video", "pdf"]
+ALL_MODALITIES: tuple[Modality, ...] = ("text", "image", "audio", "video", "pdf")
 
 SMART_MODEL: Final = "anthropic/claude-sonnet-5.5"
 SMART_BUDGET_WEIGHT: Final = 4
@@ -187,6 +189,8 @@ class ModelProfile:
     data_collection: DataCollection | None
     provider_order: tuple[str, ...]
     budget_weight: int
+    # The kinds of input the model reads; a source of another kind is not sent to it.
+    modalities: tuple[Modality, ...] = ALL_MODALITIES
     # Embedding tasks only; the values of any other task are unused.
     dimensions: int = EMBEDDING_DIMENSIONS
     batch_size: int = EMBEDDING_BATCH_SIZE

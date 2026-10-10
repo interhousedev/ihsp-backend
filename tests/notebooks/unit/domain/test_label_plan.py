@@ -82,7 +82,9 @@ def test_manual_links_and_labels_survive_a_run() -> None:
     other = stored("Other", LabelOrigin.MANUAL, 2)
     third = stored("Third", LabelOrigin.MANUAL, 3)
     fourth = stored("Fourth", LabelOrigin.MANUAL, 4)
-    links = [LabelLink(S1, label.id, LabelOrigin.MANUAL) for label in (mine, other, third)]
+    links = [
+        LabelLink(S1, label.id, LabelOrigin.MANUAL) for label in (mine, other, third)
+    ]
 
     plan = run([mine, other, third, fourth], links, parsed(["Fourth"]))
 
@@ -137,9 +139,7 @@ def test_an_old_auto_label_with_the_same_name_is_reused() -> None:
 def test_a_notebook_never_holds_more_than_twelve_labels() -> None:
     """Room is what manual labels leave; the rest of the answer is dropped."""
     manual = [stored(f"Mine {n}", LabelOrigin.MANUAL, n) for n in range(1, 11)]
-    answer = parsed(
-        ["A", "B", "C", "D"], {"s1": [0, 1], "s2": [2, 3], "s3": [0]}
-    )
+    answer = parsed(["A", "B", "C", "D"], {"s1": [0, 1], "s2": [2, 3], "s3": [0]})
 
     plan = run(manual, [], answer)
 

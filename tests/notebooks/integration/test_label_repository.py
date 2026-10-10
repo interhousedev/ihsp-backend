@@ -21,7 +21,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 
-def label(notebook: Notebook, name: str, position: int = 1, **fields: object) -> SourceLabel:
+def label(
+    notebook: Notebook, name: str, position: int = 1, **fields: object
+) -> SourceLabel:
     """A label that is not stored."""
     values: dict[str, object] = {
         "id": new_id(),

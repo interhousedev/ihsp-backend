@@ -28,9 +28,7 @@ import pytest
 WEIGHTED = 200  # the scripted usage: 100 input + 5 x 20 output
 
 
-async def label_run(
-    labels: LabelsServices, student: Actor, notebook: Notebook
-) -> None:
+async def label_run(labels: LabelsServices, student: Actor, notebook: Notebook) -> None:
     """Start a run and execute the job it queued."""
     await labels.start_labeling.execute(student, notebook.id)
     await labels.label_sources.execute(notebook.id)
@@ -160,7 +158,9 @@ async def test_manual_labels_and_links_survive_a_second_run(
     await store_link(uow_factory, source.id, mine.id, LabelOrigin.MANUAL)
     scripted_llm.queue_json(answer([("Plants", "🌱")], {"s1": ["l1"]}))
     await label_run(labels, student, notebook)
-    scripted_llm.queue_json(answer([("Sugar", "🍬"), ("exam", "📝")], {"s1": ["l1", "l2"]}))
+    scripted_llm.queue_json(
+        answer([("Sugar", "🍬"), ("exam", "📝")], {"s1": ["l1", "l2"]})
+    )
 
     await label_run(labels, student, notebook)
 
@@ -250,8 +250,7 @@ async def test_at_most_twelve_labels_are_written(
 ) -> None:
     """G12: fifteen proposals, twelve labels."""
     sources = [
-        await make_source(uow_factory, notebook, title=f"Source {n}")
-        for n in range(15)
+        await make_source(uow_factory, notebook, title=f"Source {n}") for n in range(15)
     ]
     topics = [(f"Topic {n}", "🧬") for n in range(15)]
     scripted_llm.queue_json(

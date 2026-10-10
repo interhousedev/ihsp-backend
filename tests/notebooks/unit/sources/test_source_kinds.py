@@ -55,7 +55,7 @@ async def test_file_is_added_pending_and_read_page_by_page(
     assert added.status is SourceStatus.PENDING
     assert added.selected is True
     assert added.title == "Biology.pdf"
-    assert added.ref == {"file_id": str(ref.id)}
+    assert added.ref == {"file_id": str(ref.id), "content_type": "application/pdf"}
     assert added.ref_key == f"file:{ref.id}"
     assert kicker.calls == [(PROCESS_TASK, {"source_id": str(added.id)})]
 

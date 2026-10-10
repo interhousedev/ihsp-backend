@@ -66,6 +66,8 @@ SOURCE_KEYS = {
     "stale",
     "has_guide",
     "label_ids",
+    "modality",
+    "ai_unsupported",
     "synced_at",
     "created_at",
 }

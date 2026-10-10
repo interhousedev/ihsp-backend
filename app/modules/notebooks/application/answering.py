@@ -51,6 +51,7 @@ from app.modules.notebooks.domain.errors import (
 from app.modules.notebooks.domain.history import history_messages
 from app.modules.notebooks.domain.language import resolve_language
 from app.modules.notebooks.domain.limits import CHAT_MESSAGE_MAX_CHARS, HISTORY_MESSAGES
+from app.modules.notebooks.domain.modality import readable_by
 from app.modules.notebooks.domain.prompts.chat import (
     chat_system_prompt,
     question_message,
@@ -565,10 +566,12 @@ class AnswerPipeline:
         """The usable sources of this notebook for the question, by position."""
         everything = await uow.sources.list_for_notebook(notebook_id)
         wanted = None if requested is None else set(requested)
+        modalities = self.core.deps.settings.ai_profile(AiTask.NOTEBOOK_CHAT).modalities
         chosen = [
             source
             for source in everything
             if source.usable
+            and readable_by(source, modalities)
             and (source.selected if wanted is None else source.id in wanted)
         ]
         if not chosen:

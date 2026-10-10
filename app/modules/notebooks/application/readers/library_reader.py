@@ -166,6 +166,7 @@ class LibraryReader:
             ref={
                 "item_id": str(item.item_id),
                 "file_id": str(item_file.file_id),
+                "format": item_file.format,
                 **pages,
             },
             ref_key=library_key(item_file.file_id, first, last),

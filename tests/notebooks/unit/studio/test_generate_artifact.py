@@ -401,7 +401,7 @@ async def test_sources_too_thin_fail_with_no_content(
     uow_factory: UowFactory,
     scripted_llm: HookedLlm,
 ) -> None:
-    """NB-9: sources under about 60 tokens give `no_content` without a model call."""
+    """NB-9: sources under about 8 tokens give `no_content` without a model call."""
     thin = await make_notebook(uow_factory, student.user_id)
     await make_source(uow_factory, thin, texts=("A very short note.",))
 

@@ -169,7 +169,10 @@ def test_a_missing_or_wrong_emoji_becomes_the_default_tag() -> None:
     """The first emoji of the field, else the tag."""
     parsed = parse_labels(
         answer(
-            [label("l1", "Cells", "not an emoji"), label("l2", "Energy", "⚡ and text")],
+            [
+                label("l1", "Cells", "not an emoji"),
+                label("l2", "Energy", "⚡ and text"),
+            ],
             [{"source": "s1", "labels": ["l1", "l2"]}],
         ),
         SOURCES,

@@ -48,7 +48,12 @@ async def test_a_whole_book_is_added_pending_under_its_title(
     assert added.kind is SourceKind.LIBRARY_ITEM
     assert added.status is SourceStatus.PENDING
     assert added.title == "Physics 10"
-    assert added.ref == {"item_id": str(book.id), "file_id": str(book.file_id)}
+    assert added.ref == {
+        "item_id": str(book.id),
+        "file_id": str(book.file_id),
+        "format": "pdf",
+        "format": "pdf",
+    }
     assert added.ref_key == f"library:{book.file_id}:1:0"
     assert added.origin == {
         "item_id": str(book.id),
@@ -76,6 +81,7 @@ async def test_a_chapter_shows_its_pages_in_the_title(
     assert added.ref == {
         "item_id": str(book.id),
         "file_id": str(book.file_id),
+        "format": "pdf",
         "page_from": 2,
         "page_to": 3,
     }

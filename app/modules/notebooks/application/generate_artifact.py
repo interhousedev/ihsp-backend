@@ -66,6 +66,7 @@ from app.modules.notebooks.domain.prompts.slides_revise import (
 )
 from app.modules.notebooks.domain.prompts.slides_task import SlideFormat
 from app.modules.notebooks.domain.prompts.studio import repair_message
+from app.modules.notebooks.domain.modality import readable_by
 from app.modules.notebooks.domain.sources_block import render_sources_block
 from app.modules.notebooks.domain.tokens import OUTPUT_WEIGHT, Usage
 from app.modules.notebooks.ports.unit_of_work import UowFactory
@@ -80,7 +81,7 @@ from pydantic import BaseModel
 
 log = structlog.get_logger(__name__)
 
-MIN_CONTENT_TOKENS: Final = 60  # thinner sources give `no_content`
+MIN_CONTENT_TOKENS: Final = 8  # about a sentence; thinner gives `no_content`
 PROVIDER_RETRY_DELAYS: Final = (2.0, 6.0)  # seconds; two retries
 SEED_MODULUS: Final = 2**31
 NOT_JSON: Final = "the answer was not a JSON object that matches the schema"
@@ -443,12 +444,15 @@ class GenerateArtifact:
         handler = handler_for(artifact.kind)
         options = handler.parse_options(dict(artifact.options))
         cap = handler.input_cap_tokens(self.settings.notebooks.studio_context_tokens)
+        modalities = self.settings.ai_profile(task_for_kind(artifact.kind)).modalities
         async with self.uow_factory() as uow:
             found = await uow.sources.get_many(artifact.source_ids)
             sources = [
                 source
                 for source in found
-                if source.usable and source.notebook_id == artifact.notebook_id
+                if source.usable
+                and source.notebook_id == artifact.notebook_id
+                and readable_by(source, modalities)
             ]
             if not sources:
                 raise _Failure(ArtifactFailure.NO_CONTENT)

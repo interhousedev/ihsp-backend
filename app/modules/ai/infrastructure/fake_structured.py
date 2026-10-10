@@ -477,6 +477,25 @@ def build_infographic(passages: Sequence[FakePassage], _: str) -> Document:
     }
 
 
+_SOURCE_KEY = re.compile(r'<source key="(s\d+)" title="([^"]*)"')
+LABEL_EMOJIS = ("📘", "🧪", "🌍", "🧮")
+
+
+def build_labels(passages: Sequence[FakePassage], text: str) -> Document:
+    """Up to 3 topic labels over the ``<source key=... title=...>`` tags."""
+    sources = _SOURCE_KEY.findall(text)
+    count = max(1, min(3, len(sources)))
+    labels = [
+        {"key": f"l{n + 1}", "name": f"Topic {n + 1}", "emoji": LABEL_EMOJIS[n]}
+        for n in range(count)
+    ]
+    assignments = [
+        {"source": key, "labels": [f"l{n % count + 1}"]}
+        for n, (key, _) in enumerate(sources)
+    ]
+    return {"labels": labels, "assignments": assignments}
+
+
 Builder = Callable[[Sequence[FakePassage], str], Document]
 
 BUILDERS: dict[str, Builder] = {
@@ -490,6 +509,7 @@ BUILDERS: dict[str, Builder] = {
     "nb_slides": build_slides,
     "nb_slides_revise": build_slides_revise,
     "nb_infographic": build_infographic,
+    "nb_labels": build_labels,
 }
 
 

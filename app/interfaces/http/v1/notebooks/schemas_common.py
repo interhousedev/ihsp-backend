@@ -1,5 +1,6 @@
 """Response models shared by the notebook routes (field names = § 4.4 contract)."""
 
+from contextvars import ContextVar
 from datetime import datetime
 from typing import Any, Generic, Self, TypeVar
 from uuid import UUID
@@ -7,6 +8,7 @@ from uuid import UUID
 from app.modules.notebooks.application.views import NotebookUsageView, UsagePartView
 from app.modules.notebooks.domain.entities import Source
 from app.modules.notebooks.domain.enums import SourceFailure, SourceKind, SourceStatus
+from app.modules.notebooks.domain.modality import readable_by, source_modality
 
 from pydantic import BaseModel, ConfigDict
 
@@ -78,6 +80,12 @@ class NotebookUsageResponse(BaseModel):
         )
 
 
+# The inputs the notebook chat model reads; `get_notebooks` sets it for the request.
+CHAT_MODALITIES: ContextVar[tuple[str, ...] | None] = ContextVar(
+    "notebook_chat_modalities", default=None
+)
+
+
 class SourceItemResponse(BaseModel):
     """`SourceItem`."""
 
@@ -100,11 +108,19 @@ class SourceItemResponse(BaseModel):
     synced_at: datetime | None
     created_at: datetime
     label_ids: list[UUID]
+    modality: str
+    ai_unsupported: bool
+    """True when the chat model does not read this input kind: it is kept in the
+    notebook but never sent to the model."""
 
     @classmethod
     def from_entity(cls, source: Source) -> Self:
         """Build from the source entity."""
+        modalities = CHAT_MODALITIES.get()
         return cls(
+            modality=source_modality(source),
+            ai_unsupported=modalities is not None
+            and not readable_by(source, modalities),
             id=source.id,
             notebook_id=source.notebook_id,
             kind=source.kind,

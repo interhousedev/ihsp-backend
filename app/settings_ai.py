@@ -13,6 +13,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from app.shared.ai_tasks import (
+    ALL_MODALITIES,
+    Modality,
     EMBEDDING_BATCH_SIZE,
     EMBEDDING_DIMENSIONS,
     LIGHT_NOTEBOOK_TASKS,
@@ -69,7 +71,10 @@ class AiDefaults(BaseModel):
     provider_order: tuple[str, ...] = ()
     """Comma list of OpenRouter providers to try first (`provider.order`)."""
 
-    @field_validator("fallbacks", "provider_order", mode="before")
+    modalities: tuple[Modality, ...] = ALL_MODALITIES
+    """Comma list of the inputs the model reads: text, image, audio, video, pdf."""
+
+    @field_validator("fallbacks", "provider_order", "modalities", mode="before")
     @classmethod
     def _split(cls, value: object) -> object:
         return _comma_list(value)
@@ -102,6 +107,9 @@ class AiTaskSettings(BaseModel):
     provider_order: tuple[str, ...] | None = None
     """Comma list of OpenRouter providers to try first for this task."""
 
+    modalities: tuple[Modality, ...] | None = None
+    """Comma list of the inputs this task's model reads (text, image, audio, video, pdf)."""
+
     dimensions: int | None = Field(default=None, ge=1)
     """Embedding task only: vector size. It must equal the `vectors.embeddings`
     column (1024); a model that cannot produce that size cannot be used."""
@@ -121,7 +129,7 @@ class AiTaskSettings(BaseModel):
     def _none_means_empty(cls, value: str | None) -> str | None:
         return "" if value is not None and value.strip().lower() == "none" else value
 
-    @field_validator("fallbacks", "provider_order", mode="before")
+    @field_validator("fallbacks", "provider_order", "modalities", mode="before")
     @classmethod
     def _split(cls, value: object) -> object:
         return _comma_list(value)
@@ -163,6 +171,7 @@ class AiSettings(BaseModel):
             budget_weight=_first(
                 own.budget_weight, spec.budget_weight, base.budget_weight
             ),
+            modalities=_first(own.modalities, base.modalities),
             dimensions=_first(own.dimensions, spec.dimensions, EMBEDDING_DIMENSIONS),
             batch_size=_first(own.batch_size, spec.batch_size, EMBEDDING_BATCH_SIZE),
             query_prefix=_first(own.query_prefix, spec.query_prefix, ""),

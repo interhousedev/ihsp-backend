@@ -214,7 +214,10 @@ async def test_delete_answers_204_and_the_label_is_gone(
     listed = await api.get(url(notebook))
 
     assert (first.status_code, first.content) == (204, b"")
-    assert (again.status_code, problem_type(again)) == (404, "notebooks/label-not-found")
+    assert (again.status_code, problem_type(again)) == (
+        404,
+        "notebooks/label-not-found",
+    )
     assert listed.json()["items"] == []
 
 
@@ -246,7 +249,8 @@ async def test_put_replaces_the_labels_of_a_source_and_returns_the_item(
     energy = await store_label(uow_factory, notebook.id, "Energy", position=2)
 
     response = await api.put(
-        source_url(notebook, source), json={"label_ids": [str(energy.id), str(cells.id)]}
+        source_url(notebook, source),
+        json={"label_ids": [str(energy.id), str(cells.id)]},
     )
 
     assert response.status_code == 200, response.text
@@ -423,6 +427,7 @@ async def test_a_failed_run_is_listed_with_its_reason(
     again = await api.post(url(notebook, "/auto"))
 
     assert body["items"] == []
-    assert body["auto"]["status"] == "failed" and body["auto"]["error"] == "invalid-output"
+    assert (
+        body["auto"]["status"] == "failed" and body["auto"]["error"] == "invalid-output"
+    )
     assert again.status_code == 202
-

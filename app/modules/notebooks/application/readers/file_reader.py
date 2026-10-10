@@ -64,7 +64,7 @@ class FileReader:
         return ResolvedSource(
             kind=SourceKind.FILE,
             title=clean_title(ref.name, "File"),
-            ref={"file_id": str(ref.id)},
+            ref={"file_id": str(ref.id), "content_type": ref.content_type},
             ref_key=f"file:{ref.id}",
         )
 

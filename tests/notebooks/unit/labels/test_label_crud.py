@@ -229,9 +229,13 @@ async def test_an_unknown_field_or_label_is_refused(
     theirs = await store_label(uow_factory, their_notebook.id, "Theirs")
 
     with pytest.raises(InvalidOptionsError):
-        await labels.update_label.execute(student, notebook.id, cells.id, {"origin": "x"})
+        await labels.update_label.execute(
+            student, notebook.id, cells.id, {"origin": "x"}
+        )
     with pytest.raises(LabelNotFoundError):
-        await labels.update_label.execute(student, notebook.id, theirs.id, {"name": "A"})
+        await labels.update_label.execute(
+            student, notebook.id, theirs.id, {"name": "A"}
+        )
 
 
 # - - - Delete - - -
@@ -306,7 +310,9 @@ async def test_a_source_may_lose_all_its_labels(
     cells = await store_label(uow_factory, notebook.id, "Cells")
     await store_link(uow_factory, source.id, cells.id)
 
-    updated = await labels.set_source_labels.execute(student, notebook.id, source.id, [])
+    updated = await labels.set_source_labels.execute(
+        student, notebook.id, source.id, []
+    )
 
     assert updated.label_ids == []
 
@@ -348,4 +354,6 @@ async def test_a_foreign_label_or_source_is_a_404(
             student, notebook.id, source.id, [theirs.id]
         )
     with pytest.raises(NotebookNotFoundError):
-        await labels.set_source_labels.execute(student, their_notebook.id, source.id, [])
+        await labels.set_source_labels.execute(
+            student, their_notebook.id, source.id, []
+        )

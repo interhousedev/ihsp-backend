@@ -55,7 +55,7 @@ def render_course_block(course: CourseContext) -> str:
     if course.step_title is not None:
         lines.append(
             f"Current draft of the step "
-            f"\"{_course_text(' '.join(course.step_title.split()))}\":"
+            f'"{_course_text(" ".join(course.step_title.split()))}":'
         )
         lines.append(_course_text(course.step_text or "") or "(empty)")
     lines.append("</course>")

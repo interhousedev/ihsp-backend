@@ -66,11 +66,15 @@ async def mark_running(uow_factory: UowFactory, run: LabelRun) -> None:
         await uow.commit()
 
 
-async def running(uow_factory: UowFactory, notebook_id: UUID, user_id: UUID, at: Any) -> None:
+async def running(
+    uow_factory: UowFactory, notebook_id: UUID, user_id: UUID, at: Any
+) -> None:
     """Put the notebook into the `running` state, as `StartLabeling` does."""
     await mark_running(
         uow_factory,
-        LabelRun(notebook_id, LabelRunStatus.RUNNING, started_at=at, started_by=user_id),
+        LabelRun(
+            notebook_id, LabelRunStatus.RUNNING, started_at=at, started_by=user_id
+        ),
     )
 
 
