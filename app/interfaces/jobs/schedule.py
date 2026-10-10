@@ -72,6 +72,7 @@ CRON_JOBS: tuple[CronJob, ...] = (
     CronJob("notebooks.purge_deleted", "15 4 * * *"),
     CronJob("notebooks.purge_shared", "45 4 * * *"),
     CronJob("notebooks.sweep_auto_notebooks", "20,50 * * * *"),
+    CronJob("notebooks.backfill_subject_notebooks", "40 3 * * *"),
     CronJob("notebooks.embed_passages", EVERY_10_MINUTES),
     CronJob("library.rollup_stats", "10 2 * * *"),
     CronJob("library.purge", "10 4 * * *"),

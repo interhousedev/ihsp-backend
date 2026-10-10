@@ -4,6 +4,10 @@ from dataclasses import dataclass
 
 from app.modules.notebooks.application.auto_targets import AutoTargets
 from app.modules.notebooks.application.open_auto_notebook import OpenAutoNotebook
+from app.modules.notebooks.application.provision_student_notebooks import (
+    BackfillSubjectNotebooks,
+    ProvisionStudentNotebooks,
+)
 from app.modules.notebooks.application.readers.registry import SourceReaders
 from app.modules.notebooks.application.sweep_auto_notebooks import SweepAutoNotebooks
 from app.modules.notebooks.application.sync_auto_notebook import SyncAutoNotebook
@@ -12,6 +16,8 @@ from app.modules.notebooks.application.update_auto_settings import UpdateAutoSet
 from app.modules.notebooks.ports.term_calendar import TermCalendar
 from app.modules.notebooks.wiring_core import NotebooksCore
 from app.shared.contracts.academic import ClassworkQueries, ScheduleQueries
+from app.shared.contracts.identity import IdentityDirectory
+from app.shared.contracts.library import LibraryQueries
 from app.shared.contracts.links import LinksApi
 
 
@@ -24,6 +30,8 @@ class AutoServices:
     sync_auto_notebook: SyncAutoNotebook
     sync_lesson_notebooks: SyncLessonNotebooks
     sweep_auto_notebooks: SweepAutoNotebooks
+    provision_student_notebooks: ProvisionStudentNotebooks
+    backfill_subject_notebooks: BackfillSubjectNotebooks
 
 
 def build_auto(
@@ -34,6 +42,8 @@ def build_auto(
     schedule: ScheduleQueries,
     classwork: ClassworkQueries | None,
     terms: TermCalendar | None,
+    library: LibraryQueries | None = None,
+    identity: IdentityDirectory | None = None,
 ) -> AutoServices:
     """Build the auto notebook use cases.
 
@@ -52,15 +62,20 @@ def build_auto(
         links=links,
         targets=targets,
         kicker=deps.kicker,
+        library=library,
+    )
+    open_auto = OpenAutoNotebook(
+        uow_factory=core.uow_factory,
+        clock=deps.clock,
+        targets=targets,
+        sync=sync,
+        kicker=deps.kicker,
+    )
+    provision = ProvisionStudentNotebooks(
+        schedule=schedule, terms=terms, clock=deps.clock, open_auto=open_auto
     )
     return AutoServices(
-        open_auto_notebook=OpenAutoNotebook(
-            uow_factory=core.uow_factory,
-            clock=deps.clock,
-            targets=targets,
-            sync=sync,
-            kicker=deps.kicker,
-        ),
+        open_auto_notebook=open_auto,
         update_auto_settings=UpdateAutoSettings(
             uow_factory=core.uow_factory, clock=deps.clock, sync=sync
         ),
@@ -70,5 +85,9 @@ def build_auto(
         ),
         sweep_auto_notebooks=SweepAutoNotebooks(
             uow_factory=core.uow_factory, clock=deps.clock, kicker=deps.kicker
+        ),
+        provision_student_notebooks=provision,
+        backfill_subject_notebooks=BackfillSubjectNotebooks(
+            identity=identity, provision=provision, kicker=deps.kicker
         ),
     )

@@ -19,6 +19,8 @@ PROCESSES = (
     "migrate",
     "create-user",
     "seed-demo",
+    "backfill-subject-notebooks",
+    "backfill-course-notebooks",
 )
 NOT_WIRED_EXIT_CODE = 2
 BAD_SETTINGS_EXIT_CODE = 78  # EX_CONFIG
