@@ -5,6 +5,9 @@ from dataclasses import dataclass
 from typing import Any, Literal, cast
 
 from app.bootstrap.adapters.admin_tools import AdminToolBackendAdapter
+from app.bootstrap.adapters.composition.library_platform_search import (
+    LibraryPlatformSearch,
+)
 from app.bootstrap.adapters.emis_source import make_emis_source
 from app.bootstrap.adapters.lazy_proxy import LazyProxy
 from app.bootstrap.adapters.library_academic import LibraryAcademicAdapter
@@ -401,6 +404,9 @@ class _Assembler:
             files=c.files.public,
             academic=LibraryAcademicAdapter(c.academic.schedule, c.clock),
             lessons=LibraryLessonsAdapter(c.academic.schedule.queries, c.clock),
+        )
+        c.ai.bindings.library_search = LibraryPlatformSearch(
+            c.library.catalogue.list_items
         )
 
     def build_embeddings(self, llm: LlmGateway) -> EmbeddingIndex | None:

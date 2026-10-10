@@ -12,7 +12,7 @@ from app.modules.notebooks.application.export.render import (
 from app.modules.notebooks.domain.entities import Artifact
 from app.modules.notebooks.ports.unit_of_work import UowFactory
 from app.shared.actor import Actor, Role
-from app.shared.contracts.files import FilePurpose, FileScope, FilesApi
+from app.shared.contracts.files import FilePurpose, FilesApi, FileScope
 from app.shared.contracts.links import LinksApi, ResourceRef
 
 

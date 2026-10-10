@@ -33,6 +33,9 @@ class DiscoverResultResponse(BaseModel):
     snippet: str
     why: str
     origin: Literal["web", "db"] = "web"
+    ref_kind: Literal["library_item", "notebook_source"] | None = None
+    """For a `db` result: add it by reference, not as a URL."""
+    ref_id: str | None = None
     """`db`: from the platform's own database, shown as "Из базы IHSP"."""
     already_added: bool
     """The notebook already has this page as a source."""

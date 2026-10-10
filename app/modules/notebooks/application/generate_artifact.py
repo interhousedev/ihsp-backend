@@ -53,6 +53,7 @@ from app.modules.notebooks.domain.enums import (
 from app.modules.notebooks.domain.errors import OutputInvalidError
 from app.modules.notebooks.domain.language import detect_language, resolve_language
 from app.modules.notebooks.domain.limits import ARTIFACT_TITLE_MAX_CHARS
+from app.modules.notebooks.domain.modality import readable_by
 from app.modules.notebooks.domain.prompts.course import (
     system_prompt_for,
     task_with_course,
@@ -66,7 +67,6 @@ from app.modules.notebooks.domain.prompts.slides_revise import (
 )
 from app.modules.notebooks.domain.prompts.slides_task import SlideFormat
 from app.modules.notebooks.domain.prompts.studio import repair_message
-from app.modules.notebooks.domain.modality import readable_by
 from app.modules.notebooks.domain.sources_block import render_sources_block
 from app.modules.notebooks.domain.tokens import OUTPUT_WEIGHT, Usage
 from app.modules.notebooks.ports.unit_of_work import UowFactory

@@ -2791,7 +2791,8 @@
                 "type": "null"
               }
             ],
-            "title": "Regex"
+            "title": "Regex",
+            "x-plain": true
           }
         },
         "title": "BlankInput",
@@ -5494,6 +5495,85 @@
         "title": "CountsResponse",
         "type": "object"
       },
+      "CourseBroadcastBody": {
+        "additionalProperties": false,
+        "description": "POST /v1/staff/lms/courses/{id}/broadcasts: the message for the students.",
+        "properties": {
+          "body": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Body",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "body"
+        ],
+        "title": "CourseBroadcastBody",
+        "type": "object"
+      },
+      "CourseBroadcastResponse": {
+        "description": "One sent course broadcast.",
+        "properties": {
+          "author_id": {
+            "format": "uuid",
+            "title": "Author Id",
+            "type": "string"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "course_id": {
+            "format": "uuid",
+            "title": "Course Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "recipients": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Students notified; only known right after sending.",
+            "title": "Recipients"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "course_id",
+          "author_id",
+          "title",
+          "body",
+          "created_at"
+        ],
+        "title": "CourseBroadcastResponse",
+        "type": "object"
+      },
       "CourseCreatorResponse": {
         "description": "CourseCreator: a person who holds the `lms_creator` role.",
         "properties": {
@@ -7138,6 +7218,41 @@
           "already_added": {
             "title": "Already Added",
             "type": "boolean"
+          },
+          "origin": {
+            "default": "web",
+            "enum": [
+              "web",
+              "db"
+            ],
+            "title": "Origin",
+            "type": "string"
+          },
+          "ref_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref Id"
+          },
+          "ref_kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "library_item",
+                  "notebook_source"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref Kind"
           },
           "site": {
             "title": "Site",
@@ -17055,7 +17170,8 @@
               }
             ],
             "description": "For text: accepted exact answers.",
-            "title": "Accepted Answers"
+            "title": "Accepted Answers",
+            "x-plain": true
           },
           "blanks": {
             "anyOf": [
@@ -17070,7 +17186,8 @@
                 "type": "null"
               }
             ],
-            "title": "Blanks"
+            "title": "Blanks",
+            "x-plain": true
           },
           "case_sensitive": {
             "default": false,
@@ -17092,7 +17209,8 @@
               }
             ],
             "description": "Table columns.",
-            "title": "Columns"
+            "title": "Columns",
+            "x-plain": true
           },
           "correct_cells": {
             "anyOf": [
@@ -17117,7 +17235,8 @@
               }
             ],
             "description": "For table: the (row, column) cells to mark, 0-based.",
-            "title": "Correct Cells"
+            "title": "Correct Cells",
+            "x-plain": true
           },
           "expected_outputs": {
             "anyOf": [
@@ -17132,7 +17251,8 @@
                 "type": "null"
               }
             ],
-            "title": "Expected Outputs"
+            "title": "Expected Outputs",
+            "x-plain": true
           },
           "explanation": {
             "anyOf": [
@@ -17145,7 +17265,8 @@
               }
             ],
             "description": "Shown after answering, if allowed.",
-            "title": "Explanation"
+            "title": "Explanation",
+            "x-plain": true
           },
           "expression": {
             "anyOf": [
@@ -17158,7 +17279,8 @@
               }
             ],
             "description": "For formula: the correct expression.",
-            "title": "Expression"
+            "title": "Expression",
+            "x-plain": true
           },
           "expression_variables": {
             "anyOf": [
@@ -17173,7 +17295,8 @@
                 "type": "null"
               }
             ],
-            "title": "Expression Variables"
+            "title": "Expression Variables",
+            "x-plain": true
           },
           "formula": {
             "anyOf": [
@@ -17186,7 +17309,8 @@
               }
             ],
             "description": "For random_number: answer formula.",
-            "title": "Formula"
+            "title": "Formula",
+            "x-plain": true
           },
           "items": {
             "anyOf": [
@@ -17202,7 +17326,8 @@
               }
             ],
             "description": "For sorting: items in order.",
-            "title": "Items"
+            "title": "Items",
+            "x-plain": true
           },
           "number": {
             "anyOf": [
@@ -17230,7 +17355,8 @@
               }
             ],
             "description": "For single and multiple: at least two options.",
-            "title": "Options"
+            "title": "Options",
+            "x-plain": true
           },
           "pairs": {
             "anyOf": [
@@ -17246,7 +17372,8 @@
               }
             ],
             "description": "For matching: at least two pairs.",
-            "title": "Pairs"
+            "title": "Pairs",
+            "x-plain": true
           },
           "points": {
             "default": 1,
@@ -17274,7 +17401,8 @@
               }
             ],
             "description": "For text: a regular expression.",
-            "title": "Regex"
+            "title": "Regex",
+            "x-plain": true
           },
           "rows": {
             "anyOf": [
@@ -17290,7 +17418,8 @@
               }
             ],
             "description": "Table rows.",
-            "title": "Rows"
+            "title": "Rows",
+            "x-plain": true
           },
           "tolerance": {
             "default": 0.0,
@@ -17332,7 +17461,8 @@
               }
             ],
             "description": "For random_number.",
-            "title": "Variables"
+            "title": "Variables",
+            "x-plain": true
           }
         },
         "required": [
@@ -19636,6 +19766,60 @@
         "title": "SaveStepDraftBody",
         "type": "object"
       },
+      "SaveToFilesBody": {
+        "description": "Save a ready output into the caller's files.",
+        "properties": {
+          "format": {
+            "anyOf": [
+              {
+                "enum": [
+                  "docx",
+                  "xlsx",
+                  "pptx",
+                  "md"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Format"
+          }
+        },
+        "title": "SaveToFilesBody",
+        "type": "object"
+      },
+      "SavedFileResponse": {
+        "description": "The file that was created from an output.",
+        "properties": {
+          "byte_size": {
+            "title": "Byte Size",
+            "type": "integer"
+          },
+          "content_type": {
+            "title": "Content Type",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "content_type",
+          "byte_size"
+        ],
+        "title": "SavedFileResponse",
+        "type": "object"
+      },
       "ScanResponse": {
         "description": "Findings of the scan job.",
         "properties": {
@@ -21617,13 +21801,17 @@
                 "mapping": {
                   "flashcards": "#/components/schemas/FlashcardsBlockInput",
                   "test": "#/components/schemas/TestBlockInput",
-                  "text": "#/components/schemas/TextBlockInput"
+                  "text": "#/components/schemas/TextBlockInput",
+                  "video": "#/components/schemas/VideoBlockInput"
                 },
                 "propertyName": "type"
               },
               "oneOf": [
                 {
                   "$ref": "#/components/schemas/TextBlockInput"
+                },
+                {
+                  "$ref": "#/components/schemas/VideoBlockInput"
                 },
                 {
                   "$ref": "#/components/schemas/TestBlockInput"
@@ -26977,6 +27165,36 @@
         "title": "VideoBlock",
         "type": "object"
       },
+      "VideoBlockInput": {
+        "description": "A video block: a link (YouTube, Vimeo or a direct file URL).",
+        "properties": {
+          "caption": {
+            "default": "",
+            "description": "Caption, optional.",
+            "maxLength": 500,
+            "title": "Caption",
+            "type": "string"
+          },
+          "type": {
+            "const": "video",
+            "default": "video",
+            "title": "Type",
+            "type": "string"
+          },
+          "url": {
+            "description": "Video link, https only.",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "VideoBlockInput",
+        "type": "object"
+      },
       "Visibility-Output": {
         "description": "Who may see a published item.",
         "enum": [
@@ -27042,6 +27260,15 @@
           "n": {
             "title": "N",
             "type": "integer"
+          },
+          "origin": {
+            "default": "web",
+            "enum": [
+              "web",
+              "db"
+            ],
+            "title": "Origin",
+            "type": "string"
           },
           "site": {
             "title": "Site",
@@ -47957,7 +48184,7 @@
     },
     "/v1/notebooks/{notebook_id}/artifacts/{artifact_id}/download": {
       "get": {
-        "description": "Download a ready output as a file: report .docx, table .xlsx, slides .pptx.",
+        "description": "Download a ready output: report .docx, table .xlsx, slides .pptx, the rest .md.\n\nEvery kind can also be asked for as ``json``.",
         "operationId": "download_artifact_v1_notebooks__notebook_id__artifacts__artifact_id__download_get",
         "parameters": [
           {
@@ -47990,7 +48217,9 @@
                   "enum": [
                     "docx",
                     "xlsx",
-                    "pptx"
+                    "pptx",
+                    "md",
+                    "json"
                   ],
                   "type": "string"
                 },
@@ -48240,6 +48469,77 @@
           }
         },
         "summary": "Save As Source",
+        "tags": [
+          "notebooks"
+        ]
+      }
+    },
+    "/v1/notebooks/{notebook_id}/artifacts/{artifact_id}/save-to-files": {
+      "post": {
+        "description": "Save a copy of a ready output as a file in \"My files\".",
+        "operationId": "save_to_files_v1_notebooks__notebook_id__artifacts__artifact_id__save_to_files_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notebook_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notebook Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "artifact_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Artifact Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/SaveToFilesBody"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedFileResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save To Files",
         "tags": [
           "notebooks"
         ]
@@ -51603,6 +51903,106 @@
         "summary": "Suggest Next Section",
         "tags": [
           "library"
+        ]
+      }
+    },
+    "/v1/staff/lms/courses/{course_id}/broadcasts": {
+      "get": {
+        "description": "Return the newest broadcasts of the course; same access as sending.",
+        "operationId": "list_broadcasts_v1_staff_lms_courses__course_id__broadcasts_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CourseBroadcastResponse"
+                  },
+                  "title": "Response List Broadcasts V1 Staff Lms Courses  Course Id  Broadcasts Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Broadcasts",
+        "tags": [
+          "lms-authoring"
+        ]
+      },
+      "post": {
+        "description": "Notify every enrolled student (in the app, by Web Push and in Telegram).",
+        "operationId": "send_broadcast_v1_staff_lms_courses__course_id__broadcasts_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourseBroadcastBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseBroadcastResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Send Broadcast",
+        "tags": [
+          "lms-authoring"
         ]
       }
     },

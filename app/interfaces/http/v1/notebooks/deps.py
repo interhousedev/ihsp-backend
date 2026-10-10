@@ -9,9 +9,9 @@ from typing import Annotated
 
 from app.bootstrap.container import Container
 from app.interfaces.http.dependencies import get_actor, get_container, require_roles
+from app.interfaces.http.v1.notebooks.schemas_common import CHAT_MODALITIES
 from app.modules.notebooks.domain.errors import FeatureDisabledError
 from app.modules.notebooks.wiring import NotebooksServices
-from app.interfaces.http.v1.notebooks.schemas_common import CHAT_MODALITIES
 from app.shared.actor import Actor, Role
 from app.shared.ai_tasks import AiTask
 from app.shared.features import Feature, is_enabled
