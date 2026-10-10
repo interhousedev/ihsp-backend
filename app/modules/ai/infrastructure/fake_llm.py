@@ -10,6 +10,10 @@ from app.modules.ai.infrastructure.fake_author import author_answer, is_author_c
 from app.modules.ai.infrastructure.fake_course import build_course_document
 from app.modules.ai.infrastructure.fake_sources import chat_answer, is_notebook_chat
 from app.modules.ai.infrastructure.fake_structured import build_document
+from app.modules.ai.infrastructure.fake_subjects import (
+    SUBJECT_NAMES_SCHEMA,
+    subject_names_document,
+)
 from app.shared.contracts.ai import LlmTuning
 from app.shared.ids import new_id
 
@@ -77,8 +81,11 @@ class FakeLlmGateway:
             tuning=tuning,
             schema_name=schema_name,
         )
-        data = build_course_document(schema_name, messages, system)
-        data = data or build_document(schema_name, messages)
+        if schema_name == SUBJECT_NAMES_SCHEMA:
+            data: dict[str, Any] = subject_names_document(messages)
+        else:
+            data = build_course_document(schema_name, messages, system)
+            data = data or build_document(schema_name, messages)
         text = json.dumps(data)
         usage = _usage(system, messages, text)
         return {"data": data, "text": text, "usage": {**usage, "cost_micro": None}}

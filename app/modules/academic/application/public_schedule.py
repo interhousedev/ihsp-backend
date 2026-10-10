@@ -7,6 +7,7 @@ from uuid import UUID
 from app.modules.academic.application.schedule.common import (
     DEFAULT_LOCALE,
     UowFactory,
+    kick_after_commit,
     today,
 )
 from app.modules.academic.application.schedule.ports.reader import ScheduleReader
@@ -23,6 +24,7 @@ from app.modules.academic.domain.schedule.student import (
     Student,
 )
 from app.modules.academic.domain.schedule.subject import LANGUAGES, Subject
+from app.modules.academic.domain.schedule.subject_names import missing_locales
 from app.modules.academic.domain.schedule.term import pick_current_term
 from app.shared.clock import Clock
 from app.shared.contracts.academic import LessonRef, RoomRef, StudentRef
@@ -30,6 +32,7 @@ from app.shared.contracts.emis import EmisSubject
 from app.shared.contracts.identity import IdentityDirectory, UserStatus
 from app.shared.ids import new_id
 from app.shared.notifications import NotificationDraft, NotificationType
+from app.shared.tasks import TaskKicker
 
 # - - - ScheduleQueries - - -
 
@@ -132,12 +135,17 @@ class AcademicEnrollmentImpl:
     """Implements AcademicEnrollment: registration, EMIS refresh and leaving."""
 
     def __init__(
-        self, uow_factory: UowFactory, identity: IdentityDirectory, clock: Clock
+        self,
+        uow_factory: UowFactory,
+        identity: IdentityDirectory,
+        clock: Clock,
+        kicker: TaskKicker | None = None,
     ) -> None:
-        """Store the dependencies."""
+        """Store the dependencies; ``kicker`` starts the subject name translation."""
         self.uow_factory = uow_factory
         self.identity = identity
         self.clock = clock
+        self.kicker = kicker
 
     async def ensure_student(
         self,
@@ -265,13 +273,28 @@ class AcademicEnrollmentImpl:
             if group is None:
                 raise GroupNotFoundError()
             ids: list[UUID] = []
+            untranslated: list[UUID] = []
             for item in subjects:
                 subject = await self._upsert_subject(uow, item)
                 if subject.id not in ids:
                     ids.append(subject.id)
+                    if missing_locales(subject.name):
+                        untranslated.append(subject.id)
+            for subject_id in untranslated:
+                self._kick_translation(uow, subject_id)
             group.subject_ids = ids
             await uow.groups.save(group)
             await uow.commit()
+
+    def _kick_translation(self, uow: ScheduleUnitOfWork, subject_id: UUID) -> None:
+        """Translate the missing languages in the background once the sync commits."""
+        if self.kicker is not None:
+            kick_after_commit(
+                uow,
+                self.kicker,
+                "academic.translate_subject",
+                subject_id=str(subject_id),
+            )
 
     @staticmethod
     async def _upsert_subject(uow: ScheduleUnitOfWork, item: EmisSubject) -> Subject:
