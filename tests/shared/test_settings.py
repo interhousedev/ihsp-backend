@@ -15,6 +15,47 @@ from pydantic_settings import BaseSettings
 MATERIALS = BACKEND_ROOT / "materials"
 PEM = "-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----\n"
 
+ORIGIN_URLS = {
+    name: f"https://{name}.ihsu.uz"
+    for name in (
+        "id",
+        "sp",
+        "staff",
+        "admin",
+        "lms",
+        "share",
+        "app",
+        "library",
+        "short_links",
+        "rooms",
+        "api",
+        "mcp",
+    )
+}
+
+
+def prod_base(**override: Any) -> dict[str, Any]:
+    """Everything a production process shares, as keyword arguments of Settings."""
+    base: dict[str, Any] = {
+        "env": "prod",
+        "tokens": {"service_token": "x" * 40, "refresh_cookie_secure": True},
+        "s3": {"secret_key": "y" * 30, "access_key": "AKIAEXAMPLE"},
+        "database": {"url": "postgresql+asyncpg://ihsp:p4ss@postgres:5432/ihsp"},
+        "redis": {"url": "redis://:p4ss@redis:6379/0"},
+        "telegram": {
+            "bot_token": "123:real",
+            "mode": "webhook",
+            "webhook_secret": "w" * 30,
+            "webhook_url": "https://api.ihsu.uz",
+        },
+        "emis": {"mode": "real"},
+        "openrouter": {"mode": "real", "api_key": "or-key"},
+        "exa": {"mode": "real", "api_key": "exa-key"},
+        "urls": ORIGIN_URLS,
+    }
+    base.update(override)
+    return base
+
 
 def env_names(path: Path) -> list[str]:
     """Variable names in an env file, commented ones included."""
@@ -115,14 +156,10 @@ def test_production_refuses_development_defaults() -> None:
 def test_production_accepts_explicit_secrets() -> None:
     """A fully configured prod passes and drops the dev Vault token for AppRole."""
     settings = Settings(
-        env="prod",
-        tokens={  # type: ignore[arg-type]
-            "service_token": "x" * 40,
-            "refresh_cookie_secure": True,
-        },
-        jwt_bearer={"private_key_pem": PEM},  # type: ignore[arg-type]
-        s3={"secret_key": "y" * 30},  # type: ignore[arg-type]
-        vault={"role_id": "r", "secret_id": "s"},  # type: ignore[arg-type]
+        **prod_base(
+            jwt_bearer={"private_key_pem": PEM},
+            vault={"role_id": "r", "secret_id": "s"},
+        )
     )
 
     assert settings.vault.token is None
@@ -130,15 +167,7 @@ def test_production_accepts_explicit_secrets() -> None:
 
 def prod_settings(**extra: Any) -> Settings:
     """Production settings with the secrets every process shares."""
-    return Settings(
-        env="prod",
-        tokens={  # type: ignore[arg-type]
-            "service_token": "x" * 40,
-            "refresh_cookie_secure": True,
-        },
-        s3={"secret_key": "y" * 30},  # type: ignore[arg-type]
-        **extra,
-    )
+    return Settings(**prod_base(**extra))
 
 
 @pytest.mark.parametrize("process", ["api", "bot", "mail", "scheduler", "migrate"])
@@ -181,6 +210,15 @@ def test_the_cli_checks_the_process_before_it_starts(
     monkeypatch.setenv("IHSP_TOKENS__SERVICE_TOKEN", "x" * 40)
     monkeypatch.setenv("IHSP_TOKENS__REFRESH_COOKIE_SECURE", "true")
     monkeypatch.setenv("IHSP_S3__SECRET_KEY", "y" * 30)
+    monkeypatch.setenv("IHSP_S3__ACCESS_KEY", "AKIAEXAMPLE")
+    monkeypatch.setenv("IHSP_DATABASE__URL", "postgresql+asyncpg://ihsp:p4ss@pg/ihsp")
+    monkeypatch.setenv("IHSP_REDIS__URL", "redis://:p4ss@redis:6379/0")
+    monkeypatch.setenv("IHSP_TELEGRAM__BOT_TOKEN", "123:real")
+    monkeypatch.setenv("IHSP_TELEGRAM__MODE", "webhook")
+    for section in ("EMIS", "OPENROUTER", "EXA"):
+        monkeypatch.setenv(f"IHSP_{section}__MODE", "real")
+    for name, url in ORIGIN_URLS.items():
+        monkeypatch.setenv(f"IHSP_URLS__{name.upper()}", url)
 
     with pytest.raises(ValueError, match="missing for identity"):
         cli.main(["identity"])
@@ -256,13 +294,61 @@ def test_production_refuses_samesite_none_for_the_refresh_cookie() -> None:
     """`none` is a local-development workaround for *.localhost, never prod."""
     with pytest.raises(ValueError, match="REFRESH_COOKIE_SAMESITE"):
         Settings(
-            env="prod",
-            tokens={  # type: ignore[arg-type]
-                "service_token": "x" * 40,
-                "refresh_cookie_secure": True,
-                "refresh_cookie_samesite": "none",
-            },
-            jwt_bearer={"private_key_pem": PEM},  # type: ignore[arg-type]
-            s3={"secret_key": "y" * 30},  # type: ignore[arg-type]
-            vault={"role_id": "r", "secret_id": "s"},  # type: ignore[arg-type]
+            **prod_base(
+                tokens={
+                    "service_token": "x" * 40,
+                    "refresh_cookie_secure": True,
+                    "refresh_cookie_samesite": "none",
+                },
+                jwt_bearer={"private_key_pem": PEM},
+                vault={"role_id": "r", "secret_id": "s"},
+            )
         )
+
+
+@pytest.mark.parametrize(
+    ("override", "name"),
+    [
+        ({"openrouter": {"mode": "fake"}}, "OPENROUTER__MODE=real"),
+        ({"exa": {"mode": "fake"}}, "EXA__MODE=real"),
+        ({"emis": {"mode": "fake"}}, "EMIS__MODE=real"),
+        ({"telegram": {"mode": "fake", "bot_token": "1:x"}}, "TELEGRAM__MODE"),
+        ({"telegram": {"mode": "webhook"}}, "TELEGRAM__BOT_TOKEN"),
+        ({"tokens": {"refresh_cookie_secure": True}}, "TOKENS__SERVICE_TOKEN"),
+        ({"tokens": {"service_token": "x" * 40}}, "REFRESH_COOKIE_SECURE"),
+        ({"s3": {"secret_key": "minio12345", "access_key": "k"}}, "S3__SECRET_KEY"),
+        ({"s3": {"secret_key": "y" * 30}}, "S3__ACCESS_KEY"),
+        ({"database": {}}, "DATABASE__URL"),
+        ({"redis": {}}, "REDIS__URL"),
+        ({"urls": {}}, "URLS__"),
+    ],
+)
+def test_production_refuses_fake_modes_and_development_defaults(
+    override: dict[str, Any], name: str
+) -> None:
+    """Every shared dev default or fake mode stops all processes at start."""
+    with pytest.raises(ValueError, match=name):
+        Settings(**prod_base(**override))
+
+
+@pytest.mark.parametrize("process", ["api", "worker"])
+def test_production_api_and_worker_need_the_openrouter_and_exa_keys(
+    process: str,
+) -> None:
+    """A missing AI key is a start error for the processes that call the providers."""
+    secrets = {"vault": {"role_id": "r", "secret_id": "s"}}
+    secrets["jwt_bearer"] = {"private_key_pem": PEM}
+    keyless = Settings(
+        **prod_base(openrouter={"mode": "real"}, exa={"mode": "real"}, **secrets)
+    )
+    with pytest.raises(ValueError, match="OPENROUTER__API_KEY, EXA__API_KEY"):
+        keyless.require_production_ready(process)
+    prod_settings(**secrets).require_production_ready(process)
+
+
+def test_production_bot_needs_the_webhook_secret() -> None:
+    """Webhook mode without its secret leaves the endpoint open."""
+    bare = Settings(**prod_base(telegram={"mode": "webhook", "bot_token": "1:x"}))
+    with pytest.raises(ValueError, match="TELEGRAM__WEBHOOK_SECRET"):
+        bare.require_production_ready("bot")
+    prod_settings().require_production_ready("bot")

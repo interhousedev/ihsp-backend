@@ -26,12 +26,19 @@ DEV_SERVICE_TOKEN = "dev-service-token"
 DEV_VAULT_TOKEN = "dev-root"
 DEV_S3_SECRET = "minio12345"
 DEV_BOT_TOKEN = "000:dev"
+DEV_S3_ACCESS_KEY = "minio"
+DEV_DATABASE_URL = "postgresql+asyncpg://ihsp:ihsp@localhost:5433/ihsp"
 
 # Processes that hold EMIS secrets (Vault AppRole) and the JWT-bearer signing key. The
 # others (api, bot, mail, scheduler, migrate) never see either in production.
 SECRET_HOLDING_PROCESSES = frozenset(
     {"identity", "worker", "all", "create-user", "seed-demo"}
 )
+
+# Processes that call OpenRouter and Exa (the other processes get neither key), and the
+# one that registers the Telegram webhook.
+AI_KEY_PROCESSES = frozenset({"api", "worker", "all"})
+WEBHOOK_PROCESSES = frozenset({"bot", "all"})
 
 
 @cache
@@ -242,7 +249,7 @@ class EmisSettings(BaseModel):
     base_url: str = "https://emis.edu.uz/api/v1/"
     """EMIS API root."""
 
-    profile_path: str = "student-profiles/profile/"  # README open question 9
+    profile_path: str = "student-profiles/profile/"  # spec open question 9
     """Path of the student profile endpoint under the base URL."""
 
     institution_id: int = 10815
@@ -969,23 +976,46 @@ class Settings(BaseSettings):
         return self
 
     def require_production_ready(self, process: str) -> None:
-        """Check what only some processes need: Vault AppRole and the JWT key.
+        """Check what only some processes need: AppRole, JWT key, AI keys, webhook.
 
         Called once at process start (`python -m app <process>`). Only the identity and
         worker processes (and the commands that run in their environment) read EMIS
-        secrets or sign assertions, so the others start without those secrets.
+        secrets or sign assertions, and only api and worker hold the OpenRouter and Exa
+        keys, so the others start without those secrets.
         """
-        if self.env != "prod" or process not in SECRET_HOLDING_PROCESSES:
+        if self.env != "prod":
             return
-        problems = []
-        if not (self.vault.role_id and self.vault.secret_id):
-            problems.append("VAULT__ROLE_ID and VAULT__SECRET_ID")
-        if self.jwt_bearer.ephemeral:
-            problems.append("JWT_BEARER__PRIVATE_KEY_PEM or _PATH")
+        problems = self._missing_for(process)
         if problems:
             raise ValueError(
                 f"production settings missing for {process}: " + ", ".join(problems)
             )
+
+    def _missing_for(self, process: str) -> list[str]:
+        """Names of the settings `process` still lacks in production."""
+        problems = []
+        if process in SECRET_HOLDING_PROCESSES:
+            if not (self.vault.role_id and self.vault.secret_id):
+                problems.append("VAULT__ROLE_ID and VAULT__SECRET_ID")
+            if self.jwt_bearer.ephemeral:
+                problems.append("JWT_BEARER__PRIVATE_KEY_PEM or _PATH")
+        if process in AI_KEY_PROCESSES:
+            if self.openrouter.api_key is None:
+                problems.append("OPENROUTER__API_KEY")
+            if self.exa.api_key is None:
+                problems.append("EXA__API_KEY")
+        if process in WEBHOOK_PROCESSES and self.telegram.mode == "webhook":
+            problems += self._missing_webhook()
+        return problems
+
+    def _missing_webhook(self) -> list[str]:
+        """Webhook settings the bot still lacks."""
+        missing = []
+        if self.telegram.webhook_secret is None:
+            missing.append("TELEGRAM__WEBHOOK_SECRET")
+        if not self.telegram.webhook_url:
+            missing.append("TELEGRAM__WEBHOOK_URL")
+        return missing
 
     def cors_app_origins(self) -> list[str]:
         """Origins of the id, sp, staff, admin, lms, app and library apps."""
@@ -1000,7 +1030,12 @@ class Settings(BaseSettings):
 
 
 def _production_problems(settings: Settings) -> list[str]:
-    """Names of shared settings that still hold development defaults."""
+    """Names of shared settings that still hold development defaults or fake modes.
+
+    Only settings every process receives belong here; the API keys that only `api` and
+    `worker` get are checked in `Settings.require_production_ready`.
+    """
+    urls = settings.urls.model_dump().values()
     checks = {
         "TOKENS__SERVICE_TOKEN": settings.tokens.service_token.get_secret_value()
         == DEV_SERVICE_TOKEN,
@@ -1008,6 +1043,17 @@ def _production_problems(settings: Settings) -> list[str]:
         "TOKENS__REFRESH_COOKIE_SAMESITE=lax": settings.tokens.refresh_cookie_samesite
         == "none",
         "S3__SECRET_KEY": settings.s3.secret_key.get_secret_value() == DEV_S3_SECRET,
+        "S3__ACCESS_KEY": settings.s3.access_key == DEV_S3_ACCESS_KEY,
+        "DATABASE__URL": settings.database.url == DEV_DATABASE_URL
+        or ":ihsp@" in settings.database.url,
+        "REDIS__URL": "@" not in settings.redis.url,
+        "TELEGRAM__BOT_TOKEN": settings.telegram.bot_token.get_secret_value()
+        == DEV_BOT_TOKEN,
+        "TELEGRAM__MODE=webhook": settings.telegram.mode == "fake",
+        "EMIS__MODE=real": settings.emis.mode != "real",
+        "OPENROUTER__MODE=real": settings.openrouter.mode != "real",
+        "EXA__MODE=real": settings.exa.mode != "real",
+        "URLS__* (no localhost URLs)": any("localhost" in str(u) for u in urls),
     }
     return [name for name, is_default in checks.items() if is_default]
 

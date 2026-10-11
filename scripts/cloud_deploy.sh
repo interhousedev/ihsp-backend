@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 # Deploy the production stack to a server over SSH (run it from your machine).
 #
-# Usage: scripts/cloud_deploy.sh <ssh-host> [--init] [--push-env] [--no-pull]
+# Usage: scripts/cloud_deploy.sh <ssh-host> [--init] [--push-env] [--no-pull] [--tag TAG]
 #   <ssh-host>   anything `ssh` accepts: deploy@203.0.113.7, a Host from ~/.ssh/config
 #   --init       first deployment: after copying the files run scripts/prod_init.sh on the
 #                server (secrets, Vault, certificates, Hydra, first administrator)
 #   --push-env   overwrite the server's .env.prod with the local backend/.env.prod
 #                (by default an existing server copy is kept: it holds the Vault AppRole ids)
 #   --no-pull    do not pull images (they are already on the server)
+#   --tag TAG    set TAG in the server's .env.prod first (1.2.0, sha-<40 hex>, latest); a
+#                rollback is the same command with the previous tag
 #
 # On the server (IHSP_REMOTE_DIR, default /opt/ihsp) the layout is:
 #   materials/ scripts/ secrets/ data/ backups/ .env.prod
@@ -21,17 +23,19 @@ host=
 init=0
 push_env=0
 pull=1
+tag=
 while [ $# -gt 0 ]; do
     case "$1" in
         --init) init=1; shift ;;
         --push-env) push_env=1; shift ;;
         --no-pull) pull=0; shift ;;
-        -h | --help) sed -n '2,17p' "$0"; exit 0 ;;
+        --tag) tag=${2:?--tag needs a value}; shift 2 ;;
+        -h | --help) sed -n '2,19p' "$0"; exit 0 ;;
         -*) echo "unknown argument: $1" >&2; exit 2 ;;
         *) host=$1; shift ;;
     esac
 done
-[ -n "$host" ] || { echo "usage: scripts/cloud_deploy.sh <ssh-host> [--init] [--push-env] [--no-pull]" >&2; exit 2; }
+[ -n "$host" ] || { echo "usage: scripts/cloud_deploy.sh <ssh-host> [--init] [--push-env] [--no-pull] [--tag TAG]" >&2; exit 2; }
 
 dir=${IHSP_REMOTE_DIR:-/opt/ihsp}
 say() { printf '==> %s\n' "$*"; }
@@ -59,6 +63,14 @@ if [ "$push_env" -eq 1 ] || ! ssh "$host" "test -f '$dir/.env.prod'"; then
         echo "no .env.prod here or on the server: run scripts/cloud_deploy.sh $host --init" >&2
         exit 1
     fi
+fi
+
+case "$tag" in
+    "" | *[!A-Za-z0-9._-]*) [ -z "$tag" ] || { echo "invalid tag: $tag" >&2; exit 2; } ;;
+esac
+if [ -n "$tag" ] && [ "$init" -eq 0 ]; then
+    say "setting TAG=$tag in $dir/.env.prod"
+    ssh "$host" "cd '$dir' && sed -i.bak 's/^TAG=.*/TAG=$tag/' .env.prod && rm -f .env.prod.bak && chmod 600 .env.prod"
 fi
 
 if [ "$init" -eq 1 ]; then

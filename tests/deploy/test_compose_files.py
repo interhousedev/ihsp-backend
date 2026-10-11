@@ -297,3 +297,63 @@ def test_the_worker_has_its_own_vault_dependency_in_prod(
     prod_model: dict[str, Any],
 ) -> None:
     assert "vault" in prod_model["services"]["worker"]["depends_on"]
+
+
+def test_prod_processes_run_hardened(prod_model: dict[str, Any]) -> None:
+    """Backend processes, web and Hydra: read-only root, no capabilities."""
+    hardened = (
+        "migrate",
+        "identity",
+        "api",
+        "bot",
+        "mail",
+        "worker",
+        "scheduler",
+        "web",
+        "hydra",
+        "hydra-janitor",
+    )
+    for name in hardened:
+        service = prod_model["services"][name]
+        assert service.get("read_only") is True, name
+        assert service.get("cap_drop") == ["ALL"], name
+        assert "no-new-privileges:true" in service.get("security_opt", []), name
+        assert "/tmp" in service.get("tmpfs", []), name
+
+
+def test_prod_nginx_keeps_only_the_capabilities_it_needs(
+    prod_model: dict[str, Any],
+) -> None:
+    nginx = prod_model["services"]["nginx"]
+    assert nginx["read_only"] is True
+    assert nginx["cap_drop"] == ["ALL"]
+    assert set(nginx["cap_add"]) == {"CHOWN", "SETUID", "SETGID", "NET_BIND_SERVICE"}
+
+
+def test_prod_web_listens_on_8080_with_a_wget_healthcheck(
+    prod_model: dict[str, Any],
+) -> None:
+    """nginx-unprivileged cannot bind 80 and has no curl."""
+    check = prod_model["services"]["web"]["healthcheck"]["test"]
+    assert check[0] == "CMD" and check[1] == "wget"
+    assert "127.0.0.1:8080" in check[-1]
+
+
+def test_prod_ai_cost_controls_reach_the_processes_that_use_them(
+    prod_model: dict[str, Any],
+) -> None:
+    """Keys go to api and worker only; retention and cookie settings to all."""
+    for name in ("api", "worker"):
+        env = prod_model["services"][name]["environment"]
+        assert env["IHSP_OPENROUTER__API_KEY"] and env["IHSP_EXA__API_KEY"], name
+    for name in ("identity", "bot", "mail", "scheduler", "migrate"):
+        env = prod_model["services"][name]["environment"]
+        assert "IHSP_OPENROUTER__API_KEY" not in env, name
+        assert "IHSP_EXA__API_KEY" not in env, name
+    for name in ("api", "worker", "identity"):
+        env = prod_model["services"][name]["environment"]
+        assert "IHSP_AI__USAGE_RETENTION_DAYS" in env, name
+        assert env["IHSP_TOKENS__REFRESH_COOKIE_SAMESITE"] == "lax", name
+        assert (
+            env["IHSP_EXA__MODE"] == "real" and env["IHSP_OPENROUTER__MODE"] == "real"
+        )

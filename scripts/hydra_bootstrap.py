@@ -49,7 +49,7 @@ CLIENT_NAMES = {
     "admin": "admin.iht",
     "lms": "lms.iht",
     "app": "IHT App",
-    "library": "library.iht",
+    "library": "lib.iht",
 }
 MINIAPP = "miniapp"
 DEV_MINIAPP_SECRET = "dev-miniapp-secret"  # default of identity's own setting

@@ -9,6 +9,7 @@
 #   scripts/prod_init.sh unseal          unseal Vault after a restart or reboot
 #   scripts/prod_init.sh certs           issue the Let's Encrypt certificate and start nginx
 #   scripts/prod_init.sh hydra           start Hydra and register the OAuth clients
+#   scripts/prod_init.sh s3              create/configure the S3 bucket (CORS, lifecycle)
 #   scripts/prod_init.sh admin           create the first administrator (prints an activation link)
 #
 # Environment: ACME_STAGING=1 uses Let's Encrypt's staging server (for rehearsals).
@@ -294,6 +295,13 @@ cmd_hydra() {
     dc --profile tools run --rm -T bootstrap
 }
 
+# --------------------------------------------------------------------------- s3
+cmd_s3() {
+    need_env_file
+    say "preparing the S3 bucket (CORS for all apps, lifecycle rules)"
+    dc --profile tools run --rm -T s3-init
+}
+
 # ------------------------------------------------------------------------- admin
 cmd_admin() {
     need_env_file
@@ -310,7 +318,7 @@ cmd_init() {
     cmd_env
     require_filled
     say "pulling images"
-    dc pull --ignore-buildable
+    dc pull --ignore-buildable || die "could not pull the images: run docker login ghcr.io (a private package) and check IMAGE_OWNER (lowercase) and TAG in $ENV_FILE"
     say "starting the data stores"
     dc up -d --wait postgres redis
     cmd_vault
@@ -318,6 +326,7 @@ cmd_init() {
     say "applying database migrations"
     dc run --rm --no-deps migrate
     cmd_hydra
+    cmd_s3
     say "starting everything"
     dc up -d --wait
     cmd_admin
@@ -336,6 +345,7 @@ case "${1:-init}" in
     unseal) cmd_unseal ;;
     certs) cmd_certs ;;
     hydra) cmd_hydra ;;
+    s3) cmd_s3 ;;
     admin) shift || true; cmd_admin "$@" ;;
     -h | --help | help) sed -n '2,17p' "$0" ;;
     *) die "unknown command: $1 (try --help)" ;;

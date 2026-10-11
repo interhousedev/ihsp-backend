@@ -25,10 +25,21 @@ x-healthcheck: &healthcheck
   start_period: 30s
   start_interval: 3s # probe often while starting so `up --wait` returns quickly
 
+# Container hardening for processes that need no privileges and write only to /tmp.
+x-hardened: &hardened
+  read_only: true
+  tmpfs:
+    - /tmp
+  security_opt:
+    - no-new-privileges:true
+  cap_drop: [ALL]
+
 x-backend: &backend
+  <<: *hardened
   image: ghcr.io/${IMAGE_OWNER:?set IMAGE_OWNER in .env.prod}/ihsp-backend:${TAG:?set TAG in .env.prod}
   restart: unless-stopped
   logging: *logging
+  pids_limit: 512
   volumes:
     - ./healthcheck:/healthcheck:ro
 
@@ -52,6 +63,7 @@ x-backend-env: &backend-env
   IHSP_HYDRA__ADMIN_URL: http://hydra:4445
   IHSP_HYDRA__ISSUER: https://id.${DOMAIN:?}/
   IHSP_TOKENS__REFRESH_COOKIE_SECURE: "true"
+  IHSP_TOKENS__REFRESH_COOKIE_SAMESITE: lax # the apps and the API share *.${DOMAIN}; `none` is refused
   IHSP_TOKENS__SERVICE_TOKEN: ${IHSP_TOKENS__SERVICE_TOKEN:?}
   IHSP_TELEGRAM__BOT_TOKEN: ${IHSP_TELEGRAM__BOT_TOKEN:?}
   IHSP_TELEGRAM__BOT_USERNAME: ${IHSP_TELEGRAM__BOT_USERNAME:-ihspbot}
@@ -76,6 +88,12 @@ x-backend-env: &backend-env
   # Deprecated names of the first three (still honoured by app/settings.py).
   IHSP_OPENROUTER__MODEL_STUDENT: ${IHSP_OPENROUTER__MODEL_STUDENT:-}
   IHSP_OPENROUTER__MODEL_ADMIN: ${IHSP_OPENROUTER__MODEL_ADMIN:-}
+  # AI cost controls. Soft limits are editable at runtime (admin: Limits & usage page);
+  # these are the starting values. An empty value means "the built-in default".
+  IHSP_AI__USAGE_RETENTION_DAYS: ${IHSP_AI__USAGE_RETENTION_DAYS:-}
+  IHSP_LIMITS__AI_SMART_REQUESTS_PER_WEEK_STUDENT: ${IHSP_LIMITS__AI_SMART_REQUESTS_PER_WEEK_STUDENT:-}
+  IHSP_LIMITS__AI_SESSION_TOKENS_STUDENT: ${IHSP_LIMITS__AI_SESSION_TOKENS_STUDENT:-}
+  IHSP_LIMITS__AI_DAILY_TOKENS_STUDENT: ${IHSP_LIMITS__AI_DAILY_TOKENS_STUDENT:-}
   # Feature flags: set one to false in .env.prod to switch a part of the product off.
   IHSP_FEATURES__NOTEBOOKS: ${IHSP_FEATURES__NOTEBOOKS:-true}
   IHSP_FEATURES__AI_ASSISTANT: ${IHSP_FEATURES__AI_ASSISTANT:-true}
@@ -84,6 +102,9 @@ x-backend-env: &backend-env
   IHSP_FEATURES__MAIL: ${IHSP_FEATURES__MAIL:-true}
   IHSP_FEATURES__PUSH: ${IHSP_FEATURES__PUSH:-true}
   IHSP_FEATURES__EMIS_SYNC: ${IHSP_FEATURES__EMIS_SYNC:-true}
+  IHSP_FEATURES__LIBRARY: ${IHSP_FEATURES__LIBRARY:-true}
+  IHSP_FEATURES__WEB_SEARCH: ${IHSP_FEATURES__WEB_SEARCH:-true}
+  IHSP_FEATURES__VECTOR_SEARCH: ${IHSP_FEATURES__VECTOR_SEARCH:-true}
   IHSP_OPENROUTER__APP_URL: https://my.${DOMAIN}
   IHSP_SMTP_OUT__MAIL_DOMAIN: mail.${DOMAIN}
   IHSP_SMTP_OUT__SYSTEM_FROM: no-reply@${DOMAIN}
@@ -227,6 +248,7 @@ services:
     image: oryd/hydra:v26.2.0
     restart: unless-stopped
     logging: *logging
+    <<: *hardened
     # The token hook secret is spliced into a copy of the config (Hydra has no ${VAR}).
     entrypoint: ["sh", "-c"]
     command:
@@ -262,6 +284,7 @@ services:
     image: oryd/hydra:v26.2.0
     restart: unless-stopped
     logging: *logging
+    <<: *hardened
     entrypoint: ["sh", "-c"]
     command:
       - >-
@@ -302,6 +325,7 @@ services:
   identity:
     <<: *backend
     command: ["python", "-m", "app", "identity"]
+    mem_limit: 1g
     environment:
       <<: [*backend-env, *smtp-out-env, *vault-env]
       IHSP_HYDRA__MINIAPP_CLIENT_SECRET: ${IHSP_HYDRA__MINIAPP_CLIENT_SECRET:?}
@@ -325,6 +349,7 @@ services:
   api:
     <<: *backend
     command: ["python", "-m", "app", "api"]
+    mem_limit: 2g
     environment:
       <<: [*backend-env, *openrouter-env, *exa-env]
     healthcheck:
@@ -342,6 +367,7 @@ services:
   bot:
     <<: *backend
     command: ["python", "-m", "app", "bot"]
+    mem_limit: 512m
     environment:
       <<: *backend-env
       IHSP_TELEGRAM__WEBHOOK_SECRET: ${IHSP_TELEGRAM__WEBHOOK_SECRET:?}
@@ -360,6 +386,7 @@ services:
   mail:
     <<: *backend
     command: ["python", "-m", "app", "mail"]
+    mem_limit: 512m
     ports:
       - "25:2525"
     environment:
@@ -386,6 +413,7 @@ services:
   worker:
     <<: *backend
     command: ["python", "-m", "app", "worker"]
+    mem_limit: 3g
     stop_grace_period: 60s
     environment:
       <<: [*backend-env, *smtp-out-env, *openrouter-env, *exa-env, *vault-env]
@@ -408,6 +436,7 @@ services:
   scheduler:
     <<: *backend
     command: ["python", "-m", "app", "scheduler"]
+    mem_limit: 512m
     environment:
       <<: *backend-env
     healthcheck:
@@ -423,9 +452,12 @@ services:
   # ----------------------------------------------------------------------- edge
   # Static apps (image built from web/deploy): internal only, nginx proxies to it.
   web:
+    <<: *hardened # nginx-unprivileged (uid 101, port 8080) writes only under /tmp/ihsp
     image: ghcr.io/${IMAGE_OWNER:?}/ihsp-web:${TAG:?}
     restart: unless-stopped
     logging: *logging
+    mem_limit: 256m
+    pids_limit: 256
     environment:
       APP_ENV: prod
       APP_HOST_ID: id.${DOMAIN}
@@ -477,6 +509,20 @@ services:
     image: nginx:1.27-alpine
     restart: unless-stopped
     logging: *logging
+    mem_limit: 512m
+    pids_limit: 512
+    # Starts as root to bind 80/443 and drops to the nginx user. The entrypoint renders the
+    # templates into /etc/nginx/conf.d, hence the tmpfs there.
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /run
+      - /var/cache/nginx
+      - /etc/nginx/conf.d
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID, NET_BIND_SERVICE]
     ports:
       - "80:80"
       - "443:443"
@@ -516,6 +562,8 @@ services:
     image: certbot/certbot:latest
     restart: unless-stopped
     logging: *logging
+    security_opt:
+      - no-new-privileges:true
     entrypoint: ["/bin/sh", "-c"]
     command:
       - >-
