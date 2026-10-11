@@ -20,6 +20,7 @@ from app.modules.notebooks.wiring_core import NotebooksCore
 from app.shared.actor import Actor
 from app.shared.contracts.web_search import (
     DiscoverMode,
+    SearchNotice,
     WebHit,
     WebQuota,
     WebSearchDisabledError,
@@ -46,6 +47,8 @@ class DiscoverView:
     queries: tuple[str, ...]
     results: list[DiscoveredPage]
     quota: WebQuota
+    notice: SearchNotice | None = None
+    """`timeout`: the search provider was too slow; the searches were given back."""
 
 
 def clean_query(text: str) -> str:
@@ -88,17 +91,22 @@ class DiscoverSources:
             notebook = await load_notebook(uow, actor.user_id, notebook_id)
             if notebook.is_auto:
                 raise AutoNotebookReadOnlyError()
+            known = await uow.sources.url_keys(notebook_id)
         api = self.core.web_search
         if api is None:
             raise WebSearchDisabledError()
         locale = await self.core.locale.locale_of(actor.user_id)
-        outcome = await api.search(actor, query=clean, locale=locale, kind=mode)
+        outcome = await api.search(
+            actor, query=clean, locale=locale, kind=mode, known_urls=known
+        )
         async with self.core.uow_factory() as uow:
             results = [
                 DiscoveredPage(hit, await self._added(uow, notebook_id, hit))
                 for hit in outcome.hits
             ]
-        return DiscoverView(mode, outcome.queries, results, outcome.quota)
+        return DiscoverView(
+            mode, outcome.queries, results, outcome.quota, outcome.notice
+        )
 
     @staticmethod
     async def _added(uow: NotebooksUnitOfWork, notebook_id: UUID, hit: WebHit) -> bool:

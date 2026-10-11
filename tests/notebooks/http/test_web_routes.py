@@ -66,7 +66,7 @@ async def notebook(uow_factory: Any, student: Any) -> Notebook:
 async def use_up(web: WebRig, student: Any) -> None:
     """Spend all of today's searches of the student."""
     day = local_today(web.service.clock)
-    await web.store.add(student.user_id, day, web.service.limit_of(student))
+    await web.store.add(student.user_id, day, await web.service.limit_of(student))
 
 
 def discover_url(notebook: Notebook) -> str:

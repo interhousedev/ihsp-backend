@@ -106,11 +106,11 @@ async def test_the_search_uses_the_cheap_task_model_and_the_blocklist(
 async def test_students_and_staff_have_their_own_daily_limits(
     clock: FixedClock,
 ) -> None:
-    """NB-33: LIMITS__WEB_SEARCH_PER_DAY_STUDENT (10) and _STAFF (30)."""
+    """NB-33: LIMITS__WEB_SEARCH_PER_DAY_STUDENT (10); staff are not limited (None)."""
     rig = make_rig(clock)
 
     assert (await rig.service.quota(rig.student)).limit == 10
-    assert (await rig.service.quota(rig.teacher)).limit == 30
+    assert (await rig.service.quota(rig.teacher)).limit is None
 
 
 async def test_the_search_after_the_last_one_is_refused_and_not_run(

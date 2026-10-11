@@ -5,7 +5,7 @@ from typing import Literal, Self
 
 from app.shared.contracts.web_search import WebQuota, WebResult
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class WebResultResponse(BaseModel):
@@ -39,8 +39,12 @@ class WebQuotaResponse(BaseModel):
 
     enabled: bool
     used: int
-    limit: int
-    remaining: int
+    limit: int | None = Field(
+        description="Searches a day; null when unlimited (staff)."
+    )
+    remaining: int | None = Field(
+        description="Searches left today; null when unlimited."
+    )
     resets_at: datetime
     max_results: int
     deep_cost: int

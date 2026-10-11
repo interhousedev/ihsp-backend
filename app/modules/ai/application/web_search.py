@@ -1,17 +1,21 @@
 """Use cases of web search: the daily quota and the search itself (NB-32, NB-33).
 
-`chat` and `fast` make one search call. `deep` plans several queries, searches them
-at once, merges the pages and lets the cheap model rank them with a reason each.
-Quota units are searches: one for `chat` and `fast`, `web_search_deep_queries` for
-`deep`. They are taken before the call (an atomic increment, so two requests at once
-cannot both pass the limit) and given back when the provider fails. Tokens of the
-cheap model are not counted in the AI budgets; the daily search count is the control.
+`chat` and `fast` make one Exa search. `deep` plans several queries with the model,
+searches them at once, merges the pages and lets the model rank them with a reason
+each. Quota units are searches: one for `chat` and `fast`, `web_search_deep_queries`
+for `deep`. They are taken before the call (an atomic increment, so two requests at
+once cannot both pass the limit) and given back when the provider fails or when Exa
+timed out with nothing found. Tokens of the model calls are not counted in the AI
+budgets; the daily search count is the control, and the Exa charge is in the outcome
+(`cost_micro`) for the usage ledger.
 """
 
 import asyncio
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime, time, timedelta
 
+from app.modules.ai.application.web_pages import LocalPage, WebPageIndex
 from app.modules.ai.domain.db_first import judge
 from app.modules.ai.domain.web_prompts import (
     PLAN_SCHEMA,
@@ -24,7 +28,8 @@ from app.modules.ai.domain.web_prompts import (
     rank_request,
 )
 from app.modules.ai.ports.search_quota import SearchQuotaStore
-from app.settings import Settings
+from app.modules.ai.ports.usage import FreeUsage
+from app.settings import LimitsSettings, Settings
 from app.shared.actor import Actor, Role
 from app.shared.ai_tasks import AiTask
 from app.shared.clock import TASHKENT, Clock, local_today
@@ -33,6 +38,7 @@ from app.shared.contracts.web_search import (
     PlatformPassage,
     PlatformSearch,
     SearchCall,
+    SearchNotice,
     SearchReply,
     WebHit,
     WebQuota,
@@ -44,7 +50,9 @@ from app.shared.contracts.web_search import (
     WebSearchUnavailableError,
 )
 from app.shared.features import Feature, is_enabled
+from app.shared.limits import LimitsProvider, StaticLimits
 from app.shared.web_citations import clean_text, url_key
+from app.shared.web_urls import normalise_web_url
 
 import structlog
 
@@ -65,6 +73,8 @@ class _Ran:
 
     hits: tuple[WebHit, ...]
     queries: tuple[str, ...]
+    cost_micro: int = 0
+    notice: SearchNotice | None = None
 
 
 def language_of(locale: str) -> str:
@@ -84,30 +94,43 @@ class WebSearchService:
         clock: Clock,
         settings: Settings,
         platform: PlatformSearch | None = None,
+        limits: LimitsProvider | None = None,
+        pages: WebPageIndex | None = None,
+        usage: FreeUsage | None = None,
     ) -> None:
-        """Store the collaborators; `platform` turns on database-first search."""
+        """Store the collaborators.
+
+        `platform` turns on database-first search, `pages` the search over stored pages.
+        """
         self.platform = platform
         self.store = store
         self.gateway = gateway
         self.llm = llm
         self.clock = clock
         self.settings = settings
+        self.limits = limits or StaticLimits(settings.limits)
+        self.pages = pages
+        self.usage = usage
 
     # - - - quota - - -
 
     def _switched_on(self) -> bool:
         return is_enabled(self.settings, Feature.WEB_SEARCH)
 
-    def limit_of(self, actor: Actor) -> int:
-        """Searches a day: the student value for students, the staff value otherwise."""
-        limits = self.settings.limits
-        if actor.has(Role.STUDENT):
-            return limits.web_search_per_day_student
-        return limits.web_search_per_day_staff
+    async def limit_of(self, actor: Actor) -> int | None:
+        """Searches a day of the actor; None for staff (no quota, still counted).
 
-    def cost_of(self, kind: WebSearchKind) -> int:
+        Students get their limit from the provider (the admin's value, their extension).
+        """
+        limits = await self.limits.for_actor(actor)
+        student: int | None = limits.web_search_per_day_student
+        staff: int | None = limits.web_search_per_day_staff
+        return student if actor.has(Role.STUDENT) else staff
+
+    async def cost_of(self, kind: WebSearchKind) -> int:
         """Quota units of a request: one search, or all the queries of a deep run."""
-        return self.settings.limits.web_search_deep_queries if kind == "deep" else 1
+        limits = await self.limits.current()
+        return limits.web_search_deep_queries if kind == "deep" else 1
 
     def _midnight(self) -> datetime:
         tomorrow = local_today(self.clock) + timedelta(days=1)
@@ -115,12 +138,12 @@ class WebSearchService:
 
     async def quota(self, actor: Actor) -> WebQuota:
         """Today's searches of the actor."""
-        limit = self.limit_of(actor)
+        limit = await self.limit_of(actor)
         used = await self.store.used(actor.user_id, local_today(self.clock))
-        limits = self.settings.limits
+        limits = await self.limits.current()
         return WebQuota(
-            enabled=self._switched_on() and limit > 0,
-            used=min(used, limit),
+            enabled=self._switched_on() and (limit is None or limit > 0),
+            used=used if limit is None else min(used, limit),
             limit=limit,
             resets_at=self._midnight(),
             max_results=limits.web_search_max_results,
@@ -129,12 +152,12 @@ class WebSearchService:
 
     async def _take(self, actor: Actor, units: int) -> None:
         """Take `units` from today's quota or raise; nothing stays taken on a raise."""
-        limit = self.limit_of(actor)
-        if not self._switched_on() or limit <= 0:
+        limit = await self.limit_of(actor)
+        if not self._switched_on() or (limit is not None and limit <= 0):
             raise WebSearchDisabledError()
         day = local_today(self.clock)
         total = await self.store.add(actor.user_id, day, units)
-        if total > limit:
+        if limit is not None and total > limit:
             await self.store.remove(actor.user_id, day, units)
             raise WebSearchQuotaError(
                 params={
@@ -151,21 +174,61 @@ class WebSearchService:
     # - - - search - - -
 
     async def search(
-        self, actor: Actor, *, query: str, locale: str, kind: WebSearchKind = "chat"
+        self,
+        actor: Actor,
+        *,
+        query: str,
+        locale: str,
+        kind: WebSearchKind = "chat",
+        known_urls: frozenset[str] = frozenset(),
     ) -> WebSearchOutcome:
-        """Take the quota, search, and give the quota back if the provider fails."""
+        """Answer from stored pages when they are enough, else search.
+
+        Otherwise the quota is taken, the search runs and the stored ones that still fit
+        are merged in.
+
+        `known_urls` (normalised) are the pages the student already has; they are not
+        new, so they never count toward `web_search_local_min_new`.
+        """
         text = clean_text(query, QUERY_CHARS)
-        units = self.cost_of(kind)
-        if not self._switched_on() or self.limit_of(actor) <= 0:
+        units = await self.cost_of(kind)
+        limit = await self.limit_of(actor)
+        if not self._switched_on() or (limit is not None and limit <= 0):
             raise WebSearchDisabledError()
         local, enough = await self._from_database(actor, text)
         if enough:
             log.info("web_search_skipped", kind=kind, db_hits=len(local))
+            await self._note_free("local")
             return WebSearchOutcome(
                 hits=local,
                 queries=(text,),
                 quota=await self.quota(actor),
                 web_skipped=True,
+            )
+        limits = await self.limits.current()
+        wanted = _results_of(kind, limits)
+        stored = await self._stored(text, kind, wanted, known_urls, limits)
+        if stored is not None and len(stored) >= limits.web_search_local_min_new:
+            shown = stored[:wanted]
+            served: tuple[str, ...] = tuple(
+                dict.fromkeys(page.source for page in shown)
+            )
+            log.info(
+                "web_search_local",
+                kind=kind,
+                new=len(stored),
+                hits=len(shown),
+                sources=served,
+                cost_micro=0,
+            )
+            await self._note_free(
+                "cache" if all(p.source == "cache" for p in shown) else "local"
+            )
+            return WebSearchOutcome(
+                hits=local + tuple(page.hit for page in shown),
+                queries=(text,),
+                quota=await self.quota(actor),
+                sources=(("db",) if local else ()) + served,
             )
         await self._take(actor, units)
         try:
@@ -173,16 +236,75 @@ class WebSearchService:
         except WebSearchUnavailableError:
             await self._give_back(actor, units)
             raise
+        if ran.notice is not None and not ran.hits:
+            await self._give_back(actor, units)  # Exa was too slow: nothing to pay for
+        merged, sources = _with_stored(ran.hits, stored or [], wanted)
         log.info(
             "web_search_request",
             kind=kind,
             units=units,
             queries=len(ran.queries),
-            hits=len(ran.hits),
+            hits=len(merged),
+            local_new=len(stored or []),
+            sources=sources,
+            cost_micro=ran.cost_micro,
+            notice=ran.notice,
         )
         return WebSearchOutcome(
-            hits=local + ran.hits, queries=ran.queries, quota=await self.quota(actor)
+            hits=local + tuple(merged),
+            queries=ran.queries,
+            quota=await self.quota(actor),
+            cost_micro=ran.cost_micro,
+            notice=ran.notice,
+            sources=(("db",) if local else ()) + sources,
         )
+
+    async def _note_free(self, model: str) -> None:
+        """Put a search answered without Exa into the usage ledger at zero cost.
+
+        Best effort: the answer does not wait for the ledger.
+        """
+        if self.usage is None:
+            return
+        try:
+            await self.usage.note_free(task=AiTask.WEB_SEARCH.value, model=model)
+        except Exception:
+            log.warning("web_search_usage_note_failed")
+
+    async def _stored(
+        self,
+        query: str,
+        kind: WebSearchKind,
+        wanted: int,
+        known_urls: frozenset[str],
+        limits: LimitsSettings,
+    ) -> list[LocalPage] | None:
+        """The stored pages that answer the query and are new to the student.
+
+        None when the stored pages are not used (`web_search_local_min_new` is 0).
+        """
+        if self.pages is None or limits.web_search_local_min_new <= 0:
+            return None
+        # The size of the Exa calls of this kind (the cache key of their answers).
+        size = (
+            limits.web_search_max_results
+            if kind == "chat"
+            else limits.web_search_discover_results
+        )
+        return await self.pages.candidates(
+            query,
+            params=self._params(size),
+            known=known_urls,
+            limit=max(wanted, limits.web_search_local_min_new),
+        )
+
+    def _params(self, results: int) -> dict[str, object]:
+        """What changes the results of one Exa search (the cache key with the query)."""
+        return {
+            "n": results,
+            "type": self.settings.exa.search_type,
+            "x": list(self.settings.web_search.blocked_domains),
+        }
 
     async def _from_database(
         self, actor: Actor, query: str
@@ -206,12 +328,12 @@ class WebSearchService:
         return tuple(_db_hit(p) for p in verdict.dense), verdict.sufficient
 
     async def _run(self, query: str, language: str, kind: WebSearchKind) -> _Ran:
-        limits = self.settings.limits
+        limits = await self.limits.current()
         if kind == "chat":
             reply = await self._call(
                 query, language, AiTask.WEB_SEARCH, limits.web_search_max_results, False
             )
-            return _Ran(reply.hits, (query,))
+            return _Ran(reply.hits, (query,), reply.cost_micro, reply.notice)
         if kind == "fast":
             reply = await self._call(
                 query,
@@ -220,7 +342,7 @@ class WebSearchService:
                 limits.web_search_discover_results,
                 True,
             )
-            return _Ran(reply.hits, (query,))
+            return _Ran(reply.hits, (query,), reply.cost_micro, reply.notice)
         return await self._deep(query, language)
 
     async def _call(
@@ -234,12 +356,31 @@ class WebSearchService:
             profile=self.settings.ai_profile(task),
             exclude_domains=self.settings.web_search.blocked_domains,
         )
-        return await self.gateway.search(call)
+        reply = await self.gateway.search(call)
+        await self._remember(query, max_results, reply.hits)
+        return reply
+
+    async def _remember(
+        self, query: str, max_results: int, hits: tuple[WebHit, ...]
+    ) -> None:
+        """Keep the pages of an answer for later searches, best effort.
+
+        The answer goes out either way.
+        """
+        if self.pages is None or not hits:
+            return
+        try:
+            await self.pages.remember(
+                query, params=self._params(max_results), hits=hits
+            )
+        except Exception:  # the answer does not wait for the store
+            log.warning("web_pages_remember_failed", pages=len(hits))
 
     # - - - deep - - -
 
     async def _deep(self, query: str, language: str) -> _Ran:
-        count = self.settings.limits.web_search_deep_queries
+        limits = await self.limits.current()
+        count = limits.web_search_deep_queries
         queries = await self._plan(query, language, count)
         replies = await asyncio.gather(
             *(
@@ -247,7 +388,7 @@ class WebSearchService:
                     q,
                     language,
                     AiTask.DISCOVER,
-                    self.settings.limits.web_search_discover_results,
+                    limits.web_search_discover_results,
                     True,
                 )
                 for q in queries
@@ -268,8 +409,14 @@ class WebSearchService:
                 "web_search_deep_partial", failed=len(failed), total=len(queries)
             )
         pool = _merge([reply.hits for reply in good])
+        cost = sum(reply.cost_micro for reply in good)
+        notice: SearchNotice | None = (
+            "timeout" if all(reply.notice == "timeout" for reply in good) else None
+        )
+        if not pool:
+            return _Ran((), tuple(queries), cost, notice)
         hits = await self._rank(query, language, pool)
-        return _Ran(hits, tuple(queries))
+        return _Ran(hits, tuple(queries), cost, notice)
 
     async def _plan(self, query: str, language: str, count: int) -> list[str]:
         """The request itself plus the queries the cheap model adds (best effort)."""
@@ -303,7 +450,7 @@ class WebSearchService:
         self, query: str, language: str, pool: list[WebHit]
     ) -> tuple[WebHit, ...]:
         """Keep the best pages with the reason the cheap model gives (best effort)."""
-        keep = self.settings.limits.web_search_deep_results
+        keep = (await self.limits.current()).web_search_deep_results
         pool = pool[:RANK_CANDIDATES]
         profile = self.settings.ai_profile(AiTask.DISCOVER)
         try:
@@ -328,6 +475,46 @@ class WebSearchService:
             return tuple(pool[:keep])
         ranked = _apply_ranking(pool, reply["data"].get("results"), keep)
         return ranked or tuple(pool[:keep])
+
+
+def _results_of(kind: WebSearchKind, limits: LimitsSettings) -> int:
+    """How many pages a search of this kind shows."""
+    if kind == "chat":
+        return limits.web_search_max_results
+    if kind == "fast":
+        return limits.web_search_discover_results
+    return limits.web_search_deep_results
+
+
+def _with_stored(
+    found: Sequence[WebHit], stored: Sequence[LocalPage], limit: int
+) -> tuple[list[WebHit], tuple[str, ...]]:
+    """Merge the provider's pages (first, its ranking) with the stored new pages.
+
+    The stored pages fill up to `limit` and are not among the provider's; the sources
+    of the pages are returned with them.
+    """
+    seen: set[str] = set()
+    merged: list[WebHit] = []
+    sources: list[str] = []
+    for hit in found:
+        key = normalise_web_url(hit.url) or hit.url
+        if key not in seen:
+            seen.add(key)
+            merged.append(hit)
+    if merged:
+        sources.append("exa")
+    for page in stored:
+        if len(merged) >= limit:
+            break
+        key = normalise_web_url(page.hit.url) or page.hit.url
+        if key in seen:
+            continue
+        seen.add(key)
+        merged.append(page.hit)
+        if page.source not in sources:
+            sources.append(page.source)
+    return merged, tuple(sources)
 
 
 def _db_hit(passage: PlatformPassage) -> WebHit:
