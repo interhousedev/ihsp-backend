@@ -43,12 +43,14 @@ from app.modules.links.infrastructure.hit_counter import RedisHitCounter
 from app.modules.links.infrastructure.page_renderer import JinjaPageRenderer
 from app.modules.links.infrastructure.pin_limiter import RedisPinLimiter
 from app.modules.links.infrastructure.room_page_cache import RedisRoomPageCache
+from app.modules.links.infrastructure.room_sessions import RedisRoomSessions
 from app.modules.links.infrastructure.title_fetcher import HttpTitleFetcher
 from app.modules.links.infrastructure.uow import LinksSqlUnitOfWork
 from app.modules.links.ports.hit_counter import HitCounter
 from app.modules.links.ports.page_renderer import PageRenderer
 from app.modules.links.ports.pin_limiter import PinLimiter
 from app.modules.links.ports.room_page_cache import RoomPageCache
+from app.modules.links.ports.room_sessions import RoomSessions
 from app.modules.links.ports.title_fetcher import TitleFetcher
 from app.modules.links.ports.unit_of_work import UowFactory
 from app.shared.contracts.academic import ScheduleQueries
@@ -99,6 +101,7 @@ class LinksOverrides:
     hit_counter: HitCounter | None = None
     room_cache: RoomPageCache | None = None
     pin_limiter: PinLimiter | None = None
+    room_sessions: RoomSessions | None = None
     blocked_domains: frozenset[str] | None = None
 
 
@@ -132,6 +135,7 @@ def build(
     hits = custom.hit_counter or RedisHitCounter(deps.redis)
     cache = custom.room_cache or RedisRoomPageCache(deps.redis)
     pin_limiter = custom.pin_limiter or RedisPinLimiter(deps.redis)
+    room_sessions = custom.room_sessions or RedisRoomSessions(deps.redis)
     titles = custom.title_fetcher or HttpTitleFetcher()
     rng = custom.rng or random.SystemRandom()
 
@@ -256,6 +260,7 @@ def build(
             renderer=renderer,
             cache=cache,
             pin_limiter=pin_limiter,
+            sessions=room_sessions,
             not_found=not_found,
             pages=pages,
             clock=deps.clock,

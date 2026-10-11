@@ -48,6 +48,19 @@ def error_routes(router: APIRouter) -> None:
     async def boom() -> None:
         raise RuntimeError("secret internals")
 
+    @router.get("/v1/leaky")
+    async def leaky() -> None:
+        raise ConflictError(
+            params={
+                "what": "lesson",
+                "roles": ["admin", "teacher"],
+                "count": 3,
+                "upstream": {"error": "connection to 10.0.0.5 refused"},
+                "trace": "x" * 201,
+                "exc": RuntimeError("internals"),
+            }
+        )
+
     @router.post("/v1/body")
     async def body(payload: Body) -> dict[str, str]:
         return {"name": payload.name}
@@ -158,6 +171,22 @@ async def test_a_domain_error_is_problem_json(http_client: HttpClientFactory) ->
     assert body["message_key"] == "error-conflict"
     assert body["params"] == {"what": "lesson"}
     assert "changed by someone else" in body["title"]
+
+
+async def test_error_params_echo_only_short_scalars(
+    http_client: HttpClientFactory,
+) -> None:
+    """Problem+JSON never carries nested objects, long text or exception objects."""
+    client = await http_client([build_router()])
+
+    response = await client.get("/v1/leaky")
+
+    assert response.status_code == 409
+    assert response.json()["params"] == {
+        "what": "lesson",
+        "roles": ["admin", "teacher"],
+        "count": 3,
+    }
 
 
 async def test_error_params_fill_the_english_title(

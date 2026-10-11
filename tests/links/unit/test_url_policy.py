@@ -95,6 +95,13 @@ def test_other_hosts_need_the_interstitial(url: str) -> None:
         ("192.168.0.5", False),
         ("169.254.169.254", False),
         ("::1", False),
+        ("100.64.1.1", False),  # CGNAT
+        ("::ffff:10.0.0.5", False),  # IPv4-mapped
+        ("::ffff:93.184.216.34", True),
+        ("2002:7f00:1::1", False),  # 6to4 of 127.0.0.1
+        ("2001:0:4136:e378:8000:63bf:3fff:fdd2", False),  # Teredo
+        ("64:ff9b::a00:1", False),  # NAT64 of 10.0.0.1
+        ("fe80::1%eth0", False),
         ("not-an-ip", False),
     ],
 )

@@ -103,6 +103,16 @@ class PublicShareView:
 
 
 @dataclass(frozen=True, slots=True)
+class SetCookie:
+    """A cookie the interface sets on the answer (HttpOnly, SameSite=Lax)."""
+
+    name: str
+    value: str
+    path: str
+    max_age: int
+
+
+@dataclass(frozen=True, slots=True)
 class WebResponse:
     """An HTTP answer of a public page: status, headers and body."""
 
@@ -110,3 +120,4 @@ class WebResponse:
     html: str | None = None
     location: str | None = None
     retry_after: int | None = None
+    cookie: SetCookie | None = None

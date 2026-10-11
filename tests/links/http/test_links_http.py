@@ -391,7 +391,8 @@ async def test_room_resource_changes_are_visible_in_the_room_page(
         students=[student.user_id],
     )
     anonymous = await api(None)
-    before = await anonymous.get("/r/102", params={"pin": "483920"})
+    assert (await anonymous.post("/r/102", data={"pin": "483920"})).status_code == 303
+    before = await anonymous.get("/r/102")
 
     await (await api(student)).post(
         f"/v1/lessons/{lesson.id}/resources",
@@ -401,7 +402,7 @@ async def test_room_resource_changes_are_visible_in_the_room_page(
             "target_url": "https://example.org/d",
         },
     )
-    after = await anonymous.get("/r/102", params={"pin": "483920"})
+    after = await anonymous.get("/r/102")
 
     assert "Aleksey - " not in before.text
     assert "Aleksey - " in after.text

@@ -87,6 +87,21 @@ async def test_eleventh_report_from_one_ip_in_an_hour_is_rate_limited(
     assert world.uow.store.links[link.id].reports == 11
 
 
+async def test_fifty_first_report_of_one_link_in_a_day_is_rate_limited(
+    world: LinksWorld,
+) -> None:
+    """A flood of anonymous reports on one link stops at fifty a day."""
+    link = await _link(world, world.person("Ann"))
+    for n in range(50):
+        await _report(world, link.slug, ip=f"198.51.{n // 250}.{n % 250}")
+
+    with pytest.raises(RateLimitedError):
+        await _report(world, link.slug, ip="203.0.113.77")
+
+    assert world.uow.store.links[link.id].reports == 50
+    assert await world.redis.ttl(f"rl:report-link:{link.slug}") == 86400
+
+
 async def test_queue_orders_by_report_count_then_recency(
     world: LinksWorld, clock: FixedClock
 ) -> None:

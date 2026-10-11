@@ -102,8 +102,8 @@ async def test_a_redirect_to_an_internal_host_is_refused() -> None:
     calls: list[str] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
-        calls.append(request.url.host)
-        if request.url.host == "example.org":
+        calls.append(request.headers["host"])
+        if request.headers["host"] == "example.org":
             return httpx.Response(302, headers={"location": "http://internal.test/x"})
         return _html("<title>Secret</title>")
 
@@ -113,6 +113,63 @@ async def test_a_redirect_to_an_internal_host_is_refused() -> None:
 
     assert title == "example.org"
     assert calls == ["example.org"]
+
+
+async def test_the_request_goes_to_the_validated_address_with_the_real_host() -> None:
+    """SL-8 (DNS rebinding): connect to the checked IP; the name is in Host and SNI."""
+    seen: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request)
+        return _html("<title>Pinned</title>")
+
+    title = await _fetcher(httpx.MockTransport(handler)).fetch_title(
+        "https://example.org:8443/page?q=1"
+    )
+
+    assert title == "Pinned"
+    [request] = seen
+    assert request.url.host == PUBLIC
+    assert request.url.port == 8443
+    assert request.url.raw_path == b"/page?q=1"
+    assert request.headers["host"] == "example.org:8443"
+    assert request.extensions["sni_hostname"] == "example.org"
+
+
+async def test_a_name_that_resolves_to_a_mapped_private_address_is_refused() -> None:
+    """SL-8: IPv4-mapped IPv6 answers are no way around the address check."""
+    calls: list[str] = []
+
+    async def resolver(host: str) -> list[str]:
+        return [PUBLIC, "::ffff:10.0.0.5"]
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(str(request.url))
+        return _html("<title>Secret</title>")
+
+    fetcher = HttpTitleFetcher(
+        resolver=resolver, transport=httpx.MockTransport(handler)
+    )
+
+    assert await fetcher.fetch_title("http://example.org/") == "example.org"
+    assert calls == []
+
+
+async def test_a_connection_to_an_unexpected_peer_is_dropped() -> None:
+    """SL-8: the socket must be connected to the validated address."""
+
+    class _Stream:
+        def get_extra_info(self, name: str) -> object:
+            return ("10.0.0.5", 80) if name == "server_addr" else None
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        response = _html("<title>Secret</title>")
+        response.extensions["network_stream"] = _Stream()
+        return response
+
+    fetcher = _fetcher(httpx.MockTransport(handler))
+
+    assert await fetcher.fetch_title("http://example.org/") == "example.org"
 
 
 async def test_unusual_ports_and_literal_private_ips_are_refused() -> None:

@@ -43,12 +43,48 @@ def host_of(raw: str) -> str | None:
     return host.rstrip(".").lower() if host else None
 
 
+_CGNAT = ipaddress.ip_network("100.64.0.0/10")
+_NAT64 = ipaddress.ip_network("64:ff9b::/96")
+IPAddress = ipaddress.IPv4Address | ipaddress.IPv6Address
+
+
 def is_public_ip(address: str) -> bool:
-    """True if the IP address is globally routable (not private, loopback, ...)."""
+    """True if the IP address is globally routable (not private, loopback, ...).
+
+    CGNAT (100.64.0.0/10) is not public. Neither are IPv6 forms that carry a
+    non-public IPv4 address: IPv4-mapped, IPv4-compatible, 6to4, Teredo and NAT64.
+    """
     try:
-        return ipaddress.ip_address(address).is_global
+        ip = ipaddress.ip_address(address.strip())
     except ValueError:
         return False
+    return _public(ip)
+
+
+def _public(ip: IPAddress) -> bool:
+    if not ip.is_global or ip.is_private or ip.is_loopback or ip.is_link_local:
+        return False
+    if ip.is_multicast or ip.is_reserved or ip.is_unspecified:
+        return False
+    if isinstance(ip, ipaddress.IPv4Address):
+        return ip not in _CGNAT
+    if ip.scope_id or ip.is_site_local:
+        return False
+    return all(_public(inner) for inner in _wrapped_ipv4(ip))
+
+
+def _wrapped_ipv4(ip: ipaddress.IPv6Address) -> list[ipaddress.IPv4Address]:
+    """The IPv4 addresses that an IPv6 address stands for."""
+    found: list[ipaddress.IPv4Address] = []
+    if ip.ipv4_mapped is not None:
+        found.append(ip.ipv4_mapped)
+    if ip.sixtofour is not None:
+        found.append(ip.sixtofour)
+    if ip.teredo is not None:
+        found.extend(ip.teredo)
+    if ip in _NAT64 or int(ip) >> 32 == 0:  # NAT64 and IPv4-compatible
+        found.append(ipaddress.IPv4Address(int(ip) & 0xFFFFFFFF))
+    return found
 
 
 def _host_or_raise(url: str) -> str:

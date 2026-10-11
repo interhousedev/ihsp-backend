@@ -5,7 +5,7 @@
 {% if wrong %}
 <p><strong>{{ t("room-pin-wrong") }}</strong></p>
 {% endif %}
-<form method="get" action="">
+<form method="post" action="">
 <p><label>{{ t("room-pin-prompt") }}<br><input name="pin" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="off" autofocus></label></p>
 {% if day %}
 <input type="hidden" name="date" value="{{ day }}">

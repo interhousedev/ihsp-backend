@@ -16,6 +16,21 @@ PIN = "483920"
 TODAY = date(2026, 10, 6)
 
 
+async def _post_pin(
+    world: LinksWorld,
+    slug: str = "102",
+    *,
+    pin: str | None = PIN,
+    day: str | None = None,
+    ip: str = IP,
+    lang: str | None = "en",
+) -> WebResponse:
+    """The PIN form posted (or a legacy `?pin=` query)."""
+    return await world.services.render_room_page.execute(
+        slug, pin=pin, day=day, ip=ip, accept_language=lang
+    )
+
+
 async def _page(
     world: LinksWorld,
     slug: str = "102",
@@ -25,8 +40,21 @@ async def _page(
     ip: str = IP,
     lang: str | None = "en",
 ) -> WebResponse:
+    """What the browser ends up with: the PIN is posted, the redirect followed."""
+    if pin is None:
+        return await world.services.render_room_page.execute(
+            slug, pin=None, day=day, ip=ip, accept_language=lang
+        )
+    first = await _post_pin(world, slug, pin=pin, day=day, ip=ip, lang=lang)
+    if first.cookie is None:
+        return first
     return await world.services.render_room_page.execute(
-        slug, pin=pin, day=day, ip=ip, accept_language=lang
+        slug,
+        pin=None,
+        day=day,
+        ip=ip,
+        accept_language=lang,
+        session=first.cookie.value,
     )
 
 
@@ -85,7 +113,7 @@ async def test_without_a_pin_only_the_form_is_shown(world: LinksWorld) -> None:
 
     assert result.status_code == 200
     assert result.html is not None
-    assert '<form method="get"' in result.html
+    assert '<form method="post"' in result.html
     assert 'name="pin"' in result.html
     assert "Physics" not in result.html
 
@@ -98,6 +126,61 @@ async def test_the_form_keeps_the_requested_date(world: LinksWorld) -> None:
 
     assert result.html is not None
     assert '<input type="hidden" name="date" value="2026-10-05">' in result.html
+
+
+async def test_a_right_pin_redirects_to_the_pin_free_page_with_a_session_cookie(
+    world: LinksWorld, clock: FixedClock
+) -> None:
+    """ROOM-2: the PIN never stays in the address bar or the page."""
+    await _classroom(world, clock)
+
+    result = await _post_pin(world, day="2026-10-05")
+
+    assert result.status_code == 303
+    assert result.location == "/r/102?date=2026-10-05"
+    assert result.html is None
+    assert result.cookie is not None
+    assert result.cookie.name == "room_session"
+    assert result.cookie.path == "/r/102"
+    assert result.cookie.max_age == 12 * 3600
+    assert len(result.cookie.value) >= 32
+    assert PIN not in result.cookie.value
+
+    page = await world.services.render_room_page.execute(
+        "102",
+        pin=None,
+        day=None,
+        ip=IP,
+        accept_language="en",
+        session=result.cookie.value,
+    )
+    assert page.status_code == 200
+    assert page.html is not None and "Physics" in page.html and PIN not in page.html
+
+
+async def test_an_unknown_or_foreign_session_shows_the_form(
+    world: LinksWorld, clock: FixedClock
+) -> None:
+    """ROOM-2: a session of one room does not open another; junk is ignored."""
+    await _classroom(world, clock)
+    world.schedule.add_room("204", pin="111111")
+    opened = await _post_pin(world)
+    assert opened.cookie is not None
+
+    other = await world.services.render_room_page.execute(
+        "204",
+        pin=None,
+        day=None,
+        ip=IP,
+        accept_language="en",
+        session=opened.cookie.value,
+    )
+    junk = await world.services.render_room_page.execute(
+        "102", pin=None, day=None, ip=IP, accept_language="en", session="x" * 500
+    )
+
+    assert other.status_code == 200 and 'name="pin"' in (other.html or "")
+    assert junk.status_code == 200 and 'name="pin"' in (junk.html or "")
 
 
 async def test_wrong_pin_shows_the_form_with_an_error(world: LinksWorld) -> None:
@@ -186,10 +269,10 @@ async def test_every_resource_has_a_report_link(
     assert "/s/" in result.html and "/report" in result.html
 
 
-async def test_previous_days_skip_weekends_and_keep_the_pin(
+async def test_previous_days_skip_weekends_and_carry_no_pin(
     world: LinksWorld, clock: FixedClock
 ) -> None:
-    """ROOM-4: the last seven study days (Mon-Fri) link back with ?pin=&date=."""
+    """ROOM-4: the last seven study days (Mon-Fri) link back with ?date= only."""
     await _classroom(world, clock)
 
     result = await _page(world)
@@ -206,8 +289,8 @@ async def test_previous_days_skip_weekends_and_keep_the_pin(
         "2026-09-28",
         "2026-09-25",  # 2026-09-26 and 2026-09-27 are a weekend
     ]
-    assert html.count(f"?pin={PIN}&amp;date=") == 7
-    assert "__PIN__" not in html
+    assert html.count('href="http://localhost:8000/r/102?date=') == 7
+    assert "pin=" not in html and PIN not in html
 
 
 async def test_a_saturday_shows_its_date_without_a_weekday_name(
@@ -323,7 +406,7 @@ async def test_pages_are_cached_and_cleared_when_a_resource_is_added(
     key = f"room:102:{TODAY.isoformat()}"
     assert await world.redis.ttl(key) == 600
     cached = await world.redis.get(key)
-    assert cached is not None and PIN not in cached  # the PIN is filled in on serving
+    assert cached is not None and PIN not in cached
 
     lesson = next(iter(world.schedule.lessons.values()))
     madina = world.people["Madina"]
@@ -346,7 +429,8 @@ async def test_changing_the_pin_works_with_the_cached_page(
 ) -> None:
     """ROOM-6: a regenerated PIN opens the cached page; the old one does not."""
     await _classroom(world, clock)
-    await _page(world)
+    opened = await _post_pin(world)
+    assert opened.cookie is not None
     room = world.schedule.rooms["102"]
     world.schedule.rooms["102"] = type(room)(
         id=room.id, slug=room.slug, name=room.name, pin="999999", status="active"
@@ -355,9 +439,19 @@ async def test_changing_the_pin_works_with_the_cached_page(
     old = await _page(world, pin=PIN)
     new = await _page(world, pin="999999")
 
+    stale = await world.services.render_room_page.execute(
+        "102",
+        pin=None,
+        day=None,
+        ip=IP,
+        accept_language="en",
+        session=opened.cookie.value,
+    )
+
     assert old.status_code == 403
     assert new.status_code == 200
-    assert new.html is not None and "pin=999999" in new.html
+    assert new.html is not None and "999999" not in new.html
+    assert stale.status_code == 200 and 'name="pin"' in (stale.html or "")
 
 
 async def test_unknown_and_archived_rooms_are_404(world: LinksWorld) -> None:

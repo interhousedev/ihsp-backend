@@ -1,4 +1,10 @@
-"""Open a room page: PIN form, wrong PIN, cached or fresh day (ROOM-1..ROOM-8)."""
+"""Open a room page: PIN form, wrong PIN, cached or fresh day (ROOM-1..ROOM-8).
+
+The PIN never travels in a URL or lands in the HTML: it is posted once, and a right
+PIN answers with a redirect to the PIN-free page plus a session cookie scoped to the
+room's path. A legacy `?pin=` query (printed on a door) is honoured the same way,
+so the browser's address bar and history hold no PIN.
+"""
 
 import secrets
 from datetime import date, timedelta
@@ -7,15 +13,17 @@ from uuid import UUID
 from app.modules.links.application.not_found_counter import NotFoundCounter
 from app.modules.links.application.public_pages import PublicPages
 from app.modules.links.application.resource_builder import ResourceBuilder
-from app.modules.links.application.room_day_builder import (
-    PIN_PLACEHOLDER,
-    RoomDayBuilder,
+from app.modules.links.application.room_day_builder import RoomDayBuilder
+from app.modules.links.application.views import (
+    ResourceView,
+    SetCookie,
+    WebResponse,
 )
-from app.modules.links.application.views import ResourceView, WebResponse
 from app.modules.links.domain.locale import pick_locale
 from app.modules.links.ports.page_renderer import PageRenderer
 from app.modules.links.ports.pin_limiter import PinLimiter
 from app.modules.links.ports.room_page_cache import RoomPageCache
+from app.modules.links.ports.room_sessions import SESSION_SECONDS, RoomSessions
 from app.modules.links.ports.unit_of_work import UowFactory
 from app.shared.base_error import RateLimitedError
 from app.shared.clock import Clock, local_today
@@ -24,6 +32,8 @@ from app.shared.contracts.identity import IdentityDirectory
 
 MAX_DAYS_BACK = 31
 MAX_SLUG_LENGTH = 100
+SESSION_COOKIE = "room_session"
+ROOMS_PATH = "/r"
 
 
 def parse_day(raw: str | None, today: date) -> date:
@@ -38,7 +48,7 @@ def parse_day(raw: str | None, today: date) -> date:
 
 
 class RenderRoomPage:
-    """Answers `GET /r/{room_slug}?pin=&date=`."""
+    """Answers `GET /r/{room_slug}?date=` and `POST /r/{room_slug}` (the PIN)."""
 
     def __init__(
         self,
@@ -51,6 +61,7 @@ class RenderRoomPage:
         renderer: PageRenderer,
         cache: RoomPageCache,
         pin_limiter: PinLimiter,
+        sessions: RoomSessions,
         not_found: NotFoundCounter,
         pages: PublicPages,
         clock: Clock,
@@ -64,6 +75,7 @@ class RenderRoomPage:
         self.renderer = renderer
         self.cache = cache
         self.pin_limiter = pin_limiter
+        self.sessions = sessions
         self.not_found = not_found
         self.pages = pages
         self.clock = clock
@@ -76,18 +88,25 @@ class RenderRoomPage:
         day: str | None,
         ip: str | None,
         accept_language: str | None,
+        session: str | None = None,
     ) -> WebResponse:
-        """Return the HTTP answer for the room page request."""
+        """Return the HTTP answer for the room page request.
+
+        With `pin` (the posted form, or a legacy `?pin=`): a wrong PIN shows the form
+        again (403); a right one redirects to the page and sets the session cookie.
+        Without: a valid `session` shows the day, otherwise the PIN form.
+        """
         locale = pick_locale(accept_language)
         try:
-            return await self._answer(slug, pin, day, ip, locale)
+            return await self._answer(slug, pin, session, day, ip, locale)
         except RateLimitedError as error:
             return self.pages.rate_limited(locale, error.params.get("retry_after"))
 
-    async def _answer(
+    async def _answer(  # noqa: PLR0913
         self,
         slug: str,
         pin: str | None,
+        session: str | None,
         raw_day: str | None,
         ip: str | None,
         locale: str,
@@ -98,14 +117,33 @@ class RenderRoomPage:
         wait = await self.pin_limiter.retry_after(slug, ip)
         if wait is not None:
             return self.pages.rate_limited(locale, wait)
-        if not pin:
-            return self._form(room, raw_day, locale, wrong=False, status=200)
+        if pin:
+            return await self._check_pin(room, pin, raw_day, ip, locale)
+        if session and await self._session_open(room, session):
+            today = local_today(self.clock)
+            html = await self._day_html(room, parse_day(raw_day, today), today)
+            return WebResponse(200, html)
+        return self._form(room, raw_day, locale, wrong=False, status=200)
+
+    async def _check_pin(
+        self, room: RoomRef, pin: str, raw_day: str | None, ip: str | None, locale: str
+    ) -> WebResponse:
         if not secrets.compare_digest(pin.encode(), room.pin.encode()):
-            await self.pin_limiter.record_failure(slug, ip)
+            await self.pin_limiter.record_failure(room.slug, ip)
             return self._form(room, raw_day, locale, wrong=True, status=403)
-        today = local_today(self.clock)
-        html = await self._day_html(room, parse_day(raw_day, today), today)
-        return WebResponse(200, html.replace(PIN_PLACEHOLDER, room.pin))
+        token = await self.sessions.open(room.slug, room.pin)
+        path = f"{ROOMS_PATH}/{room.slug}"
+        day = parse_day(raw_day, local_today(self.clock)) if raw_day else None
+        location = path if day is None else f"{path}?date={day.isoformat()}"
+        cookie = SetCookie(SESSION_COOKIE, token, path, SESSION_SECONDS)
+        return WebResponse(303, location=location, cookie=cookie)
+
+    async def _session_open(self, room: RoomRef, token: str) -> bool:
+        """True if the session exists and was opened with the current PIN (ROOM-6)."""
+        pin = await self.sessions.pin_of(room.slug, token)
+        return pin is not None and secrets.compare_digest(
+            pin.encode(), room.pin.encode()
+        )
 
     async def _room(self, slug: str, ip: str | None) -> RoomRef | None:
         room = None

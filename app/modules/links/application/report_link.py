@@ -11,11 +11,13 @@ from app.shared.rate_limit import RateLimiter
 
 REPORTS_PER_HOUR = 10
 WINDOW_SECONDS = 3600
+REPORTS_PER_LINK_PER_DAY = 50  # enough to reach the top of the queue; stops floods
+DAY_SECONDS = 86400
 MAX_COMMENT = 500
 
 
 class ReportLink:
-    """Count a report on the link behind a slug; rate limited per IP."""
+    """Count a report on the link behind a slug; rate limited per IP and per link."""
 
     def __init__(
         self,
@@ -46,8 +48,14 @@ class ReportLink:
             limit=REPORTS_PER_HOUR,
             window_seconds=WINDOW_SECONDS,
         )
+        clean = extract_slug(slug)
+        await self.rate_limiter.hit(
+            f"report-link:{clean}",
+            limit=REPORTS_PER_LINK_PER_DAY,
+            window_seconds=DAY_SECONDS,
+        )
         async with self.uow_factory() as uow:
-            link = await uow.links.get_by_slug(extract_slug(slug))
+            link = await uow.links.get_by_slug(clean)
             if link is None:
                 await self.not_found.count(ip)
                 raise LinkNotFoundError()

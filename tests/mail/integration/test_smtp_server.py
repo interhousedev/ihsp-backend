@@ -11,6 +11,7 @@ from types import SimpleNamespace
 from typing import Any
 
 from app.interfaces.smtp.handler import InboundHandler
+from app.interfaces.smtp.peer_limiter import PeerLimiter
 from app.interfaces.smtp.server import (
     build_handler,
     build_tls_context,
@@ -357,6 +358,56 @@ async def test_the_handler_copes_with_text_content_and_unusual_peers(
     assert reply == "250 OK queued"
     assert world.authenticator.calls[0]["peer_ip"] == expected_ip
     assert world.authenticator.calls[0]["helo"] == ""
+
+
+async def test_a_peer_probing_many_logins_gets_450_instead_of_550(
+    world: MailWorld, student: UserRef
+) -> None:
+    """MAIL-9: after twenty unknown mailboxes a peer learns nothing more."""
+    handler = InboundHandler(
+        resolve_mailbox=world.resolve_mailbox,
+        receive_inbound=world.receive_inbound,
+        max_recipients=20,
+        limiter=PeerLimiter(unknown_limit=2),
+    )
+    probe, other = _Session(("203.0.113.9", 4000)), _Session(("203.0.113.10", 4000))
+
+    async def rcpt(session: _Session, address: str) -> str:
+        envelope = _Envelope(None)
+        envelope.rcpt_tos = []
+        return await handler.handle_RCPT(None, session, envelope, address, [])
+
+    first = await rcpt(probe, "nobody@mail.ihsu.uz")
+    second = await rcpt(probe, "someone@mail.ihsu.uz")
+    blocked_unknown = await rcpt(probe, "another@mail.ihsu.uz")
+    blocked_known = await rcpt(probe, ADDRESS)
+    known_from_elsewhere = await rcpt(other, ADDRESS)
+
+    assert first.startswith("550 5.1.1") and second.startswith("550 5.1.1")
+    assert blocked_unknown.startswith("450 4.7.1")
+    assert blocked_known.startswith("450 4.7.1")
+    assert known_from_elsewhere == "250 OK"
+
+
+async def test_a_peer_sending_too_many_messages_is_told_to_wait(
+    world: MailWorld, student: UserRef
+) -> None:
+    """MAIL-9: a per-peer message limit; the message is not stored."""
+    handler = InboundHandler(
+        resolve_mailbox=world.resolve_mailbox,
+        receive_inbound=world.receive_inbound,
+        max_recipients=20,
+        limiter=PeerLimiter(messages_limit=1),
+    )
+    session = _Session(("203.0.113.9", 4000))
+    raw = fixture_bytes("plain.eml")
+
+    first = await handler.handle_DATA(None, session, _Envelope(raw))
+    second = await handler.handle_DATA(None, session, _Envelope(raw))
+
+    assert first == "250 OK queued"
+    assert second.startswith("450 4.7.1")
+    assert len(world.store.rows) == 1
 
 
 async def test_build_handler_takes_the_use_cases_from_the_container(

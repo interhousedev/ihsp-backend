@@ -15,8 +15,31 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 PROBLEM_JSON = "application/problem+json"
+MAX_PARAM_TEXT = 200
+_SCALARS = (str, int, float, bool, type(None))
 
 log = structlog.get_logger(__name__)
+
+
+def safe_params(params: dict[str, Any]) -> dict[str, Any]:
+    """Keep only short scalar values (or lists of them) of an error's `params`.
+
+    The client needs them to fill the localized message; anything else (nested
+    objects, upstream exception text, long strings) is dropped, not echoed.
+    """
+    kept: dict[str, Any] = {}
+    for key, value in params.items():
+        if isinstance(value, list) and all(_safe_scalar(v) for v in value):
+            kept[key] = value
+        elif _safe_scalar(value):
+            kept[key] = value
+    return kept
+
+
+def _safe_scalar(value: object) -> bool:
+    if not isinstance(value, _SCALARS):
+        return False
+    return not isinstance(value, str) or len(value) <= MAX_PARAM_TEXT
 
 
 def problem_response(status: int, body: dict[str, Any]) -> JSONResponse:
@@ -46,12 +69,13 @@ def _internal_body(error_id: str) -> dict[str, Any]:
 
 def problem_body(request: Request, exc: BaseError) -> dict[str, Any]:
     """The problem+json body of a domain error (no `error_id`, no logging)."""
+    params = safe_params(exc.params)
     return {
         "type": exc.code,
-        "title": _title(request, exc.message_key, exc.params),
+        "title": _title(request, exc.message_key, params),
         "status": exc.status,
         "message_key": exc.message_key,
-        "params": exc.params,
+        "params": params,
     }
 
 

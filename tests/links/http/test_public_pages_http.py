@@ -133,17 +133,41 @@ async def test_room_page_flow_with_headers(world: LinksWorld, api: Api) -> None:
     client = await api(None)
 
     form = await client.get("/r/102", headers={"accept-language": "en"})
-    wrong = await client.get("/r/102", params={"pin": "111111"})
-    page = await client.get("/r/102", params={"pin": "483920"})
+    wrong = await client.post("/r/102", data={"pin": "111111"})
+    opened = await client.post("/r/102", data={"pin": "483920", "date": "2026-10-06"})
+    page = await client.get("/r/102")  # the client keeps the session cookie
     missing = await client.get("/r/999")
 
     assert form.status_code == 200 and 'name="pin"' in form.text
+    assert 'method="post"' in form.text
     assert wrong.status_code == 403
+    assert opened.status_code == 303
+    assert opened.headers["location"] == "/r/102?date=2026-10-06"
+    cookie = opened.headers["set-cookie"]
+    assert cookie.startswith("room_session=")
+    assert "HttpOnly" in cookie and "Path=/r/102" in cookie and "SameSite=lax" in cookie
+    assert "483920" not in cookie
     assert page.status_code == 200
     assert "Physics" in page.text and "Kalandarova G." in page.text
+    assert "483920" not in page.text
     assert missing.status_code == 404
-    for response in (form, wrong, page, missing):
+    for response in (form, wrong, opened, page, missing):
         assert _has_public_headers(dict(response.headers))
+
+
+async def test_a_legacy_pin_query_is_redirected_away_at_once(
+    world: LinksWorld, api: Api
+) -> None:
+    """ROOM-2: `?pin=` printed on a door still works but leaves the address bar."""
+    room = world.schedule.add_room("102", pin="483920")
+    world.schedule.add_lesson(room=room)
+    client = await api(None)
+
+    response = await client.get("/r/102", params={"pin": "483920"})
+
+    assert response.status_code == 303
+    assert response.headers["location"] == "/r/102"
+    assert "room_session=" in response.headers["set-cookie"]
 
 
 async def test_room_pin_lockout_over_http(world: LinksWorld, api: Api) -> None:
@@ -151,9 +175,9 @@ async def test_room_pin_lockout_over_http(world: LinksWorld, api: Api) -> None:
     world.schedule.add_room("102", pin="483920")
     client = await api(None)
     for _ in range(5):
-        assert (await client.get("/r/102", params={"pin": "000000"})).status_code == 403
+        assert (await client.post("/r/102", data={"pin": "000000"})).status_code == 403
 
-    response = await client.get("/r/102", params={"pin": "483920"})
+    response = await client.post("/r/102", data={"pin": "483920"})
 
     assert response.status_code == 429
     assert int(response.headers["retry-after"]) > 0

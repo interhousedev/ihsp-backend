@@ -29,7 +29,6 @@ WEEKDAYS = (
 )
 PREVIOUS_DAYS = 7
 LAST_SCHOOL_DAY = 4
-PIN_PLACEHOLDER = "__PIN__"
 
 
 def strip_scheme(url: str) -> str:
@@ -96,8 +95,8 @@ class RoomDayBuilder:
         return f"No lessons in room {room.name} {when}"
 
     def _href(self, room: RoomRef, day: date | None) -> str:
-        base = f"{self.rooms_url}/{room.slug}?pin={PIN_PLACEHOLDER}"
-        return base if day is None else f"{base}&date={day.isoformat()}"
+        base = f"{self.rooms_url}/{room.slug}"
+        return base if day is None else f"{base}?date={day.isoformat()}"
 
     def _previous(self, room: RoomRef, day: date) -> tuple[PreviousDay, ...]:
         found: list[PreviousDay] = []
