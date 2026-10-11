@@ -58,7 +58,7 @@ def test_empty_ids_are_not_ids() -> None:
 
 
 def test_file_references_are_found_in_any_text_once() -> None:
-    """Files used in Markdown, prompts and so on are tracked (README: file_ids)."""
+    """Files used in Markdown, prompts and so on are tracked (spec: file_ids)."""
     assert extract_file_ids(CONTENT) == [UUID(FILE_A), UUID(FILE_B)]
 
 

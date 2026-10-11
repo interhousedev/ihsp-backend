@@ -1,4 +1,4 @@
-"""Cache of rendered room pages (README -> Redis keys ``room:{slug}:{date}``)."""
+"""Cache of rendered room pages (spec -> Redis keys ``room:{slug}:{date}``)."""
 
 from collections.abc import Collection
 from typing import Protocol

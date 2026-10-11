@@ -54,7 +54,7 @@ class BotServices:
 
 
 def services_from_container(container: Any) -> BotServices:
-    """Pick the contract objects out of the container (paths of FINAL_PLAN § 3.12)."""
+    """Pick the contract objects out of the container (paths of the container)."""
     settings: Settings = container.settings
     return BotServices(
         settings=settings,

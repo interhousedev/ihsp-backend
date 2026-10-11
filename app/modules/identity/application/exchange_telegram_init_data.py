@@ -20,7 +20,7 @@ from app.shared.contracts.auth import AUDIENCE_API
 from app.shared.ids import new_id
 
 MINIAPP_CLIENTS = frozenset({"sp", "staff"})
-# initData is re-sent on every 401 while the mini app stays open (backend/PLAN.md).
+# initData is re-sent on every 401 while the mini app stays open (architecture.md).
 INIT_DATA_MAX_AGE = timedelta(hours=24)
 TOKEN_SCOPE = "openid offline_access"
 

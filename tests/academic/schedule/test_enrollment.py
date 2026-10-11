@@ -345,7 +345,7 @@ async def test_a_student_who_leaves_is_marked_and_told(env: Env) -> None:
 async def test_leaving_reasons_are_mapped_to_the_stored_values(
     env: Env, reason: str, stored: str
 ) -> None:
-    """README -> Student.left_reason: graduated, expelled, transferred, other."""
+    """spec -> Student.left_reason: graduated, expelled, transferred, other."""
     pupil = await env.student(await env.group())
 
     await env.services.enrollment.mark_left(pupil.id, reason=reason)

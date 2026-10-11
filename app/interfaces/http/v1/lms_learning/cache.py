@@ -1,4 +1,4 @@
-"""Cache-Control values of the learning endpoints (README → Course versioning, 5)."""
+"""Cache-Control values of the learning endpoints (spec → Course versioning, 5)."""
 
 from typing import Final
 

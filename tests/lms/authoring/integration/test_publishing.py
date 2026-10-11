@@ -97,7 +97,7 @@ async def test_publish_stores_revisions_only_for_changed_steps(
     course: CourseFixture,
     sessionmaker_in_tx: async_sessionmaker[AsyncSession],
 ) -> None:
-    """README: unchanged steps are shared between versions."""
+    """spec: unchanged steps are shared between versions."""
     owner = course.team.owner
     seeded = await seed_published(services, owner, course.id)
     a_before = await step_row(sessionmaker_in_tx, seeded.step_a.step_id)
@@ -125,7 +125,7 @@ async def test_publishing_content_equal_to_an_older_revision_reuses_it(
     course: CourseFixture,
     sessionmaker_in_tx: async_sessionmaker[AsyncSession],
 ) -> None:
-    """README: a revision with the same hash is reused, not duplicated."""
+    """spec: a revision with the same hash is reused, not duplicated."""
     owner = course.team.owner
     seeded = await seed_published(services, owner, course.id)
     first = (await step_row(sessionmaker_in_tx, seeded.step_a.step_id)).live_revision_id
@@ -224,7 +224,7 @@ async def test_removed_step_leaves_the_live_version_and_can_come_back(
     course: CourseFixture,
     sessionmaker_in_tx: async_sessionmaker[AsyncSession],
 ) -> None:
-    """README: removing a step only removes it from the outline; history survives."""
+    """spec: removing a step only removes it from the outline; history survives."""
     owner = course.team.owner
     seeded = await seed_published(services, owner, course.id)
     b_id = seeded.step_b.step_id

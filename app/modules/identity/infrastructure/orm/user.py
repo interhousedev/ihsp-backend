@@ -24,7 +24,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 
 class User(IdMixin, TimestampMixin, Base):
-    """A person: student, teacher, administrator (README -> Models -> User)."""
+    """A person: student, teacher, administrator (spec -> Models -> User)."""
 
     __tablename__ = "users"
     __table_args__ = (

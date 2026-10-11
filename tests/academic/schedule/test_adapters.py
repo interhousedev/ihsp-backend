@@ -1,4 +1,4 @@
-"""Redis adapters: import previews and the room page cache (README -> Redis keys)."""
+"""Redis adapters: import previews and the room page cache (spec -> Redis keys)."""
 
 from app.modules.academic.infrastructure.schedule.import_store import RedisImportStore
 from app.modules.academic.infrastructure.schedule.room_page_cache import (

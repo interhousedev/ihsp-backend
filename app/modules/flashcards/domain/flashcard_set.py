@@ -22,7 +22,7 @@ class SetSource(StrEnum):
 
 @dataclass(slots=True)
 class FlashcardSet:
-    """A titled set of cards with the owner's daily limits (README → FlashcardSet)."""
+    """A titled set of cards with the owner's daily limits (spec → FlashcardSet)."""
 
     id: UUID
     owner_id: UUID

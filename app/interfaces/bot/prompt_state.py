@@ -1,4 +1,4 @@
-"""Typed view of ``ClassworkCommands.prompt_state`` (FINAL_PLAN § 3.6)."""
+"""Typed view of ``ClassworkCommands.prompt_state``."""
 
 from dataclasses import dataclass
 from datetime import datetime

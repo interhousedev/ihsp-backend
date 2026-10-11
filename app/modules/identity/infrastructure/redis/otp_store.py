@@ -1,4 +1,4 @@
-"""One-time codes in Redis (README → Redis keys: otp:{purpose}:{key})."""
+"""One-time codes in Redis (spec → Redis keys: otp:{purpose}:{key})."""
 
 import hmac
 from collections.abc import Awaitable

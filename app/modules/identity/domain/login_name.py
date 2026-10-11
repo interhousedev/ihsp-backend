@@ -1,4 +1,4 @@
-"""Login names: ``surname.name`` in lowercase Latin (README -> Models -> User)."""
+"""Login names: ``surname.name`` in lowercase Latin (spec -> Models -> User)."""
 
 from app.shared.text import slugify
 

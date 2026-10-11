@@ -93,7 +93,7 @@ class TeacherContacts(BaseModel):
 
 
 class UserPreferences(BaseModel):
-    """User settings (README → Models → User → preferences)."""
+    """User settings (spec → Models → User → preferences)."""
 
     locale: Literal["uz", "ru", "en"] = "ru"
     theme: Literal["system", "light", "dark"] = "light"

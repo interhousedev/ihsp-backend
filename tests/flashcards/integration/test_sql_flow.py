@@ -216,7 +216,7 @@ async def test_work_that_is_not_committed_is_rolled_back(world: SqlWorld) -> Non
 
 
 async def test_the_state_columns_accept_every_card_state(world: SqlWorld) -> None:
-    """README Flashcard: new, learning, review and relearning are all storable."""
+    """spec Flashcard: new, learning, review and relearning are all storable."""
     s, owner = world.services, world.student.user_id
     created = await s.create_set.execute(
         owner_id=owner, title="States", cards=cards(4), source=SetSource.MANUAL

@@ -36,7 +36,7 @@ def _period() -> Any:
 
 
 class Lesson(IdMixin, TimestampMixin, Base):
-    """One lesson with its homework and attendance (README -> Models -> Lesson)."""
+    """One lesson with its homework and attendance (spec -> Models -> Lesson)."""
 
     __tablename__ = "lessons"
     __table_args__ = (

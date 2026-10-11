@@ -110,7 +110,7 @@ def test_a_moved_day_cannot_fall_on_a_weekend(day: dt.date) -> None:
 
 
 def test_bells_are_stored_as_hours_and_minutes() -> None:
-    """README -> Term.bells: times are "08:30" in the jsonb column."""
+    """spec -> Term.bells: times are "08:30" in the jsonb column."""
     stored = bells_to_json(default_bells())
 
     assert stored[0] == {

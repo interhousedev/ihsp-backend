@@ -40,7 +40,7 @@ async def test_new_and_review_are_counted_in_one_hash_per_day(
 
 
 async def test_the_counters_expire_after_48_hours(redis: FakeRedis) -> None:
-    """README Redis keys: the TTL is 48 hours."""
+    """spec Redis keys: the TTL is 48 hours."""
     counters = RedisDailyCounters(redis)
     user, set_id = new_id(), new_id()
 

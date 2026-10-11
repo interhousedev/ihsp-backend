@@ -8,7 +8,7 @@ from uuid import UUID
 
 
 class NotificationType(StrEnum):
-    """Every notification type (README → Models → Notification)."""
+    """Every notification type (spec → Models → Notification)."""
 
     MARKS = "marks"
     RESULT_DROP = "result_drop"

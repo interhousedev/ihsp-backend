@@ -97,7 +97,7 @@ async def test_student_prompt_mentions_notebooks_and_still_denies_lms_content(
 
 
 async def test_admin_tools_match_the_spec(h: AiHarness) -> None:
-    """AI-6: the Administration tools of the README."""
+    """AI-6: the Administration tools of the spec."""
     tools = await tools_of(h, Assistant.ADMIN)
 
     names = [t["function"]["name"] for t in tools]
@@ -131,7 +131,7 @@ async def test_title_property_survives_title_stripping(h: AiHarness) -> None:
 
 
 def test_date_arguments_use_the_documented_names() -> None:
-    """AI-5: `from` and `to`, as in the README."""
+    """AI-5: `from` and `to`, as in the spec."""
     from app.modules.ai.application.tools.get_schedule import GetScheduleArgs
 
     schema = tool_parameters(GetScheduleArgs)

@@ -1,4 +1,4 @@
-"""Redis counters of today's introduced and reviewed cards (README → Redis keys)."""
+"""Redis counters of today's introduced and reviewed cards (spec → Redis keys)."""
 
 from collections.abc import Awaitable
 from datetime import date, timedelta

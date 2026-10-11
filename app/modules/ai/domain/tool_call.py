@@ -1,4 +1,4 @@
-"""Tool calls stored with assistant messages (README → Models → ChatMessage)."""
+"""Tool calls stored with assistant messages (spec → Models → ChatMessage)."""
 
 from datetime import datetime
 from enum import StrEnum

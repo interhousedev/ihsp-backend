@@ -12,7 +12,7 @@ MAX_ANSWER_MS = 60_000
 
 @dataclass(frozen=True, slots=True)
 class ReviewLogEntry:
-    """What happened when a card was rated (README → FlashcardReview)."""
+    """What happened when a card was rated (spec → FlashcardReview)."""
 
     id: UUID
     user_id: UUID

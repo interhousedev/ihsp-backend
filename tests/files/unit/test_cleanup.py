@@ -121,7 +121,7 @@ async def test_cleanup_deletes_files_past_their_own_expiry_such_as_mail(
 async def test_cleanup_deletes_in_batches_of_at_most_1000_keys(
     fakes: FilesFakes,
 ) -> None:
-    """README -> File storage: DeleteObjects takes 1000 keys per call."""
+    """spec -> File storage: DeleteObjects takes 1000 keys per call."""
     for index in range(600):
         await fakes.services.public.store_bytes(
             owner_id=uuid4(),

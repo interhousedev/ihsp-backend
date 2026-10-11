@@ -1,4 +1,4 @@
-"""Login names: surname.name in lowercase Latin (README -> Models -> User)."""
+"""Login names: surname.name in lowercase Latin (spec -> Models -> User)."""
 
 from app.modules.identity.domain.login_name import base_login, next_free
 

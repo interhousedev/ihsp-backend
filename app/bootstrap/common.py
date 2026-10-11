@@ -1,4 +1,4 @@
-"""The composition root: builds the container for one process (FINAL_PLAN § 3.12)."""
+"""The composition root: builds the container for one process (docs/reference/architecture.md)."""
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass

@@ -1,4 +1,4 @@
-"""Per-route-group CORS (backend/PLAN.md) as a path-prefix ASGI middleware."""
+"""Per-route-group CORS (docs/reference/architecture.md, CORS) as a path-prefix ASGI middleware."""
 
 from collections.abc import Sequence
 from typing import TYPE_CHECKING

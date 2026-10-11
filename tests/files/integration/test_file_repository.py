@@ -251,7 +251,7 @@ async def test_headline_marks_the_match_and_keeps_context(
 async def test_mark_deleted_clears_text_size_and_search_vector(
     uow: SqlFilesUnitOfWork, clock: FixedClock
 ) -> None:
-    """README -> Cleanup: rows are marked deleted and the vector is cleared."""
+    """spec -> Cleanup: rows are marked deleted and the vector is cleared."""
     owner = uuid4()
     file = make_file(clock, owner_id=owner)
     await uow.files.add(file)

@@ -154,7 +154,7 @@ class HydraAccessTokenVerifier:
         connector_id = (
             _uuid(connector_raw, "bad connector_id") if connector_raw else None
         )
-        # MCP servers need the granted scopes of OAuth tokens (README MCP-5).
+        # MCP servers need the granted scopes of OAuth tokens (spec MCP-5).
         scopes = _token_scopes(claims) if audience in MCP_AUDIENCES else frozenset()
         return Actor(
             user_id=user_id,

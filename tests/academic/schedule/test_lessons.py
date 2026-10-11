@@ -296,7 +296,7 @@ async def test_cancelling_a_lesson_marks_it_changed_and_notifies(env: Env) -> No
 
 
 async def test_changing_the_room_records_old_and_new_names(env: Env) -> None:
-    """README -> Lesson.changes: {"room": ["204", "310"]} for 'Room 204 -> 310'."""
+    """spec -> Lesson.changes: {"room": ["204", "310"]} for 'Room 204 -> 310'."""
     _, _, _, _, _, _, lesson = await _seed_lesson(env)
 
     item = await env.services.update_lesson.execute(
@@ -308,7 +308,7 @@ async def test_changing_the_room_records_old_and_new_names(env: Env) -> None:
 
 
 async def test_changing_a_field_back_removes_it_from_the_changes(env: Env) -> None:
-    """README -> Lesson.changes: only the difference from the timetable is kept."""
+    """spec -> Lesson.changes: only the difference from the timetable is kept."""
     _, _, _, _, _, _, lesson = await _seed_lesson(env)
     await env.services.update_lesson.execute(
         ADMIN, lesson.id, LessonPatch(room_name="310")

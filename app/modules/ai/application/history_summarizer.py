@@ -1,4 +1,4 @@
-"""Summaries of long chats (README AI-9; plan step 7)."""
+"""Summaries of long chats (spec AI-9; plan step 7)."""
 
 from collections.abc import Callable
 

@@ -11,7 +11,7 @@ class MailDirection(StrEnum):
 
 
 class MailStatus(StrEnum):
-    """README -> Models -> MailMessage.status."""
+    """spec -> Models -> MailMessage.status."""
 
     RECEIVED = "received"
     SPAM = "spam"

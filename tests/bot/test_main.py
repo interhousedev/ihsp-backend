@@ -1,4 +1,4 @@
-"""The bot process entry (FINAL_PLAN B14 step 9) and the callback fallbacks."""
+"""The bot process entry and the callback fallbacks."""
 
 import asyncio
 import contextlib

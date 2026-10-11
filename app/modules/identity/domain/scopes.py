@@ -1,4 +1,4 @@
-"""MCP servers, scopes and task presets (README MCP-8)."""
+"""MCP servers, scopes and task presets (spec MCP-8)."""
 
 from dataclasses import dataclass
 from typing import Literal

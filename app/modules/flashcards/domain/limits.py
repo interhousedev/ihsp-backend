@@ -1,4 +1,4 @@
-"""Limits of flash card sets (README WEB-22–24, plan Task B10)."""
+"""Limits of flash card sets (spec WEB-22–24, plan Task B10)."""
 
 MAX_CARDS_PER_SET = 500
 CARD_TEXT_MIN = 1

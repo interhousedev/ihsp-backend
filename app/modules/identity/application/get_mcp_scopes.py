@@ -25,7 +25,7 @@ class ServerCatalog:
 
 @dataclass(frozen=True, slots=True)
 class GetMcpScopes:
-    """Static data from README MCP-8."""
+    """Static data from spec MCP-8."""
 
     def execute(self) -> list[ServerCatalog]:
         """Return the catalog of all three servers."""

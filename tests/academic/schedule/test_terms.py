@@ -77,7 +77,7 @@ async def test_adjacent_terms_are_fine(env: Env) -> None:
 
 
 async def test_academic_year_and_half_are_unique(env: Env) -> None:
-    """README -> Term: academic_year + half is unique."""
+    """spec -> Term: academic_year + half is unique."""
     await create(env)
 
     with pytest.raises(TermDuplicateError):

@@ -1,4 +1,4 @@
-"""Redis store of attendance drafts: ``att:draft:{lesson_id}`` (README → Redis keys)."""
+"""Redis store of attendance drafts: ``att:draft:{lesson_id}`` (spec → Redis keys)."""
 
 import json
 from typing import Any

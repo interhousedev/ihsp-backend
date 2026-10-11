@@ -97,7 +97,7 @@ async def test_checkpoint_of_unchanged_content_reuses_the_revision_and_renames_i
     course: CourseFixture,
     sessionmaker_in_tx: async_sessionmaker[AsyncSession],
 ) -> None:
-    """README: on a hash conflict the existing row is reused and its label updated."""
+    """spec: on a hash conflict the existing row is reused and its label updated."""
     owner = course.team.owner
     step = await _step(services, course)
     first = await services.save_checkpoint.execute(owner, step.step_id, "one")
@@ -183,7 +183,7 @@ async def test_pruning_never_deletes_published_or_attempted_revisions(
     clock: FixedClock,
     sessionmaker_in_tx: async_sessionmaker[AsyncSession],
 ) -> None:
-    """README: pruning keeps revisions with `published_at` or used by an attempt."""
+    """spec: pruning keeps revisions with `published_at` or used by an attempt."""
     owner = course.team.owner
     step = await _step(services, course)
     step = await set_blocks(services, owner, step, text_block("protected"))

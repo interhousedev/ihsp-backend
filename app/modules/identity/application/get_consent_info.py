@@ -24,7 +24,7 @@ from app.modules.identity.ports.unit_of_work import UowFactory
 
 @dataclass(frozen=True, slots=True)
 class ConsentInfo:
-    """What the consent screen shows (README MCP-3)."""
+    """What the consent screen shows (spec MCP-3)."""
 
     client_id: str
     client_name: str

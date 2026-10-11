@@ -1,4 +1,4 @@
-"""Cancel the OTP reset and "This was not me" (FINAL_PLAN B14 step 8)."""
+"""Cancel the OTP reset and "This was not me"."""
 
 from app.shared.contracts.callbacks import NotMeCb, OtpCancelCb
 from app.shared.ids import new_id, uuid_to_b64

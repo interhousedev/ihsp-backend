@@ -62,7 +62,7 @@ def make_card(
 
 
 async def test_a_set_round_trips_with_every_field(uow_factory: UowFactory) -> None:
-    """README FlashcardSet: all fields are stored and read back."""
+    """spec FlashcardSet: all fields are stored and read back."""
     original = make_set()
     copy = make_set(
         description="Chapter 1",
@@ -172,7 +172,7 @@ async def test_cards_come_in_position_order(uow_factory: UowFactory) -> None:
 async def test_the_scheduling_state_of_a_card_round_trips(
     uow_factory: UowFactory,
 ) -> None:
-    """README Flashcard: state, step, due_at, interval, ease, reps, lapses."""
+    """spec Flashcard: state, step, due_at, interval, ease, reps, lapses."""
     flashcard_set = make_set()
     due = NOW + timedelta(days=10)
     card = make_card(

@@ -23,7 +23,7 @@ def _keys(value: Any) -> set[str]:
 
 @pytest.fixture
 def content() -> StepContent:
-    """The README example step."""
+    """The spec example step."""
     return StepContent.model_validate(EXAMPLE)
 
 

@@ -175,7 +175,7 @@ async def test_publishing_a_restored_version_creates_a_new_version_and_keeps_his
 async def test_restore_puts_removed_steps_back_into_the_outline(
     services: AuthoringServices, course: CourseFixture
 ) -> None:
-    """README: steps that no longer exist in the draft outline are re-added."""
+    """spec: steps that no longer exist in the draft outline are re-added."""
     owner = course.team.owner
     seeded = await seed_published(services, owner, course.id)
     await services.apply_outline_ops.execute(

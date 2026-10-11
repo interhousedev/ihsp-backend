@@ -31,7 +31,7 @@ async def test_a_group_name_is_stored_in_latin_with_a_slug(env: Env) -> None:
 
 
 async def test_an_active_group_name_cannot_be_reused(env: Env) -> None:
-    """README -> Group: the slug is unique among active groups."""
+    """spec -> Group: the slug is unique among active groups."""
     await env.services.create_group.execute(name="2TN2")
 
     with pytest.raises(GroupNameTakenError):
@@ -39,7 +39,7 @@ async def test_an_active_group_name_cannot_be_reused(env: Env) -> None:
 
 
 async def test_an_emis_group_can_be_linked_once(env: Env) -> None:
-    """README -> Group: emis_group_id is unique."""
+    """spec -> Group: emis_group_id is unique."""
     await env.services.create_group.execute(name="2TN1", emis_group_id=3292)
 
     with pytest.raises(GroupEmisIdTakenError):
@@ -149,7 +149,7 @@ async def test_the_curator_assigns_subgroups_and_it_is_audited(env: Env) -> None
 
 
 async def test_assignment_remembers_who_set_the_subgroup(env: Env) -> None:
-    """README -> Student: subgroup_set_by and subgroup_set_at."""
+    """spec -> Student: subgroup_set_by and subgroup_set_at."""
     teacher = env.teacher()
     group = await env.group(curator=teacher)
     pupil = await env.student(group)

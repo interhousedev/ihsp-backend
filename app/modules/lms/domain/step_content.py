@@ -1,4 +1,4 @@
-"""Step content: the JSON document of a course step (README -> Course versioning)."""
+"""Step content: the JSON document of a course step (spec -> Course versioning)."""
 
 import copy
 import hashlib

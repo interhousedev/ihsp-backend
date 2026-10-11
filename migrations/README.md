@@ -19,7 +19,7 @@ shared `embeddings` table; needs the `pgvector` Postgres image).
   `halfvec(1024)` column and its HNSW index with plain SQL/`op.create_index`. The `notebooks` one runs `CREATE EXTENSION IF NOT EXISTS pg_trgm` (its downgrade leaves the
   extension in place) and creates `passages.search_vector` as a stored generated column
   (`sa.Computed`).
-- Module agents write revisions by hand against an empty database. Never autogenerate against a
+- Write revisions against an empty throw-away database. Never autogenerate against a
   shared database. Never edit an applied revision.
 - Exclusion constraints: `op.create_exclude_constraint(..., (sa.literal_column("room_id"), "="), ...)`,
   never `sa.text`. `postgresql_nulls_not_distinct=True` is fine (PostgreSQL 16).

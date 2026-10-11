@@ -15,7 +15,7 @@ from app.modules.lms.domain.step_content import (
 import pytest
 from pydantic import ValidationError
 
-# The example document of README -> Course versioning.
+# The example document of spec -> Course versioning.
 EXAMPLE: dict[str, Any] = {
     "title": "Derivative rules",
     "blocks": [

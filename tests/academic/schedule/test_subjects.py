@@ -55,7 +55,7 @@ async def test_a_subject_needs_a_name(env: Env) -> None:
 
 
 async def test_an_emis_subject_can_be_linked_once(env: Env) -> None:
-    """README -> Subject: emis_subject_id is unique."""
+    """spec -> Subject: emis_subject_id is unique."""
     await env.services.create_subject.execute(name={"ru": "Физика"}, emis_subject_id=77)
 
     with pytest.raises(SubjectEmisIdTakenError):

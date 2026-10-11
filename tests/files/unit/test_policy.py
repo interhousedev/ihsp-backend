@@ -147,7 +147,7 @@ def test_students_without_a_staff_role_use_the_student_scope() -> None:
 
 
 def test_keys_are_built_from_scope_label_id_and_extension_only() -> None:
-    """README -> File storage: ``{scope}/{term or yyyy-mm}/{uuid}.{ext}``."""
+    """spec -> File storage: ``{scope}/{term or yyyy-mm}/{uuid}.{ext}``."""
     file_id = UUID("0192f3c4-0000-7000-8000-000000000001")
 
     key = policy.key_for(FileScope.STUDENT, "2026-1", file_id, ".pdf")

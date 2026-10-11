@@ -44,7 +44,7 @@ def manifest(*entries: tuple[UUID, UUID]) -> dict:
 
 
 def test_the_manifest_reads_both_stored_shapes() -> None:
-    """README → Course versioning: sections wrapped in an object or a bare list."""
+    """spec → Course versioning: sections wrapped in an object or a bare list."""
     step, revision = new_id(), new_id()
     wrapped = parse_manifest(manifest((step, revision)))
     bare = parse_manifest(manifest((step, revision))["sections"])

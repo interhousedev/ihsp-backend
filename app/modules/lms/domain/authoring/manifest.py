@@ -1,7 +1,7 @@
 """Version manifests: the outline of a published course with revision pointers.
 
 Stored as `{"sections": [{"id", "title", "steps": [{"step_id", "revision_id",
-"title"}]}]}` (README → Course versioning). Readers also accept a bare list of
+"title"}]}]}` (spec → Course versioning). Readers also accept a bare list of
 sections.
 """
 

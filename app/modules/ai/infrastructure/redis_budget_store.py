@@ -1,4 +1,4 @@
-"""Redis counters for the AI token budgets (README → Redis keys)."""
+"""Redis counters for the AI token budgets (spec → Redis keys)."""
 
 from collections.abc import Awaitable
 from datetime import date, datetime, timedelta

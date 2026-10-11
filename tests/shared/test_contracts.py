@@ -40,7 +40,7 @@ def test_every_contract_module_imports(name: str) -> None:
 
 
 def test_preferences_have_the_documented_defaults() -> None:
-    """README → Models → User → preferences."""
+    """spec → Models → User → preferences."""
     prefs = UserPreferences()
 
     assert prefs.locale == "ru"

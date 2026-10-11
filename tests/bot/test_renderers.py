@@ -1,4 +1,4 @@
-"""Renderers the bot registers for the notification registry (FINAL_PLAN B14 step 5)."""
+"""Renderers the bot registers for the notification registry."""
 
 from datetime import UTC, datetime
 
@@ -55,7 +55,7 @@ def labels(buttons: list[list[dict[str, object]]] | None) -> list[object]:
 
 
 def test_the_bot_registers_exactly_its_four_renderers(registry: Registry) -> None:
-    """FINAL_PLAN B14: lesson_prompt, mail, telegram_linked, otp_reset_requested."""
+    """The bot registers lesson_prompt, mail, telegram_linked, otp_reset_requested."""
     assert set(registry.renderers) == {
         NotificationType.LESSON_PROMPT,
         NotificationType.MAIL,

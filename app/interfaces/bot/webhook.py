@@ -14,7 +14,7 @@ WEBHOOK_PORT = 8002
 
 
 def webhook_path(secret: str) -> str:
-    """The route Telegram posts to; the secret is part of it (FINAL_PLAN B14)."""
+    """The route Telegram posts to; the secret is part of it."""
     return f"/telegram/{secret}"
 
 

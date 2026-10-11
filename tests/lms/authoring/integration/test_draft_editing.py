@@ -332,7 +332,7 @@ async def test_saving_unchanged_content_writes_nothing(
 async def test_every_step_save_bumps_the_course_draft_seq(
     services: AuthoringServices, course: CourseFixture
 ) -> None:
-    """README: every save bumps `draft_seq`, which publishing checks."""
+    """spec: every save bumps `draft_seq`, which publishing checks."""
     owner = course.team.owner
     section = await services.create_section.execute(owner, course.id, "Limits")
     step = await services.create_step.execute(
@@ -352,7 +352,7 @@ async def test_files_referenced_in_markdown_must_exist_and_are_tracked(
     files: FakeFilesApi,
     sessionmaker_in_tx: async_sessionmaker[AsyncSession],
 ) -> None:
-    """README: `file_ids` are the files used by the draft and must exist."""
+    """spec: `file_ids` are the files used by the draft and must exist."""
     owner = course.team.owner
     section = await services.create_section.execute(owner, course.id, "Limits")
     step = await services.create_step.execute(

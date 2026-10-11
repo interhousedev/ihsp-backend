@@ -1,4 +1,4 @@
-"""Database rules of the models, checked on a migrated database (README -> Models)."""
+"""Database rules of the models, checked on a migrated database (spec -> Models)."""
 
 from collections.abc import AsyncIterator
 from datetime import UTC, date, datetime, timedelta

@@ -70,7 +70,7 @@ def test_translations_use_the_same_parameters() -> None:
 
 
 def test_every_key_has_the_bot_prefix() -> None:
-    """FINAL_PLAN § 3.9: the bot's keys start with bot-."""
+    """The bot's keys start with bot-."""
     assert all(key.startswith("bot-") for key in catalogue("en"))
 
 

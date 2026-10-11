@@ -21,7 +21,7 @@ class CardDraft:
 
 @dataclass(slots=True)
 class Flashcard:
-    """One card of a set (README → Flashcard)."""
+    """One card of a set (spec → Flashcard)."""
 
     id: UUID
     set_id: UUID

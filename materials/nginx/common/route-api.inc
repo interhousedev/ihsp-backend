@@ -1,5 +1,4 @@
-# api.<domain>: identity, bot and api processes (backend/PLAN.md § Processes and hosts,
-# FINAL_PLAN § 2.1). Regex locations are tried in order: the first match wins.
+# api.<domain>: identity, bot and api processes (docs/reference/architecture.md, Edge routing). Regex locations are tried in order: the first match wins.
 
 # The EMIS gateway is for the worker and scheduler on the Docker network only.
 location ^~ /internal/ {

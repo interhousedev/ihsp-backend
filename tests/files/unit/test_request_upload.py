@@ -79,7 +79,7 @@ async def test_request_creates_a_pending_row_and_a_signed_put(
 async def test_the_key_never_contains_the_user_supplied_name(
     fakes: FilesFakes, student: Actor
 ) -> None:
-    """README -> File.key: random, never built from the file name."""
+    """spec -> File.key: random, never built from the file name."""
     ticket = await ask(fakes, student, name="../../secret name.pdf")
 
     file = fakes.db.row(ticket.view.file.id)

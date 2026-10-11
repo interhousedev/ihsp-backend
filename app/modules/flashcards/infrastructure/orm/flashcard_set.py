@@ -21,7 +21,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 class FlashcardSet(IdMixin, TimestampMixin, Base):
     """A set of flash cards with one owner (others copy it).
 
-    The table lives in schema ``ai`` (README), but ``source_chat_id`` has no
+    The table lives in schema ``ai`` (spec), but ``source_chat_id`` has no
     foreign key: the ``flashcards`` migration branch does not depend on ``ai``.
     """
 

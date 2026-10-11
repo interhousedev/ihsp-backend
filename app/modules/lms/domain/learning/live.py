@@ -1,7 +1,7 @@
 """The live version of a course: its manifest and the cached student render.
 
 A published version is an immutable manifest of ``{step_id, revision_id, title}``
-entries (README → Course versioning); revisions never change, so their student
+entries (spec → Course versioning); revisions never change, so their student
 render is cached in process memory by revision id (LMS-14, step 5 of the design).
 """
 

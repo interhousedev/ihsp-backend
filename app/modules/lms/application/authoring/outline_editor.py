@@ -37,7 +37,7 @@ def record_draft_change(
 
 
 class OutlineEditor:
-    """Applies outline operations atomically (LMS-13, README → Course versioning)."""
+    """Applies outline operations atomically (LMS-13, spec → Course versioning)."""
 
     def __init__(self, presenter: Presenter, clock: Clock) -> None:
         """Store collaborators."""

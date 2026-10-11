@@ -4,7 +4,7 @@ from enum import StrEnum
 
 
 class FileStatus(StrEnum):
-    """Lifecycle of a stored file (README -> Models -> File)."""
+    """Lifecycle of a stored file (spec -> Models -> File)."""
 
     PENDING = "pending"
     PROCESSING = "processing"
