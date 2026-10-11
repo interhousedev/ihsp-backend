@@ -102,6 +102,7 @@ def build_sources(
             rate_limiter=deps.rate_limiter,
             kicker=deps.kicker,
             readers=readers,
+            limits=deps.effective_limits,
         ),
         discover_sources=DiscoverSources(core),
         list_sources=ListSources(uow_factory=core.uow_factory),
@@ -125,6 +126,7 @@ def build_sources(
             uow_factory=core.uow_factory,
             settings=deps.settings,
             rate_limiter=deps.rate_limiter,
+            limits=deps.effective_limits,
         ),
         process_source=ProcessSource(
             uow_factory=core.uow_factory,

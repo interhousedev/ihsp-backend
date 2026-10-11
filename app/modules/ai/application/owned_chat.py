@@ -16,6 +16,7 @@ from app.modules.ai.ports.author_gate import AuthorGate
 from app.modules.ai.ports.unit_of_work import AiUnitOfWork
 from app.settings import Settings
 from app.shared.actor import Actor
+from app.shared.limits import LimitsProvider, StaticLimits
 from app.shared.rate_limit import RateLimiter
 
 RATE_WINDOW_SECONDS = 60
@@ -26,12 +27,17 @@ class ChatGuard:
     """Checks who may use an assistant and a chat (roles, course permission, rate)."""
 
     def __init__(
-        self, gate: AuthorGate, rate_limiter: RateLimiter, settings: Settings
+        self,
+        gate: AuthorGate,
+        rate_limiter: RateLimiter,
+        settings: Settings,
+        limits: LimitsProvider | None = None,
     ) -> None:
-        """Store the course gate, the rate limiter and the limits."""
+        """Store the course gate, the rate limiter and the limits (the provider's)."""
         self.gate = gate
         self.rate_limiter = rate_limiter
         self.settings = settings
+        self.limits = limits or StaticLimits(settings.limits)
 
     async def assistant(
         self, actor: Actor, assistant: Assistant, course_id: UUID | None = None
@@ -99,8 +105,9 @@ class ChatGuard:
         """
         if chat.assistant is not Assistant.LMS_AUTHOR:
             return
+        limits = await self.limits.current()
         await self.rate_limiter.hit(
             COURSE_CHAT_RATE_KEY.format(user_id=actor.user_id),
-            limit=self.settings.limits.lms_ai_chat_per_minute,
+            limit=limits.lms_ai_chat_per_minute,
             window_seconds=RATE_WINDOW_SECONDS,
         )

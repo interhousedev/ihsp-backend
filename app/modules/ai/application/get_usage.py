@@ -30,4 +30,4 @@ class GetUsage:
         """
         chosen = assistant or default_assistant(actor)
         await self.guard.assistant(actor, chosen, course_id)
-        return await self.budget.usage(actor.user_id, chosen)
+        return await self.budget.usage_for(actor, chosen)

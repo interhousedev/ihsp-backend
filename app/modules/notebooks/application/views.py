@@ -15,19 +15,19 @@ from app.shared.base_error import BaseError
 
 @dataclass(frozen=True, slots=True)
 class UsagePartView:
-    """Weighted tokens against a limit."""
+    """Weighted tokens against a limit (None: unlimited, staff)."""
 
     used: int
-    limit: int
+    limit: int | None
     resets_at: datetime | None
 
 
 @dataclass(frozen=True, slots=True)
 class QuotaView:
-    """Daily count of outputs against a limit."""
+    """Daily count of outputs against a limit (None: unlimited, staff)."""
 
     used: int
-    limit: int
+    limit: int | None
     resets_at: datetime
 
 

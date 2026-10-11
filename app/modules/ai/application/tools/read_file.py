@@ -7,6 +7,7 @@ from app.modules.ai.application.tools.base import ReadTool, ToolContext
 from app.modules.ai.domain.errors import ToolFailedError
 from app.modules.ai.domain.tool_args import ToolArgs
 from app.shared.contracts.files import FilesApi
+from app.shared.limits import LimitsProvider
 
 from pydantic import Field
 
@@ -29,10 +30,10 @@ class ReadFile(ReadTool[ReadFileArgs]):
     )
     args_model = ReadFileArgs
 
-    def __init__(self, files: FilesApi, max_text_bytes: int) -> None:
-        """Store the files API and the largest text the assistant may read."""
+    def __init__(self, files: FilesApi, limits: LimitsProvider) -> None:
+        """Store the files API and the limits (the largest text the assistant reads)."""
         self.files = files
-        self.max_text_bytes = max_text_bytes
+        self.limits = limits
 
     async def run(self, args: ReadFileArgs, ctx: ToolContext) -> dict[str, Any]:
         """Return the page, or fail with a message the model can relay."""
@@ -43,11 +44,12 @@ class ReadFile(ReadTool[ReadFileArgs]):
             raise ToolFailedError(support_details="the file is not ready yet")
         if ref.text_bytes is None:
             raise ToolFailedError(support_details="no text could be read from the file")
-        if ref.text_bytes > self.max_text_bytes:
+        max_text_bytes = (await self.limits.current()).ai_text_max_bytes
+        if ref.text_bytes > max_text_bytes:
             raise ToolFailedError(
                 support_details=(
                     f"the text of this file is too large for the assistant "
-                    f"({ref.text_bytes} bytes, the limit is {self.max_text_bytes})"
+                    f"({ref.text_bytes} bytes, the limit is {max_text_bytes})"
                 )
             )
         page = await self.files.read_text_page(args.file_id, args.page)

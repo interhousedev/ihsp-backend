@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, Literal, cast
+from uuid import UUID
 
 from app.bootstrap.adapters.admin_tools import AdminToolBackendAdapter
 from app.bootstrap.adapters.composition.library_platform_search import (
@@ -31,12 +32,20 @@ from app.modules.academic.wiring import (
     build_marks,
     build_schedule,
 )
+from app.modules.admin.infrastructure.limit_snapshot import load_limit_snapshot
 from app.modules.admin.wiring import build as build_admin
 from app.modules.ai.infrastructure.gateway_factory import (
     make_embedding_gateway,
     make_llm_gateway,
     make_web_search_gateway,
 )
+from app.modules.ai.infrastructure.recording_gateways import (
+    RecordingEmbeddings,
+    RecordingLlmGateway,
+    RecordingWebSearch,
+    UsageRecorder,
+)
+from app.modules.ai.infrastructure.usage_store import SqlUsageStore
 from app.modules.ai.wiring import build as build_ai
 from app.modules.dashboard.wiring import build as build_dashboard
 from app.modules.files.ports.content_sniffer import ContentSniffer
@@ -61,13 +70,15 @@ from app.modules.notify.ports.push_sender import PushSender
 from app.modules.notify.wiring import build as build_notify
 from app.modules.vectors.wiring import build as build_vectors
 from app.settings import Settings
-from app.shared.clock import Clock
+from app.shared.actor import Role
+from app.shared.clock import Clock, local_today
 from app.shared.contracts.ai import AiQueries, LlmGateway
 from app.shared.contracts.embeddings import EmbeddingIndex
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.notebooks import NotebooksQueries
 from app.shared.contracts.notify import TelegramSender
 from app.shared.features import Feature, is_enabled
+from app.shared.limits import EffectiveLimits
 from app.shared.rate_limit import RateLimiter
 from app.shared.tasks import TaskKicker
 from app.shared.wiring import ModuleDeps
@@ -129,6 +140,17 @@ def make_deps(container: Container) -> ModuleDeps:
     async def kick_dispatch() -> None:
         await kicker.kick("notify.dispatch_due")
 
+    async def roles_of(user_id: UUID) -> frozenset[Role]:
+        user = await container.identity.directory.get_user(user_id)
+        return user.roles if user is not None else frozenset()
+
+    limits = EffectiveLimits(
+        container.settings.limits,
+        lambda: load_limit_snapshot(container.sessionmaker),
+        today=lambda: local_today(container.clock),
+        roles=roles_of,
+    )
+    container.limits = limits
     return ModuleDeps(
         settings=container.settings,
         clock=container.clock,
@@ -140,6 +162,7 @@ def make_deps(container: Container) -> ModuleDeps:
         outbox_writer=write_notifications,
         audit_writer=write_audit_events,
         outbox_committed_hook=kick_dispatch,
+        limits=limits,
     )
 
 
@@ -163,6 +186,13 @@ class _Assembler:
         # Identity stores profile photos in files, which needs the academic terms.
         self.files_proxy: LazyProxy[FilesApi] = LazyProxy("files (identity photos)")
         self.llm: LlmGateway | None = overrides.llm
+        # Every model call is counted in the usage ledger (the decorators in ai).
+        self.raw_llm: LlmGateway | None = overrides.llm
+        # Set by build_embeddings (after the AI module); the AI module reads it late.
+        self.embedding_index: EmbeddingIndex | None = None
+        self.recorder = UsageRecorder(
+            SqlUsageStore(container.sessionmaker), container.clock
+        )
         self.deps = make_deps(container)
 
     def add_closer(self, closer: Callable[[], Awaitable[None]]) -> None:
@@ -384,7 +414,8 @@ class _Assembler:
         c = self.container
         tools = AdminToolBackendAdapter(c)
         c.admin_tools = tools
-        self.llm = self.overrides.llm or make_llm_gateway(c.settings)
+        self.raw_llm = self.overrides.llm or make_llm_gateway(c.settings)
+        self.llm = RecordingLlmGateway(self.raw_llm, self.recorder)
         c.llm = self.llm
         ai = build_ai(
             self.deps,
@@ -397,7 +428,11 @@ class _Assembler:
             flashcards=c.flashcards.public,
             admin_tools=tools,
             links=c.links.public,
-            web_search=make_web_search_gateway(c.settings, self.llm),
+            web_search=RecordingWebSearch(
+                make_web_search_gateway(c.settings, c.redis), self.recorder
+            ),
+            embeddings=lambda: self.embedding_index,
+            free_usage=self.recorder,
         )
         ai.bindings.share_lookup = c.links.public
         self.ai_proxy.bind(ai.public)
@@ -425,13 +460,17 @@ class _Assembler:
             c.library.catalogue.list_items
         )
 
-    def build_embeddings(self, llm: LlmGateway) -> EmbeddingIndex | None:
+    def build_embeddings(self) -> EmbeddingIndex | None:
         """The vectors module's index; None when search by meaning is switched off."""
         settings = self.container.settings
         if not is_enabled(settings, Feature.VECTOR_SEARCH):
             return None
-        gateway = make_embedding_gateway(settings, llm)
-        return build_vectors(self.deps, gateway=gateway).index
+        raw = self.raw_llm or make_llm_gateway(settings)
+        gateway = RecordingEmbeddings(
+            make_embedding_gateway(settings, raw), self.recorder
+        )
+        self.embedding_index = build_vectors(self.deps, gateway=gateway).index
+        return self.embedding_index
 
     def build_notebooks(self) -> None:
         """Notebooks: built after AI and LMS; the assistant reaches it late-bound."""
@@ -454,7 +493,7 @@ class _Assembler:
             terms=NotebookTermsAdapter(c.academic.schedule.current_term),
             web_search=c.ai.web_search,
             workspace=c.lms.authoring.workspace if self.plan.lms else None,
-            embeddings=self.build_embeddings(llm),
+            embeddings=self.build_embeddings(),
             lms_apply=(
                 LmsApplyPorts(
                     workspace=c.lms.authoring.workspace_commands,

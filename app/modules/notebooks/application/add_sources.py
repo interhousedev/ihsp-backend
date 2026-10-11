@@ -26,6 +26,7 @@ from app.shared.actor import Actor
 from app.shared.base_error import BaseError
 from app.shared.clock import Clock
 from app.shared.ids import new_id
+from app.shared.limits import LimitsProvider, StaticLimits
 from app.shared.rate_limit import RateLimiter
 from app.shared.tasks import TaskKicker
 
@@ -89,11 +90,13 @@ class AddSources:
         rate_limiter: RateLimiter,
         kicker: TaskKicker,
         readers: SourceReaders,
+        limits: LimitsProvider | None = None,
     ) -> None:
-        """Store the collaborators."""
+        """Store the collaborators; the limits come from the provider when given."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.settings = settings
+        self.limits = limits or StaticLimits(settings.limits)
         self.rate_limiter = rate_limiter
         self.kicker = kicker
         self.readers = readers
@@ -154,7 +157,7 @@ class AddSources:
     ) -> Source:
         """Build the source of one item or raise why it was refused."""
         check_fits(notebook, item)
-        limits = self.settings.limits
+        limits = await self.limits.current()
         await self.rate_limiter.hit(
             f"nb-src:{actor.user_id}",
             limit=limits.nb_source_adds_per_hour,

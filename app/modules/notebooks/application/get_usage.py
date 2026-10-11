@@ -10,18 +10,24 @@ from app.modules.notebooks.application.views import (
     UsagePartView,
 )
 from app.settings import Settings
+from app.shared.limits import LimitsProvider, StaticLimits
 
 
 class GetUsage:
     """Reads `GET /v1/notebooks/usage`."""
 
     def __init__(
-        self, budget: NotebookBudget, quota: QuotaService, settings: Settings
+        self,
+        budget: NotebookBudget,
+        quota: QuotaService,
+        settings: Settings,
+        limits: LimitsProvider | None = None,
     ) -> None:
-        """Store the services."""
+        """Store the services and the limits provider."""
         self.budget = budget
         self.quota = quota
         self.settings = settings
+        self.limits = limits or StaticLimits(settings.limits)
 
     async def execute(
         self, user_id: UUID, *, course: bool = False
@@ -43,5 +49,5 @@ class GetUsage:
                 for name, part in quotas.items()
             },
             generating=await quota.running_count(user_id),
-            generating_limit=self.settings.limits.nb_concurrent_artifacts,
+            generating_limit=(await self.limits.current()).nb_concurrent_artifacts,
         )

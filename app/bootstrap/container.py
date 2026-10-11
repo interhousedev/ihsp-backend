@@ -10,6 +10,7 @@ from app.shared.contracts.ai import AdminToolBackend, LlmGateway
 from app.shared.contracts.notify import TelegramSender
 from app.shared.db.engine import make_engine, make_sessionmaker
 from app.shared.i18n.core import I18nCore
+from app.shared.limits import LimitsProvider
 from app.shared.paths import LOCALES_DIR
 from app.shared.rate_limit import RateLimiter
 from app.shared.tasks import TaskKicker
@@ -50,6 +51,8 @@ class Container:
     rate_limiter: RateLimiter
     i18n: I18nCore
     telegram: TelegramSender = NOT_BUILT
+    # The limits in force (overrides, extensions, staff), set at build time.
+    limits: LimitsProvider | None = None
     identity: "IdentityModule" = NOT_BUILT
     academic: "AcademicModule" = NOT_BUILT
     files: "FilesServices" = NOT_BUILT

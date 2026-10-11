@@ -9,6 +9,7 @@ from app.modules.notebooks.domain.errors import BusyError, QuotaExceededError
 from app.modules.notebooks.ports.quota_store import QuotaStore
 from app.settings import Settings
 from app.shared.clock import TASHKENT, Clock, local_today
+from app.shared.limits import ActorLimits, LimitsProvider, StaticLimits
 
 TOTAL = "artifacts"  # the counter of outputs of every kind
 
@@ -18,7 +19,7 @@ class QuotaPart:
     """How many outputs of a kind were requested today, the limit and the reset."""
 
     used: int
-    limit: int
+    limit: int | None  # None: unlimited (staff)
     resets_at: datetime
 
 
@@ -37,39 +38,43 @@ class QuotaService:
         *,
         for_course: bool = False,
         course: "QuotaService | None" = None,
+        limits: LimitsProvider | None = None,
     ) -> None:
         """Store the counters, the clock and the settings.
 
         `for_course` makes this the course staff pool (`lms_ai_artifacts_per_day`
-        outputs a day); `course` is the pool of course workspaces.
+        outputs a day, unlimited for staff); `course` is the pool of course workspaces.
+        The daily limits come from the provider (overrides, the student's extension).
         """
         self.store = store
         self.clock = clock
         self.settings = settings
         self.for_course = for_course
         self.course = course
-
-    @property
-    def artifacts_per_day(self) -> int:
-        """The daily limit of all outputs (read from the settings each time)."""
-        limits = self.settings.limits
-        if self.for_course:
-            return limits.lms_ai_artifacts_per_day
-        return limits.nb_artifacts_per_day
+        self.limits = limits or StaticLimits(settings.limits)
 
     def pool(self, course: bool) -> "QuotaService":
         """The pool of a course workspace (`course=True`) or of a student notebook."""
         return self.course if course and self.course is not None else self
 
-    def limit_of(self, kind: str) -> int:
-        """The daily limit of a counter (`artifacts`, `slides`, ...)."""
-        limits = self.settings.limits
+    async def _view(self, user_id: UUID) -> ActorLimits:
+        return await self.limits.for_user(
+            user_id, unlimited=True if self.for_course else None
+        )
+
+    def limit_of(self, kind: str, view: ActorLimits) -> int | None:
+        """The daily limit of a counter; None means unlimited."""
+        artifacts: int | None = (
+            view.lms_ai_artifacts_per_day
+            if self.for_course
+            else view.nb_artifacts_per_day
+        )
         return {
-            TOTAL: self.artifacts_per_day,
-            ArtifactKind.AUDIO_OVERVIEW.value: limits.nb_audio_per_day,
-            ArtifactKind.SLIDES.value: limits.nb_slides_per_day,
-            ArtifactKind.INFOGRAPHIC.value: limits.nb_infographics_per_day,
-        }.get(kind, self.artifacts_per_day)
+            TOTAL: artifacts,
+            ArtifactKind.AUDIO_OVERVIEW.value: view.nb_audio_per_day,
+            ArtifactKind.SLIDES.value: view.nb_slides_per_day,
+            ArtifactKind.INFOGRAPHIC.value: view.nb_infographics_per_day,
+        }.get(kind, artifacts)
 
     def _midnight(self) -> datetime:
         tomorrow = local_today(self.clock) + timedelta(days=1)
@@ -88,6 +93,7 @@ class QuotaService:
         """Today's usage of the four counters of `NotebookUsage.quotas`."""
         day = local_today(self.clock)
         reset = self._midnight()
+        view = await self._view(user_id)
         names = [
             TOTAL,
             ArtifactKind.AUDIO_OVERVIEW.value,
@@ -96,7 +102,9 @@ class QuotaService:
         ]
         return {
             name: QuotaPart(
-                await self.store.used(user_id, day, name), self.limit_of(name), reset
+                await self.store.used(user_id, day, name),
+                self.limit_of(name, view),
+                reset,
             )
             for name in names
         }
@@ -109,17 +117,19 @@ class QuotaService:
         Nothing stays counted when it raises.
         """
         day = local_today(self.clock)
+        view = await self._view(user_id)
         for name in self.counters_for(kind):
             used = await self.store.used(user_id, day, name)
-            if used >= self.limit_of(name):
+            limit = self.limit_of(name, view)
+            if limit is not None and used >= limit:
                 raise QuotaExceededError(
                     params={
                         "kind": name,
-                        "limit": self.limit_of(name),
+                        "limit": limit,
                         "resets_at": self._midnight().isoformat(),
                     }
                 )
-        limit = self.settings.limits.nb_concurrent_artifacts
+        limit = (await self.limits.current()).nb_concurrent_artifacts
         await self.store.add_running(user_id, artifact_id)
         if len(await self.store.running(user_id)) > limit:
             await self.store.remove_running(user_id, artifact_id)

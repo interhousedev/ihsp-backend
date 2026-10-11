@@ -24,6 +24,7 @@ from app.modules.notebooks.domain.search_snippet import make_snippet
 from app.modules.notebooks.ports.unit_of_work import UowFactory
 from app.settings import Settings
 from app.shared.actor import Actor
+from app.shared.limits import LimitsProvider, StaticLimits
 from app.shared.rate_limit import RateLimiter
 
 RATE_WINDOW_SECONDS = 60
@@ -75,12 +76,18 @@ class SearchSources:
     """Finds the passages of a notebook that contain the words of a request."""
 
     def __init__(
-        self, *, uow_factory: UowFactory, settings: Settings, rate_limiter: RateLimiter
+        self,
+        *,
+        uow_factory: UowFactory,
+        settings: Settings,
+        rate_limiter: RateLimiter,
+        limits: LimitsProvider | None = None,
     ) -> None:
-        """Store the collaborators."""
+        """Store the collaborators; the limits come from the provider when given."""
         self.uow_factory = uow_factory
         self.settings = settings
         self.rate_limiter = rate_limiter
+        self.limits = limits or StaticLimits(settings.limits)
 
     async def execute(
         self,
@@ -105,7 +112,7 @@ class SearchSources:
             await load_notebook(uow, actor.user_id, notebook_id, write=False)
         await self.rate_limiter.hit(
             f"nb-search:{actor.user_id}",
-            limit=self.settings.limits.nb_search_per_minute,
+            limit=(await self.limits.current()).nb_search_per_minute,
             window_seconds=RATE_WINDOW_SECONDS,
         )
         async with self.uow_factory() as uow:

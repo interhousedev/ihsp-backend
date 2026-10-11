@@ -322,7 +322,7 @@ class AnswerPipeline:
     async def _rate_limit(self, user_id: UUID, *, course: bool) -> None:
         """Questions per minute of the user (course staff have their own limit)."""
         deps = self.core.deps
-        limits = deps.settings.limits
+        limits = await deps.effective_limits.current()
         await deps.rate_limiter.hit(
             f"lms-chat:{user_id}" if course else f"nb-chat:{user_id}",
             limit=(
@@ -737,7 +737,12 @@ class AnswerPipeline:
 def _web_event(web: list[WebResult]) -> StreamEvent:
     """The ``web`` event: the pages the answer may cite, before its first delta."""
     return StreamEvent(
-        "web", {"results": [item.model_dump(mode="json") for item in web]}
+        "web",
+        {
+            "results": [
+                item.model_dump(mode="json", exclude={"published_date"}) for item in web
+            ]
+        },
     )
 
 

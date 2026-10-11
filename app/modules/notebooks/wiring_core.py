@@ -88,28 +88,40 @@ def sql_uow_factory(
 def _budget(deps: ModuleDeps, store: BudgetStore | None) -> NotebookBudget:
     """The student pool with the pool of course workspaces next to it."""
     settings = deps.settings
+    limits = deps.effective_limits
     course = NotebookBudget(
         RedisBudgetStore(deps.redis, prefix=BUDGET_COURSE_PREFIX),
         deps.clock,
         settings,
         for_course=True,
+        limits=limits,
     )
     return NotebookBudget(
-        store or RedisBudgetStore(deps.redis), deps.clock, settings, course=course
+        store or RedisBudgetStore(deps.redis),
+        deps.clock,
+        settings,
+        course=course,
+        limits=limits,
     )
 
 
 def _quota(deps: ModuleDeps, store: QuotaStore | None) -> QuotaService:
     """The student output quotas with the course workspace quotas next to them."""
     settings = deps.settings
+    limits = deps.effective_limits
     course = QuotaService(
         RedisQuotaStore(deps.redis, prefix=QUOTA_COURSE_PREFIX),
         deps.clock,
         settings,
         for_course=True,
+        limits=limits,
     )
     return QuotaService(
-        store or RedisQuotaStore(deps.redis), deps.clock, settings, course=course
+        store or RedisQuotaStore(deps.redis),
+        deps.clock,
+        settings,
+        course=course,
+        limits=limits,
     )
 
 
@@ -144,7 +156,7 @@ def build_core(
         quota=quota,
         locale=LocaleResolver(identity),
         context=ContextBuilder(settings, embeddings),
-        usage=GetUsage(budget, quota, settings),
+        usage=GetUsage(budget, quota, settings, deps.effective_limits),
         turn_lock=over.turn_lock or RedisTurnLock(deps.redis),
         web_search=web_search,
         embeddings=embeddings,

@@ -37,6 +37,7 @@ from app.shared.contracts.ai import LlmGateway
 from app.shared.contracts.web_search import WebResult
 from app.shared.i18n.core import I18nCore
 from app.shared.ids import new_id
+from app.shared.limits import LimitsProvider, StaticLimits
 from app.shared.web_citations import rewrite_markers
 
 MAX_OUTPUT_TOKENS = 4096
@@ -79,10 +80,12 @@ class ContinueTurn:
         clock: Clock,
         settings: Settings,
         i18n: I18nCore,
+        limits: LimitsProvider | None = None,
     ) -> None:
         """Store the collaborators."""
         self.prompts = prompts
         self.uow_factory = uow_factory
+        self.limits = limits or StaticLimits(settings.limits)
         self.llm = llm
         self.registry = registry
         self.runner = runner
@@ -108,7 +111,12 @@ class ContinueTurn:
         progress = TurnProgress(chat=chat, changed=list(changed or []))
         ctx = ToolContext(actor, chat_id, locale, scope=chat.scope)
         run = _Run(chat_id, ctx, summary, after, progress)
-        steps = profile_for(chat.assistant, self.settings, chat.tier).max_tool_steps
+        steps = profile_for(
+            chat.assistant,
+            self.settings,
+            chat.tier,
+            limits=await self.limits.current(),
+        ).max_tool_steps
         for _ in range(steps):
             status = await self._step(run)
             if status is not None:
