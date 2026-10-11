@@ -63,7 +63,7 @@ def make_chat(
         id=new_id(),
         owner_id=owner or new_id(),  # type: ignore[arg-type]
         assistant=assistant,
-        model="anthropic/claude-haiku-4.5",
+        model="anthropic/claude-haiku-5.5",
         last_message_at=NOW,
         **fields,  # type: ignore[arg-type]
     )

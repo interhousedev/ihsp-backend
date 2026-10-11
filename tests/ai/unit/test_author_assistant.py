@@ -488,8 +488,10 @@ async def test_author_tokens_count_in_the_course_staff_pool(a: Author) -> None:
 
     assert a.h.budget.days == {} and a.h.course_budget.days
     limits = a.h.settings.limits
-    assert usage.day.used > 0 and usage.day.limit == limits.lms_ai_daily_tokens
-    assert usage.session.limit == limits.lms_ai_session_tokens
+    # Course staff are not limited: the pool counts the tokens, the limits are None.
+    assert usage.day.used > 0 and usage.day.limit is None
+    assert usage.session.limit is None
+    assert limits.lms_ai_daily_tokens > 0
 
 
 async def test_a_turn_stops_after_the_author_tool_rounds(

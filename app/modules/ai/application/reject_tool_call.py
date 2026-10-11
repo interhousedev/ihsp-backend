@@ -65,4 +65,4 @@ class RejectToolCall:
                     locale=locale,
                     changed=[claim.message],
                 )
-        return await self.results.build(actor.user_id, locale, progress)
+        return await self.results.build(actor, locale, progress)

@@ -78,3 +78,20 @@ class RedisBudgetStore:
         key = self._day_key(user_id, day)
         await _wait(self.redis.incrby(key, tokens))
         await self.redis.expire(key, int(DAY_TTL.total_seconds()))
+
+    def _week_key(self, user_id: UUID, week: date) -> str:
+        return f"{self.prefix}:smart:{user_id}:{week.isoformat()}"
+
+    async def week_used(self, user_id: UUID, week: date) -> int:
+        """Return the smart-tier requests counted in a week."""
+        value = await self.redis.get(self._week_key(user_id, week))
+        return int(_text(value)) if value is not None else 0
+
+    async def add_week(
+        self, user_id: UUID, week: date, count: int, expires_at: datetime
+    ) -> int:
+        """Add to a week's smart-tier requests; the key expires with the week."""
+        key = self._week_key(user_id, week)
+        total = int(await _wait(self.redis.incrby(key, count)))
+        await self.redis.expireat(key, int(expires_at.timestamp()))
+        return total

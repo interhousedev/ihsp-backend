@@ -12,7 +12,7 @@ import pytest
 import respx
 
 URL = "https://openrouter.ai/api/v1/chat/completions"
-MODEL = "anthropic/claude-haiku-4.5"
+MODEL = "anthropic/claude-haiku-5.5"
 SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {"title": {"type": "string"}},

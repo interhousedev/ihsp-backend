@@ -16,13 +16,15 @@ DataCollection = Literal["deny", "allow"]
 Modality = Literal["text", "image", "audio", "video", "pdf"]
 ALL_MODALITIES: tuple[Modality, ...] = ("text", "image", "audio", "video", "pdf")
 
-SMART_MODEL: Final = "anthropic/claude-sonnet-5.5"
+SMART_MODEL: Final = "google/gemini-3.8-flash"
 # Notebook guides, summaries, labels and Studio outputs: the Claude Haiku 5.5 JSON
 # outputs scored best in the 2026-10 studio bench (ru, thin and long sources) at a
 # tenth of the price of Haiku 4.5; reasoning is switched off for them (below).
 NOTEBOOK_MODEL: Final = "anthropic/claude-haiku-5.5"
-SMART_BUDGET_WEIGHT: Final = 4
-SEARCH_MODEL: Final = "google/gemini-3.5-flash-lite"  # cheap; the search is the cost
+# The smart tier: Gemini 3.8 Flash at `low` effort (benchmarked: no reasoning tokens,
+# good answers) costs about 7.5x Claude Haiku 5.5, so one smart token counts 8x.
+SMART_REASONING: Final = "low"
+SMART_BUDGET_WEIGHT: Final = 8
 # Vectors for meaning-based retrieval (docs/reference/vector-search.md): multilingual
 # (Uzbek Latin and Cyrillic, Russian, English), 32k context, USD 0.02 per 1M tokens.
 TRANSLATE_MODEL: Final = "google/gemini-3.5-flash-lite"  # cheap; a few words per call
@@ -95,9 +97,10 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
     AiTask.STUDENT_CHAT_SMART: TaskSpec(
         "assistant",
         "Student assistant, smart tier. Ships with a larger model and counts "
-        f"{SMART_BUDGET_WEIGHT}x against the token budget.",
+        f"{SMART_BUDGET_WEIGHT}x against the token budget; a few requests a week.",
         model=SMART_MODEL,
         budget_weight=SMART_BUDGET_WEIGHT,
+        reasoning_effort=SMART_REASONING,
     ),
     AiTask.ADMIN_CHAT: TaskSpec("assistant", "Administration assistant."),
     AiTask.CHAT_SUMMARY: TaskSpec(
@@ -192,16 +195,14 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
     ),
     AiTask.WEB_SEARCH: TaskSpec(
         "search",
-        "Web search for a chat message: the cheap model that runs OpenRouter's web "
-        "search and lists the pages it found (only the question is sent, no sources).",
-        model=SEARCH_MODEL,
-        data_collection=_PRIVATE,
+        "Web search for a chat message: one Exa search, no model call (only the "
+        "question is sent to Exa). The task keeps its name for the quota and budgets.",
     ),
     AiTask.DISCOVER: TaskSpec(
         "search",
-        "Discover sources: web search for the notebook, the plan of a deep run, and "
-        "the ranking and one-line reasons of the found pages.",
-        model=SEARCH_MODEL,
+        "Discover sources: the plan of a deep run (its queries) and the ranking with "
+        "one-line reasons of the pages Exa found. The searches are Exa's, not model "
+        "calls; the model call uses the default model.",
         data_collection=_PRIVATE,
     ),
     AiTask.SUBJECT_TRANSLATE: TaskSpec(
@@ -260,6 +261,7 @@ class ModelProfile:
             temperature=self.temperature,
             reasoning_effort=self.reasoning_effort,
             fallbacks=self.fallbacks,
+            task=self.task.value,
         )
 
     def output_tokens(self, default: int) -> int:

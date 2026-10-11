@@ -1,9 +1,9 @@
 """AI model settings: one default and an override per task (`IHSP_AI__...`).
 
-    IHSP_AI__DEFAULT__MODEL=anthropic/claude-haiku-4.5
+    IHSP_AI__DEFAULT__MODEL=anthropic/claude-haiku-5.5
     IHSP_AI__DEFAULT__TEMPERATURE=0.2
     IHSP_AI__TASKS__STUDIO_QUIZ__MODEL=anthropic/claude-sonnet-5.5
-    IHSP_AI__TASKS__STUDIO_QUIZ__FALLBACKS=anthropic/claude-haiku-4.5
+    IHSP_AI__TASKS__STUDIO_QUIZ__FALLBACKS=anthropic/claude-haiku-5.5
 
 A task takes its own value, else the value the code gives that task (the smart tier
 ships with a larger model), else the default. The task names are `AiTask`.
@@ -34,7 +34,10 @@ if TYPE_CHECKING:
 
 log = structlog.get_logger(__name__)
 
-DEFAULT_MODEL = "anthropic/claude-haiku-4.5"
+DEFAULT_MODEL = "anthropic/claude-haiku-5.5"
+# Claude 5.5 reasons by default, inside max_tokens: chats turn that off. A task sets
+# its own effort with `AI__TASKS__<TASK>__REASONING_EFFORT`.
+DEFAULT_REASONING: ReasoningEffort = "none"
 
 
 def _comma_list(value: object) -> object:
@@ -56,11 +59,11 @@ class AiDefaults(BaseModel):
     max_output_tokens: int | None = Field(default=None, ge=1)
     """Answer size limit; empty keeps each call site's own size (chat length, kind)."""
 
-    reasoning_effort: ReasoningEffort | None = None
+    reasoning_effort: ReasoningEffort | None = DEFAULT_REASONING
     """Reasoning effort for models that support it (minimal, low, medium or high);
-    `none` switches reasoning off for models that reason by default; empty sends
-    nothing (the provider's default, which for Claude 5.5 and GPT-5.x means reasoning
-    inside the answer budget)."""
+    `none` switches reasoning off for models that reason by default (the default, so
+    chats do not spend their answer budget on thinking); empty sends nothing (the
+    provider's default)."""
 
     fallbacks: tuple[str, ...] = ()
     """Comma list of models OpenRouter tries when the model or its providers fail."""
@@ -152,6 +155,10 @@ class AiSettings(BaseModel):
 
     default: AiDefaults = Field(default_factory=AiDefaults)
     """Defaults of every task."""
+
+    usage_retention_days: int = Field(default=400, ge=60, le=3650)
+    """Days the usage ledger (one row per model call, for the Limits & usage page) is
+    kept; a daily job deletes the older rows."""
 
     tasks: dict[AiTask, AiTaskSettings] = Field(default_factory=dict)
     """Per-task overrides, keyed by task name (see the task list above)."""

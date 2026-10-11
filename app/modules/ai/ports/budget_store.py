@@ -15,7 +15,7 @@ class SessionWindow:
 
 
 class BudgetStore(Protocol):
-    """Counters in Redis (`ai:session:{user}` and `ai:day:{user}:{date}`)."""
+    """Counters in Redis: the session window, the day and a week's smart requests."""
 
     async def session(self, user_id: UUID) -> SessionWindow | None:
         """Return the open session window, if there is one."""
@@ -35,4 +35,18 @@ class BudgetStore(Protocol):
 
     async def add_day(self, user_id: UUID, day: date, tokens: int) -> None:
         """Add tokens to a day's counter (kept for 48 hours)."""
+        ...
+
+    async def week_used(self, user_id: UUID, week: date) -> int:
+        """Return the smart-tier requests counted in a week (its Monday's date)."""
+        ...
+
+    async def add_week(
+        self, user_id: UUID, week: date, count: int, expires_at: datetime
+    ) -> int:
+        """Add `count` (negative to give one back) to a week's smart-tier requests.
+
+        Returns the new total, so a refusal can be decided atomically. The counter
+        expires at `expires_at` (the next week's start).
+        """
         ...

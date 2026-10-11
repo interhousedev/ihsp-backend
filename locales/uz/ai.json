@@ -151,6 +151,7 @@
   "ai-preview-update-teacher": "O'qituvchi akkauntini o'zgartirish",
   "ai-preview-update-timetable-entry": "Jadval yozuvini o'zgartirish",
   "ai-provider-error": "Sun'iy intellekt xizmati hozir mavjud emas. Bir daqiqadan keyin qayta urinib ko'ring.",
+  "ai-smart-weekly-limit": "Aqlli yordamchi haftasiga {limit} ta so'rov bilan cheklangan. Keyingi yangilanish: {date}.",
   "ai-step-limit": "Bitta javob uchun qadamlar limitiga yetdim. «Davom et» deb yozing, davom etaman.",
   "ai-tool-arguments": "Yordamchi vositaga noto'g'ri argumentlar yubordi.",
   "ai-tool-call-expired": "Yordamchining bu harakati muddati tugagan.",
@@ -160,5 +161,6 @@
   "ai-turn-in-progress": "Yordamchi bu chatda hali javob yozmoqda.",
   "ai-unknown-command": "Noma'lum buyruq /{command}. Mavjud: {known}.",
   "ai-value-yes": "Ha",
-  "ai-wrong-assistant": "Bu yordamchidan foydalana olmaysiz."
+  "ai-wrong-assistant": "Bu yordamchidan foydalana olmaysiz.",
+  "ai-usage-range-invalid": "Sana oraligʻi notoʻgʻri yoki {max_days} kundan uzun."
 }

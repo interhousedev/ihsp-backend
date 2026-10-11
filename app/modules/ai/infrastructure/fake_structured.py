@@ -640,7 +640,7 @@ def _question(
     kind: str,
     prompt: str,
     options: list[tuple[str, str]],
-    correct: str,
+    correct: str | list[str],
     explanation: str,
     statement: Statement,
 ) -> Document:
@@ -649,7 +649,7 @@ def _question(
         "type": kind,
         "prompt": clip(prompt, 400),
         "options": [{"id": i, "text": clip(t, 200)} for i, t in options],
-        "correct": [correct],
+        "correct": [correct] if isinstance(correct, str) else correct,
         "explanation": explanation,
         "hint": f"{DEMO}: re-read «{topic(statement.passage.text)}».",
         "difficulty": "easy",
@@ -733,16 +733,89 @@ def _true_false_questions(
     return items
 
 
-def build_quiz(passages: Sequence[FakePassage], _: str) -> Document:
+_QUIZ_TYPES = ("single", "multiple", "true_false")
+
+
+def _requested_types(task: str) -> list[str]:
+    """The question types the task restricts the quiz to (all of them by default)."""
+    found = re.findall(r"`(single|multiple|true_false)` =", task)
+    return [kind for kind in _QUIZ_TYPES if kind in found] or list(_QUIZ_TYPES)
+
+
+def _by_passage(found: Sequence[Statement]) -> list[list[Statement]]:
+    """The statements grouped by their passage, in order."""
+    groups: dict[str, list[Statement]] = {}
+    for statement in found:
+        groups.setdefault(statement.passage.text, []).append(statement)
+    return list(groups.values())
+
+
+def _passage_questions(
+    found: Sequence[Statement], kinds: Sequence[str]
+) -> list[Document]:
+    """``Which statement comes from this passage?`` over sources without formulas.
+
+    The right options are statements of the passage, the wrong ones are statements of
+    other passages, so every option is checkable against the sources.
+    """
+    groups = _by_passage(found)
+    items: list[Document] = []
+    for index, group in enumerate(groups):
+        outside = unique([g[0].text for n, g in enumerate(groups) if n != index and g])
+        own = unique([s.text for s in group])
+        about = topic(group[0].passage.text)
+        explanation = (
+            f"{DEMO}: the source says this in «{about}»; the other options come "
+            "from other passages."
+        )
+        if "single" in kinds and outside:
+            texts = [own[0], *outside[: len(LETTERS) - 1]]
+            items.append(
+                _question(
+                    0,
+                    "single",
+                    f"Which statement comes from the passage «{about}»?",
+                    [(LETTERS[n], t) for n, t in enumerate(texts)],
+                    LETTERS[0],
+                    explanation,
+                    group[0],
+                )
+            )
+        if "multiple" in kinds and len(own) >= 2 and outside:
+            texts = [*own[:2], *outside[:2]]
+            items.append(
+                _question(
+                    0,
+                    "multiple",
+                    f"Which statements come from the passage «{about}»?",
+                    [(LETTERS[n], t) for n, t in enumerate(texts)],
+                    [LETTERS[0], LETTERS[1]],
+                    explanation,
+                    group[0],
+                )
+            )
+    return items
+
+
+def build_quiz(passages: Sequence[FakePassage], task: str) -> Document:
     """Single choice over formulas and cards, true/false over sentences (§ 3.4.4).
 
     Every single choice question has exactly one true option: the right-hand side of
     its own formula or card; the distractors are the right-hand sides of the others.
-    Sentences become true/false questions, mixed with false formula statements.
+    Sentences become true/false questions, mixed with false formula statements. Only
+    the requested question types are made; without formulas, single and multiple
+    choice ask which statements come from a passage.
     """
+    kinds = _requested_types(task)
     found = teachable(all_statements(passages))
     pairs = _pairs(found)
-    items = [*_choice_questions(pairs), *_true_false_questions(found, pairs)]
+    items: list[Document] = []
+    if "single" in kinds:
+        items += _choice_questions(pairs)
+    if "true_false" in kinds:
+        items += _true_false_questions(found, pairs)
+    if not items:
+        items = _passage_questions(found, kinds)
     if not items:
         items = [
             _question(

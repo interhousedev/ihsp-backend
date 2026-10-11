@@ -10,13 +10,12 @@ from app.modules.ai.domain.chat import (
 )
 from app.settings_ai import AiTaskSettings
 from app.shared.ai_tasks import AiTask
-from app.shared.contracts.ai import LlmTuning
 from app.shared.ids import new_id
 from tests.ai.conftest import AiHarness, HarnessFactory
 
 
 async def test_a_default_request_carries_the_default_profile(h: AiHarness) -> None:
-    """No overrides: the default model, 0.2, the gateway's size, no provider object."""
+    """No overrides: the default model, 0.2, reasoning off, no provider object."""
     chat = await h.new_chat()
 
     await h.say(chat.id, "hello")
@@ -25,7 +24,12 @@ async def test_a_default_request_carries_the_default_profile(h: AiHarness) -> No
     assert request["model"] == h.settings.ai.default.model
     assert request["max_tokens"] == MAX_OUTPUT_TOKENS
     assert request["provider"] is None
-    assert request["tuning"] == LlmTuning(temperature=0.2)
+    tuning = request["tuning"]
+    assert (tuning.temperature, tuning.reasoning_effort, tuning.fallbacks) == (
+        0.2,
+        "none",
+        (),
+    )
 
 
 async def test_the_student_task_override_reaches_the_model_call(
@@ -54,8 +58,11 @@ async def test_the_student_task_override_reaches_the_model_call(
     assert h.store.chats[chat.id].model == "x/student"
     assert request["max_tokens"] == 777
     assert request["provider"] == {"data_collection": "deny", "order": ["anthropic"]}
-    assert request["tuning"] == LlmTuning(
-        temperature=0.6, reasoning_effort="low", fallbacks=("x/backup",)
+    tuning = request["tuning"]
+    assert (tuning.temperature, tuning.reasoning_effort, tuning.fallbacks) == (
+        0.6,
+        "low",
+        ("x/backup",),
     )
 
 
@@ -110,6 +117,7 @@ async def test_the_chat_summary_is_its_own_task(make_harness: HarnessFactory) ->
 
     summary, answer = h.llm.requests
     assert (summary["model"], summary["max_tokens"]) == ("x/summary", 222)
-    assert summary["tuning"] == LlmTuning(temperature=0.0)
+    tuning = summary["tuning"]
+    assert (tuning.temperature, tuning.reasoning_effort) == (0.0, "none")
     assert answer["model"] == h.settings.ai.default.model
     assert answer["max_tokens"] == MAX_OUTPUT_TOKENS

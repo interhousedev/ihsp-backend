@@ -5,9 +5,10 @@ from dataclasses import dataclass
 from app.modules.ai.domain.assistant import ASSISTANT_ROLE, Assistant
 from app.modules.ai.domain.chat import ChatTier
 from app.modules.ai.domain.errors import WrongAssistantError
-from app.settings import Settings
+from app.settings import LimitsSettings, Settings
 from app.shared.actor import Actor, Role
 from app.shared.ai_tasks import AiTask, ModelProfile
+from app.shared.limits import ActorLimits
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,15 +57,22 @@ def assistant_task(assistant: Assistant, tier: ChatTier | None = None) -> AiTask
 
 
 def profile_for(
-    assistant: Assistant, settings: Settings, tier: ChatTier | None = None
+    assistant: Assistant,
+    settings: Settings,
+    tier: ChatTier | None = None,
+    *,
+    limits: LimitsSettings | ActorLimits | None = None,
 ) -> AssistantProfile:
-    """Return the role, model profile and limits of an assistant from the settings.
+    """Return the role, model profile and limits of an assistant.
 
-    The `smart` tier of the student assistant is its own task: it has its own model
-    and budget weight (`AI__TASKS__STUDENT_CHAT_SMART__*`). The course author
-    assistant runs as `AiTask.LMS_AUTHORING` with the `lms_ai_*` limits.
+    The limits are the ones of the user (`limits`, from the limits provider: overrides,
+    extensions, staff); without them the environment's. The `smart` tier of the student
+    assistant is its own task: it has its own model and budget weight
+    (`AI__TASKS__STUDENT_CHAT_SMART__*`). The course author assistant runs as
+    `AiTask.LMS_AUTHORING` with the `lms_ai_*` limits.
     """
-    limits = settings.limits
+    if limits is None:
+        limits = settings.limits
     llm = settings.ai_profile(assistant_task(assistant, tier))
     if assistant is Assistant.STUDENT:
         return AssistantProfile(

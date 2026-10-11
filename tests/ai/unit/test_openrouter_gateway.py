@@ -55,7 +55,7 @@ def gateway(sleeps: Sleeps) -> OpenRouterGateway:
 
 
 async def ask(
-    gateway: OpenRouterGateway, model: str = "anthropic/claude-haiku-4.5"
+    gateway: OpenRouterGateway, model: str = "anthropic/claude-haiku-5.5"
 ) -> Any:
     """One request with a user message and the tool list."""
     return await gateway.complete(
@@ -102,7 +102,7 @@ async def test_request_has_headers_tools_and_a_cache_breakpoint(
     assert request.headers["authorization"] == "Bearer sk-test"
     assert request.headers["http-referer"] == "https://my.ihsu.uz"
     assert request.headers["x-openrouter-title"] == "IHT"
-    assert body["model"] == "anthropic/claude-haiku-4.5" and body["max_tokens"] == 512
+    assert body["model"] == "anthropic/claude-haiku-5.5" and body["max_tokens"] == 512
     assert body["tools"] == TOOLS and body["tool_choice"] == "auto"
     system = body["messages"][0]
     assert system["role"] == "system"
@@ -137,7 +137,7 @@ async def test_no_tools_means_no_tool_fields(gateway: OpenRouterGateway) -> None
     route = respx.post(URL).respond(200, json=fixture("completion_text"))
 
     await gateway.complete(
-        model="anthropic/claude-haiku-4.5",
+        model="anthropic/claude-haiku-5.5",
         system="s",
         messages=[],
         tools=[],
@@ -322,6 +322,62 @@ async def test_reasoning_off_falls_back_to_the_lowest_effort_when_mandatory(
         {"effort": "low"},
         {"effort": "low"},
     ]
+
+
+@respx.mock
+async def test_the_default_chat_with_tools_keeps_both_retry_rules(
+    gateway: OpenRouterGateway,
+) -> None:
+    """The default profile (Haiku 5.5, reasoning none) asks with tools: a refused
+    temperature is dropped and retried; reasoning stays off on the retry."""
+    route = respx.post(URL).mock(
+        side_effect=[
+            httpx.Response(404, json=UNSUPPORTED),
+            httpx.Response(200, json=fixture("completion_tool_calls")),
+        ]
+    )
+    tuning = LlmTuning(temperature=0.2, reasoning_effort="none")
+
+    await gateway.complete(
+        model="anthropic/claude-haiku-5.5",
+        system="s",
+        messages=[{"role": "user", "content": "marks?"}],
+        tools=TOOLS,
+        max_tokens=512,
+        tuning=tuning,
+    )
+
+    first, retry = bodies(route)
+    assert first["temperature"] == 0.2 and "temperature" not in retry
+    assert first["reasoning"] == retry["reasoning"] == {"enabled": False}
+    assert retry["tools"] == TOOLS
+
+
+@respx.mock
+async def test_mandatory_reasoning_with_tools_falls_back_to_effort_low(
+    gateway: OpenRouterGateway,
+) -> None:
+    """A model that always reasons refuses `enabled: false` even with tools: the retry
+    asks for `effort: low` and keeps the tools."""
+    route = respx.post(URL).mock(
+        side_effect=[
+            httpx.Response(400, json=MANDATORY),
+            httpx.Response(200, json=fixture("completion_tool_calls")),
+        ]
+    )
+
+    await gateway.complete(
+        model="anthropic/claude-haiku-5.5",
+        system="s",
+        messages=[{"role": "user", "content": "marks?"}],
+        tools=TOOLS,
+        max_tokens=512,
+        tuning=LlmTuning(temperature=0.2, reasoning_effort="none"),
+    )
+
+    first, retry = bodies(route)
+    assert first["reasoning"] == {"enabled": False}
+    assert retry["reasoning"] == {"effort": "low"} and retry["tools"] == TOOLS
 
 
 @respx.mock

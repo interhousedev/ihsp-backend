@@ -71,7 +71,7 @@ class ApproveToolCall:
                 progress = await self.continue_turn.execute(
                     chat_id=chat_id, actor=actor, locale=locale, changed=[message]
                 )
-        return await self.results.build(actor.user_id, locale, progress)
+        return await self.results.build(actor, locale, progress)
 
     async def _claim(self, actor: Actor, chat_id: UUID, call_id: str) -> Claim:
         async with self.uow_factory() as uow:

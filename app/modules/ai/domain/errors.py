@@ -24,6 +24,14 @@ class AiLimitReachedError(RateLimitedError):
     message_key = "ai-limit-reached"
 
 
+class AiSmartLimitReachedError(RateLimitedError):
+    """The smart tier's requests of the week are used up (params: limit, date)."""
+
+    code = "ai/smart-weekly-limit"
+    status = 429
+    message_key = "ai-smart-weekly-limit"
+
+
 class ChatNotFoundError(NotFoundError):
     """The chat does not exist, is deleted or belongs to someone else."""
 

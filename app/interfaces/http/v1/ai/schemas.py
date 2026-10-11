@@ -165,11 +165,27 @@ class UsageInfoResponse(_Response):
 
     session: UsagePartResponse
     day: UsagePartResponse
+    smart_remaining: int | None = None
+    """Smart-tier requests left this week; null when unlimited (staff) or when the
+    assistant has no smart tier."""
+    smart_limit: int | None = None
+    """Smart-tier requests a week; null when unlimited or no smart tier."""
+    smart_resets_at: datetime | None = None
+    """When the smart requests of the week reset (Monday 00:00 Tashkent)."""
 
     @classmethod
     def from_view(cls, view: UsageInfo) -> Self:
         """Build from the budget view."""
-        return cls.model_validate(view)
+        smart = view.smart
+        return cls.model_validate(
+            {
+                "session": view.session,
+                "day": view.day,
+                "smart_remaining": smart.remaining if smart else None,
+                "smart_limit": smart.limit if smart else None,
+                "smart_resets_at": smart.resets_at if smart else None,
+            }
+        )
 
 
 class ChatDetailResponse(ChatItemResponse):

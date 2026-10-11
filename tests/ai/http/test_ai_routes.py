@@ -210,6 +210,9 @@ async def test_usage_and_limit_errors(api: tuple[AiHarness, AsyncClient]) -> Non
     assert usage.json() == {
         "session": {"used": 0, "limit": 200_000, "resets_at": None},
         "day": {"used": 0, "limit": 600_000, "resets_at": "2026-10-06T19:00:00Z"},
+        "smart_remaining": 3,
+        "smart_limit": 3,
+        "smart_resets_at": "2026-10-11T19:00:00Z",
     }
     assert wrong.status_code == 403 and wrong.json()["type"] == "ai/wrong-assistant"
     assert blocked.status_code == 429
@@ -425,8 +428,8 @@ async def test_a_chat_is_created_on_a_tier(
     assert bad.json()["type"] == "common/request-validation"
     assert opened["tier"] == "smart" and listed["items"][0]["tier"] == "smart"
     assert sent.json()["chat"]["tier"] == "smart"
-    assert sent.json()["usage"]["session"]["used"] == 480
-    assert h.llm.requests[-1]["model"] == "anthropic/claude-sonnet-5.5"
+    assert sent.json()["usage"]["session"]["used"] == 960
+    assert h.llm.requests[-1]["model"] == "google/gemini-3.8-flash"
     assert admin.json()["tier"] == "fast"
 
 
@@ -456,8 +459,39 @@ async def test_course_author_chats_over_http(
     assert created.status_code == 200
     assert created.json()["course_id"] == str(author.course.id)
     assert [c["id"] for c in listed.json()["items"]] == [created.json()["id"]]
-    assert usage.json()["day"]["limit"] == h.settings.limits.lms_ai_daily_tokens
+    assert usage.json()["day"]["limit"] is None  # course staff are not limited
     assert (stranger.status_code, stranger.json()["type"]) == (
         403,
         "ai/wrong-assistant",
     )
+
+
+async def test_the_fourth_smart_message_of_a_week_is_a_429_problem(
+    api: tuple[AiHarness, AsyncClient],
+) -> None:
+    """AI-13: 429 `ai/smart-weekly-limit` with the limit and reset; nothing is sent."""
+    h, client = api
+    chat = await client.post(
+        "/v1/ai/chats", json={"assistant": "student", "tier": "smart"}
+    )
+    chat_id = chat.json()["id"]
+    for number in range(3):
+        h.llm.push(text_reply(f"answer {number}"))
+        sent = await client.post(
+            f"/v1/ai/chats/{chat_id}/messages", json={"text": f"message {number}"}
+        )
+        assert sent.status_code == 200, sent.text
+    calls = len(h.llm.requests)
+
+    blocked = await client.post(
+        f"/v1/ai/chats/{chat_id}/messages", json={"text": "one too many"}
+    )
+
+    assert blocked.status_code == 429
+    assert blocked.json()["type"] == "ai/smart-weekly-limit"
+    assert blocked.json()["params"] == {
+        "limit": "3",
+        "date": "12.10.2026",
+        "resets_at": "2026-10-11T19:00:00+00:00",
+    }
+    assert len(h.llm.requests) == calls

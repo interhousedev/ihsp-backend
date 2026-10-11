@@ -18,7 +18,7 @@ async def test_new_chat_has_a_default_title_and_the_configured_model(
 
     assert chat.title == "New chat"
     stored = h.store.chats[chat.id]
-    assert stored.model == "anthropic/claude-haiku-4.5"
+    assert stored.model == "anthropic/claude-haiku-5.5"
 
 
 async def test_title_comes_from_the_first_message_only(h: AiHarness) -> None:

@@ -8,7 +8,6 @@ from app.settings_loader import SettingsError, load_settings
 from app.shared.ai_tasks import (
     LIGHT_NOTEBOOK_TASKS,
     NOTEBOOK_TASKS,
-    SEARCH_MODEL,
     SMART_BUDGET_WEIGHT,
     SMART_MODEL,
     TASK_SPECS,
@@ -81,26 +80,26 @@ def test_every_task_falls_back_to_the_default_model() -> None:
         assert profile.budget_weight == 1
         assert profile.fallbacks == ()
         assert profile.max_output_tokens is None
-        assert profile.reasoning_effort == TASK_SPECS[task].reasoning_effort
+        assert profile.reasoning_effort == (TASK_SPECS[task].reasoning_effort or "none")
 
 
-def test_the_search_tasks_ship_with_the_cheap_model_and_deny_collection() -> None:
-    """Web search sends only the question: a cheap model, no provider that trains."""
+def test_web_search_has_no_model_and_discover_uses_the_default_one() -> None:
+    """Exa runs the chat search (no model call); Discover's plan and ranking use the
+    default model, which takes no provider that trains on the data."""
     ai = AiSettings()
 
-    for task in (AiTask.WEB_SEARCH, AiTask.DISCOVER):
-        profile = ai.profile(task)
-        assert profile.model == SEARCH_MODEL
-        assert profile.provider() == {"data_collection": "deny"}
-        assert profile.budget_weight == 1
+    assert TASK_SPECS[AiTask.WEB_SEARCH].model is None
+    profile = ai.profile(AiTask.DISCOVER)
+    assert profile.model == DEFAULT_MODEL
+    assert profile.provider() == {"data_collection": "deny"}
+    assert profile.budget_weight == 1
 
 
-def test_a_search_task_override_beats_its_built_in_model() -> None:
-    """AI__TASKS__WEB_SEARCH__MODEL wins; the other search task keeps its own."""
-    ai = tasks(web_search=AiTaskSettings(model="x/search"))
+def test_a_discover_override_beats_the_default_model() -> None:
+    """AI__TASKS__DISCOVER__MODEL wins over the default model."""
+    ai = tasks(discover=AiTaskSettings(model="x/search"))
 
-    assert ai.profile(AiTask.WEB_SEARCH).model == "x/search"
-    assert ai.profile(AiTask.DISCOVER).model == SEARCH_MODEL
+    assert ai.profile(AiTask.DISCOVER).model == "x/search"
 
 
 def test_the_default_changes_every_task_without_its_own_value() -> None:
@@ -166,14 +165,32 @@ def test_a_task_override_can_set_one_field_and_inherit_the_rest() -> None:
     assert (profile.model, profile.temperature) == ("x/default", 0.1)
 
 
-def test_the_smart_tier_ships_with_a_larger_model_and_weight_four() -> None:
+def test_the_default_model_is_haiku_55_and_chats_do_not_reason() -> None:
+    """Claude 5.5 reasons inside the answer budget by default: chats switch it off."""
+    ai = AiSettings()
+
+    for task in (
+        AiTask.STUDENT_CHAT,
+        AiTask.ADMIN_CHAT,
+        AiTask.CHAT_SUMMARY,
+        AiTask.LMS_AUTHORING,
+    ):
+        profile = ai.profile(task)
+        assert profile.model == "anthropic/claude-haiku-5.5" == DEFAULT_MODEL
+        assert profile.reasoning_effort == "none"
+
+
+def test_the_smart_tier_ships_with_gemini_at_low_effort_and_weight_eight() -> None:
     """The built-in value of the task beats the default, an override beats both."""
     ai = AiSettings(default={"model": "x/default"})  # type: ignore[arg-type]
 
     smart = ai.profile(AiTask.STUDENT_CHAT_SMART)
     fast = ai.profile(AiTask.STUDENT_CHAT)
 
-    assert smart.model == SMART_MODEL and smart.budget_weight == SMART_BUDGET_WEIGHT
+    assert smart.model == SMART_MODEL == "google/gemini-3.8-flash"
+    assert smart.budget_weight == SMART_BUDGET_WEIGHT == 8
+    assert smart.reasoning_effort == "low"
+    assert fast.reasoning_effort == "none"
     assert fast.model == "x/default" and fast.budget_weight == 1
     changed = tasks(
         student_chat_smart=AiTaskSettings(model="x/smart", budget_weight=2)

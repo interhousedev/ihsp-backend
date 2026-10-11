@@ -4,7 +4,8 @@ from collections.abc import Callable
 from datetime import datetime
 from uuid import UUID
 
-from app.modules.ai.application.assistant_profile import profile_for
+from app.modules.ai.application.assistant_profile import effective_tier, profile_for
+from app.modules.ai.application.budget import BudgetService
 from app.modules.ai.application.continue_turn import ContinueTurn
 from app.modules.ai.application.locale import LocaleResolver
 from app.modules.ai.application.owned_chat import ChatGuard
@@ -15,12 +16,14 @@ from app.modules.ai.domain.chat import (
     Attachment,
     Chat,
     ChatMessage,
+    ChatTier,
     MessageContent,
     MessageRole,
     title_from_text,
 )
 from app.modules.ai.domain.errors import (
     AiLimitReachedError,
+    AiSmartLimitReachedError,
     AttachmentInvalidError,
     ChatNotFoundError,
 )
@@ -34,6 +37,9 @@ from app.shared.contracts.web_search import WebResult, WebSearchApi
 from app.shared.ids import new_id
 from app.shared.slash_commands import stored_text
 from app.shared.web_citations import numbered
+from app.shared.web_urls import normalise_web_url
+
+CITED_TAIL = 200  # the latest messages of a chat whose cited pages are not new to it
 
 
 class SendMessage:
@@ -46,6 +52,7 @@ class SendMessage:
         guard: ChatGuard,
         files: FilesApi,
         continue_turn: ContinueTurn,
+        budget: BudgetService,
         locks: TurnLock,
         locale: LocaleResolver,
         results: TurnResults,
@@ -58,6 +65,7 @@ class SendMessage:
         self.guard = guard
         self.files = files
         self.continue_turn = continue_turn
+        self.budget = budget
         self.locks = locks
         self.locale = locale
         self.results = results
@@ -79,10 +87,11 @@ class SendMessage:
         """Run the turn for a new user message.
 
         With `web_search` one search of the day is spent and its pages go with the
-        message (nothing is stored when the search is refused or fails). A slash
-        command (`command` + `args`, or `/name args` typed in `text`) is stored in its
-        short form and expanded for the model; an unknown name raises
-        `UnknownCommandError` before anything is stored.
+        message (nothing is stored when the search is refused or fails). A message on
+        the smart tier counts one of the week's smart requests, given back when the
+        message is not stored. A slash command (`command` + `args`, or `/name args`
+        typed in `text`) is stored in its short form and expanded for the model; an
+        unknown name raises `UnknownCommandError` before anything is stored.
         """
         text = stored_text(command, args, text)
         locale = await self.locale.locale_of(actor.user_id)
@@ -92,12 +101,20 @@ class SendMessage:
             await self.guard.admit_message(actor, chat)
             await self._require_budget(chat, text, locale)
             attachments = await self._attachments(actor, file_ids)
-            found = await self._search(actor, text, locale, web_search)
-            changed = await self._append(chat, text, attachments, found)
+            smart = effective_tier(chat.assistant, chat.tier) is ChatTier.SMART
+            if smart:
+                await self._require_smart_quota(actor, chat)
+            try:
+                found = await self._search(actor, chat_id, text, locale, web_search)
+                changed = await self._append(chat, text, attachments, found)
+            except BaseException:
+                if smart:
+                    await self.budget.release_smart(actor.user_id)
+                raise
             progress = await self.continue_turn.execute(
                 chat_id=chat_id, actor=actor, locale=locale, changed=changed
             )
-        return await self.results.build(actor.user_id, locale, progress)
+        return await self.results.build(actor, locale, progress)
 
     async def _require_budget(self, chat: Chat, text: str, locale: str) -> None:
         """Refuse a message the user cannot afford, before anything is stored."""
@@ -105,14 +122,42 @@ class SendMessage:
         if hit is not None:
             raise AiLimitReachedError(params=hit.params())
 
+    async def _require_smart_quota(self, actor: Actor, chat: Chat) -> None:
+        """Count one smart request of the week, or refuse before anything is stored."""
+        limit = await self.budget.smart_limit(actor)
+        hit = await self.budget.reserve_smart(actor.user_id, limit)
+        if hit is not None:
+            raise AiSmartLimitReachedError(params=hit.params())
+
     async def _search(
-        self, actor: Actor, text: str, locale: str, wanted: bool
+        self, actor: Actor, chat_id: UUID, text: str, locale: str, wanted: bool
     ) -> list[WebResult]:
-        """The numbered pages of the message's web search (none when it is off)."""
+        """The numbered pages of the web search (none when it is off).
+
+        The pages this chat already cited are not new to it.
+        """
         if not wanted:
             return []
-        outcome = await self.web.search(actor, query=text, locale=locale, kind="chat")
+        outcome = await self.web.search(
+            actor,
+            query=text,
+            locale=locale,
+            kind="chat",
+            known_urls=await self._cited_urls(chat_id),
+        )
         return numbered(outcome.hits)
+
+    async def _cited_urls(self, chat_id: UUID) -> frozenset[str]:
+        """The normalised URLs of the pages the chat's earlier answers cited."""
+        async with self.uow_factory() as uow:
+            messages = await uow.messages.list_tail(chat_id, CITED_TAIL)
+        urls: set[str] = set()
+        for message in messages:
+            for result in message.content.web:
+                key = normalise_web_url(result.url)
+                if key is not None:
+                    urls.add(key)
+        return frozenset(urls)
 
     async def _attachments(
         self, actor: Actor, file_ids: list[UUID]

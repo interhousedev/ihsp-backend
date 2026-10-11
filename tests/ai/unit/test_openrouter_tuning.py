@@ -10,7 +10,7 @@ from tests.ai.unit.test_openrouter_gateway import URL, fixture
 import pytest
 import respx
 
-MODEL = "anthropic/claude-haiku-4.5"
+MODEL = "anthropic/claude-haiku-5.5"
 
 
 def payload(tuning: LlmTuning | None) -> dict[str, Any]:

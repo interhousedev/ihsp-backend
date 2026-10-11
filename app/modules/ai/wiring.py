@@ -1,5 +1,6 @@
 """Builds the AI module: use cases, tools and the public `AiQueries`."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from app.modules.ai.application.approve_tool_call import ApproveToolCall
@@ -18,6 +19,8 @@ from app.modules.ai.application.locale import LocaleResolver
 from app.modules.ai.application.owned_chat import ChatGuard
 from app.modules.ai.application.public_api import AiQueriesImpl
 from app.modules.ai.application.purge_admin_chats import PurgeAdminChats
+from app.modules.ai.application.purge_usage_events import PurgeUsageEvents
+from app.modules.ai.application.purge_web_pages import PurgeWebPages
 from app.modules.ai.application.regenerate_answer import RegenerateAnswer
 from app.modules.ai.application.reject_tool_call import RejectToolCall
 from app.modules.ai.application.rename_chat import RenameChat
@@ -58,11 +61,14 @@ from app.modules.ai.application.tools.registry import ToolRegistry
 from app.modules.ai.application.tools.search_files import SearchFiles
 from app.modules.ai.application.tools.search_notebook import SearchNotebook
 from app.modules.ai.application.turn_result import TurnResults
+from app.modules.ai.application.usage_report import UsageReport
+from app.modules.ai.application.web_pages import WebPageIndex
 from app.modules.ai.application.web_search import WebSearchService
 from app.modules.ai.domain.admin_tools import ADMIN_TOOLS
 from app.modules.ai.domain.tool_call import ToolAccess
 from app.modules.ai.infrastructure.author_gate import LateAuthorGate
-from app.modules.ai.infrastructure.fake_search import FakeWebSearch
+from app.modules.ai.infrastructure.exa_search import ExaWebSearch
+from app.modules.ai.infrastructure.fake_exa import FakeExaClient
 from app.modules.ai.infrastructure.notebook_platform_search import (
     CompositePlatformSearch,
     LateLibrarySearch,
@@ -77,22 +83,27 @@ from app.modules.ai.infrastructure.redis_search_quota import RedisSearchQuotaSto
 from app.modules.ai.infrastructure.redis_summary_store import RedisSummaryStore
 from app.modules.ai.infrastructure.redis_turn_lock import RedisTurnLock
 from app.modules.ai.infrastructure.uow import SqlAiUnitOfWork
+from app.modules.ai.infrastructure.usage_reader import SqlUsageReader
+from app.modules.ai.infrastructure.usage_store import SqlUsageStore
 from app.modules.ai.ports.budget_store import BudgetStore
 from app.modules.ai.ports.search_quota import SearchQuotaStore
 from app.modules.ai.ports.summary_store import SummaryStore
 from app.modules.ai.ports.turn_lock import TurnLock
 from app.modules.ai.ports.unit_of_work import UowFactory
+from app.modules.ai.ports.usage import FreeUsage
 from app.shared.contracts.academic import (
     ClassworkQueries,
     MarksQueries,
     ScheduleQueries,
 )
 from app.shared.contracts.ai import AdminToolBackend, AiQueries, LlmGateway
+from app.shared.contracts.embeddings import EmbeddingIndex
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.flashcards import FlashcardsApi
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.contracts.links import LinksApi
 from app.shared.contracts.web_search import WebSearchApi, WebSearchGateway
+from app.shared.limits import LimitsProvider
 from app.shared.wiring import ModuleDeps
 
 
@@ -115,6 +126,9 @@ class AiServices:
     public: AiQueries
     bindings: LateBindings
     web_search: WebSearchApi
+    usage_report: UsageReport
+    purge_usage_events: PurgeUsageEvents
+    purge_web_pages: PurgeWebPages
 
 
 @dataclass(frozen=True, slots=True)
@@ -137,7 +151,7 @@ def make_student_tools(
     files: FilesApi,
     flashcards: FlashcardsApi,
     bindings: LateBindings,
-    max_text_bytes: int,
+    limits: LimitsProvider,
 ) -> list[Tool]:
     """Return the student assistant's tools in their fixed order."""
     return [
@@ -149,7 +163,7 @@ def make_student_tools(
         GetMarks(marks),
         GetAttendance(classwork),
         ListFiles(files),
-        ReadFile(files, max_text_bytes),
+        ReadFile(files, limits),
         SearchFiles(files),
         ListNotebooks(bindings),
         GetNotebook(bindings),
@@ -194,7 +208,9 @@ def build(
     admin_tools: AdminToolBackend,
     links: LinksApi | None = None,
     web_search: WebSearchGateway | None = None,
+    embeddings: Callable[[], EmbeddingIndex | None] | None = None,
     overrides: AiOverrides | None = None,
+    free_usage: FreeUsage | None = None,
 ) -> AiServices:
     """Wire the module.
 
@@ -206,15 +222,17 @@ def build(
     settings = deps.settings
     bindings = LateBindings(links=links)
     uow_factory = over.uow_factory or _sql_uow_factory(deps)
+    limits = deps.effective_limits
     budget = BudgetService(
         over.budget_store or RedisBudgetStore(deps.redis),
         deps.clock,
         settings,
         course_store=over.course_budget_store
         or RedisBudgetStore(deps.redis, COURSE_PREFIX),
+        limits=limits,
     )
     gate = LateAuthorGate(bindings, settings)
-    guard = ChatGuard(gate, deps.rate_limiter, settings)
+    guard = ChatGuard(gate, deps.rate_limiter, settings, limits=limits)
     locks = over.turn_lock or RedisTurnLock(deps.redis)
     registry = ToolRegistry(
         make_student_tools(
@@ -224,7 +242,7 @@ def build(
             files=files,
             flashcards=flashcards,
             bindings=bindings,
-            max_text_bytes=settings.limits.ai_text_max_bytes,
+            limits=deps.effective_limits,
         ),
         make_admin_tools(admin_tools, identity),
         make_author_tools(bindings, deps.i18n),
@@ -251,14 +269,25 @@ def build(
         clock=deps.clock,
         settings=settings,
         i18n=deps.i18n,
+        limits=limits,
     )
     decider = CallDecider(uow_factory=uow_factory, guard=guard, clock=deps.clock)
+    pages = WebPageIndex(
+        uow_factory=uow_factory,
+        embeddings=embeddings or (lambda: None),
+        clock=deps.clock,
+        settings=settings,
+    )
     searching = WebSearchService(
         store=over.search_quota_store or RedisSearchQuotaStore(deps.redis),
-        gateway=web_search or FakeWebSearch(),
+        gateway=web_search
+        or ExaWebSearch(FakeExaClient(), settings.web_search, settings.exa),
         llm=llm,
         clock=deps.clock,
         settings=settings,
+        limits=limits,
+        pages=pages,
+        usage=free_usage,
         platform=CompositePlatformSearch(
             [
                 NotebookPlatformSearch(bindings),
@@ -295,6 +324,7 @@ def build(
             guard=guard,
             files=files,
             continue_turn=continue_turn,
+            budget=budget,
             locks=locks,
             locale=locale,
             results=results,
@@ -306,6 +336,7 @@ def build(
             uow_factory=uow_factory,
             guard=guard,
             continue_turn=continue_turn,
+            budget=budget,
             locks=locks,
             locale=locale,
             results=results,
@@ -331,7 +362,18 @@ def build(
             results=results,
         ),
         get_usage=GetUsage(budget=budget, guard=guard),
+        usage_report=UsageReport(
+            reader=SqlUsageReader(deps.sessionmaker),
+            identity=identity,
+            clock=deps.clock,
+        ),
+        purge_usage_events=PurgeUsageEvents(
+            store=SqlUsageStore(deps.sessionmaker),
+            clock=deps.clock,
+            retention_days=settings.ai.usage_retention_days,
+        ),
         purge_admin_chats=PurgeAdminChats(uow_factory=uow_factory, clock=deps.clock),
+        purge_web_pages=PurgeWebPages(pages),
         public=AiQueriesImpl(
             uow_factory=uow_factory, clock=deps.clock, locale=locale, views=views
         ),

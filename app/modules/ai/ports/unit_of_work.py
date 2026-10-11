@@ -6,6 +6,7 @@ from typing import Protocol, Self
 
 from app.modules.ai.ports.chat_repository import ChatRepository
 from app.modules.ai.ports.message_repository import MessageRepository
+from app.modules.ai.ports.web_pages import WebPageStore
 from app.shared.notifications import AuditDraft
 
 
@@ -20,6 +21,11 @@ class AiUnitOfWork(Protocol):
     @property
     def messages(self) -> MessageRepository:
         """Messages of the open transaction."""
+        ...
+
+    @property
+    def web_pages(self) -> WebPageStore:
+        """Stored web pages and cached queries of the open transaction."""
         ...
 
     async def __aenter__(self) -> Self:
