@@ -81,7 +81,7 @@ async def test_a_notebook_without_a_selected_ready_source_has_nothing_to_label(
     student: Actor,
     notebook: Notebook,
 ) -> None:
-    """G12: empty, unselected and still pending sources are `labels-nothing-to-label`."""
+    """G12: empty, unselected and pending sources are `labels-nothing-to-label`."""
     await make_source(uow_factory, notebook, selected=False)
     await make_source(uow_factory, notebook, status=SourceStatus.PENDING, texts=())
 

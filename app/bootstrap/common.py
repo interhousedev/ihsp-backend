@@ -1,4 +1,7 @@
-"""The composition root: builds the container for one process (docs/reference/architecture.md)."""
+"""The composition root: builds the container for one process.
+
+See docs/reference/architecture.md for the wiring rules.
+"""
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass

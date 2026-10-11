@@ -2761,7 +2761,7 @@
         "type": "object"
       },
       "Blank": {
-        "description": "One blank of a fill-in-the-blanks question, marked ``{{n}}`` (1-based) in the prompt.",
+        "description": "One blank of a fill-in-the-blanks question.\n\nMarked ``{{n}}`` (1-based) in the prompt.",
         "properties": {
           "accepted": {
             "items": {
@@ -4832,7 +4832,7 @@
         "type": "object"
       },
       "CodeSpec": {
-        "description": "A code question: no execution; the output is compared or the answer is graded by hand.",
+        "description": "A code question: no execution.\n\nThe output is compared, or the answer is graded by hand.",
         "properties": {
           "expected_outputs": {
             "items": {
@@ -9634,7 +9634,7 @@
         "type": "string"
       },
       "FileStatus": {
-        "description": "Lifecycle of a stored file (README -> Models -> File).",
+        "description": "Lifecycle of a stored file (spec -> Models -> File).",
         "enum": [
           "pending",
           "processing",
@@ -28561,7 +28561,7 @@
         "type": "object"
       },
       "UpdateLabelBody": {
-        "description": "PATCH /v1/notebooks/{id}/labels/{label_id}: only the keys that were sent apply.",
+        "description": "PATCH /v1/notebooks/{id}/labels/{label_id}: only the sent keys apply.",
         "properties": {
           "emoji": {
             "anyOf": [
@@ -29824,7 +29824,7 @@
         "type": "object"
       },
       "UserPreferences": {
-        "description": "User settings (README → Models → User → preferences).",
+        "description": "User settings (spec → Models → User → preferences).",
         "properties": {
           "alerts_drops": {
             "default": true,

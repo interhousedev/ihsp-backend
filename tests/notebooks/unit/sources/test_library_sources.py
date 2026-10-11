@@ -52,7 +52,6 @@ async def test_a_whole_book_is_added_pending_under_its_title(
         "item_id": str(book.id),
         "file_id": str(book.file_id),
         "format": "pdf",
-        "format": "pdf",
     }
     assert added.ref_key == f"library:{book.file_id}:1:0"
     assert added.origin == {

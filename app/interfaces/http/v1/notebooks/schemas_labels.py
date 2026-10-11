@@ -80,7 +80,7 @@ class CreateLabelBody(BaseModel):
 
 
 class UpdateLabelBody(BaseModel):
-    """PATCH /v1/notebooks/{id}/labels/{label_id}: only the keys that were sent apply."""
+    """PATCH /v1/notebooks/{id}/labels/{label_id}: only the sent keys apply."""
 
     name: str | None = Field(
         default=None, min_length=1, max_length=LABEL_NAME_MAX_CHARS

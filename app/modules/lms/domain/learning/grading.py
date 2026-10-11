@@ -5,7 +5,7 @@ current one. Regex answers run with the ``regex`` engine under a time limit.
 """
 
 import math
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, Final
@@ -100,28 +100,10 @@ def is_correct(
     """
     if not answer:
         return False
-    kind = question.type
-    if kind in ("single", "multiple"):
-        return _choice_correct(question, answer)
-    if kind == "text":
-        return _text_correct(question, answer)
-    if kind == "number":
-        return _number_correct(question, answer)
-    if kind == "sorting":
-        return _sorting_correct(question, answer)
-    if kind == "matching":
-        return _matching_correct(question, answer)
-    if kind == "table":
-        return _table_correct(question, answer)
-    if kind == "blanks":
-        return _blanks_correct(question, answer)
-    if kind == "random_number":
+    if question.type == "random_number":
         return _random_correct(question, answer, params or {})
-    if kind == "formula":
-        return _formula_correct(question, answer)
-    if kind == "code":
-        return _code_correct(question, answer)
-    return False
+    check = _CORRECTNESS.get(question.type)
+    return check is not None and check(question, answer)
 
 
 def _sorting_correct(question: Question, answer: Answer) -> bool:
@@ -280,6 +262,21 @@ def _number_correct(question: Question, answer: Answer) -> bool:
     return abs(value - config.value) <= config.tolerance
 
 
+# Kinds judged from the answer alone; random_number also needs the seeded params.
+_CORRECTNESS: Final[dict[str, Callable[[Question, Answer], bool]]] = {
+    "single": _choice_correct,
+    "multiple": _choice_correct,
+    "text": _text_correct,
+    "number": _number_correct,
+    "sorting": _sorting_correct,
+    "matching": _matching_correct,
+    "table": _table_correct,
+    "blanks": _blanks_correct,
+    "formula": _formula_correct,
+    "code": _code_correct,
+}
+
+
 # - - - Review (answers shown after grading) - - -
 
 
@@ -306,47 +303,105 @@ def build_review(
 
 def correct_answer_of(question: Question, variant: Variant) -> dict[str, Any] | None:
     """Return the correct answer in the shape of ``Answer``, if it is one value."""
-    if question.type == "sorting":
-        return {"option_ids": [option.id for option in question.options or []]}
-    if question.type == "matching":
-        return {"pairs": {pair.id: pair.id for pair in question.pairs or []}}
-    if question.type == "table" and question.table is not None:
-        return {
-            "cells": [
-                f"{row}:{column}"
-                for row, line in enumerate(question.table.correct)
-                for column, marked in enumerate(line)
-                if marked
-            ]
-        }
-    if question.type == "blanks":
-        return {
-            "texts": [
-                blank.accepted[0] if blank.accepted else ""
-                for blank in question.blanks or []
-            ]
-        }
-    if question.type == "formula" and question.formula is not None:
-        return {"text": question.formula.expression}
-    if question.type == "random_number" and question.random is not None:
-        try:
-            return {
-                "number": expression.evaluate(
-                    question.random.formula, variant.params.get(question.id, {})
-                )
-            }
-        except expression.ExpressionError:
-            return None
-    if question.type == "code" and question.code and question.code.expected_outputs:
-        return {"output": question.code.expected_outputs[0]}
+    if _has_own_shape(question):
+        return _OWN_SHAPE[question.type](question, variant)
     if question.options is not None:
-        order = variant.option_order.get(question.id) or [
-            o.id for o in question.options
+        return _option_answer(question, variant)
+    return _single_value_answer(question)
+
+
+def _has_own_shape(question: Question) -> bool:
+    """Return True when the kind has its own answer shape and the data it needs."""
+    kind = question.type
+    if kind in ("sorting", "matching", "blanks"):
+        return True
+    if kind == "table":
+        return question.table is not None
+    if kind == "formula":
+        return question.formula is not None
+    if kind == "random_number":
+        return question.random is not None
+    if kind == "code":
+        return bool(question.code and question.code.expected_outputs)
+    return False
+
+
+def _sorting_shape(question: Question, variant: Variant) -> dict[str, Any] | None:
+    """The authored order of the options."""
+    return {"option_ids": [option.id for option in question.options or []]}
+
+
+def _matching_shape(question: Question, variant: Variant) -> dict[str, Any] | None:
+    """Each left item paired with its own right item."""
+    return {"pairs": {pair.id: pair.id for pair in question.pairs or []}}
+
+
+def _table_shape(question: Question, variant: Variant) -> dict[str, Any] | None:
+    """The marked cells as ``"row:column"``."""
+    table = question.table
+    if table is None:
+        return None
+    return {
+        "cells": [
+            f"{row}:{column}"
+            for row, line in enumerate(table.correct)
+            for column, marked in enumerate(line)
+            if marked
         ]
-        correct = {option.id for option in question.options if option.correct}
+    }
+
+
+def _blanks_shape(question: Question, variant: Variant) -> dict[str, Any] | None:
+    """The first accepted answer of each blank (empty when none is set)."""
+    return {
+        "texts": [
+            blank.accepted[0] if blank.accepted else ""
+            for blank in question.blanks or []
+        ]
+    }
+
+
+def _formula_shape(question: Question, variant: Variant) -> dict[str, Any] | None:
+    """The author's expression."""
+    formula = question.formula
+    if formula is None:
+        return None
+    return {"text": formula.expression}
+
+
+def _random_shape(question: Question, variant: Variant) -> dict[str, Any] | None:
+    """The formula at the variant's values; None when it cannot be computed."""
+    spec = question.random
+    if spec is None:
+        return None
+    try:
         return {
-            "option_ids": [option_id for option_id in order if option_id in correct]
+            "number": expression.evaluate(
+                spec.formula, variant.params.get(question.id, {})
+            )
         }
+    except expression.ExpressionError:
+        return None
+
+
+def _code_shape(question: Question, variant: Variant) -> dict[str, Any] | None:
+    """The first expected output."""
+    spec = question.code
+    if not spec or not spec.expected_outputs:
+        return None
+    return {"output": spec.expected_outputs[0]}
+
+
+def _option_answer(question: Question, variant: Variant) -> dict[str, Any]:
+    """The correct option ids, in the order the student saw them."""
+    options = question.options or []
+    order = variant.option_order.get(question.id) or [option.id for option in options]
+    correct = {option.id for option in options if option.correct}
+    return {"option_ids": [option_id for option_id in order if option_id in correct]}
+
+
+def _single_value_answer(question: Question) -> dict[str, Any] | None:
+    """The one value of a text or number question, from its ``answer`` config."""
     config = question.answer
     if config is None:
         return None
@@ -355,3 +410,15 @@ def correct_answer_of(question: Question, variant: Variant) -> dict[str, Any] | 
     if config.accepted:
         return {"text": config.accepted[0]}
     return None
+
+
+# Answer shapes of the kinds that ``_has_own_shape`` accepts.
+_OWN_SHAPE: Final[dict[str, Callable[[Question, Variant], dict[str, Any] | None]]] = {
+    "sorting": _sorting_shape,
+    "matching": _matching_shape,
+    "table": _table_shape,
+    "blanks": _blanks_shape,
+    "formula": _formula_shape,
+    "random_number": _random_shape,
+    "code": _code_shape,
+}

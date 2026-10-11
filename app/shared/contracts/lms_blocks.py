@@ -7,6 +7,7 @@ the shape of the LMS ``Block`` contract. Ids are left empty: the server assigns 
 ids to blocks, questions, options and cards (LMS-23).
 """
 
+from collections.abc import Callable
 from typing import Annotated, Any, Final, Literal
 
 from pydantic import BaseModel, Field
@@ -73,7 +74,7 @@ class PairInput(BaseModel):
 
 
 class BlankInput(BaseModel):
-    """One blank of a fill-in-the-blanks question (``{{1}}``, ``{{2}}`` in the prompt)."""
+    """One blank of a fill-in-the-blanks question (``{{1}}``, ``{{2}}`` in the prompt)."""  # noqa: E501
 
     accepted: list[str] = Field(default_factory=list, max_length=20)
     regex: str | None = Field(default=None, max_length=200, json_schema_extra=_plain)
@@ -308,63 +309,85 @@ def build_question(question: QuestionInput) -> dict[str, Any]:
 
 def _task_fields(question: QuestionInput) -> dict[str, Any]:
     """Return the type-specific fields of the richer question types."""
-    kind = question.type
-    if kind == "sorting":
-        items = question.items or []
-        if len(items) < 2:
-            raise BlockInputError("a sorting question needs at least two items")
-        return {"options": [{"id": "", "text": i, "correct": False} for i in items]}
-    if kind == "matching":
-        pairs = question.pairs or []
-        if len(pairs) < 2:
-            raise BlockInputError("a matching question needs at least two pairs")
-        return {"pairs": [{"id": "", "left": p.left, "right": p.right} for p in pairs]}
-    if kind == "table":
-        rows, columns = question.rows or [], question.columns or []
-        cells = set(question.correct_cells or [])
-        if not rows or not columns or not cells:
-            raise BlockInputError("a table question needs rows, columns and cells")
-        if any(r >= len(rows) or c >= len(columns) or r < 0 or c < 0 for r, c in cells):
-            raise BlockInputError("correct_cells point outside the table")
-        grid = [
-            [(r, c) in cells for c in range(len(columns))] for r in range(len(rows))
+    builder = _TASK_FIELDS.get(question.type)
+    return {} if builder is None else builder(question)
+
+
+def _sorting_fields(question: QuestionInput) -> dict[str, Any]:
+    items = question.items or []
+    if len(items) < 2:
+        raise BlockInputError("a sorting question needs at least two items")
+    return {"options": [{"id": "", "text": i, "correct": False} for i in items]}
+
+
+def _matching_fields(question: QuestionInput) -> dict[str, Any]:
+    pairs = question.pairs or []
+    if len(pairs) < 2:
+        raise BlockInputError("a matching question needs at least two pairs")
+    return {"pairs": [{"id": "", "left": p.left, "right": p.right} for p in pairs]}
+
+
+def _table_fields(question: QuestionInput) -> dict[str, Any]:
+    rows, columns = question.rows or [], question.columns or []
+    cells = set(question.correct_cells or [])
+    if not rows or not columns or not cells:
+        raise BlockInputError("a table question needs rows, columns and cells")
+    if any(r >= len(rows) or c >= len(columns) or r < 0 or c < 0 for r, c in cells):
+        raise BlockInputError("correct_cells point outside the table")
+    grid = [[(r, c) in cells for c in range(len(columns))] for r in range(len(rows))]
+    return {"table": {"rows": rows, "columns": columns, "correct": grid}}
+
+
+def _blanks_fields(question: QuestionInput) -> dict[str, Any]:
+    blanks = question.blanks or []
+    if not blanks or any(not b.accepted and not b.regex for b in blanks):
+        raise BlockInputError("each blank needs accepted answers or a regex")
+    return {
+        "blanks": [
+            {"id": "", "accepted": b.accepted, "regex": b.regex or None} for b in blanks
         ]
-        return {"table": {"rows": rows, "columns": columns, "correct": grid}}
-    if kind == "blanks":
-        blanks = question.blanks or []
-        if not blanks or any(not b.accepted and not b.regex for b in blanks):
-            raise BlockInputError("each blank needs accepted answers or a regex")
-        return {
-            "blanks": [
-                {"id": "", "accepted": b.accepted, "regex": b.regex or None}
-                for b in blanks
-            ]
+    }
+
+
+def _random_fields(question: QuestionInput) -> dict[str, Any]:
+    if not question.variables or not (question.formula or "").strip():
+        raise BlockInputError("random_number needs variables and a formula")
+    if any(v.min > v.max for v in question.variables):
+        raise BlockInputError("a variable has min above max")
+    return {
+        "random": {
+            "variables": [v.model_dump() for v in question.variables],
+            "formula": question.formula,
+            "tolerance": question.tolerance,
         }
-    if kind == "random_number":
-        if not question.variables or not (question.formula or "").strip():
-            raise BlockInputError("random_number needs variables and a formula")
-        if any(v.min > v.max for v in question.variables):
-            raise BlockInputError("a variable has min above max")
-        return {
-            "random": {
-                "variables": [v.model_dump() for v in question.variables],
-                "formula": question.formula,
-                "tolerance": question.tolerance,
-            }
+    }
+
+
+def _formula_fields(question: QuestionInput) -> dict[str, Any]:
+    if not (question.expression or "").strip():
+        raise BlockInputError("a formula question needs `expression`")
+    return {
+        "formula": {
+            "expression": question.expression,
+            "variables": question.expression_variables or ["x"],
+            "mode": "symbolic",
         }
-    if kind == "formula":
-        if not (question.expression or "").strip():
-            raise BlockInputError("a formula question needs `expression`")
-        return {
-            "formula": {
-                "expression": question.expression,
-                "variables": question.expression_variables or ["x"],
-                "mode": "symbolic",
-            }
-        }
-    if kind == "code":
-        return {"code": {"expected_outputs": question.expected_outputs or []}}
-    return {}
+    }
+
+
+def _code_fields(question: QuestionInput) -> dict[str, Any]:
+    return {"code": {"expected_outputs": question.expected_outputs or []}}
+
+
+_TASK_FIELDS: Final[dict[str, Callable[[QuestionInput], dict[str, Any]]]] = {
+    "sorting": _sorting_fields,
+    "matching": _matching_fields,
+    "table": _table_fields,
+    "blanks": _blanks_fields,
+    "random_number": _random_fields,
+    "formula": _formula_fields,
+    "code": _code_fields,
+}
 
 
 def _options(question: QuestionInput) -> list[dict[str, Any]]:

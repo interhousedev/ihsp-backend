@@ -215,7 +215,10 @@ async def test_first_party_consent_is_accepted_on_the_server(
 async def test_library_silent_sign_in_gets_its_consent_accepted(
     auth_world: World,
 ) -> None:
-    """Silent SSO (prompt=none) of the library: the first-party consent is accepted, not shown."""
+    """Silent SSO (prompt=none) of the library accepts first-party consent.
+
+    The consent screen is not shown.
+    """
     user = await auth_world.add_user(roles={Role.STUDENT})
     session = auth_world.add_session(user)
     auth_world.hydra.add_consent(

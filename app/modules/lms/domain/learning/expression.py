@@ -80,36 +80,63 @@ def evaluate(source: str, variables: Mapping[str, float] | None = None) -> float
 def _eval(node: ast.expr, scope: Mapping[str, float]) -> float:
     """Evaluate one node of the whitelisted grammar."""
     if isinstance(node, ast.Constant):
-        if isinstance(node.value, bool) or not isinstance(node.value, int | float):
-            raise ExpressionError("bad constant")
-        return float(node.value)
+        return _constant(node)
     if isinstance(node, ast.Name):
-        if node.id not in scope:
-            raise ExpressionError(f"unknown name {node.id}")
-        return float(scope[node.id])
+        return _name(node, scope)
     if isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.USub | ast.UAdd):
-        value = _eval(node.operand, scope)
-        return -value if isinstance(node.op, ast.USub) else value
+        return _unary(node, scope)
     if isinstance(node, ast.BinOp):
-        left = _eval(node.left, scope)
-        right = _eval(node.right, scope)
-        if isinstance(node.op, ast.Pow):
-            if abs(right) > MAX_EXPONENT:
-                raise ExpressionError("exponent too large")
-            return float(left**right)
-        operation = _BINARY.get(type(node.op))
-        if operation is None:
-            raise ExpressionError("operator not allowed")
-        return float(operation(left, right))
-    if (
-        isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id in _FUNCTIONS
-        and not node.keywords
-    ):
-        args = [_eval(arg, scope) for arg in node.args]
-        return float(_FUNCTIONS[node.func.id](*args))
+        return _binary(node, scope)
+    if isinstance(node, ast.Call):
+        return _call(node, scope)
     raise ExpressionError("not allowed")
+
+
+def _constant(node: ast.Constant) -> float:
+    """Return a number literal; booleans and other literals are not allowed."""
+    if isinstance(node.value, bool) or not isinstance(node.value, int | float):
+        raise ExpressionError("bad constant")
+    return float(node.value)
+
+
+def _name(node: ast.Name, scope: Mapping[str, float]) -> float:
+    """Return the value of a variable or constant in scope."""
+    if node.id not in scope:
+        raise ExpressionError(f"unknown name {node.id}")
+    return float(scope[node.id])
+
+
+def _unary(node: ast.UnaryOp, scope: Mapping[str, float]) -> float:
+    """Apply unary ``+`` or ``-`` (the caller allows only these)."""
+    value = _eval(node.operand, scope)
+    return -value if isinstance(node.op, ast.USub) else value
+
+
+def _binary(node: ast.BinOp, scope: Mapping[str, float]) -> float:
+    """Apply a binary operator; powers are bounded by ``MAX_EXPONENT``."""
+    left = _eval(node.left, scope)
+    right = _eval(node.right, scope)
+    if isinstance(node.op, ast.Pow):
+        if abs(right) > MAX_EXPONENT:
+            raise ExpressionError("exponent too large")
+        return float(left**right)
+    operation = _BINARY.get(type(node.op))
+    if operation is None:
+        raise ExpressionError("operator not allowed")
+    return float(operation(left, right))
+
+
+def _call(node: ast.Call, scope: Mapping[str, float]) -> float:
+    """Call one of the whitelisted functions with positional arguments only."""
+    function = node.func
+    if (
+        not isinstance(function, ast.Name)
+        or function.id not in _FUNCTIONS
+        or node.keywords
+    ):
+        raise ExpressionError("not allowed")
+    args = [_eval(arg, scope) for arg in node.args]
+    return float(_FUNCTIONS[function.id](*args))
 
 
 def is_valid(source: str, names: Sequence[str]) -> bool:

@@ -9,6 +9,7 @@ from app.modules.lms.domain.learning.expression import ExpressionError, evaluate
 from app.modules.lms.domain.learning.grading import correct_answer_of, is_correct
 from app.modules.lms.domain.learning.variant import Variant, build_variant
 from app.modules.lms.domain.step_content import (
+    AnswerConfig,
     Blank,
     CodeSpec,
     FormulaSpec,
@@ -237,3 +238,81 @@ def test_video_block_renders_and_ids_are_assigned() -> None:
 def test_old_content_still_loads() -> None:
     raw = {"title": "s", "blocks": [{"id": "b", "type": "text", "markdown": "m"}]}
     assert StepContent.model_validate(raw).blocks[0].type == "text"
+
+
+@pytest.mark.parametrize(
+    ("question", "expected"),
+    [
+        (
+            make("sorting", options=[Option(id=i, text=i) for i in "abc"]),
+            {"option_ids": ["a", "b", "c"]},
+        ),
+        (
+            make(
+                "table",
+                table=TableSpec(
+                    rows=["r1", "r2"],
+                    columns=["c1", "c2"],
+                    correct=[[False, True], [True, False]],
+                ),
+            ),
+            {"cells": ["0:1", "1:0"]},
+        ),
+        (
+            make("blanks", blanks=[Blank(accepted=["x", "y"]), Blank()]),
+            {"texts": ["x", ""]},
+        ),
+        (
+            make("formula", formula=FormulaSpec(expression="x+1", variables=["x"])),
+            {"text": "x+1"},
+        ),
+        (
+            make("code", code=CodeSpec(expected_outputs=["1\n2", "3"])),
+            {"output": "1\n2"},
+        ),
+    ],
+    ids=["sorting", "table", "blanks", "formula", "code"],
+)
+def test_the_correct_answer_has_the_shape_of_each_kind(
+    question: Question, expected: dict[str, Any]
+) -> None:
+    assert correct_answer_of(question, Variant(("q",), {})) == expected
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        make("table", answer=AnswerConfig(accepted=["fallback"])),
+        make("formula", answer=AnswerConfig(accepted=["fallback"])),
+        make("random_number", answer=AnswerConfig(accepted=["fallback"])),
+        make("code", answer=AnswerConfig(accepted=["fallback"])),
+        make(
+            "code",
+            code=CodeSpec(expected_outputs=[]),
+            answer=AnswerConfig(accepted=["fallback"]),
+        ),
+    ],
+    ids=["table", "formula", "random_number", "code", "code-without-outputs"],
+)
+def test_a_kind_without_its_data_falls_back_to_its_answer_config(
+    question: Question,
+) -> None:
+    assert correct_answer_of(question, Variant(("q",), {})) == {"text": "fallback"}
+
+
+def test_a_kind_without_its_data_or_an_answer_has_no_correct_answer() -> None:
+    assert correct_answer_of(make("table"), Variant(("q",), {})) is None
+
+
+def test_a_random_answer_that_cannot_be_computed_is_none() -> None:
+    spec = RandomSpec(variables=[Variable(name="a", min=1, max=5)], formula="a/0")
+    variant = Variant(("q",), {}, {"q": {"a": 2.0}})
+    assert correct_answer_of(make("random_number", random=spec), variant) is None
+
+
+def test_unary_signs_are_allowed_and_other_operators_are_not() -> None:
+    assert evaluate("-x + +2", {"x": 3}) == -1
+    assert evaluate("-(2^2)") == -4
+    for bad in ("~1", "2 @ 3", "True"):
+        with pytest.raises(ExpressionError):
+            evaluate(bad)

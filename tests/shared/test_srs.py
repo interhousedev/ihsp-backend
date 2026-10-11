@@ -147,7 +147,8 @@ def test_preview_shows_every_button() -> None:
     assert result[Rating.EASY] == timedelta(days=4)
 
 
-# derandomize: the same examples on every run; deadline=None: no wall-clock limit that a loaded machine can exceed.
+# derandomize: the same examples on every run.
+# deadline=None: no wall-clock limit that a loaded machine can exceed.
 @settings(derandomize=True, deadline=None)
 @given(st.lists(st.sampled_from(list(Rating)), max_size=60))
 def test_ease_never_drops_below_the_minimum_and_due_is_never_in_the_past(

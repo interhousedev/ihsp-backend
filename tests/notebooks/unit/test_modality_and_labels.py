@@ -75,7 +75,8 @@ def test_the_fake_model_labels_every_source_of_the_prompt() -> None:
     message = labels_user_message(items, [])
 
     data = build_document("nb_labels", [{"role": "user", "content": message}])
-    parsed = parse_labels(data, {source_key(i): i for i in range(3)})  # type: ignore[arg-type]
+    by_key = {source_key(i): i for i in range(3)}
+    parsed = parse_labels(data, by_key)  # type: ignore[arg-type]
 
     assert len(parsed.labels) == 3
     assert set(parsed.assignments) == {"s1", "s2", "s3"}

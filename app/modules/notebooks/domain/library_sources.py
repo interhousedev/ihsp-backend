@@ -76,7 +76,7 @@ def render_notes(title: str, notes: Sequence[LibraryAnnotationRef]) -> str:
 
 
 def notes_version(notes: Sequence[LibraryAnnotationRef]) -> str:
-    """A fingerprint of the annotations: changes with an edit, a new or a deleted one."""
+    """A fingerprint of the annotations: changes on an edit, a new or a deleted one."""
     lines = sorted(
         "|".join(
             (

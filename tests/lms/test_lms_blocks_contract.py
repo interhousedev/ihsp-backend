@@ -59,6 +59,12 @@ def test_table_grid_marks_the_cells() -> None:
         make(type="blanks", blanks=[BlankInput()]),
         make(type="random_number", formula="1"),
         make(type="formula"),
+        make(type="table", rows=["r"], columns=["c"], correct_cells=[]),
+        make(
+            type="random_number",
+            variables=[VariableInput(name="a", min=5, max=1)],
+            formula="a",
+        ),
     ],
     ids=lambda q: q.type,
 )

@@ -1,6 +1,7 @@
 """HTTP: topic labels under /v1/notebooks/{id} (spec 3.4, G12/G13)."""
 
 from typing import Any
+
 from app.modules.notebooks.domain.entities import Notebook, Source
 from app.modules.notebooks.domain.labels import LabelOrigin
 from app.modules.notebooks.ports.unit_of_work import UowFactory

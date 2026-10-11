@@ -53,17 +53,18 @@ def test_new_labels_and_links_are_created_for_an_empty_notebook() -> None:
     """The first run: auto labels after each other, auto links."""
     plan = run([], [], parsed(["Cells", "Energy"], {"s1": [0], "s2": [0, 1]}))
 
-    assert [(l.name, l.position, l.origin) for l in plan.new_labels] == [
+    created = plan.new_labels
+    assert [(label.name, label.position, label.origin) for label in created] == [
         ("Cells", 1, LabelOrigin.AUTO),
         ("Energy", 2, LabelOrigin.AUTO),
     ]
-    by_name = {l.name: l.id for l in plan.new_labels}
-    assert {(l.source_id, l.label_id) for l in plan.new_links} == {
+    by_name = {label.name: label.id for label in created}
+    assert {(link.source_id, link.label_id) for link in plan.new_links} == {
         (S1, by_name["Cells"]),
         (S2, by_name["Cells"]),
         (S2, by_name["Energy"]),
     }
-    assert all(l.origin is LabelOrigin.AUTO for l in plan.new_links)
+    assert all(link.origin is LabelOrigin.AUTO for link in plan.new_links)
 
 
 def test_a_manual_label_with_the_same_name_is_reused_not_duplicated() -> None:
@@ -144,7 +145,8 @@ def test_a_notebook_never_holds_more_than_twelve_labels() -> None:
     plan = run(manual, [], answer)
 
     assert [label.name for label in plan.new_labels] == ["A", "B"]
-    assert {link.label_id for link in plan.new_links} <= {l.id for l in plan.new_labels}
+    new_ids = {label.id for label in plan.new_labels}
+    assert {link.label_id for link in plan.new_links} <= new_ids
 
 
 def test_a_label_that_ends_up_without_a_link_is_not_created() -> None:

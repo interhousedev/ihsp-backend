@@ -79,7 +79,7 @@ async def test_the_daily_limit_blocks_until_tashkent_midnight(
 
 
 async def test_admin_assistant_has_no_limits(make_harness: HarnessFactory) -> None:
-    """Administration has no session or day cap; the student assistant keeps its caps."""
+    """Administration has no session or day cap; the student assistant keeps caps."""
     h = make_harness()
 
     usage = await h.services.get_usage.execute(actor=h.admin, assistant=None)

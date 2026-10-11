@@ -1,4 +1,4 @@
-"""The outline rules of a generated deck (§ 3.4.6), applied after each slide is repaired.
+"""The outline rules of a generated deck (§ 3.4.6), applied after each repair.
 
 A deck opens with one title slide, may have one agenda right after it, closes with one
 summary, repeats no slide and stays within two slides of the requested length. The

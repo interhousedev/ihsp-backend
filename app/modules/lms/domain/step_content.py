@@ -84,7 +84,10 @@ class TableSpec(BaseModel):
 
 
 class Blank(BaseModel):
-    """One blank of a fill-in-the-blanks question, marked ``{{n}}`` (1-based) in the prompt."""
+    """One blank of a fill-in-the-blanks question.
+
+    Marked ``{{n}}`` (1-based) in the prompt.
+    """
 
     id: str = ""
     accepted: list[str] = Field(default_factory=list, max_length=50)
@@ -136,7 +139,10 @@ class FormulaSpec(BaseModel):
 
 
 class CodeSpec(BaseModel):
-    """A code question: no execution; the output is compared or the answer is graded by hand."""
+    """A code question: no execution.
+
+    The output is compared, or the answer is graded by hand.
+    """
 
     language: str = Field(default="python", max_length=32)
     starter: str = Field(default="", max_length=10_000)

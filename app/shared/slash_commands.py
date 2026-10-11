@@ -125,7 +125,10 @@ def parse_typed(text: str) -> ParsedCommand | None:
 
 
 def resolve(command: str, args: str = "") -> SlashCommand:
-    """Return the command or raise `UnknownCommandError` (the message lists the known ones)."""
+    """Return the command or raise `UnknownCommandError`.
+
+    The error message lists the known commands.
+    """
     found = BY_NAME.get(command.strip().lstrip("/").lower())
     if found is None:
         raise UnknownCommandError(
@@ -154,7 +157,10 @@ def stored_text(command: str | None, args: str, text: str) -> str:
 
 
 def expand(text: str) -> str:
-    """Return the prompt for the model: the instruction of a stored `/cmd args`, else `text`."""
+    """Return the prompt for the model.
+
+    The stored instruction of a `/cmd args`, else `text` itself.
+    """
     parsed = parse_typed(text)
     if parsed is None or parsed.command not in BY_NAME:
         return text
