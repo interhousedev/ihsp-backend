@@ -105,6 +105,8 @@ dc run --rm --no-deps hydra-migrate
 dc run --rm --no-deps migrate
 
 dc up -d --wait --remove-orphans
+# The edge config is bind-mounted: a running nginx keeps the old upstreams until it reloads.
+dc exec -T nginx nginx -s reload
 
 dc ps
 if command -v curl > /dev/null; then

@@ -92,6 +92,8 @@ fi
 
 echo "==> starting the stack"
 compose up -d --wait
+# The edge config is bind-mounted: a running nginx keeps the old upstreams until it reloads.
+compose exec -T nginx nginx -s reload
 
 echo "==> registering the OAuth clients in Hydra"
 compose run --rm bootstrap
