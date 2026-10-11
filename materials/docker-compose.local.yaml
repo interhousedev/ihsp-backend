@@ -76,9 +76,11 @@ x-backend-env: &backend-env
   IHSP_OPENROUTER__MODE: ${IHSP_OPENROUTER__MODE:-fake}
   IHSP_OPENROUTER__API_KEY: # optional: set it in .env.local together with OPENROUTER__MODE=real
   IHSP_OPENROUTER__APP_URL: http://sp.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+  IHSP_EXA__MODE: ${IHSP_EXA__MODE:-fake}
+  IHSP_EXA__API_KEY: # optional: set it in .env.local together with EXA__MODE=real
   # Models per task and feature flags (docs/reference/settings.md); override them in
   # .env.local. An empty value means "not set".
-  IHSP_AI__DEFAULT__MODEL: ${IHSP_AI__DEFAULT__MODEL:-anthropic/claude-haiku-4.5}
+  IHSP_AI__DEFAULT__MODEL: ${IHSP_AI__DEFAULT__MODEL:-anthropic/claude-haiku-5.5}
   IHSP_AI__TASKS__STUDENT_CHAT_SMART__MODEL: ${IHSP_AI__TASKS__STUDENT_CHAT_SMART__MODEL:-}
   IHSP_FEATURES__NOTEBOOKS: ${IHSP_FEATURES__NOTEBOOKS:-true}
   IHSP_FEATURES__AI_ASSISTANT: ${IHSP_FEATURES__AI_ASSISTANT:-true}
@@ -427,7 +429,7 @@ services:
       CSP_IMG_SRC: "'self' data: blob: http://localhost:${LOCAL_S3_PORT:-9100}"
     healthcheck:
       <<: *healthcheck
-      test: ["CMD", "curl", "-fsS", "http://127.0.0.1/health"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/health"]
 
   # Routing by host and path, plain HTTP on port 80 (materials/nginx/local).
   nginx:

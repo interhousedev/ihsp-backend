@@ -63,10 +63,11 @@ x-backend-env: &backend-env
   IHSP_EMIS__INSTITUTION_ID: ${IHSP_EMIS__INSTITUTION_ID:-10815}
   IHSP_EMIS__GATEWAY_URL: http://identity:8001/internal/emis
   IHSP_OPENROUTER__MODE: ${IHSP_OPENROUTER__MODE:-real}
+  IHSP_EXA__MODE: ${IHSP_EXA__MODE:-real}
   # Models per task (docs/reference/settings.md). An empty value means "not set": a task
   # without its own model uses IHSP_AI__DEFAULT__MODEL. More IHSP_AI__TASKS__<TASK>__*
   # variables can be added here, and set in .env.prod.
-  IHSP_AI__DEFAULT__MODEL: ${IHSP_AI__DEFAULT__MODEL:-anthropic/claude-haiku-4.5}
+  IHSP_AI__DEFAULT__MODEL: ${IHSP_AI__DEFAULT__MODEL:-anthropic/claude-haiku-5.5}
   IHSP_AI__DEFAULT__TEMPERATURE: ${IHSP_AI__DEFAULT__TEMPERATURE:-0.2}
   IHSP_AI__TASKS__STUDENT_CHAT__MODEL: ${IHSP_AI__TASKS__STUDENT_CHAT__MODEL:-}
   IHSP_AI__TASKS__STUDENT_CHAT_SMART__MODEL: ${IHSP_AI__TASKS__STUDENT_CHAT_SMART__MODEL:-}
@@ -123,6 +124,9 @@ x-smtp-out-env: &smtp-out-env
 
 x-openrouter-env: &openrouter-env
   IHSP_OPENROUTER__API_KEY: ${IHSP_OPENROUTER__API_KEY:?}
+
+x-exa-env: &exa-env
+  IHSP_EXA__API_KEY: ${IHSP_EXA__API_KEY:?}
 
 # The same S3 settings feed the bucket bootstrap job.
 x-cors-origins: &cors-origins https://id.${DOMAIN},https://my.${DOMAIN},https://app.${DOMAIN},https://staff.${DOMAIN},https://admin.${DOMAIN},https://lms.${DOMAIN},https://lib.${DOMAIN}
@@ -322,7 +326,7 @@ services:
     <<: *backend
     command: ["python", "-m", "app", "api"]
     environment:
-      <<: [*backend-env, *openrouter-env]
+      <<: [*backend-env, *openrouter-env, *exa-env]
     healthcheck:
       <<: *healthcheck
       test: ["CMD", "python", "/healthcheck/check.py", "http", "http://127.0.0.1:8000/health"]
@@ -384,7 +388,7 @@ services:
     command: ["python", "-m", "app", "worker"]
     stop_grace_period: 60s
     environment:
-      <<: [*backend-env, *smtp-out-env, *openrouter-env, *vault-env]
+      <<: [*backend-env, *smtp-out-env, *openrouter-env, *exa-env, *vault-env]
     secrets: # identity.destroy_emis_secret deletes the Vault secret of a closed account
       - source: jwt_bearer
         target: jwt_bearer
@@ -465,7 +469,7 @@ services:
       CSP_IMG_SRC: "'self' data: blob: ${IHSP_S3__PUBLIC_ENDPOINT_URL:?}"
     healthcheck:
       <<: *healthcheck
-      test: ["CMD", "curl", "-fsS", "http://127.0.0.1/health"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/health"]
     networks: [edge]
 
   # TLS termination and routing by host and path (materials/nginx).

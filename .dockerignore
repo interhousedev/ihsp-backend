@@ -1,21 +1,33 @@
-.venv
-.git
+# Build context: backend/. Deny everything, then allow only what the Dockerfile copies: the lock
+# (bind-mounted by the builder stage) and the runtime tree (app, locales, migrations, alembic.ini).
+*
+!pyproject.toml
+!uv.lock
+!app
+!locales
+!migrations
+!alembic.ini
+
+# Never shipped, even inside the allowed trees: bytecode and tool caches, tests and docs,
+# keys, env files, local data and backups.
 **/__pycache__
-**/*.pyc
-.mypy_cache
-.pytest_cache
-.coverage
-htmlcov
-tests
-materials/dev-keys
-materials/dev.env
-*.md
-!migrations/README.md
-.env.prod
-.env.local
-.env.*
-secrets
-data
-backups
-*.pem
-openapi
+**/*.py[cod]
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/.hypothesis
+**/.coverage
+**/.coverage.*
+**/htmlcov
+**/*.md
+**/*.pem
+**/*.key
+**/*.env
+**/.env
+**/.env.*
+**/secrets
+**/dev-keys
+**/backups
+**/data
+**/*.log
+**/.DS_Store

@@ -1,6 +1,6 @@
 # Upstreams as variables: nginx resolves them through Docker's DNS at request time, so it
 # starts (and keeps serving the others) even while one backend container is down.
-set $up_web      http://web:80;
+set $up_web      http://web:8080;
 set $up_api      http://api:8000;
 set $up_identity http://identity:8001;
 set $up_bot      http://bot:8002;
