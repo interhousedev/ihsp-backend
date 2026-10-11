@@ -5,7 +5,7 @@ name: ihsp-dev
 
 services:
   postgres:
-    image: pgvector/pgvector:pg16
+    image: pgvector/pgvector:0.8.7-pg16
     # HNSW index builds use parallel workers that need more than Docker's 64 MB /dev/shm.
     shm_size: 256mb
     environment:
@@ -13,7 +13,7 @@ services:
       POSTGRES_PASSWORD: ihsp
       POSTGRES_DB: postgres # init.sql creates ihsp, ihsp_test and hydra
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -24,10 +24,10 @@ services:
       retries: 30
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.4.11-alpine
     command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
     ports:
-      - "6380:6379"
+      - "127.0.0.1:6380:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -44,8 +44,8 @@ services:
       RUSTFS_ACCESS_KEY: minio
       RUSTFS_SECRET_KEY: minio12345
     ports:
-      - "9000:9000"
-      - "9001:9001" # console
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001" # console
     volumes:
       - s3_data:/data
     healthcheck:
@@ -55,7 +55,7 @@ services:
       retries: 30
 
   s3-init:
-    image: python:3.13-slim
+    image: python:3.13.16-slim
     command:
       - sh
       - -c
@@ -74,14 +74,14 @@ services:
     restart: "no"
 
   vault:
-    image: hashicorp/vault:2.1
+    image: hashicorp/vault:2.1.2
     cap_add:
       - IPC_LOCK
     environment:
       VAULT_DEV_ROOT_TOKEN_ID: dev-root
       VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
     ports:
-      - "8200:8200"
+      - "127.0.0.1:8200:8200"
     healthcheck:
       test: ["CMD", "vault", "status", "-address=http://127.0.0.1:8200"]
       interval: 3s
@@ -90,7 +90,7 @@ services:
 
   # Dev mode keeps nothing on disk: the bootstrap runs on every `up`.
   vault-init:
-    image: python:3.13-slim
+    image: python:3.13.16-slim
     command:
       - sh
       - -c
@@ -123,8 +123,8 @@ services:
     environment:
       DSN: postgres://ihsp:ihsp@postgres:5432/hydra?sslmode=disable&max_conns=20&max_idle_conns=4
     ports:
-      - "4444:4444" # public
-      - "4445:4445" # admin: development only, never publish in production
+      - "127.0.0.1:4444:4444" # public
+      - "127.0.0.1:4445:4445" # admin: development only, never publish in production
     volumes:
       - ./hydra/hydra.dev.yml:/etc/config/hydra/hydra.yml:ro
     extra_hosts:
@@ -139,10 +139,10 @@ services:
       retries: 30
 
   mailpit:
-    image: axllent/mailpit:latest
+    image: axllent/mailpit:v1.31.5
     ports:
-      - "1025:1025" # SMTP
-      - "8025:8025" # web UI
+      - "127.0.0.1:1025:1025" # SMTP
+      - "127.0.0.1:8025:8025" # web UI
     healthcheck:
       test: ["CMD", "/mailpit", "readyz"]
       interval: 3s

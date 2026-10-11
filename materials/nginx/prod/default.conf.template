@@ -10,10 +10,42 @@ proxy_connect_timeout 5s;
 proxy_send_timeout 60s;
 proxy_read_timeout 120s;
 
-# Port 80: ACME challenges for certbot, the healthcheck, and a redirect to HTTPS.
+# Access log without the query string ($uri instead of $request): OAuth codes, presigned S3
+# signatures and other secrets travel in query strings and must not end up in the Docker log.
+log_format ihsp '$remote_addr - [$time_local] "$request_method $uri $server_protocol" '
+                '$status $body_bytes_sent "$http_referer" "$http_user_agent"';
+
+# Rate limits per client address (the backend has its own, finer limits once a request
+# reaches uvicorn; these protect Hydra and the login endpoints before that).
+limit_req_zone $binary_remote_addr zone=ihsp_auth:10m rate=10r/s;
+limit_req_zone $binary_remote_addr zone=ihsp_register:10m rate=1r/m;
+limit_conn_zone $binary_remote_addr zone=ihsp_mcp:10m;
+limit_req_status 429;
+limit_conn_status 429;
+
+# Port 80: ACME challenges for certbot, the healthcheck, and a redirect to HTTPS. Only the
+# known host names are redirected (so $host is one of them, never an attacker's Host header);
+# anything else is answered with 404.
 server {
     listen 80 default_server;
     server_name _;
+    access_log /var/log/nginx/access.log ihsp;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    include /etc/nginx/ihsp/health.inc;
+
+    location / {
+        return 404;
+    }
+}
+
+server {
+    listen 80;
+    server_name ${HOST_ID} ${HOST_SP} ${HOST_APP} ${HOST_STAFF} ${HOST_ADMIN} ${HOST_LMS} ${HOST_LIBRARY} ${HOST_S} ${HOST_API} ${HOST_MCP} ${HOST_STORAGE} ${HOST_APEX};
+    access_log /var/log/nginx/access.log ihsp;
 
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
@@ -30,6 +62,7 @@ server {
 server {
     listen 443 ssl default_server;
     ssl_reject_handshake on;
+    access_log /var/log/nginx/access.log ihsp;
 }
 
 server {
@@ -37,6 +70,7 @@ server {
     http2 on;
     server_name ${HOST_ID};
     include /etc/nginx/conf.d/tls.inc;
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-id.inc;
 }
@@ -46,6 +80,7 @@ server {
     http2 on;
     server_name ${HOST_SP};
     include /etc/nginx/conf.d/tls.inc;
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-static.inc;
 }
@@ -56,6 +91,7 @@ server {
     http2 on;
     server_name ${HOST_APP};
     include /etc/nginx/conf.d/tls.inc;
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-static.inc;
 }
@@ -65,6 +101,7 @@ server {
     http2 on;
     server_name ${HOST_STAFF};
     include /etc/nginx/conf.d/tls.inc;
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-static.inc;
 }
@@ -74,6 +111,7 @@ server {
     http2 on;
     server_name ${HOST_ADMIN};
     include /etc/nginx/conf.d/tls.inc;
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-static.inc;
 }
@@ -83,6 +121,7 @@ server {
     http2 on;
     server_name ${HOST_LMS};
     include /etc/nginx/conf.d/tls.inc;
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-static.inc;
 }
@@ -93,6 +132,7 @@ server {
     http2 on;
     server_name ${HOST_LIBRARY};
     include /etc/nginx/conf.d/tls.inc;
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-library.inc;
 }
@@ -102,6 +142,7 @@ server {
     http2 on;
     server_name ${HOST_S};
     include /etc/nginx/conf.d/tls.inc;
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-s.inc;
 }
@@ -111,6 +152,7 @@ server {
     http2 on;
     server_name ${HOST_API};
     include /etc/nginx/conf.d/tls.inc;
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-api.inc;
 }
@@ -120,6 +162,7 @@ server {
     http2 on;
     server_name ${HOST_MCP};
     include /etc/nginx/conf.d/tls.inc;
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-mcp.inc;
 }
@@ -130,6 +173,7 @@ server {
     http2 on;
     server_name ${HOST_STORAGE};
     include /etc/nginx/conf.d/tls.inc;
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-storage.inc;
 }
@@ -140,6 +184,7 @@ server {
     http2 on;
     server_name ${HOST_APEX};
     include /etc/nginx/conf.d/tls.inc;
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-apex.inc;
 

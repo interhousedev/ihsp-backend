@@ -52,6 +52,19 @@ set_env() {
     mv "$tmp" "$ENV_FILE"
 }
 
+# own_for_containers FILE: readable only by the uid of the containers (10001). Needs root or
+# passwordless sudo; otherwise the file is left world-readable inside the mode-700 directory.
+own_for_containers() {
+    if [ "$(id -u)" = 0 ]; then
+        chown 10001:10001 "$1" && chmod 400 "$1"
+    elif sudo -n true 2> /dev/null; then
+        sudo chown 10001:10001 "$1" && sudo chmod 400 "$1"
+    else
+        chmod 644 "$1"
+        echo "note: no root or sudo; $1 stays mode 644 (owned by $(id -un)) inside the mode-700 directory" >&2
+    fi
+}
+
 need_env_file() { [ -f "$ENV_FILE" ] || die "$ENV_FILE is missing: run scripts/prod_init.sh env first"; }
 
 # Refuse to continue while a required value still says CHANGE_ME.
@@ -83,13 +96,15 @@ cmd_env() {
     done
 
     # identity signs JWT-bearer assertions with this key (the worker is given it too);
-    # no other process gets it. World-readable on purpose: the containers run as another
-    # uid (10001); ./secrets itself is mode 700.
+    # no other process gets it. The containers run as uid 10001, so the file is handed to
+    # that uid and readable by nobody else (compose mounts it as a file secret). Without
+    # root (or passwordless sudo) the chown is impossible; the file then stays 644 inside
+    # ./secrets, which is itself mode 700.
     if [ ! -f secrets/jwt-bearer.pem ]; then
-        openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out secrets/jwt-bearer.pem
+        (umask 077 && openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out secrets/jwt-bearer.pem)
         say "generated secrets/jwt-bearer.pem"
     fi
-    chmod 644 secrets/jwt-bearer.pem
+    own_for_containers secrets/jwt-bearer.pem
 
     local open
     open=$(grep -E '^[A-Za-z0-9_]+=CHANGE_ME' "$ENV_FILE" | cut -d= -f1 | tr '\n' ' ' || true)
@@ -244,8 +259,10 @@ cmd_certs() {
                 -keyout \$d/privkey.pem -out \$d/fullchain.pem 2> /dev/null
             mkdir -p /mail-tls
             cp \$d/fullchain.pem \$d/privkey.pem /mail-tls/
-            chmod 755 /mail-tls
-            chmod 644 /mail-tls/*.pem"
+            chown 10001:10001 /mail-tls /mail-tls/*.pem
+            chmod 750 /mail-tls
+            chmod 640 /mail-tls/fullchain.pem
+            chmod 600 /mail-tls/privkey.pem"
     fi
 
     say "starting the web image and nginx"

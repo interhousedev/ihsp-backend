@@ -8,7 +8,7 @@ from tests.deploy.helpers import LOCAL_COMPOSE, MATERIALS_DIR, PROD_COMPOSE
 import pytest
 
 DEV_COMPOSE = MATERIALS_DIR / "docker-compose.dev.yaml"
-IMAGE = "pgvector/pgvector:pg16"
+IMAGE = "pgvector/pgvector:0.8.7-pg16"
 
 
 @pytest.mark.parametrize("compose_file", [DEV_COMPOSE, LOCAL_COMPOSE, PROD_COMPOSE])

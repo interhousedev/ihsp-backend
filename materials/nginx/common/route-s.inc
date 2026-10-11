@@ -7,5 +7,6 @@ location ^~ /ai/ {
 
 location / {
     include /etc/nginx/ihsp/proxy.inc;
+    include /etc/nginx/ihsp/headers-html.inc;
     proxy_pass $up_api;
 }

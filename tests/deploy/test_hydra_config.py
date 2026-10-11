@@ -93,13 +93,20 @@ def test_token_hook_targets_identity_with_a_placeholder_secret(
     config = hook["auth"]["config"]
     assert (config["in"], config["name"]) == ("header", "Authorization")
     assert config["value"] == "Bearer REPLACE_WITH_TOKENS__SERVICE_TOKEN"
-    assert prod["clients"]["http"]["disallow_private_ip_ranges"] is False
 
 
-def test_dynamic_client_registration_is_on(prod: dict[str, Any]) -> None:
+def test_client_urls_may_not_target_the_internal_network(prod: dict[str, Any]) -> None:
+    http = prod["clients"]["http"]
+    assert http["disallow_private_ip_ranges"] is True
+    assert http["private_ip_exception_urls"] == [prod["oauth2"]["token_hook"]["url"]]
+
+
+def test_dynamic_client_registration_is_on_without_offline_access(
+    prod: dict[str, Any],
+) -> None:
     dcr = prod["oidc"]["dynamic_client_registration"]
     assert dcr["enabled"] is True
-    assert dcr["default_scope"] == ["openid", "offline_access"]
+    assert dcr["default_scope"] == ["openid"]
 
 
 def test_the_compose_files_use_the_same_config_file() -> None:

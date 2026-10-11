@@ -9,10 +9,24 @@ proxy_connect_timeout 5s;
 proxy_send_timeout 60s;
 proxy_read_timeout 120s;
 
+# Access log without the query string ($uri instead of $request): OAuth codes, presigned S3
+# signatures and other secrets travel in query strings and must not end up in the Docker log.
+log_format ihsp '$remote_addr - [$time_local] "$request_method $uri $server_protocol" '
+                '$status $body_bytes_sent "$http_referer" "$http_user_agent"';
+
+# Rate limits per client address (the backend has its own, finer limits once a request
+# reaches uvicorn; these protect Hydra and the login endpoints before that).
+limit_req_zone $binary_remote_addr zone=ihsp_auth:10m rate=10r/s;
+limit_req_zone $binary_remote_addr zone=ihsp_register:10m rate=1r/m;
+limit_conn_zone $binary_remote_addr zone=ihsp_mcp:10m;
+limit_req_status 429;
+limit_conn_status 429;
+
 # Healthcheck and unknown host names.
 server {
     listen 80 default_server;
     server_name _;
+    access_log /var/log/nginx/access.log ihsp;
 
     include /etc/nginx/ihsp/health.inc;
 
@@ -24,6 +38,7 @@ server {
 server {
     listen 80;
     server_name ${HOST_ID};
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-id.inc;
 }
@@ -31,6 +46,7 @@ server {
 server {
     listen 80;
     server_name ${HOST_SP};
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-static.inc;
 }
@@ -39,6 +55,7 @@ server {
 server {
     listen 80;
     server_name ${HOST_APP};
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-static.inc;
 }
@@ -46,6 +63,7 @@ server {
 server {
     listen 80;
     server_name ${HOST_STAFF};
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-static.inc;
 }
@@ -53,6 +71,7 @@ server {
 server {
     listen 80;
     server_name ${HOST_ADMIN};
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-static.inc;
 }
@@ -60,6 +79,7 @@ server {
 server {
     listen 80;
     server_name ${HOST_LMS};
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-static.inc;
 }
@@ -68,6 +88,7 @@ server {
 server {
     listen 80;
     server_name ${HOST_LIBRARY};
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-library.inc;
 }
@@ -75,6 +96,7 @@ server {
 server {
     listen 80;
     server_name ${HOST_S};
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-s.inc;
 }
@@ -82,6 +104,7 @@ server {
 server {
     listen 80;
     server_name ${HOST_API};
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-api.inc;
 }
@@ -89,6 +112,7 @@ server {
 server {
     listen 80;
     server_name ${HOST_MCP};
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-mcp.inc;
 }
@@ -96,6 +120,7 @@ server {
 server {
     listen 80;
     server_name ${HOST_APEX};
+    access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-apex.inc;
 

@@ -1,5 +1,6 @@
 """The edge nginx templates render and pass `nginx -t` in the stock image."""
 
+import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -10,7 +11,7 @@ import pytest
 
 pytestmark = requires_compose
 
-NGINX_IMAGE = "nginx:1.27-alpine"
+NGINX_IMAGE = "nginx:1.28.3-alpine"
 HOST_ENV = {
     "HOST_ID": "id.ihsu.test",
     "HOST_SP": "my.ihsu.test",
@@ -149,3 +150,67 @@ def test_the_library_host_has_its_own_route(mode: str, tmp_path: Path) -> None:
     # the other static hosts keep the plain static route
     lms = next(s for s in servers if "server_name lms.ihsu.test;" in s)
     assert "include /etc/nginx/ihsp/route-static.inc;" in lms
+
+
+def _route(name: str) -> str:
+    return (MATERIALS_DIR / "nginx" / "common" / name).read_text(encoding="utf-8")
+
+
+def _locations(text: str) -> list[str]:
+    """The bodies of the location blocks of a route file."""
+    bodies: list[str] = []
+    for match in re.finditer(r"^\s*location\s+[^{]+\{", text, flags=re.M):
+        bodies.append(text[match.end() :].split("}", 1)[0])
+    return bodies
+
+
+def test_every_api_and_mcp_location_adds_the_json_response_headers() -> None:
+    for name in ("route-api.inc", "route-mcp.inc"):
+        for body in _locations(_route(name)):
+            if "proxy_pass" in body:
+                assert "headers-api.inc" in body, (name, body)
+    headers = _route("headers-api.inc")
+    assert 'X-Content-Type-Options "nosniff"' in headers
+    assert 'Referrer-Policy "no-referrer"' in headers
+    assert "default-src 'none'; frame-ancestors 'none'" in headers
+    assert "Strict-Transport-Security" in headers
+
+
+def test_server_rendered_pages_get_the_html_headers() -> None:
+    for name, prefix in (
+        ("route-s.inc", "location / "),
+        ("route-apex.inc", "location ^~ /r/ "),
+        ("route-library.inc", "location ^~ /b/ "),
+    ):
+        body = _route(name).split(prefix, 1)[1].split("}", 1)[0]
+        assert "headers-html.inc" in body, name
+    html = _route("headers-html.inc")
+    assert "form-action 'self'" in html and "frame-ancestors 'none'" in html
+
+
+def test_login_oauth_registration_and_webhook_are_rate_limited() -> None:
+    api = _route("route-api.inc")
+    login = api.split("^/v1/(id|oauth)/", 1)[1].split("}", 1)[0]
+    assert "limit_req zone=ihsp_auth" in login
+    telegram = api.split("location ^~ /telegram/", 1)[1].split("}", 1)[0]
+    assert "limit_req zone=ihsp_auth" in telegram and "access_log off" in telegram
+    ident = _route("route-id.inc")
+    register = ident.split("location = /oauth2/register", 1)[1].split("}", 1)[0]
+    assert "limit_req zone=ihsp_register" in register
+    assert "limit_conn ihsp_mcp" in _route("route-mcp.inc")
+    for mode in ("prod", "local"):
+        template = (MATERIALS_DIR / "nginx" / mode / "default.conf.template").read_text(
+            encoding="utf-8"
+        )
+        assert "zone=ihsp_auth:10m rate=10r/s" in template
+        assert "zone=ihsp_register:10m rate=1r/m" in template
+        assert "limit_conn_zone $binary_remote_addr zone=ihsp_mcp" in template
+        assert "log_format ihsp" in template and '"$request"' not in template
+
+
+def test_port_80_redirects_known_hosts_only() -> None:
+    template = (MATERIALS_DIR / "nginx" / "prod" / "default.conf.template").read_text()
+    default, named = template.split("listen 80;", 1)
+    assert "return 404;" in default.split("listen 80 default_server;", 1)[1]
+    assert "server_name ${HOST_ID} ${HOST_SP}" in named
+    assert "return 301 https://$host$request_uri;" in named

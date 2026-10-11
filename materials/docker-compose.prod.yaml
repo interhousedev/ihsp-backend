@@ -155,7 +155,7 @@ x-cors-origins: &cors-origins https://id.${DOMAIN},https://my.${DOMAIN},https://
 services:
   # ---------------------------------------------------------------- data stores
   postgres:
-    image: pgvector/pgvector:pg16
+    image: pgvector/pgvector:0.8.7-pg16
     restart: unless-stopped
     logging: *logging
     command: ["postgres", "-c", "max_connections=200"]
@@ -174,7 +174,7 @@ services:
     networks: [data]
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.4.11-alpine
     restart: unless-stopped
     logging: *logging
     # AOF on, no eviction (rate limits, FSM, the taskiq stream and budgets live here).
@@ -196,7 +196,7 @@ services:
   # `scripts/prod_init.sh unseal`. The healthcheck passes while sealed (exit code 2) so
   # the rest of the stack keeps running; registration and EMIS sync pause until unsealed.
   vault:
-    image: hashicorp/vault:2.1
+    image: hashicorp/vault:2.1.2
     restart: unless-stopped
     logging: *logging
     command: ["server"] # the image adds -config=/vault/config
@@ -506,7 +506,7 @@ services:
 
   # TLS termination and routing by host and path (materials/nginx).
   nginx:
-    image: nginx:1.27-alpine
+    image: nginx:1.28.3-alpine
     restart: unless-stopped
     logging: *logging
     mem_limit: 512m
@@ -559,7 +559,7 @@ services:
   # Renews the certificate twice a day when due. Reload nginx and restart `mail` after a
   # renewal (the host cron line that scripts/prod_init.sh prints does it weekly).
   certbot:
-    image: certbot/certbot:latest
+    image: certbot/certbot:v5.8.0
     restart: unless-stopped
     logging: *logging
     security_opt:

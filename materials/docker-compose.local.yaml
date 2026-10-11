@@ -113,7 +113,7 @@ x-cors-origins: &cors-origins http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_S
 services:
   # ---------------------------------------------------------------- data stores
   postgres:
-    image: pgvector/pgvector:pg16
+    image: pgvector/pgvector:0.8.7-pg16
     # HNSW index builds use parallel workers that need more than Docker's 64 MB /dev/shm.
     shm_size: 256mb
     restart: unless-stopped
@@ -131,7 +131,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ihsp -d ihsp"]
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.4.11-alpine
     restart: unless-stopped
     logging: *logging
     command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
@@ -144,7 +144,7 @@ services:
   # Dev mode: in memory, unsealed, root token dev-root, KV v2 at secret/. A restart wipes
   # it, which is why vault-init runs on every `up`.
   vault:
-    image: hashicorp/vault:2.1
+    image: hashicorp/vault:2.1.2
     restart: unless-stopped
     logging: *logging
     cap_add: [IPC_LOCK]
@@ -202,7 +202,7 @@ services:
         condition: service_healthy
 
   mailpit:
-    image: axllent/mailpit:latest
+    image: axllent/mailpit:v1.31.5
     restart: unless-stopped
     logging: *logging
     ports:
@@ -433,7 +433,7 @@ services:
 
   # Routing by host and path, plain HTTP on port 80 (materials/nginx/local).
   nginx:
-    image: nginx:1.27-alpine
+    image: nginx:1.28.3-alpine
     restart: unless-stopped
     logging: *logging
     ports:

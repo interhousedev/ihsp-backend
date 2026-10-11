@@ -2,17 +2,25 @@
 # Back up a production server: PostgreSQL (databases ihsp and hydra), Redis and Vault.
 # Run it on the server, in the deploy directory (cron line: see `prod_init.sh certs`).
 #
-# Usage: scripts/backup.sh [--dir DIR] [--keep N]
+# Usage: scripts/backup.sh [--dir DIR] [--keep N] [--plain]
 #   --dir DIR   where to write (default: ./backups)
 #   --keep N    afterwards delete all but the N newest backups (default: keep everything)
+#   --plain     leave the set unencrypted on this host (for a one-off, hands-on copy only)
 #
-# Output: DIR/<UTC timestamp>/{ihsp.dump,hydra.dump,redis.rdb,vault.snap,SHA256SUMS}
+# Output: DIR/<UTC timestamp>.tar.age, an `age` encrypted tar of
+#   {ihsp.dump,hydra.dump,redis.rdb,vault.snap,SHA256SUMS}
 #   ihsp.dump, hydra.dump   pg_dump custom format (pg_restore)
 #   redis.rdb               BGSAVE snapshot (rate limits, queues; optional to restore)
 #   vault.snap              Raft snapshot, taken with the `backup` AppRole of .env.prod
+# The set holds the whole student database and Hydra's tokens, so it is encrypted to the
+# public key BACKUP_AGE_RECIPIENT of .env.prod (`age-keygen`; keep the identity OFF this
+# server, restore.sh needs it) and, when BACKUP_S3_URL is set, copied off the host with a
+# write-only key (BACKUP_S3_ACCESS_KEY / BACKUP_S3_SECRET_KEY, BACKUP_S3_ENDPOINT_URL for a
+# non-AWS provider; put object lock or versioning on that bucket). A failed encryption or
+# upload fails the run, so the cron mail says so. Needs `age` and the `aws` CLI on the host.
 # What is NOT in a backup, keep it somewhere safe yourself: .env.prod, secrets/ (JWT keys),
-# the Vault unseal keys, and the S3 bucket (the cloud provider's durability covers it;
-# student files are temporary by design).
+# the Vault unseal keys, the age identity, and the S3 bucket (the cloud provider's durability
+# covers it; student files are temporary by design).
 set -euo pipefail
 
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
@@ -22,12 +30,14 @@ ENV_FILE=.env.prod
 COMPOSE_FILE=materials/docker-compose.prod.yaml
 dir=backups
 keep=0
+plain=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --dir) dir=${2:?--dir needs a value}; shift 2 ;;
         --keep) keep=${2:?--keep needs a value}; shift 2 ;;
-        -h | --help) sed -n '2,16p' "$0"; exit 0 ;;
+        --plain) plain=1; shift ;;
+        -h | --help) sed -n '2,25p' "$0"; exit 0 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
 done
@@ -36,6 +46,16 @@ done
 dc() { docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" "$@"; }
 get_env() { sed -n "s/^$1=//p" "$ENV_FILE" | tail -n 1; }
 say() { printf '==> %s\n' "$*"; }
+
+recipient=$(get_env BACKUP_AGE_RECIPIENT)
+s3_url=$(get_env BACKUP_S3_URL)
+if [ "$plain" -ne 1 ]; then
+    [ -n "$recipient" ] || { echo "BACKUP_AGE_RECIPIENT is not set in $ENV_FILE (age-keygen; or --plain)" >&2; exit 1; }
+    command -v age > /dev/null || { echo "age is not installed (apt install age)" >&2; exit 1; }
+fi
+if [ -n "$s3_url" ]; then
+    command -v aws > /dev/null || { echo "BACKUP_S3_URL is set but the aws CLI is not installed" >&2; exit 1; }
+fi
 
 stamp=$(date -u +%Y%m%dT%H%M%SZ)
 out="$dir/$stamp"
@@ -94,12 +114,43 @@ say "checksums"
     fi
 )
 
+result=$out
+if [ "$plain" -ne 1 ]; then
+    say "encrypting"
+    result="$dir/$stamp.tar.age"
+    if tar -C "$out" -cf - . | age -r "$recipient" > "$result"; then
+        chmod 600 "$result"
+        rm -rf "${out:?}"
+    else
+        echo "error: encryption failed; the plaintext set stays in $out" >&2
+        rm -f "$result"
+        exit 1
+    fi
+fi
+
+if [ -n "$s3_url" ]; then
+    say "uploading to $s3_url"
+    endpoint=$(get_env BACKUP_S3_ENDPOINT_URL)
+    endpoint_args=()
+    [ -n "$endpoint" ] && endpoint_args=(--endpoint-url "$endpoint")
+    if [ -d "$result" ]; then
+        upload=(aws s3 cp --recursive "$result" "${s3_url%/}/$stamp/")
+    else
+        upload=(aws s3 cp "$result" "${s3_url%/}/$stamp.tar.age")
+    fi
+    if ! AWS_ACCESS_KEY_ID=$(get_env BACKUP_S3_ACCESS_KEY) AWS_SECRET_ACCESS_KEY=$(get_env BACKUP_S3_SECRET_KEY) \
+        AWS_EC2_METADATA_DISABLED=true "${upload[@]}" "${endpoint_args[@]}" > /dev/null; then
+        echo "error: upload to $s3_url failed; the backup is only on this host" >&2
+        status=1
+    fi
+fi
+
 if [ "$keep" -gt 0 ]; then
     say "keeping the $keep newest backups"
-    ls -1 "$dir" | grep -E '^[0-9]{8}T[0-9]{6}Z$' | sort \
+    ls -1 "$dir" | grep -E '^[0-9]{8}T[0-9]{6}Z(\.tar\.age)?$' | sort \
         | awk -v keep="$keep" '{ a[NR] = $0 } END { for (i = 1; i <= NR - keep; i++) print a[i] }' \
         | while read -r old; do rm -rf "${dir:?}/$old"; done
 fi
 
-echo "backup written to $out"
+echo "backup written to $result"
 exit "$status"

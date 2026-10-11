@@ -64,14 +64,15 @@ oauth2:
 
 clients:
   http:
-    disallow_private_ip_ranges: false # the hook runs on the host
+    disallow_private_ip_ranges: true # as in production; only the hook (on the host) is private
+    private_ip_exception_urls:
+      - http://host.docker.internal:8000/v1/oauth/token-hook
 
 oidc:
   dynamic_client_registration:
     enabled: true
     default_scope:
       - openid
-      - offline_access
 
 sqa:
   opt_out: true

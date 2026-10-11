@@ -11,7 +11,7 @@
 # (python-magic loads it when the file sniffer is used). No uv, no pip, no compiler, no git, no shell
 # history. The wheels bundle their own native libraries (asyncpg, cryptography, lxml, pypdfium2, ...).
 
-FROM python:3.13-slim AS builder
+FROM python:3.13.16-slim AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:0.12.23 /uv /uvx /bin/
 
@@ -28,7 +28,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-install-project
 
 # ---------------------------------------------------------------------------------------------------
-FROM python:3.13-slim AS runtime
+FROM python:3.13.16-slim AS runtime
 
 # python-magic needs libmagic at import time. Nothing else needs an OS package.
 RUN apt-get update \

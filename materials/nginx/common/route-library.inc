@@ -6,21 +6,25 @@
 # Student projects (/p/) are not part of this release and stay with the static app.
 location ^~ /b/ {
     include /etc/nginx/ihsp/proxy.inc;
+    include /etc/nginx/ihsp/headers-html.inc;
     proxy_pass $up_api;
 }
 
 location = /sitemap.xml {
     include /etc/nginx/ihsp/proxy.inc;
+    include /etc/nginx/ihsp/headers-html.inc;
     proxy_pass $up_api;
 }
 
 location = /robots.txt {
     include /etc/nginx/ihsp/proxy.inc;
+    include /etc/nginx/ihsp/headers-html.inc;
     proxy_pass $up_api;
 }
 
 location ^~ /opds/ {
     include /etc/nginx/ihsp/proxy.inc;
+    include /etc/nginx/ihsp/headers-html.inc;
     proxy_pass $up_api;
 }
 

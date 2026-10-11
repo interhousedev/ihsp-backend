@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # Restore a backup made by scripts/backup.sh. DESTRUCTIVE: replaces the current data.
 #
-# Usage: scripts/restore.sh <backup-dir> [--with-redis] [--with-vault] [--yes]
+# Usage: scripts/restore.sh <backup-dir | backup.tar.age> [--with-redis] [--with-vault] [--yes]
+#   An encrypted set (backups/<stamp>.tar.age) is decrypted into a private temporary
+#   directory with the age identity file named by BACKUP_AGE_IDENTITY (environment or
+#   .env.prod; it is not kept on the server, bring it along).
 #   --with-redis   also replace Redis (queues, rate limits; usually not needed)
 #   --with-vault   also restore the Vault Raft snapshot. Needs a root token in VAULT_TOKEN
 #                  and an unsealed Vault; the snapshot is only readable with the unseal
@@ -27,20 +30,41 @@ while [ $# -gt 0 ]; do
         --with-redis) with_redis=1; shift ;;
         --with-vault) with_vault=1; shift ;;
         --yes) assume_yes=1; shift ;;
-        -h | --help) sed -n '2,15p' "$0"; exit 0 ;;
+        -h | --help) sed -n '2,18p' "$0"; exit 0 ;;
         -*) echo "unknown argument: $1" >&2; exit 2 ;;
         *) src=$1; shift ;;
     esac
 done
 
-[ -n "$src" ] || { echo "usage: scripts/restore.sh <backup-dir> [--with-redis] [--with-vault] [--yes]" >&2; exit 2; }
-[ -d "$src" ] || { echo "$src is not a directory" >&2; exit 1; }
-src=$(cd "$src" && pwd)
-[ -f "$src/ihsp.dump" ] && [ -f "$src/hydra.dump" ] || { echo "$src has no ihsp.dump / hydra.dump" >&2; exit 1; }
+[ -n "$src" ] || { echo "usage: scripts/restore.sh <backup-dir | backup.tar.age> [--with-redis] [--with-vault] [--yes]" >&2; exit 2; }
 [ -f "$ENV_FILE" ] || { echo "$ENV_FILE not found in $ROOT" >&2; exit 1; }
 
 dc() { docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" "$@"; }
+get_env() { sed -n "s/^$1=//p" "$ENV_FILE" | tail -n 1; }
 say() { printf '==> %s\n' "$*"; }
+
+workdir=
+cleanup() { [ -n "$workdir" ] && rm -rf "$workdir"; }
+trap cleanup EXIT
+
+case "$src" in
+    *.tar.age)
+        [ -f "$src" ] || { echo "$src is not a file" >&2; exit 1; }
+        identity=${BACKUP_AGE_IDENTITY:-$(get_env BACKUP_AGE_IDENTITY)}
+        [ -n "$identity" ] || { echo "BACKUP_AGE_IDENTITY=<age identity file> is needed to decrypt $src" >&2; exit 1; }
+        command -v age > /dev/null || { echo "age is not installed (apt install age)" >&2; exit 1; }
+        say "decrypting $src"
+        workdir=$(mktemp -d "${TMPDIR:-/tmp}/ihsp-restore.XXXXXX")
+        chmod 700 "$workdir"
+        age -d -i "$identity" "$src" | tar -C "$workdir" -xf -
+        src=$workdir
+        ;;
+    *)
+        [ -d "$src" ] || { echo "$src is not a directory" >&2; exit 1; }
+        ;;
+esac
+src=$(cd "$src" && pwd)
+[ -f "$src/ihsp.dump" ] && [ -f "$src/hydra.dump" ] || { echo "$src has no ihsp.dump / hydra.dump" >&2; exit 1; }
 
 if [ -f "$src/SHA256SUMS" ]; then
     say "verifying checksums"

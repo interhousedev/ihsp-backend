@@ -1,5 +1,6 @@
 """Structure of the production and local compose files (`docker compose config`)."""
 
+import re
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -154,7 +155,14 @@ def test_prod_images_are_pinned(prod_model: dict[str, Any]) -> None:
     assert images["hydra"] == "oryd/hydra:v26.2.0"
     assert images["s3"] == "rustfs/rustfs:1.0.1"
     assert images["vault"].startswith("hashicorp/vault:2.")
-    assert images["postgres"] == "pgvector/pgvector:pg16"
+    assert images["postgres"] == "pgvector/pgvector:0.8.7-pg16"
+    # Every third-party image names a full version: no floating tag, no :latest.
+    for name, image in images.items():
+        if image.startswith("ghcr.io/"):
+            continue
+        tag = image.rsplit(":", 1)[1]
+        assert re.search(r"\d+\.\d+\.\d+", tag), (name, image)
+        assert tag != "latest", name
     for name in ("identity", "api", "bot", "mail", "worker", "scheduler", "migrate"):
         assert images[name].startswith("ghcr.io/")
         assert images[name].endswith("/ihsp-backend:CHANGE_ME")

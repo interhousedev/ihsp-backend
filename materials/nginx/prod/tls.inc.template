@@ -7,4 +7,8 @@ ssl_prefer_server_ciphers off;
 ssl_session_cache shared:SSL:10m;
 ssl_session_timeout 1d;
 ssl_session_tickets off;
+# One year, no `preload`: preloading is a one-way submission to the browser lists (hstspreload.org);
+# add it only once every host under the domain is meant to stay HTTPS forever.
+# No OCSP stapling: Let's Encrypt stopped its OCSP responders in 2025 (certificates carry no
+# OCSP URL), so `ssl_stapling` would only log a warning.
 add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;

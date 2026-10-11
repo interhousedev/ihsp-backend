@@ -66,15 +66,25 @@ oauth2:
 
 clients:
   http:
-    # The hook targets the internal identity service (a private address).
-    disallow_private_ip_ranges: false
+    # Client-supplied URLs (jwks_uri, backchannel_logout_uri, request_uris) must not point
+    # at the internal network (identity:8001, hydra:4445, vault:8200): a registered client
+    # would otherwise be a request forger. The one private address Hydra may call is the
+    # token hook of the identity process.
+    disallow_private_ip_ranges: true
+    private_ip_exception_urls:
+      - http://identity:8001/v1/oauth/token-hook
 
 oidc:
+  # Dynamic Client Registration stays on: MCP clients register themselves (product-spec MCP-3,
+  # docs/reference/mcp.md). Mitigations: the edge nginx rate-limits POST /oauth2/register
+  # (materials/nginx/common/route-id.inc), the default scope has no offline_access (a client
+  # that wants refresh tokens asks for it and the consent screen shows it), and the consent
+  # app treats every client without an admin-set metadata flag as unverified
+  # (identity/application/consent_support.py).
   dynamic_client_registration:
     enabled: true
     default_scope:
       - openid
-      - offline_access
 
 sqa:
   opt_out: true
