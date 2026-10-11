@@ -12,7 +12,10 @@ from fastapi.responses import JSONResponse
 
 def _check_service_token(authorization: str, expected: str) -> None:
     scheme, _, token = authorization.partition(" ")
-    if scheme.lower() != "bearer" or not hmac.compare_digest(token, expected):
+    # Bytes: compare_digest raises TypeError (a 500) on non-ASCII text.
+    if scheme.lower() != "bearer" or not hmac.compare_digest(
+        token.encode(), expected.encode()
+    ):
         raise UnauthorizedError(support_details="bad token hook credentials")
 
 

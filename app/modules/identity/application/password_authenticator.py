@@ -37,8 +37,13 @@ class PasswordAuthenticator:
         """
         await self.throttle.check(login, ctx.throttle_ip)
         user = await uow.users.get_by_login(login)
+        if user is not None:
+            await self.throttle.check_account(user.id)
         stored = user.password_hash if user else None
-        if user is None or not await self.hasher.verify(stored, password):
+        # The hash is always verified (a dummy one for unknown logins) so the
+        # answer takes the same time whether or not the account exists.
+        ok = await self.hasher.verify(stored, password)
+        if user is None or not ok:
             await self._record_failure(uow, login, user, ctx)
             raise InvalidCredentialsError()
         if not user.is_active:

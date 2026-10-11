@@ -91,16 +91,19 @@ class SqlSessionRepository:
         )
         return [_to_entity(row) for row in rows]
 
-    async def latest_active(self, user_id: UUID, now: datetime) -> LoginSession | None:
-        """The most recently created active session of a user."""
+    async def latest_active(
+        self, user_id: UUID, now: datetime, *, amr: list[str] | None = None
+    ) -> LoginSession | None:
+        """The most recently created active session of a user (optionally by amr)."""
+        query = select(SessionRow).where(
+            SessionRow.user_id == user_id,
+            SessionRow.revoked_at.is_(None),
+            SessionRow.expires_at > now,
+        )
+        if amr is not None:
+            query = query.where(SessionRow.amr == amr)
         row = await self._session.scalar(
-            select(SessionRow)
-            .where(
-                SessionRow.user_id == user_id,
-                SessionRow.revoked_at.is_(None),
-                SessionRow.expires_at > now,
-            )
-            .order_by(SessionRow.created_at.desc(), SessionRow.id.desc())
+            query.order_by(SessionRow.created_at.desc(), SessionRow.id.desc())
             .limit(1)
         )
         return _to_entity(row) if row else None

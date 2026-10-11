@@ -103,3 +103,17 @@ async def test_without_a_telegram_sender_only_email_is_used(
     )
 
     assert auth_world.email.last_code(user.recovery_email or "") == "222222"
+
+
+async def test_the_cleanup_set_expires_on_its_own(
+    auth_world: World, i18n: I18nCore
+) -> None:
+    """Review 2026-10-11: the set has a TTL, so a stuck job cannot grow it forever."""
+    user = await auth_world.add_user(otp_enabled=True)
+    auth_world.add_link(user, 1)
+
+    await build(auth_world, i18n).send_code(
+        user.to_ref(), "123456", purpose="login", channels=["telegram"]
+    )
+
+    assert 0 < await auth_world.redis.ttl("tg:otp-msgs") <= 86400

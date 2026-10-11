@@ -8,9 +8,14 @@ from app.modules.identity.application.find_user_for_recovery import (
     find_user_for_recovery,
 )
 from app.modules.identity.application.otp_service import OtpService
+from app.modules.identity.application.recovery_confirm_limits import (
+    code_failure,
+    limit_confirms,
+)
 from app.modules.identity.application.request_context import RequestContext
 from app.modules.identity.domain.audit_event import OTP_RESET_REQUESTED
 from app.modules.identity.domain.errors import OtpInvalidError
+from app.modules.identity.ports.login_throttle import LoginThrottle
 from app.modules.identity.ports.unit_of_work import UowFactory
 from app.shared.clock import Clock
 from app.shared.ids import new_id
@@ -28,17 +33,24 @@ class ConfirmOtpReset:
     otp: OtpService
     clock: Clock
     rate_limiter: RateLimiter
+    throttle: LoginThrottle
 
     async def execute(self, login: str, code: str, ctx: RequestContext) -> datetime:
         """Return when the reset takes effect."""
-        await self.rate_limiter.hit(
-            f"recovery-ip:{ctx.throttle_ip}", limit=20, window_seconds=3600
-        )
+        ip = ctx.throttle_ip
+        await self.rate_limiter.hit(f"recovery-ip:{ip}", limit=20, window_seconds=3600)
+        await limit_confirms(self.rate_limiter, login)
         async with self.uow_factory() as uow:
             user = await find_user_for_recovery(uow, login)
             if user is None:
-                raise OtpInvalidError(params={"attempts_left": 0})
-            await self.otp.check("otp-reset", str(user.id), code)
+                raise await code_failure(self.throttle, "otp-reset", login, ip)
+            try:
+                await self.otp.check("otp-reset", str(user.id), code)
+            except OtpInvalidError:
+                raise await code_failure(
+                    self.throttle, "otp-reset", login, ip
+                ) from None
+            await self.throttle.reset_code_failures("otp-reset", login, ip)
             request_id = new_id()
             effective_at = self.clock.now() + RESET_DELAY
             user.otp_reset_effective_at = effective_at

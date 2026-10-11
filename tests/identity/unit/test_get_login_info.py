@@ -1,7 +1,7 @@
 """ID-16: single sign-on."""
 
 from app.shared.contracts.identity import UserStatus
-from tests.identity.support import World
+from tests.identity.support import PASSWORD, World
 
 
 async def test_login_info_describes_the_client_without_skipping(
@@ -65,3 +65,44 @@ async def test_blocked_user_is_not_reused_for_single_sign_on(
     info = await auth_world.auth.get_login_info.execute("lc-1")
 
     assert info.redirect_to is None
+
+
+async def test_another_devices_session_does_not_skip_the_form(
+    auth_world: World,
+) -> None:
+    """Review 2026-10-11: only the session of this browser (Hydra sid) is reused."""
+    user = await auth_world.add_user()
+    auth_world.add_session(user, hydra_sid="sid-other-device")
+    auth_world.hydra.add_login(
+        "lc-1", skip=True, subject=str(user.id), session_id="sid-revoked-here"
+    )
+
+    info = await auth_world.auth.get_login_info.execute("lc-1")
+
+    assert info.redirect_to is None
+
+
+async def test_skip_reuses_the_remember_choice_of_the_login(auth_world: World) -> None:
+    """Review 2026-10-11: no "stay signed in" means no 30-day extension on skip."""
+    from app.modules.identity.application.request_context import RequestContext
+    from app.modules.identity.application.start_login_session import (
+        SSO_SESSION_SECONDS,
+    )
+
+    user = await auth_world.add_user()
+    auth_world.hydra.add_login("lc-1")
+    await auth_world.auth.log_in_with_password.execute(
+        "lc-1",
+        user.login or "",
+        PASSWORD,
+        remember=False,
+        ctx=RequestContext(ip="203.0.113.5", user_agent="pytest"),
+    )
+    auth_world.hydra.add_login(
+        "lc-2", skip=True, subject=str(user.id), session_id="hydra-sid-lc-1"
+    )
+
+    info = await auth_world.auth.get_login_info.execute("lc-2")
+
+    assert info.redirect_to
+    assert auth_world.hydra.last("accept_login")["remember_for"] == SSO_SESSION_SECONDS

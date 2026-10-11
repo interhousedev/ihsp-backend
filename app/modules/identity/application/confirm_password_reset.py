@@ -7,11 +7,16 @@ from app.modules.identity.application.find_user_for_recovery import (
     find_user_for_recovery,
 )
 from app.modules.identity.application.otp_service import OtpService
+from app.modules.identity.application.recovery_confirm_limits import (
+    code_failure,
+    limit_confirms,
+)
 from app.modules.identity.application.request_context import RequestContext
 from app.modules.identity.application.revoke_access import AccessRevoker
 from app.modules.identity.domain.audit_event import PASSWORD_RESET
 from app.modules.identity.domain.errors import OtpInvalidError, PasswordPolicyError
 from app.modules.identity.domain.password_policy import check_password
+from app.modules.identity.ports.login_throttle import LoginThrottle
 from app.modules.identity.ports.password_hasher import PasswordHasher
 from app.modules.identity.ports.unit_of_work import UowFactory
 from app.shared.rate_limit import RateLimiter
@@ -26,22 +31,29 @@ class ConfirmPasswordReset:
     hasher: PasswordHasher
     revoker: AccessRevoker
     rate_limiter: RateLimiter
+    throttle: LoginThrottle
 
     async def execute(
         self, login_or_email: str, code: str, new_password: str, ctx: RequestContext
     ) -> None:
         """Verify the code, apply the policy, save, revoke everything."""
-        await self.rate_limiter.hit(
-            f"recovery-ip:{ctx.throttle_ip}", limit=20, window_seconds=3600
-        )
+        ip = ctx.throttle_ip
+        await self.rate_limiter.hit(f"recovery-ip:{ip}", limit=20, window_seconds=3600)
+        await limit_confirms(self.rate_limiter, login_or_email)
         errors = check_password(new_password)
         if errors:
             raise PasswordPolicyError(params={"errors": errors})
         async with self.uow_factory() as uow:
             user = await find_user_for_recovery(uow, login_or_email)
             if user is None:
-                raise OtpInvalidError(params={"attempts_left": 0})
-            await self.otp.check("pw-reset", str(user.id), code)
+                raise await code_failure(self.throttle, "pw-reset", login_or_email, ip)
+            try:
+                await self.otp.check("pw-reset", str(user.id), code)
+            except OtpInvalidError:
+                raise await code_failure(
+                    self.throttle, "pw-reset", login_or_email, ip
+                ) from None
+            await self.throttle.reset_code_failures("pw-reset", login_or_email, ip)
             user.password_hash = await self.hasher.hash(new_password)
             user.password_change_required = False
             await self.revoker.revoke_in(uow, user, keep_telegram=True)

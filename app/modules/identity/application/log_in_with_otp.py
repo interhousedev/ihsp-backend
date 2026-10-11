@@ -15,6 +15,9 @@ from app.modules.identity.domain.user import User
 from app.modules.identity.ports.hydra_gateway import HydraGateway
 from app.modules.identity.ports.ticket_store import TicketStore
 from app.modules.identity.ports.unit_of_work import IdentityUnitOfWorkPort, UowFactory
+from app.shared.rate_limit import RateLimiter
+
+IP_LIMIT_PER_HOUR = 300
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,6 +30,7 @@ class LogInWithOtp:
     passwordless: PasswordlessOtpCheck
     tickets: TicketStore
     starter: LoginSessionStarter
+    rate_limiter: RateLimiter
 
     async def execute(
         self,
@@ -38,11 +42,16 @@ class LogInWithOtp:
         ctx: RequestContext,
     ) -> LoginResult:
         """Return the redirect URL or raise OtpInvalidError / RateLimitedError."""
+        await self.rate_limiter.hit(
+            f"login-otp-ip:{ctx.throttle_ip}",
+            limit=IP_LIMIT_PER_HOUR,
+            window_seconds=3600,
+        )
         request = await self.hydra.get_login_request(challenge)
         async with self.uow_factory() as uow:
             if ticket:
                 user, amr, mfa, remember = await self._second_factor(
-                    uow, challenge, login, code, ticket
+                    uow, challenge, login, code, ticket, ctx
                 )
             else:
                 user = await self.passwordless.execute(uow, login, code, ctx)
@@ -61,15 +70,25 @@ class LogInWithOtp:
         login: str,
         code: str,
         ticket: str,
+        ctx: RequestContext,
     ) -> tuple[User, list[str], bool, bool]:
+        # Every failure answers alike, so the ticket's liveness is not revealed.
         pending: dict[str, Any] | None = await self.tickets.get(f"login2fa:{ticket}")
         if pending is None or pending.get("challenge") != challenge:
-            raise OtpInvalidError(params={"attempts_left": 0})
-        await self.otp.check("login2fa", ticket, code)
+            raise await self.passwordless.failure("login2fa", login, ctx.throttle_ip)
+        try:
+            await self.otp.check("login2fa", ticket, code)
+        except OtpInvalidError:
+            raise await self.passwordless.failure(
+                "login2fa", login, ctx.throttle_ip
+            ) from None
         await self.tickets.delete(f"login2fa:{ticket}")
         user = await uow.users.get(UUID(pending["user_id"]))
         if user is None or not user.is_active:
-            raise OtpInvalidError(params={"attempts_left": 0})
+            raise await self.passwordless.failure("login2fa", login, ctx.throttle_ip)
         if (user.login or "").lower() != login.strip().lower():
-            raise OtpInvalidError(params={"attempts_left": 0})
+            raise await self.passwordless.failure("login2fa", login, ctx.throttle_ip)
+        await self.passwordless.throttle.reset_code_failures(
+            "login2fa", login, ctx.throttle_ip
+        )
         return user, ["pwd", "otp"], True, bool(pending.get("remember"))

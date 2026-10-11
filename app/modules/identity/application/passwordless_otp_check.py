@@ -25,17 +25,24 @@ class PasswordlessOtpCheck:
         self, uow: IdentityUnitOfWorkPort, login: str, code: str, ctx: RequestContext
     ) -> User:
         """Return the user whose code is right; Administration is never accepted."""
+        ip = ctx.throttle_ip
         user = await uow.users.get_by_login(login)
         if user is None or not user.is_active or not user.otp_enabled or user.is_admin:
-            raise OtpInvalidError(params={"attempts_left": 0})
-        failures = await self.throttle.otp_failures(user.id, ctx.throttle_ip)
+            raise await self.failure("login", login, ip)
+        failures = await self.throttle.otp_failures(user.id, ip)
         if failures >= self.failures_per_day:
             raise RateLimitedError(params={"retry_after": 3600})
         try:
             await self.otp.check("login", str(user.id), code)
         except OtpInvalidError:
-            await self.throttle.record_otp_failure(user.id, ctx.throttle_ip)
+            await self.throttle.record_otp_failure(user.id, ip)
             uow.audit(make_audit(LOGIN_FAILED, user_id=user.id, ctx=ctx, reason="otp"))
             await uow.commit()
-            raise
+            raise await self.failure("login", login, ip) from None
+        await self.throttle.reset_code_failures("login", login, ip)
         return user
+
+    async def failure(self, purpose: str, login: str, ip: str) -> OtpInvalidError:
+        """The error for a wrong code; ``attempts_left`` is the same for any login."""
+        left = await self.throttle.record_code_failure(purpose, login, ip)
+        return OtpInvalidError(params={"attempts_left": left})

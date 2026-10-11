@@ -267,9 +267,13 @@ class FakeSessionRepository:
         )
         return [_copy(s) for s in active]
 
-    async def latest_active(self, user_id: UUID, now: datetime) -> LoginSession | None:
-        """Most recently created active session."""
+    async def latest_active(
+        self, user_id: UUID, now: datetime, *, amr: list[str] | None = None
+    ) -> LoginSession | None:
+        """Most recently created active session, optionally with a given amr."""
         active = sorted(self._active(user_id, now), key=lambda s: s.id)
+        if amr is not None:
+            active = [s for s in active if list(s.amr) == amr]
         return _copy(active[-1]) if active else None
 
     async def revoke(self, session_id: UUID, now: datetime) -> LoginSession | None:

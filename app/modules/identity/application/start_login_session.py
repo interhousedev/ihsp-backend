@@ -9,6 +9,7 @@ from app.modules.identity.domain.audit_event import LOGIN_SUCCESS
 from app.modules.identity.domain.session import SESSION_LIFETIME, LoginSession
 from app.modules.identity.domain.user import User
 from app.modules.identity.ports.hydra_gateway import HydraGateway, LoginRequest
+from app.modules.identity.ports.ticket_store import TicketStore
 from app.modules.identity.ports.unit_of_work import IdentityUnitOfWorkPort
 from app.shared.clock import Clock
 from app.shared.ids import new_id
@@ -18,6 +19,8 @@ REMEMBER_FOR_SECONDS = 30 * 24 * 3600
 # ask for the password again, so a login is always remembered: "stay signed in" makes
 # the single sign-on session long, the default makes it last one school day.
 SSO_SESSION_SECONDS = 12 * 3600
+# The single sign-on skip reuses the choice made at login (ID-16).
+REMEMBER_KEY = "login-remember:{session_id}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -26,6 +29,7 @@ class LoginSessionStarter:
 
     hydra: HydraGateway
     clock: Clock
+    tickets: TicketStore
 
     async def start(
         self,
@@ -53,6 +57,11 @@ class LoginSessionStarter:
             )
         )
         await uow.commit()
+        await self.tickets.put(
+            REMEMBER_KEY.format(session_id=session.id),
+            {"remember": remember},
+            ttl=int(SESSION_LIFETIME.total_seconds()),
+        )
         return await self.hydra.accept_login(
             request.challenge,
             subject=str(user.id),

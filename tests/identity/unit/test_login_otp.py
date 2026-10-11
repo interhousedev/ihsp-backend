@@ -142,3 +142,25 @@ async def test_ten_failed_codes_a_day_block_further_attempts(
         await submit(auth_world, user.login or "", "123456")
     await request_code(auth_world, user.login or "")
     assert auth_world.otp.count("login") == 10
+
+
+async def test_unknown_login_gets_the_same_attempts_left_as_a_real_one(
+    auth_world: World,
+) -> None:
+    """Review 2026-10-11: attempts_left must not reveal whether the account exists."""
+    auth_world.hydra.add_login("lc-1")
+
+    for left in (2, 1, 0):
+        with pytest.raises(OtpInvalidError) as caught:
+            await submit(auth_world, "nobody.here", "000000")
+        assert caught.value.params == {"attempts_left": left}
+
+
+async def test_the_code_endpoint_is_limited_per_ip(auth_world: World) -> None:
+    """Review 2026-10-11: 300 code submissions per hour per IP."""
+    auth_world.hydra.add_login("lc-1")
+    await auth_world.redis.set("rl:login-otp-ip:203.0.113.5", "300")
+    await auth_world.redis.expire("rl:login-otp-ip:203.0.113.5", 3600)
+
+    with pytest.raises(RateLimitedError):
+        await submit(auth_world, "nobody.here", "000000")

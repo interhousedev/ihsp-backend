@@ -30,6 +30,18 @@ class LoginThrottle(Protocol):
         """Forget failures of the pair after a successful login."""
         ...
 
+    async def check_account(self, user_id: UUID) -> None:
+        """Raise AccountLockedError while the account has too many failures (any IP)."""
+        ...
+
+    async def record_code_failure(self, purpose: str, login: str, ip: str) -> int:
+        """Count a wrong code for a login (known or not); return the attempts left."""
+        ...
+
+    async def reset_code_failures(self, purpose: str, login: str, ip: str) -> None:
+        """Forget the code failures of the login (new code issued or code accepted)."""
+        ...
+
     async def otp_failures(self, user_id: UUID, ip: str) -> int:
         """Failed passwordless OTP codes today for the account and IP."""
         ...

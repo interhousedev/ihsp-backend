@@ -26,6 +26,7 @@ log = structlog.get_logger(__name__)
 
 CLEANUP_KEY = "tg:otp-msgs"
 CLEANUP_AFTER = timedelta(minutes=5)
+CLEANUP_KEY_TTL_SECONDS = 86400  # the set never outlives a broken cleanup job by long
 
 
 class ChannelOtpSender:
@@ -110,6 +111,7 @@ class ChannelOtpSender:
             return
         delete_at = (self._clock.now() + CLEANUP_AFTER).timestamp()
         await self._redis.zadd(CLEANUP_KEY, {f"{chat_id}:{message_id}": delete_at})
+        await self._redis.expire(CLEANUP_KEY, CLEANUP_KEY_TTL_SECONDS)
 
     async def _to_email(
         self, address: str, code: str, locale: str, purpose: str

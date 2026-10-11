@@ -30,8 +30,10 @@ class SessionRepository(Protocol):
         """Active sessions of a user, most recently seen first."""
         ...
 
-    async def latest_active(self, user_id: UUID, now: datetime) -> LoginSession | None:
-        """The most recently created active session of a user."""
+    async def latest_active(
+        self, user_id: UUID, now: datetime, *, amr: list[str] | None = None
+    ) -> LoginSession | None:
+        """The most recently created active session of a user (optionally by amr)."""
         ...
 
     async def revoke(self, session_id: UUID, now: datetime) -> LoginSession | None:

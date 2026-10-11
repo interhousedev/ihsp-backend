@@ -240,3 +240,55 @@ async def test_a_challenge_hydra_already_handled_is_reported_with_its_redirect(
 
     assert caught.value.status == 410
     assert caught.value.params["redirect_to"] == "https://hydra/restart"
+
+
+async def test_unknown_login_still_verifies_a_hash(
+    auth_world: World, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Review 2026-10-11: the dummy hash runs for unknown logins (no timing oracle)."""
+    auth_world.hydra.add_login("lc-1")
+    hasher = auth_world.auth.hasher
+    seen: list[str | None] = []
+    original = hasher.verify
+
+    async def verify(password_hash: str | None, password: str) -> bool:
+        seen.append(password_hash)
+        return await original(password_hash, password)
+
+    monkeypatch.setattr(hasher, "verify", verify)
+
+    with pytest.raises(InvalidCredentialsError):
+        await log_in(auth_world, "nobody.here", PASSWORD)
+
+    assert seen == [None]
+
+
+async def test_a_wrong_ticket_answers_like_a_wrong_code(auth_world: World) -> None:
+    """Review 2026-10-11: ticket liveness is not revealed by attempts_left."""
+    admin = await auth_world.add_user(roles={Role.ADMIN}, otp_enabled=True)
+    auth_world.hydra.add_login("lc-1", client_id="admin")
+
+    with pytest.raises(OtpInvalidError) as caught:
+        await auth_world.auth.log_in_with_otp.execute(
+            "lc-1", admin.login or "", "000000", ticket="no-such-ticket", ctx=CTX
+        )
+
+    assert caught.value.params == {"attempts_left": 2}
+
+
+async def test_fifty_failures_from_many_ips_lock_the_account(auth_world: World) -> None:
+    """Review 2026-10-11: a soft per-account cap across IPs."""
+    user = await auth_world.add_user()
+    auth_world.hydra.add_login("lc-1")
+    for n in range(50):
+        ctx = RequestContext(ip=f"198.51.{n // 250}.{n % 250}", user_agent="pytest")
+        with pytest.raises(InvalidCredentialsError):
+            await auth_world.auth.log_in_with_password.execute(
+                "lc-1", user.login or "", "Wr0ngPassword", remember=False, ctx=ctx
+            )
+
+    fresh = RequestContext(ip="192.0.2.9", user_agent="pytest")
+    with pytest.raises(AccountLockedError):
+        await auth_world.auth.log_in_with_password.execute(
+            "lc-1", user.login or "", PASSWORD, remember=False, ctx=fresh
+        )

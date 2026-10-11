@@ -251,3 +251,16 @@ async def test_hook_leaves_subjectless_requests_unchanged_with_204(api: Api) -> 
 
     assert response.status_code == 204
     assert response.content == b""
+
+
+async def test_hook_with_a_non_ascii_token_is_401_not_500(api: Api) -> None:
+    """Review 2026-10-11: compare_digest on text raised TypeError for non-ASCII."""
+    user = await api.world.add_user()
+
+    response = await api.client.post(
+        "/v1/oauth/token-hook",
+        json=hook_body(user.id, {}),
+        headers={b"Authorization": "Bearer t\u00f6ken".encode("latin-1")},
+    )
+
+    assert response.status_code == 401

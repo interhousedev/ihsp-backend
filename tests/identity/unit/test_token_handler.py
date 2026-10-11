@@ -148,14 +148,14 @@ async def test_telegram_exchange_signs_an_assertion_for_the_linked_user(
     )
 
 
-async def test_telegram_exchange_accepts_init_data_up_to_24_hours_old(
+async def test_telegram_exchange_accepts_init_data_up_to_12_hours_old(
     auth_world: World,
 ) -> None:
-    """backend/PLAN: the mini app re-sends initData on 401 for up to a day."""
+    """The mini app re-sends initData on 401 for one school day (12 h)."""
     user = await auth_world.add_user()
     auth_world.add_link(user, 555)
     opened = int(auth_world.clock.now().timestamp())
-    auth_world.clock.advance(hours=23)
+    auth_world.clock.advance(hours=11)
 
     grant = await auth_world.auth.exchange_telegram_init_data.execute(
         "sp", sign_init_data(auth_date=opened), CTX
@@ -226,3 +226,35 @@ async def test_tampered_init_data_is_unauthorized(auth_world: World) -> None:
         )
 
     assert "jwt_bearer" not in auth_world.hydra.names()
+
+
+async def test_repeated_telegram_exchanges_reuse_the_mini_app_session(
+    auth_world: World,
+) -> None:
+    """Review 2026-10-11: initData replays do not pile up session rows."""
+    user = await auth_world.add_user()
+    auth_world.add_link(user, 555)
+    init_data = sign_init_data(auth_date=int(auth_world.clock.now().timestamp()))
+
+    await auth_world.auth.exchange_telegram_init_data.execute("sp", init_data, CTX)
+    auth_world.clock.advance(hours=1)
+    await auth_world.auth.exchange_telegram_init_data.execute("sp", init_data, CTX)
+
+    (session,) = auth_world.store.sessions.values()
+    assert session.last_seen_at == auth_world.clock.now()
+
+
+async def test_telegram_exchange_is_limited_per_telegram_user(
+    auth_world: World,
+) -> None:
+    """Review 2026-10-11: about 30 exchanges per hour per Telegram account."""
+    from app.shared.base_error import RateLimitedError
+
+    user = await auth_world.add_user()
+    auth_world.add_link(user, 555)
+    init_data = sign_init_data(auth_date=int(auth_world.clock.now().timestamp()))
+    await auth_world.redis.set("rl:tg-exchange:555", "30")
+    await auth_world.redis.expire("rl:tg-exchange:555", 3600)
+
+    with pytest.raises(RateLimitedError):
+        await auth_world.auth.exchange_telegram_init_data.execute("sp", init_data, CTX)

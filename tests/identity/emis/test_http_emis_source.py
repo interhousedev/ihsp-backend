@@ -372,3 +372,60 @@ async def test_a_timetable_503_is_unavailable(
 
     with pytest.raises(EmisUnavailable):
         await source.timetable(USER, date(2026, 10, 5), date(2026, 10, 11))
+
+
+async def test_a_transport_blip_is_retried_once(
+    gateway: respx.MockRouter,
+) -> None:
+    """SYNC: one dropped connection does not fail the step; the retry is paused."""
+    waits: list[float] = []
+
+    async def sleep(seconds: float) -> None:
+        waits.append(seconds)
+
+    source = HttpEmisSource(gateway_url=BASE, service_token="svc-token", sleep=sleep)
+    route = gateway.get(f"/{USER}/profile")
+    route.side_effect = [
+        httpx.ReadTimeout("slow"),
+        httpx.Response(200, json=PROFILE_JSON),
+    ]
+
+    profile = await source.profile(USER)
+    await source.aclose()
+
+    assert profile.emis_student_id == 78218
+    assert route.call_count == 2
+    assert len(waits) == 1 and 0.5 <= waits[0] <= 1.0
+
+
+async def test_a_502_from_the_edge_is_retried_once(gateway: respx.MockRouter) -> None:
+    """SYNC: 502/503/504 are transport answers; the second try is the real one."""
+
+    async def sleep(seconds: float) -> None:
+        return None
+
+    source = HttpEmisSource(gateway_url=BASE, service_token="svc-token", sleep=sleep)
+    route = gateway.get(f"/{USER}/profile")
+    route.side_effect = [httpx.Response(502), httpx.Response(200, json=PROFILE_JSON)]
+
+    assert (await source.profile(USER)).emis_student_id == 78218
+    await source.aclose()
+    assert route.call_count == 2
+
+
+async def test_two_transport_failures_are_unavailable(
+    gateway: respx.MockRouter,
+) -> None:
+    """SYNC: the retry is a single one; a dead gateway fails fast after it."""
+
+    async def sleep(seconds: float) -> None:
+        return None
+
+    source = HttpEmisSource(gateway_url=BASE, service_token="svc-token", sleep=sleep)
+    route = gateway.get(f"/{USER}/profile")
+    route.side_effect = [httpx.ConnectError("down"), httpx.ConnectTimeout("down")]
+
+    with pytest.raises(EmisUnavailable):
+        await source.profile(USER)
+    await source.aclose()
+    assert route.call_count == 2

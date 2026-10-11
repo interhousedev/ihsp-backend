@@ -11,6 +11,9 @@ FREE_ATTEMPTS = 5
 COUNT_TTL_SECONDS = 3600
 LOCK_SECONDS = (60, 300, 900)  # 5th, 6th and later failures
 OTP_FAILURE_TTL_SECONDS = 86400
+ACCOUNT_FAILURES_PER_HOUR = 50  # soft cap across IPs: OTP or recovery from then on
+CODE_ATTEMPTS = 3  # mirrors the OTP store, so the answer is the same for any login
+CODE_TTL_SECONDS = 300
 
 
 class RedisLoginThrottle:
@@ -29,6 +32,15 @@ class RedisLoginThrottle:
         remaining = int(await self._redis.ttl(f"lf-lock:{self._pair(login, ip)}"))
         if remaining > 0:
             raise AccountLockedError(params={"retry_after": remaining})
+
+    async def check_account(self, user_id: UUID) -> None:
+        """Raise AccountLockedError once the account hit the cap from any IP."""
+        key = f"lfu:{user_id}"
+        value = await self._redis.get(key)
+        count = int(value.decode() if isinstance(value, bytes) else value or 0)
+        if count >= ACCOUNT_FAILURES_PER_HOUR:
+            remaining = int(await self._redis.ttl(key))
+            raise AccountLockedError(params={"retry_after": max(remaining, 1)})
 
     async def record_failure(
         self, login: str, ip: str, user_id: UUID | None
@@ -50,6 +62,22 @@ class RedisLoginThrottle:
         """Forget the pair's failures."""
         pair = self._pair(login, ip)
         await self._redis.delete(f"lf:{pair}", f"lf-lock:{pair}")
+
+    @staticmethod
+    def _code_key(purpose: str, login: str, ip: str) -> str:
+        return f"code-fail:{purpose}:{login.strip().lower()}:{ip}"
+
+    async def record_code_failure(self, purpose: str, login: str, ip: str) -> int:
+        """Count a wrong code; the attempts left never depend on the account."""
+        key = self._code_key(purpose, login, ip)
+        count = int(await self._redis.incr(key))
+        if count == 1:
+            await self._redis.expire(key, CODE_TTL_SECONDS)
+        return max(CODE_ATTEMPTS - count, 0)
+
+    async def reset_code_failures(self, purpose: str, login: str, ip: str) -> None:
+        """Start counting afresh for a new code."""
+        await self._redis.delete(self._code_key(purpose, login, ip))
 
     async def otp_failures(self, user_id: UUID, ip: str) -> int:
         """Wrong passwordless codes today."""

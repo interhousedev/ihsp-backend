@@ -229,3 +229,47 @@ async def test_login_reminder_survives_a_broken_mail_relay(auth_world: World) ->
     auth_world.email.fail = True
 
     await auth_world.auth.send_login_reminder.execute(user.recovery_email or "", CTX)
+
+
+# - - - confirm steps answer alike for any login - - -
+
+
+async def test_password_reset_confirm_for_an_unknown_login_counts_attempts(
+    auth_world: World,
+) -> None:
+    """Review 2026-10-11: the confirm step does not reveal if the account exists."""
+    with pytest.raises(OtpInvalidError) as caught:
+        await auth_world.auth.confirm_password_reset.execute(
+            "nobody.here", "123456", "N3wStrongPass", CTX
+        )
+    assert caught.value.params == {"attempts_left": 2}
+
+    user = await auth_world.add_user()
+    await auth_world.auth.request_password_reset.execute(user.login or "", CTX)
+    with pytest.raises(OtpInvalidError) as caught:
+        await auth_world.auth.confirm_password_reset.execute(
+            user.login or "",
+            "999999" if auth_world.otp.last().code != "999999" else "888888",
+            "N3wStrongPass",
+            CTX,
+        )
+    assert caught.value.params == {"attempts_left": 2}
+
+
+async def test_otp_reset_confirm_is_limited_per_login_across_ips(
+    auth_world: World,
+) -> None:
+    """Review 2026-10-11: 15 confirms per login per hour, whatever the IP."""
+    from app.shared.base_error import RateLimitedError
+
+    for n in range(15):
+        ctx = RequestContext(ip=f"198.51.100.{n}", user_agent="pytest")
+        with pytest.raises(OtpInvalidError):
+            await auth_world.auth.confirm_otp_reset.execute(
+                "nobody.here", "000000", ctx
+            )
+
+    with pytest.raises(RateLimitedError):
+        await auth_world.auth.confirm_otp_reset.execute(
+            "nobody.here", "000000", RequestContext(ip="192.0.2.1", user_agent="pytest")
+        )

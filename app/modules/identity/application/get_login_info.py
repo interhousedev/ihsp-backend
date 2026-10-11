@@ -3,10 +3,15 @@
 from dataclasses import dataclass
 from uuid import UUID
 
-from app.modules.identity.application.start_login_session import REMEMBER_FOR_SECONDS
+from app.modules.identity.application.start_login_session import (
+    REMEMBER_FOR_SECONDS,
+    REMEMBER_KEY,
+    SSO_SESSION_SECONDS,
+)
 from app.modules.identity.domain.client_policy import may_use_client
 from app.modules.identity.domain.session import LoginSession
 from app.modules.identity.ports.hydra_gateway import HydraGateway, LoginRequest
+from app.modules.identity.ports.ticket_store import TicketStore
 from app.modules.identity.ports.unit_of_work import IdentityUnitOfWorkPort, UowFactory
 from app.shared.clock import Clock
 
@@ -29,6 +34,7 @@ class GetLoginInfo:
     uow_factory: UowFactory
     hydra: HydraGateway
     clock: Clock
+    tickets: TicketStore
 
     async def execute(self, challenge: str) -> LoginInfo:
         """Return the login info; ``redirect_to`` is set when the login was skipped."""
@@ -54,11 +60,13 @@ class GetLoginInfo:
             session = await self._usable_session(uow, request)
         if session is None:
             return None
+        choice = await self.tickets.get(REMEMBER_KEY.format(session_id=session.id))
+        remembered = bool(choice and choice.get("remember"))
         return await self.hydra.accept_login(
             request.challenge,
             subject=request.subject,
             remember=True,
-            remember_for=REMEMBER_FOR_SECONDS,
+            remember_for=REMEMBER_FOR_SECONDS if remembered else SSO_SESSION_SECONDS,
             amr=list(session.amr),
             context={
                 "session_id": str(session.id),
@@ -83,12 +91,12 @@ class GetLoginInfo:
             or not may_use_client(client_id, user.roles)
         ):
             return None
-        session = None
-        if request.session_id:
-            session = await uow.sessions.get_by_hydra_sid(request.session_id)
-        if session is None or session.user_id != user_id:
-            # No exact match: any live session of the user proves they signed in.
-            session = await uow.sessions.latest_active(user_id, now)
+        # Only the session of this very browser (Hydra sid) may be skipped into:
+        # revoking "this browser" must stop silent re-auth here even while another
+        # device of the user still has a live session.
+        if not request.session_id:
+            return None
+        session = await uow.sessions.get_by_hydra_sid(request.session_id)
         if session is None or session.user_id != user_id or not session.is_active(now):
             return None
         return session

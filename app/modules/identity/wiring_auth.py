@@ -302,7 +302,7 @@ def build_auth(
     revoker = AccessRevoker(
         revocations=revocations, epochs=epochs, hydra=hydra, clock=clock
     )
-    starter = LoginSessionStarter(hydra=hydra, clock=clock)
+    starter = LoginSessionStarter(hydra=hydra, clock=clock, tickets=tickets)
     authenticator = PasswordAuthenticator(hasher=hasher, throttle=throttle, clock=clock)
     limits = settings.limits
     passwordless = PasswordlessOtpCheck(
@@ -333,7 +333,9 @@ def build_auth(
         load_epoch=load_epoch,
         clock=clock,
     )
-    login_info = GetLoginInfo(uow_factory=uow_factory, hydra=hydra, clock=clock)
+    login_info = GetLoginInfo(
+        uow_factory=uow_factory, hydra=hydra, clock=clock, tickets=tickets
+    )
     accept_logout = AcceptLogout(
         uow_factory=uow_factory, hydra=hydra, revocations=revocations, clock=clock
     )
@@ -400,6 +402,7 @@ def build_auth(
             passwordless=passwordless,
             tickets=tickets,
             starter=starter,
+            rate_limiter=limiter,
         ),
         get_consent_info=GetConsentInfo(
             uow_factory=uow_factory, hydra=hydra, auto_accept=auto_accept
@@ -440,6 +443,7 @@ def build_auth(
             verifier=verifier,
             signer=signer,
             clock=clock,
+            rate_limiter=limiter,
         ),
         handle_token_hook=HandleTokenHook(
             uow_factory=uow_factory, signer=signer, clock=clock
@@ -515,12 +519,17 @@ def build_auth(
             hasher=hasher,
             revoker=revoker,
             rate_limiter=limiter,
+            throttle=throttle,
         ),
         request_otp_reset=RequestOtpReset(
             uow_factory=uow_factory, otp=otp, rate_limiter=limiter
         ),
         confirm_otp_reset=ConfirmOtpReset(
-            uow_factory=uow_factory, otp=otp, clock=clock, rate_limiter=limiter
+            uow_factory=uow_factory,
+            otp=otp,
+            clock=clock,
+            rate_limiter=limiter,
+            throttle=throttle,
         ),
         cancel_otp_reset=CancelOtpReset(uow_factory=uow_factory, email=email),
         apply_otp_resets=ApplyOtpResets(uow_factory=uow_factory, clock=clock),

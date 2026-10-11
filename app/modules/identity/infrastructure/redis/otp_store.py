@@ -1,25 +1,17 @@
 """One-time codes in Redis (spec → Redis keys: otp:{purpose}:{key})."""
 
 import hmac
-from collections.abc import Awaitable
-from typing import TypeVar, cast
 
 from app.shared.base_error import RateLimitedError
 from app.shared.ids import hash_token, random_digits
+from app.shared.redis_util import wait
 
 from redis.asyncio import Redis
-
-T = TypeVar("T")
 
 OTP_TTL_SECONDS = 300
 OTP_COOLDOWN_SECONDS = 60
 OTP_ATTEMPTS = 3
 CODE_LENGTH = 6
-
-
-async def _await(value: Awaitable[T] | T) -> T:
-    """redis-py types sync/async clients together; ours is always async."""
-    return await cast("Awaitable[T]", value)
 
 
 def _text(value: bytes | str | None) -> str | None:
@@ -70,10 +62,10 @@ class RedisOtpStore:
     async def verify(self, purpose: str, subject_key: str, code: str) -> bool:
         """Check a code; the attempt is spent before comparing."""
         key = self._key(purpose, subject_key)
-        stored = _text(await _await(self._redis.hget(key, "h")))
+        stored = _text(await wait(self._redis.hget(key, "h")))
         if stored is None:
             return False
-        attempts = int(await _await(self._redis.hincrby(key, "a", -1)))
+        attempts = int(await wait(self._redis.hincrby(key, "a", -1)))
         if attempts < 0:
             await self._redis.delete(key)
             return False
@@ -87,7 +79,7 @@ class RedisOtpStore:
     async def attempts_left(self, purpose: str, subject_key: str) -> int:
         """Attempts remaining for the current code."""
         value = _text(
-            await _await(self._redis.hget(self._key(purpose, subject_key), "a"))
+            await wait(self._redis.hget(self._key(purpose, subject_key), "a"))
         )
         return max(int(value), 0) if value is not None else 0
 
