@@ -10,9 +10,7 @@ CONFIRMS_PER_LOGIN_PER_HOUR = 15
 async def limit_confirms(rate_limiter: RateLimiter, login: str) -> None:
     """Bound the guesses against one login across IPs (RateLimitedError when over)."""
     key = f"recovery-login:{login.strip().lower()}"
-    await rate_limiter.hit(
-        key, limit=CONFIRMS_PER_LOGIN_PER_HOUR, window_seconds=3600
-    )
+    await rate_limiter.hit(key, limit=CONFIRMS_PER_LOGIN_PER_HOUR, window_seconds=3600)
 
 
 async def code_failure(

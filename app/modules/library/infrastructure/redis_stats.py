@@ -8,8 +8,8 @@ counters; `library:stats:readers:{YYYY-MM-DD}:{item_id}` set of user ids.
 from datetime import timedelta
 from uuid import UUID
 
-from app.shared.redis_util import wait
 from app.shared.clock import Clock
+from app.shared.redis_util import wait
 
 import structlog
 from redis.asyncio import Redis

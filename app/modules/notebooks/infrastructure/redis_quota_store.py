@@ -2,8 +2,8 @@
 
 from datetime import date, timedelta
 from uuid import UUID
-from app.shared.redis_util import wait
 
+from app.shared.redis_util import wait
 
 from redis.asyncio import Redis
 

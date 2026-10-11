@@ -103,8 +103,7 @@ class SqlSessionRepository:
         if amr is not None:
             query = query.where(SessionRow.amr == amr)
         row = await self._session.scalar(
-            query.order_by(SessionRow.created_at.desc(), SessionRow.id.desc())
-            .limit(1)
+            query.order_by(SessionRow.created_at.desc(), SessionRow.id.desc()).limit(1)
         )
         return _to_entity(row) if row else None
 

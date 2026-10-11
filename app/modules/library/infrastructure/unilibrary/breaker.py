@@ -7,9 +7,9 @@ over the next call is a probe: success closes it, failure opens it again at once
 
 import math
 
-from app.shared.redis_util import wait
 from app.modules.library.ports.external_monitor import BreakerState, BreakerStatus
 from app.shared.clock import Clock
+from app.shared.redis_util import wait
 
 import structlog
 from redis.asyncio import Redis

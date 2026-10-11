@@ -3,9 +3,9 @@
 import json
 from datetime import datetime
 
-from app.shared.redis_util import wait
 from app.modules.library.ports.external_monitor import CallRecord
 from app.shared.clock import Clock
+from app.shared.redis_util import wait
 
 import structlog
 from redis.asyncio import Redis

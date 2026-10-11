@@ -7,9 +7,9 @@ a miss, never an error.
 
 from dataclasses import dataclass
 
-from app.shared.redis_util import wait
 from app.modules.library.ports.external_monitor import CacheStatsView
 from app.shared.clock import Clock
+from app.shared.redis_util import wait
 
 import structlog
 from redis.asyncio import Redis

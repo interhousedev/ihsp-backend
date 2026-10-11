@@ -56,6 +56,4 @@ async def _render(  # noqa: PLR0913
         accept_language=request.headers.get("accept-language"),
         session=request.cookies.get(SESSION_COOKIE),
     )
-    return to_response(
-        result, secure=container.settings.tokens.refresh_cookie_secure
-    )
+    return to_response(result, secure=container.settings.tokens.refresh_cookie_secure)

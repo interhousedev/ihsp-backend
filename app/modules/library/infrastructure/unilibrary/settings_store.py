@@ -5,8 +5,8 @@ the integration on without a restart. A flag that was never set is None and the
 environment value wins; a Redis outage also falls back to the environment.
 """
 
-from app.shared.redis_util import wait
 from app.modules.library.ports.external_settings import ExternalFlags, FlagsOverride
+from app.shared.redis_util import wait
 
 import structlog
 from redis.asyncio import Redis

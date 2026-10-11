@@ -19,10 +19,10 @@ from app.modules.library.domain.errors import (
     TextUnavailableError,
 )
 from app.modules.library.infrastructure.redis_stats import stats_key
-from app.shared.redis_util import wait
 from app.modules.library.wiring import LibraryServices
 from app.shared.actor import Actor
 from app.shared.ids import new_id
+from app.shared.redis_util import wait
 from tests.factories.library import NOW, make_book, make_external, make_material
 from tests.fakes.library.academic import FakeAcademicDirectory
 from tests.fakes.library.files import FakeFilesApi

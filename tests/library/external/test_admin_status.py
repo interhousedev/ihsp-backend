@@ -5,11 +5,11 @@ from collections.abc import Awaitable, Callable
 
 from app.modules.library.domain.entities import Item
 from app.modules.library.domain.enums import ItemStatus
-from app.shared.redis_util import wait
 from app.modules.library.ports.external_monitor import BreakerState
 from app.modules.library.wiring_external import ExternalServices
 from app.shared.actor import Actor
 from app.shared.base_error import ForbiddenError
+from app.shared.redis_util import wait
 from tests.factories.library import make_external
 from tests.fakes.clock import FixedClock
 
