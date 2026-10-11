@@ -10,10 +10,11 @@ from uuid import UUID
 from app.modules.ai.domain.assistant import Assistant
 from app.modules.ai.domain.chat import Chat, ChatMessage
 from app.shared.notifications import AuditDraft
+from tests.fakes.ai.web_pages import InMemoryWebPageStore
 
 
 class FakeAiStore:
-    """The "database": chats and messages shared by every unit of work."""
+    """The "database": chats, messages and web pages, shared by every unit of work."""
 
     def __init__(self) -> None:
         """Start empty."""
@@ -21,6 +22,7 @@ class FakeAiStore:
         self.messages: dict[UUID, list[ChatMessage]] = {}
         self.audits: list[AuditDraft] = []
         self.commits = 0
+        self.web_pages = InMemoryWebPageStore()
 
     def chat_messages(self, chat_id: UUID) -> list[ChatMessage]:
         """Return copies of a chat's messages (for assertions)."""
@@ -173,6 +175,7 @@ class FakeAiUnitOfWork:
         self.store = store
         self.chats = FakeChatRepository(store)
         self.messages = FakeMessageRepository(store)
+        self.web_pages = store.web_pages
         self._audit: list[AuditDraft] = []
 
     async def __aenter__(self) -> Self:

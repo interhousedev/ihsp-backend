@@ -6,7 +6,6 @@ the `lms` output quotas; a student's pools are not touched.
 
 from app.modules.notebooks.domain.entities import Notebook, Source
 from app.modules.notebooks.domain.enums import ArtifactKind, ArtifactStatus
-from app.modules.notebooks.domain.errors import QuotaExceededError
 from app.modules.notebooks.ports.unit_of_work import UowFactory
 from app.modules.notebooks.wiring import NotebooksServices
 from app.settings import Settings
@@ -37,8 +36,9 @@ async def test_a_question_in_the_workspace_is_paid_from_the_course_pool(
     course = await services.get_usage.execute(editor.user_id, course=True)
     student = await services.get_usage.execute(editor.user_id)
     assert course.day.used > 0 and student.day.used == 0
-    assert turn.usage.day.limit == settings.limits.lms_ai_daily_tokens
-    assert turn.usage.session.limit == settings.limits.lms_ai_session_tokens
+    # Staff are not limited by the course pool: the calls are counted, never refused.
+    assert turn.usage.day.limit is None
+    assert turn.usage.session.limit is None
     assert f"ai:lms:day:{editor.user_id}" in " ".join(await _ai_lms_keys(redis))
 
 
@@ -51,8 +51,8 @@ async def test_the_notebook_usage_shows_the_course_pool(
     """LMS-AI 4: `GET /v1/notebooks/{id}/usage` of a workspace."""
     usage = await services.get_notebook_usage.execute(viewer, workspace.id)
 
-    assert usage.day.limit == settings.limits.lms_ai_daily_tokens
-    assert usage.quotas["artifacts"].limit == settings.limits.lms_ai_artifacts_per_day
+    assert usage.day.limit is None
+    assert usage.quotas["artifacts"].limit is None
 
 
 async def test_course_staff_have_their_own_chat_rate_limit(
@@ -88,7 +88,7 @@ async def test_an_output_is_counted_for_who_asked_in_the_course_quota(
     assert (student.quotas["artifacts"].used, student.generating) == (0, 0)
 
 
-async def test_the_course_quota_has_its_own_daily_limit(
+async def test_the_course_quota_is_unlimited_for_staff_but_counted(
     services: NotebooksServices,
     workspace: Notebook,
     ws_source: Source,
@@ -96,15 +96,15 @@ async def test_the_course_quota_has_its_own_daily_limit(
     settings: Settings,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """LMS-AI 3.3: `lms_ai_artifacts_per_day` outputs a day."""
+    """Staff have no output cap in a workspace (the `lms_ai_*` quota is not applied)."""
     monkeypatch.setattr(settings.limits, "lms_ai_artifacts_per_day", 1)
     request = services.request_artifact
     await request.execute(editor, workspace.id, ArtifactKind.MIND_MAP, {}, None)
+    await request.execute(editor, workspace.id, ArtifactKind.MIND_MAP, {}, None)
 
-    with pytest.raises(QuotaExceededError) as caught:
-        await request.execute(editor, workspace.id, ArtifactKind.MIND_MAP, {}, None)
-
-    assert caught.value.params["limit"] == 1
+    course = await services.get_usage.execute(editor.user_id, course=True)
+    assert course.quotas["artifacts"].limit is None
+    assert course.quotas["artifacts"].used == 2
 
 
 async def test_the_job_charges_and_notifies_who_asked(

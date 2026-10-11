@@ -7,6 +7,7 @@ from app.bootstrap.container import Container
 from app.shared.actor import Actor, Role
 from app.shared.base_error import UnauthorizedError
 from app.shared.contracts.auth import AUDIENCE_API
+from app.shared.usage_context import bind_usage_actor
 
 from fastapi import Depends, Request
 
@@ -33,6 +34,8 @@ async def _verify(container: Container, token: str) -> Actor:
     actor: Actor = await container.identity.token_verifier.verify(
         token, audience=AUDIENCE_API
     )
+    # The model calls this request makes are counted for this actor (usage ledger).
+    bind_usage_actor(actor)
     return actor
 
 

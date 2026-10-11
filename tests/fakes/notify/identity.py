@@ -49,6 +49,19 @@ class FakeIdentityDirectory:
         """Return the existing users among the ids."""
         return {uid: self.users[uid] for uid in user_ids if uid in self.users}
 
+    async def search_users(
+        self, query: str, *, roles: Sequence[Role] = (), limit: int = 20
+    ) -> list[UserRef]:
+        """Users matching the query by name or login (and roles, if given)."""
+        needle = query.lower()
+        found = [
+            user
+            for user in self.users.values()
+            if needle in f"{user.first_name} {user.last_name} {user.login}".lower()
+            and (not roles or user.roles & set(roles))
+        ]
+        return found[:limit]
+
     async def get_preferences(self, user_id: UUID) -> UserPreferences:
         """Return stored preferences or the defaults."""
         return self.preferences.get(user_id, UserPreferences())

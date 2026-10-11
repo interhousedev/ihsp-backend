@@ -51,7 +51,7 @@ async def test_add_then_get_returns_every_stored_field(
         sampled=True,
         content={"slides": [{"title": "Light"}]},
         refs_index={"S1:P1": {"source_id": str(first)}},
-        model="anthropic/claude-haiku-4.5",
+        model="anthropic/claude-haiku-5.5",
         tokens_in=1000,
         tokens_out=2000,
         tokens_cached=500,

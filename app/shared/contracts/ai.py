@@ -23,6 +23,7 @@ class LlmTuning:
     temperature: float | None = None
     reasoning_effort: ReasoningEffort | None = None
     fallbacks: tuple[str, ...] = ()  # tried after the model, in this order
+    task: str | None = None  # the AiTask name the call runs for (usage ledger only)
 
 
 class AiProviderError(BaseError):

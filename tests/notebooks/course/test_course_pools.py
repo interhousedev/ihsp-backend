@@ -44,7 +44,7 @@ async def test_the_course_quota_has_its_own_keys(redis: FakeRedis) -> None:
     ]
 
 
-def test_a_pool_picks_the_course_pool_only_for_workspaces(
+async def test_a_pool_picks_the_course_pool_only_for_workspaces(
     redis: FakeRedis, clock: FixedClock, settings: Settings
 ) -> None:
     """LMS-AI 3.3: `pool(course)`; without a course pool everything stays put."""
@@ -54,17 +54,20 @@ def test_a_pool_picks_the_course_pool_only_for_workspaces(
 
     assert (student.pool(True), student.pool(False)) == (course, student)
     assert alone.pool(True) is alone
-    assert course.daily_limit == settings.limits.lms_ai_daily_tokens
-    assert student.session_limit == settings.limits.nb_session_tokens_student
+    user = new_id()
+    assert (await course.usage(user)).day.limit is None  # course staff: not limited
+    assert (
+        await student.usage(user)
+    ).session.limit == settings.limits.nb_session_tokens_student
 
 
-def test_the_course_quota_counts_all_outputs_with_its_own_limit(
+async def test_the_course_quota_counts_all_outputs_and_is_unlimited_for_staff(
     redis: FakeRedis, clock: FixedClock, settings: Settings
 ) -> None:
-    """LMS-AI 3.3: `lms_ai_artifacts_per_day`; the slide limits stay the same."""
+    """LMS-AI 3.3: the course pool is counted; staff have no cap on it."""
     quota = QuotaService(RedisQuotaStore(redis), clock, settings, for_course=True)
 
-    assert quota.limit_of("artifacts") == settings.limits.lms_ai_artifacts_per_day
-    assert quota.limit_of(ArtifactKind.SLIDES.value) == (
-        settings.limits.nb_slides_per_day
-    )
+    counts = await quota.snapshot(new_id())
+
+    assert counts["artifacts"].limit is None
+    assert counts[ArtifactKind.SLIDES.value].limit is None

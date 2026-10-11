@@ -12,5 +12,8 @@
   "common-cancel": "Cancel",
   "common-back": "Back",
   "common-save": "Save",
-  "admin-platform-settings-invalid": "Invalid platform setting value."
+  "admin-platform-settings-invalid": "Invalid platform setting value.",
+  "admin-limit-invalid": "Invalid limit value.",
+  "admin-limit-extension-invalid": "Invalid limit extension.",
+  "admin-limit-user-not-found": "Student not found."
 }

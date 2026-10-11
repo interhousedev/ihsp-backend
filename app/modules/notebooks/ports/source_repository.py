@@ -56,6 +56,10 @@ class SourceRepository(Protocol):
         """True if the notebook already has a source with this duplicate key."""
         ...
 
+    async def url_keys(self, notebook_id: UUID) -> frozenset[str]:
+        """The normalised URLs of the notebook's URL sources (keys without `url:`)."""
+        ...
+
     async def set_selected(
         self, notebook_id: UUID, selected: bool, ids: Sequence[UUID] | None
     ) -> None:

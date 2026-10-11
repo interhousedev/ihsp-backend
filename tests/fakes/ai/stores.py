@@ -17,6 +17,7 @@ class InMemoryBudgetStore:
         """Start empty."""
         self.windows: dict[UUID, SessionWindow] = {}
         self.days: dict[tuple[UUID, date], int] = {}
+        self.weeks: dict[tuple[UUID, date], int] = {}
 
     async def session(self, user_id: UUID) -> SessionWindow | None:
         """Return the stored window (expiry is decided by the service)."""
@@ -38,6 +39,18 @@ class InMemoryBudgetStore:
     async def add_day(self, user_id: UUID, day: date, tokens: int) -> None:
         """Add tokens to a day."""
         self.days[(user_id, day)] = self.days.get((user_id, day), 0) + tokens
+
+    async def week_used(self, user_id: UUID, week: date) -> int:
+        """Return a week's smart-tier requests."""
+        return self.weeks.get((user_id, week), 0)
+
+    async def add_week(
+        self, user_id: UUID, week: date, count: int, expires_at: datetime
+    ) -> int:
+        """Add to a week's smart-tier requests and return the total."""
+        total = self.weeks.get((user_id, week), 0) + count
+        self.weeks[(user_id, week)] = total
+        return total
 
 
 class InMemorySummaryStore:

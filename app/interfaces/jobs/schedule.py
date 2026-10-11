@@ -65,6 +65,8 @@ CRON_JOBS: tuple[CronJob, ...] = (
     CronJob("mail.sweep", EVERY_10_MINUTES),
     CronJob("lms.prune_revisions", "0 5 * * *"),
     CronJob("ai.purge_admin_chats", "15 3 * * *"),
+    CronJob("ai.purge_usage_events", "40 3 * * *"),
+    CronJob("ai.purge_web_pages", "50 3 * * *"),
     CronJob("bootstrap.cleanup_otp_messages", EVERY_MINUTE),
     CronJob("notebooks.refresh_summaries", EVERY_MINUTE),
     CronJob("notebooks.sweep_stuck", EVERY_10_MINUTES),

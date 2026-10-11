@@ -202,6 +202,14 @@ class SqlSourceRepository:
         )
         return bool((await self.session.execute(stmt)).scalar_one())
 
+    async def url_keys(self, notebook_id: UUID) -> frozenset[str]:
+        """The normalised URLs of the notebook's URL sources, for the web search."""
+        stmt = select(SourceRow.ref_key).where(
+            SourceRow.notebook_id == notebook_id, SourceRow.ref_key.like("url:%")
+        )
+        keys = (await self.session.execute(stmt)).scalars()
+        return frozenset(key[len("url:") :] for key in keys if key)
+
     async def set_selected(
         self, notebook_id: UUID, selected: bool, ids: Sequence[UUID] | None
     ) -> None:

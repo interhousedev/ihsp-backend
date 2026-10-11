@@ -60,16 +60,17 @@ Each place that calls a language model is an AI task (the table below). Modules 
 for a task and never for a model name; the settings decide what the task runs with:
 
 ```
-IHSP_AI__DEFAULT__MODEL=anthropic/claude-haiku-4.5      # every task without its own
+IHSP_AI__DEFAULT__MODEL=anthropic/claude-haiku-5.5      # every task without its own
 IHSP_AI__DEFAULT__TEMPERATURE=0.2
+IHSP_AI__DEFAULT__REASONING_EFFORT=none
 IHSP_AI__TASKS__STUDIO_QUIZ__MODEL=anthropic/claude-sonnet-5.5
-IHSP_AI__TASKS__STUDIO_QUIZ__FALLBACKS=anthropic/claude-haiku-4.5
-IHSP_AI__TASKS__STUDENT_CHAT_SMART__BUDGET_WEIGHT=4
+IHSP_AI__TASKS__STUDIO_QUIZ__FALLBACKS=anthropic/claude-haiku-5.5
+IHSP_AI__TASKS__STUDENT_CHAT_SMART__BUDGET_WEIGHT=8
 ```
 
 A task takes its own `AI__TASKS__<TASK>__<FIELD>`, else the value the code gives that
-task (the smart tier ships with a larger model and weight 4; notebook tasks send
-`data_collection: deny`), else `AI__DEFAULT__<FIELD>`.
+task (the smart tier ships with a larger model, effort `low` and weight 8; notebook
+tasks send `data_collection: deny`), else `AI__DEFAULT__<FIELD>`.
 
 {tasks}
 """

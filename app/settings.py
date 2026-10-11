@@ -303,6 +303,59 @@ class OpenRouterSettings(BaseModel):
     """Timeout of assistant calls (notebooks use NOTEBOOKS__LLM_TIMEOUT_SECONDS)."""
 
 
+class ExaSettings(BaseModel):
+    """Exa search API (`IHSP_EXA__...`): the web search of chat and Discover."""
+
+    mode: Literal["real", "fake"] = "fake"
+    """`real` calls Exa; `fake` answers with deterministic pages (no key needed)."""
+
+    api_key: SecretStr | None = None
+    """Exa API key, sent only in the `x-api-key` header; required when `MODE=real`."""
+
+    base_url: str = "https://api.exa.ai"
+    """Exa API root; a search is `POST {base_url}/search`."""
+
+    search_type: str = Field(default="auto", min_length=1)
+    """Exa search type: `auto` (Exa picks the best), `fast`, `neural`, `deep`, ..."""
+
+    timeout_seconds: int = Field(default=30, ge=5, le=120)
+    """Timeout of one search call; a slower answer is an empty result with a notice."""
+
+    text_max_characters: int = Field(default=1500, ge=200, le=10000)
+    """Longest excerpt of a page Exa returns (the text a chat answer reads)."""
+
+    max_qps: int = Field(default=10, ge=1, le=100)
+    """Searches per second our key may make, counted across all processes (Exa: 10)."""
+
+    max_concurrent: int = Field(default=10, ge=1, le=100)
+    """Searches in flight at once across all processes."""
+
+    queue_timeout_seconds: float = Field(default=5.0, ge=0, le=60)
+    """How long a search waits for a free slot before the student gets a busy answer."""
+
+    local_min_similarity: float = Field(default=0.6, ge=0, le=1)
+    """Cosine similarity a stored page needs to answer a search without Exa (0 to 1)."""
+
+    page_text_chars: int = Field(default=2000, ge=200, le=8000)
+    """Longest text kept of a stored page; title and text are embedded for search."""
+
+    query_cache_days: int = Field(default=183, ge=0, le=366)
+    """Days the results of a query are reused (0 switches the cache off). 183 is about
+    one academic term."""
+
+    page_retention_days: int = Field(default=183, ge=1, le=732)
+    """Days a stored page is kept after it was last returned by Exa (about one academic
+    term); a page returned again stays longer. A daily job deletes the older pages."""
+
+    @field_validator("api_key", mode="before")
+    @classmethod
+    def _empty_is_none(cls, value: object) -> object:
+        """An empty variable from a compose file means "no key"."""
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
+
+
 class NotebooksSettings(BaseModel):
     """Notebooks (NotebookLM-style) limits and switches.
 
@@ -735,11 +788,16 @@ class LimitsSettings(BaseModel):
     ai_daily_tokens_student: int = 600000
     """Student assistant tokens per day (Tashkent date)."""
 
+    ai_smart_requests_per_week_student: int = Field(default=3, ge=0)
+    """Smart-tier messages a student may send per week (Monday to Monday, Tashkent).
+    0 switches the smart tier off for students. A soft default: admins can change it
+    at runtime and per user. Staff are not limited."""
+
     ai_max_tool_steps: int = 8
     """Most model requests (tool rounds) in one assistant turn."""
 
     ai_smart_weight: int | None = Field(default=None, ge=1)
-    """Deprecated: use `AI__TASKS__STUDENT_CHAT_SMART__BUDGET_WEIGHT` (default 4)."""
+    """Deprecated: use `AI__TASKS__STUDENT_CHAT_SMART__BUDGET_WEIGHT` (default 8)."""
 
     mail_per_day: int = 20
     """Messages a student may send per day."""
@@ -812,6 +870,12 @@ class LimitsSettings(BaseModel):
     web_search_deep_results: int = Field(default=12, ge=1, le=25)
     """Results a Discover `deep` run keeps after ranking its searches."""
 
+    web_search_local_min_new: int = Field(default=4, ge=0, le=20)
+    """New stored pages (not already in the notebook or chat) that answer a search.
+
+    At least this many: Exa is not called and the daily quota is not spent. 0 means
+    always ask Exa."""
+
     lms_ai_session_tokens: int = 1_500_000
     """Course workspace tokens per session window of one staff member (the author
     assistant counts model tokens times the task's budget weight; notebook chat and
@@ -861,6 +925,7 @@ class Settings(BaseSettings):
     telegram: TelegramSettings = Field(default_factory=TelegramSettings)
     emis: EmisSettings = Field(default_factory=EmisSettings)
     openrouter: OpenRouterSettings = Field(default_factory=OpenRouterSettings)
+    exa: ExaSettings = Field(default_factory=ExaSettings)
     notebooks: NotebooksSettings = Field(default_factory=NotebooksSettings)
     vectors: VectorsSettings = Field(default_factory=VectorsSettings)
     files: FilesSettings = Field(default_factory=FilesSettings)

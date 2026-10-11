@@ -13,7 +13,6 @@ from app.modules.notebooks.domain.errors import InvalidOptionsError
 from app.settings import Settings
 from app.settings_ai import AiSettings, AiTaskSettings
 from app.shared.ai_tasks import NOTEBOOK_TASKS, AiTask
-from app.shared.contracts.ai import LlmTuning
 from tests.fakes.notebooks.llm import ScriptedLlm
 
 import pytest
@@ -74,10 +73,16 @@ async def test_json_calls_use_the_model_and_options_of_their_task(
 
     quiz, slides = gateway.json_requests
     assert (quiz["model"], slides["model"]) == ("x/quiz", "x/slides")
-    assert quiz["tuning"] == LlmTuning(temperature=0.4, reasoning_effort="none")
-    assert slides["tuning"] == LlmTuning(
-        temperature=0.2, reasoning_effort="none", fallbacks=("x/backup",)
+    assert (quiz["tuning"].temperature, quiz["tuning"].reasoning_effort) == (
+        0.4,
+        "none",
     )
+    slides_tuning = slides["tuning"]
+    assert (
+        slides_tuning.temperature,
+        slides_tuning.reasoning_effort,
+        slides_tuning.fallbacks,
+    ) == (0.2, "none", ("x/backup",))
     for request in (quiz, slides):
         assert request["provider"] == {
             "require_parameters": True,

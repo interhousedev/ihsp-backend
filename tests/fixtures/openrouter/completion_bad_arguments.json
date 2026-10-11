@@ -2,7 +2,7 @@
   "id": "gen-1791359000-abc",
   "object": "chat.completion",
   "created": 1791359000,
-  "model": "anthropic/claude-haiku-4.5",
+  "model": "anthropic/claude-haiku-5.5",
   "choices": [
     {
       "finish_reason": "tool_calls",

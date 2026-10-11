@@ -12,5 +12,8 @@
   "common-cancel": "Отмена",
   "common-back": "Назад",
   "common-save": "Сохранить",
-  "admin-platform-settings-invalid": "Недопустимое значение настройки платформы."
+  "admin-platform-settings-invalid": "Недопустимое значение настройки платформы.",
+  "admin-limit-invalid": "Недопустимое значение лимита.",
+  "admin-limit-extension-invalid": "Недопустимое увеличение лимита.",
+  "admin-limit-user-not-found": "Ученик не найден."
 }

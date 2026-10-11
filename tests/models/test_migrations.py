@@ -33,7 +33,7 @@ SCHEMAS = {
     "vectors",
     "dashboard",
 }
-AI_TABLES = {"ai.chats", "ai.chat_messages"}
+AI_TABLES = {"ai.chats", "ai.chat_messages", "ai.usage_events"}
 FLASHCARD_TABLES = {"ai.flashcard_sets", "ai.flashcards", "ai.flashcard_reviews"}
 
 

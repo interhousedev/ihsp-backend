@@ -8928,6 +8928,150 @@
         "title": "ExcuseBody",
         "type": "object"
       },
+      "ExtensionBody": {
+        "additionalProperties": false,
+        "description": "PUT /v1/admin/ai/limit-extensions/{user_id}: create or replace an extension.",
+        "properties": {
+          "expires_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires On"
+          },
+          "multiplier": {
+            "anyOf": [
+              {
+                "maximum": 10.0,
+                "minimum": 2.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Multiplier"
+          },
+          "note": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Note",
+            "type": "string"
+          },
+          "values": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Values",
+            "type": "object"
+          }
+        },
+        "title": "ExtensionBody",
+        "type": "object"
+      },
+      "ExtensionOut": {
+        "description": "One extension with the student it is for.",
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "expires_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires On"
+          },
+          "login": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Login"
+          },
+          "multiplier": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Multiplier"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          },
+          "user_name": {
+            "title": "User Name",
+            "type": "string"
+          },
+          "values": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Values",
+            "type": "object"
+          }
+        },
+        "required": [
+          "user_id",
+          "user_name",
+          "login",
+          "multiplier",
+          "values",
+          "expires_on",
+          "note",
+          "active",
+          "updated_at"
+        ],
+        "title": "ExtensionOut",
+        "type": "object"
+      },
+      "ExtensionsResponse": {
+        "description": "GET /v1/admin/ai/limit-extensions.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ExtensionOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ExtensionsResponse",
+        "type": "object"
+      },
       "ExternalAccess": {
         "description": "Access class of an external record (`resource_modifier_id` 1, 2, 3).",
         "enum": [
@@ -13599,6 +13743,138 @@
         "title": "LibrarySubjectSchema",
         "type": "object"
       },
+      "LimitItem": {
+        "description": "One editable limit: its value in force, its environment value and its bounds.",
+        "properties": {
+          "default": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The environment's value; a reset gives it back.",
+            "title": "Default"
+          },
+          "description": {
+            "description": "The settings' description (English).",
+            "title": "Description",
+            "type": "string"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label_key": {
+            "title": "Label Key",
+            "type": "string"
+          },
+          "maximum": {
+            "title": "Maximum",
+            "type": "integer"
+          },
+          "minimum": {
+            "title": "Minimum",
+            "type": "integer"
+          },
+          "overridden": {
+            "title": "Overridden",
+            "type": "boolean"
+          },
+          "period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "session, day, week, minute or hour; null if standing.",
+            "title": "Period"
+          },
+          "unit": {
+            "description": "tokens, count, steps, hours or bytes.",
+            "title": "Unit",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "key",
+          "group",
+          "label_key",
+          "unit",
+          "period",
+          "minimum",
+          "maximum",
+          "value",
+          "default",
+          "overridden",
+          "description"
+        ],
+        "title": "LimitItem",
+        "type": "object"
+      },
+      "LimitsBody": {
+        "additionalProperties": false,
+        "description": "PUT /v1/admin/ai/limits: the limits to change; null resets one to its default.",
+        "properties": {
+          "limits": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "minProperties": 1,
+            "title": "Limits",
+            "type": "object"
+          }
+        },
+        "required": [
+          "limits"
+        ],
+        "title": "LimitsBody",
+        "type": "object"
+      },
+      "LimitsResponse": {
+        "description": "GET and PUT /v1/admin/ai/limits.",
+        "properties": {
+          "limits": {
+            "items": {
+              "$ref": "#/components/schemas/LimitItem"
+            },
+            "title": "Limits",
+            "type": "array"
+          }
+        },
+        "required": [
+          "limits"
+        ],
+        "title": "LimitsResponse",
+        "type": "object"
+      },
       "LinkItem": {
         "description": "A short link, share or lesson resource owned by the caller.",
         "properties": {
@@ -14862,6 +15138,40 @@
           "next_cursor"
         ],
         "title": "ModerationPageResponse",
+        "type": "object"
+      },
+      "MonthOut": {
+        "description": "Month to date and the projection to the end of the month.",
+        "properties": {
+          "cost_usd": {
+            "title": "Cost Usd",
+            "type": "number"
+          },
+          "days_elapsed": {
+            "title": "Days Elapsed",
+            "type": "integer"
+          },
+          "days_in_month": {
+            "title": "Days In Month",
+            "type": "integer"
+          },
+          "month": {
+            "title": "Month",
+            "type": "string"
+          },
+          "projected_usd": {
+            "title": "Projected Usd",
+            "type": "number"
+          }
+        },
+        "required": [
+          "month",
+          "cost_usd",
+          "projected_usd",
+          "days_elapsed",
+          "days_in_month"
+        ],
+        "title": "MonthOut",
         "type": "object"
       },
       "MoveSection": {
@@ -19194,8 +19504,16 @@
         "description": "Daily count of outputs of one counter.",
         "properties": {
           "limit": {
-            "title": "Limit",
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when unlimited (staff).",
+            "title": "Limit"
           },
           "resets_at": {
             "format": "date-time",
@@ -24086,6 +24404,38 @@
         "title": "StudentLessonResponse",
         "type": "object"
       },
+      "StudentOut": {
+        "description": "A student found by name or login (for the extension picker).",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "login": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Login"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "login"
+        ],
+        "title": "StudentOut",
+        "type": "object"
+      },
       "StudentProfileResponse": {
         "description": "StudentProfile.",
         "properties": {
@@ -24286,6 +24636,23 @@
           "synced_at"
         ],
         "title": "StudentTodayResponse",
+        "type": "object"
+      },
+      "StudentsResponse": {
+        "description": "GET /v1/admin/ai/limit-extensions/students.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StudentOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "StudentsResponse",
         "type": "object"
       },
       "StudyCardResponse": {
@@ -27647,6 +28014,73 @@
         "title": "TopItemResponse",
         "type": "object"
       },
+      "TopUserOut": {
+        "description": "A user with the largest cost in the range.",
+        "properties": {
+          "cached": {
+            "title": "Cached",
+            "type": "integer"
+          },
+          "calls": {
+            "title": "Calls",
+            "type": "integer"
+          },
+          "cost_usd": {
+            "title": "Cost Usd",
+            "type": "number"
+          },
+          "failed": {
+            "title": "Failed",
+            "type": "integer"
+          },
+          "login": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Login"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "tokens_in": {
+            "title": "Tokens In",
+            "type": "integer"
+          },
+          "tokens_out": {
+            "title": "Tokens Out",
+            "type": "integer"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tokens_in",
+          "tokens_out",
+          "cached",
+          "calls",
+          "failed",
+          "cost_usd",
+          "user_id",
+          "name",
+          "login",
+          "role"
+        ],
+        "title": "TopUserOut",
+        "type": "object"
+      },
       "TopicRefSchema": {
         "description": "A topic the item feeds, with the page range.",
         "properties": {
@@ -27740,6 +28174,45 @@
           "children"
         ],
         "title": "TopicResponse",
+        "type": "object"
+      },
+      "TotalsOut": {
+        "description": "Sums of the ledger: tokens, calls, failed calls and cost in US dollars.",
+        "properties": {
+          "cached": {
+            "title": "Cached",
+            "type": "integer"
+          },
+          "calls": {
+            "title": "Calls",
+            "type": "integer"
+          },
+          "cost_usd": {
+            "title": "Cost Usd",
+            "type": "number"
+          },
+          "failed": {
+            "title": "Failed",
+            "type": "integer"
+          },
+          "tokens_in": {
+            "title": "Tokens In",
+            "type": "integer"
+          },
+          "tokens_out": {
+            "title": "Tokens Out",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "tokens_in",
+          "tokens_out",
+          "cached",
+          "calls",
+          "failed",
+          "cost_usd"
+        ],
+        "title": "TotalsOut",
         "type": "object"
       },
       "TurnResultResponse": {
@@ -28850,6 +29323,40 @@
           },
           "session": {
             "$ref": "#/components/schemas/app__interfaces__http__v1__ai__schemas__UsagePartResponse"
+          },
+          "smart_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Smart Limit"
+          },
+          "smart_remaining": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Smart Remaining"
+          },
+          "smart_resets_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Smart Resets At"
           }
         },
         "required": [
@@ -28886,6 +29393,126 @@
           "storage"
         ],
         "title": "UsageInsights",
+        "type": "object"
+      },
+      "UsageResponse": {
+        "description": "GET /v1/admin/ai/usage.",
+        "properties": {
+          "from": {
+            "format": "date",
+            "title": "From",
+            "type": "string"
+          },
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "group_by": {
+            "enum": [
+              "day",
+              "task",
+              "model",
+              "role",
+              "feature",
+              "user"
+            ],
+            "title": "Group By",
+            "type": "string"
+          },
+          "month": {
+            "$ref": "#/components/schemas/MonthOut"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/UsageRowOut"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "to": {
+            "format": "date",
+            "title": "To",
+            "type": "string"
+          },
+          "today": {
+            "$ref": "#/components/schemas/TotalsOut"
+          },
+          "top_users": {
+            "items": {
+              "$ref": "#/components/schemas/TopUserOut"
+            },
+            "title": "Top Users",
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/TotalsOut"
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "group_by",
+          "generated_at",
+          "totals",
+          "rows",
+          "top_users",
+          "month",
+          "today"
+        ],
+        "title": "UsageResponse",
+        "type": "object"
+      },
+      "UsageRowOut": {
+        "description": "One group of the report (a day, a task, a model, ...).",
+        "properties": {
+          "cached": {
+            "title": "Cached",
+            "type": "integer"
+          },
+          "calls": {
+            "title": "Calls",
+            "type": "integer"
+          },
+          "cost_by_feature": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Cost By Feature",
+            "type": "object"
+          },
+          "cost_usd": {
+            "title": "Cost Usd",
+            "type": "number"
+          },
+          "failed": {
+            "title": "Failed",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "tokens_in": {
+            "title": "Tokens In",
+            "type": "integer"
+          },
+          "tokens_out": {
+            "title": "Tokens Out",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "tokens_in",
+          "tokens_out",
+          "cached",
+          "calls",
+          "failed",
+          "cost_usd",
+          "key",
+          "cost_by_feature"
+        ],
+        "title": "UsageRowOut",
         "type": "object"
       },
       "UsedBy": {
@@ -29819,16 +30446,32 @@
             "type": "boolean"
           },
           "limit": {
-            "title": "Limit",
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Searches a day; null when unlimited (staff).",
+            "title": "Limit"
           },
           "max_results": {
             "title": "Max Results",
             "type": "integer"
           },
           "remaining": {
-            "title": "Remaining",
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Searches left today; null when unlimited.",
+            "title": "Remaining"
           },
           "resets_at": {
             "format": "date-time",
@@ -33340,8 +33983,16 @@
         "description": "Weighted tokens used against a limit.",
         "properties": {
           "limit": {
-            "title": "Limit",
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when unlimited (staff).",
+            "title": "Limit"
           },
           "resets_at": {
             "anyOf": [
@@ -33893,6 +34544,339 @@
         "summary": "Get Timetable",
         "tags": [
           "internal-emis"
+        ]
+      }
+    },
+    "/v1/admin/ai/limit-extensions": {
+      "get": {
+        "description": "Every extension, or only the one of a student.",
+        "operationId": "list_extensions_v1_admin_ai_limit_extensions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "user_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtensionsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Extensions",
+        "tags": [
+          "admin-ai"
+        ]
+      }
+    },
+    "/v1/admin/ai/limit-extensions/students": {
+      "get": {
+        "description": "Students whose name or login matches (up to 20).",
+        "operationId": "search_students_v1_admin_ai_limit_extensions_students_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 2,
+              "title": "Q",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Students",
+        "tags": [
+          "admin-ai"
+        ]
+      }
+    },
+    "/v1/admin/ai/limit-extensions/{user_id}": {
+      "delete": {
+        "description": "Remove the extension of a student.",
+        "operationId": "delete_extension_v1_admin_ai_limit_extensions__user_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Extension",
+        "tags": [
+          "admin-ai"
+        ]
+      },
+      "put": {
+        "description": "Create or replace a student's extension (multiplier or values, to a date).",
+        "operationId": "put_extension_v1_admin_ai_limit_extensions__user_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtensionBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtensionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Extension",
+        "tags": [
+          "admin-ai"
+        ]
+      }
+    },
+    "/v1/admin/ai/limits": {
+      "get": {
+        "description": "Every editable AI limit with its value and environment default.",
+        "operationId": "get_limits_v1_admin_ai_limits_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LimitsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Limits",
+        "tags": [
+          "admin-ai"
+        ]
+      },
+      "put": {
+        "description": "Change some limits; null resets a limit to its environment value.",
+        "operationId": "put_limits_v1_admin_ai_limits_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LimitsBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LimitsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Limits",
+        "tags": [
+          "admin-ai"
+        ]
+      }
+    },
+    "/v1/admin/ai/usage": {
+      "get": {
+        "description": "Tokens, calls and cost of a date range, grouped (Tashkent dates).",
+        "operationId": "get_usage_v1_admin_ai_usage_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group_by",
+            "required": false,
+            "schema": {
+              "default": "day",
+              "enum": [
+                "day",
+                "task",
+                "model",
+                "role",
+                "feature",
+                "user"
+              ],
+              "title": "Group By",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Usage",
+        "tags": [
+          "admin-ai"
         ]
       }
     },

@@ -125,15 +125,14 @@ async def test_course_staff_use_the_notebook_routes(
 async def test_the_usage_of_a_workspace_is_the_course_pool(
     api: AsyncClient, workspace: Notebook, settings: Settings
 ) -> None:
-    """LMS-AI 4: `GET /v1/notebooks/{id}/usage` shows the course staff limits."""
+    """LMS-AI 4: the usage of a workspace; staff use the course pool without a cap."""
     response = await api.get(f"/v1/notebooks/{workspace.id}/usage")
 
     assert response.status_code == 200
     body = response.json()
-    assert body["budget"]["day"]["limit"] == settings.limits.lms_ai_daily_tokens
-    assert body["quotas"]["artifacts"]["limit"] == (
-        settings.limits.lms_ai_artifacts_per_day
-    )
+    assert body["budget"]["day"]["limit"] is None
+    assert body["quotas"]["artifacts"]["limit"] is None
+    assert body["budget"]["day"]["used"] >= 0
 
 
 async def test_the_course_steps_route_lists_the_draft_outline(

@@ -35,12 +35,16 @@ EXPECTED_TABLES = {
     "ai.flashcard_sets",
     "ai.flashcards",
     "ai.flashcard_reviews",
+    "ai.usage_events",
+    "ai.web_pages",
+    "ai.web_queries",
     # notify (2), admin (1), mail (1)
     "notify.notifications",
     "notify.push_subscriptions",
     "notify.course_broadcasts",
     "admin.broadcasts",
     "admin.platform_settings",
+    "admin.limit_extensions",
     "mail.mail_messages",
     # lms (8)
     "lms.courses",
@@ -107,10 +111,10 @@ EXPECTED_TABLES = {
 
 
 def test_metadata_contains_every_table_of_the_models_readme() -> None:
-    """README -> Models plus notebooks, push, exams, documents, library, vectors: 88."""
+    """README -> Models plus notebooks, push, exams, documents, library, vectors: 92."""
     actual = {table.fullname for table in Base.metadata.tables.values()}
 
-    assert len(EXPECTED_TABLES) == 88
+    assert len(EXPECTED_TABLES) == 92
     assert actual == EXPECTED_TABLES
 
 

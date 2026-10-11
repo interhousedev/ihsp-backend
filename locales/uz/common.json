@@ -12,5 +12,8 @@
   "common-cancel": "Bekor qilish",
   "common-back": "Orqaga",
   "common-save": "Saqlash",
-  "admin-platform-settings-invalid": "Platforma sozlamasining qiymati notoʻgʻri."
+  "admin-platform-settings-invalid": "Platforma sozlamasining qiymati notoʻgʻri.",
+  "admin-limit-invalid": "Limit qiymati notoʻgʻri.",
+  "admin-limit-extension-invalid": "Limit kengaytmasi notoʻgʻri.",
+  "admin-limit-user-not-found": "O‘quvchi topilmadi."
 }

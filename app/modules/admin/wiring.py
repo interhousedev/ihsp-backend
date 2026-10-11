@@ -9,6 +9,7 @@ from app.modules.admin.application.create_broadcast import CreateBroadcast
 from app.modules.admin.application.deliver_broadcast import DeliverBroadcast
 from app.modules.admin.application.finish_broadcasts import FinishBroadcasts
 from app.modules.admin.application.get_broadcast import GetBroadcast
+from app.modules.admin.application.limit_admin import LimitAdmin
 from app.modules.admin.application.list_broadcasts import ListBroadcasts
 from app.modules.admin.application.platform_settings import PlatformSettingsService
 from app.modules.admin.application.preview_broadcast import PreviewBroadcast
@@ -22,6 +23,7 @@ from app.modules.admin.infrastructure.repositories.platform_settings_store impor
     SqlPlatformSettingsStore,
 )
 from app.modules.admin.infrastructure.uow import SqlAdminUnitOfWork
+from app.shared.clock import local_today
 from app.shared.contracts.academic import ScheduleQueries
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.wiring import ModuleDeps
@@ -43,6 +45,7 @@ class AdminServices:
     finish_broadcasts: FinishBroadcasts
     resolve_audience: ResolveAudience
     platform_settings: PlatformSettingsService
+    limit_admin: LimitAdmin
 
 
 def build(
@@ -90,5 +93,12 @@ def build(
         resolve_audience=resolver,
         platform_settings=PlatformSettingsService(
             SqlPlatformSettingsStore(deps.sessionmaker)
+        ),
+        limit_admin=LimitAdmin(
+            uow_factory=uow_factory,
+            identity=identity,
+            limits=deps.effective_limits,
+            base=deps.settings.limits,
+            today=lambda: local_today(deps.clock),
         ),
     )

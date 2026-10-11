@@ -10,7 +10,7 @@ from app.modules.notebooks.domain.entities import Source
 from app.modules.notebooks.domain.enums import SourceFailure, SourceKind, SourceStatus
 from app.modules.notebooks.domain.modality import readable_by, source_modality
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 T = TypeVar("T")
 
@@ -26,7 +26,7 @@ class UsagePartResponse(BaseModel):
     """Weighted tokens used against a limit."""
 
     used: int
-    limit: int
+    limit: int | None = Field(description="Null when unlimited (staff).")
     resets_at: datetime | None
 
     @classmethod
@@ -46,7 +46,7 @@ class QuotaResponse(BaseModel):
     """Daily count of outputs of one counter."""
 
     used: int
-    limit: int
+    limit: int | None = Field(description="Null when unlimited (staff).")
     resets_at: datetime
 
 

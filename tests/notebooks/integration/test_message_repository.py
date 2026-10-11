@@ -62,7 +62,7 @@ async def test_add_then_get_returns_the_answer_with_citations_and_usage(
         tokens_out=300,
         tokens_cached=1000,
         weighted=1700,
-        model="anthropic/claude-haiku-4.5",
+        model="anthropic/claude-haiku-5.5",
         feedback=-1,
         stopped=True,
         created_at=NOW + timedelta(seconds=5),
