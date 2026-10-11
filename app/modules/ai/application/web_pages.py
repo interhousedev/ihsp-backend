@@ -190,6 +190,7 @@ class WebPageIndex:
             await uow.web_pages.put_query(
                 cache_key(query, params), normalise_query(query), ordered, now
             )
+            await uow.commit()
         index = self.embeddings()
         if index is not None:
             to_embed = [
@@ -218,6 +219,7 @@ class WebPageIndex:
                 deleted, removed = await uow.web_pages.purge_pages(
                     page_cutoff, PURGE_BATCH
                 )
+                await uow.commit()
             pages += deleted
             vectors += removed
             if deleted < PURGE_BATCH:
@@ -225,6 +227,7 @@ class WebPageIndex:
         while True:
             async with self.uow_factory() as uow:
                 gone = await uow.web_pages.purge_queries(query_cutoff, PURGE_BATCH)
+                await uow.commit()
             queries += gone
             if gone < PURGE_BATCH:
                 break

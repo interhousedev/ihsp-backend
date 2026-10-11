@@ -207,6 +207,9 @@ async def _recorded_stream(
     await pending.finish(usage)
 
 
+SEARCH_ENGINE = "exa"
+
+
 class RecordingWebSearch:
     """Implements `WebSearchGateway` around the real one and records each search."""
 
@@ -216,16 +219,21 @@ class RecordingWebSearch:
         self._recorder = recorder
 
     async def search(self, call: SearchCall) -> SearchReply:
-        """Run the search and record its tokens and cost."""
+        """Run the search and record its tokens and the provider's charge.
+
+        The search engine (Exa) is the cost here, not the task's language model, so
+        the event names the engine; its charge comes in `reply.cost_micro`.
+        """
         pending = self._recorder.begin(
-            model=call.profile.model, task=call.profile.task.value
+            model=SEARCH_ENGINE, task=call.profile.task.value
         )
         try:
             reply = await self._inner.search(call)
         except BaseException as exc:
             await pending.finish(error=_error_name(exc))
             raise
-        await pending.finish(reply.usage)
+        charge = reply.cost_micro or reply.usage.get("cost_micro", 0)
+        await pending.finish({**reply.usage, "cost_micro": charge})
         return reply
 
 

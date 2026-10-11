@@ -227,6 +227,29 @@ async def test_a_web_search_and_an_embedding_are_counted_with_their_task() -> No
     assert embed_event.model == "qwen/qwen3-embedding-4b"
 
 
+async def test_an_exa_search_is_recorded_with_the_engine_and_its_charge() -> None:
+    """Regression: Exa returns its charge in `cost_micro`, not in the usage dict."""
+    sink = Sink()
+
+    class Exa:
+        async def search(self, call: SearchCall) -> SearchReply:
+            return SearchReply(hits=(), usage={}, cost_micro=7000)
+
+    await RecordingWebSearch(Exa(), recorder_for(sink)).search(
+        SearchCall(
+            query="q",
+            language="ru",
+            max_results=5,
+            explain=False,
+            profile=Settings().ai_profile(AiTask.WEB_SEARCH),
+        )
+    )
+
+    (event,) = sink.events
+    assert event.model == "exa"
+    assert event.cost_micro == 7000
+
+
 def test_provider_usage_numbers_are_read_defensively() -> None:
     assert counts_of(None).input_tokens == 0
     assert (

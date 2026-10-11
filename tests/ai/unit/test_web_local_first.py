@@ -141,6 +141,16 @@ async def test_a_search_no_stored_page_can_answer_calls_exa_and_keeps_the_pages(
     assert stored is not None  # the normalised spelling: lower-case host, no fragment
 
 
+async def test_stored_pages_are_committed() -> None:
+    """Regression: the pages and the cached answer were written but never committed."""
+    rig = Rig()
+    before = rig.ai.commits
+
+    await rig.search()
+
+    assert rig.ai.commits > before
+
+
 async def test_enough_new_stored_pages_answer_without_exa_and_without_the_quota() -> (
     None
 ):
