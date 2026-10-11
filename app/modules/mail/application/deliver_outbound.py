@@ -16,16 +16,20 @@ from app.modules.mail.ports.unit_of_work import UowFactory
 from app.shared.base_error import GoneError, NotFoundError
 from app.shared.clock import Clock
 from app.shared.contracts.files import FilesApi
+from app.shared.key_lock import KeyLock
 from app.shared.notifications import NotificationDraft, NotificationType
 
 import structlog
-from redis.asyncio import Redis
 
 log = structlog.get_logger(__name__)
 
 RETRY_DELAYS = (2.0, 10.0, 30.0)
 LOCK_SECONDS = 900
 Sleep = Callable[[float], Awaitable[None]]
+
+
+def _lock_key(mail_id: UUID) -> str:
+    return f"mail:send:{mail_id}"
 
 
 class DeliverOutbound:
@@ -37,16 +41,19 @@ class DeliverOutbound:
         uow_factory: UowFactory,
         files: FilesApi,
         relay: OutboundRelay,
-        redis: Redis,
+        lock: KeyLock,
         clock: Clock,
         sleep: Sleep = asyncio.sleep,
         delays: Sequence[float] = RETRY_DELAYS,
     ) -> None:
-        """Store the dependencies; ``delays`` are the waits before each retry."""
+        """Store the dependencies; ``delays`` are the waits before each retry.
+
+        ``lock`` keeps two workers from sending the same mail (`mail:send:{id}`).
+        """
         self._uow_factory = uow_factory
         self._files = files
         self._relay = relay
-        self._redis = redis
+        self._lock = lock
         self._clock = clock
         self._sleep = sleep
         self._delays = tuple(delays)
@@ -59,14 +66,13 @@ class DeliverOutbound:
             return
         if mail.status != MailStatus.QUEUED:
             return
-        if not await self._redis.set(
-            f"mail:send:{mail_id}", "1", nx=True, ex=LOCK_SECONDS
-        ):
+        token = await self._lock.acquire(_lock_key(mail_id), LOCK_SECONDS)
+        if token is None:
             return
         try:
             await self._deliver(mail)
         finally:
-            await self._redis.delete(f"mail:send:{mail_id}")
+            await self._lock.release(_lock_key(mail_id), token)
 
     async def _deliver(self, mail: MailMessage) -> None:
         refused: list[str] = []

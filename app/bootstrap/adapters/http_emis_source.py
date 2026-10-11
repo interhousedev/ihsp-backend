@@ -1,6 +1,9 @@
 """EmisSource over the identity process's internal API (worker, api and bot use it)."""
 
+import asyncio
 import datetime as dt
+import random
+from collections.abc import Awaitable, Callable
 from datetime import date, time
 from typing import Any
 from uuid import UUID
@@ -30,8 +33,18 @@ from app.shared.contracts.emis import (
 )
 
 import httpx
+import structlog
+
+log = structlog.get_logger(__name__)
 
 _TIMEOUT = httpx.Timeout(60.0, connect=5.0)  # the gateway may log in to EMIS first
+# Every call here is an idempotent GET: one transport blip (a connect or read
+# timeout, a dropped connection, a 502/503/504 from the edge) gets one more try
+# after a short jittered pause instead of failing the whole sync step.
+RETRY_STATUSES = frozenset({502, 503, 504})
+RETRY_DELAY_SECONDS = 0.5
+RETRY_JITTER_SECONDS = 0.5
+_TRANSIENT = (httpx.TimeoutException, httpx.NetworkError, httpx.RemoteProtocolError)
 _AUTH_FAILED_TYPE = EmisAuthFailed.code
 _CREDENTIALS_MISSING_TYPE = EmisCredentialsMissing.code
 
@@ -45,11 +58,13 @@ class HttpEmisSource:
         gateway_url: str,
         service_token: str,
         http: httpx.AsyncClient | None = None,
+        sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     ) -> None:
         """Store the gateway URL (``EMIS__GATEWAY_URL``) and the service token."""
         self._base = gateway_url.rstrip("/")
         self._headers = {"Authorization": f"Bearer {service_token}"}
         self._http = http or httpx.AsyncClient(timeout=_TIMEOUT)
+        self._sleep = sleep
 
     @classmethod
     def from_settings(cls, settings: Settings) -> "HttpEmisSource":
@@ -140,17 +155,40 @@ class HttpEmisSource:
         return [_emis_class(item) for item in body]
 
     async def _get(self, path: str, params: dict[str, int | str] | None = None) -> Any:
+        response = await self._get_once(path, params)
+        if response is None or _is_edge_failure(response):
+            log.warning(
+                "emis_gateway_retry",
+                path=path,
+                status=None if response is None else response.status_code,
+            )
+            jitter = random.random() * RETRY_JITTER_SECONDS
+            await self._sleep(RETRY_DELAY_SECONDS + jitter)
+            retried = await self._get_once(path, params)
+            if retried is None:
+                raise EmisUnavailable(support_details="gateway unreachable twice")
+            response = retried
+        if response.status_code == 200:
+            return response.json()
+        raise _error_for(response)
+
+    async def _get_once(
+        self, path: str, params: dict[str, int | str] | None
+    ) -> httpx.Response | None:
+        """One request; None stands for a transport failure worth one retry."""
         try:
-            response = await self._http.get(
+            return await self._http.get(
                 f"{self._base}/{path}", params=params, headers=self._headers
             )
+        except _TRANSIENT as exc:
+            log.warning(
+                "emis_gateway_transport_error", path=path, error=type(exc).__name__
+            )
+            return None
         except httpx.HTTPError as exc:
             raise EmisUnavailable(
                 support_details=f"gateway unreachable: {type(exc).__name__}"
             ) from exc
-        if response.status_code == 200:
-            return response.json()
-        raise _error_for(response)
 
 
 def _optional_date(value: str | None) -> date | None:
@@ -275,16 +313,29 @@ def _emis_class(item: dict[str, Any]) -> EmisClass:
     )
 
 
+def _is_edge_failure(response: httpx.Response) -> bool:
+    """A 502/503/504 without a problem body comes from the edge, not the gateway.
+
+    The gateway's own 503s (`emis/unavailable`, `emis/credentials-missing`) carry a
+    problem `type` and are final: retrying them only delays the student's answer.
+    """
+    return response.status_code in RETRY_STATUSES and _problem_type(response) is None
+
+
+def _problem_type(response: httpx.Response) -> str | None:
+    try:
+        problem = response.json()
+    except ValueError:
+        return None
+    return problem.get("type") if isinstance(problem, dict) else None
+
+
 def _error_for(response: httpx.Response) -> EmisAuthFailed | EmisUnavailable:
     """401 with ``emis/auth-failed`` is the student's problem, all else is ours.
 
     ``emis/credentials-missing`` is a student without a stored login: not an outage.
     """
-    try:
-        problem = response.json()
-        problem_type = problem.get("type") if isinstance(problem, dict) else None
-    except ValueError:
-        problem_type = None
+    problem_type = _problem_type(response)
     if response.status_code == 401 and problem_type == _AUTH_FAILED_TYPE:
         return EmisAuthFailed(support_details="EMIS rejected the credentials")
     if problem_type == _CREDENTIALS_MISSING_TYPE:

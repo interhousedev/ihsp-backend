@@ -1,22 +1,15 @@
 """Redis counters of today's introduced and reviewed cards (spec → Redis keys)."""
 
-from collections.abc import Awaitable
 from datetime import date, timedelta
-from typing import TypeVar, cast
 from uuid import UUID
 
 from app.modules.flashcards.domain.study import DailyUsage
 from app.modules.flashcards.ports.daily_counters import CounterKind
+from app.shared.redis_util import wait
 
 from redis.asyncio import Redis
 
 DAY_TTL = timedelta(hours=48)
-T = TypeVar("T")
-
-
-async def _wait(call: Awaitable[T] | T) -> T:
-    """Await a redis-py call (its stubs type async results as `Awaitable | value`)."""
-    return await cast("Awaitable[T]", call)
 
 
 def _count(fields: dict[str | bytes, str | bytes], name: str) -> int:
@@ -37,7 +30,7 @@ class RedisDailyCounters:
 
     async def usage(self, owner_id: UUID, set_id: UUID, day: date) -> DailyUsage:
         """Return the counters of one day (zeros when nothing was studied)."""
-        fields = await _wait(self.redis.hgetall(self._key(owner_id, set_id, day)))
+        fields = await wait(self.redis.hgetall(self._key(owner_id, set_id, day)))
         return DailyUsage(new=_count(fields, "new"), review=_count(fields, "review"))
 
     async def increment(
@@ -45,5 +38,5 @@ class RedisDailyCounters:
     ) -> None:
         """Count one introduced new card or one finished review (kept 48 hours)."""
         key = self._key(owner_id, set_id, day)
-        await _wait(self.redis.hincrby(key, kind, 1))
+        await wait(self.redis.hincrby(key, kind, 1))
         await self.redis.expire(key, int(DAY_TTL.total_seconds()))

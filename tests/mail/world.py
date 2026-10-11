@@ -23,6 +23,7 @@ from app.modules.mail.application.sweep_mail import SweepMail
 from app.modules.mail.application.view_mail import ViewMail
 from app.shared.contracts.identity import UserRef
 from app.shared.rate_limit import RateLimiter
+from app.shared.redis_util import RedisKeyLock
 from tests.fakes.clock import FixedClock
 from tests.fakes.tasks import FakeTaskKicker
 from tests.mail.fakes import (
@@ -176,7 +177,7 @@ def build_world(
             uow_factory=uow_factory,
             files=files,
             relay=relay,
-            redis=redis,
+            lock=RedisKeyLock(redis),
             clock=clock,
             sleep=sleep,
         ),

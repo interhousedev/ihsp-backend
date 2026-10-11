@@ -6,6 +6,9 @@ from uuid import UUID
 from redis.asyncio import Redis
 
 PREFIX = "links:hits:"
+# The flush runs every five minutes; a counter the flush never saw (a renamed key
+# prefix, a stopped scheduler) must not live in Redis for ever.
+TTL_SECONDS = 24 * 60 * 60
 
 
 class RedisHitCounter:
@@ -16,8 +19,10 @@ class RedisHitCounter:
         self.redis = redis
 
     async def hit(self, link_id: UUID) -> None:
-        """Count one click or view."""
-        await self.redis.incr(f"{PREFIX}{link_id}")
+        """Count one click or view; the key expires a day after its first hit."""
+        key = f"{PREFIX}{link_id}"
+        if await self.redis.incr(key) == 1:
+            await self.redis.expire(key, TTL_SECONDS)
 
     async def drain(self) -> dict[UUID, int]:
         """Take every counter and reset it atomically (GETDEL)."""
@@ -32,4 +37,6 @@ class RedisHitCounter:
     async def restore(self, counts: Mapping[UUID, int]) -> None:
         """Add the counters back after a failed flush."""
         for link_id, count in counts.items():
-            await self.redis.incrby(f"{PREFIX}{link_id}", count)
+            key = f"{PREFIX}{link_id}"
+            await self.redis.incrby(key, count)
+            await self.redis.expire(key, TTL_SECONDS)

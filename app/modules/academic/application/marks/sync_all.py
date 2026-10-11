@@ -9,10 +9,12 @@ from app.modules.academic.application.marks.ports.bell_sync import BellSync
 from app.modules.academic.application.marks.ports.timetable_sync import TimetableSync
 from app.modules.academic.application.marks.ports.unit_of_work import MarksUowFactory
 from app.modules.academic.application.marks.sync_student import SyncStudent
+from app.modules.academic.domain.marks.errors import SyncAlreadyRunningError
 from app.modules.academic.domain.marks.sync import SyncCounters, SyncMode
 from app.shared.actor import Role
 from app.shared.clock import Clock
 from app.shared.contracts.identity import IdentityDirectory, UserStatus
+from app.shared.key_lock import KeyLock
 from app.shared.notifications import NotificationDraft, NotificationType
 
 import structlog
@@ -26,6 +28,8 @@ SPREAD_SECONDS = 1200.0
 CONCURRENCY = 10
 FAILURE_ALERT_RATIO = 0.2
 _LOOKUP_CHUNK = 500
+LOCK_KEY = "academic:sync_all"
+LOCK_TTL_SECONDS = 2 * 60 * 60  # a crashed worker frees the run within two hours
 
 
 class SyncAll:
@@ -43,8 +47,13 @@ class SyncAll:
         concurrency: int = CONCURRENCY,
         spread_seconds: float = SPREAD_SECONDS,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+        lock: KeyLock | None = None,
     ) -> None:
-        """Store collaborators; tests pass ``spread_seconds=0``."""
+        """Store collaborators; tests pass ``spread_seconds=0``.
+
+        ``lock`` (Redis in production) keeps two runs from overlapping: the three
+        cron slots and a redelivered message would otherwise sync everyone twice.
+        """
         self._uow_factory = uow_factory
         self._sync_student = sync_student
         self._bell_sync = bell_sync
@@ -54,9 +63,27 @@ class SyncAll:
         self._concurrency = concurrency
         self._spread_seconds = spread_seconds
         self._sleep = sleep
+        self._lock = lock
 
     async def execute(self, slot: str = "manual") -> UUID:
-        """Run one sync run for the slot (11:30, 15:00, 20:00 or manual)."""
+        """Run one sync run for the slot (11:30, 15:00, 20:00 or manual).
+
+        Raises:
+            SyncAlreadyRunningError: Another run holds the `academic:sync_all` lock.
+        """
+        if self._lock is None:
+            return await self._run(slot)
+        token = await self._lock.acquire(LOCK_KEY, LOCK_TTL_SECONDS)
+        if token is None:
+            log.warning("sync_all_already_running", slot=slot)
+            raise SyncAlreadyRunningError(support_details="sync_all lock is held")
+        try:
+            return await self._run(slot)
+        finally:
+            await asyncio.shield(self._lock.release(LOCK_KEY, token))
+
+    async def _run(self, slot: str) -> UUID:
+        """Create the run, sync everyone and store the summary."""
         async with self._uow_factory() as uow:
             run_id = await uow.sync_runs.create(self._clock.now())
             await uow.commit()

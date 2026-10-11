@@ -1,14 +1,18 @@
 """Search the owner's files by their extracted text (assistant, global search)."""
 
+import asyncio
 from typing import Any
 from uuid import UUID
 
+from app.modules.files.domain.stored_file import StoredFile
 from app.modules.files.ports.storage import ObjectStorage
 from app.modules.files.ports.unit_of_work import UowFactory
 
 MIN_QUERY_LENGTH = 2
-MAX_LIMIT = 100
+MAX_LIMIT = 20  # each hit costs one S3 read of the extracted text
 FALLBACK_SNIPPET_CHARS = 200
+SNIPPET_SOURCE_CHARS = 200_000  # the headline looks at this much text per hit
+PARALLEL_READS = 5
 
 
 class SearchText:
@@ -25,6 +29,7 @@ class SearchText:
         """Return ``[{file_id, name, snippet}]`` for matching ready files.
 
         An empty query lists the owner's newest ready files with an empty snippet.
+        The extracted texts are read from storage a few at a time, not one by one.
         """
         query = query.strip()
         size = max(1, min(limit, MAX_LIMIT))
@@ -32,11 +37,11 @@ class SearchText:
             return await self._newest(owner_id, size)
         if len(query) < MIN_QUERY_LENGTH:
             return []
-        results: list[dict[str, Any]] = []
         async with self._uow_factory() as uow:
             files = await uow.files.search(owner_id, query, size)
-            for file in files:
-                document = (await self._storage.get(file.text_key)).decode()
+            documents = await self._documents(files)
+            results: list[dict[str, Any]] = []
+            for file, document in zip(files, documents, strict=True):
                 snippet = await uow.files.headline(document, query)
                 results.append(
                     {
@@ -46,6 +51,17 @@ class SearchText:
                     }
                 )
         return results
+
+    async def _documents(self, files: list[StoredFile]) -> list[str]:
+        """The start of each file's extracted text, read with bounded parallelism."""
+        gate = asyncio.Semaphore(PARALLEL_READS)
+
+        async def one(file: StoredFile) -> str:
+            async with gate:
+                raw = await self._storage.get(file.text_key)
+            return raw.decode()[:SNIPPET_SOURCE_CHARS]
+
+        return list(await asyncio.gather(*(one(file) for file in files)))
 
     async def _newest(self, owner_id: UUID, size: int) -> list[dict[str, Any]]:
         """The owner's newest ready files, as search results without snippets."""

@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from uuid import UUID
 
 from app.modules.ai.domain.errors import TurnInProgressError
-from app.shared.ids import random_token
+from app.shared.redis_util import RedisKeyLock
 
 from redis.asyncio import Redis
 
@@ -13,26 +13,19 @@ LOCK_TTL_SECONDS = 15 * 60  # longer than the slowest turn (8 model calls)
 
 
 class RedisTurnLock:
-    """Implements TurnLock with `SET NX EX`."""
+    """Implements TurnLock with the shared `SET NX EX` key lock on `ai:turn:{chat}`."""
 
     def __init__(self, redis: Redis) -> None:
         """Store the Redis client."""
         self.redis = redis
+        self._lock = RedisKeyLock(redis)
 
     @asynccontextmanager
     async def hold(self, chat_id: UUID) -> AsyncIterator[None]:
         """Hold the chat's lock; raise TurnInProgressError if it is taken."""
-        key = f"ai:turn:{chat_id}"
-        token = random_token(12)
-        if not await self.redis.set(key, token, nx=True, ex=LOCK_TTL_SECONDS):
-            raise TurnInProgressError(params={"chat_id": str(chat_id)})
-        try:
+        async with self._lock.hold(
+            f"ai:turn:{chat_id}",
+            LOCK_TTL_SECONDS,
+            lambda: TurnInProgressError(params={"chat_id": str(chat_id)}),
+        ):
             yield
-        finally:
-            current = await self.redis.get(key)
-            if current is not None and _text(current) == token:
-                await self.redis.delete(key)
-
-
-def _text(value: bytes | str) -> str:
-    return value.decode() if isinstance(value, bytes) else value

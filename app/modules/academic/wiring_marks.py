@@ -35,6 +35,7 @@ from app.shared.contracts.academic import AcademicEnrollment, ScheduleQueries
 from app.shared.contracts.emis import EmisSource
 from app.shared.contracts.identity import IdentityCommands, IdentityDirectory
 from app.shared.contracts.links import LinksApi
+from app.shared.redis_util import RedisKeyLock
 from app.shared.wiring import ModuleDeps
 
 
@@ -101,6 +102,7 @@ def build_marks(
             timetable_sync=timetable_sync,
             identity=identity,
             clock=deps.clock,
+            lock=RedisKeyLock(deps.redis),
         ),
         backfill_student=BackfillStudent(sync_student=sync_student),
         run_manual_sync=RunManualSync(

@@ -1,21 +1,14 @@
 """Redis counters of the notebook weighted-token budget (§ 4.1, Redis keys)."""
 
-from collections.abc import Awaitable
 from datetime import date, datetime, timedelta
-from typing import TypeVar, cast
 from uuid import UUID
 
 from app.modules.notebooks.ports.budget_store import SessionWindow
+from app.shared.redis_util import wait
 
 from redis.asyncio import Redis
 
 DAY_TTL = timedelta(hours=48)
-T = TypeVar("T")
-
-
-async def _wait(call: Awaitable[T] | T) -> T:
-    """Await a redis-py call (its stubs type async results as `Awaitable | value`)."""
-    return await cast("Awaitable[T]", call)
 
 
 def _text(value: bytes | str) -> str:
@@ -46,7 +39,7 @@ class RedisBudgetStore:
 
     async def session(self, user_id: UUID) -> SessionWindow | None:
         """Return the open session window, if there is one."""
-        raw = await _wait(self.redis.hgetall(self._session_key(user_id)))
+        raw = await wait(self.redis.hgetall(self._session_key(user_id)))
         data = {_text(k): _text(v) for k, v in raw.items()}
         if "ends_at" not in data:
             return None
@@ -60,12 +53,12 @@ class RedisBudgetStore:
         key = self._session_key(user_id)
         await self.redis.delete(key)
         fields = {"used": 0, "ends_at": ends_at.isoformat()}
-        await _wait(self.redis.hset(key, mapping=fields))
+        await wait(self.redis.hset(key, mapping=fields))
         await self.redis.expireat(key, int(ends_at.timestamp()))
 
     async def add_session(self, user_id: UUID, tokens: int) -> None:
         """Add tokens to the open window."""
-        await _wait(self.redis.hincrby(self._session_key(user_id), "used", tokens))
+        await wait(self.redis.hincrby(self._session_key(user_id), "used", tokens))
 
     async def day_used(self, user_id: UUID, day: date) -> int:
         """Return the tokens used on a Tashkent day."""
@@ -75,5 +68,5 @@ class RedisBudgetStore:
     async def add_day(self, user_id: UUID, day: date, tokens: int) -> None:
         """Add tokens to a day's counter (kept for 48 hours)."""
         key = self._day_key(user_id, day)
-        await _wait(self.redis.incrby(key, tokens))
+        await wait(self.redis.incrby(key, tokens))
         await self.redis.expire(key, int(DAY_TTL.total_seconds()))

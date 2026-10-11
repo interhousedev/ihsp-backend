@@ -131,7 +131,8 @@ async def test_two_workers_do_not_send_the_same_mail_twice(
 ) -> None:
     """MAIL-6: a second worker finds the send lock taken."""
     mail_id = await _queued(world, student)
-    await world.deliver_outbound._redis.set(f"mail:send:{mail_id}", "1")  # noqa: SLF001
+    lock = world.deliver_outbound._lock  # noqa: SLF001
+    assert await lock.acquire(f"mail:send:{mail_id}", 900)
 
     await world.deliver_outbound.execute(mail_id)
 

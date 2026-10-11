@@ -7,6 +7,11 @@ entry per slot with ``kwargs={"slot": <slot>}``.
 from app.bootstrap.container import Container
 from app.interfaces.jobs.broker import broker
 from app.interfaces.jobs.context import get_container
+from app.modules.academic.domain.marks.errors import SyncAlreadyRunningError
+
+import structlog
+
+log = structlog.get_logger(__name__)
 
 SYNC_SLOTS: tuple[tuple[str, str], ...] = (
     ("11:30", "30 11 * * *"),
@@ -19,4 +24,8 @@ SYNC_SLOTS: tuple[tuple[str, str], ...] = (
 async def sync_all(slot: str = "manual") -> None:
     """Run the sync for a slot: 11:30, 15:00, 20:00 (adds profile) or manual."""
     container: Container = get_container()
-    await container.academic.marks.sync_all.execute(slot)
+    try:
+        await container.academic.marks.sync_all.execute(slot)
+    except SyncAlreadyRunningError:
+        # A previous slot (or a redelivered message) is still syncing; it covers us.
+        log.warning("sync_all_skipped_overlap", slot=slot)

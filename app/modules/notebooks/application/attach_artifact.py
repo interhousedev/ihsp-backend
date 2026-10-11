@@ -1,5 +1,6 @@
 """Use case: attach a ready Studio output to a lesson as a material (teachers)."""
 
+import asyncio
 from typing import Literal
 from uuid import UUID
 
@@ -51,7 +52,9 @@ class AttachArtifactToLesson:
         if artifact.kind is ArtifactKind.FLASHCARDS:
             raise InvalidOptionsError(params={"kind": artifact.kind.value})
         content = require_ready(artifact, *KIND_FORMATS)
-        rendered = export_artifact(artifact.kind, _title(artifact), content)
+        rendered = await asyncio.to_thread(
+            export_artifact, artifact.kind, _title(artifact), content
+        )
         stored = await self.files.store_bytes(
             owner_id=actor.user_id,
             scope=FileScope.STAFF,

@@ -7,6 +7,8 @@ search adapter turns them into the platform's errors.
 
 from typing import Any, Protocol
 
+from app.shared.retry_after import parse_retry_after
+
 import httpx
 
 CONNECT_TIMEOUT_SECONDS = 10.0
@@ -99,12 +101,7 @@ class ExaClient:
 
 def _retry_after(response: httpx.Response) -> float | None:
     """The `Retry-After` header in seconds, when it is a plain number."""
-    raw = response.headers.get("Retry-After")
-    try:
-        seconds = float(raw) if raw is not None else None
-    except ValueError:
-        return None
-    return seconds if seconds is not None and seconds >= 0 else None
+    return parse_retry_after(response.headers.get("Retry-After"))
 
 
 def _error_text(response: httpx.Response) -> str:

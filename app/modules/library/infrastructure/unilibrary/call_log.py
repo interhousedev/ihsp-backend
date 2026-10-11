@@ -3,7 +3,7 @@
 import json
 from datetime import datetime
 
-from app.modules.library.infrastructure.redis_util import wait
+from app.shared.redis_util import wait
 from app.modules.library.ports.external_monitor import CallRecord
 from app.shared.clock import Clock
 

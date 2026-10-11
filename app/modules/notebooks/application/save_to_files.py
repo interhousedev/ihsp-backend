@@ -1,5 +1,6 @@
 """Use case: save a copy of a ready Studio output into the student's files."""
 
+import asyncio
 from uuid import UUID
 
 from app.modules.notebooks.application.access import load_artifact
@@ -51,7 +52,9 @@ class SaveArtifactToFiles:
             )
         content = require_ready(artifact, *KIND_FORMATS, *TEXT_KINDS)
         try:
-            rendered = export_as(artifact.kind, artifact.title, content, wanted)
+            rendered = await asyncio.to_thread(
+                export_as, artifact.kind, artifact.title, content, wanted
+            )
         except ValueError as error:
             raise InvalidOptionsError(
                 params={"kind": artifact.kind.value, "format": wanted}

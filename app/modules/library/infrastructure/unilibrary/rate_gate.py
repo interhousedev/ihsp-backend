@@ -9,7 +9,7 @@ import math
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 
-from app.modules.library.infrastructure.redis_util import wait
+from app.shared.redis_util import wait
 from app.modules.library.infrastructure.unilibrary.errors import UpstreamError
 from app.shared.clock import Clock
 

@@ -13,7 +13,7 @@ from uuid import UUID
 
 from app.modules.library.domain.taxonomy_stats import DayCounters
 from app.modules.library.infrastructure.redis_stats import readers_key, stats_key
-from app.modules.library.infrastructure.redis_util import wait
+from app.shared.redis_util import wait
 
 import structlog
 from redis.asyncio import Redis

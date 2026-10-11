@@ -1,7 +1,7 @@
 """LIB-12: the on/off switch is off by default and Administration can set it."""
 
 from app.modules.library.domain.errors import ExternalDisabledError
-from app.modules.library.infrastructure.redis_util import wait
+from app.shared.redis_util import wait
 from app.modules.library.ports.external_settings import ExternalFlags
 from app.modules.library.wiring_external import ExternalServices
 from app.shared.actor import Actor

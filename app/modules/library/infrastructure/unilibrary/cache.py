@@ -7,7 +7,7 @@ a miss, never an error.
 
 from dataclasses import dataclass
 
-from app.modules.library.infrastructure.redis_util import wait
+from app.shared.redis_util import wait
 from app.modules.library.ports.external_monitor import CacheStatsView
 from app.shared.clock import Clock
 

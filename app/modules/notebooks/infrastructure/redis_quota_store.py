@@ -1,20 +1,14 @@
 """Redis counters of daily outputs per kind and the set of running outputs."""
 
-from collections.abc import Awaitable
 from datetime import date, timedelta
-from typing import TypeVar, cast
 from uuid import UUID
+from app.shared.redis_util import wait
+
 
 from redis.asyncio import Redis
 
 DAY_TTL = timedelta(hours=48)
 RUNNING_TTL = timedelta(hours=1)  # self-heals if a finished output was never removed
-T = TypeVar("T")
-
-
-async def _wait(call: Awaitable[T] | T) -> T:
-    """Await a redis-py call (its stubs type async results as `Awaitable | value`)."""
-    return await cast("Awaitable[T]", call)
 
 
 def _text(value: bytes | str) -> str:
@@ -47,30 +41,30 @@ class RedisQuotaStore:
     async def add(self, user_id: UUID, day: date, kind: str) -> int:
         """Count one output; return the new value."""
         key = self._quota_key(user_id, day, kind)
-        value = int(await _wait(self.redis.incr(key)))
+        value = int(await wait(self.redis.incr(key)))
         await self.redis.expire(key, int(DAY_TTL.total_seconds()))
         return value
 
     async def remove(self, user_id: UUID, day: date, kind: str) -> None:
         """Undo one count; the counter never goes below zero."""
         key = self._quota_key(user_id, day, kind)
-        if int(await _wait(self.redis.decr(key))) < 0:
+        if int(await wait(self.redis.decr(key))) < 0:
             await self.redis.set(key, 0, ex=int(DAY_TTL.total_seconds()))
 
     async def running(self, user_id: UUID) -> set[UUID]:
         """Ids of the user's running outputs."""
-        raw = await _wait(self.redis.smembers(self._running_key(user_id)))
+        raw = await wait(self.redis.smembers(self._running_key(user_id)))
         return {UUID(_text(item)) for item in raw}
 
     async def add_running(self, user_id: UUID, artifact_id: UUID) -> None:
         """Mark an output as running."""
         key = self._running_key(user_id)
-        await _wait(self.redis.sadd(key, str(artifact_id)))
+        await wait(self.redis.sadd(key, str(artifact_id)))
         await self.redis.expire(key, int(RUNNING_TTL.total_seconds()))
 
     async def remove_running(self, user_id: UUID, artifact_id: UUID) -> None:
         """Mark an output as finished."""
-        await _wait(self.redis.srem(self._running_key(user_id), str(artifact_id)))
+        await wait(self.redis.srem(self._running_key(user_id), str(artifact_id)))
 
     async def clear(self, user_id: UUID) -> None:
         """Forget the user's running outputs."""

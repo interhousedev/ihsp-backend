@@ -14,18 +14,18 @@ for the time Exa asked for.
 import asyncio
 import time
 from collections.abc import Awaitable, Callable
-from typing import Any, TypeVar, cast
+from typing import Any
 from uuid import uuid4
 
 from app.modules.ai.infrastructure.exa import ExaApi, ExaCallError
 from app.settings import ExaSettings
+from app.shared.redis_util import wait
 
 import structlog
 from redis.asyncio import Redis
 from redis.exceptions import WatchError
 
 log = structlog.get_logger(__name__)
-T = TypeVar("T")
 
 BUCKET_KEY = "ai:exa:bucket"
 INFLIGHT_KEY = "ai:exa:inflight"
@@ -38,11 +38,6 @@ MAX_POLL_SECONDS = 0.25  # re-check a slot or a cool-down at least this often
 
 def _text(value: Any) -> str:
     return value.decode() if isinstance(value, bytes) else str(value)
-
-
-async def _wait(call: Awaitable[T] | T) -> T:
-    """Await a redis-py call (its stubs type async results as `Awaitable | value`)."""
-    return await cast("Awaitable[T]", call)
 
 
 def _number(value: Any, default: float) -> float:
@@ -95,7 +90,7 @@ class ExaRateLimiter:
     async def cool_down(self, seconds: float) -> None:
         """Hold every search for `seconds`: Exa answered 429 and said so."""
         until = self._now() + seconds
-        await _wait(self.redis.hset(BUCKET_KEY, "cool", str(until)))
+        await wait(self.redis.hset(BUCKET_KEY, "cool", str(until)))
         await self.redis.pexpire(BUCKET_KEY, STATE_TTL_MS + int(seconds * 1000))
         log.warning("web_search_cool_down", seconds=round(seconds, 1))
 
@@ -107,11 +102,11 @@ class ExaRateLimiter:
         pipe = self.redis.pipeline(transaction=True)
         try:
             await pipe.watch(BUCKET_KEY, INFLIGHT_KEY)
-            bucket = await _wait(pipe.hgetall(BUCKET_KEY))
+            bucket = await wait(pipe.hgetall(BUCKET_KEY))
             cool_until = _number(bucket.get("cool"), 0.0)
             if cool_until > now:
                 return min(cool_until - now, MAX_POLL_SECONDS)
-            active = int(await _wait(pipe.zcount(INFLIGHT_KEY, f"({now}", "+inf")))
+            active = int(await wait(pipe.zcount(INFLIGHT_KEY, f"({now}", "+inf")))
             if active >= max_concurrent:
                 return MAX_POLL_SECONDS
             tokens = min(

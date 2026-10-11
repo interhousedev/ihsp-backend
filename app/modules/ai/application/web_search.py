@@ -269,7 +269,7 @@ class WebSearchService:
         try:
             await self.usage.note_free(task=AiTask.WEB_SEARCH.value, model=model)
         except Exception:
-            log.warning("web_search_usage_note_failed")
+            log.warning("web_search_usage_note_failed", exc_info=True)
 
     async def _stored(
         self,
@@ -316,7 +316,7 @@ class WebSearchService:
         try:
             found = await self.platform.search(actor, query, cfg.candidates)
         except Exception:  # best effort: the web still answers
-            log.warning("web_search_db_first_failed")
+            log.warning("web_search_db_first_failed", exc_info=True)
             return (), False
         verdict = judge(
             found,
@@ -374,7 +374,7 @@ class WebSearchService:
                 query, params=self._params(max_results), hits=hits
             )
         except Exception:  # the answer does not wait for the store
-            log.warning("web_pages_remember_failed", pages=len(hits))
+            log.warning("web_pages_remember_failed", pages=len(hits), exc_info=True)
 
     # - - - deep - - -
 
@@ -437,7 +437,7 @@ class WebSearchService:
                 tuning=profile.tuning,
             )
         except (AiProviderError, AiInvalidOutputError):
-            log.warning("web_search_plan_failed")
+            log.warning("web_search_plan_failed", exc_info=True)
             return queries
         proposed = reply["data"].get("queries")
         for item in proposed if isinstance(proposed, list) else []:
@@ -471,7 +471,7 @@ class WebSearchService:
                 tuning=profile.tuning,
             )
         except (AiProviderError, AiInvalidOutputError):
-            log.warning("web_search_rank_failed")
+            log.warning("web_search_rank_failed", exc_info=True)
             return tuple(pool[:keep])
         ranked = _apply_ranking(pool, reply["data"].get("results"), keep)
         return ranked or tuple(pool[:keep])

@@ -2,6 +2,10 @@
 
 The scheduler (`python -m app scheduler`) sends each task by name, so tasks are not
 imported here; a test checks that every name below is a registered task.
+
+Run exactly one scheduler replica: taskiq has no leader election, so two
+schedulers send every entry twice. The jobs that must not overlap themselves
+(`academic.sync_all`) also hold a Redis `SET NX` lock while they run.
 """
 
 from dataclasses import dataclass, field

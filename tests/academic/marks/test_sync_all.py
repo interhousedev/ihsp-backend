@@ -1,8 +1,12 @@
-"""A whole EMIS sync run: selection, stats and the failure alert."""
+"""A whole EMIS sync run: selection, stats, the failure alert and the run lock."""
 
+import asyncio
+from types import SimpleNamespace
+from typing import Any
 from uuid import UUID
 
 from app.modules.academic.application.marks.sync_all import SyncAll
+from app.modules.academic.domain.marks.errors import SyncAlreadyRunningError
 from app.shared.actor import Role
 from app.shared.contracts.emis import EmisAuthFailed, EmisProfile
 from app.shared.notifications import NotificationType
@@ -11,7 +15,9 @@ from tests.academic.marks.db import runs
 from tests.academic.marks.fakes.emis import make_ratings
 from tests.academic.marks.fakes.identity import make_user
 from tests.academic.marks.world import DAY, MATH_EMIS, add_student
+from tests.fakes.key_lock import InMemoryKeyLock
 
+import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 Maker = async_sessionmaker[AsyncSession]
@@ -262,3 +268,62 @@ async def _set_subgroups(maker: Maker, subgroups: dict[UUID, int | None]) -> Non
                 .values(subgroup=subgroup)
             )
         await session.commit()
+
+
+def _sync_all(env: Env, lock: InMemoryKeyLock, **overrides: Any) -> SyncAll:
+    """SyncAll with the lock and any collaborator replaced."""
+    parts: dict[str, Any] = {
+        "uow_factory": env.uow_factory,
+        "sync_student": env.sync,
+        "bell_sync": env.bells,
+        "timetable_sync": env.timetables,
+        "identity": env.identity,
+        "clock": env.clock,
+        "concurrency": 1,
+        "spread_seconds": 0,
+        "lock": lock,
+    }
+    parts.update(overrides)
+    return SyncAll(**parts)
+
+
+async def test_a_second_run_during_the_first_is_refused(
+    env: Env, sessionmaker_in_tx: Maker
+) -> None:
+    """SYNC-1: the `academic:sync_all` lock keeps an overlapping run out."""
+    lock = InMemoryKeyLock()
+    started = asyncio.Event()
+    release = asyncio.Event()
+
+    async def slow(user_id: UUID, run_id: UUID, **kwargs: Any) -> Any:
+        started.set()
+        await release.wait()
+        return await env.sync.execute(user_id, run_id, **kwargs)
+
+    first = _sync_all(env, lock, sync_student=SimpleNamespace(execute=slow))
+    task = asyncio.create_task(first.execute("11:30"))
+    await started.wait()
+
+    with pytest.raises(SyncAlreadyRunningError):
+        await _sync_all(env, lock).execute("15:00")
+
+    release.set()
+    await task
+    assert lock.held == {}
+    assert len(await runs(sessionmaker_in_tx)) == 1
+
+
+async def test_the_lock_is_freed_when_the_run_fails(env: Env) -> None:
+    """A crashed run must not block the next slot until the TTL."""
+    lock = InMemoryKeyLock()
+
+    async def boom(*args: Any, **kwargs: Any) -> Any:
+        raise RuntimeError("identity is down")
+
+    broken = _sync_all(env, lock, identity=SimpleNamespace(get_users=boom))
+
+    with pytest.raises(RuntimeError):
+        await broken.execute("11:30")
+
+    assert lock.held == {}
+    assert await _sync_all(env, lock).execute("11:30")

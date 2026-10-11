@@ -34,6 +34,7 @@ from app.modules.mail.ports.suspension import MailSuspension
 from app.modules.mail.ports.txt_resolver import TxtResolver
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.identity import IdentityDirectory
+from app.shared.redis_util import RedisKeyLock
 from app.shared.wiring import ModuleDeps
 
 
@@ -162,7 +163,7 @@ def build(
             uow_factory=uow_factory,
             files=files,
             relay=relay,
-            redis=deps.redis,
+            lock=RedisKeyLock(deps.redis),
             clock=deps.clock,
             sleep=sleep,
         ),

@@ -16,6 +16,7 @@ from app.shared.actor import Role
 from app.shared.contracts.academic import StudentRef
 from app.shared.contracts.identity import UserPreferences
 from app.shared.contracts.links import ResourceRef
+from app.shared.key_lock import KeyLock
 from app.shared.rate_limit import RateLimiter
 from app.shared.wiring import ModuleDeps
 from tests.academic.marks.fakes.bell_sync import FakeBellSync
@@ -64,7 +65,7 @@ class Env:
     timetables: FakeTimetableSync
     kicker: FakeTaskKicker
 
-    def sync_all(self) -> SyncAll:
+    def sync_all(self, lock: KeyLock | None = None) -> SyncAll:
         """Build SyncAll that runs one student at a time without delays."""
         return SyncAll(
             uow_factory=self.uow_factory,
@@ -75,6 +76,7 @@ class Env:
             clock=self.clock,
             concurrency=1,
             spread_seconds=0,
+            lock=lock,
         )
 
 

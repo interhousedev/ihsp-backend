@@ -19,7 +19,7 @@ from app.modules.library.domain.errors import (
     TextUnavailableError,
 )
 from app.modules.library.infrastructure.redis_stats import stats_key
-from app.modules.library.infrastructure.redis_util import wait
+from app.shared.redis_util import wait
 from app.modules.library.wiring import LibraryServices
 from app.shared.actor import Actor
 from app.shared.ids import new_id

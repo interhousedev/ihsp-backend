@@ -9,6 +9,7 @@ from typing import Any, NoReturn
 
 from app.modules.ai.domain.errors import AiInvalidOutputError, AiProviderError
 from app.shared.contracts.ai import LlmTuning
+from app.shared.retry_after import parse_retry_after
 
 import httpx
 import structlog
@@ -356,11 +357,10 @@ def _timeout_args(seconds: float | None) -> dict[str, Any]:
 
 
 def _retry_after(response: httpx.Response) -> float:
-    try:
-        seconds = float(response.headers.get("Retry-After", DEFAULT_RETRY_SECONDS))
-    except ValueError:
+    seconds = parse_retry_after(response.headers.get("Retry-After"))
+    if seconds is None:
         return DEFAULT_RETRY_SECONDS
-    return min(max(seconds, 0.0), MAX_RETRY_SECONDS)
+    return min(seconds, MAX_RETRY_SECONDS)
 
 
 def _checked(response: httpx.Response) -> dict[str, Any]:
