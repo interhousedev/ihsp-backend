@@ -1,0 +1,123 @@
+# Full test run on every pull request to main: the whole pytest suite against the dev services
+# (Postgres with pgvector, Redis, S3, Vault), the deployment checks and the OpenAPI export check.
+name: Test
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Tests (dev compose services)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Python 3.13
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.13"
+
+      - name: uv (same version as the Dockerfile)
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.12.23"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install the locked dependencies, dev group included
+        run: uv sync --frozen
+
+      # The development signing key is git-ignored; scripts/dev.sh creates it the same way.
+      - name: Generate the development JWT-bearer key
+        run: |
+          mkdir -p materials/dev-keys
+          openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out materials/dev-keys/jwt-bearer.pem
+
+      # The dev compose file is the environment the defaults of app/settings.py were written for
+      # (materials/dev.env). The `*-init` services create the S3 bucket and the Vault transit key.
+      - name: Start the dev services
+        run: >
+          docker compose -f materials/docker-compose.dev.yaml
+          up -d --wait postgres redis s3 s3-init vault vault-init
+
+      # Everything: units, HTTP, migrations (tests/models), integration over fakes and the
+      # deployment checks (Dockerfiles, nginx, compose files, entrypoint).
+      - name: Whole test suite
+        run: >
+          uv run pytest -q -p no:cacheprovider
+          --junitxml=test-results/junit.xml
+
+      - name: Stop the dev services
+        if: always()
+        run: docker compose -f materials/docker-compose.dev.yaml down -v
+
+      - name: Upload the JUnit report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: junit
+          path: test-results/junit.xml
+          if-no-files-found: warn
+          retention-days: 14
+
+  openapi:
+    name: Committed openapi.json is up to date
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Python 3.13
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.13"
+
+      - name: uv (same version as the Dockerfile)
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.12.23"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install the locked dependencies
+        run: uv sync --frozen
+
+      # The export contacts no service; the dev settings file is enough.
+      - name: Export the OpenAPI document
+        env:
+          IHSP_ENV_FILE: materials/dev.env
+        run: uv run python scripts/export_openapi.py
+
+      - name: Fail when the committed document is stale
+        run: |
+          git diff --exit-code -- openapi
+          test -z "$(git status --porcelain --untracked-files=all -- openapi)"
+
+  secrets-scan:
+    name: Secrets in the change (TruffleHog)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout (full history for the diff base)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+
+      - name: Scan the commits of the pull request
+        uses: trufflesecurity/trufflehog@e76dff8a7e57d6df0c60ad8cbf5d5cba505a8fc9 # v3.99.2
+        with:
+          base: ${{ github.event.pull_request.base.sha }}
+          head: ${{ github.event.pull_request.head.sha }}
+          extra_args: --results=verified,unknown --fail

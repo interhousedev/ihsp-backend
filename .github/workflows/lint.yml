@@ -1,0 +1,50 @@
+# Formatting, import order, lint and types on every push (all branches) and every pull request.
+# Same commands as scripts/style_check.sh.
+name: Lint
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    name: Format, lint and types
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Python 3.13
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+        with:
+          python-version: "3.13"
+
+      - name: uv (same version as the Dockerfile)
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6.8.0
+        with:
+          version: "0.12.23"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install the locked dependencies, dev group included
+        run: uv sync --frozen
+
+      - name: Formatting (black)
+        run: uv run black --check app tests
+
+      - name: Import order (isort)
+        run: uv run isort --check-only app tests
+
+      - name: Lint (flake8)
+        run: uv run flake8 app tests
+
+      - name: Types (mypy)
+        run: uv run mypy app
