@@ -8,6 +8,7 @@ from app.bootstrap.common import build_container
 from app.bootstrap.container import Container
 from app.bootstrap.seed.content import seed_broadcast, seed_course, seed_flashcards
 from app.bootstrap.seed.groups import finish_groups
+from app.bootstrap.seed.homework import demo_student_ids, seed_homework
 from app.bootstrap.seed.library import seed_library
 from app.bootstrap.seed.notebooks import seed_notebook
 from app.bootstrap.seed.schedule import generate_lessons, seed_structure
@@ -56,6 +57,7 @@ async def seed(
     await finish_groups(container, structure, teachers)
     changed = await generate_lessons(container, structure.term)
     log.info("seed_lessons_generated", changed=changed)
+    await seed_homework(container, await demo_student_ids(container))
     first_group = next(iter(structure.group_ids.values()))
     members = await container.academic.schedule.queries.group_user_ids([first_group])
     if members:

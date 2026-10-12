@@ -108,6 +108,23 @@ async def test_marks_are_deterministic_and_stop_at_today() -> None:
     assert one.semester_rating is not None
 
 
+async def test_marks_follow_the_five_point_scale_mostly_fours_and_fives() -> None:
+    """ACA-15: demo marks are 2 to 5 on the lyceum scale, mostly 4 and 5, 2 rare."""
+    client = make_client()
+    values: list[int] = []
+    for student in FAKE_STUDENTS:
+        token = await client.login(student.login, "password")
+        for subject in FAKE_SUBJECTS:
+            ratings = await client.ratings(token, subject.emis_subject_id, 1)
+            values += [m.value for m in ratings.marks if m.type is EmisMarkType.LESSON]
+
+    share = {mark: values.count(mark) / len(values) for mark in range(2, 6)}
+    assert set(values) <= {2, 3, 4, 5}
+    assert share[4] + share[5] > 0.6
+    assert 0 < share[2] < 0.1
+    assert share[5] > share[3] > share[2]
+
+
 async def test_midterm_appears_after_the_midterm_date() -> None:
     """SYNC-5: one midterm on 2026-10-20 once today has passed it."""
     before = make_client()

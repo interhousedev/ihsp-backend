@@ -4,11 +4,13 @@ import datetime as dt
 from uuid import UUID
 
 from app.bootstrap.container import Container
+from app.bootstrap.seed.homework import demo_student_ids
 from app.bootstrap.seed.users import ADMIN_LOGIN
 from app.bootstrap.seed_demo import seed
 from app.settings import Settings
 from app.shared.actor import Actor, Role
 from app.shared.base_error import NotFoundError
+from app.shared.clock import local_today
 from tests.integration.conftest import ContainerFactory, IntegrationWorld
 
 import pytest
@@ -44,6 +46,51 @@ async def test_seed_is_idempotent(
     groups, entries, members, teachers = first
     assert (groups, members, teachers) == (2, 2, 5)
     assert entries > 20
+
+
+async def _homework_of_demo_weeks(container: Container) -> dict[str, int]:
+    """Lessons with homework, their attached files, and due dates on a weekend."""
+    today = local_today(container.clock)
+    monday = today - dt.timedelta(days=today.weekday())
+    lessons = {}
+    for student_id in await demo_student_ids(container):
+        found = await container.academic.schedule.queries.lessons_for_student(
+            student_id,
+            monday - dt.timedelta(days=7),
+            monday + dt.timedelta(days=13),
+        )
+        lessons.update({lesson.id: lesson for lesson in found})
+    with_homework = [lesson for lesson in lessons.values() if lesson.homework_text]
+    attached = 0
+    for lesson in with_homework:
+        refs = await container.links.public.lesson_resources(lesson.id)
+        attached += sum(1 for ref in refs if ref.role == "attachment")
+    weekend_due = sum(
+        1
+        for lesson in with_homework
+        if lesson.homework_due_date and lesson.homework_due_date.weekday() >= 5
+    )
+    return {
+        "homework": len(with_homework),
+        "attachments": attached,
+        "weekend_due": weekend_due,
+    }
+
+
+async def test_seed_adds_demo_homework_and_files_once(
+    make_container: ContainerFactory, world: IntegrationWorld
+) -> None:
+    """Homework on school-day due dates, files attached, and no repeats on a rerun."""
+    container = await make_container("all")
+
+    await seed(container, world.credentials)
+    first = await _homework_of_demo_weeks(container)
+    await seed(container, world.credentials)
+
+    assert first == await _homework_of_demo_weeks(container)
+    assert first["homework"] > 10
+    assert first["attachments"] > 0
+    assert first["weekend_due"] == 0
 
 
 async def test_seed_creates_one_demo_notebook_with_every_output(

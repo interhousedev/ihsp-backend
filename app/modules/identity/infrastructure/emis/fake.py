@@ -226,6 +226,21 @@ def _cells_of(group_emis_id: int) -> list[Cell]:
     return cells_of(group_emis_id, FAKE_SUBJECTS, _TEACHERS_OF)
 
 
+# Marks of the 5-point lyceum scale (EMIS rating 3 to 5; 2 is a fail): mostly 4 and 5,
+# some 3, rarely 2. Each entry is (mark, share in percent); the shares add up to 100.
+_LESSON_MARKS: tuple[tuple[int, int], ...] = ((5, 35), (4, 40), (3, 20), (2, 5))
+_MIDTERM_MARKS: tuple[tuple[int, int], ...] = ((5, 30), (4, 45), (3, 20), (2, 5))
+
+
+def _weighted_mark(slot: int, table: tuple[tuple[int, int], ...]) -> int:
+    """Pick the mark whose share covers ``slot`` (0 to 99) of the weighted table."""
+    for mark, share in table:
+        if slot < share:
+            return mark
+        slot -= share
+    return table[-1][0]
+
+
 def _semester_window(current: int, semester: int) -> tuple[date, date]:
     start = _SEMESTER_START - _SEMESTER_GAP * (current - semester)
     return start, start + _SEMESTER_LENGTH
@@ -351,9 +366,11 @@ class FakeEmisClient:
         while day <= min(end, today):
             value = digest(student.login, subject_id, day.isoformat())
             if day.weekday() < 5 and value % 4 == 0:  # Monday to Friday
-                marks.append(EmisMark(EmisMarkType.LESSON, day, 2 + (value >> 2) % 4))
+                mark = _weighted_mark((value >> 2) % 100, _LESSON_MARKS)
+                marks.append(EmisMark(EmisMarkType.LESSON, day, mark))
             day += timedelta(days=1)
         if semester == student.current_semester and today >= _MIDTERM_DATE:
             value = digest(student.login, subject_id, "midterm")
-            marks.append(EmisMark(EmisMarkType.MIDTERM, _MIDTERM_DATE, 3 + value % 3))
+            mark = _weighted_mark(value % 100, _MIDTERM_MARKS)
+            marks.append(EmisMark(EmisMarkType.MIDTERM, _MIDTERM_DATE, mark))
         return marks
