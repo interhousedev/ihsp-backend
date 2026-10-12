@@ -67,16 +67,3 @@ def check_subject_parent(
         or parent_id in subject_descendants(subjects, subject_id)
     ):
         raise SubjectParentInvalidError(params={"parent_id": str(parent_id)})
-
-
-def subject_path(subjects: Sequence[Subject], subject_id: UUID) -> list[Subject]:
-    """The chain from the root down to the subject (itself last)."""
-    by_id = {s.id: s for s in subjects}
-    chain: list[Subject] = []
-    seen: set[UUID] = set()
-    current = by_id.get(subject_id)
-    while current is not None and current.id not in seen:
-        seen.add(current.id)
-        chain.append(current)
-        current = by_id.get(current.parent_id) if current.parent_id else None
-    return list(reversed(chain))

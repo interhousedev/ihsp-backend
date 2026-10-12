@@ -25,3 +25,6 @@ backups/
 
 # Eval harness outputs (scripts/nb_eval_slides.py): model answers and HTML snapshots
 eval/out/
+
+# Hypothesis example database
+.hypothesis/

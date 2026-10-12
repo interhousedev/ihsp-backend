@@ -15,7 +15,7 @@ from uuid import UUID
 from app.settings import LimitsSettings
 from app.shared.base_error import ValidationFailedError
 from app.shared.limits import is_limit, is_quota
-from app.shared.settings_reference import field_docs
+from app.shared.settings_docs import field_docs
 
 OVERRIDE_PREFIX = "limit."
 """Keys of the overrides in ``admin.platform_settings``: ``limit.<field name>``."""

@@ -11,7 +11,6 @@ from datetime import date
 from uuid import UUID
 
 from app.modules.library.domain.enums import Rights, TextStatus, Visibility
-from app.modules.library.domain.errors import VisibilityConflictError
 
 AUTHOR_TERM_YEARS = 70
 """Years of protection after the author's death."""
@@ -63,15 +62,6 @@ def allowed_visibilities(rights: Rights) -> frozenset[Visibility]:
     if rights in (Rights.PUBLIC_DOMAIN, Rights.OPEN_LICENSE):
         return _FREE_VISIBILITIES
     return _LYCEUM_VISIBILITIES
-
-
-def check_visibility(rights: Rights, visibility: Visibility) -> None:
-    """Raise `library/visibility-conflict` when the class forbids the visibility."""
-    if visibility not in allowed_visibilities(rights):
-        raise VisibilityConflictError(
-            params={"rights": rights.value, "visibility": visibility.value},
-            support_details=f"{visibility.value} is not allowed for {rights.value}",
-        )
 
 
 def _has(basis: Mapping[str, object], key: str) -> bool:

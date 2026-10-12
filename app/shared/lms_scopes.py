@@ -31,11 +31,6 @@ def effective_scopes(scopes: Collection[str]) -> frozenset[str]:
     return frozenset(result)
 
 
-def is_scoped(scopes: Collection[str]) -> bool:
-    """True for a connector or OAuth client (a session has no scopes)."""
-    return bool(scopes)
-
-
 def scope_allows(scopes: Collection[str], needed: str) -> bool:
     """True for an unscoped caller, or when the scope (or its alias) is granted."""
     return not scopes or needed in effective_scopes(scopes)

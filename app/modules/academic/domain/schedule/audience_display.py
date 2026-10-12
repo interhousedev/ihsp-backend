@@ -7,11 +7,6 @@ from uuid import UUID
 from app.modules.academic.domain import audience as audience_keys
 
 
-def audience_group_ids(keys: Iterable[str]) -> set[UUID]:
-    """Return the groups mentioned by audience keys."""
-    return audience_keys.group_ids(keys)
-
-
 def display_names(keys: Iterable[str], names: Mapping[UUID, str]) -> tuple[str, ...]:
     """Return one label per key, e.g. ("2TN1/2", "2TN2/2")."""
     labels: list[str] = []

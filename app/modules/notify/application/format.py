@@ -16,11 +16,6 @@ def esc(value: object) -> str:
     return html.escape(str(value), quote=False)
 
 
-def esc_attr(value: object) -> str:
-    """Escape text for a Telegram HTML attribute value."""
-    return html.escape(str(value), quote=True)
-
-
 def strip_html(value: str) -> str:
     """Turn Telegram HTML into plain text for the web notification center."""
     text = _BREAKS.sub("\n", value)

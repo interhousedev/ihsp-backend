@@ -3,11 +3,9 @@
 from datetime import date
 
 from app.modules.library.domain.enums import Rights, TextStatus, Visibility
-from app.modules.library.domain.errors import VisibilityConflictError
 from app.modules.library.domain.rights import (
     ChecklistFacts,
     allowed_visibilities,
-    check_visibility,
     public_domain_since,
     publish_checklist,
     publish_missing,
@@ -53,20 +51,6 @@ def test_permission_and_official_books_are_never_public(rights: Rights) -> None:
     """LIB-3: hosted by permission or on an official basis means lyceum only."""
     assert Visibility.PUBLIC not in allowed_visibilities(rights)
     assert Visibility.LYCEUM in allowed_visibilities(rights)
-
-
-def test_public_visibility_with_permission_rights_is_a_conflict() -> None:
-    """LIB-3: publishing a public book with permission rights fails."""
-    with pytest.raises(VisibilityConflictError) as caught:
-        check_visibility(Rights.PERMISSION, Visibility.PUBLIC)
-
-    assert caught.value.code == "library/visibility-conflict"
-    assert caught.value.params["rights"] == "permission"
-
-
-def test_lyceum_visibility_with_permission_rights_is_fine() -> None:
-    """LIB-3: the allowed combination does not raise."""
-    check_visibility(Rights.PERMISSION, Visibility.LYCEUM)
 
 
 def test_public_domain_with_old_death_year_is_complete() -> None:
