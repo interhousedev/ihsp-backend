@@ -78,7 +78,7 @@ x-backend-env: &backend-env
   IHSP_OPENROUTER__APP_URL: http://sp.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
   IHSP_EXA__MODE: ${IHSP_EXA__MODE:-fake}
   IHSP_EXA__API_KEY: # optional: set it in .env.local together with EXA__MODE=real
-  # Models per task and feature flags (docs/reference/settings.md); override them in
+  # Models per task and feature flags (materials/.env.sample); override them in
   # .env.local. An empty value means "not set".
   IHSP_AI__DEFAULT__MODEL: ${IHSP_AI__DEFAULT__MODEL:-anthropic/claude-haiku-5.5}
   IHSP_AI__TASKS__STUDENT_CHAT_SMART__MODEL: ${IHSP_AI__TASKS__STUDENT_CHAT_SMART__MODEL:-}

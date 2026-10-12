@@ -25,7 +25,7 @@ NOTEBOOK_MODEL: Final = "anthropic/claude-haiku-5.5"
 # good answers) costs about 7.5x Claude Haiku 5.5, so one smart token counts 8x.
 SMART_REASONING: Final = "low"
 SMART_BUDGET_WEIGHT: Final = 8
-# Vectors for meaning-based retrieval (docs/reference/vector-search.md): multilingual
+# Vectors for meaning-based retrieval: multilingual
 # (Uzbek Latin and Cyrillic, Russian, English), 32k context, USD 0.02 per 1M tokens.
 TRANSLATE_MODEL: Final = "google/gemini-3.5-flash-lite"  # cheap; a few words per call
 EMBEDDING_MODEL: Final = "qwen/qwen3-embedding-4b"

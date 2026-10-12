@@ -21,7 +21,7 @@ from aiogram.types import Message
 
 LOOK_AHEAD_DAYS = 7
 # Telegram lets bots download up to 20 MB; the docs do not say whether MB is 10^6
-# or 2^20 bytes, so stay below (docs/reference/telegram.md § 7).
+# or 2^20 bytes, so stay below.
 MAX_FILE_BYTES = 20 * 1000 * 1000
 
 

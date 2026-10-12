@@ -364,10 +364,7 @@ class ExaSettings(BaseModel):
 
 
 class NotebooksSettings(BaseModel):
-    """Notebooks (NotebookLM-style) limits and switches.
-
-    See docs/reference/notebooklm.md.
-    """
+    """Notebooks (NotebookLM-style) limits and switches."""
 
     enabled: bool = True
     """Older master switch of notebooks; both this and FEATURES__NOTEBOOKS must be
@@ -403,7 +400,7 @@ class NotebooksSettings(BaseModel):
 
 
 class VectorsSettings(BaseModel):
-    """Embeddings and search by meaning (docs/reference/vector-search.md).
+    """Embeddings and search by meaning.
 
     The model, vector size and batch size are the `EMBEDDING` AI task (`AI__TASKS__
     EMBEDDING__*`); `FEATURES__VECTOR_SEARCH` switches the whole thing.
@@ -435,8 +432,7 @@ class FilesSettings(BaseModel):
 class LibrarySettings(BaseModel):
     """The library (`lib.ihsu.uz`): sizes, quotas, limits and UniLibrary.
 
-    See docs/reference/study-library.md, section 8.2. UniLibrary is a switched-off
-    base: it stays off until Administration enables it.
+    UniLibrary is a switched-off base: it stays off until Administration enables it.
     """
 
     file_max_bytes: int = 314_572_800

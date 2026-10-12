@@ -1,6 +1,10 @@
 """Per-route-group CORS as a path-prefix ASGI middleware.
 
-See docs/reference/architecture.md (CORS) for the rules.
+Rules: the cookie endpoints (`/v1/oauth/token|refresh|logout`) allow the first-party
+app origins with credentials and require the `X-IHSP-Client` header; the public share
+data (`/v1/public/*`) allows only the share host; every other `/v1/*` route allows the
+first-party app origins without credentials. The share host shows user-written content
+and is never a credentialed origin.
 """
 
 from collections.abc import Sequence

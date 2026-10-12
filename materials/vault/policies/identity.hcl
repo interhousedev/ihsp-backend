@@ -1,4 +1,4 @@
-# Policy of the identity process (docs/reference/jobs-storage-vault.md § 3.4).
+# Policy of the identity process.
 path "secret/data/emis/*"             { capabilities = ["create", "read", "update"] }
 path "secret/metadata/emis/*"         { capabilities = ["read", "delete"] }
 path "transit/encrypt/emis-passwords" { capabilities = ["update"] }

@@ -36,8 +36,8 @@ services:
       timeout: 3s
       retries: 30
 
-  # S3-compatible server. MinIO images are no longer distributed, so dev uses RustFS
-  # (docs/reference/jobs-storage-vault.md § 2). The app talks plain S3 (settings S3__*).
+  # S3-compatible server. MinIO images are no longer distributed, so dev uses RustFS.
+  # The app talks plain S3 (settings S3__*).
   s3:
     image: rustfs/rustfs:1.0.1
     environment:

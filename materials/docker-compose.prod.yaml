@@ -76,7 +76,7 @@ x-backend-env: &backend-env
   IHSP_EMIS__GATEWAY_URL: http://identity:8001/internal/emis
   IHSP_OPENROUTER__MODE: ${IHSP_OPENROUTER__MODE:-real}
   IHSP_EXA__MODE: ${IHSP_EXA__MODE:-real}
-  # Models per task (docs/reference/settings.md). An empty value means "not set": a task
+  # Models per task (materials/.env.sample). An empty value means "not set": a task
   # without its own model uses IHSP_AI__DEFAULT__MODEL. More IHSP_AI__TASKS__<TASK>__*
   # variables can be added here, and set in .env.prod.
   IHSP_AI__DEFAULT__MODEL: ${IHSP_AI__DEFAULT__MODEL:-anthropic/claude-haiku-5.5}
@@ -616,7 +616,7 @@ services:
       - ./vault:/init:ro
     networks: [data]
 
-  s3-init: # bucket, CORS and lifecycle on any S3 server (also an external one: see README-RUN.md)
+  s3-init: # bucket, CORS and lifecycle on any S3 server (also an external one)
     <<: *backend
     profiles: [tools, rustfs]
     restart: "no"

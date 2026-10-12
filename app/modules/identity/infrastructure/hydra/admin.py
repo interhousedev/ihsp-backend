@@ -1,4 +1,4 @@
-"""HTTP client for Ory Hydra's admin and public APIs (docs/reference/hydra.md)."""
+"""HTTP client for Ory Hydra's admin and public APIs."""
 
 from typing import Any
 

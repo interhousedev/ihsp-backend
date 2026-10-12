@@ -1,4 +1,4 @@
-# Ory Hydra v26.2.0, development. Built from docs/reference/hydra.md § 3.7.
+# Ory Hydra v26.2.0, development.
 # The DSN comes from the DSN environment variable (see docker-compose.dev.yaml).
 # Run with `serve all --dev`; never use this file in production.
 

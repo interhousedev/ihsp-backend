@@ -257,8 +257,8 @@ def leaf_variables(model: type[BaseModel], prefix: str = "") -> list[str]:
 def test_the_sample_documents_every_setting_in_order() -> None:
     """Every leaf setting has one line in .env.sample (commented ones count).
 
-    The lines follow the field order of the models, which is the section order of
-    docs/reference/settings.md. A per-task variable is written with `<TASK>`.
+    The lines follow the field order of the models. A per-task variable is written
+    with `<TASK>`.
     """
     expected = leaf_variables(Settings)
     in_file = [

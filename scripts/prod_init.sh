@@ -351,7 +351,8 @@ cmd_init() {
 
 Done. Check:  curl -fsS https://api.$(get_env DOMAIN)/health
 Remember: move $VAULT_KEYS off the server, and set the DNS MX record of mail.$(get_env DOMAIN)
-(README-RUN.md has the full list of DNS records).
+(DNS: A/AAAA for the apex and id, my, app, staff, admin, lms, lib, s, api, mcp, mail,
+storage; MX 10 mail.<domain>; SPF, DKIM and DMARC TXT records for mail.<domain>).
 EOF
 }
 

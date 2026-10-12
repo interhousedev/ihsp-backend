@@ -1,5 +1,4 @@
 # HashiCorp Vault 2.1 server config for production: one node, integrated (Raft) storage.
-# docs/reference/jobs-storage-vault.md § 3.5.
 #
 # The listener is plain HTTP on purpose: port 8200 is never published; only containers
 # on the internal Docker network (identity, vault init and backup jobs) can reach it.

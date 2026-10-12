@@ -1,4 +1,4 @@
-# api.<domain>: identity, bot and api processes (docs/reference/architecture.md, Edge routing). Regex locations are tried in order: the first match wins.
+# api.<domain>: identity, bot and api processes Regex locations are tried in order: the first match wins.
 # Every location adds the JSON response headers (headers-api.inc). The login and OAuth paths
 # and the Telegram webhook are rate-limited per client address (zones: default.conf.template).
 

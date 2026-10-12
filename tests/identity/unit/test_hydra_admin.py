@@ -1,4 +1,4 @@
-"""docs/reference/hydra.md: the Hydra HTTP client sends the documented requests."""
+"""The Hydra HTTP client sends the requests Hydra's admin and public APIs expect."""
 
 import json
 

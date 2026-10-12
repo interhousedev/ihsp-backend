@@ -15579,6 +15579,18 @@
             ],
             "title": "Emoji"
           },
+          "group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -15673,6 +15685,7 @@
           "origin",
           "subject_id",
           "lesson_id",
+          "group_id",
           "course_id",
           "can_write",
           "chat_config",
@@ -15715,6 +15728,18 @@
               }
             ],
             "title": "Emoji"
+          },
+          "group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
           },
           "id": {
             "format": "uuid",
@@ -15789,6 +15814,7 @@
           "origin",
           "subject_id",
           "lesson_id",
+          "group_id",
           "course_id",
           "can_write"
         ],
@@ -22827,7 +22853,7 @@
         "type": "object"
       },
       "SourceDetailResponse": {
-        "description": "`SourceDetail`: the item plus guide, text of a note and cited passages.",
+        "description": "`SourceDetail`: the item plus guide, text of a note, cited passages and file.",
         "properties": {
           "ai_unsupported": {
             "title": "Ai Unsupported",
@@ -22864,6 +22890,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/SourceFailure"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "file": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SourceFileResponse"
               },
               {
                 "type": "null"
@@ -23007,6 +23043,56 @@
         ],
         "title": "SourceFailure",
         "type": "string"
+      },
+      "SourceFileResponse": {
+        "description": "`SourceFile`: the uploaded file behind a source (preview and download).",
+        "properties": {
+          "byte_size": {
+            "title": "Byte Size",
+            "type": "integer"
+          },
+          "content_type": {
+            "title": "Content Type",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "content_type",
+          "byte_size"
+        ],
+        "title": "SourceFileResponse",
+        "type": "object"
+      },
+      "SourceFileUrlResponse": {
+        "description": "`SourceFileUrl`: a presigned URL of the file behind a source (60 seconds).",
+        "properties": {
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "expires_at"
+        ],
+        "title": "SourceFileUrlResponse",
+        "type": "object"
       },
       "SourceGuide": {
         "description": "`sources.guide` (§ 3.2.5).",
@@ -25487,6 +25573,69 @@
           }
         },
         "title": "SubjectNameResponse",
+        "type": "object"
+      },
+      "SubjectNotebookSlotResponse": {
+        "description": "`SubjectNotebookSlot`: a subject (and group) with its notebook, if made yet.",
+        "properties": {
+          "group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
+          "group_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Name"
+          },
+          "notebook_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notebook Id"
+          },
+          "source_count": {
+            "title": "Source Count",
+            "type": "integer"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "subject_name": {
+            "title": "Subject Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject_id",
+          "subject_name",
+          "group_id",
+          "group_name",
+          "notebook_id",
+          "source_count"
+        ],
+        "title": "SubjectNotebookSlotResponse",
         "type": "object"
       },
       "SubjectPatchBody": {
@@ -52382,7 +52531,7 @@
     },
     "/v1/notebooks/auto/subject/{subject_id}": {
       "get": {
-        "description": "The student's notebook of a subject if it exists (404 otherwise); read-only.",
+        "description": "The user's notebook of a subject (and group) if it exists; read-only.",
         "operationId": "find_subject_notebook_v1_notebooks_auto_subject__subject_id__get",
         "parameters": [
           {
@@ -52393,6 +52542,23 @@
               "format": "uuid",
               "title": "Subject Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group Id"
             }
           }
         ],
@@ -52424,7 +52590,7 @@
         ]
       },
       "post": {
-        "description": "Get or create the student's notebook of a subject (this term's materials).",
+        "description": "Get or create the user's notebook of a subject (this term's materials).\n\nA teacher adds the `group_id` they teach the subject to; a student does not.\nSafe to call twice at once: one notebook is made.",
         "operationId": "open_subject_notebook_v1_notebooks_auto_subject__subject_id__post",
         "parameters": [
           {
@@ -52435,6 +52601,23 @@
               "format": "uuid",
               "title": "Subject Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group Id"
             }
           }
         ],
@@ -52461,6 +52644,32 @@
           }
         },
         "summary": "Open Subject Notebook",
+        "tags": [
+          "notebooks"
+        ]
+      }
+    },
+    "/v1/notebooks/auto/subjects": {
+      "get": {
+        "description": "A slot for every subject (teachers: subject and group) the user has.\n\n`notebook_id` is null until the first open creates the notebook.",
+        "operationId": "list_subject_slots_v1_notebooks_auto_subjects_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SubjectNotebookSlotResponse"
+                  },
+                  "title": "Response List Subject Slots V1 Notebooks Auto Subjects Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Subject Slots",
         "tags": [
           "notebooks"
         ]
@@ -54880,7 +55089,7 @@
         ]
       },
       "get": {
-        "description": "Return a source with its guide and, for a note, its text.",
+        "description": "Return a source with its guide, a note's text and an upload's file.",
         "operationId": "get_source_v1_notebooks__notebook_id__sources__source_id__get",
         "parameters": [
           {
@@ -54989,6 +55198,80 @@
           }
         },
         "summary": "Update Source",
+        "tags": [
+          "notebooks"
+        ]
+      }
+    },
+    "/v1/notebooks/{notebook_id}/sources/{source_id}/file-url": {
+      "get": {
+        "description": "Presign a GET of the uploaded file; access is the access to the notebook.\n\nOnly PDFs and images may be shown inline; `404` when the source has no file.",
+        "operationId": "get_source_file_url_v1_notebooks__notebook_id__sources__source_id__file_url_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notebook_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notebook Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Source Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "disposition",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "inline",
+                    "attachment"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Disposition"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceFileUrlResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Source File Url",
         "tags": [
           "notebooks"
         ]

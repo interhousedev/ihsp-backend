@@ -1,4 +1,4 @@
-# Ory Hydra v26.2.0, production (docs/reference/hydra.md §§ 3.7 and 15).
+# Ory Hydra v26.2.0, production.
 #
 # Mirrors hydra.dev.yml; only the environment-specific parts differ. Everything
 # secret or domain-specific comes from the container environment, which wins over
@@ -75,8 +75,8 @@ clients:
       - http://identity:8001/v1/oauth/token-hook
 
 oidc:
-  # Dynamic Client Registration stays on: MCP clients register themselves (product-spec MCP-3,
-  # docs/reference/mcp.md). Mitigations: the edge nginx rate-limits POST /oauth2/register
+  # Dynamic Client Registration stays on: MCP clients register themselves (product-spec
+  # MCP-3). Mitigations: the edge nginx rate-limits POST /oauth2/register
   # (materials/nginx/common/route-id.inc), the default scope has no offline_access (a client
   # that wants refresh tokens asks for it and the consent screen shows it), and the consent
   # app treats every client without an admin-set metadata flag as unverified

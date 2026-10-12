@@ -1,6 +1,8 @@
 """The composition root: builds the container for one process.
 
-See docs/reference/architecture.md for the wiring rules.
+Wiring rules: each process (`PLANS`) builds only the modules it serves and holds only
+the credentials it needs; modules talk to each other through the contracts in
+`app/shared/contracts`, never by importing another module's internals.
 """
 
 from collections.abc import Awaitable, Callable

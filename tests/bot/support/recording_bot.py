@@ -1,6 +1,6 @@
 """A bot whose session records every request instead of calling Telegram.
 
-Follows docs/reference/telegram.md section 5.3: results (or exceptions) can be
+Results (or exceptions) can be
 queued per method class; unqueued calls get a harmless default.
 """
 
