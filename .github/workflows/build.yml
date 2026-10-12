@@ -1,0 +1,165 @@
+# Builds and publishes the ihsp-backend image to GHCR. Runs on pushes to main (merged pull requests),
+# on version tags (v*) and by hand (workflow_dispatch: pick the branch or tag in the "Run workflow"
+# dialog; the optional input adds one more image tag).
+#
+# Order, so that no channel tag points at an image that has not been scanned:
+#   1. build the candidate on the runner and scan it with Trivy (fails on fixable CRITICAL and HIGH;
+#      SARIF goes to code scanning),
+#   2. push the commit tag (sha-<commit>) with SBOM and provenance attestations,
+#   3. attest build provenance and sign the digest (keyless, Sigstore),
+#   4. point the channel tags (branch, semver, latest on main, the manual tag) at the same digest.
+name: Build image
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Extra image tag (optional), for example 1.2.3-rc1"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  image:
+    name: Image (ihsp-backend)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write        # push to GHCR
+      id-token: write        # keyless cosign signing and provenance
+      attestations: write    # build provenance attestation
+      security-events: write # Trivy SARIF to code scanning
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Image name and version
+        id: names
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          echo "image=${REGISTRY}/${owner}/ihsp-backend" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version="0.0.0-${GITHUB_SHA:0:12}"
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+      - name: Log in to GHCR
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit tag of the candidate
+        id: candidate
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+        with:
+          images: ${{ steps.names.outputs.image }}
+          tags: type=sha,format=long
+
+      # Two builds from one cache: the first stays on the runner and is scanned, the second (a cache
+      # hit) pushes with attestations. Nothing reaches the registry before the scan has passed.
+      - name: Build the candidate on the runner
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          file: Dockerfile
+          load: true
+          tags: ${{ steps.candidate.outputs.tags }}
+          labels: ${{ steps.candidate.outputs.labels }}
+          build-args: |
+            VERSION=${{ steps.names.outputs.version }}
+            REVISION=${{ github.sha }}
+            SOURCE=${{ github.server_url }}/${{ github.repository }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      - name: Scan the candidate (fails on CRITICAL and HIGH, unfixed ones included)
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1 # 0.35.0
+        with:
+          image-ref: ${{ steps.candidate.outputs.tags }}
+          format: sarif
+          output: trivy.sarif
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+
+      - name: Push the commit tag
+        id: build
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ steps.candidate.outputs.tags }}
+          labels: ${{ steps.candidate.outputs.labels }}
+          build-args: |
+            VERSION=${{ steps.names.outputs.version }}
+            REVISION=${{ github.sha }}
+            SOURCE=${{ github.server_url }}/${{ github.repository }}
+          provenance: mode=max
+          sbom: true
+          cache-from: type=gha,scope=backend
+
+      - name: Upload the scan to code scanning
+        if: always() && hashFiles('trivy.sarif') != ''
+        uses: github/codeql-action/upload-sarif@9f759ee644a3e7c15c1390abf49868036c00067b # v3.38.3
+        with:
+          sarif_file: trivy.sarif
+          category: trivy-backend
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
+        with:
+          subject-name: ${{ steps.names.outputs.image }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+
+      - name: Cosign (keyless)
+        uses: sigstore/cosign-installer@7e8b541eb2e61bf99390e1afd4be13a184e9ebc5 # v3.10.1
+
+      - name: Sign the digest
+        env:
+          IMAGE_DIGEST: ${{ steps.names.outputs.image }}@${{ steps.build.outputs.digest }}
+        run: cosign sign --yes "$IMAGE_DIGEST"
+
+      - name: Channel tags (branch, semver, latest on main, manual tag)
+        id: channels
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+        with:
+          images: ${{ steps.names.outputs.image }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ inputs.tag || 'unused' }},enable=${{ inputs.tag != '' }}
+
+      - name: Point the channel tags at the scanned digest
+        env:
+          TAGS: ${{ steps.channels.outputs.tags }}
+          SOURCE_IMAGE: ${{ steps.names.outputs.image }}@${{ steps.build.outputs.digest }}
+        run: |
+          set -eu
+          printf '%s\n' "$TAGS" | while IFS= read -r tag; do
+            [ -n "$tag" ] || continue
+            docker buildx imagetools create --tag "$tag" "$SOURCE_IMAGE"
+          done
