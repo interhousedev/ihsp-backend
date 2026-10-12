@@ -7,9 +7,7 @@ from app.interfaces.http.v1.notebooks.schemas_admin_materials import (
     SubjectMaterialCreateBody,
     SubjectMaterialResponse,
 )
-from app.modules.notebooks.application.add_default_material import (
-    DefaultMaterialDraft,
-)
+from app.modules.notebooks.application.material_target import DefaultMaterialDraft
 
 from fastapi import Path
 

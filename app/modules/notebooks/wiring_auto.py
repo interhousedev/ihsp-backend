@@ -20,9 +20,13 @@ from app.modules.notebooks.application.readers.registry import SourceReaders
 from app.modules.notebooks.application.remove_default_material import (
     RemoveDefaultMaterial,
 )
+from app.modules.notebooks.application.staff_subject_materials import (
+    StaffSubjectMaterials,
+)
 from app.modules.notebooks.application.sweep_auto_notebooks import SweepAutoNotebooks
 from app.modules.notebooks.application.sync_auto_notebook import SyncAutoNotebook
 from app.modules.notebooks.application.sync_lesson_notebooks import SyncLessonNotebooks
+from app.modules.notebooks.application.teaching_directory import TeachingDirectory
 from app.modules.notebooks.application.update_auto_settings import UpdateAutoSettings
 from app.modules.notebooks.ports.term_calendar import TermCalendar
 from app.modules.notebooks.wiring_core import NotebooksCore
@@ -48,6 +52,7 @@ class AutoServices:
     list_default_materials: ListDefaultMaterials
     add_default_material: AddDefaultMaterial
     remove_default_material: RemoveDefaultMaterial
+    staff_subject_materials: StaffSubjectMaterials
 
 
 def build_auto(
@@ -118,4 +123,12 @@ def build_auto(
             uow_factory=core.uow_factory, clock=deps.clock, files=files
         ),
         remove_default_material=RemoveDefaultMaterial(uow_factory=core.uow_factory),
+        staff_subject_materials=StaffSubjectMaterials(
+            uow_factory=core.uow_factory,
+            clock=deps.clock,
+            teaching=TeachingDirectory(
+                schedule=schedule, terms=terms, clock=deps.clock
+            ),
+            files=files,
+        ),
     )

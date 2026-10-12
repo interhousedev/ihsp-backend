@@ -23496,6 +23496,107 @@
         "title": "StaffAssessmentListResponse",
         "type": "object"
       },
+      "StaffGroupMaterialResponse": {
+        "description": "A material of one group (and subgroup).",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "edu_subject_id": {
+            "title": "Edu Subject Id",
+            "type": "integer"
+          },
+          "file_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id"
+          },
+          "group_id": {
+            "format": "uuid",
+            "title": "Group Id",
+            "type": "string"
+          },
+          "group_name": {
+            "title": "Group Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DefaultMaterialKind"
+          },
+          "library_item_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Library Item Id"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "subgroup": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subgroup"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "id",
+          "edu_subject_id",
+          "kind",
+          "title",
+          "url",
+          "file_id",
+          "library_item_id",
+          "position",
+          "created_at",
+          "group_id",
+          "group_name",
+          "subgroup"
+        ],
+        "title": "StaffGroupMaterialResponse",
+        "type": "object"
+      },
       "StaffHomeworkResponse": {
         "description": "Homework of a lesson as the teacher sees it.",
         "properties": {
@@ -23570,6 +23671,184 @@
           "attendance"
         ],
         "title": "StaffLessonResponse",
+        "type": "object"
+      },
+      "StaffSubjectGroupResponse": {
+        "description": "A group, or a subgroup, the teacher teaches a subject to.",
+        "properties": {
+          "group_id": {
+            "format": "uuid",
+            "title": "Group Id",
+            "type": "string"
+          },
+          "group_name": {
+            "title": "Group Name",
+            "type": "string"
+          },
+          "subgroup": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subgroup"
+          }
+        },
+        "required": [
+          "group_id",
+          "group_name",
+          "subgroup"
+        ],
+        "title": "StaffSubjectGroupResponse",
+        "type": "object"
+      },
+      "StaffSubjectMaterialCreateBody": {
+        "description": "A material for all the teacher's groups, or (with `group_id`) for one group.",
+        "properties": {
+          "file_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id"
+          },
+          "group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DefaultMaterialKind"
+          },
+          "library_item_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Library Item Id"
+          },
+          "subgroup": {
+            "anyOf": [
+              {
+                "maximum": 2.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subgroup"
+          },
+          "title": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "maxLength": 2048,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "kind",
+          "title"
+        ],
+        "title": "StaffSubjectMaterialCreateBody",
+        "type": "object"
+      },
+      "StaffSubjectMaterialsResponse": {
+        "description": "The three tiers of a subject: administration, mine, per group.",
+        "properties": {
+          "admin": {
+            "items": {
+              "$ref": "#/components/schemas/SubjectMaterialResponse"
+            },
+            "title": "Admin",
+            "type": "array"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/StaffGroupMaterialResponse"
+            },
+            "title": "Groups",
+            "type": "array"
+          },
+          "mine": {
+            "items": {
+              "$ref": "#/components/schemas/SubjectMaterialResponse"
+            },
+            "title": "Mine",
+            "type": "array"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/StaffSubjectResponse"
+          }
+        },
+        "required": [
+          "subject",
+          "admin",
+          "mine",
+          "groups"
+        ],
+        "title": "StaffSubjectMaterialsResponse",
+        "type": "object"
+      },
+      "StaffSubjectResponse": {
+        "description": "A subject the teacher teaches this term.",
+        "properties": {
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/StaffSubjectGroupResponse"
+            },
+            "title": "Groups",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject_id",
+          "name",
+          "groups"
+        ],
+        "title": "StaffSubjectResponse",
         "type": "object"
       },
       "StaffTodayResponse": {
@@ -57732,6 +58011,175 @@
         "summary": "Put My Photo",
         "tags": [
           "photo"
+        ]
+      }
+    },
+    "/v1/staff/subjects": {
+      "get": {
+        "description": "The subjects the teacher teaches this term, each with its groups.",
+        "operationId": "list_staff_subjects_v1_staff_subjects_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StaffSubjectResponse"
+                  },
+                  "title": "Response List Staff Subjects V1 Staff Subjects Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Staff Subjects",
+        "tags": [
+          "staff-subjects"
+        ]
+      }
+    },
+    "/v1/staff/subjects/{subject_id}/materials": {
+      "get": {
+        "description": "The administration (read-only), own and per-group materials of a subject.",
+        "operationId": "get_staff_subject_materials_v1_staff_subjects__subject_id__materials_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffSubjectMaterialsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Staff Subject Materials",
+        "tags": [
+          "staff-subjects"
+        ]
+      },
+      "post": {
+        "description": "Add a material for all the teacher's groups, or for one group (`group_id`).",
+        "operationId": "add_staff_subject_material_v1_staff_subjects__subject_id__materials_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StaffSubjectMaterialCreateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubjectMaterialResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Staff Subject Material",
+        "tags": [
+          "staff-subjects"
+        ]
+      }
+    },
+    "/v1/staff/subjects/{subject_id}/materials/{material_id}": {
+      "delete": {
+        "description": "Remove one of the teacher's own materials; notebooks follow on their sync.",
+        "operationId": "remove_staff_subject_material_v1_staff_subjects__subject_id__materials__material_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "material_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Material Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Staff Subject Material",
+        "tags": [
+          "staff-subjects"
         ]
       }
     },

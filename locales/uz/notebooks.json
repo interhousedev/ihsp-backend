@@ -14,6 +14,7 @@
   "notebooks-default-material-exists": "Bu material fan uchun allaqachon standart materiallar qatorida.",
   "notebooks-default-material-invalid": "Bu fayl, havola yoki kitobni standart material sifatida qo'shib bo'lmaydi. Tekshirib, qayta urinib ko'ring.",
   "notebooks-default-material-limit": "Fan uchun standart materiallarning eng ko'p soniga yetildi.",
+  "notebooks-subject-not-taught": "Siz bu fanni bu guruhga o'qitmaysiz.",
   "notebooks-default-material-not-found": "Standart material topilmadi.",
   "notebooks-default-title": "Yangi daftar",
   "notebooks-feature-disabled": "Bu funksiya o'chirilgan.",

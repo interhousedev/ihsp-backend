@@ -11,6 +11,9 @@ from app.interfaces.http.v1.notebooks.router_chat import router as chat_router
 from app.interfaces.http.v1.notebooks.router_labels import router as labels_router
 from app.interfaces.http.v1.notebooks.router_notebooks import router as notebooks_router
 from app.interfaces.http.v1.notebooks.router_sources import router as sources_router
+from app.interfaces.http.v1.notebooks.router_staff_subjects import (
+    router as staff_subjects_router,
+)
 from app.interfaces.http.v1.notebooks.router_studio import router as studio_router
 
 from fastapi import APIRouter
@@ -22,4 +25,5 @@ ROUTERS: list[APIRouter] = [
     chat_router,
     studio_router,
     admin_materials_router,
+    staff_subjects_router,
 ]

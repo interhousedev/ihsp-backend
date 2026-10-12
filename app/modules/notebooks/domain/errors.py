@@ -59,6 +59,13 @@ class DefaultMaterialNotFoundError(NotFoundError):
     message_key = "notebooks-default-material-not-found"
 
 
+class SubjectNotTaughtError(ForbiddenError):
+    """The teacher does not teach this subject to this group (or at all)."""
+
+    code = "notebooks/subject-not-taught"
+    message_key = "notebooks-subject-not-taught"
+
+
 class DefaultMaterialExistsError(ConflictError):
     """The subject already has this file, link or library item as a default material."""
 

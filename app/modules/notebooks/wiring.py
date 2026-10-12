@@ -80,6 +80,9 @@ from app.modules.notebooks.application.set_source_labels import SetSourceLabels
 from app.modules.notebooks.application.shared_passage_search import (
     SharedPassageSearch,
 )
+from app.modules.notebooks.application.staff_subject_materials import (
+    StaffSubjectMaterials,
+)
 from app.modules.notebooks.application.start_labeling import StartLabeling
 from app.modules.notebooks.application.sweep_auto_notebooks import SweepAutoNotebooks
 from app.modules.notebooks.application.sweep_sources import SweepSources
@@ -164,6 +167,7 @@ class NotebooksServices:
     list_default_materials: ListDefaultMaterials
     add_default_material: AddDefaultMaterial
     remove_default_material: RemoveDefaultMaterial
+    staff_subject_materials: StaffSubjectMaterials
     provision_course_notebook: ProvisionCourseNotebook
     sync_course_notebook: SyncCourseNotebook
     sync_course_notebooks: SyncCourseNotebooks
@@ -326,6 +330,7 @@ def build(
         list_default_materials=auto.list_default_materials,
         add_default_material=auto.add_default_material,
         remove_default_material=auto.remove_default_material,
+        staff_subject_materials=auto.staff_subject_materials,
         provision_course_notebook=course.provision_course_notebook,
         sync_course_notebook=course.sync_course_notebook,
         sync_course_notebooks=course.sync_course_notebooks,

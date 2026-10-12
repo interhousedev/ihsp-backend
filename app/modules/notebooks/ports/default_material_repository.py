@@ -13,6 +13,18 @@ class DefaultMaterialRepository(Protocol):
         """The default materials of one EMIS subject id, by `position`."""
         ...
 
+    async def list_for_teacher(
+        self, edu_subject_id: int, teacher_id: UUID
+    ) -> list[DefaultMaterial]:
+        """The teacher's own materials (all groups and per group) of the subject."""
+        ...
+
+    async def list_for_sync(
+        self, edu_subject_id: int, teacher_ids: frozenset[UUID]
+    ) -> list[DefaultMaterial]:
+        """Admin materials plus those of the given teachers, for one subject."""
+        ...
+
     async def list_all(self) -> list[DefaultMaterial]:
         """Every default material, by EMIS subject id and `position`."""
         ...

@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import replace
 from uuid import UUID
 
-from app.modules.notebooks.application.add_default_material import DefaultMaterialDraft
+from app.modules.notebooks.application.material_target import DefaultMaterialDraft
 from app.modules.notebooks.domain.default_materials import (
     MAX_DEFAULT_MATERIALS,
     DefaultMaterialKind,

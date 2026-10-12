@@ -5,12 +5,13 @@ from uuid import UUID
 from app.modules.notebooks.domain.default_materials import (
     DefaultMaterial,
     DefaultMaterialKind,
+    MaterialScope,
 )
 from app.modules.notebooks.infrastructure.orm.default_material import (
     SubjectDefaultMaterial as Row,
 )
 
-from sqlalchemy import delete, select
+from sqlalchemy import delete, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -26,6 +27,10 @@ def _to_material(row: Row) -> DefaultMaterial:
         file_id=row.file_id,
         url=row.url,
         library_item_id=row.library_item_id,
+        scope=MaterialScope(row.scope),
+        teacher_id=row.teacher_id,
+        group_id=row.group_id,
+        subgroup=row.subgroup,
     )
 
 
@@ -40,15 +45,56 @@ class SqlDefaultMaterialRepository:
         """The default materials of one EMIS subject id, by `position`."""
         stmt = (
             select(Row)
-            .where(Row.edu_subject_id == edu_subject_id)
+            .where(
+                Row.edu_subject_id == edu_subject_id,
+                Row.scope == MaterialScope.ADMIN.value,
+            )
             .order_by(Row.position, Row.created_at, Row.id)
+        )
+        rows = (await self.session.execute(stmt)).scalars().all()
+        return [_to_material(row) for row in rows]
+
+    async def list_for_teacher(
+        self, edu_subject_id: int, teacher_id: UUID
+    ) -> list[DefaultMaterial]:
+        """The teacher's own materials (all groups and per group) of the subject."""
+        stmt = (
+            select(Row)
+            .where(
+                Row.edu_subject_id == edu_subject_id,
+                Row.teacher_id == teacher_id,
+                Row.scope != MaterialScope.ADMIN.value,
+            )
+            .order_by(Row.position, Row.created_at, Row.id)
+        )
+        rows = (await self.session.execute(stmt)).scalars().all()
+        return [_to_material(row) for row in rows]
+
+    async def list_for_sync(
+        self, edu_subject_id: int, teacher_ids: frozenset[UUID]
+    ) -> list[DefaultMaterial]:
+        """Admin materials plus those of the given teachers, for one subject."""
+        stmt = (
+            select(Row)
+            .where(
+                Row.edu_subject_id == edu_subject_id,
+                or_(
+                    Row.scope == MaterialScope.ADMIN.value,
+                    Row.teacher_id.in_(teacher_ids),
+                ),
+            )
+            .order_by(Row.scope, Row.position, Row.created_at, Row.id)
         )
         rows = (await self.session.execute(stmt)).scalars().all()
         return [_to_material(row) for row in rows]
 
     async def list_all(self) -> list[DefaultMaterial]:
         """Every default material, by EMIS subject id and `position`."""
-        stmt = select(Row).order_by(Row.edu_subject_id, Row.position, Row.created_at)
+        stmt = (
+            select(Row)
+            .where(Row.scope == MaterialScope.ADMIN.value)
+            .order_by(Row.edu_subject_id, Row.position, Row.created_at)
+        )
         rows = (await self.session.execute(stmt)).scalars().all()
         return [_to_material(row) for row in rows]
 
@@ -71,6 +117,10 @@ class SqlDefaultMaterialRepository:
                 file_id=material.file_id,
                 url=material.url,
                 library_item_id=material.library_item_id,
+                scope=material.scope.value,
+                teacher_id=material.teacher_id,
+                group_id=material.group_id,
+                subgroup=material.subgroup,
             )
         )
         await self.session.flush()

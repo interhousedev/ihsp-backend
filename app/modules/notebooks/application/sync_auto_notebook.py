@@ -9,6 +9,7 @@ from app.modules.notebooks.application.auto_targets import AutoTargets
 from app.modules.notebooks.application.default_material_sources import (
     DefaultMaterialSources,
 )
+from app.modules.notebooks.application.material_audience import audience_of
 from app.modules.notebooks.application.notebook_state import sources_changed
 from app.modules.notebooks.application.readers.base import ResolvedSource
 from app.modules.notebooks.application.readers.registry import SourceReaders
@@ -144,7 +145,10 @@ class SyncAutoNotebook:
     async def _defaults_of(
         self, notebook: Notebook, lessons: list[LessonRef]
     ) -> list[DefaultMaterial]:
-        """The default materials of the notebook's subject (subject notebooks only).
+        """The materials of the notebook's subject that reach it (subject notebooks).
+
+        The administration materials of the subject, those of the teachers the
+        notebook follows, and the group materials of its group (and subgroup).
 
         Only while the student still has lessons of the subject this term: otherwise
         the sync takes the copies out, as it does with the lesson materials.
@@ -158,8 +162,12 @@ class SyncAutoNotebook:
         edu_subject_id = await self.targets.emis_subject_id(notebook.subject_id)
         if edu_subject_id is None:
             return []
+        audience = await audience_of(self.targets.schedule, notebook, lessons)
         async with self.uow_factory() as uow:
-            return await uow.default_materials.list_for_subject(edu_subject_id)
+            found = await uow.default_materials.list_for_sync(
+                edu_subject_id, audience.teacher_ids
+            )
+        return [x for x in found if x.applies_to(audience)]
 
     async def _candidates(
         self, notebook: Notebook, lessons: list[LessonRef]

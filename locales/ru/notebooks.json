@@ -14,6 +14,7 @@
   "notebooks-default-material-exists": "Этот материал уже есть среди материалов предмета по умолчанию.",
   "notebooks-default-material-invalid": "Этот файл, ссылку или книгу нельзя сделать материалом по умолчанию. Проверьте и повторите.",
   "notebooks-default-material-limit": "У предмета уже максимальное число материалов по умолчанию.",
+  "notebooks-subject-not-taught": "Вы не преподаёте этот предмет этой группе.",
   "notebooks-default-material-not-found": "Материал по умолчанию не найден.",
   "notebooks-default-title": "Новый блокнот",
   "notebooks-feature-disabled": "Эта функция отключена.",

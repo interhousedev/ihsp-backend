@@ -22,6 +22,7 @@ from fastapi import Depends
 _student = require_roles(Role.STUDENT)
 _owner = require_roles(Role.STUDENT, Role.TEACHER)
 _admin = require_roles(Role.ADMIN)
+_teacher = require_roles(Role.TEACHER)
 
 
 async def get_notebooks(
@@ -50,6 +51,7 @@ async def get_workspace_notebooks(
 
 StudentActor = Annotated[Actor, Depends(_student)]
 AdminActor = Annotated[Actor, Depends(_admin)]
+TeacherActor = Annotated[Actor, Depends(_teacher)]
 OwnerActor = Annotated[Actor, Depends(_owner)]  # students and teachers own notebooks
 MemberActor = Annotated[Actor, Depends(get_actor)]  # access is checked per notebook
 Notebooks = Annotated[NotebooksServices, Depends(get_notebooks)]
