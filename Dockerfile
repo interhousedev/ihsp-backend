@@ -1,6 +1,6 @@
 # Backend image: one image for every process (`python -m app <process>`; compose sets the command).
 #
-#   docker build -t ihsp-backend:dev backend/      # the build context is backend/ (see .dockerignore)
+#   docker build -t ihsp-backend:dev .      # the build context is the repo root (see .dockerignore)
 #
 # Builder: the locked runtime dependencies only, into /app/.venv (uv, bytecode compiled, cache mounts).
 # The project itself is not installed: the app resolves its locales, migrations and alembic.ini from the

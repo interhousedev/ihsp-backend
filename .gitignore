@@ -28,3 +28,11 @@ eval/out/
 
 # Hypothesis example database
 .hypothesis/
+
+# Tooling, IDE and OS
+.idea/
+.vscode/
+*.log
+.env
+.env.*.local
+materials/dev-keys/*.pem

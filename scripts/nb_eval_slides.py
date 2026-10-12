@@ -15,7 +15,7 @@ case then rewrites two slides of the English deck. Each case writes to
 
 `eval/out/slides/index.html` links the decks of the last run.
 
-Usage (from `backend/`):
+Usage (from the repo root):
 
     # real model (needs IHSP_OPENROUTER__API_KEY and IHSP_OPENROUTER__MODE=real,
     # e.g. in a git-ignored env file):

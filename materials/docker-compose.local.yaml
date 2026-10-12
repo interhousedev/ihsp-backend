@@ -380,7 +380,8 @@ services:
   web:
     image: ihsp-web:local
     build:
-      context: ../../web
+      # Sibling checkout of the iht-web repo (override with IHSP_WEB_DIR, relative to materials/).
+      context: ${IHSP_WEB_DIR:-../../iht-web}
       # local_up.sh packs the apps it built on the host (deploy/Dockerfile.prebuilt); with
       # --full-build it sets WEB_DOCKERFILE=deploy/Dockerfile and `next build` runs in Docker.
       dockerfile: ${WEB_DOCKERFILE:-deploy/Dockerfile.prebuilt}
@@ -400,7 +401,7 @@ services:
       API_HOST: api.${LOCAL_DOMAIN:-localhost}
       MCP_HOST: mcp.${LOCAL_DOMAIN:-localhost}
       ROOT_HOST: ${LOCAL_DOMAIN:-localhost}
-      # The web image has backend routes of its own (web/deploy/sites/api.conf and others).
+      # The web image has backend routes of its own (iht-web deploy/sites/api.conf and others).
       # The edge nginx in front of it never sends that traffic here, but nginx resolves
       # these upstreams when it starts, so they point at a closed local port instead of at
       # services that may still be starting.

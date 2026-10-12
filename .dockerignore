@@ -1,4 +1,4 @@
-# Build context: backend/. Deny everything, then allow only what the Dockerfile copies: the lock
+# Build context: the repo root. Deny everything, then allow only what the Dockerfile copies: the lock
 # (bind-mounted by the builder stage) and the runtime tree (app, locales, migrations, alembic.ini).
 *
 !pyproject.toml

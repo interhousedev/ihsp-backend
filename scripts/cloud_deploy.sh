@@ -5,7 +5,7 @@
 #   <ssh-host>   anything `ssh` accepts: deploy@203.0.113.7, a Host from ~/.ssh/config
 #   --init       first deployment: after copying the files run scripts/prod_init.sh on the
 #                server (secrets, Vault, certificates, Hydra, first administrator)
-#   --push-env   overwrite the server's .env.prod with the local backend/.env.prod
+#   --push-env   overwrite the server's .env.prod with the local .env.prod
 #                (by default an existing server copy is kept: it holds the Vault AppRole ids)
 #   --no-pull    do not pull images (they are already on the server)
 #   --tag TAG    set TAG in the server's .env.prod first (1.2.0, sha-<40 hex>, latest); a

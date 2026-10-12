@@ -1,7 +1,7 @@
 # Edge nginx (production): TLS termination and routing by host and path.
 # Rendered by the nginx image's entrypoint (envsubst over HOST_* and CERT_NAME) into
 # /etc/nginx/conf.d/. Route files are in materials/nginx/common (mounted at /etc/nginx/ihsp).
-# Static apps come from the `web` container (image built from web/deploy).
+# Static apps come from the `web` container (image built from iht-web deploy).
 
 resolver 127.0.0.11 valid=10s ipv6=off;
 server_tokens off;

@@ -285,7 +285,7 @@ def test_local_web_image_is_packed_from_the_host_build_by_default(
 ) -> None:
     build = local_model["services"]["web"]["build"]
     assert build["dockerfile"] == "deploy/Dockerfile.prebuilt"
-    assert build["context"].endswith("/web")
+    assert build["context"].endswith("/iht-web")
 
 
 def test_local_web_image_can_be_built_in_docker(

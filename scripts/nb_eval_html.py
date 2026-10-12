@@ -1,6 +1,6 @@
 """Standalone HTML snapshots of generated slide decks (for `nb_eval_slides.py`).
 
-The page mirrors the web viewer (`web/packages/features-core/src/notebooks/viewers/
+The page mirrors the web viewer (`iht-web packages/features-core/src/notebooks/viewers/
 slides/`): 16:9 slides sized in container units, the eight layouts, a footer with the
 deck title and the slide number, light and dark themes (system setting or the toggle),
 a fit-to-slide pass that shrinks dense slides, and a print stylesheet with one slide

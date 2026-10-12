@@ -450,7 +450,7 @@ services:
     networks: [data, edge]
 
   # ----------------------------------------------------------------------- edge
-  # Static apps (image built from web/deploy): internal only, nginx proxies to it.
+  # Static apps (image built from iht-web deploy): internal only, nginx proxies to it.
   web:
     <<: *hardened # nginx-unprivileged (uid 101, port 8080) writes only under /tmp/ihsp
     image: ghcr.io/${IMAGE_OWNER:?}/ihsp-web:${TAG:?}
@@ -472,7 +472,7 @@ services:
       API_HOST: api.${DOMAIN}
       MCP_HOST: mcp.${DOMAIN}
       ROOT_HOST: ${DOMAIN}
-      # The web image has backend routes of its own (web/deploy/sites/api.conf and others).
+      # The web image has backend routes of its own (iht-web deploy/sites/api.conf and others).
       # The edge nginx in front of it never sends that traffic here, but nginx resolves
       # these upstreams when it starts, so they point at a closed local port instead of at
       # services that may still be starting.

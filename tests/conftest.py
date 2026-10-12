@@ -72,7 +72,7 @@ def settings() -> Settings:
 
 @pytest.fixture(scope="session")
 def i18n() -> I18nCore:
-    """Translations from backend/locales."""
+    """Translations from locales."""
     return I18nCore(LOCALES_DIR).load()
 
 

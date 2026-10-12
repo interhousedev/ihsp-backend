@@ -6,12 +6,12 @@
 # Usage: scripts/local_up.sh [--no-build] [--full-build] [--no-seed]
 #   --no-build     reuse the images from the last run (and the web apps built on the host)
 #   --full-build   build the web image the long way: `next build` of all seven apps inside
-#                  Docker (web/deploy/Dockerfile). Needs a Docker VM with plenty of memory
+#                  Docker (iht-web deploy/Dockerfile). Needs a Docker VM with plenty of memory
 #                  and nothing else heavy running; the default does not.
 #   --no-seed      skip `python -m app seed-demo`
 # By default the web apps are built on the host, one at a time (`bun run build`, so Bun
-# must be installed), and packed into the image by web/deploy/Dockerfile.prebuilt.
-# Optional settings (fake modes, ports, domain) go into backend/.env.local; see
+# must be installed), and packed into the image by iht-web deploy/Dockerfile.prebuilt.
+# Optional settings (fake modes, ports, domain) go into .env.local; see
 # materials/.env.local.sample.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -36,7 +36,16 @@ for arg in "$@"; do
 done
 
 compose_file=materials/docker-compose.local.yaml
-web_dir=../web
+web_dir=${IHSP_WEB_DIR:-../iht-web}
+if [ ! -d "$web_dir/deploy" ]; then
+    echo "web checkout not found at $web_dir: clone the iht-web repo next to this one or set IHSP_WEB_DIR" >&2
+    exit 1
+fi
+# The compose file resolves its build context relative to materials/.
+case "$web_dir" in
+    /*) export IHSP_WEB_DIR="$web_dir" ;;
+    *) export IHSP_WEB_DIR="$(cd "$web_dir" && pwd)" ;;
+esac
 web_apps=(id sp staff admin lms share library)
 if [ "$full_build" -eq 1 ]; then
     export WEB_DOCKERFILE=deploy/Dockerfile
@@ -163,8 +172,8 @@ Demo logins (python -m app seed-demo):
   teacher  usmonov.bobur, karimova.nodira, ...  TeacherDemo1   (five demo teachers)
   student  abdullayev.alisher, ergashev.gulnora StudentDemo1   (the fake-EMIS accounts student01 and student16)
 
-Logs:   docker compose -f backend/$compose_file logs -f <service>
-Stop:   backend/scripts/local_down.sh        (add --wipe to delete the data)
+Logs:   docker compose -f $compose_file logs -f <service>
+Stop:   scripts/local_down.sh        (add --wipe to delete the data)
 EOF
 
 exit "$failed"

@@ -1,6 +1,6 @@
 """Request and response models of the UniLibrary endpoints (TS contract, doc 7.1/7.2).
 
-Names follow `web/packages/api/src/types/library.ts`: `UniLibrarySearchResult`,
+Names follow `iht-web packages/api/src/types/library.ts`: `UniLibrarySearchResult`,
 `UniLibraryTaxonomy`, `PinExternalBody`, `UniLibrarySettings`, `UniLibraryStatus`,
 `Feed`, `FeedInput`, `FieldMapEntry`. Cards are `ItemCardSchema` of the catalogue.
 """
