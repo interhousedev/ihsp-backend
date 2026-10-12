@@ -17,6 +17,10 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 PROBLEM_JSON = "application/problem+json"
 MAX_PARAM_TEXT = 200
 _SCALARS = (str, int, float, bool, type(None))
+# Structured conflict payloads the web reads (`getConflictTheirs`,
+# `getConflictList`, the attendance sheet): built server-side from view models
+# for the authorised caller, so they pass through as they are.
+PAYLOAD_KEYS = frozenset({"theirs", "current", "conflicts"})
 
 log = structlog.get_logger(__name__)
 
@@ -26,10 +30,13 @@ def safe_params(params: dict[str, Any]) -> dict[str, Any]:
 
     The client needs them to fill the localized message; anything else (nested
     objects, upstream exception text, long strings) is dropped, not echoed.
+    Only the `PAYLOAD_KEYS` conflict payloads keep their structure.
     """
     kept: dict[str, Any] = {}
     for key, value in params.items():
-        if isinstance(value, list) and all(_safe_scalar(v) for v in value):
+        if key in PAYLOAD_KEYS and isinstance(value, dict | list):
+            kept[key] = value
+        elif isinstance(value, list) and all(_safe_scalar(v) for v in value):
             kept[key] = value
         elif _safe_scalar(value):
             kept[key] = value

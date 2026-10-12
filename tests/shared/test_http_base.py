@@ -55,6 +55,7 @@ def error_routes(router: APIRouter) -> None:
                 "what": "lesson",
                 "roles": ["admin", "teacher"],
                 "count": 3,
+                "theirs": {"version": 3},
                 "upstream": {"error": "connection to 10.0.0.5 refused"},
                 "trace": "x" * 201,
                 "exc": RuntimeError("internals"),
@@ -176,7 +177,7 @@ async def test_a_domain_error_is_problem_json(http_client: HttpClientFactory) ->
 async def test_error_params_echo_only_short_scalars(
     http_client: HttpClientFactory,
 ) -> None:
-    """Problem+JSON never carries nested objects, long text or exception objects."""
+    """Problem+JSON drops nested objects, long text and exceptions (conflicts aside)."""
     client = await http_client([build_router()])
 
     response = await client.get("/v1/leaky")
@@ -186,6 +187,7 @@ async def test_error_params_echo_only_short_scalars(
         "what": "lesson",
         "roles": ["admin", "teacher"],
         "count": 3,
+        "theirs": {"version": 3},
     }
 
 
