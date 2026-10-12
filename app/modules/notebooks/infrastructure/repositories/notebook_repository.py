@@ -91,6 +91,7 @@ def _to_entity(row: NotebookRow, ready: int, selected: int) -> Notebook:
         origin=NotebookOrigin(row.origin),
         subject_id=row.subject_id,
         lesson_id=row.lesson_id,
+        group_id=row.group_id,
         auto_settings=(
             AutoSettings.model_validate(row.auto_settings)
             if row.auto_settings is not None
@@ -127,6 +128,7 @@ def _apply(row: NotebookRow, notebook: Notebook) -> None:
     row.origin = notebook.origin.value
     row.subject_id = notebook.subject_id
     row.lesson_id = notebook.lesson_id
+    row.group_id = notebook.group_id
     row.auto_settings = (
         notebook.auto_settings.model_dump(mode="json")
         if notebook.auto_settings is not None
@@ -223,9 +225,16 @@ class SqlNotebookRepository:
         return int((await self.session.execute(stmt)).scalar_one())
 
     async def find_auto(
-        self, owner_id: UUID, origin: NotebookOrigin, target_id: UUID
+        self,
+        owner_id: UUID,
+        origin: NotebookOrigin,
+        target_id: UUID,
+        group_id: UUID | None = None,
     ) -> Notebook | None:
-        """The owner's live subject notebook (`target_id` = subject) or lesson one."""
+        """The owner's live subject notebook (`target_id` = subject) or lesson one.
+
+        A teacher's subject notebook is told apart by its `group_id`.
+        """
         target = (
             NotebookRow.subject_id
             if origin is NotebookOrigin.SUBJECT_AUTO
@@ -235,10 +244,24 @@ class SqlNotebookRepository:
             NotebookRow.owner_id == owner_id,
             NotebookRow.origin == origin.value,
             target == target_id,
+            (
+                NotebookRow.group_id.is_(None)
+                if group_id is None
+                else NotebookRow.group_id == group_id
+            ),
             NotebookRow.deleted_at.is_(None),
         )
         found = await self._entities(stmt)
         return found[0] if found else None
+
+    async def list_subject_auto(self, owner_id: UUID) -> list[Notebook]:
+        """The owner's live subject notebooks (a teacher's, one per group, too)."""
+        stmt = _select_notebooks().where(
+            NotebookRow.owner_id == owner_id,
+            NotebookRow.origin == NotebookOrigin.SUBJECT_AUTO.value,
+            NotebookRow.deleted_at.is_(None),
+        )
+        return await self._entities(stmt)
 
     async def add_auto(self, notebook: Notebook) -> bool:
         """Insert an auto notebook unless the owner already has a live one for it.

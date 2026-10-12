@@ -47,9 +47,20 @@ class NotebookRepository(Protocol):
         ...
 
     async def find_auto(
-        self, owner_id: UUID, origin: NotebookOrigin, target_id: UUID
+        self,
+        owner_id: UUID,
+        origin: NotebookOrigin,
+        target_id: UUID,
+        group_id: UUID | None = None,
     ) -> Notebook | None:
-        """The owner's live subject notebook (`target_id` = subject) or lesson one."""
+        """The owner's live subject notebook (`target_id` = subject) or lesson one.
+
+        A teacher's subject notebook is told apart by its `group_id`.
+        """
+        ...
+
+    async def list_subject_auto(self, owner_id: UUID) -> list[Notebook]:
+        """The owner's live subject notebooks (a teacher's, one per group, too)."""
         ...
 
     async def add_auto(self, notebook: Notebook) -> bool:

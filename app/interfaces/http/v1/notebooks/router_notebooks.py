@@ -11,6 +11,7 @@ from app.interfaces.http.v1.notebooks.handlers import (
     get_usage,
     list_course_steps,
     list_notebooks,
+    list_subject_slots,
     open_course_notebook,
     open_course_workspace,
     open_lesson_notebook,
@@ -43,6 +44,9 @@ router.add_api_route(
     "/course/{course_id}", open_course_notebook.open_course_notebook, methods=["POST"]
 )
 # Subject and lesson notebooks the system keeps up to date (get-or-create, lookup).
+router.add_api_route(
+    "/auto/subjects", list_subject_slots.list_subject_slots, methods=["GET"]
+)
 router.add_api_route(
     "/auto/subject/{subject_id}",
     open_subject_notebook.open_subject_notebook,

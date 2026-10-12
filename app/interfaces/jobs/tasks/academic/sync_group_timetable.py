@@ -18,8 +18,4 @@ async def sync_group_timetable(user_id: UUID, group_id: UUID) -> str:
     result = await container.academic.emis_import.sync_group_timetable.execute(
         group_id=group_id, user_id=user_id
     )
-    if result.status == "synced":  # the student's subjects are known now
-        await container.kicker.kick(
-            "notebooks.provision_student_notebooks", user_id=str(user_id)
-        )
     return result.status

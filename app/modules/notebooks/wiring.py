@@ -40,6 +40,7 @@ from app.modules.notebooks.application.list_labels import ListLabels
 from app.modules.notebooks.application.list_notebooks import ListNotebooks
 from app.modules.notebooks.application.list_passages import ListPassages
 from app.modules.notebooks.application.list_sources import ListSources
+from app.modules.notebooks.application.list_subject_slots import ListSubjectSlots
 from app.modules.notebooks.application.message_feedback import MessageFeedback
 from app.modules.notebooks.application.open_auto_notebook import OpenAutoNotebook
 from app.modules.notebooks.application.open_course_workspace import (
@@ -153,6 +154,7 @@ class NotebooksServices:
     refresh_summaries: RefreshSummaries
     sweep_sources: SweepSources
     open_auto_notebook: OpenAutoNotebook
+    list_subject_slots: ListSubjectSlots
     update_auto_settings: UpdateAutoSettings
     sync_auto_notebook: SyncAutoNotebook
     sync_lesson_notebooks: SyncLessonNotebooks
@@ -314,6 +316,7 @@ def build(
         refresh_summaries=sources.refresh_summaries,
         sweep_sources=sources.sweep_sources,
         open_auto_notebook=auto.open_auto_notebook,
+        list_subject_slots=auto.list_subject_slots,
         update_auto_settings=auto.update_auto_settings,
         sync_auto_notebook=auto.sync_auto_notebook,
         sync_lesson_notebooks=auto.sync_lesson_notebooks,

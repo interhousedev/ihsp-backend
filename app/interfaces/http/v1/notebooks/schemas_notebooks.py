@@ -81,6 +81,17 @@ class AutoSettingsResponse(BaseModel):
         )
 
 
+class SubjectNotebookSlotResponse(BaseModel):
+    """`SubjectNotebookSlot`: a subject (and group) with its notebook, if made yet."""
+
+    subject_id: UUID
+    subject_name: str
+    group_id: UUID | None  # teachers only
+    group_name: str | None
+    notebook_id: UUID | None  # None until the first open creates it
+    source_count: int
+
+
 class NotebookItemResponse(BaseModel):
     """`NotebookItem`."""
 
@@ -94,6 +105,7 @@ class NotebookItemResponse(BaseModel):
     origin: NotebookOrigin
     subject_id: UUID | None
     lesson_id: UUID | None
+    group_id: UUID | None  # a teacher's subject notebook: its group
     course_id: UUID | None  # a course workspace or a student course notebook
     can_write: bool  # False for a course member who may only read
 
@@ -111,6 +123,7 @@ class NotebookItemResponse(BaseModel):
             origin=notebook.origin,
             subject_id=notebook.subject_id,
             lesson_id=notebook.lesson_id,
+            group_id=notebook.group_id,
             course_id=notebook.course_id,
             can_write=notebook.can_write,
         )

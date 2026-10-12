@@ -10,6 +10,7 @@ from app.modules.notebooks.application.default_material_sources import (
 from app.modules.notebooks.application.list_default_materials import (
     ListDefaultMaterials,
 )
+from app.modules.notebooks.application.list_subject_slots import ListSubjectSlots
 from app.modules.notebooks.application.open_auto_notebook import OpenAutoNotebook
 from app.modules.notebooks.application.provision_student_notebooks import (
     BackfillSubjectNotebooks,
@@ -37,6 +38,7 @@ class AutoServices:
     """Use cases and jobs of auto notebooks (attribute = file name)."""
 
     open_auto_notebook: OpenAutoNotebook
+    list_subject_slots: ListSubjectSlots
     update_auto_settings: UpdateAutoSettings
     sync_auto_notebook: SyncAutoNotebook
     sync_lesson_notebooks: SyncLessonNotebooks
@@ -94,6 +96,9 @@ def build_auto(
     )
     return AutoServices(
         open_auto_notebook=open_auto,
+        list_subject_slots=ListSubjectSlots(
+            uow_factory=core.uow_factory, targets=targets
+        ),
         update_auto_settings=UpdateAutoSettings(
             uow_factory=core.uow_factory, clock=deps.clock, sync=sync
         ),

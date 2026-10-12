@@ -7,7 +7,7 @@ it and a `kind` that says why word matching alone may fail. The vectors are real
 them with `scripts/vector_eval.py`), so the test needs no network.
 
 Run `pytest tests/notebooks/integration/test_retrieval_quality.py -s` to print the
-table that docs/reference/vector-search.md quotes.
+recall table per language and question kind.
 """
 
 import json
@@ -138,7 +138,7 @@ async def test_hybrid_search_beats_words_alone_on_the_trilingual_set(
     sessionmaker_in_tx: async_sessionmaker[AsyncSession],
     notebook: Notebook,
 ) -> None:
-    """NB-14: the numbers behind docs/reference/vector-search.md."""
+    """NB-14: recall of word, meaning and hybrid retrieval on the multilingual set."""
     source_ids, ids_by_text = await prepare(uow_factory, notebook, sessionmaker_in_tx)
     results = {
         mode: await evaluate(uow_factory, notebook, source_ids, ids_by_text, mode)

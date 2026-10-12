@@ -154,6 +154,7 @@ class Notebook:
     origin: NotebookOrigin = NotebookOrigin.MANUAL
     subject_id: UUID | None = None
     lesson_id: UUID | None = None
+    group_id: UUID | None = None  # a teacher's subject notebook: the group it is for
     auto_settings: AutoSettings | None = None
     auto_synced_at: datetime | None = None
     space_key: str | None = None  # the shared course space the notebook belongs to

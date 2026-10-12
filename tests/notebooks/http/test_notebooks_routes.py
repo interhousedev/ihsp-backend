@@ -27,6 +27,7 @@ ITEM_KEYS = {
     "origin",
     "subject_id",
     "lesson_id",
+    "group_id",
     "course_id",
     "can_write",
 }

@@ -1,5 +1,5 @@
 {
-  "description": "Small multilingual retrieval set: 8 documents (Uzbek Latin x2, Uzbek Cyrillic x2, Russian x2, English x2), 64 passages, 64 questions. `kind` says why the question is hard for word matching. Written for docs/reference/vector-search.md; not a public benchmark.",
+  "description": "Small multilingual retrieval set: 8 documents (Uzbek Latin x2, Uzbek Cyrillic x2, Russian x2, English x2), 64 passages, 64 questions. `kind` says why the question is hard for word matching. Not a public benchmark.",
   "documents": [
     {
       "id": "bio",

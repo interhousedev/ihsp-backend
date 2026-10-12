@@ -53,8 +53,12 @@ class OpenAutoNotebook:
         target_id: UUID,
         *,
         create: bool = True,
+        group_id: UUID | None = None,
     ) -> Notebook:
         """Return the student's notebook for the subject or lesson.
+
+        A teacher passes the `group_id` they teach the subject to: their notebook is
+        one per subject and group.
 
         With `create=False` only an existing one is returned and nothing is touched
         (the card on the subject page); otherwise it is created when missing and
@@ -68,17 +72,19 @@ class OpenAutoNotebook:
         """
         if not origin.is_auto:
             raise InvalidOptionsError(params={"field": "origin"})
-        found = await self._existing(actor, origin, target_id, touch=create)
+        found = await self._existing(actor, origin, target_id, group_id, touch=create)
         if found is not None:
             return found
         if not create:
             raise NotebookNotFoundError()
-        target = await self.targets.resolve(actor.user_id, origin, target_id)
+        target = await self.targets.resolve(actor.user_id, origin, target_id, group_id)
         if target is None:
             raise NotebookNotFoundError()
         created = await self._create(actor, target)
         if created is None:  # a parallel request made it first
-            existing = await self._existing(actor, origin, target_id, touch=True)
+            existing = await self._existing(
+                actor, origin, target_id, group_id, touch=True
+            )
             if existing is None:
                 raise NotebookNotFoundError()
             return existing
@@ -86,7 +92,13 @@ class OpenAutoNotebook:
         return await self._reload(created.id)
 
     async def _existing(
-        self, actor: Actor, origin: NotebookOrigin, target_id: UUID, *, touch: bool
+        self,
+        actor: Actor,
+        origin: NotebookOrigin,
+        target_id: UUID,
+        group_id: UUID | None,
+        *,
+        touch: bool,
     ) -> Notebook | None:
         """Return the notebook if there is one.
 
@@ -94,7 +106,9 @@ class OpenAutoNotebook:
         last sync was a while ago.
         """
         async with self.uow_factory() as uow:
-            notebook = await uow.notebooks.find_auto(actor.user_id, origin, target_id)
+            notebook = await uow.notebooks.find_auto(
+                actor.user_id, origin, target_id, group_id
+            )
             if notebook is None or not touch:
                 return notebook
             now = self.clock.now()
@@ -127,6 +141,7 @@ class OpenAutoNotebook:
             origin=target.origin,
             subject_id=target.subject_id,
             lesson_id=target.lesson_id,
+            group_id=target.group_id,
             auto_settings=AutoSettings(),
             space_key=target.space_key,
         )

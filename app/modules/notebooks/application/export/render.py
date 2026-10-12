@@ -55,11 +55,6 @@ def file_name(title: str, kind: str) -> str:
     return f"{clean or 'document'}.{kind}"
 
 
-def format_for(kind: ArtifactKind) -> str | None:
-    """The export format of an output kind, or None if it has none."""
-    return KIND_FORMATS.get(kind)
-
-
 def default_format(kind: ArtifactKind) -> str | None:
     """The download format when none is asked for: Office, else Markdown."""
     office = KIND_FORMATS.get(kind)

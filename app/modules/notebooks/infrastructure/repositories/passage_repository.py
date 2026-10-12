@@ -185,7 +185,7 @@ class SqlPassageRepository:
             return by_words[:limit]
         found = {_hit_key(p): p for p in (*by_meaning, *by_words)}
         # Meaning first: it wins ties, because a question in another language or
-        # script gives weak word matches (see docs/reference/vector-search.md).
+        # script gives weak word matches.
         order = reciprocal_rank_fusion(
             [[_hit_key(p) for p in by_meaning], [_hit_key(p) for p in by_words]]
         )

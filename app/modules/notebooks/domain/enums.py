@@ -164,11 +164,3 @@ class ArtifactFailure(StrEnum):
     LIMIT_REACHED = "limit_reached"
     TIMEOUT = "timeout"
     CANCELED = "canceled"
-
-
-class Language(StrEnum):
-    """Output languages."""
-
-    UZ = "uz"
-    RU = "ru"
-    EN = "en"

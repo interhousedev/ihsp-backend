@@ -207,13 +207,6 @@ class CompleteRegistration:
                     user_id=str(user_id),
                 )
             )
-            uow.after_commit(
-                partial(
-                    self._kicker.kick,
-                    "notebooks.provision_student_notebooks",
-                    user_id=str(user_id),
-                )
-            )
             self._kick_timetable(uow, user_id, student)
             await uow.commit()
         return login

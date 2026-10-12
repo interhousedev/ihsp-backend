@@ -65,7 +65,21 @@ class Notebook(IdMixin, TimestampMixin, Base):
             "owner_id",
             "subject_id",
             unique=True,
-            postgresql_where=text("origin = 'subject_auto' AND deleted_at IS NULL"),
+            postgresql_where=text(
+                "origin = 'subject_auto' AND group_id IS NULL AND deleted_at IS NULL"
+            ),
+        ),
+        # A teacher has one per subject and group they teach it to.
+        Index(
+            "ix_notebooks_owner_id_subject_id_group_id_auto",
+            "owner_id",
+            "subject_id",
+            "group_id",
+            unique=True,
+            postgresql_where=text(
+                "origin = 'subject_auto' AND group_id IS NOT NULL "
+                "AND deleted_at IS NULL"
+            ),
         ),
         Index(
             "ix_notebooks_owner_id_lesson_id_auto",
@@ -112,6 +126,9 @@ class Notebook(IdMixin, TimestampMixin, Base):
             postgresql_where=text("origin = 'course_student' AND deleted_at IS NULL"),
         ),
         CheckConstraint(AUTO_TARGET, name="auto_target"),
+        CheckConstraint(
+            "group_id IS NULL OR origin = 'subject_auto'", name="group_subject_only"
+        ),
         {"schema": "notebooks"},
     )
 
@@ -139,6 +156,8 @@ class Notebook(IdMixin, TimestampMixin, Base):
     )
     subject_id: Mapped[UUID | None] = mapped_column(Uuid)
     lesson_id: Mapped[UUID | None] = mapped_column(Uuid)
+    # A teacher's subject notebook is scoped to one group (a student's has none).
+    group_id: Mapped[UUID | None] = mapped_column(Uuid)
     # SQL NULL for a manual notebook (the CHECK constraint tests `IS NULL`).
     auto_settings: Mapped[dict[str, Any] | None] = mapped_column(
         JSONB(none_as_null=True)
