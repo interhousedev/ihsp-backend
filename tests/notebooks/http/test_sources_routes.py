@@ -40,7 +40,7 @@ ITEM_KEYS = {
     "modality",
     "ai_unsupported",
 }
-DETAIL_KEYS = ITEM_KEYS | {"guide", "body_md", "editable", "citations"}
+DETAIL_KEYS = ITEM_KEYS | {"guide", "body_md", "editable", "citations", "file"}
 PASSAGE_KEYS = {"id", "seq", "text", "page", "heading"}
 PROBLEM_KEYS = {"type", "title", "status", "message_key", "params"}
 TEXTS = tuple(
@@ -292,6 +292,70 @@ async def test_a_note_opens_with_its_guide_text_and_the_editable_flag(
         "questions": ["Why?"],
     }
     assert body["citations"] == [] and body["has_guide"] is True
+    assert body["file"] is None
+
+
+async def test_an_uploaded_file_source_carries_its_file_and_a_link_to_it(
+    api: AsyncClient,
+    uow_factory: UowFactory,
+    world: World,
+    student: Actor,
+    notebook: Notebook,
+) -> None:
+    """SourceDetail.file names the upload; `file-url` presigns it for the member."""
+    file = world.files.add_text(
+        make_file(student.user_id, name="lab-setup.pdf"), "Text of the file."
+    )
+    source = await make_source(
+        uow_factory,
+        notebook,
+        kind=SourceKind.FILE,
+        title="lab-setup.pdf",
+        ref={"file_id": str(file.id), "content_type": file.content_type},
+    )
+
+    detail = await api.get(sources_url(notebook, f"/{source.id}"))
+    inline = await api.get(
+        sources_url(notebook, f"/{source.id}/file-url"),
+        params={"disposition": "inline"},
+    )
+    attachment = await api.get(sources_url(notebook, f"/{source.id}/file-url"))
+
+    body = detail.json()
+    assert detail.status_code == 200, detail.text
+    assert set(body) == DETAIL_KEYS
+    assert body["file"] == {
+        "id": str(file.id),
+        "name": "lab-setup.pdf",
+        "content_type": "application/pdf",
+        "byte_size": file.byte_size,
+    }
+    for response in (inline, attachment):
+        assert response.status_code == 200, response.text
+        assert set(response.json()) == {"url", "expires_at"}
+        assert response.json()["url"] == f"https://files.test/{file.id}"
+
+
+async def test_the_file_link_is_hidden_with_the_notebook_and_for_sources_without_a_file(
+    api: AsyncClient,
+    uow_factory: UowFactory,
+    world: World,
+    other_student: Actor,
+    notebook: Notebook,
+    theirs: Notebook,
+) -> None:
+    """A pasted text has no file; another student's notebook is a 404 (not 403)."""
+    text = await make_source(uow_factory, notebook, kind=SourceKind.TEXT)
+    file = world.files.add_text(make_file(other_student.user_id), "Not yours.")
+    foreign = await make_source(
+        uow_factory, theirs, kind=SourceKind.FILE, ref={"file_id": str(file.id)}
+    )
+
+    no_file = await api.get(sources_url(notebook, f"/{text.id}/file-url"))
+    hidden = await api.get(sources_url(theirs, f"/{foreign.id}/file-url"))
+
+    assert no_file.status_code == 404, no_file.text
+    assert hidden.status_code == 404, hidden.text
 
 
 async def test_a_source_with_citations_is_not_editable_and_lists_them(

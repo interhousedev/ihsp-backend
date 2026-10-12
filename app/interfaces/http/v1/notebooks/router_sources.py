@@ -5,6 +5,7 @@ from app.interfaces.http.v1.notebooks.handlers import (
     discover_sources,
     get_passage,
     get_source,
+    get_source_file_url,
     list_passages,
     list_sources,
     remove_source,
@@ -53,6 +54,11 @@ router.add_api_route(
 )
 router.add_api_route(
     "/{notebook_id}/sources/{source_id}/sync", sync_source.sync_source, methods=["POST"]
+)
+router.add_api_route(
+    "/{notebook_id}/sources/{source_id}/file-url",
+    get_source_file_url.get_source_file_url,
+    methods=["GET"],
 )
 router.add_api_route(
     "/{notebook_id}/sources/{source_id}/passages",

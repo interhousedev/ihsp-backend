@@ -1,5 +1,6 @@
 """Request and response models of the source and passage endpoints (§ 4.4)."""
 
+from datetime import datetime
 from typing import Any, Self
 from uuid import UUID
 
@@ -10,6 +11,7 @@ from app.modules.notebooks.domain.entities import Citation, Passage, Source, Sou
 from app.modules.notebooks.domain.enums import SourceKind
 from app.modules.notebooks.domain.limits import SOURCE_TITLE_MAX_CHARS
 from app.modules.notebooks.domain.source_input import SourceInput
+from app.shared.contracts.files import FileRef
 
 from fastapi import Request
 from pydantic import BaseModel, Field
@@ -38,23 +40,53 @@ class UpdateSourceBody(BaseModel):
     body_md: str | None = None
 
 
+class SourceFileResponse(BaseModel):
+    """`SourceFile`: the uploaded file behind a source (preview and download)."""
+
+    id: UUID
+    name: str
+    content_type: str
+    byte_size: int
+
+    @classmethod
+    def from_ref(cls, ref: FileRef) -> Self:
+        """Build from the files contract."""
+        return cls(
+            id=ref.id,
+            name=ref.name,
+            content_type=ref.content_type,
+            byte_size=ref.byte_size,
+        )
+
+
+class SourceFileUrlResponse(BaseModel):
+    """`SourceFileUrl`: a presigned URL of the file behind a source (60 seconds)."""
+
+    url: str
+    expires_at: datetime
+
+
 class SourceDetailResponse(SourceItemResponse):
-    """`SourceDetail`: the item plus guide, text of a note and cited passages."""
+    """`SourceDetail`: the item plus guide, text of a note, cited passages and file."""
 
     guide: SourceGuide | None
     body_md: str | None
     editable: bool
     citations: list[Citation]
+    file: SourceFileResponse | None = None
+    """The uploaded file behind a `file` source or a file-based lesson material
+    (`GET …/file-url` gives a link to it); null for every other source."""
 
     @classmethod
-    def from_entity(cls, source: Source) -> Self:
-        """Build from the source entity."""
+    def from_entity(cls, source: Source, file: FileRef | None = None) -> Self:
+        """Build from the source entity and, when there is one, its file."""
         return cls(
             **dict(SourceItemResponse.from_entity(source)),
             guide=source.guide,
             body_md=source.body_md,
             editable=source.editable,
             citations=source.citations or [],
+            file=None if file is None else SourceFileResponse.from_ref(file),
         )
 
 

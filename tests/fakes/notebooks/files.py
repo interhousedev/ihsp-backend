@@ -52,6 +52,16 @@ class FakeNotebookFiles(FakeFiles):
         """The text sidecar is gone."""
         self.files[file_id] = dataclasses.replace(self.files[file_id], text_bytes=None)
 
+    async def download_url(
+        self,
+        file_id: UUID,
+        *,
+        inline: bool | None = None,
+        ttl_seconds: int | None = None,
+    ) -> str:
+        """A fake presigned URL (the caller has checked the access)."""
+        return f"https://files.test/{file_id}"
+
     async def read_text_with_pages(self, file_id: UUID) -> FullText:
         """Return the text, or fail like the files module does."""
         self.read_calls.append(file_id)
