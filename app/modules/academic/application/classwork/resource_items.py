@@ -10,8 +10,8 @@ from app.shared.contracts.links import ResourceRef
 def resource_item(ref: ResourceRef, author: Person | None) -> dict[str, Any]:
     """Build one ``ResourceItem``.
 
-    The links contract carries no file details and no creation time, so ``file``
-    and ``created_at`` are null; students get the author's first name only.
+    ``file`` is the stored file in the ``FileItem`` shape (null for a web address);
+    students get the author's first name only.
     """
     person = (
         author.to_json()
@@ -32,8 +32,29 @@ def resource_item(ref: ResourceRef, author: Person | None) -> dict[str, Any]:
         "author": person,
         "hidden": ref.hidden,
         "source": ref.source,
-        "file": None,
-        "created_at": None,
+        "file": _file_item(ref),
+        "created_at": ref.created_at.isoformat() if ref.created_at else None,
+    }
+
+
+def _file_item(ref: ResourceRef) -> dict[str, Any] | None:
+    """The file of a resource as a ``FileItem``, or None for a web address."""
+    file = ref.file
+    if file is None:
+        return None
+    return {
+        "id": str(file.id),
+        "name": file.name,
+        "content_type": file.content_type,
+        "byte_size": file.byte_size,
+        "purpose": file.purpose.value,
+        "status": file.status,
+        "reject_reason": None,
+        "text_bytes": file.text_bytes,
+        "assistant_ready": file.status == "ready" and file.text_bytes is not None,
+        "created_at": ref.created_at.isoformat() if ref.created_at else None,
+        "expires_on": None,
+        "used_by": [{"kind": "lesson", "id": str(ref.lesson_id), "label": ref.title}],
     }
 
 

@@ -2,10 +2,12 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Literal, Protocol
 from uuid import UUID
 
 from app.shared.actor import Actor
+from app.shared.contracts.files import FileRef
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,6 +26,10 @@ class ResourceRef:
     file_id: UUID | None
     # "emis": brought by EMIS (a hint, labelled in the UI), "user": added by a person.
     source: Literal["user", "emis"] = "user"
+    # The stored file (name, type, size) and when the resource was added: the student
+    # app shows the size and offers a preview for images, PDFs, video and audio.
+    file: FileRef | None = None
+    created_at: datetime | None = None
 
 
 # Lesson resources that an outside system (EMIS) brought carry this author, who is no

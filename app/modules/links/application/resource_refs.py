@@ -22,4 +22,6 @@ def to_ref(view: ResourceView) -> ResourceRef:
         hidden=link.is_hidden,
         file_id=link.file_id,
         source="emis" if link.owner_id == EMIS_AUTHOR_ID else "user",
+        file=view.file,
+        created_at=link.created_at,
     )
