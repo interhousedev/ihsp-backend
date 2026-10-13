@@ -14,6 +14,7 @@ from app.modules.academic.wiring_emis_import import (
 )
 from app.modules.academic.wiring_marks import MarksServices, build_marks
 from app.modules.academic.wiring_schedule import ScheduleServices, build_schedule
+from app.modules.academic.wiring_teaching import TeachingServices, build_teaching
 
 __all__ = [
     "AcademicModule",
@@ -22,11 +23,13 @@ __all__ = [
     "EmisImportServices",
     "MarksServices",
     "ScheduleServices",
+    "TeachingServices",
     "build_assessments",
     "build_classwork",
     "build_emis_import",
     "build_marks",
     "build_schedule",
+    "build_teaching",
 ]
 
 
@@ -47,3 +50,4 @@ class AcademicModule:
     marks: MarksServices = _NOT_BUILT
     emis_import: EmisImportServices = _NOT_BUILT
     assessments: AssessmentServices = _NOT_BUILT
+    teaching: TeachingServices = _NOT_BUILT

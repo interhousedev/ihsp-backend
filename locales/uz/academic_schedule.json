@@ -34,5 +34,7 @@
   "academic-teacher-not-found": "O‘qituvchi topilmadi.",
   "academic-import-invalid": "Fayl talabalar ro‘yxati sifatida o‘qilmadi.",
   "academic-import-expired": "Import ko‘rinishi eskirdi. Faylni qayta yuklang.",
-  "academic-term-control-periods-invalid": "Nazorat davri noto‘g‘ri: u tugashidan oldin boshlanishi, semestr ichida bo‘lishi va oldingi nazoratdan keyin kelishi kerak (oraliq 1, oraliq 2, yakuniy)."
+  "academic-term-control-periods-invalid": "Nazorat davri noto‘g‘ri: u tugashidan oldin boshlanishi, semestr ichida bo‘lishi va oldingi nazoratdan keyin kelishi kerak (oraliq 1, oraliq 2, yakuniy).",
+  "academic-not-teaching-group": "Siz bu guruhda bu fanni o‘qitmaysiz.",
+  "academic-student-not-in-group": "Bu talaba ushbu guruhda emas."
 }

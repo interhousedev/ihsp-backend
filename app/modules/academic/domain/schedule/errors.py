@@ -266,3 +266,20 @@ class ImportExpiredError(GoneError):
 
     code = "academic/import-expired"
     message_key = "academic-import-expired"
+
+
+# - - - Teaching (a teacher's subject groups) - - -
+
+
+class NotTeachingGroupError(ForbiddenError):
+    """The teacher does not teach this subject to this group (or subgroup)."""
+
+    code = "academic/not-teaching-group"
+    message_key = "academic-not-teaching-group"
+
+
+class StudentNotInGroupError(NotFoundError):
+    """The student is not an active student of the group (or subgroup)."""
+
+    code = "academic/student-not-in-group"
+    message_key = "academic-student-not-in-group"

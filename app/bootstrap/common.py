@@ -36,6 +36,7 @@ from app.modules.academic.wiring import (
     build_emis_import,
     build_marks,
     build_schedule,
+    build_teaching,
 )
 from app.modules.admin.infrastructure.limit_snapshot import load_limit_snapshot
 from app.modules.admin.wiring import build as build_admin
@@ -365,6 +366,13 @@ class _Assembler:
             emis_import=emis_import,
             assessments=build_assessments(
                 self.deps, identity=identity.directory, schedule=schedule.queries
+            ),
+            teaching=build_teaching(
+                self.deps,
+                schedule=schedule.queries,
+                identity=identity.directory,
+                marks=marks.queries,
+                classwork=classwork.queries,
             ),
         )
 

@@ -34,5 +34,7 @@
   "academic-teacher-not-found": "Teacher not found.",
   "academic-import-invalid": "The file cannot be read as a student list.",
   "academic-import-expired": "The import preview has expired. Upload the file again.",
-  "academic-term-control-periods-invalid": "A control period is invalid: it must start on or before its end, lie inside the term and come after the previous control (midterm 1, midterm 2, final)."
+  "academic-term-control-periods-invalid": "A control period is invalid: it must start on or before its end, lie inside the term and come after the previous control (midterm 1, midterm 2, final).",
+  "academic-not-teaching-group": "You do not teach this subject to this group.",
+  "academic-student-not-in-group": "This student is not in this group."
 }
