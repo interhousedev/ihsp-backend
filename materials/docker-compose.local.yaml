@@ -7,7 +7,7 @@
 #   scripts/local_down.sh      stop (add --wipe to delete the volumes)
 #
 # Hosts (LOCAL_DOMAIN defaults to `localhost`):
-#   id.localhost  sp.localhost  app.localhost  staff.localhost  admin.localhost  lms.localhost
+#   id.localhost  my.localhost  app.localhost  staff.localhost  admin.localhost  lms.localhost
 #   library.localhost (books and materials; /b/, /sitemap.xml, /robots.txt, /opds/ come from the api)
 #   s.localhost (short links, /ai/ share viewer)  api.localhost  mcp.localhost
 #   localhost/r/<slug> (room pages)
@@ -75,7 +75,7 @@ x-backend-env: &backend-env
   IHSP_EMIS__GATEWAY_URL: http://identity:8001/internal/emis
   IHSP_OPENROUTER__MODE: ${IHSP_OPENROUTER__MODE:-fake}
   IHSP_OPENROUTER__API_KEY: # optional: set it in .env.local together with OPENROUTER__MODE=real
-  IHSP_OPENROUTER__APP_URL: http://sp.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+  IHSP_OPENROUTER__APP_URL: http://my.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
   IHSP_EXA__MODE: ${IHSP_EXA__MODE:-fake}
   IHSP_EXA__API_KEY: # optional: set it in .env.local together with EXA__MODE=real
   # Models per task and feature flags (materials/.env.sample); override them in
@@ -92,7 +92,7 @@ x-backend-env: &backend-env
   IHSP_SMTP_OUT__MAIL_DOMAIN: mail.ihsu.uz
   IHSP_SMTP_OUT__SYSTEM_FROM: no-reply@ihsu.uz
   IHSP_URLS__ID: http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
-  IHSP_URLS__SP: http://sp.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+  IHSP_URLS__SP: http://my.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
   IHSP_URLS__APP: http://app.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
   IHSP_URLS__STAFF: http://staff.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
   IHSP_URLS__ADMIN: http://admin.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
@@ -108,7 +108,7 @@ x-backend-env: &backend-env
   IHSP_APP__LATEST: ${IHSP_APP__LATEST:-1.0.0}
   IHSP_APP__MIN_SUPPORTED: ${IHSP_APP__MIN_SUPPORTED:-1.0.0}
 
-x-cors-origins: &cors-origins http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://sp.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://app.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://staff.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://admin.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://lms.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://library.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+x-cors-origins: &cors-origins http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://my.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://app.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://staff.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://admin.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://lms.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://library.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
 
 services:
   # ---------------------------------------------------------------- data stores
@@ -390,7 +390,7 @@ services:
     environment:
       APP_ENV: dev
       APP_HOST_ID: id.${LOCAL_DOMAIN:-localhost}
-      APP_HOST_SP: sp.${LOCAL_DOMAIN:-localhost}
+      APP_HOST_MY: my.${LOCAL_DOMAIN:-localhost}
       APP_HOST_APP: app.${LOCAL_DOMAIN:-localhost}
       APP_HOST_STAFF: staff.${LOCAL_DOMAIN:-localhost}
       APP_HOST_ADMIN: admin.${LOCAL_DOMAIN:-localhost}
@@ -413,7 +413,7 @@ services:
       IHSP_WEB_API_URL: http://api.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
       IHSP_WEB_ID_URL: http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
       IHSP_WEB_HYDRA_URL: http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
-      IHSP_WEB_SP_URL: http://sp.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+      IHSP_WEB_SP_URL: http://my.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
       IHSP_WEB_APP_URL: http://app.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
       IHSP_WEB_STAFF_URL: http://staff.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
       IHSP_WEB_ADMIN_URL: http://admin.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
@@ -442,7 +442,7 @@ services:
     environment:
       NGINX_ENVSUBST_FILTER: ^HOST_
       HOST_ID: id.${LOCAL_DOMAIN:-localhost}
-      HOST_SP: sp.${LOCAL_DOMAIN:-localhost}
+      HOST_MY: my.${LOCAL_DOMAIN:-localhost}
       HOST_APP: app.${LOCAL_DOMAIN:-localhost}
       HOST_STAFF: staff.${LOCAL_DOMAIN:-localhost}
       HOST_ADMIN: admin.${LOCAL_DOMAIN:-localhost}

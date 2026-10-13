@@ -83,7 +83,7 @@ scripts/local_up.sh          # build, start, register the OAuth clients, seed de
 scripts/local_down.sh        # stop; add --wipe to delete the data
 ```
 
-`local_up.sh` needs the `iht-web` checkout (`../iht-web` or `IHSP_WEB_DIR=/path/to/iht-web`) and stops with an error if it is missing. It builds the seven web apps on the host one at a time and packs them with `deploy/Dockerfile.prebuilt` of the web repository, so the Docker VM never runs `next build`. Options: `--no-build`, `--full-build` (build the web image inside Docker; needs a large Docker VM), `--no-seed`. Open `http://sp.localhost/` and sign in with a demo login.
+`local_up.sh` needs the `iht-web` checkout (`../iht-web` or `IHSP_WEB_DIR=/path/to/iht-web`) and stops with an error if it is missing. It builds the seven web apps on the host one at a time and packs them with `deploy/Dockerfile.prebuilt` of the web repository, so the Docker VM never runs `next build`. Options: `--no-build`, `--full-build` (build the web image inside Docker; needs a large Docker VM), `--no-seed`. Open `http://my.localhost/` and sign in with a demo login.
 
 Demo logins (local stack only): `admin.ihsp` / `AdminDemo1` (the admin one-time code arrives in Mailpit), `usmonov.bobur` / `TeacherDemo1`, `abdullayev.alisher` / `StudentDemo1`, `tursunov.sardor` / `LibrarianDemo1`.
 

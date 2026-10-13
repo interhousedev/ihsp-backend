@@ -45,7 +45,7 @@ server {
 
 server {
     listen 80;
-    server_name ${HOST_SP};
+    server_name ${HOST_MY};
     access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
     include /etc/nginx/ihsp/route-static.inc;
@@ -125,6 +125,6 @@ server {
     include /etc/nginx/ihsp/route-apex.inc;
 
     location = / {
-        return 302 http://${HOST_SP}/;
+        return 302 http://${HOST_MY}/;
     }
 }

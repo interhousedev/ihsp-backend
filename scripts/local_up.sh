@@ -145,7 +145,7 @@ failed=0
 echo "==> checking the edge"
 check "api.$domain" /health 200
 check "id.$domain" /.well-known/openid-configuration 200
-check "sp.$domain" / 200
+check "my.$domain" / 200
 check "app.$domain" / 200
 check "library.$domain" / 200
 check "library.$domain" /env.js 200
@@ -155,7 +155,7 @@ cat << EOF
 
 IHSP is running.
 
-  Student app    http://sp.$domain$suffix/
+  Student app    http://my.$domain$suffix/
   App (PWA)      http://app.$domain$suffix/      (installable: open it on a phone)
   Teacher app    http://staff.$domain$suffix/
   Admin          http://admin.$domain$suffix/

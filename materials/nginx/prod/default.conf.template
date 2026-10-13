@@ -44,7 +44,7 @@ server {
 
 server {
     listen 80;
-    server_name ${HOST_ID} ${HOST_SP} ${HOST_APP} ${HOST_STAFF} ${HOST_ADMIN} ${HOST_LMS} ${HOST_LIBRARY} ${HOST_S} ${HOST_API} ${HOST_MCP} ${HOST_STORAGE} ${HOST_APEX};
+    server_name ${HOST_ID} ${HOST_MY} ${HOST_APP} ${HOST_STAFF} ${HOST_ADMIN} ${HOST_LMS} ${HOST_LIBRARY} ${HOST_S} ${HOST_API} ${HOST_MCP} ${HOST_STORAGE} ${HOST_APEX};
     access_log /var/log/nginx/access.log ihsp;
 
     location /.well-known/acme-challenge/ {
@@ -78,7 +78,7 @@ server {
 server {
     listen 443 ssl;
     http2 on;
-    server_name ${HOST_SP};
+    server_name ${HOST_MY};
     include /etc/nginx/conf.d/tls.inc;
     access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
@@ -189,6 +189,6 @@ server {
     include /etc/nginx/ihsp/route-apex.inc;
 
     location = / {
-        return 302 https://${HOST_SP}/;
+        return 302 https://${HOST_MY}/;
     }
 }

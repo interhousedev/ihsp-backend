@@ -14,7 +14,7 @@ pytestmark = requires_compose
 NGINX_IMAGE = "nginx:1.28.3-alpine"
 HOST_ENV = {
     "HOST_ID": "id.ihsu.test",
-    "HOST_SP": "my.ihsu.test",
+    "HOST_MY": "my.ihsu.test",
     "HOST_APP": "app.ihsu.test",
     "HOST_STAFF": "staff.ihsu.test",
     "HOST_ADMIN": "admin.ihsu.test",
@@ -212,5 +212,5 @@ def test_port_80_redirects_known_hosts_only() -> None:
     template = (MATERIALS_DIR / "nginx" / "prod" / "default.conf.template").read_text()
     default, named = template.split("listen 80;", 1)
     assert "return 404;" in default.split("listen 80 default_server;", 1)[1]
-    assert "server_name ${HOST_ID} ${HOST_SP}" in named
+    assert "server_name ${HOST_ID} ${HOST_MY}" in named
     assert "return 301 https://$host$request_uri;" in named
