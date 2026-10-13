@@ -4,6 +4,7 @@ from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
 
+from app.modules.academic.application.classwork.resource_items import file_item
 from app.modules.academic.application.marks.ports.unit_of_work import MarksUowFactory
 from app.modules.academic.application.marks.semester_range import semester_range
 from app.modules.academic.application.marks.view_context import (
@@ -210,6 +211,6 @@ def _resource(view: ViewContext, ref: ResourceRef) -> dict[str, Any]:
         "author": author,
         "hidden": ref.hidden,
         "source": ref.source,
-        "file": None,
-        "created_at": None,
+        "file": file_item(ref),
+        "created_at": ref.created_at,
     }

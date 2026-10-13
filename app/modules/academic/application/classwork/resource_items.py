@@ -32,12 +32,12 @@ def resource_item(ref: ResourceRef, author: Person | None) -> dict[str, Any]:
         "author": person,
         "hidden": ref.hidden,
         "source": ref.source,
-        "file": _file_item(ref),
+        "file": file_item(ref),
         "created_at": ref.created_at.isoformat() if ref.created_at else None,
     }
 
 
-def _file_item(ref: ResourceRef) -> dict[str, Any] | None:
+def file_item(ref: ResourceRef) -> dict[str, Any] | None:
     """The file of a resource as a ``FileItem``, or None for a web address."""
     file = ref.file
     if file is None:
