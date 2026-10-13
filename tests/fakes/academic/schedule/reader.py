@@ -212,6 +212,33 @@ class FakeScheduleReader:
         merged.sort(key=lambda view: (view.ref.starts_at, str(view.ref.id)))
         return merged
 
+    async def student_placement(self, user_id: UUID) -> tuple[UUID, int | None] | None:
+        """Return (group id, subgroup) of the student, None for an unknown one."""
+        student = self.store.students.get(user_id)
+        return None if student is None else (student.group_id, student.subgroup)
+
+    async def projected_for_group(
+        self, group_id: UUID, start: dt.date, end: dt.date, locale: str
+    ) -> list[LessonView]:
+        """Return the lessons of the whole group and of both its subgroups."""
+        keys = set(audience_keys.student_keys(group_id, None))
+        generated = self._views(
+            [
+                lesson
+                for lesson in self.store.lessons.values()
+                if start <= lesson.date <= end
+                and not on_a_saturday(lesson.date)
+                and set(lesson.audience) & keys
+            ],
+            locale,
+        )
+        projected = self._project(
+            lambda entry: bool(set(entry.audience) & keys), start, end, locale
+        )
+        merged = [*generated, *projected]
+        merged.sort(key=lambda view: (view.ref.starts_at, str(view.ref.id)))
+        return merged
+
     async def projected_for_teacher(
         self, teacher_id: UUID, start: dt.date, end: dt.date, locale: str
     ) -> list[LessonView]:

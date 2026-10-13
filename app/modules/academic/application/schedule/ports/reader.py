@@ -74,6 +74,16 @@ class ScheduleReader(Protocol):
         """Return generated lessons plus lessons projected from entries."""
         ...
 
+    async def student_placement(self, user_id: UUID) -> tuple[UUID, int | None] | None:
+        """Return (group id, subgroup) of the student, None for an unknown one."""
+        ...
+
+    async def projected_for_group(
+        self, group_id: UUID, start: dt.date, end: dt.date, locale: str
+    ) -> list[LessonView]:
+        """Return generated and projected lessons of the group and both subgroups."""
+        ...
+
     async def projected_for_teacher(
         self, teacher_id: UUID, start: dt.date, end: dt.date, locale: str
     ) -> list[LessonView]:

@@ -201,10 +201,32 @@ class SqlScheduleReader:
         """Return generated lessons plus lessons projected from entries."""
         async with self.sessionmaker() as session:
             keys = await self._keys(session, user_id)
-            if keys is None:
-                return []
+        if keys is None:
+            return []
+        return await self._projected_for_keys(keys, start, end, locale)
+
+    async def student_placement(self, user_id: UUID) -> tuple[UUID, int | None] | None:
+        """Return (group id, subgroup) of the student, None for an unknown one."""
+        async with self.sessionmaker() as session:
+            row = await session.get(StudentRow, user_id)
+        return (row.group_id, row.subgroup) if row else None
+
+    async def projected_for_group(
+        self, group_id: UUID, start: dt.date, end: dt.date, locale: str
+    ) -> list[LessonView]:
+        """Return the lessons of the whole group and of both its subgroups."""
+        keys = audience_keys.student_keys(group_id, None)
+        return await self._projected_for_keys(keys, start, end, locale)
+
+    async def _projected_for_keys(
+        self, keys: list[str], start: dt.date, end: dt.date, locale: str
+    ) -> list[LessonView]:
+        async with self.sessionmaker() as session:
             projected = await projected_views(session, keys, start, end, locale)
-        generated = await self.lessons_for_student(user_id, start, end, locale)
+        generated = await self._query(
+            [overlaps(LessonRow.audience, keys), LessonRow.date.between(start, end)],
+            locale,
+        )
         merged = [*generated, *projected]
         merged.sort(key=lambda view: (view.ref.starts_at, str(view.ref.id)))
         return merged

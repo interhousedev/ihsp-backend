@@ -4,7 +4,10 @@ import datetime as dt
 from typing import Literal
 from uuid import UUID
 
-from app.interfaces.http.v1.admin_schedule.shared_schemas import PersonRefResponse
+from app.interfaces.http.v1.admin_schedule.shared_schemas import (
+    LessonItemResponse,
+    PersonRefResponse,
+)
 from app.modules.academic.application.schedule.results import StudentProfileData
 
 from pydantic import BaseModel
@@ -53,3 +56,17 @@ class StudentProfileResponse(BaseModel):
             },
             from_attributes=True,
         )
+
+
+class LessonSubgroupResponse(BaseModel):
+    """The subgroup a lesson is for; `is_own_subgroup` is False for the other half."""
+
+    subgroup_id: int
+    subgroup_name: str
+    is_own_subgroup: bool
+
+
+class StudentLessonItemResponse(LessonItemResponse):
+    """A LessonItem of the student's timetable; `subgroup` is None for the group."""
+
+    subgroup: LessonSubgroupResponse | None = None

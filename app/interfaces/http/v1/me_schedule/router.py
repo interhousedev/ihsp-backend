@@ -6,7 +6,10 @@ from app.interfaces.http.v1.me_schedule.handlers.get_staff_timetable import (
     get_staff_timetable,
 )
 from app.interfaces.http.v1.me_schedule.handlers.get_timetable import get_timetable
-from app.interfaces.http.v1.me_schedule.schemas import StudentProfileResponse
+from app.interfaces.http.v1.me_schedule.schemas import (
+    StudentLessonItemResponse,
+    StudentProfileResponse,
+)
 
 from fastapi import APIRouter
 
@@ -21,7 +24,7 @@ router.add_api_route(
     "/v1/me/timetable",
     get_timetable,
     methods=["GET"],
-    response_model=list[LessonItemResponse],
+    response_model=list[StudentLessonItemResponse],
 )
 router.add_api_route(
     "/v1/staff/timetable",

@@ -77,8 +77,17 @@ async def test_the_student_timetable_follows_the_subgroup(env: Env) -> None:
         dt.date(2026, 10, 13),
     )
 
-    assert [(i["date"], i["period"]) for i in items] == [("2026-10-07", 1)]
+    assert [(i["date"], i["period"]) for i in items] == [
+        ("2026-10-07", 1),
+        ("2026-10-07", 2),
+    ]
     item = items[0]
+    assert item["subgroup"] is None
+    assert items[1]["subgroup"] == {
+        "subgroup_id": 2,
+        "subgroup_name": "2TN2/2",
+        "is_own_subgroup": False,
+    }
     assert item["teacher"]["id"] == str(teacher.id)
     assert item["audience"] == [
         {"group_id": str(group.id), "group_name": "2TN2", "subgroup": None}
@@ -189,3 +198,53 @@ async def test_the_staff_timetable_lists_the_teachers_lessons(env: Env) -> None:
     )
 
     assert [i["id"] for i in items] == [str(mine.id)]
+
+
+async def test_the_other_subgroup_is_shown_only_where_it_adds_a_lesson(
+    env: Env,
+) -> None:
+    """Own subgroup wins a slot of the same subject; other slots show the other."""
+    term = await env.term()
+    english = await env.subject("Английский", short="Англ")
+    it = await env.subject("Информатика", short="Инф")
+    group = await env.group("2TN2")
+    pupil = await env.student(group, subgroup=1)
+    for sub in (1, 2):
+        await env.entry(
+            term, weekday=3, period=1, subject=english, audience=[f"{group.id}:{sub}"]
+        )
+    await env.entry(term, weekday=3, period=2, subject=it, audience=[f"{group.id}:2"])
+    await env.services.generate_lessons.execute(from_date=dt.date(2026, 10, 6), days=14)
+
+    items = await env.services.get_student_timetable.execute(
+        make_actor(Role.STUDENT, user_id=pupil.id),
+        dt.date(2026, 10, 7),
+        dt.date(2026, 10, 7),
+    )
+
+    assert [
+        (i["period"], i["subgroup"]["subgroup_id"], i["subgroup"]["is_own_subgroup"])
+        for i in items
+    ] == [(1, 1, True), (2, 2, False)]
+
+
+async def test_a_student_without_a_subgroup_owns_every_lesson(env: Env) -> None:
+    """Until a subgroup is set, the student attends both halves."""
+    term = await env.term()
+    subject = await env.subject()
+    group = await env.group("2TN2")
+    pupil = await env.student(group)
+    await env.entry(
+        term, weekday=3, period=1, subject=subject, audience=[f"{group.id}:2"]
+    )
+    await env.services.generate_lessons.execute(from_date=dt.date(2026, 10, 6), days=14)
+
+    items = await env.services.get_student_timetable.execute(
+        make_actor(Role.STUDENT, user_id=pupil.id),
+        dt.date(2026, 10, 7),
+        dt.date(2026, 10, 7),
+    )
+
+    assert [i["subgroup"] for i in items] == [
+        {"subgroup_id": 2, "subgroup_name": "2TN2/2", "is_own_subgroup": True}
+    ]

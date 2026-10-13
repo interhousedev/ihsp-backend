@@ -698,7 +698,36 @@ async def test_student_profile_and_timetable(env: Env, api: Api) -> None:
         "attendance_submitted",
         "absent_count",
         "late_count",
+        "subgroup",
     }
+    assert item["subgroup"] is None
+
+
+async def test_student_timetable_marks_the_other_subgroup(env: Env, api: Api) -> None:
+    """GET /v1/me/timetable: the other half's lesson in a free slot is marked."""
+    term = await env.term()
+    subject = await env.subject()
+    group = await env.group("2TN2")
+    me = await env.student(group, subgroup=1)
+    for period, sub in ((1, 1), (2, 2)):
+        await env.lesson(
+            term,
+            day=dt.date(2026, 10, 7),
+            period=period,
+            subject=subject,
+            audience=[f"{group.id}:{sub}"],
+        )
+    api.as_role(Role.STUDENT, user_id=me.id)
+
+    timetable = await api.client.get(
+        "/v1/me/timetable", params={"from": "2026-10-07", "to": "2026-10-07"}
+    )
+
+    assert timetable.status_code == 200
+    assert [item["subgroup"] for item in timetable.json()] == [
+        {"subgroup_id": 1, "subgroup_name": "2TN2/1", "is_own_subgroup": True},
+        {"subgroup_id": 2, "subgroup_name": "2TN2/2", "is_own_subgroup": False},
+    ]
 
 
 async def test_staff_timetable(env: Env, api: Api) -> None:

@@ -191,6 +191,53 @@ async def test_subgroup_materials_stay_in_their_subgroup(
     }
 
 
+async def test_a_student_without_a_subgroup_gets_whole_group_materials_only(
+    auto: AutoServices,
+    staff: StaffSubjectMaterials,
+    uow_factory: UowFactory,
+    world: World,
+    admin: Actor,
+    teacher: Actor,
+    make_actor: Callable[..., Actor],
+    physics: UUID,
+) -> None:
+    """Not yet placed in a half: admin and whole-group materials, no subgroup ones."""
+    third = make_actor(Role.STUDENT)
+    _lesson(world, teacher, third, f"{G1}:1", "EN/1", physics, (G1, None))
+    await auto.add_default_material.execute(admin, EMIS, _file(world, admin, "Admin"))
+    await staff.add(
+        teacher, physics, _file(world, teacher, "Sub 1"), group_id=G1, subgroup=1
+    )
+    await staff.add(teacher, physics, _file(world, teacher, "Whole"), group_id=G1)
+
+    assert await _titles(auto, uow_factory, third, physics) == {"Admin", "Whole"}
+
+
+async def test_a_student_moved_to_another_subgroup_follows_the_new_one(
+    auto: AutoServices,
+    staff: StaffSubjectMaterials,
+    uow_factory: UowFactory,
+    world: World,
+    teacher: Actor,
+    student: Actor,
+    physics: UUID,
+) -> None:
+    """The next sync swaps subgroup 1's materials for subgroup 2's."""
+    _lesson(world, teacher, student, f"{G1}:1", "EN/1", physics, (G1, 1))
+    _lesson(world, teacher, None, f"{G1}:2", "EN/2", physics)
+    await staff.add(
+        teacher, physics, _file(world, teacher, "Sub 1"), group_id=G1, subgroup=1
+    )
+    await staff.add(
+        teacher, physics, _file(world, teacher, "Sub 2"), group_id=G1, subgroup=2
+    )
+    assert await _titles(auto, uow_factory, student, physics) == {"Sub 1"}
+
+    _lesson(world, teacher, student, f"{G1}:2", "EN/2", physics, (G1, 2))
+
+    assert await _titles(auto, uow_factory, student, physics) == {"Sub 2"}
+
+
 async def test_a_teacher_cannot_add_for_a_group_or_subject_they_do_not_teach(
     staff: StaffSubjectMaterials,
     world: World,
