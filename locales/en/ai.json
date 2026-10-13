@@ -107,6 +107,7 @@
   "ai-note-read-notebook-source": "Read a source of a notebook",
   "ai-note-read-workspace-source": "Read a workspace source",
   "ai-note-replace-step-content": "Step rewrite",
+  "ai-note-read-chat-history": "Read earlier messages of this chat",
   "ai-note-search-files": "Searched your files",
   "ai-note-search-notebook": "Searched a notebook",
   "ai-note-search-users": "Searched users",

@@ -6,6 +6,7 @@ from app.settings import Settings
 from app.settings_ai import DEFAULT_MODEL, AiSettings, AiTaskSettings
 from app.settings_loader import SettingsError, load_settings
 from app.shared.ai_tasks import (
+    COMPACT_MODEL,
     LIGHT_NOTEBOOK_TASKS,
     NOTEBOOK_TASKS,
     SMART_BUDGET_WEIGHT,
@@ -47,6 +48,7 @@ def test_the_catalog_lists_the_places_that_call_a_model() -> None:
         "student_chat_smart",
         "admin_chat",
         "chat_summary",
+        "context_compact",
         "notebook_chat",
         "source_guide",
         "notebook_summary",
@@ -64,6 +66,9 @@ def test_the_catalog_lists_the_places_that_call_a_model() -> None:
         "discover",
         "subject_translate",
         "embedding",
+        "retrieval_plan",
+        "query_decompose",
+        "studio_faithfulness",
     } == names
 
 
@@ -442,3 +447,12 @@ def test_auto_labels_is_a_light_private_notebook_task() -> None:
     assert AiTask.SOURCE_LABELS in NOTEBOOK_TASKS
     assert profile.provider() == {"data_collection": "deny"}
     assert profile.budget_weight == 1
+
+
+def test_context_compaction_runs_on_the_cheapest_model_privately() -> None:
+    """AI-EFF-2: CONTEXT_COMPACT ships with the cheap model, no reasoning, deny."""
+    profile = AiSettings().profile(AiTask.CONTEXT_COMPACT)
+
+    assert profile.model == COMPACT_MODEL
+    assert profile.reasoning_effort == "none"
+    assert profile.data_collection == "deny"

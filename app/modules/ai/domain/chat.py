@@ -8,6 +8,7 @@ from uuid import UUID
 from app.modules.ai.domain.assistant import Assistant
 from app.modules.ai.domain.chat_scope import ChatScope
 from app.modules.ai.domain.tool_call import ToolCall, ToolStatus
+from app.shared.agent_steps import AgentStep
 from app.shared.contracts.web_search import WebResult
 
 from pydantic import BaseModel, Field
@@ -55,6 +56,8 @@ class MessageContent(BaseModel):
     text: str = ""
     attachments: list[Attachment] = Field(default_factory=list)
     web: list[WebResult] = Field(default_factory=list)
+    # What the assistant did while answering (AI-STEPS); shown, never sent back.
+    steps: list[AgentStep] = Field(default_factory=list)
 
 
 @dataclass(slots=True)

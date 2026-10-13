@@ -269,6 +269,18 @@ def test_every_task_has_a_product_feature() -> None:
     assert feature_of("unknown") == "other"
 
 
+def test_the_cheap_retrieval_and_check_tasks_have_their_features() -> None:
+    """Multi-hop, decomposition and faithfulness calls land on their surfaces."""
+    assert feature_of(AiTask.RETRIEVAL_PLAN) == "notebook_chat"
+    assert feature_of(AiTask.QUERY_DECOMPOSE) == "notebook_chat"
+    assert feature_of(AiTask.STUDIO_FAITHFULNESS) == "studio"
+
+
+def test_no_task_of_the_catalog_falls_into_other() -> None:
+    """Every AI task is attributed to a product feature in the ledger."""
+    assert all(feature_of(task) != "other" for task in AiTask)
+
+
 async def test_an_answer_without_a_paid_call_is_a_free_event() -> None:
     sink = Sink()
 

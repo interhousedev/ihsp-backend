@@ -6,6 +6,7 @@ from typing import Any
 
 from app.modules.notebooks.domain.tokens import Usage
 from app.settings import Settings
+from app.shared.ai.prompt_cache import context_message
 from app.shared.ai_tasks import AiTask, ModelProfile
 from app.shared.contracts.ai import LlmGateway
 
@@ -62,17 +63,24 @@ class NotebookLlm:
         return self.profile(task).output_tokens(default)
 
     def context_message(
-        self, block: str, task: AiTask = AiTask.NOTEBOOK_CHAT
+        self,
+        block: str,
+        task: AiTask = AiTask.NOTEBOOK_CHAT,
+        *,
+        extra: str | None = None,
     ) -> dict[str, Any]:
-        """The first user message (`<sources>`); Anthropic models get a cache mark."""
-        if self.model(task).startswith("anthropic/"):
-            part = {
-                "type": "text",
-                "text": block,
-                "cache_control": {"type": "ephemeral"},
-            }
-            return {"role": "user", "content": [part]}
-        return {"role": "user", "content": block}
+        """The first user message (`<sources>`); caching models get a cache mark.
+
+        `extra` (the summary of older turns) follows the cached block.
+        """
+        ai = self.settings.ai
+        return context_message(
+            block,
+            model=self.model(task),
+            prefixes=ai.prompt_cache_models,
+            min_chars=ai.prompt_cache_min_chars,
+            extra=extra,
+        )
 
     async def json(
         self,

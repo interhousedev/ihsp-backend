@@ -28,6 +28,10 @@ SMART_BUDGET_WEIGHT: Final = 8
 # Vectors for meaning-based retrieval: multilingual
 # (Uzbek Latin and Cyrillic, Russian, English), 32k context, USD 0.02 per 1M tokens.
 TRANSLATE_MODEL: Final = "google/gemini-3.5-flash-lite"  # cheap; a few words per call
+# Retrieval planning, query splitting and faithfulness checks: short JSON verdicts.
+CHEAP_MODEL: Final = TRANSLATE_MODEL
+# Summaries of older chat turns: the cheapest configured chat model.
+COMPACT_MODEL: Final = TRANSLATE_MODEL
 EMBEDDING_MODEL: Final = "qwen/qwen3-embedding-4b"
 EMBEDDING_DIMENSIONS: Final = 1024  # must equal the `vectors.embeddings` column size
 EMBEDDING_BATCH_SIZE: Final = 32
@@ -45,6 +49,7 @@ class AiTask(StrEnum):
     STUDENT_CHAT_SMART = "student_chat_smart"
     ADMIN_CHAT = "admin_chat"
     CHAT_SUMMARY = "chat_summary"
+    CONTEXT_COMPACT = "context_compact"
     NOTEBOOK_CHAT = "notebook_chat"
     SOURCE_GUIDE = "source_guide"
     NOTEBOOK_SUMMARY = "notebook_summary"
@@ -62,6 +67,9 @@ class AiTask(StrEnum):
     DISCOVER = "discover"
     SUBJECT_TRANSLATE = "subject_translate"
     EMBEDDING = "embedding"
+    RETRIEVAL_PLAN = "retrieval_plan"
+    QUERY_DECOMPOSE = "query_decompose"
+    STUDIO_FAITHFULNESS = "studio_faithfulness"
 
 
 @dataclass(frozen=True, slots=True)
@@ -105,6 +113,14 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
     AiTask.ADMIN_CHAT: TaskSpec("assistant", "Administration assistant."),
     AiTask.CHAT_SUMMARY: TaskSpec(
         "assistant", "Short summary of the older messages of a long assistant chat."
+    ),
+    AiTask.CONTEXT_COMPACT: TaskSpec(
+        "assistant",
+        "Context compaction: a short summary of the older turns of a long notebook "
+        "chat, cached per chat so it is not made again each turn. The cheapest model.",
+        model=COMPACT_MODEL,
+        data_collection=_PRIVATE,
+        reasoning_effort=_NO_REASONING,
     ),
     AiTask.NOTEBOOK_CHAT: TaskSpec(
         "notebooks",
@@ -221,6 +237,29 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
         dimensions=EMBEDDING_DIMENSIONS,
         batch_size=EMBEDDING_BATCH_SIZE,
         query_prefix=EMBEDDING_QUERY_PREFIX,
+    ),
+    AiTask.RETRIEVAL_PLAN: TaskSpec(
+        "notebooks",
+        "Multi-hop retrieval: whether the passages found for a notebook chat "
+        "question suffice, and follow-up queries for what is missing.",
+        model=CHEAP_MODEL,
+        data_collection=_PRIVATE,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.QUERY_DECOMPOSE: TaskSpec(
+        "notebooks",
+        "Query decomposition: splits a complex notebook chat question into "
+        "sub-questions that are retrieved one by one (only the question is sent).",
+        model=CHEAP_MODEL,
+        data_collection=_PRIVATE,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.STUDIO_FAITHFULNESS: TaskSpec(
+        "notebooks",
+        "Faithfulness check of a Studio output against its sources.",
+        model=CHEAP_MODEL,
+        data_collection=_PRIVATE,
+        reasoning_effort=_NO_REASONING,
     ),
 }
 

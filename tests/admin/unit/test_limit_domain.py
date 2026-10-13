@@ -126,3 +126,11 @@ def test_valid_extension_terms_are_kept_with_a_trimmed_note() -> None:
     assert checked.multiplier == 5
     assert checked.values == {"nb_chat_per_minute": 30}
     assert checked.note == "thesis"
+
+
+def test_the_chat_history_limit_is_editable_in_its_bounds() -> None:
+    """AI-EFF-3: Administration changes the history limit at runtime (2..200)."""
+    spec = spec_of("ai_chat_history_limit")
+
+    assert (spec.group, spec.unit) == ("assistant", "count")
+    assert (spec.minimum, spec.maximum) == (2, 200)

@@ -91,6 +91,12 @@ x-backend-env: &backend-env
   # AI cost controls. Soft limits are editable at runtime (admin: Limits & usage page);
   # these are the starting values. An empty value means "the built-in default".
   IHSP_AI__USAGE_RETENTION_DAYS: ${IHSP_AI__USAGE_RETENTION_DAYS:-}
+  IHSP_AI__CHAT_HISTORY_LIMIT: ${IHSP_AI__CHAT_HISTORY_LIMIT:-}
+  # Notebook quality per token: multi-hop retrieval, question decomposition and the
+  # Studio faithfulness check (cheap-model calls, recorded in the usage ledger).
+  IHSP_NOTEBOOKS__MULTI_HOP_ENABLED: ${IHSP_NOTEBOOKS__MULTI_HOP_ENABLED:-true}
+  IHSP_NOTEBOOKS__DECOMPOSE_ENABLED: ${IHSP_NOTEBOOKS__DECOMPOSE_ENABLED:-true}
+  IHSP_NOTEBOOKS__FAITHFULNESS_CHECK: ${IHSP_NOTEBOOKS__FAITHFULNESS_CHECK:-true}
   IHSP_LIMITS__AI_SMART_REQUESTS_PER_WEEK_STUDENT: ${IHSP_LIMITS__AI_SMART_REQUESTS_PER_WEEK_STUDENT:-}
   IHSP_LIMITS__AI_SESSION_TOKENS_STUDENT: ${IHSP_LIMITS__AI_SESSION_TOKENS_STUDENT:-}
   IHSP_LIMITS__AI_DAILY_TOKENS_STUDENT: ${IHSP_LIMITS__AI_DAILY_TOKENS_STUDENT:-}
@@ -461,7 +467,7 @@ services:
     environment:
       APP_ENV: prod
       APP_HOST_ID: id.${DOMAIN}
-      APP_HOST_SP: my.${DOMAIN}
+      APP_HOST_MY: my.${DOMAIN}
       APP_HOST_APP: app.${DOMAIN}
       APP_HOST_STAFF: staff.${DOMAIN}
       APP_HOST_ADMIN: admin.${DOMAIN}
@@ -530,7 +536,7 @@ services:
       NGINX_ENVSUBST_FILTER: ^(HOST|CERT)_
       CERT_NAME: ${DOMAIN:?}
       HOST_ID: id.${DOMAIN}
-      HOST_SP: my.${DOMAIN}
+      HOST_MY: my.${DOMAIN}
       HOST_APP: app.${DOMAIN}
       HOST_STAFF: staff.${DOMAIN}
       HOST_ADMIN: admin.${DOMAIN}

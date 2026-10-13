@@ -15,6 +15,10 @@ from typing import Any, Final, cast
 from uuid import UUID
 
 from app.modules.notebooks.application.access import load_notebook
+from app.modules.notebooks.application.history_compactor import (
+    history_limit,
+    window_only,
+)
 from app.modules.notebooks.application.llm import StreamItem
 from app.modules.notebooks.application.views import (
     NotebookUsageView,
@@ -32,6 +36,7 @@ from app.modules.notebooks.domain.citations import (
     StreamPiece,
     process_answer,
 )
+from app.modules.notebooks.domain.compaction import COMPACT_LOOKBACK, summary_note
 from app.modules.notebooks.domain.context import ContextPack, CourseContext
 from app.modules.notebooks.domain.entities import (
     AnchorPassages,
@@ -50,7 +55,7 @@ from app.modules.notebooks.domain.errors import (
 )
 from app.modules.notebooks.domain.history import history_messages
 from app.modules.notebooks.domain.language import resolve_language
-from app.modules.notebooks.domain.limits import CHAT_MESSAGE_MAX_CHARS, HISTORY_MESSAGES
+from app.modules.notebooks.domain.limits import CHAT_MESSAGE_MAX_CHARS
 from app.modules.notebooks.domain.modality import readable_by
 from app.modules.notebooks.domain.prompts.chat import (
     chat_system_prompt,
@@ -62,6 +67,14 @@ from app.modules.notebooks.domain.tokens import Usage, estimate_cost, estimate_t
 from app.modules.notebooks.ports.unit_of_work import NotebooksUnitOfWork
 from app.modules.notebooks.wiring_core import NotebooksCore
 from app.shared.actor import Actor, Role
+from app.shared.agent_steps import (
+    AgentStep,
+    StepKind,
+    StepRecorder,
+    current_steps,
+    recording,
+    step,
+)
 from app.shared.ai_tasks import AiTask
 from app.shared.base_error import BaseError
 from app.shared.clock import local_today
@@ -122,6 +135,7 @@ def message_payload(message: NotebookMessage) -> dict[str, Any]:
         "followups": list(content.followups),
         "source_ids": [str(source_id) for source_id in content.source_ids],
         "web": [item.model_dump(mode="json") for item in content.web],
+        "steps": [item.model_dump(mode="json") for item in content.steps],
         "retrieval": content.retrieval,
         "grounded": content.grounded,
         "feedback": (
@@ -200,6 +214,7 @@ class Turn:
     replaces: NotebookMessage | None = None  # regenerate: the answer to replace
     web_search: bool = False  # a new question asked with the web toggle on
     web: list[WebResult] = field(default_factory=list)  # regenerate: the same pages
+    summary: str | None = None  # older turns, compacted (AI-EFF-2)
 
 
 @dataclass(frozen=True, slots=True)
@@ -335,6 +350,17 @@ class AnswerPipeline:
 
     async def answer(self, request: AnswerRequest) -> TurnView:
         """Answer in one piece: both messages are stored in one transaction."""
+        with recording(StepRecorder()):  # AI-STEPS: stored with the answer
+            return await self._answer(request)
+
+    async def stream(self, request: AnswerRequest) -> AsyncGenerator[StreamEvent, None]:
+        """Answer as events; the steps of the answer stream as ``step`` events."""
+        with recording(StepRecorder()):
+            async with aclosing(self._stream(request)) as events:
+                async for event in events:
+                    yield event
+
+    async def _answer(self, request: AnswerRequest) -> TurnView:
         async with self.core.turn_lock.hold(request.notebook_id, request.user_id):
             prepared = await self._prepare(request)
             completion = await self.core.llm.text(
@@ -349,7 +375,9 @@ class AnswerPipeline:
             )
             return await self._settle(prepared, outcome, None)
 
-    async def stream(self, request: AnswerRequest) -> AsyncGenerator[StreamEvent, None]:
+    async def _stream(
+        self, request: AnswerRequest
+    ) -> AsyncGenerator[StreamEvent, None]:
         """Answer as events: ``message``, ``delta`` and ``citation``, then ``done``.
 
         Failures before the question is stored are raised (nothing was stored; the
@@ -367,7 +395,10 @@ class AnswerPipeline:
                 )
                 if prepared.web:
                     yield _web_event(prepared.web)
-                async with aclosing(self._model_events(prepared, streamed)) as events:
+                for update in _step_events():
+                    yield update
+                model = _with_steps(self._model_events(prepared, streamed))
+                async with aclosing(model) as events:
                     async for event in events:
                         yield event
                 done = await self._finish(prepared, streamed, question)
@@ -481,6 +512,7 @@ class AnswerPipeline:
                 previous_user_text=_previous_user_text(turn.history),
                 anchor=turn.anchor,
             )
+        turn = await self._compacted(request, turn)
         course = await self.core.course_context.load(notebook)
         if course is not None:
             pack = replace(pack, course=course)
@@ -529,14 +561,34 @@ class AnswerPipeline:
         actor = request.actor or Actor(
             user_id=request.user_id, roles=frozenset({Role.STUDENT})
         )
-        outcome = await api.search(actor, query=turn.text, locale=locale, kind="chat")
+        async with step(StepKind.WEB_SEARCH, "Searched the web"):
+            outcome = await api.search(
+                actor, query=turn.text, locale=locale, kind="chat"
+            )
         return numbered(outcome.hits)
+
+    async def _history_span(self) -> int:
+        """Messages read for a turn: the history limit and the older ones to compact."""
+        return await history_limit(self.core.deps.effective_limits) + COMPACT_LOOKBACK
+
+    async def _compacted(self, request: AnswerRequest, turn: Turn) -> Turn:
+        """The newest messages in full and a summary of the older ones (AI-EFF-2)."""
+        limit = await history_limit(self.core.deps.effective_limits)
+        compactor = self.core.compactor
+        if compactor is None:
+            history, summary = window_only(turn.history, limit)
+        else:
+            history, summary = await compactor.apply(
+                request.notebook_id, request.user_id, turn.history, limit=limit
+            )
+        return replace(turn, history=history, summary=summary)
 
     async def _turn(self, uow: NotebooksUnitOfWork, request: AnswerRequest) -> Turn:
         """The question and the thread before it (a new question or the last one)."""
         user_id, notebook_id = request.user_id, request.notebook_id
         if request.text is not None:
-            tail = await uow.messages.list_tail(notebook_id, user_id, HISTORY_MESSAGES)
+            span = await self._history_span()
+            tail = await uow.messages.list_tail(notebook_id, user_id, span)
             return Turn(
                 request.text,
                 request.source_ids,
@@ -544,7 +596,8 @@ class AnswerPipeline:
                 tail,
                 web_search=request.web_search,
             )
-        tail = await uow.messages.list_tail(notebook_id, user_id, HISTORY_MESSAGES + 2)
+        span = await self._history_span()
+        tail = await uow.messages.list_tail(notebook_id, user_id, span + 2)
         if (
             len(tail) < 2
             or tail[-1].role is not MessageRole.ASSISTANT
@@ -612,8 +665,10 @@ class AnswerPipeline:
             question = f"{NO_SOURCES_NOTE}\n\n{question}"
         block = render_web_block(web, full=True, intro=WEB_INTRO)
         return [
-            self.core.llm.context_message(render_sources_block(pack)),
-            *history_messages(turn.history),
+            self.core.llm.context_message(
+                render_sources_block(pack), extra=summary_note(turn.summary)
+            ),
+            *history_messages(turn.history, limit=len(turn.history)),
             {
                 "role": "user",
                 "content": f"{question}\n\n{block}" if block else question,
@@ -684,6 +739,7 @@ class AnswerPipeline:
                 retrieval=pack.retrieval,
                 grounded=outcome.grounded,
                 web=outcome.web,
+                steps=_recorded_steps(),
             ),
             created_at=self.core.deps.clock.now(),
             tokens_in=usage.input,
@@ -732,6 +788,36 @@ class AnswerPipeline:
             streamed.stored = True
         usage = await self.core.usage.execute(prepared.user_id, course=prepared.course)
         return TurnView(known, answer, usage, outcome.action)
+
+
+def _step_events() -> list[StreamEvent]:
+    """The ``step`` events of the steps started or finished since the last call."""
+    recorder = current_steps()
+    if recorder is None:
+        return []
+    return [
+        StreamEvent("step", item.model_dump(mode="json"))
+        for item in recorder.pop_updates()
+    ]
+
+
+async def _with_steps(
+    events: AsyncGenerator[StreamEvent, None],
+) -> AsyncGenerator[StreamEvent, None]:
+    """The model's events, each followed by the steps recorded meanwhile."""
+    async with aclosing(events) as inner:
+        async for event in inner:
+            yield event
+            for update in _step_events():
+                yield update
+    for update in _step_events():  # the steps of the last chunk
+        yield update
+
+
+def _recorded_steps() -> list[AgentStep]:
+    """The steps of the answer being made (AI-STEPS)."""
+    recorder = current_steps()
+    return recorder.steps if recorder is not None else []
 
 
 def _web_event(web: list[WebResult]) -> StreamEvent:

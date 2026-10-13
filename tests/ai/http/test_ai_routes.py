@@ -99,7 +99,7 @@ async def test_sending_a_message_returns_a_turn_result(
     user, answer = body["new_messages"]
     assert set(user) == {
         *("seq", "role", "text", "file_ids", "tool_calls", "created_at"),
-        *("feedback", "web"),
+        *("feedback", "web", "steps"),
     }
     assert user["web"] == [] and answer["web"] == []
     assert (user["seq"], user["role"], answer["text"]) == (1, "user", "Hello!")

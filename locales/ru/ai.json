@@ -107,6 +107,7 @@
   "ai-note-read-notebook-source": "Прочитал источник блокнота",
   "ai-note-read-workspace-source": "Прочитал источник рабочей области",
   "ai-note-replace-step-content": "Переписывание шага",
+  "ai-note-read-chat-history": "Прочитал ранние сообщения чата",
   "ai-note-search-files": "Поискал в ваших файлах",
   "ai-note-search-notebook": "Поискал в блокноте",
   "ai-note-search-users": "Поискал пользователей",

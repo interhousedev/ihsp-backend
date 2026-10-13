@@ -22,6 +22,9 @@ from app.modules.notebooks.infrastructure.repositories.notebook_repository impor
 from app.modules.notebooks.infrastructure.repositories.passage_repository import (
     SqlPassageRepository,
 )
+from app.modules.notebooks.infrastructure.repositories.presentation_plan_repository import (  # noqa: E501
+    SqlPresentationPlanRepository,
+)
 from app.modules.notebooks.infrastructure.repositories.progress_repository import (
     SqlProgressRepository,
 )
@@ -55,6 +58,7 @@ class SqlNotebooksUnitOfWork(SqlUnitOfWork):
     progress: SqlProgressRepository
     labels: SqlLabelRepository
     default_materials: SqlDefaultMaterialRepository
+    plans: SqlPresentationPlanRepository
 
     def __init__(
         self,
@@ -83,3 +87,4 @@ class SqlNotebooksUnitOfWork(SqlUnitOfWork):
         self.progress = SqlProgressRepository(self.session)
         self.labels = SqlLabelRepository(self.session)
         self.default_materials = SqlDefaultMaterialRepository(self.session)
+        self.plans = SqlPresentationPlanRepository(self.session)

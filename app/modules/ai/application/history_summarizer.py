@@ -39,11 +39,16 @@ class HistorySummarizer:
         self.budget = budget
         self.settings = settings
 
-    async def context(self, chat: Chat, last_seq: int) -> tuple[str | None, int]:
-        """Return (summary, after_seq): messages after `after_seq` go in full."""
-        if last_seq <= WINDOW_MESSAGES:
+    async def context(
+        self, chat: Chat, last_seq: int, window: int = WINDOW_MESSAGES
+    ) -> tuple[str | None, int]:
+        """Return (summary, after_seq): messages after `after_seq` go in full.
+
+        `window` is the history limit (`ai_chat_history_limit`, AI-EFF-3).
+        """
+        if last_seq <= window:
             return None, 0
-        target = last_seq - WINDOW_MESSAGES
+        target = last_seq - window
         stored = await self.store.get(chat.id)
         if stored is None or target - stored.upto_seq >= SUMMARY_EVERY:
             stored = await self._refresh(chat, stored, target) or stored

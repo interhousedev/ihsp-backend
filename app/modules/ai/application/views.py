@@ -7,6 +7,7 @@ from typing import Literal
 from uuid import UUID
 
 from app.modules.ai.application.budget import UsageInfo
+from app.shared.agent_steps import AgentStep
 from app.shared.contracts.web_search import WebResult
 
 
@@ -86,6 +87,7 @@ class ChatMessageView:
     created_at: datetime
     feedback: Literal["up", "down"] | None
     web: list[WebResult] = field(default_factory=list)
+    steps: list[AgentStep] = field(default_factory=list)
 
 
 @dataclass(frozen=True, slots=True)

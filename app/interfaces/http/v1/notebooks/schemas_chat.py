@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any, Literal, Self
 from uuid import UUID
 
+from app.interfaces.http.v1.agent_steps import AgentStepResponse
 from app.interfaces.http.v1.notebooks.schemas_common import NotebookUsageResponse
 from app.interfaces.http.v1.web_search.schemas import WebResultResponse
 from app.modules.notebooks.application.views import TurnView
@@ -15,6 +16,25 @@ from app.shared.slash_commands import expand, stored_text
 from pydantic import BaseModel, Field, model_validator
 
 Rating = Literal["up", "down"]
+
+
+class ChatAttachment(BaseModel):
+    """A lesson, or one material of a lesson, the question is about (students).
+
+    `lesson`: `id` is the lesson. `material`: `id` is the link of the material and
+    `lesson_id` its lesson. The lesson's subject, date, topic, materials and homework
+    reach the model as a pinned text.
+    """
+
+    kind: Literal["lesson", "material"]
+    id: UUID
+    lesson_id: UUID | None = None
+
+    @model_validator(mode="after")
+    def _material_needs_lesson(self) -> Self:
+        if self.kind == "material" and self.lesson_id is None:
+            raise ValueError("a material needs its lesson_id")
+        return self
 
 
 class SendMessageBody(BaseModel):
@@ -32,6 +52,8 @@ class SendMessageBody(BaseModel):
     args: str = Field(default="", max_length=8000)
     source_ids: list[UUID] | None = Field(default=None, max_length=200)
     anchor: Anchor | None = None
+    attachments: list[ChatAttachment] = Field(default_factory=list, max_length=5)
+    """Lessons or lesson materials the question is about (see `ChatAttachment`)."""
     web_search: bool = False
     """Also search the web for this question: spends one of today's searches (404
     `web-search/disabled`, 429 `web-search/quota-exceeded`, 503
@@ -86,6 +108,8 @@ class NotebookMessageResponse(BaseModel):
     feedback: Rating | None
     stopped: bool
     created_at: datetime
+    steps: list[AgentStepResponse] = Field(default_factory=list)
+    """What the assistant did while answering, in order (AI-STEPS)."""
 
     @classmethod
     def from_entity(cls, message: NotebookMessage) -> Self:
@@ -105,6 +129,7 @@ class NotebookMessageResponse(BaseModel):
             feedback=_rating_of(message.feedback),
             stopped=message.stopped,
             created_at=message.created_at,
+            steps=[AgentStepResponse.model_validate(s) for s in content.steps],
         )
 
 

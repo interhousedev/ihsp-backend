@@ -3,11 +3,19 @@
 import asyncio
 import json
 import re
-from collections.abc import AsyncGenerator, AsyncIterator, Awaitable, Callable
+from collections.abc import (
+    AsyncGenerator,
+    AsyncIterator,
+    Awaitable,
+    Callable,
+    Sequence,
+)
 from contextlib import aclosing
 from typing import Any, NoReturn
 
 from app.modules.ai.domain.errors import AiInvalidOutputError, AiProviderError
+from app.settings_ai import DEFAULT_CACHE_MODELS
+from app.shared.ai.prompt_cache import supports_prompt_cache, text_part
 from app.shared.contracts.ai import LlmTuning
 from app.shared.retry_after import parse_retry_after
 
@@ -47,8 +55,13 @@ class OpenRouterGateway:
         timeout_seconds: float,
         client: httpx.AsyncClient | None = None,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
+        cache_models: Sequence[str] = DEFAULT_CACHE_MODELS,
     ) -> None:
-        """Configure the HTTP client; pass `client` in tests."""
+        """Configure the HTTP client; pass `client` in tests.
+
+        `cache_models` are the model id prefixes that get `cache_control` marks.
+        """
+        self._cache_models = tuple(cache_models)
         self._client = client or httpx.AsyncClient(
             base_url=base_url.rstrip("/"),
             timeout=httpx.Timeout(timeout_seconds, connect=10.0),
@@ -106,7 +119,9 @@ class OpenRouterGateway:
         tuning: LlmTuning | None = None,
     ) -> dict[str, Any]:
         """Return {"text", "tool_calls", "usage"} for one model request."""
-        payload = build_payload(model, system, messages, tools, max_tokens, tuning)
+        payload = build_payload(
+            model, system, messages, tools, max_tokens, tuning, self._cache_models
+        )
         if provider is not None:
             payload["provider"] = provider
         data = await self._post(payload)
@@ -131,7 +146,9 @@ class OpenRouterGateway:
             AiProviderError: The provider failed.
             AiInvalidOutputError: The answer holds no JSON object.
         """
-        payload = build_payload(model, system, messages, [], max_tokens, tuning)
+        payload = build_payload(
+            model, system, messages, [], max_tokens, tuning, self._cache_models
+        )
         payload["response_format"] = {
             "type": "json_schema",
             "json_schema": {"name": schema_name, "strict": True, "schema": schema},
@@ -161,7 +178,9 @@ class OpenRouterGateway:
 
         A failed connection is retried once, but only before the first delta.
         """
-        payload = build_payload(model, system, messages, [], max_tokens, tuning)
+        payload = build_payload(
+            model, system, messages, [], max_tokens, tuning, self._cache_models
+        )
         payload["stream"] = True
         payload["stream_options"] = {"include_usage": True}
         if provider is not None:
@@ -300,8 +319,9 @@ def build_payload(
     tools: list[dict[str, Any]],
     max_tokens: int,
     tuning: LlmTuning | None = None,
+    cache_models: Sequence[str] = DEFAULT_CACHE_MODELS,
 ) -> dict[str, Any]:
-    """Build the request body; Anthropic models get a cache breakpoint on the system.
+    """Build the request body; caching models get a cache breakpoint on the system.
 
     `tuning` (from the task's model profile) sets the temperature, the reasoning effort
     and the fallback models (OpenRouter's `models` list, the model first).
@@ -310,10 +330,8 @@ def build_payload(
     together, because the provider caches the prefix `tools, system, messages`.
     """
     system_content: Any = system
-    if model.startswith("anthropic/"):
-        system_content = [
-            {"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}
-        ]
+    if supports_prompt_cache(model, cache_models):  # `AI__PROMPT_CACHE_MODELS`
+        system_content = [text_part(system, cache=True)]
     payload: dict[str, Any] = {
         "model": model,
         "messages": [{"role": "system", "content": system_content}, *messages],

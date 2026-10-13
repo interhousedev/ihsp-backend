@@ -28,7 +28,7 @@ AUTHOR_TOOLS = [
     "search_workspace", "read_workspace_source", "list_workspace_outputs",
     "apply_outline", "create_section", "create_step", "replace_step_content",
     "add_text_block", "add_test_block", "add_flashcards_block",
-    "generate_studio_output", "apply_studio_output",
+    "generate_studio_output", "apply_studio_output", "read_chat_history",
 ]  # fmt: skip
 
 
@@ -187,7 +187,7 @@ async def test_the_context_is_refreshed_and_the_head_stays_cacheable(
 async def test_the_author_gets_exactly_its_tools_with_closed_schemas(
     a: Author,
 ) -> None:
-    """Fifteen tools, reads first; every nested object forbids extra keys."""
+    """Sixteen tools, reads first; every nested object forbids extra keys."""
     chat = await a.chat()
     await a.say(chat.id, "hi")
     tools = a.h.llm.requests[-1]["tools"]

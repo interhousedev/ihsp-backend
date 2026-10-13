@@ -55,6 +55,7 @@ MESSAGE_KEYS = {
     "grounded",
     "feedback",
     "stopped",
+    "steps",
     "created_at",
 }
 CITATION_KEYS = {

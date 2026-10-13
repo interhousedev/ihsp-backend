@@ -2,8 +2,10 @@
 
 from collections import defaultdict
 from collections.abc import Sequence
+from functools import partial
 from uuid import UUID
 
+from app.modules.notebooks.application.retrieval_expander import RetrievalExpander
 from app.modules.notebooks.domain.context import ContextPack
 from app.modules.notebooks.domain.context_policy import (
     allocate_tokens,
@@ -60,15 +62,20 @@ class ContextBuilder:
     """
 
     def __init__(
-        self, settings: Settings, embeddings: EmbeddingIndex | None = None
+        self,
+        settings: Settings,
+        embeddings: EmbeddingIndex | None = None,
+        expander: RetrievalExpander | None = None,
     ) -> None:
         """Store the caps (`chat_full_context_tokens`, `studio_context_tokens`).
 
         With `embeddings` (and `FEATURES__VECTOR_SEARCH` on) retrieval is hybrid:
         words and meaning. Without them it is the lexical search of old.
+        `expander` adds query decomposition and multi-hop retrieval to the chat.
         """
         self.settings = settings
         self.embeddings = embeddings
+        self.expander = expander
 
     async def _query_vector(self, query: str) -> QueryVector | None:
         """The vector of a retrieval query; None when meaning search is off or slow."""
@@ -101,7 +108,11 @@ class ContextBuilder:
             return build_pack(sources, _group(passages), "full")
         pinned = await self._pinned(uow, notebook_id, set(ids), anchor)
         query = retrieval_query(question, previous_user_text)
-        hits = await self._search(uow, notebook_id, ids, query, RETRIEVAL_HITS)
+        search = partial(self._search, uow, notebook_id, ids)
+        if self.expander is None:
+            hits = await search(query, RETRIEVAL_HITS)
+        else:
+            hits = await self.expander.hits(query, search, RETRIEVAL_HITS)
         if not hits and not pinned:
             return await self._fallback(uow, sources)
         by_source = await self._neighbour_index(uow, sources, [*hits, *pinned])

@@ -38,6 +38,7 @@ DEFAULT_MODEL = "anthropic/claude-haiku-5.5"
 # Claude 5.5 reasons by default, inside max_tokens: chats turn that off. A task sets
 # its own effort with `AI__TASKS__<TASK>__REASONING_EFFORT`.
 DEFAULT_REASONING: ReasoningEffort = "none"
+DEFAULT_CACHE_MODELS: tuple[str, ...] = ("anthropic/", "google/gemini-")
 
 
 def _comma_list(value: object) -> object:
@@ -163,6 +164,27 @@ class AiSettings(BaseModel):
     tasks: dict[AiTask, AiTaskSettings] = Field(default_factory=dict)
     """Per-task overrides, keyed by task name (see the task list above)."""
 
+    chat_history_limit: int | None = Field(default=None, ge=2, le=200)
+    """Latest chat messages sent to the model with each question; empty keeps 20.
+    Administration can change it at runtime (limit `ai_chat_history_limit`)."""
+
+    prompt_cache_models: tuple[str, ...] = DEFAULT_CACHE_MODELS
+    """Comma list of model id prefixes that get `cache_control` marks (providers
+    with explicit prompt caching behind OpenRouter: Anthropic, Gemini)."""
+
+    prompt_cache_min_chars: int = Field(default=0, ge=0)
+    """Smallest sources block (characters) marked for caching. Providers ignore a
+    mark below their own minimum (about 1024 tokens), so 0 costs nothing."""
+
+    compact_history_chars: int = Field(default=24_000, ge=1000)
+    """Characters of history sent in full; older turns beyond it (or beyond the
+    history limit) are summarised by the cheap `CONTEXT_COMPACT` task."""
+
+    @field_validator("prompt_cache_models", mode="before")
+    @classmethod
+    def _split_prefixes(cls, value: object) -> object:
+        return _comma_list(value)
+
     def profile(self, task: AiTask) -> ModelProfile:
         """The model and parameters of a task (override, built-in, default)."""
         spec = TASK_SPECS[task]
@@ -281,3 +303,13 @@ def fold_deprecated(settings: "Settings") -> None:
             if getattr(current, move.field) is None:
                 tasks[task] = current.model_copy(update={move.field: move.value})
     settings.ai = settings.ai.model_copy(update={"tasks": tasks})
+    fold_history_limit(settings)
+
+
+def fold_history_limit(settings: "Settings") -> None:
+    """`AI__CHAT_HISTORY_LIMIT` becomes the environment value of the editable limit."""
+    value = settings.ai.chat_history_limit
+    if value is not None:
+        settings.limits = settings.limits.model_copy(
+            update={"ai_chat_history_limit": value}
+        )

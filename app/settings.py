@@ -398,6 +398,29 @@ class NotebooksSettings(BaseModel):
     studio_context_tokens: int = 150_000
     """Token cap of the source pack for Studio outputs."""
 
+    multi_hop_enabled: bool = False
+    """In retrieval mode a small model (AI task RETRIEVAL_PLAN) checks whether the
+    found passages answer the question and searches again for what is missing."""
+
+    multi_hop_max_hops: int = Field(default=2, ge=0, le=5)
+    """Follow-up retrieval rounds at most (each one small-model call)."""
+
+    multi_hop_queries_per_hop: int = Field(default=3, ge=1, le=3)
+    """Follow-up queries of one round at most."""
+
+    decompose_enabled: bool = False
+    """A complex chat question (heuristic, then AI task QUERY_DECOMPOSE) is split
+    into sub-questions; each gets its own retrieval and the main model synthesises
+    from the shorter, focused pack."""
+
+    decompose_max_parts: int = Field(default=4, ge=2, le=6)
+    """Sub-questions of one question at most."""
+
+    faithfulness_check: bool = False
+    """A small model (AI task STUDIO_FAITHFULNESS) checks Studio outputs against
+    their sources; a failure gets one regeneration, then the output is marked
+    `verification: unverified` in its content."""
+
 
 class VectorsSettings(BaseModel):
     """Embeddings and search by meaning.
@@ -798,6 +821,11 @@ class LimitsSettings(BaseModel):
 
     ai_max_tool_steps: int = 8
     """Most model requests (tool rounds) in one assistant turn."""
+
+    ai_chat_history_limit: int = Field(default=20, ge=2, le=200)
+    """Latest chat messages sent to the model with each question (assistant and
+    notebook chats); the model reads older ones with `read_chat_history`. The
+    environment default is `AI__CHAT_HISTORY_LIMIT`."""
 
     ai_smart_weight: int | None = Field(default=None, ge=1)
     """Deprecated: use `AI__TASKS__STUDENT_CHAT_SMART__BUDGET_WEIGHT` (default 8)."""

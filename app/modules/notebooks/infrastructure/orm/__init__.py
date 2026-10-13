@@ -21,6 +21,9 @@ from app.modules.notebooks.infrastructure.orm.label import (
 from app.modules.notebooks.infrastructure.orm.message import Message
 from app.modules.notebooks.infrastructure.orm.notebook import Notebook
 from app.modules.notebooks.infrastructure.orm.passage import Passage
+from app.modules.notebooks.infrastructure.orm.presentation_plan import (
+    PresentationPlan,
+)
 from app.modules.notebooks.infrastructure.orm.shared_cache import (
     SharedArtifact,
     SharedSummary,
@@ -37,6 +40,7 @@ __all__ = [
     "Message",
     "Notebook",
     "Passage",
+    "PresentationPlan",
     "SharedArtifact",
     "SharedSummary",
     "Source",

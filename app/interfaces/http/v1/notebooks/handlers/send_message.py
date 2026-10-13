@@ -3,6 +3,10 @@
 from uuid import UUID
 
 from app.interfaces.http.v1.notebooks.deps import MemberActor, Notebooks
+from app.interfaces.http.v1.notebooks.handlers.attachments import (
+    LessonReaderDep,
+    attachment_anchor,
+)
 from app.interfaces.http.v1.notebooks.handlers.sse import (
     stream_response,
     wants_stream,
@@ -22,16 +26,18 @@ async def send_message(
     request: Request,
     actor: MemberActor,
     notebooks: Notebooks,
+    read_lesson: LessonReaderDep,
 ) -> NotebookTurnResponse | StreamingResponse:
     """Answer a question: one JSON turn, or events with `Accept: text/event-stream`."""
     ask = notebooks.ask_notebook
     question = body.question()
+    anchor = await attachment_anchor(body.attachments, body.anchor, actor, read_lesson)
     if wants_stream(request):
         events = ask.stream(
-            actor, notebook_id, question, body.source_ids, body.anchor, body.web_search
+            actor, notebook_id, question, body.source_ids, anchor, body.web_search
         )
         return await stream_response(events)
     view = await ask.execute(
-        actor, notebook_id, question, body.source_ids, body.anchor, body.web_search
+        actor, notebook_id, question, body.source_ids, anchor, body.web_search
     )
     return NotebookTurnResponse.from_view(view)

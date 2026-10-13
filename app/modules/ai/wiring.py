@@ -55,6 +55,7 @@ from app.modules.ai.application.tools.list_notebook_artifacts import (
 from app.modules.ai.application.tools.list_notebooks import ListNotebooks
 from app.modules.ai.application.tools.lms_catalog import make_author_tools
 from app.modules.ai.application.tools.make_document import MakeDocument
+from app.modules.ai.application.tools.read_chat_history import ReadChatHistory
 from app.modules.ai.application.tools.read_file import ReadFile
 from app.modules.ai.application.tools.read_notebook_source import ReadNotebookSource
 from app.modules.ai.application.tools.registry import ToolRegistry
@@ -234,18 +235,22 @@ def build(
     gate = LateAuthorGate(bindings, settings)
     guard = ChatGuard(gate, deps.rate_limiter, settings, limits=limits)
     locks = over.turn_lock or RedisTurnLock(deps.redis)
+    history = ReadChatHistory(uow_factory)  # every assistant (AI-EFF-3)
     registry = ToolRegistry(
-        make_student_tools(
-            schedule=schedule,
-            classwork=classwork,
-            marks=marks,
-            files=files,
-            flashcards=flashcards,
-            bindings=bindings,
-            limits=deps.effective_limits,
-        ),
-        make_admin_tools(admin_tools, identity),
-        make_author_tools(bindings, deps.i18n),
+        [
+            *make_student_tools(
+                schedule=schedule,
+                classwork=classwork,
+                marks=marks,
+                files=files,
+                flashcards=flashcards,
+                bindings=bindings,
+                limits=deps.effective_limits,
+            ),
+            history,
+        ],
+        [*make_admin_tools(admin_tools, identity), history],
+        [*make_author_tools(bindings, deps.i18n), history],
     )
     locale = LocaleResolver(identity)
     views = ChatViews(deps.i18n)

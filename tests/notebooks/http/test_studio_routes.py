@@ -269,7 +269,7 @@ async def test_the_openapi_document_has_no_audio_or_video() -> None:
     app.include_router(router)
 
     paths = set(app.openapi()["paths"])
-    assert len(paths) == 14  # the Apply and attach-to-lesson routes included
+    assert len(paths) == 17  # with Apply, attach-to-lesson and the presentation plans
     assert not [p for p in paths if "assets" in p or "audio" in p or "discover" in p]
     # (the step-draft schemas of the Apply routes legitimately name a video block)
     assert '"audio"' not in json.dumps(app.openapi()["paths"])

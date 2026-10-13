@@ -6,9 +6,13 @@ from app.modules.notebooks.application.budget import NotebookBudget
 from app.modules.notebooks.application.context_builder import ContextBuilder
 from app.modules.notebooks.application.course_context import CourseContextLoader
 from app.modules.notebooks.application.get_usage import GetUsage
+from app.modules.notebooks.application.history_compactor import HistoryCompactor
 from app.modules.notebooks.application.llm import NotebookLlm
 from app.modules.notebooks.application.locale import LocaleResolver
+from app.modules.notebooks.application.multi_hop_retrieval import MultiHopRetrieval
+from app.modules.notebooks.application.query_decomposer import QueryDecomposer
 from app.modules.notebooks.application.quota import QuotaService
+from app.modules.notebooks.application.retrieval_expander import RetrievalExpander
 from app.modules.notebooks.infrastructure.lms_course_gate import (
     NO_COURSES,
     LmsCourseGate,
@@ -17,6 +21,7 @@ from app.modules.notebooks.infrastructure.redis_budget_store import (
     COURSE_PREFIX as BUDGET_COURSE_PREFIX,
 )
 from app.modules.notebooks.infrastructure.redis_budget_store import RedisBudgetStore
+from app.modules.notebooks.infrastructure.redis_compact_store import RedisCompactStore
 from app.modules.notebooks.infrastructure.redis_quota_store import (
     COURSE_PREFIX as QUOTA_COURSE_PREFIX,
 )
@@ -24,16 +29,28 @@ from app.modules.notebooks.infrastructure.redis_quota_store import RedisQuotaSto
 from app.modules.notebooks.infrastructure.redis_turn_lock import RedisTurnLock
 from app.modules.notebooks.infrastructure.uow import SqlNotebooksUnitOfWork
 from app.modules.notebooks.ports.budget_store import BudgetStore
+from app.modules.notebooks.ports.compact_store import CompactStore
 from app.modules.notebooks.ports.course_gate import CourseGate
 from app.modules.notebooks.ports.quota_store import QuotaStore
 from app.modules.notebooks.ports.turn_lock import TurnLock
 from app.modules.notebooks.ports.unit_of_work import UowFactory
+from app.settings import Settings
 from app.shared.contracts.ai import LlmGateway
 from app.shared.contracts.embeddings import EmbeddingIndex
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.contracts.lms import LmsWorkspace
 from app.shared.contracts.web_search import WebSearchApi
 from app.shared.wiring import ModuleDeps
+
+
+def _context(
+    llm: NotebookLlm, settings: Settings, embeddings: EmbeddingIndex | None
+) -> ContextBuilder:
+    """The context builder with the small-model retrieval helpers (off by default)."""
+    expander = RetrievalExpander(
+        QueryDecomposer(llm, settings), MultiHopRetrieval(llm, settings)
+    )
+    return ContextBuilder(settings, embeddings, expander)
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,6 +73,8 @@ class NotebooksCore:
     course_context: CourseContextLoader = field(
         default_factory=lambda: CourseContextLoader(None)
     )
+    # Summaries of older chat turns (None: the last messages only, no summary).
+    compactor: HistoryCompactor | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,6 +85,7 @@ class CoreOverrides:
     budget_store: BudgetStore | None = None
     quota_store: QuotaStore | None = None
     turn_lock: TurnLock | None = None
+    compact_store: CompactStore | None = None
 
 
 def sql_uow_factory(
@@ -148,18 +168,22 @@ def build_core(
     gate: CourseGate = (
         NO_COURSES if workspace is None else LmsCourseGate(workspace, settings)
     )
+    llm = NotebookLlm(gateway, settings)
     return NotebooksCore(
         deps=deps,
         uow_factory=over.uow_factory or sql_uow_factory(deps, gate),
-        llm=NotebookLlm(gateway, settings),
+        llm=llm,
         budget=budget,
         quota=quota,
         locale=LocaleResolver(identity),
-        context=ContextBuilder(settings, embeddings),
+        context=_context(llm, settings, embeddings),
         usage=GetUsage(budget, quota, settings, deps.effective_limits),
         turn_lock=over.turn_lock or RedisTurnLock(deps.redis),
         web_search=web_search,
         embeddings=embeddings,
         workspace=workspace,
         course_context=CourseContextLoader(workspace),
+        compactor=HistoryCompactor(
+            llm, over.compact_store or RedisCompactStore(deps.redis), settings
+        ),
     )

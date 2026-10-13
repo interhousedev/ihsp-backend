@@ -72,6 +72,7 @@ EXPECTED_TABLES = {
     "notebooks.source_label_links",
     "notebooks.source_label_runs",
     "notebooks.subject_default_materials",
+    "notebooks.presentation_plans",
     # library (25)
     "library.subjects",
     "library.item_tags",
@@ -111,10 +112,10 @@ EXPECTED_TABLES = {
 
 
 def test_metadata_contains_every_table_of_the_models_readme() -> None:
-    """spec -> Models plus notebooks, push, exams, documents, library, vectors: 92."""
+    """spec -> Models plus notebooks, push, exams, documents, library, vectors: 93."""
     actual = {table.fullname for table in Base.metadata.tables.values()}
 
-    assert len(EXPECTED_TABLES) == 92
+    assert len(EXPECTED_TABLES) == 93
     assert actual == EXPECTED_TABLES
 
 

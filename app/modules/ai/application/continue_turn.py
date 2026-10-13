@@ -32,6 +32,7 @@ from app.modules.ai.domain.tool_call import ToolCall, ToolStatus
 from app.modules.ai.ports.unit_of_work import AiUnitOfWork
 from app.settings import Settings
 from app.shared.actor import Actor
+from app.shared.agent_steps import current_steps
 from app.shared.clock import Clock
 from app.shared.contracts.ai import LlmGateway
 from app.shared.contracts.web_search import WebResult
@@ -42,6 +43,11 @@ from app.shared.web_citations import rewrite_markers
 
 MAX_OUTPUT_TOKENS = 4096
 TAIL_MESSAGES = WINDOW_MESSAGES + SUMMARY_EVERY + 20
+
+
+def history_span(limit: int) -> int:
+    """Messages read for a turn whose history limit is `limit` (AI-EFF-3)."""
+    return max(TAIL_MESSAGES, limit + SUMMARY_EVERY + 20)
 
 
 @dataclass(slots=True)
@@ -62,6 +68,7 @@ class _Run:
     summary: str | None
     after_seq: int
     progress: TurnProgress
+    span: int = TAIL_MESSAGES  # messages read per step (AI-EFF-3)
 
 
 class ContinueTurn:
@@ -104,18 +111,17 @@ class ContinueTurn:
         changed: list[ChatMessage] | None = None,
     ) -> TurnProgress:
         """Run model steps; `changed` carries messages the caller already touched."""
+        limits = await self.limits.current()
+        history = limits.ai_chat_history_limit
         chat, tail = await self._load(chat_id)
         summary, after = await self.summarizer.context(
-            chat, tail[-1].seq if tail else 0
+            chat, tail[-1].seq if tail else 0, window=history
         )
         progress = TurnProgress(chat=chat, changed=list(changed or []))
         ctx = ToolContext(actor, chat_id, locale, scope=chat.scope)
-        run = _Run(chat_id, ctx, summary, after, progress)
+        run = _Run(chat_id, ctx, summary, after, progress, history_span(history))
         steps = profile_for(
-            chat.assistant,
-            self.settings,
-            chat.tier,
-            limits=await self.limits.current(),
+            chat.assistant, self.settings, chat.tier, limits=limits
         ).max_tool_steps
         for _ in range(steps):
             status = await self._step(run)
@@ -125,16 +131,18 @@ class ContinueTurn:
         await self._close_with_notice(run)
         return progress
 
-    async def _load(self, chat_id: UUID) -> tuple[Chat, list[ChatMessage]]:
+    async def _load(
+        self, chat_id: UUID, span: int = TAIL_MESSAGES
+    ) -> tuple[Chat, list[ChatMessage]]:
         async with self.uow_factory() as uow:
             chat = await uow.chats.get(chat_id)
             if chat is None or chat.deleted_at is not None:
                 raise ChatNotFoundError()
-            return chat, await uow.messages.list_tail(chat_id, TAIL_MESSAGES)
+            return chat, await uow.messages.list_tail(chat_id, span)
 
     async def _step(self, run: _Run) -> TurnStatus | None:
         """Do one model request; return the final status or None to continue."""
-        chat, tail = await self._load(run.chat_id)
+        chat, tail = await self._load(run.chat_id, run.span)
         system = await self.prompts.build(chat, run.ctx.locale)
         window = select_window(tail, run.after_seq)
         messages = to_llm_messages(window, run.summary)
@@ -229,6 +237,8 @@ class ContinueTurn:
     ) -> tuple[ChatMessage, Chat]:
         now = self.clock.now()
         content = _answer_content(text, web or [])
+        if (recorder := current_steps()) is not None:  # AI-STEPS, up to this message
+            content.steps = recorder.take()
         async with self.uow_factory() as uow:
             chat = await uow.chats.get_for_update(chat_id)
             if chat is None:

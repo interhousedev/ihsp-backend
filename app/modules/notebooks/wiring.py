@@ -10,9 +10,15 @@ from app.modules.notebooks.application.ask_notebook import AskNotebook
 from app.modules.notebooks.application.attach_artifact import AttachArtifactToLesson
 from app.modules.notebooks.application.build_source_guide import BuildSourceGuide
 from app.modules.notebooks.application.cancel_artifact import CancelArtifact
+from app.modules.notebooks.application.confirm_presentation_plan import (
+    ConfirmPresentationPlan,
+)
 from app.modules.notebooks.application.copy_notebook import CopyNotebook
 from app.modules.notebooks.application.create_label import CreateLabel
 from app.modules.notebooks.application.create_notebook import CreateNotebook
+from app.modules.notebooks.application.create_presentation_plan import (
+    CreatePresentationPlan,
+)
 from app.modules.notebooks.application.delete_artifact import DeleteArtifact
 from app.modules.notebooks.application.delete_chat import DeleteChat
 from app.modules.notebooks.application.delete_label import DeleteLabel
@@ -27,6 +33,9 @@ from app.modules.notebooks.application.get_chat import GetChat
 from app.modules.notebooks.application.get_notebook import GetNotebook
 from app.modules.notebooks.application.get_notebook_usage import GetNotebookUsage
 from app.modules.notebooks.application.get_passage import GetPassage
+from app.modules.notebooks.application.get_presentation_plan import (
+    GetPresentationPlan,
+)
 from app.modules.notebooks.application.get_source import GetSource
 from app.modules.notebooks.application.get_usage import GetUsage
 from app.modules.notebooks.application.label_sources import LabelSources
@@ -97,6 +106,9 @@ from app.modules.notebooks.application.sync_source import SyncSource
 from app.modules.notebooks.application.update_auto_settings import UpdateAutoSettings
 from app.modules.notebooks.application.update_label import UpdateLabel
 from app.modules.notebooks.application.update_notebook import UpdateNotebook
+from app.modules.notebooks.application.update_presentation_plan import (
+    UpdatePresentationPlan,
+)
 from app.modules.notebooks.application.update_source import UpdateSource
 from app.modules.notebooks.infrastructure.repositories.shared_passage_repository import (  # noqa: E501
     SqlSharedPassageReader,
@@ -193,6 +205,10 @@ class NotebooksServices:
     save_flashcard_set: SaveFlashcardSet
     edit_slides: EditSlides
     revise_slides: ReviseSlides
+    create_presentation_plan: CreatePresentationPlan
+    get_presentation_plan: GetPresentationPlan
+    update_presentation_plan: UpdatePresentationPlan
+    confirm_presentation_plan: ConfirmPresentationPlan
     apply_course_artifact: ApplyCourseArtifact
     get_usage: GetUsage
     open_course_workspace: OpenCourseWorkspace
@@ -356,6 +372,10 @@ def build(
         save_flashcard_set=studio.save_flashcard_set,
         edit_slides=studio.edit_slides,
         revise_slides=studio.revise_slides,
+        create_presentation_plan=studio.create_presentation_plan,
+        get_presentation_plan=studio.get_presentation_plan,
+        update_presentation_plan=studio.update_presentation_plan,
+        confirm_presentation_plan=studio.confirm_presentation_plan,
         apply_course_artifact=studio.apply_course_artifact,
         get_usage=core.usage,
         open_course_workspace=workspaces.open_course_workspace,

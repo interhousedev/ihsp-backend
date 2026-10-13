@@ -378,22 +378,22 @@ async def test_history_is_sent_with_plain_numbered_citations(
     ]
 
 
-async def test_only_the_last_twelve_messages_are_sent(
+async def test_only_the_last_twenty_messages_are_sent(
     core: NotebooksCore, chat: ChatServices, student: Actor, scripted_llm: ScriptedLlm
 ) -> None:
-    """NB-6: six turns of history, oldest dropped first."""
+    """NB-6: ten turns of history (`ai_chat_history_limit`), oldest dropped first."""
     notebook, _ = await notebook_with_source(core, student)
-    for seq in range(1, 15):
+    for seq in range(1, 23):
         role = MessageRole.USER if seq % 2 else MessageRole.ASSISTANT
         await make_message(core.uow_factory, notebook, role=role, text=f"m{seq}")
 
     turn = await chat.ask_notebook.execute(student, notebook.id, "Now?")
 
     messages = scripted_llm.text_requests[-1]["messages"]
-    assert len(messages) == 1 + 12 + 1
+    assert len(messages) == 1 + 20 + 1
     assert messages[1]["content"] == "m3"
-    assert messages[12]["content"] == "m14"
-    assert turn.user_message.seq == 15
+    assert messages[20]["content"] == "m22"
+    assert turn.user_message.seq == 23
 
 
 async def test_the_chat_has_no_tools_and_denies_data_collection(

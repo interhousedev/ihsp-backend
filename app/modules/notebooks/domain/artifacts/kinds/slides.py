@@ -27,6 +27,10 @@ from app.modules.notebooks.domain.artifacts.kind_support import (
     validate_numbered,
 )
 from app.modules.notebooks.domain.artifacts.refs import build_refs_index, valid_refs
+from app.modules.notebooks.domain.artifacts.slide_outline import (
+    PlanSlide,
+    outline_clause,
+)
 from app.modules.notebooks.domain.artifacts.slide_text import inline_labels, slide_text
 from app.modules.notebooks.domain.artifacts.slides_shape import (
     TOLERANCE,
@@ -101,6 +105,10 @@ class SlidesOptions(CommonOptions):
 
     format: SlideFormat = "presenter"
     length: Length = "default"
+    # A confirmed presentation plan (PLAN): the deck follows it slide by slide.
+    outline: list[PlanSlide] | None = Field(
+        None, max_length=SLIDE_COUNTS["long"] + TOLERANCE
+    )
 
 
 # The docstrings and descriptions of these models are shown to the model in the schema.
@@ -390,12 +398,13 @@ class SlidesHandler:
     def task_block(self, options: BaseModel, prompt: str | None) -> str:
         """The English task text (§ 3.4.6) for the last user message."""
         opts = expect_options(options, SlidesOptions)
-        return slides_task(
+        task = slides_task(
             count=SLIDE_COUNTS[opts.length],
             tolerance=SLIDE_TOLERANCE,
             fmt=opts.format,
             prompt=prompt,
         )
+        return task + outline_clause(opts.outline)
 
     def default_title(self, notebook_title: str, options: BaseModel) -> str:
         """``Slides: <notebook>``."""

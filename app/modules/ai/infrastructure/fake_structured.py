@@ -1062,9 +1062,24 @@ def build_labels(
     return {"labels": labels, "assignments": assignments}
 
 
+def build_slides_plan(passages: Sequence[FakePassage], text: str) -> Document:
+    """A presentation plan (PLAN): the slide titles of the fake deck with bullets."""
+    deck = build_slides(passages, text)
+    slides = [
+        {
+            "title": slide["title"],
+            "bullets": list(slide.get("bullets") or [])[:5]
+            or [topic(cycle(passages, n).text)],
+        }
+        for n, slide in enumerate(deck["slides"])
+    ]
+    return {"title": deck.get("title") or title_of(passages), "slides": slides}
+
+
 Builder = Callable[[Sequence[FakePassage], str], Document]
 
 BUILDERS: dict[str, Builder] = {
+    "nb_slides_plan": build_slides_plan,
     "nb_guide": build_guide,
     "nb_summary": build_summary,
     "nb_report": build_report,

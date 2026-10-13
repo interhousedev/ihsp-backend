@@ -100,4 +100,5 @@ class ChatViews:
             created_at=message.created_at,
             feedback=message.feedback.value if message.feedback else None,
             web=list(message.content.web),
+            steps=list(message.content.steps),
         )

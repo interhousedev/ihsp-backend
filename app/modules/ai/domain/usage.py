@@ -45,6 +45,7 @@ _FEATURE_OF: dict[str, str] = {
     "student_chat_smart": "assistant",
     "admin_chat": "assistant",
     "chat_summary": "assistant",
+    "context_compact": "notebook_chat",
     "notebook_chat": "notebook_chat",
     "source_guide": "notebook_prep",
     "notebook_summary": "notebook_prep",
@@ -62,6 +63,9 @@ _FEATURE_OF: dict[str, str] = {
     "discover": "web_search",
     "embedding": "embedding",
     "subject_translate": "academic",
+    "retrieval_plan": "notebook_chat",
+    "query_decompose": "notebook_chat",
+    "studio_faithfulness": "studio",
 }
 
 

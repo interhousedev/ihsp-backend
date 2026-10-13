@@ -1,7 +1,7 @@
 """Turns the model's tool calls into stored calls: read tools run, writes wait."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, Final
 
 from app.modules.ai.application.tools.base import Tool, ToolContext, WriteTool
 from app.modules.ai.application.tools.registry import ToolRegistry
@@ -9,6 +9,7 @@ from app.modules.ai.domain.assistant import Assistant
 from app.modules.ai.domain.chat import APPROVAL_TTL_HOURS
 from app.modules.ai.domain.errors import ToolArgumentsError, ToolFailedError
 from app.modules.ai.domain.tool_call import ToolAccess, ToolCall, ToolStatus
+from app.shared.agent_steps import StepKind, StepStatus, record_step
 from app.shared.base_error import BaseError
 from app.shared.clock import Clock
 from app.shared.ids import new_id
@@ -45,7 +46,9 @@ class ToolRunner:
         calls: list[ToolCall] = []
         for raw in raw_calls:
             call_id = _unique_id(str(raw.get("id") or ""), taken_ids)
-            calls.append(await self._one(assistant, ctx, raw, call_id))
+            call = await self._one(assistant, ctx, raw, call_id)
+            _record(call)
+            calls.append(call)
         return calls
 
     async def _one(
@@ -110,6 +113,38 @@ class ToolRunner:
             log.exception("ai.approved_tool_crashed", tool=call.tool)
             return _finish(call, error="the tool crashed")
         return _finish(call, result=to_jsonable_python(result))
+
+
+_KIND_PREFIXES: Final = (
+    ("read_", StepKind.READ_FILE),
+    ("search_", StepKind.RETRIEVE),
+    ("create_", StepKind.CREATE),
+    ("make_", StepKind.CREATE),
+    ("add_", StepKind.CREATE),
+    ("generate_", StepKind.CREATE),
+    ("apply_", StepKind.CREATE),
+)
+
+
+def step_kind_for(tool: str) -> StepKind:
+    """The step kind of a tool, read from its name (`read_file` reads a file)."""
+    return next((k for p, k in _KIND_PREFIXES if tool.startswith(p)), StepKind.TOOL)
+
+
+def _record(call: ToolCall) -> None:
+    """Record a run or failed call as a step (a parked write shows its own card)."""
+    if call.status is ToolStatus.PENDING_APPROVAL:
+        return
+    result = call.result if isinstance(call.result, dict) else {}
+    target = result.get("name") or result.get("title")
+    failed = call.status is ToolStatus.FAILED
+    record_step(
+        step_kind_for(call.tool),
+        call.tool,
+        target=target if isinstance(target, str) else None,
+        ref=call.id,
+        status=StepStatus.FAILED if failed else StepStatus.DONE,
+    )
 
 
 def _unique_id(model_id: str, taken: set[str]) -> str:

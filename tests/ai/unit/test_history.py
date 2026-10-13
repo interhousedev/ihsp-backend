@@ -134,23 +134,23 @@ async def seed_messages(h: AiHarness, chat_id: object, count: int) -> None:
 
 
 async def test_long_chat_gets_one_summary_then_reuses_it(h: AiHarness) -> None:
-    """AI-9: past 30 messages one extra request summarizes the older ones."""
+    """AI-9, AI-EFF-3: past the history limit (20) one request summarizes the rest."""
     chat = await h.new_chat()
     await seed_messages(h, chat.id, 40)
     h.llm.push(text_reply("SUMMARY TEXT"), text_reply("answer"))
 
     await h.say(
         chat.id, "continue"
-    )  # seq 41 -> messages 1..11 are older than the window
+    )  # seq 41 -> messages 1..21 are older than the window
 
     summarize, answer = h.llm.requests
     assert "summarize a conversation" in summarize["system"]
     assert summarize["tools"] == []
     stored = h.summaries.items[chat.id]
-    assert (stored.text, stored.upto_seq) == ("SUMMARY TEXT", 11)
+    assert (stored.text, stored.upto_seq) == ("SUMMARY TEXT", 21)
     first = answer["messages"][0]["content"]
-    assert "SUMMARY TEXT" in first and "msg-011" in first  # the turn's user message
-    assert "msg-010" not in first
+    assert "SUMMARY TEXT" in first and "msg-021" in first  # the turn's user message
+    assert "msg-020" not in first
 
     h.llm.requests.clear()
     await h.say(chat.id, "again")
@@ -169,7 +169,7 @@ async def test_summary_is_recomputed_every_twenty_messages(h: AiHarness) -> None
     await h.say(chat.id, "n")
 
     assert h.summaries.items[chat.id].text == "S2"
-    assert h.summaries.items[chat.id].upto_seq > 11
+    assert h.summaries.items[chat.id].upto_seq > 21
 
 
 async def seed_more(h: AiHarness, chat_id: object, count: int) -> None:

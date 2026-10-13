@@ -23,7 +23,7 @@ STUDENT_TOOLS = {
     "search_files", "list_notebooks", "get_notebook", "search_notebook",
     "read_notebook_source", "list_notebook_artifacts", "list_flashcard_sets",
     "get_flashcard_set", "create_flashcard_set", "add_flashcards", "create_notebook",
-    "add_notebook_sources", "create_artifact", "make_document",
+    "add_notebook_sources", "create_artifact", "make_document", "read_chat_history",
 }  # fmt: skip
 NOTEBOOK_READ_TOOLS = [
     "list_notebooks", "get_notebook", "search_notebook", "read_notebook_source",
@@ -70,6 +70,7 @@ async def test_notebook_tools_sit_after_the_file_tools_and_the_flash_card_writes
     assert names[names.index("add_flashcards") + 1 :] == [
         *NOTEBOOK_WRITE_TOOLS,
         "make_document",
+        "read_chat_history",
     ]
 
 
@@ -101,8 +102,8 @@ async def test_admin_tools_match_the_spec(h: AiHarness) -> None:
     tools = await tools_of(h, Assistant.ADMIN)
 
     names = [t["function"]["name"] for t in tools]
-    assert names == [d.name for d in ADMIN_TOOLS]
-    assert len(names) == 22 and len(set(names)) == 22
+    assert names == [*(d.name for d in ADMIN_TOOLS), "read_chat_history"]
+    assert len(names) == 23 and len(set(names)) == 23
 
 
 @pytest.mark.parametrize("assistant", [Assistant.STUDENT, Assistant.ADMIN])

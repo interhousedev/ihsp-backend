@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Literal, Self
 from uuid import UUID
 
+from app.interfaces.http.v1.agent_steps import AgentStepResponse
 from app.interfaces.http.v1.web_search.schemas import WebResultResponse
 from app.modules.ai.application.budget import UsageInfo
 from app.modules.ai.application.views import (
@@ -149,6 +150,8 @@ class ChatMessageViewResponse(_Response):
     feedback: Literal["up", "down"] | None
     web: list[WebResultResponse]
     """Pages of the message's web search; `⟦w1⟧` chips in the text point at them."""
+    steps: list[AgentStepResponse] = Field(default_factory=list)
+    """What the assistant did while answering, in order (AI-STEPS)."""
 
 
 class UsagePartResponse(_Response):

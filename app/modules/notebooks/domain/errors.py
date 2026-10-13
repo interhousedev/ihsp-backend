@@ -227,3 +227,17 @@ class OutputInvalidError(BaseError):
         """Keep the list of problems for the repair call."""
         super().__init__(support_details="; ".join(problems)[:500])
         self.problems = problems
+
+
+class PlanTooLongError(ValidationFailedError):
+    """A presentation plan has more slides than a deck may have (PLAN)."""
+
+    code = "notebooks/plan-too-long"
+    message_key = "notebooks-plan-too-long"
+
+
+class PlanConfirmedError(ConflictError):
+    """The plan's deck is already generated; it can no longer change (PLAN)."""
+
+    code = "notebooks/plan-confirmed"
+    message_key = "notebooks-plan-confirmed"

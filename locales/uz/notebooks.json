@@ -6,6 +6,8 @@
   "notebooks-artifact-error-provider": "Material yaratishda sun'iy intellekt xizmati xato qildi. Qayta urinib ko'ring.",
   "notebooks-artifact-error-timeout": "Materialni yaratish juda uzoq davom etdi. Kamroq manba bilan urinib ko'ring.",
   "notebooks-artifact-limit": "Bu daftarda materiallar juda ko'p. Yangisini yaratish uchun birini o'chiring.",
+  "notebooks-plan-confirmed": "Bu reja asosida slaydlar allaqachon yaratilgan.",
+  "notebooks-plan-too-long": "Rejada {count} ta slayd bor, taqdimotda esa ko'pi bilan {max} ta bo'lishi mumkin. Avval slaydlarni o'chiring yoki birlashtiring.",
   "notebooks-artifact-not-ready": "Bu material hali tayyor emas.",
   "notebooks-auto-limit": "Fan va dars daftarlarining eng ko'p soniga yetdingiz.",
   "notebooks-auto-readonly": "Bu daftar dars materiallaridan avtomatik yig'iladi. Materialni o'chirmasdan chiqarib tashlang yoki erkin tahrirlash uchun nusxa oling.",

@@ -32,6 +32,7 @@ from app.modules.notebooks.application.course_context import (
     CourseContextLoader,
     step_id_of,
 )
+from app.modules.notebooks.application.faithfulness_check import FaithfulnessCheck
 from app.modules.notebooks.application.llm import JsonCompletion, NotebookLlm
 from app.modules.notebooks.application.locale import LocaleResolver
 from app.modules.notebooks.application.quota import QuotaService
@@ -145,6 +146,7 @@ class _Plan:
     process: Callable[[dict[str, Any]], ProcessedOutput]
     sampled: bool
     source_map: dict[str, str]
+    sources_text: str = ""  # the sources block; "" skips the faithfulness check
 
 
 @dataclass(frozen=True, slots=True)
@@ -321,8 +323,12 @@ class GenerateArtifact:
         settings: Settings,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         course_context: CourseContextLoader | None = None,
+        faithfulness: FaithfulnessCheck | None = None,
     ) -> None:
         """Store the collaborators; `sleep` is injected for the retry backoff.
+
+        `faithfulness` checks fresh outputs against their sources before they are
+        stored (`NOTEBOOKS__FAITHFULNESS_CHECK`); without it nothing is checked.
 
         `course_context` gives the outputs of a course workspace their course (the
         outline and, for a step, its draft); without it they get none.
@@ -337,6 +343,7 @@ class GenerateArtifact:
         self.settings = settings
         self.sleep = sleep
         self.course_context = course_context or CourseContextLoader(None)
+        self.faithfulness = faithfulness
 
     async def execute(self, artifact_id: UUID | str) -> None:
         """Generate the output; do nothing unless it is `queued`."""
@@ -461,7 +468,29 @@ class GenerateArtifact:
             plan = await self._plan_revision(run, changes)
         await self._check_budget(run, plan)
         output = await self._produce(run, plan)
+        output = await self._checked(run, plan, output)
         await self._store(run, plan, output)
+
+    async def _checked(
+        self, run: _Run, plan: _Plan, output: ProcessedOutput
+    ) -> ProcessedOutput:
+        """The output after the faithfulness check (regenerated or marked)."""
+        if self.faithfulness is None or not plan.sources_text:
+            return output
+        checked = await self.faithfulness.ensure(
+            output, plan.sources_text, partial(self._regenerate, run, plan)
+        )
+        if checked.usage.weighted:
+            pool = self.budget.pool(run.course)
+            await pool.add(run.artifact.charged_to, checked.usage.weighted)
+        return checked.output
+
+    async def _regenerate(self, run: _Run, plan: _Plan) -> ProcessedOutput | None:
+        """One more output for a failed check; None when that attempt fails."""
+        try:
+            return await self._produce(run, plan)
+        except _Failure:
+            return None
 
     async def _plan_fresh(self, run: _Run) -> _Plan:
         """The context pack, the prompt and the post-processing of a new output."""
@@ -508,11 +537,12 @@ class GenerateArtifact:
         if not general:
             task = _with_thin_note(task, pack)
         max_tokens = self.llm.max_tokens(ai_task, handler.max_tokens(options))
+        block = render_sources_block(pack)
         return _Plan(
             task=ai_task,
             system=system_prompt_for(artifact.kind, language),
             messages=[
-                self.llm.context_message(render_sources_block(pack), ai_task),
+                self.llm.context_message(block, ai_task),
                 {
                     "role": "user",
                     "content": _general_task(task, notebook) if general else task,
@@ -525,6 +555,7 @@ class GenerateArtifact:
             process=partial(_process_fresh, handler, options, ctx),
             sampled=pack.sampled,
             source_map={label: str(sid) for label, sid in pack.source_map.items()},
+            sources_text="" if general else block,
         )
 
     async def _plan_revision(self, run: _Run, changes: list[dict[str, str]]) -> _Plan:

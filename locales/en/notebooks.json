@@ -6,6 +6,8 @@
   "notebooks-artifact-error-provider": "The AI service failed while creating this output. Try again.",
   "notebooks-artifact-error-timeout": "Creating this output took too long. Try again with fewer sources.",
   "notebooks-artifact-limit": "This notebook has too many outputs. Delete one to create another.",
+  "notebooks-plan-confirmed": "This presentation plan has already been turned into slides.",
+  "notebooks-plan-too-long": "The plan has {count} slides; a presentation can have at most {max}. Delete or merge slides first.",
   "notebooks-artifact-not-ready": "This output is not ready yet.",
   "notebooks-auto-limit": "You have reached the maximum number of subject and lesson notebooks.",
   "notebooks-auto-readonly": "This notebook is kept up to date from your lessons. Exclude a material instead of removing it, or make a copy to edit it freely.",

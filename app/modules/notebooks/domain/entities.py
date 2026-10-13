@@ -19,6 +19,7 @@ from app.modules.notebooks.domain.enums import (
     SourceStatus,
     SummaryStatus,
 )
+from app.shared.agent_steps import AgentStep
 from app.shared.contracts.web_search import WebResult
 
 from pydantic import BaseModel, Field
@@ -114,6 +115,7 @@ class MessageContent(BaseModel):
         default=None, discriminator="kind"
     )
     web: list[WebResult] = Field(default_factory=list)  # pages of the web search
+    steps: list[AgentStep] = Field(default_factory=list)  # AI-STEPS, never re-sent
 
 
 class ArtifactError(BaseModel):

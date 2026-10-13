@@ -7,10 +7,20 @@ from dataclasses import dataclass
 from app.modules.notebooks.application.apply_course_artifact import ApplyCourseArtifact
 from app.modules.notebooks.application.attach_artifact import AttachArtifactToLesson
 from app.modules.notebooks.application.cancel_artifact import CancelArtifact
+from app.modules.notebooks.application.confirm_presentation_plan import (
+    ConfirmPresentationPlan,
+)
+from app.modules.notebooks.application.create_presentation_plan import (
+    CreatePresentationPlan,
+)
 from app.modules.notebooks.application.delete_artifact import DeleteArtifact
 from app.modules.notebooks.application.edit_slides import EditSlides
+from app.modules.notebooks.application.faithfulness_check import FaithfulnessCheck
 from app.modules.notebooks.application.generate_artifact import GenerateArtifact
 from app.modules.notebooks.application.get_artifact import GetArtifact
+from app.modules.notebooks.application.get_presentation_plan import (
+    GetPresentationPlan,
+)
 from app.modules.notebooks.application.list_artifacts import ListArtifacts
 from app.modules.notebooks.application.rename_artifact import RenameArtifact
 from app.modules.notebooks.application.request_artifact import RequestArtifact
@@ -20,6 +30,9 @@ from app.modules.notebooks.application.save_as_source import SaveAsSource
 from app.modules.notebooks.application.save_flashcard_set import SaveFlashcardSet
 from app.modules.notebooks.application.save_progress import SaveProgress
 from app.modules.notebooks.application.save_to_files import SaveArtifactToFiles
+from app.modules.notebooks.application.update_presentation_plan import (
+    UpdatePresentationPlan,
+)
 from app.modules.notebooks.wiring_core import NotebooksCore
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.flashcards import FlashcardsApi
@@ -46,6 +59,10 @@ class StudioServices:
     """Studio use cases; the attribute is the name of its file."""
 
     request_artifact: RequestArtifact
+    create_presentation_plan: CreatePresentationPlan
+    get_presentation_plan: GetPresentationPlan
+    update_presentation_plan: UpdatePresentationPlan
+    confirm_presentation_plan: ConfirmPresentationPlan
     generate_artifact: GenerateArtifact
     list_artifacts: ListArtifacts
     get_artifact: GetArtifact
@@ -86,15 +103,32 @@ def build_studio(
     deps = core.deps
     uow_factory, clock, settings = core.uow_factory, deps.clock, deps.settings
     ports = lms_apply or LmsApplyPorts()
+    request = RequestArtifact(
+        uow_factory=uow_factory,
+        budget=core.budget,
+        quota=core.quota,
+        kicker=deps.kicker,
+        clock=clock,
+        settings=settings,
+        locale=core.locale,
+    )
     return StudioServices(
-        request_artifact=RequestArtifact(
+        request_artifact=request,
+        create_presentation_plan=CreatePresentationPlan(
             uow_factory=uow_factory,
+            llm=core.llm,
+            context=core.context,
             budget=core.budget,
-            quota=core.quota,
-            kicker=deps.kicker,
+            locale=core.locale,
             clock=clock,
             settings=settings,
-            locale=core.locale,
+        ),
+        get_presentation_plan=GetPresentationPlan(uow_factory=uow_factory),
+        update_presentation_plan=UpdatePresentationPlan(
+            uow_factory=uow_factory, clock=clock
+        ),
+        confirm_presentation_plan=ConfirmPresentationPlan(
+            uow_factory=uow_factory, request=request, clock=clock
         ),
         generate_artifact=GenerateArtifact(
             uow_factory=uow_factory,
@@ -107,6 +141,7 @@ def build_studio(
             settings=settings,
             sleep=sleep,
             course_context=core.course_context,
+            faithfulness=FaithfulnessCheck(core.llm, settings),
         ),
         list_artifacts=ListArtifacts(uow_factory=uow_factory),
         get_artifact=GetArtifact(uow_factory=uow_factory, clock=clock),

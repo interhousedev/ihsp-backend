@@ -1,6 +1,32 @@
 {
   "components": {
     "schemas": {
+      "AbsentLessonResponse": {
+        "description": "A lesson of the subject the student missed.",
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "excused": {
+            "title": "Excused",
+            "type": "boolean"
+          },
+          "lesson_id": {
+            "format": "uuid",
+            "title": "Lesson Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lesson_id",
+          "date",
+          "excused"
+        ],
+        "title": "AbsentLessonResponse",
+        "type": "object"
+      },
       "AccessOptionResponse": {
         "description": "An access filter option.",
         "properties": {
@@ -556,6 +582,94 @@
           "recent_audit"
         ],
         "title": "AdminUserDetailResponse",
+        "type": "object"
+      },
+      "AgentStepResponse": {
+        "description": "AgentStep: one action of the assistant while it answered.\n\n`target` is a name to show (a file, a count of results); `ref` an id the web can\nopen (a file id, a tool call id, a plan id).",
+        "properties": {
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "read_file",
+              "web_search",
+              "retrieve",
+              "open_view",
+              "create",
+              "tool",
+              "think"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "enum": [
+              "running",
+              "done",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "status"
+        ],
+        "title": "AgentStepResponse",
         "type": "object"
       },
       "AlertResponse": {
@@ -4329,6 +4443,42 @@
         "title": "ChangePasswordBody",
         "type": "object"
       },
+      "ChatAttachment": {
+        "description": "A lesson, or one material of a lesson, the question is about (students).\n\n`lesson`: `id` is the lesson. `material`: `id` is the link of the material and\n`lesson_id` its lesson. The lesson's subject, date, topic, materials and homework\nreach the model as a pinned text.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "lesson",
+              "material"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "lesson_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lesson Id"
+          }
+        },
+        "required": [
+          "kind",
+          "id"
+        ],
+        "title": "ChatAttachment",
+        "type": "object"
+      },
       "ChatConfig": {
         "description": "`notebooks.chat_config` (§ 3.3.6).",
         "properties": {
@@ -4653,6 +4803,13 @@
           "seq": {
             "title": "Seq",
             "type": "integer"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/AgentStepResponse"
+            },
+            "title": "Steps",
+            "type": "array"
           },
           "text": {
             "title": "Text",
@@ -10499,6 +10656,77 @@
         "title": "HomeworkDoneBody",
         "type": "object"
       },
+      "HomeworkEntryResponse": {
+        "description": "A homework of the subject and what the student did (`done_at`, `note`).",
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "done_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Done At"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "lesson_id": {
+            "format": "uuid",
+            "title": "Lesson Id",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "required": [
+          "lesson_id",
+          "date",
+          "due_date",
+          "text",
+          "done_at",
+          "note"
+        ],
+        "title": "HomeworkEntryResponse",
+        "type": "object"
+      },
       "HomeworkNoteBody": {
         "description": "Body of ``PUT /v1/me/homework/{lesson_id}/note``.",
         "properties": {
@@ -13473,6 +13701,30 @@
         "title": "LessonResultRow",
         "type": "object"
       },
+      "LessonSubgroupResponse": {
+        "description": "The subgroup a lesson is for; `is_own_subgroup` is False for the other half.",
+        "properties": {
+          "is_own_subgroup": {
+            "title": "Is Own Subgroup",
+            "type": "boolean"
+          },
+          "subgroup_id": {
+            "title": "Subgroup Id",
+            "type": "integer"
+          },
+          "subgroup_name": {
+            "title": "Subgroup Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subgroup_id",
+          "subgroup_name",
+          "is_own_subgroup"
+        ],
+        "title": "LessonSubgroupResponse",
+        "type": "object"
+      },
       "LibraryItemInput": {
         "description": "A library book or material, or a page range of one of its files.\n\nWithout `file_id` the primary file is read. A whole textbook can be longer than\na source may be, so a chapter range (`page_from`, `page_to`, 1-based and\ninclusive) keeps it under the limit.",
         "properties": {
@@ -15886,6 +16138,13 @@
             "title": "Source Ids",
             "type": "array"
           },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/AgentStepResponse"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
           "stopped": {
             "title": "Stopped",
             "type": "boolean"
@@ -17521,6 +17780,79 @@
         "title": "PinExternalBody",
         "type": "object"
       },
+      "PlanConfirmResponse": {
+        "description": "The confirmed plan and the deck that is being generated.",
+        "properties": {
+          "artifact": {
+            "$ref": "#/components/schemas/ArtifactItemResponse"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/PresentationPlanResponse"
+          }
+        },
+        "required": [
+          "plan",
+          "artifact"
+        ],
+        "title": "PlanConfirmResponse",
+        "type": "object"
+      },
+      "PlanCreateBody": {
+        "description": "POST /v1/notebooks/{id}/presentation-plans.",
+        "properties": {
+          "format": {
+            "default": "presenter",
+            "enum": [
+              "presenter",
+              "detailed"
+            ],
+            "title": "Format",
+            "type": "string"
+          },
+          "prompt": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt"
+          },
+          "slide_count": {
+            "anyOf": [
+              {
+                "maximum": 40.0,
+                "minimum": 3.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slide Count"
+          },
+          "source_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Ids"
+          }
+        },
+        "title": "PlanCreateBody",
+        "type": "object"
+      },
       "PlanPreviewResponse": {
         "description": "What applying a course plan would do to the draft outline.",
         "properties": {
@@ -17668,6 +18000,76 @@
         "title": "PlanSectionPreviewResponse",
         "type": "object"
       },
+      "PlanSlide": {
+        "description": "One slide of an outline: a title and up to 8 bullets.",
+        "properties": {
+          "bullets": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "title": "Bullets",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "PlanSlide",
+        "type": "object"
+      },
+      "PlanSlideBody": {
+        "description": "One slide of an outline.",
+        "properties": {
+          "bullets": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "title": "Bullets",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "PlanSlideBody",
+        "type": "object"
+      },
+      "PlanSlideResponse": {
+        "description": "One slide of an outline.",
+        "properties": {
+          "bullets": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Bullets",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "bullets"
+        ],
+        "title": "PlanSlideResponse",
+        "type": "object"
+      },
       "PlanStepInput": {
         "description": "One planned step.",
         "properties": {
@@ -17737,6 +18139,40 @@
           "action"
         ],
         "title": "PlanStepPreviewResponse",
+        "type": "object"
+      },
+      "PlanUpdateBody": {
+        "description": "PATCH /v1/notebooks/{id}/presentation-plans/{pid}: what is sent is replaced.",
+        "properties": {
+          "slides": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/PlanSlideBody"
+                },
+                "maxItems": 40,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slides"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "PlanUpdateBody",
         "type": "object"
       },
       "PlannerPair": {
@@ -18284,6 +18720,84 @@
           }
         },
         "title": "PreferencesPatchBody",
+        "type": "object"
+      },
+      "PresentationPlanResponse": {
+        "description": "`PresentationPlan`: a slide outline confirmed before its deck is made.",
+        "properties": {
+          "artifact_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Artifact Id"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "max_slides": {
+            "title": "Max Slides",
+            "type": "integer"
+          },
+          "notebook_id": {
+            "format": "uuid",
+            "title": "Notebook Id",
+            "type": "string"
+          },
+          "over_limit": {
+            "title": "Over Limit",
+            "type": "boolean"
+          },
+          "slides": {
+            "items": {
+              "$ref": "#/components/schemas/PlanSlideResponse"
+            },
+            "title": "Slides",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "confirmed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "notebook_id",
+          "title",
+          "slides",
+          "status",
+          "max_slides",
+          "over_limit",
+          "artifact_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "PresentationPlanResponse",
         "type": "object"
       },
       "PresetResponse": {
@@ -21404,6 +21918,43 @@
         "title": "RosterItemResponse",
         "type": "object"
       },
+      "RosterStudentResponse": {
+        "description": "A student of the group (subgroup None: not assigned).",
+        "properties": {
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "subgroup": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subgroup"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "first_name",
+          "last_name",
+          "subgroup"
+        ],
+        "title": "RosterStudentResponse",
+        "type": "object"
+      },
       "RunSyncBody": {
         "description": "Start a sync for one student, or for everybody when ``user_id`` is absent.",
         "properties": {
@@ -22832,6 +23383,21 @@
             ],
             "title": "Length",
             "type": "string"
+          },
+          "outline": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/PlanSlide"
+                },
+                "maxItems": 18,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outline"
           },
           "source_ids": {
             "anyOf": [
@@ -24702,6 +25268,189 @@
           "synced_at"
         ],
         "title": "StudentItemResponse",
+        "type": "object"
+      },
+      "StudentLessonItemResponse": {
+        "description": "A LessonItem of the student's timetable; `subgroup` is None for the group.",
+        "properties": {
+          "absent_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Absent Count"
+          },
+          "attendance_submitted": {
+            "title": "Attendance Submitted",
+            "type": "boolean"
+          },
+          "audience": {
+            "items": {
+              "$ref": "#/components/schemas/app__interfaces__http__v1__admin_schedule__shared_schemas__AudienceItemResponse"
+            },
+            "title": "Audience",
+            "type": "array"
+          },
+          "changes": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "items": {},
+                  "type": "array"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changes"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "ends_at": {
+            "format": "date-time",
+            "title": "Ends At",
+            "type": "string"
+          },
+          "has_homework": {
+            "title": "Has Homework",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_overridden": {
+            "title": "Is Overridden",
+            "type": "boolean"
+          },
+          "kind": {
+            "default": "other",
+            "enum": [
+              "lecture",
+              "practice",
+              "midterm",
+              "final",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "late_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Late Count"
+          },
+          "period": {
+            "title": "Period",
+            "type": "integer"
+          },
+          "room": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/app__interfaces__http__v1__admin_schedule__shared_schemas__RoomRefLiteResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "starts_at": {
+            "format": "date-time",
+            "title": "Starts At",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "scheduled",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "subgroup": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LessonSubgroupResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subject": {
+            "$ref": "#/components/schemas/app__interfaces__http__v1__admin_schedule__shared_schemas__SubjectRefResponse"
+          },
+          "teacher": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/app__interfaces__http__v1__admin_schedule__shared_schemas__PersonRefResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "topic": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic"
+          },
+          "topic_source": {
+            "anyOf": [
+              {
+                "enum": [
+                  "emis",
+                  "manual"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic Source"
+          }
+        },
+        "required": [
+          "id",
+          "date",
+          "period",
+          "starts_at",
+          "ends_at",
+          "subject",
+          "teacher",
+          "room",
+          "audience",
+          "status",
+          "is_overridden",
+          "changes",
+          "topic",
+          "has_homework",
+          "attendance_submitted"
+        ],
+        "title": "StudentLessonItemResponse",
         "type": "object"
       },
       "StudentLessonResponse": {
@@ -27191,6 +27940,332 @@
           "name"
         ],
         "title": "TeacherSubjectRefResponse",
+        "type": "object"
+      },
+      "TeachingGroupResponse": {
+        "description": "A group (or subgroup) the caller teaches a subject: students and lessons.\n\n`subgroups` lists the subgroups the caller teaches in the group; empty when the\ngroup is taught undivided. `lessons` cover this week and the next three.",
+        "properties": {
+          "group_id": {
+            "format": "uuid",
+            "title": "Group Id",
+            "type": "string"
+          },
+          "group_name": {
+            "title": "Group Name",
+            "type": "string"
+          },
+          "lessons": {
+            "items": {
+              "$ref": "#/components/schemas/TeachingLessonResponse"
+            },
+            "title": "Lessons",
+            "type": "array"
+          },
+          "students": {
+            "items": {
+              "$ref": "#/components/schemas/RosterStudentResponse"
+            },
+            "title": "Students",
+            "type": "array"
+          },
+          "subgroup": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subgroup"
+          },
+          "subgroups": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Subgroups",
+            "type": "array"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "subject_name": {
+            "title": "Subject Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject_id",
+          "subject_name",
+          "group_id",
+          "group_name",
+          "subgroup",
+          "subgroups",
+          "students",
+          "lessons"
+        ],
+        "title": "TeachingGroupResponse",
+        "type": "object"
+      },
+      "TeachingLessonResponse": {
+        "description": "A lesson of the subject for the group.",
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "ends_at": {
+            "format": "date-time",
+            "title": "Ends At",
+            "type": "string"
+          },
+          "group_names": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Group Names",
+            "type": "array"
+          },
+          "homework_due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Homework Due Date"
+          },
+          "homework_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Homework Text"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "period": {
+            "title": "Period",
+            "type": "integer"
+          },
+          "room_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Room Name"
+          },
+          "starts_at": {
+            "format": "date-time",
+            "title": "Starts At",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "scheduled",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "topic": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Topic"
+          }
+        },
+        "required": [
+          "id",
+          "date",
+          "period",
+          "starts_at",
+          "ends_at",
+          "room_name",
+          "group_names",
+          "status",
+          "topic",
+          "homework_text",
+          "homework_due_date"
+        ],
+        "title": "TeachingLessonResponse",
+        "type": "object"
+      },
+      "TeachingMarkResponse": {
+        "description": "One mark (2 to 5).",
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "lesson_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lesson Id"
+          },
+          "semester": {
+            "title": "Semester",
+            "type": "integer"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "semester",
+          "type",
+          "value",
+          "date",
+          "lesson_id"
+        ],
+        "title": "TeachingMarkResponse",
+        "type": "object"
+      },
+      "TeachingStudentResponse": {
+        "description": "A student's record in the subject: marks of the newest semester and more.\n\n`average` is the mean of `marks` on the 5-point scale.",
+        "properties": {
+          "absences": {
+            "title": "Absences",
+            "type": "integer"
+          },
+          "absent_lessons": {
+            "items": {
+              "$ref": "#/components/schemas/AbsentLessonResponse"
+            },
+            "title": "Absent Lessons",
+            "type": "array"
+          },
+          "average": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average"
+          },
+          "group_id": {
+            "format": "uuid",
+            "title": "Group Id",
+            "type": "string"
+          },
+          "group_name": {
+            "title": "Group Name",
+            "type": "string"
+          },
+          "homework": {
+            "items": {
+              "$ref": "#/components/schemas/HomeworkEntryResponse"
+            },
+            "title": "Homework",
+            "type": "array"
+          },
+          "lessons_with_attendance": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lessons With Attendance"
+          },
+          "marks": {
+            "items": {
+              "$ref": "#/components/schemas/TeachingMarkResponse"
+            },
+            "title": "Marks",
+            "type": "array"
+          },
+          "semester": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Semester"
+          },
+          "semester_mark": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Semester Mark"
+          },
+          "student": {
+            "$ref": "#/components/schemas/RosterStudentResponse"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "subject_name": {
+            "title": "Subject Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject_id",
+          "subject_name",
+          "group_id",
+          "group_name",
+          "student",
+          "semester",
+          "marks",
+          "average",
+          "semester_mark",
+          "homework",
+          "absences",
+          "lessons_with_attendance",
+          "absent_lessons"
+        ],
+        "title": "TeachingStudentResponse",
         "type": "object"
       },
       "TelegramLinkedResponse": {
@@ -34362,6 +35437,14 @@
             "maxLength": 8000,
             "title": "Args",
             "type": "string"
+          },
+          "attachments": {
+            "items": {
+              "$ref": "#/components/schemas/ChatAttachment"
+            },
+            "maxItems": 5,
+            "title": "Attachments",
+            "type": "array"
           },
           "command": {
             "anyOf": [
@@ -52539,7 +53622,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/app__interfaces__http__v1__admin_schedule__shared_schemas__LessonItemResponse"
+                    "$ref": "#/components/schemas/StudentLessonItemResponse"
                   },
                   "title": "Response Get Timetable V1 Me Timetable Get",
                   "type": "array"
@@ -55091,6 +56174,230 @@
           }
         },
         "summary": "Get Passage",
+        "tags": [
+          "notebooks"
+        ]
+      }
+    },
+    "/v1/notebooks/{notebook_id}/presentation-plans": {
+      "post": {
+        "description": "Outline a slide deck; the deck is made only after \"Generate\" (PLAN).",
+        "operationId": "create_presentation_plan_v1_notebooks__notebook_id__presentation_plans_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notebook_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notebook Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanCreateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresentationPlanResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Presentation Plan",
+        "tags": [
+          "notebooks"
+        ]
+      }
+    },
+    "/v1/notebooks/{notebook_id}/presentation-plans/{plan_id}": {
+      "get": {
+        "description": "Return one of the caller's presentation plans (PLAN).",
+        "operationId": "get_presentation_plan_v1_notebooks__notebook_id__presentation_plans__plan_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notebook_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notebook Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresentationPlanResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Presentation Plan",
+        "tags": [
+          "notebooks"
+        ]
+      },
+      "patch": {
+        "description": "Save the edited outline: titles, bullets, deleted and moved slides (PLAN).",
+        "operationId": "update_presentation_plan_v1_notebooks__notebook_id__presentation_plans__plan_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notebook_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notebook Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanUpdateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PresentationPlanResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Presentation Plan",
+        "tags": [
+          "notebooks"
+        ]
+      }
+    },
+    "/v1/notebooks/{notebook_id}/presentation-plans/{plan_id}/confirm": {
+      "post": {
+        "description": "Generate: queue the deck of the plan (422 `plan-too-long` over the limit).",
+        "operationId": "confirm_presentation_plan_v1_notebooks__notebook_id__presentation_plans__plan_id__confirm_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notebook_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notebook Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanConfirmResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm Presentation Plan",
         "tags": [
           "notebooks"
         ]
@@ -58035,6 +59342,264 @@
           }
         },
         "summary": "List Staff Subjects",
+        "tags": [
+          "staff-subjects"
+        ]
+      }
+    },
+    "/v1/staff/subjects/{subject_id}/groups/{group_id}": {
+      "get": {
+        "description": "A group the caller teaches the subject: students and lessons.",
+        "operationId": "get_group_v1_staff_subjects__subject_id__groups__group_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Group Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeachingGroupResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Group",
+        "tags": [
+          "staff-subjects"
+        ]
+      }
+    },
+    "/v1/staff/subjects/{subject_id}/groups/{group_id}/students/{student_id}": {
+      "get": {
+        "description": "A student's marks, homework and attendance in the subject.",
+        "operationId": "get_student_v1_staff_subjects__subject_id__groups__group_id__students__student_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Group Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "student_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Student Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeachingStudentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Student",
+        "tags": [
+          "staff-subjects"
+        ]
+      }
+    },
+    "/v1/staff/subjects/{subject_id}/groups/{group_id}/subgroups/{subgroup}": {
+      "get": {
+        "description": "A subgroup the caller teaches the subject: its students and lessons.",
+        "operationId": "get_subgroup_v1_staff_subjects__subject_id__groups__group_id__subgroups__subgroup__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Group Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subgroup",
+            "required": true,
+            "schema": {
+              "maximum": 2,
+              "minimum": 1,
+              "title": "Subgroup",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeachingGroupResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Subgroup",
+        "tags": [
+          "staff-subjects"
+        ]
+      }
+    },
+    "/v1/staff/subjects/{subject_id}/groups/{group_id}/subgroups/{subgroup}/students/{student_id}": {
+      "get": {
+        "description": "A student of a subgroup: marks, homework and attendance in the subject.",
+        "operationId": "get_subgroup_student_v1_staff_subjects__subject_id__groups__group_id__subgroups__subgroup__students__student_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Group Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subgroup",
+            "required": true,
+            "schema": {
+              "maximum": 2,
+              "minimum": 1,
+              "title": "Subgroup",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "student_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Student Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeachingStudentResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Subgroup Student",
         "tags": [
           "staff-subjects"
         ]

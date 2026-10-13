@@ -30,6 +30,7 @@ def make_llm_gateway(settings: Settings) -> LlmGateway:
         app_url=config.app_url,
         app_title=config.app_title,
         timeout_seconds=config.timeout_seconds,
+        cache_models=settings.ai.prompt_cache_models,
     )
 
 

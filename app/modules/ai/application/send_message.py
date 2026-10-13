@@ -31,6 +31,7 @@ from app.modules.ai.ports.turn_lock import TurnLock
 from app.modules.ai.ports.unit_of_work import AiUnitOfWork
 from app.settings import Settings
 from app.shared.actor import Actor
+from app.shared.agent_steps import StepKind, StepRecorder, record_step, recording
 from app.shared.clock import Clock
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.web_search import WebResult, WebSearchApi
@@ -104,16 +105,18 @@ class SendMessage:
             smart = effective_tier(chat.assistant, chat.tier) is ChatTier.SMART
             if smart:
                 await self._require_smart_quota(actor, chat)
-            try:
-                found = await self._search(actor, chat_id, text, locale, web_search)
-                changed = await self._append(chat, text, attachments, found)
-            except BaseException:
-                if smart:
-                    await self.budget.release_smart(actor.user_id)
-                raise
-            progress = await self.continue_turn.execute(
-                chat_id=chat_id, actor=actor, locale=locale, changed=changed
-            )
+            with recording(StepRecorder()):  # AI-STEPS of this answer
+                try:
+                    found = await self._search(actor, chat_id, text, locale, web_search)
+                    changed = await self._append(chat, text, attachments, found)
+                except BaseException:
+                    if smart:
+                        await self.budget.release_smart(actor.user_id)
+                    raise
+                _record_inputs(attachments, web_search, found)
+                progress = await self.continue_turn.execute(
+                    chat_id=chat_id, actor=actor, locale=locale, changed=changed
+                )
         return await self.results.build(actor, locale, progress)
 
     async def _require_budget(self, chat: Chat, text: str, locale: str) -> None:
@@ -198,6 +201,23 @@ class SendMessage:
             await uow.chats.save(locked)
             await uow.commit()
         return [*changed, message]
+
+
+def _record_inputs(
+    attachments: list[Attachment], searched: bool, found: list[WebResult]
+) -> None:
+    """The steps before the model answers: the files it reads, the web search."""
+    for item in attachments:
+        record_step(
+            StepKind.READ_FILE,
+            "Reviewed uploaded file",
+            target=item.name,
+            ref=str(item.file_id),
+        )
+    if searched:
+        record_step(
+            StepKind.WEB_SEARCH, "Searched the web", target=f"{len(found)} results"
+        )
 
 
 def _user_message(

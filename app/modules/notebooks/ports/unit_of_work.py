@@ -17,6 +17,9 @@ from app.modules.notebooks.ports.label_repository import LabelRepository
 from app.modules.notebooks.ports.message_repository import MessageRepository
 from app.modules.notebooks.ports.notebook_repository import NotebookRepository
 from app.modules.notebooks.ports.passage_repository import PassageRepository
+from app.modules.notebooks.ports.presentation_plan_repository import (
+    PresentationPlanRepository,
+)
 from app.modules.notebooks.ports.shared_cache_repository import SharedCacheRepository
 from app.modules.notebooks.ports.source_repository import SourceRepository
 from app.shared.notifications import NotificationDraft
@@ -78,6 +81,11 @@ class NotebooksUnitOfWork(Protocol):
     @property
     def default_materials(self) -> DefaultMaterialRepository:
         """Default materials of EMIS subject ids (copied into subject notebooks)."""
+        ...
+
+    @property
+    def plans(self) -> PresentationPlanRepository:
+        """Slide outlines confirmed before a deck is generated."""
         ...
 
     async def __aenter__(self) -> Self:
