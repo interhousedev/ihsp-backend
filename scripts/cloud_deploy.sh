@@ -68,10 +68,12 @@ fi
 case "$tag" in
     "" | *[!A-Za-z0-9._-]*) [ -z "$tag" ] || { echo "invalid tag: $tag" >&2; exit 2; } ;;
 esac
-if [ -n "$tag" ] && [ "$init" -eq 0 ]; then
+set_tag() {
+    [ -n "$tag" ] || return 0
     say "setting TAG=$tag in $dir/.env.prod"
-    ssh "$host" "cd '$dir' && sed -i.bak 's/^TAG=.*/TAG=$tag/' .env.prod && rm -f .env.prod.bak && chmod 600 .env.prod"
-fi
+    ssh "$host" "cd '$dir' && test -f .env.prod && sed -i.bak 's/^TAG=.*/TAG=$tag/' .env.prod && rm -f .env.prod.bak && chmod 600 .env.prod"
+}
+[ "$init" -eq 1 ] || set_tag
 
 if [ "$init" -eq 1 ]; then
     say "first-time setup on the server (interactive)"
@@ -79,6 +81,8 @@ if [ "$init" -eq 1 ]; then
     echo
     echo "If .env.prod on the server still has CHANGE_ME values, edit it there now ($dir/.env.prod),"
     read -r -p "then press Enter to continue (Ctrl-C to stop): " _
+    # The first setup pulls the images of TAG: --tag applies to it too.
+    set_tag
     ssh -t "$host" "cd '$dir' && scripts/prod_init.sh init"
     exit 0
 fi
