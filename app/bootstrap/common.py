@@ -110,13 +110,14 @@ class ProcessPlan:
     full: bool  # classwork, marks, flash cards, links, AI, notify, admin
     lms: bool
     # Holds the OpenRouter and Exa keys. False: the AI gateways are built without them
-    # and fail only when called (the bot builds the AI module but never calls it).
+    # and fail only when called (the bot and one-off CLI commands such as create-user
+    # build the AI module without the keys in their environment).
     ai_keys: bool = True
 
 
 PLANS: dict[str, ProcessPlan] = {
     "all": ProcessPlan(True, True, True, True, True, True),
-    "cli": ProcessPlan(True, True, True, True, True, True),
+    "cli": ProcessPlan(True, True, True, True, True, True, ai_keys=False),
     # Files too: Administration sets profile photos (`/v1/admin/users/{id}/photo`).
     "identity": ProcessPlan(True, True, True, False, False, False),
     "api": ProcessPlan(False, False, True, True, True, True),
