@@ -37,51 +37,51 @@ async def main() -> None:
     ) as s3:
         try:
             await s3.create_bucket(Bucket=bucket)
+            await s3.put_bucket_cors(
+                Bucket=bucket,
+                CORSConfiguration={
+                    "CORSRules": [
+                        {
+                            "AllowedOrigins": os.environ["S3_CORS_ORIGINS"].split(","),
+                            "AllowedMethods": ["GET", "HEAD", "PUT"],
+                            "AllowedHeaders": ["*"],
+                            # The readers (library, sp) load books with HTTP Range requests
+                            # and need the range headers of the answer.
+                            "ExposeHeaders": [
+                                "ETag",
+                                "x-amz-checksum-sha256",
+                                "Accept-Ranges",
+                                "Content-Range",
+                                "Content-Length",
+                            ],
+                            "MaxAgeSeconds": 3600,
+                        }
+                    ]
+                },
+            )
+            await s3.put_bucket_lifecycle_configuration(
+                Bucket=bucket,
+                LifecycleConfiguration={
+                    "Rules": [
+                        {
+                            "ID": "abort-stale-multipart",
+                            "Status": "Enabled",
+                            "Filter": {"Prefix": ""},
+                            "AbortIncompleteMultipartUpload": {
+                                "DaysAfterInitiation": 1},
+                        },
+                        {
+                            "ID": "expire-tmp",
+                            "Status": "Enabled",
+                            "Filter": {"Prefix": "tmp/"},
+                            "Expiration": {"Days": 1},
+                        },
+                    ]
+                },
+            )
         except ClientError as exc:
             if exc.response["Error"]["Code"] not in EXISTS:
-                raise
-        await s3.put_bucket_cors(
-            Bucket=bucket,
-            CORSConfiguration={
-                "CORSRules": [
-                    {
-                        "AllowedOrigins": os.environ["S3_CORS_ORIGINS"].split(","),
-                        "AllowedMethods": ["GET", "HEAD", "PUT"],
-                        "AllowedHeaders": ["*"],
-                        # The readers (library, sp) load books with HTTP Range requests
-                        # and need the range headers of the answer.
-                        "ExposeHeaders": [
-                            "ETag",
-                            "x-amz-checksum-sha256",
-                            "Accept-Ranges",
-                            "Content-Range",
-                            "Content-Length",
-                        ],
-                        "MaxAgeSeconds": 3600,
-                    }
-                ]
-            },
-        )
-        await s3.put_bucket_lifecycle_configuration(
-            Bucket=bucket,
-            LifecycleConfiguration={
-                "Rules": [
-                    {
-                        "ID": "abort-stale-multipart",
-                        "Status": "Enabled",
-                        "Filter": {"Prefix": ""},
-                        "AbortIncompleteMultipartUpload": {"DaysAfterInitiation": 1},
-                    },
-                    {
-                        "ID": "expire-tmp",
-                        "Status": "Enabled",
-                        "Filter": {"Prefix": "tmp/"},
-                        "Expiration": {"Days": 1},
-                    },
-                ]
-            },
-        )
-
+                print("S3 Initialization error:", exc)
 
 if __name__ == "__main__":
     asyncio.run(main())
