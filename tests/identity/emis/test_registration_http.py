@@ -209,6 +209,23 @@ async def test_an_expired_registration_is_a_410(api: Api) -> None:
     assert response.json()["type"] == "id/registration-expired"
 
 
+async def test_a_long_hydra_login_challenge_passes_validation(api: Api) -> None:
+    """Log in -> Register: Hydra v2+ challenges are encrypted flows over 1 KB."""
+    response = await post(
+        api,
+        "/v1/id/register/complete",
+        {
+            "registration_token": "x" * 30,
+            "password": NEW_PASSWORD,
+            "email_code": "123456",
+            "login_challenge": "c" * 2400,
+        },
+    )
+
+    assert response.status_code == 410
+    assert response.json()["type"] == "id/registration-expired"
+
+
 async def test_a_weak_password_lists_the_broken_rules(api: Api, world: World) -> None:
     """ID-4: the form shows which rules failed."""
     start = await post(

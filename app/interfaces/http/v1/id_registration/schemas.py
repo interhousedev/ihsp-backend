@@ -85,7 +85,8 @@ class CompleteRegistrationBody(BaseModel):
     password: SecretStr = _PASSWORD
     email_code: str = Field(min_length=1, max_length=20)
     confirm_import_match: bool = False
-    login_challenge: str | None = Field(default=None, max_length=500)
+    # Hydra v2+ challenges are encrypted flows, often 1-3 KB long
+    login_challenge: str | None = Field(default=None, max_length=8192)
 
 
 class CompleteRegistrationResponse(BaseModel):
