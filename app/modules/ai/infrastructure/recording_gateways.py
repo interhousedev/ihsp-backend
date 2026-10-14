@@ -63,7 +63,7 @@ class UsageRecorder:
                     role=pending.actor.role,
                     task=pending.task,
                     feature=feature_of(pending.task),
-                    model=pending.model,
+                    model=_model_of(usage, pending.model),
                     input_tokens=counts.input_tokens,
                     output_tokens=counts.output_tokens,
                     cached_tokens=counts.cached_tokens,
@@ -91,6 +91,12 @@ class PendingCall:
     ) -> None:
         """Record the call: its usage on success, its error class on failure."""
         await self.recorder._write(self, usage, error=error)
+
+
+def _model_of(usage: Mapping[str, Any] | None, requested: str) -> str:
+    """The model that ran: a fallback gateway names it in the usage."""
+    ran = usage.get("model") if usage else None
+    return ran if isinstance(ran, str) and ran else requested
 
 
 def _error_name(exc: BaseException) -> str:

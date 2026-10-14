@@ -357,10 +357,12 @@ def test_prod_ai_cost_controls_reach_the_processes_that_use_them(
     for name in ("api", "worker", "bot"):
         env = prod_model["services"][name]["environment"]
         assert env["IHSP_OPENROUTER__API_KEY"] and env["IHSP_EXA__API_KEY"], name
+        assert env["IHSP_ANTHROPIC__MODEL_MAP"].endswith("=claude-haiku-5-5"), name
     for name in ("identity", "mail", "scheduler", "migrate"):
         env = prod_model["services"][name]["environment"]
         assert "IHSP_OPENROUTER__API_KEY" not in env, name
         assert "IHSP_EXA__API_KEY" not in env, name
+        assert "IHSP_ANTHROPIC__API_KEY" not in env, name
     for name in ("api", "worker", "identity"):
         env = prod_model["services"][name]["environment"]
         assert "IHSP_AI__USAGE_RETENTION_DAYS" in env, name
@@ -431,7 +433,12 @@ def test_every_backend_process_gets_the_shared_settings() -> None:
 
 def test_only_the_ai_module_processes_hold_the_model_keys() -> None:
     services = _raw_services()
-    for key in ("IHSP_OPENROUTER__API_KEY", "IHSP_EXA__API_KEY"):
+    for key in (
+        "IHSP_OPENROUTER__API_KEY",
+        "IHSP_EXA__API_KEY",
+        "IHSP_ANTHROPIC__API_KEY",
+        "IHSP_ANTHROPIC__MODEL_MAP",
+    ):
         holders = {
             name
             for name in BACKEND_PROCESSES

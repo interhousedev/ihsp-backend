@@ -310,6 +310,33 @@ class OpenRouterSettings(BaseModel):
     """Timeout of assistant calls (notebooks use NOTEBOOKS__LLM_TIMEOUT_SECONDS)."""
 
 
+class AnthropicSettings(BaseModel):
+    """Direct Anthropic API: the fallback when OpenRouter's credit or limit runs out."""
+
+    api_key: SecretStr | None = None
+    """Anthropic API key; without it there is no fallback (OpenRouter errors stay)."""
+
+    fallback_enabled: bool = True
+    """Retry a call on Anthropic when OpenRouter answers 402 or a limit 429."""
+
+    model_map: str = "anthropic/claude-haiku-5.5=claude-haiku-5-5"
+    """`openrouter-id=anthropic-id` pairs, comma separated: the models to fall back."""
+
+    @property
+    def models(self) -> dict[str, str]:
+        """The OpenRouter model id -> the Anthropic model id."""
+        pairs = (
+            item.split("=", 1) for item in self.model_map.split(",") if "=" in item
+        )
+        return {source.strip(): target.strip() for source, target in pairs}
+
+    @property
+    def active(self) -> bool:
+        """True when calls may fall back to Anthropic."""
+        key = self.api_key.get_secret_value() if self.api_key else ""
+        return self.fallback_enabled and bool(key) and bool(self.models)
+
+
 class ExaSettings(BaseModel):
     """Exa search API (`IHSP_EXA__...`): the web search of chat and Discover."""
 
@@ -963,6 +990,7 @@ class Settings(BaseSettings):
     telegram: TelegramSettings = Field(default_factory=TelegramSettings)
     emis: EmisSettings = Field(default_factory=EmisSettings)
     openrouter: OpenRouterSettings = Field(default_factory=OpenRouterSettings)
+    anthropic: AnthropicSettings = Field(default_factory=AnthropicSettings)
     exa: ExaSettings = Field(default_factory=ExaSettings)
     notebooks: NotebooksSettings = Field(default_factory=NotebooksSettings)
     vectors: VectorsSettings = Field(default_factory=VectorsSettings)
