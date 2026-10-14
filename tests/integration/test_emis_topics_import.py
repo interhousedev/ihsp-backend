@@ -103,6 +103,19 @@ def kicked(world: IntegrationWorld, task: str) -> list[dict[str, object]]:
     return [kwargs for name, kwargs in world.kicker.calls if name == task]
 
 
+async def timetable_tasks(
+    container: Container, world: IntegrationWorld
+) -> list[dict[str, object]]:
+    """The group timetables the kicked `academic.sync_student_all` tasks sync."""
+    tasks: list[dict[str, object]] = []
+    for kwargs in kicked(world, "academic.sync_student_all"):
+        user_id = UUID(str(kwargs["user_id"]))
+        student = await container.academic.schedule.queries.get_student(user_id)
+        assert student is not None
+        tasks.append({"user_id": str(user_id), "group_id": str(student.group_id)})
+    return tasks
+
+
 async def lessons_of(container: Container, user_id: UUID) -> list[LessonRef]:
     return await container.academic.schedule.queries.lessons_for_student(
         user_id, TODAY, WINDOW_END
@@ -122,7 +135,7 @@ async def test_topics_and_resources_arrive_labelled_as_emis_when_switched_on(
     container = await make_container("all")
     await make_term(container)
     user_id = await register(container, world, "student01")
-    [task] = kicked(world, "academic.sync_group_timetable")
+    [task] = await timetable_tasks(container, world)
 
     await sync(container, task)
 

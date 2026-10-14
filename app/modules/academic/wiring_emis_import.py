@@ -7,18 +7,34 @@ from app.modules.academic.application.curriculum.sync_group_curriculum import (
 )
 from app.modules.academic.application.schedule.common import UowFactory
 from app.modules.academic.application.schedule.generate_lessons import GenerateLessons
+from app.modules.academic.application.schedule.get_student_sync import (
+    GetStudentSync,
+)
 from app.modules.academic.application.schedule.ports.lesson_urls import (
     LessonUrlImporter,
 )
 from app.modules.academic.application.schedule.ports.room_page_cache import (
     RoomPageCache,
 )
+from app.modules.academic.application.schedule.request_student_sync import (
+    RequestStudentSync,
+)
+from app.modules.academic.application.schedule.student_sync_state import (
+    SyncStateStore,
+)
 from app.modules.academic.application.schedule.sync_class_hours import SyncClassHours
 from app.modules.academic.application.schedule.sync_group_timetable import (
     SyncGroupTimetable,
 )
+from app.modules.academic.application.schedule.sync_student_all import (
+    SyncStudentAll,
+)
 from app.modules.academic.infrastructure.schedule.room_page_cache import (
     RedisRoomPageCache,
+)
+from app.modules.academic.infrastructure.schedule.sync_state import (
+    MemorySyncState,
+    RedisSyncState,
 )
 from app.modules.academic.wiring_schedule import (
     ScheduleServices,
@@ -38,6 +54,10 @@ class EmisImportServices:
     sync_class_hours: SyncClassHours
     sync_group_timetable: SyncGroupTimetable
     sync_group_curriculum: SyncGroupCurriculum
+    sync_state: SyncStateStore
+    sync_student_all: SyncStudentAll
+    request_student_sync: RequestStudentSync
+    get_student_sync: GetStudentSync
 
 
 def assemble_emis_import(
@@ -52,29 +72,45 @@ def assemble_emis_import(
     kicker: TaskKicker,
     clock: Clock,
     import_topics: bool = False,
+    sync_state: SyncStateStore | None = None,
 ) -> EmisImportServices:
     """Connect the use cases to the given ports (real or fake)."""
+    state = sync_state or MemorySyncState(clock.now)
     sync_class_hours = SyncClassHours(
         uow_factory=uow_factory, emis=emis, generate=generate, clock=clock
     )
     sync_group_curriculum = SyncGroupCurriculum(
         uow_factory=uow_factory, emis=emis, identity=identity, clock=clock
     )
+    sync_group_timetable = SyncGroupTimetable(
+        uow_factory=uow_factory,
+        emis=emis,
+        identity_commands=identity_commands,
+        sync_class_hours=sync_class_hours,
+        generate=generate,
+        urls=urls,
+        cache=cache,
+        kicker=kicker,
+        clock=clock,
+        import_topics=import_topics,
+    )
     return EmisImportServices(
         sync_class_hours=sync_class_hours,
-        sync_group_timetable=SyncGroupTimetable(
+        sync_group_timetable=sync_group_timetable,
+        sync_group_curriculum=sync_group_curriculum,
+        sync_state=state,
+        sync_student_all=SyncStudentAll(
             uow_factory=uow_factory,
-            emis=emis,
-            identity_commands=identity_commands,
-            sync_class_hours=sync_class_hours,
-            generate=generate,
-            urls=urls,
-            cache=cache,
+            curriculum=sync_group_curriculum,
+            timetable=sync_group_timetable,
+            state=state,
             kicker=kicker,
             clock=clock,
-            import_topics=import_topics,
         ),
-        sync_group_curriculum=sync_group_curriculum,
+        request_student_sync=RequestStudentSync(
+            state=state, kicker=kicker, clock=clock
+        ),
+        get_student_sync=GetStudentSync(state=state),
     )
 
 
@@ -99,4 +135,5 @@ def build_emis_import(
         kicker=deps.kicker,
         clock=deps.clock,
         import_topics=deps.settings.emis.import_topics,
+        sync_state=RedisSyncState(deps.redis),
     )

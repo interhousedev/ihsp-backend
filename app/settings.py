@@ -264,10 +264,10 @@ class EmisSettings(BaseModel):
     gateway_url: str = "http://localhost:8000/internal/emis"
     """Where other processes reach the identity-process EMIS gateway."""
 
-    # EMIS topics, topic files, homework files and videos are filled in badly, so the
-    # timetable sync leaves them out; times, rooms, teachers, odd/even weeks, halves
-    # and the lesson kind (midterm, final) are imported either way.
-    import_topics: bool = False
+    # EMIS topics, topic files, homework files and videos (the lesson plan) arrive
+    # with the timetable; `EMIS__IMPORT_TOPICS=false` leaves them out. Times, rooms,
+    # teachers, odd/even weeks, halves and the lesson kind are imported either way.
+    import_topics: bool = True
 
 
 class OpenRouterSettings(BaseModel):
@@ -1004,8 +1004,8 @@ class Settings(BaseSettings):
 
         Called once at process start (`python -m app <process>`). Only the identity and
         worker processes (and the commands that run in their environment) read EMIS
-        secrets or sign assertions, and only api and worker hold the OpenRouter and Exa
-        keys, so the others start without those secrets.
+        secrets or sign assertions, and api and worker need the OpenRouter and Exa keys
+        (the bot holds them too but starts without: its AI calls fail when reached).
         """
         if self.env != "prod":
             return

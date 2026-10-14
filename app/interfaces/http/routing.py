@@ -39,6 +39,7 @@ API_PACKAGES: tuple[str, ...] = (
     f"{V1}.me_classwork",
     f"{V1}.me_marks",
     f"{V1}.me_curriculum",
+    f"{V1}.me_sync",
     f"{V1}.me_assessments",
     f"{V1}.staff_assessments",
     f"{V1}.admin_assessments",

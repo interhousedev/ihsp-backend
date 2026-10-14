@@ -5237,7 +5237,7 @@
           "login_challenge": {
             "anyOf": [
               {
-                "maxLength": 500,
+                "maxLength": 8192,
                 "type": "string"
               },
               {
@@ -27393,6 +27393,57 @@
           "items"
         ],
         "title": "SyncRunPageResponse",
+        "type": "object"
+      },
+      "SyncStatusResponse": {
+        "description": "The last sync: queued, running, done or failed, and when.",
+        "properties": {
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "requested_at": {
+            "format": "date-time",
+            "title": "Requested At",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "running",
+              "done",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "requested_at",
+          "finished_at",
+          "detail"
+        ],
+        "title": "SyncStatusResponse",
         "type": "object"
       },
       "SystemHealth": {
@@ -53419,6 +53470,56 @@
           }
         },
         "summary": "Get Planner",
+        "tags": [
+          "marks"
+        ]
+      }
+    },
+    "/v1/me/sync": {
+      "get": {
+        "description": "The last sync, or null before the first one.",
+        "operationId": "get_sync_v1_me_sync_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SyncStatusResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Get Sync V1 Me Sync Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Sync",
+        "tags": [
+          "marks"
+        ]
+      },
+      "post": {
+        "description": "Queue the sync of teachers, lessons and marks; 429 within ten minutes.",
+        "operationId": "post_sync_v1_me_sync_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Post Sync",
         "tags": [
           "marks"
         ]

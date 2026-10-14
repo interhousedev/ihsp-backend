@@ -194,13 +194,13 @@ async def test_a_conflict_says_in_which_weeks_the_other_entry_runs(env: Env) -> 
     assert even_weeks == []
 
 
-def test_emis_materials_are_not_imported_unless_the_setting_says_so() -> None:
-    """EMIS__IMPORT_TOPICS is off by default and documented in the env sample."""
+def test_emis_lesson_plans_are_imported_unless_the_setting_says_no() -> None:
+    """EMIS__IMPORT_TOPICS is on by default and documented in the env sample."""
     from pathlib import Path
 
     from app.settings import EmisSettings
 
     sample = (Path(__file__).parents[3] / "materials" / ".env.sample").read_text()
 
-    assert EmisSettings().import_topics is False
-    assert "IHSP_EMIS__IMPORT_TOPICS=false" in sample
+    assert EmisSettings().import_topics is True
+    assert "IHSP_EMIS__IMPORT_TOPICS=true" in sample

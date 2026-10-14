@@ -78,6 +78,19 @@ def kicked(world: IntegrationWorld, task: str) -> list[dict[str, object]]:
     return [kwargs for name, kwargs in world.kicker.calls if name == task]
 
 
+async def timetable_tasks(
+    container: Container, world: IntegrationWorld
+) -> list[dict[str, object]]:
+    """The group timetables the kicked `academic.sync_student_all` tasks sync."""
+    tasks: list[dict[str, object]] = []
+    for kwargs in kicked(world, "academic.sync_student_all"):
+        user_id = UUID(str(kwargs["user_id"]))
+        student = await container.academic.schedule.queries.get_student(user_id)
+        assert student is not None
+        tasks.append({"user_id": str(user_id), "group_id": str(student.group_id)})
+    return tasks
+
+
 async def teachers(container: Container) -> list[UserRef]:
     async with container.identity.auth.uow_factory() as uow:
         users = await uow.users.list_with_roles([Role.TEACHER])
@@ -114,7 +127,7 @@ async def test_registering_a_student_fills_the_group_with_a_timetable_from_emis(
 
     user_id = await register(container, world, "student01")
 
-    [task] = kicked(world, "academic.sync_group_timetable")
+    [task] = await timetable_tasks(container, world)
     assert task["user_id"] == str(user_id)
     group_id = UUID(str(task["group_id"]))
     assert await group_entries(container, term, group_id) == 0  # registration is fast
@@ -149,11 +162,12 @@ async def test_registering_a_student_fills_the_group_with_a_timetable_from_emis(
 async def test_exam_weeks_arrive_but_emis_materials_do_not(
     make_container: ContainerFactory, world: IntegrationWorld
 ) -> None:
-    """ACA-7: the kind (midterm) is imported; topics, files and videos are not."""
+    """ACA-7: with EMIS__IMPORT_TOPICS off only the kind (midterm) is imported."""
     container = await make_container("all")
+    container.academic.emis_import.sync_group_timetable.import_topics = False
     await make_term(container)
     user_id = await register(container, world, "student01")
-    [task] = kicked(world, "academic.sync_group_timetable")
+    [task] = await timetable_tasks(container, world)
     group_id = UUID(str(task["group_id"]))
 
     result = await sync(container, task)
@@ -179,7 +193,7 @@ async def test_the_other_half_and_a_second_run_change_nothing_they_should_not(
     term = await make_term(container)
     first = await register(container, world, "student01")
     second = await register(container, world, "student02")
-    first_task, second_task = kicked(world, "academic.sync_group_timetable")
+    first_task, second_task = await timetable_tasks(container, world)
     group_id = UUID(str(first_task["group_id"]))
     assert second_task["group_id"] == first_task["group_id"]
 
@@ -216,7 +230,7 @@ async def test_a_second_group_reuses_the_teachers_of_the_first(
     await make_term(container)
     await register(container, world, "student01")
     await register(container, world, "student16")  # group 1TN1
-    for task in kicked(world, "academic.sync_group_timetable"):
+    for task in await timetable_tasks(container, world):
         result = await sync(container, task)
         assert (result.status, result.merged, result.skipped) == ("synced", 0, 0)
 
@@ -232,7 +246,7 @@ async def test_the_evening_run_moves_future_lessons_when_emis_changes_the_bells(
     container = await make_container("all")
     await make_term(container)
     user_id = await register(container, world, "student01")
-    [task] = kicked(world, "academic.sync_group_timetable")
+    [task] = await timetable_tasks(container, world)
     await sync(container, task)
     await container.academic.marks.backfill_student.execute(user_id)
     before = await lessons_of(container, user_id)

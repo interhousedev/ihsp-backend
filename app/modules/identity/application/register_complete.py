@@ -214,20 +214,23 @@ class CompleteRegistration:
     def _kick_timetable(
         self, uow: EmisUnitOfWork, user_id: UUID, student: StudentRef
     ) -> None:
-        """Sync the group's timetable through the new student's EMIS link.
+        """Sync the student's curriculum, terms and group timetable through their link.
 
-        It fills an unknown group, adds the slots of the student's own half, sets the
-        student's subgroup and refreshes the EMIS bells. The task needs the account
-        to be committed, so it starts after the commit.
+        One task does it in order: the curriculum creates the terms the timetable
+        needs (a separate timetable kick ran before any term existed and gave up with
+        ``no_term``). The timetable fills an unknown group, adds the student's own
+        half, the subgroup, the EMIS bells and the teachers. The marks come from
+        ``academic.backfill_student``. The task needs the committed account.
         """
         uow.after_commit(
             partial(
                 self._kicker.kick,
-                "academic.sync_group_timetable",
+                "academic.sync_student_all",
                 user_id=str(user_id),
-                group_id=str(student.group_id),
+                with_marks=False,
             )
         )
+        log.info("student_sync_kicked", group_id=str(student.group_id))
 
     @staticmethod
     async def _ensure_free(uow: EmisUnitOfWork, pending: PendingRegistration) -> None:
