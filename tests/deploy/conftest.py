@@ -8,20 +8,29 @@ from tests.deploy.helpers import (
     PROD_COMPOSE,
     PROD_ENV_SAMPLE,
     compose_json,
+    docker_compose_available,
 )
 
 import pytest
 
 
+def _require_docker() -> None:
+    """Skip a test that resolves a compose model when `docker compose` is missing."""
+    if not docker_compose_available():
+        pytest.skip("docker compose is not available")
+
+
 @pytest.fixture(scope="session")
 def prod_model() -> dict[str, Any]:
     """The production stack resolved with materials/.env.prod.sample."""
+    _require_docker()
     return compose_json(PROD_COMPOSE, PROD_ENV_SAMPLE)
 
 
 @pytest.fixture(scope="session")
 def local_model() -> dict[str, Any]:
     """The local full stack resolved with its defaults."""
+    _require_docker()
     return compose_json(LOCAL_COMPOSE)
 
 
@@ -30,6 +39,7 @@ def prod_model_after_init(
     tmp_path_factory: pytest.TempPathFactory,
 ) -> dict[str, Any]:
     """The production stack once prod_init.sh vault has stored the AppRole ids."""
+    _require_docker()
     env: Path = tmp_path_factory.mktemp("env") / ".env.prod"
     env.write_text(
         PROD_ENV_SAMPLE.read_text(encoding="utf-8")

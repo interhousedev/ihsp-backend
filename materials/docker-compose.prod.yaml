@@ -375,7 +375,9 @@ services:
     command: ["python", "-m", "app", "bot"]
     mem_limit: 512m
     environment:
-      <<: *backend-env
+      # Same AI keys as api. The bot builds the AI module at start; without a key its
+      # gateways fail only when called (ProcessPlan.ai_keys), so the process never stops.
+      <<: [*backend-env, *openrouter-env, *exa-env]
       IHSP_TELEGRAM__WEBHOOK_SECRET: ${IHSP_TELEGRAM__WEBHOOK_SECRET:?}
       IHSP_TELEGRAM__WEBHOOK_URL: https://api.${DOMAIN} # base URL; the bot registers /telegram/<secret>
     healthcheck:

@@ -109,6 +109,9 @@ class ProcessPlan:
     mail: bool
     full: bool  # classwork, marks, flash cards, links, AI, notify, admin
     lms: bool
+    # Holds the OpenRouter and Exa keys. False: the AI gateways are built without them
+    # and fail only when called (the bot builds the AI module but never calls it).
+    ai_keys: bool = True
 
 
 PLANS: dict[str, ProcessPlan] = {
@@ -117,7 +120,7 @@ PLANS: dict[str, ProcessPlan] = {
     # Files too: Administration sets profile photos (`/v1/admin/users/{id}/photo`).
     "identity": ProcessPlan(True, True, True, False, False, False),
     "api": ProcessPlan(False, False, True, True, True, True),
-    "bot": ProcessPlan(False, False, True, True, True, False),
+    "bot": ProcessPlan(False, False, True, True, True, False, ai_keys=False),
     "mail": ProcessPlan(False, False, True, True, False, False),
     # The worker destroys the Vault secret of deleted accounts.
     "worker": ProcessPlan(True, False, True, True, True, True),
@@ -427,7 +430,9 @@ class _Assembler:
         c = self.container
         tools = AdminToolBackendAdapter(c)
         c.admin_tools = tools
-        self.raw_llm = self.overrides.llm or make_llm_gateway(c.settings)
+        self.raw_llm = self.overrides.llm or make_llm_gateway(
+            c.settings, required=self.plan.ai_keys
+        )
         self.llm = RecordingLlmGateway(self.raw_llm, self.recorder)
         c.llm = self.llm
         ai = build_ai(
@@ -442,7 +447,10 @@ class _Assembler:
             admin_tools=tools,
             links=c.links.public,
             web_search=RecordingWebSearch(
-                make_web_search_gateway(c.settings, c.redis), self.recorder
+                make_web_search_gateway(
+                    c.settings, c.redis, required=self.plan.ai_keys
+                ),
+                self.recorder,
             ),
             embeddings=lambda: self.embedding_index,
             free_usage=self.recorder,

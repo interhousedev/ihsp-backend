@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from tests.deploy.helpers import (
+    BACKEND_PROCESSES,
     LOCAL_COMPOSE,
     MATERIALS_DIR,
     PROD_COMPOSE,
@@ -17,8 +18,7 @@ from tests.deploy.helpers import (
 )
 
 import pytest
-
-pytestmark = requires_compose
+import yaml  # type: ignore[import-untyped]
 
 COMMON_SERVICES = {
     "postgres",
@@ -49,6 +49,7 @@ def _model(request: pytest.FixtureRequest, which: str) -> dict[str, Any]:
     return model
 
 
+@requires_compose
 @pytest.mark.parametrize(
     ("compose_file", "env_file"),
     [(PROD_COMPOSE, PROD_ENV_SAMPLE), (LOCAL_COMPOSE, None)],
@@ -63,6 +64,7 @@ def test_compose_config_is_valid(compose_file: Path, env_file: Path | None) -> N
     assert result.returncode == 0, result.stderr
 
 
+@requires_compose
 def test_prod_compose_without_env_file_demands_the_secrets() -> None:
     result = subprocess.run(
         ["docker", "compose", "--env-file", "/dev/null", "-f", str(PROD_COMPOSE)]
@@ -288,6 +290,7 @@ def test_local_web_image_is_packed_from_the_host_build_by_default(
     assert build["context"].endswith("/iht-web")
 
 
+@requires_compose
 def test_local_web_image_can_be_built_in_docker(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -350,11 +353,11 @@ def test_prod_web_listens_on_8080_with_a_wget_healthcheck(
 def test_prod_ai_cost_controls_reach_the_processes_that_use_them(
     prod_model: dict[str, Any],
 ) -> None:
-    """Keys go to api and worker only; retention and cookie settings to all."""
-    for name in ("api", "worker"):
+    """Keys go to api, worker and bot only; retention and cookie settings to all."""
+    for name in ("api", "worker", "bot"):
         env = prod_model["services"][name]["environment"]
         assert env["IHSP_OPENROUTER__API_KEY"] and env["IHSP_EXA__API_KEY"], name
-    for name in ("identity", "bot", "mail", "scheduler", "migrate"):
+    for name in ("identity", "mail", "scheduler", "migrate"):
         env = prod_model["services"][name]["environment"]
         assert "IHSP_OPENROUTER__API_KEY" not in env, name
         assert "IHSP_EXA__API_KEY" not in env, name
@@ -365,3 +368,86 @@ def test_prod_ai_cost_controls_reach_the_processes_that_use_them(
         assert (
             env["IHSP_EXA__MODE"] == "real" and env["IHSP_OPENROUTER__MODE"] == "real"
         )
+
+
+# - - - Without Docker: the YAML as written (anchors merged, ${VARS} unresolved) - - -
+
+# The settings every backend process reads from the shared `backend-env` block.
+SHARED_BACKEND_SETTINGS = (
+    "IHSP_ENV",
+    "IHSP_DATABASE__URL",
+    "IHSP_REDIS__URL",
+    "IHSP_S3__ACCESS_KEY",
+    "IHSP_TOKENS__SERVICE_TOKEN",
+    "IHSP_HYDRA__ISSUER",
+    "IHSP_EMIS__MODE",
+)
+# Processes that build the AI module (ProcessPlan.full) and therefore hold the keys.
+AI_KEY_HOLDERS = ("api", "worker", "bot")
+
+
+def _raw_services() -> dict[str, Any]:
+    """The `services` of the production compose file exactly as written."""
+    model = yaml.safe_load(PROD_COMPOSE.read_text(encoding="utf-8"))
+    services: dict[str, Any] = model["services"]
+    return services
+
+
+def _raw_environment(services: dict[str, Any], name: str) -> dict[str, Any]:
+    environment: dict[str, Any] = services[name]["environment"]
+    return environment
+
+
+def test_bot_receives_the_openrouter_variables_as_api_does() -> None:
+    services = _raw_services()
+    api = {
+        k
+        for k in _raw_environment(services, "api")
+        if k.startswith("IHSP_OPENROUTER__")
+    }
+    bot = {
+        k
+        for k in _raw_environment(services, "bot")
+        if k.startswith("IHSP_OPENROUTER__")
+    }
+    assert "IHSP_OPENROUTER__API_KEY" in bot
+    assert bot == api
+
+
+def test_bot_receives_the_exa_key_as_api_does() -> None:
+    services = _raw_services()
+    api_env = _raw_environment(services, "api")
+    bot_env = _raw_environment(services, "bot")
+    assert bot_env["IHSP_EXA__API_KEY"] == api_env["IHSP_EXA__API_KEY"]
+
+
+def test_every_backend_process_gets_the_shared_settings() -> None:
+    services = _raw_services()
+    for name in BACKEND_PROCESSES:
+        environment = _raw_environment(services, name)
+        missing = [k for k in SHARED_BACKEND_SETTINGS if k not in environment]
+        assert missing == [], name
+
+
+def test_only_the_ai_module_processes_hold_the_model_keys() -> None:
+    services = _raw_services()
+    for key in ("IHSP_OPENROUTER__API_KEY", "IHSP_EXA__API_KEY"):
+        holders = {
+            name
+            for name in BACKEND_PROCESSES
+            if key in _raw_environment(services, name)
+        }
+        assert holders == set(AI_KEY_HOLDERS), key
+
+
+def test_every_variable_the_compose_file_reads_is_documented_in_the_sample() -> None:
+    """Every `${NAME}` the compose file reads (outside comments) is in the sample."""
+    code = "\n".join(
+        line
+        for line in PROD_COMPOSE.read_text(encoding="utf-8").splitlines()
+        if not line.lstrip().startswith("#")
+    )
+    used = set(re.findall(r"\$\{([A-Z][A-Z0-9_]*)", code))
+    sample = PROD_ENV_SAMPLE.read_text(encoding="utf-8")
+    documented = set(re.findall(r"^#?\s*([A-Z][A-Z0-9_]+)=", sample, re.MULTILINE))
+    assert sorted(used - documented) == []

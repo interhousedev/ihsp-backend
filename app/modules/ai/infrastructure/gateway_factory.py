@@ -8,6 +8,10 @@ from app.modules.ai.infrastructure.fake_exa import FakeExaClient
 from app.modules.ai.infrastructure.fake_llm import FakeLlmGateway
 from app.modules.ai.infrastructure.openrouter import OpenRouterGateway
 from app.modules.ai.infrastructure.openrouter_embeddings import OpenRouterEmbeddings
+from app.modules.ai.infrastructure.unavailable import (
+    UnavailableExaClient,
+    UnavailableLlmGateway,
+)
 from app.settings import Settings
 from app.shared.ai_tasks import AiTask
 from app.shared.contracts.ai import LlmGateway
@@ -17,12 +21,18 @@ from app.shared.contracts.web_search import WebSearchGateway
 from redis.asyncio import Redis
 
 
-def make_llm_gateway(settings: Settings) -> LlmGateway:
-    """Return the real OpenRouter gateway or the fake one (`OPENROUTER__MODE`)."""
+def make_llm_gateway(settings: Settings, *, required: bool = True) -> LlmGateway:
+    """Return the real OpenRouter gateway or the fake one (`OPENROUTER__MODE`).
+
+    A real connection without a key stops the start when `required`; a process that
+    holds no key (the bot) gets a gateway that fails only when a call reaches it.
+    """
     config = settings.openrouter
     if config.mode == "fake":
         return FakeLlmGateway()
     if config.api_key is None:
+        if not required:
+            return UnavailableLlmGateway("OPENROUTER__API_KEY is not set here")
         raise ValueError("OPENROUTER__API_KEY is required when OPENROUTER__MODE=real")
     return OpenRouterGateway(
         api_key=config.api_key.get_secret_value(),
@@ -35,13 +45,14 @@ def make_llm_gateway(settings: Settings) -> LlmGateway:
 
 
 def make_web_search_gateway(
-    settings: Settings, redis: Redis | None
+    settings: Settings, redis: Redis | None, *, required: bool = True
 ) -> WebSearchGateway:
     """The Exa search: the real API in `EXA__MODE=real`, else the deterministic fake.
 
     A real connection without `EXA__API_KEY` stops the start, like a missing OpenRouter
-    key does; the key itself is never logged. The real API is called through the
-    allowance shared by all processes (Redis), so `redis` is required then.
+    key does (unless `required` is False: then searches fail when reached); the key
+    itself is never logged. The real API is called through the allowance shared by all
+    processes (Redis), so `redis` is required then.
     """
     config = settings.exa
     client: ExaApi
@@ -49,6 +60,9 @@ def make_web_search_gateway(
         client = FakeExaClient()
     else:
         if config.api_key is None:
+            if not required:
+                client = UnavailableExaClient("EXA__API_KEY is not set here")
+                return ExaWebSearch(client, settings.web_search, config)
             raise ValueError("EXA__API_KEY is required when EXA__MODE=real")
         if redis is None:
             raise ValueError("Redis is required for the Exa rate limit")
