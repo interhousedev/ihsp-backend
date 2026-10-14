@@ -14,6 +14,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 
 BOTTOM_NAV_MAX = 4
 SP_BOTTOM_NAV_IDS: tuple[str, ...] = (
+    "dashboard",
     "today",
     "timetable",
     "subjects",

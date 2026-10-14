@@ -140,6 +140,10 @@ def test_bottom_nav_is_validated() -> None:
         "today",
         "grades",
     ]
+    assert UserPreferences(bottom_nav=["dashboard", "today"]).bottom_nav == [
+        "dashboard",
+        "today",
+    ]
     for bad in (
         ["nope"],
         ["today"] * 2,
