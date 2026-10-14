@@ -17,6 +17,13 @@ class NotebookNotFoundError(NotFoundError):
     message_key = "notebooks-not-found"
 
 
+class SubjectNotFoundError(NotFoundError):
+    """The subject of a subject notebook is unknown to the school (no EMIS match)."""
+
+    code = "notebooks/subject-not-found"
+    message_key = "notebooks-subject-not-found"
+
+
 class NotebookLimitError(ConflictError):
     """The student already has the maximum number of notebooks."""
 

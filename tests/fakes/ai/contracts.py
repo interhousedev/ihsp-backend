@@ -197,6 +197,11 @@ class FakeSchedule:
         """No subject has an EMIS id in these fakes."""
         return None
 
+    async def subject_title(self, subject_id: UUID) -> str | None:
+        """The name of the subject from any lesson of it; None when there is none."""
+        names = (x.subject_name for x in self.lessons if x.subject_id == subject_id)
+        return next(names, None)
+
 
 class FakeFiles:
     """FilesApi with files owned by users; check_access = ownership."""

@@ -77,21 +77,35 @@ async def test_the_lesson_notebook_is_listed_with_its_origin(
     }
 
 
-async def test_a_subject_or_lesson_of_someone_else_is_not_found(
+async def test_a_lesson_of_someone_else_or_an_unknown_subject_is_not_found(
     api: AsyncClient, world: World, other_student: Actor
 ) -> None:
-    """NB-AUTO: no lessons of the student's own means 404 for both routes."""
+    """NB-AUTO: a foreign lesson is a 404; an unknown subject says so clearly."""
     foreign = world.schedule.attend(other_student.user_id, make_lesson())
 
-    subject = await api.post(f"/v1/notebooks/auto/subject/{foreign.subject_id}")
     lesson = await api.post(f"/v1/notebooks/auto/lesson/{foreign.id}")
     nothing = await api.post(f"/v1/notebooks/auto/subject/{new_id()}")
 
-    assert (subject.status_code, lesson.status_code, nothing.status_code) == (
-        404,
-        404,
-        404,
-    )
+    assert lesson.status_code == 404
+    assert nothing.status_code == 404
+    assert problem_type(nothing) == "notebooks/subject-not-found"
+
+
+async def test_a_fresh_student_without_lessons_gets_the_subject_notebook(
+    api: AsyncClient, world: World
+) -> None:
+    """Before the timetable syncs the subject still opens (empty), not a 404."""
+    subject_id = new_id()
+    world.schedule.name_subject(subject_id, "Chemistry")
+    url = f"/v1/notebooks/auto/subject/{subject_id}"
+
+    created = await api.post(url)
+    again = await api.post(url)
+
+    assert created.status_code == 200, created.text
+    assert created.json()["title"] == "Chemistry"
+    assert created.json()["source_count"] == 0
+    assert again.json()["id"] == created.json()["id"]
 
 
 async def test_patching_the_auto_settings_switches_classmates_and_excludes_files(

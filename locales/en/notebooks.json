@@ -17,6 +17,7 @@
   "notebooks-default-material-invalid": "This file, link or book cannot be a default material. Check it and try again.",
   "notebooks-default-material-limit": "The subject already has the maximum number of default materials.",
   "notebooks-subject-not-taught": "You do not teach this subject to this group.",
+  "notebooks-subject-not-found": "This subject is not known yet. Try again after your timetable syncs.",
   "notebooks-default-material-not-found": "This default material was not found.",
   "notebooks-default-title": "Untitled notebook",
   "notebooks-feature-disabled": "This feature is switched off.",

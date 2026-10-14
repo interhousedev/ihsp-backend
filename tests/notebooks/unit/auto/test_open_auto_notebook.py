@@ -16,6 +16,7 @@ from app.modules.notebooks.domain.errors import (
     FeatureDisabledError,
     InvalidOptionsError,
     NotebookNotFoundError,
+    SubjectNotFoundError,
 )
 from app.modules.notebooks.ports.unit_of_work import UowFactory
 from app.modules.notebooks.wiring_auto import AutoServices, build_auto
@@ -24,6 +25,7 @@ from app.modules.notebooks.wiring_sources import SourcesServices
 from app.shared.actor import Actor
 from app.shared.contracts.academic import LessonRef, ScheduleQueries
 from app.shared.contracts.links import LinksApi
+from app.shared.ids import new_id
 from tests.fakes.ai.contracts import make_lesson
 from tests.fakes.clock import FixedClock
 from tests.fakes.notebooks.world import World
@@ -130,14 +132,50 @@ async def test_each_student_has_their_own_notebook_of_the_subject(
     assert mine.id != theirs.id and theirs.owner_id == other_student.user_id
 
 
-async def test_a_subject_the_student_does_not_attend_is_not_found(
+async def test_a_known_subject_without_lessons_yet_gets_an_empty_notebook(
     auto: AutoServices, world: World, student: Actor, other_student: Actor
 ) -> None:
-    """NB-AUTO: only subjects of the student's own lessons; others answer 404."""
-    foreign = world.schedule.attend(other_student.user_id, make_lesson(subject="Art"))
+    """A fresh student whose timetable has not synced yet still gets the notebook.
 
-    with pytest.raises(NotebookNotFoundError):
-        await open_subject(auto, student, foreign)
+    It is empty: only the student's own lessons ever feed it, so nothing of other
+    students leaks in; the sync job fills it once the lessons arrive.
+    """
+    foreign = world.schedule.attend(other_student.user_id, make_lesson(subject="Art"))
+    teacher_file(world, foreign)
+
+    notebook = await open_subject(auto, student, foreign)
+
+    assert notebook.owner_id == student.user_id
+    assert notebook.subject_id == foreign.subject_id and notebook.title == "Art"
+    assert notebook.source_count == 0
+
+
+async def test_a_subject_named_only_in_the_catalogue_gets_a_notebook(
+    auto: AutoServices, world: World, student: Actor
+) -> None:
+    """No lessons at all yet: the title comes from the subject itself."""
+    subject_id = new_id()
+    world.schedule.name_subject(subject_id, "Chemistry")
+
+    notebook = await auto.open_auto_notebook.execute(
+        student, NotebookOrigin.SUBJECT_AUTO, subject_id
+    )
+
+    assert notebook.title == "Chemistry" and notebook.source_count == 0
+    again = await auto.open_auto_notebook.execute(
+        student, NotebookOrigin.SUBJECT_AUTO, subject_id
+    )
+    assert again.id == notebook.id
+
+
+async def test_an_unknown_subject_is_refused_clearly(
+    auto: AutoServices, student: Actor
+) -> None:
+    """A subject id the school does not know answers "subject not found"."""
+    with pytest.raises(SubjectNotFoundError):
+        await auto.open_auto_notebook.execute(
+            student, NotebookOrigin.SUBJECT_AUTO, new_id()
+        )
 
 
 async def test_only_lessons_of_this_term_feed_the_subject_notebook(

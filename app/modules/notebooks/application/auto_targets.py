@@ -6,7 +6,10 @@ from uuid import UUID
 
 from app.modules.notebooks.domain.entities import Notebook
 from app.modules.notebooks.domain.enums import NotebookOrigin
-from app.modules.notebooks.domain.errors import FeatureDisabledError
+from app.modules.notebooks.domain.errors import (
+    FeatureDisabledError,
+    SubjectNotFoundError,
+)
 from app.modules.notebooks.domain.limits import NOTEBOOK_TITLE_MAX_CHARS
 from app.modules.notebooks.ports.term_calendar import TermCalendar
 from app.shared.clock import Clock, local_today
@@ -94,10 +97,12 @@ class AutoTargets:
     ) -> AutoTarget | None:
         """Return the target of a new notebook.
 
-        None when the student has no such subject or lesson, or the teacher does not
-        teach the subject to the group (`group_id` is given for teachers only).
+        None when the student has no such lesson, or the teacher does not teach the
+        subject to the group (`group_id` is given for teachers only). A student's
+        subject needs no lessons yet, only to be known to the school.
 
         Raises:
+            SubjectNotFoundError: A student's subject the school does not know.
             FeatureDisabledError: The academic contracts are not wired.
         """
         if origin is NotebookOrigin.SUBJECT_AUTO:
@@ -176,15 +181,22 @@ class AutoTargets:
     async def _subject(self, user_id: UUID, subject_id: UUID) -> AutoTarget | None:
         start, end = await self._term_window()
         lessons = await self._term_lessons(user_id, subject_id, (start, end))
-        if not lessons:
-            return None
+        # No lessons yet (a fresh student before the timetable syncs): the notebook
+        # is made empty; only the student's own lessons ever feed it.
+        name = (
+            lessons[0].subject_name
+            if lessons
+            else await self.schedule.subject_title(subject_id)
+        )
+        if name is None:
+            raise SubjectNotFoundError()
         student = await self.schedule.get_student(user_id)
         group = f"{student.group_id}:{student.subgroup or 0}" if student else "none"
         return AutoTarget(
             origin=NotebookOrigin.SUBJECT_AUTO,
             subject_id=subject_id,
             lesson_id=None,
-            title=lessons[0].subject_name[:NOTEBOOK_TITLE_MAX_CHARS],
+            title=name[:NOTEBOOK_TITLE_MAX_CHARS],
             emoji=SUBJECT_EMOJI,
             lessons=lessons,
             space_key=f"subject:{subject_id}:{start or 'open'}:{group}",

@@ -58,6 +58,10 @@ class ScheduleQueriesImpl:
         """The EMIS id of a subject; None when the subject has none (or is gone)."""
         return await self.reader.subject_emis_id(subject_id)
 
+    async def subject_title(self, subject_id: UUID) -> str | None:
+        """The subject's display name; None when there is no such subject."""
+        return await self.reader.subject_title(subject_id, self.locale)
+
     async def lessons_for_student(
         self, user_id: UUID, start: dt.date, end: dt.date
     ) -> list[LessonRef]:

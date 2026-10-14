@@ -67,7 +67,8 @@ class OpenAutoNotebook:
         Raises:
             InvalidOptionsError: `origin` is `manual`.
             NotebookNotFoundError: No such notebook (`create=False`), or the student
-                has no such subject or lesson.
+                has no such lesson (or the teacher no such group).
+            SubjectNotFoundError: The subject is unknown to the school.
             AutoNotebookLimitError: Too many subject and lesson notebooks.
         """
         if not origin.is_auto:

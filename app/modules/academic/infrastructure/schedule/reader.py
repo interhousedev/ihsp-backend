@@ -11,6 +11,7 @@ from app.modules.academic.application.schedule.ports.reader import (
 )
 from app.modules.academic.domain import audience as audience_keys
 from app.modules.academic.domain.schedule.lesson_view import LessonView
+from app.modules.academic.domain.schedule.subject import subject_name
 from app.modules.academic.infrastructure.orm import Group as GroupRow
 from app.modules.academic.infrastructure.orm import Lesson as LessonRow
 from app.modules.academic.infrastructure.orm import Room as RoomRow
@@ -23,6 +24,7 @@ from app.modules.academic.infrastructure.schedule.lesson_views import (
     lesson_select,
 )
 from app.modules.academic.infrastructure.schedule.like import ESCAPE, like_pattern
+from app.modules.academic.infrastructure.schedule.mappers import subject_to_entity
 from app.modules.academic.infrastructure.schedule.projection import (
     projected_views,
     projected_views_for_teacher,
@@ -47,6 +49,12 @@ class SqlScheduleReader:
         stmt = select(SubjectRow.emis_subject_id).where(SubjectRow.id == subject_id)
         async with self.sessionmaker() as session:
             return (await session.execute(stmt)).scalar_one_or_none()
+
+    async def subject_title(self, subject_id: UUID, locale: str) -> str | None:
+        """The subject's name in the locale, None when it does not exist."""
+        async with self.sessionmaker() as session:
+            row = await session.get(SubjectRow, subject_id)
+        return None if row is None else subject_name(subject_to_entity(row), locale)
 
     # - - - Students and rooms - - -
 

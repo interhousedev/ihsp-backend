@@ -19,6 +19,7 @@ class FakeLessonSchedule(FakeSchedule):
         self.emis_ids: dict[UUID, int] = {}  # subject id -> EMIS subject id
         self.taught: list[tuple[UUID, LessonRef]] = []  # (teacher id, lesson)
         self.placed: dict[UUID, tuple[UUID, int | None]] = {}  # student -> group, sub
+        self.subject_names: dict[UUID, str] = {}  # subjects known without lessons
 
     def place(self, user_id: UUID, group_id: UUID, subgroup: int | None = None) -> None:
         """Put the student in this group (and subgroup) instead of the default one."""
@@ -31,6 +32,16 @@ class FakeLessonSchedule(FakeSchedule):
     async def subject_emis_id(self, subject_id: UUID) -> int | None:
         """The EMIS id of the subject, None when it has none."""
         return self.emis_ids.get(subject_id)
+
+    def name_subject(self, subject_id: UUID, name: str) -> None:
+        """The school knows the subject (EMIS mapping) though it has no lessons yet."""
+        self.subject_names[subject_id] = name
+
+    async def subject_title(self, subject_id: UUID) -> str | None:
+        """The subject's name: a named subject, else one of its lessons."""
+        if subject_id in self.subject_names:
+            return self.subject_names[subject_id]
+        return await super().subject_title(subject_id)
 
     def attend(self, user_id: UUID, lesson: LessonRef) -> LessonRef:
         """Register the lesson and put the student in its audience."""

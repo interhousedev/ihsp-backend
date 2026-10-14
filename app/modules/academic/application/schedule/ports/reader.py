@@ -46,6 +46,10 @@ class ScheduleReader(Protocol):
         """The EMIS id of a subject, None when it has none (or does not exist)."""
         ...
 
+    async def subject_title(self, subject_id: UUID, locale: str) -> str | None:
+        """The subject's name in the locale, None when it does not exist."""
+        ...
+
     async def lessons_for_student(
         self, user_id: UUID, start: dt.date, end: dt.date, locale: str
     ) -> list[LessonView]:

@@ -106,6 +106,10 @@ class ScheduleQueries(Protocol):
         """The EMIS id of a subject; None when the subject has none (or is gone)."""
         ...
 
+    async def subject_title(self, subject_id: UUID) -> str | None:
+        """The subject's display name; None when there is no such subject."""
+        ...
+
     async def lessons_for_student(
         self, user_id: UUID, start: dt.date, end: dt.date
     ) -> list[LessonRef]:
