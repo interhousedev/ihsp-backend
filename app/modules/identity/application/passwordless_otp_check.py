@@ -22,12 +22,21 @@ class PasswordlessOtpCheck:
     failures_per_day: int
 
     async def execute(
-        self, uow: IdentityUnitOfWorkPort, login: str, code: str, ctx: RequestContext
+        self,
+        uow: IdentityUnitOfWorkPort,
+        login: str,
+        code: str,
+        ctx: RequestContext,
+        *,
+        allow_pending_deletion: bool = False,
     ) -> User:
         """Return the user whose code is right; Administration is never accepted."""
         ip = ctx.throttle_ip
         user = await uow.users.get_by_login(login)
-        if user is None or not user.is_active or not user.otp_enabled or user.is_admin:
+        usable = user is not None and (
+            user.is_active or (allow_pending_deletion and user.is_pending_deletion)
+        )
+        if user is None or not usable or not user.otp_enabled or user.is_admin:
             raise await self.failure("login", login, ip)
         failures = await self.throttle.otp_failures(user.id, ip)
         if failures >= self.failures_per_day:

@@ -59,6 +59,7 @@ class IdentityModule:
             academic_enrollment=academic_enrollment,
             commands=self.commands,
             credentials=credentials,
+            deletion_telegram_notice=self.auth.deletion_telegram_notice,
         )
         return self.emis_services
 

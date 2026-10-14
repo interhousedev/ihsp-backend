@@ -21,5 +21,6 @@
   "id-wrong-password": "Parol noto'g'ri.",
   "id-delete-forbidden": "Bu akkauntni bu yerda o'chirib bo'lmaydi. Ma'muriyatga murojaat qiling.",
   "id-mail-reclaimed-notice": "Akkauntingiz EMIS ma'lumotlari bilan qaytarib olindi: parol o'zgartirildi, barcha sessiyalar, ulanishlar va Telegram bog'lanishlari tugatildi. Agar bu siz bo'lmasangiz, ma'muriyatga murojaat qiling.",
-  "id-mail-deleted-notice": "Akkauntingiz o'chirildi. Shaxsiy ma'lumotlaringiz {closes_on} sanasida o'chiriladi; davomat va baholar litsey yozuvlarida saqlanadi."
+  "id-mail-deleted-notice": "Akkauntingiz o'chirildi. Shaxsiy ma'lumotlaringiz {closes_on} sanasida o'chiriladi; davomat va baholar litsey yozuvlarida saqlanadi.",
+  "id-mail-deletion-scheduled": "Akkauntingiz {closes_on} sanasida oʻchiriladi. Fikringiz oʻzgardimi? Shu sanagacha IHT ID ga qayta kiring va «Tiklash» ni tanlang. Davomat va baholar litsey yozuvlarida saqlanadi."
 }

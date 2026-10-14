@@ -222,23 +222,16 @@ class IdentityCommandsImpl:
             await uow.commit()
 
     async def close_account(self, user_id: UUID, *, reason: str) -> None:
-        """Mark the account deleted, revoke access and start the clean-up tasks."""
+        """Schedule the deletion and revoke access; the daily purge removes the data.
+
+        Until then, logging in offers to restore the account.
+        """
         async with self.uow_factory() as uow:
             user = await require_user(uow, user_id)
-            user.status = UserStatus.DELETED
-            user.deleted_at = self.clock.now()
-            await self.revoker.revoke_in(uow, user)
-            uow.audit(make_audit("user.deleted", user_id=user_id, reason=reason))
-
-            async def start_cleanup() -> None:
-                for task in (
-                    "identity.destroy_emis_secret",
-                    "files.delete_owner",
-                    "links.revoke_owner",
-                    "notebooks.delete_owner",
-                    "library.delete_owner",
-                ):
-                    await self.kicker.kick(task, user_id=str(user_id))
-
-            uow.after_commit(start_cleanup)
+            user.status = UserStatus.PENDING_DELETION
+            user.deletion_requested_at = self.clock.now()
+            await self.revoker.revoke_in(uow, user, keep_telegram=True)
+            uow.audit(
+                make_audit("user.deletion_requested", user_id=user_id, reason=reason)
+            )
             await uow.commit()

@@ -149,12 +149,14 @@ class FakeAccountRevoker:
     def __init__(self) -> None:
         """Start empty."""
         self.revoked: list[UUID] = []
+        self.kept_telegram: list[bool] = []
 
     async def revoke_everything(
         self, user_id: UUID, *, keep_telegram: bool = False
     ) -> None:
         """Record the call."""
         self.revoked.append(user_id)
+        self.kept_telegram.append(keep_telegram)
 
 
 class FakeEmailSender:
@@ -342,6 +344,8 @@ class InMemoryAccountRepository:
     def __init__(self) -> None:
         """Start empty."""
         self.accounts: dict[UUID, AccountSnapshot] = {}
+        self.deletion_requested: dict[UUID, datetime] = {}
+        self.deleted_at: dict[UUID, datetime] = {}
 
     def add(self, account: AccountSnapshot) -> AccountSnapshot:
         """Insert a prepared account."""
@@ -449,6 +453,29 @@ class InMemoryAccountRepository:
     async def mark_deleted(self, user_id: UUID, now: datetime) -> None:
         """Mark the account deleted."""
         self.accounts[user_id].status = UserStatus.DELETED
+
+    async def mark_pending_deletion(self, user_id: UUID, now: datetime) -> None:
+        """Schedule the deletion."""
+        self.accounts[user_id].status = UserStatus.PENDING_DELETION
+        self.deletion_requested[user_id] = now
+
+    async def deletion_due(self, requested_before: datetime, limit: int) -> list[UUID]:
+        """Pending deletions requested before the cutoff."""
+        return [
+            user_id
+            for user_id, account in self.accounts.items()
+            if account.status is UserStatus.PENDING_DELETION
+            and self.deletion_requested[user_id] < requested_before
+        ][:limit]
+
+    async def finalize_deletion(self, user_id: UUID) -> bool:
+        """Pending -> deleted."""
+        account = self.accounts[user_id]
+        if account.status is not UserStatus.PENDING_DELETION:
+            return False
+        account.status = UserStatus.DELETED
+        self.deleted_at[user_id] = self.deletion_requested[user_id]
+        return True
 
     async def clear_emis_secret(self, user_id: UUID) -> None:
         """Forget the Vault reference."""

@@ -445,6 +445,13 @@ class VectorsSettings(BaseModel):
     runs every 10 minutes until every passage has its vector)."""
 
 
+class IdentitySettings(BaseModel):
+    """Identity module: account lifecycle."""
+
+    account_deletion_days: int = Field(default=30, ge=1, le=365)
+    """Days a deleted account stays restorable (by logging in) before the purge."""
+
+
 class FilesSettings(BaseModel):
     """Files module: limits of single purposes."""
 
@@ -959,6 +966,7 @@ class Settings(BaseSettings):
     exa: ExaSettings = Field(default_factory=ExaSettings)
     notebooks: NotebooksSettings = Field(default_factory=NotebooksSettings)
     vectors: VectorsSettings = Field(default_factory=VectorsSettings)
+    identity: IdentitySettings = Field(default_factory=IdentitySettings)
     files: FilesSettings = Field(default_factory=FilesSettings)
     library: LibrarySettings = Field(default_factory=LibrarySettings)
     push: PushSettings = Field(default_factory=PushSettings)

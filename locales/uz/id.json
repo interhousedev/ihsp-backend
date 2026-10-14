@@ -44,5 +44,7 @@
   "id-password-unchanged": "Yangi parol joriy paroldan farq qilishi kerak.",
   "id-photo-empty": "Rasm fayli bo'sh.",
   "id-photo-too-large": "Rasm juda katta. Hajmi {max_mb} MB dan oshmasligi kerak.",
-  "id-photo-type-not-allowed": "Rasm JPG yoki PNG formatida bo'lishi kerak."
+  "id-photo-type-not-allowed": "Rasm JPG yoki PNG formatida bo'lishi kerak.",
+  "id-deletion-scheduled-telegram": "Akkauntingiz <b>{deletes_on}</b> sanasida oʻchiriladi.\nUni saqlab qolish uchun shu sanagacha qayta kiring va «Tiklash» ni tanlang: {url}",
+  "id-btn-restore-account": "Akkauntni tiklash"
 }

@@ -14479,7 +14479,7 @@
         "type": "object"
       },
       "LoginResultResponse": {
-        "description": "A redirect, a second factor, or a forced password change.",
+        "description": "A redirect, a second factor, a forced password change or a restore offer.",
         "properties": {
           "password_change": {
             "anyOf": [
@@ -14501,6 +14501,16 @@
               }
             ],
             "title": "Redirect To"
+          },
+          "restore": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RestoreResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "second_factor": {
             "anyOf": [
@@ -21341,6 +21351,48 @@
           "created_at"
         ],
         "title": "ResourceItemResponse",
+        "type": "object"
+      },
+      "RestoreBody": {
+        "description": "POST /v1/id/login/restore and /login/restore/decline.",
+        "properties": {
+          "login_challenge": {
+            "minLength": 1,
+            "title": "Login Challenge",
+            "type": "string"
+          },
+          "ticket": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Ticket",
+            "type": "string"
+          }
+        },
+        "required": [
+          "login_challenge",
+          "ticket"
+        ],
+        "title": "RestoreBody",
+        "type": "object"
+      },
+      "RestoreResponse": {
+        "description": "The account is scheduled for deletion on ``deletes_on``: restore or decline.",
+        "properties": {
+          "deletes_on": {
+            "format": "date",
+            "title": "Deletes On",
+            "type": "string"
+          },
+          "ticket": {
+            "title": "Ticket",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ticket",
+          "deletes_on"
+        ],
+        "title": "RestoreResponse",
         "type": "object"
       },
       "RestoreRevisionBody": {
@@ -31574,6 +31626,7 @@
           "active",
           "blocked",
           "deactivated",
+          "pending_deletion",
           "deleted"
         ],
         "title": "UserStatus",
@@ -43048,6 +43101,90 @@
           }
         },
         "summary": "Post Login Password",
+        "tags": [
+          "id-login"
+        ]
+      }
+    },
+    "/v1/id/login/restore": {
+      "post": {
+        "description": "Cancel the deletion with the ticket of the login step, then sign in.",
+        "operationId": "post_login_restore_v1_id_login_restore_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResultResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Login Restore",
+        "tags": [
+          "id-login"
+        ]
+      }
+    },
+    "/v1/id/login/restore/decline": {
+      "post": {
+        "description": "Keep the deletion: reject the login challenge.",
+        "operationId": "post_login_restore_decline_v1_id_login_restore_decline_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RedirectToResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Login Restore Decline",
         "tags": [
           "id-login"
         ]

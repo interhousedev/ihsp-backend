@@ -35,7 +35,9 @@ class RequestLoginOtp:
         ip = ctx.throttle_ip
         async with self.uow_factory() as uow:
             user = await uow.users.get_by_login(login)
-            if user is None or not user.is_active or not user.otp_enabled:
+            # A pending deletion may sign in with a code to restore the account.
+            usable = user is not None and (user.is_active or user.is_pending_deletion)
+            if user is None or not usable or not user.otp_enabled:
                 return
             if user.is_admin:  # Administration needs the password first (ID-11)
                 return

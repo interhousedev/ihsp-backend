@@ -52,6 +52,7 @@ def _to_entity(row: UserRow) -> User:
         otp_reset_effective_at=row.otp_reset_effective_at,
         otp_reset_request_id=row.otp_reset_request_id,
         deleted_at=row.deleted_at,
+        deletion_requested_at=row.deletion_requested_at,
         photo_file_id=row.photo_file_id,
         created_at=row.created_at,
     )
@@ -86,6 +87,7 @@ def _apply(row: UserRow, user: User) -> None:
     row.otp_reset_effective_at = user.otp_reset_effective_at
     row.otp_reset_request_id = user.otp_reset_request_id
     row.deleted_at = user.deleted_at
+    row.deletion_requested_at = user.deletion_requested_at
     row.photo_file_id = user.photo_file_id
 
 

@@ -180,6 +180,38 @@ class RegistrationRepository:
             .values(status=UserStatus.DELETED.value, deleted_at=now)
         )
 
+    async def mark_pending_deletion(self, user_id: UUID, now: datetime) -> None:
+        """Set status ``pending_deletion`` and ``deletion_requested_at``."""
+        await self._session.execute(
+            update(User)
+            .where(User.id == user_id)
+            .values(status=UserStatus.PENDING_DELETION.value, deletion_requested_at=now)
+        )
+
+    async def deletion_due(self, requested_before: datetime, limit: int) -> list[UUID]:
+        """Pending deletions requested before the cutoff."""
+        rows = await self._session.scalars(
+            select(User.id)
+            .where(
+                User.status == UserStatus.PENDING_DELETION.value,
+                User.deletion_requested_at < requested_before,
+            )
+            .limit(limit)
+        )
+        return list(rows)
+
+    async def finalize_deletion(self, user_id: UUID) -> bool:
+        """Pending -> ``deleted`` (``deleted_at`` = request time); False if restored."""
+        result = await self._session.execute(
+            update(User)
+            .where(User.id == user_id, User.status == UserStatus.PENDING_DELETION.value)
+            .values(
+                status=UserStatus.DELETED.value, deleted_at=User.deletion_requested_at
+            )
+            .returning(User.id)
+        )
+        return result.first() is not None
+
     async def clear_emis_secret(self, user_id: UUID) -> None:
         """Forget the Vault reference once the secret is destroyed."""
         await self._session.execute(

@@ -58,6 +58,7 @@ async def test_post_login_returns_the_redirect(api: Api) -> None:
         "redirect_to": "https://hydra/continue?login_verifier=lc-1",
         "second_factor": None,
         "password_change": None,
+        "restore": None,
     }
 
 

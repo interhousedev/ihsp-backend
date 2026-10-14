@@ -12,6 +12,10 @@ from app.interfaces.http.v1.id.login.handlers.post_login_otp import post_login_o
 from app.interfaces.http.v1.id.login.handlers.post_login_password import (
     post_login_password,
 )
+from app.interfaces.http.v1.id.login.handlers.post_login_restore import (
+    post_login_restore,
+    post_login_restore_decline,
+)
 from app.interfaces.http.v1.id.login.handlers.request_login_otp import (
     request_login_otp,
 )
@@ -48,6 +52,18 @@ router.add_api_route(
     post_login_password,
     methods=["POST"],
     response_model=LoginResultResponse,
+)
+router.add_api_route(
+    "/login/restore",
+    post_login_restore,
+    methods=["POST"],
+    response_model=LoginResultResponse,
+)
+router.add_api_route(
+    "/login/restore/decline",
+    post_login_restore_decline,
+    methods=["POST"],
+    response_model=RedirectToResponse,
 )
 router.add_api_route(
     "/consent", get_consent, methods=["GET"], response_model=ConsentInfoResponse

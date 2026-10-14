@@ -12,6 +12,7 @@ from app.modules.identity.application.password_authenticator import (
     PasswordAuthenticator,
 )
 from app.modules.identity.application.request_context import RequestContext
+from app.modules.identity.application.restore_account import RestoreOffer
 from app.modules.identity.application.start_login_session import LoginSessionStarter
 from app.modules.identity.domain.client_policy import may_use_client
 from app.modules.identity.domain.errors import RoleMissingError
@@ -38,6 +39,7 @@ class LogInWithPassword:
     otp: OtpService
     starter: LoginSessionStarter
     change_password_on_login: bool = False
+    restore_offer: RestoreOffer | None = None
 
     async def execute(
         self,
@@ -54,9 +56,20 @@ class LogInWithPassword:
         )
         request = await self.hydra.get_login_request(challenge)
         async with self.uow_factory() as uow:
-            user = await self.authenticator.authenticate(uow, login, password, ctx)
+            user = await self.authenticator.authenticate(
+                uow,
+                login,
+                password,
+                ctx,
+                allow_pending_deletion=self.restore_offer is not None,
+            )
             if not may_use_client(request.client.client_id, user.roles):
                 raise RoleMissingError(params={"client_id": request.client.client_id})
+            if self.restore_offer is not None and user.is_pending_deletion:
+                await uow.commit()  # a rehashed password is kept
+                return await self.restore_offer.make(
+                    user, request.challenge, amr=["pwd"], remember=remember
+                )
             if user.is_admin and user.otp_enabled:
                 return await self._second_factor(uow, user, request, remember, ctx)
             if self.change_password_on_login and user.password_change_required:

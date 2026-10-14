@@ -44,5 +44,7 @@
   "id-password-unchanged": "Новый пароль должен отличаться от прежнего.",
   "id-photo-empty": "Файл с фотографией пустой.",
   "id-photo-too-large": "Фотография слишком большая. Максимальный размер — {max_mb} МБ.",
-  "id-photo-type-not-allowed": "Фотография должна быть изображением JPG или PNG."
+  "id-photo-type-not-allowed": "Фотография должна быть изображением JPG или PNG.",
+  "id-deletion-scheduled-telegram": "Ваш аккаунт будет удалён <b>{deletes_on}</b>.\nЧтобы сохранить его, войдите снова до этой даты и выберите «Восстановить»: {url}",
+  "id-btn-restore-account": "Восстановить аккаунт"
 }

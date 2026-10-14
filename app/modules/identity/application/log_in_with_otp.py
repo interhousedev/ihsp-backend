@@ -8,6 +8,7 @@ from app.modules.identity.application.login_result import LoginResult
 from app.modules.identity.application.otp_service import OtpService
 from app.modules.identity.application.passwordless_otp_check import PasswordlessOtpCheck
 from app.modules.identity.application.request_context import RequestContext
+from app.modules.identity.application.restore_account import RestoreOffer
 from app.modules.identity.application.start_login_session import LoginSessionStarter
 from app.modules.identity.domain.client_policy import may_use_client
 from app.modules.identity.domain.errors import OtpInvalidError, RoleMissingError
@@ -31,6 +32,7 @@ class LogInWithOtp:
     tickets: TicketStore
     starter: LoginSessionStarter
     rate_limiter: RateLimiter
+    restore_offer: RestoreOffer | None = None
 
     async def execute(
         self,
@@ -54,10 +56,20 @@ class LogInWithOtp:
                     uow, challenge, login, code, ticket, ctx
                 )
             else:
-                user = await self.passwordless.execute(uow, login, code, ctx)
+                user = await self.passwordless.execute(
+                    uow,
+                    login,
+                    code,
+                    ctx,
+                    allow_pending_deletion=self.restore_offer is not None,
+                )
                 amr, mfa, remember = ["otp"], False, False
             if not may_use_client(request.client.client_id, user.roles):
                 raise RoleMissingError(params={"client_id": request.client.client_id})
+            if self.restore_offer is not None and user.is_pending_deletion:
+                return await self.restore_offer.make(
+                    user, request.challenge, amr=amr, remember=remember
+                )
             redirect = await self.starter.start(
                 uow, request, user, amr=amr, mfa=mfa, ctx=ctx, remember=remember
             )

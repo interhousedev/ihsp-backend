@@ -11,6 +11,9 @@ from pywebpush import WebPushException, webpush_async
 log = structlog.get_logger(__name__)
 
 GONE_STATUSES = frozenset({404, 410})
+# Every push is a visible, user-facing alert: `high` makes Apple and FCM deliver it at
+# once instead of batching it until the device wakes.
+URGENCY = "high"
 
 
 class PywebpushSender:
@@ -54,6 +57,7 @@ class PywebpushSender:
                 vapid_private_key=self._vapid,
                 vapid_claims={"sub": self._subject},  # the library adds aud and exp
                 ttl=self._ttl,
+                headers={"Urgency": URGENCY},
                 timeout=self._timeout,
                 aiohttp_session=self._http(),
             )

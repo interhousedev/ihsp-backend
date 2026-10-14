@@ -168,12 +168,12 @@ async def test_commands_unlink_telegram(auth_world: World) -> None:
     assert auth_world.store.audit_types(user.id) == ["telegram.unlinked"]
 
 
-async def test_close_account_revokes_everything_and_starts_the_clean_up(
+async def test_close_account_schedules_the_deletion_and_revokes_access(
     auth_world: World,
 ) -> None:
-    """ID-29: status deleted and access revoked.
+    """ID-29: pending deletion, sessions revoked; nothing removed yet.
 
-    Files, links, notebooks, library and Vault clean-up kicked.
+    Telegram links stay for the notice and a restore; the purge job removes data.
     """
     user = await auth_world.add_user(auth_epoch=1)
     session = auth_world.add_session(user)
@@ -182,19 +182,13 @@ async def test_close_account_revokes_everything_and_starts_the_clean_up(
     await auth_world.auth.commands.close_account(user.id, reason="student request")
 
     stored = auth_world.user(user.id)
-    assert stored.status == UserStatus.DELETED
-    assert stored.deleted_at == auth_world.clock.now()
+    assert stored.status == UserStatus.PENDING_DELETION
+    assert stored.deletion_requested_at == auth_world.clock.now()
+    assert stored.deleted_at is None
     assert stored.auth_epoch > 1
     assert auth_world.store.sessions[session.id].revoked_at is not None
-    assert auth_world.store.links == {}
-    assert auth_world.kicker.names() == [
-        "identity.destroy_emis_secret",
-        "files.delete_owner",
-        "links.revoke_owner",
-        "notebooks.delete_owner",
-        "library.delete_owner",
-    ]
-    assert all(kw == {"user_id": str(user.id)} for _, kw in auth_world.kicker.calls)
+    assert 555 in auth_world.store.links
+    assert auth_world.kicker.names() == []
 
 
 async def test_purge_anonymizes_accounts_deleted_30_days_ago(auth_world: World) -> None:
@@ -202,7 +196,10 @@ async def test_purge_anonymizes_accounts_deleted_30_days_ago(auth_world: World) 
     user = await auth_world.add_user(
         preferences={"locale": "uz"}, emis_student_id=78218, otp_enabled=True
     )
-    await auth_world.auth.commands.close_account(user.id, reason="x")
+    # Deleted under the old flow (or closed by the pending-deletion job).
+    stored = auth_world.user(user.id)
+    stored.status = UserStatus.DELETED
+    stored.deleted_at = auth_world.clock.now()
 
     assert await auth_world.auth.purge_deleted_users.execute() == 0
     auth_world.clock.advance(days=31)

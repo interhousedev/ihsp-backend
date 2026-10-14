@@ -161,6 +161,18 @@ class AccountRepository(Protocol):
         """Set status ``deleted`` and ``deleted_at``."""
         ...
 
+    async def mark_pending_deletion(self, user_id: UUID, now: datetime) -> None:
+        """Set status ``pending_deletion`` and ``deletion_requested_at``."""
+        ...
+
+    async def deletion_due(self, requested_before: datetime, limit: int) -> list[UUID]:
+        """Pending deletions requested before the cutoff."""
+        ...
+
+    async def finalize_deletion(self, user_id: UUID) -> bool:
+        """Pending -> ``deleted`` (``deleted_at`` = request time); False if restored."""
+        ...
+
     async def clear_emis_secret(self, user_id: UUID) -> None:
         """Forget the Vault reference after the secret was destroyed."""
         ...

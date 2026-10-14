@@ -1,5 +1,6 @@
 """Schemas of the Hydra login, consent and logout endpoints."""
 
+from datetime import date
 from typing import Literal
 
 from app.modules.identity.application.get_consent_info import ConsentInfo
@@ -44,12 +45,20 @@ class PasswordChangeResponse(BaseModel):
     ticket: str
 
 
+class RestoreResponse(BaseModel):
+    """The account is scheduled for deletion on ``deletes_on``: restore or decline."""
+
+    ticket: str
+    deletes_on: date
+
+
 class LoginResultResponse(BaseModel):
-    """A redirect, a second factor, or a forced password change."""
+    """A redirect, a second factor, a forced password change or a restore offer."""
 
     redirect_to: str | None = None
     second_factor: SecondFactorResponse | None = None
     password_change: PasswordChangeResponse | None = None
+    restore: RestoreResponse | None = None
 
     @classmethod
     def of(cls, result: LoginResult) -> "LoginResultResponse":
@@ -65,6 +74,13 @@ class LoginResultResponse(BaseModel):
             password_change=(
                 PasswordChangeResponse(ticket=result.password_change.ticket)
                 if result.password_change
+                else None
+            ),
+            restore=(
+                RestoreResponse(
+                    ticket=result.restore.ticket, deletes_on=result.restore.deletes_on
+                )
+                if result.restore
                 else None
             ),
         )
@@ -85,6 +101,13 @@ class NewPasswordLoginBody(BaseModel):
     login_challenge: str = Field(min_length=1)
     ticket: str = Field(min_length=1, max_length=200)
     new_password: str = Field(min_length=1, max_length=1000)
+
+
+class RestoreBody(BaseModel):
+    """POST /v1/id/login/restore and /login/restore/decline."""
+
+    login_challenge: str = Field(min_length=1)
+    ticket: str = Field(min_length=1, max_length=200)
 
 
 class OtpRequestBody(BaseModel):

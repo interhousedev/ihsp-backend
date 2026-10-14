@@ -34,6 +34,7 @@ from app.modules.identity.application.create_connector import CreateConnector
 from app.modules.identity.application.create_staff_account import CreateStaffAccount
 from app.modules.identity.application.create_teacher import CreateTeacher
 from app.modules.identity.application.deactivate_teacher import DeactivateTeacher
+from app.modules.identity.application.deletion_notice import DeletionTelegramNotice
 from app.modules.identity.application.disable_otp import DisableOtp
 from app.modules.identity.application.enable_otp import EnableOtp
 from app.modules.identity.application.exchange_code import ExchangeCode
@@ -83,6 +84,11 @@ from app.modules.identity.application.request_password_reset import (
     RequestPasswordReset,
 )
 from app.modules.identity.application.request_telegram_otp import RequestTelegramOtp
+from app.modules.identity.application.restore_account import (
+    DeclineAccountRestore,
+    RestoreAccountAtLogin,
+    RestoreOffer,
+)
 from app.modules.identity.application.resume_mail import ResumeMail
 from app.modules.identity.application.revoke_access import AccessRevoker
 from app.modules.identity.application.revoke_connector import RevokeConnector
@@ -169,6 +175,8 @@ class AuthServices:
     log_in_with_new_password: LogInWithNewPassword
     request_login_otp: RequestLoginOtp
     log_in_with_otp: LogInWithOtp
+    restore_account_at_login: RestoreAccountAtLogin
+    decline_account_restore: DeclineAccountRestore
     get_consent_info: GetConsentInfo
     send_consent_otp: SendConsentOtp
     accept_consent: AcceptConsent
@@ -245,6 +253,7 @@ class AuthServices:
     list_oauth_clients: ListOAuthClients
     verify_oauth_client: VerifyOAuthClient
     purge_deleted_users: PurgeDeletedUsers
+    deletion_telegram_notice: DeletionTelegramNotice
 
 
 def build_auth(
@@ -292,6 +301,11 @@ def build_auth(
         app_name=settings.public_app_name,
     )
     otp = OtpService(otp_store=otp_store, otp_sender=otp_sender, email=email)
+    restore_offer = RestoreOffer(
+        tickets=tickets,
+        clock=clock,
+        retention_days=settings.identity.account_deletion_days,
+    )
     signer = JoseAssertionSigner(
         private_key_pem=settings.jwt_bearer.private_key_pem.get_secret_value(),
         key_id=settings.jwt_bearer.key_id,
@@ -386,6 +400,7 @@ def build_auth(
             change_password_on_login=is_enabled(
                 settings, Feature.CHANGE_PASSWORD_ON_LOGIN
             ),
+            restore_offer=restore_offer,
         ),
         log_in_with_new_password=LogInWithNewPassword(
             uow_factory=uow_factory,
@@ -403,7 +418,12 @@ def build_auth(
             tickets=tickets,
             starter=starter,
             rate_limiter=limiter,
+            restore_offer=restore_offer,
         ),
+        restore_account_at_login=RestoreAccountAtLogin(
+            uow_factory=uow_factory, hydra=hydra, tickets=tickets, starter=starter
+        ),
+        decline_account_restore=DeclineAccountRestore(hydra=hydra, tickets=tickets),
         get_consent_info=GetConsentInfo(
             uow_factory=uow_factory, hydra=hydra, auto_accept=auto_accept
         ),
@@ -595,4 +615,10 @@ def build_auth(
         list_oauth_clients=ListOAuthClients(uow_factory=uow_factory, hydra=hydra),
         verify_oauth_client=VerifyOAuthClient(uow_factory=uow_factory, hydra=hydra),
         purge_deleted_users=PurgeDeletedUsers(uow_factory=uow_factory, clock=clock),
+        deletion_telegram_notice=DeletionTelegramNotice(
+            uow_factory=uow_factory,
+            telegram=telegram_sender,
+            i18n=deps.i18n,
+            id_app_url=settings.urls.id,
+        ),
     )

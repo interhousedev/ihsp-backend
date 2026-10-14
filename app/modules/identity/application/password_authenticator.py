@@ -30,10 +30,14 @@ class PasswordAuthenticator:
         login: str,
         password: str,
         ctx: RequestContext,
+        *,
+        allow_pending_deletion: bool = False,
     ) -> User:
         """Return the active user or raise InvalidCredentialsError / AccountLockedError.
 
-        Failures are committed (audit, counters) before the error is raised.
+        Failures are committed (audit, counters) before the error is raised. With
+        ``allow_pending_deletion`` an account scheduled for deletion is returned too
+        (the web login then offers to restore it).
         """
         await self.throttle.check(login, ctx.throttle_ip)
         user = await uow.users.get_by_login(login)
@@ -46,7 +50,8 @@ class PasswordAuthenticator:
         if user is None or not ok:
             await self._record_failure(uow, login, user, ctx)
             raise InvalidCredentialsError()
-        if not user.is_active:
+        pending_ok = allow_pending_deletion and user.is_pending_deletion
+        if not user.is_active and not pending_ok:
             uow.audit(
                 make_audit(
                     LOGIN_FAILED, user_id=user.id, ctx=ctx, reason=user.status.value

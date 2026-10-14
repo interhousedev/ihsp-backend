@@ -33,6 +33,7 @@ EXPECTED = {
     "reclaim_complete",
     "update_emis_password",
     "delete_account",
+    "finalize_account_deletions",
     "destroy_emis_secret",
 }
 

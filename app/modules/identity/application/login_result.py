@@ -1,6 +1,7 @@
 """Result types shared by the login use cases."""
 
 from dataclasses import dataclass, field
+from datetime import date
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,9 +21,18 @@ class PasswordChange:
 
 
 @dataclass(frozen=True, slots=True)
+class AccountRestore:
+    """The account is scheduled for deletion: restore it (or not) with the ticket."""
+
+    ticket: str
+    deletes_on: date
+
+
+@dataclass(frozen=True, slots=True)
 class LoginResult:
-    """The URL to continue at, a second factor, or a forced password change."""
+    """The URL to continue at, a second factor, a password change or a restore."""
 
     redirect_to: str | None = None
     second_factor: SecondFactor | None = None
     password_change: PasswordChange | None = None
+    restore: AccountRestore | None = None

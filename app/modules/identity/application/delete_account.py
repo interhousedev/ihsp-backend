@@ -1,18 +1,21 @@
-"""Delete a student's own account (UF-ID-16, ID-9, ID-29)."""
+"""Delete a student's own account (UF-ID-16, ID-9, ID-29).
 
-from datetime import date, timedelta
-from functools import partial
+The deletion is soft: the account becomes ``pending_deletion`` and every session
+is revoked. Logging in again before the purge offers to restore it; the daily job
+``identity.purge_deleted_users`` removes the data after the retention period.
+"""
 
-from app.modules.identity.application.destroy_emis_secret import DestroyEmisSecret
+from collections.abc import Awaitable, Callable
+from datetime import date
+from uuid import UUID
+
+from app.modules.identity.application.deletion_notice import deletion_date
 from app.modules.identity.application.register_errors import (
     DeleteForbiddenError,
     OtpCodeInvalidError,
     WrongPasswordError,
 )
-from app.modules.identity.application.register_models import (
-    AccountSnapshot,
-    CredentialStoreError,
-)
+from app.modules.identity.application.register_models import AccountSnapshot
 from app.modules.identity.application.register_ports import (
     AccountRevokerPort,
     EmailSenderPort,
@@ -21,11 +24,9 @@ from app.modules.identity.application.register_ports import (
     UnitOfWorkFactory,
 )
 from app.shared.actor import Actor, Role
-from app.shared.clock import Clock, local_today
-from app.shared.contracts.academic import AcademicEnrollment
+from app.shared.clock import Clock
 from app.shared.contracts.identity import UserStatus
 from app.shared.notifications import AuditDraft
-from app.shared.tasks import TaskKicker
 
 import structlog
 
@@ -34,9 +35,11 @@ log = structlog.get_logger(__name__)
 RETENTION_DAYS = 30
 STEP_UP_PURPOSE = "step-up"  # the code POST /v1/id/me/step-up sends, keyed by user id
 
+TelegramNotice = Callable[[UUID, date], Awaitable[None]]
+
 
 class DeleteAccount:
-    """Mark the account deleted, revoke everything, destroy the secret."""
+    """Mark the account pending deletion, revoke every session, tell the owner."""
 
     def __init__(
         self,
@@ -45,22 +48,20 @@ class DeleteAccount:
         hasher: PasswordHasher,
         otp: OtpPort,
         revoker: AccountRevokerPort,
-        enrollment: AcademicEnrollment,
-        destroy_secret: DestroyEmisSecret,
         email_sender: EmailSenderPort,
-        kicker: TaskKicker,
         clock: Clock,
+        telegram_notice: TelegramNotice | None = None,
+        retention_days: int = RETENTION_DAYS,
     ) -> None:
         """Store the collaborators."""
         self._uow_factory = uow_factory
         self._hasher = hasher
         self._otp = otp
         self._revoker = revoker
-        self._enrollment = enrollment
-        self._destroy_secret = destroy_secret
         self._email_sender = email_sender
-        self._kicker = kicker
         self._clock = clock
+        self._telegram_notice = telegram_notice
+        self._retention_days = retention_days
 
     async def execute(
         self,
@@ -71,19 +72,30 @@ class DeleteAccount:
         ip: str | None,
         user_agent: str | None,
     ) -> date:
-        """Check the password (and the step-up code), delete, return ``closes_on``."""
+        """Check the password (and the step-up code), schedule; return ``closes_on``."""
         async with self._uow_factory() as uow:
             account = await uow.accounts.get(actor.user_id)
         account = self._require_deletable(account)
         await self._check_password(account, password)
         await self._check_otp(account, otp_code)
-        closes_on = local_today(self._clock) + timedelta(days=RETENTION_DAYS)
-        await self._mark_deleted(account, ip, user_agent)
-        # mark_left first: it queues the account_closing notice before the links go.
-        await self._enrollment.mark_left(account.id, reason="deleted")
-        await self._revoker.revoke_everything(account.id)
-        await self._destroy_secret_now(account)
-        await self._send_notice(account, closes_on)
+        now = self._clock.now()
+        closes_on = deletion_date(now, self._retention_days)
+        async with self._uow_factory() as uow:
+            await uow.accounts.mark_pending_deletion(account.id, now)
+            uow.audit(
+                AuditDraft(
+                    type="account.deletion_requested",
+                    user_id=account.id,
+                    actor_id=account.id,
+                    ip=ip,
+                    user_agent=user_agent,
+                    metadata={"deletes_on": closes_on.isoformat()},
+                )
+            )
+            await uow.commit()
+        # Telegram links stay: they carry the notice and survive a restore.
+        await self._revoker.revoke_everything(account.id, keep_telegram=True)
+        await self._send_notices(account, closes_on)
         return closes_on
 
     @staticmethod
@@ -110,43 +122,13 @@ class DeleteAccount:
         ):
             raise OtpCodeInvalidError()
 
-    async def _mark_deleted(
-        self, account: AccountSnapshot, ip: str | None, user_agent: str | None
-    ) -> None:
-        async with self._uow_factory() as uow:
-            await uow.accounts.mark_deleted(account.id, self._clock.now())
-            uow.audit(
-                AuditDraft(
-                    type="account.deleted",
-                    user_id=account.id,
-                    actor_id=account.id,
-                    ip=ip,
-                    user_agent=user_agent,
-                )
-            )
-            for task in (
-                "files.delete_owner",
-                "links.revoke_owner",
-                "notebooks.delete_owner",
-                "library.delete_owner",
-            ):
-                uow.after_commit(
-                    partial(self._kicker.kick, task, user_id=str(account.id))
-                )
-            await uow.commit()
-
-    async def _destroy_secret_now(self, account: AccountSnapshot) -> None:
-        """Destroy at once; if Vault is down the retrying task finishes the job."""
-        try:
-            await self._destroy_secret.execute(account.id)
-        except CredentialStoreError:
-            log.warning("vault destroy failed, retrying later", user=str(account.id))
-            await self._kicker.kick(
-                "identity.destroy_emis_secret", user_id=str(account.id)
-            )
-
-    async def _send_notice(self, account: AccountSnapshot, closes_on: date) -> None:
-        """Email the recovery address; a mail failure must not undo the deletion."""
+    async def _send_notices(self, account: AccountSnapshot, closes_on: date) -> None:
+        """Telegram and the recovery address; a failure never undoes the request."""
+        if self._telegram_notice is not None:
+            try:
+                await self._telegram_notice(account.id, closes_on)
+            except Exception:
+                log.exception("deletion telegram notice failed", user=str(account.id))
         if not account.recovery_email:
             return
         try:
@@ -154,7 +136,7 @@ class DeleteAccount:
                 account.recovery_email,
                 "notice",
                 {
-                    "text_key": "id-mail-deleted-notice",
+                    "text_key": "id-mail-deletion-scheduled",
                     "text_params": {"closes_on": closes_on.isoformat()},
                 },
                 account.locale,

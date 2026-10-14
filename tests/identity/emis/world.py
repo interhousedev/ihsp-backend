@@ -1,11 +1,15 @@
 """The EMIS use cases wired to fakes, plus helpers that walk through whole flows."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import date
 from uuid import UUID
 
 from app.modules.identity.application.delete_account import DeleteAccount
 from app.modules.identity.application.destroy_emis_secret import DestroyEmisSecret
 from app.modules.identity.application.emis_gateway import EmisGatewayImpl
+from app.modules.identity.application.finalize_account_deletions import (
+    FinalizeAccountDeletions,
+)
 from app.modules.identity.application.reclaim_complete import CompleteReclaim
 from app.modules.identity.application.reclaim_email_code import SendReclaimEmailCode
 from app.modules.identity.application.reclaim_start import StartReclaim
@@ -76,10 +80,12 @@ class World:
     reclaim_complete: CompleteReclaim
     update_emis_password: UpdateEmisPassword
     delete_account: DeleteAccount
+    finalize_account_deletions: FinalizeAccountDeletions
     destroy_emis_secret: DestroyEmisSecret
     gateway: EmisGatewayImpl
     pending_registrations: RedisPendingStore[PendingRegistration]
     pending_reclaims: RedisPendingStore[PendingReclaim]
+    telegram_notices: list[tuple[UUID, date]] = field(default_factory=list)
 
     async def register(
         self,
@@ -152,6 +158,11 @@ def build_world(
         uow_factory=uow_factory, otp=otp, email_sender=emails, rate_limiter=limiter
     )
     destroy = DestroyEmisSecret(store=store, uow_factory=uow_factory)
+    telegram_notices: list[tuple[UUID, date]] = []
+
+    async def telegram_notice(user_id: UUID, deletes_on: date) -> None:
+        telegram_notices.append((user_id, deletes_on))
+
     return World(
         emis=emis,
         store=store,
@@ -214,12 +225,19 @@ def build_world(
             hasher=hasher,
             otp=otp,
             revoker=revoker,
-            enrollment=enrollment,
-            destroy_secret=destroy,
             email_sender=emails,
+            clock=clock,
+            telegram_notice=telegram_notice,
+        ),
+        finalize_account_deletions=FinalizeAccountDeletions(
+            uow_factory=uow_factory,
+            revoker=revoker,
+            enrollment=enrollment,
             kicker=kicker,
             clock=clock,
+            retention_days=30,
         ),
+        telegram_notices=telegram_notices,
         destroy_emis_secret=destroy,
         gateway=EmisGatewayImpl(emis=emis, store=store, uow_factory=uow_factory),
         pending_registrations=pending_registrations,

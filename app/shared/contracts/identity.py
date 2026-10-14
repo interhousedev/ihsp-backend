@@ -40,6 +40,8 @@ class UserStatus(StrEnum):
     ACTIVE = "active"
     BLOCKED = "blocked"
     DEACTIVATED = "deactivated"
+    PENDING_DELETION = "pending_deletion"
+    """The owner asked to delete it; restorable at login until the purge."""
     DELETED = "deleted"
 
 

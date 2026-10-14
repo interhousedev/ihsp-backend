@@ -21,5 +21,6 @@
   "id-wrong-password": "The password is wrong.",
   "id-delete-forbidden": "This account cannot be deleted here. Contact Administration.",
   "id-mail-reclaimed-notice": "Your account was reclaimed with EMIS credentials: the password was changed and all sessions, connectors and Telegram links were signed out. If this was not you, contact Administration.",
-  "id-mail-deleted-notice": "Your account was deleted. Your personal data will be removed on {closes_on}; attendance and marks stay in the lyceum's records."
+  "id-mail-deleted-notice": "Your account was deleted. Your personal data will be removed on {closes_on}; attendance and marks stay in the lyceum's records.",
+  "id-mail-deletion-scheduled": "Your account is scheduled for deletion on {closes_on}. Changed your mind? Log in to IHT ID again before that date and choose Restore. Attendance and marks stay in the lyceum's records."
 }

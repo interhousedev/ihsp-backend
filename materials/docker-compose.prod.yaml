@@ -69,6 +69,13 @@ x-backend-env: &backend-env
   IHSP_TELEGRAM__BOT_USERNAME: ${IHSP_TELEGRAM__BOT_USERNAME:-ihspbot}
   IHSP_TELEGRAM__MODE: ${IHSP_TELEGRAM__MODE:-webhook}
   IHSP_TELEGRAM__ADMIN_CHAT_ID: # optional, from .env.prod when set
+  # Web Push (the iOS/Android/desktop system notifications): off until .env.prod sets
+  # IHSP_PUSH__ENABLED=true with a VAPID pair from `uv run python scripts/gen_vapid.py`.
+  # api serves the public key; worker sends the pushes. Apple needs a mailto:/https: subject.
+  IHSP_PUSH__ENABLED: ${IHSP_PUSH__ENABLED:-false}
+  IHSP_PUSH__VAPID_PUBLIC_KEY: ${IHSP_PUSH__VAPID_PUBLIC_KEY:-}
+  IHSP_PUSH__VAPID_PRIVATE_KEY: ${IHSP_PUSH__VAPID_PRIVATE_KEY:-}
+  IHSP_PUSH__SUBJECT: ${IHSP_PUSH__SUBJECT:-mailto:admin@ihsu.uz}
   IHSP_EMIS__MODE: ${IHSP_EMIS__MODE:-real}
   IHSP_EMIS__BASE_URL: ${IHSP_EMIS__BASE_URL:-https://emis.edu.uz/api/v1/}
   IHSP_EMIS__PROFILE_PATH: ${IHSP_EMIS__PROFILE_PATH:-student-profiles/profile/}

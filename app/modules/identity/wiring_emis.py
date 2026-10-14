@@ -3,9 +3,15 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 
-from app.modules.identity.application.delete_account import DeleteAccount
+from app.modules.identity.application.delete_account import (
+    DeleteAccount,
+    TelegramNotice,
+)
 from app.modules.identity.application.destroy_emis_secret import DestroyEmisSecret
 from app.modules.identity.application.emis_gateway import EmisGatewayImpl
+from app.modules.identity.application.finalize_account_deletions import (
+    FinalizeAccountDeletions,
+)
 from app.modules.identity.application.reclaim_complete import CompleteReclaim
 from app.modules.identity.application.reclaim_email_code import SendReclaimEmailCode
 from app.modules.identity.application.reclaim_start import StartReclaim
@@ -56,6 +62,7 @@ class EmisServices:
     reclaim_complete: CompleteReclaim
     update_emis_password: UpdateEmisPassword
     delete_account: DeleteAccount
+    finalize_account_deletions: FinalizeAccountDeletions
     destroy_emis_secret: DestroyEmisSecret
     closers: list[Callable[[], Awaitable[None]]] = field(default_factory=list)
 
@@ -75,6 +82,7 @@ def build_emis(
     academic_enrollment: AcademicEnrollment,
     commands: IdentityCommands | None = None,
     emis_client: EmisApi | None = None,
+    deletion_telegram_notice: TelegramNotice | None = None,
     credentials: CredentialStore | None = None,
     password_hasher: PasswordHasher | None = None,
 ) -> EmisServices:
@@ -181,11 +189,18 @@ def build_emis(
             hasher=hasher,
             otp=otp_store,
             revoker=account_revoker,
-            enrollment=academic_enrollment,
-            destroy_secret=destroy_secret,
             email_sender=email_sender,
+            clock=deps.clock,
+            telegram_notice=deletion_telegram_notice,
+            retention_days=deps.settings.identity.account_deletion_days,
+        ),
+        finalize_account_deletions=FinalizeAccountDeletions(
+            uow_factory=uow_factory,
+            revoker=account_revoker,
+            enrollment=academic_enrollment,
             kicker=deps.kicker,
             clock=deps.clock,
+            retention_days=deps.settings.identity.account_deletion_days,
         ),
         destroy_emis_secret=destroy_secret,
         closers=closers,

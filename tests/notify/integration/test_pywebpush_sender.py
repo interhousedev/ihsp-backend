@@ -113,6 +113,7 @@ async def test_the_message_is_encrypted_for_the_device_and_signed_with_vapid(
     (headers,) = push_service.requests
     assert headers["Content-Encoding"] == "aes128gcm"
     assert headers["ttl"] == "3600"
+    assert headers["urgency"] == "high"  # Apple and FCM deliver at once
     scheme, _, rest = headers["Authorization"].partition(" ")
     parts = dict(item.split("=", 1) for item in rest.split(","))
     assert scheme == "vapid" and parts["k"] == keys.public_key

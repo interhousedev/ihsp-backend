@@ -44,5 +44,7 @@
   "id-password-unchanged": "The new password must differ from the current one.",
   "id-photo-empty": "The photo file is empty.",
   "id-photo-too-large": "The photo is too large. The limit is {max_mb} MB.",
-  "id-photo-type-not-allowed": "The photo must be a JPG or PNG image."
+  "id-photo-type-not-allowed": "The photo must be a JPG or PNG image.",
+  "id-deletion-scheduled-telegram": "Your account is scheduled for deletion on <b>{deletes_on}</b>.\nTo keep it, log in again before that date and choose Restore: {url}",
+  "id-btn-restore-account": "Restore account"
 }

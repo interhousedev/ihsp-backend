@@ -451,3 +451,22 @@ def test_every_variable_the_compose_file_reads_is_documented_in_the_sample() -> 
     sample = PROD_ENV_SAMPLE.read_text(encoding="utf-8")
     documented = set(re.findall(r"^#?\s*([A-Z][A-Z0-9_]+)=", sample, re.MULTILINE))
     assert sorted(used - documented) == []
+
+
+PUSH_SETTINGS = (
+    "IHSP_PUSH__ENABLED",
+    "IHSP_PUSH__VAPID_PUBLIC_KEY",
+    "IHSP_PUSH__VAPID_PRIVATE_KEY",
+    "IHSP_PUSH__SUBJECT",
+)
+
+
+def test_web_push_settings_reach_the_api_and_the_worker() -> None:
+    """api serves the VAPID public key, worker sends; without them push stays off."""
+    services = _raw_services()
+    for name in ("api", "worker"):
+        environment = _raw_environment(services, name)
+        missing = [k for k in PUSH_SETTINGS if k not in environment]
+        assert missing == [], name
+    subject = _raw_environment(services, "worker")["IHSP_PUSH__SUBJECT"]
+    assert subject.split(":-", 1)[1].startswith("mailto:")  # Apple needs mailto:/https:

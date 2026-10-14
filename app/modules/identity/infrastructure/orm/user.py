@@ -67,6 +67,7 @@ class User(IdMixin, TimestampMixin, Base):
             "active",
             "blocked",
             "deactivated",
+            "pending_deletion",
             "deleted",
             name="status",
             native_enum=False,
@@ -109,5 +110,9 @@ class User(IdMixin, TimestampMixin, Base):
     )
     otp_reset_request_id: Mapped[UUID | None] = mapped_column(Uuid)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Set while the status is pending_deletion: the purge runs N days after it.
+    deletion_requested_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )
     # Profile photo: a file of the files module (a plain id, no foreign key).
     photo_file_id: Mapped[UUID | None] = mapped_column(Uuid)

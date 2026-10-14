@@ -49,6 +49,7 @@ class User:
     otp_reset_effective_at: datetime | None = None
     otp_reset_request_id: UUID | None = None
     deleted_at: datetime | None = None
+    deletion_requested_at: datetime | None = None
     photo_file_id: UUID | None = None
     created_at: datetime | None = None
 
@@ -104,6 +105,18 @@ class User:
             raise InvalidStatusError(params={"status": self.status.value})
         self.status = UserStatus.DEACTIVATED
         self.bump_epoch()
+
+    @property
+    def is_pending_deletion(self) -> bool:
+        """True while a requested deletion may still be cancelled at login."""
+        return self.status == UserStatus.PENDING_DELETION
+
+    def restore(self) -> None:
+        """Cancel a requested deletion."""
+        if self.status != UserStatus.PENDING_DELETION:
+            raise InvalidStatusError(params={"status": self.status.value})
+        self.status = UserStatus.ACTIVE
+        self.deletion_requested_at = None
 
     def grant(self, role: Role) -> bool:
         """Add a role; return True if it was new."""
