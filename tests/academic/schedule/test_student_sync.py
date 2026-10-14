@@ -46,7 +46,7 @@ async def test_the_full_sync_creates_the_term_then_lessons_and_teachers(
     status = await env.emis_import.sync_student_all.execute(user.id, with_marks=False)
 
     assert status == "synced"
-    assert len(await env.lessons()) == 8
+    assert len(await env.lessons()) == 8 + 10  # four weeks ahead, ten since Sep 1
     teachers = [
         u
         for u in env.identity.users.values()

@@ -22,7 +22,7 @@ from tests.academic.schedule.emis_builders import (
     klass,
     weekly,
 )
-from tests.academic.schedule.env import TODAY, Env
+from tests.academic.schedule.env import TERM_START, TODAY, Env
 
 import pytest
 
@@ -83,10 +83,11 @@ async def test_a_group_without_a_timetable_gets_entries_teachers_rooms_and_lesso
     ]
     assert sorted(u.last_name for u in pending) == ["Kalandarova", "Yuldashev"]
     lessons = await lessons_of(env)
-    assert [x.date for x in lessons] == [
-        day(week, weekday) for week in range(4) for weekday in (2, 3)
-    ]
-    assert result.lessons == len(lessons) == 8
+    past = weekday_dates(TERM_START, day(0, 1) - ONE_DAY, (2, 3))
+    assert sorted(x.date for x in lessons) == sorted(
+        past + [day(week, weekday) for week in range(4) for weekday in (2, 3)]
+    )
+    assert result.lessons == len(lessons) == 8 + len(past)
 
 
 async def test_lessons_start_and_end_at_the_emis_bell_times(env: Env) -> None:
@@ -96,7 +97,7 @@ async def test_lessons_start_and_end_at_the_emis_bell_times(env: Env) -> None:
 
     await run(env, group.id, user.id)
 
-    first = (await lessons_of(env))[0]
+    first = await lesson_on(env, day(0, 2))
     assert first.starts_at == dt.datetime(2026, 10, 6, 3, 30, tzinfo=dt.UTC)
     assert first.ends_at == dt.datetime(2026, 10, 6, 4, 50, tzinfo=dt.UTC)
 
@@ -129,7 +130,11 @@ async def test_odd_and_even_slots_become_parity_entries_and_lessons_follow(
     entries = await entries_of(env, term.id)
     fridays = [e for e in entries if e.weekday == 5]
     assert sorted(e.week_parity for e in fridays) == ["even", "odd"]
-    by_date = {x.date: x for x in await lessons_of(env) if x.date.isoweekday() == 5}
+    by_date = {
+        x.date: x
+        for x in await lessons_of(env)
+        if x.date.isoweekday() == 5 and x.date >= day(0, 1)
+    }
     assert sorted(by_date) == [day(0, 5), day(1, 5), day(2, 5), day(3, 5)]
     names = {x.date: x.subject_id for x in by_date.values()}
     assert names[day(0, 5)] == names[day(2, 5)] != names[day(1, 5)] == names[day(3, 5)]
@@ -145,6 +150,111 @@ async def test_classes_on_a_saturday_are_ignored(env: Env) -> None:
     entries = await entries_of(env, term.id)
     assert [(e.weekday, e.period) for e in entries] == [(2, 1)]
     assert {x.date.isoweekday() for x in await lessons_of(env)} == {2}
+
+
+# - - - the weeks before the first sync - - -
+
+ONE_DAY = dt.timedelta(days=1)
+
+
+def weekday_dates(
+    start: dt.date, end: dt.date, weekdays: tuple[int, ...]
+) -> list[dt.date]:
+    """Every date from start to end (both inclusive) that falls on one of weekdays."""
+    span = [start + dt.timedelta(days=n) for n in range((end - start).days + 1)]
+    return [d for d in span if d.isoweekday() in weekdays]
+
+
+async def test_a_first_sync_mid_term_backfills_from_the_term_start(env: Env) -> None:
+    """ACA-7: a student who registers in week 8 gets the lessons since term start."""
+    _, group, user = await set_up(env)
+    env.emis.classes = weekly(2, 0)
+
+    await run(env, group.id, user.id)
+
+    dates = sorted(x.date for x in await lessons_of(env))
+    past = weekday_dates(TERM_START, day(0, 1) - ONE_DAY, (2,))
+    assert dates[0] == TERM_START
+    assert [d for d in dates if d < day(0, 1)] == past
+    assert len(past) > 1
+
+
+async def test_nothing_is_generated_outside_the_term(env: Env) -> None:
+    """The backfill and the forward window both stop at the term's dates."""
+    start, end = dt.date(2026, 9, 29), dt.date(2026, 10, 20)
+    await env.term(starts_on=start, ends_on=end)
+    group = await env.group("2TN2", emis_group_id=3292)
+    user = await env.student(group)
+    env.emis.classes = weekly(2, 0) + weekly(3, 0)
+
+    await run(env, group.id, user.id)
+
+    dates = sorted(x.date for x in await lessons_of(env))
+    assert dates == weekday_dates(start, end, (2, 3))
+
+
+async def test_a_non_study_day_in_the_past_gets_no_lesson(env: Env) -> None:
+    """Holidays: the backfill follows the term's non-study days."""
+    holiday = dt.date(2026, 9, 8)
+    await env.term(non_study_days=[holiday])
+    group = await env.group("2TN2", emis_group_id=3292)
+    user = await env.student(group)
+    env.emis.classes = weekly(2, 0)
+
+    await run(env, group.id, user.id)
+
+    dates = [x.date for x in await lessons_of(env)]
+    assert TERM_START in dates
+    assert holiday not in dates
+
+
+async def test_a_second_sync_does_not_backfill_again(env: Env) -> None:
+    """Past lessons exist after the first sync: the next run adds and changes none."""
+    _, group, user = await set_up(env)
+    env.emis.classes = weekly(2, 0)
+    await run(env, group.id, user.id)
+    before = sorted(x.id for x in await lessons_of(env))
+
+    again = await run(env, group.id, user.id)
+
+    assert again.lessons == 0
+    assert sorted(x.id for x in await lessons_of(env)) == before
+
+
+async def test_the_backfill_adds_no_past_lessons_for_another_group(env: Env) -> None:
+    """Only the synced group's entries are extrapolated into the past."""
+    term, group, user = await set_up(env)
+    other = await env.group("1TN1", emis_group_id=3291)
+    subject = await env.subject("Физика", emis_id=102)
+    await env.entry(
+        term, weekday=4, period=1, subject=subject, audience=[str(other.id)]
+    )
+    env.emis.classes = weekly(2, 0)
+
+    await run(env, group.id, user.id)
+
+    past = [x for x in await lessons_of(env) if x.date < day(0, 1)]
+    assert past and all(x.audience == [str(group.id)] for x in past)
+
+
+async def test_a_group_with_past_lessons_is_not_backfilled(env: Env) -> None:
+    """A past lesson already in the group's audience stops the backfill for the past."""
+    term, group, user = await set_up(env)
+    subject = await env.subject("Математика", emis_id=101)
+    seeded = await env.lesson(
+        term,
+        day=dt.date(2026, 9, 8),
+        period=1,
+        subject=subject,
+        audience=[str(group.id)],
+    )
+    env.emis.classes = weekly(2, 0)
+
+    result = await run(env, group.id, user.id)
+
+    past = [x for x in await lessons_of(env) if x.date < day(0, 1)]
+    assert [x.id for x in past] == [seeded.id]
+    assert result.lessons == 4  # the four forward Tuesdays only
 
 
 # - - - halves - - -
@@ -414,7 +524,11 @@ async def test_a_slot_that_leaves_emis_removes_the_entry_and_its_empty_lessons(
 
     assert result.removed == 1
     assert [(e.weekday, e.period) for e in await entries_of(env, term.id)] == [(2, 1)]
-    wednesdays = [x for x in await lessons_of(env) if x.date.isoweekday() == 3]
+    wednesdays = [
+        x
+        for x in await lessons_of(env)
+        if x.date.isoweekday() == 3 and x.date >= day(0, 1)
+    ]
     assert [(x.date, x.status) for x in wednesdays] == [(day(1, 3), "cancelled")]
 
 

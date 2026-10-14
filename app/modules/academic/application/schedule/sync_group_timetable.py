@@ -43,6 +43,7 @@ from app.modules.academic.application.schedule.room_cache import (
     invalidate_room_pages,
 )
 from app.modules.academic.application.schedule.sync_class_hours import SyncClassHours
+from app.modules.academic.domain import audience as audience_keys
 from app.modules.academic.domain.schedule.calendar import monday_of
 from app.modules.academic.domain.schedule.emis_timetable import derive_slots
 from app.modules.academic.domain.schedule.student import Student
@@ -64,6 +65,7 @@ import structlog
 log = structlog.get_logger(__name__)
 
 WEEKS = 4  # this week and the next three
+ONE_DAY = dt.timedelta(days=1)
 TimetableStatus = Literal[
     "synced", "no_term", "no_group", "no_student", "empty", "emis_unavailable"
 ]
@@ -139,6 +141,7 @@ class SyncGroupTimetable:
         if isinstance(done, TimetableResult):
             return done
         entries, scope, subgroup = done
+        backfilled = await self._backfill(term, group_id, first)
         generated = await self._generate(term, day, last)
         lessons = await self._lessons(
             term, group_id, classes, scope, (first, last), teachers
@@ -152,6 +155,7 @@ class SyncGroupTimetable:
             "emis_group_synced",
             group_id=str(group_id),
             entries=entries.added,
+            backfilled=backfilled,
             lessons=lessons.created + lessons.moved + lessons.cancelled,
         )
         return TimetableResult(
@@ -162,7 +166,13 @@ class SyncGroupTimetable:
             removed=entries.removed,
             skipped=entries.skipped,
             teachers=teachers.count,
-            lessons=generated + lessons.created + lessons.moved + lessons.cancelled,
+            lessons=(
+                backfilled
+                + generated
+                + lessons.created
+                + lessons.moved
+                + lessons.cancelled
+            ),
             resources=resources,
             subgroup=subgroup,
         )
@@ -268,11 +278,41 @@ class SyncGroupTimetable:
     # - - - Lessons - - -
 
     async def _generate(self, term: Term, day: dt.date, last: dt.date) -> int:
-        start = max(day, term.starts_on)
-        if start > last:
+        """Lessons from today (or the term's start) on, inside the term."""
+        return await self._generate_within(
+            term, max(day, term.starts_on), min(last, term.ends_on)
+        )
+
+    async def _backfill(self, term: Term, group_id: UUID, first: dt.date) -> int:
+        """Lessons for the term's weeks before this sync, if the group has none there.
+
+        Only a group with no lesson at all before ``first`` is filled, so real EMIS
+        data and earlier runs are never duplicated or overwritten.
+        """
+        end = min(first - ONE_DAY, term.ends_on)
+        if term.starts_on > end:
+            return 0
+        keys = audience_keys.student_keys(group_id, None)
+        async with self.uow_factory() as uow:
+            found = await uow.lessons.in_audience(term.id, term.starts_on, end, keys)
+        if found:
+            return 0
+        return await self._generate_within(term, term.starts_on, end, keys)
+
+    async def _generate_within(
+        self,
+        term: Term,
+        start: dt.date,
+        end: dt.date,
+        audience: list[str] | None = None,
+    ) -> int:
+        if start > end:
             return 0
         return await self.generate.execute(
-            term_id=term.id, from_date=start, days=(last - start).days + 1
+            term_id=term.id,
+            from_date=start,
+            days=(end - start).days + 1,
+            audience=audience,
         )
 
     async def _lessons(

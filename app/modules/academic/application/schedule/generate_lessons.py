@@ -1,6 +1,7 @@
 """Generate lessons from the timetable for the next days (UF-SYS-05, ACA-7)."""
 
 import datetime as dt
+from collections.abc import Sequence
 from uuid import UUID
 
 from app.modules.academic.application.schedule.common import (
@@ -54,8 +55,13 @@ class GenerateLessons:
         term_id: UUID | None = None,
         from_date: dt.date | None = None,
         days: int = DEFAULT_DAYS,
+        audience: Sequence[str] | None = None,
     ) -> int:
-        """Generate for every term overlapping the window; return changed lessons."""
+        """Generate for every term overlapping the window; return changed lessons.
+
+        ``audience`` keeps only the timetable entries of those audience keys (one
+        group's backfill must not add lessons for other groups).
+        """
         start = from_date or today(self.clock)
         end = start + dt.timedelta(days=days - 1)
         async with self.uow_factory() as uow:
@@ -63,10 +69,16 @@ class GenerateLessons:
         total = 0
         for term in terms:
             if term_id is None or term.id == term_id:
-                total += await self._generate_term(term.id, start, end)
+                total += await self._generate_term(term.id, start, end, audience)
         return total
 
-    async def _generate_term(self, term_id: UUID, start: dt.date, end: dt.date) -> int:
+    async def _generate_term(
+        self,
+        term_id: UUID,
+        start: dt.date,
+        end: dt.date,
+        audience: Sequence[str] | None = None,
+    ) -> int:
         now = self.clock.now()
         async with self.uow_factory() as uow:
             await uow.lock_term(term_id)
@@ -74,6 +86,9 @@ class GenerateLessons:
             if term is None:
                 return 0
             entries = await uow.entries.list_for_term(term.id)
+            if audience is not None:
+                keys = set(audience)
+                entries = [e for e in entries if keys.intersection(e.audience)]
             existing = await uow.lessons.generated_in_range(term.id, start, end)
             plan = plan_generation(
                 term, entries, existing, start=start, end=end, now=now
