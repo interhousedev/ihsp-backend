@@ -40,6 +40,27 @@ NOT_EDITABLE: frozenset[str] = frozenset({"ai_smart_weight"})
 QUOTA_MARKERS: tuple[str, ...] = ("tokens", "per_day", "per_week")
 """Name parts of the quota limits: staff are not limited by these (rates are kept)."""
 
+UNLIMITED = -1
+"""The value of a limit with no cap (set and stored as -1; readers see ``None``)."""
+
+UNLIMITABLE: frozenset[str] = frozenset(
+    {
+        "ai_session_tokens_student",
+        "ai_daily_tokens_student",
+        "ai_smart_requests_per_week_student",
+        "nb_session_tokens_student",
+        "nb_daily_tokens_student",
+        "nb_artifacts_per_day",
+        "nb_slides_per_day",
+        "nb_infographics_per_day",
+        "web_search_per_day_student",
+    }
+)
+"""Editable quotas (token budgets and per-day or per-week counts) that may be -1.
+
+Sizes, rates, timeouts and step counts have no meaning as unlimited and are not here.
+"""
+
 STAFF_ROLES: frozenset[Role] = frozenset(
     {Role.TEACHER, Role.ADMIN, Role.LMS_ADMIN, Role.LMS_CREATOR, Role.LIBRARIAN}
 )
@@ -57,6 +78,11 @@ def is_limit(name: str) -> bool:
 def is_quota(name: str) -> bool:
     """True for an editable quota (tokens or counts per day or week)."""
     return is_limit(name) and any(marker in name for marker in QUOTA_MARKERS)
+
+
+def is_unlimitable(name: str) -> bool:
+    """True for a limit that may be set to -1 (no cap)."""
+    return name in UNLIMITABLE
 
 
 def is_scalable(name: str) -> bool:
@@ -112,10 +138,13 @@ class ActorLimits:
         self.unlimited = unlimited
 
     def __getattr__(self, name: str) -> Any:
-        """Return the limit, or None for a quota of an unlimited user."""
+        """Return the limit: None for -1 (no cap) and for an unlimited user's quota."""
         if self.unlimited and is_quota(name):
             return None
-        return getattr(self.values, name)
+        value = getattr(self.values, name)
+        if value == UNLIMITED and is_unlimitable(name):
+            return None
+        return value
 
 
 def apply_overrides(
@@ -137,7 +166,7 @@ def apply_extension(base: LimitsSettings, extension: LimitExtension) -> LimitsSe
     """Raise the limits of one user: the larger of the base value and the extension.
 
     The multiplier scales every count and token budget; explicit values set a floor for
-    their key. An extension never lowers a limit.
+    their key. An extension never lowers a limit, and a -1 (no cap) stays -1.
     """
     updates: dict[str, int] = {}
     for name in LimitsSettings.model_fields:
@@ -146,14 +175,25 @@ def apply_extension(base: LimitsSettings, extension: LimitExtension) -> LimitsSe
         value = getattr(base, name)
         if not isinstance(value, int) or isinstance(value, bool):
             continue
-        new = value
-        if extension.multiplier and is_scalable(name):
-            new = max(new, value * extension.multiplier)
-        if name in extension.values:
-            new = max(new, int(extension.values[name]))
+        new = _extended(name, value, extension)
         if new != value:
             updates[name] = new
     return base.model_copy(update=updates) if updates else base
+
+
+def _extended(name: str, value: int, extension: LimitExtension) -> int:
+    """One limit under an extension: a -1 stays, an explicit -1 grant lifts it."""
+    if value == UNLIMITED and is_unlimitable(name):
+        return value
+    new = value
+    if extension.multiplier and is_scalable(name):
+        new = max(new, value * extension.multiplier)
+    if name in extension.values:
+        granted = int(extension.values[name])
+        if granted == UNLIMITED and is_unlimitable(name):
+            return UNLIMITED
+        new = max(new, granted)
+    return new
 
 
 class LimitsProvider(Protocol):

@@ -158,6 +158,7 @@ x-smtp-out-env: &smtp-out-env
 
 x-openrouter-env: &openrouter-env
   IHSP_OPENROUTER__API_KEY: ${IHSP_OPENROUTER__API_KEY:?}
+  IHSP_ANTHROPIC__MODE: ${IHSP_ANTHROPIC__MODE:-fallback}
   IHSP_ANTHROPIC__API_KEY: ${IHSP_ANTHROPIC__API_KEY:-}
   IHSP_ANTHROPIC__FALLBACK_ENABLED: ${IHSP_ANTHROPIC__FALLBACK_ENABLED:-true}
   IHSP_ANTHROPIC__MODEL_MAP: ${IHSP_ANTHROPIC__MODEL_MAP:-anthropic/claude-haiku-5.5=claude-haiku-5-5}

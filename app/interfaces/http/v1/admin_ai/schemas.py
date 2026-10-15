@@ -36,7 +36,10 @@ class LimitItem(BaseModel):
     )
     minimum: int
     maximum: int
-    value: int | None
+    unlimitable: bool = Field(
+        description="True when -1 (no cap, shown as unlimited) is a valid value."
+    )
+    value: int | None = Field(description="The value in force; -1 means no cap.")
     default: int | None = Field(
         description="The environment's value; a reset gives it back."
     )
@@ -55,6 +58,7 @@ class LimitItem(BaseModel):
             period=spec.period,
             minimum=spec.minimum,
             maximum=spec.maximum,
+            unlimitable=spec.unlimitable,
             value=row.value,
             default=row.default,
             overridden=row.overridden,

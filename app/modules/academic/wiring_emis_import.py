@@ -135,6 +135,7 @@ def build_emis_import(
         files=files,
         links=links,
         max_bytes=deps.settings.limits.file_max_bytes,
+        concurrency=deps.settings.emis.download_concurrency,
     )
     return assemble_emis_import(
         uow_factory=sql_schedule_uow_factory(deps),

@@ -9,8 +9,19 @@ from app.modules.ai.infrastructure.anthropic_gateway import (
     AnthropicLlmGateway,
     build_request,
 )
-from app.modules.ai.infrastructure.fallback_gateway import FallbackLlmGateway
-from app.modules.ai.infrastructure.gateway_factory import make_llm_gateway
+from app.modules.ai.infrastructure.fallback_gateway import (
+    FallbackLlmGateway,
+    is_limit_error,
+    is_overload_error,
+    mapped_models,
+    same_model,
+)
+from app.modules.ai.infrastructure.gateway_factory import (
+    make_embedding_gateway,
+    make_llm_gateway,
+)
+from app.modules.ai.infrastructure.openrouter import OpenRouterGateway
+from app.modules.ai.infrastructure.openrouter_embeddings import OpenRouterEmbeddings
 from app.settings import AnthropicSettings, Settings
 from app.shared.contracts.ai import LlmTuning
 
@@ -230,8 +241,130 @@ class Scripted:
 
 def _fallback(error: Exception, deltas: int = 0) -> tuple[Any, Scripted, Scripted]:
     primary, backup = Scripted(error, deltas), Scripted()
-    gateway = FallbackLlmGateway(primary, backup, {HAIKU: TARGET})
+    gateway = FallbackLlmGateway(
+        primary,
+        backup,
+        primary_route=same_model,
+        secondary_route=mapped_models({HAIKU: TARGET}),
+        switch_on=is_limit_error,
+    )
     return gateway, primary, backup
+
+
+def _anthropic_first(
+    error: Exception, deltas: int = 0
+) -> tuple[Any, Scripted, Scripted]:
+    """Mode `default`: the mapped model on Anthropic (primary), OpenRouter after."""
+    anthropic, openrouter = Scripted(error, deltas), Scripted()
+    gateway = FallbackLlmGateway(
+        anthropic,
+        openrouter,
+        primary_route=mapped_models({HAIKU: TARGET}),
+        secondary_route=same_model,
+        switch_on=is_overload_error,
+    )
+    return gateway, anthropic, openrouter
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        AiProviderError(params={"status": 529}),
+        AiProviderError(params={"status": 429}),
+        AiProviderError(params={"status": 500}),
+        AiProviderError(params={"status": 503}),
+    ],
+)
+async def test_default_mode_overload_falls_back_to_openrouter(
+    error: AiProviderError,
+) -> None:
+    gateway, anthropic, openrouter = _anthropic_first(error)
+    result = await gateway.complete(model=HAIKU, **ARGS)
+    assert result["text"] == HAIKU
+    assert (anthropic.models, openrouter.models) == ([TARGET], [HAIKU])
+
+
+@pytest.mark.parametrize(
+    "error",
+    [AiProviderError(params={"status": 400}), AiProviderError(params={"status": 401})],
+)
+async def test_default_mode_other_anthropic_errors_propagate(error: Exception) -> None:
+    gateway, _, openrouter = _anthropic_first(error)
+    with pytest.raises(type(error)):
+        await gateway.complete(model=HAIKU, **ARGS)
+    assert openrouter.models == []
+
+
+async def test_default_mode_sends_unmapped_models_to_openrouter_only() -> None:
+    gateway, anthropic, openrouter = _anthropic_first(_status(529))
+    result = await gateway.complete(model="google/gemini-3.8-flash", **ARGS)
+    assert result["text"] == "google/gemini-3.8-flash"
+    assert anthropic.models == [] and openrouter.models == ["google/gemini-3.8-flash"]
+
+
+async def test_default_mode_stream_falls_back_only_before_the_first_delta() -> None:
+    gateway, _, openrouter = _anthropic_first(_status(529))
+    items = [i async for i in gateway.stream(model=HAIKU, **_stream_args())]
+    assert items == [{"usage": {"model": HAIKU}}]
+    assert openrouter.models == [HAIKU]
+
+    gateway, _, openrouter = _anthropic_first(_status(529), deltas=1)
+    with pytest.raises(AiProviderError):
+        _ = [i async for i in gateway.stream(model=HAIKU, **_stream_args())]
+    assert openrouter.models == []
+
+
+def test_the_default_mode_factory_puts_anthropic_first_and_keeps_openrouter() -> None:
+    real = {"mode": "real", "api_key": "sk-or"}
+    keyed = Settings(
+        openrouter=real, anthropic={"mode": "default", "api_key": "sk-ant"}
+    )
+    gateway = make_llm_gateway(keyed)
+    assert isinstance(gateway, FallbackLlmGateway)
+    assert isinstance(gateway.first, AnthropicLlmGateway)
+    assert isinstance(gateway.second, OpenRouterGateway)
+    # the embeddings keep the OpenRouter connection even when Anthropic is first
+    assert isinstance(make_embedding_gateway(keyed, gateway), OpenRouterEmbeddings)
+
+
+def test_default_mode_without_the_key_stops_the_start() -> None:
+    real = {"mode": "real", "api_key": "sk-or"}
+    keyless = Settings(openrouter=real, anthropic={"mode": "default"})
+    with pytest.raises(ValueError, match="ANTHROPIC__API_KEY is required"):
+        make_llm_gateway(keyless)
+    # a process that holds no key (the bot) starts on OpenRouter alone
+    assert isinstance(make_llm_gateway(keyless, required=False), OpenRouterGateway)
+
+
+def test_default_mode_without_the_key_is_a_startup_problem_of_the_ai_processes() -> (
+    None
+):
+    real = {"mode": "real", "api_key": "sk-or"}
+    exa = {"mode": "real", "api_key": "exa-key"}
+    settings = Settings(openrouter=real, exa=exa, anthropic={"mode": "default"})
+    assert settings._missing_for("api") == [
+        "ANTHROPIC__API_KEY (ANTHROPIC__MODE=default)"
+    ]
+    assert settings._missing_for("bot") == []
+
+
+def test_the_mode_is_parsed_from_the_environment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    assert Settings().anthropic.mode == "fallback"
+    monkeypatch.setenv("IHSP_ANTHROPIC__MODE", "default")
+    assert Settings().anthropic.mode == "default"
+    monkeypatch.setenv("IHSP_ANTHROPIC__MODE", "sometimes")
+    with pytest.raises(ValueError):
+        Settings()
+
+
+def test_default_mode_is_active_without_the_fallback_flag() -> None:
+    config = AnthropicSettings(mode="default", api_key="k", fallback_enabled=False)
+    assert config.active
+    assert not AnthropicSettings(
+        mode="fallback", api_key="k", fallback_enabled=False
+    ).active
 
 
 def _status(status: int, text: str = "") -> AiProviderError:

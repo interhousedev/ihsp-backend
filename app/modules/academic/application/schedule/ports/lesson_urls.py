@@ -30,3 +30,7 @@ class LessonMaterialImporter(Protocol):
     async def purge(self, lesson_ids: Sequence[UUID]) -> int:
         """Delete the lessons' EMIS materials and their stored files; return count."""
         ...
+
+    async def lessons_with_materials(self, lesson_ids: Sequence[UUID]) -> set[UUID]:
+        """The lessons that already have any resource attached."""
+        ...

@@ -10,13 +10,25 @@ from uuid import UUID
 from app.bootstrap.container import Container
 from app.interfaces.jobs.broker import broker
 from app.interfaces.jobs.context import get_container
+from app.shared.jobs import RedisJobTracker, run_job
 
 
 @broker.task(task_name="academic.sync_group_timetable")
-async def sync_group_timetable(user_id: UUID, group_id: UUID) -> str:
+async def sync_group_timetable(
+    user_id: UUID, group_id: UUID, job_id: str | None = None
+) -> str:
     """Update the group's entries, lessons and lesson details; return the status."""
     container: Container = get_container()
-    result = await container.academic.emis_import.sync_group_timetable.execute(
-        group_id=group_id, user_id=user_id, full_term=True
-    )
-    return result.status
+    async with run_job(
+        RedisJobTracker(container.redis),
+        "academic.sync_group_timetable",
+        f"EMIS timetable of group {group_id}",
+        job_id=job_id,
+    ) as job:
+        if job is None:
+            return "cancelled"
+        result = await container.academic.emis_import.sync_group_timetable.execute(
+            group_id=group_id, user_id=user_id, full_term=True
+        )
+        return result.status
+    return "cancelled"

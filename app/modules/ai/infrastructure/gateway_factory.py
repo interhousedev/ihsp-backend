@@ -7,7 +7,14 @@ from app.modules.ai.infrastructure.exa_search import ExaWebSearch
 from app.modules.ai.infrastructure.fake_embeddings import FakeEmbeddingGateway
 from app.modules.ai.infrastructure.fake_exa import FakeExaClient
 from app.modules.ai.infrastructure.fake_llm import FakeLlmGateway
-from app.modules.ai.infrastructure.fallback_gateway import FallbackLlmGateway
+from app.modules.ai.infrastructure.fallback_gateway import (
+    FallbackLlmGateway,
+    is_limit_error,
+    is_overload_error,
+    mapped_models,
+    never,
+    same_model,
+)
 from app.modules.ai.infrastructure.openrouter import OpenRouterGateway
 from app.modules.ai.infrastructure.openrouter_embeddings import OpenRouterEmbeddings
 from app.modules.ai.infrastructure.unavailable import (
@@ -26,11 +33,14 @@ from redis.asyncio import Redis
 def make_llm_gateway(settings: Settings, *, required: bool = True) -> LlmGateway:
     """Return the real OpenRouter gateway or the fake one (`OPENROUTER__MODE`).
 
-    With `ANTHROPIC__API_KEY` the real gateway falls back to the Anthropic API when
-    OpenRouter's credit or limit runs out (the mapped models only).
+    With `ANTHROPIC__API_KEY` the real gateway works with the Anthropic API for the
+    mapped models (Claude Haiku 5.5): `ANTHROPIC__MODE=fallback` (default) asks
+    OpenRouter first and Anthropic after a limit; `default` asks Anthropic first and
+    OpenRouter after a rate limit, overload or 5xx. Unmapped models use OpenRouter.
 
     A real connection without a key stops the start when `required`; a process that
     holds no key (the bot) gets a gateway that fails only when a call reaches it.
+    `ANTHROPIC__MODE=default` without its key stops the start the same way.
     """
     config = settings.openrouter
     if config.mode == "fake":
@@ -39,6 +49,12 @@ def make_llm_gateway(settings: Settings, *, required: bool = True) -> LlmGateway
         if not required:
             return UnavailableLlmGateway("OPENROUTER__API_KEY is not set here")
         raise ValueError("OPENROUTER__API_KEY is required when OPENROUTER__MODE=real")
+    anthropic_config = settings.anthropic
+    if anthropic_config.mode == "default" and anthropic_config.api_key is None:
+        if required:
+            raise ValueError(
+                "ANTHROPIC__API_KEY is required when ANTHROPIC__MODE=default"
+            )
     primary = OpenRouterGateway(
         api_key=config.api_key.get_secret_value(),
         base_url=config.base_url,
@@ -47,14 +63,30 @@ def make_llm_gateway(settings: Settings, *, required: bool = True) -> LlmGateway
         timeout_seconds=config.timeout_seconds,
         cache_models=settings.ai.prompt_cache_models,
     )
-    fallback = settings.anthropic
-    if not fallback.active or fallback.api_key is None:
+    if not anthropic_config.active or anthropic_config.api_key is None:
         return primary
     anthropic = AnthropicLlmGateway(
-        api_key=fallback.api_key.get_secret_value(),
+        api_key=anthropic_config.api_key.get_secret_value(),
         timeout_seconds=config.timeout_seconds,
     )
-    return FallbackLlmGateway(primary, anthropic, fallback.models)
+    models = anthropic_config.models
+    if anthropic_config.mode == "default":
+        return FallbackLlmGateway(
+            anthropic,
+            primary,
+            primary_route=mapped_models(models),
+            secondary_route=same_model,
+            switch_on=(
+                is_overload_error if anthropic_config.fallback_enabled else never
+            ),
+        )
+    return FallbackLlmGateway(
+        primary,
+        anthropic,
+        primary_route=same_model,
+        secondary_route=mapped_models(models),
+        switch_on=is_limit_error,
+    )
 
 
 def make_web_search_gateway(
@@ -100,7 +132,7 @@ def make_embedding_gateway(settings: Settings, llm: LlmGateway) -> EmbeddingGate
     """
     profile = settings.ai_profile(AiTask.EMBEDDING)
     if isinstance(llm, FallbackLlmGateway):
-        llm = llm.primary
+        llm = llm.first if isinstance(llm.first, OpenRouterGateway) else llm.second
     if settings.openrouter.mode == "real" and isinstance(llm, OpenRouterGateway):
         return OpenRouterEmbeddings(llm, profile)
     return FakeEmbeddingGateway(dims=profile.dimensions, batch_size=profile.batch_size)

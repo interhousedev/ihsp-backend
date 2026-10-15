@@ -96,6 +96,11 @@ class FakeScheduleReader:
             synced_at=student.synced_at,
         )
 
+    async def subject_title(self, subject_id: UUID, locale: str) -> str | None:
+        """The subject's name in the locale, None when it does not exist."""
+        subject = self.store.subjects.get(subject_id)
+        return None if subject is None else subject_name(subject, locale)
+
     async def room_by_slug(self, slug: str) -> RoomRef | None:
         """Return the room with the slug."""
         for room in self.store.rooms.values():

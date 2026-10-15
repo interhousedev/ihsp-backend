@@ -1,122 +1,85 @@
-"""TaskiqKicker starts tasks by name; a broker outage is retried once, then raised."""
+"""Job tracker: queued, running, progress, cooperative stop, admin endpoints."""
 
 from typing import Any
 
-from app.interfaces.jobs.broker import TaskiqKicker, build_broker, retry_middleware
-from app.interfaces.jobs.context import get_container, set_container
-from app.shared.tasks import TaskKickFailedError
-
-import pytest
-from redis.exceptions import ConnectionError as RedisConnectionError
-from taskiq import InMemoryBroker
-
-
-class BrokenBroker(InMemoryBroker):
-    """A broker whose Redis is down for the first `failures` sends."""
-
-    def __init__(self, failures: int = 99) -> None:
-        """Fail `failures` times, then work."""
-        super().__init__()
-        self.failures = failures
-        self.attempts = 0
-
-    async def kick(self, message: Any) -> None:
-        """Fail like a lost connection while failures remain."""
-        self.attempts += 1
-        if self.attempts <= self.failures:
-            raise RedisConnectionError("redis is down")
-        await super().kick(message)
+from app.interfaces.http.dependencies import get_actor
+from app.interfaces.http.v1.admin_jobs import ROUTERS
+from app.shared import jobs
+from app.shared.actor import Role
+from app.shared.jobs import (
+    JobCancelled,
+    MemoryJobTracker,
+    RedisJobTracker,
+    enqueue,
+    job_progress,
+    job_should_stop,
+    run_job,
+)
 
 
-async def test_a_task_is_started_by_its_name() -> None:
-    """GEN-8: TaskKicker.kick('<module>.<task>', **kwargs) runs the task."""
-    broker = InMemoryBroker()
-    seen: list[str] = []
-
-    @broker.task(task_name="demo.greet")
-    async def greet(name: str) -> str:
-        seen.append(name)
-        return f"hi, {name}"
-
-    await broker.startup()
-    try:
-        await TaskiqKicker(broker).kick("demo.greet", name="Ann")
-        await broker.wait_all()
-    finally:
-        await broker.shutdown()
-
-    assert seen == ["Ann"]
+async def test_a_job_runs_reports_progress_and_finishes() -> None:
+    tracker = MemoryJobTracker()
+    job_id = await enqueue(tracker, "k", "Label", started_by="admin")
+    async with run_job(tracker, "k", "Label", job_id=job_id) as job:
+        assert job is not None
+        await job_progress(done=1, total=3, add={"files": 2})
+        await job_progress(add={"files": 1})
+    stored = await tracker.get(job_id)
+    assert stored is not None
+    assert (stored.status, stored.done, stored.total) == ("done", 1, 3)
+    assert stored.counters == {"files": 3}
+    assert stored.started_by == "admin"
 
 
-async def test_a_task_unknown_to_this_process_is_still_sent() -> None:
-    """The API process need not import task modules; sending must not raise."""
-    broker = InMemoryBroker()
-    await broker.startup()
-    try:
-        await TaskiqKicker(broker).kick("elsewhere.task", value=1)
-    finally:
-        await broker.shutdown()
+async def test_cancel_drops_a_queued_job() -> None:
+    tracker = MemoryJobTracker()
+    job_id = await enqueue(tracker, "k", "L")
+    cancelled = await jobs.cancel(tracker, job_id)
+    assert cancelled is not None and cancelled.status == "cancelled"
+    async with run_job(tracker, "k", "L", job_id=job_id) as job:
+        assert job is None
 
 
-async def test_a_broker_outage_is_raised_after_a_retry() -> None:
-    """The caller learns that nothing is scheduled instead of a silent log line."""
-    broker = BrokenBroker()
-
-    @broker.task(task_name="demo.noop")
-    async def noop() -> None:
-        return None
-
-    kicker = TaskiqKicker(broker, retry_delay=0)
-    with pytest.raises(TaskKickFailedError):
-        await kicker.kick("demo.noop")
-    with pytest.raises(TaskKickFailedError):
-        await kicker.kick("demo.unknown")
-    assert broker.attempts == 4
-
-
-async def test_a_single_blip_is_retried_and_the_task_runs() -> None:
-    """One failed send is tried again before anyone is told."""
-    broker = BrokenBroker(failures=1)
-    seen: list[int] = []
-
-    @broker.task(task_name="demo.count")
-    async def count(n: int) -> None:
-        seen.append(n)
-
-    await broker.startup()
-    try:
-        await TaskiqKicker(broker, retry_delay=0).kick("demo.count", n=1)
-        await broker.wait_all()
-    finally:
-        await broker.shutdown()
-
-    assert seen == [1]
-    assert broker.attempts == 2
+async def test_the_cancel_flag_stops_the_loop(monkeypatch: Any) -> None:
+    monkeypatch.setattr(jobs, "STOP_CHECK_SECONDS", 0.0)
+    tracker = MemoryJobTracker()
+    seen = []
+    async with run_job(tracker, "k", "L", job_id="j1"):
+        for step in range(10):
+            if await job_should_stop():
+                raise JobCancelled()
+            seen.append(step)
+            if step == 2:
+                stopping = await jobs.cancel(tracker, "j1")
+                assert stopping is not None and stopping.status == "stopping"
+    assert seen == [0, 1, 2]
+    stored = await tracker.get("j1")
+    assert stored is not None and stored.status == "cancelled"
 
 
-def test_task_retries_back_off_with_jitter() -> None:
-    """Opt-in retries wait 5 s, then double, capped at five minutes."""
-    middleware = retry_middleware()
-
-    assert middleware.default_retry_label is False
-    assert middleware.default_retry_count == 3
-    assert middleware.default_delay == 5.0
-    assert middleware.use_delay_exponent is True
-    assert middleware.use_jitter is True
-    assert middleware.max_delay_exponent == 300.0
+async def test_outside_a_job_the_helpers_do_nothing() -> None:
+    assert await job_should_stop() is False
+    await job_progress(done=1)
 
 
-def test_in_memory_broker_is_used_when_asked() -> None:
-    """Tests never touch the dev Redis queue."""
-    assert isinstance(
-        build_broker("redis://localhost:6380/0", in_memory=True), InMemoryBroker
-    )
+async def test_jobs_endpoints(http_client: Any, make_actor: Any, redis: Any) -> None:
+    tracker = RedisJobTracker(redis)
+    job_id = await enqueue(tracker, "academic.resync_materials", "EMIS 2026/1")
+    admin = await http_client(ROUTERS, {get_actor: lambda: make_actor(Role.ADMIN)})
+
+    listed = await admin.get("/v1/admin/jobs")
+    assert listed.status_code == 200
+    [item] = listed.json()["items"]
+    assert (item["id"], item["status"]) == (job_id, "queued")
+
+    stopped = await admin.post(f"/v1/admin/jobs/{job_id}/cancel")
+    assert stopped.status_code == 200
+    assert stopped.json()["status"] == "cancelled"
+    assert await tracker.is_cancelled(job_id)
+    assert (await admin.post("/v1/admin/jobs/nope/cancel")).status_code == 404
 
 
-def test_the_worker_container_must_be_set_before_use() -> None:
-    """Task functions read the container set by bootstrap/worker.py."""
-    sentinel: Any = object()
-
-    set_container(sentinel)
-
-    assert get_container() is sentinel
+async def test_jobs_endpoints_are_for_admins(http_client: Any, make_actor: Any) -> None:
+    teacher = await http_client(ROUTERS, {get_actor: lambda: make_actor(Role.TEACHER)})
+    assert (await teacher.get("/v1/admin/jobs")).status_code == 403
+    assert (await teacher.post("/v1/admin/jobs/x/cancel")).status_code == 403

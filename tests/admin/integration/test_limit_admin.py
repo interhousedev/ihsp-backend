@@ -118,7 +118,7 @@ async def test_a_null_resets_a_limit_to_its_environment_value(world: World) -> N
 
 async def test_an_invalid_change_is_refused_and_changes_nothing(world: World) -> None:
     with pytest.raises(LimitInvalidError):
-        await world.admin.update(world.admin_actor, {"nb_slides_per_day": -1})
+        await world.admin.update(world.admin_actor, {"nb_chat_per_minute": -1})
     with pytest.raises(LimitInvalidError):
         await world.admin.update(world.admin_actor, {"lms_ai_session_tokens": 5})
 

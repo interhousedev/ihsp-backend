@@ -7,6 +7,7 @@ the preview) and attached as a file resource named ``Classwork: <topic>`` or
 address is attached as a link instead, so the student still reaches it.
 """
 
+import asyncio
 import mimetypes
 from collections.abc import Sequence
 from pathlib import PurePosixPath
@@ -25,6 +26,7 @@ from app.shared.contracts.links import (
     ImportedUrl,
     LinksApi,
 )
+from app.shared.jobs import job_progress, job_should_stop
 
 import structlog
 
@@ -36,6 +38,7 @@ PREFIXES: dict[MaterialKind, str] = {
     "video": "Video",
 }
 MAX_TOPIC_LENGTH = 200
+DOWNLOAD_CONCURRENCY = 6  # EMIS__DOWNLOAD_CONCURRENCY
 
 
 def material_title(item: EmisMaterial) -> str:
@@ -71,30 +74,42 @@ class ImportLessonMaterials:
         files: FilesApi,
         links: LinksApi,
         max_bytes: int,
+        concurrency: int = DOWNLOAD_CONCURRENCY,
     ) -> None:
-        """Store the collaborators and the size limit of one file (LIMITS__)."""
+        """Store the collaborators, the size limit of one file and the parallelism."""
         self.emis = emis
         self.files = files
         self.links = links
         self.max_bytes = max_bytes
+        self.concurrency = max(concurrency, 1)
 
     async def import_materials(
         self, user_id: UUID, items: Sequence[EmisMaterial]
     ) -> int:
-        """Attach the materials not attached before; return how many are new."""
+        """Attach the materials not attached before; return how many are new.
+
+        Known (lesson, url) pairs are skipped before any download; the new files
+        are downloaded in parallel (at most ``concurrency`` at a time, each URL
+        once), then stored and attached in the order of ``items``. A job stop
+        request ends the downloads early; what was fetched is still attached.
+        """
         lesson_ids = list(dict.fromkeys(item.lesson_id for item in items))
         known = await self.links.emis_sources(lesson_ids) if lesson_ids else set()
-        stored: list[ImportedFile] = []
-        fallback: list[ImportedUrl] = []
-        downloads: dict[str, EmisFile | None] = {}
+        fresh: list[EmisMaterial] = []
         for item in items:
             key = (item.lesson_id, item.url)
-            if key in known:
-                continue
-            known.add(key)
+            if key not in known:
+                known.add(key)
+                fresh.append(item)
+        downloads = await self._download_all(user_id, fresh)
+        stored: list[ImportedFile] = []
+        fallback: list[ImportedUrl] = []
+        for item in fresh:
+            if item.kind != "video" and item.url not in downloads:
+                continue  # stopped before its download: the next sync brings it
             ref = None
             if item.kind != "video":
-                ref = await self._store(user_id, item, downloads)
+                ref = await self._store(item, downloads[item.url])
             if ref is None:
                 fallback.append(
                     ImportedUrl(item.lesson_id, item.url, material_title(item))
@@ -104,7 +119,25 @@ class ImportLessonMaterials:
         added = await self.links.import_lesson_files(stored) if stored else 0
         if fallback:
             added += await self.links.import_lesson_urls(fallback)
+        await job_progress(add={"files": len(stored), "links": len(fallback)})
         return added
+
+    async def _download_all(
+        self, user_id: UUID, items: Sequence[EmisMaterial]
+    ) -> dict[str, EmisFile | None]:
+        """Download each distinct file URL once, ``concurrency`` at a time."""
+        firsts = {item.url: item for item in reversed(items) if item.kind != "video"}
+        gate = asyncio.Semaphore(self.concurrency)
+        downloads: dict[str, EmisFile | None] = {}
+
+        async def one(item: EmisMaterial) -> None:
+            async with gate:
+                if await job_should_stop():
+                    return
+                downloads[item.url] = await self._download(user_id, item)
+
+        await asyncio.gather(*(one(item) for item in reversed(firsts.values())))
+        return downloads
 
     async def purge(self, lesson_ids: Sequence[UUID]) -> int:
         """Delete the EMIS resources of the lessons and the files EMIS owns."""
@@ -115,15 +148,14 @@ class ImportLessonMaterials:
                 await self.files.delete_file(file_id)
         return len(file_ids)
 
-    async def _store(
-        self,
-        user_id: UUID,
-        item: EmisMaterial,
-        downloads: dict[str, EmisFile | None],
-    ) -> FileRef | None:
-        if item.url not in downloads:
-            downloads[item.url] = await self._download(user_id, item)
-        file = downloads[item.url]
+    async def lessons_with_materials(self, lesson_ids: Sequence[UUID]) -> set[UUID]:
+        """The lessons that already have any resource attached."""
+        if not lesson_ids:
+            return set()
+        found = await self.links.resources_for_lessons(lesson_ids)
+        return {lesson_id for lesson_id, refs in found.items() if refs}
+
+    async def _store(self, item: EmisMaterial, file: EmisFile | None) -> FileRef | None:
         if file is None:
             return None
         try:

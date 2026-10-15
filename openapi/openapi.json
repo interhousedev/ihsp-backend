@@ -8707,6 +8707,62 @@
         "title": "EmisProfileResponse",
         "type": "object"
       },
+      "EmisPullBody": {
+        "description": "Body of POST /v1/admin/subjects/{id}/emis-pull.\n\n``full`` replaces the EMIS materials of the subject's lessons, ``soft`` only\nfills lessons without any material. ``terms`` absent = the current term.",
+        "properties": {
+          "group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
+          "mode": {
+            "default": "full",
+            "enum": [
+              "full",
+              "soft"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "teacher_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Id"
+          },
+          "terms": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/TermChoice"
+                },
+                "maxItems": 10,
+                "minItems": 1,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Terms"
+          }
+        },
+        "title": "EmisPullBody",
+        "type": "object"
+      },
       "EmisSemesterDatesResponse": {
         "description": "EmisSemesterDates: ``number`` is 1-based, the dates are ISO.",
         "properties": {
@@ -11368,6 +11424,130 @@
         ],
         "title": "ItemType",
         "type": "string"
+      },
+      "JobListResponse": {
+        "description": "Active jobs (queued, running, stopping) and those finished today.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/JobResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "JobListResponse",
+        "type": "object"
+      },
+      "JobResponse": {
+        "description": "One worker job.",
+        "properties": {
+          "counters": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counters",
+            "type": "object"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "done": {
+            "title": "Done",
+            "type": "integer"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "started_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started By"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "label",
+          "status",
+          "created_at",
+          "started_at",
+          "finished_at",
+          "started_by",
+          "done",
+          "total",
+          "note",
+          "counters"
+        ],
+        "title": "JobResponse",
+        "type": "object"
       },
       "JournalCellResponse": {
         "description": "A cell of the journal.",
@@ -14067,6 +14247,11 @@
             "title": "Unit",
             "type": "string"
           },
+          "unlimitable": {
+            "description": "True when -1 (no cap, shown as unlimited) is a valid value.",
+            "title": "Unlimitable",
+            "type": "boolean"
+          },
           "value": {
             "anyOf": [
               {
@@ -14076,6 +14261,7 @@
                 "type": "null"
               }
             ],
+            "description": "The value in force; -1 means no cap.",
             "title": "Value"
           }
         },
@@ -14087,6 +14273,7 @@
           "period",
           "minimum",
           "maximum",
+          "unlimitable",
           "value",
           "default",
           "overridden",
@@ -26835,6 +27022,51 @@
         "title": "SubjectPatchBody",
         "type": "object"
       },
+      "SubjectPeopleResponse": {
+        "description": "Teachers and groups of the subject in the current term.",
+        "properties": {
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/SubjectPersonResponse"
+            },
+            "title": "Groups",
+            "type": "array"
+          },
+          "teachers": {
+            "items": {
+              "$ref": "#/components/schemas/SubjectPersonResponse"
+            },
+            "title": "Teachers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "teachers",
+          "groups"
+        ],
+        "title": "SubjectPeopleResponse",
+        "type": "object"
+      },
+      "SubjectPersonResponse": {
+        "description": "A teacher or a group that has the subject.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "SubjectPersonResponse",
+        "type": "object"
+      },
       "SubjectPlannerResponse": {
         "description": "Predicted semester mark and the marks the controls must bring.",
         "properties": {
@@ -38169,6 +38401,71 @@
         ]
       }
     },
+    "/v1/admin/jobs": {
+      "get": {
+        "description": "Active jobs first, then the recently finished ones (newest first).",
+        "operationId": "list_jobs_v1_admin_jobs_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Jobs",
+        "tags": [
+          "admin-jobs"
+        ]
+      }
+    },
+    "/v1/admin/jobs/{job_id}/cancel": {
+      "post": {
+        "description": "Stop a job: a queued one is dropped, a running one stops at its next check.",
+        "operationId": "cancel_job_v1_admin_jobs__job_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel Job",
+        "tags": [
+          "admin-jobs"
+        ]
+      }
+    },
     "/v1/admin/lessons": {
       "get": {
         "description": "Search lessons; the cursor pages by date, period and id.",
@@ -40157,6 +40454,102 @@
           }
         },
         "summary": "Update Subject",
+        "tags": [
+          "admin-schedule"
+        ]
+      }
+    },
+    "/v1/admin/subjects/{subject_id}/emis-pull": {
+      "post": {
+        "description": "Pull the subject's EMIS materials in the worker (full or soft); answers 202.",
+        "operationId": "emis_pull_v1_admin_subjects__subject_id__emis_pull_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmisPullBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Emis Pull",
+        "tags": [
+          "admin-schedule"
+        ]
+      }
+    },
+    "/v1/admin/subjects/{subject_id}/people": {
+      "get": {
+        "description": "Teachers and groups that have the subject in the current term.",
+        "operationId": "subject_people_v1_admin_subjects__subject_id__people_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubjectPeopleResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Subject People",
         "tags": [
           "admin-schedule"
         ]

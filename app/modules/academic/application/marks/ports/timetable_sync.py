@@ -4,6 +4,8 @@ from collections.abc import Collection, Sequence
 from typing import Protocol
 from uuid import UUID
 
+from app.modules.academic.domain.schedule.material_scope import MaterialScope
+
 
 class TimetableOutcome(Protocol):
     """How a timetable sync ended."""
@@ -31,8 +33,9 @@ class MaterialResync(Protocol):
         self,
         *,
         group_id: UUID,
-        terms: Collection[tuple[str, int]],
+        terms: Collection[tuple[str, int]] | None,
         fetchers: Sequence[Sequence[UUID]],
+        scope: MaterialScope | None = None,
     ) -> int:
-        """Purge and re-import; return how many materials were attached."""
+        """Purge and re-import (terms None: the current one); return how many."""
         ...

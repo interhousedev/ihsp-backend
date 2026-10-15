@@ -14,7 +14,7 @@ from uuid import UUID
 
 from app.settings import LimitsSettings
 from app.shared.base_error import ValidationFailedError
-from app.shared.limits import is_limit, is_quota
+from app.shared.limits import UNLIMITED, is_limit, is_quota, is_unlimitable
 from app.shared.settings_docs import field_docs
 
 OVERRIDE_PREFIX = "limit."
@@ -112,6 +112,8 @@ class LimitSpec:
     minimum: int
     maximum: int
     description: str
+    unlimitable: bool = False
+    """True when -1 (no cap) is valid; the editor shows an "Unlimited" toggle."""
 
 
 @cache
@@ -141,6 +143,7 @@ def editable_specs() -> tuple[LimitSpec, ...]:
                 minimum=minimum,
                 maximum=maximum,
                 description=docs.get(name, ""),
+                unlimitable=is_unlimitable(name),
             )
         )
     return tuple(specs)
@@ -155,11 +158,17 @@ def spec_of(key: str) -> LimitSpec:
 
 
 def check_value(spec: LimitSpec, value: Any) -> int | None:
-    """Return the value (None = reset to the environment's value) or raise."""
+    """Return the value (None = reset to the environment's value) or raise.
+
+    -1 (no cap) is accepted only for the limits that allow it; every other limit takes
+    its normal range.
+    """
     if value is None:
         return None
     if isinstance(value, bool) or not isinstance(value, int):
         raise LimitInvalidError(params=_bounds(spec))
+    if spec.unlimitable and value == UNLIMITED:
+        return value
     if not spec.minimum <= value <= spec.maximum:
         raise LimitInvalidError(params=_bounds(spec))
     return value

@@ -38,6 +38,10 @@ class FakeLessonUrls:
         self.purged.extend(lesson_ids)
         return len(gone)
 
+    async def lessons_with_materials(self, lesson_ids: Sequence[UUID]) -> set[UUID]:
+        """The lessons that have something attached."""
+        return {lid for lid, _ in self.attached} & set(lesson_ids)
+
     def of(self, lesson_id: UUID) -> list[EmisMaterial]:
         """The materials attached to one lesson, oldest first."""
         return [item for (lid, _), item in self.attached.items() if lid == lesson_id]

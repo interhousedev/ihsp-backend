@@ -4,6 +4,8 @@ from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from uuid import UUID
 
+from app.modules.academic.domain.schedule.material_scope import MaterialScope
+
 
 @dataclass(frozen=True, slots=True)
 class FakeOutcome:
@@ -23,6 +25,7 @@ class FakeTimetableSync:
         self.resyncs: list[
             tuple[UUID, frozenset[tuple[str, int]], list[list[UUID]]]
         ] = []
+        self.scopes: list[MaterialScope | None] = []
 
     async def execute(
         self, *, group_id: UUID, user_id: UUID, refresh_bells: bool = True
@@ -37,11 +40,13 @@ class FakeTimetableSync:
         self,
         *,
         group_id: UUID,
-        terms: Collection[tuple[str, int]],
+        terms: Collection[tuple[str, int]] | None,
         fetchers: Sequence[Sequence[UUID]],
+        scope: MaterialScope | None = None,
     ) -> int:
         """Record which students would read EMIS for the group."""
         self.resyncs.append(
-            (group_id, frozenset(terms), [list(slot) for slot in fetchers])
+            (group_id, frozenset(terms or ()), [list(slot) for slot in fetchers])
         )
+        self.scopes.append(scope)
         return 1

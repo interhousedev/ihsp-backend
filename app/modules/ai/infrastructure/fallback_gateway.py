@@ -1,13 +1,21 @@
-"""Falls back from OpenRouter to the Anthropic API when OpenRouter's credit runs out.
+"""Fails over between two LLM providers (OpenRouter and the Anthropic API).
 
-Only a limit failure (402, a 429 left after OpenRouter's own retry, or a key or credit
-limit message) of a mapped model (Claude Haiku 5.5) is retried on the fallback, with
-the mapped model id; every other error propagates unchanged. A stream falls back only
-before its first delta. The answer's usage names the model that ran (`model`), so the
-usage ledger records the fallback call.
+Two orders, one class (`IHSP_ANTHROPIC__MODE`):
+
+- `fallback` (default): OpenRouter is the primary; a limit failure (402, a 429 left
+  after OpenRouter's own retry, or a key or credit limit message) of a mapped model
+  (Claude Haiku 5.5) is retried on Anthropic with the mapped model id.
+- `default`: a mapped model goes to Anthropic first; a rate limit, an overload (529)
+  or a 5xx falls back to OpenRouter with the model id it had. Unmapped models always
+  go to OpenRouter.
+
+Which failures switch, and which model id each side gets, is passed in; every other
+error propagates unchanged. A stream switches only before its first delta. The
+answer's usage names the model and provider that ran (`model`, `provider`), so the
+usage ledger records the call that answered.
 """
 
-from collections.abc import AsyncIterator, Mapping
+from collections.abc import AsyncIterator, Callable, Mapping
 from typing import Any, Final
 
 from app.modules.ai.domain.errors import AiProviderError
@@ -18,6 +26,7 @@ import structlog
 log = structlog.get_logger(__name__)
 
 LIMIT_STATUSES: Final = frozenset({402, 429})
+OVERLOAD_STATUSES: Final = frozenset({429, 529})
 LIMIT_PHRASES: Final = (
     "insufficient credits",
     "credit limit",
@@ -26,9 +35,13 @@ LIMIT_PHRASES: Final = (
     "more credits",
 )
 
+ModelRoute = Callable[[str], str | None]
+"""Caller's model id -> this side's model id; None = this side does not take it."""
+SwitchRule = Callable[[BaseException], bool]
+
 
 def is_limit_error(exc: BaseException) -> bool:
-    """True when the provider refused for credit, key limit or rate limit."""
+    """True when OpenRouter refused for credit, key limit or rate limit."""
     if not isinstance(exc, AiProviderError):
         return False
     if exc.params.get("status") in LIMIT_STATUSES:
@@ -37,25 +50,61 @@ def is_limit_error(exc: BaseException) -> bool:
     return any(phrase in details for phrase in LIMIT_PHRASES)
 
 
+def is_overload_error(exc: BaseException) -> bool:
+    """True when the Anthropic API is rate limited, overloaded or failing (5xx)."""
+    if not isinstance(exc, AiProviderError):
+        return False
+    status = exc.params.get("status")
+    if not isinstance(status, int):
+        return False
+    return status in OVERLOAD_STATUSES or status >= 500
+
+
+def never(_: BaseException) -> bool:
+    """A switch rule that never switches (the failover is off)."""
+    return False
+
+
+def same_model(model: str) -> str:
+    """The route of a provider that takes every model under the caller's id."""
+    return model
+
+
+def mapped_models(models: Mapping[str, str]) -> ModelRoute:
+    """The route of the models in `models` (caller id -> this side's id)."""
+    table = dict(models)
+    return lambda model: table.get(model)
+
+
 class FallbackLlmGateway:
-    """Implements `LlmGateway`: `primary`, then `fallback` on a limit failure."""
+    """Implements `LlmGateway`: `primary`, then `secondary` after a switch failure.
+
+    `primary_route` None-maps a model to skip the primary (it goes straight to the
+    secondary); `secondary_route` None-maps a model to a secondary that does not take
+    it, so its failures propagate.
+    """
 
     def __init__(
         self,
         primary: LlmGateway,
-        fallback: LlmGateway,
-        models: Mapping[str, str],
+        secondary: LlmGateway,
+        *,
+        primary_route: ModelRoute,
+        secondary_route: ModelRoute,
+        switch_on: SwitchRule,
     ) -> None:
-        """`models` maps a primary model id to the fallback's id of the same model."""
-        self.primary = primary
-        self._fallback = fallback
-        self._models = dict(models)
+        """Wire the two providers, their model routes and the switch rule."""
+        self.first = primary
+        self.second = secondary
+        self._primary_route = primary_route
+        self._secondary_route = secondary_route
+        self._switch_on = switch_on
 
-    def _target(self, model: str, exc: BaseException) -> str | None:
-        target = self._models.get(model)
-        if target is None or not is_limit_error(exc):
+    def _switch(self, model: str, exc: BaseException) -> str | None:
+        target = self._secondary_route(model)
+        if target is None or not self._switch_on(exc):
             return None
-        log.warning("ai.fallback_to_anthropic", model=model, target=target)
+        log.warning("ai.failover", model=model, target=target)
         return target
 
     async def complete(
@@ -69,7 +118,7 @@ class FallbackLlmGateway:
         provider: dict[str, Any] | None = None,
         tuning: LlmTuning | None = None,
     ) -> dict[str, Any]:
-        """`complete` on the primary, on the fallback after a limit failure."""
+        """`complete` on the primary, on the secondary after a switch failure."""
         args: dict[str, Any] = {
             "system": system,
             "messages": messages,
@@ -78,13 +127,18 @@ class FallbackLlmGateway:
             "provider": provider,
             "tuning": tuning,
         }
+        first = self._primary_route(model)
+        if first is None:
+            return await self.second.complete(
+                model=self._secondary_route(model) or model, **args
+            )
         try:
-            return await self.primary.complete(model=model, **args)
+            return await self.first.complete(model=first, **args)
         except AiProviderError as exc:
-            target = self._target(model, exc)
+            target = self._switch(model, exc)
             if target is None:
                 raise
-        return await self._fallback.complete(model=target, **args)
+        return await self.second.complete(model=target, **args)
 
     async def complete_json(
         self,
@@ -99,7 +153,7 @@ class FallbackLlmGateway:
         timeout_seconds: float | None = None,
         tuning: LlmTuning | None = None,
     ) -> dict[str, Any]:
-        """`complete_json` on the primary, on the fallback after a limit failure."""
+        """`complete_json` on the primary, on the secondary after a switch failure."""
         args: dict[str, Any] = {
             "system": system,
             "messages": messages,
@@ -110,13 +164,18 @@ class FallbackLlmGateway:
             "timeout_seconds": timeout_seconds,
             "tuning": tuning,
         }
+        first = self._primary_route(model)
+        if first is None:
+            return await self.second.complete_json(
+                model=self._secondary_route(model) or model, **args
+            )
         try:
-            return await self.primary.complete_json(model=model, **args)
+            return await self.first.complete_json(model=first, **args)
         except AiProviderError as exc:
-            target = self._target(model, exc)
+            target = self._switch(model, exc)
             if target is None:
                 raise
-        return await self._fallback.complete_json(model=target, **args)
+        return await self.second.complete_json(model=target, **args)
 
     async def stream(
         self,
@@ -129,7 +188,7 @@ class FallbackLlmGateway:
         timeout_seconds: float | None = None,
         tuning: LlmTuning | None = None,
     ) -> AsyncIterator[dict[str, Any]]:
-        """Stream from the primary; a limit failure before any item falls back."""
+        """Stream from the primary; a switch failure before any delta moves on."""
         args: dict[str, Any] = {
             "system": system,
             "messages": messages,
@@ -138,15 +197,21 @@ class FallbackLlmGateway:
             "timeout_seconds": timeout_seconds,
             "tuning": tuning,
         }
+        first = self._primary_route(model)
+        if first is None:
+            direct = self._secondary_route(model) or model
+            async for item in self.second.stream(model=direct, **args):
+                yield item
+            return
         delivered = False
         try:
-            async for item in self.primary.stream(model=model, **args):
+            async for item in self.first.stream(model=first, **args):
                 delivered = True
                 yield item
             return
         except AiProviderError as exc:
-            target = None if delivered else self._target(model, exc)
+            target = None if delivered else self._switch(model, exc)
             if target is None:
                 raise
-        async for item in self._fallback.stream(model=target, **args):
+        async for item in self.second.stream(model=target, **args):
             yield item

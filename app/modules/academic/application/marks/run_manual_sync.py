@@ -7,8 +7,10 @@ from uuid import UUID
 from app.modules.academic.application.marks.ports.unit_of_work import MarksUowFactory
 from app.modules.academic.domain.marks.errors import (
     StudentNotFoundError,
+    SubjectNotFoundError,
     SyncAlreadyRunningError,
 )
+from app.modules.academic.domain.schedule.material_scope import PullMode
 from app.shared.actor import Actor, Role
 from app.shared.clock import Clock
 from app.shared.contracts.academic import ScheduleQueries
@@ -44,9 +46,16 @@ class RunManualSync:
         await self._all(actor)
 
     async def resync_materials(
-        self, actor: Actor, terms: Sequence[tuple[str, int]]
+        self,
+        actor: Actor,
+        terms: Sequence[tuple[str, int]],
+        *,
+        job_id: str | None = None,
     ) -> None:
-        """Kick `academic.resync_materials` for the terms (academic year, half)."""
+        """Kick `academic.resync_materials` for the terms (academic year, half).
+
+        ``job_id`` is the queued job admins see in the process list (optional).
+        """
         actor.require(Role.ADMIN)
         chosen = sorted(set(terms))
         async with self._uow_factory() as uow:
@@ -61,6 +70,52 @@ class RunManualSync:
         await self._kicker.kick(
             "academic.resync_materials",
             terms=[[year, half] for year, half in chosen],
+            **({"job_id": job_id} if job_id else {}),
+        )
+
+    async def pull_subject(
+        self,
+        actor: Actor,
+        subject_id: UUID,
+        *,
+        mode: PullMode = "full",
+        teacher_id: UUID | None = None,
+        group_id: UUID | None = None,
+        terms: Sequence[tuple[str, int]] | None = None,
+        job_id: str | None = None,
+    ) -> None:
+        """Kick `academic.pull_subject_materials`; ``terms`` None = current term."""
+        actor.require(Role.ADMIN)
+        if await self._schedule.subject_title(subject_id) is None:
+            raise SubjectNotFoundError(params={"subject_id": str(subject_id)})
+        chosen = None if terms is None else sorted(set(terms))
+        async with self._uow_factory() as uow:
+            uow.audit(
+                AuditDraft(
+                    type="sync.subject_materials_pull",
+                    actor_id=actor.user_id,
+                    metadata={
+                        "subject_id": str(subject_id),
+                        "mode": mode,
+                        "teacher_id": str(teacher_id) if teacher_id else None,
+                        "group_id": str(group_id) if group_id else None,
+                        "terms": (
+                            None
+                            if chosen is None
+                            else [f"{year}/{half}" for year, half in chosen]
+                        ),
+                    },
+                )
+            )
+            await uow.commit()
+        await self._kicker.kick(
+            "academic.pull_subject_materials",
+            subject_id=str(subject_id),
+            mode=mode,
+            teacher_id=str(teacher_id) if teacher_id else None,
+            group_id=str(group_id) if group_id else None,
+            terms=None if chosen is None else [[year, half] for year, half in chosen],
+            **({"job_id": job_id} if job_id else {}),
         )
 
     async def _one(self, actor: Actor, user_id: UUID) -> None:

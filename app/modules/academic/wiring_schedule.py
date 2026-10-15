@@ -41,6 +41,9 @@ from app.modules.academic.application.schedule.get_staff_timetable import (
 from app.modules.academic.application.schedule.get_student_timetable import (
     GetStudentTimetable,
 )
+from app.modules.academic.application.schedule.get_subject_people import (
+    GetSubjectPeople,
+)
 from app.modules.academic.application.schedule.get_teacher_timetable import (
     GetTeacherTimetable,
 )
@@ -134,6 +137,7 @@ class ScheduleServices:
     get_my_teacher: GetMyTeacher
     get_teacher_timetable: GetTeacherTimetable
     get_staff_timetable: GetStaffTimetable
+    get_subject_people: GetSubjectPeople
     rotate_calendar_token: RotateCalendarToken
     user_for_calendar_token: UserForCalendarToken
     queries: ScheduleQueriesImpl
@@ -202,6 +206,7 @@ def assemble_schedule(
         get_my_teacher=GetMyTeacher(reader, identity, clock),
         get_teacher_timetable=GetTeacherTimetable(reader, identity, clock),
         get_staff_timetable=GetStaffTimetable(reader, identity, clock),
+        get_subject_people=GetSubjectPeople(uow_factory, identity, clock),
         rotate_calendar_token=RotateCalendarToken(uow_factory),
         user_for_calendar_token=UserForCalendarToken(uow_factory),
         queries=ScheduleQueriesImpl(reader),

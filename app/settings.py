@@ -295,6 +295,12 @@ class EmisSettings(BaseModel):
     request_delay_ms: int = 0
     """Pause between EMIS requests (milliseconds)."""
 
+    download_concurrency: int = 6
+    """Parallel material downloads of one student's import (EMIS politeness)."""
+
+    group_concurrency: int = 3
+    """Groups whose materials an admin re-sync pulls at the same time."""
+
     gateway_url: str = "http://localhost:8000/internal/emis"
     """Where other processes reach the identity-process EMIS gateway."""
 
@@ -345,13 +351,18 @@ class OpenRouterSettings(BaseModel):
 
 
 class AnthropicSettings(BaseModel):
-    """Direct Anthropic API: the fallback when OpenRouter's credit or limit runs out."""
+    """Direct Anthropic API: OpenRouter's fallback, or first for the mapped models."""
+
+    mode: Literal["fallback", "default"] = "fallback"
+    """`fallback`: OpenRouter first, Anthropic on a limit. `default`: mapped models
+    go to Anthropic first, then OpenRouter on a rate limit, overload or 5xx."""
 
     api_key: SecretStr | None = None
     """Anthropic API key; without it there is no fallback (OpenRouter errors stay)."""
 
     fallback_enabled: bool = True
-    """Retry a call on Anthropic when OpenRouter answers 402 or a limit 429."""
+    """Retry on the other provider after a failure. In `default` mode, false makes
+    the Anthropic errors final."""
 
     model_map: str = "anthropic/claude-haiku-5.5=claude-haiku-5-5"
     """`openrouter-id=anthropic-id` pairs, comma separated: the models to fall back."""
@@ -368,7 +379,8 @@ class AnthropicSettings(BaseModel):
     def active(self) -> bool:
         """True when calls may fall back to Anthropic."""
         key = self.api_key.get_secret_value() if self.api_key else ""
-        return self.fallback_enabled and bool(key) and bool(self.models)
+        enabled = self.mode == "default" or self.fallback_enabled
+        return enabled and bool(key) and bool(self.models)
 
 
 class ExaSettings(BaseModel):
@@ -880,15 +892,16 @@ class LimitsSettings(BaseModel):
     """Length of an assistant budget window; a new one starts at the next message."""
 
     ai_session_tokens_student: int = 200000
-    """Student assistant tokens per session window (times the task's budget_weight)."""
+    """Student assistant tokens per session window (times the task's budget_weight).
+    -1 means no cap."""
 
     ai_daily_tokens_student: int = 600000
-    """Student assistant tokens per day (Tashkent date)."""
+    """Student assistant tokens per day (Tashkent date). -1 means no cap."""
 
-    ai_smart_requests_per_week_student: int = Field(default=3, ge=0)
+    ai_smart_requests_per_week_student: int = Field(default=3, ge=-1)
     """Smart-tier messages a student may send per week (Monday to Monday, Tashkent).
-    0 switches the smart tier off for students. A soft default: admins can change it
-    at runtime and per user. Staff are not limited."""
+    0 switches the smart tier off for students; -1 means no cap. A soft default: admins
+    can change it at runtime and per user. Staff are not limited."""
 
     ai_max_tool_steps: int = 8
     """Most model requests (tool rounds) in one assistant turn."""
@@ -923,22 +936,25 @@ class LimitsSettings(BaseModel):
     """Days after a lesson during which its attendance can still be edited."""
 
     nb_session_tokens_student: int = 1_500_000
-    """Notebook weighted tokens per session (input + 0.1 x cached + 5 x output)."""
+    """Notebook weighted tokens per session (input + 0.1 x cached + 5 x output).
+    -1 means no cap."""
 
     nb_daily_tokens_student: int = 4_000_000
-    """Notebook weighted tokens per day."""
+    """Notebook weighted tokens per day. -1 means no cap."""
 
     nb_artifacts_per_day: int = 20
-    """Studio outputs a student may start per day."""
+    """Studio outputs a student may start per day. -1 means no cap."""
 
     nb_audio_per_day: int = 0
     """Audio overviews per day; 0 switches the counter off (the kind is not built)."""
 
     nb_slides_per_day: int = 6
-    """Slide decks per day (also counts toward nb_artifacts_per_day)."""
+    """Slide decks per day (also counts toward nb_artifacts_per_day).
+    -1 means no cap."""
 
     nb_infographics_per_day: int = 6
-    """Infographics per day (also counts toward nb_artifacts_per_day)."""
+    """Infographics per day (also counts toward nb_artifacts_per_day).
+    -1 means no cap."""
 
     nb_concurrent_artifacts: int = 3
     """Studio outputs one student may have generating at the same time."""
@@ -952,10 +968,10 @@ class LimitsSettings(BaseModel):
     nb_search_per_minute: int = Field(default=30, ge=1)
     """Full-text searches in the sources of notebooks per minute of one user."""
 
-    web_search_per_day_student: int = Field(default=10, ge=0)
+    web_search_per_day_student: int = Field(default=10, ge=-1)
     """Web searches a student may start per day (Tashkent date): a chat message with the
     web toggle on counts one, a Discover `fast` search one, a `deep` one
-    `web_search_deep_queries`. 0 forbids web search."""
+    `web_search_deep_queries`. 0 forbids web search; -1 means no cap."""
 
     web_search_per_day_staff: int = Field(default=30, ge=0)
     """Web searches per day of a teacher, administrator or other non-student."""
@@ -1101,9 +1117,16 @@ class Settings(BaseSettings):
                 problems.append("OPENROUTER__API_KEY")
             if self.exa.api_key is None:
                 problems.append("EXA__API_KEY")
+            problems += self._missing_anthropic()
         if process in WEBHOOK_PROCESSES and self.telegram.mode == "webhook":
             problems += self._missing_webhook()
         return problems
+
+    def _missing_anthropic(self) -> list[str]:
+        """The Anthropic key, which `ANTHROPIC__MODE=default` needs to start."""
+        if self.anthropic.mode == "default" and self.anthropic.api_key is None:
+            return ["ANTHROPIC__API_KEY (ANTHROPIC__MODE=default)"]
+        return []
 
     def _missing_webhook(self) -> list[str]:
         """Webhook settings the bot still lacks."""

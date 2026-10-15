@@ -118,7 +118,9 @@ def build_marks(
             clock=deps.clock,
         ),
         resync_materials=ResyncMaterials(
-            uow_factory=uow_factory, materials=material_resync
+            uow_factory=uow_factory,
+            materials=material_resync,
+            group_concurrency=deps.settings.emis.group_concurrency,
         ),
         list_sync_runs=ListSyncRuns(uow_factory=uow_factory),
         list_subjects=ListSubjects(

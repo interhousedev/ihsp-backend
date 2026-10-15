@@ -72,7 +72,8 @@ def profile_for(
     `AiTask.LMS_AUTHORING` with the `lms_ai_*` limits.
     """
     if limits is None:
-        limits = settings.limits
+        # Wrapped so that -1 (no cap) reads as None, like the provider's values.
+        limits = ActorLimits(settings.limits, unlimited=False)
     llm = settings.ai_profile(assistant_task(assistant, tier))
     if assistant is Assistant.STUDENT:
         return AssistantProfile(
