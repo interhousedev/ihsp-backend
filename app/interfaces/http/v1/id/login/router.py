@@ -16,6 +16,9 @@ from app.interfaces.http.v1.id.login.handlers.post_login_restore import (
     post_login_restore,
     post_login_restore_decline,
 )
+from app.interfaces.http.v1.id.login.handlers.post_login_ticket import (
+    post_login_ticket,
+)
 from app.interfaces.http.v1.id.login.handlers.request_login_otp import (
     request_login_otp,
 )
@@ -62,6 +65,12 @@ router.add_api_route(
 router.add_api_route(
     "/login/restore/decline",
     post_login_restore_decline,
+    methods=["POST"],
+    response_model=RedirectToResponse,
+)
+router.add_api_route(
+    "/login/ticket",
+    post_login_ticket,
     methods=["POST"],
     response_model=RedirectToResponse,
 )

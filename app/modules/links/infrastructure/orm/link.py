@@ -70,6 +70,7 @@ class Link(IdMixin, TimestampMixin, Base):
     )
     owner_id: Mapped[UUID] = mapped_column(Uuid)
     target_url: Mapped[str | None] = mapped_column(Text)
+    source_url: Mapped[str | None] = mapped_column(Text)
     file_id: Mapped[UUID | None] = mapped_column(Uuid)
     target_id: Mapped[UUID | None] = mapped_column(Uuid)
     title: Mapped[str | None] = mapped_column(String(500))

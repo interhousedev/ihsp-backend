@@ -73,6 +73,8 @@ class Link:
     last_reported_at: datetime | None = None
     reports_reviewed_at: datetime | None = None
     slug_released_at: datetime | None = None
+    # Where an imported file came from (EMIS material URL): the re-sync key.
+    source_url: str | None = None
 
     @property
     def is_share(self) -> bool:

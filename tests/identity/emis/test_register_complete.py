@@ -93,6 +93,8 @@ async def test_registration_creates_the_account_secret_and_student(
     assert [a.type for a in world.ledger.audits] == ["user.registered"]
     assert await world.redis.keys("reg:*") == []
     assert registered.redirect_to is None
+    assert registered.login_ticket == f"ticket-{registered.user_id}"
+    assert world.acceptor.tickets == [registered.user_id]
     assert started.registration_token not in str(world.ledger.audits)
 
 
@@ -104,6 +106,8 @@ async def test_the_login_challenge_is_accepted_and_its_redirect_returned(
 
     assert registered.redirect_to == "https://hydra.test/continue?c=abc"
     assert world.acceptor.accepted == [("abc", registered.user_id, ["pwd"])]
+    assert world.acceptor.remembered == [True]
+    assert registered.login_ticket is None
 
 
 async def test_a_failed_login_accept_does_not_undo_the_registration(

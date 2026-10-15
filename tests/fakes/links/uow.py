@@ -93,13 +93,26 @@ class FakeLinkRepository:
         self, owner_id: UUID, lesson_ids: Sequence[UUID]
     ) -> set[tuple[UUID, str]]:
         """Return (lesson id, URL) of every resource the owner ever added."""
-        return {
-            (link.lesson_id, link.target_url)
+        found: set[tuple[UUID, str]] = set()
+        for link in self.working.values():
+            url = link.target_url or link.source_url
+            if link.owner_id == owner_id and link.lesson_id in lesson_ids and url:
+                assert link.lesson_id is not None
+                found.add((link.lesson_id, url))
+        return found
+
+    async def delete_owned_on_lessons(
+        self, owner_id: UUID, lesson_ids: Sequence[UUID]
+    ) -> list[Link]:
+        """Remove the owner's resources on the lessons; return them."""
+        gone = [
+            link
             for link in self.working.values()
-            if link.owner_id == owner_id
-            and link.lesson_id in lesson_ids
-            and link.target_url is not None
-        }
+            if link.owner_id == owner_id and link.lesson_id in lesson_ids
+        ]
+        for link in gone:
+            del self.working[link.id]
+        return gone
 
     async def moderation_queue(
         self, *, after: ModerationCursor | None, limit: int

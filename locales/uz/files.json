@@ -6,6 +6,7 @@
   "files-invalid-checksum": "Fayl nazorat yig'indisi noto'g'ri.",
   "files-invalid-size": "Fayl bo'sh yoki uning hajmi noto'g'ri.",
   "files-upload-missing": "Fayl yuklanmadi. Uni qayta yuklang.",
+  "files-storage-unavailable": "Fayl saqlash xizmati hozir mavjud emas. Keyinroq qayta urinib koʻring.",
   "files-not-found": "Fayl topilmadi.",
   "files-deleted": "Bu fayl o'chirilgan.",
   "files-not-ready": "Fayl hali tayyor emas.",

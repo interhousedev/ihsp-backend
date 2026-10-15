@@ -429,3 +429,34 @@ async def test_two_transport_failures_are_unavailable(
         await source.profile(USER)
     await source.aclose()
     assert route.call_count == 2
+
+
+async def test_download_passes_the_url_and_returns_the_bytes(
+    source: HttpEmisSource, gateway: respx.MockRouter
+) -> None:
+    """ACA-9: materials come through the gateway, which holds the EMIS session."""
+    route = gateway.get(f"/{USER}/file").respond(
+        200,
+        content=b"%PDF-1.4",
+        headers={"content-type": "application/pdf", "X-Emis-File-Name": "T%C3%A9.pdf"},
+    )
+
+    file = await source.download(USER, "https://emis.test/f.pdf", max_bytes=100)
+
+    assert (file.name, file.content_type, file.data) == (
+        "Té.pdf",
+        "application/pdf",
+        b"%PDF-1.4",
+    )
+    params = route.calls.last.request.url.params
+    assert (params["url"], params["max_bytes"]) == ("https://emis.test/f.pdf", "100")
+
+
+async def test_a_failed_download_is_unavailable(
+    source: HttpEmisSource, gateway: respx.MockRouter
+) -> None:
+    """A gateway error (too large, EMIS down) is an EmisUnavailable."""
+    gateway.get(f"/{USER}/file").respond(503, json={"type": "emis/unavailable"})
+
+    with pytest.raises(EmisUnavailable):
+        await source.download(USER, "https://emis.test/f.pdf", max_bytes=100)

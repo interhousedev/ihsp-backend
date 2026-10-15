@@ -21,6 +21,9 @@ class FakeFiles:
     def __init__(self) -> None:
         """Start with no files."""
         self.files: dict[UUID, FileRef] = {}
+        self.objects: dict[UUID, bytes] = {}  # what store_bytes wrote ("S3")
+        self.deleted: list[UUID] = []
+        self.refuse: Exception | None = None  # store_bytes raises it when set
 
     def add(
         self,
@@ -91,8 +94,18 @@ class FakeFiles:
         data: bytes,
         expires_days: int | None = None,
     ) -> FileRef:
-        """Store a ready file."""
-        return self.add(owner_id, name=name, purpose=purpose)
+        """Store a ready file and keep its bytes."""
+        if self.refuse is not None:
+            raise self.refuse
+        file = self.add(owner_id, name=name, purpose=purpose, scope=scope)
+        self.objects[file.id] = data
+        return file
+
+    async def delete_file(self, file_id: UUID) -> None:
+        """Remove the file and its bytes; unknown ids are fine."""
+        self.files.pop(file_id, None)
+        self.objects.pop(file_id, None)
+        self.deleted.append(file_id)
 
     async def check_access(self, file_id: UUID, actor: Actor) -> bool:
         """Allow owners only."""

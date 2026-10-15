@@ -20,6 +20,12 @@ class PasswordConfirmBody(BaseModel):
     new_password: str = Field(min_length=1, max_length=1000)
 
 
+class PasswordConfirmResponse(BaseModel):
+    """The password changed: redeem the ticket on IHT ID's next login challenge."""
+
+    login_ticket: str
+
+
 class OtpRecoveryRequestBody(BaseModel):
     """POST /v1/id/recovery/otp/request."""
 

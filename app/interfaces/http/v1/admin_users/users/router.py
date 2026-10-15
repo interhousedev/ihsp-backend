@@ -23,6 +23,9 @@ from app.interfaces.http.v1.admin_users.users.handlers.post_reset_otp import (
 from app.interfaces.http.v1.admin_users.users.handlers.post_reset_password import (
     post_reset_password,
 )
+from app.interfaces.http.v1.admin_users.users.handlers.post_reset_password_link import (
+    post_reset_password_link,
+)
 from app.interfaces.http.v1.admin_users.users.handlers.post_revoke_sessions import (
     post_revoke_sessions,
 )
@@ -79,6 +82,12 @@ router.add_api_route(
 router.add_api_route(
     "/{id}/reset-password",
     post_reset_password,
+    methods=["POST"],
+    response_model=ActivationUrlResponse,
+)
+router.add_api_route(
+    "/{id}/reset-password-link",
+    post_reset_password_link,
     methods=["POST"],
     response_model=ActivationUrlResponse,
 )

@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from app.modules.identity.application.start_login_session import (
-    REMEMBER_FOR_SECONDS,
+    REMEMBER_DAYS,
     REMEMBER_KEY,
-    SSO_SESSION_SECONDS,
+    remember_for_seconds,
 )
 from app.modules.identity.domain.client_policy import may_use_client
 from app.modules.identity.domain.session import LoginSession
@@ -35,6 +35,7 @@ class GetLoginInfo:
     hydra: HydraGateway
     clock: Clock
     tickets: TicketStore
+    remember_days: int = REMEMBER_DAYS
 
     async def execute(self, challenge: str) -> LoginInfo:
         """Return the login info; ``redirect_to`` is set when the login was skipped."""
@@ -66,7 +67,7 @@ class GetLoginInfo:
             request.challenge,
             subject=request.subject,
             remember=True,
-            remember_for=REMEMBER_FOR_SECONDS if remembered else SSO_SESSION_SECONDS,
+            remember_for=remember_for_seconds(remembered, self.remember_days),
             amr=list(session.amr),
             context={
                 "session_id": str(session.id),

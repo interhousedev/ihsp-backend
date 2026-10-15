@@ -36,6 +36,7 @@ from app.shared.contracts.emis import (
     EmisClass,
     EmisClassHour,
     EmisCurriculum,
+    EmisFile,
     EmisMark,
     EmisMarkType,
     EmisProfile,
@@ -246,6 +247,15 @@ def _semester_window(current: int, semester: int) -> tuple[date, date]:
     return start, start + _SEMESTER_LENGTH
 
 
+# The smallest PDF a viewer opens: what the fake EMIS serves for every material.
+_FAKE_PDF = (
+    b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
+    b"2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
+    b"3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>endobj\n"
+    b"trailer<</Root 1 0 R>>\n%%EOF\n"
+)
+
+
 class FakeEmisClient:
     """Same interface as EmisClient; marks follow the injected clock."""
 
@@ -353,6 +363,14 @@ class FakeEmisClient:
             classes.extend(to_classes(ClassSchedulesV1DTO.model_validate(body)))
             first = sunday + timedelta(days=1)
         return classes
+
+    async def download(self, token: str, url: str, max_bytes: int) -> EmisFile:
+        """Return a one-page PDF named after the URL's last path segment."""
+        self._student(token)
+        if len(_FAKE_PDF) > max_bytes:
+            raise EmisRequestError("file too large")
+        name = url.split("?", 1)[0].rstrip("/").rsplit("/", 1)[-1] or "file.pdf"
+        return EmisFile(name=name, content_type="application/pdf", data=_FAKE_PDF)
 
     def _marks(
         self, student: FakeStudent, subject_id: int, semester: int

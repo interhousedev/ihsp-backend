@@ -56,7 +56,16 @@ class LinkRepository(Protocol):
     async def lesson_urls_of_owner(
         self, owner_id: UUID, lesson_ids: Sequence[UUID]
     ) -> set[tuple[UUID, str]]:
-        """Return (lesson id, URL) of all the owner's resources, deleted ones too."""
+        """Return (lesson id, URL) of all the owner's resources, deleted ones too.
+
+        For an imported file the URL is where it came from (``source_url``).
+        """
+        ...
+
+    async def delete_owned_on_lessons(
+        self, owner_id: UUID, lesson_ids: Sequence[UUID]
+    ) -> list[Link]:
+        """Delete the owner's resources on the lessons for good; return them."""
         ...
 
     async def moderation_queue(

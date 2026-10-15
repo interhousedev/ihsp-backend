@@ -455,10 +455,10 @@ async def test_topic_files_become_resources_once(topics_env: Env) -> None:
 
     lesson = await lesson_on(env, day(0, 2))
     attached = env.urls.of(lesson.id)
-    assert [(a.url, a.title) for a in attached] == [
-        ("https://cdn-emis.edu.uz/files/a.pdf", "Jadids"),
-        ("https://cdn-emis.edu.uz/files/b.pdf", "Jadids (homework)"),
-        ("https://www.youtube.com/watch?v=q0sUmfmG7gI", "Jadids (video)"),
+    assert [(a.url, a.name, a.kind) for a in attached] == [
+        ("https://cdn-emis.edu.uz/files/a.pdf", "Jadids", "classwork"),
+        ("https://cdn-emis.edu.uz/files/b.pdf", "Jadids", "homework"),
+        ("https://www.youtube.com/watch?v=q0sUmfmG7gI", "Jadids", "video"),
     ]
     assert (first.resources, second.resources) == (3, 0)
     assert env.urls.of((await lesson_on(env, day(1, 2))).id) == []

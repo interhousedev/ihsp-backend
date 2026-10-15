@@ -71,7 +71,7 @@ def test_login_consent_and_logout_are_redirect_endpoints_of_identity(
 
 def test_single_sign_on_session_can_last_thirty_days(prod: dict[str, Any]) -> None:
     """`remember_for` of the login (30 days) is capped by this lifetime."""
-    assert prod["ttl"]["authentication_session"] == "720h"
+    assert prod["ttl"]["authentication_session"] == "8760h"
 
 
 def test_prod_secrets_and_dev_mode_stay_out_of_the_file(prod: dict[str, Any]) -> None:

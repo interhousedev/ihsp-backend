@@ -46,7 +46,7 @@ strategies:
 ttl:
   access_token: 15m # durations use h/m/s, never d
   refresh_token: 720h
-  authentication_session: 720h # cap of `remember_for` of the single sign-on session
+  authentication_session: 8760h # cap of `remember_for` (IHSP_IDENTITY__REMEMBER_DAYS=365)
 
 oauth2:
   pkce:

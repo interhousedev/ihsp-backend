@@ -25,7 +25,11 @@ from app.modules.academic.application.marks.list_subject_lessons import (
 from app.modules.academic.application.marks.list_subjects import ListSubjects
 from app.modules.academic.application.marks.list_sync_runs import ListSyncRuns
 from app.modules.academic.application.marks.ports.bell_sync import BellSync
-from app.modules.academic.application.marks.ports.timetable_sync import TimetableSync
+from app.modules.academic.application.marks.ports.timetable_sync import (
+    MaterialResync,
+    TimetableSync,
+)
+from app.modules.academic.application.marks.resync_materials import ResyncMaterials
 from app.modules.academic.application.marks.run_manual_sync import RunManualSync
 from app.modules.academic.application.marks.sync_all import SyncAll
 from app.modules.academic.application.marks.sync_student import SyncStudent
@@ -47,6 +51,7 @@ class MarksServices:
     sync_all: SyncAll
     backfill_student: BackfillStudent
     run_manual_sync: RunManualSync
+    resync_materials: ResyncMaterials
     list_sync_runs: ListSyncRuns
     list_subjects: ListSubjects
     get_subject_detail: GetSubjectDetail
@@ -71,6 +76,7 @@ def build_marks(
     links: LinksApi,
     bell_sync: BellSync,
     timetable_sync: TimetableSync,
+    material_resync: MaterialResync,
 ) -> MarksServices:
     """Wire the marks use cases to SQL repositories and other modules' contracts."""
 
@@ -110,6 +116,9 @@ def build_marks(
             schedule=schedule,
             kicker=deps.kicker,
             clock=deps.clock,
+        ),
+        resync_materials=ResyncMaterials(
+            uow_factory=uow_factory, materials=material_resync
         ),
         list_sync_runs=ListSyncRuns(uow_factory=uow_factory),
         list_subjects=ListSubjects(

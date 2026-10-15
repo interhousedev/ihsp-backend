@@ -1,5 +1,6 @@
 """Process settings read from environment variables (prefix IHSP_, nested by __)."""
 
+import urllib.parse
 from functools import cache
 from pathlib import Path
 from typing import Literal
@@ -90,6 +91,39 @@ class S3Settings(BaseModel):
 
     bucket: str = "ihsp-dev"
     """Bucket for files and exports."""
+
+    @model_validator(mode="after")
+    def _endpoints_are_origins(self) -> "S3Settings":
+        """Fail fast on endpoint paths: the bucket belongs in S3__BUCKET."""
+        endpoint = _endpoint_path(self.endpoint_url, "S3__ENDPOINT_URL")
+        public = _endpoint_path(self.public_endpoint_url, "S3__PUBLIC_ENDPOINT_URL")
+        if endpoint != public:
+            raise ValueError(
+                "S3__ENDPOINT_URL and S3__PUBLIC_ENDPOINT_URL must have the same path "
+                f"(got {endpoint!r} and {public!r}); both should be scheme://host"
+            )
+        if "/" in self.bucket or not self.bucket:
+            raise ValueError(
+                "S3__BUCKET must be a bare bucket name without '/'; put the bucket "
+                "there, not in S3__ENDPOINT_URL (endpoint = scheme://host, "
+                "bucket = the provider bucket name)"
+            )
+        return self
+
+
+def _endpoint_path(url: str, name: str) -> str:
+    """Return the path of an S3 endpoint; raise when it is not a bare scheme://host."""
+    parts = urllib.parse.urlsplit(url)
+    if parts.scheme not in ("http", "https") or not parts.netloc:
+        raise ValueError(f"{name} must be an http(s)://host URL, got {url!r}")
+    path = parts.path.rstrip("/")
+    if path or parts.query or parts.fragment:
+        raise ValueError(
+            f"{name} must be scheme://host only, got a path {path or parts.query!r} "
+            f"in {url!r}; set endpoint = scheme://host (e.g. "
+            "https://storage.cloupard.uz) and the provider bucket name in S3__BUCKET"
+        )
+    return path
 
 
 class VaultSettings(BaseModel):
@@ -477,6 +511,9 @@ class IdentitySettings(BaseModel):
 
     account_deletion_days: int = Field(default=30, ge=1, le=365)
     """Days a deleted account stays restorable (by logging in) before the purge."""
+
+    remember_days: int = Field(default=365, ge=1, le=3650)
+    """Days a remembered device stays signed in to IHT ID (Hydra ``remember_for``)."""
 
 
 class FilesSettings(BaseModel):

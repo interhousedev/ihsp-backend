@@ -1,5 +1,6 @@
 """Start an EMIS sync by hand (ADM-14)."""
 
+from collections.abc import Sequence
 from datetime import timedelta
 from uuid import UUID
 
@@ -41,6 +42,26 @@ class RunManualSync:
             await self._one(actor, user_id)
             return
         await self._all(actor)
+
+    async def resync_materials(
+        self, actor: Actor, terms: Sequence[tuple[str, int]]
+    ) -> None:
+        """Kick `academic.resync_materials` for the terms (academic year, half)."""
+        actor.require(Role.ADMIN)
+        chosen = sorted(set(terms))
+        async with self._uow_factory() as uow:
+            uow.audit(
+                AuditDraft(
+                    type="sync.materials_resync",
+                    actor_id=actor.user_id,
+                    metadata={"terms": [f"{year}/{half}" for year, half in chosen]},
+                )
+            )
+            await uow.commit()
+        await self._kicker.kick(
+            "academic.resync_materials",
+            terms=[[year, half] for year, half in chosen],
+        )
 
     async def _one(self, actor: Actor, user_id: UUID) -> None:
         if await self._schedule.get_student(user_id) is None:

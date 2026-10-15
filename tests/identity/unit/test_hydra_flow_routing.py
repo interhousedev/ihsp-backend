@@ -3,11 +3,11 @@
 The browser is sent to the static login app only when a form is really needed.
 """
 
+from datetime import timedelta
 from urllib.parse import parse_qs, urlparse
 
 from app.modules.identity.application.request_context import RequestContext
 from app.modules.identity.application.start_login_session import (
-    REMEMBER_FOR_SECONDS,
     SSO_SESSION_SECONDS,
 )
 from app.modules.identity.domain.errors import HydraUnavailableError
@@ -173,10 +173,10 @@ async def test_a_login_is_always_remembered_for_single_sign_on(
     assert accepted["remember_for"] == SSO_SESSION_SECONDS
 
 
-async def test_remember_me_keeps_the_hydra_session_for_thirty_days(
+async def test_remember_me_keeps_the_hydra_session_for_a_year(
     auth_world: World,
 ) -> None:
-    """The checkbox lengthens the single sign-on session."""
+    """The checkbox remembers the device for IHSP_IDENTITY__REMEMBER_DAYS (365)."""
     user = await auth_world.add_user()
     auth_world.hydra.add_login("lc-1")
 
@@ -186,7 +186,51 @@ async def test_remember_me_keeps_the_hydra_session_for_thirty_days(
 
     accepted = auth_world.hydra.last("accept_login")
     assert accepted["remember"] is True
-    assert accepted["remember_for"] == REMEMBER_FOR_SECONDS
+    assert accepted["remember_for"] == 365 * 24 * 3600
+    session = next(iter(auth_world.store.sessions.values()))
+    assert session.expires_at - auth_world.clock.now() >= timedelta(days=365)
+
+
+async def test_a_remembered_device_skips_the_password_a_year_later(
+    auth_world: World,
+) -> None:
+    """my.iht lost its tokens: Hydra skip=true is accepted without the form."""
+    user = await auth_world.add_user()
+    auth_world.hydra.add_login("lc-1")
+    await auth_world.auth.log_in_with_password.execute(
+        "lc-1", user.login or "", PASSWORD, remember=True, ctx=CTX
+    )
+    auth_world.clock.advance(days=300)
+    auth_world.hydra.add_login(
+        "lc-2", skip=True, subject=str(user.id), session_id="hydra-sid-lc-1"
+    )
+
+    info = await auth_world.auth.get_login_info.execute("lc-2")
+
+    assert info.skip and info.redirect_to
+    assert auth_world.hydra.last("accept_login")["remember_for"] == 365 * 24 * 3600
+
+
+async def test_a_ticket_signs_in_once_on_a_remembered_device(
+    auth_world: World,
+) -> None:
+    """Registration/reset without a challenge: IHT ID redeems it on its own login."""
+    from app.modules.identity.domain.errors import LoginTicketInvalidError
+
+    user = await auth_world.add_user()
+    acceptor = auth_world.auth.login_acceptor
+    ticket = await acceptor.issue_ticket(user.id, amr=["pwd"])
+    auth_world.hydra.add_login("lc-1")
+
+    redirect = await acceptor.redeem_ticket("lc-1", ticket, ip=None, user_agent=None)
+
+    accepted = auth_world.hydra.last("accept_login")
+    assert redirect
+    assert accepted["subject"] == str(user.id)
+    assert accepted["remember_for"] == 365 * 24 * 3600
+    auth_world.hydra.add_login("lc-2")
+    with pytest.raises(LoginTicketInvalidError):
+        await acceptor.redeem_ticket("lc-2", ticket, ip=None, user_agent=None)
 
 
 # - - - Consent - - -

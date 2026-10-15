@@ -48,6 +48,7 @@ class RegisteredStudent:
     user_id: UUID
     login: str
     redirect_to: str | None
+    login_ticket: str | None = None
 
 
 class CompleteRegistration:
@@ -97,6 +98,11 @@ class CompleteRegistration:
         user_id = pending.import_user_id or new_id()
         login = await self._register(pending, user_id, password, ip, user_agent)
         await self._pending.delete(registration_token)
+        if login_challenge is None:
+            ticket = await self._issue_ticket(user_id)
+            return RegisteredStudent(
+                user_id=user_id, login=login, redirect_to=None, login_ticket=ticket
+            )
         redirect_to = await self._accept_login(login_challenge, user_id, ip, user_agent)
         return RegisteredStudent(user_id=user_id, login=login, redirect_to=redirect_to)
 
@@ -278,8 +284,18 @@ class CompleteRegistration:
                 amr=["pwd"],
                 ip=ip,
                 user_agent=user_agent,
-                remember=False,
+                remember=True,
             )
         except Exception:
             log.exception("login after registration failed", user_id=str(user_id))
+            return None
+
+    async def _issue_ticket(self, user_id: UUID) -> str | None:
+        """No challenge (opened IHT ID directly): IHT ID redeems this on its login."""
+        try:
+            return await self._login_acceptor.issue_ticket(user_id, amr=["pwd"])
+        except Exception:
+            log.exception(
+                "login ticket after registration failed", user_id=str(user_id)
+            )
             return None

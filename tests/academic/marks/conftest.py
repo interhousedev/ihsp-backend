@@ -241,4 +241,5 @@ async def services(
         links=links,  # type: ignore[arg-type]
         bell_sync=env.bells,
         timetable_sync=env.timetables,
+        material_resync=env.timetables,
     )

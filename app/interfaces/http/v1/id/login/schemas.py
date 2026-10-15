@@ -110,6 +110,13 @@ class RestoreBody(BaseModel):
     ticket: str = Field(min_length=1, max_length=200)
 
 
+class LoginTicketBody(BaseModel):
+    """POST /v1/id/login/ticket: sign in with the ticket of a registration or reset."""
+
+    login_challenge: str = Field(min_length=1)
+    ticket: str = Field(min_length=1, max_length=200)
+
+
 class OtpRequestBody(BaseModel):
     """POST /v1/id/login/otp/request (the mini app page sends an empty challenge)."""
 

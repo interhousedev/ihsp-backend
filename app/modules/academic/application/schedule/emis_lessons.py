@@ -24,6 +24,10 @@ from app.modules.academic.application.schedule.bootstrap_teachers import (
 )
 from app.modules.academic.application.schedule.emis_subjects import SubjectResolver
 from app.modules.academic.application.schedule.ensure_room import ensure_room_in
+from app.modules.academic.application.schedule.ports.lesson_urls import (
+    EmisMaterial,
+    MaterialKind,
+)
 from app.modules.academic.application.schedule.ports.unit_of_work import (
     ScheduleUnitOfWork,
 )
@@ -37,7 +41,6 @@ from app.modules.academic.domain.schedule.lesson_changes import (
 )
 from app.modules.academic.domain.schedule.term import Term
 from app.shared.contracts.emis import EmisClass
-from app.shared.contracts.links import ImportedUrl
 from app.shared.ids import new_id
 
 import structlog
@@ -59,7 +62,7 @@ class LessonTally:
     skipped: int = 0
     changed: list[UUID] = field(default_factory=list)
     room_ids: set[UUID | None] = field(default_factory=set)
-    urls: dict[tuple[UUID, str], ImportedUrl] = field(default_factory=dict)
+    urls: dict[tuple[UUID, str], EmisMaterial] = field(default_factory=dict)
 
 
 class LessonReconciler:
@@ -317,14 +320,15 @@ class LessonReconciler:
         topic = item.topic
         if topic is None:
             return
-        for url, title in (
-            (topic.topic_file_url, topic.name),
-            (topic.homework_file_url, f"{topic.name} (homework)"),
-            (topic.video_url, f"{topic.name} (video)"),
-        ):
+        found: tuple[tuple[str | None, MaterialKind], ...] = (
+            (topic.topic_file_url, "classwork"),
+            (topic.homework_file_url, "homework"),
+            (topic.video_url, "video"),
+        )
+        for url, kind in found:
             if url:
                 self._tally.urls.setdefault(
-                    (lesson.id, url), ImportedUrl(lesson.id, url, title)
+                    (lesson.id, url), EmisMaterial(lesson.id, url, topic.name, kind)
                 )
 
     # - - - Classes EMIS dropped - - -

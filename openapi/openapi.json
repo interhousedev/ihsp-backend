@@ -5276,6 +5276,17 @@
             "title": "Login",
             "type": "string"
           },
+          "login_ticket": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Login Ticket"
+          },
           "redirect_to": {
             "anyOf": [
               {
@@ -14526,6 +14537,28 @@
         "title": "LoginResultResponse",
         "type": "object"
       },
+      "LoginTicketBody": {
+        "description": "POST /v1/id/login/ticket: sign in with the ticket of a registration or reset.",
+        "properties": {
+          "login_challenge": {
+            "minLength": 1,
+            "title": "Login Challenge",
+            "type": "string"
+          },
+          "ticket": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Ticket",
+            "type": "string"
+          }
+        },
+        "required": [
+          "login_challenge",
+          "ticket"
+        ],
+        "title": "LoginTicketBody",
+        "type": "object"
+      },
       "LogoutResponse": {
         "description": "Hydra's end-session URL.",
         "properties": {
@@ -17640,6 +17673,20 @@
           "new_password"
         ],
         "title": "PasswordConfirmBody",
+        "type": "object"
+      },
+      "PasswordConfirmResponse": {
+        "description": "The password changed: redeem the ticket on IHT ID's next login challenge.",
+        "properties": {
+          "login_ticket": {
+            "title": "Login Ticket",
+            "type": "string"
+          }
+        },
+        "required": [
+          "login_ticket"
+        ],
+        "title": "PasswordConfirmResponse",
         "type": "object"
       },
       "PasswordRequestBody": {
@@ -21408,6 +21455,25 @@
           "revision_id"
         ],
         "title": "RestoreRevisionBody",
+        "type": "object"
+      },
+      "ResyncMaterialsBody": {
+        "description": "The terms whose EMIS materials are replaced.",
+        "properties": {
+          "terms": {
+            "items": {
+              "$ref": "#/components/schemas/TermChoice"
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Terms",
+            "type": "array"
+          }
+        },
+        "required": [
+          "terms"
+        ],
+        "title": "ResyncMaterialsBody",
         "type": "object"
       },
       "ReviewBody": {
@@ -28542,6 +28608,28 @@
           "init_data"
         ],
         "title": "TelegramTokenBody",
+        "type": "object"
+      },
+      "TermChoice": {
+        "description": "An academic year and its half, e.g. 2026-2027 / 1.",
+        "properties": {
+          "academic_year": {
+            "pattern": "^\\d{4}-\\d{4}$",
+            "title": "Academic Year",
+            "type": "string"
+          },
+          "half": {
+            "maximum": 2.0,
+            "minimum": 1.0,
+            "title": "Half",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "academic_year",
+          "half"
+        ],
+        "title": "TermChoice",
         "type": "object"
       },
       "TermInputBody": {
@@ -35937,6 +36025,70 @@
         ]
       }
     },
+    "/internal/emis/{user_id}/file": {
+      "get": {
+        "description": "Download the file with the student's EMIS session and pass the bytes on.",
+        "operationId": "get_file_internal_emis__user_id__file_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "url",
+            "required": true,
+            "schema": {
+              "maxLength": 2048,
+              "minLength": 8,
+              "title": "Url",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "max_bytes",
+            "required": true,
+            "schema": {
+              "maximum": 1073741824,
+              "minimum": 1,
+              "title": "Max Bytes",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get File",
+        "tags": [
+          "internal-emis"
+        ]
+      }
+    },
     "/internal/emis/{user_id}/profile": {
       "get": {
         "description": "Return the student's EMIS profile.",
@@ -40010,6 +40162,46 @@
         ]
       }
     },
+    "/v1/admin/sync/materials": {
+      "post": {
+        "description": "Replace the EMIS materials of the chosen terms in the worker; answers 202.",
+        "operationId": "resync_materials_v1_admin_sync_materials_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResyncMaterialsBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resync Materials",
+        "tags": [
+          "admin-sync"
+        ]
+      }
+    },
     "/v1/admin/sync/run": {
       "post": {
         "description": "Start a manual sync run for one student or for everybody; answers 202.",
@@ -41479,6 +41671,50 @@
           }
         },
         "summary": "Post Reset Password",
+        "tags": [
+          "admin-users"
+        ]
+      }
+    },
+    "/v1/admin/users/{id}/reset-password-link": {
+      "post": {
+        "description": "Issue a reset link for the admin to hand over; nothing is emailed.",
+        "operationId": "post_reset_password_link_v1_admin_users__id__reset_password_link_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActivationUrlResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Reset Password Link",
         "tags": [
           "admin-users"
         ]
@@ -43190,6 +43426,48 @@
         ]
       }
     },
+    "/v1/id/login/ticket": {
+      "post": {
+        "description": "Redeem the one-time ticket on this login challenge (remembered device).",
+        "operationId": "post_login_ticket_v1_id_login_ticket_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginTicketBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RedirectToResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Login Ticket",
+        "tags": [
+          "id-login"
+        ]
+      }
+    },
     "/v1/id/logout": {
       "get": {
         "description": "Close our session and return where Hydra continues.",
@@ -44270,7 +44548,7 @@
     },
     "/v1/id/recovery/password/confirm": {
       "post": {
-        "description": "Check the code and the policy, change the password, log out everywhere.",
+        "description": "Change the password, log out everywhere, hand a ticket to sign in here.",
         "operationId": "post_password_confirm_v1_id_recovery_password_confirm_post",
         "requestBody": {
           "content": {
@@ -44283,7 +44561,14 @@
           "required": true
         },
         "responses": {
-          "204": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasswordConfirmResponse"
+                }
+              }
+            },
             "description": "Successful Response"
           },
           "422": {

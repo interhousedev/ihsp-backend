@@ -22,6 +22,7 @@ from app.shared.contracts.emis import (
     EmisClass,
     EmisClassHour,
     EmisCurriculum,
+    EmisFile,
     EmisProfile,
     EmisSubject,
     EmisSubjectRatings,
@@ -107,6 +108,14 @@ class EmisGatewayImpl:
 
         async def fetch(token: str) -> list[EmisClass]:
             return await self._emis.timetable(token, begin, end)
+
+        return await self._call(user_id, fetch)
+
+    async def download(self, user_id: UUID, url: str, *, max_bytes: int) -> EmisFile:
+        """Download a material EMIS links, with the student's EMIS session."""
+
+        async def fetch(token: str) -> EmisFile:
+            return await self._emis.download(token, url, max_bytes)
 
         return await self._call(user_id, fetch)
 

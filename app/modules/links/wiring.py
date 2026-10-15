@@ -13,6 +13,10 @@ from app.modules.links.application.dismiss_reports import DismissReports
 from app.modules.links.application.flush_hits import FlushHits
 from app.modules.links.application.get_public_share import GetPublicShare
 from app.modules.links.application.hide_lesson_resource import HideLessonResource
+from app.modules.links.application.import_lesson_files import (
+    ImportLessonFiles,
+    PurgeEmisResources,
+)
 from app.modules.links.application.import_lesson_urls import ImportLessonUrls
 from app.modules.links.application.lesson_access import LessonAccess
 from app.modules.links.application.link_creation_limit import LinkCreationLimit
@@ -280,6 +284,15 @@ def build(
                 allocator=allocator,
                 invalidator=invalidator,
                 clock=deps.clock,
+            ),
+            import_files=ImportLessonFiles(
+                uow_factory=uow_factory,
+                allocator=allocator,
+                invalidator=invalidator,
+                clock=deps.clock,
+            ),
+            purge_emis=PurgeEmisResources(
+                uow_factory=uow_factory, invalidator=invalidator
             ),
             clock=deps.clock,
         ),

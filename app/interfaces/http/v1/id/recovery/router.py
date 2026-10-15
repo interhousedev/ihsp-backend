@@ -18,7 +18,10 @@ from app.interfaces.http.v1.id.recovery.handlers.post_password_confirm import (
 from app.interfaces.http.v1.id.recovery.handlers.post_password_request import (
     post_password_request,
 )
-from app.interfaces.http.v1.id.recovery.schemas import OtpRecoveryConfirmResponse
+from app.interfaces.http.v1.id.recovery.schemas import (
+    OtpRecoveryConfirmResponse,
+    PasswordConfirmResponse,
+)
 
 from fastapi import APIRouter, Response
 
@@ -35,8 +38,7 @@ router.add_api_route(
     "/password/confirm",
     post_password_confirm,
     methods=["POST"],
-    status_code=204,
-    response_class=Response,
+    response_model=PasswordConfirmResponse,
 )
 router.add_api_route(
     "/otp/request",

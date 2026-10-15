@@ -7,7 +7,7 @@ half arrives when a student of that half syncs. The run is idempotent.
 
 import datetime as dt
 from collections import Counter
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from typing import Literal
 from uuid import UUID
@@ -31,7 +31,7 @@ from app.modules.academic.application.schedule.emis_lessons import (
 from app.modules.academic.application.schedule.emis_subjects import SubjectResolver
 from app.modules.academic.application.schedule.generate_lessons import GenerateLessons
 from app.modules.academic.application.schedule.ports.lesson_urls import (
-    LessonUrlImporter,
+    LessonMaterialImporter,
 )
 from app.modules.academic.application.schedule.ports.room_page_cache import (
     RoomPageCache,
@@ -66,6 +66,8 @@ log = structlog.get_logger(__name__)
 
 WEEKS = 4  # this week and the next three
 ONE_DAY = dt.timedelta(days=1)
+FETCH_DAYS = 56  # one gateway call covers at most 62 days
+WEEKS_SPAN = dt.timedelta(days=7 * WEEKS - 1)
 TimetableStatus = Literal[
     "synced", "no_term", "no_group", "no_student", "empty", "emis_unavailable"
 ]
@@ -98,7 +100,7 @@ class SyncGroupTimetable:
         identity_commands: IdentityCommands,
         sync_class_hours: SyncClassHours,
         generate: GenerateLessons,
-        urls: LessonUrlImporter,
+        urls: LessonMaterialImporter,
         cache: RoomPageCache,
         kicker: TaskKicker,
         clock: Clock,
@@ -117,9 +119,18 @@ class SyncGroupTimetable:
         self.import_topics = import_topics
 
     async def execute(
-        self, *, group_id: UUID, user_id: UUID, refresh_bells: bool = True
+        self,
+        *,
+        group_id: UUID,
+        user_id: UUID,
+        refresh_bells: bool = True,
+        full_term: bool = False,
     ) -> TimetableResult:
-        """Sync the group through the student's EMIS link."""
+        """Sync the group through the student's EMIS link.
+
+        On the first sync of a group (``full_term``, or no lesson before this week)
+        the materials of the term's earlier weeks are imported too.
+        """
         day = today(self.clock)
         async with self.uow_factory() as uow:
             term = pick_current_term(await uow.terms.list_all(), day)
@@ -147,10 +158,15 @@ class SyncGroupTimetable:
             term, group_id, classes, scope, (first, last), teachers
         )
         resources = (
-            await self.urls.import_lesson_urls(list(lessons.urls.values()))
+            await self.urls.import_materials(user_id, list(lessons.urls.values()))
             if lessons.urls
             else 0
         )
+        if self.import_topics and (full_term or backfilled):
+            earlier = await self._materials_between(
+                term, group_id, user_id, (term.starts_on, first - ONE_DAY)
+            )
+            resources += earlier or 0
         log.info(
             "emis_group_synced",
             group_id=str(group_id),
@@ -323,6 +339,8 @@ class SyncGroupTimetable:
         scope: set[int | None],
         window: tuple[dt.date, dt.date],
         teachers: TeacherResolver,
+        *,
+        import_topics: bool | None = None,
     ) -> LessonTally:
         async with self.uow_factory() as uow:
             await uow.lock_term(term.id)
@@ -340,9 +358,120 @@ class SyncGroupTimetable:
                 emis_entry_ids=emis_entries,
                 now=self.clock.now(),
                 today=today(self.clock),
-                import_topics=self.import_topics,
+                import_topics=(
+                    self.import_topics if import_topics is None else import_topics
+                ),
             ).run(classes, scope, window)
             kick_recompute_due_dates(uow, self.kicker, tally.changed)
             await invalidate_room_pages(uow, self.cache, tally.room_ids)
             await uow.commit()
         return tally
+
+    # - - - Materials of a whole term (first sync, admin re-sync) - - -
+
+    async def resync_materials(
+        self,
+        *,
+        group_id: UUID,
+        terms: Collection[tuple[str, int]],
+        fetchers: Sequence[Sequence[UUID]],
+    ) -> int:
+        """Replace the group's EMIS materials in the chosen terms; return how many.
+
+        ``terms`` are (academic year, half) pairs; ``fetchers`` are at most two lists
+        of students (one per half of a split group), each tried in order until one
+        EMIS link answers. Nothing is deleted when no student could be read.
+        """
+        day = today(self.clock)
+        async with self.uow_factory() as uow:
+            chosen = [
+                term
+                for term in await uow.terms.list_all()
+                if (term.academic_year, term.half) in terms and term.starts_on <= day
+            ]
+        total = 0
+        for term in chosen:
+            window = (term.starts_on, min(term.ends_on, monday_of(day) + WEEKS_SPAN))
+            fetched = [
+                found
+                for slot in fetchers
+                if (found := await self._first_answer(slot, window)) is not None
+            ]
+            if not fetched:
+                log.warning("emis_materials_resync_unread", group_id=str(group_id))
+                continue
+            await self._purge(term, group_id, window)
+            for user_id, classes in fetched:
+                total += await self._apply_materials(
+                    term, group_id, user_id, classes, window
+                )
+        return total
+
+    async def _first_answer(
+        self, slot: Sequence[UUID], window: tuple[dt.date, dt.date]
+    ) -> tuple[UUID, list[EmisClass]] | None:
+        for user_id in slot:
+            classes = await self._fetch_span(user_id, window)
+            if classes is not None:
+                return user_id, classes
+        return None
+
+    async def _purge(
+        self, term: Term, group_id: UUID, window: tuple[dt.date, dt.date]
+    ) -> None:
+        keys = audience_keys.student_keys(group_id, None)
+        async with self.uow_factory() as uow:
+            lessons = await uow.lessons.in_audience(term.id, *window, keys)
+        purged = await self.urls.purge([lesson.id for lesson in lessons])
+        log.info("emis_materials_purged", group_id=str(group_id), resources=purged)
+
+    async def _materials_between(
+        self,
+        term: Term,
+        group_id: UUID,
+        user_id: UUID,
+        window: tuple[dt.date, dt.date],
+    ) -> int | None:
+        """Import the materials of the classes dated in the window (None: no EMIS)."""
+        window = (max(window[0], term.starts_on), min(window[1], term.ends_on))
+        if window[0] > window[1]:
+            return 0
+        classes = await self._fetch_span(user_id, window)
+        if classes is None:
+            return None
+        return await self._apply_materials(term, group_id, user_id, classes, window)
+
+    async def _apply_materials(
+        self,
+        term: Term,
+        group_id: UUID,
+        user_id: UUID,
+        classes: Sequence[EmisClass],
+        window: tuple[dt.date, dt.date],
+    ) -> int:
+        async with self.uow_factory() as uow:
+            student = await uow.students.get(user_id)
+        scope: set[int | None] = {None, student.subgroup if student else None}
+        scope.update(item.subgroup for item in classes)
+        teachers = TeacherResolver(self.identity_commands)
+        tally = await self._lessons(
+            term, group_id, classes, scope, window, teachers, import_topics=True
+        )
+        if not tally.urls:
+            return 0
+        return await self.urls.import_materials(user_id, list(tally.urls.values()))
+
+    async def _fetch_span(
+        self, user_id: UUID, window: tuple[dt.date, dt.date]
+    ) -> list[EmisClass] | None:
+        """The classes of a long window, asked in spans the gateway accepts."""
+        classes: list[EmisClass] = []
+        first = window[0]
+        while first <= window[1]:
+            last = min(first + dt.timedelta(days=FETCH_DAYS - 1), window[1])
+            part = await self._fetch(user_id, first, last)
+            if part is None:
+                return None
+            classes.extend(part)
+            first = last + ONE_DAY
+        return classes

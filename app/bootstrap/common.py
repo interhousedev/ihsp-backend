@@ -350,7 +350,8 @@ class _Assembler:
             emis=source,
             identity=identity.directory,
             identity_commands=identity.commands,
-            urls=links.public,
+            links=links.public,
+            files=c.files.public,
         )
         marks = build_marks(
             self.deps,
@@ -362,6 +363,7 @@ class _Assembler:
             links=links.public,
             bell_sync=emis_import.sync_class_hours,
             timetable_sync=emis_import.sync_group_timetable,
+            material_resync=emis_import.sync_group_timetable,
         )
         c.academic = AcademicModule(
             schedule=schedule,

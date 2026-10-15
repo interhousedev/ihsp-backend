@@ -447,8 +447,8 @@ async def test_password_recovery_round_trip(api: Api) -> None:
         },
     )
 
-    assert (asked.status_code, unknown.status_code, done.status_code) == (202, 202, 204)
-    assert done.content == b""
+    assert (asked.status_code, unknown.status_code, done.status_code) == (202, 202, 200)
+    assert done.json()["login_ticket"]
 
 
 async def test_weak_new_password_is_422_with_the_broken_rules(api: Api) -> None:

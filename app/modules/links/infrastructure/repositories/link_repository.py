@@ -9,7 +9,7 @@ from app.modules.links.domain.link import LessonRole, Link, LinkKind, ShareMode
 from app.modules.links.infrastructure.orm.link import Link as LinkRow
 from app.modules.links.ports.link_repository import ModerationCursor
 
-from sqlalchemy import ColumnElement, and_, or_, select, update
+from sqlalchemy import ColumnElement, and_, delete, func, or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -49,6 +49,7 @@ def _to_entity(row: LinkRow) -> Link:
         last_reported_at=row.last_reported_at,
         reports_reviewed_at=row.reports_reviewed_at,
         slug_released_at=row.slug_released_at,
+        source_url=row.source_url,
     )
 
 
@@ -57,6 +58,7 @@ def _apply(row: LinkRow, link: Link) -> None:
     row.kind = link.kind.value
     row.owner_id = link.owner_id
     row.target_url = link.target_url
+    row.source_url = link.source_url
     row.file_id = link.file_id
     row.target_id = link.target_id
     row.title = link.title
@@ -178,15 +180,33 @@ class SqlLinkRepository:
     async def lesson_urls_of_owner(
         self, owner_id: UUID, lesson_ids: Sequence[UUID]
     ) -> set[tuple[UUID, str]]:
-        """Return (lesson id, URL) of all the owner's resources, deleted ones too."""
+        """Return (lesson id, URL) of all the owner's resources, deleted ones too.
+
+        The URL is the link's target or, for an imported file, where it came from.
+        """
         if not lesson_ids:
             return set()
-        stmt = select(LinkRow.lesson_id, LinkRow.target_url).where(
+        url = func.coalesce(LinkRow.target_url, LinkRow.source_url)
+        stmt = select(LinkRow.lesson_id, url).where(
             LinkRow.owner_id == owner_id,
             LinkRow.lesson_id.in_(lesson_ids),
-            LinkRow.target_url.is_not(None),
+            url.is_not(None),
         )
         return {(row[0], row[1]) for row in (await self.session.execute(stmt)).all()}
+
+    async def delete_owned_on_lessons(
+        self, owner_id: UUID, lesson_ids: Sequence[UUID]
+    ) -> list[Link]:
+        """Delete the owner's resources on the lessons for good; return them."""
+        if not lesson_ids:
+            return []
+        stmt = (
+            delete(LinkRow)
+            .where(LinkRow.owner_id == owner_id, LinkRow.lesson_id.in_(lesson_ids))
+            .returning(LinkRow)
+        )
+        rows = (await self.session.execute(stmt)).scalars().all()
+        return [_to_entity(row) for row in rows]
 
     async def moderation_queue(
         self, *, after: ModerationCursor | None, limit: int

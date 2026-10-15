@@ -1,17 +1,26 @@
 """LoginAcceptor implementation: log a user in without asking for credentials.
 
-Used by registration and reclaim (B2) right after the account is created.
+Used by registration and reclaim (B2) right after the account is created, and by
+the one-time sign-in ticket of a registration or password reset that had no login
+challenge: IHT ID then starts its own login and redeems the ticket there.
 """
 
+import secrets
 from collections.abc import Sequence
 from dataclasses import dataclass
 from uuid import UUID
 
 from app.modules.identity.application.request_context import RequestContext
 from app.modules.identity.application.start_login_session import LoginSessionStarter
-from app.modules.identity.domain.errors import UserNotFoundError
+from app.modules.identity.domain.errors import (
+    LoginTicketInvalidError,
+    UserNotFoundError,
+)
 from app.modules.identity.ports.hydra_gateway import HydraGateway
 from app.modules.identity.ports.unit_of_work import UowFactory
+
+LOGIN_TICKET_KEY = "login-ticket:{ticket}"
+LOGIN_TICKET_SECONDS = 600
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,3 +56,31 @@ class LoginAcceptorImpl:
                 ctx=RequestContext(ip=ip, user_agent=user_agent),
                 remember=remember,
             )
+
+    async def issue_ticket(self, user_id: UUID, *, amr: Sequence[str]) -> str:
+        """A one-time ticket that signs ``user_id`` in on the next login challenge."""
+        ticket = secrets.token_urlsafe(32)
+        await self.starter.tickets.put(
+            LOGIN_TICKET_KEY.format(ticket=ticket),
+            {"user_id": str(user_id), "amr": list(amr)},
+            ttl=LOGIN_TICKET_SECONDS,
+        )
+        return ticket
+
+    async def redeem_ticket(
+        self, challenge: str, ticket: str, *, ip: str | None, user_agent: str | None
+    ) -> str:
+        """Accept ``challenge`` for the ticket's user (remembered device)."""
+        key = LOGIN_TICKET_KEY.format(ticket=ticket)
+        data = await self.starter.tickets.get(key)
+        if data is None:
+            raise LoginTicketInvalidError()
+        await self.starter.tickets.delete(key)
+        return await self.accept(
+            challenge,
+            UUID(str(data["user_id"])),
+            amr=list(data.get("amr") or ["pwd"]),
+            ip=ip,
+            user_agent=user_agent,
+            remember=True,
+        )

@@ -16,6 +16,7 @@ from app.shared.contracts.emis import (
     EmisClass,
     EmisClassHour,
     EmisCurriculum,
+    EmisFile,
     EmisProfile,
     EmisSubject,
     EmisSubjectRatings,
@@ -65,6 +66,10 @@ class EmisApi(EmisTimetableSource, Protocol):
 
     async def class_hours(self, token: str) -> list[EmisClassHour]:
         """Return the bells (``student-profiles/class-hours/``)."""
+        ...
+
+    async def download(self, token: str, url: str, max_bytes: int) -> EmisFile:
+        """Download a material URL; ``EmisRequestError`` on failure or overflow."""
         ...
 
 
@@ -274,6 +279,10 @@ class LoginAcceptorPort(Protocol):
         remember: bool,
     ) -> str:
         """Return the redirect URL."""
+        ...
+
+    async def issue_ticket(self, user_id: UUID, *, amr: list[str]) -> str:
+        """A one-time ticket that signs the user in on IHT ID's own next login."""
         ...
 
 

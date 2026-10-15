@@ -141,6 +141,7 @@ async def test_register_complete_returns_login_and_redirect(
     assert response.json() == {
         "login": "abdullayev.alisher",
         "redirect_to": "https://hydra.test/continue?c=challenge-1",
+        "login_ticket": None,
     }
 
 

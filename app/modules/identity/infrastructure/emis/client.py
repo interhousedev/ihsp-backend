@@ -2,7 +2,9 @@
 
 import asyncio
 import datetime as dt
+import re
 from typing import Any, TypeVar
+from urllib.parse import unquote, urlsplit
 
 from app.modules.identity.application.register_models import (
     EmisAuthError,
@@ -39,6 +41,7 @@ from app.shared.contracts.emis import (
     EmisClass,
     EmisClassHour,
     EmisCurriculum,
+    EmisFile,
     EmisProfile,
     EmisSubject,
     EmisSubjectRatings,
@@ -53,6 +56,8 @@ CLASS_SCHEDULES_PATH = "student-profiles/class-schedules/"
 EMIS_DATE = "%d.%m.%Y"
 LOGIN_PATH = "student-profiles/login/"
 _TIMEOUT = httpx.Timeout(20.0, connect=5.0)
+_DOWNLOAD_TIMEOUT = httpx.Timeout(60.0, connect=5.0)
+_FILENAME = re.compile(r"filename\*?=(?:UTF-8'')?\"?([^\";]+)", re.IGNORECASE)
 M = TypeVar("M", bound=BaseModel)
 
 
@@ -202,6 +207,60 @@ class EmisClient:
                 raise EmisRequestError("class schedules response has no results list")
             classes.extend(to_classes(parse_result(ClassSchedulesV1DTO, body)))
         return classes
+
+    async def download(self, token: str, url: str, max_bytes: int) -> EmisFile:
+        """Stream a material URL, stopping past ``max_bytes``.
+
+        The EMIS token goes only to the EMIS host itself, never to another server
+        (files often sit on a CDN that needs no session).
+        """
+        parts = urlsplit(url)
+        if parts.scheme not in {"http", "https"} or not parts.hostname:
+            raise EmisRequestError("material URL is not http(s)")
+        own_host = parts.hostname == self._http.base_url.host
+        headers = {"Authorization": token} if own_host else {}
+        async with self._semaphore:
+            try:
+                async with self._http.stream(
+                    "GET",
+                    url,
+                    headers=headers,
+                    timeout=_DOWNLOAD_TIMEOUT,
+                    follow_redirects=True,
+                ) as response:
+                    if response.status_code == 401 and own_host:
+                        raise EmisAuthError()
+                    if response.status_code != 200:
+                        raise EmisRequestError(f"HTTP {response.status_code}")
+                    data = await _read_limited(response, max_bytes)
+            except httpx.HTTPError as exc:
+                raise EmisRequestError(f"transport {type(exc).__name__}") from exc
+        return EmisFile(
+            name=_file_name(response, parts.path),
+            content_type=response.headers.get("content-type"),
+            data=data,
+        )
+
+
+async def _read_limited(response: httpx.Response, max_bytes: int) -> bytes:
+    declared = response.headers.get("content-length", "")
+    if declared.isdigit() and int(declared) > max_bytes:
+        raise EmisRequestError("file too large")
+    chunks: list[bytes] = []
+    size = 0
+    async for chunk in response.aiter_bytes():
+        size += len(chunk)
+        if size > max_bytes:
+            raise EmisRequestError("file too large")
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
+def _file_name(response: httpx.Response, path: str) -> str:
+    """The Content-Disposition name, else the last segment of the URL path."""
+    found = _FILENAME.search(response.headers.get("content-disposition", ""))
+    raw = found.group(1) if found else path.rstrip("/").rsplit("/", 1)[-1]
+    return unquote(raw).strip() or "file"
 
 
 def _weeks(begin: dt.date, end: dt.date) -> list[tuple[dt.date, dt.date]]:

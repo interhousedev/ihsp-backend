@@ -10,8 +10,11 @@ from app.modules.academic.application.schedule.generate_lessons import GenerateL
 from app.modules.academic.application.schedule.get_student_sync import (
     GetStudentSync,
 )
+from app.modules.academic.application.schedule.import_materials import (
+    ImportLessonMaterials,
+)
 from app.modules.academic.application.schedule.ports.lesson_urls import (
-    LessonUrlImporter,
+    LessonMaterialImporter,
 )
 from app.modules.academic.application.schedule.ports.room_page_cache import (
     RoomPageCache,
@@ -42,7 +45,9 @@ from app.modules.academic.wiring_schedule import (
 )
 from app.shared.clock import Clock
 from app.shared.contracts.emis import EmisSource
+from app.shared.contracts.files import FilesApi
 from app.shared.contracts.identity import IdentityCommands, IdentityDirectory
+from app.shared.contracts.links import LinksApi
 from app.shared.tasks import TaskKicker
 from app.shared.wiring import ModuleDeps
 
@@ -67,7 +72,7 @@ def assemble_emis_import(
     identity: IdentityDirectory,
     identity_commands: IdentityCommands,
     generate: GenerateLessons,
-    urls: LessonUrlImporter,
+    urls: LessonMaterialImporter,
     cache: RoomPageCache,
     kicker: TaskKicker,
     clock: Clock,
@@ -121,9 +126,16 @@ def build_emis_import(
     emis: EmisSource,
     identity: IdentityDirectory,
     identity_commands: IdentityCommands,
-    urls: LessonUrlImporter,
+    links: LinksApi,
+    files: FilesApi,
 ) -> EmisImportServices:
     """Build the EMIS import use cases on PostgreSQL."""
+    urls = ImportLessonMaterials(
+        emis=emis,
+        files=files,
+        links=links,
+        max_bytes=deps.settings.limits.file_max_bytes,
+    )
     return assemble_emis_import(
         uow_factory=sql_schedule_uow_factory(deps),
         emis=emis,

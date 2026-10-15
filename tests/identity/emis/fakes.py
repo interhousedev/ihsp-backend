@@ -124,6 +124,8 @@ class FakeLoginAcceptor:
     def __init__(self) -> None:
         """Start empty."""
         self.accepted: list[tuple[str, UUID, list[str]]] = []
+        self.remembered: list[bool] = []
+        self.tickets: list[UUID] = []
         self.fail = False
 
     async def accept(
@@ -140,7 +142,13 @@ class FakeLoginAcceptor:
         if self.fail:
             raise RuntimeError("hydra is down")
         self.accepted.append((challenge, user_id, amr))
+        self.remembered.append(remember)
         return f"https://hydra.test/continue?c={challenge}"
+
+    async def issue_ticket(self, user_id: UUID, *, amr: list[str]) -> str:
+        """Record the user and hand out a fixed ticket."""
+        self.tickets.append(user_id)
+        return f"ticket-{user_id}"
 
 
 class FakeAccountRevoker:

@@ -322,3 +322,72 @@ async def test_set_password_activates_a_pending_teacher(api: Api) -> None:
     assert ok.status_code == 204
     assert api.world.user(teacher.id).status == UserStatus.ACTIVE
     assert api.world.user(teacher.id).password_change_required is False
+
+
+async def test_reset_password_link_returns_a_link_without_emailing(api: Api) -> None:
+    """ADM-5: the same reset link as reset-password, returned and not emailed."""
+    await api.admin()
+    other = await api.world.add_user(login="r.link", recovery_email="rl@example.org")
+    api.world.add_link(other, 888)
+
+    response = await api.client.post(f"/v1/admin/users/{other.id}/reset-password-link")
+
+    assert response.status_code == 200
+    assert response.json()["activation_url"].startswith(
+        "http://localhost:3001/activate/?token="
+    )
+    assert not api.world.email.to("rl@example.org", "activation")
+
+
+async def test_reset_password_link_is_admin_only(api: Api) -> None:
+    """Non-admins get 403 from the reset-password-link route."""
+    student = await api.world.add_user()
+    other = await api.world.add_user(login="r.other")
+    api.login_as(student)
+
+    response = await api.client.post(f"/v1/admin/users/{other.id}/reset-password-link")
+
+    assert response.status_code == 403
+    assert response.json()["type"] == "common/forbidden"
+
+
+async def test_reset_password_link_token_works_with_the_reset_flow(api: Api) -> None:
+    """The link from reset-password-link activates through the reset flow."""
+    await api.admin()
+    other = await api.world.add_user(login="r.flow", recovery_email="rf@example.org")
+
+    link = await api.client.post(f"/v1/admin/users/{other.id}/reset-password-link")
+    token = link.json()["activation_url"].split("token=")[1]
+    info = await api.client.get(f"/v1/id/activation/{token}")
+    done = await api.client.post(
+        f"/v1/id/activation/{token}", json={"password": "N3wStrongPass"}
+    )
+
+    assert info.status_code == 200
+    assert done.status_code == 200
+    assert done.json()["redirect_to"]
+
+
+async def test_reset_password_link_refuses_your_own_admin_account(api: Api) -> None:
+    """ID-23: the link route refuses the same self-target as reset-password."""
+    admin = await api.admin()
+
+    response = await api.client.post(
+        f"/v1/admin/users/{admin.user_id}/reset-password-link"
+    )
+
+    assert response.status_code == 403
+    assert response.json()["type"] == "id/admin-reset-forbidden"
+
+
+async def test_reset_password_link_refuses_an_administrator_target(api: Api) -> None:
+    """The link route refuses Administration targets; the emailed reset still works."""
+    await api.admin()
+    other = await api.world.add_user(
+        roles={Role.ADMIN}, login="r.admin", recovery_email="ra@example.org"
+    )
+
+    response = await api.client.post(f"/v1/admin/users/{other.id}/reset-password-link")
+
+    assert response.status_code == 403
+    assert response.json()["type"] == "id/admin-target-reset-forbidden"

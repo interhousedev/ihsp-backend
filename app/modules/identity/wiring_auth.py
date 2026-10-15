@@ -316,7 +316,10 @@ def build_auth(
     revoker = AccessRevoker(
         revocations=revocations, epochs=epochs, hydra=hydra, clock=clock
     )
-    starter = LoginSessionStarter(hydra=hydra, clock=clock, tickets=tickets)
+    remember_days = settings.identity.remember_days
+    starter = LoginSessionStarter(
+        hydra=hydra, clock=clock, tickets=tickets, remember_days=remember_days
+    )
     authenticator = PasswordAuthenticator(hasher=hasher, throttle=throttle, clock=clock)
     limits = settings.limits
     passwordless = PasswordlessOtpCheck(
@@ -348,7 +351,14 @@ def build_auth(
         clock=clock,
     )
     login_info = GetLoginInfo(
-        uow_factory=uow_factory, hydra=hydra, clock=clock, tickets=tickets
+        uow_factory=uow_factory,
+        hydra=hydra,
+        clock=clock,
+        tickets=tickets,
+        remember_days=remember_days,
+    )
+    login_acceptor = LoginAcceptorImpl(
+        uow_factory=uow_factory, hydra=hydra, starter=starter
     )
     accept_logout = AcceptLogout(
         uow_factory=uow_factory, hydra=hydra, revocations=revocations, clock=clock
@@ -377,9 +387,7 @@ def build_auth(
         connector_verifier=DbConnectorTokenVerifier(
             uow_factory=uow_factory, clock=clock
         ),
-        login_acceptor=LoginAcceptorImpl(
-            uow_factory=uow_factory, hydra=hydra, starter=starter
-        ),
+        login_acceptor=login_acceptor,
         account_revoker=AccountRevokerImpl(uow_factory=uow_factory, revoker=revoker),
         email_sender=email,
         otp_store=otp_store,
@@ -540,6 +548,7 @@ def build_auth(
             revoker=revoker,
             rate_limiter=limiter,
             throttle=throttle,
+            login_acceptor=login_acceptor,
         ),
         request_otp_reset=RequestOtpReset(
             uow_factory=uow_factory, otp=otp, rate_limiter=limiter

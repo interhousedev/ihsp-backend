@@ -1,6 +1,7 @@
 """Typed errors of the files module."""
 
 from app.shared.base_error import (
+    BaseError,
     ConflictError,
     GoneError,
     NotFoundError,
@@ -58,6 +59,14 @@ class UploadMissingError(ConflictError):
 
     code = "files/upload-missing"
     message_key = "files-upload-missing"
+
+
+class StorageError(BaseError):
+    """The object store refused a request (credentials, bucket or endpoint config)."""
+
+    code = "files/storage-unavailable"
+    status = 502
+    message_key = "files-storage-unavailable"
 
 
 class StoredFileNotFoundError(NotFoundError):

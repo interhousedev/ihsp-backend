@@ -1,14 +1,32 @@
-"""Port: attach web addresses from EMIS to lessons (implemented by the links module)."""
+"""Port: attach the materials EMIS links to lessons (files, homework, videos)."""
 
 from collections.abc import Sequence
-from typing import Protocol
+from dataclasses import dataclass
+from typing import Literal, Protocol
+from uuid import UUID
 
-from app.shared.contracts.links import ImportedUrl
+MaterialKind = Literal["classwork", "homework", "video"]
 
 
-class LessonUrlImporter(Protocol):
-    """Adds URLs as lesson materials, skipping those already attached."""
+@dataclass(frozen=True, slots=True)
+class EmisMaterial:
+    """One address EMIS gives for a class: its topic file, homework file or video."""
 
-    async def import_lesson_urls(self, urls: Sequence[ImportedUrl]) -> int:
-        """Attach the URLs; return how many were new."""
+    lesson_id: UUID
+    url: str
+    name: str  # the EMIS topic
+    kind: MaterialKind
+
+
+class LessonMaterialImporter(Protocol):
+    """Adds EMIS materials to lessons, skipping those already attached."""
+
+    async def import_materials(
+        self, user_id: UUID, items: Sequence[EmisMaterial]
+    ) -> int:
+        """Attach the materials (downloads through the student's EMIS link)."""
+        ...
+
+    async def purge(self, lesson_ids: Sequence[UUID]) -> int:
+        """Delete the lessons' EMIS materials and their stored files; return count."""
         ...

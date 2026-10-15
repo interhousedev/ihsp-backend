@@ -94,6 +94,8 @@ class CompleteRegistrationResponse(BaseModel):
 
     login: str
     redirect_to: str | None
+    login_ticket: str | None = None
+    """Set without a login challenge: IHT ID redeems it on its own next login."""
 
 
 class StartReclaimBody(StartRegistrationBody):

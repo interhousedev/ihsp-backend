@@ -9,6 +9,7 @@ from app.shared.contracts.emis import (
     EmisClass,
     EmisClassHour,
     EmisCurriculum,
+    EmisFile,
     EmisProfile,
     EmisSubject,
     EmisSubjectRatings,
@@ -30,6 +31,8 @@ class FakeEmisSource:
         self.curriculum_result: EmisCurriculum | None = None
         self.curriculum_errors: dict[UUID, Exception] = {}
         self.curriculum_error: Exception | None = None
+        self.files: dict[str, EmisFile] = {}
+        self.downloads: list[tuple[UUID, str]] = []
 
     async def class_hours(self, user_id: UUID) -> list[EmisClassHour]:
         """Return the scripted bells."""
@@ -57,6 +60,14 @@ class FakeEmisSource:
             raise self.curriculum_error
         assert self.curriculum_result is not None, "curriculum not scripted"
         return self.curriculum_result
+
+    async def download(self, user_id: UUID, url: str, *, max_bytes: int) -> EmisFile:
+        """Return the scripted file of the URL; an unknown URL is an outage."""
+        self.downloads.append((user_id, url))
+        file = self.files.get(url)
+        if file is None or len(file.data) > max_bytes:
+            raise EmisUnavailable(support_details="no such file")
+        return file
 
     def down(self) -> None:
         """EMIS cannot be reached."""

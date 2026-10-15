@@ -6,6 +6,7 @@ import random
 from collections.abc import Awaitable, Callable
 from datetime import date, time
 from typing import Any
+from urllib.parse import unquote
 from uuid import UUID
 
 from app.settings import Settings
@@ -18,6 +19,7 @@ from app.shared.contracts.emis import (
     EmisCurriculumItem,
     EmisCurriculumSubject,
     EmisDirection,
+    EmisFile,
     EmisMark,
     EmisMarkType,
     EmisName,
@@ -38,6 +40,8 @@ import structlog
 log = structlog.get_logger(__name__)
 
 _TIMEOUT = httpx.Timeout(60.0, connect=5.0)  # the gateway may log in to EMIS first
+_DOWNLOAD_TIMEOUT = httpx.Timeout(120.0, connect=5.0)  # login, then the whole file
+FILE_NAME_HEADER = "X-Emis-File-Name"
 # Every call here is an idempotent GET: one transport blip (a connect or read
 # timeout, a dropped connection, a 502/503/504 from the edge) gets one more try
 # after a short jittered pause instead of failing the whole sync step.
@@ -153,6 +157,29 @@ class HttpEmisSource:
             {"begin": begin.isoformat(), "end": end.isoformat()},
         )
         return [_emis_class(item) for item in body]
+
+    async def download(self, user_id: UUID, url: str, *, max_bytes: int) -> EmisFile:
+        """Download a material through the gateway (it holds the EMIS session)."""
+        try:
+            response = await self._http.get(
+                f"{self._base}/{user_id}/file",
+                params={"url": url, "max_bytes": max_bytes},
+                headers=self._headers,
+                timeout=_DOWNLOAD_TIMEOUT,
+            )
+        except httpx.HTTPError as exc:
+            raise EmisUnavailable(
+                support_details=f"gateway unreachable: {type(exc).__name__}"
+            ) from exc
+        if response.status_code != 200:
+            raise _error_for(response)
+        if len(response.content) > max_bytes:
+            raise EmisUnavailable(support_details="file too large")
+        return EmisFile(
+            name=unquote(response.headers.get(FILE_NAME_HEADER, "")) or "file",
+            content_type=response.headers.get("content-type"),
+            data=response.content,
+        )
 
     async def _get(self, path: str, params: dict[str, int | str] | None = None) -> Any:
         response = await self._get_once(path, params)

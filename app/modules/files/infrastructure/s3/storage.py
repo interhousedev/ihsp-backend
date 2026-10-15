@@ -12,6 +12,7 @@ from collections.abc import Sequence
 from contextlib import AsyncExitStack
 from typing import Any
 
+from app.modules.files.domain.errors import StorageError
 from app.modules.files.ports.storage import ObjectInfo, PresignedUpload
 
 import structlog
@@ -34,10 +35,6 @@ S3_CONFIG = AioConfig(
     read_timeout=30,
     retries={"max_attempts": 3, "mode": "standard"},
 )
-
-
-class StorageError(Exception):
-    """The storage server refused an operation."""
 
 
 def content_disposition(name: str, *, inline: bool) -> str:
@@ -105,6 +102,20 @@ class S3Storage:
                     self._presign_client = await self._create(self._public_endpoint_url)
         return self._presign_client
 
+    def _refused(self, exc: ClientError, op: str, key: str) -> StorageError:
+        """Log a refused request (bucket, key, S3 code) and return the domain error."""
+        error = exc.response.get("Error", {})
+        status = exc.response.get("ResponseMetadata", {}).get("HTTPStatusCode")
+        log.error(
+            "s3_request_refused",
+            op=op,
+            bucket=self._bucket,
+            key=key,
+            code=error.get("Code"),
+            http_status=status,
+        )
+        return StorageError(support_details=f"s3 {op} refused: {error.get('Code')}")
+
     async def close(self) -> None:
         """Close both clients."""
         await self._stack.aclose()
@@ -171,7 +182,7 @@ class S3Storage:
         except ClientError as exc:
             if exc.response["Error"]["Code"] in _MISSING_CODES:
                 return None
-            raise
+            raise self._refused(exc, "head", key) from exc
         return ObjectInfo(
             size=int(head["ContentLength"]),
             checksum_sha256=head.get("ChecksumSHA256"),
@@ -181,9 +192,12 @@ class S3Storage:
     async def read_range(self, key: str, start: int, end: int) -> bytes:
         """Return bytes ``start..end`` (inclusive)."""
         client = await self._io()
-        response = await client.get_object(
-            Bucket=self._bucket, Key=key, Range=f"bytes={start}-{end}"
-        )
+        try:
+            response = await client.get_object(
+                Bucket=self._bucket, Key=key, Range=f"bytes={start}-{end}"
+            )
+        except ClientError as exc:
+            raise self._refused(exc, "get", key) from exc
         async with response["Body"] as stream:
             data: bytes = await stream.read()
         return data
@@ -191,7 +205,10 @@ class S3Storage:
     async def get(self, key: str) -> bytes:
         """Return the whole object."""
         client = await self._io()
-        response = await client.get_object(Bucket=self._bucket, Key=key)
+        try:
+            response = await client.get_object(Bucket=self._bucket, Key=key)
+        except ClientError as exc:
+            raise self._refused(exc, "get", key) from exc
         async with response["Body"] as stream:
             data: bytes = await stream.read()
         return data
@@ -199,9 +216,12 @@ class S3Storage:
     async def put(self, key: str, data: bytes, content_type: str) -> None:
         """Write an object."""
         client = await self._io()
-        await client.put_object(
-            Bucket=self._bucket, Key=key, Body=data, ContentType=content_type
-        )
+        try:
+            await client.put_object(
+                Bucket=self._bucket, Key=key, Body=data, ContentType=content_type
+            )
+        except ClientError as exc:
+            raise self._refused(exc, "put", key) from exc
 
     async def delete_many(self, keys: Sequence[str]) -> None:
         """Delete objects in batches of 1000; keys that do not exist are fine."""
@@ -209,11 +229,16 @@ class S3Storage:
         client = await self._io()
         for start in range(0, len(unique), DELETE_BATCH):
             batch = unique[start : start + DELETE_BATCH]
-            response = await client.delete_objects(
-                Bucket=self._bucket,
-                Delete={"Objects": [{"Key": key} for key in batch], "Quiet": True},
-            )
+            try:
+                response = await client.delete_objects(
+                    Bucket=self._bucket,
+                    Delete={"Objects": [{"Key": key} for key in batch], "Quiet": True},
+                )
+            except ClientError as exc:
+                raise self._refused(exc, "delete", batch[0]) from exc
             errors = response.get("Errors")
             if errors:
                 log.error("s3_delete_failed", errors=errors[:5], count=len(errors))
-                raise StorageError(f"{len(errors)} objects were not deleted")
+                raise StorageError(
+                    support_details=f"{len(errors)} objects were not deleted"
+                )

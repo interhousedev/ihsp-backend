@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from app.modules.identity.application.accept_login_for_user import LoginAcceptorImpl
 from app.modules.identity.application.audit_drafts import make_audit
 from app.modules.identity.application.find_user_for_recovery import (
     find_user_for_recovery,
@@ -24,7 +25,7 @@ from app.shared.rate_limit import RateLimiter
 
 @dataclass(frozen=True, slots=True)
 class ConfirmPasswordReset:
-    """Changes the password and logs the user out everywhere."""
+    """Changes the password, logs the user out everywhere, then back in here."""
 
     uow_factory: UowFactory
     otp: OtpService
@@ -32,11 +33,16 @@ class ConfirmPasswordReset:
     revoker: AccessRevoker
     rate_limiter: RateLimiter
     throttle: LoginThrottle
+    login_acceptor: LoginAcceptorImpl
 
     async def execute(
         self, login_or_email: str, code: str, new_password: str, ctx: RequestContext
-    ) -> None:
-        """Verify the code, apply the policy, save, revoke everything."""
+    ) -> str:
+        """Verify, save, revoke everything; return a one-time sign-in ticket.
+
+        The browser that proved the code redeems the ticket on IHT ID's next login
+        challenge, so the reset ends signed in on this device only.
+        """
         ip = ctx.throttle_ip
         await self.rate_limiter.hit(f"recovery-ip:{ip}", limit=20, window_seconds=3600)
         await limit_confirms(self.rate_limiter, login_or_email)
@@ -59,3 +65,4 @@ class ConfirmPasswordReset:
             await self.revoker.revoke_in(uow, user, keep_telegram=True)
             uow.audit(make_audit(PASSWORD_RESET, user_id=user.id, ctx=ctx))
             await uow.commit()
+        return await self.login_acceptor.issue_ticket(user.id, amr=["pwd"])

@@ -80,6 +80,13 @@ class AdminResetForbiddenError(ForbiddenError):
     message_key = "id-admin-reset-forbidden"
 
 
+class AdminTargetResetForbiddenError(ForbiddenError):
+    """The link route does not issue links for Administration accounts."""
+
+    code = "id/admin-target-reset-forbidden"
+    message_key = "id-admin-target-reset-forbidden"
+
+
 class AdminServerForbiddenError(ForbiddenError):
     """Dynamically registered, unverified clients may not use the admin server."""
 
@@ -148,6 +155,13 @@ class ActivationLinkInvalidError(GoneError):
 
     code = "id/activation-invalid"
     message_key = "id-activation-invalid"
+
+
+class LoginTicketInvalidError(GoneError):
+    """The one-time sign-in ticket of a registration or reset is unknown or used."""
+
+    code = "id/login-ticket-invalid"
+    message_key = "id-login-ticket-invalid"
 
 
 class UserNotFoundError(NotFoundError):

@@ -24,10 +24,15 @@ async def test_password_reset_changes_the_password_and_logs_out_everywhere(
     await auth_world.auth.request_password_reset.execute(user.login or "", CTX)
     code = auth_world.otp.last("pw-reset").code
     assert auth_world.otp.last("pw-reset").channels == ("email",)
-    await auth_world.auth.confirm_password_reset.execute(
+    ticket = await auth_world.auth.confirm_password_reset.execute(
         user.recovery_email or "", code, "N3wStrongPass", CTX
     )
 
+    auth_world.hydra.add_login("lc-after-reset")
+    await auth_world.auth.login_acceptor.redeem_ticket(
+        "lc-after-reset", ticket, ip=None, user_agent=None
+    )
+    assert auth_world.hydra.last("accept_login")["subject"] == str(user.id)
     stored = auth_world.user(user.id)
     assert await auth_world.auth.hasher.verify(stored.password_hash, "N3wStrongPass")
     assert stored.auth_epoch > 1

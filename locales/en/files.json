@@ -6,6 +6,7 @@
   "files-invalid-checksum": "The file checksum is not valid.",
   "files-invalid-size": "The file is empty or its size is not valid.",
   "files-upload-missing": "The file was not uploaded. Upload it again.",
+  "files-storage-unavailable": "File storage is unavailable right now. Try again later.",
   "files-not-found": "File not found.",
   "files-deleted": "This file was deleted.",
   "files-not-ready": "The file is not ready yet.",

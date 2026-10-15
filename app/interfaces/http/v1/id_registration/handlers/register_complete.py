@@ -29,5 +29,7 @@ async def register_complete(
         user_agent=request.headers.get("user-agent"),
     )
     return CompleteRegistrationResponse(
-        login=registered.login, redirect_to=registered.redirect_to
+        login=registered.login,
+        redirect_to=registered.redirect_to,
+        login_ticket=registered.login_ticket,
     )

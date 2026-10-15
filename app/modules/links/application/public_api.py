@@ -5,6 +5,10 @@ from typing import Literal
 from uuid import UUID
 
 from app.modules.links.application.add_lesson_resources import AddLessonResources
+from app.modules.links.application.import_lesson_files import (
+    ImportLessonFiles,
+    PurgeEmisResources,
+)
 from app.modules.links.application.import_lesson_urls import ImportLessonUrls
 from app.modules.links.application.resource_builder import ResourceBuilder
 from app.modules.links.application.resource_refs import to_ref
@@ -13,7 +17,12 @@ from app.modules.links.domain.link import SHARE_KINDS, LessonRole, LinkKind, Lin
 from app.modules.links.ports.unit_of_work import UowFactory
 from app.shared.actor import Actor
 from app.shared.clock import Clock
-from app.shared.contracts.links import ImportedUrl, ResourceRef
+from app.shared.contracts.links import (
+    EMIS_AUTHOR_ID,
+    ImportedFile,
+    ImportedUrl,
+    ResourceRef,
+)
 
 
 class LinksApiImpl:
@@ -26,9 +35,13 @@ class LinksApiImpl:
         builder: ResourceBuilder,
         add_resources: AddLessonResources,
         import_urls: ImportLessonUrls,
+        import_files: ImportLessonFiles,
+        purge_emis: PurgeEmisResources,
         clock: Clock,
     ) -> None:
         """Store the collaborators."""
+        self.import_files = import_files
+        self.purge_emis = purge_emis
         self.uow_factory = uow_factory
         self.builder = builder
         self.add_resources = add_resources
@@ -91,6 +104,21 @@ class LinksApiImpl:
     async def import_lesson_urls(self, urls: Sequence[ImportedUrl]) -> int:
         """Attach URLs from EMIS as materials (author "EMIS"); return the new ones."""
         return await self.import_urls.execute(urls)
+
+    async def emis_sources(self, lesson_ids: Sequence[UUID]) -> set[tuple[UUID, str]]:
+        """Return (lesson id, URL) of everything EMIS ever attached, deleted too."""
+        async with self.uow_factory() as uow:
+            return await uow.links.lesson_urls_of_owner(
+                EMIS_AUTHOR_ID, list(lesson_ids)
+            )
+
+    async def import_lesson_files(self, files: Sequence[ImportedFile]) -> int:
+        """Attach stored EMIS materials as file resources; return the new ones."""
+        return await self.import_files.execute(files)
+
+    async def purge_emis_resources(self, lesson_ids: Sequence[UUID]) -> list[UUID]:
+        """Delete the lessons' EMIS resources for good; return their file ids."""
+        return await self.purge_emis.execute(lesson_ids)
 
     async def used_by_files(
         self, file_ids: Sequence[UUID]

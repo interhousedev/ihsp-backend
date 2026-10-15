@@ -1,5 +1,6 @@
 """Port: refresh a group's EMIS timetable (implemented by the schedule)."""
 
+from collections.abc import Collection, Sequence
 from typing import Protocol
 from uuid import UUID
 
@@ -20,4 +21,18 @@ class TimetableSync(Protocol):
         self, *, group_id: UUID, user_id: UUID, refresh_bells: bool = True
     ) -> TimetableOutcome:
         """Apply the timetable; EMIS errors come back as a status, not an exception."""
+        ...
+
+
+class MaterialResync(Protocol):
+    """Replaces a group's EMIS materials in some terms (implemented by the schedule)."""
+
+    async def resync_materials(
+        self,
+        *,
+        group_id: UUID,
+        terms: Collection[tuple[str, int]],
+        fetchers: Sequence[Sequence[UUID]],
+    ) -> int:
+        """Purge and re-import; return how many materials were attached."""
         ...

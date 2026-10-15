@@ -219,6 +219,15 @@ class EmisCurriculum:
     vocational_subjects: tuple[EmisCurriculumItem, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class EmisFile:
+    """A file EMIS links from a class (topic or homework material), downloaded."""
+
+    name: str  # from Content-Disposition or the URL path; may lack an extension
+    content_type: str | None
+    data: bytes
+
+
 class EmisAuthFailed(BaseError):
     """EMIS rejected the stored credentials."""
 
@@ -276,4 +285,12 @@ class EmisSource(Protocol):
         self, user_id: UUID, begin: dt.date, end: dt.date
     ) -> list[EmisClass]:
         """Return the student's classes on the dates begin..end (inclusive)."""
+        ...
+
+    async def download(self, user_id: UUID, url: str, *, max_bytes: int) -> EmisFile:
+        """Download a material EMIS links, with the student's EMIS session.
+
+        Raises ``EmisUnavailable`` on a timeout, a non-200 answer or a body larger
+        than ``max_bytes`` (the download stops there).
+        """
         ...

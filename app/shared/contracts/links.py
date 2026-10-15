@@ -47,6 +47,15 @@ class ImportedUrl:
     title: str
 
 
+@dataclass(frozen=True, slots=True)
+class ImportedFile:
+    """A material an outside system linked, downloaded into a stored file."""
+
+    lesson_id: UUID
+    source_url: str  # the outside address: the re-sync key
+    file_id: UUID
+
+
 class LinksApi(Protocol):
     """Lesson resources for other modules."""
 
@@ -79,6 +88,25 @@ class LinksApi(Protocol):
 
         Idempotent: a URL that EMIS already attached to the lesson is skipped, even
         if a teacher deleted it since. Blocked or malformed URLs are skipped.
+        """
+        ...
+
+    async def emis_sources(self, lesson_ids: Sequence[UUID]) -> set[tuple[UUID, str]]:
+        """Return (lesson id, URL) of everything EMIS ever attached, deleted too."""
+        ...
+
+    async def import_lesson_files(self, files: Sequence[ImportedFile]) -> int:
+        """Attach stored files as EMIS materials; return how many are new.
+
+        Idempotent like ``import_lesson_urls``: a (lesson, source URL) EMIS already
+        attached is skipped.
+        """
+        ...
+
+    async def purge_emis_resources(self, lesson_ids: Sequence[UUID]) -> list[UUID]:
+        """Delete every EMIS resource of the lessons for good; return their file ids.
+
+        Only resources whose author is EMIS go; people's uploads stay.
         """
         ...
 
