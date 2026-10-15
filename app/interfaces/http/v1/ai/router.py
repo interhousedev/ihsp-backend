@@ -13,6 +13,7 @@ from app.interfaces.http.v1.ai.handlers import (
     send_message,
     set_message_feedback,
 )
+from app.interfaces.http.v1.ai.schemas import TurnResultResponse
 
 from fastapi import APIRouter, status
 
@@ -29,12 +30,16 @@ router.add_api_route(
     status_code=status.HTTP_204_NO_CONTENT,
 )
 router.add_api_route(
-    "/chats/{chat_id}/messages", send_message.send_message, methods=["POST"]
+    "/chats/{chat_id}/messages",
+    send_message.send_message,
+    methods=["POST"],
+    response_model=TurnResultResponse,
 )
 router.add_api_route(
     "/chats/{chat_id}/regenerate",
     regenerate_answer.regenerate_answer,
     methods=["POST"],
+    response_model=TurnResultResponse,
 )
 router.add_api_route(
     "/chats/{chat_id}/messages/{seq}/feedback",
@@ -46,10 +51,12 @@ router.add_api_route(
     "/chats/{chat_id}/tool-calls/{call_id}/approve",
     approve_tool_call.approve_tool_call,
     methods=["POST"],
+    response_model=TurnResultResponse,
 )
 router.add_api_route(
     "/chats/{chat_id}/tool-calls/{call_id}/reject",
     reject_tool_call.reject_tool_call,
     methods=["POST"],
+    response_model=TurnResultResponse,
 )
 router.add_api_route("/usage", get_usage.get_usage, methods=["GET"])

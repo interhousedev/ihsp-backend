@@ -3,6 +3,7 @@
 import csv
 import io
 import re
+from collections.abc import Sequence
 from typing import Any, Final
 
 from app.modules.notebooks.application.export.docx import markdown_to_docx
@@ -10,6 +11,11 @@ from app.modules.notebooks.application.export.pptx import deck_to_pptx, slides_t
 from app.modules.notebooks.application.export.quiz import (
     flashcards_to_csv,
     quiz_to_docx,
+)
+from app.modules.notebooks.application.export.structured import (
+    blocks_to_docx,
+    presentation_to_pptx,
+    sheets_to_xlsx,
 )
 from app.modules.notebooks.application.export.text import (
     TEXT_KINDS,
@@ -192,3 +198,24 @@ class DocumentExporter:
         else:
             data = slides_to_pptx(title, None, parse_slides(content))
         return RenderedDocument(file_name(title, kind), CONTENT_TYPES[kind], data)
+
+    def render_slides(
+        self, title: str, slides: Sequence[dict[str, Any]]
+    ) -> RenderedDocument:
+        """Render structured slides as a .pptx."""
+        data = presentation_to_pptx(title, slides)
+        return RenderedDocument(file_name(title, "pptx"), CONTENT_TYPES["pptx"], data)
+
+    def render_blocks(
+        self, title: str, blocks: Sequence[dict[str, Any]]
+    ) -> RenderedDocument:
+        """Render structured blocks as a .docx."""
+        data = blocks_to_docx(title, blocks)
+        return RenderedDocument(file_name(title, "docx"), CONTENT_TYPES["docx"], data)
+
+    def render_sheets(
+        self, title: str, sheets: Sequence[dict[str, Any]]
+    ) -> RenderedDocument:
+        """Render structured sheets as an .xlsx."""
+        data = sheets_to_xlsx(sheets)
+        return RenderedDocument(file_name(title, "xlsx"), CONTENT_TYPES["xlsx"], data)

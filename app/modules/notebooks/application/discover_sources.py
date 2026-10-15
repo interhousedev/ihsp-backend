@@ -11,7 +11,6 @@ from uuid import UUID
 from app.modules.notebooks.application.access import load_notebook
 from app.modules.notebooks.application.readers.url_reader import normalise_url
 from app.modules.notebooks.domain.errors import (
-    AutoNotebookReadOnlyError,
     InvalidOptionsError,
     SourceUnsupportedError,
 )
@@ -79,7 +78,6 @@ class DiscoverSources:
 
         Raises:
             NotebookNotFoundError: Not the student's notebook.
-            AutoNotebookReadOnlyError: A subject or lesson notebook only takes notes.
             InvalidOptionsError: The request is empty or longer than 300 characters.
             WebSearchDisabledError: The feature is off or there is no search service.
             WebSearchQuotaError: Not enough searches are left today (`deep` costs
@@ -88,9 +86,7 @@ class DiscoverSources:
         """
         clean = clean_query(query)
         async with self.core.uow_factory() as uow:
-            notebook = await load_notebook(uow, actor.user_id, notebook_id)
-            if notebook.is_auto:
-                raise AutoNotebookReadOnlyError()
+            await load_notebook(uow, actor.user_id, notebook_id)
             known = await uow.sources.url_keys(notebook_id)
         api = self.core.web_search
         if api is None:

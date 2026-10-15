@@ -294,3 +294,26 @@ async def test_an_answer_without_a_paid_call_is_a_free_event() -> None:
     )
     assert event.cost_micro == 0
     assert event.input_tokens == 0 and event.success is True
+
+
+async def test_a_stream_with_tools_passes_them_and_records_the_usage() -> None:
+    sink = Sink()
+    seen: list[Any] = []
+
+    class ToolInner(Inner):
+        def stream(self, **kwargs: Any) -> AsyncIterator[dict[str, Any]]:
+            seen.append(kwargs.get("tools"))
+            return self._stream()
+
+    gateway = RecordingLlmGateway(ToolInner(), recorder_for(sink))
+    tools = [{"type": "function", "function": {"name": "t"}}]
+
+    _ = [
+        item
+        async for item in gateway.stream(
+            model="m", system="s", messages=[], max_tokens=5, tools=tools
+        )
+    ]
+
+    assert seen == [tools]
+    assert sink.events[0].output_tokens == 30

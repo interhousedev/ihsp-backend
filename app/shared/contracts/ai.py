@@ -128,8 +128,13 @@ class LlmGateway(Protocol):
         provider: dict[str, Any] | None = None,
         timeout_seconds: float | None = None,
         tuning: LlmTuning | None = None,
+        tools: list[dict[str, Any]] | None = None,
     ) -> AsyncIterator[dict[str, Any]]:
-        """Stream plain text: ``{"delta": str}`` items, then ``{"usage": {...}}``."""
+        """Stream text: ``{"delta": str}`` items, then ``{"usage": {...}}``.
+
+        With ``tools`` (tool choice auto) the last item also carries the assembled
+        ``"tool_calls": [{"id", "name", "arguments"}]`` of the response.
+        """
         ...
 
 

@@ -5,7 +5,7 @@ lock (`pending_approval` -> `running`), so it can never run twice; the second
 stores the result. No lock is held while the tool runs.
 """
 
-from collections.abc import Callable
+from collections.abc import AsyncIterator, Callable
 from uuid import UUID
 
 from app.modules.ai.application.continue_turn import ContinueTurn
@@ -19,6 +19,7 @@ from app.modules.ai.application.locale import LocaleResolver
 from app.modules.ai.application.pending_calls import refresh_counter
 from app.modules.ai.application.tool_runner import ToolRunner
 from app.modules.ai.application.tools.base import ToolContext
+from app.modules.ai.application.turn_events import TurnEvent, TurnEvents, run_streamed
 from app.modules.ai.application.turn_result import TurnResults
 from app.modules.ai.application.views import TurnResultView
 from app.modules.ai.domain.chat import Chat, ChatMessage
@@ -53,13 +54,32 @@ class ApproveToolCall:
         self.locale = locale
         self.results = results
 
-    async def execute(
+    def stream(
         self, *, actor: Actor, chat_id: UUID, call_id: str
+    ) -> AsyncIterator[TurnEvent]:
+        """The turn as live events; a refusal raises before the first one."""
+        events = TurnEvents()
+        return run_streamed(
+            events,
+            lambda: self.execute(
+                actor=actor, chat_id=chat_id, call_id=call_id, events=events
+            ),
+        )
+
+    async def execute(
+        self,
+        *,
+        actor: Actor,
+        chat_id: UUID,
+        call_id: str,
+        events: TurnEvents | None = None,
     ) -> TurnResultView:
         """Approve the call, run it, store the result and continue the turn."""
         locale = await self.locale.locale_of(actor.user_id)
         async with self.locks.hold(chat_id):
             claim = await self._claim(actor, chat_id, call_id)
+            if events is not None:  # accepted: the stream starts here
+                events.emit("status", {"text": ""})
             ctx = ToolContext(actor, chat_id, locale, scope=claim.chat.scope)
             outcome = await self.runner.run_approved(
                 claim.chat.assistant, ctx, claim.call
@@ -69,7 +89,11 @@ class ApproveToolCall:
                 progress = waiting_progress(chat, message)
             else:
                 progress = await self.continue_turn.execute(
-                    chat_id=chat_id, actor=actor, locale=locale, changed=[message]
+                    chat_id=chat_id,
+                    actor=actor,
+                    locale=locale,
+                    changed=[message],
+                    events=events,
                 )
         return await self.results.build(actor, locale, progress)
 

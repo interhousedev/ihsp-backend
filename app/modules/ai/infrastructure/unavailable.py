@@ -62,6 +62,7 @@ class UnavailableLlmGateway:
         provider: dict[str, Any] | None = None,
         timeout_seconds: float | None = None,
         tuning: LlmTuning | None = None,
+        tools: list[dict[str, Any]] | None = None,
     ) -> AsyncIterator[dict[str, Any]]:
         """Raise AiProviderError when the stream is started: no model access."""
         raise self._error()

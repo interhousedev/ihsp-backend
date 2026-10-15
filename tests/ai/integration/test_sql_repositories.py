@@ -244,7 +244,7 @@ async def test_approval_flow_on_the_sql_unit_of_work(
     detail = await h.services.get_chat.execute(actor=h.student, chat_id=chat.id)
     assert proposed.status is TurnStatus.AWAITING_APPROVAL
     assert result.status is TurnStatus.DONE
-    assert [m.role for m in detail.messages] == ["user", "assistant", "assistant"]
+    assert [m.role for m in detail.messages] == ["user", "assistant"]
     assert detail.messages[1].tool_calls[0].status == "done"
     assert detail.chat.pending_approvals == 0 and detail.chat.title == "cards please"
     assert [a.type for a in audits] == ["ai.write_approved"]
@@ -420,7 +420,7 @@ async def test_regenerate_and_feedback_on_the_sql_unit_of_work(
     await h.services.set_message_feedback.execute(
         actor=h.student,
         chat_id=chat.id,
-        seq=3,
+        seq=2,
         rating=Feedback.DOWN,
         comment="wrong",
     )

@@ -58,6 +58,9 @@ class MessageContent(BaseModel):
     web: list[WebResult] = Field(default_factory=list)
     # What the assistant did while answering (AI-STEPS); shown, never sent back.
     steps: list[AgentStep] = Field(default_factory=list)
+    # The texts of the earlier tool rounds of one answer ("Found it, now I'll…"):
+    # `progress[r]` is the text of round r; `text` is the last round's (the answer).
+    progress: list[str] = Field(default_factory=list)
 
 
 @dataclass(slots=True)

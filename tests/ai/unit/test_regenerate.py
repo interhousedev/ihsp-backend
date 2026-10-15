@@ -70,7 +70,7 @@ async def test_regenerate_removes_the_tool_steps_of_the_old_answer(
     chat = await h.new_chat()
     h.llm.push(tool_reply(("get_my_subjects", {})), text_reply("old answer"))
     first = await h.say(chat.id, "my subjects")
-    assert [m.seq for m in first.new_messages] == [1, 2, 3]
+    assert [m.seq for m in first.new_messages] == [1, 2]
     h.llm.push(text_reply("new answer"))
 
     result = await regenerate(h, chat.id)

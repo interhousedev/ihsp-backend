@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any, Generic, Self, TypeVar
 from uuid import UUID
 
+from app.modules.notebooks.application.sync_auto_notebook import is_managed
 from app.modules.notebooks.application.views import NotebookUsageView, UsagePartView
 from app.modules.notebooks.domain.entities import Source
 from app.modules.notebooks.domain.enums import SourceFailure, SourceKind, SourceStatus
@@ -112,6 +113,8 @@ class SourceItemResponse(BaseModel):
     ai_unsupported: bool
     """True when the chat model does not read this input kind: it is kept in the
     notebook but never sent to the model."""
+    synced: bool
+    """True for a source the sync manages (lesson material); it cannot be removed."""
 
     @classmethod
     def from_entity(cls, source: Source) -> Self:
@@ -138,4 +141,5 @@ class SourceItemResponse(BaseModel):
             synced_at=source.text_synced_at,
             created_at=source.created_at,
             label_ids=source.label_ids,
+            synced=is_managed(source),
         )

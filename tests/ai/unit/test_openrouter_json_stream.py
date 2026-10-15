@@ -590,3 +590,40 @@ async def test_a_consumer_that_stops_early_leaves_the_gateway_usable(
     assert first == {"delta": "one "}
     assert error is None and items[0] == {"delta": "one "}
     assert route.call_count == 2
+
+
+@respx.mock
+async def test_stream_with_tools_assembles_the_tool_call_pieces(
+    gateway: OpenRouterGateway,
+) -> None:
+    """Text deltas come at once; tool call pieces are joined per index at the end."""
+
+    def piece(part: dict[str, Any], finish: str | None = None) -> dict[str, Any]:
+        choice = {"delta": {"tool_calls": [part]}, "finish_reason": finish}
+        return {"id": "gen-1", "choices": [choice]}
+
+    stream = (
+        event(delta("Looking. "))
+        + event(piece({"index": 0, "id": "c1", "function": {"name": "get_marks"}}))
+        + event(piece({"index": 0, "function": {"arguments": '{"subj'}}))
+        + event(piece({"index": 1, "id": "c2", "function": {"name": "get_homework"}}))
+        + event(piece({"index": 0, "function": {"arguments": 'ect": "lit"}'}}))
+        + event(piece({"index": 1, "function": {"arguments": "{}"}}, "tool_calls"))
+        + event(usage_chunk(prompt_tokens=10, completion_tokens=4))
+        + event("[DONE]")
+    )
+    route = respx.post(URL).mock(return_value=sse(stream))
+    tools = [{"type": "function", "function": {"name": "get_marks"}}]
+
+    items, error = await collect(gateway, tools=tools)
+
+    assert error is None
+    assert items[0] == {"delta": "Looking. "}
+    assert items[-1]["tool_calls"] == [
+        {"id": "c1", "name": "get_marks", "arguments": {"subject": "lit"}},
+        {"id": "c2", "name": "get_homework", "arguments": {}},
+    ]
+    assert items[-1]["usage"]["input"] == 10
+    body = body_of(route)
+    assert body["tools"][0]["function"]["name"] == "get_marks"
+    assert body["tool_choice"] == "auto"

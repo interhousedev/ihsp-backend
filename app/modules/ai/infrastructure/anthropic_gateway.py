@@ -98,9 +98,14 @@ class AnthropicLlmGateway:
         provider: dict[str, Any] | None = None,
         timeout_seconds: float | None = None,
         tuning: LlmTuning | None = None,
+        tools: list[dict[str, Any]] | None = None,
     ) -> AsyncIterator[dict[str, Any]]:
-        """Yield {"delta": text} items, then {"usage": {...}}."""
-        params = build_request(model, system, messages, [], max_tokens, tuning)
+        """Yield {"delta": text} items, then {"usage", "tool_calls"?}.
+
+        Text comes from `text_stream`; the tool_use blocks are read from the final
+        message (`get_final_message`), already assembled by the SDK.
+        """
+        params = build_request(model, system, messages, tools or [], max_tokens, tuning)
         if timeout_seconds is not None:
             params["timeout"] = timeout_seconds
         try:
@@ -111,7 +116,11 @@ class AnthropicLlmGateway:
                 final = await stream.get_final_message()
         except anthropic.APIError as exc:
             raise _provider_error(exc) from exc
-        yield {"usage": usage_of(final.usage, model)}
+        last = parse_message(final, model)
+        if last["tool_calls"]:
+            yield {"usage": last["usage"], "tool_calls": last["tool_calls"]}
+        else:
+            yield {"usage": last["usage"]}
 
     async def _call(self, method: Any, params: dict[str, Any]) -> Any:
         try:

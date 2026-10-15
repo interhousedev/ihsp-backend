@@ -50,7 +50,7 @@ class MakeDocument(ReadTool[MakeDocumentArgs]):
         document = renderer.render(args.kind, args.title, args.content)
         ref = await self.files.store_bytes(
             owner_id=ctx.actor.user_id,
-            scope=_scope_of(ctx.actor),
+            scope=scope_of(ctx.actor),
             purpose=FilePurpose.AI_UPLOAD,
             name=document.name,
             data=document.data,
@@ -63,6 +63,6 @@ class MakeDocument(ReadTool[MakeDocumentArgs]):
         }
 
 
-def _scope_of(actor: Actor) -> FileScope:
+def scope_of(actor: Actor) -> FileScope:
     """Staff files count against the staff quota, students' against theirs."""
     return FileScope.STAFF if _STAFF_ROLES & actor.roles else FileScope.STUDENT

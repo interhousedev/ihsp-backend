@@ -17,6 +17,7 @@ from tests.fakes.ai.llm import text_reply
 
 import pytest
 
+OFFICE_TOOLS = ["create_presentation", "create_document", "create_spreadsheet"]
 STUDENT_TOOLS = {
     "get_my_subjects", "get_subject_lessons", "get_lesson_materials", "get_schedule",
     "get_homework", "get_marks", "get_attendance", "list_files", "read_file",
@@ -24,6 +25,7 @@ STUDENT_TOOLS = {
     "read_notebook_source", "list_notebook_artifacts", "list_flashcard_sets",
     "get_flashcard_set", "create_flashcard_set", "add_flashcards", "create_notebook",
     "add_notebook_sources", "create_artifact", "make_document", "read_chat_history",
+    *OFFICE_TOOLS,
 }  # fmt: skip
 NOTEBOOK_READ_TOOLS = [
     "list_notebooks", "get_notebook", "search_notebook", "read_notebook_source",
@@ -70,6 +72,7 @@ async def test_notebook_tools_sit_after_the_file_tools_and_the_flash_card_writes
     assert names[names.index("add_flashcards") + 1 :] == [
         *NOTEBOOK_WRITE_TOOLS,
         "make_document",
+        *OFFICE_TOOLS,
         "read_chat_history",
     ]
 
@@ -81,7 +84,7 @@ async def test_the_administration_assistant_gets_no_notebook_tools(
     tools = await tools_of(h, Assistant.ADMIN)
 
     names = {t["function"]["name"] for t in tools}
-    assert not names & set(NOTEBOOK_READ_TOOLS + NOTEBOOK_WRITE_TOOLS)
+    assert not names & set(NOTEBOOK_READ_TOOLS + NOTEBOOK_WRITE_TOOLS + OFFICE_TOOLS)
 
 
 async def test_student_prompt_mentions_notebooks_and_still_denies_lms_content(

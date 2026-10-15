@@ -50,6 +50,7 @@ class ToolCall(BaseModel):
     id: str
     tool: str
     access: ToolAccess
+    round: int = 0  # the model request of the answer that made the call
     args: dict[str, Any] = Field(default_factory=dict)
     status: ToolStatus
     preview: PreviewData | None = None

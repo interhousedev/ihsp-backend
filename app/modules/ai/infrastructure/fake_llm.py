@@ -100,15 +100,27 @@ class FakeLlmGateway:
         provider: dict[str, Any] | None = None,
         timeout_seconds: float | None = None,
         tuning: LlmTuning | None = None,
+        tools: list[dict[str, Any]] | None = None,
     ) -> AsyncIterator[dict[str, Any]]:
         """Yield the answer of `complete` in 12-character deltas, then the usage."""
         self._record(
-            model, system, messages, provider=provider, tuning=tuning, streamed=True
+            model,
+            system,
+            messages,
+            tools=tools or [],
+            provider=provider,
+            tuning=tuning,
+            streamed=True,
         )
-        text, _ = self._answer(system, messages)
+        text, calls = self._answer(system, messages)
         for start in range(0, len(text), STREAM_CHUNK_CHARS):
             yield {"delta": text[start : start + STREAM_CHUNK_CHARS]}
-        yield {"usage": {**_usage(system, messages, text), "cost_micro": None}}
+        last: dict[str, Any] = {
+            "usage": {**_usage(system, messages, text), "cost_micro": None}
+        }
+        if tools and calls:
+            last["tool_calls"] = calls
+        yield last
 
     def _record(
         self,

@@ -363,6 +363,8 @@ class Artifact:
     deleted_at: datetime | None = None
     # Who asked for it in a shared notebook (a course workspace); None means the owner.
     requested_by: UUID | None = None
+    # Thin sources at request time: the web query to offer (not stored).
+    suggest_web_search: str | None = None
 
     @property
     def charged_to(self) -> UUID:

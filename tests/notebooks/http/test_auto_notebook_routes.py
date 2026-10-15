@@ -168,10 +168,10 @@ async def test_bad_auto_settings_are_a_422_and_a_manual_notebook_has_none(
     assert problem_type(not_auto) == "notebooks/invalid-options"
 
 
-async def test_lesson_sources_of_an_auto_notebook_are_read_only(
+async def test_synced_sources_are_kept_and_own_sources_are_free(
     api: AsyncClient, world: World, physics: LessonRef
 ) -> None:
-    """NB-AUTO: adding or removing a material answers 409 `notebooks/auto-readonly`."""
+    """NB-AUTO: own sources come and go; removing a synced one answers 409."""
     teacher_file(world, physics)
     opened = (await api.post(f"/v1/notebooks/auto/subject/{physics.subject_id}")).json()
     [source] = (await api.get(f"/v1/notebooks/{opened['id']}/sources")).json()
@@ -181,8 +181,16 @@ async def test_lesson_sources_of_an_auto_notebook_are_read_only(
         json={"items": [{"kind": "text", "title": "Pasted", "text": "Some text."}]},
     )
     removed = await api.delete(f"/v1/notebooks/{opened['id']}/sources/{source['id']}")
+    [own] = added.json()["items"]
+    own_removed = await api.delete(f"/v1/notebooks/{opened['id']}/sources/{own['id']}")
+    excluded = await api.patch(
+        f"/v1/notebooks/{opened['id']}/auto",
+        json={"exclude_source_ids": [source["id"]]},
+    )
 
-    assert added.status_code == 409 and problem_type(added) == "notebooks/auto-readonly"
+    assert source["synced"] is True and own["synced"] is False
+    assert added.status_code == 201 and own_removed.status_code == 204
+    assert excluded.status_code == 200 and excluded.json()["source_count"] == 0
     assert (
         removed.status_code == 409
         and problem_type(removed) == "notebooks/auto-readonly"

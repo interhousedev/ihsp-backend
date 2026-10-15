@@ -88,6 +88,7 @@ class ChatMessageView:
     feedback: Literal["up", "down"] | None
     web: list[WebResult] = field(default_factory=list)
     steps: list[AgentStep] = field(default_factory=list)
+    progress: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True, slots=True)

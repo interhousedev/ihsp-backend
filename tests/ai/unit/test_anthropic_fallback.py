@@ -44,10 +44,13 @@ def _usage(**counts: int) -> SimpleNamespace:
 class FakeStream:
     """The async context manager `messages.stream` returns."""
 
-    def __init__(self, texts: list[str], usage: SimpleNamespace) -> None:
-        """Keep the deltas and the final usage."""
+    def __init__(
+        self, texts: list[str], usage: SimpleNamespace, content: list[Any] | None = None
+    ) -> None:
+        """Keep the deltas, the final usage and the final content blocks."""
         self._texts = texts
         self._usage = usage
+        self._content = content or []
 
     async def __aenter__(self) -> "FakeStream":
         """Open."""
@@ -66,8 +69,8 @@ class FakeStream:
             yield text
 
     async def get_final_message(self) -> SimpleNamespace:
-        """The final message (only its usage is read)."""
-        return SimpleNamespace(usage=self._usage)
+        """The final message: its content blocks and usage."""
+        return SimpleNamespace(usage=self._usage, content=self._content)
 
 
 class FakeMessages:
@@ -443,3 +446,53 @@ def test_the_model_map_is_parsed_and_an_empty_key_means_no_fallback() -> None:
     assert config.models == {"a": "b", "c": "d"}
     assert not config.active
     assert AnthropicSettings().models == {HAIKU: TARGET}
+
+
+async def test_stream_with_tools_ends_with_the_tool_use_blocks() -> None:
+    """Text from `text_stream`; tool_use blocks from the final message."""
+    block = SimpleNamespace(type="tool_use", id="tu1", name="get_marks", input={"a": 1})
+    text = SimpleNamespace(type="text", text="Looking.")
+    stream = FakeStream(["Looking."], _usage(input_tokens=5), [text, block])
+    messages = FakeMessages(stream=stream)
+    tools = [{"type": "function", "function": {"name": "get_marks", "parameters": {}}}]
+
+    items = [
+        item
+        async for item in _gateway(messages).stream(
+            model=TARGET, system="s", messages=[], max_tokens=10, tools=tools
+        )
+    ]
+
+    assert items[0] == {"delta": "Looking."}
+    assert items[-1]["tool_calls"] == [
+        {"id": "tu1", "name": "get_marks", "arguments": {"a": 1}}
+    ]
+    assert messages.calls[0]["tools"][0]["name"] == "get_marks"
+    assert messages.calls[0]["tool_choice"] == {"type": "auto"}
+
+
+async def test_the_fallback_stream_passes_the_tools_on() -> None:
+    """The tools reach the gateway that streams."""
+    seen: list[Any] = []
+
+    class Spy(Scripted):
+        async def stream(  # type: ignore[override]
+            self, *, model: str, **kwargs: Any
+        ) -> AsyncIterator[dict[str, Any]]:
+            seen.append(kwargs.get("tools"))
+            yield {"usage": {}, "tool_calls": [{"id": "x", "name": "t"}]}
+
+    gateway = FallbackLlmGateway(
+        Spy(),
+        Scripted(),
+        primary_route=same_model,
+        secondary_route=same_model,
+        switch_on=is_limit_error,
+    )
+    tools = [{"type": "function", "function": {"name": "t"}}]
+
+    items = [
+        i async for i in gateway.stream(model=HAIKU, **_stream_args(), tools=tools)
+    ]
+
+    assert seen == [tools] and items[-1]["tool_calls"][0]["name"] == "t"

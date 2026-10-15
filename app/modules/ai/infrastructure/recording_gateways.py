@@ -183,6 +183,7 @@ class RecordingLlmGateway:
         provider: dict[str, Any] | None = None,
         timeout_seconds: float | None = None,
         tuning: LlmTuning | None = None,
+        tools: list[dict[str, Any]] | None = None,
     ) -> AsyncIterator[dict[str, Any]]:
         """Stream through the gateway; the call is recorded when the stream ends."""
         pending = self._recorder.begin(model=model, task=_task_of(tuning))
@@ -194,6 +195,7 @@ class RecordingLlmGateway:
             provider=provider,
             timeout_seconds=timeout_seconds,
             tuning=tuning,
+            tools=tools,
         )
         return _recorded_stream(pending, items)
 

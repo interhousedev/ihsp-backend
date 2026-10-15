@@ -42,6 +42,7 @@ ITEM_KEYS = {
     "flashcard_set_id",
     "created_at",
     "finished_at",
+    "suggest_web_search",
 }
 DETAIL_KEYS = ITEM_KEYS | {
     "content",
@@ -68,6 +69,7 @@ SOURCE_KEYS = {
     "label_ids",
     "modality",
     "ai_unsupported",
+    "synced",
     "synced_at",
     "created_at",
 }

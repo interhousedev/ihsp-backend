@@ -9,6 +9,7 @@ from app.modules.notebooks.domain.errors import (
     NotebookNotFoundError,
 )
 from app.modules.notebooks.domain.source_input import (
+    LessonResourceInput,
     NoteInput,
     TextInput,
 )
@@ -155,24 +156,63 @@ async def test_only_an_auto_notebook_of_the_caller_has_these_settings(
         )
 
 
-async def test_lesson_materials_cannot_be_added_by_hand(
+async def test_lesson_materials_cannot_be_added_by_hand_but_own_sources_can(
     auto: AutoServices,
     sources: SourcesServices,
     student: Actor,
     physics: LessonRef,
 ) -> None:
-    """NB-AUTO: auto notebooks are read-only for sources; only notes can be added."""
+    """NB-AUTO: the sync owns lesson materials; the student's own sources are free."""
     notebook = await open_subject(auto, student, physics)
 
     with pytest.raises(AutoNotebookReadOnlyError):
         await sources.add_sources.execute(
-            student, notebook.id, [TextInput(title="Pasted", text="Some text.")]
+            student,
+            notebook.id,
+            [LessonResourceInput(lesson_id=physics.id, link_id=new_id())],
         )
     added = await sources.add_sources.execute(
-        student, notebook.id, [NoteInput(title="Mine", body_md="A note.")]
+        student,
+        notebook.id,
+        [
+            NoteInput(title="Mine", body_md="A note."),
+            TextInput(title="Pasted", text="Some text."),
+        ],
     )
 
-    assert len(added.items) == 1 and added.rejected == []
+    assert len(added.items) == 2 and added.rejected == []
+
+
+async def test_the_sync_keeps_own_sources_and_still_manages_synced_ones(
+    auto: AutoServices,
+    sources: SourcesServices,
+    uow_factory: UowFactory,
+    world: World,
+    student: Actor,
+    physics: LessonRef,
+) -> None:
+    """NB-AUTO: own sources survive syncs; lesson materials come and go."""
+    teacher_file(world, physics, "Waves")
+    notebook = await open_subject(auto, student, physics)
+    own = (
+        await sources.add_sources.execute(
+            student, notebook.id, [TextInput(title="Pasted", text="Some text.")]
+        )
+    ).items[0]
+    optics = teacher_file(world, physics, "Optics")
+
+    added = await auto.sync_auto_notebook.execute(notebook.id)
+    titles = {s.title for s in await _sources(uow_factory, notebook)}
+    world.links.items[physics.id] = [
+        r for r in world.links.items[physics.id] if str(r.link_id) != optics
+    ]
+    removed = await auto.sync_auto_notebook.execute(notebook.id)
+    await sources.remove_source.execute(student, notebook.id, own.id)
+    left = await _sources(uow_factory, notebook)
+
+    assert added.added == 1 and own.title in titles and len(titles) == 3
+    assert removed.removed == 1 and removed.added == 0
+    assert [s.title for s in left] == ["Waves"]
 
 
 async def test_a_lesson_material_cannot_be_removed_but_a_note_can(

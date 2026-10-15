@@ -187,6 +187,7 @@ class FallbackLlmGateway:
         provider: dict[str, Any] | None = None,
         timeout_seconds: float | None = None,
         tuning: LlmTuning | None = None,
+        tools: list[dict[str, Any]] | None = None,
     ) -> AsyncIterator[dict[str, Any]]:
         """Stream from the primary; a switch failure before any delta moves on."""
         args: dict[str, Any] = {
@@ -196,6 +197,7 @@ class FallbackLlmGateway:
             "provider": provider,
             "timeout_seconds": timeout_seconds,
             "tuning": tuning,
+            "tools": tools,
         }
         first = self._primary_route(model)
         if first is None:

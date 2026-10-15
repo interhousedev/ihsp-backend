@@ -118,12 +118,11 @@ async def test_a_turn_stores_its_steps_with_the_answers(h: AiHarness) -> None:
 
     result = await h.say(chat.id, "my subjects and photosynthesis", web=True)
 
-    tool_answer, final = result.new_messages[1:]
-    assert [(s.kind, s.label) for s in tool_answer.steps] == [
+    (answer,) = result.new_messages[1:]
+    assert [(s.kind, s.label) for s in answer.steps] == [
         (StepKind.WEB_SEARCH, "Searched the web"),
         (StepKind.TOOL, "get_my_subjects"),
     ]
-    assert final.steps == []
     stored = h.store.chat_messages(chat.id)
-    assert [len(m.content.steps) for m in stored] == [0, 2, 0]
+    assert [len(m.content.steps) for m in stored] == [0, 2]
     assert "Searched the web" not in json.dumps(h.llm.requests[-1]["messages"])

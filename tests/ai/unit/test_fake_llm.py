@@ -88,3 +88,18 @@ async def test_the_whole_flow_runs_on_the_fake_gateway(
     assert done.status.value == "done"
     assert len(h.flashcards.create_calls) == 1
     assert done.new_messages[-1].text.startswith("(fake) Tool result")
+
+
+async def test_the_fake_stream_ends_with_the_tool_calls_when_tools_are_given() -> None:
+    gateway = FakeLlmGateway()
+    messages = [{"role": "user", "content": "my homework?"}]
+
+    items = [
+        item
+        async for item in gateway.stream(
+            model="m", system="s", messages=messages, max_tokens=9, tools=[{"x": 1}]
+        )
+    ]
+
+    assert items[-1]["tool_calls"][0]["name"] == "get_homework"
+    assert "usage" in items[-1]

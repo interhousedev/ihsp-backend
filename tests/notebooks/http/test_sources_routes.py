@@ -39,6 +39,7 @@ ITEM_KEYS = {
     "label_ids",
     "modality",
     "ai_unsupported",
+    "synced",
 }
 DETAIL_KEYS = ITEM_KEYS | {"guide", "body_md", "editable", "citations", "file"}
 PASSAGE_KEYS = {"id", "seq", "text", "page", "heading"}

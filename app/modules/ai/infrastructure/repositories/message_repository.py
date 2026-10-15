@@ -69,10 +69,11 @@ class SqlMessageRepository:
         await self.session.flush()
 
     async def save(self, message: ChatMessage) -> None:
-        """Write the message's tool calls and usage."""
+        """Write the message's content, tool calls and usage."""
         row = await self.session.get(MessageRow, message.id)
         if row is None:
             return
+        row.content = message.content.model_dump(mode="json")
         row.tool_calls = _calls_json(message)
         row.tokens_in = message.tokens_in
         row.tokens_out = message.tokens_out

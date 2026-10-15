@@ -67,6 +67,9 @@
   "ai-note-audit-log": "Посмотрел журнал аудита",
   "ai-note-create-artifact": "Учебный материал",
   "ai-note-make-document": "Подготовил документ",
+  "ai-note-create-presentation": "Подготовил презентацию",
+  "ai-note-create-document": "Подготовил документ",
+  "ai-note-create-spreadsheet": "Подготовил таблицу",
   "ai-note-create-broadcast-draft": "Черновик рассылки",
   "ai-note-create-flashcard-set": "Набор карточек",
   "ai-note-create-group": "Новая группа",
@@ -163,5 +166,6 @@
   "ai-unknown-command": "Неизвестная команда /{command}. Доступны: {known}.",
   "ai-value-yes": "Да",
   "ai-wrong-assistant": "Вам недоступен этот помощник.",
-  "ai-usage-range-invalid": "Некорректный период или он длиннее {max_days} дней."
+  "ai-usage-range-invalid": "Некорректный период или он длиннее {max_days} дней.",
+  "ai-status-thinking": "Думаю…"
 }

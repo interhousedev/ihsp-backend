@@ -85,6 +85,7 @@ SOURCE_ITEM_KEYS = {
     "label_ids",
     "modality",
     "ai_unsupported",
+    "synced",
     "synced_at",
     "created_at",
 }

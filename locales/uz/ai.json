@@ -67,6 +67,9 @@
   "ai-note-audit-log": "Audit jurnalini ko'rib chiqdi",
   "ai-note-create-artifact": "O'quv materiali",
   "ai-note-make-document": "Hujjat tayyorladi",
+  "ai-note-create-presentation": "Taqdimot tayyorladi",
+  "ai-note-create-document": "Hujjat tayyorladi",
+  "ai-note-create-spreadsheet": "Jadval tayyorladi",
   "ai-note-create-broadcast-draft": "Xabarnoma qoralamasi",
   "ai-note-create-flashcard-set": "Kartochka to'plami",
   "ai-note-create-group": "Yangi guruh",
@@ -163,5 +166,6 @@
   "ai-unknown-command": "Noma'lum buyruq /{command}. Mavjud: {known}.",
   "ai-value-yes": "Ha",
   "ai-wrong-assistant": "Bu yordamchidan foydalana olmaysiz.",
-  "ai-usage-range-invalid": "Sana oraligʻi notoʻgʻri yoki {max_days} kundan uzun."
+  "ai-usage-range-invalid": "Sana oraligʻi notoʻgʻri yoki {max_days} kundan uzun.",
+  "ai-status-thinking": "Oʻylayapman…"
 }

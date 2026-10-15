@@ -17,6 +17,11 @@ from app.modules.ai.domain.tool_call import PreviewData, ToolCall, ToolStatus
 from app.modules.ai.domain.tools import note_key
 from app.shared.i18n.core import I18nCore
 
+# Tools whose finished result is a file card.
+FILE_TOOLS = frozenset(
+    {"make_document", "create_presentation", "create_document", "create_spreadsheet"}
+)
+
 
 class ChatViews:
     """Turns domain objects into views in a user's language."""
@@ -74,9 +79,9 @@ class ChatViews:
 
     @staticmethod
     def _document(call: ToolCall) -> DocumentCardView | None:
-        """The file card of a finished ``make_document`` call."""
+        """The file card of a finished file-making call (``make_document`` etc.)."""
         result: dict[str, Any] | None = call.result
-        if call.tool != "make_document" or call.status is not ToolStatus.DONE:
+        if call.tool not in FILE_TOOLS or call.status is not ToolStatus.DONE:
             return None
         if not result or result.get("kind") not in ("docx", "xlsx", "pptx"):
             return None
@@ -101,4 +106,5 @@ class ChatViews:
             feedback=message.feedback.value if message.feedback else None,
             web=list(message.content.web),
             steps=list(message.content.steps),
+            progress=list(message.content.progress),
         )

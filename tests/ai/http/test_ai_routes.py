@@ -99,7 +99,7 @@ async def test_sending_a_message_returns_a_turn_result(
     user, answer = body["new_messages"]
     assert set(user) == {
         *("seq", "role", "text", "file_ids", "tool_calls", "created_at"),
-        *("feedback", "web", "steps"),
+        *("feedback", "web", "steps", "progress"),
     }
     assert user["web"] == [] and answer["web"] == []
     assert (user["seq"], user["role"], answer["text"]) == (1, "user", "Hello!")
@@ -495,3 +495,24 @@ async def test_the_fourth_smart_message_of_a_week_is_a_429_problem(
         "resets_at": "2026-10-11T19:00:00+00:00",
     }
     assert len(h.llm.requests) == calls
+
+
+async def test_sending_with_accept_event_stream_answers_with_events(
+    api: tuple[AiHarness, AsyncClient],
+) -> None:
+    """The SSE variant: status first, deltas of the answer, done with the result."""
+    h, client = api
+    chat = await create_chat(client)
+    h.llm.push(text_reply("Hello there"))
+
+    response = await client.post(
+        f"/v1/ai/chats/{chat['id']}/messages",
+        json={"text": "Hi", "file_ids": []},
+        headers={"Accept": "text/event-stream"},
+    )
+
+    assert response.headers["content-type"].startswith("text/event-stream")
+    names = [line[7:] for line in response.text.splitlines() if line[:7] == "event: "]
+    assert names[0] == "status" and names[-1] == "done"
+    assert names.count("delta") == 2
+    assert '"new_messages"' in response.text.split("event: done")[1]

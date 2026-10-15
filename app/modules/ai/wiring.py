@@ -38,6 +38,7 @@ from app.modules.ai.application.tools.base import Tool
 from app.modules.ai.application.tools.create_artifact import CreateArtifact
 from app.modules.ai.application.tools.create_flashcard_set import CreateFlashcardSet
 from app.modules.ai.application.tools.create_notebook import CreateNotebook
+from app.modules.ai.application.tools.create_office_file import make_office_tools
 from app.modules.ai.application.tools.get_attendance import GetAttendance
 from app.modules.ai.application.tools.get_flashcard_set import GetFlashcardSet
 from app.modules.ai.application.tools.get_homework import GetHomework
@@ -179,6 +180,7 @@ def make_student_tools(
         AddNotebookSources(files, bindings),
         CreateArtifact(bindings),
         MakeDocument(files, bindings),
+        *make_office_tools(files, bindings),
     ]
 
 
@@ -250,7 +252,11 @@ def build(
             history,
         ],
         [*make_admin_tools(admin_tools, identity), history],
-        [*make_author_tools(bindings, deps.i18n), history],
+        [
+            *make_author_tools(bindings, deps.i18n),
+            *make_office_tools(files, bindings),
+            history,
+        ],
     )
     locale = LocaleResolver(identity)
     views = ChatViews(deps.i18n)
@@ -336,6 +342,7 @@ def build(
             web=searching,
             clock=deps.clock,
             settings=settings,
+            i18n=deps.i18n,
         ),
         regenerate_answer=RegenerateAnswer(
             uow_factory=uow_factory,

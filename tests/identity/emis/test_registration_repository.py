@@ -272,8 +272,6 @@ async def test_registration_and_deletion_through_the_sql_unit_of_work(
     )
     await db_session.refresh(row)
 
-    assert row.status == "deleted"
-    assert row.deleted_at == clock.now()
-    assert row.emis_vault_ref is None
-    assert world.store.secrets == {}
+    assert row.status == "pending_deletion"
+    assert row.deletion_requested_at == clock.now()
     assert closes_on.isoformat() == "2026-11-05"

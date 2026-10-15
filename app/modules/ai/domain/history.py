@@ -64,9 +64,23 @@ def _user_text(message: ChatMessage, *, full_web: bool = True) -> str:
 
 
 def _assistant_entries(message: ChatMessage) -> list[dict[str, Any]]:
+    """The model requests of one answer: each round's text, calls and results."""
+    rounds = len(message.content.progress) + 1
+    out: list[dict[str, Any]] = []
+    for index in range(rounds):
+        last = index == rounds - 1
+        text = message.text if last else message.content.progress[index]
+        calls = [c for c in message.tool_calls if min(c.round, rounds - 1) == index]
+        if not calls and not last:
+            continue
+        out.extend(_round_entries(text, calls))
+    return out
+
+
+def _round_entries(text: str, calls: list[ToolCall]) -> list[dict[str, Any]]:
     entry: dict[str, Any] = {"role": "assistant"}
-    if message.tool_calls:
-        entry["content"] = message.text or None
+    if calls:
+        entry["content"] = text or None
         entry["tool_calls"] = [
             {
                 "id": call.id,
@@ -76,17 +90,17 @@ def _assistant_entries(message: ChatMessage) -> list[dict[str, Any]]:
                     "arguments": json.dumps(call.args, ensure_ascii=False),
                 },
             }
-            for call in message.tool_calls
+            for call in calls
         ]
     else:
-        entry["content"] = message.text or "…"
+        entry["content"] = text or "…"
     results = [
         {
             "role": "tool",
             "tool_call_id": call.id,
             "content": tool_result_content(call),
         }
-        for call in message.tool_calls
+        for call in calls
     ]
     return [entry, *results]
 
@@ -117,7 +131,7 @@ def to_llm_messages(
 
 def message_chars(message: ChatMessage) -> int:
     """Return the approximate size of a message in the request."""
-    size = len(message.text)
+    size = len(message.text) + sum(map(len, message.content.progress))
     if message.role is MessageRole.USER:
         size += sum(
             len(r.title) + len(r.url) + len(r.snippet) for r in message.content.web

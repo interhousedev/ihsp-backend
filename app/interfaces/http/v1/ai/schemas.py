@@ -152,6 +152,8 @@ class ChatMessageViewResponse(_Response):
     """Pages of the message's web search; `⟦w1⟧` chips in the text point at them."""
     steps: list[AgentStepResponse] = Field(default_factory=list)
     """What the assistant did while answering, in order (AI-STEPS)."""
+    progress: list[str] = Field(default_factory=list)
+    """The short notes the assistant wrote between its tool rounds, oldest first."""
 
 
 class UsagePartResponse(_Response):

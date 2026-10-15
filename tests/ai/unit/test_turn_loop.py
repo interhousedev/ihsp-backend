@@ -27,11 +27,11 @@ async def test_read_tool_runs_at_once_and_the_answer_follows(h: AiHarness) -> No
     result = await h.say(chat.id, "What is due?")
 
     assert result.status is TurnStatus.DONE
-    assert [m.role for m in result.new_messages] == ["user", "assistant", "assistant"]
+    assert [m.role for m in result.new_messages] == ["user", "assistant"]
     call = result.new_messages[1].tool_calls[0]
     assert (call.status, call.access) == ("done", "read")
     assert call.note == "Looked up your homework"
-    assert result.new_messages[2].text == "Physics: read chapter 4."
+    assert result.new_messages[1].text == "Physics: read chapter 4."
     assert result.chat.title == "What is due?"
 
 

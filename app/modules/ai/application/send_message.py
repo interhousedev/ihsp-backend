@@ -1,6 +1,6 @@
 """Use case: the user writes a message and the assistant answers (AI-2, AI-7)."""
 
-from collections.abc import Callable
+from collections.abc import AsyncIterator, Callable
 from datetime import datetime
 from uuid import UUID
 
@@ -10,6 +10,7 @@ from app.modules.ai.application.continue_turn import ContinueTurn
 from app.modules.ai.application.locale import LocaleResolver
 from app.modules.ai.application.owned_chat import ChatGuard
 from app.modules.ai.application.pending_calls import supersede_pending
+from app.modules.ai.application.turn_events import TurnEvent, TurnEvents, run_streamed
 from app.modules.ai.application.turn_result import TurnResults
 from app.modules.ai.application.views import TurnResultView
 from app.modules.ai.domain.chat import (
@@ -27,14 +28,23 @@ from app.modules.ai.domain.errors import (
     AttachmentInvalidError,
     ChatNotFoundError,
 )
+from app.modules.ai.domain.tools import note_key
 from app.modules.ai.ports.turn_lock import TurnLock
 from app.modules.ai.ports.unit_of_work import AiUnitOfWork
 from app.settings import Settings
 from app.shared.actor import Actor
-from app.shared.agent_steps import StepKind, StepRecorder, record_step, recording
+from app.shared.agent_steps import (
+    AgentStep,
+    StepKind,
+    StepRecorder,
+    StepStatus,
+    record_step,
+    recording,
+)
 from app.shared.clock import Clock
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.web_search import WebResult, WebSearchApi
+from app.shared.i18n.core import I18nCore
 from app.shared.ids import new_id
 from app.shared.slash_commands import stored_text
 from app.shared.web_citations import numbered
@@ -60,8 +70,10 @@ class SendMessage:
         web: WebSearchApi,
         clock: Clock,
         settings: Settings,
+        i18n: I18nCore,
     ) -> None:
         """Store the collaborators."""
+        self.i18n = i18n
         self.uow_factory = uow_factory
         self.guard = guard
         self.files = files
@@ -84,6 +96,7 @@ class SendMessage:
         web_search: bool = False,
         command: str | None = None,
         args: str = "",
+        events: TurnEvents | None = None,
     ) -> TurnResultView:
         """Run the turn for a new user message.
 
@@ -105,7 +118,8 @@ class SendMessage:
             smart = effective_tier(chat.assistant, chat.tier) is ChatTier.SMART
             if smart:
                 await self._require_smart_quota(actor, chat)
-            with recording(StepRecorder()):  # AI-STEPS of this answer
+            listener = _live_steps(events, self.i18n, locale) if events else None
+            with recording(StepRecorder(listener)):  # AI-STEPS of this answer
                 try:
                     found = await self._search(actor, chat_id, text, locale, web_search)
                     changed = await self._append(chat, text, attachments, found)
@@ -113,11 +127,48 @@ class SendMessage:
                     if smart:
                         await self.budget.release_smart(actor.user_id)
                     raise
+                if events is not None:  # accepted: the stream starts here
+                    events.status(self.i18n.t(locale, "ai-status-thinking"))
                 _record_inputs(attachments, web_search, found)
                 progress = await self.continue_turn.execute(
-                    chat_id=chat_id, actor=actor, locale=locale, changed=changed
+                    chat_id=chat_id,
+                    actor=actor,
+                    locale=locale,
+                    changed=changed,
+                    events=events,
                 )
         return await self.results.build(actor, locale, progress)
+
+    def stream(
+        self,
+        *,
+        actor: Actor,
+        chat_id: UUID,
+        text: str,
+        file_ids: list[UUID],
+        web_search: bool = False,
+        command: str | None = None,
+        args: str = "",
+    ) -> AsyncIterator[TurnEvent]:
+        """The turn as live events (`status`, `step`, `delta`, then `done`/`error`).
+
+        A refusal (limit, unknown chat, bad file) raises before the first event.
+        """
+        events = TurnEvents()
+
+        async def turn() -> TurnResultView:
+            return await self.execute(
+                actor=actor,
+                chat_id=chat_id,
+                text=text,
+                file_ids=file_ids,
+                web_search=web_search,
+                command=command,
+                args=args,
+                events=events,
+            )
+
+        return run_streamed(events, turn)
 
     async def _require_budget(self, chat: Chat, text: str, locale: str) -> None:
         """Refuse a message the user cannot afford, before anything is stored."""
@@ -201,6 +252,26 @@ class SendMessage:
             await uow.chats.save(locked)
             await uow.commit()
         return [*changed, message]
+
+
+def _live_steps(
+    events: TurnEvents, i18n: I18nCore, locale: str
+) -> Callable[[AgentStep], None]:
+    """Send every step, and the label of a finished one as the status line."""
+
+    def listen(item: AgentStep) -> None:
+        events.step(item)
+        if item.status is StepStatus.DONE and item.kind is not StepKind.THINK:
+            events.status(_status_line(item, i18n, locale))
+
+    return listen
+
+
+def _status_line(item: AgentStep, i18n: I18nCore, locale: str) -> str:
+    """A tool step shows the tool's note ("Looked up your marks")."""
+    if " " not in item.label and "_" in item.label:
+        return i18n.t(locale, note_key(item.label))
+    return item.label
 
 
 def _record_inputs(

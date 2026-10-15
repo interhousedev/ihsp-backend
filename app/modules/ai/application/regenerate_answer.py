@@ -1,6 +1,6 @@
 """Use case: answer the last user message again (AI-2, AI-8)."""
 
-from collections.abc import Callable
+from collections.abc import AsyncIterator, Callable
 from uuid import UUID
 
 from app.modules.ai.application.assistant_profile import effective_tier, profile_for
@@ -9,6 +9,7 @@ from app.modules.ai.application.continue_turn import TAIL_MESSAGES, ContinueTurn
 from app.modules.ai.application.locale import LocaleResolver
 from app.modules.ai.application.owned_chat import ChatGuard
 from app.modules.ai.application.pending_calls import expire_overdue, refresh_counter
+from app.modules.ai.application.turn_events import TurnEvent, TurnEvents, run_streamed
 from app.modules.ai.application.turn_result import TurnResults
 from app.modules.ai.application.views import TurnResultView
 from app.modules.ai.domain.chat import Chat, ChatTier, last_turn
@@ -53,7 +54,16 @@ class RegenerateAnswer:
         self.clock = clock
         self.settings = settings
 
-    async def execute(self, *, actor: Actor, chat_id: UUID) -> TurnResultView:
+    def stream(self, *, actor: Actor, chat_id: UUID) -> AsyncIterator[TurnEvent]:
+        """The rerun as live events; a refusal raises before the first one."""
+        events = TurnEvents()
+        return run_streamed(
+            events, lambda: self.execute(actor=actor, chat_id=chat_id, events=events)
+        )
+
+    async def execute(
+        self, *, actor: Actor, chat_id: UUID, events: TurnEvents | None = None
+    ) -> TurnResultView:
         """Check the budgets, drop the messages after the last user message, rerun.
 
         On the smart tier the rerun counts one smart request of the week, given back
@@ -74,8 +84,10 @@ class RegenerateAnswer:
                 if smart:
                     await self.budget.release_smart(actor.user_id)
                 raise
+            if events is not None:  # accepted: the stream starts here
+                events.emit("status", {"text": ""})
             progress = await self.continue_turn.execute(
-                chat_id=chat_id, actor=actor, locale=locale
+                chat_id=chat_id, actor=actor, locale=locale, events=events
             )
         return await self.results.build(actor, locale, progress)
 

@@ -471,6 +471,10 @@ class NotebooksSettings(BaseModel):
     studio_context_tokens: int = 150_000
     """Token cap of the source pack for Studio outputs."""
 
+    thin_sources_chars: int = Field(default=6_000, ge=0)
+    """Below this many characters of ready source text (or with no source at all) a
+    Studio request suggests searching the web for more sources. About one page."""
+
     multi_hop_enabled: bool = False
     """In retrieval mode a small model (AI task RETRIEVAL_PLAN) checks whether the
     found passages answer the question and searches again for what is missing."""

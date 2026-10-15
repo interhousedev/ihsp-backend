@@ -10,7 +10,7 @@
   "notebooks-plan-too-long": "The plan has {count} slides; a presentation can have at most {max}. Delete or merge slides first.",
   "notebooks-artifact-not-ready": "This output is not ready yet.",
   "notebooks-auto-limit": "You have reached the maximum number of subject and lesson notebooks.",
-  "notebooks-auto-readonly": "This notebook is kept up to date from your lessons. Exclude a material instead of removing it, or make a copy to edit it freely.",
+  "notebooks-auto-readonly": "This material comes from your lessons and is kept up to date automatically. Exclude it instead of removing it.",
   "notebooks-busy": "Notebooks are busy with your previous request. Wait for it to finish.",
   "notebooks-copy-title": "{title} (copy)",
   "notebooks-default-material-exists": "This material is already a default material of the subject.",

@@ -113,7 +113,9 @@ class AddSources:
         Raises:
             NotebookNotFoundError: The notebook is not the caller's.
             InvalidOptionsError: No items, or more than `add_batch_max`.
-            AutoNotebookReadOnlyError: A subject or lesson notebook only takes notes.
+            AutoNotebookReadOnlyError: A lesson material added by hand to a subject or
+                lesson notebook (the sync owns those); other sources are the
+                student's own.
         """
         if not 1 <= len(items) <= self.settings.notebooks.add_batch_max:
             raise InvalidOptionsError(
@@ -124,7 +126,9 @@ class AddSources:
             notebook = await load_notebook(
                 uow, actor.user_id, notebook_id, for_update=True
             )
-            if notebook.is_auto and any(item.kind != "note" for item in items):
+            if notebook.is_auto and any(
+                item.kind == "lesson_resource" for item in items
+            ):
                 raise AutoNotebookReadOnlyError()
             batch = _Batch(
                 position=await uow.sources.next_position(notebook.id),

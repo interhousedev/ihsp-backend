@@ -15,7 +15,7 @@ class MessageRepository(Protocol):
         ...
 
     async def save(self, message: ChatMessage) -> None:
-        """Write the message's tool calls and usage."""
+        """Write the message's content, tool calls and usage."""
         ...
 
     async def set_feedback(self, message: ChatMessage) -> None:

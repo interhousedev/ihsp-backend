@@ -33,6 +33,7 @@ from app.modules.notebooks.domain.errors import (
     NoSourcesSelectedError,
 )
 from app.modules.notebooks.domain.language import resolve_language
+from app.modules.notebooks.domain.web_suggestion import suggestion_for_request
 from app.modules.notebooks.ports.unit_of_work import NotebooksUnitOfWork, UowFactory
 from app.settings import Settings
 from app.shared.actor import Actor
@@ -177,6 +178,12 @@ class RequestArtifact:
                 report_format=handler.report_format(parsed),
             )
             artifact.cache_key = key
+            artifact.suggest_web_search = suggestion_for_request(
+                char_counts=[source.char_count for source in sources],
+                title=notebook.title,
+                focus=focus,
+                threshold=self.settings.notebooks.thin_sources_chars,
+            )
             if course:  # a shared notebook: the staff member who asked pays
                 artifact.requested_by = actor.user_id
             quota = self.quota.pool(course)

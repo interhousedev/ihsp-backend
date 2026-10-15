@@ -10,7 +10,7 @@
   "notebooks-plan-too-long": "Rejada {count} ta slayd bor, taqdimotda esa ko'pi bilan {max} ta bo'lishi mumkin. Avval slaydlarni o'chiring yoki birlashtiring.",
   "notebooks-artifact-not-ready": "Bu material hali tayyor emas.",
   "notebooks-auto-limit": "Fan va dars daftarlarining eng ko'p soniga yetdingiz.",
-  "notebooks-auto-readonly": "Bu daftar dars materiallaridan avtomatik yig'iladi. Materialni o'chirmasdan chiqarib tashlang yoki erkin tahrirlash uchun nusxa oling.",
+  "notebooks-auto-readonly": "Bu material darslaringizdan keladi va avtomatik yangilanadi. Uni oʻchirish oʻrniga chiqarib tashlang.",
   "notebooks-busy": "Daftarlar oldingi so'rovingiz bilan band. Uning tugashini kuting.",
   "notebooks-copy-title": "{title} (nusxa)",
   "notebooks-default-material-exists": "Bu material fan uchun allaqachon standart materiallar qatorida.",

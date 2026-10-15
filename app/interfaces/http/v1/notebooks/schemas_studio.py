@@ -9,6 +9,10 @@ from datetime import datetime
 from typing import Annotated, Any, Literal, Self
 from uuid import UUID
 
+from app.modules.notebooks.application.faithfulness_check import (
+    UNVERIFIED,
+    VERIFICATION_KEY,
+)
 from app.modules.notebooks.application.views import ArtifactDetailView
 from app.modules.notebooks.domain.artifacts.kind_support import CommonOptions
 from app.modules.notebooks.domain.artifacts.kinds.course_plan import CoursePlanOptions
@@ -24,6 +28,7 @@ from app.modules.notebooks.domain.artifacts.kinds.report import ReportOptions
 from app.modules.notebooks.domain.artifacts.kinds.slides import SlidesOptions
 from app.modules.notebooks.domain.entities import Artifact, ArtifactError
 from app.modules.notebooks.domain.enums import ArtifactStatus, ReportFormat
+from app.modules.notebooks.domain.web_suggestion import suggestion_for_content
 
 from pydantic import BaseModel, Field
 
@@ -212,13 +217,30 @@ class _ArtifactBase(BaseModel):
     finished_at: datetime | None
 
 
+class WebSearchSuggestion(BaseModel):
+    """A web search the student may start to add sources; the server never starts it."""
+
+    query: str
+
+
+def _suggestion(query: str | None) -> WebSearchSuggestion | None:
+    """The suggestion of a query, None when there is none."""
+    return WebSearchSuggestion(query=query) if query else None
+
+
 class ArtifactItemResponse(_ArtifactBase):
     """`ArtifactItem`: an output without its content."""
+
+    # Set on the create response when the sources were thin; absent from later reads.
+    suggest_web_search: WebSearchSuggestion | None = None
 
     @classmethod
     def from_entity(cls, artifact: Artifact) -> Self:
         """Build from the artifact entity."""
-        return cls(**_item_fields(artifact))
+        return cls(
+            **_item_fields(artifact),
+            suggest_web_search=_suggestion(artifact.suggest_web_search),
+        )
 
 
 class ArtifactDetailResponse(_ArtifactBase):
@@ -229,17 +251,27 @@ class ArtifactDetailResponse(_ArtifactBase):
     source_map: dict[str, str]
     progress_state: dict[str, Any] | None
     assets: list[dict[str, Any]] = Field(default_factory=list)  # always empty
+    # Set when the faithfulness check left claims without a source in the sources.
+    suggest_web_search: WebSearchSuggestion | None = None
 
     @classmethod
     def from_view(cls, view: ArtifactDetailView) -> Self:
         """Build from the use case view."""
         artifact = view.artifact
+        query = suggestion_for_content(
+            artifact.content,
+            verification_key=VERIFICATION_KEY,
+            unverified=UNVERIFIED,
+            title=artifact.title,
+            focus=artifact.prompt,
+        )
         return cls(
             **_item_fields(artifact),
             content=artifact.content,
             refs_index=artifact.refs_index or {},
             source_map=artifact.source_map,
             progress_state=view.progress_state,
+            suggest_web_search=_suggestion(query),
         )
 
 

@@ -173,13 +173,16 @@ class OpenRouterGateway:
         provider: dict[str, Any] | None = None,
         timeout_seconds: float | None = None,
         tuning: LlmTuning | None = None,
+        tools: list[dict[str, Any]] | None = None,
     ) -> AsyncIterator[dict[str, Any]]:
-        """Yield {"delta": text} items, then {"usage": {...}} (server-sent events).
+        """Yield {"delta": text} items, then {"usage", "tool_calls"?} (SSE).
 
-        A failed connection is retried once, but only before the first delta.
+        With `tools` (tool choice auto) the streamed tool call pieces are collected
+        per index and come assembled with the usage at the end. A failed connection
+        is retried once, but only before the first delta.
         """
         payload = build_payload(
-            model, system, messages, [], max_tokens, tuning, self._cache_models
+            model, system, messages, tools or [], max_tokens, tuning, self._cache_models
         )
         payload["stream"] = True
         payload["stream_options"] = {"include_usage": True}
@@ -540,6 +543,7 @@ class SseParser:
         self.done = False
         self._finished = False
         self._usage: dict[str, Any] = {}
+        self._calls: dict[int, dict[str, Any]] = {}
 
     def feed(self, line: str) -> list[dict[str, Any]]:
         """Return the items of one line."""
@@ -556,14 +560,36 @@ class SseParser:
         choice = (chunk.get("choices") or [{}])[0]
         if choice.get("finish_reason"):
             self._finished = True
-        content = (choice.get("delta") or {}).get("content")
+        delta = choice.get("delta") or {}
+        for part in delta.get("tool_calls") or []:
+            self._add_call_part(part)
+        content = delta.get("content")
         return [{"delta": content}] if content else []
+
+    def _add_call_part(self, part: dict[str, Any]) -> None:
+        """Collect one piece of a streamed tool call (id, name, argument text)."""
+        index = int(part.get("index") or 0)
+        call = self._calls.setdefault(
+            index, {"id": "", "function": {"name": "", "arguments": ""}}
+        )
+        if part.get("id"):
+            call["id"] = part["id"]
+        function = part.get("function") or {}
+        if function.get("name"):
+            call["function"]["name"] += function["name"]
+        if function.get("arguments"):
+            call["function"]["arguments"] += function["arguments"]
 
     def finish(self) -> list[dict[str, Any]]:
         """Return the usage item; a stream cut short is a provider error."""
         if not self._finished:
             raise AiProviderError(support_details="stream ended early")
-        return [{"usage": _usage(self._usage)}]
+        last: dict[str, Any] = {"usage": _usage(self._usage)}
+        if self._calls:
+            last["tool_calls"] = [
+                _tool_call(self._calls[index]) for index in sorted(self._calls)
+            ]
+        return [last]
 
 
 def _parse_chunk(body: str) -> dict[str, Any]:

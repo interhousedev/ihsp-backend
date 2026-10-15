@@ -61,9 +61,9 @@ async def test_approve_runs_the_write_and_the_assistant_continues(h: AiHarness) 
     )
 
     assert result.status is TurnStatus.DONE
-    assert [m.seq for m in result.new_messages] == [2, 3]
+    assert [m.seq for m in result.new_messages] == [2]  # one answer, one message
     assert result.new_messages[0].tool_calls[0].status == "done"
-    assert result.new_messages[1].text == "Your set is ready."
+    assert result.new_messages[0].text == "Your set is ready."
     assert result.chat.pending_approvals == 0
     created = h.flashcards.create_calls
     assert len(created) == 1

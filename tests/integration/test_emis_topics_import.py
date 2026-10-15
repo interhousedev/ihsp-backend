@@ -172,9 +172,9 @@ async def _expected_urls(
                 continue
             topic = item.topic
             if topic.topic_file_url:
-                titles[lesson.id].add(topic.name)
+                titles[lesson.id].add(f"Classwork: {topic.name}.pdf")
             if topic.homework_file_url:
-                titles[lesson.id].add(f"{topic.name} (homework)")
+                titles[lesson.id].add(f"Homework: {topic.name}.pdf")
             if topic.video_url:
                 titles[lesson.id].add(f"{topic.name} (video)")
     return titles

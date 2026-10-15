@@ -45,7 +45,7 @@ async def test_tool_calls_and_empty_assistant_texts_are_dropped(h: AiHarness) ->
         "What do I study?",
         "No subjects yet.",
     ]
-    assert transcript["last_seq"] == 3  # the tool-call message still has a seq
+    assert transcript["last_seq"] == 2  # the tool round is inside the answer
     assert "get_my_subjects" not in str(transcript)
 
 

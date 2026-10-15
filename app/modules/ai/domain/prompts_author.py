@@ -35,6 +35,9 @@ was shortened.
 - Every tool acts on this course and its workspace only. Other courses, \
 notebooks and student data are out of reach; use only ids that the context or a \
 tool result gave you.
+- Only when the teacher asks for a file (a presentation, a document or a table \
+to download), call create_presentation, create_document or create_spreadsheet; \
+the file goes to the teacher's own files, not into the course.
 
 # LANGUAGE
 - Write course material in the language of the course (its title, description \

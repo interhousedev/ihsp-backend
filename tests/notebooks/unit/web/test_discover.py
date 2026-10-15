@@ -4,7 +4,6 @@ from app.modules.notebooks.application.discover_sources import DiscoverSources
 from app.modules.notebooks.domain.entities import AutoSettings
 from app.modules.notebooks.domain.enums import NotebookOrigin, SourceKind
 from app.modules.notebooks.domain.errors import (
-    AutoNotebookReadOnlyError,
     InvalidOptionsError,
     NotebookNotFoundError,
 )
@@ -189,7 +188,7 @@ async def test_a_request_of_the_wrong_length_is_refused_before_any_search(
     assert web.store.days == {}
 
 
-async def test_a_subject_notebook_the_system_keeps_cannot_take_web_sources(
+async def test_a_subject_notebook_takes_web_sources_like_any_notebook(
     make_web_core: WebCore, student: Actor
 ) -> None:
     core, web = make_web_core()
@@ -201,10 +200,9 @@ async def test_a_subject_notebook_the_system_keeps_cannot_take_web_sources(
         auto_settings=AutoSettings(),
     )
 
-    with pytest.raises(AutoNotebookReadOnlyError):
-        await DiscoverSources(core).execute(student, notebook.id, "topic")
+    await DiscoverSources(core).execute(student, notebook.id, "topic")
 
-    assert web.search.calls == []
+    assert len(web.search.calls) == 1
 
 
 def test_the_fake_pages_are_distinct() -> None:

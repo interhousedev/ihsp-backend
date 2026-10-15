@@ -48,7 +48,9 @@ async def download_artifact(
         raise InvalidOptionsError(
             params={"kind": artifact.kind.value, "format": wanted}
         ) from error
-    ascii_name = document.name.encode("ascii", "ignore").decode() or f"file.{wanted}"
+    # A Cyrillic title has no ASCII letters: "file.pptx", not a nameless ".pptx".
+    stem = document.name.rsplit(".", 1)[0].encode("ascii", "ignore").decode().strip()
+    ascii_name = f"{stem or 'file'}.{wanted}"
     disposition = (
         f'attachment; filename="{ascii_name}"; '
         f"filename*=UTF-8''{quote(document.name)}"

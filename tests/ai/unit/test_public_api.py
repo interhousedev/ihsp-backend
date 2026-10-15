@@ -18,9 +18,9 @@ async def test_shared_chat_hides_tool_results_and_keeps_notes(h: AiHarness) -> N
 
     assert shared is not None
     assert shared["owner_id"] == h.student.user_id
-    assert [m["role"] for m in shared["messages"]] == ["user", "assistant", "assistant"]
+    assert [m["role"] for m in shared["messages"]] == ["user", "assistant"]
     assert shared["messages"][1]["tool_notes"] == ["Looked up your subjects"]
-    assert shared["messages"][2]["text"] == "You have no subjects."
+    assert shared["messages"][1]["text"] == "You have no subjects."
     assert "result" not in str(shared)
 
 

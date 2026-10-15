@@ -1459,6 +1459,16 @@
           "status": {
             "$ref": "#/components/schemas/ArtifactStatus"
           },
+          "suggest_web_search": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WebSearchSuggestion"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "title": {
             "title": "Title",
             "type": "string"
@@ -1649,6 +1659,16 @@
           },
           "status": {
             "$ref": "#/components/schemas/ArtifactStatus"
+          },
+          "suggest_web_search": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WebSearchSuggestion"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "title": {
             "title": "Title",
@@ -4790,6 +4810,13 @@
               "type": "string"
             },
             "title": "File Ids",
+            "type": "array"
+          },
+          "progress": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Progress",
             "type": "array"
           },
           "role": {
@@ -23852,6 +23879,10 @@
           "status": {
             "$ref": "#/components/schemas/SourceStatus"
           },
+          "synced": {
+            "title": "Synced",
+            "type": "boolean"
+          },
           "synced_at": {
             "anyOf": [
               {
@@ -23893,6 +23924,7 @@
           "label_ids",
           "modality",
           "ai_unsupported",
+          "synced",
           "guide",
           "body_md",
           "editable",
@@ -24080,6 +24112,10 @@
           "status": {
             "$ref": "#/components/schemas/SourceStatus"
           },
+          "synced": {
+            "title": "Synced",
+            "type": "boolean"
+          },
           "synced_at": {
             "anyOf": [
               {
@@ -24120,7 +24156,8 @@
           "created_at",
           "label_ids",
           "modality",
-          "ai_unsupported"
+          "ai_unsupported",
+          "synced"
         ],
         "title": "SourceItemResponse",
         "type": "object"
@@ -32473,6 +32510,20 @@
           "cited"
         ],
         "title": "WebResultResponse",
+        "type": "object"
+      },
+      "WebSearchSuggestion": {
+        "description": "A web search the student may start to add sources; the server never starts it.",
+        "properties": {
+          "query": {
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "WebSearchSuggestion",
         "type": "object"
       },
       "Widget": {
@@ -42586,7 +42637,7 @@
     },
     "/v1/ai/chats/{chat_id}/messages": {
       "post": {
-        "description": "Send a message and return what the assistant did with it.",
+        "description": "Send a message: one JSON result, or events with `Accept: text/event-stream`.\n\nThe events are `status`, `step`, `delta` (the text being written),\n`round_end` (that text was a progress note), then `done` (the TurnResult:\nstored messages and usage) or `error`.",
         "operationId": "send_message_v1_ai_chats__chat_id__messages_post",
         "parameters": [
           {

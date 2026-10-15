@@ -28,7 +28,8 @@ AUTHOR_TOOLS = [
     "search_workspace", "read_workspace_source", "list_workspace_outputs",
     "apply_outline", "create_section", "create_step", "replace_step_content",
     "add_text_block", "add_test_block", "add_flashcards_block",
-    "generate_studio_output", "apply_studio_output", "read_chat_history",
+    "generate_studio_output", "apply_studio_output", "create_presentation",
+    "create_document", "create_spreadsheet", "read_chat_history",
 ]  # fmt: skip
 
 

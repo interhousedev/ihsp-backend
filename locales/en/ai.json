@@ -67,6 +67,9 @@
   "ai-note-audit-log": "Looked up the audit log",
   "ai-note-create-artifact": "Study material",
   "ai-note-make-document": "Made a document",
+  "ai-note-create-presentation": "Made a presentation",
+  "ai-note-create-document": "Made a document",
+  "ai-note-create-spreadsheet": "Made a spreadsheet",
   "ai-note-create-broadcast-draft": "Broadcast draft",
   "ai-note-create-flashcard-set": "Flash card set",
   "ai-note-create-group": "New group",
@@ -163,5 +166,6 @@
   "ai-unknown-command": "Unknown command /{command}. Available: {known}.",
   "ai-value-yes": "Yes",
   "ai-wrong-assistant": "You cannot use this assistant.",
-  "ai-usage-range-invalid": "The date range is invalid or longer than {max_days} days."
+  "ai-usage-range-invalid": "The date range is invalid or longer than {max_days} days.",
+  "ai-status-thinking": "Thinking…"
 }

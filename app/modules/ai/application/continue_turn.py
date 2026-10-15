@@ -13,6 +13,7 @@ from app.modules.ai.application.system_prompts import SystemPrompts
 from app.modules.ai.application.tool_runner import ToolRunner
 from app.modules.ai.application.tools.base import ToolContext
 from app.modules.ai.application.tools.registry import ToolRegistry
+from app.modules.ai.application.turn_events import TurnEvents
 from app.modules.ai.application.views import TurnStatus
 from app.modules.ai.domain.chat import (
     Chat,
@@ -32,7 +33,7 @@ from app.modules.ai.domain.tool_call import ToolCall, ToolStatus
 from app.modules.ai.ports.unit_of_work import AiUnitOfWork
 from app.settings import Settings
 from app.shared.actor import Actor
-from app.shared.agent_steps import current_steps
+from app.shared.agent_steps import StepKind, current_steps, record_step
 from app.shared.clock import Clock
 from app.shared.contracts.ai import LlmGateway
 from app.shared.contracts.web_search import WebResult
@@ -69,6 +70,8 @@ class _Run:
     after_seq: int
     progress: TurnProgress
     span: int = TAIL_MESSAGES  # messages read per step (AI-EFF-3)
+    message_seq: int | None = None  # the one assistant message of this answer
+    events: TurnEvents | None = None  # the live events of a streamed turn
 
 
 class ContinueTurn:
@@ -109,8 +112,14 @@ class ContinueTurn:
         actor: Actor,
         locale: str,
         changed: list[ChatMessage] | None = None,
+        events: TurnEvents | None = None,
     ) -> TurnProgress:
-        """Run model steps; `changed` carries messages the caller already touched."""
+        """Run model steps; `changed` carries messages the caller already touched.
+
+        Every model request of the answer goes into one assistant message: the
+        texts of the tool rounds become its `progress` notes and the last text is
+        the answer. A turn continued after an approval adds to the waiting message.
+        """
         limits = await self.limits.current()
         history = limits.ai_chat_history_limit
         chat, tail = await self._load(chat_id)
@@ -120,6 +129,9 @@ class ContinueTurn:
         progress = TurnProgress(chat=chat, changed=list(changed or []))
         ctx = ToolContext(actor, chat_id, locale, scope=chat.scope)
         run = _Run(chat_id, ctx, summary, after, progress, history_span(history))
+        run.events = events
+        if tail and tail[-1].role is MessageRole.ASSISTANT:
+            run.message_seq = tail[-1].seq
         steps = profile_for(
             chat.assistant, self.settings, chat.tier, limits=limits
         ).max_tool_steps
@@ -150,34 +162,60 @@ class ContinueTurn:
         if await self._over_budget(chat, system, messages, tools):
             return TurnStatus.LIMIT_REACHED
         task = profile_for(chat.assistant, self.settings, chat.tier).llm
-        response = await self.llm.complete(
-            model=chat.model,
-            system=system,
-            messages=messages,
-            tools=tools,
-            max_tokens=task.output_tokens(MAX_OUTPUT_TOKENS),
-            provider=task.provider(),
-            tuning=task.tuning,
-        )
+        request: dict[str, Any] = {
+            "model": chat.model,
+            "system": system,
+            "messages": messages,
+            "tools": tools,
+            "max_tokens": task.output_tokens(MAX_OUTPUT_TOKENS),
+            "provider": task.provider(),
+            "tuning": task.tuning,
+        }
+        if run.events is None:
+            response = await self.llm.complete(**request)
+        else:
+            response = await self._streamed(run.events, request)
         usage = response.get("usage") or {}
         tokens_in, tokens_out = int(usage.get("input", 0)), int(usage.get("output", 0))
         await self.budget.add(
             chat.owner_id, (tokens_in + tokens_out) * self._weight(chat), chat.assistant
         )
         taken = {call.id for message in tail for call in message.tool_calls}
-        calls = await self.runner.propose(
-            chat.assistant, run.ctx, response.get("tool_calls") or [], taken
-        )
+        text = str(response.get("text") or "")
+        raw_calls = response.get("tool_calls") or []
+        if raw_calls and run.events is not None:  # the streamed text was a note
+            run.events.emit("round_end", {"text": text})
+            run.events.status(text)
+        if raw_calls and text.strip():  # a progress note between tool rounds
+            record_step(StepKind.THINK, text)
+        calls = await self.runner.propose(chat.assistant, run.ctx, raw_calls, taken)
         message, stored = await self._store(
-            run.chat_id,
-            str(response.get("text") or ""),
-            calls,
-            (tokens_in, tokens_out),
-            web=_turn_web(tail),
+            run, text, calls, (tokens_in, tokens_out), web=_turn_web(tail)
         )
         run.progress.changed.append(message)
         run.progress.chat = stored
         return _final_status(calls)
+
+    async def _streamed(
+        self, events: TurnEvents, request: dict[str, Any]
+    ) -> dict[str, Any]:
+        """One model request through `stream`: text pieces go out as `delta` events.
+
+        Returns the same shape as `complete` (text, tool_calls, usage).
+        """
+        pieces: list[str] = []
+        last: dict[str, Any] = {}
+        async for item in self.llm.stream(**request):
+            if item.get("delta"):
+                pieces.append(item["delta"])
+                events.emit("delta", {"text": item["delta"]})
+            if "usage" in item:
+                last = item
+        return {
+            "text": "".join(pieces),
+            "tool_calls": last.get("tool_calls") or [],
+            "usage": last.get("usage") or {},
+        }
 
     async def precheck(self, chat: Chat, text: str, locale: str) -> LimitHit | None:
         """Return the limit a new user message would run into, before it is stored."""
@@ -229,32 +267,43 @@ class ContinueTurn:
 
     async def _store(
         self,
-        chat_id: UUID,
+        run: _Run,
         text: str,
         calls: list[ToolCall],
         tokens: tuple[int, int],
         web: list[WebResult] | None = None,
     ) -> tuple[ChatMessage, Chat]:
+        """Add one model request to the answer's message (made by the first one)."""
         now = self.clock.now()
         content = _answer_content(text, web or [])
         if (recorder := current_steps()) is not None:  # AI-STEPS, up to this message
             content.steps = recorder.take()
         async with self.uow_factory() as uow:
-            chat = await uow.chats.get_for_update(chat_id)
+            chat = await uow.chats.get_for_update(run.chat_id)
             if chat is None:
                 raise ChatNotFoundError()
-            message = ChatMessage(
-                id=new_id(),
-                chat_id=chat_id,
-                seq=await uow.messages.last_seq(chat_id) + 1,
-                role=MessageRole.ASSISTANT,
-                content=content,
-                created_at=now,
-                tool_calls=calls,
-                tokens_in=tokens[0],
-                tokens_out=tokens[1],
-            )
-            await uow.messages.add(message)
+            message = None
+            if run.message_seq is not None:
+                message = await uow.messages.get_for_update(
+                    run.chat_id, run.message_seq
+                )
+            if message is None:
+                message = ChatMessage(
+                    id=new_id(),
+                    chat_id=run.chat_id,
+                    seq=await uow.messages.last_seq(run.chat_id) + 1,
+                    role=MessageRole.ASSISTANT,
+                    content=content,
+                    created_at=now,
+                    tool_calls=calls,
+                    tokens_in=tokens[0],
+                    tokens_out=tokens[1],
+                )
+                await uow.messages.add(message)
+                run.message_seq = message.seq
+            else:
+                _add_round(message, content, calls, tokens)
+                await uow.messages.save(message)
             chat.pending_approvals += sum(
                 1 for c in calls if c.status is ToolStatus.PENDING_APPROVAL
             )
@@ -266,9 +315,27 @@ class ContinueTurn:
     async def _close_with_notice(self, run: _Run) -> None:
         """After the last allowed step, end the turn with a short assistant note."""
         text = self.i18n.t(run.ctx.locale, "ai-step-limit")
-        message, chat = await self._store(run.chat_id, text, [], (0, 0))
+        message, chat = await self._store(run, text, [], (0, 0))
         run.progress.changed.append(message)
         run.progress.chat = chat
+
+
+def _add_round(
+    message: ChatMessage,
+    content: MessageContent,
+    calls: list[ToolCall],
+    tokens: tuple[int, int],
+) -> None:
+    """Make `content` the answer; the text so far becomes a progress note."""
+    index = len(message.content.progress) + 1
+    message.content.progress.append(message.content.text)
+    message.content.text = content.text
+    if content.web:
+        message.content.web = content.web
+    message.content.steps.extend(content.steps)
+    message.tool_calls.extend(c.model_copy(update={"round": index}) for c in calls)
+    message.tokens_in = (message.tokens_in or 0) + tokens[0]
+    message.tokens_out = (message.tokens_out or 0) + tokens[1]
 
 
 def _turn_web(tail: list[ChatMessage]) -> list[WebResult]:
