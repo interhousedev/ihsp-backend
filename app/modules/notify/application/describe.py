@@ -78,6 +78,23 @@ def _marks(p: dict[str, Any], v: _View) -> Description:
     )
 
 
+def _curator_exam_mark(p: dict[str, Any], v: _View) -> Description:
+    key = "notify-curator-exam-mark-body-" + (
+        "final" if p.get("type") == "final" else "midterm"
+    )
+    body = v.t(
+        key,
+        student=p.get("student_name", ""),
+        group=p.get("group_name", ""),
+        subject=p.get("subject_name", ""),
+        value=p.get("value", ""),
+        date=fmt_date(p.get("date")),
+    )
+    return Description(
+        v.t("notify-curator-exam-mark-title"), body, f"{v.urls.staff}/group/"
+    )
+
+
 def _result_drop(p: dict[str, Any], v: _View) -> Description:
     key = (
         "notify-result-drop-gpa"
@@ -350,6 +367,25 @@ def _library_report_filed(p: dict[str, Any], v: _View) -> Description:
     )
 
 
+def _library_suggestion_approved(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-library-suggestion-approved-title"),
+        v.t("notify-library-suggestion-approved-body", title=p.get("title", "")),
+        _library_item_link(p, v),
+    )
+
+
+def _library_suggestion_declined(p: dict[str, Any], v: _View) -> Description:
+    body = v.t("notify-library-suggestion-declined-body", title=p.get("title", ""))
+    if p.get("reason"):
+        body += v.t("notify-library-text-part", text=p["reason"])
+    return Description(
+        v.t("notify-library-suggestion-declined-title"),
+        body,
+        v.library_link("/my/?tab=suggestions"),
+    )
+
+
 def _library_reading_list_new(p: dict[str, Any], v: _View) -> Description:
     key = "notify-library-reading-list-new-body"
     if p.get("subject"):
@@ -442,6 +478,9 @@ _BUILDERS: dict[NotificationType, _Builder] = {
     NotificationType.LIBRARY_QUEUE_WAITING: _library_queue_waiting,
     NotificationType.LIBRARY_REPORT_FILED: _library_report_filed,
     NotificationType.LIBRARY_READING_LIST_NEW: _library_reading_list_new,
+    NotificationType.LIBRARY_SUGGESTION_APPROVED: _library_suggestion_approved,
+    NotificationType.LIBRARY_SUGGESTION_DECLINED: _library_suggestion_declined,
+    NotificationType.CURATOR_EXAM_MARK: _curator_exam_mark,
 }
 
 

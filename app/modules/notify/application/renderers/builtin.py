@@ -7,6 +7,9 @@ from app.modules.notify.application.renderers.assessment_reminder import (
     AssessmentReminderRenderer,
 )
 from app.modules.notify.application.renderers.broadcast import BroadcastRenderer
+from app.modules.notify.application.renderers.curator_exam_mark import (
+    CuratorExamMarkRenderer,
+)
 from app.modules.notify.application.renderers.emis_reauth import EmisReauthRenderer
 from app.modules.notify.application.renderers.files_expiring import (
     FilesExpiringRenderer,
@@ -37,6 +40,12 @@ from app.modules.notify.application.renderers.library_reading_list_new import (
 )
 from app.modules.notify.application.renderers.library_report_filed import (
     LibraryReportFiledRenderer,
+)
+from app.modules.notify.application.renderers.library_suggestion_approved import (
+    LibrarySuggestionApprovedRenderer,
+)
+from app.modules.notify.application.renderers.library_suggestion_declined import (
+    LibrarySuggestionDeclinedRenderer,
 )
 from app.modules.notify.application.renderers.login_failures import (
     LoginFailuresRenderer,
@@ -124,4 +133,15 @@ def register_builtin_renderers(
     registry.register(
         NotificationType.LIBRARY_READING_LIST_NEW,
         LibraryReadingListNewRenderer(i18n, urls),
+    )
+    registry.register(
+        NotificationType.LIBRARY_SUGGESTION_APPROVED,
+        LibrarySuggestionApprovedRenderer(i18n, urls),
+    )
+    registry.register(
+        NotificationType.LIBRARY_SUGGESTION_DECLINED,
+        LibrarySuggestionDeclinedRenderer(i18n, urls),
+    )
+    registry.register(
+        NotificationType.CURATOR_EXAM_MARK, CuratorExamMarkRenderer(i18n, urls)
     )

@@ -143,6 +143,24 @@ PAYLOADS: dict[NotificationType, dict[str, Any]] = {
         "title": "Start of term",
         "subject": "Physics",
     },
+    NotificationType.LIBRARY_SUGGESTION_APPROVED: {
+        "suggestion_id": ITEM_ID,
+        "item_id": ITEM_ID,
+        "title": "Algebra",
+    },
+    NotificationType.LIBRARY_SUGGESTION_DECLINED: {
+        "suggestion_id": ITEM_ID,
+        "title": "Algebra",
+        "reason": "We already have it.",
+    },
+    NotificationType.CURATOR_EXAM_MARK: {
+        "student_name": "Karimov Ali",
+        "group_name": "2TN2",
+        "subject_name": "Physics",
+        "type": "midterm",
+        "value": 3,
+        "date": "2026-10-06",
+    },
 }
 
 
