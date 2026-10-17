@@ -93,6 +93,19 @@ ssh "$host" "cd '$dir' && PULL=$pull bash -s" << 'REMOTE'
 set -euo pipefail
 dc() { docker compose --env-file .env.prod -f materials/docker-compose.prod.yaml "$@"; }
 domain=$(sed -n 's/^DOMAIN=//p' .env.prod | tail -n 1)
+tag=$(sed -n 's/^TAG=//p' .env.prod | tail -n 1)
+echo "==> deploying TAG=$tag"
+# On any failure show why: the state of every service and the last log lines of the ones
+# that are not running (a backend that refuses its settings exits at once).
+on_error() {
+    echo "DEPLOY FAILED. Services:" >&2
+    dc ps -a >&2 || true
+    for svc in migrate api worker identity bot mail scheduler web; do
+        echo "--- $svc (last 30 lines)" >&2
+        dc logs --no-color --tail 30 "$svc" >&2 2> /dev/null || true
+    done
+}
+trap on_error ERR
 
 if [ "$PULL" = "1" ]; then
     dc pull --ignore-buildable
@@ -106,9 +119,13 @@ if [ "$sealed" != "false" ]; then
     echo "WARNING: Vault is sealed. Registration and EMIS sync pause until: scripts/prod_init.sh unseal" >&2
 fi
 dc run --rm --no-deps hydra-migrate
+# The migration runs the new image first: a bad .env.prod (for example an S3 endpoint
+# with a path) stops here, before any running container is touched.
 dc run --rm --no-deps migrate
 
-dc up -d --wait --remove-orphans
+dc up -d --wait --remove-orphans --force-recreate
+# Containers that an interrupted earlier deploy renamed to <id>_ihsp-... are left over.
+docker ps -a --format '{{.Names}}' | grep -E '^[0-9a-f]{12}_ihsp-' | xargs -r docker rm -f
 # The edge config is bind-mounted: a running nginx keeps the old upstreams until it reloads.
 dc exec -T nginx nginx -s reload
 
