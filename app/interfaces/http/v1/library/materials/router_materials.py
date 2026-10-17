@@ -5,6 +5,7 @@ from app.interfaces.http.v1.library.materials.handlers import (
     create_material,
     create_material_version,
     create_suggestion,
+    list_my_suggestions,
     list_my_uploads,
     report_item,
     submit_material,
@@ -52,6 +53,11 @@ router.add_api_route(
 )
 router.add_api_route(
     "/me/library/uploads", list_my_uploads.list_my_uploads, methods=["GET"]
+)
+router.add_api_route(
+    "/me/library/suggestions",
+    list_my_suggestions.list_my_suggestions,
+    methods=["GET"],
 )
 router.add_api_route(
     "/library/suggestions",

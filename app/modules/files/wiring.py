@@ -28,6 +28,7 @@ from app.modules.files.application.search_text import SearchText
 from app.modules.files.application.storage_usage import StorageUsage
 from app.modules.files.application.store_bytes import StoreBytes
 from app.modules.files.application.sweep_processing import SweepProcessing
+from app.modules.files.application.transfer_ownership import TransferOwnership
 from app.modules.files.application.warn_expiring import WarnExpiring
 from app.modules.files.domain.policy import MB, FilesLimits
 from app.modules.files.infrastructure.extraction.extractor import FileTextExtractor
@@ -78,6 +79,7 @@ class FilesServices:
     purge_pending: PurgePending
     sweep_processing: SweepProcessing
     delete_owner_files: DeleteOwnerFiles
+    storage: ObjectStorage  # the object store itself (the LMS keeps H5P packages)
     public: FilesApiImpl
     limits: FilesLimits
     closers: list[Callable[[], Awaitable[None]]] = field(default_factory=list)
@@ -251,7 +253,9 @@ def assemble(
             combine_images_uc=combine_images,
             remove_file_uc=remove_file,
             list_owned_uc=list_owned,
+            transfer_uc=TransferOwnership(uow_factory=uow_factory, clock=clock),
         ),
         limits=limits,
         closers=closers,
+        storage=storage,
     )

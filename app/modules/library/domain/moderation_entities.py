@@ -71,6 +71,11 @@ class BookSuggestion:
     status: SuggestionStatus = SuggestionStatus.NEW
     handled_by: UUID | None = None
     details: dict[str, Any] | None = None
+    # Why a librarian declined it (shown to the suggester).
+    reason: str | None = None
+    # The book an accepted suggestion became.
+    item_id: UUID | None = None
+    decided_at: datetime | None = None
 
 
 @dataclass(frozen=True, slots=True)

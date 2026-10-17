@@ -15,6 +15,7 @@ from app.modules.files.application.read_text_page import ReadTextPage
 from app.modules.files.application.remove_file import RemoveFile
 from app.modules.files.application.search_text import SearchText
 from app.modules.files.application.store_bytes import StoreBytes
+from app.modules.files.application.transfer_ownership import TransferOwnership
 from app.modules.files.domain.errors import StoredFileNotFoundError
 from app.modules.files.domain.outline import pages_from_metadata
 from app.modules.files.domain.policy import checksum_hex, may_read
@@ -48,6 +49,7 @@ class FilesApiImpl:
         combine_images_uc: CombineImagesToPdf,
         remove_file_uc: RemoveFile,
         list_owned_uc: ListOwnedFiles,
+        transfer_uc: TransferOwnership,
     ) -> None:
         """Store the dependencies."""
         self._uow_factory = uow_factory
@@ -61,6 +63,7 @@ class FilesApiImpl:
         self._combine_images = combine_images_uc
         self._remove_file = remove_file_uc
         self._list_owned = list_owned_uc
+        self._transfer = transfer_uc
 
     async def get(self, file_id: UUID) -> FileRef | None:
         """Return the file's metadata (also when deleted) or None if unknown."""
@@ -173,6 +176,12 @@ class FilesApiImpl:
     async def delete_file(self, file_id: UUID) -> None:
         """Delete the content, the text and the row for good; unknown ids are fine."""
         await self._remove_file.execute(file_id)
+
+    async def transfer_ownership(
+        self, file_ids: Sequence[UUID], new_owner_id: UUID
+    ) -> None:
+        """Give the files to another owner; the old owner's quota no longer counts."""
+        await self._transfer.execute(file_ids, new_owner_id)
 
     async def list_owned(self, owner_id: UUID, *, limit: int) -> list[FileRef]:
         """Return the owner's ready, non-deleted files, newest first."""

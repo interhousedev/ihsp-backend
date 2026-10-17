@@ -1,5 +1,6 @@
 """Requests and responses of the materials endpoints (names follow doc § 7.5)."""
 
+from datetime import datetime
 from typing import Annotated, Self
 from uuid import UUID
 
@@ -17,7 +18,9 @@ from app.modules.library.domain.enums import (
     MaterialLicence,
     ReportReason,
     StatusReasonCode,
+    SuggestionStatus,
 )
+from app.modules.library.domain.moderation_entities import BookSuggestion
 
 from pydantic import BaseModel, Field
 
@@ -138,6 +141,37 @@ class SuggestionBody(BaseModel):
     file_id: UUID | None = None
     note: str | None = Field(default=None, max_length=1000)
     book: SuggestedBookBody | None = None
+
+
+class MySuggestionResponse(BaseModel):
+    """`MySuggestion`: one of the signed-in person's suggestions and its status."""
+
+    id: UUID
+    title: str
+    status: SuggestionStatus
+    created_at: datetime
+    decided_at: datetime | None
+    reason: str | None
+    item_id: UUID | None
+
+    @classmethod
+    def from_entity(cls, suggestion: BookSuggestion) -> Self:
+        """Build from the stored suggestion."""
+        return cls(
+            id=suggestion.id,
+            title=suggestion.title,
+            status=suggestion.status,
+            created_at=suggestion.created_at,
+            decided_at=suggestion.decided_at,
+            reason=suggestion.reason,
+            item_id=suggestion.item_id,
+        )
+
+
+class MySuggestionsResponse(BaseModel):
+    """`GET /me/library/suggestions`: newest first."""
+
+    items: list[MySuggestionResponse]
 
 
 class LibraryReportBody(BaseModel):

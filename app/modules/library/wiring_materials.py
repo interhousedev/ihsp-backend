@@ -2,6 +2,12 @@
 
 from dataclasses import dataclass
 
+from app.modules.library.application.catalogue.books.attach_book_file import (
+    AttachBookFile,
+)
+from app.modules.library.application.materials.approve_suggestion import (
+    ApproveSuggestion,
+)
 from app.modules.library.application.materials.attach_material_files import (
     AttachMaterialFiles,
 )
@@ -21,6 +27,9 @@ from app.modules.library.application.materials.delete_owner import (
 )
 from app.modules.library.application.materials.drafts import MaterialDrafts
 from app.modules.library.application.materials.get_suggestion import GetSuggestion
+from app.modules.library.application.materials.list_my_suggestions import (
+    ListMySuggestions,
+)
 from app.modules.library.application.materials.list_my_uploads import ListMyUploads
 from app.modules.library.application.materials.list_queue import ListQueue
 from app.modules.library.application.materials.purge_files import PurgeFiles
@@ -61,6 +70,8 @@ class MaterialsServices:
     create_suggestion: CreateSuggestion
     decide_suggestion: DecideSuggestion
     get_suggestion: GetSuggestion
+    approve_suggestion: ApproveSuggestion
+    list_my_suggestions: ListMySuggestions
     create_sanction: CreateSanction
     list_sanctions: ListSanctions
     remind_queue: RemindQueue
@@ -69,7 +80,7 @@ class MaterialsServices:
     delete_owner: DeleteOwnerMaterials
 
 
-def build_materials(core: LibraryCore) -> MaterialsServices:
+def build_materials(core: LibraryCore, attach: AttachBookFile) -> MaterialsServices:
     """Wire the use cases of the materials area."""
     settings = core.settings
     guard = UploadGuard(
@@ -147,9 +158,19 @@ def build_materials(core: LibraryCore) -> MaterialsServices:
             clock=core.clock,
             files=core.files,
             academic=core.academic,
+            guard=guard,
         ),
-        decide_suggestion=DecideSuggestion(uow_factory=core.uow_factory),
+        decide_suggestion=DecideSuggestion(
+            uow_factory=core.uow_factory, clock=core.clock, files=core.files
+        ),
         get_suggestion=GetSuggestion(uow_factory=core.uow_factory),
+        approve_suggestion=ApproveSuggestion(
+            uow_factory=core.uow_factory,
+            clock=core.clock,
+            files=core.files,
+            attach=attach,
+        ),
+        list_my_suggestions=ListMySuggestions(uow_factory=core.uow_factory),
         create_sanction=CreateSanction(
             uow_factory=core.uow_factory, clock=core.clock, identity=core.identity
         ),

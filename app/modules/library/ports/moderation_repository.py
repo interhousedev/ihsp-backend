@@ -92,7 +92,19 @@ class ModerationRepository(Protocol):
         ...
 
     async def save_suggestion(self, suggestion: BookSuggestion) -> None:
-        """Update status and handler of a suggestion."""
+        """Update the decision, the file and the form of a suggestion."""
+        ...
+
+    async def user_suggestions(
+        self, user_id: UUID, *, limit: int
+    ) -> list[BookSuggestion]:
+        """The person's suggestions, newest first."""
+        ...
+
+    async def purgeable_suggestions(
+        self, *, declined_before: datetime, limit: int
+    ) -> list[BookSuggestion]:
+        """Suggestions declined long ago that still name a file or a cover."""
         ...
 
     async def new_suggestions(self, *, limit: int, offset: int) -> list[BookSuggestion]:

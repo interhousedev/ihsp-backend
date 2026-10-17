@@ -4,7 +4,7 @@ from dataclasses import replace
 from uuid import uuid4
 
 from app.modules.files.application.request_upload import UploadTicket
-from app.modules.files.domain.errors import QuotaExceededError
+from app.modules.files.domain.errors import QuotaExceededError, StoredFileNotFoundError
 from app.shared.actor import Actor
 from app.shared.contracts.files import FilePurpose
 from tests.fakes.clock import FixedClock
@@ -101,3 +101,36 @@ async def test_deleting_frees_the_library_quota(
     await fakes.services.public.delete_file(first.view.file.id)
 
     await upload()
+
+
+async def test_transfer_ownership_frees_the_quota_and_the_owner_loses_the_file(
+    clock: FixedClock, kicker: FakeTaskKicker, student: Actor
+) -> None:
+    """An adopted file stops counting to the student and cannot be deleted by them."""
+    limits = replace(DEFAULT_LIMITS, library_student_quota_bytes=10)
+    fakes = build_files_fakes(clock, kicker, limits=limits)
+    ticket = await fakes.services.request_upload.execute(
+        student,
+        name="a.pdf",
+        size=10,
+        content_type=PDF_TYPE,
+        sha256_b64=sha256_b64(b"x" * 10),
+        purpose=MATERIAL,
+    )
+    file_id = ticket.view.file.id
+    system_id = uuid4()
+
+    await fakes.services.public.transfer_ownership([file_id, uuid4()], system_id)
+
+    assert fakes.db.row(file_id).owner_id == system_id
+    with pytest.raises(StoredFileNotFoundError):
+        await fakes.services.delete_file.execute(student, file_id)
+    assert fakes.db.row(file_id).owner_id == system_id
+    await fakes.services.request_upload.execute(
+        student,
+        name="b.pdf",
+        size=10,
+        content_type=PDF_TYPE,
+        sha256_b64=sha256_b64(b"y" * 10),
+        purpose=MATERIAL,
+    )

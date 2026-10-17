@@ -105,6 +105,15 @@ class SuggestionResponse(BaseModel):
         )
 
 
+class SuggestionFileResponse(BaseModel):
+    """The file a suggester uploaded with the form."""
+
+    id: UUID
+    name: str
+    content_type: str
+    byte_size: int
+
+
 class SuggestionDetailResponse(BaseModel):
     """`SuggestionDetail`: one suggestion as the editor prefills a book from it."""
 
@@ -114,6 +123,22 @@ class SuggestionDetailResponse(BaseModel):
     note: str | None
     status: SuggestionStatus
     book: SuggestedBookBody | None = None
+    file: SuggestionFileResponse | None = None
+    reason: str | None = None
+    item_id: UUID | None = None
+    created_at: datetime | None = None
+
+
+class ApproveSuggestionBody(BaseModel):
+    """`POST /manage/library/suggestions/{id}/approve`: the book the editor saved."""
+
+    item_id: UUID
+
+
+class DeclineSuggestionBody(BaseModel):
+    """`POST /manage/library/suggestions/{id}/decline`: why, shown to the suggester."""
+
+    reason: str | None = Field(default=None, max_length=1000)
 
 
 class QueueRowResponse(BaseModel):

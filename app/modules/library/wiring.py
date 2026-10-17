@@ -46,11 +46,12 @@ def build(
     core = build_core(
         deps, identity=identity, files=files, academic=academic, overrides=overrides
     )
+    catalogue = build_catalogue(core)
     return LibraryServices(
         core=core,
-        catalogue=build_catalogue(core),
+        catalogue=catalogue,
         taxonomy=build_taxonomy(core),
-        materials=build_materials(core),
+        materials=build_materials(core, catalogue.attach_book_file),
         reader=build_reader(core, lessons),
         external=build_external(core),
         bridge=build_bridge(core),

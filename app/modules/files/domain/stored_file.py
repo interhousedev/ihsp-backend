@@ -90,6 +90,11 @@ class StoredFile:
         self.text_bytes = None
         self.updated_at = now
 
+    def transfer_to(self, owner_id: UUID, now: datetime) -> None:
+        """Hand the file to another owner (the system owner for library files)."""
+        self.owner_id = owner_id
+        self.updated_at = now
+
     def rename(self, name: str, now: datetime) -> None:
         """Change the display name (the key never changes)."""
         self.name = name

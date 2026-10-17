@@ -104,6 +104,7 @@ class BookSuggestion(IdMixin, TimestampMixin, Base):
     __tablename__ = "book_suggestions"
     __table_args__ = (
         Index("ix_book_suggestions_status_created_at", "status", "created_at"),
+        Index("ix_book_suggestions_user_id_created_at", "user_id", "created_at"),
         {"schema": "library"},
     )
 
@@ -118,3 +119,6 @@ class BookSuggestion(IdMixin, TimestampMixin, Base):
     handled_by: Mapped[UUID | None] = mapped_column(Uuid)
     # The whole suggest form (authors, tags, subjects, ...) as JSON; None for old rows.
     details: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    reason: Mapped[str | None] = mapped_column(Text)
+    item_id: Mapped[UUID | None] = mapped_column(Uuid)
+    decided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

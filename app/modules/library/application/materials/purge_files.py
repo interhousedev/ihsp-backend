@@ -1,14 +1,16 @@
-"""Delete the files of old rejected and withdrawn materials (`library.purge`)."""
+"""Delete files of old rejected materials and declined suggestions (`library.purge`)."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import partial
+from uuid import UUID
 
-from app.modules.library.ports.unit_of_work import UowFactory
+from app.modules.library.ports.unit_of_work import LibraryUnitOfWork, UowFactory
 from app.shared.clock import Clock
 from app.shared.contracts.files import FilesApi
 
 REJECTED_AFTER = timedelta(days=30)
 UNPUBLISHED_AFTER = timedelta(days=90)
+DECLINED_SUGGESTION_AFTER = timedelta(days=30)
 BATCH = 200
 
 
@@ -42,5 +44,26 @@ class PurgeFiles:
                 item.files = []
                 item.has_text = False
                 await uow.items.save(item)
+            purged += await self._purge_suggestions(uow, now)
             await uow.commit()
+        return purged
+
+    async def _purge_suggestions(self, uow: LibraryUnitOfWork, now: datetime) -> int:
+        """The file and cover of suggestions declined more than 30 days ago."""
+        purged = 0
+        found = await uow.moderation.purgeable_suggestions(
+            declined_before=now - DECLINED_SUGGESTION_AFTER, limit=BATCH
+        )
+        for suggestion in found:
+            cover = (suggestion.details or {}).get("cover_file_id")
+            for file_id in (suggestion.file_id, cover):
+                if file_id is not None:
+                    uow.after_commit(
+                        partial(self.files.delete_file, UUID(str(file_id)))
+                    )
+                    purged += 1
+            suggestion.file_id = None
+            if suggestion.details is not None:
+                suggestion.details = {**suggestion.details, "cover_file_id": None}
+            await uow.moderation.save_suggestion(suggestion)
         return purged

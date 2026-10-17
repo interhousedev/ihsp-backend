@@ -50,10 +50,16 @@ class AttachBookFile:
         file_id: UUID,
         file_format: FileFormat,
         is_primary: bool,
+        uploaded_by: UUID | None = None,
     ) -> ItemFileView:
-        """Attach the file; the first file of a book is always the primary one."""
+        """Attach the file; the first file of a book is always the primary one.
+
+        `uploaded_by` is the suggester whose upload an approved suggestion hands
+        over; without it the file must be the librarian's own upload.
+        """
         require_librarian(actor)
-        ref = await self._checked_upload(actor, file_id, file_format)
+        owner = uploaded_by or actor.user_id
+        ref = await self._checked_upload(owner, file_id, file_format)
         async with self.uow_factory() as uow:
             item = await self.support.get_book(uow, book_id, lock=True)
             existing = item.file(file_id)
@@ -72,7 +78,7 @@ class AttachBookFile:
         return file_view(stored)
 
     async def _checked_upload(
-        self, actor: Actor, file_id: UUID, file_format: FileFormat
+        self, owner_id: UUID, file_id: UUID, file_format: FileFormat
     ) -> FileRef:
         if file_format not in BOOK_FORMATS:
             raise InvalidFileError(
@@ -82,7 +88,7 @@ class AttachBookFile:
         if (
             ref is None
             or ref.scope is not FileScope.LIBRARY
-            or ref.owner_id != actor.user_id
+            or ref.owner_id != owner_id
             or ref.status != "ready"
         ):
             raise InvalidFileError(support_details=f"file {file_id} is not usable")

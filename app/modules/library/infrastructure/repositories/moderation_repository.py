@@ -93,6 +93,9 @@ def _suggestion_from(row: SuggestionRow) -> BookSuggestion:
         status=SuggestionStatus(row.status),
         handled_by=row.handled_by,
         details=dict(row.details) if row.details is not None else None,
+        reason=row.reason,
+        item_id=row.item_id,
+        decided_at=row.decided_at,
     )
 
 
@@ -282,13 +285,49 @@ class SqlModerationRepository:
         return _suggestion_from(row) if row else None
 
     async def save_suggestion(self, suggestion: BookSuggestion) -> None:
-        """Update status and handler of a suggestion."""
+        """Update the decision, the file and the form of a suggestion."""
         row = await self.session.get(SuggestionRow, suggestion.id)
         if row is None:
             raise LookupError(f"suggestion {suggestion.id} is not stored")
         row.status = suggestion.status.value
         row.handled_by = suggestion.handled_by
+        row.file_id = suggestion.file_id
+        row.details = suggestion.details
+        row.reason = suggestion.reason
+        row.item_id = suggestion.item_id
+        row.decided_at = suggestion.decided_at
         await self.session.flush()
+
+    async def user_suggestions(
+        self, user_id: UUID, *, limit: int
+    ) -> list[BookSuggestion]:
+        """The person's suggestions, newest first."""
+        rows = await self.session.scalars(
+            select(SuggestionRow)
+            .where(SuggestionRow.user_id == user_id)
+            .order_by(SuggestionRow.created_at.desc(), SuggestionRow.id.desc())
+            .limit(limit)
+        )
+        return [_suggestion_from(row) for row in rows]
+
+    async def purgeable_suggestions(
+        self, *, declined_before: datetime, limit: int
+    ) -> list[BookSuggestion]:
+        """Suggestions declined long ago that still name a file or a cover."""
+        rows = await self.session.scalars(
+            select(SuggestionRow)
+            .where(
+                SuggestionRow.status == SuggestionStatus.DECLINED.value,
+                SuggestionRow.decided_at < declined_before,
+                or_(
+                    SuggestionRow.file_id.is_not(None),
+                    SuggestionRow.details["cover_file_id"].astext.is_not(None),
+                ),
+            )
+            .order_by(SuggestionRow.decided_at, SuggestionRow.id)
+            .limit(limit)
+        )
+        return [_suggestion_from(row) for row in rows]
 
     async def new_suggestions(self, *, limit: int, offset: int) -> list[BookSuggestion]:
         """Suggestions nobody decided yet, oldest first."""

@@ -3,6 +3,7 @@
 from typing import Any
 from uuid import UUID
 
+from app.modules.library.application.materials.upload_guard import UploadGuard
 from app.modules.library.domain.moderation_entities import BookSuggestion
 from app.modules.library.ports.directories import AcademicDirectory
 from app.modules.library.ports.unit_of_work import UowFactory
@@ -28,8 +29,10 @@ class CreateSuggestion:
         clock: Clock,
         files: FilesApi,
         academic: AcademicDirectory,
+        guard: UploadGuard | None = None,
     ) -> None:
-        """Initialize the use case."""
+        """Initialize the use case (`guard` refuses users under an upload ban)."""
+        self.guard = guard
         self.academic = academic
         self.uow_factory = uow_factory
         self.clock = clock
@@ -69,6 +72,8 @@ class CreateSuggestion:
             details=details,
         )
         async with self.uow_factory() as uow:
+            if self.guard is not None:
+                await self.guard.ensure_not_banned(uow, actor.user_id)
             await uow.moderation.add_suggestion(suggestion)
             await uow.commit()
         return suggestion
