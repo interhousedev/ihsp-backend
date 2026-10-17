@@ -16,6 +16,8 @@ UNUSABLE_FILE_STATUSES = frozenset({"deleted", "rejected"})
 
 def link_title(link: Link, file: FileRef | None) -> str:
     """Name shown for a link: the file name, the page title or the host."""
+    if file is not None and link.source_url and link.title:
+        return link.title  # an EMIS file shared by lessons keeps each one's name
     if file is not None:
         return file.name
     if link.title:

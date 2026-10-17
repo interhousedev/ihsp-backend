@@ -30,6 +30,7 @@ class File(IdMixin, TimestampMixin, Base):
         Index("ix_files_owner_id_scope_term_id", "owner_id", "scope", "term_id"),
         Index("ix_files_term_id_status", "term_id", "status"),
         Index("ix_files_expires_at", "expires_at"),
+        Index("ix_files_checksum", "checksum"),
         Index("ix_files_status_created_at", "status", "created_at"),
         Index("ix_files_search_vector", "search_vector", postgresql_using="gin"),
         {"schema": "files"},

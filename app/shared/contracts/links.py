@@ -54,6 +54,7 @@ class ImportedFile:
     lesson_id: UUID
     source_url: str  # the outside address: the re-sync key
     file_id: UUID
+    title: str | None = None  # the resource's own name (the file may be shared)
 
 
 class LinksApi(Protocol):
@@ -108,6 +109,10 @@ class LinksApi(Protocol):
 
         Only resources whose author is EMIS go; people's uploads stay.
         """
+        ...
+
+    async def files_in_use(self, file_ids: Sequence[UUID]) -> set[UUID]:
+        """Return the files among the ids that an active resource or link uses."""
         ...
 
     async def resolve_share(self, slug: str) -> tuple[str, UUID] | None:

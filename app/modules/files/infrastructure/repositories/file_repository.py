@@ -143,6 +143,27 @@ class SqlFileRepository:
         rows = await self._session.scalars(select(File).where(File.id.in_(file_ids)))
         return [_to_entity(row) for row in rows]
 
+    async def find_by_checksum(
+        self, owner_id: UUID, scope: FileScope, checksum: str, byte_size: int
+    ) -> StoredFile | None:
+        """Return a live (not deleted or rejected) file with this content."""
+        stmt = (
+            select(File)
+            .where(
+                File.checksum == checksum,
+                File.byte_size == byte_size,
+                File.owner_id == owner_id,
+                File.scope == scope.value,
+                File.status.not_in(
+                    (FileStatus.DELETED.value, FileStatus.REJECTED.value)
+                ),
+            )
+            .order_by(File.created_at)
+            .limit(1)
+        )
+        row = await self._session.scalar(stmt)
+        return None if row is None else _to_entity(row)
+
     async def list_for_owner(
         self,
         owner_id: UUID,

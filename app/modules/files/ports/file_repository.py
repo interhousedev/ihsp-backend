@@ -41,6 +41,12 @@ class FileRepository(Protocol):
         """Return the existing files (any status)."""
         ...
 
+    async def find_by_checksum(
+        self, owner_id: UUID, scope: FileScope, checksum: str, byte_size: int
+    ) -> StoredFile | None:
+        """Return a live (not deleted or rejected) file with this content."""
+        ...
+
     async def list_for_owner(
         self,
         owner_id: UUID,

@@ -32,6 +32,9 @@ class SlowEmis:
 
 
 class Files:
+    async def find_by_content(self, **_: Any) -> FileRef | None:
+        return None
+
     async def store_bytes(self, *, name: str, **_: Any) -> FileRef:
         return FileRef(
             uuid4(), uuid4(), FileScope.SYSTEM, FilePurpose.LINK, name,

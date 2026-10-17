@@ -146,6 +146,14 @@ class FakeLinkRepository:
             if link.owner_id == owner_id and link.revoked_at is None
         ]
 
+    async def active_by_files(self, file_ids: Sequence[UUID]) -> list[Link]:
+        """Return links that are not revoked and point at one of the files."""
+        return [
+            replace(link)
+            for link in self.working.values()
+            if link.file_id in file_ids and link.revoked_at is None
+        ]
+
     async def release_revoked_before(self, cutoff: datetime, now: datetime) -> int:
         """Free the slugs of links revoked before the cutoff."""
         count = 0

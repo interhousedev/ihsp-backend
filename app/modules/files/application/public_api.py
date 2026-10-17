@@ -1,5 +1,6 @@
 """FilesApi: what other modules may do with files (contract in shared/contracts)."""
 
+import base64
 from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
@@ -115,6 +116,17 @@ class FilesApiImpl:
         async with self._uow_factory() as uow:
             file = await uow.files.get(file_id)
         return None if file is None else checksum_hex(file.checksum)
+
+    async def find_by_content(
+        self, *, owner_id: UUID, scope: FileScope, sha256: str, byte_size: int
+    ) -> FileRef | None:
+        """Return a live file of the owner and scope with this content, or None."""
+        checksum = base64.b64encode(bytes.fromhex(sha256)).decode()
+        async with self._uow_factory() as uow:
+            file = await uow.files.find_by_checksum(
+                owner_id, scope, checksum, byte_size
+            )
+        return None if file is None else file.to_ref()
 
     async def search_text(
         self, owner_id: UUID, query: str, limit: int = 10

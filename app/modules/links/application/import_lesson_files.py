@@ -65,6 +65,7 @@ class ImportLessonFiles:
                 owner_id=EMIS_AUTHOR_ID,
                 created_at=now,
                 file_id=item.file_id,
+                title=item.title,
                 source_url=item.source_url,
                 lesson_id=item.lesson_id,
                 lesson_role=LessonRole.MATERIAL,

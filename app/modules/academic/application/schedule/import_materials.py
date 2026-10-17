@@ -8,6 +8,7 @@ address is attached as a link instead, so the student still reaches it.
 """
 
 import asyncio
+import hashlib
 import mimetypes
 from collections.abc import Sequence
 from pathlib import PurePosixPath
@@ -103,19 +104,20 @@ class ImportLessonMaterials:
                 fresh.append(item)
         downloads = await self._download_all(user_id, fresh)
         stored: list[ImportedFile] = []
+        by_hash: dict[str, FileRef] = {}  # same bytes from two URLs: one file
         fallback: list[ImportedUrl] = []
         for item in fresh:
             if item.kind != "video" and item.url not in downloads:
                 continue  # stopped before its download: the next sync brings it
-            ref = None
-            if item.kind != "video":
-                ref = await self._store(item, downloads[item.url])
-            if ref is None:
+            file = downloads.get(item.url) if item.kind != "video" else None
+            ref = await self._store(item, file, by_hash)
+            if file is None or ref is None:
                 fallback.append(
                     ImportedUrl(item.lesson_id, item.url, material_title(item))
                 )
             else:
-                stored.append(ImportedFile(item.lesson_id, item.url, ref.id))
+                title = file_name(item, file)  # the file may be shared: own name
+                stored.append(ImportedFile(item.lesson_id, item.url, ref.id, title))
         added = await self.links.import_lesson_files(stored) if stored else 0
         if fallback:
             added += await self.links.import_lesson_urls(fallback)
@@ -140,11 +142,18 @@ class ImportLessonMaterials:
         return downloads
 
     async def purge(self, lesson_ids: Sequence[UUID]) -> int:
-        """Delete the EMIS resources of the lessons and the files EMIS owns."""
-        file_ids = await self.links.purge_emis_resources(lesson_ids)
+        """Delete the EMIS resources of the lessons and the files EMIS owns.
+
+        A file that other lessons' resources still use (same content) stays.
+        """
+        file_ids = list(
+            dict.fromkeys(await self.links.purge_emis_resources(lesson_ids))
+        )
         owned = await self.files.get_many(file_ids) if file_ids else {}
-        for file_id, ref in owned.items():
-            if ref.owner_id == EMIS_AUTHOR_ID:  # never a person's upload
+        emis = [i for i, ref in owned.items() if ref.owner_id == EMIS_AUTHOR_ID]
+        in_use = await self.links.files_in_use(emis) if emis else set()
+        for file_id in emis:  # never a person's upload
+            if file_id not in in_use:
                 await self.files.delete_file(file_id)
         return len(file_ids)
 
@@ -155,9 +164,28 @@ class ImportLessonMaterials:
         found = await self.links.resources_for_lessons(lesson_ids)
         return {lesson_id for lesson_id, refs in found.items() if refs}
 
-    async def _store(self, item: EmisMaterial, file: EmisFile | None) -> FileRef | None:
+    async def _store(
+        self, item: EmisMaterial, file: EmisFile | None, by_hash: dict[str, FileRef]
+    ) -> FileRef | None:
+        """Store the bytes, or reuse the EMIS file with the same content."""
         if file is None:
             return None
+        digest = hashlib.sha256(file.data).hexdigest()
+        if digest in by_hash:
+            return by_hash[digest]
+        ref = await self.files.find_by_content(
+            owner_id=EMIS_AUTHOR_ID,
+            scope=FileScope.SYSTEM,
+            sha256=digest,
+            byte_size=len(file.data),
+        )
+        if ref is None:
+            ref = await self._store_new(item, file)
+        if ref is not None:
+            by_hash[digest] = ref
+        return ref
+
+    async def _store_new(self, item: EmisMaterial, file: EmisFile) -> FileRef | None:
         try:
             return await self.files.store_bytes(
                 owner_id=EMIS_AUTHOR_ID,

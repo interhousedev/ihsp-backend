@@ -74,6 +74,25 @@ class InMemoryFileRepository:
             copy.deepcopy(self.store.rows[i]) for i in file_ids if i in self.store.rows
         ]
 
+    async def find_by_checksum(
+        self, owner_id: UUID, scope: FileScope, checksum: str, byte_size: int
+    ) -> StoredFile | None:
+        """Return the oldest live row with this content."""
+        dead = (FileStatus.DELETED, FileStatus.REJECTED)
+        found = sorted(
+            (
+                row
+                for row in self.store.rows.values()
+                if row.checksum == checksum
+                and row.byte_size == byte_size
+                and row.owner_id == owner_id
+                and row.scope == scope
+                and row.status not in dead
+            ),
+            key=lambda row: row.created_at,
+        )
+        return copy.deepcopy(found[0]) if found else None
+
     async def list_for_owner(
         self,
         owner_id: UUID,

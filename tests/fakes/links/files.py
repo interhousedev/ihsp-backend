@@ -1,5 +1,6 @@
 """In-memory FilesApi."""
 
+import hashlib
 from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
@@ -100,6 +101,21 @@ class FakeFiles:
         file = self.add(owner_id, name=name, purpose=purpose, scope=scope)
         self.objects[file.id] = data
         return file
+
+    async def find_by_content(
+        self, *, owner_id: UUID, scope: FileScope, sha256: str, byte_size: int
+    ) -> FileRef | None:
+        """Return a stored file of the owner and scope with these bytes."""
+        for file_id, data in self.objects.items():
+            file = self.files.get(file_id)
+            if (
+                file is not None
+                and (file.owner_id, file.scope) == (owner_id, scope)
+                and len(data) == byte_size
+                and hashlib.sha256(data).hexdigest() == sha256
+            ):
+                return file
+        return None
 
     async def delete_file(self, file_id: UUID) -> None:
         """Remove the file and its bytes; unknown ids are fine."""

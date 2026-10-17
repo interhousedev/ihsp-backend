@@ -120,6 +120,12 @@ class LinksApiImpl:
         """Delete the lessons' EMIS resources for good; return their file ids."""
         return await self.purge_emis.execute(lesson_ids)
 
+    async def files_in_use(self, file_ids: Sequence[UUID]) -> set[UUID]:
+        """Return the files among the ids that an active resource or link uses."""
+        async with self.uow_factory() as uow:
+            links = await uow.links.active_by_files(list(file_ids))
+        return {link.file_id for link in links if link.file_id is not None}
+
     async def used_by_files(
         self, file_ids: Sequence[UUID]
     ) -> dict[UUID, list[tuple[str, UUID, str]]]:

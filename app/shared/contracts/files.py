@@ -135,6 +135,16 @@ class FilesApi(Protocol):
         """Return the lower-case hex SHA-256 of the content, or None if unknown."""
         ...
 
+    async def find_by_content(
+        self, *, owner_id: UUID, scope: FileScope, sha256: str, byte_size: int
+    ) -> FileRef | None:
+        """Return a live file of the owner and scope with this content, or None.
+
+        ``sha256`` is the lower-case hex digest; deleted and rejected files are
+        never returned.
+        """
+        ...
+
     async def search_text(
         self, owner_id: UUID, query: str, limit: int = 10
     ) -> list[dict[str, Any]]:
