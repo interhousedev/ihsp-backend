@@ -43,12 +43,15 @@ class UpdateTeacher:
             user = await require_user(uow, user_id)
             if Role.TEACHER not in user.roles:
                 raise UserNotFoundError(params={"user_id": str(user_id)})
+            names = (user.last_name, user.first_name, user.middle_name)
             if last_name is not None:
                 user.last_name = last_name.strip()
             if first_name is not None:
                 user.first_name = first_name.strip()
             if middle_name is not None:
                 user.middle_name = middle_name.strip() or None
+            if names != (user.last_name, user.first_name, user.middle_name):
+                user.name_locked = True  # the EMIS sync keeps a manual name
             if email is not None and email.strip().lower() != user.recovery_email:
                 resend_url = await self._change_email(uow, user, email)
             await uow.users.save(user)

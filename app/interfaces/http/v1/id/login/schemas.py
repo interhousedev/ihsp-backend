@@ -32,9 +32,9 @@ class LoginInfoResponse(BaseModel):
 
 
 class SecondFactorResponse(BaseModel):
-    """A code was sent; send it back with the ticket."""
+    """A code was sent (otp), or the authenticator app is asked for (totp)."""
 
-    method: Literal["otp"] = "otp"
+    method: Literal["otp", "totp"] = "otp"
     ticket: str
     channels: list[str]
 
@@ -67,7 +67,11 @@ class LoginResultResponse(BaseModel):
         return cls(
             redirect_to=result.redirect_to,
             second_factor=(
-                SecondFactorResponse(ticket=factor.ticket, channels=factor.channels)
+                SecondFactorResponse(
+                    method="totp" if factor.method == "totp" else "otp",
+                    ticket=factor.ticket,
+                    channels=factor.channels,
+                )
                 if factor
                 else None
             ),

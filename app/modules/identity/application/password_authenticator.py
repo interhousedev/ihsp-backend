@@ -5,7 +5,10 @@ from dataclasses import dataclass
 from app.modules.identity.application.audit_drafts import make_audit
 from app.modules.identity.application.request_context import RequestContext
 from app.modules.identity.domain.audit_event import LOGIN_FAILED
-from app.modules.identity.domain.errors import InvalidCredentialsError
+from app.modules.identity.domain.errors import (
+    InvalidCredentialsError,
+    PasswordLoginDisabledError,
+)
 from app.modules.identity.domain.user import User
 from app.modules.identity.ports.login_throttle import LoginThrottle
 from app.modules.identity.ports.password_hasher import PasswordHasher
@@ -61,6 +64,9 @@ class PasswordAuthenticator:
             reason = {"reason": "blocked"} if user.status.value == "blocked" else {}
             raise InvalidCredentialsError(params=reason)
         await self.throttle.reset(login, ctx.throttle_ip)
+        factors = await uow.factors.get(user.id)
+        if factors is not None and factors.password_login_disabled:
+            raise PasswordLoginDisabledError()
         if stored and self.hasher.needs_rehash(stored):
             user.password_hash = await self.hasher.hash(password)
             await uow.users.save(user)

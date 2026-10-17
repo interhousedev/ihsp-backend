@@ -19,6 +19,7 @@ from app.modules.identity.application.register_ports import (
 )
 from app.shared.contracts.emis import (
     EmisAuthFailed,
+    EmisCertificate,
     EmisClass,
     EmisClassHour,
     EmisCurriculum,
@@ -118,6 +119,10 @@ class EmisGatewayImpl:
             return await self._emis.download(token, url, max_bytes)
 
         return await self._call(user_id, fetch)
+
+    async def certificates(self, user_id: UUID) -> list[EmisCertificate]:
+        """Return the CEFR and national certificates of the student's profile."""
+        return await self._call(user_id, self._emis.certificates)
 
     # - - - Token handling - - -
 

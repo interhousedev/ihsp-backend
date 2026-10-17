@@ -537,3 +537,45 @@ async def test_network_error_raises_request_error(
 
     with pytest.raises(EmisRequestError):
         await client.profile("t")
+
+
+async def test_ratings_without_attendance_fields_report_none(
+    client: EmisClient, emis_http: respx.MockRouter
+) -> None:
+    """The real ratings response has no attendance, so nothing is reported."""
+    emis_http.get(RATINGS).respond(200, json=load_fixture("ratings_all_types.json"))
+
+    ratings = await client.ratings("emis-token-1", 35, 3)
+
+    assert (ratings.absent_dates, ratings.absence_total) == (None, None)
+
+
+async def test_ratings_read_absence_flags_and_totals_when_present(
+    client: EmisClient, emis_http: respx.MockRouter
+) -> None:
+    """An "nb" row without a mark is an absence; a subject total is kept."""
+    body = {
+        "result": {
+            "ratings": [
+                {
+                    "name": "Joriy nazorat",
+                    "dailyRatings": [
+                        {"class_date": "04.09.2026", "rating": 5, "nb": False},
+                        {"class_date": "11.09.2026", "rating": None, "nb": True},
+                    ],
+                }
+            ],
+            "semester_rating": 4,
+            "absences_count": 3,
+        },
+        "code": 200,
+        "success": True,
+        "error": None,
+    }
+    emis_http.get(RATINGS).respond(200, json=body)
+
+    ratings = await client.ratings("emis-token-1", 35, 3)
+
+    assert [m.value for m in ratings.marks] == [5]
+    assert ratings.absent_dates == (date(2026, 9, 11),)
+    assert ratings.absence_total == 3

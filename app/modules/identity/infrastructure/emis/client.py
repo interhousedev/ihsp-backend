@@ -10,6 +10,7 @@ from app.modules.identity.application.register_models import (
     EmisAuthError,
     EmisRequestError,
 )
+from app.modules.identity.infrastructure.emis.certificates import to_certificates
 from app.modules.identity.infrastructure.emis.mapping import (
     to_class_hours,
     to_classes,
@@ -38,6 +39,7 @@ from app.modules.identity.infrastructure.emis.models.responses.ratings import (
 )
 from app.settings import EmisSettings
 from app.shared.contracts.emis import (
+    EmisCertificate,
     EmisClass,
     EmisClassHour,
     EmisCurriculum,
@@ -157,6 +159,11 @@ class EmisClient:
         """Return the student's profile."""
         result = await self._request("GET", self._profile_path, token=token)
         return to_profile(parse_result(ProfileV1DTO, result))
+
+    async def certificates(self, token: str) -> list[EmisCertificate]:
+        """Return the CEFR and national certificates of the profile."""
+        result = await self._request("GET", self._profile_path, token=token)
+        return to_certificates(result)
 
     async def curriculum(self, token: str) -> list[EmisSubject]:
         """Return the subjects of the curriculum."""

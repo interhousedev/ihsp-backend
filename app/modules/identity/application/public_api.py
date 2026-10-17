@@ -189,9 +189,11 @@ class IdentityCommandsImpl:
         last_name: str,
         middle_name: str | None,
     ) -> None:
-        """Update the user's names from EMIS."""
+        """Update the user's names from EMIS, unless an administrator locked them."""
         async with self.uow_factory() as uow:
             user = await require_user(uow, user_id)
+            if user.name_locked:
+                return
             user.first_name = first_name
             user.last_name = last_name
             user.middle_name = middle_name

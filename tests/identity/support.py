@@ -45,6 +45,7 @@ class World:
     kicker: Any
     telegram: FakeTelegramSender
     files: FilesFakes
+    webauthn: Any = None
 
     def uow(self) -> FakeIdentityUnitOfWork:
         """A unit of work over the same store."""

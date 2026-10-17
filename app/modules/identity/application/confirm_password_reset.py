@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from app.modules.identity.application.accept_login_for_user import LoginAcceptorImpl
 from app.modules.identity.application.audit_drafts import make_audit
+from app.modules.identity.application.factor_support import enable_password_login
 from app.modules.identity.application.find_user_for_recovery import (
     find_user_for_recovery,
 )
@@ -62,6 +63,7 @@ class ConfirmPasswordReset:
             await self.throttle.reset_code_failures("pw-reset", login_or_email, ip)
             user.password_hash = await self.hasher.hash(new_password)
             user.password_change_required = False
+            await enable_password_login(uow, user.id)
             await self.revoker.revoke_in(uow, user, keep_telegram=True)
             uow.audit(make_audit(PASSWORD_RESET, user_id=user.id, ctx=ctx))
             await uow.commit()

@@ -1,13 +1,17 @@
 """EMIS ratings response."""
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 
 class DailyRatingV1DTO(BaseModel):
-    """One mark."""
+    """One mark; ``absent`` is read if EMIS ever sends an absence flag ("nb")."""
 
     class_date: str
-    rating: int
+    rating: int | None = None
+    absent: bool | None = Field(
+        default=None,
+        validation_alias=AliasChoices("absent", "is_absent", "nb", "is_nb"),
+    )
 
 
 class RatingGroupV1DTO(BaseModel):
@@ -26,3 +30,9 @@ class RatingsV1DTO(BaseModel):
 
     ratings: list[RatingGroupV1DTO] | None = None
     semester_rating: float | str | None = None
+    absences: int | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "absences", "absences_count", "missed_classes", "nb_count", "davomat"
+        ),
+    )

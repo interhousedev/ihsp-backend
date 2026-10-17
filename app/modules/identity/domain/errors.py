@@ -208,6 +208,13 @@ class LoginTakenError(ConflictError):
     message_key = "id-login-taken"
 
 
+class InvalidLoginError(ValidationFailedError):
+    """The login breaks the login rules (characters or length)."""
+
+    code = "id/login-invalid"
+    message_key = "id-login-invalid"
+
+
 class PhotoEmptyError(ValidationFailedError):
     """The uploaded photo has no content."""
 
@@ -229,3 +236,47 @@ class PhotoTypeNotAllowedError(ValidationFailedError):
     code = "id/photo-type-not-allowed"
     status = 422
     message_key = "id-photo-type-not-allowed"
+
+
+class PasskeyInvalidError(UnauthorizedError):
+    """The passkey answer failed verification or the passkey is unknown."""
+
+    code = "auth/passkey-invalid"
+    status = 401
+    message_key = "id-passkey-invalid"
+
+
+class PasswordLoginDisabledError(UnauthorizedError):
+    """The user turned password sign-in off; a passkey is needed."""
+
+    code = "auth/password-disabled"
+    status = 401
+    message_key = "id-password-login-disabled"
+
+
+class PasskeyNotFoundError(NotFoundError):
+    """No such passkey of this user."""
+
+    code = "id/passkey-not-found"
+    message_key = "id-passkey-not-found"
+
+
+class LastPasskeyError(ConflictError):
+    """Password sign-in is off: the last passkey cannot be removed."""
+
+    code = "id/last-passkey"
+    message_key = "id-last-passkey"
+
+
+class PasskeyRequiredError(ConflictError):
+    """Password sign-in can only be turned off while a passkey exists."""
+
+    code = "id/passkey-required"
+    message_key = "id-passkey-required"
+
+
+class TotpStateError(ConflictError):
+    """The authenticator app is already on (enable) or off (disable)."""
+
+    code = "id/totp-state"
+    message_key = "id-totp-state"

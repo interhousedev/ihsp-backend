@@ -41,6 +41,7 @@ from app.modules.identity.application.exchange_code import ExchangeCode
 from app.modules.identity.application.exchange_telegram_init_data import (
     ExchangeTelegramInitData,
 )
+from app.modules.identity.application.factor_support import TotpVerifier
 from app.modules.identity.application.get_consent_info import GetConsentInfo
 from app.modules.identity.application.get_login_info import GetLoginInfo
 from app.modules.identity.application.get_mcp_scopes import GetMcpScopes
@@ -139,12 +140,17 @@ from app.modules.identity.infrastructure.redis.revocation_list import (
 from app.modules.identity.infrastructure.redis.ticket_store import RedisTicketStore
 from app.modules.identity.infrastructure.telegram.init_data import HmacInitDataVerifier
 from app.modules.identity.infrastructure.uow import make_uow_factory
+from app.modules.identity.infrastructure.vault.client import VaultCredentialStore
+from app.modules.identity.infrastructure.webauthn_rp import PyWebAuthn
 from app.modules.identity.ports.email_sender import EmailSender
 from app.modules.identity.ports.hydra_gateway import HydraGateway
 from app.modules.identity.ports.init_data_verifier import InitDataVerifier
 from app.modules.identity.ports.otp_sender import OtpSender
 from app.modules.identity.ports.password_hasher import PasswordHasher
+from app.modules.identity.ports.secret_cipher import SecretCipher
 from app.modules.identity.ports.unit_of_work import UowFactory
+from app.modules.identity.ports.webauthn import WebAuthn
+from app.modules.identity.wiring_factors import FactorServices, build_factors
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.notify import TelegramSender
 from app.shared.features import Feature, is_enabled
@@ -254,6 +260,8 @@ class AuthServices:
     verify_oauth_client: VerifyOAuthClient
     purge_deleted_users: PurgeDeletedUsers
     deletion_telegram_notice: DeletionTelegramNotice
+    # - - - Authenticator app and passkeys - - -
+    factors: FactorServices
 
 
 def build_auth(
@@ -267,6 +275,8 @@ def build_auth(
     init_data_verifier: InitDataVerifier | None = None,
     otp_sender: OtpSender | None = None,
     uow_factory: UowFactory | None = None,
+    cipher: SecretCipher | None = None,
+    webauthn: WebAuthn | None = None,
 ) -> AuthServices:
     """Build every identity auth service.
 
@@ -301,6 +311,8 @@ def build_auth(
         app_name=settings.public_app_name,
     )
     otp = OtpService(otp_store=otp_store, otp_sender=otp_sender, email=email)
+    cipher = cipher or VaultCredentialStore(settings.vault)
+    totp = TotpVerifier(cipher=cipher, clock=clock)
     restore_offer = RestoreOffer(
         tickets=tickets,
         clock=clock,
@@ -492,6 +504,8 @@ def build_auth(
             otp=otp,
             linker=LinkTelegramAccount(email=email, clock=clock),
             max_age=init_max_age,
+            totp=totp,
+            rate_limiter=limiter,
         ),
         get_me=GetMe(
             uow_factory=uow_factory,
@@ -608,7 +622,9 @@ def build_auth(
         admin_set_password=AdminSetPassword(
             uow_factory=uow_factory, hasher=hasher, revoker=revoker
         ),
-        update_user=UpdateUser(uow_factory=uow_factory, links=links, clock=clock),
+        update_user=UpdateUser(
+            uow_factory=uow_factory, links=links, clock=clock, revoker=revoker
+        ),
         set_user_photo=SetUserPhoto(
             uow_factory=uow_factory, files=files, urls=photo_urls
         ),
@@ -629,5 +645,16 @@ def build_auth(
             telegram=telegram_sender,
             i18n=deps.i18n,
             id_app_url=settings.urls.id,
+        ),
+        factors=build_factors(
+            uow_factory=uow_factory,
+            hydra=hydra,
+            cipher=cipher,
+            webauthn=webauthn or PyWebAuthn.for_url(settings.urls.id),
+            tickets=tickets,
+            starter=starter,
+            rate_limiter=limiter,
+            clock=clock,
+            restore_offer=restore_offer,
         ),
     )

@@ -18,6 +18,8 @@ from tests.fakes.identity.senders import (
     FakeTelegramSender,
 )
 from tests.fakes.identity.uow import FakeIdentityUnitOfWork, IdentityStore
+from tests.fakes.identity.vault import InMemoryCredentialStore
+from tests.fakes.identity.webauthn import FakeWebAuthn
 from tests.fakes.tasks import FakeTaskKicker
 from tests.identity.support import World
 
@@ -38,6 +40,7 @@ def build_world(
     email = FakeEmailSender()
     telegram = FakeTelegramSender()
     files = build_files_fakes(clock, kicker)
+    webauthn = FakeWebAuthn()
     deps = ModuleDeps(
         settings=settings,
         clock=clock,
@@ -59,6 +62,8 @@ def build_world(
         otp_sender=otp,
         hasher=Argon2PasswordHasher(PasswordHasher.from_parameters(profiles.CHEAPEST)),
         uow_factory=lambda: FakeIdentityUnitOfWork(store, clock),
+        cipher=InMemoryCredentialStore(),
+        webauthn=webauthn,
     )
     return World(
         auth=auth,
@@ -71,4 +76,5 @@ def build_world(
         kicker=kicker,
         telegram=telegram,
         files=files,
+        webauthn=webauthn,
     )

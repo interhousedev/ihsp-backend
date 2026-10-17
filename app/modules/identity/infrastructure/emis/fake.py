@@ -13,6 +13,7 @@ from app.modules.identity.application.register_models import (
     EmisAuthError,
     EmisRequestError,
 )
+from app.modules.identity.infrastructure.emis.certificates import to_certificates
 from app.modules.identity.infrastructure.emis.fake_schedule import (
     Cell,
     cells_of,
@@ -33,6 +34,7 @@ from app.modules.identity.infrastructure.emis.models.responses.curriculum import
 )
 from app.shared.clock import Clock, local_today
 from app.shared.contracts.emis import (
+    EmisCertificate,
     EmisClass,
     EmisClassHour,
     EmisCurriculum,
@@ -160,6 +162,37 @@ def _build_students() -> tuple[FakeStudent, ...]:
 FAKE_STUDENTS: tuple[FakeStudent, ...] = _build_students()
 _BY_LOGIN = {student.login: student for student in FAKE_STUDENTS}
 _BY_EMIS_ID = {student.emis_student_id: student for student in FAKE_STUDENTS}
+
+
+def fake_certificate_block(emis_student_id: int) -> dict[str, Any]:
+    """The ``result`` object of the fake profile with ``dtm_certificate_info``."""
+    return {
+        "dtm_certificate_info": {
+            "cefr": [
+                {
+                    "level": "B2",
+                    "ball": 72,
+                    "subject": "English",
+                    "start_date": "2025-03-15",
+                    "end_date": "2027-03-14",
+                    "ser_num": f"CEFR-{emis_student_id}",
+                    "hash": f"https://cert.uzbmb.uz/cefr/{emis_student_id}.pdf",
+                }
+            ],
+            "national": [
+                {
+                    "level": "B+",
+                    "percent": 78.5,
+                    "ball": 70.1,
+                    "science_name": "Matematika",
+                    "start_at": "2025-06-01",
+                    "end_at": "2027-05-31",
+                    "cert_number": f"NAT-{emis_student_id}",
+                    "url": f"https://api.uzbmb.uz/national/{emis_student_id}.pdf",
+                }
+            ],
+        }
+    }
 
 
 def fake_curriculum_result() -> dict[str, Any]:
@@ -363,6 +396,16 @@ class FakeEmisClient:
             classes.extend(to_classes(ClassSchedulesV1DTO.model_validate(body)))
             first = sunday + timedelta(days=1)
         return classes
+
+    async def certificates(self, token: str) -> list[EmisCertificate]:
+        """Return sample CEFR and national certificates for the first students.
+
+        The response goes through the same mapping as the real profile block.
+        """
+        student = self._student(token)
+        if student.emis_student_id % 3 == 0:
+            return []
+        return to_certificates(fake_certificate_block(student.emis_student_id))
 
     async def download(self, token: str, url: str, max_bytes: int) -> EmisFile:
         """Return a one-page PDF named after the URL's last path segment."""

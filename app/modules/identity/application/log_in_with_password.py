@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 
+from app.modules.identity.application.log_in_with_totp import issue_totp_ticket
 from app.modules.identity.application.login_result import (
     LoginResult,
     PasswordChange,
@@ -50,7 +51,7 @@ class LogInWithPassword:
         remember: bool,
         ctx: RequestContext,
     ) -> LoginResult:
-        """Return the redirect URL, or a second-factor ticket (OTP on)."""
+        """Return the redirect URL, or a second-factor ticket (TOTP or OTP on)."""
         await self.rate_limiter.hit(
             f"login-ip:{ctx.throttle_ip}", limit=IP_LIMIT_PER_HOUR, window_seconds=3600
         )
@@ -70,6 +71,10 @@ class LogInWithPassword:
                 return await self.restore_offer.make(
                     user, request.challenge, amr=["pwd"], remember=remember
                 )
+            factors = await uow.factors.get(user.id)
+            if factors is not None and factors.totp_enabled:
+                await uow.commit()  # a rehashed password is kept
+                return await issue_totp_ticket(self.tickets, user, request, remember)
             if user.is_admin and user.otp_enabled:
                 return await self._second_factor(uow, user, request, remember, ctx)
             if self.change_password_on_login and user.password_change_required:

@@ -6,6 +6,9 @@ from app.modules.identity.infrastructure.repositories.audit_event_repository imp
 from app.modules.identity.infrastructure.repositories.connector_repository import (
     SqlConnectorRepository,
 )
+from app.modules.identity.infrastructure.repositories.factor_repository import (
+    SqlFactorRepository,
+)
 from app.modules.identity.infrastructure.repositories.session_repository import (
     SqlSessionRepository,
 )
@@ -28,6 +31,7 @@ class IdentityUnitOfWork(SqlUnitOfWork):
     telegram_links: SqlTelegramLinkRepository
     connectors: SqlConnectorRepository
     audit_events: SqlAuditEventRepository
+    factors: SqlFactorRepository
 
     def _init_repos(self) -> None:
         """Create the repositories on the fresh session."""
@@ -36,6 +40,7 @@ class IdentityUnitOfWork(SqlUnitOfWork):
         self.telegram_links = SqlTelegramLinkRepository(self.session)
         self.connectors = SqlConnectorRepository(self.session)
         self.audit_events = SqlAuditEventRepository(self.session)
+        self.factors = SqlFactorRepository(self.session)
 
 
 def make_uow_factory(deps: ModuleDeps) -> UowFactory:

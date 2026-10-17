@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 
+from app.modules.identity.application.factor_support import TotpVerifier
 from app.modules.identity.application.link_telegram_account import LinkTelegramAccount
 from app.modules.identity.application.login_result import LoginResult, SecondFactor
 from app.modules.identity.application.otp_service import OtpService
@@ -11,11 +12,12 @@ from app.modules.identity.application.password_authenticator import (
 )
 from app.modules.identity.application.passwordless_otp_check import PasswordlessOtpCheck
 from app.modules.identity.application.request_context import RequestContext
-from app.modules.identity.domain.errors import InvalidCredentialsError
+from app.modules.identity.domain.errors import InvalidCredentialsError, OtpInvalidError
 from app.modules.identity.domain.user import User
 from app.modules.identity.ports.init_data_verifier import InitDataVerifier
 from app.modules.identity.ports.unit_of_work import IdentityUnitOfWorkPort, UowFactory
 from app.shared.ids import random_token
+from app.shared.rate_limit import RateLimiter
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,6 +40,8 @@ class TelegramLogin:
     otp: OtpService
     linker: LinkTelegramAccount
     max_age: timedelta
+    totp: TotpVerifier | None = None
+    rate_limiter: RateLimiter | None = None
 
     async def execute(
         self,
@@ -73,7 +77,21 @@ class TelegramLogin:
         otp_code: str | None,
         ctx: RequestContext,
     ) -> LoginResult | None:
-        """An administrator with OTP on needs a code; send one on the first attempt."""
+        """The authenticator app (anyone with it on) or, for Administration, OTP."""
+        factors = await uow.factors.get(user.id)
+        if self.totp is not None and factors is not None and factors.totp_enabled:
+            if not otp_code:
+                return LoginResult(
+                    second_factor=SecondFactor(ticket=random_token(8), method="totp")
+                )
+            if self.rate_limiter is not None:
+                await self.rate_limiter.hit(
+                    f"totp-tg:{user.id}", limit=10, window_seconds=900
+                )
+            if await self.totp.verify(factors, otp_code) is None:
+                raise OtpInvalidError(params={"attempts_left": 1})
+            await uow.factors.save(factors)
+            return None
         if not (user.is_admin and user.otp_enabled):
             return None
         if otp_code:

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from app.modules.identity.application.audit_drafts import make_audit
+from app.modules.identity.application.factor_support import enable_password_login
 from app.modules.identity.application.load_user import require_user
 from app.modules.identity.application.request_context import RequestContext
 from app.modules.identity.application.revoke_access import AccessRevoker
@@ -54,6 +55,7 @@ class AdminSetPassword:
                 raise AdminResetForbiddenError()
             user.password_hash = await self.hasher.hash(password)
             user.password_change_required = require_change
+            await enable_password_login(uow, user.id)
             activated = user.status in (
                 UserStatus.PENDING_ACTIVATION,
                 UserStatus.UNREGISTERED,

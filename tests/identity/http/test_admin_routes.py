@@ -391,3 +391,27 @@ async def test_reset_password_link_refuses_an_administrator_target(api: Api) -> 
 
     assert response.status_code == 403
     assert response.json()["type"] == "id/admin-target-reset-forbidden"
+
+
+async def test_patch_user_edits_login_and_rejects_a_taken_one(api: Api) -> None:
+    """PATCH login: 200 lowercased and locked; 409 for another login in any case."""
+    await api.admin()
+    await api.world.add_user(login="aliev.bahodir")
+    student = await api.world.add_user(login="karimova.dilnoza")
+
+    changed = await api.client.patch(
+        f"/v1/admin/users/{student.id}", json={"login": "Karimova.Dilnoza2"}
+    )
+    taken = await api.client.patch(
+        f"/v1/admin/users/{student.id}", json={"login": "ALIEV.bahodir"}
+    )
+    invalid = await api.client.patch(
+        f"/v1/admin/users/{student.id}", json={"login": "bad login"}
+    )
+
+    assert changed.status_code == 200
+    assert changed.json()["login"] == "karimova.dilnoza2"
+    assert taken.status_code == 409
+    assert "id/login-taken" in taken.text
+    assert invalid.status_code == 422
+    assert "id/login-invalid" in invalid.text

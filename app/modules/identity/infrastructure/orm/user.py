@@ -116,3 +116,10 @@ class User(IdMixin, TimestampMixin, Base):
     )
     # Profile photo: a file of the files module (a plain id, no foreign key).
     photo_file_id: Mapped[UUID | None] = mapped_column(Uuid)
+    # An administrator's manual edit: the EMIS sync skips the locked names/login.
+    name_locked: Mapped[bool] = mapped_column(
+        Boolean, server_default=text("false"), nullable=False
+    )
+    login_locked: Mapped[bool] = mapped_column(
+        Boolean, server_default=text("false"), nullable=False
+    )

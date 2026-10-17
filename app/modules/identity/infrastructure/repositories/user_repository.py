@@ -54,6 +54,8 @@ def _to_entity(row: UserRow) -> User:
         deleted_at=row.deleted_at,
         deletion_requested_at=row.deletion_requested_at,
         photo_file_id=row.photo_file_id,
+        name_locked=row.name_locked,
+        login_locked=row.login_locked,
         created_at=row.created_at,
     )
 
@@ -89,6 +91,8 @@ def _apply(row: UserRow, user: User) -> None:
     row.deleted_at = user.deleted_at
     row.deletion_requested_at = user.deletion_requested_at
     row.photo_file_id = user.photo_file_id
+    row.name_locked = user.name_locked
+    row.login_locked = user.login_locked
 
 
 def _has_any_role(roles: Sequence[Role]) -> ColumnElement[bool]:

@@ -27,6 +27,7 @@ dependencies = [
     "openpyxl>=3.1.5",
     "pydantic>=2.13.5",
     "pydantic-settings>=2.15.0",
+    "pyotp>=2.10.0",
     "pypdf>=6.19.0",
     "pypdfium2>=5.14.0",
     "pyspf>=2.0.14",
@@ -44,6 +45,7 @@ dependencies = [
     "tzdata>=2026.5",
     "uuid-utils>=1.0.0",
     "uvicorn[standard]>=0.54.0",
+    "webauthn>=3.0.1",
 ]
 
 [build-system]

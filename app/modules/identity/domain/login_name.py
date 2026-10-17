@@ -1,6 +1,24 @@
 """Login names: ``surname.name`` in lowercase Latin (spec -> Models -> User)."""
 
+import re
+
+from app.modules.identity.domain.errors import InvalidLoginError
 from app.shared.text import slugify
+
+LOGIN_MIN_LENGTH = 3
+LOGIN_MAX_LENGTH = 100
+# Lowercase Latin letters and digits, dot-separated: what base_login produces.
+_LOGIN_RE = re.compile(r"[a-z0-9]+(?:\.[a-z0-9]+)*")
+
+
+def check_login(value: str) -> str:
+    """Return the login trimmed and lowercased, or raise InvalidLoginError."""
+    clean = value.strip().lower()
+    if not LOGIN_MIN_LENGTH <= len(clean) <= LOGIN_MAX_LENGTH:
+        raise InvalidLoginError()
+    if _LOGIN_RE.fullmatch(clean) is None:
+        raise InvalidLoginError()
+    return clean
 
 
 def base_login(last_name: str, first_name: str) -> str:

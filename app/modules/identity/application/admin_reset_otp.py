@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from app.modules.identity.application.audit_drafts import make_audit
+from app.modules.identity.application.factor_support import reset_totp
 from app.modules.identity.application.load_user import require_user
 from app.modules.identity.application.request_context import RequestContext
 from app.modules.identity.domain.audit_event import OTP_RESET_BY_ADMIN
@@ -14,7 +15,7 @@ from app.shared.actor import Actor
 
 @dataclass(frozen=True, slots=True)
 class AdminResetOtp:
-    """OTP stays on; the lost Telegram accounts are unlinked at once."""
+    """OTP stays on; the lost Telegram accounts and the authenticator app go at once."""
 
     uow_factory: UowFactory
 
@@ -25,6 +26,7 @@ class AdminResetOtp:
             if user.is_admin and user.id == actor.user_id:
                 raise AdminResetForbiddenError()
             await uow.telegram_links.delete_all_for_user(user_id)
+            await reset_totp(uow, user_id)
             user.otp_via_email = user.otp_enabled and user.has_verified_email
             user.clear_otp_reset()
             await uow.users.save(user)

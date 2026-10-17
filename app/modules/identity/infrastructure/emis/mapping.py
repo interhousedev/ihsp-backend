@@ -295,22 +295,31 @@ def to_ratings(
 ) -> EmisSubjectRatings:
     """Map the ratings of one subject; unknown rating groups are skipped."""
     marks: list[EmisMark] = []
+    absent: set[date] = set()
+    flagged = False
     for group in dto.ratings or []:
         mark_type = _mark_type(group.name)
-        if mark_type is None:
-            continue
-        marks.extend(
-            EmisMark(
-                type=mark_type, date=_parse_date(daily.class_date), value=daily.rating
-            )
-            for daily in group.daily_ratings or []
-        )
+        for daily in group.daily_ratings or []:
+            if daily.absent is not None:
+                flagged = True
+                if daily.absent:
+                    absent.add(_parse_date(daily.class_date))
+            if mark_type is not None and daily.rating is not None:
+                marks.append(
+                    EmisMark(
+                        type=mark_type,
+                        date=_parse_date(daily.class_date),
+                        value=daily.rating,
+                    )
+                )
     return EmisSubjectRatings(
         emis_subject_id=subject_id,
         semester=semester,
         semester_rating=_semester_rating(dto.semester_rating),
         marks=tuple(marks),
         payload_hash=payload_hash(raw_result),
+        absent_dates=tuple(sorted(absent)) if flagged else None,
+        absence_total=dto.absences,
     )
 
 

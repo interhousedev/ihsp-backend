@@ -13,6 +13,7 @@ from app.modules.identity.application.register_models import (
     NewStudentAccount,
 )
 from app.shared.contracts.emis import (
+    EmisCertificate,
     EmisClass,
     EmisClassHour,
     EmisCurriculum,
@@ -70,6 +71,10 @@ class EmisApi(EmisTimetableSource, Protocol):
 
     async def download(self, token: str, url: str, max_bytes: int) -> EmisFile:
         """Download a material URL; ``EmisRequestError`` on failure or overflow."""
+        ...
+
+    async def certificates(self, token: str) -> list[EmisCertificate]:
+        """Return the CEFR and national certificates of the profile."""
         ...
 
 

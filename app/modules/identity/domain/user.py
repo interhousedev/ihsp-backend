@@ -51,6 +51,9 @@ class User:
     deleted_at: datetime | None = None
     deletion_requested_at: datetime | None = None
     photo_file_id: UUID | None = None
+    # Set when an administrator edits the field: EMIS sync then leaves it alone.
+    name_locked: bool = False
+    login_locked: bool = False
     created_at: datetime | None = None
 
     @property

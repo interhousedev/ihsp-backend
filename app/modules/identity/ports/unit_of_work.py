@@ -6,6 +6,7 @@ from typing import Protocol, Self
 
 from app.modules.identity.ports.audit_event_repository import AuditEventRepository
 from app.modules.identity.ports.connector_repository import ConnectorRepository
+from app.modules.identity.ports.factor_repository import FactorRepository
 from app.modules.identity.ports.session_repository import SessionRepository
 from app.modules.identity.ports.telegram_link_repository import (
     TelegramLinkRepository,
@@ -35,6 +36,11 @@ class IdentityUnitOfWorkPort(Protocol):
     @property
     def connectors(self) -> ConnectorRepository:
         """Connector repository."""
+        ...
+
+    @property
+    def factors(self) -> FactorRepository:
+        """TOTP state and passkeys."""
         ...
 
     @property
