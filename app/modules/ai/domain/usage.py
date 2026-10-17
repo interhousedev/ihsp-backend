@@ -66,6 +66,8 @@ _FEATURE_OF: dict[str, str] = {
     "retrieval_plan": "notebook_chat",
     "query_decompose": "notebook_chat",
     "studio_faithfulness": "studio",
+    "web_material_triage": "web_search",
+    "media_describe": "notebook_prep",
 }
 
 

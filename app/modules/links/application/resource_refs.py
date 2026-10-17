@@ -24,4 +24,5 @@ def to_ref(view: ResourceView) -> ResourceRef:
         source="emis" if link.owner_id == EMIS_AUTHOR_ID else "user",
         file=view.file,
         created_at=link.created_at,
+        target_url=link.target_url,
     )

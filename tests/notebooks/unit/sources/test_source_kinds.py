@@ -1,5 +1,7 @@
 """NB-2, NB-3, LMS-17: every kind of source, from the request to ready passages."""
 
+from dataclasses import replace
+
 from app.modules.notebooks.domain.entities import Notebook
 from app.modules.notebooks.domain.enums import GuideStatus, SourceKind, SourceStatus
 from app.modules.notebooks.domain.source_input import (
@@ -181,6 +183,31 @@ async def test_lesson_link_is_fetched_like_a_web_page(
     assert ready.ref["url"] == resource.short_url
     assert world.fetcher.calls == [resource.short_url]
     assert (await passages_of(uow_factory, ready.id))[0].text == PAGE_TWO
+
+
+async def test_lesson_link_is_read_at_its_target_not_its_link_page(
+    sources: SourcesServices,
+    uow_factory: UowFactory,
+    world: World,
+    student: Actor,
+    notebook: Notebook,
+) -> None:
+    """A link material is fetched at its target URL; the short link is a link page."""
+    lesson = world.schedule.attend(student.user_id, make_lesson())
+    made = make_resource(lesson.id, title="Article")
+    resource = world.links.add(replace(made, target_url="https://ziyouz.uz/jadid"))
+    world.fetcher.add_page("https://ziyouz.uz/jadid", PAGE_TWO)
+
+    ready = await add_ready(
+        sources,
+        uow_factory,
+        student,
+        notebook,
+        LessonResourceInput(lesson_id=lesson.id, link_id=resource.link_id),
+    )
+
+    assert ready.ref["url"] == "https://ziyouz.uz/jadid"
+    assert world.fetcher.calls == ["https://ziyouz.uz/jadid"]
 
 
 async def test_flashcard_set_gives_ten_cards_per_passage(

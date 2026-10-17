@@ -300,6 +300,17 @@ class ProcessSource:
         current.updated_at = now
         await uow.sources.save(current)
         await sources_changed(uow, notebook, now)
+        if (
+            current.kind is SourceKind.URL
+            and self.settings.notebooks.web_materials_enabled
+        ):
+            uow.after_commit(
+                partial(
+                    self.kicker.kick,
+                    "notebooks.gather_web_materials",
+                    source_id=str(current.id),
+                )
+            )
         if kick_guide:
             uow.after_commit(
                 partial(

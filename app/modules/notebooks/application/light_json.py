@@ -1,7 +1,7 @@
 """One structured call of a light task, with budget accounting and retries."""
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from typing import Any, Final
 from uuid import UUID
 
@@ -13,6 +13,7 @@ from app.shared.contracts.ai import AiProviderError
 
 PROVIDER_RETRIES: Final = 2  # after the first try
 BACKOFF_SECONDS: Final = 2.0
+ATTACHMENT_COST_CHARS: Final = 6000  # what an image or audio part is counted as
 
 Sleep = Callable[[float], Awaitable[None]]
 
@@ -43,10 +44,12 @@ class LightJson:
         schema: dict[str, Any],
         max_tokens: int,
         course: bool = False,
+        attachments: Sequence[dict[str, Any]] = (),
     ) -> dict[str, Any]:
         """Return the model's JSON document.
 
         `course=True` charges the owner's course pool (a course workspace).
+        `attachments` are extra content parts (an image or audio) after the text.
 
         Raises:
             LimitReachedError: The student's budget does not cover the call.
@@ -56,15 +59,22 @@ class LightJson:
         max_tokens = self.llm.max_tokens(task, max_tokens)
         budget = self.budget.pool(course)
         await budget.require(
-            owner_id, estimate_cost(len(system) + len(user), max_tokens)
+            owner_id,
+            estimate_cost(
+                len(system) + len(user) + ATTACHMENT_COST_CHARS * len(attachments),
+                max_tokens,
+            ),
         )
+        content: str | list[dict[str, Any]] = user
+        if attachments:
+            content = [{"type": "text", "text": user}, *attachments]
         attempt = 0
         while True:
             try:
                 done = await self.llm.json(
                     task=task,
                     system=system,
-                    messages=[{"role": "user", "content": user}],
+                    messages=[{"role": "user", "content": content}],
                     schema_name=schema_name,
                     schema=schema,
                     max_tokens=max_tokens,

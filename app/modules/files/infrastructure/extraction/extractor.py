@@ -4,11 +4,15 @@ import asyncio
 from collections.abc import Callable
 
 from app.modules.files.domain.errors import TextExtractionError
-from app.modules.files.domain.policy import DOCX, EPUB, PDF
+from app.modules.files.domain.policy import DOCX, EPUB, PDF, PPTX, XLSX
 from app.modules.files.infrastructure.extraction.docx_text import extract_docx
 from app.modules.files.infrastructure.extraction.epub_text import extract_epub
 from app.modules.files.infrastructure.extraction.limits import (
     EXTRACT_TIMEOUT_SECONDS,
+)
+from app.modules.files.infrastructure.extraction.office_text import (
+    extract_pptx,
+    extract_xlsx,
 )
 from app.modules.files.infrastructure.extraction.pdf_text import extract_pdf
 from app.modules.files.infrastructure.extraction.plain_text import extract_plain
@@ -18,13 +22,15 @@ _PARSERS: dict[str, Callable[[bytes], ExtractedText]] = {
     PDF: extract_pdf,
     EPUB: extract_epub,
     DOCX: extract_docx,
+    PPTX: extract_pptx,
+    XLSX: extract_xlsx,
     "text/plain": extract_plain,
     "text/markdown": extract_plain,
 }
 
 
 class FileTextExtractor:
-    """Extracts text from PDF, EPUB, DOCX, TXT and MD files."""
+    """Extracts text from PDF, EPUB, DOCX, PPTX, XLSX, TXT and MD files."""
 
     def __init__(self, timeout_seconds: float = EXTRACT_TIMEOUT_SECONDS) -> None:
         """Set how long one file may take."""

@@ -72,6 +72,7 @@ class _Run:
     span: int = TAIL_MESSAGES  # messages read per step (AI-EFF-3)
     message_seq: int | None = None  # the one assistant message of this answer
     events: TurnEvents | None = None  # the live events of a streamed turn
+    seen: dict[str, ToolCall] = field(default_factory=dict)  # read calls by key
 
 
 class ContinueTurn:
@@ -188,7 +189,9 @@ class ContinueTurn:
             run.events.status(text)
         if raw_calls and text.strip():  # a progress note between tool rounds
             record_step(StepKind.THINK, text)
-        calls = await self.runner.propose(chat.assistant, run.ctx, raw_calls, taken)
+        calls = await self.runner.propose(
+            chat.assistant, run.ctx, raw_calls, taken, run.seen
+        )
         message, stored = await self._store(
             run, text, calls, (tokens_in, tokens_out), web=_turn_web(tail)
         )
@@ -276,6 +279,8 @@ class ContinueTurn:
         """Add one model request to the answer's message (made by the first one)."""
         now = self.clock.now()
         content = _answer_content(text, web or [])
+        if calls:  # text before tool calls is a progress note, never the answer
+            content = MessageContent(progress=[content.text], web=content.web)
         if (recorder := current_steps()) is not None:  # AI-STEPS, up to this message
             content.steps = recorder.take()
         async with self.uow_factory() as uow:
@@ -326,9 +331,17 @@ def _add_round(
     calls: list[ToolCall],
     tokens: tuple[int, int],
 ) -> None:
-    """Make `content` the answer; the text so far becomes a progress note."""
-    index = len(message.content.progress) + 1
-    message.content.progress.append(message.content.text)
+    """Add a round; the text so far becomes a progress note.
+
+    `progress[r]` stays the text of round r (a round with calls stored it already).
+    """
+    rounds = 1 + max((c.round for c in message.tool_calls), default=0)
+    if len(message.content.progress) < rounds:
+        message.content.progress.append(message.content.text)
+    message.content.progress.extend(content.progress)
+    index = len(message.content.progress)
+    if content.progress:
+        index -= 1
     message.content.text = content.text
     if content.web:
         message.content.web = content.web

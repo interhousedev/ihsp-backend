@@ -498,6 +498,24 @@ class NotebooksSettings(BaseModel):
     their sources; a failure gets one regeneration, then the output is marked
     `verification: unverified` in its content."""
 
+    web_materials_enabled: bool = True
+    """A web page added as a source is scanned for linked files and article images
+    (PDF, DOCX, PPTX, XLSX, PNG, JPEG, WebP, audio); a cheap model (AI task
+    WEB_MATERIAL_TRIAGE) keeps the substantive ones, which are stored in the owner's
+    files and added to the same notebook, private to it."""
+
+    web_materials_per_page: int = Field(default=10, ge=0, le=20)
+    """Candidates one page may offer at most (0 switches gathering off)."""
+
+    web_materials_max_bytes: int = Field(default=20_971_520, ge=1024)
+    """Largest file gathered from a page; bigger ones are skipped."""
+
+    web_materials_min_image_px: int = Field(default=200, ge=1)
+    """Images with a declared width or height below this are icons, not material."""
+
+    web_materials_timeout_seconds: float = Field(default=15.0, gt=0, le=120)
+    """Download timeout of one gathered file."""
+
 
 class VectorsSettings(BaseModel):
     """Embeddings and search by meaning.
@@ -915,6 +933,11 @@ class LimitsSettings(BaseModel):
     notebook chats); the model reads older ones with `read_chat_history`. The
     environment default is `AI__CHAT_HISTORY_LIMIT`."""
 
+    ai_ask_before_web_search: int = Field(default=1, ge=0, le=1)
+    """1: when the school data has nothing, the student assistant asks before it
+    searches the internet (the search is an approval card); 0: it searches at once.
+    The environment default is `AI__ASK_BEFORE_WEB_SEARCH`."""
+
     ai_smart_weight: int | None = Field(default=None, ge=1)
     """Deprecated: use `AI__TASKS__STUDENT_CHAT_SMART__BUDGET_WEIGHT` (default 8)."""
 
@@ -971,6 +994,14 @@ class LimitsSettings(BaseModel):
 
     nb_search_per_minute: int = Field(default=30, ge=1)
     """Full-text searches in the sources of notebooks per minute of one user."""
+
+    nb_web_materials_per_day: int = Field(default=30, ge=-1)
+    """Files gathered from web pages into a student's notebooks per day (Tashkent
+    date). 0 switches gathering off; -1 means no cap."""
+
+    nb_media_described_per_day: int = Field(default=20, ge=-1)
+    """Images described and audio transcribed by the media model (AI task
+    MEDIA_DESCRIBE) per student and day. -1 means no cap."""
 
     web_search_per_day_student: int = Field(default=10, ge=-1)
     """Web searches a student may start per day (Tashkent date): a chat message with the

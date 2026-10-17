@@ -62,6 +62,7 @@ from app.modules.ai.application.tools.read_notebook_source import ReadNotebookSo
 from app.modules.ai.application.tools.registry import ToolRegistry
 from app.modules.ai.application.tools.search_files import SearchFiles
 from app.modules.ai.application.tools.search_notebook import SearchNotebook
+from app.modules.ai.application.tools.search_web import SearchWeb
 from app.modules.ai.application.turn_result import TurnResults
 from app.modules.ai.application.usage_report import UsageReport
 from app.modules.ai.application.web_pages import WebPageIndex
@@ -172,6 +173,7 @@ def make_student_tools(
         SearchNotebook(bindings),
         ReadNotebookSource(bindings),
         ListNotebookArtifacts(bindings),
+        SearchWeb(bindings, limits),
         ListFlashcardSets(flashcards),
         GetFlashcardSet(flashcards),
         CreateFlashcardSet(flashcards),
@@ -276,7 +278,7 @@ def build(
         runner=runner,
         budget=budget,
         summarizer=summarizer,
-        prompts=SystemPrompts(gate, deps.clock),
+        prompts=SystemPrompts(gate, deps.clock, limits),
         clock=deps.clock,
         settings=settings,
         i18n=deps.i18n,
@@ -307,6 +309,7 @@ def build(
             ]
         ),
     )
+    bindings.web = searching
     return AiServices(
         create_chat=CreateChat(
             uow_factory=uow_factory,

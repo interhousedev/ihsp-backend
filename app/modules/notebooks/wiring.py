@@ -27,6 +27,7 @@ from app.modules.notebooks.application.delete_owner import DeleteOwner
 from app.modules.notebooks.application.discover_sources import DiscoverSources
 from app.modules.notebooks.application.edit_slides import EditSlides
 from app.modules.notebooks.application.embed_passages import EmbedPassages
+from app.modules.notebooks.application.gather_web_materials import GatherWebMaterials
 from app.modules.notebooks.application.generate_artifact import GenerateArtifact
 from app.modules.notebooks.application.get_artifact import GetArtifact
 from app.modules.notebooks.application.get_chat import GetChat
@@ -168,6 +169,7 @@ class NotebooksServices:
     build_source_guide: BuildSourceGuide
     refresh_summaries: RefreshSummaries
     sweep_sources: SweepSources
+    gather_web_materials: GatherWebMaterials
     open_auto_notebook: OpenAutoNotebook
     list_subject_slots: ListSubjectSlots
     update_auto_settings: UpdateAutoSettings
@@ -335,6 +337,7 @@ def build(
         build_source_guide=sources.build_source_guide,
         refresh_summaries=sources.refresh_summaries,
         sweep_sources=sources.sweep_sources,
+        gather_web_materials=sources.gather_web_materials,
         open_auto_notebook=auto.open_auto_notebook,
         list_subject_slots=auto.list_subject_slots,
         update_auto_settings=auto.update_auto_settings,

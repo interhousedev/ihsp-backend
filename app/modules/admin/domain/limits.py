@@ -38,7 +38,10 @@ _MAX_BY_UNIT: dict[str, int] = {
     "hours": 720,
     "steps": 100,
     "count": 100_000,
+    "switch": 1,
 }
+_SWITCHES: frozenset[str] = frozenset({"ai_ask_before_web_search"})
+"""0/1 limits: the editor shows a switch instead of a number."""
 
 
 class LimitInvalidError(ValidationFailedError):
@@ -74,7 +77,9 @@ def group_of(name: str) -> str:
 
 
 def unit_of(name: str) -> str:
-    """What the number counts: tokens, steps, hours, bytes or plain counts."""
+    """What the number counts: tokens, steps, hours, bytes, counts or a 0/1 switch."""
+    if name in _SWITCHES:
+        return "switch"
     if "tokens" in name:
         return "tokens"
     if name.endswith("_bytes"):

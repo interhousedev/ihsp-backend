@@ -66,6 +66,10 @@ class WriteTool(_Tool[A]):
 
     access: ClassVar[ToolAccess] = ToolAccess.WRITE
 
+    async def needs_approval(self, ctx: ToolContext) -> bool:
+        """True when the call waits for the user (a setting may let it run at once)."""
+        return True
+
     @abstractmethod
     async def preview(self, args: A, ctx: ToolContext) -> PreviewData:
         """Build the approval card from the real arguments."""

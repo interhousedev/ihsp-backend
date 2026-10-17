@@ -303,7 +303,7 @@ def _parse_url(raw: str) -> _Target:
 
 
 @dataclass(frozen=True, slots=True)
-class _Download:
+class Download:
     """A complete, accepted response."""
 
     url: str
@@ -345,10 +345,12 @@ def _check_peer(response: httpx.Response, address: str) -> None:
         raise _forbidden("connected to an address that was not validated")
 
 
-def _check_type(response: httpx.Response) -> str:
+def _check_type(
+    response: httpx.Response, allowed: tuple[str, ...] = ALLOWED_TYPES
+) -> str:
     raw = str(response.headers.get("content-type", ""))
     content_type = raw.split(";", 1)[0].strip().lower()
-    if content_type not in ALLOWED_TYPES:
+    if content_type not in allowed:
         raise _unsupported(f"content type {content_type[:60] or 'missing'}")
     return content_type
 
@@ -415,6 +417,9 @@ def _decode(body: bytes, header_charset: str | None, html: bool) -> str:
         return body.decode("utf-8", errors="replace")
 
 
+decode_body = _decode  # the decoding of pages, for the material scanner
+
+
 def _page_text(reader: PdfReader, index: int) -> str:
     try:
         return reader.pages[index].extract_text() or ""
@@ -464,7 +469,7 @@ def _extract_pdf(data: bytes) -> tuple[str | None, str, tuple[int, ...]]:
     return title, "\n".join(texts), tuple(offsets)
 
 
-async def _to_page(download: _Download) -> FetchedPage:
+async def _to_page(download: Download) -> FetchedPage:
     kind = download.content_type
     if kind == "application/pdf":
         title, text, pages = await asyncio.to_thread(_extract_pdf, download.body)
@@ -522,14 +527,28 @@ class HttpWebFetcher:
             raise
 
     async def _fetch(self, url: str) -> FetchedPage:
+        return await _to_page(await self.download_raw(url))
+
+    async def download_raw(
+        self,
+        url: str,
+        *,
+        allowed: tuple[str, ...] = ALLOWED_TYPES,
+        max_bytes: int | None = None,
+        timeout_seconds: float | None = None,
+    ) -> Download:
+        """The checked bytes of `url` (every hop SSRF-checked), not yet read as text.
+
+        Raises:
+            SourceReadError: As `fetch`.
+        """
         try:
-            async with asyncio.timeout(self.timeout_seconds):
-                download = await self._download(url)
+            async with asyncio.timeout(timeout_seconds or self.timeout_seconds):
+                return await self._download(url, allowed, max_bytes or self.max_bytes)
         except (TimeoutError, httpx.TimeoutException) as exc:
             raise _failed("timeout") from exc
         except (httpx.HTTPError, httpx.InvalidURL, OSError) as exc:
             raise _failed(f"request failed: {type(exc).__name__}") from exc
-        return await _to_page(download)
 
     def _client(self) -> httpx.AsyncClient:
         timeout = httpx.Timeout(
@@ -546,13 +565,15 @@ class HttpWebFetcher:
             limits=httpx.Limits(max_keepalive_connections=0),
         )
 
-    async def _download(self, url: str) -> _Download:
+    async def _download(
+        self, url: str, allowed: tuple[str, ...], max_bytes: int
+    ) -> Download:
         async with self._client() as client:
             current = url
             for _ in range(MAX_REDIRECTS + 1):
                 target = await self._target(current)
-                result = await self._hop(client, target)
-                if isinstance(result, _Download):
+                result = await self._hop(client, target, allowed, max_bytes)
+                if isinstance(result, Download):
                     return result
                 current = urljoin(target.url, result.location)
         raise _failed("too many redirects")
@@ -579,20 +600,29 @@ class HttpWebFetcher:
         return addresses
 
     async def _hop(
-        self, client: httpx.AsyncClient, target: _Target
-    ) -> _Download | _Redirect:
+        self,
+        client: httpx.AsyncClient,
+        target: _Target,
+        allowed: tuple[str, ...],
+        max_bytes: int,
+    ) -> Download | _Redirect:
         """One request; a validated address that refuses the connection is skipped."""
         failure: httpx.TransportError | None = None
         for address in target.addresses[:MAX_ADDRESSES]:
             try:
-                return await self._request(client, target, address)
+                return await self._request(client, target, address, allowed, max_bytes)
             except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
                 failure = exc
         raise _failed("connection failed") from failure
 
     async def _request(
-        self, client: httpx.AsyncClient, target: _Target, address: str
-    ) -> _Download | _Redirect:
+        self,
+        client: httpx.AsyncClient,
+        target: _Target,
+        address: str,
+        allowed: tuple[str, ...],
+        max_bytes: int,
+    ) -> Download | _Redirect:
         async with client.stream(
             "GET",
             target.url_for(address),
@@ -606,17 +636,17 @@ class HttpWebFetcher:
                 return _redirect(response)
             if not 200 <= status < 300:
                 raise _failed(f"http {status}")
-            content_type = _check_type(response)
-            _check_length(response, self.max_bytes)
-            body = await self._read(response)
-        return _Download(target.url, content_type, _charset_of(response), body)
+            content_type = _check_type(response, allowed)
+            _check_length(response, max_bytes)
+            body = await self._read(response, max_bytes)
+        return Download(target.url, content_type, _charset_of(response), body)
 
-    async def _read(self, response: httpx.Response) -> bytes:
+    async def _read(self, response: httpx.Response, max_bytes: int) -> bytes:
         chunks: list[bytes] = []
         size = 0
         async for chunk in response.aiter_bytes():
             size += len(chunk)
-            if size > self.max_bytes:
-                raise _too_large(f"more than {self.max_bytes} bytes")
+            if size > max_bytes:
+                raise _too_large(f"more than {max_bytes} bytes")
             chunks.append(chunk)
         return b"".join(chunks)

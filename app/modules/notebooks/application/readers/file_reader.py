@@ -35,6 +35,15 @@ def has_text(ref: FileRef | None) -> bool:
     return ref is not None and ref.status == READY and ref.text_bytes is not None
 
 
+def is_media(source: Source) -> bool:
+    """A gathered image or recording: its text is the media model's, in `body_md`."""
+    return bool(source.ref.get("media")) and bool(source.body_md)
+
+
+def _exists(ref: FileRef | None) -> bool:
+    return ref is not None and ref.status not in ("deleted", "rejected")
+
+
 def require_text(ref: FileRef) -> None:
     """Raise when the file cannot be a source because it has no text.
 
@@ -73,6 +82,8 @@ class FileReader:
         file_id = file_id_of(source)
         if file_id is None:
             raise SourceReadError(SourceFailure.DELETED.value)
+        if is_media(source):
+            return SourceText(text=source.body_md or "")
         return await self.read_file(file_id)
 
     async def read_file(self, file_id: UUID) -> SourceText:
@@ -97,8 +108,14 @@ class FileReader:
         if not file_ids:
             return set()
         found = await self.files.get_many(file_ids)
+        media = {s.id for s in sources if is_media(s)}
         return {
             source_id
             for source_id, file_id in wanted.items()
-            if file_id is not None and not has_text(found.get(file_id))
+            if file_id is not None
+            and not (
+                _exists(found.get(file_id))
+                if source_id in media
+                else has_text(found.get(file_id))
+            )
         }

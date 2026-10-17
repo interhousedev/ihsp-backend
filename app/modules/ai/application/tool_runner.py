@@ -1,5 +1,6 @@
 """Turns the model's tool calls into stored calls: read tools run, writes wait."""
 
+import json
 from datetime import timedelta
 from typing import Any, Final
 
@@ -41,14 +42,28 @@ class ToolRunner:
         ctx: ToolContext,
         raw_calls: list[dict[str, Any]],
         taken_ids: set[str],
+        seen: dict[str, ToolCall] | None = None,
     ) -> list[ToolCall]:
-        """Run read calls now; return write calls as `pending_approval`."""
+        """Run read calls now; return write calls as `pending_approval`.
+
+        `seen` holds the read calls done earlier in the turn by `call_key`: the same
+        tool with the same (or only differently spaced or cased) arguments is not run
+        again; its earlier result comes back marked `repeated`.
+        """
         calls: list[ToolCall] = []
         for raw in raw_calls:
             call_id = _unique_id(str(raw.get("id") or ""), taken_ids)
+            key = call_key(raw)
+            earlier = seen.get(key) if seen is not None else None
+            if earlier is not None:
+                calls.append(_repeated(earlier, call_id))
+                continue
             call = await self._one(assistant, ctx, raw, call_id)
             _record(call)
             calls.append(call)
+            done = call.status is ToolStatus.DONE and call.access is ToolAccess.READ
+            if seen is not None and done:
+                seen[key] = call
         return calls
 
     async def _one(
@@ -75,7 +90,7 @@ class ToolRunner:
     ) -> ToolCall:
         parsed = tool.parse(args)
         await tool.validate(parsed, ctx)
-        if isinstance(tool, WriteTool):
+        if isinstance(tool, WriteTool) and await tool.needs_approval(ctx):
             expires = self.clock.now() + timedelta(hours=APPROVAL_TTL_HOURS)
             return ToolCall(
                 id=call_id,
@@ -145,6 +160,36 @@ def _record(call: ToolCall) -> None:
         ref=call.id,
         status=StepStatus.FAILED if failed else StepStatus.DONE,
     )
+
+
+def call_key(raw: dict[str, Any]) -> str:
+    """The identity of a call within a turn: its tool and normalised arguments."""
+    arguments = raw.get("arguments")
+    args = arguments if isinstance(arguments, dict) else {}
+    return json.dumps(
+        [str(raw.get("name", "")), _normalised(args)],
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+
+
+def _normalised(value: Any) -> Any:
+    if isinstance(value, str):
+        return " ".join(value.casefold().split())
+    if isinstance(value, dict):
+        return {k: _normalised(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_normalised(v) for v in value]
+    return value
+
+
+def _repeated(earlier: ToolCall, call_id: str) -> ToolCall:
+    """A repeated call: the earlier result, marked so the model stops asking."""
+    result = {
+        "repeated": "Same call as earlier in this answer; use this result.",
+        **(earlier.result or {}),
+    }
+    return earlier.model_copy(update={"id": call_id, "result": result})
 
 
 def _unique_id(model_id: str, taken: set[str]) -> str:

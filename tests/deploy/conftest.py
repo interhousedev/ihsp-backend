@@ -20,11 +20,26 @@ def _require_docker() -> None:
         pytest.skip("docker compose is not available")
 
 
+# The operator fills these in (prod_init.sh refuses a CHANGE_ME); the settings reject a
+# non-origin endpoint, so the tests stand in a valid origin.
+_S3_ORIGIN = "https://storage.example.com"
+
+
+def _filled_sample() -> str:
+    """The prod sample with its S3 endpoint placeholders set to a valid origin."""
+    text = PROD_ENV_SAMPLE.read_text(encoding="utf-8")
+    for name in ("IHSP_S3__ENDPOINT_URL", "IHSP_S3__PUBLIC_ENDPOINT_URL"):
+        text = text.replace(f"{name}=CHANGE_ME\n", f"{name}={_S3_ORIGIN}\n")
+    return text
+
+
 @pytest.fixture(scope="session")
-def prod_model() -> dict[str, Any]:
+def prod_model(tmp_path_factory: pytest.TempPathFactory) -> dict[str, Any]:
     """The production stack resolved with materials/.env.prod.sample."""
     _require_docker()
-    return compose_json(PROD_COMPOSE, PROD_ENV_SAMPLE)
+    env: Path = tmp_path_factory.mktemp("env") / ".env.prod"
+    env.write_text(_filled_sample(), encoding="utf-8")
+    return compose_json(PROD_COMPOSE, env)
 
 
 @pytest.fixture(scope="session")
@@ -42,7 +57,7 @@ def prod_model_after_init(
     _require_docker()
     env: Path = tmp_path_factory.mktemp("env") / ".env.prod"
     env.write_text(
-        PROD_ENV_SAMPLE.read_text(encoding="utf-8")
+        _filled_sample()
         + "IHSP_VAULT__ROLE_ID=real-role\nIHSP_VAULT__SECRET_ID=real-secret\n"
         + "VAULT_BACKUP_ROLE_ID=backup-role\nVAULT_BACKUP_SECRET_ID=backup-secret\n",
         encoding="utf-8",

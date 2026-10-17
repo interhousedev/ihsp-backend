@@ -7,6 +7,7 @@ from app.modules.notebooks.application.add_sources import AddSources
 from app.modules.notebooks.application.build_source_guide import BuildSourceGuide
 from app.modules.notebooks.application.discover_sources import DiscoverSources
 from app.modules.notebooks.application.embed_passages import EmbedPassages
+from app.modules.notebooks.application.gather_web_materials import GatherWebMaterials
 from app.modules.notebooks.application.get_passage import GetPassage
 from app.modules.notebooks.application.get_source import GetSource
 from app.modules.notebooks.application.light_json import LightJson, Sleep
@@ -21,9 +22,13 @@ from app.modules.notebooks.application.select_sources import SelectSources
 from app.modules.notebooks.application.sweep_sources import SweepSources
 from app.modules.notebooks.application.sync_source import SyncSource
 from app.modules.notebooks.application.update_source import UpdateSource
+from app.modules.notebooks.infrastructure.material_fetcher import HttpMaterialFetcher
 from app.modules.notebooks.infrastructure.redis_guide_lock import RedisGuideLock
+from app.modules.notebooks.infrastructure.web_fetcher import HttpWebFetcher
 from app.modules.notebooks.ports.web_fetcher import WebFetcher
+from app.modules.notebooks.ports.web_materials import MaterialFetcher
 from app.modules.notebooks.wiring_core import NotebooksCore
+from app.settings import Settings
 from app.shared.contracts.academic import ScheduleQueries
 from app.shared.contracts.ai import AiQueries
 from app.shared.contracts.files import FilesApi
@@ -54,6 +59,7 @@ class SourcesServices:
     build_source_guide: BuildSourceGuide
     refresh_summaries: RefreshSummaries
     sweep_sources: SweepSources
+    gather_web_materials: GatherWebMaterials
     readers: SourceReaders  # shared with the auto notebook sync
 
 
@@ -70,6 +76,7 @@ def build_sources(
     sleep: Sleep = asyncio.sleep,
     library: LibrarySourceReader | None = None,
     identity: IdentityDirectory | None = None,
+    materials: MaterialFetcher | None = None,
 ) -> SourcesServices:
     """Build the source use cases over the shared services and other modules' APIs.
 
@@ -77,6 +84,8 @@ def build_sources(
     `library` (with `identity`, for the roles of the source owner) turns books and
     notes of the library into sources; without them those kinds are unsupported.
     `sleep` is the pause between retries of the light model (tests pass a fake).
+    `materials` gathers the files of web sources; by default it is built over an
+    `HttpWebFetcher`, and nothing is gathered without one.
     """
     deps = core.deps
     readers = SourceReaders(
@@ -160,5 +169,31 @@ def build_sources(
             readers=readers,
             kicker=deps.kicker,
         ),
+        gather_web_materials=GatherWebMaterials(
+            uow_factory=core.uow_factory,
+            clock=deps.clock,
+            settings=deps.settings,
+            files=files,
+            fetcher=materials or _materials(fetcher, deps.settings),
+            model=light,
+            counters=core.quota.store,
+            limits=deps.effective_limits,
+            kicker=deps.kicker,
+            sleep=sleep,
+        ),
         readers=readers,
+    )
+
+
+def _materials(
+    fetcher: WebFetcher | None, settings: Settings
+) -> MaterialFetcher | None:
+    """The material gatherer over the SSRF-safe page fetcher, when there is one."""
+    if not isinstance(fetcher, HttpWebFetcher):
+        return None
+    cfg = settings.notebooks
+    return HttpMaterialFetcher(
+        fetcher,
+        min_image_px=cfg.web_materials_min_image_px,
+        timeout_seconds=cfg.web_materials_timeout_seconds,
     )

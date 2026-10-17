@@ -53,3 +53,8 @@ def reset_usage_actor(token: Token[UsageActor | None]) -> None:
 def current_usage_actor() -> UsageActor:
     """The caller of the calls made now; a system call when nobody is bound."""
     return _current.get() or UsageActor(None, ROLE_SYSTEM)
+
+
+def bind_usage_user(user_id: UUID, *, unlimited: bool) -> Token[UsageActor | None]:
+    """Count the calls of a job for a user (staff when `unlimited`, else student)."""
+    return _current.set(UsageActor(user_id, ROLE_STAFF if unlimited else ROLE_STUDENT))

@@ -108,7 +108,11 @@ class LessonResourceReader:
         )
 
     async def _target(self, resource: ResourceRef) -> dict[str, str]:
-        """``file_id`` of a file resource (it must have text) or ``url`` of a link."""
+        """``file_id`` of a file resource (it must have text) or ``url`` of a link.
+
+        A link is read at its target: its short URL opens the link page of IHT
+        (title and a button), whose text is not the material.
+        """
         if resource.kind == "file" and resource.file_id is not None:
             stored = await self.files.get(resource.file_id)
             if stored is None or stored.status == "deleted":
@@ -116,4 +120,4 @@ class LessonResourceReader:
             require_text(stored)
             return {"file_id": str(resource.file_id)}
         self.url_reader.require_fetcher()
-        return {"url": resource.short_url}
+        return {"url": resource.target_url or resource.short_url}

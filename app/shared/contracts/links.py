@@ -30,6 +30,8 @@ class ResourceRef:
     # app shows the size and offers a preview for images, PDFs, video and audio.
     file: FileRef | None = None
     created_at: datetime | None = None
+    # The web address a URL resource leads to (its short link opens a link page).
+    target_url: str | None = None
 
 
 # Lesson resources that an outside system (EMIS) brought carry this author, who is no

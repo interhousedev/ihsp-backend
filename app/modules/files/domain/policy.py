@@ -105,6 +105,29 @@ RULES: dict[str, TypeRule] = {
     ".jpeg": TypeRule(
         "image/jpeg", frozenset({"image/jpeg"}), frozenset({"image/jpeg"})
     ),
+    ".webp": TypeRule(
+        "image/webp", frozenset({"image/webp"}), frozenset({"image/webp"})
+    ),
+    # Audio (gathered web materials, transcribed by the media model).
+    ".mp3": TypeRule(
+        "audio/mpeg", frozenset({"audio/mpeg", "audio/mp3"}), frozenset({"audio/mpeg"})
+    ),
+    ".m4a": TypeRule(
+        "audio/mp4",
+        frozenset({"audio/mp4", "audio/x-m4a"}),
+        frozenset({"audio/mp4", "audio/x-m4a", "video/mp4"}),
+        loose_declared=True,
+    ),
+    ".ogg": TypeRule(
+        "audio/ogg",
+        frozenset({"audio/ogg"}),
+        frozenset({"audio/ogg", "application/ogg"}),
+    ),
+    ".wav": TypeRule(
+        "audio/wav",
+        frozenset({"audio/wav", "audio/x-wav"}),
+        frozenset({"audio/wav", "audio/x-wav", "audio/vnd.wave"}),
+    ),
     # Videos are only accepted for ``VIDEO_PURPOSES`` (``check_purpose_extension``).
     ".mp4": TypeRule(
         MP4,

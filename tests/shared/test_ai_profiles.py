@@ -69,6 +69,8 @@ def test_the_catalog_lists_the_places_that_call_a_model() -> None:
         "retrieval_plan",
         "query_decompose",
         "studio_faithfulness",
+        "web_material_triage",
+        "media_describe",
     } == names
 
 

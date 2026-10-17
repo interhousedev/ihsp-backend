@@ -168,6 +168,11 @@ class AiSettings(BaseModel):
     """Latest chat messages sent to the model with each question; empty keeps 20.
     Administration can change it at runtime (limit `ai_chat_history_limit`)."""
 
+    ask_before_web_search: bool | None = None
+    """True (the default): the student assistant asks before it searches the internet;
+    False: it searches at once. Administration can change it at runtime (limit
+    `ai_ask_before_web_search`)."""
+
     prompt_cache_models: tuple[str, ...] = DEFAULT_CACHE_MODELS
     """Comma list of model id prefixes that get `cache_control` marks (providers
     with explicit prompt caching behind OpenRouter: Anthropic, Gemini)."""
@@ -307,9 +312,14 @@ def fold_deprecated(settings: "Settings") -> None:
 
 
 def fold_history_limit(settings: "Settings") -> None:
-    """`AI__CHAT_HISTORY_LIMIT` becomes the environment value of the editable limit."""
+    """`AI__CHAT_HISTORY_LIMIT`, `AI__ASK_BEFORE_WEB_SEARCH`: environment limits."""
     value = settings.ai.chat_history_limit
     if value is not None:
         settings.limits = settings.limits.model_copy(
             update={"ai_chat_history_limit": value}
+        )
+    ask = settings.ai.ask_before_web_search
+    if ask is not None:
+        settings.limits = settings.limits.model_copy(
+            update={"ai_ask_before_web_search": int(ask)}
         )

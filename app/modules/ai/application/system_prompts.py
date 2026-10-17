@@ -6,6 +6,7 @@ from app.modules.ai.domain.prompts import system_prompt
 from app.modules.ai.domain.prompts_author import author_system_prompt, course_context
 from app.modules.ai.ports.author_gate import AuthorGate
 from app.shared.clock import Clock, local_today
+from app.shared.limits import LimitsProvider
 
 
 class SystemPrompts:
@@ -16,15 +17,22 @@ class SystemPrompts:
     It costs one small LMS read and saves the model a tool round.
     """
 
-    def __init__(self, gate: AuthorGate, clock: Clock) -> None:
-        """Store the course gate (for the outline) and the clock (for the date)."""
+    def __init__(
+        self, gate: AuthorGate, clock: Clock, limits: LimitsProvider | None = None
+    ) -> None:
+        """Store the course gate (outline), the clock (date) and the runtime limits."""
         self.gate = gate
         self.clock = clock
+        self.limits = limits
 
     async def build(self, chat: Chat, locale: str) -> str:
         """Return the system prompt of the chat's assistant in the user's locale."""
         today = local_today(self.clock)
         if chat.assistant is not Assistant.LMS_AUTHOR or chat.scope is None:
-            return system_prompt(chat.assistant, locale, today)
+            ask = True
+            if self.limits is not None:
+                current = await self.limits.current()
+                ask = bool(current.ai_ask_before_web_search)
+            return system_prompt(chat.assistant, locale, today, ask_before_web=ask)
         brief = await self.gate.course_brief(chat.scope.course_id)
         return author_system_prompt(locale, today, course_context(brief))

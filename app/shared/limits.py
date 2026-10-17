@@ -53,6 +53,8 @@ UNLIMITABLE: frozenset[str] = frozenset(
         "nb_artifacts_per_day",
         "nb_slides_per_day",
         "nb_infographics_per_day",
+        "nb_web_materials_per_day",
+        "nb_media_described_per_day",
         "web_search_per_day_student",
     }
 )

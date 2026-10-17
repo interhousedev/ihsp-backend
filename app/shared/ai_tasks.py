@@ -32,6 +32,8 @@ TRANSLATE_MODEL: Final = "google/gemini-3.5-flash-lite"  # cheap; a few words pe
 CHEAP_MODEL: Final = TRANSLATE_MODEL
 # Summaries of older chat turns: the cheapest configured chat model.
 COMPACT_MODEL: Final = TRANSLATE_MODEL
+# Reads images and audio (Gemini Flash-Lite class): describes gathered media cheaply.
+MEDIA_MODEL: Final = "google/gemini-3.5-flash-lite"
 EMBEDDING_MODEL: Final = "qwen/qwen3-embedding-4b"
 EMBEDDING_DIMENSIONS: Final = 1024  # must equal the `vectors.embeddings` column size
 EMBEDDING_BATCH_SIZE: Final = 32
@@ -70,6 +72,8 @@ class AiTask(StrEnum):
     RETRIEVAL_PLAN = "retrieval_plan"
     QUERY_DECOMPOSE = "query_decompose"
     STUDIO_FAITHFULNESS = "studio_faithfulness"
+    WEB_MATERIAL_TRIAGE = "web_material_triage"
+    MEDIA_DESCRIBE = "media_describe"
 
 
 @dataclass(frozen=True, slots=True)
@@ -258,6 +262,22 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
         "notebooks",
         "Faithfulness check of a Studio output against its sources.",
         model=CHEAP_MODEL,
+        data_collection=_PRIVATE,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.WEB_MATERIAL_TRIAGE: TaskSpec(
+        "notebooks",
+        "Web materials triage: keeps only the substantive educational files and images "
+        "linked from a web source (title, URL, nearby text; images are looked at).",
+        model=CHEAP_MODEL,
+        data_collection=_PRIVATE,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.MEDIA_DESCRIBE: TaskSpec(
+        "notebooks",
+        "Media reading: describes a gathered image and transcribes gathered audio so "
+        "they can be searched and cited (a vision and audio model).",
+        model=MEDIA_MODEL,
         data_collection=_PRIVATE,
         reasoning_effort=_NO_REASONING,
     ),

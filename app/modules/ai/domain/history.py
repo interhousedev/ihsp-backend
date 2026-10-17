@@ -64,14 +64,18 @@ def _user_text(message: ChatMessage, *, full_web: bool = True) -> str:
 
 
 def _assistant_entries(message: ChatMessage) -> list[dict[str, Any]]:
-    """The model requests of one answer: each round's text, calls and results."""
+    """The model requests of one answer: each round's text, calls and results.
+
+    A round with calls keeps its note in `progress`; while no later round exists the
+    answer text is empty and is no entry of its own.
+    """
     rounds = len(message.content.progress) + 1
     out: list[dict[str, Any]] = []
     for index in range(rounds):
         last = index == rounds - 1
         text = message.text if last else message.content.progress[index]
         calls = [c for c in message.tool_calls if min(c.round, rounds - 1) == index]
-        if not calls and not last:
+        if not calls and (not last or (index > 0 and not text)):
             continue
         out.extend(_round_entries(text, calls))
     return out
