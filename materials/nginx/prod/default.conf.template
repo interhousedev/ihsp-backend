@@ -123,7 +123,7 @@ server {
     include /etc/nginx/conf.d/tls.inc;
     access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;
-    include /etc/nginx/ihsp/route-static.inc;
+    include /etc/nginx/ihsp/route-lms.inc;
 }
 
 # Library: the static app from the web container; /b/, /sitemap.xml, /robots.txt and /opds/ from the api.

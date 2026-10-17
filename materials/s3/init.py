@@ -68,7 +68,8 @@ async def main() -> None:
                             "Status": "Enabled",
                             "Filter": {"Prefix": ""},
                             "AbortIncompleteMultipartUpload": {
-                                "DaysAfterInitiation": 1},
+                                "DaysAfterInitiation": 1
+                            },
                         },
                         {
                             "ID": "expire-tmp",
@@ -82,6 +83,7 @@ async def main() -> None:
         except ClientError as exc:
             if exc.response["Error"]["Code"] not in EXISTS:
                 print("S3 Initialization error:", exc)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

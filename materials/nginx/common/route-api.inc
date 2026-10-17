@@ -37,6 +37,23 @@ location ^~ /telegram/ {
     proxy_pass $up_bot;
 }
 
+# Large uploads: the H5P package (cap 100 MiB) and the .imscc cartridge import (cap 200 MiB)
+# are checked by the api; nginx allows a little more for the multipart envelope. The default
+# for everything else stays in default.conf.template.
+location ~ ^/v1/lms/courses/[^/]+/h5p$ {
+    include /etc/nginx/ihsp/proxy.inc;
+    include /etc/nginx/ihsp/headers-api.inc;
+    client_max_body_size 101m;
+    proxy_pass $up_api;
+}
+
+location = /v1/lms/courses/import {
+    include /etc/nginx/ihsp/proxy.inc;
+    include /etc/nginx/ihsp/headers-api.inc;
+    client_max_body_size 201m;
+    proxy_pass $up_api;
+}
+
 location / {
     include /etc/nginx/ihsp/proxy.inc;
     include /etc/nginx/ihsp/headers-api.inc;

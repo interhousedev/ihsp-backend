@@ -9,6 +9,7 @@ read-only at /healthcheck/check.py). Exit code 0 means healthy.
                                      (for example `proc app worker` for
                                      `python -m app worker`)
 """
+
 import os
 import sys
 import urllib.request

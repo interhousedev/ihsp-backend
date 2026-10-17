@@ -149,7 +149,7 @@ def test_the_library_host_has_its_own_route(mode: str, tmp_path: Path) -> None:
     assert "location ^~ /opds/ {" in dump
     # the other static hosts keep the plain static route
     lms = next(s for s in servers if "server_name lms.ihsu.test;" in s)
-    assert "include /etc/nginx/ihsp/route-static.inc;" in lms
+    assert "include /etc/nginx/ihsp/route-lms.inc;" in lms
 
 
 def _route(name: str) -> str:
@@ -214,3 +214,31 @@ def test_port_80_redirects_known_hosts_only() -> None:
     assert "return 404;" in default.split("listen 80 default_server;", 1)[1]
     assert "server_name ${HOST_ID} ${HOST_MY}" in named
     assert "return 301 https://$host$request_uri;" in named
+
+
+def test_the_lms_route_sends_h5p_files_to_the_api_and_the_rest_to_web() -> None:
+    route = _route("route-lms.inc")
+    body = route.split("location ^~ /v1/lms/h5p/ {", 1)[1].split("}", 1)[0]
+    assert "proxy_pass $up_api;" in body
+    assert "/etc/nginx/ihsp/proxy.inc;" in body
+    assert "include /etc/nginx/ihsp/route-static.inc;" in route
+
+
+def test_static_routes_never_leak_the_internal_port_in_redirects() -> None:
+    route = (MATERIALS_DIR / "nginx" / "common" / "route-static.inc").read_text()
+    assert "proxy_redirect ~^http://[^/]+:8080/(.*)$ https://$host/$1;" in route
+
+
+def test_upload_routes_allow_the_h5p_and_cartridge_caps_only_there() -> None:
+    api = _route("route-api.inc")
+    h5p = api.split("location ~ ^/v1/lms/courses/[^/]+/h5p$ {", 1)[1].split("}", 1)[0]
+    imscc = api.split("location = /v1/lms/courses/import {", 1)[1].split("}", 1)[0]
+    assert "client_max_body_size 101m;" in h5p  # H5P cap is 100 MiB
+    assert "client_max_body_size 201m;" in imscc  # .imscc cap is 200 MiB
+    for body in (h5p, imscc):
+        assert "proxy.inc" in body and "headers-api.inc" in body
+        assert "proxy_pass $up_api;" in body
+    assert api.count("client_max_body_size") == 2
+    for mode in ("local", "prod"):
+        template = MATERIALS_DIR / "nginx" / mode / "default.conf.template"
+        assert "client_max_body_size 25m;" in template.read_text()
