@@ -31,6 +31,7 @@ class FilePurpose(StrEnum):
     LIBRARY_MATERIAL = "library_material"
     LMS_VIDEO = "lms_video"
     USER_PHOTO = "user_photo"
+    CERTIFICATE = "certificate"
 
 
 @dataclass(frozen=True, slots=True)
@@ -184,6 +185,16 @@ class FilesApi(Protocol):
 
         There is no access check (the caller already decided); unknown ids and files
         that are already gone are fine, so the call can be repeated.
+        """
+        ...
+
+    async def transfer_ownership(
+        self, file_ids: Sequence[UUID], new_owner_id: UUID
+    ) -> None:
+        """Give live files to another owner (e.g. the library adopting a book).
+
+        The previous owner's quota stops counting them and they can no longer
+        delete them. Unknown, deleted or already-moved ids are skipped.
         """
         ...
 

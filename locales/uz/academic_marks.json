@@ -1,5 +1,6 @@
 {
   "academic-student-not-found": "Talaba yozuvi topilmadi",
+  "academic-not-head-student": "Siz guruh sardori emassiz",
   "academic-subject-not-found": "Bu fan sizning o'quv rejangizda yo'q",
   "academic-sync-running": "EMIS bilan sinxronizatsiya allaqachon ishlayapti",
   "academic-invalid-what-if": "Sinov bahosi lesson:5, midterm:4 yoki final:3 ko'rinishida yoziladi (2 dan 5 gacha)"

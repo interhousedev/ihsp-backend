@@ -1,5 +1,6 @@
 """In-memory FilesApi subset for the library tests (bytes, text pages, URLs)."""
 
+import dataclasses
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any
@@ -36,6 +37,7 @@ class FakeFilesApi:
         """Start empty."""
         self.files: dict[UUID, StoredFile] = {}
         self.urls: list[tuple[UUID, int | None]] = []
+        self.transferred: list[tuple[UUID, UUID]] = []
 
     def add_file(
         self,
@@ -173,6 +175,16 @@ class FakeFilesApi:
             pages=[f"page {n + 1}" for n in range(len(file_ids))],
         )
         return self.files[new_id_].ref
+
+    async def transfer_ownership(
+        self, file_ids: Sequence[UUID], new_owner_id: UUID
+    ) -> None:
+        """Record the moves and change the owner of known files."""
+        self.transferred.extend((i, new_owner_id) for i in file_ids)
+        for file_id in file_ids:
+            stored = self.files.get(file_id)
+            if stored is not None:
+                stored.ref = dataclasses.replace(stored.ref, owner_id=new_owner_id)
 
     async def delete_file(self, file_id: UUID) -> None:
         """Forget the file (already gone is fine)."""

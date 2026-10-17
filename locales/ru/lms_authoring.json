@@ -21,5 +21,11 @@
   "lms-nothing-to-publish": "Нет изменений для публикации.",
   "lms-no-live-version": "Нет опубликованной версии, к которой можно вернуться.",
   "lms-invite-not-applicable": "Код приглашения есть только у курсов по приглашению.",
-  "lms-video-block-not-found": "Этот блок не является загруженным видео."
+  "lms-video-block-not-found": "Этот блок не является загруженным видео.",
+  "lms-settings-invalid": "Недопустимое значение настройки курса.",
+  "lms-link-target-forbidden": "Эту ссылку нельзя проверить.",
+  "lms-h5p-block-not-found": "В этом блоке нет пакета H5P.",
+  "lms-h5p-invalid": "Этот файл не является корректным пакетом H5P.",
+  "lms-cartridge-invalid": "Этот файл не является пригодным пакетом IMS Common Cartridge (.imscc).",
+  "lms-cartridge-import-not-found": "Импорт не найден или устарел."
 }

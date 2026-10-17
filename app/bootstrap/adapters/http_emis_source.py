@@ -12,6 +12,7 @@ from uuid import UUID
 from app.settings import Settings
 from app.shared.contracts.emis import (
     EmisAuthFailed,
+    EmisCertificate,
     EmisClass,
     EmisClassHour,
     EmisCredentialsMissing,
@@ -134,6 +135,8 @@ class HttpEmisSource:
                 for mark in body["marks"]
             ),
             payload_hash=body["payload_hash"],
+            absent_dates=_dates(body.get("absent_dates")),
+            absence_total=body.get("absence_total"),
         )
 
     async def class_hours(self, user_id: UUID) -> list[EmisClassHour]:
@@ -157,6 +160,11 @@ class HttpEmisSource:
             {"begin": begin.isoformat(), "end": end.isoformat()},
         )
         return [_emis_class(item) for item in body]
+
+    async def certificates(self, user_id: UUID) -> list[EmisCertificate]:
+        """Return the student's CEFR and national certificates."""
+        body = await self._get(f"{user_id}/certificates")
+        return [_emis_certificate(item) for item in body]
 
     async def download(self, user_id: UUID, url: str, *, max_bytes: int) -> EmisFile:
         """Download a material through the gateway (it holds the EMIS session)."""
@@ -301,6 +309,20 @@ def _emis_curriculum(body: dict[str, Any]) -> EmisCurriculum:
     )
 
 
+def _emis_certificate(item: dict[str, Any]) -> EmisCertificate:
+    return EmisCertificate(
+        kind=item["kind"],
+        level=item["level"],
+        score=item["score"],
+        percent=item["percent"],
+        subject=item["subject"],
+        issued_on=_optional_date(item["issued_on"]),
+        expires_on=_optional_date(item["expires_on"]),
+        serial=item["serial"],
+        url=item["url"],
+    )
+
+
 def _emis_class(item: dict[str, Any]) -> EmisClass:
     subject, teacher, topic = item["subject"], item["teacher"], item["topic"]
     return EmisClass(
@@ -370,3 +392,8 @@ def _error_for(response: httpx.Response) -> EmisAuthFailed | EmisUnavailable:
     return EmisUnavailable(
         support_details=f"gateway answered {response.status_code} {problem_type}"
     )
+
+
+def _dates(values: list[str] | None) -> tuple[date, ...] | None:
+    """Parse the EMIS absent dates; None means EMIS sent no attendance."""
+    return None if values is None else tuple(date.fromisoformat(v) for v in values)

@@ -21,5 +21,11 @@
   "lms-nothing-to-publish": "There are no changes to publish.",
   "lms-no-live-version": "There is no published version to go back to.",
   "lms-invite-not-applicable": "Only invite-only courses have an invite code.",
-  "lms-video-block-not-found": "This block is not an uploaded video."
+  "lms-video-block-not-found": "This block is not an uploaded video.",
+  "lms-settings-invalid": "A course setting is invalid.",
+  "lms-link-target-forbidden": "This link cannot be checked.",
+  "lms-h5p-block-not-found": "This block has no H5P package.",
+  "lms-h5p-invalid": "This file is not a valid H5P package.",
+  "lms-cartridge-invalid": "This file is not a usable IMS Common Cartridge (.imscc).",
+  "lms-cartridge-import-not-found": "This import was not found or has expired."
 }

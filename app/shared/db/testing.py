@@ -22,6 +22,7 @@ SCHEMAS = (
     "notebooks",
     "library",
     "vectors",
+    "certificates",
 )
 
 

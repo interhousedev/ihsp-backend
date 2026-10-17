@@ -10,6 +10,7 @@ from uuid import UUID
 
 from app.modules.identity.domain.audit_event import AuditEventRecord
 from app.modules.identity.domain.connector import McpConnector
+from app.modules.identity.domain.factors import Passkey, UserFactors
 from app.modules.identity.domain.session import LoginSession
 from app.modules.identity.domain.telegram_link import TelegramLink
 from app.modules.identity.domain.user import User
@@ -30,18 +31,36 @@ class IdentityStore:
     links: dict[int, TelegramLink] = field(default_factory=dict)
     connectors: dict[UUID, McpConnector] = field(default_factory=dict)
     events: list[AuditEventRecord] = field(default_factory=list)
+    factors: dict[UUID, UserFactors] = field(default_factory=dict)
+    passkeys: dict[UUID, Passkey] = field(default_factory=dict)
     notifications: list[NotificationDraft] = field(default_factory=list)
     audits: list[AuditDraft] = field(default_factory=list)
 
     def snapshot(self) -> tuple[Any, ...]:
         """Copy the tables so an uncommitted unit of work can be rolled back."""
         return copy.deepcopy(
-            (self.users, self.sessions, self.links, self.connectors, self.events)
+            (
+                self.users,
+                self.sessions,
+                self.links,
+                self.connectors,
+                self.events,
+                self.factors,
+                self.passkeys,
+            )
         )
 
     def restore(self, snap: tuple[Any, ...]) -> None:
         """Put a snapshot back."""
-        self.users, self.sessions, self.links, self.connectors, self.events = snap
+        (
+            self.users,
+            self.sessions,
+            self.links,
+            self.connectors,
+            self.events,
+            self.factors,
+            self.passkeys,
+        ) = snap
 
     def audit_types(self, user_id: UUID | None = None) -> list[str]:
         """Types of the committed audit drafts (optionally of one user)."""
@@ -425,6 +444,55 @@ class FakeConnectorRepository:
             connector.last_used_at = now
 
 
+class FakeFactorRepository:
+    """FactorRepository over the store."""
+
+    def __init__(self, store: IdentityStore) -> None:
+        """Bind to the store."""
+        self._s = store
+
+    async def get(self, user_id: UUID) -> UserFactors | None:
+        """A copy of the factors."""
+        found = self._s.factors.get(user_id)
+        return _copy(found) if found else None
+
+    async def save(self, factors: UserFactors) -> None:
+        """Insert or replace."""
+        self._s.factors[factors.user_id] = _copy(factors)
+
+    async def list_passkeys(self, user_id: UUID) -> list[Passkey]:
+        """Oldest first."""
+        keys = [p for p in self._s.passkeys.values() if p.user_id == user_id]
+        return [_copy(p) for p in sorted(keys, key=lambda p: (p.created_at, p.id))]
+
+    async def get_passkey(self, passkey_id: UUID) -> Passkey | None:
+        """One passkey."""
+        found = self._s.passkeys.get(passkey_id)
+        return _copy(found) if found else None
+
+    async def get_passkey_by_credential(self, credential_id: bytes) -> Passkey | None:
+        """By credential id."""
+        found = next(
+            (p for p in self._s.passkeys.values() if p.credential_id == credential_id),
+            None,
+        )
+        return _copy(found) if found else None
+
+    async def add_passkey(self, passkey: Passkey) -> None:
+        """Insert."""
+        self._s.passkeys[passkey.id] = _copy(passkey)
+
+    async def save_passkey(self, passkey: Passkey) -> None:
+        """Replace."""
+        if passkey.id not in self._s.passkeys:
+            raise LookupError(str(passkey.id))
+        self._s.passkeys[passkey.id] = _copy(passkey)
+
+    async def delete_passkey(self, passkey_id: UUID) -> None:
+        """Remove."""
+        self._s.passkeys.pop(passkey_id, None)
+
+
 class FakeAuditEventRepository:
     """AuditEventRepository over the store."""
 
@@ -490,6 +558,7 @@ class FakeIdentityUnitOfWork:
         self.telegram_links = FakeTelegramLinkRepository(store)
         self.connectors = FakeConnectorRepository(store)
         self.audit_events = FakeAuditEventRepository(store)
+        self.factors = FakeFactorRepository(store)
         self.committed = False
         self._snapshot: tuple[Any, ...] = ()
         self._notifications: list[NotificationDraft] = []

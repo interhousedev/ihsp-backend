@@ -1,5 +1,6 @@
 {
   "academic-student-not-found": "Student record not found",
+  "academic-not-head-student": "You are not the head student of the group",
   "academic-subject-not-found": "This subject is not in your curriculum",
   "academic-sync-running": "An EMIS sync is already running",
   "academic-invalid-what-if": "A what-if mark looks like lesson:5, midterm:4 or final:3 (marks 2 to 5)"

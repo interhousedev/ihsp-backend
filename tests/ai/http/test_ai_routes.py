@@ -466,6 +466,35 @@ async def test_course_author_chats_over_http(
     )
 
 
+async def test_enrolled_learner_gets_403_on_every_author_endpoint(
+    api: tuple[AiHarness, AsyncClient], current: dict[str, Actor]
+) -> None:
+    """A learner enrolled in the course is no staff: no author chat, list or usage."""
+    h, client = api
+    author = arrange(h)
+    current["actor"] = h.teacher
+    created = await client.post(
+        "/v1/ai/chats",
+        json={"assistant": "lms_author", "course_id": str(author.course.id)},
+    )
+    current["actor"] = h.student
+    params = {"assistant": "lms_author", "course_id": str(author.course.id)}
+    responses = [
+        await client.post("/v1/ai/chats", json=params),
+        await client.get("/v1/ai/chats", params=params),
+        await client.get("/v1/ai/usage", params=params),
+    ]
+    sent = await client.post(
+        f"/v1/ai/chats/{created.json()['id']}/messages",
+        json={"text": "Make me a test"},
+    )
+
+    assert created.status_code == 200
+    assert [r.status_code for r in responses] == [403, 403, 403]
+    assert {r.json()["type"] for r in responses} == {"ai/wrong-assistant"}
+    assert sent.status_code == 404  # the teacher's chat is not the learner's
+
+
 async def test_the_fourth_smart_message_of_a_week_is_a_429_problem(
     api: tuple[AiHarness, AsyncClient],
 ) -> None:

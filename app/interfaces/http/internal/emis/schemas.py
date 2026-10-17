@@ -4,6 +4,7 @@ from datetime import date, time
 from typing import Literal
 
 from app.shared.contracts.emis import (
+    EmisCertificate,
     EmisClass,
     EmisClassHour,
     EmisCurriculum,
@@ -23,6 +24,35 @@ from app.shared.contracts.emis import (
 )
 
 from pydantic import BaseModel
+
+
+class EmisCertificateResponse(BaseModel):
+    """EmisCertificate: a CEFR or national certificate of the EMIS profile."""
+
+    kind: Literal["cefr", "national"]
+    level: str | None
+    score: float | None
+    percent: float | None
+    subject: str | None
+    issued_on: date | None
+    expires_on: date | None
+    serial: str | None
+    url: str | None
+
+    @classmethod
+    def from_contract(cls, item: EmisCertificate) -> "EmisCertificateResponse":
+        """Build the response from the contract dataclass."""
+        return cls(
+            kind=item.kind,
+            level=item.level,
+            score=item.score,
+            percent=item.percent,
+            subject=item.subject,
+            issued_on=item.issued_on,
+            expires_on=item.expires_on,
+            serial=item.serial,
+            url=item.url,
+        )
 
 
 class EmisProfileResponse(BaseModel):
@@ -89,6 +119,8 @@ class EmisSubjectRatingsResponse(BaseModel):
     semester_rating: int | None
     marks: list[EmisMarkResponse]
     payload_hash: str
+    absent_dates: list[date] | None = None
+    absence_total: int | None = None
 
     @classmethod
     def from_contract(cls, ratings: EmisSubjectRatings) -> "EmisSubjectRatingsResponse":
@@ -102,6 +134,10 @@ class EmisSubjectRatingsResponse(BaseModel):
                 for m in ratings.marks
             ],
             payload_hash=ratings.payload_hash,
+            absent_dates=(
+                None if ratings.absent_dates is None else list(ratings.absent_dates)
+            ),
+            absence_total=ratings.absence_total,
         )
 
 

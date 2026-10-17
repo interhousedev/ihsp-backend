@@ -21,5 +21,11 @@
   "lms-nothing-to-publish": "Nashr qilish uchun o'zgarishlar yo'q.",
   "lms-no-live-version": "Qaytish mumkin bo'lgan nashr qilingan versiya yo'q.",
   "lms-invite-not-applicable": "Taklif kodi faqat taklif bo'yicha kurslarda bor.",
-  "lms-video-block-not-found": "Bu blok yuklangan video emas."
+  "lms-video-block-not-found": "Bu blok yuklangan video emas.",
+  "lms-settings-invalid": "Kurs sozlamasi notoʻgʻri.",
+  "lms-link-target-forbidden": "Bu havolani tekshirib boʻlmaydi.",
+  "lms-h5p-block-not-found": "Bu blokda H5P paketi yoʻq.",
+  "lms-h5p-invalid": "Bu fayl yaroqli H5P paketi emas.",
+  "lms-cartridge-invalid": "Bu fayl yaroqli IMS Common Cartridge (.imscc) paketi emas.",
+  "lms-cartridge-import-not-found": "Import topilmadi yoki muddati oʻtgan."
 }

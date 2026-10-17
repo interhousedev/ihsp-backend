@@ -4,12 +4,14 @@ from app.shared.db import models  # noqa: F401  (imports every module's ORM pack
 from app.shared.db.base import Base
 
 EXPECTED_TABLES = {
-    # id (5)
+    # id (7)
     "id.users",
     "id.sessions",
     "id.telegram_links",
     "id.mcp_connectors",
     "id.audit_events",
+    "id.user_factors",
+    "id.passkeys",
     # academic (12)
     "academic.terms",
     "academic.groups",
@@ -25,6 +27,7 @@ EXPECTED_TABLES = {
     "academic.assessments",
     "academic.group_curriculum",
     "academic.group_curriculum_subject",
+    "academic.emis_attendance",
     # files (1), links (1)
     "files.files",
     "links.links",
@@ -108,14 +111,18 @@ EXPECTED_TABLES = {
     "vectors.embeddings",
     # dashboard (1)
     "dashboard.layouts",
+    # certificates (3)
+    "certificates.types",
+    "certificates.entries",
+    "certificates.entry_files",
 }
 
 
 def test_metadata_contains_every_table_of_the_models_readme() -> None:
-    """spec -> Models plus notebooks, push, exams, documents, library, vectors: 93."""
+    """spec -> Models plus the later modules (99 tables)."""
     actual = {table.fullname for table in Base.metadata.tables.values()}
 
-    assert len(EXPECTED_TABLES) == 93
+    assert len(EXPECTED_TABLES) == 99
     assert actual == EXPECTED_TABLES
 
 

@@ -37,6 +37,15 @@ class FakeFilesApi:
         self.files[ref.id] = ref
         return ref
 
+    async def transfer_ownership(
+        self, file_ids: Sequence[UUID], new_owner_id: UUID
+    ) -> None:
+        """Record the moves (the fake keeps no quota)."""
+        self.transferred: list[tuple[UUID, UUID]] = [
+            *getattr(self, "transferred", []),
+            *((file_id, new_owner_id) for file_id in file_ids),
+        ]
+
     async def get(self, file_id: UUID) -> FileRef | None:
         """Return the file or None."""
         return self.files.get(file_id)

@@ -91,7 +91,9 @@ def upgrade() -> None:
             name=op.f("fk_source_label_links_source_id_sources"),
             ondelete="CASCADE",
         ),
-        sa.PrimaryKeyConstraint("source_id", "label_id", name=op.f("pk_source_label_links")),
+        sa.PrimaryKeyConstraint(
+            "source_id", "label_id", name=op.f("pk_source_label_links")
+        ),
         schema="notebooks",
     )
     op.create_index(

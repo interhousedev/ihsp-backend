@@ -61,6 +61,9 @@ class EmisSubjectRatings:
     semester_rating: int | None
     marks: tuple[EmisMark, ...]
     payload_hash: str  # sha256 of the canonical JSON of this response
+    # Attendance; None while EMIS sends none (the real API has no such fields yet).
+    absent_dates: tuple[dt.date, ...] | None = None
+    absence_total: int | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -228,6 +231,26 @@ class EmisFile:
     data: bytes
 
 
+@dataclass(frozen=True, slots=True)
+class EmisCertificate:
+    """A language or national (DTM) certificate from the EMIS profile.
+
+    ``kind`` is ``cefr`` (``dtm_certificate_info.cefr``) or ``national``
+    (``dtm_certificate_info.national``); ``score`` is EMIS ``ball``. ``url`` points
+    at the PDF on the issuer's site.
+    """
+
+    kind: Literal["cefr", "national"]
+    level: str | None
+    score: float | None
+    percent: float | None
+    subject: str | None
+    issued_on: dt.date | None
+    expires_on: dt.date | None
+    serial: str | None
+    url: str | None
+
+
 class EmisAuthFailed(BaseError):
     """EMIS rejected the stored credentials."""
 
@@ -293,4 +316,8 @@ class EmisSource(Protocol):
         Raises ``EmisUnavailable`` on a timeout, a non-200 answer or a body larger
         than ``max_bytes`` (the download stops there).
         """
+        ...
+
+    async def certificates(self, user_id: UUID) -> list[EmisCertificate]:
+        """Return the certificates of the student's EMIS profile (CEFR, national)."""
         ...

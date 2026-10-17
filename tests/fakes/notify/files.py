@@ -1,5 +1,6 @@
 """A FilesApi that serves prepared files."""
 
+from collections.abc import Sequence
 from uuid import UUID
 
 from app.shared.contracts.files import FilePurpose, FileRef, FileScope
@@ -30,6 +31,15 @@ class FakeFilesApi:
         self.refs[ref.id] = ref
         self.blobs[ref.id] = data
         return ref
+
+    async def transfer_ownership(
+        self, file_ids: Sequence[UUID], new_owner_id: UUID
+    ) -> None:
+        """Record the moves (the fake keeps no quota)."""
+        self.transferred: list[tuple[UUID, UUID]] = [
+            *getattr(self, "transferred", []),
+            *((file_id, new_owner_id) for file_id in file_ids),
+        ]
 
     async def get(self, file_id: UUID) -> FileRef | None:
         """Return the reference or None."""

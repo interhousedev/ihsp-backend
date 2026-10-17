@@ -64,6 +64,7 @@ API_PACKAGES: tuple[str, ...] = (
     f"{V1}.web_search",
     f"{V1}.outbound_mail",
     f"{V1}.flashcards",
+    f"{V1}.certificates",
     f"{V1}.notebooks",
     f"{V1}.library",
     f"{V1}.lms_authoring",

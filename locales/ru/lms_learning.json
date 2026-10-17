@@ -15,5 +15,7 @@
   "lms-learn-answer-invalid": "Ответ на вопрос {question_id} недопустим.",
   "lms-learn-score-invalid": "Оценка должна быть от 0 до {max_score}.",
   "lms-learn-attempt-preview": "Пробные попытки нельзя проверять.",
-  "lms-learn-video-not-found": "В этом блоке нет загруженного видео."
+  "lms-learn-video-not-found": "В этом блоке нет загруженного видео.",
+  "lms-learn-h5p-not-found": "В этом блоке нет пакета H5P.",
+  "lms-learn-interaction-not-found": "В этом видео нет такого вопроса."
 }

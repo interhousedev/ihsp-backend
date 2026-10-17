@@ -7,7 +7,7 @@ depend on each other. Schema `ai` is shared by the `ai` and `flashcards` branche
 
 Branches: `identity` (schema `id`), `academic`, `files`, `links`, `ai`, `flashcards` (tables in
 schema `ai`), `notify`, `admin`, `mail`, `lms`, `notebooks`, `library`, `vectors` (schema `vectors`: the
-shared `embeddings` table; needs the `pgvector` Postgres image).
+shared `embeddings` table; needs the `pgvector` Postgres image), `dashboard`, `certificates` (types seeded with the defaults, student entries and their files).
 
 ## Rules
 

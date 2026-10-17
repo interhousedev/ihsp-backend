@@ -134,5 +134,14 @@
   "notify-btn-open-library-list": "Open reading list",
   "notify-course-broadcast-invalid": "The broadcast needs a title (up to 120 characters) and a text (up to 2000 characters).",
   "notify-course-broadcast-not-found": "Broadcast not found.",
-  "notify-course-broadcast-forbidden": "Only the author or a course admin can edit a broadcast."
+  "notify-course-broadcast-forbidden": "Only the author or a course admin can edit a broadcast.",
+  "notify-curator-exam-mark-title": "Low exam mark in your group",
+  "notify-curator-exam-mark-body-midterm": "{student} ({group}) got {value} for the midterm control (ПК) in {subject} on {date}.",
+  "notify-curator-exam-mark-body-final": "{student} ({group}) got {value} for the final control (ИК) in {subject} on {date}.",
+  "notify-btn-open-group": "Open group",
+  "notify-library-suggestion-approved-title": "Your suggestion was accepted",
+  "notify-library-suggestion-approved-body": "“{title}”, the book you suggested, is now in the library. Thank you!",
+  "notify-library-suggestion-declined-title": "Your suggestion was declined",
+  "notify-library-suggestion-declined-body": "The librarians did not add “{title}” to the library.",
+  "notify-btn-open-library-suggestions": "My suggestions"
 }

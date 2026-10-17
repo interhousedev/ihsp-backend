@@ -1283,6 +1283,21 @@
         "title": "ApplyResultResponse",
         "type": "object"
       },
+      "ApproveSuggestionBody": {
+        "description": "`POST /manage/library/suggestions/{id}/approve`: the book the editor saved.",
+        "properties": {
+          "item_id": {
+            "format": "uuid",
+            "title": "Item Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_id"
+        ],
+        "title": "ApproveSuggestionBody",
+        "type": "object"
+      },
       "ArtifactDetailResponse": {
         "description": "`ArtifactDetail`: the item, the document, its references and the progress.",
         "properties": {
@@ -3163,6 +3178,20 @@
         "title": "BlockQuestion",
         "type": "object"
       },
+      "Body_add_entry_file_v1_certificates_me__entry_id__files_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_add_entry_file_v1_certificates_me__entry_id__files_post",
+        "type": "object"
+      },
       "Body_import_preview_v1_admin_students_import_post": {
         "properties": {
           "file": {
@@ -3203,6 +3232,34 @@
           "file"
         ],
         "title": "Body_put_photo_v1_admin_users__id__photo_put",
+        "type": "object"
+      },
+      "Body_start_cartridge_import_v1_lms_courses_import_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_start_cartridge_import_v1_lms_courses_import_post",
+        "type": "object"
+      },
+      "Body_upload_h5p_v1_lms_courses__course_id__h5p_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_h5p_v1_lms_courses__course_id__h5p_post",
         "type": "object"
       },
       "BookActionBody": {
@@ -4438,6 +4495,662 @@
           "back"
         ],
         "title": "CardWithIdBody",
+        "type": "object"
+      },
+      "CartridgeImportReport": {
+        "description": "What the import created and what it could not map.",
+        "properties": {
+          "files": {
+            "title": "Files",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CartridgeReportItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "links": {
+            "title": "Links",
+            "type": "integer"
+          },
+          "questions": {
+            "title": "Questions",
+            "type": "integer"
+          },
+          "quizzes": {
+            "title": "Quizzes",
+            "type": "integer"
+          },
+          "sections": {
+            "title": "Sections",
+            "type": "integer"
+          },
+          "steps": {
+            "title": "Steps",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "sections",
+          "steps",
+          "files",
+          "quizzes",
+          "questions",
+          "links",
+          "items"
+        ],
+        "title": "CartridgeImportReport",
+        "type": "object"
+      },
+      "CartridgeImportStarted": {
+        "description": "The job that imports the cartridge.",
+        "properties": {
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id"
+        ],
+        "title": "CartridgeImportStarted",
+        "type": "object"
+      },
+      "CartridgeImportStatus": {
+        "description": "Progress of an import; ``course_id`` and ``report`` once it is done.",
+        "properties": {
+          "course_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course Id"
+          },
+          "done": {
+            "title": "Done",
+            "type": "integer"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          },
+          "report": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CartridgeImportReport"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "running",
+              "stopping",
+              "done",
+              "failed",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "required": [
+          "job_id",
+          "status",
+          "done",
+          "total",
+          "course_id",
+          "error",
+          "report"
+        ],
+        "title": "CartridgeImportStatus",
+        "type": "object"
+      },
+      "CartridgeReportItem": {
+        "description": "An item kept only as a link or note, or skipped.",
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "kind",
+          "note"
+        ],
+        "title": "CartridgeReportItem",
+        "type": "object"
+      },
+      "CertificateEntryResponse": {
+        "description": "CertificateEntry.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/CertificateFileResponse"
+            },
+            "title": "Files",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "issued_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued At"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percent"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "serial": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Serial"
+          },
+          "source": {
+            "enum": [
+              "manual",
+              "emis"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "type_id": {
+            "format": "uuid",
+            "title": "Type Id",
+            "type": "string"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "id",
+          "type_id",
+          "level",
+          "score",
+          "percent",
+          "subject",
+          "year",
+          "serial",
+          "source",
+          "issued_at",
+          "expires_at",
+          "files",
+          "created_at"
+        ],
+        "title": "CertificateEntryResponse",
+        "type": "object"
+      },
+      "CertificateFileResponse": {
+        "description": "CertificateFile.",
+        "properties": {
+          "content_type": {
+            "title": "Content Type",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "size",
+          "content_type"
+        ],
+        "title": "CertificateFileResponse",
+        "type": "object"
+      },
+      "CertificateTypeInput": {
+        "description": "Body of POST /admin/types.",
+        "properties": {
+          "asks_level": {
+            "default": false,
+            "title": "Asks Level",
+            "type": "boolean"
+          },
+          "asks_percent": {
+            "default": false,
+            "title": "Asks Percent",
+            "type": "boolean"
+          },
+          "asks_score": {
+            "default": false,
+            "title": "Asks Score",
+            "type": "boolean"
+          },
+          "asks_subject": {
+            "default": false,
+            "title": "Asks Subject",
+            "type": "boolean"
+          },
+          "asks_year": {
+            "default": true,
+            "title": "Asks Year",
+            "type": "boolean"
+          },
+          "code": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Code",
+            "type": "string"
+          },
+          "levels": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 40,
+            "title": "Levels",
+            "type": "array"
+          },
+          "name": {
+            "$ref": "#/components/schemas/TypeName"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "score_max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Max"
+          },
+          "score_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Min"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ],
+        "title": "CertificateTypeInput",
+        "type": "object"
+      },
+      "CertificateTypePatch": {
+        "description": "Body of PATCH /admin/types/{id}: only the sent fields change.",
+        "properties": {
+          "asks_level": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asks Level"
+          },
+          "asks_percent": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asks Percent"
+          },
+          "asks_score": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asks Score"
+          },
+          "asks_subject": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asks Subject"
+          },
+          "asks_year": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Asks Year"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "levels": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 40,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Levels"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TypeName"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "position": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "score_max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Max"
+          },
+          "score_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Min"
+          }
+        },
+        "title": "CertificateTypePatch",
+        "type": "object"
+      },
+      "CertificateTypeResponse": {
+        "description": "CertificateType.",
+        "properties": {
+          "asks_level": {
+            "title": "Asks Level",
+            "type": "boolean"
+          },
+          "asks_percent": {
+            "title": "Asks Percent",
+            "type": "boolean"
+          },
+          "asks_score": {
+            "title": "Asks Score",
+            "type": "boolean"
+          },
+          "asks_subject": {
+            "title": "Asks Subject",
+            "type": "boolean"
+          },
+          "asks_year": {
+            "title": "Asks Year",
+            "type": "boolean"
+          },
+          "builtin": {
+            "title": "Builtin",
+            "type": "boolean"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "levels": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Levels",
+            "type": "array"
+          },
+          "name": {
+            "$ref": "#/components/schemas/TypeName"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "score_max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Max"
+          },
+          "score_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Min"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "levels",
+          "asks_level",
+          "asks_score",
+          "score_min",
+          "score_max",
+          "asks_percent",
+          "asks_subject",
+          "asks_year",
+          "builtin",
+          "position"
+        ],
+        "title": "CertificateTypeResponse",
         "type": "object"
       },
       "ChangePasswordBody": {
@@ -5894,6 +6607,26 @@
         "title": "CourseBroadcastResponse",
         "type": "object"
       },
+      "CourseCopied": {
+        "description": "The new draft course created by a copy.",
+        "properties": {
+          "course_id": {
+            "format": "uuid",
+            "title": "Course Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "course_id",
+          "title"
+        ],
+        "title": "CourseCopied",
+        "type": "object"
+      },
       "CourseCreatorResponse": {
         "description": "CourseCreator: a person who holds the `lms_creator` role.",
         "properties": {
@@ -6214,6 +6947,250 @@
           "steps"
         ],
         "title": "CourseSectionItemResponse",
+        "type": "object"
+      },
+      "CourseSettingsView": {
+        "description": "`CourseSettings`: everything the settings page edits, plus counts.",
+        "properties": {
+          "accent_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accent Color"
+          },
+          "audience": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Audience",
+            "type": "array"
+          },
+          "audience_group_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Audience Group Ids",
+            "type": "array"
+          },
+          "audience_scope": {
+            "title": "Audience Scope",
+            "type": "string"
+          },
+          "banner_file_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Banner File Id"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "cover_file_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover File Id"
+          },
+          "duration_weeks": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Weeks"
+          },
+          "enrolment_ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enrolment Ends At"
+          },
+          "enrolment_open": {
+            "title": "Enrolment Open",
+            "type": "boolean"
+          },
+          "enrolment_starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enrolment Starts At"
+          },
+          "friendly_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Friendly Name"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "invite_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invite Code"
+          },
+          "language": {
+            "title": "Language",
+            "type": "string"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "lock_version": {
+            "title": "Lock Version",
+            "type": "integer"
+          },
+          "navigation": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Navigation",
+            "type": "array"
+          },
+          "outcomes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Outcomes",
+            "type": "array"
+          },
+          "publish_state": {
+            "title": "Publish State",
+            "type": "string"
+          },
+          "requirements": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Requirements",
+            "type": "array"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "stats": {
+            "$ref": "#/components/schemas/SettingsStatsView"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "visibility": {
+            "title": "Visibility",
+            "type": "string"
+          },
+          "workload_hours_per_week": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workload Hours Per Week"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "lock_version",
+          "code",
+          "friendly_name",
+          "summary",
+          "cover_file_id",
+          "banner_file_id",
+          "accent_color",
+          "language",
+          "level",
+          "workload_hours_per_week",
+          "duration_weeks",
+          "tags",
+          "outcomes",
+          "requirements",
+          "audience",
+          "audience_scope",
+          "audience_group_ids",
+          "enrolment_open",
+          "enrolment_starts_at",
+          "enrolment_ends_at",
+          "navigation",
+          "publish_state",
+          "visibility",
+          "invite_code",
+          "stats"
+        ],
+        "title": "CourseSettingsView",
         "type": "object"
       },
       "CourseStaffItemResponse": {
@@ -6537,6 +7514,90 @@
           "visibility"
         ],
         "title": "CreateCourseBody",
+        "type": "object"
+      },
+      "CreateEntryBody": {
+        "description": "Body of POST /me.",
+        "properties": {
+          "level": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percent"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "serial": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Serial"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "type_id": {
+            "format": "uuid",
+            "title": "Type Id",
+            "type": "string"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "type_id"
+        ],
+        "title": "CreateEntryBody",
         "type": "object"
       },
       "CreateLabelBody": {
@@ -7865,6 +8926,25 @@
         "title": "DayLessonResponse",
         "type": "object"
       },
+      "DeclineSuggestionBody": {
+        "description": "`POST /manage/library/suggestions/{id}/decline`: why, shown to the suggester.",
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "title": "DeclineSuggestionBody",
+        "type": "object"
+      },
       "DefaultMaterialKind": {
         "description": "Where a default material's text comes from.",
         "enum": [
@@ -8165,6 +9245,122 @@
           "new_email"
         ],
         "title": "EmailChangeBody",
+        "type": "object"
+      },
+      "EmisCertificateResponse": {
+        "description": "EmisCertificate: a CEFR or national certificate of the EMIS profile.",
+        "properties": {
+          "expires_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires On"
+          },
+          "issued_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued On"
+          },
+          "kind": {
+            "enum": [
+              "cefr",
+              "national"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percent"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "serial": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Serial"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "kind",
+          "level",
+          "score",
+          "percent",
+          "subject",
+          "issued_on",
+          "expires_on",
+          "serial",
+          "url"
+        ],
+        "title": "EmisCertificateResponse",
         "type": "object"
       },
       "EmisClassHourResponse": {
@@ -8895,6 +10091,32 @@
       "EmisSubjectRatingsResponse": {
         "description": "EmisSubjectRatings.",
         "properties": {
+          "absence_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Absence Total"
+          },
+          "absent_dates": {
+            "anyOf": [
+              {
+                "items": {
+                  "format": "date",
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Absent Dates"
+          },
           "emis_subject_id": {
             "title": "Emis Subject Id",
             "type": "integer"
@@ -9177,6 +10399,39 @@
           "excused"
         ],
         "title": "ExcuseBody",
+        "type": "object"
+      },
+      "ExportBody": {
+        "description": "Body of POST /staff/export: file ids, or filters that pick the files.",
+        "properties": {
+          "file_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "maxItems": 1000,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Ids"
+          },
+          "filters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StaffFiltersBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "ExportBody",
         "type": "object"
       },
       "ExtensionBody": {
@@ -9879,7 +11134,8 @@
           "library_cover",
           "library_material",
           "lms_video",
-          "user_photo"
+          "user_photo",
+          "certificate"
         ],
         "title": "FilePurpose",
         "type": "string"
@@ -10380,6 +11636,34 @@
         "title": "GradeRowResponse",
         "type": "object"
       },
+      "GroupCountsResponse": {
+        "description": "Counts per level of one group.",
+        "properties": {
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "group_id": {
+            "format": "uuid",
+            "title": "Group Id",
+            "type": "string"
+          },
+          "group_name": {
+            "title": "Group Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "group_id",
+          "group_name",
+          "counts"
+        ],
+        "title": "GroupCountsResponse",
+        "type": "object"
+      },
       "GroupCreateBody": {
         "description": "Body of POST /v1/admin/groups.",
         "properties": {
@@ -10595,6 +11879,232 @@
         "title": "GroupPatchBody",
         "type": "object"
       },
+      "GroupProgressCell": {
+        "description": "One student's EMIS result and attendance in one subject.",
+        "properties": {
+          "absence_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Absence Rate"
+          },
+          "absences": {
+            "title": "Absences",
+            "type": "integer"
+          },
+          "attendance_source": {
+            "default": "platform",
+            "enum": [
+              "emis",
+              "platform",
+              "mixed"
+            ],
+            "title": "Attendance Source",
+            "type": "string"
+          },
+          "emis_rating": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emis Rating"
+          },
+          "final_avg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Avg"
+          },
+          "lesson_avg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lesson Avg"
+          },
+          "lessons": {
+            "title": "Lessons",
+            "type": "integer"
+          },
+          "marks_count": {
+            "title": "Marks Count",
+            "type": "integer"
+          },
+          "midterm_avg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Midterm Avg"
+          },
+          "semester_mark": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Semester Mark"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject_id",
+          "semester_mark",
+          "midterm_avg",
+          "final_avg",
+          "lesson_avg",
+          "emis_rating",
+          "marks_count",
+          "absences",
+          "lessons",
+          "absence_rate"
+        ],
+        "title": "GroupProgressCell",
+        "type": "object"
+      },
+      "GroupProgressResponse": {
+        "description": "Marks and attendance of a group for its curator or head student.",
+        "properties": {
+          "group_id": {
+            "format": "uuid",
+            "title": "Group Id",
+            "type": "string"
+          },
+          "group_name": {
+            "title": "Group Name",
+            "type": "string"
+          },
+          "semester": {
+            "title": "Semester",
+            "type": "integer"
+          },
+          "semesters": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Semesters",
+            "type": "array"
+          },
+          "students": {
+            "items": {
+              "$ref": "#/components/schemas/GroupProgressStudent"
+            },
+            "title": "Students",
+            "type": "array"
+          },
+          "subjects": {
+            "items": {
+              "$ref": "#/components/schemas/SubjectRef"
+            },
+            "title": "Subjects",
+            "type": "array"
+          }
+        },
+        "required": [
+          "group_id",
+          "group_name",
+          "semester",
+          "semesters",
+          "subjects",
+          "students"
+        ],
+        "title": "GroupProgressResponse",
+        "type": "object"
+      },
+      "GroupProgressStudent": {
+        "description": "A student's row: GPA, total attendance and one cell per subject.",
+        "properties": {
+          "absence_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Absence Rate"
+          },
+          "absences": {
+            "title": "Absences",
+            "type": "integer"
+          },
+          "attendance_source": {
+            "default": "platform",
+            "enum": [
+              "emis",
+              "platform",
+              "mixed"
+            ],
+            "title": "Attendance Source",
+            "type": "string"
+          },
+          "cells": {
+            "items": {
+              "$ref": "#/components/schemas/GroupProgressCell"
+            },
+            "title": "Cells",
+            "type": "array"
+          },
+          "gpa": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gpa"
+          },
+          "lessons": {
+            "title": "Lessons",
+            "type": "integer"
+          },
+          "student": {
+            "$ref": "#/components/schemas/app__interfaces__http__v1__me_marks__schemas__PersonRef"
+          }
+        },
+        "required": [
+          "student",
+          "gpa",
+          "absences",
+          "lessons",
+          "absence_rate",
+          "cells"
+        ],
+        "title": "GroupProgressStudent",
+        "type": "object"
+      },
       "GroupResponse": {
         "description": "A study group a reading list can be aimed at.",
         "properties": {
@@ -10707,6 +12217,121 @@
           "registered"
         ],
         "title": "GroupStudentResponse",
+        "type": "object"
+      },
+      "H5PBlock-Input": {
+        "description": "An uploaded H5P package, played in the browser with h5p-standalone.",
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "main_library": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Main Library",
+            "type": "string"
+          },
+          "package_id": {
+            "default": "",
+            "maxLength": 36,
+            "title": "Package Id",
+            "type": "string"
+          },
+          "passing_score_pct": {
+            "default": 0.0,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Passing Score Pct",
+            "type": "number"
+          },
+          "title": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Title",
+            "type": "string"
+          },
+          "type": {
+            "const": "h5p",
+            "default": "h5p",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "title": "H5PBlock",
+        "type": "object"
+      },
+      "H5PLaunchResponse": {
+        "description": "The signed base URL of an H5P package.",
+        "properties": {
+          "base_url": {
+            "title": "Base Url",
+            "type": "string"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "base_url",
+          "expires_in"
+        ],
+        "title": "H5PLaunchResponse",
+        "type": "object"
+      },
+      "H5PLaunchView": {
+        "description": "Where the player loads an H5P package from (signed, short-lived).",
+        "properties": {
+          "base_url": {
+            "title": "Base Url",
+            "type": "string"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "base_url",
+          "expires_in"
+        ],
+        "title": "H5PLaunchView",
+        "type": "object"
+      },
+      "H5PPackageResponse": {
+        "description": "An uploaded H5P package.",
+        "properties": {
+          "byte_size": {
+            "title": "Byte Size",
+            "type": "integer"
+          },
+          "files": {
+            "title": "Files",
+            "type": "integer"
+          },
+          "main_library": {
+            "title": "Main Library",
+            "type": "string"
+          },
+          "package_id": {
+            "title": "Package Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "package_id",
+          "title",
+          "main_library",
+          "files",
+          "byte_size"
+        ],
+        "title": "H5PPackageResponse",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -10879,6 +12504,35 @@
           "skipped"
         ],
         "title": "ImportConfirmResponse",
+        "type": "object"
+      },
+      "ImportEmisResponse": {
+        "description": "Result of POST /me/import-emis.",
+        "properties": {
+          "created": {
+            "title": "Created",
+            "type": "integer"
+          },
+          "files": {
+            "title": "Files",
+            "type": "integer"
+          },
+          "skipped": {
+            "title": "Skipped",
+            "type": "integer"
+          },
+          "updated": {
+            "title": "Updated",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "created",
+          "updated",
+          "files",
+          "skipped"
+        ],
+        "title": "ImportEmisResponse",
         "type": "object"
       },
       "ImportErrorSchema": {
@@ -11194,6 +12848,127 @@
           "marks"
         ],
         "title": "InsightsResponse",
+        "type": "object"
+      },
+      "Interaction": {
+        "description": "A pause of an interactive video: a question, a note or a link.",
+        "properties": {
+          "at_sec": {
+            "maximum": 86400.0,
+            "minimum": 0.0,
+            "title": "At Sec",
+            "type": "number"
+          },
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "default": "question",
+            "enum": [
+              "question",
+              "note",
+              "link"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "multiple": {
+            "default": false,
+            "title": "Multiple",
+            "type": "boolean"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/Option"
+            },
+            "maxItems": 10,
+            "title": "Options",
+            "type": "array"
+          },
+          "points": {
+            "default": 1.0,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Points",
+            "type": "number"
+          },
+          "text": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Text",
+            "type": "string"
+          },
+          "url": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "at_sec"
+        ],
+        "title": "Interaction",
+        "type": "object"
+      },
+      "InteractiveVideoBlock-Input": {
+        "description": "A video that pauses at timestamps for questions, notes and links.",
+        "properties": {
+          "caption": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Caption",
+            "type": "string"
+          },
+          "file_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id"
+          },
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "interactions": {
+            "items": {
+              "$ref": "#/components/schemas/Interaction"
+            },
+            "maxItems": 100,
+            "title": "Interactions",
+            "type": "array"
+          },
+          "source": {
+            "default": "link",
+            "enum": [
+              "link",
+              "upload"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "type": {
+            "const": "interactive_video",
+            "default": "interactive_video",
+            "title": "Type",
+            "type": "string"
+          },
+          "url": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "title": "InteractiveVideoBlock",
         "type": "object"
       },
       "IntervalsResponse": {
@@ -12352,6 +14127,28 @@
         "title": "LearningAttemptView",
         "type": "object"
       },
+      "LearningBlockResultView": {
+        "description": "My result of an H5P or interactive video block (best H5P score).",
+        "properties": {
+          "completed": {
+            "default": false,
+            "title": "Completed",
+            "type": "boolean"
+          },
+          "max_score": {
+            "default": 0.0,
+            "title": "Max Score",
+            "type": "number"
+          },
+          "score": {
+            "default": 0.0,
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "title": "LearningBlockResultView",
+        "type": "object"
+      },
       "LearningCardCountsView": {
         "description": "Cards left to study today.",
         "properties": {
@@ -12472,6 +14269,29 @@
       "LearningCourseCardView": {
         "description": "`CourseCard`: a course in the catalog and in My courses.",
         "properties": {
+          "accent_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accent Color"
+          },
+          "cover_file_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover File Id"
+          },
           "cover_url": {
             "anyOf": [
               {
@@ -12510,6 +14330,11 @@
           "steps_count": {
             "title": "Steps Count",
             "type": "integer"
+          },
+          "summary": {
+            "default": "",
+            "title": "Summary",
+            "type": "string"
           },
           "title": {
             "title": "Title",
@@ -12553,6 +14378,17 @@
       "LearningCoursePageView": {
         "description": "`CoursePage`: the course card with staff, outline and my state.",
         "properties": {
+          "accent_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accent Color"
+          },
           "can_edit": {
             "title": "Can Edit",
             "type": "boolean"
@@ -12564,6 +14400,18 @@
             },
             "title": "Changed Since Last Visit",
             "type": "array"
+          },
+          "cover_file_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover File Id"
           },
           "cover_url": {
             "anyOf": [
@@ -12648,6 +14496,11 @@
           "steps_count": {
             "title": "Steps Count",
             "type": "integer"
+          },
+          "summary": {
+            "default": "",
+            "title": "Summary",
+            "type": "string"
           },
           "title": {
             "title": "Title",
@@ -12803,6 +14656,292 @@
         "title": "LearningFlashcardsBlockView",
         "type": "object"
       },
+      "LearningH5PBlockView": {
+        "description": "An H5P block; ``GET .../h5p`` returns the signed base URL of the package.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "main_library": {
+            "default": "",
+            "title": "Main Library",
+            "type": "string"
+          },
+          "package_id": {
+            "title": "Package Id",
+            "type": "string"
+          },
+          "passed": {
+            "default": false,
+            "title": "Passed",
+            "type": "boolean"
+          },
+          "passing_score_pct": {
+            "default": 0.0,
+            "title": "Passing Score Pct",
+            "type": "number"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LearningBlockResultView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "type": {
+            "const": "h5p",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "package_id"
+        ],
+        "title": "LearningH5PBlockView",
+        "type": "object"
+      },
+      "LearningH5PResultBody": {
+        "description": "`POST .../blocks/{block_id}/h5p-result`: an xAPI statement of the player.",
+        "properties": {
+          "statement": {
+            "additionalProperties": true,
+            "title": "Statement",
+            "type": "object"
+          }
+        },
+        "required": [
+          "statement"
+        ],
+        "title": "LearningH5PResultBody",
+        "type": "object"
+      },
+      "LearningInteractionAnswerBody": {
+        "description": "`POST .../interactions/{interaction_id}/answer`: the chosen options.",
+        "properties": {
+          "option_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "title": "Option Ids",
+            "type": "array"
+          }
+        },
+        "title": "LearningInteractionAnswerBody",
+        "type": "object"
+      },
+      "LearningInteractionAnswerView": {
+        "description": "My first answer to an interactive video question.",
+        "properties": {
+          "correct": {
+            "title": "Correct",
+            "type": "boolean"
+          },
+          "option_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Option Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "option_ids",
+          "correct"
+        ],
+        "title": "LearningInteractionAnswerView",
+        "type": "object"
+      },
+      "LearningInteractionOptionView": {
+        "description": "An answer option of an interactive video question (no correctness).",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "text"
+        ],
+        "title": "LearningInteractionOptionView",
+        "type": "object"
+      },
+      "LearningInteractionResultView": {
+        "description": "The graded answer, the right options (shown after answering) and the total.",
+        "properties": {
+          "answer": {
+            "$ref": "#/components/schemas/LearningInteractionAnswerView"
+          },
+          "correct_option_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Correct Option Ids",
+            "type": "array"
+          },
+          "result": {
+            "$ref": "#/components/schemas/LearningBlockResultView"
+          }
+        },
+        "required": [
+          "answer",
+          "correct_option_ids",
+          "result"
+        ],
+        "title": "LearningInteractionResultView",
+        "type": "object"
+      },
+      "LearningInteractionView": {
+        "description": "A pause of an interactive video.",
+        "properties": {
+          "at_sec": {
+            "title": "At Sec",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "question",
+              "note",
+              "link"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "multiple": {
+            "default": false,
+            "title": "Multiple",
+            "type": "boolean"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/LearningInteractionOptionView"
+            },
+            "title": "Options",
+            "type": "array"
+          },
+          "points": {
+            "default": 1.0,
+            "title": "Points",
+            "type": "number"
+          },
+          "text": {
+            "default": "",
+            "title": "Text",
+            "type": "string"
+          },
+          "url": {
+            "default": "",
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "at_sec",
+          "kind"
+        ],
+        "title": "LearningInteractionView",
+        "type": "object"
+      },
+      "LearningInteractiveVideoBlockView": {
+        "description": "An interactive video block with my answers so far.",
+        "properties": {
+          "answers": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/LearningInteractionAnswerView"
+            },
+            "title": "Answers",
+            "type": "object"
+          },
+          "caption": {
+            "default": "",
+            "title": "Caption",
+            "type": "string"
+          },
+          "file_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "interactions": {
+            "items": {
+              "$ref": "#/components/schemas/LearningInteractionView"
+            },
+            "title": "Interactions",
+            "type": "array"
+          },
+          "passed": {
+            "default": false,
+            "title": "Passed",
+            "type": "boolean"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LearningBlockResultView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "enum": [
+              "link",
+              "upload"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "type": {
+            "const": "interactive_video",
+            "title": "Type",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "source",
+          "url"
+        ],
+        "title": "LearningInteractiveVideoBlockView",
+        "type": "object"
+      },
       "LearningJoinBody": {
         "description": "`POST /v1/lms/join`: an invite code.",
         "properties": {
@@ -12817,6 +14956,322 @@
           "code"
         ],
         "title": "LearningJoinBody",
+        "type": "object"
+      },
+      "LearningLandingAuthorView": {
+        "description": "A staff member shown on the landing page.",
+        "properties": {
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/LearningPersonRefView"
+          }
+        },
+        "required": [
+          "user",
+          "role"
+        ],
+        "title": "LearningLandingAuthorView",
+        "type": "object"
+      },
+      "LearningLandingEnrolmentView": {
+        "description": "Enrolment window and whether the viewer can join now.",
+        "properties": {
+          "can_enrol": {
+            "title": "Can Enrol",
+            "type": "boolean"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "enrolled": {
+            "title": "Enrolled",
+            "type": "boolean"
+          },
+          "open": {
+            "title": "Open",
+            "type": "boolean"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          }
+        },
+        "required": [
+          "open",
+          "starts_at",
+          "ends_at",
+          "can_enrol",
+          "enrolled"
+        ],
+        "title": "LearningLandingEnrolmentView",
+        "type": "object"
+      },
+      "LearningLandingSectionView": {
+        "description": "A syllabus section with its lesson titles.",
+        "properties": {
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/LearningLandingStepView"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "steps"
+        ],
+        "title": "LearningLandingSectionView",
+        "type": "object"
+      },
+      "LearningLandingStepView": {
+        "description": "A lesson in the syllabus.",
+        "properties": {
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "LearningLandingStepView",
+        "type": "object"
+      },
+      "LearningLandingView": {
+        "description": "`CourseLanding`: the public page of a course.",
+        "properties": {
+          "accent_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accent Color"
+          },
+          "audience": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Audience",
+            "type": "array"
+          },
+          "authors": {
+            "items": {
+              "$ref": "#/components/schemas/LearningLandingAuthorView"
+            },
+            "title": "Authors",
+            "type": "array"
+          },
+          "banner_file_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Banner File Id"
+          },
+          "banner_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Banner Url"
+          },
+          "cover_file_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover File Id"
+          },
+          "cover_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Url"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "duration_weeks": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Weeks"
+          },
+          "enrolment": {
+            "$ref": "#/components/schemas/LearningLandingEnrolmentView"
+          },
+          "friendly_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Friendly Name"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "language": {
+            "title": "Language",
+            "type": "string"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "outcomes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Outcomes",
+            "type": "array"
+          },
+          "preview": {
+            "title": "Preview",
+            "type": "boolean"
+          },
+          "publish_state": {
+            "title": "Publish State",
+            "type": "string"
+          },
+          "requirements": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Requirements",
+            "type": "array"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "syllabus": {
+            "items": {
+              "$ref": "#/components/schemas/LearningLandingSectionView"
+            },
+            "title": "Syllabus",
+            "type": "array"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "workload_hours_per_week": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workload Hours Per Week"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "friendly_name",
+          "summary",
+          "description",
+          "cover_file_id",
+          "cover_url",
+          "banner_file_id",
+          "banner_url",
+          "accent_color",
+          "language",
+          "level",
+          "workload_hours_per_week",
+          "duration_weeks",
+          "tags",
+          "outcomes",
+          "requirements",
+          "audience",
+          "publish_state",
+          "preview",
+          "authors",
+          "syllabus",
+          "enrolment"
+        ],
+        "title": "LearningLandingView",
         "type": "object"
       },
       "LearningMyCoursesView": {
@@ -13199,6 +15654,8 @@
               "discriminator": {
                 "mapping": {
                   "flashcards": "#/components/schemas/LearningFlashcardsBlockView",
+                  "h5p": "#/components/schemas/LearningH5PBlockView",
+                  "interactive_video": "#/components/schemas/LearningInteractiveVideoBlockView",
                   "test": "#/components/schemas/LearningQuizBlockView",
                   "text": "#/components/schemas/LearningTextBlockView",
                   "video": "#/components/schemas/LearningVideoBlockView"
@@ -13217,6 +15674,12 @@
                 },
                 {
                   "$ref": "#/components/schemas/LearningFlashcardsBlockView"
+                },
+                {
+                  "$ref": "#/components/schemas/LearningH5PBlockView"
+                },
+                {
+                  "$ref": "#/components/schemas/LearningInteractiveVideoBlockView"
                 }
               ]
             },
@@ -14508,6 +16971,20 @@
         "title": "LinkItem",
         "type": "object"
       },
+      "LinkJobView": {
+        "description": "The queued link check.",
+        "properties": {
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id"
+        ],
+        "title": "LinkJobView",
+        "type": "object"
+      },
       "LinkPageResponse": {
         "description": "Page<LinkItem>.",
         "properties": {
@@ -14535,6 +17012,109 @@
           "next_cursor"
         ],
         "title": "LinkPageResponse",
+        "type": "object"
+      },
+      "LinkReportView": {
+        "description": "`LinkReport`: the last link check of a course.",
+        "properties": {
+          "checked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked At"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "results": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/LinkResultView"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "idle",
+              "running",
+              "done"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "LinkReportView",
+        "type": "object"
+      },
+      "LinkResultView": {
+        "description": "One checked URL.",
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "status_code": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status Code"
+          },
+          "step_id": {
+            "title": "Step Id",
+            "type": "string"
+          },
+          "step_title": {
+            "title": "Step Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "step_id",
+          "step_title",
+          "status_code",
+          "ok",
+          "error"
+        ],
+        "title": "LinkResultView",
         "type": "object"
       },
       "ListRefSchema": {
@@ -15761,6 +18341,91 @@
         "title": "MovedDay",
         "type": "object"
       },
+      "MySuggestionResponse": {
+        "description": "`MySuggestion`: one of the signed-in person's suggestions and its status.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "item_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SuggestionStatus"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "status",
+          "created_at",
+          "decided_at",
+          "reason",
+          "item_id"
+        ],
+        "title": "MySuggestionResponse",
+        "type": "object"
+      },
+      "MySuggestionsResponse": {
+        "description": "`GET /me/library/suggestions`: newest first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MySuggestionResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "MySuggestionsResponse",
+        "type": "object"
+      },
       "MyTeacherResponse": {
         "description": "A teacher of the student.",
         "properties": {
@@ -15919,6 +18584,26 @@
           }
         },
         "title": "NamesResponse",
+        "type": "object"
+      },
+      "NavigationItem": {
+        "description": "A section of the course page and whether learners see it.",
+        "properties": {
+          "hidden": {
+            "default": false,
+            "title": "Hidden",
+            "type": "boolean"
+          },
+          "key": {
+            "maxLength": 32,
+            "title": "Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key"
+        ],
+        "title": "NavigationItem",
         "type": "object"
       },
       "NewConnectorResponse": {
@@ -17843,6 +20528,136 @@
           "kind"
         ],
         "title": "PassageSourceResponse",
+        "type": "object"
+      },
+      "PasskeyLoginBody": {
+        "description": "POST /v1/id/login/passkey: the browser's AuthenticationResponseJSON.",
+        "properties": {
+          "credential": {
+            "additionalProperties": true,
+            "title": "Credential",
+            "type": "object"
+          },
+          "login_challenge": {
+            "minLength": 1,
+            "title": "Login Challenge",
+            "type": "string"
+          },
+          "remember": {
+            "default": false,
+            "title": "Remember",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "login_challenge",
+          "credential"
+        ],
+        "title": "PasskeyLoginBody",
+        "type": "object"
+      },
+      "PasskeyOptionsBody": {
+        "description": "POST /v1/id/login/passkey/options.",
+        "properties": {
+          "login_challenge": {
+            "minLength": 1,
+            "title": "Login Challenge",
+            "type": "string"
+          }
+        },
+        "required": [
+          "login_challenge"
+        ],
+        "title": "PasskeyOptionsBody",
+        "type": "object"
+      },
+      "PasskeyRegisterBody": {
+        "description": "POST /v1/id/me/passkeys: the browser's RegistrationResponseJSON.",
+        "properties": {
+          "credential": {
+            "additionalProperties": true,
+            "title": "Credential",
+            "type": "object"
+          },
+          "name": {
+            "default": "",
+            "maxLength": 100,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "credential"
+        ],
+        "title": "PasskeyRegisterBody",
+        "type": "object"
+      },
+      "PasskeyRenameBody": {
+        "description": "PATCH /v1/id/me/passkeys/{id}.",
+        "properties": {
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "PasskeyRenameBody",
+        "type": "object"
+      },
+      "PasskeyResponse": {
+        "description": "One passkey of the user (no key material).",
+        "properties": {
+          "backed_up": {
+            "title": "Backed Up",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "transports": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Transports",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "transports",
+          "backed_up",
+          "created_at",
+          "last_used_at"
+        ],
+        "title": "PasskeyResponse",
         "type": "object"
       },
       "PasswordChangeResponse": {
@@ -20371,6 +23186,36 @@
         "title": "RandomSpec",
         "type": "object"
       },
+      "RankingItem": {
+        "description": "One ranked student.",
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "group_name": {
+            "title": "Group Name",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "student_id": {
+            "format": "uuid",
+            "title": "Student Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "student_id",
+          "name",
+          "group_name",
+          "count"
+        ],
+        "title": "RankingItem",
+        "type": "object"
+      },
       "Rating": {
         "description": "Answer buttons.",
         "enum": [
@@ -20976,6 +23821,23 @@
           "emis_rating"
         ],
         "title": "RecordBookSubject",
+        "type": "object"
+      },
+      "RecoveryCodesResponse": {
+        "description": "One-time recovery codes, shown once.",
+        "properties": {
+          "recovery_codes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Recovery Codes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "recovery_codes"
+        ],
+        "title": "RecoveryCodesResponse",
         "type": "object"
       },
       "RedirectResponseBody": {
@@ -22771,7 +25633,7 @@
         "type": "object"
       },
       "SecondFactorResponse": {
-        "description": "A code was sent; send it back with the ticket.",
+        "description": "A code was sent (otp), or the authenticator app is asked for (totp).",
         "properties": {
           "channels": {
             "items": {
@@ -22781,8 +25643,11 @@
             "type": "array"
           },
           "method": {
-            "const": "otp",
             "default": "otp",
+            "enum": [
+              "otp",
+              "totp"
+            ],
             "title": "Method",
             "type": "string"
           },
@@ -22796,6 +25661,38 @@
           "channels"
         ],
         "title": "SecondFactorResponse",
+        "type": "object"
+      },
+      "SecurityResponse": {
+        "description": "GET /v1/id/me/security.",
+        "properties": {
+          "passkeys": {
+            "items": {
+              "$ref": "#/components/schemas/PasskeyResponse"
+            },
+            "title": "Passkeys",
+            "type": "array"
+          },
+          "password_login_enabled": {
+            "title": "Password Login Enabled",
+            "type": "boolean"
+          },
+          "recovery_codes_left": {
+            "title": "Recovery Codes Left",
+            "type": "integer"
+          },
+          "totp_enabled": {
+            "title": "Totp Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "totp_enabled",
+          "recovery_codes_left",
+          "password_login_enabled",
+          "passkeys"
+        ],
+        "title": "SecurityResponse",
         "type": "object"
       },
       "SelectSourcesBody": {
@@ -23461,6 +26358,305 @@
           }
         },
         "title": "SettingsBody",
+        "type": "object"
+      },
+      "SettingsDetailsBody": {
+        "description": "Partial change; omitted fields stay as they are, `null` clears nullable ones.",
+        "properties": {
+          "accent_color": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accent Color"
+          },
+          "audience": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 50,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audience"
+          },
+          "audience_group_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "maxItems": 200,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audience Group Ids"
+          },
+          "audience_scope": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audience Scope"
+          },
+          "banner_file_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Banner File Id"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "cover_file_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover File Id"
+          },
+          "duration_weeks": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Weeks"
+          },
+          "enrolment_ends_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enrolment Ends At"
+          },
+          "enrolment_open": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enrolment Open"
+          },
+          "enrolment_starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enrolment Starts At"
+          },
+          "friendly_name": {
+            "anyOf": [
+              {
+                "maxLength": 400,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Friendly Name"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "maxLength": 8,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "enum": [
+                  "beginner",
+                  "intermediate",
+                  "advanced"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "navigation": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/NavigationItem"
+                },
+                "maxItems": 32,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Navigation"
+          },
+          "outcomes": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 50,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Outcomes"
+          },
+          "requirements": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 50,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requirements"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 50,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          },
+          "workload_hours_per_week": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workload Hours Per Week"
+          }
+        },
+        "title": "SettingsDetailsBody",
+        "type": "object"
+      },
+      "SettingsStatsView": {
+        "description": "Counts shown next to the settings.",
+        "properties": {
+          "learners": {
+            "title": "Learners",
+            "type": "integer"
+          },
+          "sections": {
+            "title": "Sections",
+            "type": "integer"
+          },
+          "staff_by_role": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Staff By Role",
+            "type": "object"
+          },
+          "steps": {
+            "title": "Steps",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sections",
+          "steps",
+          "learners",
+          "staff_by_role"
+        ],
+        "title": "SettingsStatsView",
         "type": "object"
       },
       "SharedArtifact": {
@@ -24404,6 +27600,261 @@
         "title": "StaffAssessmentListResponse",
         "type": "object"
       },
+      "StaffEntriesResponse": {
+        "description": "A page of staff entries.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StaffEntryResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "StaffEntriesResponse",
+        "type": "object"
+      },
+      "StaffEntryResponse": {
+        "description": "StaffEntry: an entry with its student.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/CertificateFileResponse"
+            },
+            "title": "Files",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "issued_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued At"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percent"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "serial": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Serial"
+          },
+          "source": {
+            "enum": [
+              "manual",
+              "emis"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "student": {
+            "$ref": "#/components/schemas/StaffStudent"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "type_id": {
+            "format": "uuid",
+            "title": "Type Id",
+            "type": "string"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "id",
+          "type_id",
+          "level",
+          "score",
+          "percent",
+          "subject",
+          "year",
+          "serial",
+          "source",
+          "issued_at",
+          "expires_at",
+          "files",
+          "created_at",
+          "student"
+        ],
+        "title": "StaffEntryResponse",
+        "type": "object"
+      },
+      "StaffFiltersBody": {
+        "description": "Staff filters as a JSON object (export body).",
+        "properties": {
+          "group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "q": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q"
+          },
+          "student_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Id"
+          },
+          "subgroup": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subgroup"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "type_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type Id"
+          }
+        },
+        "title": "StaffFiltersBody",
+        "type": "object"
+      },
       "StaffGroupMaterialResponse": {
         "description": "A material of one group (and subgroup).",
         "properties": {
@@ -24505,6 +27956,34 @@
         "title": "StaffGroupMaterialResponse",
         "type": "object"
       },
+      "StaffGroupResponse": {
+        "description": "A group for the filter dropdown.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "subgroups": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Subgroups",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "subgroups"
+        ],
+        "title": "StaffGroupResponse",
+        "type": "object"
+      },
       "StaffHomeworkResponse": {
         "description": "Homework of a lesson as the teacher sees it.",
         "properties": {
@@ -24579,6 +28058,83 @@
           "attendance"
         ],
         "title": "StaffLessonResponse",
+        "type": "object"
+      },
+      "StaffRankingResponse": {
+        "description": "Response of GET /staff/ranking.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RankingItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "StaffRankingResponse",
+        "type": "object"
+      },
+      "StaffStatsResponse": {
+        "description": "Response of GET /staff/stats.",
+        "properties": {
+          "types": {
+            "items": {
+              "$ref": "#/components/schemas/TypeStatsResponse"
+            },
+            "title": "Types",
+            "type": "array"
+          }
+        },
+        "required": [
+          "types"
+        ],
+        "title": "StaffStatsResponse",
+        "type": "object"
+      },
+      "StaffStudent": {
+        "description": "The student of a staff entry.",
+        "properties": {
+          "group_id": {
+            "format": "uuid",
+            "title": "Group Id",
+            "type": "string"
+          },
+          "group_name": {
+            "title": "Group Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "subgroup": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subgroup"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "group_id",
+          "group_name",
+          "subgroup"
+        ],
+        "title": "StaffStudent",
         "type": "object"
       },
       "StaffSubjectGroupResponse": {
@@ -24898,6 +28454,8 @@
               "discriminator": {
                 "mapping": {
                   "flashcards": "#/components/schemas/FlashcardsBlock-Input",
+                  "h5p": "#/components/schemas/H5PBlock-Input",
+                  "interactive_video": "#/components/schemas/InteractiveVideoBlock-Input",
                   "test": "#/components/schemas/TestBlock-Input",
                   "text": "#/components/schemas/TextBlock-Input",
                   "video": "#/components/schemas/VideoBlock-Input"
@@ -24916,6 +28474,12 @@
                 },
                 {
                   "$ref": "#/components/schemas/FlashcardsBlock-Input"
+                },
+                {
+                  "$ref": "#/components/schemas/H5PBlock-Input"
+                },
+                {
+                  "$ref": "#/components/schemas/InteractiveVideoBlock-Input"
                 }
               ]
             },
@@ -24941,6 +28505,8 @@
               "discriminator": {
                 "mapping": {
                   "flashcards": "#/components/schemas/app__modules__lms__domain__step_content__FlashcardsBlock",
+                  "h5p": "#/components/schemas/app__modules__lms__domain__step_content__H5PBlock",
+                  "interactive_video": "#/components/schemas/app__modules__lms__domain__step_content__InteractiveVideoBlock",
                   "test": "#/components/schemas/app__modules__lms__domain__step_content__TestBlock",
                   "text": "#/components/schemas/app__modules__lms__domain__step_content__TextBlock",
                   "video": "#/components/schemas/app__modules__lms__domain__step_content__VideoBlock"
@@ -24959,6 +28525,12 @@
                 },
                 {
                   "$ref": "#/components/schemas/app__modules__lms__domain__step_content__FlashcardsBlock"
+                },
+                {
+                  "$ref": "#/components/schemas/app__modules__lms__domain__step_content__H5PBlock"
+                },
+                {
+                  "$ref": "#/components/schemas/app__modules__lms__domain__step_content__InteractiveVideoBlock"
                 }
               ]
             },
@@ -25134,6 +28706,8 @@
                   "discriminator": {
                     "mapping": {
                       "flashcards": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__FlashcardsBlock",
+                      "h5p": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__H5PBlock",
+                      "interactive_video": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__InteractiveVideoBlock",
                       "test": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__TestBlock",
                       "text": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__TextBlock",
                       "video": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__VideoBlock"
@@ -25152,6 +28726,12 @@
                     },
                     {
                       "$ref": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__FlashcardsBlock"
+                    },
+                    {
+                      "$ref": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__H5PBlock"
+                    },
+                    {
+                      "$ref": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__InteractiveVideoBlock"
                     }
                   ]
                 },
@@ -25187,6 +28767,8 @@
               "discriminator": {
                 "mapping": {
                   "flashcards": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__FlashcardsBlock",
+                  "h5p": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__H5PBlock",
+                  "interactive_video": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__InteractiveVideoBlock",
                   "test": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__TestBlock",
                   "text": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__TextBlock",
                   "video": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__VideoBlock"
@@ -25205,6 +28787,12 @@
                 },
                 {
                   "$ref": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__FlashcardsBlock"
+                },
+                {
+                  "$ref": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__H5PBlock"
+                },
+                {
+                  "$ref": "#/components/schemas/app__interfaces__http__v1__notebooks__schemas_apply__InteractiveVideoBlock"
                 }
               ]
             },
@@ -26243,6 +29831,16 @@
             "title": "Absences",
             "type": "integer"
           },
+          "attendance_source": {
+            "default": "platform",
+            "enum": [
+              "emis",
+              "platform",
+              "mixed"
+            ],
+            "title": "Attendance Source",
+            "type": "string"
+          },
           "emis_rating": {
             "anyOf": [
               {
@@ -26357,6 +29955,16 @@
             ],
             "title": "Absence Rate"
           },
+          "attendance_source": {
+            "default": "platform",
+            "enum": [
+              "emis",
+              "platform",
+              "mixed"
+            ],
+            "title": "Attendance Source",
+            "type": "string"
+          },
           "averages": {
             "$ref": "#/components/schemas/Averages"
           },
@@ -26445,6 +30053,15 @@
               "not_taken"
             ],
             "title": "Attendance",
+            "type": "string"
+          },
+          "attendance_source": {
+            "default": "platform",
+            "enum": [
+              "emis",
+              "platform"
+            ],
+            "title": "Attendance Source",
             "type": "string"
           },
           "attendance_submitted": {
@@ -27587,10 +31204,44 @@
               }
             ]
           },
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "file": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SuggestionFileResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
             "type": "string"
+          },
+          "item_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Id"
           },
           "note": {
             "anyOf": [
@@ -27602,6 +31253,17 @@
               }
             ],
             "title": "Note"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
           },
           "status": {
             "$ref": "#/components/schemas/SuggestionStatus"
@@ -27630,6 +31292,36 @@
           "status"
         ],
         "title": "SuggestionDetailResponse",
+        "type": "object"
+      },
+      "SuggestionFileResponse": {
+        "description": "The file a suggester uploaded with the form.",
+        "properties": {
+          "byte_size": {
+            "title": "Byte Size",
+            "type": "integer"
+          },
+          "content_type": {
+            "title": "Content Type",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "content_type",
+          "byte_size"
+        ],
+        "title": "SuggestionFileResponse",
         "type": "object"
       },
       "SuggestionResponse": {
@@ -30178,6 +33870,70 @@
         "title": "TotalsOut",
         "type": "object"
       },
+      "TotpCodeBody": {
+        "description": "A 6-digit code (or, to disable, a recovery code).",
+        "properties": {
+          "code": {
+            "maxLength": 16,
+            "minLength": 6,
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "TotpCodeBody",
+        "type": "object"
+      },
+      "TotpLoginBody": {
+        "description": "POST /v1/id/login/totp.",
+        "properties": {
+          "code": {
+            "maxLength": 16,
+            "minLength": 6,
+            "title": "Code",
+            "type": "string"
+          },
+          "login_challenge": {
+            "minLength": 1,
+            "title": "Login Challenge",
+            "type": "string"
+          },
+          "ticket": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Ticket",
+            "type": "string"
+          }
+        },
+        "required": [
+          "login_challenge",
+          "ticket",
+          "code"
+        ],
+        "title": "TotpLoginBody",
+        "type": "object"
+      },
+      "TotpSetupResponse": {
+        "description": "POST /v1/id/me/totp/setup: show ``otpauth_uri`` as a QR code.",
+        "properties": {
+          "otpauth_uri": {
+            "title": "Otpauth Uri",
+            "type": "string"
+          },
+          "secret": {
+            "title": "Secret",
+            "type": "string"
+          }
+        },
+        "required": [
+          "secret",
+          "otpauth_uri"
+        ],
+        "title": "TotpSetupResponse",
+        "type": "object"
+      },
       "TurnResultResponse": {
         "description": "TurnResult.",
         "properties": {
@@ -30211,6 +33967,67 @@
           "usage"
         ],
         "title": "TurnResultResponse",
+        "type": "object"
+      },
+      "TypeName": {
+        "description": "A name in the three languages.",
+        "properties": {
+          "en": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "En",
+            "type": "string"
+          },
+          "ru": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Ru",
+            "type": "string"
+          },
+          "uz": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Uz",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uz",
+          "ru",
+          "en"
+        ],
+        "title": "TypeName",
+        "type": "object"
+      },
+      "TypeStatsResponse": {
+        "description": "Levels of a type and the counts per group.",
+        "properties": {
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/GroupCountsResponse"
+            },
+            "title": "Groups",
+            "type": "array"
+          },
+          "levels": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Levels",
+            "type": "array"
+          },
+          "type_id": {
+            "format": "uuid",
+            "title": "Type Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type_id",
+          "levels",
+          "groups"
+        ],
+        "title": "TypeStatsResponse",
         "type": "object"
       },
       "UniLibraryAccessFilter": {
@@ -30521,6 +34338,82 @@
           "emis_password"
         ],
         "title": "UpdateEmisPasswordBody",
+        "type": "object"
+      },
+      "UpdateEntryBody": {
+        "description": "Body of PATCH /me/{entry_id}: only the sent fields change.",
+        "properties": {
+          "level": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percent"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "serial": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Serial"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "title": "UpdateEntryBody",
         "type": "object"
       },
       "UpdateLabelBody": {
@@ -31708,7 +35601,7 @@
         "type": "object"
       },
       "UserPatchBody": {
-        "description": "PATCH /v1/admin/users/{id}: display name and email (omitted keeps).",
+        "description": "PATCH /v1/admin/users/{id}: names, login and email (omitted keeps).",
         "properties": {
           "email": {
             "anyOf": [
@@ -31747,6 +35640,18 @@
               }
             ],
             "title": "Last Name"
+          },
+          "login": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Login"
           },
           "middle_name": {
             "anyOf": [
@@ -32397,6 +36302,21 @@
         ],
         "title": "Visibility",
         "type": "string"
+      },
+      "WebAuthnOptionsResponse": {
+        "description": "PublicKeyCredentialCreationOptions / RequestOptions as JSON (base64url).",
+        "properties": {
+          "options": {
+            "additionalProperties": true,
+            "title": "Options",
+            "type": "object"
+          }
+        },
+        "required": [
+          "options"
+        ],
+        "title": "WebAuthnOptionsResponse",
+        "type": "object"
       },
       "WebQuotaResponse": {
         "description": "`WebSearchStatus`: whether web search is on and today's searches.\n\n`remaining` is `limit - used` (never below 0). A Discover `deep` run costs\n`deep_cost` searches, every other search one. When `enabled` is false clients\nhide the toggle and Discover.",
@@ -35775,6 +39695,102 @@
         "title": "FlashcardsBlock",
         "type": "object"
       },
+      "app__interfaces__http__v1__notebooks__schemas_apply__H5PBlock": {
+        "additionalProperties": true,
+        "description": "An H5P package block (only shown, as the step already has it).",
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "main_library": {
+            "default": "",
+            "title": "Main Library",
+            "type": "string"
+          },
+          "package_id": {
+            "default": "",
+            "title": "Package Id",
+            "type": "string"
+          },
+          "passing_score_pct": {
+            "default": 0.0,
+            "title": "Passing Score Pct",
+            "type": "number"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "type": {
+            "const": "h5p",
+            "default": "h5p",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "title": "H5PBlock",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__notebooks__schemas_apply__InteractiveVideoBlock": {
+        "additionalProperties": true,
+        "description": "An interactive video block (only shown, as the step already has it).",
+        "properties": {
+          "caption": {
+            "default": "",
+            "title": "Caption",
+            "type": "string"
+          },
+          "file_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id"
+          },
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "interactions": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Interactions",
+            "type": "array"
+          },
+          "source": {
+            "default": "link",
+            "enum": [
+              "link",
+              "upload"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "type": {
+            "const": "interactive_video",
+            "default": "interactive_video",
+            "title": "Type",
+            "type": "string"
+          },
+          "url": {
+            "default": "",
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "title": "InteractiveVideoBlock",
+        "type": "object"
+      },
       "app__interfaces__http__v1__notebooks__schemas_apply__TestBlock": {
         "additionalProperties": true,
         "description": "A test block: its settings and questions.",
@@ -36064,6 +40080,107 @@
         "title": "FlashcardsBlock",
         "type": "object"
       },
+      "app__modules__lms__domain__step_content__H5PBlock": {
+        "description": "An uploaded H5P package, played in the browser with h5p-standalone.",
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "main_library": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Main Library",
+            "type": "string"
+          },
+          "package_id": {
+            "default": "",
+            "maxLength": 36,
+            "title": "Package Id",
+            "type": "string"
+          },
+          "passing_score_pct": {
+            "default": 0.0,
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Passing Score Pct",
+            "type": "number"
+          },
+          "title": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Title",
+            "type": "string"
+          },
+          "type": {
+            "const": "h5p",
+            "default": "h5p",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "title": "H5PBlock",
+        "type": "object"
+      },
+      "app__modules__lms__domain__step_content__InteractiveVideoBlock": {
+        "description": "A video that pauses at timestamps for questions, notes and links.",
+        "properties": {
+          "caption": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Caption",
+            "type": "string"
+          },
+          "file_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id"
+          },
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "interactions": {
+            "items": {
+              "$ref": "#/components/schemas/Interaction"
+            },
+            "maxItems": 100,
+            "title": "Interactions",
+            "type": "array"
+          },
+          "source": {
+            "default": "link",
+            "enum": [
+              "link",
+              "upload"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "type": {
+            "const": "interactive_video",
+            "default": "interactive_video",
+            "title": "Type",
+            "type": "string"
+          },
+          "url": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "title": "InteractiveVideoBlock",
+        "type": "object"
+      },
       "app__modules__lms__domain__step_content__TestBlock": {
         "description": "A test block with its settings and questions.",
         "properties": {
@@ -36213,6 +40330,54 @@
         "summary": "Get Calendar Feed",
         "tags": [
           "composition"
+        ]
+      }
+    },
+    "/internal/emis/{user_id}/certificates": {
+      "get": {
+        "description": "Return the CEFR and national certificates of the student's EMIS profile.",
+        "operationId": "get_certificates_internal_emis__user_id__certificates_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EmisCertificateResponse"
+                  },
+                  "title": "Response Get Certificates Internal Emis  User Id  Certificates Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Certificates",
+        "tags": [
+          "internal-emis"
         ]
       }
     },
@@ -41739,7 +45904,7 @@
         ]
       },
       "patch": {
-        "description": "Edit the display name and the email of any user.",
+        "description": "Edit the names, the login and the email of any user.",
         "operationId": "patch_user_v1_admin_users__id__patch",
         "parameters": [
           {
@@ -43029,6 +47194,1031 @@
         ]
       }
     },
+    "/v1/certificates/admin/types": {
+      "post": {
+        "description": "Create a custom certificate type.",
+        "operationId": "create_type_v1_certificates_admin_types_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertificateTypeInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateTypeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Type",
+        "tags": [
+          "certificates"
+        ]
+      }
+    },
+    "/v1/certificates/admin/types/{type_id}": {
+      "delete": {
+        "description": "Delete a custom type nobody uses.",
+        "operationId": "delete_type_v1_certificates_admin_types__type_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "type_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Type Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Type",
+        "tags": [
+          "certificates"
+        ]
+      },
+      "patch": {
+        "description": "Change the sent fields of a type.",
+        "operationId": "update_type_v1_certificates_admin_types__type_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "type_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Type Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertificateTypePatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateTypeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Type",
+        "tags": [
+          "certificates"
+        ]
+      }
+    },
+    "/v1/certificates/files/{file_id}/download": {
+      "get": {
+        "description": "Redirect to a short-lived download URL of an attached file.",
+        "operationId": "download_file_v1_certificates_files__file_id__download_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "file_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "File Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "307": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download File",
+        "tags": [
+          "certificates"
+        ]
+      }
+    },
+    "/v1/certificates/me": {
+      "get": {
+        "description": "Return the caller's certificates.",
+        "operationId": "list_my_entries_v1_certificates_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CertificateEntryResponse"
+                  },
+                  "title": "Response List My Entries V1 Certificates Me Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List My Entries",
+        "tags": [
+          "certificates"
+        ]
+      },
+      "post": {
+        "description": "Record a certificate.",
+        "operationId": "create_entry_v1_certificates_me_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEntryBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateEntryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Entry",
+        "tags": [
+          "certificates"
+        ]
+      }
+    },
+    "/v1/certificates/me/import-emis": {
+      "post": {
+        "description": "Import the caller's CEFR and national certificates from EMIS.",
+        "operationId": "import_emis_v1_certificates_me_import_emis_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportEmisResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Import Emis",
+        "tags": [
+          "certificates"
+        ]
+      }
+    },
+    "/v1/certificates/me/{entry_id}": {
+      "delete": {
+        "description": "Delete the caller's certificate with its files.",
+        "operationId": "delete_entry_v1_certificates_me__entry_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Entry",
+        "tags": [
+          "certificates"
+        ]
+      },
+      "patch": {
+        "description": "Change the sent fields of the caller's certificate.",
+        "operationId": "update_entry_v1_certificates_me__entry_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEntryBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateEntryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Entry",
+        "tags": [
+          "certificates"
+        ]
+      }
+    },
+    "/v1/certificates/me/{entry_id}/files": {
+      "post": {
+        "description": "Attach an uploaded file (.png .jpg .jpeg .pdf .docx) to the caller's entry.",
+        "operationId": "add_entry_file_v1_certificates_me__entry_id__files_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_add_entry_file_v1_certificates_me__entry_id__files_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateFileResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Entry File",
+        "tags": [
+          "certificates"
+        ]
+      }
+    },
+    "/v1/certificates/me/{entry_id}/files/{file_id}": {
+      "delete": {
+        "description": "Delete one file of the caller's entry.",
+        "operationId": "remove_entry_file_v1_certificates_me__entry_id__files__file_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "file_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "File Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Entry File",
+        "tags": [
+          "certificates"
+        ]
+      }
+    },
+    "/v1/certificates/staff/entries": {
+      "get": {
+        "description": "Return a page of certificates of the students the caller may see.",
+        "operationId": "list_staff_entries_v1_certificates_staff_entries_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subgroup",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subgroup"
+            }
+          },
+          {
+            "in": "query",
+            "name": "type_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject"
+            }
+          },
+          {
+            "in": "query",
+            "name": "level",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Level"
+            }
+          },
+          {
+            "in": "query",
+            "name": "student_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Student Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffEntriesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Staff Entries",
+        "tags": [
+          "certificates"
+        ]
+      }
+    },
+    "/v1/certificates/staff/export": {
+      "post": {
+        "description": "Stream the chosen certificate files as a ZIP archive.",
+        "operationId": "export_entries_v1_certificates_staff_export_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Entries",
+        "tags": [
+          "certificates"
+        ]
+      }
+    },
+    "/v1/certificates/staff/groups": {
+      "get": {
+        "description": "Return the groups the caller may filter by.",
+        "operationId": "list_staff_groups_v1_certificates_staff_groups_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StaffGroupResponse"
+                  },
+                  "title": "Response List Staff Groups V1 Certificates Staff Groups Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Staff Groups",
+        "tags": [
+          "certificates"
+        ]
+      }
+    },
+    "/v1/certificates/staff/ranking": {
+      "get": {
+        "description": "Return students ranked by their number of certificates.",
+        "operationId": "get_staff_ranking_v1_certificates_staff_ranking_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subgroup",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subgroup"
+            }
+          },
+          {
+            "in": "query",
+            "name": "type_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject"
+            }
+          },
+          {
+            "in": "query",
+            "name": "level",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Level"
+            }
+          },
+          {
+            "in": "query",
+            "name": "student_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Student Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffRankingResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Staff Ranking",
+        "tags": [
+          "certificates"
+        ]
+      }
+    },
+    "/v1/certificates/staff/stats": {
+      "get": {
+        "description": "Return counts by type, level and group.",
+        "operationId": "get_staff_stats_v1_certificates_staff_stats_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "group_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subgroup",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subgroup"
+            }
+          },
+          {
+            "in": "query",
+            "name": "type_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject"
+            }
+          },
+          {
+            "in": "query",
+            "name": "level",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Level"
+            }
+          },
+          {
+            "in": "query",
+            "name": "student_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Student Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffStatsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Staff Stats",
+        "tags": [
+          "certificates"
+        ]
+      }
+    },
+    "/v1/certificates/types": {
+      "get": {
+        "description": "Return every certificate type.",
+        "operationId": "list_types_v1_certificates_types_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CertificateTypeResponse"
+                  },
+                  "title": "Response List Types V1 Certificates Types Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Types",
+        "tags": [
+          "certificates"
+        ]
+      }
+    },
     "/v1/files": {
       "post": {
         "description": "Check type, size and quota, create a pending file and a presigned PUT.",
@@ -43744,6 +48934,90 @@
         ]
       }
     },
+    "/v1/id/login/passkey": {
+      "post": {
+        "description": "Verify the passkey and accept the login.",
+        "operationId": "post_login_passkey_v1_id_login_passkey_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasskeyLoginBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResultResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Login Passkey",
+        "tags": [
+          "id-factors"
+        ]
+      }
+    },
+    "/v1/id/login/passkey/options": {
+      "post": {
+        "description": "Options for navigator.credentials.get (also for conditional UI).",
+        "operationId": "post_login_passkey_options_v1_id_login_passkey_options_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasskeyOptionsBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebAuthnOptionsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Login Passkey Options",
+        "tags": [
+          "id-factors"
+        ]
+      }
+    },
     "/v1/id/login/password": {
       "post": {
         "description": "Set the new password, then finish the login.",
@@ -43909,6 +49183,48 @@
         "summary": "Post Login Ticket",
         "tags": [
           "id-login"
+        ]
+      }
+    },
+    "/v1/id/login/totp": {
+      "post": {
+        "description": "The authenticator code (or a recovery code) after the password.",
+        "operationId": "post_login_totp_v1_id_login_totp_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TotpLoginBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResultResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Login Totp",
+        "tags": [
+          "id-factors"
         ]
       }
     },
@@ -44443,6 +49759,159 @@
         ]
       }
     },
+    "/v1/id/me/passkeys": {
+      "post": {
+        "description": "Store a new passkey.",
+        "operationId": "post_passkey_v1_id_me_passkeys_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasskeyRegisterBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Passkey",
+        "tags": [
+          "id-factors"
+        ]
+      }
+    },
+    "/v1/id/me/passkeys/options": {
+      "post": {
+        "description": "Options for navigator.credentials.create.",
+        "operationId": "post_passkey_options_v1_id_me_passkeys_options_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebAuthnOptionsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Post Passkey Options",
+        "tags": [
+          "id-factors"
+        ]
+      }
+    },
+    "/v1/id/me/passkeys/{id}": {
+      "delete": {
+        "description": "Remove a passkey (not the last one while password sign-in is off).",
+        "operationId": "delete_passkey_v1_id_me_passkeys__id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Passkey",
+        "tags": [
+          "id-factors"
+        ]
+      },
+      "patch": {
+        "description": "Rename a passkey.",
+        "operationId": "patch_passkey_v1_id_me_passkeys__id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasskeyRenameBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasskeyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Passkey",
+        "tags": [
+          "id-factors"
+        ]
+      }
+    },
     "/v1/id/me/password": {
       "post": {
         "description": "Verify the current password, apply the policy, log out other devices.",
@@ -44475,6 +49944,28 @@
         "summary": "Post Password",
         "tags": [
           "id-account"
+        ]
+      }
+    },
+    "/v1/id/me/password-login/disable": {
+      "post": {
+        "description": "Sign in with passkeys only; a password reset turns passwords back on.",
+        "operationId": "post_password_login_disable_v1_id_me_password_login_disable_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Post Password Login Disable",
+        "tags": [
+          "id-factors"
         ]
       }
     },
@@ -44517,6 +50008,28 @@
         "summary": "Patch Preferences",
         "tags": [
           "id-account"
+        ]
+      }
+    },
+    "/v1/id/me/security": {
+      "get": {
+        "description": "TOTP state, password sign-in switch and passkeys.",
+        "operationId": "get_security_v1_id_me_security_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Security",
+        "tags": [
+          "id-factors"
         ]
       }
     },
@@ -44723,6 +50236,112 @@
         "summary": "Patch Telegram",
         "tags": [
           "id-account"
+        ]
+      }
+    },
+    "/v1/id/me/totp/confirm": {
+      "post": {
+        "description": "Turn the app on with its first code; return the recovery codes.",
+        "operationId": "post_totp_confirm_v1_id_me_totp_confirm_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TotpCodeBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryCodesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Totp Confirm",
+        "tags": [
+          "id-factors"
+        ]
+      }
+    },
+    "/v1/id/me/totp/disable": {
+      "post": {
+        "description": "Turn the app off with a fresh code or a recovery code.",
+        "operationId": "post_totp_disable_v1_id_me_totp_disable_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TotpCodeBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Totp Disable",
+        "tags": [
+          "id-factors"
+        ]
+      }
+    },
+    "/v1/id/me/totp/setup": {
+      "post": {
+        "description": "A new secret for the authenticator app (valid 10 minutes).",
+        "operationId": "post_totp_setup_v1_id_me_totp_setup_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TotpSetupResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Post Totp Setup",
+        "tags": [
+          "id-factors"
         ]
       }
     },
@@ -48136,6 +53755,48 @@
         ]
       }
     },
+    "/v1/lms/courses/import": {
+      "post": {
+        "description": "Upload an .imscc (at most 200 MB); the import runs in the background.",
+        "operationId": "start_cartridge_import_v1_lms_courses_import_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_start_cartridge_import_v1_lms_courses_import_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartridgeImportStarted"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Cartridge Import",
+        "tags": [
+          "lms-authoring"
+        ]
+      }
+    },
     "/v1/lms/courses/{course_id}/compare": {
       "get": {
         "description": "Return which steps differ between version numbers `a` and `b`.",
@@ -48193,6 +53854,50 @@
           }
         },
         "summary": "Compare Versions",
+        "tags": [
+          "lms-authoring"
+        ]
+      }
+    },
+    "/v1/lms/courses/{course_id}/copy": {
+      "post": {
+        "description": "Copy the course draft as \"<title> (copy)\" owned by the caller (editors).",
+        "operationId": "copy_course_v1_lms_courses__course_id__copy_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseCopied"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Copy Course",
         "tags": [
           "lms-authoring"
         ]
@@ -48438,6 +54143,100 @@
         ]
       }
     },
+    "/v1/lms/courses/{course_id}/export.imscc": {
+      "get": {
+        "description": "Download the course draft as a Common Cartridge 1.3 (editors).",
+        "operationId": "export_cartridge_v1_lms_courses__course_id__export_imscc_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/vnd.ims.imsccv1p3": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Cartridge",
+        "tags": [
+          "lms-authoring"
+        ]
+      }
+    },
+    "/v1/lms/courses/{course_id}/h5p": {
+      "post": {
+        "description": "Upload a `.h5p` package (zip, up to 100 MB); needs `edit` on the course.",
+        "operationId": "upload_h5p_v1_lms_courses__course_id__h5p_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_h5p_v1_lms_courses__course_id__h5p_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/H5PPackageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload H5P",
+        "tags": [
+          "lms-authoring"
+        ]
+      }
+    },
     "/v1/lms/courses/{course_id}/invite-code": {
       "post": {
         "description": "Replace the invite code; old invite links stop working.",
@@ -48477,6 +54276,92 @@
           }
         },
         "summary": "Rotate Invite Code",
+        "tags": [
+          "lms-authoring"
+        ]
+      }
+    },
+    "/v1/lms/courses/{course_id}/link-check": {
+      "get": {
+        "description": "Return the last link report (`idle` when none).",
+        "operationId": "get_link_report_v1_lms_courses__course_id__link_check_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkReportView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Link Report",
+        "tags": [
+          "lms-authoring"
+        ]
+      },
+      "post": {
+        "description": "Queue a check of the links in the step drafts.",
+        "operationId": "start_link_check_v1_lms_courses__course_id__link_check_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkJobView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Link Check",
         "tags": [
           "lms-authoring"
         ]
@@ -48575,6 +54460,69 @@
           }
         },
         "summary": "Preview Step",
+        "tags": [
+          "lms-authoring"
+        ]
+      }
+    },
+    "/v1/lms/courses/{course_id}/preview/steps/{step_id}/blocks/{block_id}/h5p": {
+      "get": {
+        "description": "Return the signed base URL of a draft's H5P package (`view_drafts`).",
+        "operationId": "preview_h5p_v1_lms_courses__course_id__preview_steps__step_id__blocks__block_id__h5p_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "step_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Step Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "block_id",
+            "required": true,
+            "schema": {
+              "title": "Block Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/H5PLaunchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview H5P",
         "tags": [
           "lms-authoring"
         ]
@@ -48698,6 +54646,48 @@
       }
     },
     "/v1/lms/courses/{course_id}/settings": {
+      "get": {
+        "description": "Return every setting, the join code and the course counts.",
+        "operationId": "get_settings_v1_lms_courses__course_id__settings_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseSettingsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Settings",
+        "tags": [
+          "lms-authoring"
+        ]
+      },
       "patch": {
         "description": "Apply the provided settings; `cover_file_id: null` removes the cover.",
         "operationId": "update_settings_v1_lms_courses__course_id__settings_patch",
@@ -48746,6 +54736,104 @@
           }
         },
         "summary": "Update Settings",
+        "tags": [
+          "lms-authoring"
+        ]
+      }
+    },
+    "/v1/lms/courses/{course_id}/settings/details": {
+      "patch": {
+        "description": "Change the sent fields; invalid values are a 422 naming the field.",
+        "operationId": "update_details_v1_lms_courses__course_id__settings_details_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsDetailsBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseSettingsView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Details",
+        "tags": [
+          "lms-authoring"
+        ]
+      }
+    },
+    "/v1/lms/courses/{course_id}/settings/join-code": {
+      "post": {
+        "description": "Replace the join code; the old one stops working.",
+        "operationId": "regenerate_join_code_v1_lms_courses__course_id__settings_join_code_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteCodeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Regenerate Join Code",
         "tags": [
           "lms-authoring"
         ]
@@ -49068,6 +55156,69 @@
         ]
       }
     },
+    "/v1/lms/courses/{course_id}/steps/{step_id}/blocks/{block_id}/h5p": {
+      "get": {
+        "description": "Return the signed base URL of the block's package (enrolled or staff).",
+        "operationId": "get_h5p_launch_v1_lms_courses__course_id__steps__step_id__blocks__block_id__h5p_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "step_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Step Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "block_id",
+            "required": true,
+            "schema": {
+              "title": "Block Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/H5PLaunchView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get H5P Launch",
+        "tags": [
+          "lms"
+        ]
+      }
+    },
     "/v1/lms/courses/{course_id}/steps/{step_id}/blocks/{block_id}/video": {
       "get": {
         "description": "Return a presigned GET URL of an uploaded video (enrolled or staff).",
@@ -49376,6 +55527,102 @@
         ]
       }
     },
+    "/v1/lms/courses/{slug}/landing": {
+      "get": {
+        "description": "Describe the course; `?preview=1` shows drafts to people who can edit.",
+        "operationId": "get_course_landing_v1_lms_courses__slug__landing_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "preview",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Preview",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearningLandingView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Course Landing",
+        "tags": [
+          "lms"
+        ]
+      }
+    },
+    "/v1/lms/imports/{job_id}": {
+      "get": {
+        "description": "Poll an import started by the caller.",
+        "operationId": "get_cartridge_import_v1_lms_imports__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CartridgeImportStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Cartridge Import",
+        "tags": [
+          "lms-authoring"
+        ]
+      }
+    },
     "/v1/lms/join": {
       "post": {
         "description": "Join with an invite code (rate limited); a wrong code is a 404.",
@@ -49498,6 +55745,141 @@
           }
         },
         "summary": "Start Attempt",
+        "tags": [
+          "lms"
+        ]
+      }
+    },
+    "/v1/lms/steps/{step_id}/blocks/{block_id}/h5p-result": {
+      "post": {
+        "description": "Store a `completed`/`answered` xAPI statement of the whole content.",
+        "operationId": "record_h5p_result_v1_lms_steps__step_id__blocks__block_id__h5p_result_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "step_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Step Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "block_id",
+            "required": true,
+            "schema": {
+              "title": "Block Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LearningH5PResultBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearningBlockResultView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record H5P Result",
+        "tags": [
+          "lms"
+        ]
+      }
+    },
+    "/v1/lms/steps/{step_id}/blocks/{block_id}/interactions/{interaction_id}/answer": {
+      "post": {
+        "description": "Grade an answer to a question of an interactive video.",
+        "operationId": "answer_interaction_v1_lms_steps__step_id__blocks__block_id__interactions__interaction_id__answer_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "step_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Step Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "block_id",
+            "required": true,
+            "schema": {
+              "title": "Block Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "interaction_id",
+            "required": true,
+            "schema": {
+              "title": "Interaction Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LearningInteractionAnswerBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearningInteractionResultView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Answer Interaction",
         "tags": [
           "lms"
         ]
@@ -51255,7 +57637,7 @@
     },
     "/v1/manage/library/suggestions/{suggestion_id}": {
       "get": {
-        "description": "One suggestion with the form the suggester filled in.",
+        "description": "One suggestion with the form and the file the suggester sent.",
         "operationId": "get_suggestion_v1_manage_library_suggestions__suggestion_id__get",
         "parameters": [
           {
@@ -51297,9 +57679,56 @@
         ]
       }
     },
+    "/v1/manage/library/suggestions/{suggestion_id}/approve": {
+      "post": {
+        "description": "Link the book saved from the suggestion, hand over its file, notify.",
+        "operationId": "approve_suggestion_v1_manage_library_suggestions__suggestion_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "suggestion_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Suggestion Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveSuggestionBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve Suggestion",
+        "tags": [
+          "library-manage"
+        ]
+      }
+    },
     "/v1/manage/library/suggestions/{suggestion_id}/{decision}": {
       "post": {
-        "description": "Accept or decline a book suggestion.",
+        "description": "Accept or decline a book suggestion; a decline may say why.",
         "operationId": "decide_suggestion_v1_manage_library_suggestions__suggestion_id___decision__post",
         "parameters": [
           {
@@ -51326,6 +57755,23 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/DeclineSuggestionBody"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Body"
+              }
+            }
+          }
+        },
         "responses": {
           "204": {
             "description": "Successful Response"
@@ -52589,6 +59035,58 @@
         ]
       }
     },
+    "/v1/me/group/progress": {
+      "get": {
+        "description": "Return the group's marks and attendance; only for its head student.",
+        "operationId": "get_my_group_progress_v1_me_group_progress_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "semester",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 4,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Semester"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupProgressResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get My Group Progress",
+        "tags": [
+          "marks"
+        ]
+      }
+    },
     "/v1/me/homework": {
       "get": {
         "description": "Return the chosen list; ``upcoming`` is the default.",
@@ -53542,6 +60040,28 @@
         "summary": "Put Shelf Entry",
         "tags": [
           "library"
+        ]
+      }
+    },
+    "/v1/me/library/suggestions": {
+      "get": {
+        "description": "The signed-in person's suggestions and their statuses, newest first.",
+        "operationId": "list_my_suggestions_v1_me_library_suggestions_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MySuggestionsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List My Suggestions",
+        "tags": [
+          "library-materials"
         ]
       }
     },
@@ -58966,6 +65486,68 @@
           }
         },
         "summary": "Get Group",
+        "tags": [
+          "staff-groups"
+        ]
+      }
+    },
+    "/v1/staff/groups/{group_id}/progress": {
+      "get": {
+        "description": "Return marks and attendance per student; only its curator or an admin.",
+        "operationId": "get_group_progress_v1_staff_groups__group_id__progress_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Group Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "semester",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 4,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Semester"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GroupProgressResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Group Progress",
         "tags": [
           "staff-groups"
         ]

@@ -178,6 +178,14 @@ class ScheduleQueries(Protocol):
         ...
 
 
+class GroupDirectory(Protocol):
+    """Existence check of student groups (provider: schedule)."""
+
+    async def existing_group_ids(self, ids: Sequence[UUID]) -> set[UUID]:
+        """Return the subset of ``ids`` that are groups."""
+        ...
+
+
 class ClassworkQueries(Protocol):
     """Read access to homework and attendance (provider: B4)."""
 

@@ -36,6 +36,9 @@ class NotificationType(StrEnum):
     LIBRARY_QUEUE_WAITING = "library_queue_waiting"
     LIBRARY_REPORT_FILED = "library_report_filed"
     LIBRARY_READING_LIST_NEW = "library_reading_list_new"
+    LIBRARY_SUGGESTION_APPROVED = "library_suggestion_approved"
+    LIBRARY_SUGGESTION_DECLINED = "library_suggestion_declined"
+    CURATOR_EXAM_MARK = "curator_exam_mark"
 
 
 @dataclass(frozen=True, slots=True)

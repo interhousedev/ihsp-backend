@@ -134,5 +134,14 @@
   "notify-btn-open-library-list": "Открыть список чтения",
   "notify-course-broadcast-invalid": "В рассылке нужны заголовок (до 120 символов) и текст (до 2000 символов).",
   "notify-course-broadcast-not-found": "Рассылка не найдена.",
-  "notify-course-broadcast-forbidden": "Рассылку может изменить только её автор или администратор курса."
+  "notify-course-broadcast-forbidden": "Рассылку может изменить только её автор или администратор курса.",
+  "notify-curator-exam-mark-title": "Низкая оценка за контроль в вашей группе",
+  "notify-curator-exam-mark-body-midterm": "{student} ({group}) получил(а) {value} за промежуточный контроль (ПК) по предмету {subject}, {date}.",
+  "notify-curator-exam-mark-body-final": "{student} ({group}) получил(а) {value} за итоговый контроль (ИК) по предмету {subject}, {date}.",
+  "notify-btn-open-group": "Открыть группу",
+  "notify-library-suggestion-approved-title": "Ваше предложение принято",
+  "notify-library-suggestion-approved-body": "Предложенная вами книга «{title}» теперь в библиотеке. Спасибо!",
+  "notify-library-suggestion-declined-title": "Ваше предложение отклонено",
+  "notify-library-suggestion-declined-body": "Библиотекари не добавили «{title}» в библиотеку.",
+  "notify-btn-open-library-suggestions": "Мои предложения"
 }

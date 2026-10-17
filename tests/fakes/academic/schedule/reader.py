@@ -126,6 +126,10 @@ class FakeScheduleReader:
             found.append(student.user_id)
         return found
 
+    async def existing_group_ids(self, ids: Sequence[UUID]) -> set[UUID]:
+        """Return the subset of ``ids`` that are groups."""
+        return {i for i in ids if i in self.store.groups}
+
     async def curated_group_ids(self, teacher_id: UUID) -> list[UUID]:
         """Return active groups the teacher curates."""
         return [

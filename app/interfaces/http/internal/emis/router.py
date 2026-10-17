@@ -1,5 +1,8 @@
 """Internal EMIS gateway routes (private network, service token)."""
 
+from app.interfaces.http.internal.emis.handlers.get_certificates import (
+    get_certificates,
+)
 from app.interfaces.http.internal.emis.handlers.get_class_hours import get_class_hours
 from app.interfaces.http.internal.emis.handlers.get_curriculum import get_curriculum
 from app.interfaces.http.internal.emis.handlers.get_file import get_file
@@ -8,6 +11,7 @@ from app.interfaces.http.internal.emis.handlers.get_ratings import get_ratings
 from app.interfaces.http.internal.emis.handlers.get_subjects import get_subjects
 from app.interfaces.http.internal.emis.handlers.get_timetable import get_timetable
 from app.interfaces.http.internal.emis.schemas import (
+    EmisCertificateResponse,
     EmisClassHourResponse,
     EmisClassResponse,
     EmisCurriculumResponse,
@@ -60,5 +64,11 @@ router.add_api_route(
     get_timetable,
     methods=["GET"],
     response_model=list[EmisClassResponse],
+)
+router.add_api_route(
+    "/{user_id}/certificates",
+    get_certificates,
+    methods=["GET"],
+    response_model=list[EmisCertificateResponse],
 )
 router.add_api_route("/{user_id}/file", get_file, methods=["GET"])

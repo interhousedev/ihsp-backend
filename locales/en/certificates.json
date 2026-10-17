@@ -1,0 +1,12 @@
+{
+  "cert-type-not-found": "Certificate type not found.",
+  "cert-type-builtin": "A built-in certificate type cannot be deleted or renamed by code.",
+  "cert-type-in-use": "Certificates of this type exist, so it cannot be deleted.",
+  "cert-type-code-taken": "A certificate type with this code already exists.",
+  "cert-entry-not-found": "Certificate not found.",
+  "cert-file-not-found": "Certificate file not found.",
+  "cert-invalid": "The value of the field \"{field}\" is not valid for this certificate.",
+  "cert-not-curator": "You can only see the certificates of the groups you curate.",
+  "cert-download-failed": "The certificate file could not be downloaded.",
+  "cert-url-unsafe": "The certificate link is not allowed."
+}

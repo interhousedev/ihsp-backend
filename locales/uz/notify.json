@@ -134,5 +134,14 @@
   "notify-btn-open-library-list": "Ro'yxatni ochish",
   "notify-course-broadcast-invalid": "Xabarda sarlavha (120 belgigacha) va matn (2000 belgigacha) boʻlishi kerak.",
   "notify-course-broadcast-not-found": "Xabar topilmadi.",
-  "notify-course-broadcast-forbidden": "Xabarni faqat muallifi yoki kurs administratori tahrirlay oladi."
+  "notify-course-broadcast-forbidden": "Xabarni faqat muallifi yoki kurs administratori tahrirlay oladi.",
+  "notify-curator-exam-mark-title": "Guruhingizda nazoratdan past baho",
+  "notify-curator-exam-mark-body-midterm": "{student} ({group}) {subject} fanidan oraliq nazoratda (ON) {value} oldi, {date}.",
+  "notify-curator-exam-mark-body-final": "{student} ({group}) {subject} fanidan yakuniy nazoratda (YN) {value} oldi, {date}.",
+  "notify-btn-open-group": "Guruhni ochish",
+  "notify-library-suggestion-approved-title": "Taklifingiz qabul qilindi",
+  "notify-library-suggestion-approved-body": "Siz taklif qilgan «{title}» kitobi endi kutubxonada. Rahmat!",
+  "notify-library-suggestion-declined-title": "Taklifingiz rad etildi",
+  "notify-library-suggestion-declined-body": "Kutubxonachilar «{title}» kitobini kutubxonaga qoʻshmadi.",
+  "notify-btn-open-library-suggestions": "Mening takliflarim"
 }

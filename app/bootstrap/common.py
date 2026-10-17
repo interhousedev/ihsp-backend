@@ -11,6 +11,7 @@ from typing import Any, Literal, cast
 from uuid import UUID
 
 from app.bootstrap.adapters.admin_tools import AdminToolBackendAdapter
+from app.bootstrap.adapters.certificate_students import CertificateStudentsAdapter
 from app.bootstrap.adapters.composition.library_platform_search import (
     LibraryPlatformSearch,
 )
@@ -53,6 +54,7 @@ from app.modules.ai.infrastructure.recording_gateways import (
 )
 from app.modules.ai.infrastructure.usage_store import SqlUsageStore
 from app.modules.ai.wiring import build as build_ai
+from app.modules.certificates.wiring import build as build_certificates
 from app.modules.dashboard.wiring import build as build_dashboard
 from app.modules.files.ports.content_sniffer import ContentSniffer
 from app.modules.files.wiring import build as build_files
@@ -344,6 +346,12 @@ class _Assembler:
         )
         if closer is not None:
             self.add_closer(closer)
+        c.certificates = build_certificates(
+            self.deps,
+            files=c.files.public,
+            emis=source,
+            directory=CertificateStudentsAdapter(schedule),
+        )
         emis_import = build_emis_import(
             self.deps,
             schedule=schedule,
@@ -467,7 +475,11 @@ class _Assembler:
         """LMS authoring and learning."""
         c = self.container
         c.lms = build_lms(
-            self.deps, identity=c.identity.directory, files=c.files.public
+            self.deps,
+            identity=c.identity.directory,
+            files=c.files.public,
+            h5p_store=c.files.storage,
+            groups=c.academic.schedule.queries,
         )
 
     def build_library(self) -> None:

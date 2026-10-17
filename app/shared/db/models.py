@@ -19,6 +19,7 @@ MODULES = (
     "library",
     "vectors",
     "dashboard",
+    "certificates",
 )
 
 
