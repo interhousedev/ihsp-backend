@@ -53,6 +53,9 @@ def course_card(
         progress_pct=progress_pct,
         visibility="invite" if course.visibility == "invite" else "public",
         updated_at=version.created_at if version else None,
+        summary=course.summary,
+        accent_color=course.accent_color,
+        cover_file_id=course.cover_file_id,
     )
 
 

@@ -10,7 +10,11 @@ from app.modules.lms.domain.authoring.errors import (
     VideoBlockNotFoundError,
 )
 from app.modules.lms.domain.authoring.permissions import VIEW_DRAFTS
-from app.modules.lms.domain.step_content import StepContent, VideoBlock
+from app.modules.lms.domain.step_content import (
+    InteractiveVideoBlock,
+    StepContent,
+    VideoBlock,
+)
 from app.shared.actor import Actor
 from app.shared.contracts.files import FilesApi
 
@@ -40,7 +44,7 @@ class PreviewVideo:
             (
                 block.file_id
                 for block in content.blocks
-                if isinstance(block, VideoBlock)
+                if isinstance(block, VideoBlock | InteractiveVideoBlock)
                 and block.id == block_id
                 and block.source == "upload"
             ),

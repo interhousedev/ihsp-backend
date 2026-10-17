@@ -41,3 +41,7 @@ class CourseRepository(Protocol):
     async def list_for_user(self, user_id: UUID, permission: str) -> list[Course]:
         """Return courses where the user holds the permission."""
         ...
+
+    async def count_learners(self, course_id: UUID) -> int:
+        """Return the number of enrollments of the course."""
+        ...

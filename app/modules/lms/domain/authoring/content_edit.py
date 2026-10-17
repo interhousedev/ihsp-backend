@@ -53,11 +53,14 @@ def extract_file_ids(content: dict[str, Any]) -> list[UUID]:
     return sorted(found | set(video_file_ids(content)))
 
 
+VIDEO_TYPES = ("video", "interactive_video")
+
+
 def video_file_ids(content: dict[str, Any]) -> list[UUID]:
     """Return the IDs of the files of uploaded video blocks."""
     ids: list[UUID] = []
     for block in content.get("blocks", []):
-        if block.get("type") == "video" and block.get("source") == "upload":
+        if block.get("type") in VIDEO_TYPES and block.get("source") == "upload":
             try:
                 ids.append(UUID(str(block.get("file_id"))))
             except ValueError:

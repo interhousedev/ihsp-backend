@@ -35,6 +35,28 @@ class Course:
     draft_seq: int = 0
     live_outline_hash: str | None = None
     live_version_id: UUID | None = None
+    # Settings (lms_0003).
+    code: str | None = None
+    friendly_name: str | None = None
+    summary: str = ""
+    banner_file_id: UUID | None = None
+    accent_color: str | None = None
+    language: str = "ru"
+    level: str | None = None
+    workload_hours_per_week: int | None = None
+    duration_weeks: int | None = None
+    tags: list[str] = field(default_factory=list)
+    outcomes: list[str] = field(default_factory=list)
+    requirements: list[str] = field(default_factory=list)
+    audience: list[str] = field(default_factory=list)
+    audience_scope: str = "link"
+    audience_group_ids: list[str] = field(default_factory=list)
+    enrolment_open: bool = True
+    enrolment_starts_at: datetime | None = None
+    enrolment_ends_at: datetime | None = None
+    navigation: list[dict[str, Any]] = field(default_factory=list)
+    publish_state: str = "draft"
+    link_report: dict[str, Any] | None = None
 
 
 @dataclass(slots=True)

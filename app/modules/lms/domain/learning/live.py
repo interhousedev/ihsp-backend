@@ -13,9 +13,15 @@ from typing import Any, Final, Literal
 from uuid import UUID
 
 from app.modules.lms.domain.authoring.manifest import parse_manifest as parse_sections
-from app.modules.lms.domain.learning.points import block_max_points, sum_points
+from app.modules.lms.domain.learning.points import (
+    block_max_points,
+    scored_block_max_points,
+    sum_points,
+)
 from app.modules.lms.domain.step_content import (
     FlashcardsBlock,
+    H5PBlock,
+    InteractiveVideoBlock,
     StepContent,
     TestBlock,
 )
@@ -120,11 +126,17 @@ class RenderedRevision:
     test_block_ids: tuple[str, ...]
     card_ids: Mapping[str, tuple[str, ...]]
     test_points: Mapping[str, Decimal]
+    scored_points: Mapping[str, Decimal]
+
+    @property
+    def gradable_block_ids(self) -> tuple[str, ...]:
+        """Return the tests, H5P blocks and interactive videos of the step."""
+        return (*self.test_block_ids, *self.scored_points)
 
     @property
     def points_total(self) -> Decimal:
-        """Return the points of a perfect pass of every test of the step."""
-        return sum_points(self.test_points.values())
+        """Return the points of a perfect pass of every gradable block."""
+        return sum_points((*self.test_points.values(), *self.scored_points.values()))
 
 
 def render_revision(revision_id: UUID, content: StepContent) -> RenderedRevision:
@@ -146,6 +158,11 @@ def render_revision(revision_id: UUID, content: StepContent) -> RenderedRevision
             block.id: block_max_points(block)
             for block in content.blocks
             if isinstance(block, TestBlock)
+        },
+        scored_points={
+            block.id: scored_block_max_points(block)
+            for block in content.blocks
+            if isinstance(block, H5PBlock | InteractiveVideoBlock)
         },
     )
 

@@ -38,7 +38,7 @@ class MarkStepViewed:
             rendered = await load_rendered(
                 uow, self.cache, context.live_step.revision_id
             )
-            complete = completes_on_view(rendered.test_block_ids)
+            complete = completes_on_view(rendered.gradable_block_ids)
             state = await uow.states.touch_viewed(
                 actor.user_id, step_id, now=now, complete=complete
             )

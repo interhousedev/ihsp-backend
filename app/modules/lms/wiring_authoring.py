@@ -19,6 +19,9 @@ from app.modules.lms.application.authoring.ensure_preview_revision import (
     EnsurePreviewRevision,
 )
 from app.modules.lms.application.authoring.get_course_draft import GetCourseDraft
+from app.modules.lms.application.authoring.get_course_settings import (
+    GetCourseSettings,
+)
 from app.modules.lms.application.authoring.get_pending_changes import (
     GetPendingChanges,
 )
@@ -36,10 +39,14 @@ from app.modules.lms.application.authoring.list_step_history import ListStepHist
 from app.modules.lms.application.authoring.list_versions import ListVersions
 from app.modules.lms.application.authoring.outline_editor import OutlineEditor
 from app.modules.lms.application.authoring.presenter import Presenter
+from app.modules.lms.application.authoring.preview_h5p import PreviewH5P
 from app.modules.lms.application.authoring.preview_step import PreviewStep
 from app.modules.lms.application.authoring.preview_video import PreviewVideo
 from app.modules.lms.application.authoring.prune_revisions import PruneRevisions
 from app.modules.lms.application.authoring.publish_course import PublishCourse
+from app.modules.lms.application.authoring.regenerate_join_code import (
+    RegenerateJoinCode,
+)
 from app.modules.lms.application.authoring.remove_course_staff import (
     RemoveCourseStaff,
 )
@@ -49,11 +56,21 @@ from app.modules.lms.application.authoring.rotate_invite_code import RotateInvit
 from app.modules.lms.application.authoring.save_checkpoint import SaveCheckpoint
 from app.modules.lms.application.authoring.save_step_draft import SaveStepDraft
 from app.modules.lms.application.authoring.uow_factory import UowFactory
+from app.modules.lms.application.authoring.update_course_details import (
+    UpdateCourseDetails,
+)
 from app.modules.lms.application.authoring.update_course_meta import UpdateCourseMeta
 from app.modules.lms.application.authoring.update_course_settings import (
     UpdateCourseSettings,
 )
 from app.modules.lms.application.authoring.update_course_staff import UpdateCourseStaff
+from app.modules.lms.application.authoring.upload_h5p import UploadH5P
+from app.modules.lms.application.authoring.validate_links import (
+    GetLinkReport,
+    StartLinkCheck,
+    ValidateLinks,
+)
+from app.modules.lms.application.h5p_links import H5PLinks
 from app.modules.lms.application.public_authoring import (
     LmsDraftCommandsImpl,
     LmsQueriesImpl,
@@ -62,9 +79,16 @@ from app.modules.lms.application.public_workspace import (
     LmsWorkspaceCommandsImpl,
     LmsWorkspaceImpl,
 )
+from app.modules.lms.infrastructure.authoring.http_link_checker import (
+    HttpLinkChecker,
+)
 from app.modules.lms.infrastructure.authoring.uow import SqlAuthoringUnitOfWork
+from app.modules.lms.infrastructure.h5p_memory_store import MemoryH5PStore
+from app.modules.lms.ports.authoring.link_checker import LinkChecker
 from app.modules.lms.ports.authoring.unit_of_work import AuthoringUnitOfWork
+from app.modules.lms.ports.h5p_store import H5PObjectStore
 from app.shared.clock import Clock
+from app.shared.contracts.academic import GroupDirectory
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.tasks import TaskKicker
@@ -103,16 +127,29 @@ class AuthoringServices:
     restore_version: RestoreVersion
     preview_step: PreviewStep
     preview_video: PreviewVideo
+    preview_h5p: PreviewH5P
+    upload_h5p: UploadH5P
     ensure_preview_revision: EnsurePreviewRevision
     prune_revisions: PruneRevisions
     queries: LmsQueriesImpl
     draft_commands: LmsDraftCommandsImpl
     workspace: LmsWorkspaceImpl
     workspace_commands: LmsWorkspaceCommandsImpl
+    get_course_settings: GetCourseSettings
+    update_course_details: UpdateCourseDetails
+    regenerate_join_code: RegenerateJoinCode
+    start_link_check: StartLinkCheck
+    get_link_report: GetLinkReport
+    validate_links: ValidateLinks
 
 
 def build_authoring(
-    deps: ModuleDeps, *, identity: IdentityDirectory, files: FilesApi
+    deps: ModuleDeps,
+    *,
+    identity: IdentityDirectory,
+    files: FilesApi,
+    h5p_links: H5PLinks | None = None,
+    groups: GroupDirectory | None = None,
 ) -> AuthoringServices:
     """Build the authoring use cases on SQL repositories."""
 
@@ -130,6 +167,8 @@ def build_authoring(
         identity=identity,
         files=files,
         kicker=deps.kicker,
+        h5p_links=h5p_links,
+        groups=groups,
     )
 
 
@@ -140,8 +179,14 @@ def assemble_authoring(
     identity: IdentityDirectory,
     files: FilesApi,
     kicker: TaskKicker | None = None,
+    link_checker: LinkChecker | None = None,
+    h5p_links: H5PLinks | None = None,
+    groups: GroupDirectory | None = None,
 ) -> AuthoringServices:
     """Connect use cases to a unit of work factory (SQL, or fakes in tests)."""
+    if h5p_links is None:
+        h5p_links = H5PLinks(b"lms-h5p-test-key", clock, MemoryH5PStore())
+    h5p_store: H5PObjectStore = h5p_links.store or MemoryH5PStore()
     presenter = Presenter(identity)
     writer = StepDraftWriter(files)
     editor = OutlineEditor(presenter, clock)
@@ -184,6 +229,8 @@ def assemble_authoring(
         restore_version=RestoreVersion(uow_factory, clock, presenter),
         preview_step=PreviewStep(uow_factory),
         preview_video=PreviewVideo(uow_factory, files),
+        preview_h5p=PreviewH5P(uow_factory, h5p_links),
+        upload_h5p=UploadH5P(uow_factory, h5p_store),
         ensure_preview_revision=EnsurePreviewRevision(uow_factory, clock),
         prune_revisions=PruneRevisions(uow_factory, clock),
         queries=LmsQueriesImpl(
@@ -215,5 +262,13 @@ def assemble_authoring(
         workspace_commands=LmsWorkspaceCommandsImpl(
             apply_course_plan=ApplyCoursePlan(uow_factory, clock, writer),
             save_step_draft=save_step_draft,
+        ),
+        get_course_settings=GetCourseSettings(uow_factory),
+        update_course_details=UpdateCourseDetails(uow_factory, writer, groups),
+        regenerate_join_code=RegenerateJoinCode(uow_factory),
+        start_link_check=StartLinkCheck(uow_factory, clock, kicker),
+        get_link_report=GetLinkReport(uow_factory),
+        validate_links=ValidateLinks(
+            uow_factory, link_checker or HttpLinkChecker(), clock
         ),
     )

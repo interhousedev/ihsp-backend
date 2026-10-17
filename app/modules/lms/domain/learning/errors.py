@@ -38,6 +38,20 @@ class VideoNotFoundError(NotFoundError):
     message_key = "lms-learn-video-not-found"
 
 
+class H5PNotFoundError(NotFoundError):
+    """The live step has no H5P block with a package and this ID."""
+
+    code = "lms/h5p-not-found"
+    message_key = "lms-learn-h5p-not-found"
+
+
+class InteractionNotFoundError(NotFoundError):
+    """The interactive video block has no question with this ID."""
+
+    code = "lms/interaction-not-found"
+    message_key = "lms-learn-interaction-not-found"
+
+
 class CardNotFoundError(NotFoundError):
     """The flash card does not exist (any more) in the step."""
 

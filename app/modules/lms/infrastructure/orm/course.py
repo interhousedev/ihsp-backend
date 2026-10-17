@@ -8,6 +8,7 @@ from app.shared.db.base import Base, IdMixin, TimestampMixin
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     DateTime,
     Enum,
     ForeignKey,
@@ -82,3 +83,42 @@ class Course(IdMixin, TimestampMixin, Base):
             name="fk_courses_live_version_id_course_versions",
         ),
     )
+
+    # Course settings (lms_0003).
+    code: Mapped[str | None] = mapped_column(String(32))
+    friendly_name: Mapped[str | None] = mapped_column(String(255))
+    summary: Mapped[str] = mapped_column(String(500), server_default=text("''"))
+    banner_file_id: Mapped[UUID | None] = mapped_column(Uuid)
+    accent_color: Mapped[str | None] = mapped_column(String(7))
+    language: Mapped[str] = mapped_column(String(8), server_default=text("'ru'"))
+    level: Mapped[str | None] = mapped_column(String(16))
+    workload_hours_per_week: Mapped[int | None] = mapped_column(Integer)
+    duration_weeks: Mapped[int | None] = mapped_column(Integer)
+    tags: Mapped[list[str]] = mapped_column(JSONB, server_default=text("'[]'::jsonb"))
+    outcomes: Mapped[list[str]] = mapped_column(
+        JSONB, server_default=text("'[]'::jsonb")
+    )
+    requirements: Mapped[list[str]] = mapped_column(
+        JSONB, server_default=text("'[]'::jsonb")
+    )
+    audience: Mapped[list[str]] = mapped_column(
+        JSONB, server_default=text("'[]'::jsonb")
+    )
+    audience_scope: Mapped[str] = mapped_column(
+        String(16), server_default=text("'link'")
+    )
+    audience_group_ids: Mapped[list[str]] = mapped_column(
+        JSONB, server_default=text("'[]'::jsonb")
+    )
+    enrolment_open: Mapped[bool] = mapped_column(Boolean, server_default=text("true"))
+    enrolment_starts_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True)
+    )
+    enrolment_ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    navigation: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB, server_default=text("'[]'::jsonb")
+    )
+    publish_state: Mapped[str] = mapped_column(
+        String(16), server_default=text("'draft'")
+    )
+    link_report: Mapped[dict[str, Any] | None] = mapped_column(JSONB)

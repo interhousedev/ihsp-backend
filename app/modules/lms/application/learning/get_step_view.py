@@ -25,7 +25,10 @@ from app.modules.lms.application.learning.step_context import (
 from app.modules.lms.application.learning.types import UowFactory
 from app.modules.lms.application.learning.views import (
     LearningAttemptResultView,
+    LearningBlockResultView,
     LearningFlashcardsBlockView,
+    LearningH5PBlockView,
+    LearningInteractiveVideoBlockView,
     LearningQuizBlockView,
     LearningQuizRulesView,
     LearningStepView,
@@ -33,6 +36,7 @@ from app.modules.lms.application.learning.views import (
     LearningVideoBlockView,
     StepBlockView,
 )
+from app.modules.lms.domain.learning.block_results import stored_result
 from app.modules.lms.domain.learning.cards import select_next
 from app.modules.lms.domain.learning.entities import Attempt, StepState
 from app.modules.lms.domain.learning.errors import (
@@ -41,7 +45,7 @@ from app.modules.lms.domain.learning.errors import (
 )
 from app.modules.lms.domain.learning.grading import review_visible
 from app.modules.lms.domain.learning.live import RenderCache, RenderedRevision
-from app.modules.lms.domain.learning.points import earned_points
+from app.modules.lms.domain.learning.points import earned_points, scored_earned_points
 from app.modules.lms.ports.learning.daily_counters import DailyCounters
 from app.modules.lms.ports.learning.unit_of_work import LearningUnitOfWork
 from app.shared.actor import Actor
@@ -99,7 +103,8 @@ class GetStepView:
                 block.points_earned
                 for block in blocks
                 if isinstance(block, LearningQuizBlockView)
-            ),
+            )
+            + _scored_earned(rendered, state.cards if state else {}),
         )
 
     async def _check_access(
@@ -135,6 +140,8 @@ class GetStepView:
                 )
             elif block["type"] == "flashcards":
                 views.append(await self._cards(actor, block, rendered, cards))
+            elif block["type"] in ("h5p", "interactive_video"):
+                views.append(_scored(block, stored_result(cards, block["id"])))
             elif block["type"] == "video":
                 views.append(LearningVideoBlockView(**block, passed=state is not None))
             else:
@@ -202,3 +209,36 @@ class GetStepView:
                 card_id in states for card_id in rendered.card_ids.get(block["id"], ())
             ),
         )
+
+
+def _scored(
+    block: dict[str, Any], stored: Mapping[str, Any] | None
+) -> LearningH5PBlockView | LearningInteractiveVideoBlockView:
+    """Fill an H5P or interactive video block with my stored result."""
+    result = (
+        LearningBlockResultView(
+            score=float(stored.get("score", 0)),
+            max_score=float(stored.get("max_score", 0)),
+            completed=bool(stored.get("completed")),
+        )
+        if stored
+        else None
+    )
+    if block["type"] == "h5p":
+        return LearningH5PBlockView(
+            **block, result=result, passed=bool(stored and stored.get("passed"))
+        )
+    return LearningInteractiveVideoBlockView(
+        **block,
+        answers=dict((stored or {}).get("answers", {})),
+        result=result,
+        passed=result is not None and result.completed,
+    )
+
+
+def _scored_earned(rendered: RenderedRevision, cards: Mapping[str, Any]) -> float:
+    """Return the points earned in the H5P and interactive video blocks."""
+    return sum(
+        float(scored_earned_points(stored_result(cards, block_id), total))
+        for block_id, total in rendered.scored_points.items()
+    )

@@ -43,6 +43,19 @@ class SqlStepStateRepository:
         )
         return _to_entity(row) if row else None
 
+    async def cards_by_step(
+        self, user_id: UUID, step_ids: Sequence[UUID]
+    ) -> dict[UUID, dict[str, Any]]:
+        """Return the stored cards and block results of the user per step."""
+        if not step_ids:
+            return {}
+        rows = await self.session.execute(
+            select(StepStateRow.step_id, StepStateRow.cards).where(
+                StepStateRow.user_id == user_id, StepStateRow.step_id.in_(step_ids)
+            )
+        )
+        return {step_id: dict(cards or {}) for step_id, cards in rows}
+
     async def completed_step_ids(
         self, user_id: UUID, step_ids: Sequence[UUID]
     ) -> set[UUID]:

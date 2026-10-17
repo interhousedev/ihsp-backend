@@ -23,6 +23,23 @@ def _to_entity(row: Course) -> LearningCourse:
         status=row.status,
         live_version_id=row.live_version_id,
         updated_at=row.updated_at,
+        friendly_name=row.friendly_name,
+        summary=row.summary,
+        banner_file_id=row.banner_file_id,
+        accent_color=row.accent_color,
+        language=row.language,
+        level=row.level,
+        workload_hours_per_week=row.workload_hours_per_week,
+        duration_weeks=row.duration_weeks,
+        tags=tuple(row.tags or ()),
+        outcomes=tuple(row.outcomes or ()),
+        requirements=tuple(row.requirements or ()),
+        audience=tuple(row.audience or ()),
+        audience_scope=row.audience_scope,
+        enrolment_open=row.enrolment_open,
+        enrolment_starts_at=row.enrolment_starts_at,
+        enrolment_ends_at=row.enrolment_ends_at,
+        publish_state=row.publish_state,
     )
 
 

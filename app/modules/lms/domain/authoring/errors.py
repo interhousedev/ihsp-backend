@@ -31,6 +31,13 @@ class VideoBlockNotFoundError(NotFoundError):
     message_key = "lms-video-block-not-found"
 
 
+class H5PBlockNotFoundError(NotFoundError):
+    """The step has no H5P block with an uploaded package and this ID."""
+
+    code = "lms/h5p-not-found"
+    message_key = "lms-h5p-block-not-found"
+
+
 class RevisionNotFoundError(NotFoundError):
     """The step revision does not exist."""
 
@@ -145,6 +152,13 @@ class PlanInvalidError(ValidationFailedError):
     message_key = "lms-plan-invalid"
 
 
+class H5PPackageInvalidError(ValidationFailedError):
+    """The uploaded file is not an acceptable H5P package (``reason`` says why)."""
+
+    code = "lms/h5p-invalid"
+    message_key = "lms-h5p-invalid"
+
+
 class ContentInvalidError(ValidationFailedError):
     """Step content is invalid (for example duplicate IDs)."""
 
@@ -178,3 +192,17 @@ class InviteNotApplicableError(ValidationFailedError):
 
     code = "lms/invite-not-applicable"
     message_key = "lms-invite-not-applicable"
+
+
+class SettingsInvalidError(ValidationFailedError):
+    """A course setting is out of range or malformed (`params.field`)."""
+
+    code = "lms/settings-invalid"
+    message_key = "lms-settings-invalid"
+
+
+class LinkCheckForbiddenTargetError(ValidationFailedError):
+    """The link points at a host the checker must never contact."""
+
+    code = "lms/link-target-forbidden"
+    message_key = "lms-link-target-forbidden"

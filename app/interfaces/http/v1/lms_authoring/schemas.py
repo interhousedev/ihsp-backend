@@ -8,6 +8,8 @@ from app.modules.lms.application.authoring.views import (
     CompareStepView,
     CourseDraftView,
     CourseStaffItemView,
+    H5PLaunchView,
+    H5PPackageView,
     InviteCodeView,
     OutlineSectionView,
     OutlineStepView,
@@ -62,6 +64,14 @@ class StepDiffResponse(StepDiffView):
 
 class PreviewStepResponse(PreviewStepView):
     """`StepView` of a draft render."""
+
+
+class H5PPackageResponse(H5PPackageView):
+    """An uploaded H5P package."""
+
+
+class H5PLaunchResponse(H5PLaunchView):
+    """The signed base URL of an H5P package."""
 
 
 class VideoStreamResponse(VideoStreamView):

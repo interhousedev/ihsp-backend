@@ -3,6 +3,7 @@
 from datetime import datetime
 from uuid import UUID
 
+from app.modules.lms.domain.authoring.course_settings import derive_publish_state
 from app.modules.lms.domain.authoring.entities import Course
 from app.modules.lms.domain.authoring.enums import CourseStatus, Visibility
 from app.modules.lms.domain.authoring.errors import (
@@ -11,8 +12,9 @@ from app.modules.lms.domain.authoring.errors import (
 )
 from app.modules.lms.infrastructure.orm import Course as CourseRow
 from app.modules.lms.infrastructure.orm import CourseStaff as StaffRow
+from app.modules.lms.infrastructure.orm import Enrollment as EnrollmentRow
 
-from sqlalchemy import any_, literal, select, update
+from sqlalchemy import any_, func, literal, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -100,6 +102,15 @@ class SqlCourseRepository:
         )
         return [_to_entity(r) for r in (await self.session.scalars(statement))]
 
+    async def count_learners(self, course_id: UUID) -> int:
+        """Return the number of enrollments of the course."""
+        total = await self.session.scalar(
+            select(func.count())
+            .select_from(EnrollmentRow)
+            .where(EnrollmentRow.course_id == course_id)
+        )
+        return int(total or 0)
+
     async def _row(self, course_id: UUID, *, lock: bool = False) -> CourseRow | None:
         statement = (
             select(CourseRow)
@@ -131,6 +142,27 @@ def _to_entity(row: CourseRow) -> Course:
         draft_seq=row.draft_seq,
         live_outline_hash=row.live_outline_hash,
         live_version_id=row.live_version_id,
+        code=row.code,
+        friendly_name=row.friendly_name,
+        summary=row.summary,
+        banner_file_id=row.banner_file_id,
+        accent_color=row.accent_color,
+        language=row.language,
+        level=row.level,
+        workload_hours_per_week=row.workload_hours_per_week,
+        duration_weeks=row.duration_weeks,
+        tags=list(row.tags or []),
+        outcomes=list(row.outcomes or []),
+        requirements=list(row.requirements or []),
+        audience=list(row.audience or []),
+        audience_scope=row.audience_scope,
+        audience_group_ids=list(row.audience_group_ids or []),
+        enrolment_open=row.enrolment_open,
+        enrolment_starts_at=row.enrolment_starts_at,
+        enrolment_ends_at=row.enrolment_ends_at,
+        navigation=list(row.navigation or []),
+        publish_state=row.publish_state,
+        link_report=row.link_report,
     )
 
 
@@ -153,3 +185,25 @@ def _apply(row: CourseRow, course: Course) -> None:
     row.outline_hash = course.outline_hash
     row.live_outline_hash = course.live_outline_hash
     row.live_version_id = course.live_version_id
+    row.code = course.code
+    row.friendly_name = course.friendly_name
+    row.summary = course.summary
+    row.banner_file_id = course.banner_file_id
+    row.accent_color = course.accent_color
+    row.language = course.language
+    row.level = course.level
+    row.workload_hours_per_week = course.workload_hours_per_week
+    row.duration_weeks = course.duration_weeks
+    row.tags = course.tags
+    row.outcomes = course.outcomes
+    row.requirements = course.requirements
+    row.audience = course.audience
+    row.audience_scope = course.audience_scope
+    row.audience_group_ids = course.audience_group_ids
+    row.enrolment_open = course.enrolment_open
+    row.enrolment_starts_at = course.enrolment_starts_at
+    row.enrolment_ends_at = course.enrolment_ends_at
+    row.navigation = course.navigation
+    # Derived, so it can never disagree with `status` and `live_version_id`.
+    row.publish_state = derive_publish_state(course)
+    row.link_report = course.link_report

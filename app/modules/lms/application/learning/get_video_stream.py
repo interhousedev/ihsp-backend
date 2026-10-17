@@ -58,7 +58,7 @@ class GetVideoStream:
                 block.get("file_id")
                 for block in rendered.blocks
                 if block["id"] == block_id
-                and block["type"] == "video"
+                and block["type"] in ("video", "interactive_video")
                 and block.get("source") == "upload"
             ),
             None,

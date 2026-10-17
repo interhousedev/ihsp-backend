@@ -27,6 +27,7 @@ QuestionType = Literal[
 ]
 FormulaMode = Literal["symbolic", "numeric"]
 VideoSource = Literal["link", "upload"]
+InteractionKind = Literal["question", "note", "link"]
 MAX_TABLE_SIDE = 30
 MAX_VARIABLES = 10
 
@@ -233,8 +234,86 @@ class FlashcardsBlock(BaseModel):
     cards: list[Card] = Field(default_factory=list)
 
 
+class H5PBlock(BaseModel):
+    """An uploaded H5P package, played in the browser with h5p-standalone."""
+
+    id: str = ""
+    type: Literal["h5p"] = "h5p"
+    package_id: str = Field(default="", max_length=36)
+    title: str = Field(default="", max_length=500)
+    main_library: str = Field(default="", max_length=200)
+    passing_score_pct: float = Field(default=0.0, ge=0, le=100)
+
+    @model_validator(mode="after")
+    def _package_id(self) -> "H5PBlock":
+        """An empty package id is a block that has no package yet."""
+        if self.package_id:
+            try:
+                UUID(self.package_id)
+            except ValueError as exc:
+                raise ValueError("h5p package_id must be a UUID") from exc
+        return self
+
+
+class Interaction(BaseModel):
+    """A pause of an interactive video: a question, a note or a link."""
+
+    id: str = ""
+    at_sec: float = Field(ge=0, le=24 * 3600)
+    kind: InteractionKind = "question"
+    text: str = Field(default="", max_length=2000)
+    options: list[Option] = Field(default_factory=list, max_length=10)
+    multiple: bool = False
+    url: str = Field(default="", max_length=2000)
+    points: float = Field(default=1.0, ge=0, le=100)
+
+    @model_validator(mode="after")
+    def _kind_fields(self) -> "Interaction":
+        """Only questions keep options; a link URL must be http(s) when set."""
+        if self.url and not self.url.startswith(("https://", "http://")):
+            raise ValueError("an interactive video link needs an http(s) URL")
+        if self.kind != "question":
+            self.options = []
+        return self
+
+
+class InteractiveVideoBlock(BaseModel):
+    """A video that pauses at timestamps for questions, notes and links."""
+
+    id: str = ""
+    type: Literal["interactive_video"] = "interactive_video"
+    source: VideoSource = "link"
+    url: str = Field(default="", max_length=2000)
+    file_id: str | None = None
+    caption: str = Field(default="", max_length=500)
+    interactions: list[Interaction] = Field(default_factory=list, max_length=100)
+
+    @model_validator(mode="after")
+    def _source_and_order(self) -> "InteractiveVideoBlock":
+        """Same source rules as a video.
+
+        Interactions keep the author's order (the editor matches server ids by
+        position); the player sorts them by ``at_sec``.
+        """
+        if self.source == "upload":
+            try:
+                UUID(self.file_id or "")
+            except ValueError as exc:
+                raise ValueError("an uploaded video needs a valid file_id") from exc
+            self.url = ""
+        else:
+            self.file_id = None
+        return self
+
+
 Block = Annotated[
-    TextBlock | VideoBlock | TestBlock | FlashcardsBlock, Field(discriminator="type")
+    TextBlock
+    | VideoBlock
+    | TestBlock
+    | FlashcardsBlock
+    | H5PBlock
+    | InteractiveVideoBlock,
+    Field(discriminator="type"),
 ]
 
 
@@ -243,6 +322,9 @@ Identified = (
     | VideoBlock
     | TestBlock
     | FlashcardsBlock
+    | H5PBlock
+    | InteractiveVideoBlock
+    | Interaction
     | Question
     | Option
     | Card
@@ -279,6 +361,10 @@ def _items(content: StepContent) -> Iterator[Identified]:
                 yield from question.blanks or []
         elif isinstance(block, FlashcardsBlock):
             yield from block.cards
+        elif isinstance(block, InteractiveVideoBlock):
+            for interaction in block.interactions:
+                yield interaction
+                yield from interaction.options
 
 
 def assign_ids(content: StepContent, existing_ids: set[str]) -> StepContent:

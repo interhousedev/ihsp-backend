@@ -173,8 +173,37 @@ class FlashcardsBlock(_Loose):
     cards: list[BlockCard] = Field(default_factory=list)
 
 
+class H5PBlock(_Loose):
+    """An H5P package block (only shown, as the step already has it)."""
+
+    id: str = ""
+    type: Literal["h5p"] = "h5p"
+    package_id: str = ""
+    title: str = ""
+    main_library: str = ""
+    passing_score_pct: float = 0.0
+
+
+class InteractiveVideoBlock(_Loose):
+    """An interactive video block (only shown, as the step already has it)."""
+
+    id: str = ""
+    type: Literal["interactive_video"] = "interactive_video"
+    source: Literal["link", "upload"] = "link"
+    url: str = ""
+    file_id: str | None = None
+    caption: str = ""
+    interactions: list[dict[str, object]] = Field(default_factory=list)
+
+
 Block = Annotated[
-    TextBlock | VideoBlock | TestBlock | FlashcardsBlock, Field(discriminator="type")
+    TextBlock
+    | VideoBlock
+    | TestBlock
+    | FlashcardsBlock
+    | H5PBlock
+    | InteractiveVideoBlock,
+    Field(discriminator="type"),
 ]
 
 

@@ -1,5 +1,7 @@
 """Request bodies of the LMS learning endpoints (responses are the use case views)."""
 
+from typing import Any
+
 from app.shared.srs import Rating
 
 from pydantic import BaseModel, Field
@@ -40,3 +42,15 @@ class LearningOverrideScoreBody(BaseModel):
 
     score: float = Field(allow_inf_nan=False)
     comment: str = Field(min_length=1, max_length=1000)
+
+
+class LearningH5PResultBody(BaseModel):
+    """`POST .../blocks/{block_id}/h5p-result`: an xAPI statement of the player."""
+
+    statement: dict[str, Any]
+
+
+class LearningInteractionAnswerBody(BaseModel):
+    """`POST .../interactions/{interaction_id}/answer`: the chosen options."""
+
+    option_ids: list[str] = Field(default_factory=list, max_length=10)

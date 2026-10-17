@@ -41,4 +41,7 @@ def _summary(course: Course) -> dict[str, Any]:
         "status": course.status.value,
         "visibility": course.visibility.value,
         "published": course.live_version_id is not None,
+        "summary": course.summary,
+        "accent_color": course.accent_color,
+        "cover_file_id": str(course.cover_file_id) if course.cover_file_id else None,
     }

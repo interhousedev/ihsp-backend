@@ -27,6 +27,23 @@ class LearningCourse:
     status: str
     live_version_id: UUID | None
     updated_at: datetime | None = None
+    friendly_name: str | None = None
+    summary: str = ""
+    banner_file_id: UUID | None = None
+    accent_color: str | None = None
+    language: str = "ru"
+    level: str | None = None
+    workload_hours_per_week: int | None = None
+    duration_weeks: int | None = None
+    tags: tuple[str, ...] = ()
+    outcomes: tuple[str, ...] = ()
+    requirements: tuple[str, ...] = ()
+    audience: tuple[str, ...] = ()
+    audience_scope: str = "link"
+    enrolment_open: bool = True
+    enrolment_starts_at: datetime | None = None
+    enrolment_ends_at: datetime | None = None
+    publish_state: str = "draft"
 
     @property
     def is_open_for_students(self) -> bool:

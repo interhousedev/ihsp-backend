@@ -5,9 +5,14 @@ from decimal import Decimal
 from uuid import UUID
 
 from app.modules.lms.application.learning.revision_loading import load_rendered_many
+from app.modules.lms.domain.learning.block_results import stored_result
 from app.modules.lms.domain.learning.entities import LiveVersion
 from app.modules.lms.domain.learning.live import RenderCache
-from app.modules.lms.domain.learning.points import earned_points, sum_points
+from app.modules.lms.domain.learning.points import (
+    earned_points,
+    scored_earned_points,
+    sum_points,
+)
 from app.modules.lms.ports.learning.unit_of_work import LearningUnitOfWork
 
 
@@ -54,15 +59,30 @@ async def load_course_points(
         if user_id is not None
         else {}
     )
+    cards = (
+        await uow.states.cards_by_step(user_id, [s.step_id for s in steps])
+        if user_id is not None
+        else {}
+    )
     result: dict[UUID, StepPoints] = {}
     for step in steps:
         render = renders.get(step.revision_id)
         blocks = render.test_points if render is not None else {}
+        scored = render.scored_points if render is not None else {}
+        step_cards = cards.get(step.step_id, {})
         result[step.step_id] = StepPoints(
-            total=sum_points(blocks.values()),
+            total=sum_points((*blocks.values(), *scored.values())),
             earned=sum_points(
-                earned_points(best.get((step.step_id, block_id)), total)
-                for block_id, total in blocks.items()
+                (
+                    *(
+                        earned_points(best.get((step.step_id, block_id)), total)
+                        for block_id, total in blocks.items()
+                    ),
+                    *(
+                        scored_earned_points(stored_result(step_cards, block_id), total)
+                        for block_id, total in scored.items()
+                    ),
+                )
             ),
         )
     return CoursePoints(steps=result)

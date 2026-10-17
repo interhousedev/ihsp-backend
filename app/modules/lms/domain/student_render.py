@@ -4,6 +4,8 @@ from typing import Any
 
 from app.modules.lms.domain.step_content import (
     FlashcardsBlock,
+    H5PBlock,
+    InteractiveVideoBlock,
     Question,
     StepContent,
     TestBlock,
@@ -26,9 +28,47 @@ def render_step(content: StepContent, *, revision_id: str) -> dict[str, Any]:
 
 
 def _render_block(
-    block: TextBlock | VideoBlock | TestBlock | FlashcardsBlock,
+    block: (
+        TextBlock
+        | VideoBlock
+        | TestBlock
+        | FlashcardsBlock
+        | H5PBlock
+        | InteractiveVideoBlock
+    ),
 ) -> dict[str, Any]:
     """Render one block without correctness data."""
+    if isinstance(block, H5PBlock):
+        return {
+            "id": block.id,
+            "type": "h5p",
+            "package_id": block.package_id,
+            "title": block.title,
+            "main_library": block.main_library,
+            "passing_score_pct": block.passing_score_pct,
+        }
+    if isinstance(block, InteractiveVideoBlock):
+        return {
+            "id": block.id,
+            "type": "interactive_video",
+            "source": block.source,
+            "url": block.url,
+            "file_id": block.file_id,
+            "caption": block.caption,
+            "interactions": [
+                {
+                    "id": item.id,
+                    "at_sec": item.at_sec,
+                    "kind": item.kind,
+                    "text": item.text,
+                    "url": item.url,
+                    "multiple": item.multiple,
+                    "points": item.points,
+                    "options": [{"id": o.id, "text": o.text} for o in item.options],
+                }
+                for item in sorted(block.interactions, key=lambda i: i.at_sec)
+            ],
+        }
     if isinstance(block, TextBlock):
         return {"id": block.id, "type": "text", "markdown": block.markdown}
     if isinstance(block, VideoBlock):

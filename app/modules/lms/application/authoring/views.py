@@ -92,6 +92,23 @@ class PreviewStepView(BaseModel):
     points_earned: float = 0.0
 
 
+class H5PPackageView(BaseModel):
+    """An uploaded, unpacked H5P package; the editor puts its id into an H5P block."""
+
+    package_id: str
+    title: str
+    main_library: str
+    files: int
+    byte_size: int
+
+
+class H5PLaunchView(BaseModel):
+    """Where the player loads an H5P package from (signed, short-lived)."""
+
+    base_url: str
+    expires_in: int
+
+
 class VideoStreamView(BaseModel):
     """A short-lived URL that streams an uploaded video (supports ``Range``)."""
 

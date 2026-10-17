@@ -2,11 +2,17 @@
 
 from dataclasses import dataclass
 
+from app.modules.lms.application.h5p_links import H5PLinks
+from app.modules.lms.application.learning.answer_interaction import (
+    AnswerInteraction,
+)
 from app.modules.lms.application.learning.attempt_finisher import AttemptFinisher
 from app.modules.lms.application.learning.course_page import CoursePageBuilder
 from app.modules.lms.application.learning.enroll_in_course import EnrollInCourse
 from app.modules.lms.application.learning.get_attempt import GetAttempt
+from app.modules.lms.application.learning.get_course_landing import GetCourseLanding
 from app.modules.lms.application.learning.get_course_page import GetCoursePage
+from app.modules.lms.application.learning.get_h5p_launch import GetH5PLaunch
 from app.modules.lms.application.learning.get_step_view import GetStepView
 from app.modules.lms.application.learning.get_video_stream import GetVideoStream
 from app.modules.lms.application.learning.join_course import JoinCourse
@@ -21,6 +27,7 @@ from app.modules.lms.application.learning.list_my_courses import ListMyCourses
 from app.modules.lms.application.learning.mark_step_viewed import MarkStepViewed
 from app.modules.lms.application.learning.next_card import NextCard
 from app.modules.lms.application.learning.override_score import OverrideScore
+from app.modules.lms.application.learning.record_h5p_result import RecordH5PResult
 from app.modules.lms.application.learning.review_card import ReviewCard
 from app.modules.lms.application.learning.save_answers import SaveAnswers
 from app.modules.lms.application.learning.source_reader import LmsSourceReaderImpl
@@ -48,6 +55,10 @@ class LearningServices:
     join_course: JoinCourse
     get_step_view: GetStepView
     get_video_stream: GetVideoStream
+    get_h5p_launch: GetH5PLaunch
+    record_h5p_result: RecordH5PResult
+    answer_interaction: AnswerInteraction
+    h5p_links: H5PLinks
     mark_step_viewed: MarkStepViewed
     start_attempt: StartAttempt
     save_answers: SaveAnswers
@@ -59,6 +70,7 @@ class LearningServices:
     override_score: OverrideScore
     source_reader: LmsSourceReaderImpl
     list_broadcast_audience: ListBroadcastAudience
+    get_course_landing: GetCourseLanding
 
 
 def build_learning(
@@ -67,6 +79,7 @@ def build_learning(
     identity: IdentityDirectory,
     preview_revisions: PreviewRevisions,
     files: FilesApi | None = None,
+    h5p_links: H5PLinks | None = None,
 ) -> LearningServices:
     """Build the learning use cases.
 
@@ -89,6 +102,7 @@ def build_learning(
     completion = StepCompletion(cache)
     finisher = AttemptFinisher(completion)
     pages = CoursePageBuilder(identity, clock, cache)
+    links = h5p_links or H5PLinks(b"lms-h5p-test-key", clock, None)
     return LearningServices(
         list_catalog=ListCatalog(uow_factory),
         list_my_courses=ListMyCourses(uow_factory, clock),
@@ -97,6 +111,10 @@ def build_learning(
         join_course=JoinCourse(uow_factory, pages, deps.rate_limiter, deps.kicker),
         get_step_view=GetStepView(uow_factory, clock, cache, finisher, counters),
         get_video_stream=GetVideoStream(uow_factory, cache, files),
+        get_h5p_launch=GetH5PLaunch(uow_factory, cache, links),
+        record_h5p_result=RecordH5PResult(uow_factory, clock, completion),
+        answer_interaction=AnswerInteraction(uow_factory, clock, completion),
+        h5p_links=links,
         mark_step_viewed=MarkStepViewed(uow_factory, clock, cache),
         start_attempt=StartAttempt(uow_factory, clock, finisher, preview_revisions),
         save_answers=SaveAnswers(uow_factory, clock, finisher),
@@ -108,4 +126,5 @@ def build_learning(
         override_score=OverrideScore(uow_factory, clock, identity, completion),
         source_reader=LmsSourceReaderImpl(uow_factory),
         list_broadcast_audience=ListBroadcastAudience(uow_factory),
+        get_course_landing=GetCourseLanding(uow_factory, identity, clock),
     )

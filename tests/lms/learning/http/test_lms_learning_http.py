@@ -64,6 +64,9 @@ async def test_the_catalog_and_my_courses_follow_the_contract(
             "progress_pct": None,
             "visibility": "public",
             "updated_at": catalog.json()[0]["updated_at"],
+            "summary": "",
+            "accent_color": None,
+            "cover_file_id": None,
         }
     ]
     assert catalog.json()[0]["updated_at"].endswith("Z")

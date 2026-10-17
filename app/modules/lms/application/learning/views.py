@@ -29,6 +29,9 @@ class LearningCourseCardView(BaseModel):
     progress_pct: int | None
     visibility: Literal["public", "invite"]
     updated_at: datetime | None
+    summary: str = ""
+    accent_color: str | None = None
+    cover_file_id: UUID | None = None
 
 
 class LearningCourseStaffItemView(BaseModel):
@@ -210,11 +213,91 @@ class LearningFlashcardsBlockView(BaseModel):
     passed: bool = False
 
 
+class LearningBlockResultView(BaseModel):
+    """My result of an H5P or interactive video block (best H5P score)."""
+
+    score: float = 0.0
+    max_score: float = 0.0
+    completed: bool = False
+
+
+class LearningH5PBlockView(BaseModel):
+    """An H5P block; ``GET .../h5p`` returns the signed base URL of the package."""
+
+    id: str
+    type: Literal["h5p"]
+    package_id: str
+    title: str = ""
+    main_library: str = ""
+    passing_score_pct: float = 0.0
+    result: LearningBlockResultView | None = None
+    passed: bool = False
+
+
+class LearningInteractionOptionView(BaseModel):
+    """An answer option of an interactive video question (no correctness)."""
+
+    id: str
+    text: str
+
+
+class LearningInteractionView(BaseModel):
+    """A pause of an interactive video."""
+
+    id: str
+    at_sec: float
+    kind: Literal["question", "note", "link"]
+    text: str = ""
+    url: str = ""
+    multiple: bool = False
+    points: float = 1.0
+    options: list[LearningInteractionOptionView] = Field(default_factory=list)
+
+
+class LearningInteractionAnswerView(BaseModel):
+    """My first answer to an interactive video question."""
+
+    option_ids: list[str]
+    correct: bool
+
+
+class LearningInteractionResultView(BaseModel):
+    """The graded answer, the right options (shown after answering) and the total."""
+
+    answer: LearningInteractionAnswerView
+    correct_option_ids: list[str]
+    result: LearningBlockResultView
+
+
+class LearningInteractiveVideoBlockView(BaseModel):
+    """An interactive video block with my answers so far."""
+
+    id: str
+    type: Literal["interactive_video"]
+    source: Literal["link", "upload"]
+    url: str
+    file_id: str | None = None
+    caption: str = ""
+    interactions: list[LearningInteractionView] = Field(default_factory=list)
+    answers: dict[str, LearningInteractionAnswerView] = Field(default_factory=dict)
+    result: LearningBlockResultView | None = None
+    passed: bool = False
+
+
+class H5PLaunchView(BaseModel):
+    """Where the player loads an H5P package from (signed, short-lived)."""
+
+    base_url: str
+    expires_in: int
+
+
 StepBlockView = Annotated[
     LearningTextBlockView
     | LearningVideoBlockView
     | LearningQuizBlockView
-    | LearningFlashcardsBlockView,
+    | LearningFlashcardsBlockView
+    | LearningH5PBlockView
+    | LearningInteractiveVideoBlockView,
     Field(discriminator="type"),
 ]
 
@@ -302,3 +385,65 @@ class LearningCourseStudentView(BaseModel):
     progress_pct: int
     completed_at: datetime | None
     attempts: list[LearningStudentAttemptView]
+
+
+# - - - Landing page - - -
+
+
+class LearningLandingEnrolmentView(BaseModel):
+    """Enrolment window and whether the viewer can join now."""
+
+    open: bool
+    starts_at: datetime | None
+    ends_at: datetime | None
+    can_enrol: bool
+    enrolled: bool
+
+
+class LearningLandingStepView(BaseModel):
+    """A lesson in the syllabus."""
+
+    title: str
+
+
+class LearningLandingSectionView(BaseModel):
+    """A syllabus section with its lesson titles."""
+
+    title: str
+    steps: list[LearningLandingStepView]
+
+
+class LearningLandingAuthorView(BaseModel):
+    """A staff member shown on the landing page."""
+
+    user: LearningPersonRefView
+    role: str
+
+
+class LearningLandingView(BaseModel):
+    """`CourseLanding`: the public page of a course."""
+
+    id: UUID
+    slug: str
+    title: str
+    friendly_name: str | None
+    summary: str
+    description: str
+    cover_file_id: UUID | None
+    cover_url: str | None
+    banner_file_id: UUID | None
+    banner_url: str | None
+    accent_color: str | None
+    language: str
+    level: str | None
+    workload_hours_per_week: int | None
+    duration_weeks: int | None
+    tags: list[str]
+    outcomes: list[str]
+    requirements: list[str]
+    audience: list[str]
+    publish_state: str
+    preview: bool
+    authors: list[LearningLandingAuthorView]
+    syllabus: list[LearningLandingSectionView]
+    enrolment: LearningLandingEnrolmentView
