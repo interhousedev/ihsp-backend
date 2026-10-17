@@ -59,7 +59,7 @@ class ListSubjects:
             counts = (
                 {}
                 if rng is None
-                else await reader.attendance_counts(actor.user_id, *rng)
+                else await reader.attendance_counts(actor.user_id, *rng, semester=sem)
             )
             teachers = (
                 {} if rng is None else await reader.teacher_ids(ctx, subject_ids, *rng)
@@ -103,5 +103,6 @@ def _card(
         "emis_rating": None if row is None else row.emis_rating,
         "absences": 0 if count is None else count.absences,
         "lates": 0 if count is None else count.lates,
+        "attendance_source": "platform" if count is None else count.source,
         "next_lesson": None if lesson is None else view.lesson_item(lesson),
     }

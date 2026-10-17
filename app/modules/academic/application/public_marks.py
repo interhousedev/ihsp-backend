@@ -53,7 +53,9 @@ class MarksQueriesImpl:
             subject_ids = set(rows) | set(ctx.curriculum_subject_ids)
             rng = await semester_range(reader, ctx, sem, local_today(self._clock))
             counts = (
-                {} if rng is None else await reader.attendance_counts(user_id, *rng)
+                {}
+                if rng is None
+                else await reader.attendance_counts(user_id, *rng, semester=sem)
             )
             teachers = (
                 {} if rng is None else await reader.teacher_ids(ctx, subject_ids, *rng)

@@ -5,6 +5,7 @@ from app.modules.academic.infrastructure.orm.curriculum import (
     GroupCurriculum,
     GroupCurriculumSubject,
 )
+from app.modules.academic.infrastructure.orm.emis_attendance import EmisAttendance
 from app.modules.academic.infrastructure.orm.group import Group
 from app.modules.academic.infrastructure.orm.homework_todo import HomeworkTodo
 from app.modules.academic.infrastructure.orm.lesson import Lesson
@@ -19,6 +20,7 @@ from app.modules.academic.infrastructure.orm.timetable_entry import TimetableEnt
 
 __all__ = [
     "Assessment",
+    "EmisAttendance",
     "Group",
     "GroupCurriculum",
     "GroupCurriculumSubject",

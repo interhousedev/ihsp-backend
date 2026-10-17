@@ -84,6 +84,7 @@ class SubjectLesson(LessonItem):
 
     marks: list[MarkItem]
     attendance: AttendanceValue
+    attendance_source: Literal["emis", "platform"] = "platform"
     homework_text: str | None
 
 
@@ -112,6 +113,7 @@ class SubjectCardResponse(BaseModel):
     emis_rating: int | None
     absences: int
     lates: int = 0
+    attendance_source: Literal["emis", "platform", "mixed"] = "platform"
     next_lesson: LessonItem | None
 
 
@@ -133,6 +135,7 @@ class SubjectDetailResponse(BaseModel):
     semester_mark: float | None
     emis_rating: int | None
     absence_rate: float | None
+    attendance_source: Literal["emis", "platform", "mixed"] = "platform"
     lessons: list[SubjectLesson]
     marks: list[MarkItem]
     materials: list[ResourceItem]
@@ -230,3 +233,42 @@ class LessonResultRow(BaseModel):
     lesson_id: UUID
     attendance: Literal["present", "absent", "late"] | None
     mark: int | None
+
+
+class GroupProgressCell(BaseModel):
+    """One student's EMIS result and attendance in one subject."""
+
+    subject_id: UUID
+    semester_mark: float | None
+    midterm_avg: float | None
+    final_avg: float | None
+    lesson_avg: float | None
+    emis_rating: int | None
+    marks_count: int
+    absences: int
+    lessons: int
+    absence_rate: float | None
+    attendance_source: Literal["emis", "platform", "mixed"] = "platform"
+
+
+class GroupProgressStudent(BaseModel):
+    """A student's row: GPA, total attendance and one cell per subject."""
+
+    student: PersonRef
+    gpa: float | None
+    absences: int
+    lessons: int
+    absence_rate: float | None
+    attendance_source: Literal["emis", "platform", "mixed"] = "platform"
+    cells: list[GroupProgressCell]
+
+
+class GroupProgressResponse(BaseModel):
+    """Marks and attendance of a group for its curator or head student."""
+
+    group_id: UUID
+    group_name: str
+    semester: int
+    semesters: list[int]
+    subjects: list[SubjectRef]
+    students: list[GroupProgressStudent]

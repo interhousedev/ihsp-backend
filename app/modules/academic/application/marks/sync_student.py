@@ -4,9 +4,15 @@ from uuid import UUID
 
 from app.modules.academic.application.marks.apply_ratings import ApplyRatings
 from app.modules.academic.application.marks.ports.unit_of_work import (
+    MarksUnitOfWork,
     MarksUowFactory,
 )
-from app.modules.academic.domain.marks.alerts import build_alerts
+from app.modules.academic.domain.marks.alerts import (
+    AddedMark,
+    build_alerts,
+    curator_exam_alerts,
+    low_exam_marks,
+)
 from app.modules.academic.domain.marks.sync import (
     FetchedRatings,
     StudentSyncState,
@@ -195,6 +201,7 @@ class SyncStudent:
         async with self._uow_factory() as uow:
             await uow.students.lock(state.user_id)
             result = await self._apply.execute(uow, state, fetched, locale=prefs.locale)
+            await self._save_attendance(uow, state.user_id, fetched)
             if mode != "backfill":
                 uow.notify(
                     *build_alerts(
@@ -206,11 +213,53 @@ class SyncStudent:
                         gpa_changes=result.gpa_changes,
                     )
                 )
+                uow.notify(
+                    *await self._curator_alerts(uow, state.user_id, result.added)
+                )
             await uow.students.record_success(
                 state.user_id, at=self._clock.now(), backfilled=mode == "backfill"
             )
             await uow.commit()
         counters.marks_new += len(result.added)
+
+    async def _save_attendance(
+        self, uow: MarksUnitOfWork, user_id: UUID, fetched: list[FetchedRatings]
+    ) -> None:
+        """Store the attendance EMIS sent; subjects without any keep the rosters."""
+        now = self._clock.now()
+        for item in fetched:
+            ratings = item.ratings
+            if ratings.absent_dates is None and ratings.absence_total is None:
+                continue
+            await uow.emis_attendance.save(
+                user_id,
+                item.subject.subject_id,
+                ratings.semester,
+                absent_dates=ratings.absent_dates,
+                absence_total=ratings.absence_total,
+                at=now,
+            )
+
+    async def _curator_alerts(
+        self, uow: MarksUnitOfWork, user_id: UUID, added: list[AddedMark]
+    ) -> list[NotificationDraft]:
+        """Tell the group's curator about new ПК/ИК marks of 2 or 3."""
+        if not low_exam_marks(added):
+            return []
+        ctx = await uow.reader.student_context(user_id)
+        group = None if ctx is None else await uow.reader.group_roles(ctx.group_id)
+        if group is None or group.curator_id is None:
+            return []
+        user = await self._identity.get_user(user_id)
+        name = "" if user is None else f"{user.last_name} {user.first_name}".strip()
+        return curator_exam_alerts(
+            curator_id=group.curator_id,
+            student_id=user_id,
+            student_name=name,
+            group_id=group.id,
+            group_name=group.name,
+            added=added,
+        )
 
     async def _record_reauth(self, user_id: UUID) -> None:
         """EMIS rejected the credentials: count it and tell the student once a day."""

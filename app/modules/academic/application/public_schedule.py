@@ -126,6 +126,10 @@ class ScheduleQueriesImpl:
         """Return the groups the teacher curates."""
         return await self.reader.curated_group_ids(teacher_id)
 
+    async def existing_group_ids(self, ids: Sequence[UUID]) -> set[UUID]:
+        """Return the subset of ``ids`` that are groups."""
+        return await self.reader.existing_group_ids(ids)
+
     async def projected_lessons_for_student(
         self, user_id: UUID, start: dt.date, end: dt.date
     ) -> list[LessonRef]:

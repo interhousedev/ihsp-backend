@@ -1,6 +1,11 @@
 """Errors of the student-facing marks views and the sync controls."""
 
-from app.shared.base_error import ConflictError, NotFoundError, ValidationFailedError
+from app.shared.base_error import (
+    ConflictError,
+    ForbiddenError,
+    NotFoundError,
+    ValidationFailedError,
+)
 
 
 class StudentNotFoundError(NotFoundError):
@@ -29,3 +34,10 @@ class InvalidWhatIfError(ValidationFailedError):
 
     code = "academic/invalid-what-if"
     message_key = "academic-invalid-what-if"
+
+
+class NotHeadStudentError(ForbiddenError):
+    """The caller is not the head student of their group."""
+
+    code = "academic/not-head-student"
+    message_key = "academic-not-head-student"

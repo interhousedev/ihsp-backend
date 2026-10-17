@@ -5,6 +5,9 @@ from dataclasses import dataclass
 from app.modules.academic.application.marks.apply_ratings import ApplyRatings
 from app.modules.academic.application.marks.backfill_student import BackfillStudent
 from app.modules.academic.application.marks.get_day_grades import GetDayGrades
+from app.modules.academic.application.marks.get_group_progress import (
+    GetGroupProgress,
+)
 from app.modules.academic.application.marks.get_record_book import GetRecordBook
 from app.modules.academic.application.marks.get_semester_grades import (
     GetSemesterGrades,
@@ -62,6 +65,7 @@ class MarksServices:
     get_day_grades: GetDayGrades
     get_record_book: GetRecordBook
     get_sync_failures: GetSyncFailures
+    get_group_progress: GetGroupProgress
     queries: MarksQueriesImpl
 
 
@@ -144,6 +148,9 @@ def build_marks(
         get_day_grades=GetDayGrades(uow_factory=uow_factory, identity=identity),
         get_record_book=GetRecordBook(uow_factory=uow_factory, identity=identity),
         get_sync_failures=GetSyncFailures(uow_factory=uow_factory),
+        get_group_progress=GetGroupProgress(
+            uow_factory=uow_factory, identity=identity, clock=deps.clock
+        ),
         queries=MarksQueriesImpl(
             uow_factory=uow_factory, identity=identity, clock=deps.clock
         ),

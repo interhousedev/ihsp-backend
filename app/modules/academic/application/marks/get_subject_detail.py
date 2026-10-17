@@ -14,6 +14,7 @@ from app.modules.academic.application.marks.view_context import (
     num,
 )
 from app.modules.academic.domain.marks.attendance import attendance_state
+from app.modules.academic.domain.marks.attendance_merge import EmisAttendanceReport
 from app.modules.academic.domain.marks.errors import (
     StudentNotFoundError,
     SubjectNotFoundError,
@@ -84,8 +85,9 @@ class GetSubjectDetail:
             counts = (
                 {}
                 if rng is None
-                else await reader.attendance_counts(actor.user_id, *rng)
+                else await reader.attendance_counts(actor.user_id, *rng, semester=sem)
             )
+            emis = await reader.emis_attendance(actor.user_id, sem)
             known = (
                 subject_id in ctx.curriculum_subject_ids
                 or row is not None
@@ -116,6 +118,7 @@ class GetSubjectDetail:
             marks,
             resources,
             counts.get(subject_id),
+            emis.get(subject_id),
         )
 
 
@@ -129,6 +132,7 @@ def _detail(
     marks: Sequence[MarkRow],
     resources: dict[UUID, list[ResourceRef]],
     count: AttendanceCount | None,
+    emis: EmisAttendanceReport | None = None,
 ) -> dict[str, Any]:
     by_lesson: dict[UUID, list[dict[str, Any]]] = {}
     for mark in marks:
@@ -151,7 +155,10 @@ def _detail(
         "semester_mark": None if row is None else num(row.value),
         "emis_rating": None if row is None else row.emis_rating,
         "absence_rate": _rate(count),
-        "lessons": [_lesson(view, student_id, lesson, by_lesson) for lesson in lessons],
+        "attendance_source": "platform" if count is None else count.source,
+        "lessons": [
+            _lesson(view, student_id, lesson, by_lesson, emis) for lesson in lessons
+        ],
         "marks": [view.mark_item(m) for m in marks],
         "materials": _materials(view, lessons, resources),
     }
@@ -168,6 +175,7 @@ def _lesson(
     student_id: UUID,
     lesson: LessonRow,
     marks: dict[UUID, list[dict[str, Any]]],
+    emis: EmisAttendanceReport | None = None,
 ) -> dict[str, Any]:
     item = view.lesson_item(lesson)
     item["marks"] = marks.get(lesson.id, [])
@@ -178,6 +186,12 @@ def _lesson(
         lesson.attendance_excused,
         lesson.attendance_late,
     )
+    item["attendance_source"] = "platform"
+    if emis is not None and emis.absent_dates and lesson.date in emis.absent_dates:
+        # EMIS has priority: it marked the student absent on this day.
+        if item["attendance"] != "excused":
+            item["attendance"] = "absent"
+        item["attendance_source"] = "emis"
     item["homework_text"] = lesson.homework_text
     return item
 

@@ -1,6 +1,7 @@
 """The marks unit of work over one SQLAlchemy session."""
 
 from app.modules.academic.infrastructure.marks.repositories import (
+    emis_attendance_repository,
     lesson_matcher,
     marks_reader,
     marks_repository,
@@ -20,6 +21,7 @@ class SqlMarksUnitOfWork(SqlUnitOfWork):
     lessons: lesson_matcher.SqlLessonMatcher
     sync_runs: sync_runs_repository.SqlSyncRunsRepository
     reader: marks_reader.SqlMarksReader
+    emis_attendance: emis_attendance_repository.SqlEmisAttendanceRepository
 
     def _init_repos(self) -> None:
         """Create the repositories bound to the open session."""
@@ -29,3 +31,6 @@ class SqlMarksUnitOfWork(SqlUnitOfWork):
         self.lessons = lesson_matcher.SqlLessonMatcher(self.session)
         self.sync_runs = sync_runs_repository.SqlSyncRunsRepository(self.session)
         self.reader = marks_reader.SqlMarksReader(self.session)
+        self.emis_attendance = emis_attendance_repository.SqlEmisAttendanceRepository(
+            self.session
+        )

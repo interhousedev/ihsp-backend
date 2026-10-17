@@ -5,6 +5,7 @@ from types import TracebackType
 from typing import Protocol, Self
 
 from app.modules.academic.application.marks.ports.repositories import (
+    EmisAttendanceRepository,
     LessonMatcher,
     MarksReader,
     MarksRepository,
@@ -41,6 +42,11 @@ class MarksUnitOfWork(Protocol):
     @property
     def sync_runs(self) -> SyncRunsRepository:
         """Sync run summaries."""
+        ...
+
+    @property
+    def emis_attendance(self) -> EmisAttendanceRepository:
+        """Attendance the sync read from EMIS."""
         ...
 
     @property

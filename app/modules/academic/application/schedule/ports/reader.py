@@ -146,6 +146,10 @@ class ScheduleReader(Protocol):
         """Return the active groups the teacher curates."""
         ...
 
+    async def existing_group_ids(self, ids: Sequence[UUID]) -> set[UUID]:
+        """Return the subset of ``ids`` that are groups."""
+        ...
+
     async def list_lessons(
         self,
         filters: LessonFilters,

@@ -4,10 +4,14 @@ from app.interfaces.http.v1.admin_schedule.groups.schemas import (
     GroupDetailResponse,
     GroupItemResponse,
 )
+from app.interfaces.http.v1.me_marks.schemas import GroupProgressResponse
 from app.interfaces.http.v1.staff_groups.handlers.assign_subgroups import (
     assign_subgroups,
 )
 from app.interfaces.http.v1.staff_groups.handlers.get_group import get_group
+from app.interfaces.http.v1.staff_groups.handlers.get_group_progress import (
+    get_group_progress,
+)
 from app.interfaces.http.v1.staff_groups.handlers.list_groups import list_groups
 
 from fastapi import APIRouter
@@ -24,4 +28,10 @@ router.add_api_route(
     assign_subgroups,
     methods=["PUT"],
     response_model=GroupDetailResponse,
+)
+router.add_api_route(
+    "/{group_id}/progress",
+    get_group_progress,
+    methods=["GET"],
+    response_model=GroupProgressResponse,
 )

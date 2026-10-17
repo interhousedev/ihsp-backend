@@ -4,7 +4,7 @@ import datetime as dt
 from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any
+from typing import Any, Literal
 from uuid import UUID
 
 
@@ -94,3 +94,16 @@ class AttendanceCount:
     absences: int
     with_attendance: int
     lates: int = 0
+    source: Literal["emis", "platform", "mixed"] = "platform"
+
+
+@dataclass(frozen=True, slots=True)
+class GroupRoles:
+    """A group with its curator, head student and active students."""
+
+    id: UUID
+    name: str
+    current_semester: int | None
+    curator_id: UUID | None
+    head_student_id: UUID | None
+    student_ids: tuple[UUID, ...]

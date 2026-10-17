@@ -9,6 +9,7 @@ from uuid import UUID
 from app.modules.academic.domain.marks.diff import MarkKey
 from app.modules.academic.domain.marks.records import ResultSnapshot
 from app.modules.academic.domain.marks.results import drop_amount, formula_switched
+from app.shared.contracts.emis import EmisMarkType
 from app.shared.contracts.identity import UserPreferences
 from app.shared.notifications import NotificationDraft, NotificationType
 
@@ -294,3 +295,46 @@ def build_alerts(
     drafts += _subject_below(user_id, prefs, subject_changes)
     drafts += _mark_below(user_id, prefs, added)
     return drafts
+
+
+LOW_EXAM_VALUES = frozenset({2, 3})
+EXAM_TYPES = frozenset({EmisMarkType.MIDTERM, EmisMarkType.FINAL})
+
+
+def low_exam_marks(added: Sequence[AddedMark]) -> list[AddedMark]:
+    """Return the new ПК (midterm) and ИК (final) marks of 2 or 3."""
+    return [
+        m for m in added if m.key.type in EXAM_TYPES and m.key.value in LOW_EXAM_VALUES
+    ]
+
+
+def curator_exam_alerts(
+    *,
+    curator_id: UUID,
+    student_id: UUID,
+    student_name: str,
+    group_id: UUID,
+    group_name: str,
+    added: Sequence[AddedMark],
+) -> list[NotificationDraft]:
+    """One `curator_exam_mark` per low exam mark, for the student's curator."""
+    return [
+        NotificationDraft(
+            user_id=curator_id,
+            type=NotificationType.CURATOR_EXAM_MARK,
+            payload={
+                **_mark_payload(m),
+                "semester": m.semester,
+                "student_id": str(student_id),
+                "student_name": student_name,
+                "group_id": str(group_id),
+                "group_name": group_name,
+            },
+            dedupe_key=(
+                f"exam_low:{curator_id}:{student_id}:{m.subject_id}:{m.semester}:"
+                f"{m.key.type.value}:{m.key.date.isoformat()}:{m.key.value}:"
+                f"{m.key.ordinal}"
+            ),
+        )
+        for m in low_exam_marks(added)
+    ]

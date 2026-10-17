@@ -9,6 +9,7 @@ from app.modules.academic.domain.marks.alerts import (
     GpaChange,
     SubjectChange,
     build_alerts,
+    curator_exam_alerts,
 )
 from app.modules.academic.domain.marks.diff import MarkKey
 from app.modules.academic.domain.marks.records import ResultSnapshot
@@ -171,3 +172,30 @@ def test_dedupe_keys_carry_the_user() -> None:
     gpa = GpaChange(3, Decimal("4.62"), Decimal("4.55"))
     drafts = _build(prefs, None, None, [gpa])
     assert drafts and all(str(USER) in d.dedupe_key for d in drafts)
+
+
+def test_curator_exam_alerts_only_for_low_midterm_and_final() -> None:
+    """ПК/ИК marks of 2 or 3 alert the curator; lesson marks and 4 or 5 do not."""
+    curator, group = UUID(int=31), UUID(int=32)
+    added = [
+        _mark(MATH, "Math", 2),
+        _mark(MATH, "Math", 3, EmisMarkType.MIDTERM),
+        _mark(MATH, "Math", 4, EmisMarkType.MIDTERM),
+        _mark(PHYSICS, "Physics", 2, EmisMarkType.FINAL),
+        _mark(PHYSICS, "Physics", 5, EmisMarkType.FINAL),
+    ]
+    drafts = curator_exam_alerts(
+        curator_id=curator,
+        student_id=USER,
+        student_name="Karimov Ali",
+        group_id=group,
+        group_name="2TN2",
+        added=added,
+    )
+    assert [(d.payload["type"], d.payload["value"]) for d in drafts] == [
+        ("midterm", 3),
+        ("final", 2),
+    ]
+    assert {d.user_id for d in drafts} == {curator}
+    assert {d.type for d in drafts} == {NotificationType.CURATOR_EXAM_MARK}
+    assert len({d.dedupe_key for d in drafts}) == 2

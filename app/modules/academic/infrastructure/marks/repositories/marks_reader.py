@@ -7,8 +7,14 @@ from typing import Any
 from uuid import UUID
 
 from app.modules.academic.domain.audience import student_keys
+from app.modules.academic.domain.marks.attendance_merge import (
+    EmisAttendanceReport,
+    RosterEntry,
+    merge_attendance,
+)
 from app.modules.academic.domain.marks.read_models import (
     AttendanceCount,
+    GroupRoles,
     LessonRow,
     MarkRow,
     ResultRow,
@@ -16,6 +22,7 @@ from app.modules.academic.domain.marks.read_models import (
     SubjectInfo,
 )
 from app.modules.academic.infrastructure.marks.sql_helpers import has_uuid, overlaps
+from app.modules.academic.infrastructure.orm.emis_attendance import EmisAttendance
 from app.modules.academic.infrastructure.orm.group import Group
 from app.modules.academic.infrastructure.orm.lesson import Lesson
 from app.modules.academic.infrastructure.orm.mark import Mark
@@ -276,28 +283,57 @@ class SqlMarksReader:
         return {r.subject_id: _lesson_row(r) for r in rows}
 
     async def attendance_counts(
-        self, student_id: UUID, start: dt.date | None, end: dt.date | None
+        self,
+        student_id: UUID,
+        start: dt.date | None,
+        end: dt.date | None,
+        *,
+        semester: int | None = None,
     ) -> dict[UUID, AttendanceCount]:
-        """Return absences and counted lessons per subject."""
-        stmt = (
-            sa.select(
-                Lesson.subject_id,
-                sa.func.count().filter(has_uuid(Lesson.attendance_absent, student_id)),
-                sa.func.count(),
-                sa.func.count().filter(has_uuid(Lesson.attendance_late, student_id)),
-            )
-            .where(has_uuid(Lesson.attendance_roster, student_id))
-            .group_by(Lesson.subject_id)
-        )
+        """Return absences and counted lessons per subject.
+
+        With a semester, EMIS attendance of that semester overrides the rosters.
+        """
+        stmt = sa.select(
+            Lesson.subject_id,
+            Lesson.date,
+            has_uuid(Lesson.attendance_absent, student_id),
+            has_uuid(Lesson.attendance_late, student_id),
+        ).where(has_uuid(Lesson.attendance_roster, student_id))
         if start is not None:
             stmt = stmt.where(Lesson.date >= start)
         if end is not None:
             stmt = stmt.where(Lesson.date <= end)
-        return {
-            row[0]: AttendanceCount(
-                absences=row[1], with_attendance=row[2], lates=row[3]
+        roster: dict[UUID, list[RosterEntry]] = {}
+        for row in (await self.session.execute(stmt)).all():
+            roster.setdefault(row[0], []).append(
+                RosterEntry(row[1], bool(row[2]), bool(row[3]))
             )
-            for row in (await self.session.execute(stmt)).all()
+        emis = (
+            {} if semester is None else await self.emis_attendance(student_id, semester)
+        )
+        return {
+            sid: merge_attendance(
+                roster.get(sid, []),
+                None if sid not in emis else emis[sid].within(start, end),
+            )
+            for sid in roster.keys() | {s for s, r in emis.items() if not r.empty}
+        }
+
+    async def emis_attendance(
+        self, student_id: UUID, semester: int
+    ) -> dict[UUID, EmisAttendanceReport]:
+        """Return what EMIS reported per subject for one semester."""
+        stmt = sa.select(EmisAttendance).where(
+            EmisAttendance.student_id == student_id,
+            EmisAttendance.semester == semester,
+        )
+        return {
+            row.subject_id: EmisAttendanceReport(
+                None if row.absent_dates is None else frozenset(row.absent_dates),
+                row.absence_total,
+            )
+            for row in (await self.session.scalars(stmt)).all()
         }
 
     async def teacher_ids(
@@ -365,3 +401,34 @@ class SqlMarksReader:
             .where(Student.user_id.in_(list(user_ids)))
         )
         return {r.user_id: r.value for r in (await self.session.execute(stmt)).all()}
+
+    async def group_roles(self, group_id: UUID) -> GroupRoles | None:
+        """Return the group's curator, head student and active students."""
+        group = (
+            await self.session.execute(
+                sa.select(
+                    Group.id,
+                    Group.name,
+                    Group.current_semester,
+                    Group.curator_id,
+                    Group.head_student_id,
+                ).where(Group.id == group_id)
+            )
+        ).first()
+        if group is None:
+            return None
+        ids = (
+            await self.session.execute(
+                sa.select(Student.user_id).where(
+                    Student.group_id == group_id, Student.status == "active"
+                )
+            )
+        ).scalars()
+        return GroupRoles(
+            id=group.id,
+            name=group.name,
+            current_semester=group.current_semester,
+            curator_id=group.curator_id,
+            head_student_id=group.head_student_id,
+            student_ids=tuple(ids),
+        )

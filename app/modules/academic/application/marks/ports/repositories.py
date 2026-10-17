@@ -6,8 +6,10 @@ from decimal import Decimal
 from typing import Protocol
 from uuid import UUID
 
+from app.modules.academic.domain.marks.attendance_merge import EmisAttendanceReport
 from app.modules.academic.domain.marks.read_models import (
     AttendanceCount,
+    GroupRoles,
     LessonRow,
     MarkRow,
     ResultRow,
@@ -154,6 +156,23 @@ class SyncRunsRepository(Protocol):
         ...
 
 
+class EmisAttendanceRepository(Protocol):
+    """Attendance the sync read from EMIS."""
+
+    async def save(
+        self,
+        student_id: UUID,
+        subject_id: UUID,
+        semester: int,
+        *,
+        absent_dates: Sequence[dt.date] | None,
+        absence_total: int | None,
+        at: dt.datetime,
+    ) -> None:
+        """Insert or replace one subject's EMIS attendance."""
+        ...
+
+
 class MarksReader(Protocol):
     """Read queries behind the student-facing marks views."""
 
@@ -205,9 +224,20 @@ class MarksReader(Protocol):
         ...
 
     async def attendance_counts(
-        self, student_id: UUID, start: dt.date | None, end: dt.date | None
+        self,
+        student_id: UUID,
+        start: dt.date | None,
+        end: dt.date | None,
+        *,
+        semester: int | None = None,
     ) -> dict[UUID, AttendanceCount]:
-        """Return absences and counted lessons per subject."""
+        """Return absences and counted lessons per subject; EMIS first if semester."""
+        ...
+
+    async def emis_attendance(
+        self, student_id: UUID, semester: int
+    ) -> dict[UUID, EmisAttendanceReport]:
+        """Return what EMIS reported per subject for one semester."""
         ...
 
     async def teacher_ids(
@@ -232,4 +262,8 @@ class MarksReader(Protocol):
         self, user_ids: Sequence[UUID], semester: int | None
     ) -> dict[UUID, Decimal | None]:
         """Return the GPA of each student (their current semester if None)."""
+        ...
+
+    async def group_roles(self, group_id: UUID) -> GroupRoles | None:
+        """Return the group's curator, head student and active students."""
         ...

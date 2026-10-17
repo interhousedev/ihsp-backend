@@ -181,7 +181,9 @@ def downgrade() -> None:
     op.drop_index(
         "uq_assessments_emis_lesson_id", table_name="assessments", schema="academic"
     )
-    op.drop_index("ix_assessments_audience", table_name="assessments", schema="academic")
+    op.drop_index(
+        "ix_assessments_audience", table_name="assessments", schema="academic"
+    )
     op.drop_index(
         "ix_assessments_subject_id", table_name="assessments", schema="academic"
     )

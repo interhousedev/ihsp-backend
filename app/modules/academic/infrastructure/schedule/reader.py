@@ -125,6 +125,14 @@ class SqlScheduleReader:
         async with self.sessionmaker() as session:
             return list(await session.scalars(stmt))
 
+    async def existing_group_ids(self, ids: Sequence[UUID]) -> set[UUID]:
+        """Return the subset of ``ids`` that are groups."""
+        if not ids:
+            return set()
+        stmt = select(GroupRow.id).where(GroupRow.id.in_(list(ids)))
+        async with self.sessionmaker() as session:
+            return set(await session.scalars(stmt))
+
     async def _keys(self, session: AsyncSession, user_id: UUID) -> list[str] | None:
         row = await session.get(StudentRow, user_id)
         return audience_keys.student_keys(row.group_id, row.subgroup) if row else None
