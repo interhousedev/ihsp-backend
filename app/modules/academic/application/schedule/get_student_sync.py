@@ -1,20 +1,20 @@
-"""The calling student's last full EMIS sync (the settings page polls it)."""
+"""The calling student's initial sync job (the settings page polls it)."""
 
-from app.modules.academic.application.schedule.student_sync_state import (
-    SyncState,
-    SyncStateStore,
+from app.modules.academic.application.schedule.student_sync_jobs import (
+    StudentSyncJob,
+    StudentSyncJobs,
 )
 from app.shared.actor import Actor, Role
 
 
 class GetStudentSync:
-    """Read the state the request and the worker wrote."""
+    """Read the durable sync record."""
 
-    def __init__(self, *, state: SyncStateStore) -> None:
-        """Store the state store."""
-        self._state = state
+    def __init__(self, *, jobs: StudentSyncJobs) -> None:
+        """Store the job port."""
+        self._jobs = jobs
 
-    async def execute(self, actor: Actor) -> SyncState | None:
-        """None before the first sync."""
+    async def execute(self, actor: Actor) -> StudentSyncJob | None:
+        """None when the student has no job (no registration through EMIS)."""
         actor.require(Role.STUDENT)
-        return await self._state.get(actor.user_id)
+        return await self._jobs.get(actor.user_id)

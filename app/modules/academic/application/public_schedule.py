@@ -14,6 +14,9 @@ from app.modules.academic.application.schedule.ports.reader import ScheduleReade
 from app.modules.academic.application.schedule.ports.unit_of_work import (
     ScheduleUnitOfWork,
 )
+from app.modules.academic.application.schedule.student_sync_jobs import (
+    StudentSyncJobs,
+)
 from app.modules.academic.domain.schedule.errors import (
     GroupNameTakenError,
     GroupNotFoundError,
@@ -152,12 +155,20 @@ class AcademicEnrollmentImpl:
         identity: IdentityDirectory,
         clock: Clock,
         kicker: TaskKicker | None = None,
+        sync_jobs: StudentSyncJobs | None = None,
     ) -> None:
         """Store the dependencies; ``kicker`` starts the subject name translation."""
         self.uow_factory = uow_factory
         self.identity = identity
         self.clock = clock
         self.kicker = kicker
+        self.sync_jobs = sync_jobs
+
+    async def enqueue_student_sync(self, user_id: UUID) -> None:
+        """Record the initial sync as pending, in its own short transaction."""
+        if self.sync_jobs is None:
+            raise RuntimeError("AcademicEnrollmentImpl built without sync_jobs")
+        await self.sync_jobs.enqueue(user_id, self.clock.now())
 
     async def ensure_student(
         self,

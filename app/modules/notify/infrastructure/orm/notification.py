@@ -75,6 +75,7 @@ class Notification(IdMixin, TimestampMixin, Base):
             "curator_exam_mark",
             "library_suggestion_approved",
             "library_suggestion_declined",
+            "student_sync_failed",
             name="type",
             native_enum=False,
             create_constraint=True,

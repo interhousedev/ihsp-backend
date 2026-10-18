@@ -37,7 +37,17 @@ from app.modules.academic.application.marks.run_manual_sync import RunManualSync
 from app.modules.academic.application.marks.sync_all import SyncAll
 from app.modules.academic.application.marks.sync_student import SyncStudent
 from app.modules.academic.application.public_marks import MarksQueriesImpl
+from app.modules.academic.application.schedule.run_student_sync import (
+    ListStudentSyncJobs,
+    RetryStudentSyncs,
+    RunStudentSync,
+)
+from app.modules.academic.application.schedule.student_sync_jobs import (
+    StudentSyncJobs,
+)
+from app.modules.academic.application.schedule.sync_student_all import SyncStudentAll
 from app.modules.academic.infrastructure.marks.uow import SqlMarksUnitOfWork
+from app.modules.academic.wiring_schedule import sql_schedule_uow_factory
 from app.shared.contracts.academic import AcademicEnrollment, ScheduleQueries
 from app.shared.contracts.emis import EmisSource
 from app.shared.contracts.identity import IdentityCommands, IdentityDirectory
@@ -53,6 +63,9 @@ class MarksServices:
     sync_student: SyncStudent
     sync_all: SyncAll
     backfill_student: BackfillStudent
+    run_student_sync: RunStudentSync
+    retry_student_syncs: RetryStudentSyncs
+    list_student_sync_jobs: ListStudentSyncJobs
     run_manual_sync: RunManualSync
     resync_materials: ResyncMaterials
     list_sync_runs: ListSyncRuns
@@ -81,6 +94,8 @@ def build_marks(
     bell_sync: BellSync,
     timetable_sync: TimetableSync,
     material_resync: MaterialResync,
+    sync_all_students: SyncStudentAll,
+    sync_jobs: StudentSyncJobs,
 ) -> MarksServices:
     """Wire the marks use cases to SQL repositories and other modules' contracts."""
 
@@ -103,6 +118,7 @@ def build_marks(
         kicker=deps.kicker,
         institution_id=deps.settings.emis.institution_id,
     )
+    backfill_student = BackfillStudent(sync_student=sync_student)
     return MarksServices(
         sync_student=sync_student,
         sync_all=SyncAll(
@@ -114,7 +130,19 @@ def build_marks(
             clock=deps.clock,
             lock=RedisKeyLock(deps.redis),
         ),
-        backfill_student=BackfillStudent(sync_student=sync_student),
+        backfill_student=backfill_student,
+        run_student_sync=RunStudentSync(
+            jobs=sync_jobs,
+            sync_all=sync_all_students,
+            backfill=backfill_student,
+            uow_factory=sql_schedule_uow_factory(deps),
+            clock=deps.clock,
+            identity=identity,
+        ),
+        retry_student_syncs=RetryStudentSyncs(
+            jobs=sync_jobs, kicker=deps.kicker, clock=deps.clock
+        ),
+        list_student_sync_jobs=ListStudentSyncJobs(jobs=sync_jobs),
         run_manual_sync=RunManualSync(
             uow_factory=uow_factory,
             schedule=schedule,

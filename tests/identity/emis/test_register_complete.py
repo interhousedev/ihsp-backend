@@ -83,12 +83,9 @@ async def test_registration_creates_the_account_secret_and_student(
         }
     ]
     assert world.enrollment.subjects_synced == [(world.enrollment.group_id, 8)]
+    assert world.enrollment.enqueued == [registered.user_id]
     assert world.kicker.calls == [
-        ("academic.backfill_student", {"user_id": str(registered.user_id)}),
-        (
-            "academic.sync_student_all",
-            {"user_id": str(registered.user_id), "with_marks": False},
-        ),
+        ("academic.run_student_sync", {"user_id": str(registered.user_id)}),
     ]
     assert [a.type for a in world.ledger.audits] == ["user.registered"]
     assert await world.redis.keys("reg:*") == []
@@ -297,14 +294,8 @@ async def test_every_new_student_syncs_the_timetable_of_their_group(
 
     _, registered = await world.register()
 
-    assert world.kicker.names() == [
-        "academic.backfill_student",
-        "academic.sync_student_all",
-    ]
-    assert world.kicker.calls[1][1] == {
-        "user_id": str(registered.user_id),
-        "with_marks": False,
-    }
+    assert world.kicker.names() == ["academic.run_student_sync"]
+    assert world.enrollment.enqueued == [registered.user_id]
 
 
 async def test_the_bells_are_left_to_the_timetable_sync(world: World) -> None:

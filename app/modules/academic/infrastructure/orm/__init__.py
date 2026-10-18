@@ -13,6 +13,7 @@ from app.modules.academic.infrastructure.orm.mark import Mark
 from app.modules.academic.infrastructure.orm.result import Result
 from app.modules.academic.infrastructure.orm.room import Room
 from app.modules.academic.infrastructure.orm.student import Student
+from app.modules.academic.infrastructure.orm.student_sync_job import StudentSyncJob
 from app.modules.academic.infrastructure.orm.subject import Subject
 from app.modules.academic.infrastructure.orm.sync_run import SyncRun
 from app.modules.academic.infrastructure.orm.term import Term
@@ -30,6 +31,7 @@ __all__ = [
     "Result",
     "Room",
     "Student",
+    "StudentSyncJob",
     "Subject",
     "SyncRun",
     "Term",

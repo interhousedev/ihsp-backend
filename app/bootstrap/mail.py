@@ -7,6 +7,7 @@ from app.bootstrap.common import build_container
 from app.interfaces.smtp.server import run_mail_server
 from app.settings import Settings
 from app.shared.logging import configure_logging
+from app.shared.observability import init_observability
 
 
 async def _serve(settings: Settings) -> None:
@@ -24,5 +25,6 @@ async def _serve(settings: Settings) -> None:
 def run(settings: Settings, args: argparse.Namespace) -> int:
     """Receive mail until interrupted."""
     configure_logging(settings.log_level, json_logs=settings.env == "prod")
+    init_observability(settings, "mail")
     asyncio.run(_serve(settings))
     return 0

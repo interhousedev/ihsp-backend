@@ -4675,6 +4675,26 @@
             "title": "Created At",
             "type": "string"
           },
+          "custom_values": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              ]
+            },
+            "title": "Custom Values",
+            "type": "object"
+          },
           "expires_at": {
             "anyOf": [
               {
@@ -4804,6 +4824,7 @@
           "issued_at",
           "expires_at",
           "files",
+          "custom_values",
           "created_at"
         ],
         "title": "CertificateEntryResponse",
@@ -4872,6 +4893,14 @@
             "minLength": 1,
             "title": "Code",
             "type": "string"
+          },
+          "custom_fields": {
+            "items": {
+              "$ref": "#/components/schemas/CustomFieldInput"
+            },
+            "maxItems": 20,
+            "title": "Custom Fields",
+            "type": "array"
           },
           "levels": {
             "items": {
@@ -4998,6 +5027,21 @@
             ],
             "title": "Code"
           },
+          "custom_fields": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CustomFieldInput"
+                },
+                "maxItems": 20,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom Fields"
+          },
           "levels": {
             "anyOf": [
               {
@@ -5093,6 +5137,13 @@
             "title": "Code",
             "type": "string"
           },
+          "custom_fields": {
+            "items": {
+              "$ref": "#/components/schemas/CustomFieldResponse"
+            },
+            "title": "Custom Fields",
+            "type": "array"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -5148,7 +5199,8 @@
           "asks_subject",
           "asks_year",
           "builtin",
-          "position"
+          "position",
+          "custom_fields"
         ],
         "title": "CertificateTypeResponse",
         "type": "object"
@@ -7519,6 +7571,33 @@
       "CreateEntryBody": {
         "description": "Body of POST /me.",
         "properties": {
+          "custom": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom"
+          },
           "level": {
             "anyOf": [
               {
@@ -8573,6 +8652,171 @@
           "curriculum"
         ],
         "title": "CurriculumSyncResponse",
+        "type": "object"
+      },
+      "CustomFieldInput": {
+        "description": "A custom input field of a type (admin).",
+        "properties": {
+          "allow_other": {
+            "default": false,
+            "title": "Allow Other",
+            "type": "boolean"
+          },
+          "key": {
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "text",
+              "number",
+              "single",
+              "multi"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "$ref": "#/components/schemas/TypeName"
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Options",
+            "type": "array"
+          },
+          "required": {
+            "default": false,
+            "title": "Required",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "key",
+          "kind",
+          "label"
+        ],
+        "title": "CustomFieldInput",
+        "type": "object"
+      },
+      "CustomFieldResponse": {
+        "description": "CustomField.",
+        "properties": {
+          "allow_other": {
+            "default": false,
+            "title": "Allow Other",
+            "type": "boolean"
+          },
+          "key": {
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "text",
+              "number",
+              "single",
+              "multi"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "$ref": "#/components/schemas/TypeName"
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 50,
+            "title": "Options",
+            "type": "array"
+          },
+          "required": {
+            "default": false,
+            "title": "Required",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "key",
+          "kind",
+          "label"
+        ],
+        "title": "CustomFieldResponse",
+        "type": "object"
+      },
+      "CustomFieldValuesResponse": {
+        "description": "Response of GET /staff/fields/{key}/values.\n\n``other_values`` holds the free-text values of a choice field (all distinct\ntexts for a text field); ``min`` and ``max`` are set for a number field.",
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "text",
+              "number",
+              "single",
+              "multi"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          },
+          "options": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Options",
+            "type": "array"
+          },
+          "other_values": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Other Values",
+            "type": "array"
+          }
+        },
+        "required": [
+          "key",
+          "kind",
+          "options",
+          "other_values",
+          "min",
+          "max"
+        ],
+        "title": "CustomFieldValuesResponse",
         "type": "object"
       },
       "DashboardResponse": {
@@ -17193,6 +17437,115 @@
         "title": "LmsStepInput",
         "type": "object"
       },
+      "LogIssue": {
+        "description": "One grouped error issue.",
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "last_seen": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Seen"
+          },
+          "level": {
+            "title": "Level",
+            "type": "string"
+          },
+          "project": {
+            "title": "Project",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "level",
+          "count",
+          "last_seen",
+          "project",
+          "url"
+        ],
+        "title": "LogIssue",
+        "type": "object"
+      },
+      "LogIssuesPage": {
+        "description": "A page of issues; empty with ``disabled`` when Bugsink is not configured.",
+        "properties": {
+          "disabled": {
+            "title": "Disabled",
+            "type": "boolean"
+          },
+          "has_next": {
+            "title": "Has Next",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LogIssue"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "projects": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Projects",
+            "type": "array"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "size",
+          "has_next",
+          "projects",
+          "disabled"
+        ],
+        "title": "LogIssuesPage",
+        "type": "object"
+      },
+      "LogLevel": {
+        "description": "Severity of an error issue.",
+        "enum": [
+          "fatal",
+          "error",
+          "warning",
+          "info",
+          "debug"
+        ],
+        "title": "LogLevel",
+        "type": "string"
+      },
       "LoginBody": {
         "description": "POST /v1/id/login.",
         "properties": {
@@ -19504,6 +19857,35 @@
           "materials_count"
         ],
         "title": "NowOrNextResponse",
+        "type": "object"
+      },
+      "NumberRange": {
+        "description": "Bounds of a number custom field filter; an open end is null.",
+        "properties": {
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          }
+        },
+        "title": "NumberRange",
         "type": "object"
       },
       "OAuthClientResponse": {
@@ -23735,6 +24117,39 @@
         "title": "ReadingListItemBody",
         "type": "object"
       },
+      "ReconcileMaterialsResponse": {
+        "description": "What \"check that all lesson materials are in the notebook\" found.",
+        "properties": {
+          "added": {
+            "description": "Lesson materials added to notebooks now.",
+            "title": "Added",
+            "type": "integer"
+          },
+          "already_present": {
+            "description": "Materials the notebooks already had.",
+            "title": "Already Present",
+            "type": "integer"
+          },
+          "notebooks": {
+            "description": "Subject notebooks checked.",
+            "title": "Notebooks",
+            "type": "integer"
+          },
+          "skipped": {
+            "description": "Materials not readable yet; retried later.",
+            "title": "Skipped",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "notebooks",
+          "added",
+          "already_present",
+          "skipped"
+        ],
+        "title": "ReconcileMaterialsResponse",
+        "type": "object"
+      },
       "RecordBookResponse": {
         "description": "All semesters with results.",
         "properties": {
@@ -27630,6 +28045,26 @@
             "title": "Created At",
             "type": "string"
           },
+          "custom_values": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              ]
+            },
+            "title": "Custom Values",
+            "type": "object"
+          },
           "expires_at": {
             "anyOf": [
               {
@@ -27762,6 +28197,7 @@
           "issued_at",
           "expires_at",
           "files",
+          "custom_values",
           "created_at",
           "student"
         ],
@@ -27771,6 +28207,17 @@
       "StaffFiltersBody": {
         "description": "Staff filters as a JSON object (export body).",
         "properties": {
+          "custom": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "maxProperties": 20,
+            "title": "Custom",
+            "type": "object"
+          },
           "group_id": {
             "anyOf": [
               {
@@ -27804,6 +28251,14 @@
               }
             ],
             "title": "Q"
+          },
+          "ranges": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/NumberRange"
+            },
+            "maxProperties": 20,
+            "title": "Ranges",
+            "type": "object"
           },
           "student_id": {
             "anyOf": [
@@ -31475,18 +31930,11 @@
         "type": "object"
       },
       "SyncStatusResponse": {
-        "description": "The last sync: queued, running, done or failed, and when.",
+        "description": "The sync record: where it is, what it synced, and why it failed if it did.",
         "properties": {
-          "detail": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Detail"
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
           },
           "finished_at": {
             "anyOf": [
@@ -31500,6 +31948,45 @@
             ],
             "title": "Finished At"
           },
+          "last_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Error"
+          },
+          "marks_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Marks Count"
+          },
+          "max_attempts": {
+            "default": 6,
+            "title": "Max Attempts",
+            "type": "integer"
+          },
+          "next_attempt_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Attempt At"
+          },
           "requested_at": {
             "format": "date-time",
             "title": "Requested At",
@@ -31507,20 +31994,41 @@
           },
           "status": {
             "enum": [
-              "queued",
+              "pending",
               "running",
-              "done",
+              "succeeded",
               "failed"
             ],
             "title": "Status",
             "type": "string"
+          },
+          "subgroup": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subgroup"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
           }
         },
         "required": [
+          "user_id",
           "status",
+          "attempts",
           "requested_at",
+          "next_attempt_at",
           "finished_at",
-          "detail"
+          "last_error",
+          "subgroup",
+          "marks_count"
         ],
         "title": "SyncStatusResponse",
         "type": "object"
@@ -34343,6 +34851,33 @@
       "UpdateEntryBody": {
         "description": "Body of PATCH /me/{entry_id}: only the sent fields change.",
         "properties": {
+          "custom": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Custom"
+          },
           "level": {
             "anyOf": [
               {
@@ -43545,6 +44080,97 @@
         ]
       }
     },
+    "/v1/admin/logs/issues": {
+      "get": {
+        "description": "Error issues from Bugsink, filtered and paged; disabled when unconfigured.",
+        "operationId": "list_issues_v1_admin_logs_issues_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "project",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project"
+            }
+          },
+          {
+            "in": "query",
+            "name": "level",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/LogLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Level"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 10000,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogIssuesPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Issues",
+        "tags": [
+          "admin-logs"
+        ]
+      }
+    },
     "/v1/admin/moderation/queue": {
       "get": {
         "description": "List reported links, most reported first (UF-ADM-10).",
@@ -44379,6 +45005,50 @@
         ]
       }
     },
+    "/v1/admin/subject-materials/subjects/{subject_id}/reconcile": {
+      "post": {
+        "description": "Sync every student's subject notebook of the subject, now; report the totals.",
+        "operationId": "reconcile_admin_subject_materials_v1_admin_subject_materials_subjects__subject_id__reconcile_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReconcileMaterialsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reconcile Admin Subject Materials",
+        "tags": [
+          "admin-subject-materials"
+        ]
+      }
+    },
     "/v1/admin/subject-materials/{edu_subject_id}": {
       "get": {
         "description": "The default materials of one EMIS subject id, in their order.",
@@ -44915,6 +45585,72 @@
           }
         },
         "summary": "List Runs",
+        "tags": [
+          "admin-sync"
+        ]
+      }
+    },
+    "/v1/admin/sync/student-syncs": {
+      "get": {
+        "description": "Students whose initial sync is in this status, most recently changed first.",
+        "operationId": "list_student_syncs_v1_admin_sync_student_syncs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "failed",
+              "enum": [
+                "pending",
+                "running",
+                "succeeded",
+                "failed"
+              ],
+              "title": "Status",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SyncStatusResponse"
+                  },
+                  "title": "Response List Student Syncs V1 Admin Sync Student Syncs Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Student Syncs",
         "tags": [
           "admin-sync"
         ]
@@ -47852,6 +48588,164 @@
           }
         },
         "summary": "Export Entries",
+        "tags": [
+          "certificates"
+        ]
+      }
+    },
+    "/v1/certificates/staff/fields/{key}/values": {
+      "get": {
+        "description": "Return the choices and stored values of one custom field of the type.",
+        "operationId": "list_custom_field_values_v1_certificates_staff_fields__key__values_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subgroup",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subgroup"
+            }
+          },
+          {
+            "in": "query",
+            "name": "type_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subject",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject"
+            }
+          },
+          {
+            "in": "query",
+            "name": "level",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Level"
+            }
+          },
+          {
+            "in": "query",
+            "name": "student_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Student Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomFieldValuesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Custom Field Values",
         "tags": [
           "certificates"
         ]
@@ -67292,6 +68186,50 @@
           }
         },
         "summary": "Remove Staff Subject Material",
+        "tags": [
+          "staff-subjects"
+        ]
+      }
+    },
+    "/v1/staff/subjects/{subject_id}/reconcile": {
+      "post": {
+        "description": "Sync the teacher's own subject notebooks of the subject, now; report totals.",
+        "operationId": "reconcile_staff_subject_materials_v1_staff_subjects__subject_id__reconcile_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReconcileMaterialsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reconcile Staff Subject Materials",
         "tags": [
           "staff-subjects"
         ]

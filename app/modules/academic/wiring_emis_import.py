@@ -22,6 +22,9 @@ from app.modules.academic.application.schedule.ports.room_page_cache import (
 from app.modules.academic.application.schedule.request_student_sync import (
     RequestStudentSync,
 )
+from app.modules.academic.application.schedule.student_sync_jobs import (
+    StudentSyncJobs,
+)
 from app.modules.academic.application.schedule.student_sync_state import (
     SyncStateStore,
 )
@@ -34,6 +37,10 @@ from app.modules.academic.application.schedule.sync_student_all import (
 )
 from app.modules.academic.infrastructure.schedule.room_page_cache import (
     RedisRoomPageCache,
+)
+from app.modules.academic.infrastructure.schedule.student_sync_jobs import (
+    MemoryStudentSyncJobs,
+    SqlStudentSyncJobs,
 )
 from app.modules.academic.infrastructure.schedule.sync_state import (
     MemorySyncState,
@@ -63,6 +70,7 @@ class EmisImportServices:
     sync_student_all: SyncStudentAll
     request_student_sync: RequestStudentSync
     get_student_sync: GetStudentSync
+    sync_jobs: StudentSyncJobs
 
 
 def assemble_emis_import(
@@ -78,9 +86,11 @@ def assemble_emis_import(
     clock: Clock,
     import_topics: bool = False,
     sync_state: SyncStateStore | None = None,
+    sync_jobs: StudentSyncJobs | None = None,
 ) -> EmisImportServices:
     """Connect the use cases to the given ports (real or fake)."""
     state = sync_state or MemorySyncState(clock.now)
+    jobs = sync_jobs or MemoryStudentSyncJobs()
     sync_class_hours = SyncClassHours(
         uow_factory=uow_factory, emis=emis, generate=generate, clock=clock
     )
@@ -112,10 +122,9 @@ def assemble_emis_import(
             kicker=kicker,
             clock=clock,
         ),
-        request_student_sync=RequestStudentSync(
-            state=state, kicker=kicker, clock=clock
-        ),
-        get_student_sync=GetStudentSync(state=state),
+        request_student_sync=RequestStudentSync(jobs=jobs, kicker=kicker, clock=clock),
+        get_student_sync=GetStudentSync(jobs=jobs),
+        sync_jobs=jobs,
     )
 
 
@@ -149,4 +158,5 @@ def build_emis_import(
         clock=deps.clock,
         import_topics=deps.settings.emis.import_topics,
         sync_state=RedisSyncState(deps.redis),
+        sync_jobs=SqlStudentSyncJobs(sql_schedule_uow_factory(deps)),
     )

@@ -61,6 +61,9 @@ from app.modules.notify.application.renderers.notebook_artifact_ready import (
 from app.modules.notify.application.renderers.registry import RendererRegistry
 from app.modules.notify.application.renderers.result_below import ResultBelowRenderer
 from app.modules.notify.application.renderers.result_drop import ResultDropRenderer
+from app.modules.notify.application.renderers.student_sync_failed import (
+    StudentSyncFailedRenderer,
+)
 from app.modules.notify.application.renderers.sync_alert import SyncAlertRenderer
 from app.settings import UrlsSettings
 from app.shared.contracts.files import FilesApi
@@ -103,6 +106,9 @@ def register_builtin_renderers(
         NotificationType.MAIL_SUSPENDED, MailSuspendedRenderer(i18n, urls)
     )
     registry.register(NotificationType.SYNC_ALERT, SyncAlertRenderer(i18n, urls))
+    registry.register(
+        NotificationType.STUDENT_SYNC_FAILED, StudentSyncFailedRenderer(i18n, urls)
+    )
     registry.register(
         NotificationType.NOTEBOOK_ARTIFACT_READY,
         NotebookArtifactReadyRenderer(i18n, urls),

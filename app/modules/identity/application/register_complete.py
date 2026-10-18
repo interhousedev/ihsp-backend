@@ -30,7 +30,7 @@ from app.modules.identity.application.register_verification import EmailVerifier
 from app.modules.identity.domain.login_name import base_login, next_free
 from app.modules.identity.domain.password_policy import check_password
 from app.shared.clock import Clock
-from app.shared.contracts.academic import AcademicEnrollment, StudentRef
+from app.shared.contracts.academic import AcademicEnrollment
 from app.shared.contracts.identity import UserStatus
 from app.shared.ids import new_id
 from app.shared.notifications import AuditDraft
@@ -193,6 +193,8 @@ class CompleteRegistration:
             await self._enrollment.sync_subjects(
                 group_id=student.group_id, subjects=pending.subjects
             )
+            # Durable record first: if the kick below is lost, the retry job runs it.
+            await self._enrollment.enqueue_student_sync(user_id)
             uow.audit(
                 AuditDraft(
                     type="user.registered",
@@ -206,37 +208,20 @@ class CompleteRegistration:
                     },
                 )
             )
-            uow.after_commit(
-                partial(
-                    self._kicker.kick,
-                    "academic.backfill_student",
-                    user_id=str(user_id),
-                )
-            )
-            self._kick_timetable(uow, user_id, student)
+            uow.after_commit(partial(self._kick_student_sync, user_id))
             await uow.commit()
         return login
 
-    def _kick_timetable(
-        self, uow: EmisUnitOfWork, user_id: UUID, student: StudentRef
-    ) -> None:
-        """Sync the student's curriculum, terms and group timetable through their link.
+    async def _kick_student_sync(self, user_id: UUID) -> None:
+        """Start the initial sync (timetable, subgroup, marks) now, best effort.
 
-        One task does it in order: the curriculum creates the terms the timetable
-        needs (a separate timetable kick ran before any term existed and gave up with
-        ``no_term``). The timetable fills an unknown group, adds the student's own
-        half, the subgroup, the EMIS bells and the teachers. The marks come from
-        ``academic.backfill_student``. The task needs the committed account.
+        A refused kick must not fail the registration, which is already committed;
+        the pending job row makes the periodic retry job run the sync instead.
         """
-        uow.after_commit(
-            partial(
-                self._kicker.kick,
-                "academic.sync_student_all",
-                user_id=str(user_id),
-                with_marks=False,
-            )
-        )
-        log.info("student_sync_kicked", group_id=str(student.group_id))
+        try:
+            await self._kicker.kick("academic.run_student_sync", user_id=str(user_id))
+        except Exception:
+            log.warning("student_sync_kick_failed", user_id=str(user_id))
 
     @staticmethod
     async def _ensure_free(uow: EmisUnitOfWork, pending: PendingRegistration) -> None:

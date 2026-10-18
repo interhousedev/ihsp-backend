@@ -3,7 +3,7 @@
 from uuid import UUID
 
 from app.modules.academic.application.marks.sync_student import SyncStudent
-from app.modules.academic.domain.marks.sync import SyncOutcome
+from app.modules.academic.domain.marks.sync import SyncCounters, SyncOutcome
 
 
 class BackfillStudent:
@@ -13,6 +13,10 @@ class BackfillStudent:
         """Store the student sync use case."""
         self._sync_student = sync_student
 
-    async def execute(self, user_id: UUID) -> SyncOutcome:
-        """Run a backfill sync for the student."""
-        return await self._sync_student.execute(user_id, None, mode="backfill")
+    async def execute(
+        self, user_id: UUID, counters: SyncCounters | None = None
+    ) -> SyncOutcome:
+        """Run a backfill sync for the student; ``counters`` collects the marks."""
+        return await self._sync_student.execute(
+            user_id, None, mode="backfill", counters=counters
+        )

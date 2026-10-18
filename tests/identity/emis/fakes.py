@@ -242,6 +242,7 @@ class FakeEnrollment:
         self.subjects_synced: list[tuple[UUID, int]] = []
         self.left: list[tuple[UUID, str]] = []
         self.imported: UUID | None = None
+        self.enqueued: list[UUID] = []
         self.fail_ensure = False
         self.needs_timetable = False
         self.group_id = new_id()
@@ -293,6 +294,10 @@ class FakeEnrollment:
     ) -> None:
         """Record the call."""
         self.subjects_synced.append((group_id, len(subjects)))
+
+    async def enqueue_student_sync(self, user_id: UUID) -> None:
+        """Record the call."""
+        self.enqueued.append(user_id)
 
     async def mark_left(self, user_id: UUID, *, reason: str) -> None:
         """Record the call."""

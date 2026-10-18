@@ -15,6 +15,7 @@ from app.interfaces.http.routing import (
 )
 from app.settings import Settings
 from app.shared.logging import configure_logging
+from app.shared.observability import init_observability
 
 import structlog
 import uvicorn
@@ -118,5 +119,6 @@ async def serve(settings: Settings, *, process: str) -> None:
 def run_http(settings: Settings, process: str) -> int:
     """Entry point of `python -m app all|identity|api`."""
     configure_logging(settings.log_level, json_logs=settings.env == "prod")
+    init_observability(settings, process)
     asyncio.run(serve(settings, process=process))
     return 0

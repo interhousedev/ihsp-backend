@@ -72,6 +72,9 @@ from app.modules.academic.application.schedule.rename_room import RenameRoom
 from app.modules.academic.application.schedule.student_profile import (
     GetStudentProfile,
 )
+from app.modules.academic.application.schedule.student_sync_jobs import (
+    StudentSyncJobs,
+)
 from app.modules.academic.application.schedule.teacher_deactivated import (
     TeacherDeactivated,
 )
@@ -84,6 +87,10 @@ from app.modules.academic.infrastructure.schedule.import_store import RedisImpor
 from app.modules.academic.infrastructure.schedule.reader import SqlScheduleReader
 from app.modules.academic.infrastructure.schedule.room_page_cache import (
     RedisRoomPageCache,
+)
+from app.modules.academic.infrastructure.schedule.student_sync_jobs import (
+    MemoryStudentSyncJobs,
+    SqlStudentSyncJobs,
 )
 from app.modules.academic.infrastructure.schedule.uow import SqlScheduleUnitOfWork
 from app.shared.clock import Clock
@@ -156,8 +163,10 @@ def assemble_schedule(
     identity_commands: IdentityCommands,
     rooms_url: str,
     mail_domain: str,
+    sync_jobs: StudentSyncJobs | None = None,
 ) -> ScheduleServices:
     """Connect use cases to the given ports (real or fake)."""
+    jobs = sync_jobs or MemoryStudentSyncJobs()
     return ScheduleServices(
         create_term=CreateTerm(uow_factory, clock),
         update_term=UpdateTerm(uow_factory, clock, kicker),
@@ -210,7 +219,7 @@ def assemble_schedule(
         rotate_calendar_token=RotateCalendarToken(uow_factory),
         user_for_calendar_token=UserForCalendarToken(uow_factory),
         queries=ScheduleQueriesImpl(reader),
-        enrollment=AcademicEnrollmentImpl(uow_factory, identity, clock, kicker),
+        enrollment=AcademicEnrollmentImpl(uow_factory, identity, clock, kicker, jobs),
     )
 
 
@@ -246,4 +255,5 @@ def build_schedule(
         identity_commands=identity_commands,
         rooms_url=deps.settings.urls.rooms,
         mail_domain=deps.settings.smtp_out.mail_domain,
+        sync_jobs=SqlStudentSyncJobs(sql_schedule_uow_factory(deps)),
     )

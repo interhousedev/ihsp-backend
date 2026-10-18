@@ -30,25 +30,27 @@ async def test_the_button_queues_a_sync_and_the_page_reads_it(
 
     assert before.status_code == 200 and before.json() is None
     assert posted.status_code == 202
-    assert posted.json()["status"] == "queued"
+    assert posted.json()["status"] == "pending"
     assert posted.json()["finished_at"] is None
     assert after.json() == posted.json()
     assert env.kicker.calls[-1] == (
-        "academic.sync_student_all",
-        {"user_id": str(actor.user_id), "with_marks": True},
+        "academic.run_student_sync",
+        {"user_id": str(actor.user_id)},
     )
 
 
-async def test_a_second_click_within_ten_minutes_answers_429(
+async def test_a_second_click_while_queued_answers_the_same_job(
     http_client: Any, env: Env, make_actor: Any
 ) -> None:
-    """Rate limited per student."""
+    """Idempotent: a second click returns the pending job and queues nothing."""
     client = await _client(http_client, env, make_actor(Role.STUDENT))
-    await client.post("/v1/me/sync")
+    first = await client.post("/v1/me/sync")
 
     response = await client.post("/v1/me/sync")
 
-    assert response.status_code == 429
+    assert response.status_code == 202
+    assert response.json() == first.json()
+    assert env.kicker.names().count("academic.run_student_sync") == 1
 
 
 async def test_a_teacher_may_not_ask(

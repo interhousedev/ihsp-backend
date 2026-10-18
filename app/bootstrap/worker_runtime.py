@@ -10,6 +10,7 @@ from app.interfaces.jobs.broker import TaskiqKicker, broker
 from app.interfaces.jobs.context import set_container
 from app.settings import load_settings
 from app.shared.logging import configure_logging
+from app.shared.observability import init_observability
 
 from taskiq import TaskiqEvents, TaskiqState
 
@@ -19,6 +20,7 @@ async def start_container(state: TaskiqState) -> None:
     """Build the container of this worker process and publish it to the tasks."""
     settings = load_settings()
     configure_logging(settings.log_level, json_logs=settings.env == "prod")
+    init_observability(settings, "worker")
     container = await build_container(
         settings, process="worker", kicker=TaskiqKicker(broker)
     )

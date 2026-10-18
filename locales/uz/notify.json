@@ -143,5 +143,7 @@
   "notify-library-suggestion-approved-body": "Siz taklif qilgan «{title}» kitobi endi kutubxonada. Rahmat!",
   "notify-library-suggestion-declined-title": "Taklifingiz rad etildi",
   "notify-library-suggestion-declined-body": "Kutubxonachilar «{title}» kitobini kutubxonaga qoʻshmadi.",
-  "notify-btn-open-library-suggestions": "Mening takliflarim"
+  "notify-btn-open-library-suggestions": "Mening takliflarim",
+  "notify-student-sync-failed-title": "Talaba sinxronlashi to'xtatildi",
+  "notify-student-sync-failed-body": "Talabaning EMIS dastlabki sinxronlashi {attempts} marta muvaffaqiyatsiz bo'ldi. Sababini monitorda ko'ring."
 }

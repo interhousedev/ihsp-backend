@@ -442,6 +442,13 @@ def _mail_suspended(p: dict[str, Any], v: _View) -> Description:
     )
 
 
+def _student_sync_failed(p: dict[str, Any], v: _View) -> Description:
+    body = v.t("notify-student-sync-failed-body", attempts=p.get("attempts", ""))
+    return Description(
+        v.t("notify-student-sync-failed-title"), body, f"{v.urls.admin}/monitoring/"
+    )
+
+
 def _sync_alert(p: dict[str, Any], v: _View) -> Description:
     body = v.t(
         "notify-sync-alert-body", failed=p.get("failed", ""), total=p.get("total", "")
@@ -469,6 +476,7 @@ _BUILDERS: dict[NotificationType, _Builder] = {
     NotificationType.ACCOUNT_CLOSING: _account_closing,
     NotificationType.MAIL_SUSPENDED: _mail_suspended,
     NotificationType.SYNC_ALERT: _sync_alert,
+    NotificationType.STUDENT_SYNC_FAILED: _student_sync_failed,
     NotificationType.NOTEBOOK_ARTIFACT_READY: _notebook_artifact_ready,
     NotificationType.ASSESSMENT_REMINDER: _assessment_reminder,
     NotificationType.LIBRARY_ITEM_APPROVED: _library_item_approved,

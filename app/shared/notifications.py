@@ -27,6 +27,7 @@ class NotificationType(StrEnum):
     ACCOUNT_CLOSING = "account_closing"
     MAIL_SUSPENDED = "mail_suspended"
     SYNC_ALERT = "sync_alert"
+    STUDENT_SYNC_FAILED = "student_sync_failed"
     NOTEBOOK_ARTIFACT_READY = "notebook_artifact_ready"
     ASSESSMENT_REMINDER = "assessment_reminder"
     LIBRARY_ITEM_APPROVED = "library_item_approved"

@@ -66,6 +66,10 @@ class SyncStudentAll:
         except _EMIS_ERRORS:
             await self._finish(user_id, requested, "emis_unavailable")
             raise
+        except Exception:
+            # Any other crash must not leave the state "running" forever.
+            await self._finish(user_id, requested, "error")
+            raise
         await self._finish(user_id, requested, status)
         return status
 

@@ -372,6 +372,8 @@ class _Assembler:
             bell_sync=emis_import.sync_class_hours,
             timetable_sync=emis_import.sync_group_timetable,
             material_resync=emis_import.sync_group_timetable,
+            sync_all_students=emis_import.sync_student_all,
+            sync_jobs=emis_import.sync_jobs,
         )
         c.academic = AcademicModule(
             schedule=schedule,

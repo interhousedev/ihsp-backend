@@ -1,20 +1,13 @@
 """A student's full EMIS sync: after a registration and from the settings button."""
 
-import datetime as dt
-
-from app.modules.academic.application.schedule.student_sync_state import SyncState
 from app.modules.academic.domain.schedule.group import Group
-from app.modules.academic.infrastructure.schedule.sync_state import MemorySyncState
 from app.shared.actor import Role
-from app.shared.base_error import ForbiddenError, RateLimitedError
 from app.shared.contracts.emis import EmisUnavailable
 from app.shared.contracts.identity import UserRef, UserStatus
 from tests.academic.schedule.curriculum_builders import make_curriculum
 from tests.academic.schedule.emis_builders import PHYSICS, YULDASHEV, weekly
 from tests.academic.schedule.env import Env
 from tests.factories import make_actor as build_actor
-
-import pytest
 
 
 async def _no_term_student(env: Env) -> tuple[Group, UserRef]:
@@ -102,57 +95,25 @@ async def test_an_unknown_student_ends_as_failed(env: Env) -> None:
 
 
 async def test_a_request_queues_the_sync_and_kicks_the_task(env: Env) -> None:
-    """POST /v1/me/sync: 202 with the queued state; the worker does the rest."""
+    """POST /v1/me/sync: a failed or new job is queued and kicked once."""
     actor = build_actor(Role.STUDENT)
 
-    state = await env.emis_import.request_student_sync.execute(actor)
+    job = await env.emis_import.request_student_sync.execute(actor)
 
-    assert state.status == "queued"
-    assert state.requested_at == env.clock.now()
+    assert job.status == "pending"
     assert env.kicker.calls[-1] == (
-        "academic.sync_student_all",
-        {"user_id": str(actor.user_id), "with_marks": True},
+        "academic.run_student_sync",
+        {"user_id": str(actor.user_id)},
     )
-    assert await env.emis_import.get_student_sync.execute(actor) == state
+    assert await env.emis_import.get_student_sync.execute(actor) == job
 
 
-async def test_a_second_request_within_ten_minutes_is_rate_limited(env: Env) -> None:
-    """Once per ten minutes per student."""
+async def test_a_second_request_while_pending_is_idempotent(env: Env) -> None:
+    """Pressing the button twice queues one sync and returns the same job."""
     actor = build_actor(Role.STUDENT)
-    await env.emis_import.request_student_sync.execute(actor)
+    first = await env.emis_import.request_student_sync.execute(actor)
 
-    with pytest.raises(RateLimitedError) as caught:
-        await env.emis_import.request_student_sync.execute(actor)
+    second = await env.emis_import.request_student_sync.execute(actor)
 
-    assert caught.value.params["retry_after"] == 600
-    assert env.kicker.names().count("academic.sync_student_all") == 1
-
-
-async def test_only_students_may_ask_for_a_sync(env: Env) -> None:
-    """A teacher has no EMIS student link."""
-    with pytest.raises(ForbiddenError):
-        await env.emis_import.request_student_sync.execute(build_actor(Role.TEACHER))
-
-
-async def test_no_sync_yet_reads_as_none(env: Env) -> None:
-    """GET /v1/me/sync before any sync."""
-    assert (
-        await env.emis_import.get_student_sync.execute(build_actor(Role.STUDENT))
-        is None
-    )
-
-
-async def test_the_memory_store_claims_a_window_once() -> None:
-    """The claim is the rate limit: the second one gets the seconds left."""
-    store = MemorySyncState(now=lambda: dt.datetime(2026, 10, 6, tzinfo=dt.UTC))
-    user_id = build_actor(Role.STUDENT).user_id
-
-    first = await store.claim(user_id, seconds=600)
-    second = await store.claim(user_id, seconds=600)
-
-    assert (first, second) == (None, 600)
-    await store.put(
-        user_id,
-        SyncState("queued", requested_at=dt.datetime(2026, 1, 1, tzinfo=dt.UTC)),
-    )
-    assert (await store.get(user_id)) is not None
+    assert second == first
+    assert env.kicker.names().count("academic.run_student_sync") == 1

@@ -143,5 +143,7 @@
   "notify-library-suggestion-approved-body": "“{title}”, the book you suggested, is now in the library. Thank you!",
   "notify-library-suggestion-declined-title": "Your suggestion was declined",
   "notify-library-suggestion-declined-body": "The librarians did not add “{title}” to the library.",
-  "notify-btn-open-library-suggestions": "My suggestions"
+  "notify-btn-open-library-suggestions": "My suggestions",
+  "notify-student-sync-failed-title": "Student sync gave up",
+  "notify-student-sync-failed-body": "A student's initial EMIS sync failed {attempts} times. Open the monitor to see the reason."
 }

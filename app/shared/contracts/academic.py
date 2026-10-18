@@ -349,3 +349,7 @@ class AcademicEnrollment(Protocol):
     async def mark_left(self, user_id: UUID, *, reason: str) -> None:
         """Mark the student as having left."""
         ...
+
+    async def enqueue_student_sync(self, user_id: UUID) -> None:
+        """Record the initial sync as pending; it is retried until it succeeds."""
+        ...

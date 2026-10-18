@@ -11,6 +11,9 @@ from app.modules.academic.application.marks.sync_all import SyncAll
 from app.modules.academic.application.marks.sync_student import SyncStudent
 from app.modules.academic.infrastructure.marks.uow import SqlMarksUnitOfWork
 from app.modules.academic.infrastructure.orm.lesson import Lesson
+from app.modules.academic.infrastructure.schedule.student_sync_jobs import (
+    MemoryStudentSyncJobs,
+)
 from app.modules.academic.wiring_marks import MarksServices, build_marks
 from app.shared.actor import Role
 from app.shared.contracts.academic import StudentRef
@@ -242,4 +245,6 @@ async def services(
         bell_sync=env.bells,
         timetable_sync=env.timetables,
         material_resync=env.timetables,
+        sync_all_students=None,  # type: ignore[arg-type]  # not used by marks tests
+        sync_jobs=MemoryStudentSyncJobs(),
     )

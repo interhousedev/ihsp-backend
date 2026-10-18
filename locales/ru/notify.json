@@ -143,5 +143,7 @@
   "notify-library-suggestion-approved-body": "Предложенная вами книга «{title}» теперь в библиотеке. Спасибо!",
   "notify-library-suggestion-declined-title": "Ваше предложение отклонено",
   "notify-library-suggestion-declined-body": "Библиотекари не добавили «{title}» в библиотеку.",
-  "notify-btn-open-library-suggestions": "Мои предложения"
+  "notify-btn-open-library-suggestions": "Мои предложения",
+  "notify-student-sync-failed-title": "Синхронизация студента прервана",
+  "notify-student-sync-failed-body": "Первичная синхронизация студента из EMIS не удалась {attempts} раз. Откройте монитор, чтобы увидеть причину."
 }

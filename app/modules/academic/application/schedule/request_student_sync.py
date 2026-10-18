@@ -1,36 +1,44 @@
-"""The student asks for a full EMIS sync from the settings (once per ten minutes)."""
+"""The student asks for a full EMIS sync from the settings page (idempotent).
 
-from app.modules.academic.application.schedule.student_sync_state import (
-    SYNC_WINDOW_SECONDS,
-    SyncState,
-    SyncStateStore,
+A job already pending, running or succeeded is returned as it is and nothing is
+queued again; a failed job is reset and queued once. The kick is best effort: the job
+row is already pending, so the periodic retry job runs it if the kick is lost.
+"""
+
+from app.modules.academic.application.schedule.run_student_sync import TASK_NAME
+from app.modules.academic.application.schedule.student_sync_jobs import (
+    StudentSyncJob,
+    StudentSyncJobs,
 )
 from app.shared.actor import Actor, Role
-from app.shared.base_error import RateLimitedError
 from app.shared.clock import Clock
 from app.shared.tasks import TaskKicker
 
+import structlog
+
+log = structlog.get_logger(__name__)
+
 
 class RequestStudentSync:
-    """Queue `academic.sync_student_all` for the calling student."""
+    """Queue (or report) the student's initial sync."""
 
     def __init__(
-        self, *, state: SyncStateStore, kicker: TaskKicker, clock: Clock
+        self, *, jobs: StudentSyncJobs, kicker: TaskKicker, clock: Clock
     ) -> None:
         """Store the collaborators."""
-        self._state = state
+        self._jobs = jobs
         self._kicker = kicker
         self._clock = clock
 
-    async def execute(self, actor: Actor) -> SyncState:
-        """Return the queued state; RateLimitedError inside the window."""
+    async def execute(self, actor: Actor) -> StudentSyncJob:
+        """Return the job; ``status`` says whether it is queued, running or done."""
         actor.require(Role.STUDENT)
-        left = await self._state.claim(actor.user_id, seconds=SYNC_WINDOW_SECONDS)
-        if left is not None:
-            raise RateLimitedError(params={"retry_after": left})
-        state = SyncState("queued", requested_at=self._clock.now())
-        await self._state.put(actor.user_id, state)
-        await self._kicker.kick(
-            "academic.sync_student_all", user_id=str(actor.user_id), with_marks=True
-        )
-        return state
+        job, queued = await self._jobs.request(actor.user_id, self._clock.now())
+        if queued:
+            try:
+                await self._kicker.kick(TASK_NAME, user_id=str(actor.user_id))
+            except Exception:
+                log.warning(
+                    "student_sync_manual_kick_failed", user_id=str(actor.user_id)
+                )
+        return job

@@ -81,9 +81,9 @@ def kicked(world: IntegrationWorld, task: str) -> list[dict[str, object]]:
 async def timetable_tasks(
     container: Container, world: IntegrationWorld
 ) -> list[dict[str, object]]:
-    """The group timetables the kicked `academic.sync_student_all` tasks sync."""
+    """Group timetables of the kicked `academic.run_student_sync` students."""
     tasks: list[dict[str, object]] = []
-    for kwargs in kicked(world, "academic.sync_student_all"):
+    for kwargs in kicked(world, "academic.run_student_sync"):
         user_id = UUID(str(kwargs["user_id"]))
         student = await container.academic.schedule.queries.get_student(user_id)
         assert student is not None

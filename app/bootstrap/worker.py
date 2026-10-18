@@ -6,6 +6,7 @@ import pkgutil
 
 import app.interfaces.jobs.tasks as tasks_package
 from app.settings import Settings
+from app.shared.observability import init_observability
 
 from taskiq.cli.worker.args import WorkerArgs
 from taskiq.cli.worker.run import run_worker
@@ -38,6 +39,7 @@ def worker_count(extra: list[str]) -> int:
 
 def run(settings: Settings, args: argparse.Namespace) -> int:
     """Run the taskiq worker (it starts its own child processes)."""
+    init_observability(settings, "worker")
     worker_args = WorkerArgs(
         broker=BROKER,
         modules=[RUNTIME_MODULE, *task_modules()],

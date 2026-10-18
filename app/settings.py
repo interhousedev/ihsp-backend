@@ -822,6 +822,37 @@ class SmtpInSettings(BaseModel):
     """Run DKIM checks on inbound mail (off in dev)."""
 
 
+class BugsinkSettings(BaseModel):
+    """Error tracking (`IHSP_BUGSINK__...`): Sentry DSN of the Bugsink server.
+
+    Empty DSN means off. Events carry no personal data and no auth headers or cookies.
+    """
+
+    dsn: str = ""
+    """Bugsink project DSN (https://<key>@host/<project>). Empty = off."""
+
+    release: str = ""
+    """Release sent with events; the image version (set by the build)."""
+
+    traces_sample_rate: float = 0.0
+    """Performance tracing sample rate; 0 keeps it off."""
+
+    api_url: str = ""
+    """Base URL of the Bugsink server for its REST API (the admin page). Empty = off."""
+
+    api_token: SecretStr = SecretStr("")
+    """Bugsink API token for the admin page (secret).
+
+    Empty means off.
+    """
+
+    projects: list[str] = Field(default_factory=list)
+    """Bugsink project ids offered as the logs filter.
+
+    One id per list item.
+    """
+
+
 class UrlsSettings(BaseModel):
     """Public origins of the apps and services."""
 
@@ -1090,6 +1121,7 @@ class Settings(BaseSettings):
     mail: MailSettings = Field(default_factory=MailSettings)
     smtp_in: SmtpInSettings = Field(default_factory=SmtpInSettings)
     urls: UrlsSettings = Field(default_factory=UrlsSettings)
+    bugsink: BugsinkSettings = Field(default_factory=BugsinkSettings)
     app: AppSettings = Field(default_factory=AppSettings)
     limits: LimitsSettings = Field(default_factory=LimitsSettings)
     ai: AiSettings = Field(default_factory=AiSettings)

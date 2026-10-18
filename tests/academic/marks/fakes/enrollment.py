@@ -38,6 +38,9 @@ class FakeEnrollment:
         """Record the call."""
         self.left.append((user_id, reason))
 
+    async def enqueue_student_sync(self, user_id: UUID) -> None:
+        """Not used by marks."""
+
 
 class FakeSchedule:
     """ScheduleQueries.get_student only."""

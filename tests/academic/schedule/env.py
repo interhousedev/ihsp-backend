@@ -23,6 +23,9 @@ from app.modules.academic.infrastructure.orm import Mark as MarkRow
 from app.modules.academic.infrastructure.schedule.import_store import RedisImportStore
 from app.modules.academic.infrastructure.schedule.mappers import lesson_to_entity
 from app.modules.academic.infrastructure.schedule.reader import SqlScheduleReader
+from app.modules.academic.infrastructure.schedule.student_sync_jobs import (
+    MemoryStudentSyncJobs,
+)
 from app.modules.academic.infrastructure.schedule.uow import SqlScheduleUnitOfWork
 from app.modules.academic.wiring_emis_import import (
     EmisImportServices,
@@ -419,6 +422,7 @@ def build_env(
 
         uow_factory = sql_factory  # type: ignore[assignment]
         reader = SqlScheduleReader(maker)
+    sync_jobs = MemoryStudentSyncJobs()
     services = assemble_schedule(
         uow_factory=uow_factory,
         reader=reader,
@@ -430,6 +434,7 @@ def build_env(
         identity_commands=commands,  # type: ignore[arg-type]
         rooms_url=ROOMS_URL,
         mail_domain=MAIL_DOMAIN,
+        sync_jobs=sync_jobs,
     )
     emis = FakeEmisSource()
     urls = FakeLessonUrls()
@@ -444,6 +449,7 @@ def build_env(
         kicker=kicker,
         clock=clock,
         import_topics=import_topics,
+        sync_jobs=sync_jobs,
     )
     return Env(
         kind=kind,
