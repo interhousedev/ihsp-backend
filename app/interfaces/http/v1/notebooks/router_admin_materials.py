@@ -7,7 +7,8 @@ from app.interfaces.http.v1.notebooks.handlers import (
     remove_default_material,
 )
 from app.interfaces.http.v1.notebooks.schemas_admin_materials import (
-    ReconcileMaterialsResponse,
+    ReconcileJobAccepted,
+    ReconcileJobStatus,
     SubjectMaterialGroupResponse,
     SubjectMaterialResponse,
 )
@@ -47,5 +48,12 @@ router.add_api_route(
     "/subjects/{subject_id}/reconcile",
     reconcile_subject_materials.reconcile_admin_subject_materials,
     methods=["POST"],
-    response_model=ReconcileMaterialsResponse,
+    response_model=ReconcileJobAccepted,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+router.add_api_route(
+    "/subjects/{subject_id}/reconcile/{job_id}",
+    reconcile_subject_materials.get_admin_reconcile_status,
+    methods=["GET"],
+    response_model=ReconcileJobStatus,
 )

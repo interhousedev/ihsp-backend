@@ -1,10 +1,18 @@
 """Routes of a teacher's subjects and the materials they keep for them."""
 
+from typing import Annotated
 from uuid import UUID
 
+from app.bootstrap.container import Container
+from app.interfaces.http.dependencies import get_container
 from app.interfaces.http.v1.notebooks.deps import Notebooks, TeacherActor
+from app.interfaces.http.v1.notebooks.reconcile_jobs import (
+    reconcile_status,
+    start_reconcile,
+)
 from app.interfaces.http.v1.notebooks.schemas_admin_materials import (
-    ReconcileMaterialsResponse,
+    ReconcileJobAccepted,
+    ReconcileJobStatus,
     SubjectMaterialResponse,
 )
 from app.interfaces.http.v1.notebooks.schemas_staff_subjects import (
@@ -14,7 +22,7 @@ from app.interfaces.http.v1.notebooks.schemas_staff_subjects import (
 )
 from app.modules.notebooks.application.material_target import DefaultMaterialDraft
 
-from fastapi import Response, status
+from fastapi import Depends, Response, status
 
 
 async def list_staff_subjects(
@@ -65,10 +73,21 @@ async def remove_staff_subject_material(
 
 
 async def reconcile_staff_subject_materials(
-    subject_id: UUID, notebooks: Notebooks, actor: TeacherActor
-) -> ReconcileMaterialsResponse:
-    """Sync the teacher's own subject notebooks of the subject, now; report totals."""
-    result = await notebooks.reconcile_subject_materials.execute(
-        subject_id, owner_id=actor.user_id
-    )
-    return ReconcileMaterialsResponse.from_result(result)
+    subject_id: UUID,
+    notebooks: Notebooks,
+    actor: TeacherActor,
+    container: Annotated[Container, Depends(get_container)],
+) -> ReconcileJobAccepted:
+    """Queue the sync of the teacher's own subject notebooks; answer 202."""
+    return await start_reconcile(container, subject_id, actor.user_id, actor.user_id)
+
+
+async def get_staff_reconcile_status(
+    subject_id: UUID,
+    job_id: str,
+    notebooks: Notebooks,
+    actor: TeacherActor,
+    container: Annotated[Container, Depends(get_container)],
+) -> ReconcileJobStatus:
+    """The totals of a reconcile job the teacher started."""
+    return await reconcile_status(container, job_id, started_by=actor.user_id)

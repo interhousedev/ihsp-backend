@@ -4,13 +4,11 @@ from datetime import datetime
 from typing import Self
 from uuid import UUID
 
-from app.modules.notebooks.application.reconcile_subject_materials import (
-    ReconcileResult,
-)
 from app.modules.notebooks.domain.default_materials import (
     DefaultMaterial,
     DefaultMaterialKind,
 )
+from app.shared.jobs import JobStatus
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -81,20 +79,20 @@ class SubjectMaterialGroupResponse(BaseModel):
     materials: list[SubjectMaterialResponse]
 
 
-class ReconcileMaterialsResponse(BaseModel):
-    """What "check that all lesson materials are in the notebook" found."""
+class ReconcileJobAccepted(BaseModel):
+    """202 answer of "check that all lesson materials are in the notebooks"."""
 
-    notebooks: int = Field(description="Subject notebooks checked.")
-    added: int = Field(description="Lesson materials added to notebooks now.")
+    job_id: str = Field(description="Poll GET .../reconcile/{job_id} for the totals.")
+    status: JobStatus = Field(description="Starts as queued.")
+
+
+class ReconcileJobStatus(BaseModel):
+    """Progress and totals of one reconcile job."""
+
+    job_id: str
+    status: JobStatus = Field(description="queued, running, done, failed or cancelled.")
+    done: bool = Field(description="True once the check finished (status done).")
+    notebooks: int = Field(description="Subject notebooks checked so far.")
+    added: int = Field(description="Lesson materials added to notebooks.")
     already_present: int = Field(description="Materials the notebooks already had.")
     skipped: int = Field(description="Materials not readable yet; retried later.")
-
-    @classmethod
-    def from_result(cls, result: ReconcileResult) -> Self:
-        """Map the use-case totals."""
-        return cls(
-            notebooks=result.notebooks,
-            added=result.added,
-            already_present=result.already_present,
-            skipped=result.skipped,
-        )

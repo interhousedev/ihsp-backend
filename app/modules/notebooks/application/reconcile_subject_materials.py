@@ -6,7 +6,8 @@ from uuid import UUID
 from app.modules.notebooks.application.sync_auto_notebook import SyncAutoNotebook
 from app.modules.notebooks.ports.unit_of_work import UowFactory
 
-RECONCILE_LIMIT = 1000  # subject notebooks checked by one request
+RECONCILE_LIMIT = 1000  # subject notebooks checked by one job
+RECONCILE_TASK = "notebooks.reconcile_subject_materials"  # the taskiq task wire name
 
 
 @dataclass(frozen=True, slots=True)

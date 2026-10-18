@@ -2,7 +2,8 @@
 
 from app.interfaces.http.v1.notebooks.handlers import staff_subjects
 from app.interfaces.http.v1.notebooks.schemas_admin_materials import (
-    ReconcileMaterialsResponse,
+    ReconcileJobAccepted,
+    ReconcileJobStatus,
     SubjectMaterialResponse,
 )
 from app.interfaces.http.v1.notebooks.schemas_staff_subjects import (
@@ -43,5 +44,12 @@ router.add_api_route(
     "/{subject_id}/reconcile",
     staff_subjects.reconcile_staff_subject_materials,
     methods=["POST"],
-    response_model=ReconcileMaterialsResponse,
+    response_model=ReconcileJobAccepted,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+router.add_api_route(
+    "/{subject_id}/reconcile/{job_id}",
+    staff_subjects.get_staff_reconcile_status,
+    methods=["GET"],
+    response_model=ReconcileJobStatus,
 )
