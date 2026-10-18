@@ -1,7 +1,7 @@
 """Which students a staff member may see: all for Administration, own groups else."""
 
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from uuid import UUID
 
 from app.modules.certificates.domain.errors import NotCuratorError
@@ -24,6 +24,10 @@ class StaffFilters:
     level: str | None = None
     student_id: UUID | None = None
     q: str | None = None
+    custom: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    """Custom field key -> selected values (applies only with one type)."""
+    ranges: dict[str, tuple[float | None, float | None]] = field(default_factory=dict)
+    """Custom number field key -> (min, max)."""
 
 
 class StaffScope:

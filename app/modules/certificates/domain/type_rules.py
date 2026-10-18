@@ -9,6 +9,11 @@ from app.modules.certificates.domain.certificate_type import (
     TYPE_FIELDS,
     CertificateType,
 )
+from app.modules.certificates.domain.custom_fields import (
+    CustomField,
+    check_fields,
+    field_from_dict,
+)
 from app.modules.certificates.domain.errors import (
     CertificateInvalidError,
     CertificateTypeBuiltinError,
@@ -40,6 +45,7 @@ def check_type(kind: CertificateType) -> None:
     low, high = kind.score_min, kind.score_max
     if low is not None and high is not None and low > high:
         raise _fail("score_max")
+    check_fields(kind.custom_fields)
 
 
 def apply_changes(kind: CertificateType, changes: Mapping[str, Any]) -> None:
@@ -49,5 +55,11 @@ def apply_changes(kind: CertificateType, changes: Mapping[str, Any]) -> None:
             continue
         if key == "code" and kind.builtin and value != kind.code:
             raise CertificateTypeBuiltinError()
+        if key == "custom_fields":
+            value = [_as_field(item) for item in value or []]
         setattr(kind, key, value)
     check_type(kind)
+
+
+def _as_field(item: CustomField | Mapping[str, Any]) -> CustomField:
+    return item if isinstance(item, CustomField) else field_from_dict(item)

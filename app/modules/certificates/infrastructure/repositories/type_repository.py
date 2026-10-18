@@ -3,6 +3,7 @@
 from uuid import UUID
 
 from app.modules.certificates.domain.certificate_type import CertificateType
+from app.modules.certificates.domain.custom_fields import field_from_dict
 from app.modules.certificates.infrastructure.orm.certificate_type import (
     CertificateTypeRow as Row,
 )
@@ -27,6 +28,7 @@ def to_entity(row: Row) -> CertificateType:
         asks_year=row.asks_year,
         builtin=row.builtin,
         position=row.position,
+        custom_fields=[field_from_dict(item) for item in row.custom_fields or []],
     )
 
 
@@ -43,6 +45,7 @@ def _apply(row: Row, kind: CertificateType) -> None:
     row.asks_year = kind.asks_year
     row.builtin = kind.builtin
     row.position = kind.position
+    row.custom_fields = [item.to_dict() for item in kind.custom_fields]
 
 
 class SqlCertificateTypeRepository:

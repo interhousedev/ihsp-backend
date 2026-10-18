@@ -8,5 +8,7 @@
   "cert-invalid": "The value of the field \"{field}\" is not valid for this certificate.",
   "cert-not-curator": "You can only see the certificates of the groups you curate.",
   "cert-download-failed": "The certificate file could not be downloaded.",
-  "cert-url-unsafe": "The certificate link is not allowed."
+  "cert-url-unsafe": "The certificate link is not allowed.",
+  "cert-custom-field-required": "The field \"{field}\" is required.",
+  "cert-custom-field-invalid": "The value of the field \"{field}\" is not valid."
 }

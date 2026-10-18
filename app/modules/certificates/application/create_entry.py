@@ -34,7 +34,7 @@ class CreateEntry:
                 type_id=type_id,
                 created_at=self._clock.now(),
             )
-            apply_values(kind, entry, values)
+            apply_values(kind, entry, {"custom": {}, **values})
             await uow.entries.add(entry)
             await uow.commit()
         return entry

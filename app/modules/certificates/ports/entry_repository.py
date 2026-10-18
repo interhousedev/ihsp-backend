@@ -1,7 +1,7 @@
 """Port: storage of certificate entries and their files."""
 
-from collections.abc import Sequence
-from dataclasses import dataclass
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass, field
 from typing import Protocol
 from uuid import UUID
 
@@ -16,6 +16,12 @@ class EntryFilter:
     type_id: UUID | None = None
     subject: str | None = None
     level: str | None = None
+    custom: Mapping[str, tuple[str, ...]] = field(default_factory=dict)
+    """Custom choice or text key -> any of these values."""
+    ranges: Mapping[str, tuple[float | None, float | None]] = field(
+        default_factory=dict
+    )
+    """Custom number key -> (min, max), either end open."""
 
 
 class EntryRepository(Protocol):

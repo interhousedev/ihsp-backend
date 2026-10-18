@@ -1,6 +1,7 @@
 """SQL repository of certificate entries and their files."""
 
 from collections.abc import Sequence
+from typing import Any
 from uuid import UUID
 
 from app.modules.certificates.domain.entry import (
@@ -16,7 +17,20 @@ from app.modules.certificates.infrastructure.orm.certificate_entry import (
 )
 from app.modules.certificates.ports.entry_repository import EntryFilter
 
-from sqlalchemy import Select, delete, func, select
+from sqlalchemy import (
+    ColumnElement,
+    Float,
+    Select,
+    String,
+    and_,
+    case,
+    cast,
+    delete,
+    func,
+    or_,
+    select,
+)
+from sqlalchemy.dialects.postgresql import array
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -40,6 +54,7 @@ def _entity(row: Row, files: Sequence[FileRow]) -> CertificateEntry:
         issued_at=row.issued_at,
         expires_at=row.expires_at,
         files=[_file(f) for f in files],
+        custom_values=dict(row.custom_values or {}),
     )
 
 
@@ -55,6 +70,7 @@ def _apply(row: Row, entry: CertificateEntry) -> None:
     row.source = entry.source.value
     row.issued_at = entry.issued_at
     row.expires_at = entry.expires_at
+    row.custom_values = dict(entry.custom_values)
 
 
 def _filtered(flt: EntryFilter) -> Select[tuple[Row]]:
@@ -65,7 +81,32 @@ def _filtered(flt: EntryFilter) -> Select[tuple[Row]]:
         stmt = stmt.where(Row.level == flt.level)
     if flt.subject:
         stmt = stmt.where(Row.subject.ilike(f"%{_escape(flt.subject)}%", escape="\\"))
+    for key, wanted in flt.custom.items():
+        stmt = stmt.where(_custom_in(key, wanted))
+    for key, (low, high) in flt.ranges.items():
+        stmt = stmt.where(_custom_between(key, low, high))
     return stmt
+
+
+def _custom_in(key: str, wanted: tuple[str, ...]) -> Any:
+    # A scalar (text, single choice) or a jsonb array (multi choice) may match.
+    scalar = Row.custom_values[key].astext.in_(list(wanted))
+    listed = Row.custom_values[key].has_any(array(list(wanted), type_=String))
+    return or_(scalar, listed)
+
+
+def _custom_between(key: str, low: float | None, high: float | None) -> Any:
+    value = Row.custom_values[key]
+    number = case(
+        (func.jsonb_typeof(value) == "number", cast(value.astext, Float)),
+        else_=None,
+    )
+    conditions: list[ColumnElement[bool]] = [number.is_not(None)]
+    if low is not None:
+        conditions.append(number >= low)
+    if high is not None:
+        conditions.append(number <= high)
+    return and_(*conditions)
 
 
 def _escape(text: str) -> str:

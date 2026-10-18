@@ -12,6 +12,9 @@ from app.modules.certificates.application.get_file_download import GetFileDownlo
 from app.modules.certificates.application.get_staff_ranking import GetStaffRanking
 from app.modules.certificates.application.get_staff_stats import GetStaffStats
 from app.modules.certificates.application.import_emis import ImportEmis
+from app.modules.certificates.application.list_custom_field_values import (
+    ListCustomFieldValues,
+)
 from app.modules.certificates.application.list_my_entries import ListMyEntries
 from app.modules.certificates.application.list_staff_entries import ListStaffEntries
 from app.modules.certificates.application.list_staff_groups import ListStaffGroups
@@ -52,6 +55,7 @@ class CertificatesServices:
     get_staff_ranking: GetStaffRanking
     list_staff_groups: ListStaffGroups
     export_entries: ExportEntries
+    list_custom_field_values: ListCustomFieldValues
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,6 +105,9 @@ def build(
         get_staff_ranking=GetStaffRanking(uow_factory=uow_factory, scope=scope),
         list_staff_groups=ListStaffGroups(scope=scope),
         export_entries=ExportEntries(uow_factory=uow_factory, scope=scope, files=files),
+        list_custom_field_values=ListCustomFieldValues(
+            uow_factory=uow_factory, scope=scope
+        ),
     )
 
 

@@ -1,7 +1,11 @@
 """A kind of certificate students record (IELTS, CEFR, SAT, ...)."""
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 from uuid import UUID
+
+if TYPE_CHECKING:
+    from app.modules.certificates.domain.custom_fields import CustomField
 
 LOCALES = ("uz", "ru", "en")
 
@@ -23,6 +27,7 @@ class CertificateType:
     asks_year: bool = True
     builtin: bool = False
     position: int = 0
+    custom_fields: list["CustomField"] = field(default_factory=list)
 
     def title(self, locale: str) -> str:
         """The name in the locale, else English, else the code."""
@@ -41,4 +46,5 @@ TYPE_FIELDS = (
     "asks_subject",
     "asks_year",
     "position",
+    "custom_fields",
 )

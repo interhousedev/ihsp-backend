@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from app.modules.certificates.domain.certificate_type import CertificateType
+from app.modules.certificates.domain.custom_fields import clean_values
 from app.modules.certificates.domain.entry import CertificateEntry
 from app.modules.certificates.domain.validation import (
     check_level,
@@ -34,3 +35,5 @@ def apply_values(
     check_year(entry.year)
     check_text("subject", entry.subject)
     check_text("serial", entry.serial)
+    if "custom" in values:
+        entry.custom_values = clean_values(kind.custom_fields, values["custom"])

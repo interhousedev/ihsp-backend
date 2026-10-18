@@ -8,5 +8,7 @@
   "cert-invalid": "«{field}» maydonining qiymati bu sertifikat uchun yaroqsiz.",
   "cert-not-curator": "Siz faqat oʻzingiz kuratorlik qiladigan guruhlarning sertifikatlarini koʻra olasiz.",
   "cert-download-failed": "Sertifikat faylini yuklab boʻlmadi.",
-  "cert-url-unsafe": "Sertifikat havolasiga ruxsat berilmagan."
+  "cert-url-unsafe": "Sertifikat havolasiga ruxsat berilmagan.",
+  "cert-custom-field-required": "«{field}» maydoni majburiy.",
+  "cert-custom-field-invalid": "«{field}» maydonining qiymati yaroqsiz."
 }

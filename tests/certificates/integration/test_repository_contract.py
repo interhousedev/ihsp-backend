@@ -181,3 +181,45 @@ async def test_query_filters_pages_and_counts(uow_factory: UowFactory) -> None:
     assert [e.student_id for e in of_level] == [bob]
     assert [e.student_id for e in of_subject] == [ann]
     assert nobody == ([], 0)
+
+
+async def test_custom_filters_match_choices_text_and_number_ranges(
+    uow_factory: UowFactory,
+) -> None:
+    """ORM and fake agree: a scalar or list value matches, numbers are bounded.
+
+    Covers FILT-CF-01 (choice, multi-select), FILT-CF-02 (number range).
+    """
+    ann, bob, cid = new_id(), new_id(), new_id()
+    kind = make_type("sat")
+    async with uow_factory() as uow:
+        await uow.types.add(kind)
+        await uow.entries.add(
+            make_entry(ann, kind.id, custom_values={"track": "math", "score": 700.0})
+        )
+        await uow.entries.add(
+            make_entry(
+                bob, kind.id, custom_values={"track": ["art", "math"], "score": 300}
+            )
+        )
+        await uow.entries.add(
+            make_entry(
+                cid, kind.id, custom_values={"track": "Other text", "score": 900}
+            )
+        )
+        await uow.commit()
+
+    async with uow_factory() as uow:
+        by_track, _ = await uow.entries.query(
+            EntryFilter([ann, bob, cid], custom={"track": ("math", "Other text")}),
+            limit=None,
+            offset=0,
+        )
+        by_range, _ = await uow.entries.query(
+            EntryFilter([ann, bob, cid], ranges={"score": (500.0, None)}),
+            limit=None,
+            offset=0,
+        )
+
+    assert sorted(e.student_id for e in by_track) == sorted([ann, bob, cid])
+    assert sorted(e.student_id for e in by_range) == sorted([ann, cid])

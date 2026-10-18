@@ -11,6 +11,7 @@ from app.interfaces.http.v1.certificates.handlers import (
     get_staff_ranking,
     get_staff_stats,
     import_emis,
+    list_custom_field_values,
     list_my_entries,
     list_staff_entries,
     list_staff_groups,
@@ -23,6 +24,7 @@ from app.interfaces.http.v1.certificates.schemas import (
     CertificateEntryResponse,
     CertificateFileResponse,
     CertificateTypeResponse,
+    CustomFieldValuesResponse,
     ImportEmisResponse,
     StaffEntriesResponse,
     StaffGroupResponse,
@@ -136,5 +138,11 @@ router.add_api_route(
     list_staff_groups.list_staff_groups,
     methods=["GET"],
     response_model=list[StaffGroupResponse],
+)
+router.add_api_route(
+    "/staff/fields/{key}/values",
+    list_custom_field_values.list_custom_field_values,
+    methods=["GET"],
+    response_model=CustomFieldValuesResponse,
 )
 router.add_api_route("/staff/export", export_entries.export_entries, methods=["POST"])

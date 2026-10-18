@@ -3,6 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from enum import StrEnum
+from typing import Any
 from uuid import UUID
 
 
@@ -42,3 +43,4 @@ class CertificateEntry:
     issued_at: date | None = None
     expires_at: date | None = None
     files: list[EntryFile] = field(default_factory=list)
+    custom_values: dict[str, Any] = field(default_factory=dict)

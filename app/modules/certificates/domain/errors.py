@@ -79,3 +79,17 @@ class UnsafeCertificateUrlError(CertificateDownloadError):
     code = "certificate_url_unsafe"
     status = 422
     message_key = "cert-url-unsafe"
+
+
+class CustomFieldRequiredError(ValidationFailedError):
+    """A required custom field of the type has no value. Params: field (its key)."""
+
+    code = "certificate_custom_field_required"
+    message_key = "cert-custom-field-required"
+
+
+class CustomFieldInvalidError(ValidationFailedError):
+    """A custom field value does not fit its kind or options. Params: field (key)."""
+
+    code = "certificate_custom_field_invalid"
+    message_key = "cert-custom-field-invalid"

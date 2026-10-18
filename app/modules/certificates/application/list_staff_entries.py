@@ -29,12 +29,18 @@ class StaffEntriesPage:
 
 
 def repo_filter(students: list[StudentInfo], flt: StaffFilters) -> EntryFilter:
-    """The repository filter for the students in scope and the query filters."""
+    """The repository filter for the students in scope and the query filters.
+
+    Custom field filters only mean something for one type, so they need it.
+    """
+    typed = flt.type_id is not None
     return EntryFilter(
         student_ids=[s.id for s in students],
         type_id=flt.type_id,
         subject=flt.subject,
         level=flt.level,
+        custom=dict(flt.custom) if typed else {},
+        ranges=dict(flt.ranges) if typed else {},
     )
 
 

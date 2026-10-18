@@ -15,10 +15,11 @@ from httpx import AsyncClient, Response
 TYPE_KEYS = {
     "id", "code", "name", "levels", "asks_level", "asks_score", "score_min",
     "score_max", "asks_percent", "asks_subject", "asks_year", "builtin", "position",
+    "custom_fields",
 }  # fmt: skip
 ENTRY_KEYS = {
     "id", "type_id", "level", "score", "percent", "subject", "year", "serial",
-    "source", "issued_at", "expires_at", "files", "created_at",
+    "source", "issued_at", "expires_at", "files", "custom_values", "created_at",
 }  # fmt: skip
 NAME = {"uz": "Test", "ru": "Тест", "en": "Test"}
 
@@ -280,3 +281,140 @@ async def test_export_streams_a_zip_named_group_student_file(
         with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
             assert archive.namelist() == ["2TN1-Ann Alpha-ielts.pdf"]
     assert empty.status_code == 200
+
+
+CUSTOM_LABEL = {"uz": "Yo'nalish", "ru": "Направление", "en": "Track"}
+
+
+async def test_admin_defines_custom_fields_and_students_fill_them(
+    h: CertificatesHarness, api: Api
+) -> None:
+    """CF-API-01: the type takes custom fields; a required one is enforced (422)."""
+    fields = [
+        {
+            "key": "track",
+            "kind": "multi",
+            "label": CUSTOM_LABEL,
+            "required": True,
+            "options": ["math", "art"],
+            "allow_other": True,
+        },
+        {"key": "score", "kind": "number", "label": CUSTOM_LABEL},
+    ]
+    created = await api.client.post(
+        "/v1/certificates/admin/types",
+        json={"code": "fields", "name": NAME, "custom_fields": fields},
+    )
+    kind_id = created.json()["id"]
+    student = api.as_(h.student_actor(h.ann)).client
+
+    missing = await student.post(
+        "/v1/certificates/me", json={"type_id": kind_id, "custom": {"score": 5}}
+    )
+    refused = await student.post(
+        "/v1/certificates/me",
+        json={"type_id": kind_id, "custom": {"track": "math", "score": 1}},
+    )
+    accepted = await student.post(
+        "/v1/certificates/me",
+        json={
+            "type_id": kind_id,
+            "custom": {"track": ["math", "Chess club"], "score": 5},
+        },
+    )
+
+    assert created.status_code == 200, created.text
+    assert [item["key"] for item in created.json()["custom_fields"]] == [
+        "track",
+        "score",
+    ]
+    assert missing.status_code == 422
+    assert refused.status_code == 422
+    assert accepted.status_code == 200
+    assert accepted.json()["custom_values"] == {
+        "track": ["math", "Chess club"],
+        "score": 5.0,
+    }
+
+
+async def test_bad_custom_field_definitions_are_refused(
+    h: CertificatesHarness, api: Api
+) -> None:
+    """CF-API-02: a choice field without options and a bad key are 422."""
+    no_options = await api.client.post(
+        "/v1/certificates/admin/types",
+        json={
+            "code": "bad1",
+            "name": NAME,
+            "custom_fields": [
+                {"key": "track", "kind": "single", "label": CUSTOM_LABEL}
+            ],
+        },
+    )
+    bad_key = await api.client.post(
+        "/v1/certificates/admin/types",
+        json={
+            "code": "bad2",
+            "name": NAME,
+            "custom_fields": [{"key": "Track!", "kind": "text", "label": CUSTOM_LABEL}],
+        },
+    )
+
+    assert no_options.status_code == 422
+    assert bad_key.status_code == 422
+
+
+async def test_staff_filters_and_values_use_custom_fields(
+    h: CertificatesHarness, api: Api
+) -> None:
+    """CF-API-03: cf_, cfmin_ and cfmax_ query params filter; values are listed."""
+    kind = await h.add_type(
+        "fields",
+        custom_fields=[
+            make_field("track", "single", options=("math", "art"), allow_other=True),
+            make_field("score", "number"),
+        ],
+    )
+    await h.add_entry(h.ann, kind, custom={"track": "math", "score": 700})
+    await h.add_entry(h.bob, kind, custom={"track": "Chess club", "score": 200})
+    staff = api.as_(h.admin).client
+    base = {"type_id": str(kind.id)}
+
+    chosen = await staff.get(
+        "/v1/certificates/staff/entries",
+        params=[*base.items(), ("cf_track", "Chess club"), ("cf_track", "math")],
+    )
+    ranged = await staff.get(
+        "/v1/certificates/staff/entries",
+        params={**base, "cfmin_score": "500"},
+    )
+    values = await staff.get("/v1/certificates/staff/fields/track/values", params=base)
+    scores = await staff.get("/v1/certificates/staff/fields/score/values", params=base)
+    unknown = await staff.get("/v1/certificates/staff/fields/nope/values", params=base)
+
+    assert chosen.json()["total"] == 2
+    assert ranged.json()["total"] == 1
+    assert values.json() == {
+        "key": "track",
+        "kind": "single",
+        "options": ["math", "art"],
+        "other_values": ["Chess club"],
+        "min": None,
+        "max": None,
+    }
+    assert (scores.json()["min"], scores.json()["max"]) == (200.0, 700.0)
+    assert unknown.status_code == 422
+
+
+def make_field(key: str, kind: str, **over: object) -> object:
+    """A custom field as the domain holds it, for arranging a type."""
+    from app.modules.certificates.domain.custom_fields import CustomField, FieldKind
+
+    values: dict[str, object] = {
+        "key": key,
+        "kind": FieldKind(kind),
+        "label": CUSTOM_LABEL,
+        "options": (),
+    }
+    values.update(over)
+    return CustomField(**values)  # type: ignore[arg-type]

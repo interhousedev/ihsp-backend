@@ -142,6 +142,7 @@ class FakeEntryRepository:
                 not flt.subject
                 or flt.subject.casefold() in (e.subject or "").casefold()
             )
+            and _custom_matches(e.custom_values, flt)
         ]
         rows.sort(key=lambda e: (e.created_at, e.id), reverse=True)
         page = rows[offset:] if limit is None else rows[offset : offset + limit]
@@ -158,6 +159,22 @@ class FakeEntryRepository:
             if any(f.id in wanted for f in e.files)
         ]
         return copy.deepcopy(found)
+
+
+def _custom_matches(values: dict[str, object], flt: EntryFilter) -> bool:
+    """Same rule as the SQL filter: a scalar or a list may contain a wanted value."""
+    for key, wanted in flt.custom.items():
+        value = values.get(key)
+        held = value if isinstance(value, list) else [value]
+        if not any(v in wanted for v in held):
+            return False
+    for key, (low, high) in flt.ranges.items():
+        number = values.get(key)
+        if isinstance(number, bool) or not isinstance(number, int | float):
+            return False
+        if (low is not None and number < low) or (high is not None and number > high):
+            return False
+    return True
 
 
 class FakeCertificatesUnitOfWork:

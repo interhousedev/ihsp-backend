@@ -1,6 +1,7 @@
 """ORM models of certificates.entries and certificates.entry_files."""
 
 from datetime import date
+from typing import Any
 from uuid import UUID
 
 from app.shared.db.base import Base, IdMixin, TimestampMixin
@@ -14,6 +15,7 @@ from sqlalchemy import (
     Uuid,
     text,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 
@@ -48,6 +50,9 @@ class CertificateEntryRow(IdMixin, TimestampMixin, Base):
     source: Mapped[str] = mapped_column(String(10), server_default=text("'manual'"))
     issued_at: Mapped[date | None]
     expires_at: Mapped[date | None]
+    custom_values: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, server_default=text("'{}'")
+    )
 
 
 class CertificateEntryFileRow(TimestampMixin, Base):
