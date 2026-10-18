@@ -309,7 +309,32 @@ async def test_syncing_subjects_again_updates_names_without_duplicates(
         assert a.subject_ids == b.subject_ids and len(a.subject_ids) == 1
         merged = await uow.subjects.get(a.subject_ids[0])
     assert merged is not None
-    assert merged.name == {"uz": "Fizika", "ru": "Физика 2", "en": "Physics"}
+    assert merged.name == {"uz": "Fizika", "ru": "Физика", "en": "Physics"}
+
+
+async def test_admin_names_survive_repeated_syncs(env: Env) -> None:
+    """Translations entered by an admin are never overwritten by an EMIS sync."""
+    group = await env.group()
+    enrollment = env.services.enrollment
+    await enrollment.sync_subjects(
+        group_id=group.id, subjects=[subject(20, uz="Tarix", ru="История")]
+    )
+    async with env.uow_factory() as uow:
+        saved = await uow.groups.get(group.id)
+        assert saved is not None
+        subject_id = saved.subject_ids[0]
+    await env.services.update_subject.execute(
+        subject_id, name={"uz": "Tarix", "ru": "История Узб.", "en": "History"}
+    )
+
+    await enrollment.sync_subjects(
+        group_id=group.id, subjects=[subject(20, uz="Tarikh", ru="Истор.", en="Hist")]
+    )
+
+    async with env.uow_factory() as uow:
+        kept = await uow.subjects.get(subject_id)
+    assert kept is not None
+    assert kept.name == {"uz": "Tarix", "ru": "История Узб.", "en": "History"}
 
 
 async def test_a_student_who_leaves_is_marked_and_told(env: Env) -> None:

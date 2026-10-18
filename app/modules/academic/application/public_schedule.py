@@ -333,10 +333,14 @@ class AcademicEnrollmentImpl:
             )
             await uow.subjects.add(subject)
             return subject
+        # A name that exists (EMIS or an admin edit or a translation) is never
+        # overwritten by a sync; only empty languages are filled.
+        filled = dict(subject.name)
         for lang in LANGUAGES:
             fresh = names[lang].strip()
-            if fresh:
-                subject.name[lang] = fresh
+            if fresh and not (filled.get(lang) or "").strip():
+                filled[lang] = fresh
+        subject.name = filled
         await uow.subjects.save(subject)
         return subject
 
