@@ -18,6 +18,8 @@ from tests.academic.schedule.emis_builders import (
     HISTORY,
     PHYSICS,
     YULDASHEV,
+    EmisSubject,
+    EmisTeacher,
     day,
     klass,
     weekly,
@@ -25,6 +27,9 @@ from tests.academic.schedule.emis_builders import (
 from tests.academic.schedule.env import TERM_START, TODAY, Env
 
 import pytest
+
+ENGLISH = EmisSubject(107, "Ingliz tili", "Английский язык", "English")
+KARIMOVA = EmisTeacher(9003, "Dilnoza", "Karimova", None)
 
 
 async def run(env: Env, group_id: UUID, user_id: UUID) -> TimetableResult:
@@ -138,6 +143,37 @@ async def test_odd_and_even_slots_become_parity_entries_and_lessons_follow(
     assert sorted(by_date) == [day(0, 5), day(1, 5), day(2, 5), day(3, 5)]
     names = {x.date: x.subject_id for x in by_date.values()}
     assert names[day(0, 5)] == names[day(2, 5)] != names[day(1, 5)] == names[day(3, 5)]
+
+
+async def test_one_subject_on_three_days_stays_three_weekly_entries(env: Env) -> None:
+    """ACA-5: English on Tue, Wed and Thu; EMIS lists Tue and Wed in two weeks only.
+
+    The weeks of the window without a Tuesday or Wednesday class must not turn those
+    weekly classes into one-offs: all three days keep their weekly entry and lessons.
+    """
+    term, group, user = await set_up(env)
+    env.emis.classes = (
+        weekly(2, 0, weeks=(0, 1), subject=ENGLISH, teacher=KARIMOVA)
+        + weekly(3, 0, weeks=(0, 1), subject=ENGLISH, teacher=KARIMOVA)
+        + weekly(4, 0, subject=ENGLISH, teacher=KARIMOVA)
+    )
+
+    await run(env, group.id, user.id)
+
+    entries = await entries_of(env, term.id)
+    assert [(e.weekday, e.period, e.week_parity) for e in entries] == [
+        (2, 1, "every"),
+        (3, 1, "every"),
+        (4, 1, "every"),
+    ]
+    dated = {
+        (x.date, x.period)
+        for x in await lessons_of(env)
+        if x.date >= day(0, 1) and x.date <= day(3, 5)
+    }
+    assert dated == {
+        (day(week, weekday), 1) for week in range(4) for weekday in (2, 3, 4)
+    }
 
 
 async def test_classes_on_a_saturday_are_ignored(env: Env) -> None:

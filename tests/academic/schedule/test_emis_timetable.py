@@ -77,6 +77,12 @@ def test_the_same_weeks_count_differently_from_a_later_anchor() -> None:
     assert derive(weekly(4, weeks=(1, 3)), later) == [(4, 1, "even", None, 101)]
 
 
+def test_a_slot_in_weeks_zero_and_two_only_is_alternating_not_weekly() -> None:
+    """ACA-5: present in two weeks of one parity, absent from the other parity's
+    weeks: an even entry, even though two weeks alone are not "more than half"."""
+    assert derive(weekly(4, 1, weeks=(0, 2))) == [(4, 2, "even", None, 101)]
+
+
 def test_two_subjects_alternating_in_one_slot_are_an_odd_and_an_even_entry() -> None:
     """ACA-5: physics in odd weeks, history in even weeks, on the same pair."""
     classes = weekly(3, 2, weeks=(1, 3), subject=PHYSICS) + weekly(

@@ -58,8 +58,9 @@ def derive_slots(
     * missing from none of the weeks that had a study day on its weekday: every week;
     * present in exactly the odd (or exactly the even) such weeks, with the other
       parity absent: odd (even) weeks only;
-    * otherwise present in more than half of them: every week (a class was cancelled);
-      else a one-off, which is no weekly slot (it stays a dated lesson).
+    * otherwise present in at least two of them: every week (a class was cancelled, or
+      EMIS has not listed the later weeks yet); a slot seen in one week only is a
+      one-off, which is no weekly slot (it stays a dated lesson).
     """
     in_term = [c for c in classes if term.starts_on <= c.date <= term.ends_on]
     observed = {term_week(c.date, term) for c in in_term}
@@ -121,4 +122,4 @@ def _parity(present: set[int], witnesses: set[int]) -> WeekParity | None:
         same = {w for w in witnesses if parity_of_week(w) == only}
         if present == same:
             return only
-    return "every" if len(present) * 2 > len(witnesses) else None
+    return "every" if len(present) >= 2 else None
