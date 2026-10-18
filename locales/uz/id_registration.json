@@ -1,6 +1,7 @@
 {
   "emis-auth-failed": "EMIS login yoki paroli noto'g'ri.",
   "emis-unavailable": "EMIS javob bermayapti. Keyinroq urinib ko'ring.",
+  "emis-paused": "EMIS bir oz kutishni so'radi. Bir necha daqiqadan so'ng qayta urinib ko'ring.",
   "emis-credentials-missing": "Bu hisob uchun ishlaydigan EMIS kirish ma'lumoti saqlanmagan. EMIS ni ulash uchun qayta kiring.",
   "id-wrong-institution": "Faqat International House Tashkent o'quvchilari ro'yxatdan o'ta oladi.",
   "id-emis-already-linked": "Bu EMIS akkauntiga allaqachon IHT akkaunti ulangan. Tizimga kiring, parolni tiklang yoki EMIS ma'lumotlari bilan akkauntni qaytarib oling.",

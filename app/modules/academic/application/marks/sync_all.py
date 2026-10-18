@@ -6,6 +6,7 @@ from collections.abc import Awaitable, Callable
 from uuid import UUID
 
 from app.modules.academic.application.marks.ports.bell_sync import BellSync
+from app.modules.academic.application.marks.ports.sync_control import SyncControl
 from app.modules.academic.application.marks.ports.timetable_sync import TimetableSync
 from app.modules.academic.application.marks.ports.unit_of_work import MarksUowFactory
 from app.modules.academic.application.marks.sync_student import SyncStudent
@@ -13,6 +14,7 @@ from app.modules.academic.domain.marks.errors import SyncAlreadyRunningError
 from app.modules.academic.domain.marks.sync import SyncCounters, SyncMode
 from app.shared.actor import Role
 from app.shared.clock import Clock
+from app.shared.contracts.emis import EmisPaused
 from app.shared.contracts.identity import IdentityDirectory, UserStatus
 from app.shared.key_lock import KeyLock
 from app.shared.notifications import NotificationDraft, NotificationType
@@ -32,8 +34,27 @@ LOCK_KEY = "academic:sync_all"
 LOCK_TTL_SECONDS = 2 * 60 * 60  # a crashed worker frees the run within two hours
 
 
+class _Halt:
+    """What stopped a run: an administrator's stop, or EMIS asking for a pause."""
+
+    def __init__(self) -> None:
+        """Nothing has stopped the run yet."""
+        self.stopped = False
+        self.paused = False
+
+    @property
+    def halted(self) -> bool:
+        """True once the run must not start another student."""
+        return self.stopped or self.paused
+
+
 class SyncAll:
-    """Creates a SyncRun, syncs the students in parallel and alerts on failures."""
+    """Creates a SyncRun, syncs the students in parallel and alerts on failures.
+
+    Between students (and buckets) the run checks its stop flag and the EMIS pause. A
+    stop ends the run ``stopped``; a pause ends it ``paused`` and leaves a resume marker
+    so that ``ResumePausedSync`` runs it again once EMIS is back.
+    """
 
     def __init__(
         self,
@@ -48,11 +69,13 @@ class SyncAll:
         spread_seconds: float = SPREAD_SECONDS,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
         lock: KeyLock | None = None,
+        control: SyncControl | None = None,
     ) -> None:
         """Store collaborators; tests pass ``spread_seconds=0``.
 
         ``lock`` (Redis in production) keeps two runs from overlapping: the three
         cron slots and a redelivered message would otherwise sync everyone twice.
+        ``control`` carries the stop flags and the EMIS pause (None: never halted).
         """
         self._uow_factory = uow_factory
         self._sync_student = sync_student
@@ -64,6 +87,7 @@ class SyncAll:
         self._spread_seconds = spread_seconds
         self._sleep = sleep
         self._lock = lock
+        self._control = control
 
     async def execute(self, slot: str = "manual") -> UUID:
         """Run one sync run for the slot (11:30, 15:00, 20:00 or manual).
@@ -91,21 +115,46 @@ class SyncAll:
         counters = SyncCounters()
         tally: Counter[str] = Counter()
         mode: SyncMode = "profile" if slot == PROFILE_SLOT else "regular"
+        halt = _Halt()
         try:
             if mode == "profile":
-                await self._sync_bells(user_ids)
-            await self._run_students(run_id, user_ids, mode, counters, tally)
-            if mode == "profile":
-                await self._sync_timetables(user_ids)
+                await self._sync_bells(run_id, user_ids, halt)
+            await self._run_students(run_id, user_ids, mode, counters, tally, halt)
+            if mode == "profile" and not halt.halted:
+                await self._sync_timetables(run_id, user_ids, halt)
         except Exception:
             await self._finish(run_id, "failed", len(user_ids), counters, tally)
             raise
-        await self._finish(run_id, "done", len(user_ids), counters, tally)
+        if halt.stopped:
+            status = "stopped"
+        elif halt.paused:
+            status = "paused"
+        else:
+            status = "done"
+        await self._finish(run_id, status, len(user_ids), counters, tally)
+        if halt.paused and self._control is not None:
+            await self._control.set_resume(slot)
         return run_id
 
-    async def _sync_bells(self, user_ids: list[UUID]) -> None:
+    async def _halted(self, run_id: UUID, halt: _Halt) -> bool:
+        """Check the stop flag and the EMIS pause once; remember what was found."""
+        if halt.halted:
+            return True
+        if self._control is None:
+            return False
+        if await self._control.run_stop_requested(run_id):
+            halt.stopped = True
+        elif await self._control.emis_pause_seconds() > 0:
+            halt.paused = True
+        return halt.halted
+
+    async def _sync_bells(
+        self, run_id: UUID, user_ids: list[UUID], halt: _Halt
+    ) -> None:
         """Bells are the same for everyone: one working EMIS link is enough (ACA-4)."""
         for user_id in user_ids[:BELL_ATTEMPTS]:
+            if await self._halted(run_id, halt):
+                return
             try:
                 await self._bell_sync.execute(user_id)
             except Exception:
@@ -113,7 +162,9 @@ class SyncAll:
             else:
                 return
 
-    async def _sync_timetables(self, user_ids: list[UUID]) -> None:
+    async def _sync_timetables(
+        self, run_id: UUID, user_ids: list[UUID], halt: _Halt
+    ) -> None:
         """Refresh each group's timetable once per half (ACA-1, ACA-7).
 
         A student sees only their own half of a class taught in halves, so one student
@@ -129,6 +180,8 @@ class SyncAll:
                 buckets.setdefault((group_id, subgroup), []).append(user_id)
         for (group_id, _), students in buckets.items():
             for user_id in students[:TIMETABLE_ATTEMPTS]:
+                if await self._halted(run_id, halt):
+                    return
                 if await self._sync_timetable(group_id, user_id):
                     break
 
@@ -167,6 +220,7 @@ class SyncAll:
         mode: SyncMode,
         counters: SyncCounters,
         tally: Counter[str],
+        halt: _Halt,
     ) -> None:
         """Process students with bounded parallelism, spread over the window."""
         gate = asyncio.Semaphore(self._concurrency)
@@ -175,9 +229,20 @@ class SyncAll:
         async def worker(index: int, user_id: UUID) -> None:
             await self._sleep(index * self._spread_seconds / total)
             async with gate:
-                await self._one(run_id, user_id, mode, counters, tally)
+                if await self._halted(run_id, halt) or await self._student_stopped(
+                    user_id
+                ):
+                    tally["skipped"] += 1  # not attempted: a later sync covers it
+                    return
+                await self._one(run_id, user_id, mode, counters, tally, halt)
 
         await asyncio.gather(*(worker(i, uid) for i, uid in enumerate(user_ids)))
+
+    async def _student_stopped(self, user_id: UUID) -> bool:
+        """An administrator stopped this student's sync: skip it in this run."""
+        if self._control is None:
+            return False
+        return await self._control.student_stop_requested(user_id)
 
     async def _one(
         self,
@@ -186,12 +251,18 @@ class SyncAll:
         mode: SyncMode,
         counters: SyncCounters,
         tally: Counter[str],
+        halt: _Halt,
     ) -> None:
         """Sync one student and count how it ended; never raises."""
         try:
             outcome = await self._sync_student.execute(
                 user_id, run_id, mode=mode, counters=counters
             )
+        except EmisPaused:
+            # EMIS asked for a rest: this student is not failed, the run pauses.
+            halt.paused = True
+            tally["skipped"] += 1
+            return
         except Exception:
             log.warning("student_sync_failed", user_id=str(user_id), exc_info=True)
             tally["failed"] += 1
@@ -212,6 +283,7 @@ class SyncAll:
             "ok": tally["ok"],
             "failed": tally["failed"],
             "reauth": tally["reauth"],
+            "skipped": tally["skipped"],
             "emis_requests": counters.emis_requests,
             "marks_new": counters.marks_new,
         }
@@ -227,6 +299,8 @@ class SyncAll:
             )
             uow.notify(*drafts)
             await uow.commit()
+        if self._control is not None:
+            await self._control.clear_run_stop(run_id)
 
     @staticmethod
     def _alert(

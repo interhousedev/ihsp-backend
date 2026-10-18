@@ -4731,50 +4731,6 @@
             ],
             "title": "Issued At"
           },
-          "level": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Level"
-          },
-          "percent": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Percent"
-          },
-          "score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Score"
-          },
-          "serial": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Serial"
-          },
           "source": {
             "enum": [
               "manual",
@@ -4783,43 +4739,15 @@
             "title": "Source",
             "type": "string"
           },
-          "subject": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Subject"
-          },
           "type_id": {
             "format": "uuid",
             "title": "Type Id",
             "type": "string"
-          },
-          "year": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Year"
           }
         },
         "required": [
           "id",
           "type_id",
-          "level",
-          "score",
-          "percent",
-          "subject",
-          "year",
-          "serial",
           "source",
           "issued_at",
           "expires_at",
@@ -4863,31 +4791,6 @@
       "CertificateTypeInput": {
         "description": "Body of POST /admin/types.",
         "properties": {
-          "asks_level": {
-            "default": false,
-            "title": "Asks Level",
-            "type": "boolean"
-          },
-          "asks_percent": {
-            "default": false,
-            "title": "Asks Percent",
-            "type": "boolean"
-          },
-          "asks_score": {
-            "default": false,
-            "title": "Asks Score",
-            "type": "boolean"
-          },
-          "asks_subject": {
-            "default": false,
-            "title": "Asks Subject",
-            "type": "boolean"
-          },
-          "asks_year": {
-            "default": true,
-            "title": "Asks Year",
-            "type": "boolean"
-          },
           "code": {
             "maxLength": 40,
             "minLength": 1,
@@ -4900,14 +4803,6 @@
             },
             "maxItems": 20,
             "title": "Custom Fields",
-            "type": "array"
-          },
-          "levels": {
-            "items": {
-              "type": "string"
-            },
-            "maxItems": 40,
-            "title": "Levels",
             "type": "array"
           },
           "name": {
@@ -4925,28 +4820,6 @@
               }
             ],
             "title": "Position"
-          },
-          "score_max": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Score Max"
-          },
-          "score_min": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Score Min"
           }
         },
         "required": [
@@ -4959,61 +4832,6 @@
       "CertificateTypePatch": {
         "description": "Body of PATCH /admin/types/{id}: only the sent fields change.",
         "properties": {
-          "asks_level": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Asks Level"
-          },
-          "asks_percent": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Asks Percent"
-          },
-          "asks_score": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Asks Score"
-          },
-          "asks_subject": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Asks Subject"
-          },
-          "asks_year": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Asks Year"
-          },
           "code": {
             "anyOf": [
               {
@@ -5042,21 +4860,6 @@
             ],
             "title": "Custom Fields"
           },
-          "levels": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "maxItems": 40,
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Levels"
-          },
           "name": {
             "anyOf": [
               {
@@ -5079,28 +4882,6 @@
               }
             ],
             "title": "Position"
-          },
-          "score_max": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Score Max"
-          },
-          "score_min": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Score Min"
           }
         },
         "title": "CertificateTypePatch",
@@ -5109,26 +4890,6 @@
       "CertificateTypeResponse": {
         "description": "CertificateType.",
         "properties": {
-          "asks_level": {
-            "title": "Asks Level",
-            "type": "boolean"
-          },
-          "asks_percent": {
-            "title": "Asks Percent",
-            "type": "boolean"
-          },
-          "asks_score": {
-            "title": "Asks Score",
-            "type": "boolean"
-          },
-          "asks_subject": {
-            "title": "Asks Subject",
-            "type": "boolean"
-          },
-          "asks_year": {
-            "title": "Asks Year",
-            "type": "boolean"
-          },
           "builtin": {
             "title": "Builtin",
             "type": "boolean"
@@ -5149,55 +4910,18 @@
             "title": "Id",
             "type": "string"
           },
-          "levels": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Levels",
-            "type": "array"
-          },
           "name": {
             "$ref": "#/components/schemas/TypeName"
           },
           "position": {
             "title": "Position",
             "type": "integer"
-          },
-          "score_max": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Score Max"
-          },
-          "score_min": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Score Min"
           }
         },
         "required": [
           "id",
           "code",
           "name",
-          "levels",
-          "asks_level",
-          "asks_score",
-          "score_min",
-          "score_max",
-          "asks_percent",
-          "asks_subject",
-          "asks_year",
           "builtin",
           "position",
           "custom_fields"
@@ -7598,79 +7322,10 @@
             ],
             "title": "Custom"
           },
-          "level": {
-            "anyOf": [
-              {
-                "maxLength": 40,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Level"
-          },
-          "percent": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Percent"
-          },
-          "score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Score"
-          },
-          "serial": {
-            "anyOf": [
-              {
-                "maxLength": 255,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Serial"
-          },
-          "subject": {
-            "anyOf": [
-              {
-                "maxLength": 255,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Subject"
-          },
           "type_id": {
             "format": "uuid",
             "title": "Type Id",
             "type": "string"
-          },
-          "year": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Year"
           }
         },
         "required": [
@@ -8682,6 +8337,28 @@
           "label": {
             "$ref": "#/components/schemas/TypeName"
           },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          },
           "options": {
             "items": {
               "type": "string"
@@ -8731,6 +8408,28 @@
           },
           "label": {
             "$ref": "#/components/schemas/TypeName"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
           },
           "options": {
             "items": {
@@ -23569,7 +23268,7 @@
         "type": "object"
       },
       "RankingItem": {
-        "description": "One ranked student.",
+        "description": "One ranked student: ``value`` is the best score of the type (null: none).",
         "properties": {
           "count": {
             "title": "Count",
@@ -23587,6 +23286,17 @@
             "format": "uuid",
             "title": "Student Id",
             "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
           }
         },
         "required": [
@@ -24117,11 +23827,40 @@
         "title": "ReadingListItemBody",
         "type": "object"
       },
-      "ReconcileMaterialsResponse": {
-        "description": "What \"check that all lesson materials are in the notebook\" found.",
+      "ReconcileJobAccepted": {
+        "description": "202 answer of \"check that all lesson materials are in the notebooks\".",
+        "properties": {
+          "job_id": {
+            "description": "Poll GET .../reconcile/{job_id} for the totals.",
+            "title": "Job Id",
+            "type": "string"
+          },
+          "status": {
+            "description": "Starts as queued.",
+            "enum": [
+              "queued",
+              "running",
+              "stopping",
+              "done",
+              "failed",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id",
+          "status"
+        ],
+        "title": "ReconcileJobAccepted",
+        "type": "object"
+      },
+      "ReconcileJobStatus": {
+        "description": "Progress and totals of one reconcile job.",
         "properties": {
           "added": {
-            "description": "Lesson materials added to notebooks now.",
+            "description": "Lesson materials added to notebooks.",
             "title": "Added",
             "type": "integer"
           },
@@ -24130,8 +23869,17 @@
             "title": "Already Present",
             "type": "integer"
           },
+          "done": {
+            "description": "True once the check finished (status done).",
+            "title": "Done",
+            "type": "boolean"
+          },
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          },
           "notebooks": {
-            "description": "Subject notebooks checked.",
+            "description": "Subject notebooks checked so far.",
             "title": "Notebooks",
             "type": "integer"
           },
@@ -24139,15 +23887,31 @@
             "description": "Materials not readable yet; retried later.",
             "title": "Skipped",
             "type": "integer"
+          },
+          "status": {
+            "description": "queued, running, done, failed or cancelled.",
+            "enum": [
+              "queued",
+              "running",
+              "stopping",
+              "done",
+              "failed",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
           }
         },
         "required": [
+          "job_id",
+          "status",
+          "done",
           "notebooks",
           "added",
           "already_present",
           "skipped"
         ],
-        "title": "ReconcileMaterialsResponse",
+        "title": "ReconcileJobStatus",
         "type": "object"
       },
       "RecordBookResponse": {
@@ -28101,50 +27865,6 @@
             ],
             "title": "Issued At"
           },
-          "level": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Level"
-          },
-          "percent": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Percent"
-          },
-          "score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Score"
-          },
-          "serial": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Serial"
-          },
           "source": {
             "enum": [
               "manual",
@@ -28156,43 +27876,15 @@
           "student": {
             "$ref": "#/components/schemas/StaffStudent"
           },
-          "subject": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Subject"
-          },
           "type_id": {
             "format": "uuid",
             "title": "Type Id",
             "type": "string"
-          },
-          "year": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Year"
           }
         },
         "required": [
           "id",
           "type_id",
-          "level",
-          "score",
-          "percent",
-          "subject",
-          "year",
-          "serial",
           "source",
           "issued_at",
           "expires_at",
@@ -34877,75 +34569,6 @@
               }
             ],
             "title": "Custom"
-          },
-          "level": {
-            "anyOf": [
-              {
-                "maxLength": 40,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Level"
-          },
-          "percent": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Percent"
-          },
-          "score": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Score"
-          },
-          "serial": {
-            "anyOf": [
-              {
-                "maxLength": 255,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Serial"
-          },
-          "subject": {
-            "anyOf": [
-              {
-                "maxLength": 255,
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Subject"
-          },
-          "year": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Year"
           }
         },
         "title": "UpdateEntryBody",
@@ -45007,7 +44630,7 @@
     },
     "/v1/admin/subject-materials/subjects/{subject_id}/reconcile": {
       "post": {
-        "description": "Sync every student's subject notebook of the subject, now; report the totals.",
+        "description": "Queue the sync of every student's subject notebook of the subject; answer 202.",
         "operationId": "reconcile_admin_subject_materials_v1_admin_subject_materials_subjects__subject_id__reconcile_post",
         "parameters": [
           {
@@ -45022,11 +44645,11 @@
           }
         ],
         "responses": {
-          "200": {
+          "202": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReconcileMaterialsResponse"
+                  "$ref": "#/components/schemas/ReconcileJobAccepted"
                 }
               }
             },
@@ -45044,6 +44667,59 @@
           }
         },
         "summary": "Reconcile Admin Subject Materials",
+        "tags": [
+          "admin-subject-materials"
+        ]
+      }
+    },
+    "/v1/admin/subject-materials/subjects/{subject_id}/reconcile/{job_id}": {
+      "get": {
+        "description": "The totals of a reconcile job (any admin may read any of them).",
+        "operationId": "get_admin_reconcile_status_v1_admin_subject_materials_subjects__subject_id__reconcile__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReconcileJobStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Admin Reconcile Status",
         "tags": [
           "admin-subject-materials"
         ]
@@ -45590,6 +45266,48 @@
         ]
       }
     },
+    "/v1/admin/sync/runs/{run_id}/stop": {
+      "post": {
+        "description": "Stop a running sync run; 202, 404 unknown run, 409 not running.",
+        "operationId": "stop_run_v1_admin_sync_runs__run_id__stop_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "run_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Run Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Stop Run",
+        "tags": [
+          "admin-sync"
+        ]
+      }
+    },
     "/v1/admin/sync/student-syncs": {
       "get": {
         "description": "Students whose initial sync is in this status, most recently changed first.",
@@ -45651,6 +45369,48 @@
           }
         },
         "summary": "List Student Syncs",
+        "tags": [
+          "admin-sync"
+        ]
+      }
+    },
+    "/v1/admin/sync/student-syncs/{user_id}/stop": {
+      "post": {
+        "description": "Stop a running student sync; 202, 409 when it is not running.",
+        "operationId": "stop_student_sync_v1_admin_sync_student_syncs__user_id__stop_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Stop Student Sync",
         "tags": [
           "admin-sync"
         ]
@@ -48779,7 +48539,7 @@
     },
     "/v1/certificates/staff/ranking": {
       "get": {
-        "description": "Return students ranked by their number of certificates.",
+        "description": "Return students ranked by the type's score (else by certificate count).",
         "operationId": "get_staff_ranking_v1_certificates_staff_ranking_get",
         "parameters": [
           {
@@ -68193,7 +67953,7 @@
     },
     "/v1/staff/subjects/{subject_id}/reconcile": {
       "post": {
-        "description": "Sync the teacher's own subject notebooks of the subject, now; report totals.",
+        "description": "Queue the sync of the teacher's own subject notebooks; answer 202.",
         "operationId": "reconcile_staff_subject_materials_v1_staff_subjects__subject_id__reconcile_post",
         "parameters": [
           {
@@ -68208,11 +67968,11 @@
           }
         ],
         "responses": {
-          "200": {
+          "202": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ReconcileMaterialsResponse"
+                  "$ref": "#/components/schemas/ReconcileJobAccepted"
                 }
               }
             },
@@ -68230,6 +67990,59 @@
           }
         },
         "summary": "Reconcile Staff Subject Materials",
+        "tags": [
+          "staff-subjects"
+        ]
+      }
+    },
+    "/v1/staff/subjects/{subject_id}/reconcile/{job_id}": {
+      "get": {
+        "description": "The totals of a reconcile job the teacher started.",
+        "operationId": "get_staff_reconcile_status_v1_staff_subjects__subject_id__reconcile__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subject_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subject Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReconcileJobStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Staff Reconcile Status",
         "tags": [
           "staff-subjects"
         ]

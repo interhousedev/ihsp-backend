@@ -149,6 +149,10 @@ class SyncRunsRepository(Protocol):
         """Return True if a run started after the cutoff is still running."""
         ...
 
+    async def status_of(self, run_id: UUID) -> str | None:
+        """Return the status of the run, or None when there is no such run."""
+        ...
+
     async def list_page(
         self, *, before: tuple[dt.datetime, UUID] | None, limit: int
     ) -> list[SyncRunRecord]:

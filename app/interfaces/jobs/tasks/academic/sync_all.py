@@ -29,3 +29,10 @@ async def sync_all(slot: str = "manual") -> None:
     except SyncAlreadyRunningError:
         # A previous slot (or a redelivered message) is still syncing; it covers us.
         log.warning("sync_all_skipped_overlap", slot=slot)
+
+
+@broker.task(task_name="academic.resume_sync_all")
+async def resume_sync_all() -> bool:
+    """Run again a sync that EMIS paused, once EMIS may be called; True if it ran."""
+    container: Container = get_container()
+    return await container.academic.marks.resume_paused_sync.execute()

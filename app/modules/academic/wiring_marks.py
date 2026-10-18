@@ -32,8 +32,15 @@ from app.modules.academic.application.marks.ports.timetable_sync import (
     MaterialResync,
     TimetableSync,
 )
+from app.modules.academic.application.marks.resume_paused_sync import (
+    ResumePausedSync,
+)
 from app.modules.academic.application.marks.resync_materials import ResyncMaterials
 from app.modules.academic.application.marks.run_manual_sync import RunManualSync
+from app.modules.academic.application.marks.stop_sync import (
+    StopStudentSync,
+    StopSyncRun,
+)
 from app.modules.academic.application.marks.sync_all import SyncAll
 from app.modules.academic.application.marks.sync_student import SyncStudent
 from app.modules.academic.application.public_marks import MarksQueriesImpl
@@ -46,12 +53,14 @@ from app.modules.academic.application.schedule.student_sync_jobs import (
     StudentSyncJobs,
 )
 from app.modules.academic.application.schedule.sync_student_all import SyncStudentAll
+from app.modules.academic.infrastructure.marks.sync_control import RedisSyncControl
 from app.modules.academic.infrastructure.marks.uow import SqlMarksUnitOfWork
 from app.modules.academic.wiring_schedule import sql_schedule_uow_factory
 from app.shared.contracts.academic import AcademicEnrollment, ScheduleQueries
 from app.shared.contracts.emis import EmisSource
 from app.shared.contracts.identity import IdentityCommands, IdentityDirectory
 from app.shared.contracts.links import LinksApi
+from app.shared.emis_pause import EmisPause
 from app.shared.redis_util import RedisKeyLock
 from app.shared.wiring import ModuleDeps
 
@@ -62,6 +71,9 @@ class MarksServices:
 
     sync_student: SyncStudent
     sync_all: SyncAll
+    stop_sync_run: StopSyncRun
+    stop_student_sync: StopStudentSync
+    resume_paused_sync: ResumePausedSync
     backfill_student: BackfillStudent
     run_student_sync: RunStudentSync
     retry_student_syncs: RetryStudentSyncs
@@ -119,17 +131,20 @@ def build_marks(
         institution_id=deps.settings.emis.institution_id,
     )
     backfill_student = BackfillStudent(sync_student=sync_student)
+    control = RedisSyncControl(deps.redis, EmisPause(deps.redis))
+    sync_all_run = SyncAll(
+        uow_factory=uow_factory,
+        sync_student=sync_student,
+        bell_sync=bell_sync,
+        timetable_sync=timetable_sync,
+        identity=identity,
+        clock=deps.clock,
+        lock=RedisKeyLock(deps.redis),
+        control=control,
+    )
     return MarksServices(
         sync_student=sync_student,
-        sync_all=SyncAll(
-            uow_factory=uow_factory,
-            sync_student=sync_student,
-            bell_sync=bell_sync,
-            timetable_sync=timetable_sync,
-            identity=identity,
-            clock=deps.clock,
-            lock=RedisKeyLock(deps.redis),
-        ),
+        sync_all=sync_all_run,
         backfill_student=backfill_student,
         run_student_sync=RunStudentSync(
             jobs=sync_jobs,
@@ -138,11 +153,15 @@ def build_marks(
             uow_factory=sql_schedule_uow_factory(deps),
             clock=deps.clock,
             identity=identity,
+            control=control,
         ),
         retry_student_syncs=RetryStudentSyncs(
             jobs=sync_jobs, kicker=deps.kicker, clock=deps.clock
         ),
         list_student_sync_jobs=ListStudentSyncJobs(jobs=sync_jobs),
+        stop_sync_run=StopSyncRun(uow_factory=uow_factory, control=control),
+        stop_student_sync=StopStudentSync(jobs=sync_jobs, control=control),
+        resume_paused_sync=ResumePausedSync(control=control, sync_all=sync_all_run),
         run_manual_sync=RunManualSync(
             uow_factory=uow_factory,
             schedule=schedule,

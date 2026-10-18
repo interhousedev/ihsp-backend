@@ -267,6 +267,29 @@ class EmisUnavailable(BaseError):
     message_key = "emis-unavailable"
 
 
+class EmisPaused(EmisUnavailable):
+    """EMIS asked us to stop calling (429 or Retry-After); the sync stops and waits."""
+
+    code = "emis/paused"
+    status = 503
+    message_key = "emis-paused"
+
+    def __init__(
+        self, *, retry_after: float, support_details: str | None = None
+    ) -> None:
+        """Store the seconds EMIS asked for."""
+        super().__init__(support_details=support_details)
+        self.retry_after = retry_after
+
+
+class EmisFileRetryLater(EmisUnavailable):
+    """A material download failed upstream (5xx): it stays pending for next sync."""
+
+    code = "emis/file-retry"
+    status = 503
+    message_key = "emis-unavailable"
+
+
 class EmisCredentialsMissing(EmisUnavailable):
     """The student's EMIS login is not stored: this student cannot be used.
 

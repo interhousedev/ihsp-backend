@@ -53,6 +53,7 @@ CRON_JOBS: tuple[CronJob, ...] = (
     CronJob("academic.generate_assessments", "30 2,20 * * *"),
     CronJob("academic.assessment_reminders", "30 7 * * *"),
     CronJob("academic.retry_student_syncs", EVERY_5_MINUTES),
+    CronJob("academic.resume_sync_all", EVERY_5_MINUTES),
     CronJob("notify.dispatch_due", EVERY_MINUTE),
     CronJob("admin.start_scheduled_broadcasts", EVERY_MINUTE),
     CronJob("admin.finish_broadcasts", EVERY_5_MINUTES),

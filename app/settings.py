@@ -295,6 +295,12 @@ class EmisSettings(BaseModel):
     request_delay_ms: int = 0
     """Pause between EMIS requests (milliseconds)."""
 
+    max_qps: int = Field(default=3, ge=1, le=100)
+    """EMIS requests a second, across all processes (a shared Redis limit)."""
+
+    file_max_qps: int = Field(default=1, ge=1, le=100)
+    """Material downloads a second from EMIS and its CDN, across all processes."""
+
     download_concurrency: int = 6
     """Parallel material downloads of one student's import (EMIS politeness)."""
 

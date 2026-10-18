@@ -21,9 +21,11 @@ from app.shared.contracts.emis import (
     EmisCurriculumSubject,
     EmisDirection,
     EmisFile,
+    EmisFileRetryLater,
     EmisMark,
     EmisMarkType,
     EmisName,
+    EmisPaused,
     EmisProfile,
     EmisSemesterDates,
     EmisSemesterSubject,
@@ -389,6 +391,10 @@ def _error_for(response: httpx.Response) -> EmisAuthFailed | EmisUnavailable:
         return EmisAuthFailed(support_details="EMIS rejected the credentials")
     if problem_type == _CREDENTIALS_MISSING_TYPE:
         return EmisCredentialsMissing(support_details="no stored EMIS login")
+    if problem_type == EmisPaused.code:
+        return EmisPaused(retry_after=0, support_details="EMIS is paused")
+    if problem_type == EmisFileRetryLater.code:
+        return EmisFileRetryLater(support_details="EMIS file failed upstream")
     return EmisUnavailable(
         support_details=f"gateway answered {response.status_code} {problem_type}"
     )

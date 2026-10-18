@@ -85,11 +85,14 @@ class MemoryStudentSyncJobs:
         user_id: UUID,
         now: dt.datetime,
         *,
+        attempt: int,
         subgroup: int | None,
         marks_count: int,
     ) -> None:
-        """Mark succeeded."""
+        """Mark succeeded, unless a newer attempt has taken over the job."""
         job = self._jobs[user_id]
+        if job.status != "running" or job.attempts != attempt:
+            return
         self._jobs[user_id] = StudentSyncJob(
             user_id=user_id,
             status="succeeded",
@@ -106,11 +109,14 @@ class MemoryStudentSyncJobs:
         user_id: UUID,
         now: dt.datetime,
         *,
+        attempt: int,
         error: str,
-        next_attempt_at: dt.datetime,
+        next_attempt_at: dt.datetime | None,
     ) -> None:
-        """Mark failed and schedule the next attempt."""
+        """Mark failed, unless a newer attempt has taken over the job."""
         job = self._jobs[user_id]
+        if job.status != "running" or job.attempts != attempt:
+            return
         self._jobs[user_id] = StudentSyncJob(
             user_id=user_id,
             status="failed",
@@ -255,20 +261,27 @@ class SqlStudentSyncJobs:
         user_id: UUID,
         now: dt.datetime,
         *,
+        attempt: int,
         subgroup: int | None,
         marks_count: int,
     ) -> None:
-        """Mark succeeded and store what was synced."""
+        """Mark succeeded and store what was synced (only this attempt's own row)."""
         await self._rows(
             """
             UPDATE academic.student_sync_jobs
             SET status = 'succeeded', finished_at = :now, next_attempt_at = NULL,
                 last_error = NULL, subgroup = :sub, marks_count = :marks,
                 updated_at = :now
-            WHERE user_id = :u
+            WHERE user_id = :u AND status = 'running' AND attempts = :attempt
             RETURNING user_id
             """,
-            {"u": user_id, "now": now, "sub": subgroup, "marks": marks_count},
+            {
+                "u": user_id,
+                "now": now,
+                "sub": subgroup,
+                "marks": marks_count,
+                "attempt": attempt,
+            },
         )
 
     async def fail(
@@ -276,19 +289,26 @@ class SqlStudentSyncJobs:
         user_id: UUID,
         now: dt.datetime,
         *,
+        attempt: int,
         error: str,
-        next_attempt_at: dt.datetime,
+        next_attempt_at: dt.datetime | None,
     ) -> None:
-        """Mark failed with the reason and the next attempt time."""
+        """Mark failed with the reason, only for this attempt's own row."""
         await self._rows(
             """
             UPDATE academic.student_sync_jobs
             SET status = 'failed', finished_at = :now, last_error = :err,
                 next_attempt_at = :next, updated_at = :now
-            WHERE user_id = :u
+            WHERE user_id = :u AND status = 'running' AND attempts = :attempt
             RETURNING user_id
             """,
-            {"u": user_id, "now": now, "err": error[:500], "next": next_attempt_at},
+            {
+                "u": user_id,
+                "now": now,
+                "err": error[:500],
+                "next": next_attempt_at,
+                "attempt": attempt,
+            },
         )
 
     async def due(self, now: dt.datetime, limit: int) -> list[UUID]:

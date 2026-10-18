@@ -10,6 +10,7 @@ import datetime as dt
 from uuid import UUID
 
 from app.modules.academic.application.marks.backfill_student import BackfillStudent
+from app.modules.academic.application.marks.ports.sync_control import SyncControl
 from app.modules.academic.application.schedule.common import UowFactory
 from app.modules.academic.application.schedule.student_sync_jobs import (
     MAX_ATTEMPTS,
@@ -22,6 +23,7 @@ from app.modules.academic.application.schedule.sync_student_all import SyncStude
 from app.modules.academic.domain.marks.sync import SyncCounters
 from app.shared.actor import SYSTEM_USER_ID, Actor, Role
 from app.shared.clock import Clock
+from app.shared.contracts.emis import EmisPaused
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.notifications import AuditDraft, NotificationDraft, NotificationType
 from app.shared.tasks import TaskKicker
@@ -38,6 +40,10 @@ class StudentSyncIncompleteError(Exception):
     """An attempt ended without the subgroup or the marks (a reason, not a crash)."""
 
 
+class StudentSyncStoppedError(Exception):
+    """An administrator stopped the attempt between two steps."""
+
+
 class RunStudentSync:
     """Claim the job, sync timetable then marks, store the outcome."""
 
@@ -50,8 +56,10 @@ class RunStudentSync:
         uow_factory: UowFactory,
         clock: Clock,
         identity: IdentityDirectory,
+        control: SyncControl | None = None,
     ) -> None:
-        """Store the collaborators."""
+        """Store the collaborators; ``control`` carries the stop flags."""
+        self._control = control
         self._identity = identity
         self._jobs = jobs
         self._sync_all = sync_all
@@ -65,12 +73,33 @@ class RunStudentSync:
         if claimed is None:
             return await self._jobs.get(user_id)
         try:
+            await self._attempt(claimed)
+        finally:
+            if self._control is not None:
+                await self._control.clear_student_stop(user_id)
+        return await self._jobs.get(user_id)
+
+    async def _attempt(self, claimed: StudentSyncJob) -> None:
+        """Run the attempt and record its outcome; never re-raises."""
+        user_id = claimed.user_id
+        try:
             subgroup, marks = await self._sync(user_id)
+        except StudentSyncStoppedError:
+            await self._record_stopped(claimed)
+        except EmisPaused as exc:
+            # EMIS asked for a rest: retry after the pause, not a failure to count.
+            await self._record_failure(
+                claimed, exc, retry_in=max(exc.retry_after, 60.0)
+            )
         except Exception as exc:  # recorded below; the retry job picks it up
             await self._record_failure(claimed, exc)
         else:
             await self._jobs.succeed(
-                user_id, self._clock.now(), subgroup=subgroup, marks_count=marks
+                user_id,
+                self._clock.now(),
+                attempt=claimed.attempts,
+                subgroup=subgroup,
+                marks_count=marks,
             )
             log.info(
                 "student_sync_succeeded",
@@ -79,12 +108,20 @@ class RunStudentSync:
                 subgroup=subgroup,
                 marks=marks,
             )
-        return await self._jobs.get(user_id)
+
+    async def _check_stop(self, user_id: UUID) -> None:
+        """Between two steps: stop if an administrator asked for it."""
+        if self._control is not None and await self._control.student_stop_requested(
+            user_id
+        ):
+            raise StudentSyncStoppedError()
 
     async def _sync(self, user_id: UUID) -> tuple[int | None, int]:
+        await self._check_stop(user_id)
         timetable = await self._sync_all.execute(user_id, with_marks=False)
         if timetable != "synced":
             raise StudentSyncIncompleteError(f"timetable:{timetable}")
+        await self._check_stop(user_id)
         counters = SyncCounters()
         outcome = await self._backfill.execute(user_id, counters=counters)
         if outcome.status != "ok":
@@ -93,17 +130,32 @@ class RunStudentSync:
             student = await uow.students.get(user_id)
         return (student.subgroup if student else None), counters.marks_new
 
-    async def _record_failure(self, job: StudentSyncJob, exc: Exception) -> None:
+    async def _record_stopped(self, job: StudentSyncJob) -> None:
+        """Stopped by an administrator: no automatic retry; a new request restarts."""
+        log.info("student_sync_stopped", user_id=str(job.user_id), attempt=job.attempts)
+        await self._jobs.fail(
+            job.user_id,
+            self._clock.now(),
+            attempt=job.attempts,
+            error="stopped: by an administrator",
+            next_attempt_at=None,
+        )
+
+    async def _record_failure(
+        self, job: StudentSyncJob, exc: Exception, *, retry_in: float | None = None
+    ) -> None:
         now = self._clock.now()
         error = f"{type(exc).__name__}: {exc}"
         code = getattr(exc, "code", None)
         if code:
             error = f"{code}: {exc}"
+        delay = backoff_seconds(job.attempts) if retry_in is None else retry_in
         await self._jobs.fail(
             job.user_id,
             now,
+            attempt=job.attempts,
             error=error,
-            next_attempt_at=now + dt.timedelta(seconds=backoff_seconds(job.attempts)),
+            next_attempt_at=now + dt.timedelta(seconds=delay),
         )
         log.warning(
             "student_sync_failed",

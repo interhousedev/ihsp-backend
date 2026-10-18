@@ -29,6 +29,20 @@ class SyncAlreadyRunningError(ConflictError):
     message_key = "academic-sync-running"
 
 
+class SyncRunNotFoundError(NotFoundError):
+    """No EMIS sync run has this id."""
+
+    code = "academic/sync-run-not-found"
+    message_key = "academic-sync-run-not-found"
+
+
+class SyncNotRunningError(ConflictError):
+    """The sync (run or student) is not running, so it cannot be stopped."""
+
+    code = "academic/sync-not-running"
+    message_key = "academic-sync-not-running"
+
+
 class InvalidWhatIfError(ValidationFailedError):
     """A hypothetical mark is not ``<type>:<2..5>`` or there are too many."""
 

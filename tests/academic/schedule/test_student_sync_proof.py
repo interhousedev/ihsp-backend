@@ -153,10 +153,12 @@ async def test_a_manual_request_resets_a_failed_job_once(env: Env) -> None:
     actor = build_actor(Role.STUDENT, user_id=b.id)
     await env.services.enrollment.enqueue_student_sync(b.id)
     jobs = env.emis_import.sync_jobs
-    await jobs.claim(b.id, env.clock.now())
+    claimed = await jobs.claim(b.id, env.clock.now())
+    assert claimed is not None
     await jobs.fail(
         b.id,
         env.clock.now(),
+        attempt=claimed.attempts,
         error="boom",
         next_attempt_at=env.clock.now(),
     )

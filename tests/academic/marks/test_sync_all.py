@@ -53,6 +53,7 @@ async def test_run_stats_and_alert_when_more_than_a_fifth_fail(
         "ok": 7,
         "failed": 3,
         "reauth": 0,
+        "skipped": 0,
         "emis_requests": 17,  # 7 students x 2 subjects + 3 failed first requests
         "marks_new": 7,
     }

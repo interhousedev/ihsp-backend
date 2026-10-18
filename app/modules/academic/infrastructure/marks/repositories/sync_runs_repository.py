@@ -50,6 +50,11 @@ class SqlSyncRunsRepository:
         )
         return bool((await self.session.execute(stmt)).scalar())
 
+    async def status_of(self, run_id: UUID) -> str | None:
+        """Return the status of a run, None for an unknown id."""
+        stmt = sa.select(SyncRun.status).where(SyncRun.id == run_id)
+        return (await self.session.execute(stmt)).scalar_one_or_none()
+
     async def list_page(
         self, *, before: tuple[dt.datetime, UUID] | None, limit: int
     ) -> list[SyncRunRecord]:

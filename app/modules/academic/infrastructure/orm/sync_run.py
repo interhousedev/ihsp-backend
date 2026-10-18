@@ -28,6 +28,8 @@ class SyncRun(IdMixin, TimestampMixin, Base):
             "running",
             "done",
             "failed",
+            "stopped",
+            "paused",
             name="status",
             native_enum=False,
             create_constraint=True,

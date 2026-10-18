@@ -66,6 +66,7 @@ class StudentSyncJobs(Protocol):
         user_id: UUID,
         now: dt.datetime,
         *,
+        attempt: int,
         subgroup: int | None,
         marks_count: int,
     ) -> None:
@@ -77,10 +78,11 @@ class StudentSyncJobs(Protocol):
         user_id: UUID,
         now: dt.datetime,
         *,
+        attempt: int,
         error: str,
-        next_attempt_at: dt.datetime,
+        next_attempt_at: dt.datetime | None,
     ) -> None:
-        """Mark the attempt as failed and set when the next one may run."""
+        """Mark the attempt as failed; None means no automatic retry (admin stop)."""
         ...
 
     async def due(self, now: dt.datetime, limit: int) -> list[UUID]:

@@ -6,6 +6,7 @@ from typing import Any
 from uuid import UUID, uuid4
 
 from app.modules.academic.application.marks.apply_ratings import ApplyRatings
+from app.modules.academic.application.marks.ports.sync_control import SyncControl
 from app.modules.academic.application.marks.ports.unit_of_work import MarksUowFactory
 from app.modules.academic.application.marks.sync_all import SyncAll
 from app.modules.academic.application.marks.sync_student import SyncStudent
@@ -68,7 +69,9 @@ class Env:
     timetables: FakeTimetableSync
     kicker: FakeTaskKicker
 
-    def sync_all(self, lock: KeyLock | None = None) -> SyncAll:
+    def sync_all(
+        self, lock: KeyLock | None = None, control: SyncControl | None = None
+    ) -> SyncAll:
         """Build SyncAll that runs one student at a time without delays."""
         return SyncAll(
             uow_factory=self.uow_factory,
@@ -80,6 +83,7 @@ class Env:
             concurrency=1,
             spread_seconds=0,
             lock=lock,
+            control=control,
         )
 
 
