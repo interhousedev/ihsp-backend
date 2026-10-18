@@ -58,6 +58,10 @@ x-backend-env: &backend-env
   IHSP_S3__REGION: ${IHSP_S3__REGION:-us-east-1}
   IHSP_S3__ACCESS_KEY: ${IHSP_S3__ACCESS_KEY:?}
   IHSP_S3__SECRET_KEY: ${IHSP_S3__SECRET_KEY:?}
+  # Error tracking (Sentry protocol) and the Bugsink API of the admin page; empty DSN = off.
+  IHSP_BUGSINK__DSN: ${IHSP_BUGSINK__DSN:-}
+  IHSP_BUGSINK__API_URL: https://logs.${DOMAIN}
+  IHSP_BUGSINK__API_TOKEN: ${IHSP_BUGSINK__API_TOKEN:-}
   IHSP_S3__BUCKET: ${IHSP_S3__BUCKET:-ihsp}
   IHSP_HYDRA__PUBLIC_URL: http://hydra:4444
   IHSP_HYDRA__ADMIN_URL: http://hydra:4445
@@ -182,9 +186,11 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
       POSTGRES_DB: ihsp
       HYDRA_DB_PASSWORD: ${HYDRA_DB_PASSWORD:?} # used once by init-hydra.sh
+      BUGSINK_DB_PASSWORD: ${BUGSINK_DB_PASSWORD:?} # used once by init-bugsink.sh
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./postgres/init-hydra.sh:/docker-entrypoint-initdb.d/10-hydra.sh:ro
+      - ./postgres/init-bugsink.sh:/docker-entrypoint-initdb.d/11-bugsink.sh:ro
     healthcheck:
       <<: *healthcheck
       test: ["CMD-SHELL", "pg_isready -U ihsp -d ihsp"]
@@ -560,6 +566,7 @@ services:
       HOST_MCP: mcp.${DOMAIN}
       HOST_APEX: ${DOMAIN}
       HOST_STORAGE: ${STORAGE_PUBLIC_HOST:-storage.invalid}
+      HOST_LOGS: logs.${DOMAIN}
     volumes:
       - ./nginx/prod:/etc/nginx/templates:ro
       - ./nginx/common:/etc/nginx/ihsp:ro
@@ -604,6 +611,87 @@ services:
       start_period: 5m
       start_interval: 5s
     networks: [edge]
+
+  # ---------------------------------------------------- error tracking (Bugsink)
+  # logs.<domain>: the Bugsink UI and the Sentry-protocol ingest (/api/<project>/envelope/),
+  # routed by nginx. Events are stored in the `bugsink` database; the nightly
+  # scripts/backup_bugsink.sh copies that database to the sp-logs bucket.
+  # Version pinned: upgrade by changing the tag after reading the Bugsink release notes.
+  bugsink:
+    image: bugsink/bugsink:2.6.1
+    restart: unless-stopped
+    logging: *logging
+    mem_limit: 1g
+    pids_limit: 512
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    environment:
+      SECRET_KEY: ${BUGSINK_SECRET_KEY:?}
+      CREATE_SUPERUSER: ${BUGSINK_ADMIN_EMAIL:?}:${BUGSINK_ADMIN_PASSWORD:?}
+      DATABASE_URL: postgresql://bugsink:${BUGSINK_DB_PASSWORD:?}@${BUGSINK_DB_HOST:-postgres}:5432/bugsink
+      BASE_URL: https://logs.${DOMAIN}
+      ALLOWED_HOSTS: logs.${DOMAIN}
+      PORT: "8000"
+      TASK_ALWAYS_EAGER: "False" # event processing runs in bugsink_worker
+      WAKEUP_CALLS_DIR: /wakeup
+      DEBUG: "False"
+    volumes:
+      - bugsink_data:/data
+      - bugsink_wakeup:/wakeup
+      - ./healthcheck:/healthcheck:ro
+    healthcheck:
+      <<: *healthcheck
+      # A plain TCP connect: Bugsink answers only for ALLOWED_HOSTS, so no HTTP probe here.
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 8000), 3)"]
+    networks: [data, edge]
+
+  # BUGSINK_DB_MODE=dedicated (.env.prod): a PostgreSQL of its own for Bugsink, started by
+  # the bugsink-dedicated profile (scripts/cloud_deploy.sh sets it). In the default `main`
+  # mode the bugsink role and database live in the main postgres and this service is absent.
+  bugsink-db:
+    image: pgvector/pgvector:0.8.7-pg16
+    profiles: [bugsink-dedicated]
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      POSTGRES_USER: bugsink
+      POSTGRES_PASSWORD: ${BUGSINK_DB_PASSWORD:?}
+      POSTGRES_DB: bugsink
+    volumes:
+      - bugsink_db_data:/var/lib/postgresql/data
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "pg_isready -U bugsink -d bugsink"]
+    networks: [data]
+
+  # Snappea: processes the events the web process queues (same image, its own process).
+  bugsink_worker:
+    image: bugsink/bugsink:2.6.1
+    command: ["bugsink-runsnappea"]
+    restart: unless-stopped
+    logging: *logging
+    mem_limit: 1g
+    pids_limit: 512
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    environment:
+      SECRET_KEY: ${BUGSINK_SECRET_KEY:?}
+      DATABASE_URL: postgresql://bugsink:${BUGSINK_DB_PASSWORD:?}@${BUGSINK_DB_HOST:-postgres}:5432/bugsink
+      BASE_URL: https://logs.${DOMAIN}
+      ALLOWED_HOSTS: logs.${DOMAIN}
+      SNAPPEA_NUM_WORKERS: "2"
+      TASK_ALWAYS_EAGER: "False"
+      WAKEUP_CALLS_DIR: /wakeup
+      DEBUG: "False"
+    volumes:
+      - bugsink_data:/data
+      - bugsink_wakeup:/wakeup
+    depends_on:
+      bugsink:
+        condition: service_healthy
+    networks: [data]
 
   # ----------------------------------------------------------- one-off tool jobs
   # `docker compose --profile tools run --rm <service>`; scripts/prod_init.sh uses them.
@@ -666,6 +754,9 @@ volumes:
   redis_data:
   vault_data:
   s3_data:
+  bugsink_data:
+  bugsink_wakeup:
+  bugsink_db_data:
 
 secrets:
   # Signing key of the JWT-bearer assertions: identity and worker only (and the Hydra

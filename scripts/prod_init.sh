@@ -25,7 +25,8 @@ VAULT_KEYS=secrets/vault-init.txt
 
 # Variables that must be generated when they still hold the sample's placeholder.
 GENERATED=(
-    POSTGRES_PASSWORD HYDRA_DB_PASSWORD REDIS_PASSWORD
+    POSTGRES_PASSWORD HYDRA_DB_PASSWORD REDIS_PASSWORD BUGSINK_DB_PASSWORD
+    BUGSINK_SECRET_KEY BUGSINK_ADMIN_PASSWORD
     HYDRA_SECRET_SYSTEM HYDRA_SECRET_COOKIE HYDRA_SECRET_PAGINATION
     IHSP_TOKENS__SERVICE_TOKEN IHSP_TELEGRAM__WEBHOOK_SECRET IHSP_HYDRA__MINIAPP_CLIENT_SECRET
 )
@@ -243,7 +244,7 @@ cmd_certs() {
     domain=$(get_env DOMAIN)
     email=$(get_env ACME_EMAIL)
     storage=$(get_env STORAGE_PUBLIC_HOST)
-    for h in "" id. my. app. staff. admin. lms. lib. s. api. mcp. mail.; do
+    for h in "" id. my. app. staff. admin. lms. lib. s. api. mcp. logs. mail.; do
         hosts+=(-d "$h$domain")
     done
     [ -n "$storage" ] && hosts+=(-d "$storage")
@@ -298,6 +299,7 @@ Install this cron entry on the host (crontab -e), weekly is enough:
 and one for the nightly backup:
 
   30 2 * * *  cd $ROOT && scripts/backup.sh --keep 14 >> backups/backup.log 2>&1
+  45 2 * * *  cd $ROOT && scripts/backup_bugsink.sh --keep 14 >> backups/backup.log 2>&1
 EOF
 }
 
@@ -351,7 +353,7 @@ cmd_init() {
 
 Done. Check:  curl -fsS https://api.$(get_env DOMAIN)/health
 Remember: move $VAULT_KEYS off the server, and set the DNS MX record of mail.$(get_env DOMAIN)
-(DNS: A/AAAA for the apex and id, my, app, staff, admin, lms, lib, s, api, mcp, mail,
+(DNS: A/AAAA for the apex and id, my, app, staff, admin, lms, lib, s, api, mcp, logs, mail,
 storage; MX 10 mail.<domain>; SPF, DKIM and DMARC TXT records for mail.<domain>).
 EOF
 }

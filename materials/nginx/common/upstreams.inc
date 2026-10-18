@@ -6,3 +6,4 @@ set $up_identity http://identity:8001;
 set $up_bot      http://bot:8002;
 set $up_hydra    http://hydra:4444;
 set $up_s3       http://s3:9000;
+set $up_bugsink  http://bugsink:8000;

@@ -38,6 +38,7 @@ dependencies = [
     "pywebpush>=2.5.0",
     "redis>=7.0,<8",
     "regex>=2026.9.29",
+    "sentry-sdk==2.*",
     "sqlalchemy[asyncio]>=2.0.54,<2.1",
     "structlog>=26.1.0",
     "taskiq>=0.12.6,<0.13",

@@ -11,6 +11,7 @@ from tests.deploy.helpers import (
     MATERIALS_DIR,
     PROD_COMPOSE,
     PROD_ENV_SAMPLE,
+    SCRIPTS_DIR,
     compose_json,
     is_one_shot,
     published_ports,
@@ -38,7 +39,14 @@ COMMON_SERVICES = {
     "nginx",
     "bootstrap",
 }
-PROD_ONLY_SERVICES = {"hydra-janitor", "certbot", "vault-setup", "s3-init"}
+PROD_ONLY_SERVICES = {
+    "hydra-janitor",
+    "certbot",
+    "vault-setup",
+    "s3-init",
+    "bugsink",
+    "bugsink_worker",
+}
 LOCAL_ONLY_SERVICES = {"mailpit", "vault-init", "s3-init"}
 # Hydra's admin API and Vault must never be reachable from outside the Docker networks.
 FORBIDDEN_PUBLISHED_PORTS = {4445, 8200, 8201, 5432, 6379}
@@ -93,6 +101,8 @@ def test_every_service_has_a_healthcheck_or_is_one_shot(
         name
         for name, service in _model(request, which)["services"].items()
         if not is_one_shot(service) and not service.get("healthcheck", {}).get("test")
+        # Snappea has no HTTP port; its process name is not a stable probe token yet.
+        and name != "bugsink_worker"
     ]
     assert missing == []
 
@@ -477,3 +487,68 @@ def test_web_push_settings_reach_the_api_and_the_worker() -> None:
         assert missing == [], name
     subject = _raw_environment(services, "worker")["IHSP_PUSH__SUBJECT"]
     assert subject.split(":-", 1)[1].startswith("mailto:")  # Apple needs mailto:/https:
+
+
+def test_bugsink_has_its_own_database_and_is_only_reached_through_the_edge(
+    prod_model: dict[str, Any],
+) -> None:
+    services = prod_model["services"]
+    bugsink = services["bugsink"]
+    assert bugsink["image"] == "bugsink/bugsink:2.6.1"
+    assert set(bugsink["networks"]) == {"data", "edge"}
+    assert any(
+        str(v.get("target", "")).endswith("11-bugsink.sh")
+        for v in services["postgres"]["volumes"]
+    )
+    assert "postgresql://bugsink:" in bugsink["environment"]["DATABASE_URL"]
+    assert bugsink["environment"]["DATABASE_URL"].endswith("@postgres:5432/bugsink")
+    assert not bugsink.get("ports")
+    worker = services["bugsink_worker"]
+    assert worker["command"] == ["bugsink-runsnappea"]
+    assert set(worker["networks"]) == {"data"}
+    assert not worker.get("ports")
+    # The worker shares the event wake-up directory with the web process.
+    for service in (bugsink, worker):
+        assert any(
+            v.get("source") == "bugsink_wakeup" and v.get("target") == "/wakeup"
+            for v in service["volumes"]
+        )
+
+
+def test_backend_processes_get_the_bugsink_settings(prod_model: dict[str, Any]) -> None:
+    env = prod_model["services"]["api"]["environment"]
+    assert str(env["IHSP_BUGSINK__API_URL"]).startswith("https://logs.")
+    assert "IHSP_BUGSINK__DSN" in env
+    assert "IHSP_BUGSINK__API_TOKEN" in env
+
+
+def test_bugsink_db_is_a_profile_service_for_the_dedicated_mode(
+    prod_model: dict[str, Any],
+) -> None:
+    services = prod_model["services"]
+    assert services["bugsink-db"]["profiles"] == ["bugsink-dedicated"]
+    assert services["bugsink-db"]["image"] == "pgvector/pgvector:0.8.7-pg16"
+    assert set(services["bugsink-db"]["networks"]) == {"data"}
+    # The default (main) mode is the main postgres: nothing else depends on bugsink-db.
+    for name, service in services.items():
+        if name != "bugsink-db":
+            assert "bugsink-db" not in (service.get("depends_on") or {}), name
+
+
+def test_cloud_deploy_handles_both_bugsink_db_modes() -> None:
+    script = (SCRIPTS_DIR / "cloud_deploy.sh").read_text(encoding="utf-8")
+    assert "BUGSINK_DB_MODE" in script
+    assert "CREATE ROLE bugsink" in script
+    assert "CREATE DATABASE bugsink" in script
+    assert "COMPOSE_PROFILES=bugsink-dedicated" in script
+    backup = (SCRIPTS_DIR / "backup_bugsink.sh").read_text(encoding="utf-8")
+    assert "BUGSINK_DB_MODE" in backup
+    assert "bugsink-db" in backup
+
+
+def test_bugsink_api_token_is_pasted_not_generated() -> None:
+    """Bugsink issues its API tokens in its UI: prod_init never generates one."""
+    sample = PROD_ENV_SAMPLE.read_text(encoding="utf-8")
+    assert re.search(r"^IHSP_BUGSINK__API_TOKEN=$", sample, re.MULTILINE)
+    script = (SCRIPTS_DIR / "prod_init.sh").read_text(encoding="utf-8")
+    assert "IHSP_BUGSINK__API_TOKEN" not in script

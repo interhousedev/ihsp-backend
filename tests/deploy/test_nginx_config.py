@@ -25,6 +25,7 @@ HOST_ENV = {
     "HOST_MCP": "mcp.ihsu.test",
     "HOST_APEX": "ihsu.test",
     "HOST_STORAGE": "storage.ihsu.test",
+    "HOST_LOGS": "logs.ihsu.test",
     "HOST_PORT_SUFFIX": "",
     "CERT_NAME": "ihsu.test",
     "NGINX_ENVSUBST_FILTER": "^(HOST|CERT)_",

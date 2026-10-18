@@ -114,6 +114,29 @@ fi
 # Data stores first, then the one-shot migrations, so a failed migration stops the
 # deployment before any application container is replaced.
 dc up -d --wait postgres redis vault
+# Bugsink's database (BUGSINK_DB_MODE in .env.prod): `main` (default) keeps it in the main
+# PostgreSQL; the role and database are created here if missing and the role's password is set
+# from BUGSINK_DB_PASSWORD on every deploy (idempotent). `dedicated` starts the bugsink-db
+# container (profile bugsink-dedicated) instead. The shell variables below win over .env.prod.
+bugsink_mode=$(sed -n 's/^BUGSINK_DB_MODE=//p' .env.prod | tail -n 1)
+case "${bugsink_mode:-main}" in
+    main)
+        export BUGSINK_DB_HOST=postgres
+        bugsink_pw=$(sed -n 's/^BUGSINK_DB_PASSWORD=//p' .env.prod | tail -n 1)
+        [ -n "$bugsink_pw" ] || { echo "BUGSINK_DB_PASSWORD is not set in .env.prod" >&2; exit 1; }
+        dc exec -T -e BUGSINK_PW="$bugsink_pw" postgres sh -c \
+            'psql -v ON_ERROR_STOP=1 -U ihsp -d postgres -v pw="$BUGSINK_PW"' << 'SQL'
+SELECT format('CREATE ROLE bugsink LOGIN PASSWORD %L', :'pw') WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'bugsink') \gexec
+SELECT format('ALTER ROLE bugsink LOGIN PASSWORD %L', :'pw') \gexec
+SELECT 'CREATE DATABASE bugsink OWNER bugsink' WHERE NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = 'bugsink') \gexec
+SQL
+        ;;
+    dedicated)
+        export BUGSINK_DB_HOST=bugsink-db COMPOSE_PROFILES=bugsink-dedicated
+        dc up -d --wait bugsink-db
+        ;;
+    *) echo "BUGSINK_DB_MODE must be main or dedicated" >&2; exit 1 ;;
+esac
 sealed=$(dc exec -T vault vault status 2> /dev/null | awk '$1 == "Sealed" { print $2 }' || true)
 if [ "$sealed" != "false" ]; then
     echo "WARNING: Vault is sealed. Registration and EMIS sync pause until: scripts/prod_init.sh unseal" >&2

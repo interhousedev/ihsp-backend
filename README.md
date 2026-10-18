@@ -133,7 +133,7 @@ CI fails when the committed document differs from the export. Then, in the `iht-
 One Docker host runs everything: PostgreSQL, Redis, Vault, Hydra, the backend processes, the `web` image (static apps), the edge nginx with Let's Encrypt, and certbot. The server pulls images built by CI (`ghcr.io/<owner>/ihsp-backend` and `ihsp-web`); nothing is built on it.
 
 1. Server: Linux with Docker and the compose plugin, at least 4 vCPU and 8 GB RAM, ports 25, 80 and 443 open, an SSH user in the `docker` group that owns `/opt/ihsp`.
-2. DNS: A/AAAA records for `ihsu.uz`, `id`, `my`, `app`, `staff`, `admin`, `lms`, `lib`, `s`, `api`, `mcp` and `mail`; an MX record for `mail.ihsu.uz`; SPF, DKIM and DMARC TXT records for the mail domain.
+2. DNS: A/AAAA records for `ihsu.uz`, `id`, `my`, `app`, `staff`, `admin`, `lms`, `lib`, `s`, `api`, `mcp`, `logs` and `mail`; an MX record for `mail.ihsu.uz`; SPF, DKIM and DMARC TXT records for the mail domain.
 3. Object storage: a bucket and an access key at an S3 provider (or the bundled RustFS profile).
 4. Accounts: OpenRouter, Exa, a Telegram bot from @BotFather, an outgoing SMTP relay, EMIS access.
 5. `cp materials/.env.prod.sample .env.prod` and fill in the `>>> SET <<<` values (`DOMAIN`, `ACME_EMAIL`, `IMAGE_OWNER`, `TAG`, S3, Telegram, OpenRouter, Exa, SMTP). The file is a secret: mode 600, never committed.
@@ -145,6 +145,9 @@ Updates and rollback: `scripts/cloud_deploy.sh deploy@<server> --tag 1.1.0`. It 
 Vault is a single node and starts sealed after every reboot. Until it is unsealed, registration and EMIS sync pause. Unseal with `ssh -t deploy@<server> 'cd /opt/ihsp && scripts/prod_init.sh unseal'`.
 
 Backups: `scripts/backup.sh` dumps both databases, a Redis snapshot and a Vault Raft snapshot, encrypts them to the public key `BACKUP_AGE_RECIPIENT` (keep the private key off the server) and optionally uploads them to a versioned S3 bucket.
+
+Error tracking: self-hosted Bugsink (`bugsink/bugsink`, Sentry-compatible) at `logs.<domain>` receives errors, stack traces and WARNING+ log records from every backend process and, when `NEXT_PUBLIC_BUGSINK_DSN` is set, from the browser apps. Events live in a `bugsink` PostgreSQL database: `BUGSINK_DB_MODE=main` (default) creates it in the main PostgreSQL, `dedicated` runs a separate container. `scripts/backup_bugsink.sh` uploads a nightly encrypted dump to the `sp-logs` bucket (`BUGSINK_BACKUP_S3_*`). After the first start, create a project in the Bugsink UI and set `IHSP_BUGSINK__DSN`; set `IHSP_BUGSINK__API_URL` and `IHSP_BUGSINK__API_TOKEN` so the admin app's Logs page (`GET /v1/admin/logs/issues`) lists recent issues with links to Bugsink. An empty DSN or token turns each part off.
+
 
 AI spending is capped by soft limits (`IHSP_LIMITS__*`) that administrators change at runtime on the Limits & usage page; every model call is recorded in the usage ledger. Set a hard spending cap at OpenRouter and at Exa as well.
 

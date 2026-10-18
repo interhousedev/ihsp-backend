@@ -14,6 +14,7 @@ OWNED_SCRIPTS = (
     "prod_init.sh",
     "cloud_deploy.sh",
     "backup.sh",
+    "backup_bugsink.sh",
     "restore.sh",
 )
 SHELL_FILES = [
