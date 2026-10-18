@@ -5,7 +5,6 @@ import datetime as dt
 from app.modules.academic.domain.classwork.errors import (
     AbsentOutsideRosterError,
     AttendanceConflictError,
-    AttendanceWindowClosedError,
     NotLessonTeacherError,
 )
 from app.modules.academic.infrastructure.orm.student import Student
@@ -201,27 +200,25 @@ async def test_resubmitting_with_the_new_version_replaces_the_list(env: Env) -> 
     assert sheet["version"] == 2
 
 
-async def test_teacher_after_the_window_is_refused_on_day_eight(env: Env) -> None:
-    """ACA-11: seven days are allowed, the eighth is not."""
+async def test_teacher_edits_a_lesson_of_any_age(env: Env) -> None:
+    """ACA-11: the teacher may edit attendance of an old lesson."""
     w = env.world
-    ok = await add_lesson(env.maker, w, day=DAY - dt.timedelta(days=7), period=1)
-    late = await add_lesson(env.maker, w, day=DAY - dt.timedelta(days=8), period=1)
+    lesson_id = await add_lesson(env.maker, w, day=DAY - dt.timedelta(days=30))
 
-    await env.services.submit_attendance.execute(
-        lesson_id=ok, actor=env.teacher, absent=[], base_version=0, source="staff"
+    sheet = await env.services.submit_attendance.execute(
+        lesson_id=lesson_id,
+        actor=env.teacher,
+        absent=[w.aziz.id],
+        base_version=0,
+        source="staff",
     )
-    with pytest.raises(AttendanceWindowClosedError) as error:
-        await env.services.submit_attendance.execute(
-            lesson_id=late, actor=env.teacher, absent=[], base_version=0, source="staff"
-        )
 
-    assert error.value.code == "attendance/window-closed"
+    assert sheet["editable"] is True
+    assert sheet["version"] == 1
 
 
-async def test_administration_edits_after_the_window_and_it_is_audited(
-    env: Env,
-) -> None:
-    """ACA-11: only Administration can edit after seven days."""
+async def test_administration_edits_a_lesson_of_any_age(env: Env) -> None:
+    """ACA-11: Administration edits old lessons, recorded as admin, no late audit."""
     w = env.world
     lesson_id = await add_lesson(env.maker, w, day=DAY - dt.timedelta(days=30))
 
@@ -237,18 +234,6 @@ async def test_administration_edits_after_the_window_and_it_is_audited(
     assert row.attendance_source == "admin"
     assert row.attendance_by == w.admin.id
     assert sheet["editable"] is True
-    assert [a.type for a in env.outbox.audits] == ["attendance.late_edit"]
-    assert env.outbox.audits[0].actor_id == w.admin.id
-
-
-async def test_in_window_edit_by_administration_is_not_a_late_edit(env: Env) -> None:
-    """The audit event is only for edits after the window."""
-    lesson_id = await add_lesson(env.maker, env.world)
-
-    await env.services.submit_attendance.execute(
-        lesson_id=lesson_id, actor=env.admin, absent=[], base_version=0, source="staff"
-    )
-
     assert env.outbox.audits == []
 
 

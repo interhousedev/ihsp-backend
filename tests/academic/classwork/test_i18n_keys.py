@@ -24,7 +24,6 @@ def test_every_error_has_a_translation_in_every_language() -> None:
         if issubclass(cls, BaseError) and cls.__module__ == errors.__name__
     }
 
-    assert "attendance-window-closed" in keys
     for lang in LANGUAGES:
         missing = {key for key in keys if key not in _messages(lang)}
         assert not missing, f"{lang}: {sorted(missing)}"

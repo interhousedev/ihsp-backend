@@ -47,10 +47,10 @@ async def test_admin_sets_topic_and_homework_of_another_teachers_lesson(
     assert removed.json()["homework"] is None
 
 
-async def test_admin_submits_attendance_after_the_teachers_window(
+async def test_admin_and_teacher_submit_attendance_for_an_old_lesson(
     env: Env, http_client: HttpClientFactory
 ) -> None:
-    """ACA-11: Administration edits attendance of an old lesson, a teacher cannot."""
+    """ACA-11: no window; the teacher and Administration both edit old lessons."""
     w = env.world
     old = await add_lesson(env.maker, w, day=DAY - dt.timedelta(days=8))
     admin = await client_as(http_client, env, env.admin)
@@ -58,12 +58,15 @@ async def test_admin_submits_attendance_after_the_teachers_window(
     body = {"absent": [str(w.bobur.id)], "base_version": 0}
 
     by_teacher = await teacher.put(f"/v1/staff/lessons/{old}/attendance", json=body)
-    by_admin = await admin.put(f"/v1/staff/lessons/{old}/attendance", json=body)
+    by_admin = await admin.put(
+        f"/v1/staff/lessons/{old}/attendance",
+        json={"absent": [], "base_version": 1},
+    )
     reopened = await admin.get(f"/v1/staff/lessons/{old}")
 
-    assert by_teacher.status_code == 403
+    assert by_teacher.status_code == 200
     assert by_admin.status_code == 200
-    assert [row["absent"] for row in by_admin.json()["roster"]] == [False, True, False]
+    assert [row["absent"] for row in by_admin.json()["roster"]] == [False, False, False]
     assert reopened.json()["attendance"]["editable"] is True
 
 

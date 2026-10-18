@@ -88,7 +88,7 @@ async def test_journal_has_students_by_lessons_with_absences_and_marks(
 
 
 async def test_old_lessons_are_not_editable_in_the_grid(env: Env) -> None:
-    """UF-STF-07 3a: lessons older than seven days are read-only."""
+    """UF-STF-07: no time window, old lessons stay editable for staff."""
     w = env.world
     old = await add_lesson(env.maker, w, day=DAY - dt.timedelta(days=9))
 
@@ -100,7 +100,7 @@ async def test_old_lessons_are_not_editable_in_the_grid(env: Env) -> None:
     )
 
     assert journal["lessons"][0]["id"] == str(old)
-    assert journal["lessons"][0]["editable"] is False
+    assert journal["lessons"][0]["editable"] is True
     assert admin_view["lessons"][0]["editable"] is True
 
 

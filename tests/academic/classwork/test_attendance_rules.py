@@ -1,6 +1,5 @@
-"""ACA-11, ACA-2: the edit window, permissions and the audience snapshot."""
+"""ACA-11, ACA-2: permissions, cancelled lessons and the audience snapshot."""
 
-import datetime as dt
 from uuid import UUID
 
 from app.modules.academic.domain import audience
@@ -8,18 +7,16 @@ from app.modules.academic.domain.classwork.attendance_rules import (
     attendance_editable,
     build_snapshot,
     ensure_attendance_editable,
-    window_open,
 )
 from app.modules.academic.domain.classwork.errors import (
     AbsentOutsideRosterError,
     AttendanceCancelledLessonError,
-    AttendanceWindowClosedError,
     NotLessonTeacherError,
 )
 from app.modules.academic.domain.classwork.roster import RosterStudent, build_roster
 from app.shared.actor import Actor, Role
 from app.shared.ids import new_id
-from tests.academic.classwork.factories import GROUP, LESSON_DAY, TEACHER, make_lesson
+from tests.academic.classwork.factories import GROUP, TEACHER, make_lesson
 
 import pytest
 
@@ -29,56 +26,36 @@ def actor(role: Role, user_id: UUID | None = None) -> Actor:
     return Actor(user_id=user_id or new_id(), roles=frozenset({role}))
 
 
-def test_teacher_may_edit_on_day_seven_but_not_on_day_eight() -> None:
-    """ACA-11: seven days after the lesson the window closes."""
+def test_teacher_may_edit_a_lesson_of_any_age() -> None:
+    """ACA-11: no time window; the lesson's teacher edits at any date."""
     lesson = make_lesson()
     teacher = actor(Role.TEACHER, TEACHER)
 
-    assert window_open(lesson, LESSON_DAY + dt.timedelta(days=7), 7)
-    assert not window_open(lesson, LESSON_DAY + dt.timedelta(days=8), 7)
-    assert attendance_editable(lesson, teacher, LESSON_DAY + dt.timedelta(days=7), 7)
-    assert not attendance_editable(
-        lesson, teacher, LESSON_DAY + dt.timedelta(days=8), 7
-    )
+    assert attendance_editable(lesson, teacher)
+    ensure_attendance_editable(lesson, teacher)
 
 
-def test_administration_can_always_edit_and_it_is_flagged_as_late() -> None:
-    """ACA-11: Administration edits after the window."""
+def test_administration_may_edit_any_lesson() -> None:
+    """ACA-11: Administration edits any lesson."""
     lesson = make_lesson()
     admin = actor(Role.ADMIN)
-    late_day = LESSON_DAY + dt.timedelta(days=30)
 
-    assert attendance_editable(lesson, admin, late_day, 7)
-    assert ensure_attendance_editable(lesson, admin, late_day, 7) is True
-    assert ensure_attendance_editable(lesson, admin, LESSON_DAY, 7) is False
-
-
-def test_late_edit_by_the_teacher_is_refused() -> None:
-    """ACA-11, attendance/window-closed."""
-    lesson = make_lesson()
-
-    with pytest.raises(AttendanceWindowClosedError) as error:
-        ensure_attendance_editable(
-            lesson, actor(Role.TEACHER, TEACHER), LESSON_DAY + dt.timedelta(days=8), 7
-        )
-
-    assert error.value.code == "attendance/window-closed"
+    assert attendance_editable(lesson, admin)
+    ensure_attendance_editable(lesson, admin)
 
 
 def test_another_teacher_is_refused() -> None:
     """STF-8: only the lesson's teacher or Administration."""
     with pytest.raises(NotLessonTeacherError):
-        ensure_attendance_editable(make_lesson(), actor(Role.TEACHER), LESSON_DAY, 7)
+        ensure_attendance_editable(make_lesson(), actor(Role.TEACHER))
+    assert not attendance_editable(make_lesson(), actor(Role.TEACHER))
 
 
 def test_a_cancelled_lesson_takes_no_attendance() -> None:
     """Attendance for cancelled lessons is refused."""
     with pytest.raises(AttendanceCancelledLessonError):
         ensure_attendance_editable(
-            make_lesson(status="cancelled"),
-            actor(Role.TEACHER, TEACHER),
-            LESSON_DAY,
-            7,
+            make_lesson(status="cancelled"), actor(Role.TEACHER, TEACHER)
         )
 
 

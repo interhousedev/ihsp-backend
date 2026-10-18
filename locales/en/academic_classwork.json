@@ -6,7 +6,6 @@
   "academic-not-lesson-teacher": "Only the lesson's teacher or Administration can do this.",
   "attendance-lesson-reassigned": "This lesson was reassigned to another teacher.",
   "academic-not-curator": "You are not the curator of this group.",
-  "attendance-window-closed": "Attendance can be edited for {days} days. Ask Administration to correct it.",
   "attendance-conflict": "Attendance was changed by someone else. Review the current list and submit again.",
   "attendance-absent-outside-roster": "Some students are not in this lesson's audience.",
   "attendance-lesson-cancelled": "Attendance cannot be taken for a cancelled lesson.",

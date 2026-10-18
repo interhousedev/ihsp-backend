@@ -57,13 +57,6 @@ class NotCuratorError(ForbiddenError):
     message_key = "academic-not-curator"
 
 
-class AttendanceWindowClosedError(ForbiddenError):
-    """The 7-day edit window has passed; only Administration can edit."""
-
-    code = "attendance/window-closed"
-    message_key = "attendance-window-closed"
-
-
 class AttendanceConflictError(ConflictError):
     """Someone changed the attendance after the caller opened it (ACA-11)."""
 

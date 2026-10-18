@@ -22,7 +22,6 @@ from app.modules.academic.domain.classwork.attendance_rules import (
 from app.modules.academic.domain.classwork.lesson import Lesson
 from app.shared.actor import Actor, Role
 from app.shared.clock import Clock, local_today
-from app.shared.notifications import AuditDraft
 
 Source = Literal["bot", "staff", "admin"]
 
@@ -39,7 +38,7 @@ def effective_source(source: Source, lesson: Lesson, actor: Actor) -> Source:
 
 
 class SubmitAttendance:
-    """Check permission, window and version, then save the absent list."""
+    """Check permission and version, then save the absent list."""
 
     def __init__(
         self,
@@ -47,14 +46,12 @@ class SubmitAttendance:
         clock: Clock,
         roster_loader: RosterLoader,
         sheets: AttendanceSheetBuilder,
-        edit_days: int,
     ) -> None:
         """Initialize the use case."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.roster_loader = roster_loader
         self.sheets = sheets
-        self.edit_days = edit_days
 
     async def execute(
         self,
@@ -75,9 +72,7 @@ class SubmitAttendance:
         today = local_today(self.clock)
         async with self.uow_factory() as uow:
             lesson = await require_lesson(uow, lesson_id)
-            after_window = ensure_attendance_editable(
-                lesson, actor, today, self.edit_days
-            )
+            ensure_attendance_editable(lesson, actor)
             roster = await self.roster_loader.load(uow, lesson)
             if base_version != lesson.attendance_version:
                 sheet = await self.sheets.build(lesson, roster, actor, today)
@@ -97,14 +92,6 @@ class SubmitAttendance:
                 fresh = await require_lesson(uow, lesson_id)
                 sheet = await self.sheets.build(fresh, roster, actor, today)
                 raise conflict_with(sheet)
-            if after_window:
-                uow.audit(
-                    AuditDraft(
-                        type="attendance.late_edit",
-                        actor_id=actor.user_id,
-                        metadata={"lesson_id": str(lesson_id), "version": version},
-                    )
-                )
             await uow.commit()
             fresh = await require_lesson(uow, lesson_id)
             return await self.sheets.build(fresh, roster, actor, today)

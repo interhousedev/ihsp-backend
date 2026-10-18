@@ -158,13 +158,13 @@ def build_classwork(
     lesson_items = LessonItemBuilder(people)
     homework_items = HomeworkItemBuilder(people, clock)
     roster_loader = RosterLoader(people)
-    sheets = AttendanceSheetBuilder(people, edit_days)
+    sheets = AttendanceSheetBuilder(people)
     study_days = StudyDays(schedule)
     formatter = ReportFormatter(people)
     drafts = RedisAttendanceDraftStore(deps.redis)
     prompts = PromptStateBuilder(clock, roster_loader, drafts)
 
-    submit = SubmitAttendance(uow_factory, clock, roster_loader, sheets, edit_days)
+    submit = SubmitAttendance(uow_factory, clock, roster_loader, sheets)
     set_homework = SetHomework(uow_factory, clock)
     clear_homework = ClearHomework(uow_factory, clock)
     set_topic = SetTopic(uow_factory, clock)
@@ -185,7 +185,7 @@ def build_classwork(
     )
     group_attendance = GroupAttendance(uow_factory, clock, people, formatter, schedule)
     attendance_report = AttendanceReport(uow_factory, clock, people, formatter)
-    get_journal = GetJournal(uow_factory, clock, people, roster_loader, edit_days)
+    get_journal = GetJournal(uow_factory, clock, people, roster_loader)
 
     return ClassworkServices(
         get_attendance_sheet=GetAttendanceSheet(
@@ -193,7 +193,7 @@ def build_classwork(
         ),
         submit_attendance=submit,
         toggle_journal_cell=ToggleJournalCell(
-            uow_factory, clock, roster_loader, sheets, edit_days
+            uow_factory, clock, roster_loader, sheets
         ),
         set_excuse=SetExcuse(uow_factory, clock, roster_loader, sheets, schedule),
         get_prompt_state=get_prompt_state,

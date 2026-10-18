@@ -46,14 +46,12 @@ class GetJournal:
         clock: Clock,
         people: PeopleDirectory,
         roster_loader: RosterLoader,
-        edit_days: int,
     ) -> None:
         """Initialize the use case."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.people = people
         self.roster_loader = roster_loader
-        self.edit_days = edit_days
 
     async def _term(
         self, uow: ViewUnitOfWork, term_id: UUID | None, today: dt.date
@@ -129,7 +127,7 @@ class GetJournal:
             "date": lesson.date.isoformat(),
             "topic": lesson.topic,
             "attendance_submitted": lesson.submitted,
-            "editable": attendance_editable(lesson, actor, today, self.edit_days),
+            "editable": attendance_editable(lesson, actor),
             "version": lesson.attendance_version,
         }
 

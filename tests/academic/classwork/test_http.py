@@ -215,10 +215,10 @@ async def test_homework_put_delete_and_topic(
     assert removed.json()["lesson"]["topic"] == "Waves"
 
 
-async def test_attendance_put_conflict_and_window_closed(
+async def test_attendance_put_conflict_and_old_lesson(
     env: Env, http_client: HttpClientFactory
 ) -> None:
-    """PUT /v1/staff/lessons/{id}/attendance: 409 with the sheet, 403 after 7 days."""
+    """PUT /v1/staff/lessons/{id}/attendance: 409 with the sheet, old lessons ok."""
     w = env.world
     lesson_id = await add_lesson(env.maker, w)
     old = await add_lesson(env.maker, w, day=DAY - dt.timedelta(days=8))
@@ -238,8 +238,7 @@ async def test_attendance_put_conflict_and_window_closed(
     problem = stale.json()
     assert problem["type"] == "common/conflict"
     assert problem["params"]["current"]["version"] == 1
-    assert late.status_code == 403
-    assert late.json()["type"] == "attendance/window-closed"
+    assert late.status_code == 200
 
 
 async def test_attendance_put_with_unassigned_students(

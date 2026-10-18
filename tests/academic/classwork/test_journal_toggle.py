@@ -5,7 +5,6 @@ import datetime as dt
 from app.modules.academic.domain.classwork.errors import (
     AbsentOutsideRosterError,
     AttendanceConflictError,
-    AttendanceWindowClosedError,
 )
 from tests.academic.classwork.conftest import Env
 from tests.academic.classwork.world import DAY, add_lesson, lesson_row
@@ -145,19 +144,23 @@ async def test_student_outside_the_audience_is_refused(env: Env) -> None:
         )
 
 
-async def test_older_than_seven_days_is_read_only_for_teachers(env: Env) -> None:
-    """UF-STF-07 3a: lessons older than seven days are read-only."""
+async def test_teacher_toggles_a_lesson_older_than_seven_days(env: Env) -> None:
+    """UF-STF-07: no time window, the teacher may toggle an old lesson."""
     w = env.world
     lesson_id = await add_lesson(env.maker, w, day=DAY - dt.timedelta(days=8))
 
-    with pytest.raises(AttendanceWindowClosedError):
-        await env.services.toggle_journal_cell.execute(
-            lesson_id=lesson_id,
-            student_id=w.aziz.id,
-            absent=True,
-            base_version=0,
-            actor=env.teacher,
-        )
+    version = await env.services.toggle_journal_cell.execute(
+        lesson_id=lesson_id,
+        student_id=w.aziz.id,
+        absent=True,
+        base_version=0,
+        actor=env.teacher,
+    )
+
+    row = await lesson_row(env.maker, lesson_id)
+    assert version == 1
+    assert row.attendance_absent == [w.aziz.id]
+    assert env.outbox.audits == []
 
 
 async def test_administration_toggle_after_the_window_is_audited(env: Env) -> None:
@@ -175,7 +178,7 @@ async def test_administration_toggle_after_the_window_is_audited(env: Env) -> No
 
     row = await lesson_row(env.maker, lesson_id)
     assert row.attendance_source == "admin"
-    assert [a.type for a in env.outbox.audits] == ["attendance.late_edit"]
+    assert env.outbox.audits == []
 
 
 async def test_toggle_late_marks_the_student_late_not_absent(env: Env) -> None:

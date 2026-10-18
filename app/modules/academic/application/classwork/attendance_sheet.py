@@ -1,4 +1,4 @@
-"""Builds the ``AttendanceSheet`` JSON of a lesson (STF-8, ACA-11)."""
+"""Builds the ``AttendanceSheet`` JSON of a lesson (STF-8)."""
 
 import datetime as dt
 from collections.abc import Collection
@@ -15,10 +15,9 @@ from app.shared.actor import Actor
 class AttendanceSheetBuilder:
     """Combines the lesson's saved lists with the current roster."""
 
-    def __init__(self, people: PeopleDirectory, edit_days: int) -> None:
-        """Store the people directory and the edit window in days."""
+    def __init__(self, people: PeopleDirectory) -> None:
+        """Store the people directory."""
         self.people = people
-        self.edit_days = edit_days
 
     async def build(
         self,
@@ -65,9 +64,7 @@ class AttendanceSheetBuilder:
                 }
             )
         author = await self.people.person(lesson.attendance_by)
-        editable = lesson.scheduled and attendance_editable(
-            lesson, actor, today, self.edit_days
-        )
+        editable = lesson.scheduled and attendance_editable(lesson, actor)
         return {
             "lesson_id": str(lesson.id),
             "submitted": lesson.submitted,

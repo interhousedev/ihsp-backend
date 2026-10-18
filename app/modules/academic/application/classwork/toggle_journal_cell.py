@@ -23,7 +23,6 @@ from app.modules.academic.domain.classwork.attendance_rules import (
 from app.modules.academic.domain.classwork.errors import AbsentOutsideRosterError
 from app.shared.actor import Actor
 from app.shared.clock import Clock, local_today
-from app.shared.notifications import AuditDraft
 
 
 class ToggleJournalCell:
@@ -35,14 +34,12 @@ class ToggleJournalCell:
         clock: Clock,
         roster_loader: RosterLoader,
         sheets: AttendanceSheetBuilder,
-        edit_days: int,
     ) -> None:
         """Initialize the use case."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.roster_loader = roster_loader
         self.sheets = sheets
-        self.edit_days = edit_days
 
     async def execute(
         self,
@@ -58,9 +55,7 @@ class ToggleJournalCell:
         today = local_today(self.clock)
         async with self.uow_factory() as uow:
             lesson = await require_lesson(uow, lesson_id)
-            after_window = ensure_attendance_editable(
-                lesson, actor, today, self.edit_days
-            )
+            ensure_attendance_editable(lesson, actor)
             if absent and late:
                 raise AbsentOutsideRosterError(params={"user_ids": [str(student_id)]})
             roster = await self.roster_loader.load(uow, lesson)
@@ -85,14 +80,6 @@ class ToggleJournalCell:
                 fresh = await require_lesson(uow, lesson_id)
                 raise conflict_with(
                     await self.sheets.build(fresh, roster, actor, today)
-                )
-            if after_window:
-                uow.audit(
-                    AuditDraft(
-                        type="attendance.late_edit",
-                        actor_id=actor.user_id,
-                        metadata={"lesson_id": str(lesson_id), "version": version},
-                    )
                 )
             await uow.commit()
             return version
