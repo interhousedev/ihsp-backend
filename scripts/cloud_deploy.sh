@@ -124,12 +124,16 @@ case "${bugsink_mode:-main}" in
         export BUGSINK_DB_HOST=postgres
         bugsink_pw=$(sed -n 's/^BUGSINK_DB_PASSWORD=//p' .env.prod | tail -n 1)
         [ -n "$bugsink_pw" ] || { echo "BUGSINK_DB_PASSWORD is not set in .env.prod" >&2; exit 1; }
-        dc exec -T -e BUGSINK_PW="$bugsink_pw" postgres sh -c \
+        # `-e BUGSINK_PW` (no value) copies the variable from this shell, so the password
+        # never appears in the docker argv (ps); it is unset right after the command.
+        export BUGSINK_PW="$bugsink_pw"
+        dc exec -T -e BUGSINK_PW postgres sh -c \
             'psql -v ON_ERROR_STOP=1 -U ihsp -d postgres -v pw="$BUGSINK_PW"' << 'SQL'
 SELECT format('CREATE ROLE bugsink LOGIN PASSWORD %L', :'pw') WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'bugsink') \gexec
 SELECT format('ALTER ROLE bugsink LOGIN PASSWORD %L', :'pw') \gexec
 SELECT 'CREATE DATABASE bugsink OWNER bugsink' WHERE NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = 'bugsink') \gexec
 SQL
+        unset BUGSINK_PW
         ;;
     dedicated)
         export BUGSINK_DB_HOST=bugsink-db COMPOSE_PROFILES=bugsink-dedicated

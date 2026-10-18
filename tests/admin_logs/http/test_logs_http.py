@@ -6,6 +6,7 @@ from app.interfaces.http.dependencies import get_actor
 from app.interfaces.http.v1.admin_logs import ROUTERS
 from app.interfaces.http.v1.admin_logs.bugsink import BugsinkClient
 from app.interfaces.http.v1.admin_logs.handlers.list_issues import get_bugsink_client
+from app.settings import BugsinkSettings, Settings
 from app.shared.actor import Actor, Role
 from app.shared.ids import new_id
 from tests.conftest import HttpClientFactory
@@ -90,6 +91,23 @@ async def test_upstream_failure_is_502(http_client: HttpClientFactory) -> None:
     response = await client.get("/v1/admin/logs/issues")
 
     assert response.status_code == 502
+
+
+async def test_rejects_a_project_outside_the_configured_ones(
+    http_client: HttpClientFactory, settings: Settings
+) -> None:
+    configured = settings.model_copy(
+        update={"bugsink": BugsinkSettings(projects=["3"])}
+    )
+    client = await http_client(
+        ROUTERS, overrides={get_actor: _actor}, settings=configured
+    )
+
+    unknown = await client.get("/v1/admin/logs/issues", params={"project": "9"})
+    known = await client.get("/v1/admin/logs/issues", params={"project": "3"})
+
+    assert unknown.status_code == 422
+    assert known.status_code == 200
 
 
 async def test_rejects_unknown_level(http_client: HttpClientFactory) -> None:

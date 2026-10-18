@@ -51,6 +51,8 @@ async def list_issues(
 ) -> LogIssuesPage:
     """Error issues from Bugsink, filtered and paged; disabled when unconfigured."""
     projects = list(container.settings.bugsink.projects)
+    if project is not None and projects and project not in projects:
+        raise HTTPException(status_code=422, detail="unknown error-tracking project")
     if client is None:
         return LogIssuesPage(
             items=[],

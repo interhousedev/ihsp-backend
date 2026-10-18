@@ -186,7 +186,10 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
       POSTGRES_DB: ihsp
       HYDRA_DB_PASSWORD: ${HYDRA_DB_PASSWORD:?} # used once by init-hydra.sh
-      BUGSINK_DB_PASSWORD: ${BUGSINK_DB_PASSWORD:?} # used once by init-bugsink.sh
+      # Used once by init-bugsink.sh, and only when BUGSINK_DB_MODE is main (dedicated mode
+      # has its own bugsink-db, so the password may be empty there).
+      BUGSINK_DB_MODE: ${BUGSINK_DB_MODE:-main}
+      BUGSINK_DB_PASSWORD: ${BUGSINK_DB_PASSWORD:-}
     volumes:
       - pg_data:/var/lib/postgresql/data
       - ./postgres/init-hydra.sh:/docker-entrypoint-initdb.d/10-hydra.sh:ro
