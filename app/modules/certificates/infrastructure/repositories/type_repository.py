@@ -18,14 +18,6 @@ def to_entity(row: Row) -> CertificateType:
         id=row.id,
         code=row.code,
         name={str(k): str(v) for k, v in row.name.items()},
-        levels=[str(level) for level in row.levels],
-        asks_level=row.asks_level,
-        asks_score=row.asks_score,
-        score_min=row.score_min,
-        score_max=row.score_max,
-        asks_percent=row.asks_percent,
-        asks_subject=row.asks_subject,
-        asks_year=row.asks_year,
         builtin=row.builtin,
         position=row.position,
         custom_fields=[field_from_dict(item) for item in row.custom_fields or []],
@@ -35,14 +27,6 @@ def to_entity(row: Row) -> CertificateType:
 def _apply(row: Row, kind: CertificateType) -> None:
     row.code = kind.code
     row.name = dict(kind.name)
-    row.levels = list(kind.levels)
-    row.asks_level = kind.asks_level
-    row.asks_score = kind.asks_score
-    row.score_min = kind.score_min
-    row.score_max = kind.score_max
-    row.asks_percent = kind.asks_percent
-    row.asks_subject = kind.asks_subject
-    row.asks_year = kind.asks_year
     row.builtin = kind.builtin
     row.position = kind.position
     row.custom_fields = [item.to_dict() for item in kind.custom_fields]

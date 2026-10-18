@@ -46,6 +46,10 @@ class CustomFieldInput(BaseModel):
     required: bool = False
     options: list[str] = Field(default_factory=list, max_length=50)
     allow_other: bool = False
+    min: float | None = None
+    """Number fields: the lowest value (null: open)."""
+    max: float | None = None
+    """Number fields: the highest value (null: open)."""
 
 
 class CustomFieldResponse(CustomFieldInput):
@@ -61,6 +65,8 @@ class CustomFieldResponse(CustomFieldInput):
             required=item.required,
             options=list(item.options),
             allow_other=item.allow_other,
+            min=item.min_value,
+            max=item.max_value,
         )
 
 
@@ -69,14 +75,6 @@ class CertificateTypeInput(BaseModel):
 
     code: str = Field(min_length=1, max_length=40)
     name: TypeName
-    levels: list[str] = Field(default_factory=list, max_length=40)
-    asks_level: bool = False
-    asks_score: bool = False
-    score_min: float | None = None
-    score_max: float | None = None
-    asks_percent: bool = False
-    asks_subject: bool = False
-    asks_year: bool = True
     position: int | None = Field(default=None, ge=0, le=10_000)
     custom_fields: list[CustomFieldInput] = Field(default_factory=list, max_length=20)
 
@@ -86,14 +84,6 @@ class CertificateTypePatch(BaseModel):
 
     code: str | None = Field(default=None, min_length=1, max_length=40)
     name: TypeName | None = None
-    levels: list[str] | None = Field(default=None, max_length=40)
-    asks_level: bool | None = None
-    asks_score: bool | None = None
-    score_min: float | None = None
-    score_max: float | None = None
-    asks_percent: bool | None = None
-    asks_subject: bool | None = None
-    asks_year: bool | None = None
     position: int | None = Field(default=None, ge=0, le=10_000)
     custom_fields: list[CustomFieldInput] | None = Field(default=None, max_length=20)
 
@@ -104,14 +94,6 @@ class CertificateTypeResponse(BaseModel):
     id: UUID
     code: str
     name: TypeName
-    levels: list[str]
-    asks_level: bool
-    asks_score: bool
-    score_min: float | None
-    score_max: float | None
-    asks_percent: bool
-    asks_subject: bool
-    asks_year: bool
     builtin: bool
     position: int
     custom_fields: list[CustomFieldResponse]
@@ -127,14 +109,6 @@ class CertificateTypeResponse(BaseModel):
                 ru=kind.name.get("ru", ""),
                 en=kind.name.get("en", ""),
             ),
-            levels=kind.levels,
-            asks_level=kind.asks_level,
-            asks_score=kind.asks_score,
-            score_min=kind.score_min,
-            score_max=kind.score_max,
-            asks_percent=kind.asks_percent,
-            asks_subject=kind.asks_subject,
-            asks_year=kind.asks_year,
             builtin=kind.builtin,
             position=kind.position,
             custom_fields=[
@@ -160,14 +134,11 @@ class CertificateFileResponse(BaseModel):
 
 
 class EntryValues(BaseModel):
-    """Values a student fills in for a certificate."""
+    """Values a student fills in for a certificate: its type's custom fields.
 
-    level: str | None = Field(default=None, max_length=40)
-    score: float | None = None
-    percent: float | None = None
-    subject: str | None = Field(default=None, max_length=255)
-    year: int | None = None
-    serial: str | None = Field(default=None, max_length=255)
+    Level, score, percent, subject, year and serial are custom fields by key.
+    """
+
     custom: dict[str, CustomValue] | None = None
 
 
@@ -186,12 +157,6 @@ class CertificateEntryResponse(BaseModel):
 
     id: UUID
     type_id: UUID
-    level: str | None
-    score: float | None
-    percent: float | None
-    subject: str | None
-    year: int | None
-    serial: str | None
     source: Literal["manual", "emis"]
     issued_at: date | None
     expires_at: date | None
@@ -205,12 +170,6 @@ class CertificateEntryResponse(BaseModel):
         return cls(
             id=entry.id,
             type_id=entry.type_id,
-            level=entry.level,
-            score=entry.score,
-            percent=entry.percent,
-            subject=entry.subject,
-            year=entry.year,
-            serial=entry.serial,
             source=entry.source.value,
             issued_at=entry.issued_at,
             expires_at=entry.expires_at,
@@ -330,12 +289,13 @@ class StaffStatsResponse(BaseModel):
 
 
 class RankingItem(BaseModel):
-    """One ranked student."""
+    """One ranked student: ``value`` is the best score of the type (null: none)."""
 
     student_id: UUID
     name: str
     group_name: str
     count: int
+    value: float | None = None
 
 
 class StaffRankingResponse(BaseModel):
@@ -353,6 +313,7 @@ class StaffRankingResponse(BaseModel):
                     name=r.name,
                     group_name=r.group_name,
                     count=r.count,
+                    value=r.value,
                 )
                 for r in ranked
             ]

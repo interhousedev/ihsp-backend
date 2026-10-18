@@ -3,27 +3,41 @@
 from app.modules.certificates.domain.errors import (
     CertificateEntryNotFoundError,
     CertificateFileNotFoundError,
-    CertificateInvalidError,
     CertificateTypeNotFoundError,
+    CustomFieldInvalidError,
 )
 from app.modules.files.domain.errors import QuotaExceededError, TypeNotAllowedError
 from app.shared.ids import new_id
-from tests.certificates.conftest import CertificatesHarness
+from tests.certificates.conftest import (
+    CertificatesHarness,
+    level_field,
+    number_field,
+    text_field,
+)
 
 import pytest
 
 
 async def test_a_student_records_a_certificate(h: CertificatesHarness) -> None:
     """The entry is stored with the given values and the manual source."""
-    kind = await h.add_type("ielts", levels=["6.0", "6.5", "7.0"])
+    kind = await h.add_type(
+        "ielts",
+        custom_fields=[
+            level_field(("6.0", "6.5", "7.0")),
+            number_field("year", 1990, 2100),
+            text_field("serial"),
+        ],
+    )
 
     entry = await h.services.create_entry.execute(
-        h.ann.id, kind.id, {"level": " 6.5 ", "year": 2026, "serial": ""}
+        h.ann.id,
+        kind.id,
+        {"custom": {"level": " 6.5 ", "year": 2026, "serial": ""}},
     )
 
     mine = await h.services.list_my_entries.execute(h.ann.id)
-    assert [(e.level, e.year, e.serial, e.source.value) for e in mine] == [
-        ("6.5", 2026, None, "manual")
+    assert [(e.custom_values, e.source.value) for e in mine] == [
+        ({"level": "6.5", "year": 2026.0}, "manual")
     ]
     assert entry.id == mine[0].id
 
@@ -35,34 +49,45 @@ async def test_an_unknown_type_is_refused(h: CertificatesHarness) -> None:
 
 
 @pytest.mark.parametrize(
-    "values",
+    "custom",
     [
         {"level": "9.9"},
         {"score": 1700},
         {"percent": 101},
         {"year": 1800},
+        {"score": "high"},
     ],
 )
 async def test_values_outside_the_type_are_refused(
-    h: CertificatesHarness, values: dict[str, object]
+    h: CertificatesHarness, custom: dict[str, object]
 ) -> None:
     """Level not in the type, score or percent out of range, odd year: 422."""
     kind = await h.add_type(
-        "sat", levels=["6.5"], score_min=400, score_max=1600, asks_score=True
+        "sat",
+        custom_fields=[
+            level_field(("6.5",)),
+            number_field("score", 400, 1600),
+            number_field("percent", 0, 100),
+            number_field("year", 1990, 2100),
+        ],
     )
 
-    with pytest.raises(CertificateInvalidError):
-        await h.services.create_entry.execute(h.ann.id, kind.id, values)
+    with pytest.raises(CustomFieldInvalidError):
+        await h.services.create_entry.execute(h.ann.id, kind.id, {"custom": custom})
 
 
 async def test_a_student_edits_only_the_sent_fields(h: CertificatesHarness) -> None:
     """Fields not in the patch keep their value."""
-    kind = await h.add_type("sat", score_min=400, score_max=1600)
-    entry_id = await h.add_entry(h.ann, kind, score=1300, subject="Math")
+    kind = await h.add_type(
+        "sat", custom_fields=[number_field("score", 400, 1600), text_field("subject")]
+    )
+    entry_id = await h.add_entry(h.ann, kind, custom={"score": 1300, "subject": "Math"})
 
-    changed = await h.services.update_entry.execute(h.ann.id, entry_id, {"score": 1400})
+    changed = await h.services.update_entry.execute(
+        h.ann.id, entry_id, {"custom": {"score": 1400, "subject": "Math"}}
+    )
 
-    assert (changed.score, changed.subject) == (1400, "Math")
+    assert changed.custom_values == {"score": 1400.0, "subject": "Math"}
 
 
 async def test_someone_elses_entry_is_not_found(h: CertificatesHarness) -> None:

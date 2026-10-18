@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from uuid import UUID
 
 from app.modules.certificates.domain.certificate_type import CertificateType
+from app.modules.certificates.domain.custom_fields import CustomField, FieldKind
 from app.modules.certificates.ports.student_directory import StudentInfo
 from app.modules.certificates.wiring import (
     CertificatesOverrides,
@@ -42,6 +43,28 @@ def make_type(code: str = "ielts", **fields: object) -> CertificateType:
     }
     values.update(fields)
     return CertificateType(**values)  # type: ignore[arg-type]
+
+
+def label(key: str) -> dict[str, str]:
+    """The label of a field in the three languages (the key is enough for tests)."""
+    return {"uz": key, "ru": key, "en": key}
+
+
+def level_field(levels: tuple[str, ...] = ("B1", "B2")) -> CustomField:
+    """The level: a single choice of the levels, in their order."""
+    return CustomField("level", FieldKind.SINGLE, label("level"), options=levels)
+
+
+def number_field(
+    key: str, low: float | None = None, high: float | None = None
+) -> CustomField:
+    """A number field with optional bounds."""
+    return CustomField(key, FieldKind.NUMBER, label(key), min_value=low, max_value=high)
+
+
+def text_field(key: str) -> CustomField:
+    """A free text field."""
+    return CustomField(key, FieldKind.TEXT, label(key))
 
 
 def make_student(

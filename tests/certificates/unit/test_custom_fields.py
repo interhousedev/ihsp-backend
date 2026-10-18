@@ -156,3 +156,20 @@ def test_unknown_keys_are_dropped() -> None:
     assert clean_values([field("track")], {"track": "art", "other": "x"}) == {
         "track": "art"
     }
+
+
+def test_number_bounds_are_checked_on_values() -> None:
+    """A number field with bounds takes values inside them, refuses the rest."""
+    bounded = field("score", FieldKind.NUMBER, min_value=400, max_value=1600)
+
+    assert clean_values([bounded], {"score": 500}) == {"score": 500.0}
+    with pytest.raises(CustomFieldInvalidError):
+        clean_values([bounded], {"score": 1700})
+
+
+def test_bounds_belong_to_number_fields_only() -> None:
+    """Bounds on a text field, or an inverted number range, are a type error."""
+    with pytest.raises(CertificateInvalidError):
+        check_fields([field("note", FieldKind.TEXT, min_value=1)])
+    with pytest.raises(CertificateInvalidError):
+        check_fields([field("score", FieldKind.NUMBER, min_value=10, max_value=1)])

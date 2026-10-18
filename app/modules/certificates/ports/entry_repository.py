@@ -10,7 +10,10 @@ from app.modules.certificates.domain.entry import CertificateEntry, EntryFile
 
 @dataclass(frozen=True, slots=True)
 class EntryFilter:
-    """Which entries a staff query wants (``student_ids`` is the allowed set)."""
+    """Which entries a staff query wants (``student_ids`` is the allowed set).
+
+    ``level`` and ``subject`` match the custom values under those keys.
+    """
 
     student_ids: Sequence[UUID]
     type_id: UUID | None = None

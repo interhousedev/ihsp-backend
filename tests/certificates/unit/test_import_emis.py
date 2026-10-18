@@ -4,7 +4,12 @@ import datetime as dt
 
 from app.modules.identity.infrastructure.emis.certificates import to_certificates
 from app.shared.contracts.emis import EmisAuthFailed, EmisCertificate, EmisUnavailable
-from tests.certificates.conftest import CertificatesHarness
+from tests.certificates.conftest import (
+    CertificatesHarness,
+    level_field,
+    number_field,
+    text_field,
+)
 
 import pytest
 
@@ -19,8 +24,30 @@ NATIONAL = EmisCertificate(
 
 
 async def _with_builtin_types(h: CertificatesHarness) -> None:
-    await h.add_type("cefr", builtin=True)
-    await h.add_type("national", builtin=True)
+    """The seeded CEFR and national types, with the fields the migration gives them."""
+    await h.add_type(
+        "cefr",
+        builtin=True,
+        custom_fields=[
+            level_field(("A1", "A2", "B1", "B2", "C1", "C2")),
+            number_field("score"),
+            text_field("subject"),
+            number_field("year", 1990, 2100),
+            text_field("serial"),
+        ],
+    )
+    await h.add_type(
+        "national",
+        builtin=True,
+        custom_fields=[
+            level_field(("A+", "A", "B+", "B", "C+", "C")),
+            number_field("score"),
+            number_field("percent", 0, 100),
+            text_field("subject"),
+            number_field("year", 1990, 2100),
+            text_field("serial"),
+        ],
+    )
 
 
 async def test_new_certificates_become_emis_entries_with_their_pdf(
@@ -38,19 +65,24 @@ async def test_new_certificates_become_emis_entries_with_their_pdf(
         2,
         0,
     )
-    entries = {e.serial: e for e in await h.services.list_my_entries.execute(h.ann.id)}
+    entries = {
+        e.custom_values["serial"]: e
+        for e in await h.services.list_my_entries.execute(h.ann.id)
+    }
     cefr = entries["C-1"]
-    assert (cefr.source.value, cefr.level, cefr.score, cefr.year) == (
-        "emis",
-        "B2",
-        72,
-        2025,
-    )
+    assert cefr.source.value == "emis"
+    assert cefr.custom_values == {
+        "level": "B2",
+        "score": 72,
+        "subject": "English",
+        "year": 2025,
+        "serial": "C-1",
+    }
     assert (cefr.issued_at, cefr.expires_at) == (
         dt.date(2025, 3, 15),
         dt.date(2027, 3, 14),
     )
-    assert entries["N-7"].percent == 91.5
+    assert entries["N-7"].custom_values["percent"] == 91.5
     assert [f.name for f in cefr.files] == ["cefr-C-1.pdf"]
     assert {f.owner_id for f in h.files.files.values()} == {h.ann.id}
 
@@ -94,7 +126,7 @@ async def test_a_changed_certificate_updates_the_same_entry(
 
     [entry] = await h.services.list_my_entries.execute(h.ann.id)
     assert (result.created, result.updated) == (0, 1)
-    assert (entry.level, entry.score) == ("C1", 85)
+    assert (entry.custom_values["level"], entry.custom_values["score"]) == ("C1", 85)
 
 
 async def test_the_same_serial_of_two_students_stays_separate(

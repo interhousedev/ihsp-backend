@@ -20,8 +20,6 @@ from app.modules.certificates.domain.errors import (
 )
 
 CODE_RE = re.compile(r"^[a-z0-9][a-z0-9_]{0,39}$")
-MAX_LEVELS = 40
-MAX_LEVEL_LEN = 20
 MAX_NAME_LEN = 120
 
 
@@ -37,14 +35,6 @@ def check_type(kind: CertificateType) -> None:
         title = kind.name.get(locale, "").strip()
         if not title or len(title) > MAX_NAME_LEN:
             raise _fail("name")
-    levels = kind.levels
-    if len(levels) > MAX_LEVELS or len(set(levels)) != len(levels):
-        raise _fail("levels")
-    if any(not item or len(item) > MAX_LEVEL_LEN for item in levels):
-        raise _fail("levels")
-    low, high = kind.score_min, kind.score_max
-    if low is not None and high is not None and low > high:
-        raise _fail("score_max")
     check_fields(kind.custom_fields)
 
 

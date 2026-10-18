@@ -17,14 +17,6 @@ class CertificateType:
     id: UUID
     code: str
     name: dict[str, str]
-    levels: list[str] = field(default_factory=list)
-    asks_level: bool = False
-    asks_score: bool = False
-    score_min: float | None = None
-    score_max: float | None = None
-    asks_percent: bool = False
-    asks_subject: bool = False
-    asks_year: bool = True
     builtin: bool = False
     position: int = 0
     custom_fields: list["CustomField"] = field(default_factory=list)
@@ -34,17 +26,4 @@ class CertificateType:
         return self.name.get(locale) or self.name.get("en") or self.code
 
 
-TYPE_FIELDS = (
-    "code",
-    "name",
-    "levels",
-    "asks_level",
-    "asks_score",
-    "score_min",
-    "score_max",
-    "asks_percent",
-    "asks_subject",
-    "asks_year",
-    "position",
-    "custom_fields",
-)
+TYPE_FIELDS = ("code", "name", "position", "custom_fields")

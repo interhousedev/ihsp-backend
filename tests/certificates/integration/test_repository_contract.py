@@ -14,6 +14,7 @@ from app.modules.certificates.ports.entry_repository import EntryFilter
 from app.modules.certificates.ports.unit_of_work import UowFactory
 from app.shared.db.uow_testing import noop_audit_writer, noop_outbox_writer
 from app.shared.ids import new_id
+from tests.certificates.conftest import level_field, number_field, text_field
 from tests.fakes.certificates.uow import FakeCertificatesStore, fake_uow_factory
 
 import pytest
@@ -60,9 +61,14 @@ def make_entry(student: UUID, type_id: UUID, **fields: object) -> CertificateEnt
 
 async def test_types_round_trip_in_position_order(uow_factory: UowFactory) -> None:
     """Json fields survive; the list is ordered by position; codes are found."""
-    second = make_type("sat", position=1, score_min=400.0, score_max=1600.0)
+    second = make_type(
+        "sat", position=1, custom_fields=[number_field("score", 400.0, 1600.0)]
+    )
     first = make_type(
-        "ielts", position=0, levels=["6.5", "7.0"], asks_level=True, builtin=True
+        "ielts",
+        position=0,
+        custom_fields=[level_field(("6.5", "7.0"))],
+        builtin=True,
     )
     async with uow_factory() as uow:
         await uow.types.add(second)
@@ -75,8 +81,9 @@ async def test_types_round_trip_in_position_order(uow_factory: UowFactory) -> No
         next_position = await uow.types.next_position()
 
     assert [t.code for t in listed] == ["ielts", "sat"]
-    assert listed[0].levels == ["6.5", "7.0"] and listed[0].builtin
-    assert by_code is not None and by_code.score_max == 1600.0
+    assert [f.options for f in listed[0].custom_fields] == [("6.5", "7.0")]
+    assert listed[0].builtin
+    assert by_code is not None and by_code.custom_fields[0].max_value == 1600.0
     assert next_position == 2
 
 
@@ -88,9 +95,7 @@ async def test_entry_with_files_round_trips_and_is_found_by_serial(
     entry = make_entry(
         student,
         kind.id,
-        level="B2",
-        score=72.5,
-        serial="C-1",
+        custom_values={"level": "B2", "score": 72.5, "serial": "C-1"},
         source=EntrySource.EMIS,
         issued_at=date(2025, 3, 15),
     )
@@ -107,7 +112,12 @@ async def test_entry_with_files_round_trips_and_is_found_by_serial(
         missing = await uow.entries.find_by_serial(new_id(), kind.id, "C-1")
 
     assert found is not None
-    assert (found.level, found.score, found.source, found.issued_at) == (
+    assert (
+        found.custom_values["level"],
+        found.custom_values["score"],
+        found.source,
+        found.issued_at,
+    ) == (
         "B2",
         72.5,
         EntrySource.EMIS,
@@ -123,13 +133,13 @@ async def test_save_removing_a_file_and_deleting_an_entry(
 ) -> None:
     """Edits persist; a detached file is gone; deleting the entry drops its files."""
     student, kind = new_id(), make_type("sat")
-    entry = make_entry(student, kind.id, score=1200.0)
+    entry = make_entry(student, kind.id, custom_values={"score": 1200.0})
     file = EntryFile(new_id(), entry.id, "a.png", 5, "image/png")
     async with uow_factory() as uow:
         await uow.types.add(kind)
         await uow.entries.add(entry)
         await uow.entries.add_file(file)
-        entry.score = 1300.0
+        entry.custom_values = {"score": 1300.0}
         await uow.entries.save(entry)
         await uow.commit()
     async with uow_factory() as uow:
@@ -137,7 +147,7 @@ async def test_save_removing_a_file_and_deleting_an_entry(
         await uow.commit()
     async with uow_factory() as uow:
         [mine] = await uow.entries.list_for_student(student)
-        assert (mine.score, mine.files) == (1300.0, [])
+        assert (mine.custom_values, mine.files) == ({"score": 1300.0}, [])
         assert await uow.entries.count_for_type(kind.id) == 1
         await uow.entries.delete(entry.id)
         await uow.commit()
@@ -148,14 +158,21 @@ async def test_save_removing_a_file_and_deleting_an_entry(
 async def test_query_filters_pages_and_counts(uow_factory: UowFactory) -> None:
     """Students, type, level and subject filters; the total ignores paging."""
     ann, bob, other = new_id(), new_id(), new_id()
-    cefr, sat = make_type("cefr"), make_type("sat")
+    cefr = make_type("cefr", custom_fields=[level_field(), text_field("subject")])
+    sat = make_type("sat")
     async with uow_factory() as uow:
         await uow.types.add(cefr)
         await uow.types.add(sat)
-        await uow.entries.add(make_entry(ann, cefr.id, level="B2", subject="English"))
+        await uow.entries.add(
+            make_entry(
+                ann, cefr.id, custom_values={"level": "B2", "subject": "English"}
+            )
+        )
         await uow.entries.add(make_entry(ann, sat.id))
-        await uow.entries.add(make_entry(bob, cefr.id, level="B1", subject="German"))
-        await uow.entries.add(make_entry(other, cefr.id, level="B2"))
+        await uow.entries.add(
+            make_entry(bob, cefr.id, custom_values={"level": "B1", "subject": "German"})
+        )
+        await uow.entries.add(make_entry(other, cefr.id, custom_values={"level": "B2"}))
         await uow.commit()
 
     async with uow_factory() as uow:

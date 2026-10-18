@@ -7,19 +7,19 @@ from typing import Any
 from app.interfaces.http.dependencies import get_actor
 from app.interfaces.http.v1.certificates import ROUTERS
 from app.shared.actor import Actor
-from tests.certificates.conftest import CertificatesHarness
+from tests.certificates.conftest import (
+    CertificatesHarness,
+    level_field,
+    number_field,
+)
 
 import pytest
 from httpx import AsyncClient, Response
 
-TYPE_KEYS = {
-    "id", "code", "name", "levels", "asks_level", "asks_score", "score_min",
-    "score_max", "asks_percent", "asks_subject", "asks_year", "builtin", "position",
-    "custom_fields",
-}  # fmt: skip
+TYPE_KEYS = {"id", "code", "name", "builtin", "position", "custom_fields"}
 ENTRY_KEYS = {
-    "id", "type_id", "level", "score", "percent", "subject", "year", "serial",
-    "source", "issued_at", "expires_at", "files", "custom_values", "created_at",
+    "id", "type_id", "source", "issued_at", "expires_at", "files", "custom_values",
+    "created_at",
 }  # fmt: skip
 NAME = {"uz": "Test", "ru": "Тест", "en": "Test"}
 
@@ -61,7 +61,7 @@ async def test_types_are_listed_for_any_signed_in_user(
     h: CertificatesHarness, api: Api
 ) -> None:
     """GET /types returns the contract fields."""
-    await h.add_type("sat", score_min=400, score_max=1600)
+    await h.add_type("sat", custom_fields=[number_field("score", 400, 1600)])
 
     response = await api.as_(h.student_actor(h.ann)).client.get(
         "/v1/certificates/types"
@@ -70,7 +70,7 @@ async def test_types_are_listed_for_any_signed_in_user(
     assert response.status_code == 200
     [item] = response.json()
     assert set(item) == TYPE_KEYS
-    assert item["score_max"] == 1600
+    assert item["custom_fields"][0]["max"] == 1600
 
 
 async def test_admin_creates_edits_and_deletes_a_type(
@@ -79,16 +79,27 @@ async def test_admin_creates_edits_and_deletes_a_type(
     """POST/PATCH/DELETE /admin/types, 204 on delete."""
     created = await api.client.post(
         "/v1/certificates/admin/types",
-        json={"code": "toefl", "name": NAME, "levels": ["80"], "asks_score": True},
+        json={
+            "code": "toefl",
+            "name": NAME,
+            "custom_fields": [
+                {"key": "score", "kind": "number", "label": NAME, "max": 100}
+            ],
+        },
     )
     type_id = created.json()["id"]
     patched = await api.client.patch(
-        f"/v1/certificates/admin/types/{type_id}", json={"score_max": 120}
+        f"/v1/certificates/admin/types/{type_id}",
+        json={
+            "custom_fields": [
+                {"key": "score", "kind": "number", "label": NAME, "max": 120}
+            ]
+        },
     )
     deleted = await api.client.delete(f"/v1/certificates/admin/types/{type_id}")
 
     assert created.status_code == 200 and created.json()["builtin"] is False
-    assert (patched.json()["score_max"], patched.json()["levels"]) == (120, ["80"])
+    assert patched.json()["custom_fields"][0]["max"] == 120
     assert deleted.status_code == 204
 
 
@@ -129,24 +140,31 @@ async def test_student_entry_crud_with_validation(
     h: CertificatesHarness, api: Api
 ) -> None:
     """POST /me, 422 on a level outside the type, PATCH, GET, DELETE."""
-    kind = await h.add_type("ielts", levels=["6.5", "7.0"])
+    kind = await h.add_type(
+        "ielts",
+        custom_fields=[level_field(("6.5", "7.0")), number_field("year", 1990, 2100)],
+    )
     me = api.as_(h.student_actor(h.ann)).client
 
     bad = await me.post(
-        "/v1/certificates/me", json={"type_id": str(kind.id), "level": "9"}
+        "/v1/certificates/me",
+        json={"type_id": str(kind.id), "custom": {"level": "9"}},
     )
     ok = await me.post(
         "/v1/certificates/me",
-        json={"type_id": str(kind.id), "level": "6.5", "year": 2026},
+        json={"type_id": str(kind.id), "custom": {"level": "6.5", "year": 2026}},
     )
     entry_id = ok.json()["id"]
-    patched = await me.patch(f"/v1/certificates/me/{entry_id}", json={"level": "7.0"})
+    patched = await me.patch(
+        f"/v1/certificates/me/{entry_id}",
+        json={"custom": {"level": "7.0", "year": 2026}},
+    )
     listed = await me.get("/v1/certificates/me")
     deleted = await me.delete(f"/v1/certificates/me/{entry_id}")
 
     assert bad.status_code == 422
     assert set(ok.json()) == ENTRY_KEYS and ok.json()["source"] == "manual"
-    assert patched.json()["level"] == "7.0" and patched.json()["year"] == 2026
+    assert patched.json()["custom_values"] == {"level": "7.0", "year": 2026}
     assert [e["id"] for e in listed.json()] == [entry_id]
     assert deleted.status_code == 204
 
@@ -215,9 +233,9 @@ async def test_import_emis_returns_the_counters(
 
 async def test_staff_views_follow_the_scope(h: CertificatesHarness, api: Api) -> None:
     """Entries with the student, stats, ranking, groups; 403 for a foreign group."""
-    kind = await h.add_type("cefr", levels=["B2"])
-    await h.add_entry(h.ann, kind, level="B2")
-    await h.add_entry(h.cid, kind, level="B2")
+    kind = await h.add_type("cefr", custom_fields=[level_field(("B2",))])
+    await h.add_entry(h.ann, kind, custom={"level": "B2"})
+    await h.add_entry(h.cid, kind, custom={"level": "B2"})
     staff = api.as_(h.curator).client
 
     entries = await staff.get("/v1/certificates/staff/entries", params={"limit": 10})
@@ -242,6 +260,7 @@ async def test_staff_views_follow_the_scope(h: CertificatesHarness, api: Api) ->
             "name": "Ann Alpha",
             "group_name": "2TN1",
             "count": 1,
+            "value": None,
         }
     ]
     assert groups.json() == [

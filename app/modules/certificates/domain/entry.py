@@ -33,14 +33,9 @@ class CertificateEntry:
     student_id: UUID
     type_id: UUID
     created_at: datetime
-    level: str | None = None
-    score: float | None = None
-    percent: float | None = None
-    subject: str | None = None
-    year: int | None = None
-    serial: str | None = None
     source: EntrySource = EntrySource.MANUAL
     issued_at: date | None = None
     expires_at: date | None = None
     files: list[EntryFile] = field(default_factory=list)
     custom_values: dict[str, Any] = field(default_factory=dict)
+    """Values by the type's custom field keys (level, score, serial, ...)."""

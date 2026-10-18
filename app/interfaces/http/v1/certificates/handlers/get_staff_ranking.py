@@ -16,7 +16,7 @@ async def get_staff_ranking(
     filters: FiltersDep,
     limit: int = Query(default=50, ge=1, le=200),
 ) -> StaffRankingResponse:
-    """Return students ranked by their number of certificates."""
+    """Return students ranked by the type's score (else by certificate count)."""
     ranked = await container.certificates.get_staff_ranking.execute(
         actor, filters, limit=limit
     )

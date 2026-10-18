@@ -44,12 +44,6 @@ def _entity(row: Row, files: Sequence[FileRow]) -> CertificateEntry:
         student_id=row.student_id,
         type_id=row.type_id,
         created_at=row.created_at,
-        level=row.level,
-        score=row.score,
-        percent=row.percent,
-        subject=row.subject,
-        year=row.year,
-        serial=row.serial,
         source=EntrySource(row.source),
         issued_at=row.issued_at,
         expires_at=row.expires_at,
@@ -61,12 +55,6 @@ def _entity(row: Row, files: Sequence[FileRow]) -> CertificateEntry:
 def _apply(row: Row, entry: CertificateEntry) -> None:
     row.student_id = entry.student_id
     row.type_id = entry.type_id
-    row.level = entry.level
-    row.score = entry.score
-    row.percent = entry.percent
-    row.subject = entry.subject
-    row.year = entry.year
-    row.serial = entry.serial
     row.source = entry.source.value
     row.issued_at = entry.issued_at
     row.expires_at = entry.expires_at
@@ -78,9 +66,10 @@ def _filtered(flt: EntryFilter) -> Select[tuple[Row]]:
     if flt.type_id is not None:
         stmt = stmt.where(Row.type_id == flt.type_id)
     if flt.level is not None:
-        stmt = stmt.where(Row.level == flt.level)
+        stmt = stmt.where(Row.custom_values["level"].astext == flt.level)
     if flt.subject:
-        stmt = stmt.where(Row.subject.ilike(f"%{_escape(flt.subject)}%", escape="\\"))
+        subject = Row.custom_values["subject"].astext
+        stmt = stmt.where(subject.ilike(f"%{_escape(flt.subject)}%", escape="\\"))
     for key, wanted in flt.custom.items():
         stmt = stmt.where(_custom_in(key, wanted))
     for key, (low, high) in flt.ranges.items():
@@ -176,7 +165,7 @@ class SqlEntryRepository:
         stmt = select(Row).where(
             Row.student_id == student_id,
             Row.type_id == type_id,
-            Row.serial == serial,
+            Row.custom_values["serial"].astext == serial,
         )
         row = await self.session.scalar(stmt)
         return None if row is None else (await self._with_files([row]))[0]

@@ -100,7 +100,7 @@ class FakeEntryRepository:
     ) -> CertificateEntry | None:
         """The student's entry with this type and serial."""
         for entry in self.store.entries.values():
-            if (entry.student_id, entry.type_id, entry.serial) == (
+            if (entry.student_id, entry.type_id, entry.custom_values.get("serial")) == (
                 student_id,
                 type_id,
                 serial,
@@ -137,10 +137,11 @@ class FakeEntryRepository:
             for e in self.store.entries.values()
             if e.student_id in set(flt.student_ids)
             and (flt.type_id is None or e.type_id == flt.type_id)
-            and (flt.level is None or e.level == flt.level)
+            and (flt.level is None or e.custom_values.get("level") == flt.level)
             and (
                 not flt.subject
-                or flt.subject.casefold() in (e.subject or "").casefold()
+                or flt.subject.casefold()
+                in str(e.custom_values.get("subject") or "").casefold()
             )
             and _custom_matches(e.custom_values, flt)
         ]

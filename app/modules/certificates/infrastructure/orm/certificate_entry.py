@@ -7,10 +7,8 @@ from uuid import UUID
 from app.shared.db.base import Base, IdMixin, TimestampMixin
 
 from sqlalchemy import (
-    Float,
     ForeignKey,
     Index,
-    SmallInteger,
     String,
     Uuid,
     text,
@@ -30,9 +28,9 @@ class CertificateEntryRow(IdMixin, TimestampMixin, Base):
             "uq_entries_student_type_serial",
             "student_id",
             "type_id",
-            "serial",
+            text("(custom_values->>'serial')"),
             unique=True,
-            postgresql_where=text("serial IS NOT NULL"),
+            postgresql_where=text("custom_values->>'serial' IS NOT NULL"),
         ),
         {"schema": "certificates"},
     )
@@ -41,18 +39,13 @@ class CertificateEntryRow(IdMixin, TimestampMixin, Base):
     type_id: Mapped[UUID] = mapped_column(
         Uuid, ForeignKey("certificates.types.id", ondelete="RESTRICT")
     )
-    level: Mapped[str | None] = mapped_column(String(40))
-    score: Mapped[float | None] = mapped_column(Float)
-    percent: Mapped[float | None] = mapped_column(Float)
-    subject: Mapped[str | None] = mapped_column(String(255))
-    year: Mapped[int | None] = mapped_column(SmallInteger)
-    serial: Mapped[str | None] = mapped_column(String(255))
     source: Mapped[str] = mapped_column(String(10), server_default=text("'manual'"))
     issued_at: Mapped[date | None]
     expires_at: Mapped[date | None]
     custom_values: Mapped[dict[str, Any]] = mapped_column(
         JSONB, server_default=text("'{}'")
     )
+    """Values by custom field key: level, score, percent, subject, year, serial."""
 
 
 class CertificateEntryFileRow(TimestampMixin, Base):

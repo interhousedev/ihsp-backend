@@ -7,7 +7,7 @@ from app.modules.certificates.domain.errors import (
     CertificateTypeInUseError,
     CertificateTypeNotFoundError,
 )
-from tests.certificates.conftest import CertificatesHarness
+from tests.certificates.conftest import CertificatesHarness, number_field
 
 import pytest
 
@@ -21,10 +21,24 @@ async def test_admin_creates_a_custom_type_after_the_last_position(
     await h.add_type("ielts", position=4)
 
     kind = await h.services.create_type.execute(
-        {"code": "toefl", "name": NAME, "levels": ["80", "100"]}
+        {
+            "code": "toefl",
+            "name": NAME,
+            "custom_fields": [
+                {
+                    "key": "level",
+                    "kind": "single",
+                    "label": NAME,
+                    "options": ["80", "100"],
+                }
+            ],
+        }
     )
 
-    assert (kind.builtin, kind.position, kind.levels) == (False, 5, ["80", "100"])
+    assert (kind.builtin, kind.position) == (False, 5)
+    assert [(f.key, f.options) for f in kind.custom_fields] == [
+        ("level", ("80", "100"))
+    ]
 
 
 async def test_a_code_cannot_be_used_twice(h: CertificatesHarness) -> None:
@@ -40,31 +54,50 @@ async def test_a_code_cannot_be_used_twice(h: CertificatesHarness) -> None:
     [
         {"code": "Bad Code", "name": NAME},
         {"code": "ok", "name": {"uz": "x", "ru": "", "en": "x"}},
-        {"code": "ok", "name": NAME, "levels": ["A", "A"]},
-        {"code": "ok", "name": NAME, "score_min": 10, "score_max": 1},
+        {
+            "code": "ok",
+            "name": NAME,
+            "custom_fields": [
+                {"key": "level", "kind": "single", "label": NAME, "options": ["A", "A"]}
+            ],
+        },
+        {
+            "code": "ok",
+            "name": NAME,
+            "custom_fields": [
+                {"key": "score", "kind": "number", "label": NAME, "min": 10, "max": 1}
+            ],
+        },
     ],
 )
 async def test_an_unusable_type_is_refused(
     h: CertificatesHarness, fields: dict[str, object]
 ) -> None:
-    """Bad code, empty name, repeated levels and an inverted range fail."""
+    """Bad code, empty name, repeated choices and an inverted range fail."""
     with pytest.raises(CertificateInvalidError):
         await h.services.create_type.execute(fields)
 
 
 async def test_admin_edits_a_type(h: CertificatesHarness) -> None:
     """Only the sent fields change."""
-    kind = await h.add_type("sat", asks_score=True)
+    kind = await h.add_type("sat", custom_fields=[number_field("score")])
 
     changed = await h.services.update_type.execute(
-        kind.id, {"score_min": 400, "score_max": 1600}
+        kind.id,
+        {
+            "custom_fields": [
+                {
+                    "key": "score",
+                    "kind": "number",
+                    "label": NAME,
+                    "min": 400,
+                    "max": 1600,
+                }
+            ]
+        },
     )
 
-    assert (changed.score_min, changed.score_max, changed.asks_score) == (
-        400,
-        1600,
-        True,
-    )
+    assert [(f.min_value, f.max_value) for f in changed.custom_fields] == [(400, 1600)]
 
 
 async def test_a_builtin_type_keeps_its_code_but_can_be_renamed(

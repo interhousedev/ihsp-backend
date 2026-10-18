@@ -44,6 +44,10 @@ class CustomField:
     required: bool = False
     options: tuple[str, ...] = ()
     allow_other: bool = False
+    min_value: float | None = None
+    """Number fields only: the lowest allowed value (None: open)."""
+    max_value: float | None = None
+    """Number fields only: the highest allowed value (None: open)."""
 
     def to_dict(self) -> dict[str, Any]:
         """Return the JSON form stored on the type."""
@@ -54,6 +58,8 @@ class CustomField:
             "required": self.required,
             "options": list(self.options),
             "allow_other": self.allow_other,
+            "min": self.min_value,
+            "max": self.max_value,
         }
 
 
@@ -70,7 +76,13 @@ def field_from_dict(raw: Mapping[str, Any]) -> CustomField:
         required=bool(raw.get("required", False)),
         options=tuple(str(o) for o in raw.get("options") or ()),
         allow_other=bool(raw.get("allow_other", False)),
+        min_value=_optional_float(raw.get("min")),
+        max_value=_optional_float(raw.get("max")),
     )
+
+
+def _optional_float(value: Any) -> float | None:
+    return None if value is None else float(value)
 
 
 def check_fields(fields: list[CustomField]) -> None:
@@ -91,14 +103,29 @@ def _check_field(item: CustomField) -> None:
         title = item.label.get(locale, "").strip()
         if not title or len(title) > MAX_LABEL_LEN:
             raise _type_error()
-    if item.kind not in CHOICE_KINDS:
-        if item.options or item.allow_other:
-            raise _type_error()
-        return
+    if item.kind is FieldKind.NUMBER:
+        _check_number(item)
+    elif item.min_value is not None or item.max_value is not None:
+        raise _type_error()
+    elif item.kind in CHOICE_KINDS:
+        _check_choices(item)
+    elif item.options or item.allow_other:
+        raise _type_error()
+
+
+def _check_choices(item: CustomField) -> None:
     options = item.options
     if not options or len(options) > MAX_OPTIONS or len(set(options)) != len(options):
         raise _type_error()
     if any(not o.strip() or len(o) > MAX_OPTION_LEN for o in options):
+        raise _type_error()
+
+
+def _check_number(item: CustomField) -> None:
+    low, high = item.min_value, item.max_value
+    if item.options or item.allow_other:
+        raise _type_error()
+    if low is not None and high is not None and low > high:
         raise _type_error()
 
 
@@ -153,6 +180,11 @@ def _number(item: CustomField, value: Any) -> float:
     number = float(value)
     if not math.isfinite(number):
         raise CustomFieldInvalidError(params={"field": item.key})
+    low, high = item.min_value, item.max_value
+    if (low is not None and number < low) or (high is not None and number > high):
+        raise CustomFieldInvalidError(
+            params={"field": item.key, "min": low, "max": high}
+        )
     return number
 
 

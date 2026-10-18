@@ -10,20 +10,29 @@ from app.modules.certificates.domain.errors import (
     NotCuratorError,
 )
 from app.shared.actor import Actor, Role
-from tests.certificates.conftest import CertificatesHarness
+from tests.certificates.conftest import (
+    CertificatesHarness,
+    level_field,
+    number_field,
+    text_field,
+)
 
 import pytest
 
 
 async def _world(h: CertificatesHarness) -> dict[str, object]:
     """Ann (A): two CEFR + volunteering; Bob (A): CEFR; Cid (B): CEFR."""
-    cefr = await h.add_type("cefr", levels=["B1", "B2"], position=0)
+    cefr = await h.add_type(
+        "cefr",
+        custom_fields=[level_field(("B1", "B2")), text_field("subject")],
+        position=0,
+    )
     volunteering = await h.add_type("volunteering", position=1)
-    await h.add_entry(h.ann, cefr, level="B2", subject="English")
-    await h.add_entry(h.ann, cefr, level="B1", subject="German")
+    await h.add_entry(h.ann, cefr, custom={"level": "B2", "subject": "English"})
+    await h.add_entry(h.ann, cefr, custom={"level": "B1", "subject": "German"})
     await h.add_entry(h.ann, volunteering)
-    await h.add_entry(h.bob, cefr, level="B2")
-    await h.add_entry(h.cid, cefr, level="B2")
+    await h.add_entry(h.bob, cefr, custom={"level": "B2"})
+    await h.add_entry(h.cid, cefr, custom={"level": "B2"})
     return {"cefr": cefr, "volunteering": volunteering}
 
 
@@ -246,3 +255,38 @@ async def test_an_export_without_files_is_not_found(h: CertificatesHarness) -> N
 
     with pytest.raises(CertificateFileNotFoundError):
         await h.services.export_entries.plan(h.admin, file_ids=None, filters=None)
+
+
+async def test_ranking_orders_students_by_the_score_of_the_type(
+    h: CertificatesHarness,
+) -> None:
+    """The best score of the type ranks; a student without one is not ranked."""
+    kind = await h.add_type("sat", custom_fields=[number_field("score", 400, 1600)])
+    await h.add_entry(h.ann, kind, custom={"score": 1200})
+    await h.add_entry(h.ann, kind, custom={"score": 1000})
+    await h.add_entry(h.bob, kind, custom={"score": 1400})
+    await h.add_entry(h.cid, kind)
+
+    ranked = await h.services.get_staff_ranking.execute(
+        h.admin, StaffFilters(type_id=kind.id), limit=10
+    )
+
+    assert [(r.student_id, r.value, r.count) for r in ranked] == [
+        (h.bob.id, 1400.0, 1),
+        (h.ann.id, 1200.0, 2),
+    ]
+
+
+async def test_ranking_without_scores_uses_the_level_order(
+    h: CertificatesHarness,
+) -> None:
+    """With no score field, the level's place among its choices ranks."""
+    kind = await h.add_type("cefr", custom_fields=[level_field(("B1", "B2"))])
+    await h.add_entry(h.bob, kind, custom={"level": "B1"})
+    await h.add_entry(h.ann, kind, custom={"level": "B2"})
+
+    ranked = await h.services.get_staff_ranking.execute(
+        h.admin, StaffFilters(type_id=kind.id), limit=10
+    )
+
+    assert [r.student_id for r in ranked] == [h.ann.id, h.bob.id]

@@ -95,7 +95,7 @@ class ImportEmis:
                 await uow.entries.add(entry)
                 await uow.commit()
                 return entry, True, False
-            changed = _merge(entry, item)
+            changed = _merge(entry, kind, item)
             if changed:
                 await uow.entries.save(entry)
                 await uow.commit()
@@ -109,10 +109,9 @@ class ImportEmis:
             student_id=student_id,
             type_id=kind.id,
             created_at=self._clock.now(),
-            serial=item.serial,
             source=EntrySource.EMIS,
         )
-        _merge(entry, item)
+        _merge(entry, kind, item)
         return entry
 
     async def _store_pdf(
@@ -144,24 +143,47 @@ class ImportEmis:
         return 1
 
 
-def _merge(entry: CertificateEntry, item: EmisCertificate) -> bool:
-    """Copy the EMIS values into the entry; True if anything changed."""
+_CUSTOM_KEYS = ("level", "score", "percent", "subject", "year")
+
+
+def _merge(
+    entry: CertificateEntry, kind: CertificateType, item: EmisCertificate
+) -> bool:
+    """Copy the EMIS values into the entry; True if anything changed.
+
+    EMIS gives the CEFR level and the national score and level; each goes to the
+    custom field of its key when the type has that field. The serial always goes
+    to ``serial`` (it identifies the entry), and the dates stay columns.
+    """
     issued: date | None = item.issued_on
-    values: dict[str, object] = {
+    offered = {f.key for f in kind.custom_fields}
+    custom: dict[str, object] = {
         "level": item.level,
         "score": item.score,
         "percent": item.percent,
         "subject": item.subject,
         "year": issued.year if issued else None,
-        "issued_at": issued,
-        "expires_at": item.expires_on,
     }
-    changed = False
-    for key, value in values.items():
+    values = dict(entry.custom_values)
+    for key in _CUSTOM_KEYS:
+        if key not in offered:
+            continue
+        _set_or_drop(values, key, custom[key])
+    _set_or_drop(values, "serial", item.serial)
+    changed = values != entry.custom_values
+    entry.custom_values = values
+    for key, value in (("issued_at", issued), ("expires_at", item.expires_on)):
         if getattr(entry, key) != value:
             setattr(entry, key, value)
             changed = True
     return changed
+
+
+def _set_or_drop(values: dict[str, object], key: str, value: object) -> None:
+    if value is None or value == "":
+        values.pop(key, None)
+    else:
+        values[key] = value
 
 
 def _pdf_name(kind: str, serial: str) -> str:
