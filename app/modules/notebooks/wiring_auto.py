@@ -17,6 +17,9 @@ from app.modules.notebooks.application.provision_student_notebooks import (
     ProvisionStudentNotebooks,
 )
 from app.modules.notebooks.application.readers.registry import SourceReaders
+from app.modules.notebooks.application.reconcile_subject_materials import (
+    ReconcileSubjectMaterials,
+)
 from app.modules.notebooks.application.remove_default_material import (
     RemoveDefaultMaterial,
 )
@@ -53,6 +56,7 @@ class AutoServices:
     add_default_material: AddDefaultMaterial
     remove_default_material: RemoveDefaultMaterial
     staff_subject_materials: StaffSubjectMaterials
+    reconcile_subject_materials: ReconcileSubjectMaterials
 
 
 def build_auto(
@@ -123,6 +127,9 @@ def build_auto(
             uow_factory=core.uow_factory, clock=deps.clock, files=files
         ),
         remove_default_material=RemoveDefaultMaterial(uow_factory=core.uow_factory),
+        reconcile_subject_materials=ReconcileSubjectMaterials(
+            uow_factory=core.uow_factory, sync=sync
+        ),
         staff_subject_materials=StaffSubjectMaterials(
             uow_factory=core.uow_factory,
             clock=deps.clock,

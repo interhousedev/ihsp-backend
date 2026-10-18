@@ -1,5 +1,6 @@
 """NB-AUTO: the job that keeps a subject or lesson notebook in step with the lessons."""
 
+import dataclasses
 from uuid import UUID
 
 from app.modules.notebooks.domain.entities import Notebook, Source
@@ -341,3 +342,69 @@ async def test_a_new_lesson_of_the_subject_adds_its_materials(
     await auto.sync_auto_notebook.execute(notebook.id)
 
     assert await _keys(uow_factory, notebook.id) == [f"lesson:{link}"]
+
+
+async def test_a_material_is_titled_with_its_lesson_day(
+    auto: AutoServices,
+    uow_factory: UowFactory,
+    world: World,
+    student: Actor,
+    physics: LessonRef,
+) -> None:
+    """NB-AUTO: a material reads "DD.MM <original name>", the lesson's day first."""
+    teacher_file(world, physics, "Classwork: Waves")
+    notebook = await open_subject(auto, student, physics)
+
+    async with uow_factory() as uow:
+        titles = [s.title for s in await uow.sources.list_for_notebook(notebook.id)]
+
+    assert titles == [f"{physics.date:%d.%m} Classwork: Waves"]
+
+
+async def test_a_second_sync_counts_the_materials_already_there(
+    auto: AutoServices,
+    world: World,
+    student: Actor,
+    physics: LessonRef,
+) -> None:
+    """NB-AUTO: a sync with nothing new reports the present materials, adds none."""
+    teacher_file(world, physics, "First")
+    notebook = await open_subject(auto, student, physics)
+
+    result = await auto.sync_auto_notebook.execute(notebook.id)
+
+    assert (result.added, result.removed, result.present) == (0, 0, 1)
+
+
+async def test_a_file_still_processing_keeps_the_notebook_due_for_the_sweep(
+    auto: AutoServices,
+    uow_factory: UowFactory,
+    world: World,
+    student: Actor,
+    physics: LessonRef,
+    clock: FixedClock,
+) -> None:
+    """NB-AUTO: a file still being processed is skipped and the notebook stays due.
+
+    The upload finishes after the sync that the lesson's import kicked; nothing else
+    would bring the file in, so the notebook must not be marked as synced.
+    """
+    late = make_file(physics.id, name="Late.pdf", status="processing", text_bytes=None)
+    ref = world.files.add_text(late, PAGE)
+    world.links.add(make_resource(physics.id, title="Late", file_id=ref.id))
+    notebook = await open_subject(auto, student, physics)
+    synced_at = (await _stored(uow_factory, notebook.id)).auto_synced_at
+    clock.advance(minutes=30)
+
+    result = await auto.sync_auto_notebook.execute(notebook.id)
+
+    assert (result.added, result.skipped) == (0, 1)
+    assert (await _stored(uow_factory, notebook.id)).auto_synced_at == synced_at
+
+    world.files.add_text(
+        dataclasses.replace(late, status="ready", text_bytes=2000), PAGE
+    )
+    result = await auto.sync_auto_notebook.execute(notebook.id)
+
+    assert result.added == 1
+    assert (await _stored(uow_factory, notebook.id)).auto_synced_at == clock.now()

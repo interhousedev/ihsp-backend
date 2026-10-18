@@ -140,7 +140,10 @@ async def test_patching_the_auto_settings_switches_classmates_and_excludes_files
     assert on.status_code == 200 and on.json()["source_count"] == 2
     assert on.json()["auto"]["include_classmates"] is True
     assert off.json()["source_count"] == 1
-    assert off.json()["auto"]["excluded_refs"][0]["title"] == "Slides"
+    assert (
+        off.json()["auto"]["excluded_refs"][0]["title"]
+        == f"{physics.date:%d.%m} Slides"
+    )
     assert restored.json()["source_count"] == 2
     assert restored.json()["auto"]["excluded_refs"] == []
 

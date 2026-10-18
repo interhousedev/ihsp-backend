@@ -2,6 +2,7 @@
 
 from app.interfaces.http.v1.notebooks.handlers import staff_subjects
 from app.interfaces.http.v1.notebooks.schemas_admin_materials import (
+    ReconcileMaterialsResponse,
     SubjectMaterialResponse,
 )
 from app.interfaces.http.v1.notebooks.schemas_staff_subjects import (
@@ -37,4 +38,10 @@ router.add_api_route(
     staff_subjects.remove_staff_subject_material,
     methods=["DELETE"],
     status_code=status.HTTP_204_NO_CONTENT,
+)
+router.add_api_route(
+    "/{subject_id}/reconcile",
+    staff_subjects.reconcile_staff_subject_materials,
+    methods=["POST"],
+    response_model=ReconcileMaterialsResponse,
 )

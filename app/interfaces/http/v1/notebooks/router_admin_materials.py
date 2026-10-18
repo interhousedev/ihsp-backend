@@ -3,9 +3,11 @@
 from app.interfaces.http.v1.notebooks.handlers import (
     add_default_material,
     list_default_materials,
+    reconcile_subject_materials,
     remove_default_material,
 )
 from app.interfaces.http.v1.notebooks.schemas_admin_materials import (
+    ReconcileMaterialsResponse,
     SubjectMaterialGroupResponse,
     SubjectMaterialResponse,
 )
@@ -40,4 +42,10 @@ router.add_api_route(
     remove_default_material.remove_default_material,
     methods=["DELETE"],
     status_code=status.HTTP_204_NO_CONTENT,
+)
+router.add_api_route(
+    "/subjects/{subject_id}/reconcile",
+    reconcile_subject_materials.reconcile_admin_subject_materials,
+    methods=["POST"],
+    response_model=ReconcileMaterialsResponse,
 )

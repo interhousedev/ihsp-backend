@@ -55,6 +55,7 @@ class AutoSyncResult:
     added: int = 0
     removed: int = 0
     skipped: int = 0  # materials without readable text yet (picked up next time)
+    present: int = 0  # wanted materials the notebook already holds
 
 
 @dataclass(slots=True)
@@ -64,6 +65,9 @@ class _Plan:
     keep: set[str]
     new: list[ResolvedSource]
     skipped: int = 0
+    present: int = 0
+    # A file is still being processed: the notebook stays due for the next sweep.
+    pending: bool = False
 
 
 def book_ident(item_id: object, page_from: int | None, page_to: int | None) -> str:
@@ -225,9 +229,10 @@ class SyncAutoNotebook:
                 break
             if item.ref_key in stored:
                 plan.keep.add(item.ref_key)
+                plan.present += 1
                 continue
             resource = by_key[item.ref_key][1]
-            resolved = await self._describe(item, resource, lesson_by_id)
+            resolved = await self._describe(item, resource, lesson_by_id, plan)
             if resolved is None:
                 plan.skipped += 1
                 continue
@@ -351,15 +356,24 @@ class SyncAutoNotebook:
         item: AutoCandidate,
         resource: ResourceRef,
         lessons: dict[UUID, LessonRef],
+        plan: _Plan,
     ) -> ResolvedSource | None:
-        """The new source of a material, or None while it has no readable text."""
+        """The new source of a material, or None while it has no readable text.
+
+        A file still being processed marks the plan pending: the upload finishes
+        later and nothing else would tell this notebook about it.
+        """
         try:
             return await self.readers.lesson_reader.describe(
                 resource,
                 lessons[item.lesson_id],
                 from_classmates=item.from_classmates,
             )
-        except (SourceUnsupportedError, SourceForbiddenError):
+        except SourceUnsupportedError as exc:
+            if exc.params.get("hint") == "not_ready":
+                plan.pending = True
+            return None
+        except SourceForbiddenError:
             return None
 
     async def _apply(self, notebook: Notebook, plan: _Plan) -> AutoSyncResult:
@@ -378,7 +392,8 @@ class SyncAutoNotebook:
             for source in gone:
                 await uow.sources.delete(source.id)
             fresh = await self._add(uow, locked, current, plan)
-            locked.auto_synced_at = now
+            if not plan.pending:  # else the next sweep syncs it again
+                locked.auto_synced_at = now
             await sources_changed(uow, locked, now)
             await uow.commit()
         log.info(
@@ -388,8 +403,9 @@ class SyncAutoNotebook:
             added=len(fresh),
             removed=len(gone),
             skipped=plan.skipped,
+            present=plan.present,
         )
-        return AutoSyncResult(len(fresh), len(gone), plan.skipped)
+        return AutoSyncResult(len(fresh), len(gone), plan.skipped, plan.present)
 
     async def _add(
         self,

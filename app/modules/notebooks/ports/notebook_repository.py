@@ -95,6 +95,12 @@ class NotebookRepository(Protocol):
         """Live notebooks that feed on a lesson: its subject's and its own."""
         ...
 
+    async def auto_subject_ids(
+        self, subject_id: UUID, owner_id: UUID | None, limit: int
+    ) -> list[UUID]:
+        """Live subject notebooks of a subject, of one owner when one is given."""
+        ...
+
     async def due_auto_sync(
         self, synced_before: datetime, opened_after: datetime, limit: int
     ) -> list[UUID]:

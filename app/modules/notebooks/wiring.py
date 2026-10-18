@@ -69,6 +69,9 @@ from app.modules.notebooks.application.public_api import NotebooksQueriesImpl
 from app.modules.notebooks.application.public_commands import NotebooksCommandsImpl
 from app.modules.notebooks.application.purge_deleted import PurgeDeleted
 from app.modules.notebooks.application.purge_shared import PurgeShared
+from app.modules.notebooks.application.reconcile_subject_materials import (
+    ReconcileSubjectMaterials,
+)
 from app.modules.notebooks.application.refresh_summaries import RefreshSummaries
 from app.modules.notebooks.application.regenerate_chat import RegenerateChat
 from app.modules.notebooks.application.remove_default_material import (
@@ -182,6 +185,7 @@ class NotebooksServices:
     add_default_material: AddDefaultMaterial
     remove_default_material: RemoveDefaultMaterial
     staff_subject_materials: StaffSubjectMaterials
+    reconcile_subject_materials: ReconcileSubjectMaterials
     provision_course_notebook: ProvisionCourseNotebook
     sync_course_notebook: SyncCourseNotebook
     sync_course_notebooks: SyncCourseNotebooks
@@ -350,6 +354,7 @@ def build(
         add_default_material=auto.add_default_material,
         remove_default_material=auto.remove_default_material,
         staff_subject_materials=auto.staff_subject_materials,
+        reconcile_subject_materials=auto.reconcile_subject_materials,
         provision_course_notebook=course.provision_course_notebook,
         sync_course_notebook=course.sync_course_notebook,
         sync_course_notebooks=course.sync_course_notebooks,

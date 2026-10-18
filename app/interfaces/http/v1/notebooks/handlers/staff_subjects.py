@@ -4,6 +4,7 @@ from uuid import UUID
 
 from app.interfaces.http.v1.notebooks.deps import Notebooks, TeacherActor
 from app.interfaces.http.v1.notebooks.schemas_admin_materials import (
+    ReconcileMaterialsResponse,
     SubjectMaterialResponse,
 )
 from app.interfaces.http.v1.notebooks.schemas_staff_subjects import (
@@ -61,3 +62,13 @@ async def remove_staff_subject_material(
     """Remove one of the teacher's own materials; notebooks follow on their sync."""
     await notebooks.staff_subject_materials.remove(actor, subject_id, material_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+async def reconcile_staff_subject_materials(
+    subject_id: UUID, notebooks: Notebooks, actor: TeacherActor
+) -> ReconcileMaterialsResponse:
+    """Sync the teacher's own subject notebooks of the subject, now; report totals."""
+    result = await notebooks.reconcile_subject_materials.execute(
+        subject_id, owner_id=actor.user_id
+    )
+    return ReconcileMaterialsResponse.from_result(result)

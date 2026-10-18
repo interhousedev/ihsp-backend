@@ -318,6 +318,20 @@ class SqlNotebookRepository:
         )
         return list((await self.session.execute(stmt)).scalars().all())
 
+    async def auto_subject_ids(
+        self, subject_id: UUID, owner_id: UUID | None, limit: int
+    ) -> list[UUID]:
+        """Live subject notebooks of a subject, of one owner when one is given."""
+        stmt = select(NotebookRow.id).where(
+            NotebookRow.deleted_at.is_(None),
+            NotebookRow.origin == NotebookOrigin.SUBJECT_AUTO.value,
+            NotebookRow.subject_id == subject_id,
+        )
+        if owner_id is not None:
+            stmt = stmt.where(NotebookRow.owner_id == owner_id)
+        stmt = stmt.order_by(NotebookRow.id).limit(limit)
+        return list((await self.session.execute(stmt)).scalars().all())
+
     async def due_auto_sync(
         self, synced_before: datetime, opened_after: datetime, limit: int
     ) -> list[UUID]:

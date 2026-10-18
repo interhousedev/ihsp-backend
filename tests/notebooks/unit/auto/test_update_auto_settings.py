@@ -58,7 +58,10 @@ async def test_an_excluded_material_leaves_and_stays_out_on_every_sync(
     ]
     assert updated.auto_settings is not None
     [excluded] = updated.auto_settings.excluded_refs
-    assert (excluded.ref_key, excluded.title) == (f"lesson:{drop}", "Drop")
+    assert (excluded.ref_key, excluded.title) == (
+        f"lesson:{drop}",
+        f"{physics.date:%d.%m} Drop",
+    )
     assert updated.source_count == 1
 
 
@@ -212,7 +215,7 @@ async def test_the_sync_keeps_own_sources_and_still_manages_synced_ones(
 
     assert added.added == 1 and own.title in titles and len(titles) == 3
     assert removed.removed == 1 and removed.added == 0
-    assert [s.title for s in left] == ["Waves"]
+    assert [s.title for s in left] == [f"{physics.date:%d.%m} Waves"]
 
 
 async def test_a_lesson_material_cannot_be_removed_but_a_note_can(

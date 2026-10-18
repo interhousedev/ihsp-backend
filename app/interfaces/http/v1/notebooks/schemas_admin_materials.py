@@ -4,6 +4,9 @@ from datetime import datetime
 from typing import Self
 from uuid import UUID
 
+from app.modules.notebooks.application.reconcile_subject_materials import (
+    ReconcileResult,
+)
 from app.modules.notebooks.domain.default_materials import (
     DefaultMaterial,
     DefaultMaterialKind,
@@ -76,3 +79,22 @@ class SubjectMaterialGroupResponse(BaseModel):
 
     edu_subject_id: int
     materials: list[SubjectMaterialResponse]
+
+
+class ReconcileMaterialsResponse(BaseModel):
+    """What "check that all lesson materials are in the notebook" found."""
+
+    notebooks: int = Field(description="Subject notebooks checked.")
+    added: int = Field(description="Lesson materials added to notebooks now.")
+    already_present: int = Field(description="Materials the notebooks already had.")
+    skipped: int = Field(description="Materials not readable yet; retried later.")
+
+    @classmethod
+    def from_result(cls, result: ReconcileResult) -> Self:
+        """Map the use-case totals."""
+        return cls(
+            notebooks=result.notebooks,
+            added=result.added,
+            already_present=result.already_present,
+            skipped=result.skipped,
+        )

@@ -147,7 +147,7 @@ async def test_lesson_file_is_read_like_a_file_and_keeps_its_origin(
 
     assert ready.kind is SourceKind.LESSON_RESOURCE
     assert ready.status is SourceStatus.READY
-    assert ready.title == "Worksheet"
+    assert ready.title == f"{lesson.date:%d.%m} Worksheet"
     assert ready.ref["file_id"] == str(ref.id)
     assert ready.ref_key == f"lesson:{resource.link_id}"
     assert ready.origin == {

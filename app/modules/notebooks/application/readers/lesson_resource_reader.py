@@ -82,9 +82,13 @@ class LessonResourceReader:
         if from_classmates:
             origin["from_classmates"] = True
             origin["author"] = resource.author_first_name
+        # "14.10 Classwork: <name>": the lesson's day, then the material's own name.
+        day = lesson.date.strftime("%d.%m")
         return ResolvedSource(
             kind=SourceKind.LESSON_RESOURCE,
-            title=clean_title(resource.title, "Lesson material"),
+            title=clean_title(
+                f"{day} {clean_title(resource.title, 'Lesson material')}", ""
+            ),
             ref=ref,
             ref_key=lesson_ref_key(resource.link_id),
             origin=origin,
