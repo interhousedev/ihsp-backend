@@ -10,6 +10,8 @@ from app.modules.identity.application.register_models import (
     AccountSnapshot,
     CredentialStoreError,
     EmisAuthError,
+    EmisPausedError,
+    EmisRequestError,
     EmisSecret,
 )
 from app.modules.identity.application.register_ports import (
@@ -183,6 +185,11 @@ class EmisGatewayImpl:
             except EmisAuthError:
                 await self._mark_needs_reauth(user_id)
                 raise
+            except EmisPausedError:
+                raise
+            except EmisRequestError as exc:
+                # Not cached: the next call logs in again. Reason is logged upstream.
+                raise EmisRequestError(f"login:{exc}") from exc
         try:
             await self._store.update_token(ref, token)
         except CredentialStoreError:

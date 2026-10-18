@@ -4,10 +4,12 @@ import asyncio
 import datetime as dt
 import re
 from typing import Any, TypeVar
-from urllib.parse import unquote, urlsplit
+from urllib.parse import SplitResult, unquote, urlsplit
 
 from app.modules.identity.application.register_models import (
     EmisAuthError,
+    EmisFileRetryError,
+    EmisPausedError,
     EmisRequestError,
 )
 from app.modules.identity.infrastructure.emis.certificates import to_certificates
@@ -37,6 +39,7 @@ from app.modules.identity.infrastructure.emis.models.responses.profile import (
 from app.modules.identity.infrastructure.emis.models.responses.ratings import (
     RatingsV1DTO,
 )
+from app.modules.identity.infrastructure.emis.rate_limit import EmisRateLimiter
 from app.settings import EmisSettings
 from app.shared.contracts.emis import (
     EmisCertificate,
@@ -48,9 +51,12 @@ from app.shared.contracts.emis import (
     EmisSubject,
     EmisSubjectRatings,
 )
+from app.shared.emis_pause import EmisPause
 
 import httpx
+import structlog
 from pydantic import BaseModel, ValidationError
+from redis.asyncio import Redis
 
 CURRICULUM_PATH = "student-profiles/curriculum/"
 CLASS_HOURS_PATH = "student-profiles/class-hours/"
@@ -59,6 +65,12 @@ EMIS_DATE = "%d.%m.%Y"
 LOGIN_PATH = "student-profiles/login/"
 _TIMEOUT = httpx.Timeout(20.0, connect=5.0)
 _DOWNLOAD_TIMEOUT = httpx.Timeout(60.0, connect=5.0)
+_DOWNLOAD_ATTEMPTS = 3
+_DOWNLOAD_BACKOFF_SECONDS = 0.5
+_TRANSIENT_MARKERS = ("http_502", "http_503", "http_504", "transport")
+DEFAULT_PAUSE_SECONDS = 60.0  # a 429 without Retry-After
+MAX_PAUSE_SECONDS = 3600.0
+log = structlog.get_logger(__name__)
 _FILENAME = re.compile(r"filename\*?=(?:UTF-8'')?\"?([^\";]+)", re.IGNORECASE)
 M = TypeVar("M", bound=BaseModel)
 
@@ -71,6 +83,24 @@ def parse_result(model: type[M], result: dict[str, Any]) -> M:
         raise EmisRequestError(f"unexpected {model.__name__} shape") from exc
 
 
+def _status_reason(status: int) -> str:
+    """Upstream reason: rate_limit for 429, else http_<status>."""
+    return "rate_limit" if status == 429 else f"http_{status}"
+
+
+def _is_transient(exc: EmisRequestError) -> bool:
+    """A CDN 5xx or transport failure may succeed later."""
+    return str(exc).startswith(_TRANSIENT_MARKERS)
+
+
+def _retry_after(response: httpx.Response) -> float | None:
+    """The Retry-After header in seconds (numeric form only), clamped."""
+    raw = response.headers.get("retry-after", "").strip()
+    if not raw.isdigit():
+        return None
+    return min(max(float(raw), 1.0), MAX_PAUSE_SECONDS)
+
+
 class EmisClient:
     """Talks to EMIS; every call takes the access token, nothing is cached."""
 
@@ -79,22 +109,34 @@ class EmisClient:
         http: httpx.AsyncClient,
         *,
         profile_path: str,
+        limiter: EmisRateLimiter,
+        pause: EmisPause,
+        max_qps: int,
+        file_max_qps: int,
         concurrency: int = 20,
         request_delay_ms: int = 0,
     ) -> None:
-        """Store the HTTP client and the concurrency limits."""
+        """Store the HTTP client, the shared limits and the shared pause."""
         self._http = http
         self._profile_path = profile_path.lstrip("/")
+        self._limiter = limiter
+        self._pause = pause
+        self._max_qps = max_qps
+        self._file_max_qps = file_max_qps
         self._semaphore = asyncio.Semaphore(concurrency)
         self._delay = request_delay_ms / 1000
 
     @classmethod
-    def from_settings(cls, settings: EmisSettings) -> "EmisClient":
-        """Build the client for ``EMIS__BASE_URL``."""
+    def from_settings(cls, settings: EmisSettings, redis: Redis) -> "EmisClient":
+        """Build the client for ``EMIS__BASE_URL``; the limits are shared via Redis."""
         http = httpx.AsyncClient(base_url=settings.base_url, timeout=_TIMEOUT)
         return cls(
             http,
             profile_path=settings.profile_path,
+            limiter=EmisRateLimiter(redis),
+            pause=EmisPause(redis),
+            max_qps=settings.max_qps,
+            file_max_qps=settings.file_max_qps,
             concurrency=settings.concurrency,
             request_delay_ms=settings.request_delay_ms,
         )
@@ -102,6 +144,23 @@ class EmisClient:
     async def aclose(self) -> None:
         """Close the HTTP connection pool."""
         await self._http.aclose()
+
+    async def _gate(self, bucket: str, qps: int) -> None:
+        """Refuse while EMIS asked for a pause; else wait for the shared allowance."""
+        wait_for = await self._pause.remaining()
+        if wait_for > 0:
+            raise EmisPausedError(wait_for)
+        await self._limiter.acquire(bucket, qps)
+
+    async def _pause_if_asked(self, response: httpx.Response) -> None:
+        """A 429, or a 5xx with Retry-After, means EMIS wants rest: pause all."""
+        retry_after = _retry_after(response)
+        if response.status_code != 429 and retry_after is None:
+            return
+        seconds = retry_after if retry_after is not None else DEFAULT_PAUSE_SECONDS
+        await self._pause.pause(seconds)
+        log.warning("emis_paused", status=response.status_code, seconds=seconds)
+        raise EmisPausedError(seconds)
 
     async def _send(
         self,
@@ -116,6 +175,7 @@ class EmisClient:
         async with self._semaphore:
             if self._delay:
                 await asyncio.sleep(self._delay)
+            await self._gate("api", self._max_qps)
             try:
                 response = await self._http.request(
                     method, path, headers=headers, json=body
@@ -125,7 +185,8 @@ class EmisClient:
         if response.status_code == 401:
             raise EmisAuthError()
         if response.status_code != 200:
-            raise EmisRequestError(f"HTTP {response.status_code}")
+            await self._pause_if_asked(response)
+            raise EmisRequestError(_status_reason(response.status_code))
         return response
 
     async def _request(
@@ -226,7 +287,40 @@ class EmisClient:
             raise EmisRequestError("material URL is not http(s)")
         own_host = parts.hostname == self._http.base_url.host
         headers = {"Authorization": token} if own_host else {}
+        for attempt in range(1, _DOWNLOAD_ATTEMPTS + 1):
+            try:
+                return await self._download_once(
+                    url, headers, own_host, max_bytes, parts
+                )
+            except EmisPausedError:
+                raise  # EMIS asked for a rest: no retry now, the sync stops
+            except EmisRequestError as exc:
+                transient = _is_transient(exc)
+                log.warning(
+                    "emis_download_failed",
+                    host=parts.hostname,
+                    attempt=attempt,
+                    reason=str(exc),
+                    transient=transient,
+                )
+                if not transient:
+                    raise
+                if attempt == _DOWNLOAD_ATTEMPTS:
+                    # a 5xx or a transport failure: the file stays pending for next sync
+                    raise EmisFileRetryError(str(exc)) from exc
+                await asyncio.sleep(_DOWNLOAD_BACKOFF_SECONDS * attempt)
+        raise AssertionError("unreachable")  # the loop returns or raises
+
+    async def _download_once(
+        self,
+        url: str,
+        headers: dict[str, str],
+        own_host: bool,
+        max_bytes: int,
+        parts: SplitResult,
+    ) -> EmisFile:
         async with self._semaphore:
+            await self._gate("file", self._file_max_qps)
             try:
                 async with self._http.stream(
                     "GET",
@@ -238,7 +332,8 @@ class EmisClient:
                     if response.status_code == 401 and own_host:
                         raise EmisAuthError()
                     if response.status_code != 200:
-                        raise EmisRequestError(f"HTTP {response.status_code}")
+                        await self._pause_if_asked(response)
+                        raise EmisRequestError(_status_reason(response.status_code))
                     data = await _read_limited(response, max_bytes)
             except httpx.HTTPError as exc:
                 raise EmisRequestError(f"transport {type(exc).__name__}") from exc

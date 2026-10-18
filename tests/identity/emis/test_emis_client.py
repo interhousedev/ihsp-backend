@@ -13,13 +13,17 @@ from app.modules.identity.infrastructure.emis.fake import (
     FakeEmisClient,
     fake_curriculum_result,
 )
+from app.modules.identity.infrastructure.emis.rate_limit import EmisRateLimiter
 from app.shared.contracts.emis import EmisMarkType, EmisTeacher, EmisTopic
+from app.shared.emis_pause import EmisPause
 from tests.fakes.clock import FixedClock
 from tests.identity.emis.emis_fixtures import load_fixture
 
 import httpx
 import pytest
 import respx
+from fakeredis import FakeServer
+from fakeredis.aioredis import FakeRedis
 
 BASE = "https://emis.test/api/v1/"
 PROFILE = "student-profiles/profile/"
@@ -40,7 +44,15 @@ def emis_http() -> Iterator[respx.MockRouter]:
 @pytest.fixture
 async def client(emis_http: respx.MockRouter) -> AsyncIterator[EmisClient]:
     http = httpx.AsyncClient(base_url=BASE)
-    yield EmisClient(http, profile_path=PROFILE)
+    redis = FakeRedis(server=FakeServer(), decode_responses=True)
+    yield EmisClient(
+        http,
+        profile_path=PROFILE,
+        limiter=EmisRateLimiter(redis),
+        pause=EmisPause(redis),
+        max_qps=1000,
+        file_max_qps=1000,
+    )
     await http.aclose()
 
 

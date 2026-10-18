@@ -7,6 +7,8 @@ from app.modules.identity.application.register_models import (
     CredentialNotFoundError,
     CredentialStoreError,
     EmisAuthError,
+    EmisFileRetryError,
+    EmisPausedError,
     EmisRequestError,
 )
 from app.shared.base_error import (
@@ -19,8 +21,14 @@ from app.shared.base_error import (
 from app.shared.contracts.emis import (
     EmisAuthFailed,
     EmisCredentialsMissing,
+    EmisFileRetryLater,
+    EmisPaused,
     EmisUnavailable,
 )
+
+import structlog
+
+log = structlog.get_logger(__name__)
 
 
 class WrongInstitutionError(ForbiddenError):
@@ -123,14 +131,26 @@ class DeleteForbiddenError(ForbiddenError):
 
 @contextmanager
 def emis_errors() -> Iterator[None]:
-    """Map EMIS and Vault port errors to the contract errors (401 / 503)."""
+    """Map EMIS and Vault port errors to the contract errors (401 / 503).
+
+    The real reason is logged here: the 503 body is generic, so without this line the
+    upstream status (EMIS HTTP 404, 413, a Vault seal) is lost in production.
+    """
     try:
         yield
     except EmisAuthError as exc:
         raise EmisAuthFailed(support_details="EMIS rejected the credentials") from exc
+    except EmisPausedError as exc:
+        raise EmisPaused(
+            retry_after=exc.retry_after, support_details="EMIS asked for a pause"
+        ) from exc
+    except EmisFileRetryError as exc:
+        raise EmisFileRetryLater(support_details=f"EMIS file: {exc}") from exc
     except EmisRequestError as exc:
+        log.warning("emis_upstream_failed", source="emis", reason=str(exc))
         raise EmisUnavailable(support_details=f"EMIS: {exc}") from exc
     except CredentialNotFoundError as exc:
         raise EmisCredentialsMissing(support_details="Vault secret is missing") from exc
     except CredentialStoreError as exc:
+        log.warning("emis_upstream_failed", source="vault", reason=str(exc))
         raise EmisUnavailable(support_details=f"Vault: {exc}") from exc

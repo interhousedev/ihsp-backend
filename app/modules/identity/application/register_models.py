@@ -22,6 +22,19 @@ class EmisRequestError(Exception):
     """EMIS did not answer, or answered with something unexpected."""
 
 
+class EmisPausedError(EmisRequestError):
+    """EMIS asked us to stop (429 or Retry-After): calls wait ``retry_after``."""
+
+    def __init__(self, retry_after: float) -> None:
+        """Store the seconds EMIS asked for."""
+        super().__init__("paused")
+        self.retry_after = retry_after
+
+
+class EmisFileRetryError(EmisRequestError):
+    """A material download failed upstream (5xx or transport): try it again later."""
+
+
 class CredentialNotFoundError(Exception):
     """The Vault secret does not exist (never written, or destroyed)."""
 

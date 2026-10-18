@@ -99,7 +99,7 @@ def build_emis(
     elif settings.emis.mode == "fake":
         emis = FakeEmisClient(deps.clock)
     else:
-        http_client = EmisClient.from_settings(settings.emis)
+        http_client = EmisClient.from_settings(settings.emis, deps.redis)
         closers.append(http_client.aclose)
         emis = http_client
     store = credentials or VaultCredentialStore(settings.vault)
