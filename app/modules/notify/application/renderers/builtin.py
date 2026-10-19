@@ -14,6 +14,7 @@ from app.modules.notify.application.renderers.emis_reauth import EmisReauthRende
 from app.modules.notify.application.renderers.files_expiring import (
     FilesExpiringRenderer,
 )
+from app.modules.notify.application.renderers.knowledge_gap import KnowledgeGapRenderer
 from app.modules.notify.application.renderers.lesson_changed import (
     LessonChangedRenderer,
 )
@@ -109,6 +110,7 @@ def register_builtin_renderers(
     registry.register(
         NotificationType.STUDENT_SYNC_FAILED, StudentSyncFailedRenderer(i18n, urls)
     )
+    registry.register(NotificationType.KNOWLEDGE_GAP, KnowledgeGapRenderer(i18n, urls))
     registry.register(
         NotificationType.NOTEBOOK_ARTIFACT_READY,
         NotebookArtifactReadyRenderer(i18n, urls),

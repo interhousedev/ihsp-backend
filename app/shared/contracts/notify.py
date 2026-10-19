@@ -22,6 +22,26 @@ class NotifyApi(Protocol):
         ...
 
 
+class KnowledgeGapNotifier(Protocol):
+    """Tells every administrator that an AI chat found nothing in the knowledge base."""
+
+    async def notify_knowledge_gap(
+        self,
+        *,
+        query: str,
+        chat_kind: str,
+        user_role: str,
+        chat_id: str | None = None,
+        notebook_id: str | None = None,
+    ) -> int:
+        """Notify all administrators; return how many notifications were queued.
+
+        The same normalized query (lowercase, collapsed whitespace) is not
+        announced again within 24 hours; then 0 is returned.
+        """
+        ...
+
+
 class TelegramSender(Protocol):
     """Sends Telegram messages (aiogram Bot in production, a fake in tests).
 

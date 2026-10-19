@@ -99,10 +99,10 @@ def test_render_types_carry_the_message_and_its_recipient() -> None:
 
 
 def test_every_notification_type_is_unique() -> None:
-    """Values are unique snake_case strings; the library adds 7 of the 30."""
+    """Values are unique snake_case strings; the library adds 7 of the 31."""
     values = [t.value for t in NotificationType]
 
-    assert len(values) == len(set(values)) == 30
+    assert len(values) == len(set(values)) == 31
     assert all(re.fullmatch("[a-z]+(_[a-z]+)*", value) for value in values)
 
 

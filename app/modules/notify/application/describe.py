@@ -449,6 +449,18 @@ def _student_sync_failed(p: dict[str, Any], v: _View) -> Description:
     )
 
 
+def _knowledge_gap(p: dict[str, Any], v: _View) -> Description:
+    body = v.t(
+        "notify-knowledge-gap-body",
+        query=p.get("query", ""),
+        chat_kind=p.get("chat_kind", ""),
+        user_role=p.get("user_role", ""),
+    )
+    return Description(
+        v.t("notify-knowledge-gap-title"), body, f"{v.urls.admin}/knowledge/"
+    )
+
+
 def _sync_alert(p: dict[str, Any], v: _View) -> Description:
     body = v.t(
         "notify-sync-alert-body", failed=p.get("failed", ""), total=p.get("total", "")
@@ -477,6 +489,7 @@ _BUILDERS: dict[NotificationType, _Builder] = {
     NotificationType.MAIL_SUSPENDED: _mail_suspended,
     NotificationType.SYNC_ALERT: _sync_alert,
     NotificationType.STUDENT_SYNC_FAILED: _student_sync_failed,
+    NotificationType.KNOWLEDGE_GAP: _knowledge_gap,
     NotificationType.NOTEBOOK_ARTIFACT_READY: _notebook_artifact_ready,
     NotificationType.ASSESSMENT_REMINDER: _assessment_reminder,
     NotificationType.LIBRARY_ITEM_APPROVED: _library_item_approved,

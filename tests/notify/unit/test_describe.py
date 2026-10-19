@@ -97,6 +97,13 @@ PAYLOADS: dict[NotificationType, dict[str, Any]] = {
     NotificationType.MAIL_SUSPENDED: {"reason": "spam"},
     NotificationType.SYNC_ALERT: {"run_id": "r", "failed": 3, "total": 120},
     NotificationType.STUDENT_SYNC_FAILED: {"attempts": 6, "student_id": "s"},
+    NotificationType.KNOWLEDGE_GAP: {
+        "query": "dress code",
+        "chat_kind": "student_chat",
+        "chat_id": None,
+        "notebook_id": None,
+        "user_role": "student",
+    },
     NotificationType.NOTEBOOK_ARTIFACT_READY: {
         "notebook_id": NOTEBOOK_ID,
         "artifact_id": ARTIFACT_ID,

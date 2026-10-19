@@ -53,6 +53,10 @@ class NotificationRepository(Protocol):
         """Rewrite the title, text and edit mark of the notifications of a broadcast."""
         ...
 
+    async def dedupe_key_seen_since(self, prefix: str, since: datetime) -> bool:
+        """Return True if a row with this dedupe key prefix is newer than since."""
+        ...
+
     async def purge_created_before(self, cutoff: datetime) -> int:
         """Delete notifications created before the cutoff; return how many."""
         ...

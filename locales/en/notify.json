@@ -73,6 +73,7 @@
   "notify-btn-update-emis": "Update EMIS password",
   "notify-btn-open-files": "Open files",
   "notify-btn-open-security": "Security settings",
+  "notify-btn-open-knowledge": "Open knowledge base",
   "notify-btn-open-monitoring": "Open monitoring",
   "notify-btn-open-notebook": "Open notebook",
   "notify-notification-not-found": "Notification not found.",
@@ -145,5 +146,7 @@
   "notify-library-suggestion-declined-body": "The librarians did not add “{title}” to the library.",
   "notify-btn-open-library-suggestions": "My suggestions",
   "notify-student-sync-failed-title": "Student sync gave up",
-  "notify-student-sync-failed-body": "A student's initial EMIS sync failed {attempts} times. Open the monitor to see the reason."
+  "notify-student-sync-failed-body": "A student's initial EMIS sync failed {attempts} times. Open the monitor to see the reason.",
+  "notify-knowledge-gap-title": "Knowledge base gap",
+  "notify-knowledge-gap-body": "An AI chat found nothing for: “{query}” ({chat_kind}, {user_role}). Add an entry to the knowledge base."
 }

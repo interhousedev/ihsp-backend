@@ -76,6 +76,7 @@ class Notification(IdMixin, TimestampMixin, Base):
             "library_suggestion_approved",
             "library_suggestion_declined",
             "student_sync_failed",
+            "knowledge_gap",
             name="type",
             native_enum=False,
             create_constraint=True,

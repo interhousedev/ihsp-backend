@@ -70,6 +70,35 @@ class FakeIdentityDirectory:
         """No user has a photo in this fake."""
         return {}
 
+    async def user_by_telegram(self, telegram_user_id: int) -> UserRef | None:
+        """Return the user a Telegram account is linked to."""
+        for user_id, accounts in self.accounts.items():
+            if any(a.telegram_user_id == telegram_user_id for a in accounts):
+                return self.users.get(user_id)
+        return None
+
+    async def user_by_login(self, login: str) -> UserRef | None:
+        """Return the active user with the login, case-insensitively."""
+        needle = login.lower()
+        for user in self.users.values():
+            if user.login.lower() == needle and user.status == UserStatus.ACTIVE:
+                return user
+        return None
+
+    async def touch_telegram(
+        self, telegram_user_id: int, username: str | None, first_name: str
+    ) -> None:
+        """Refresh the cached Telegram username of the account."""
+        for user_id, accounts in self.accounts.items():
+            self.accounts[user_id] = [
+                (
+                    replace(account, username=username)
+                    if account.telegram_user_id == telegram_user_id
+                    else account
+                )
+                for account in accounts
+            ]
+
     async def telegram_accounts(self, user_id: UUID) -> list[TelegramAccountRef]:
         """Return the user's accounts."""
         return list(self.accounts.get(user_id, []))

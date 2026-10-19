@@ -199,6 +199,19 @@ class SqlNotificationRepository:
         result = cast(CursorResult[Any], await self.session.execute(stmt))
         return int(result.rowcount)
 
+    async def dedupe_key_seen_since(self, prefix: str, since: datetime) -> bool:
+        """Return True if a row with this dedupe key prefix was created since."""
+        escaped = prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        stmt = (
+            sa.select(sa.literal(1))
+            .where(
+                self.table.c.dedupe_key.like(f"{escaped}%", escape="\\"),
+                self.table.c.created_at >= since,
+            )
+            .limit(1)
+        )
+        return (await self.session.execute(stmt)).first() is not None
+
     async def purge_created_before(self, cutoff: datetime) -> int:
         """Delete rows created before the cutoff."""
         stmt = sa.delete(self.table).where(self.table.c.created_at < cutoff)

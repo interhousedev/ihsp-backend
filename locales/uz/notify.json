@@ -73,6 +73,7 @@
   "notify-btn-update-emis": "EMIS parolini yangilash",
   "notify-btn-open-files": "Fayllarni ochish",
   "notify-btn-open-security": "Xavfsizlik sozlamalari",
+  "notify-btn-open-knowledge": "Bilimlar bazasini ochish",
   "notify-btn-open-monitoring": "Monitoringni ochish",
   "notify-btn-open-notebook": "Daftarni ochish",
   "notify-notification-not-found": "Bildirishnoma topilmadi.",
@@ -145,5 +146,7 @@
   "notify-library-suggestion-declined-body": "Kutubxonachilar «{title}» kitobini kutubxonaga qoʻshmadi.",
   "notify-btn-open-library-suggestions": "Mening takliflarim",
   "notify-student-sync-failed-title": "Talaba sinxronlashi to'xtatildi",
-  "notify-student-sync-failed-body": "Talabaning EMIS dastlabki sinxronlashi {attempts} marta muvaffaqiyatsiz bo'ldi. Sababini monitorda ko'ring."
+  "notify-student-sync-failed-body": "Talabaning EMIS dastlabki sinxronlashi {attempts} marta muvaffaqiyatsiz bo'ldi. Sababini monitorda ko'ring.",
+  "notify-knowledge-gap-title": "Bilimlar bazasida bo'shliq",
+  "notify-knowledge-gap-body": "AI chat quyidagi so'rov bo'yicha hech narsa topmadi: «{query}» ({chat_kind}, {user_role}). Bilimlar bazasiga yozuv qo'shing."
 }

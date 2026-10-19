@@ -225,6 +225,13 @@ class InMemoryNotificationRepository:
                 changed += 1
         return changed
 
+    async def dedupe_key_seen_since(self, prefix: str, since: datetime) -> bool:
+        """Any row with the prefix created since."""
+        return any(
+            n.dedupe_key.startswith(prefix) and n.created_at >= since
+            for n in self.rows.values()
+        )
+
     async def purge_created_before(self, cutoff: datetime) -> int:
         """Delete old rows."""
         old = [nid for nid, n in self.rows.items() if n.created_at < cutoff]
