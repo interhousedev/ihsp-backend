@@ -138,6 +138,10 @@ from app.shared.contracts.library import LibraryQueries, LibrarySourceReader
 from app.shared.contracts.links import LinksApi
 from app.shared.contracts.lms import LmsSourceReader, LmsWorkspace
 from app.shared.contracts.notebooks import NotebooksCommands, NotebooksQueries
+from app.shared.contracts.school_knowledge import (
+    KnowledgeGapReporter,
+    KnowledgeLookup,
+)
 from app.shared.contracts.web_search import WebSearchApi
 from app.shared.wiring import ModuleDeps
 
@@ -254,6 +258,8 @@ def build(
     embeddings: EmbeddingIndex | None = None,
     library: LibrarySourceReader | None = None,
     library_queries: LibraryQueries | None = None,
+    knowledge: KnowledgeLookup | None = None,
+    knowledge_gaps: KnowledgeGapReporter | None = None,
 ) -> NotebooksServices:
     """Wire the module over the other modules' public APIs.
 
@@ -276,6 +282,8 @@ def build(
         web_search=web_search,
         workspace=workspace,
         embeddings=embeddings,
+        knowledge=knowledge,
+        knowledge_gaps=knowledge_gaps,
     )
     notebooks = build_notebooks(core)
     workspaces = build_workspace(core)

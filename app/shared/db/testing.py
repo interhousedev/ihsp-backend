@@ -23,6 +23,7 @@ SCHEMAS = (
     "library",
     "vectors",
     "certificates",
+    "knowledge",
 )
 
 

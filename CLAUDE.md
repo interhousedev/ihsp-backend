@@ -8,7 +8,7 @@ The Python backend of the IHT lyceum platform (internal name IHSP): FastAPI, aio
 
 ## Where things live
 
-- `app/modules/<name>/{domain,ports,application,infrastructure,wiring.py}`: business logic. Modules: academic, admin, ai, certificates, dashboard, files, flashcards, identity, library, links, lms, mail, notebooks, notify, vectors.
+- `app/modules/<name>/{domain,ports,application,infrastructure,wiring.py}`: business logic. Modules: academic, admin, ai, certificates, dashboard, files, flashcards, identity, knowledge, library, links, lms, mail, notebooks, notify, vectors.
 - `app/interfaces/{http,bot,mcp,smtp,jobs}`: protocol edges. `app/bootstrap/`: one composition root per process. `app/shared/`: kernel and cross-module contracts.
 - `app/settings*.py`: settings (`IHSP_*`). `materials/.env.sample` documents them.
 - `app/shared/ai_tasks.py`: every model call site is a named AI task. `app/modules/notebooks/domain/artifacts/strict.py`: structured-output helpers (`NOT_NULL`).

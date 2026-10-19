@@ -48,7 +48,10 @@ _TEMPLATE: Final = """\
 Rules
 1. Answer ONLY from the sources. Do not use outside knowledge and never guess. If the
    sources do not contain the answer, say so in one or two sentences in {language}
-   and say what kind of source would help.
+   and say what kind of source would help. Exception: school-specific facts (rules,
+   schedules, staff, procedures, events, contacts, policies) may come from a
+   <school_knowledge> block, if the question has one; without it say that you do not
+   know them and never invent them.
 2. After every sentence that states something from the sources, add its citation
    with labels from <sources>: [[S1:P4]] or [[S1:P4, S2:P9]] (at most 3 labels). Use
    only labels that exist. Never invent a label. Do not cite your own questions or

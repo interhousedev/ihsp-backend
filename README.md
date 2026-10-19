@@ -40,6 +40,14 @@ Infrastructure: PostgreSQL 16 with pgvector (one schema per module), Redis 7, S3
 
 Every module owns a PostgreSQL schema and never reads another module's tables. Inside a module the layers are `domain`, `ports`, `application`, `infrastructure` and `wiring.py`; the process entry points are in `app/interfaces/` (http, bot, mcp, smtp, jobs). The rules are in [CODESTYLE.md](CODESTYLE.md).
 
+## School knowledge base
+
+The `knowledge` module holds school facts (rules, schedules, staff, procedures, contacts). Administrators edit them on the admin "Knowledge" page (`iht-web` route `apps/admin/src/app/(console)/knowledge`), backed by `app/interfaces/http/v1/admin_knowledge/`.
+
+- Search is hybrid: pgvector similarity, pg_trgm similarity on key, title and value, and full text, fused by reciprocal rank.
+- The AI assistants (`search_knowledge_base` tool) and the notebook chat look facts up through `KnowledgeSearchPort`. A search with zero hits notifies every administrator through `notify_knowledge_gap` (the query only, deduplicated for 24 hours); a failed notification is logged and ignored.
+- Settings: `IHSP_KNOWLEDGE__VECTOR_MIN_SIMILARITY` (0.45), `IHSP_KNOWLEDGE__TRIGRAM_MIN_SIMILARITY` (0.2), `IHSP_KNOWLEDGE__CANDIDATES` (20, hits per signal before fusion), `IHSP_KNOWLEDGE__DEFAULT_LIMIT` (5).
+
 ## Repository layout
 
 | Path | Content |

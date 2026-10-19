@@ -20,6 +20,7 @@ MODULES = (
     "vectors",
     "dashboard",
     "certificates",
+    "knowledge",
 )
 
 

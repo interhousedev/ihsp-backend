@@ -49,6 +49,7 @@ API_PACKAGES: tuple[str, ...] = (
     f"{V1}.admin_schedule",
     f"{V1}.admin_attendance",
     f"{V1}.admin_sync",
+    f"{V1}.admin_student_sync",
     f"{V1}.admin_jobs",
     f"{V1}.admin_insights",
     f"{V1}.admin_logs",
@@ -66,6 +67,7 @@ API_PACKAGES: tuple[str, ...] = (
     f"{V1}.outbound_mail",
     f"{V1}.flashcards",
     f"{V1}.certificates",
+    f"{V1}.admin_knowledge",
     f"{V1}.notebooks",
     f"{V1}.library",
     f"{V1}.lms_authoring",
@@ -91,6 +93,7 @@ FEATURE_PACKAGES: dict[str, Feature] = {
     f"{V1}.lms_learning": Feature.LMS,
     f"{V1}.push": Feature.PUSH,
     f"{V1}.admin_sync": Feature.EMIS_SYNC,
+    f"{V1}.admin_student_sync": Feature.EMIS_SYNC,
 }
 
 

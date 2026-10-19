@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from app.modules.files.wiring import FilesServices
     from app.modules.flashcards.wiring import FlashcardsServices
     from app.modules.identity.wiring import IdentityModule
+    from app.modules.knowledge.wiring import KnowledgeServices
     from app.modules.library.wiring import LibraryServices
     from app.modules.links.wiring import LinksServices
     from app.modules.lms.wiring import LmsModule
@@ -68,6 +69,7 @@ class Container:
     notebooks: "NotebooksServices" = NOT_BUILT
     library: "LibraryServices" = NOT_BUILT
     certificates: "CertificatesServices" = NOT_BUILT
+    knowledge: "KnowledgeServices" = NOT_BUILT
     admin_tools: AdminToolBackend = NOT_BUILT
     llm: LlmGateway = NOT_BUILT
     mcp_audit: "McpAuditPort" = NOT_BUILT

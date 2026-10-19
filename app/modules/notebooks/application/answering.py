@@ -518,7 +518,8 @@ class AnswerPipeline:
             pack = replace(pack, course=course)
         locale = await self.core.locale.locale_of(user_id)
         system = self._system(notebook.chat_config, locale, course)
-        messages = self._messages(pack, turn, [])
+        school = await self._school_facts(request, turn, pack)
+        messages = self._messages(pack, turn, [], school)
         max_tokens = self.core.llm.max_tokens(
             AiTask.NOTEBOOK_CHAT, MAX_TOKENS[notebook.chat_config.length]
         )
@@ -529,7 +530,7 @@ class AnswerPipeline:
         await pool.require(user_id, estimate_cost(chars, max_tokens))
         web = turn.web or (await self._search(request, turn, locale))
         if web:  # the same pages again on a regeneration, a new search otherwise
-            messages = self._messages(pack, turn, web)
+            messages = self._messages(pack, turn, web, school)
             chars = _chars(system, messages)
         return Prepared(
             user_id=user_id,
@@ -543,6 +544,17 @@ class AnswerPipeline:
             chars=chars,
             web=web,
             course=notebook.is_course_workspace,
+        )
+
+    async def _school_facts(
+        self, request: AnswerRequest, turn: Turn, pack: ContextPack
+    ) -> str | None:
+        """School facts for a question without sources (None: nothing to add)."""
+        knowledge = self.core.school_knowledge
+        if knowledge is None or pack.sources:
+            return None
+        return await knowledge.block_for(
+            turn.text, notebook_id=request.notebook_id, actor=request.actor
         )
 
     async def _search(
@@ -652,7 +664,11 @@ class AnswerPipeline:
         )
 
     def _messages(
-        self, pack: ContextPack, turn: Turn, web: list[WebResult]
+        self,
+        pack: ContextPack,
+        turn: Turn,
+        web: list[WebResult],
+        school: str | None = None,
     ) -> list[dict[str, Any]]:
         """Context message, the last turns, then the question (§ 3.3.3).
 
@@ -663,6 +679,8 @@ class AnswerPipeline:
         question = question_message(turn.text, note)
         if not pack.sources:
             question = f"{NO_SOURCES_NOTE}\n\n{question}"
+            if school:
+                question = f"{school}\n\n{question}"
         block = render_web_block(web, full=True, intro=WEB_INTRO)
         return [
             self.core.llm.context_message(

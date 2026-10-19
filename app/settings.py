@@ -546,6 +546,22 @@ class VectorsSettings(BaseModel):
     runs every 10 minutes until every passage has its vector)."""
 
 
+class KnowledgeSettings(BaseModel):
+    """Knowledge base: hybrid search thresholds (vector, trigram and full text)."""
+
+    vector_min_similarity: float = Field(default=0.45, ge=0, le=1)
+    """Smallest cosine similarity for a vector hit to count."""
+
+    trigram_min_similarity: float = Field(default=0.2, ge=0, le=1)
+    """Smallest pg_trgm similarity (key, title or value) for a partial-match hit."""
+
+    candidates: int = Field(default=20, ge=1, le=200)
+    """Hits each signal (vector, words) contributes before reciprocal rank fusion."""
+
+    default_limit: int = Field(default=5, ge=1, le=50)
+    """Hits `KnowledgeSearchPort.search` returns when the caller gives no limit."""
+
+
 class IdentitySettings(BaseModel):
     """Identity module: account lifecycle."""
 
@@ -1119,6 +1135,7 @@ class Settings(BaseSettings):
     exa: ExaSettings = Field(default_factory=ExaSettings)
     notebooks: NotebooksSettings = Field(default_factory=NotebooksSettings)
     vectors: VectorsSettings = Field(default_factory=VectorsSettings)
+    knowledge: KnowledgeSettings = Field(default_factory=KnowledgeSettings)
     identity: IdentitySettings = Field(default_factory=IdentitySettings)
     files: FilesSettings = Field(default_factory=FilesSettings)
     library: LibrarySettings = Field(default_factory=LibrarySettings)

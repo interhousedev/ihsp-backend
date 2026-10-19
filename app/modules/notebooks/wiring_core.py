@@ -13,6 +13,7 @@ from app.modules.notebooks.application.multi_hop_retrieval import MultiHopRetrie
 from app.modules.notebooks.application.query_decomposer import QueryDecomposer
 from app.modules.notebooks.application.quota import QuotaService
 from app.modules.notebooks.application.retrieval_expander import RetrievalExpander
+from app.modules.notebooks.application.school_knowledge import SchoolKnowledge
 from app.modules.notebooks.infrastructure.lms_course_gate import (
     NO_COURSES,
     LmsCourseGate,
@@ -39,6 +40,10 @@ from app.shared.contracts.ai import LlmGateway
 from app.shared.contracts.embeddings import EmbeddingIndex
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.contracts.lms import LmsWorkspace
+from app.shared.contracts.school_knowledge import (
+    KnowledgeGapReporter,
+    KnowledgeLookup,
+)
 from app.shared.contracts.web_search import WebSearchApi
 from app.shared.wiring import ModuleDeps
 
@@ -75,6 +80,8 @@ class NotebooksCore:
     )
     # Summaries of older chat turns (None: the last messages only, no summary).
     compactor: HistoryCompactor | None = None
+    # School facts for a chat without sources (None: no knowledge base wired).
+    school_knowledge: SchoolKnowledge | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -154,6 +161,8 @@ def build_core(
     web_search: WebSearchApi | None = None,
     workspace: LmsWorkspace | None = None,
     embeddings: EmbeddingIndex | None = None,
+    knowledge: KnowledgeLookup | None = None,
+    knowledge_gaps: KnowledgeGapReporter | None = None,
 ) -> NotebooksCore:
     """Build the shared services; `overrides` replace the stores (tests).
 
@@ -183,6 +192,11 @@ def build_core(
         embeddings=embeddings,
         workspace=workspace,
         course_context=CourseContextLoader(workspace),
+        school_knowledge=(
+            SchoolKnowledge(llm, knowledge, knowledge_gaps)
+            if knowledge is not None
+            else None
+        ),
         compactor=HistoryCompactor(
             llm, over.compact_store or RedisCompactStore(deps.redis), settings
         ),

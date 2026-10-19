@@ -8,6 +8,7 @@ and the course author assistant reach them through these bindings too.
 
 from dataclasses import dataclass
 
+from app.modules.ai.ports.knowledge import KnowledgeGapReporter, KnowledgeLookup
 from app.modules.ai.ports.share_lookup import ChatShareLookup
 from app.shared.contracts.documents import DocumentRenderer
 from app.shared.contracts.links import LinksApi
@@ -33,6 +34,8 @@ class LateBindings:
     notebooks_commands: NotebooksCommands | None = None
     documents: DocumentRenderer | None = None
     web: WebSearchApi | None = None  # the assistant's search_web tool
+    knowledge: KnowledgeLookup | None = None  # search_knowledge_base
+    knowledge_gaps: KnowledgeGapReporter | None = None
     # The course author assistant (lms_author); all four are needed for it.
     lms_workspace: LmsWorkspace | None = None
     lms_workspace_commands: LmsWorkspaceCommands | None = None

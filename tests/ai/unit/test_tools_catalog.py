@@ -23,6 +23,7 @@ STUDENT_TOOLS = {
     "get_homework", "get_marks", "get_attendance", "list_files", "read_file",
     "search_files", "list_notebooks", "get_notebook", "search_notebook",
     "read_notebook_source", "list_notebook_artifacts", "search_web",
+    "search_knowledge_base",
     "list_flashcard_sets",
     "get_flashcard_set", "create_flashcard_set", "add_flashcards", "create_notebook",
     "add_notebook_sources", "create_artifact", "make_document", "read_chat_history",
@@ -106,8 +107,12 @@ async def test_admin_tools_match_the_spec(h: AiHarness) -> None:
     tools = await tools_of(h, Assistant.ADMIN)
 
     names = [t["function"]["name"] for t in tools]
-    assert names == [*(d.name for d in ADMIN_TOOLS), "read_chat_history"]
-    assert len(names) == 23 and len(set(names)) == 23
+    assert names == [
+        *(d.name for d in ADMIN_TOOLS),
+        "search_knowledge_base",
+        "read_chat_history",
+    ]
+    assert len(names) == 24 and len(set(names)) == 24
 
 
 @pytest.mark.parametrize("assistant", [Assistant.STUDENT, Assistant.ADMIN])

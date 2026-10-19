@@ -1,0 +1,5 @@
+{
+  "knowledge-not-found": "Запись базы знаний не найдена.",
+  "knowledge-key-taken": "Запись с таким ключом уже существует.",
+  "knowledge-invalid": "Значение поля «{field}» недопустимо."
+}

@@ -61,6 +61,9 @@ from app.modules.ai.application.tools.read_file import ReadFile
 from app.modules.ai.application.tools.read_notebook_source import ReadNotebookSource
 from app.modules.ai.application.tools.registry import ToolRegistry
 from app.modules.ai.application.tools.search_files import SearchFiles
+from app.modules.ai.application.tools.search_knowledge_base import (
+    SearchKnowledgeBase,
+)
 from app.modules.ai.application.tools.search_notebook import SearchNotebook
 from app.modules.ai.application.tools.search_web import SearchWeb
 from app.modules.ai.application.turn_result import TurnResults
@@ -174,6 +177,7 @@ def make_student_tools(
         ReadNotebookSource(bindings),
         ListNotebookArtifacts(bindings),
         SearchWeb(bindings, limits),
+        SearchKnowledgeBase(bindings, "student"),
         ListFlashcardSets(flashcards),
         GetFlashcardSet(flashcards),
         CreateFlashcardSet(flashcards),
@@ -187,10 +191,10 @@ def make_student_tools(
 
 
 def make_admin_tools(
-    backend: AdminToolBackend, identity: IdentityDirectory
+    backend: AdminToolBackend, identity: IdentityDirectory, bindings: LateBindings
 ) -> list[Tool]:
     """Return the Administration assistant's tools in their fixed order."""
-    return [
+    tools: list[Tool] = [
         (
             AdminReadTool(d, backend)
             if d.access is ToolAccess.READ
@@ -198,6 +202,8 @@ def make_admin_tools(
         )
         for d in ADMIN_TOOLS
     ]
+    tools.append(SearchKnowledgeBase(bindings, "admin"))
+    return tools
 
 
 def build(
@@ -253,7 +259,7 @@ def build(
             ),
             history,
         ],
-        [*make_admin_tools(admin_tools, identity), history],
+        [*make_admin_tools(admin_tools, identity, bindings), history],
         [
             *make_author_tools(bindings, deps.i18n),
             *make_office_tools(files, bindings),

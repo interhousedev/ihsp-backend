@@ -25,6 +25,10 @@ from app.bootstrap.adapters.library_lessons import LibraryLessonsAdapter
 from app.bootstrap.adapters.mail_suspension import MailSuspensionAdapter
 from app.bootstrap.adapters.mcp_ports import ConnectorCoursesAdapter, McpAuditAdapter
 from app.bootstrap.adapters.notebook_terms import NotebookTermsAdapter
+from app.bootstrap.adapters.school_knowledge import (
+    KnowledgeGapAdapter,
+    KnowledgeLookupAdapter,
+)
 from app.bootstrap.adapters.signature_sniffer import SignatureSniffer
 from app.bootstrap.adapters.telegram import make_telegram_sender
 from app.bootstrap.adapters.term_resolver import TermResolverAdapter
@@ -66,6 +70,7 @@ from app.modules.identity.infrastructure.hydra.factory import build_hydra_admin
 from app.modules.identity.ports.email_sender import EmailSender
 from app.modules.identity.ports.hydra_gateway import HydraGateway
 from app.modules.identity.wiring import build as build_identity
+from app.modules.knowledge.wiring import build as build_knowledge
 from app.modules.library.wiring import build as build_library
 from app.modules.links.wiring import build as build_links
 from app.modules.lms.wiring import build as build_lms
@@ -202,6 +207,8 @@ class _Assembler:
         self.raw_llm: LlmGateway | None = overrides.llm
         # Set by build_embeddings (after the AI module); the AI module reads it late.
         self.embedding_index: EmbeddingIndex | None = None
+        self.knowledge_lookup: KnowledgeLookupAdapter | None = None
+        self.knowledge_gaps: KnowledgeGapAdapter | None = None
         self.recorder = UsageRecorder(
             SqlUsageStore(container.sessionmaker), container.clock
         )
@@ -352,6 +359,9 @@ class _Assembler:
             emis=source,
             directory=CertificateStudentsAdapter(schedule),
         )
+        c.knowledge = build_knowledge(
+            self.deps, embeddings=lambda: self.embedding_index
+        )
         emis_import = build_emis_import(
             self.deps,
             schedule=schedule,
@@ -469,6 +479,10 @@ class _Assembler:
             free_usage=self.recorder,
         )
         ai.bindings.share_lookup = c.links.public
+        self.knowledge_lookup = KnowledgeLookupAdapter(c.knowledge.public)
+        self.knowledge_gaps = KnowledgeGapAdapter(c.notify.public)
+        ai.bindings.knowledge = self.knowledge_lookup
+        ai.bindings.knowledge_gaps = self.knowledge_gaps
         self.ai_proxy.bind(ai.public)
         self.usage_ai.bind(ai.public)
         c.ai = ai
@@ -526,6 +540,8 @@ class _Assembler:
             lms=c.lms.learning.source_reader if self.plan.lms else None,
             library=c.library.bridge.source_reader,
             library_queries=c.library.reader.queries,
+            knowledge=self.knowledge_lookup,
+            knowledge_gaps=self.knowledge_gaps,
             fetcher=HttpWebFetcher(),
             classwork=c.academic.classwork.queries,
             terms=NotebookTermsAdapter(c.academic.schedule.current_term),
