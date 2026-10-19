@@ -53,6 +53,16 @@ class StudentSyncJobs(Protocol):
         """
         ...
 
+    async def request_refresh(
+        self, user_id: UUID, now: dt.datetime
+    ) -> tuple[StudentSyncJob, bool]:
+        """Administrator re-sync: queue any job unless it is pending or running.
+
+        A succeeded job is queued again (the data is refreshed), a missing one is
+        created; a pending or running one is returned unchanged.
+        """
+        ...
+
     async def get(self, user_id: UUID) -> StudentSyncJob | None:
         """Return the job, or None when the student has none."""
         ...

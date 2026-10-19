@@ -60,6 +60,16 @@ class MemoryStudentSyncJobs:
         await self.enqueue(user_id, now)
         return self._jobs[user_id], True
 
+    async def request_refresh(
+        self, user_id: UUID, now: dt.datetime
+    ) -> tuple[StudentSyncJob, bool]:
+        """Queue unless pending or running; the admin re-sync."""
+        job = self._jobs.get(user_id)
+        if job is not None and job.status in ("pending", "running"):
+            return job, False
+        await self.enqueue(user_id, now)
+        return self._jobs[user_id], True
+
     async def get(self, user_id: UUID) -> StudentSyncJob | None:
         """Return the job, or None."""
         return self._jobs.get(user_id)
@@ -203,6 +213,38 @@ class SqlStudentSyncJobs:
             SET status = 'pending', attempts = 0, requested_at = :now,
                 next_attempt_at = :now, last_error = NULL, updated_at = :now
             WHERE user_id = :u AND status = 'failed'
+            RETURNING user_id
+            """,
+            {"u": user_id, "now": now},
+        )
+        queued = bool(reset)
+        if not reset:
+            created = await self._rows(
+                """
+                INSERT INTO academic.student_sync_jobs
+                    (user_id, status, attempts, requested_at, next_attempt_at,
+                     updated_at)
+                VALUES (:u, 'pending', 0, :now, :now, :now)
+                ON CONFLICT (user_id) DO NOTHING
+                RETURNING user_id
+                """,
+                {"u": user_id, "now": now},
+            )
+            queued = bool(created)
+        job = await self.get(user_id)
+        assert job is not None  # the row was just updated or inserted
+        return job, queued
+
+    async def request_refresh(
+        self, user_id: UUID, now: dt.datetime
+    ) -> tuple[StudentSyncJob, bool]:
+        """Admin re-sync: reset any job that is not pending or running, or create it."""
+        reset = await self._rows(
+            """
+            UPDATE academic.student_sync_jobs
+            SET status = 'pending', attempts = 0, requested_at = :now,
+                next_attempt_at = :now, last_error = NULL, updated_at = :now
+            WHERE user_id = :u AND status NOT IN ('pending', 'running')
             RETURNING user_id
             """,
             {"u": user_id, "now": now},

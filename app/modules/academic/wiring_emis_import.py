@@ -8,6 +8,7 @@ from app.modules.academic.application.curriculum.sync_group_curriculum import (
 from app.modules.academic.application.schedule.common import UowFactory
 from app.modules.academic.application.schedule.generate_lessons import GenerateLessons
 from app.modules.academic.application.schedule.get_student_sync import (
+    AdminGetStudentSync,
     GetStudentSync,
 )
 from app.modules.academic.application.schedule.import_materials import (
@@ -20,6 +21,7 @@ from app.modules.academic.application.schedule.ports.room_page_cache import (
     RoomPageCache,
 )
 from app.modules.academic.application.schedule.request_student_sync import (
+    AdminRequestStudentSync,
     RequestStudentSync,
 )
 from app.modules.academic.application.schedule.student_sync_jobs import (
@@ -70,6 +72,8 @@ class EmisImportServices:
     sync_student_all: SyncStudentAll
     request_student_sync: RequestStudentSync
     get_student_sync: GetStudentSync
+    admin_request_student_sync: AdminRequestStudentSync
+    admin_get_student_sync: AdminGetStudentSync
     sync_jobs: StudentSyncJobs
 
 
@@ -124,6 +128,10 @@ def assemble_emis_import(
         ),
         request_student_sync=RequestStudentSync(jobs=jobs, kicker=kicker, clock=clock),
         get_student_sync=GetStudentSync(jobs=jobs),
+        admin_request_student_sync=AdminRequestStudentSync(
+            jobs=jobs, kicker=kicker, clock=clock
+        ),
+        admin_get_student_sync=AdminGetStudentSync(jobs=jobs),
         sync_jobs=jobs,
     )
 
