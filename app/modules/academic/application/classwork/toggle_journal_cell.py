@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from uuid import UUID
 
+from app.modules.academic.application.classwork.apply_work_offs import WorkOffApplier
 from app.modules.academic.application.classwork.attendance_sheet import (
     AttendanceSheetBuilder,
 )
@@ -34,12 +35,14 @@ class ToggleJournalCell:
         clock: Clock,
         roster_loader: RosterLoader,
         sheets: AttendanceSheetBuilder,
+        work_offs: WorkOffApplier,
     ) -> None:
         """Initialize the use case."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.roster_loader = roster_loader
         self.sheets = sheets
+        self.work_offs = work_offs
 
     async def execute(
         self,
@@ -51,7 +54,11 @@ class ToggleJournalCell:
         base_version: int,
         actor: Actor,
     ) -> int:
-        """Toggle the cell and return the new ``attendance_version``."""
+        """Toggle the cell and return the new ``attendance_version``.
+
+        A newly absent student gets a ``lesson_absence`` notice; an un-marked
+        student loses the work-off of this lesson (WO-3, WO-4).
+        """
         today = local_today(self.clock)
         async with self.uow_factory() as uow:
             lesson = await require_lesson(uow, lesson_id)
@@ -81,5 +88,8 @@ class ToggleJournalCell:
                 raise conflict_with(
                     await self.sheets.build(fresh, roster, actor, today)
                 )
+            await self.work_offs.after_toggle(
+                uow, lesson, student_id, absent=absent, version=version
+            )
             await uow.commit()
             return version
