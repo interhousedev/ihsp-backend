@@ -148,5 +148,20 @@
   "notify-student-sync-failed-title": "Talaba sinxronlashi to'xtatildi",
   "notify-student-sync-failed-body": "Talabaning EMIS dastlabki sinxronlashi {attempts} marta muvaffaqiyatsiz bo'ldi. Sababini monitorda ko'ring.",
   "notify-knowledge-gap-title": "Bilimlar bazasida bo'shliq",
-  "notify-knowledge-gap-body": "AI chat quyidagi so'rov bo'yicha hech narsa topmadi: «{query}» ({chat_kind}, {user_role}). Bilimlar bazasiga yozuv qo'shing."
+  "notify-knowledge-gap-body": "AI chat quyidagi so'rov bo'yicha hech narsa topmadi: «{query}» ({chat_kind}, {user_role}). Bilimlar bazasiga yozuv qo'shing.",
+  "notify-btn-open-attendance": "Davomatni ochish",
+  "notify-lesson-absence-title": "Sizga dars qoldirgan deb belgilandi",
+  "notify-lesson-absence-title-update": "Qayta topshirish topshirig'i yangilandi",
+  "notify-lesson-absence-body": "{subject} ({teacher}), {date}, {period}-dars.",
+  "notify-lesson-absence-work-off": "Qayta topshirish topshirig'i: {text}",
+  "notify-lesson-absence-due": "Muddat: {due} gacha",
+  "notify-curator-absences-title": "{group} guruhida qoldirilgan darslar, {date}",
+  "notify-curator-absences-line": "{student} — {period}-dars. {subject} ({teacher})",
+  "notify-curator-absences-work-off": "qayta topshirish: {text}",
+  "notify-curator-absences-excused": "sababli",
+  "notify-teacher-temporary-marks-title": "Vaqtinchalik jurnal: EMISga o'tkaziladigan baholar ({count})",
+  "notify-teacher-temporary-marks-line": "{date}, {period}-dars, {group} · {subject}: {student} — {value}",
+  "notify-teacher-temporary-marks-comment": "izoh: {text}",
+  "notify-teacher-temporary-marks-footer": "Bu baholarni EMISga o'tkazing. O'tkazilgandan keyin ular keyingi EMIS sinxronlashidan so'ng avtomatik yo'qoladi.",
+  "notify-btn-open-temporary-marks": "Vaqtinchalik baholarni ochish"
 }

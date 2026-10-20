@@ -169,6 +169,50 @@ PAYLOADS: dict[NotificationType, dict[str, Any]] = {
         "value": 3,
         "date": "2026-10-06",
     },
+    NotificationType.LESSON_ABSENCE: {
+        "lesson_id": LESSON_ID,
+        "date": "2026-10-06",
+        "period": 3,
+        "subject_name": "Physics",
+        "teacher_name": "Rustamov Aziz",
+        "work_off_text": None,
+        "due_date": None,
+        "update": False,
+    },
+    NotificationType.CURATOR_ABSENCES: {
+        "date": "2026-10-06",
+        "group_id": "g",
+        "group_name": "2TN2",
+        "items": [
+            {
+                "student_id": "s1",
+                "student_name": "Karimov Ali",
+                "lesson_id": LESSON_ID,
+                "period": 3,
+                "subject_name": "Physics",
+                "teacher_name": "Rustamov Aziz",
+                "excused": False,
+                "work_off_text": None,
+            }
+        ],
+    },
+    NotificationType.TEACHER_TEMPORARY_MARKS: {
+        "date": "2026-10-20",
+        "count": 1,
+        "items": [
+            {
+                "lesson_id": LESSON_ID,
+                "lesson_date": "2026-10-19",
+                "period": 2,
+                "group_name": "2TN2",
+                "subject_name": "Physics",
+                "student_id": "s1",
+                "student_name": "Karimov Ali",
+                "value": 4,
+                "comment": None,
+            }
+        ],
+    },
 }
 
 
@@ -354,3 +398,118 @@ def test_every_studio_kind_has_a_label_and_an_unknown_one_is_shown_as_is(
     )
 
     assert result.body == f"Ready: {label} “Photosynthesis”"
+
+
+def test_lesson_absence_without_work_off_names_the_lesson(i18n: I18nCore) -> None:
+    """A plain absence shows date, period, subject and teacher only."""
+    result = describe(
+        NotificationType.LESSON_ABSENCE,
+        PAYLOADS[NotificationType.LESSON_ABSENCE],
+        "en",
+        i18n=i18n,
+        urls=URLS,
+    )
+
+    assert result.body == "Physics (Rustamov Aziz), 06.10, period 3."
+    assert result.link == f"{URLS.sp}/attendance/"
+
+
+def test_lesson_absence_with_work_off_shows_text_and_due_date(i18n: I18nCore) -> None:
+    """The work-off text and its due date follow the lesson line."""
+    payload = {
+        **PAYLOADS[NotificationType.LESSON_ABSENCE],
+        "work_off_text": "Solve tasks 1-5",
+        "due_date": "2026-10-13",
+    }
+
+    result = describe(
+        NotificationType.LESSON_ABSENCE, payload, "en", i18n=i18n, urls=URLS
+    )
+
+    lines = result.body.split("\n")
+    assert lines[1] == "Work-off task: Solve tasks 1-5"
+    assert lines[2] == "Due by 13.10"
+
+
+def test_lesson_absence_update_has_its_own_title(i18n: I18nCore) -> None:
+    """A changed work-off task is announced as an update."""
+    plain = PAYLOADS[NotificationType.LESSON_ABSENCE]
+    update = {**plain, "update": True, "work_off_text": "Read chapter 4"}
+
+    first = describe(NotificationType.LESSON_ABSENCE, plain, "en", i18n=i18n, urls=URLS)
+    second = describe(
+        NotificationType.LESSON_ABSENCE, update, "en", i18n=i18n, urls=URLS
+    )
+
+    assert second.title == "Work-off task updated"
+    assert first.title != second.title
+
+
+def test_curator_absences_list_one_line_per_item(i18n: I18nCore) -> None:
+    """Group and date are in the title; items carry work-off and excused marks."""
+    items = [
+        {
+            "student_name": "Karimov Ali",
+            "period": 2,
+            "subject_name": "Physics",
+            "teacher_name": "Rustamov Aziz",
+            "excused": False,
+            "work_off_text": "Tasks 1-5",
+        },
+        {
+            "student_name": "Karimov Ali",
+            "period": 4,
+            "subject_name": "Algebra",
+            "teacher_name": "Ismoilova Dilya",
+            "excused": True,
+            "work_off_text": None,
+        },
+        {
+            "student_name": "Umarov Timur",
+            "period": 2,
+            "subject_name": "Physics",
+            "teacher_name": "Rustamov Aziz",
+            "excused": False,
+            "work_off_text": None,
+        },
+    ]
+    payload = {**PAYLOADS[NotificationType.CURATOR_ABSENCES], "items": items}
+
+    result = describe(
+        NotificationType.CURATOR_ABSENCES, payload, "en", i18n=i18n, urls=URLS
+    )
+
+    assert result.title == "Absences in 2TN2, 06.10"
+    assert result.body.split("\n") == [
+        "Karimov Ali — period 2. Physics (Rustamov Aziz) · work-off: Tasks 1-5",
+        "Karimov Ali — period 4. Algebra (Ismoilova Dilya) · excused",
+        "Umarov Timur — period 2. Physics (Rustamov Aziz)",
+    ]
+    assert result.link == f"{URLS.staff}/group/attendance/"
+
+
+def test_teacher_temporary_marks_list_one_line_per_item(i18n: I18nCore) -> None:
+    """Count is in the title; one line per mark, a footer, a staff link."""
+    item = PAYLOADS[NotificationType.TEACHER_TEMPORARY_MARKS]["items"][0]
+    items = [
+        item,
+        {**item, "student_name": "Umarov Timur", "value": 3, "comment": "Quiz"},
+    ]
+    payload = {"date": "2026-10-20", "count": 2, "items": items}
+
+    result = describe(
+        NotificationType.TEACHER_TEMPORARY_MARKS,
+        payload,
+        "en",
+        i18n=i18n,
+        urls=URLS,
+    )
+
+    assert result.title == "Temporary marks to move to EMIS (2)"
+    lines = result.body.split("\n")
+    assert lines[0] == "19.10, period 2, 2TN2 · Physics: Karimov Ali — 4"
+    assert (
+        lines[1] == "19.10, period 2, 2TN2 · Physics: Umarov Timur — 3 · comment: Quiz"
+    )
+    assert len(lines) == 3
+    assert result.link == f"{URLS.staff}/temporary-marks/"

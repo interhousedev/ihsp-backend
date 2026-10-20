@@ -148,5 +148,20 @@
   "notify-student-sync-failed-title": "Синхронизация студента прервана",
   "notify-student-sync-failed-body": "Первичная синхронизация студента из EMIS не удалась {attempts} раз. Откройте монитор, чтобы увидеть причину.",
   "notify-knowledge-gap-title": "Пробел в базе знаний",
-  "notify-knowledge-gap-body": "ИИ-чат ничего не нашёл по запросу: «{query}» ({chat_kind}, {user_role}). Добавьте запись в базу знаний."
+  "notify-knowledge-gap-body": "ИИ-чат ничего не нашёл по запросу: «{query}» ({chat_kind}, {user_role}). Добавьте запись в базу знаний.",
+  "notify-btn-open-attendance": "Открыть посещаемость",
+  "notify-lesson-absence-title": "Вам отмечено отсутствие",
+  "notify-lesson-absence-title-update": "Отработка обновлена",
+  "notify-lesson-absence-body": "{subject} ({teacher}), {date}, урок {period}.",
+  "notify-lesson-absence-work-off": "Отработка: {text}",
+  "notify-lesson-absence-due": "Срок: до {due}",
+  "notify-curator-absences-title": "Пропуски в группе {group}, {date}",
+  "notify-curator-absences-line": "{student} — урок {period}. {subject} ({teacher})",
+  "notify-curator-absences-work-off": "отработка: {text}",
+  "notify-curator-absences-excused": "уважительная",
+  "notify-teacher-temporary-marks-title": "Временный журнал: оценки для переноса в EMIS ({count})",
+  "notify-teacher-temporary-marks-line": "{date}, урок {period}, {group} · {subject}: {student} — {value}",
+  "notify-teacher-temporary-marks-comment": "комментарий: {text}",
+  "notify-teacher-temporary-marks-footer": "Перенесите эти оценки в EMIS. После переноса они исчезнут автоматически после следующей синхронизации с EMIS.",
+  "notify-btn-open-temporary-marks": "Открыть временный журнал"
 }

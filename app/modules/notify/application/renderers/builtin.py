@@ -7,6 +7,9 @@ from app.modules.notify.application.renderers.assessment_reminder import (
     AssessmentReminderRenderer,
 )
 from app.modules.notify.application.renderers.broadcast import BroadcastRenderer
+from app.modules.notify.application.renderers.curator_absences import (
+    CuratorAbsencesRenderer,
+)
 from app.modules.notify.application.renderers.curator_exam_mark import (
     CuratorExamMarkRenderer,
 )
@@ -15,6 +18,9 @@ from app.modules.notify.application.renderers.files_expiring import (
     FilesExpiringRenderer,
 )
 from app.modules.notify.application.renderers.knowledge_gap import KnowledgeGapRenderer
+from app.modules.notify.application.renderers.lesson_absence import (
+    LessonAbsenceRenderer,
+)
 from app.modules.notify.application.renderers.lesson_changed import (
     LessonChangedRenderer,
 )
@@ -66,6 +72,9 @@ from app.modules.notify.application.renderers.student_sync_failed import (
     StudentSyncFailedRenderer,
 )
 from app.modules.notify.application.renderers.sync_alert import SyncAlertRenderer
+from app.modules.notify.application.renderers.teacher_temporary_marks import (
+    TeacherTemporaryMarksRenderer,
+)
 from app.settings import UrlsSettings
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.links import LinksApi
@@ -152,4 +161,14 @@ def register_builtin_renderers(
     )
     registry.register(
         NotificationType.CURATOR_EXAM_MARK, CuratorExamMarkRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.LESSON_ABSENCE, LessonAbsenceRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.CURATOR_ABSENCES, CuratorAbsencesRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.TEACHER_TEMPORARY_MARKS,
+        TeacherTemporaryMarksRenderer(i18n, urls),
     )

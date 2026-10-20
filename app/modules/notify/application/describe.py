@@ -95,6 +95,75 @@ def _curator_exam_mark(p: dict[str, Any], v: _View) -> Description:
     )
 
 
+def _lesson_absence(p: dict[str, Any], v: _View) -> Description:
+    title = (
+        "notify-lesson-absence-title-update"
+        if p.get("update")
+        else "notify-lesson-absence-title"
+    )
+    lines = [
+        v.t(
+            "notify-lesson-absence-body",
+            date=fmt_date(p.get("date")),
+            period=p.get("period", ""),
+            subject=p.get("subject_name", ""),
+            teacher=p.get("teacher_name", ""),
+        )
+    ]
+    if p.get("work_off_text"):
+        lines.append(v.t("notify-lesson-absence-work-off", text=p["work_off_text"]))
+        if p.get("due_date"):
+            lines.append(v.t("notify-lesson-absence-due", due=fmt_date(p["due_date"])))
+    return Description(v.t(title), "\n".join(lines), f"{v.urls.sp}/attendance/")
+
+
+def _curator_absences(p: dict[str, Any], v: _View) -> Description:
+    lines = []
+    for item in p.get("items", []):
+        line = v.t(
+            "notify-curator-absences-line",
+            student=item.get("student_name", ""),
+            period=item.get("period", ""),
+            subject=item.get("subject_name", ""),
+            teacher=item.get("teacher_name", ""),
+        )
+        if item.get("work_off_text"):
+            line += " · " + v.t(
+                "notify-curator-absences-work-off", text=item["work_off_text"]
+            )
+        if item.get("excused"):
+            line += " · " + v.t("notify-curator-absences-excused")
+        lines.append(line)
+    title = v.t(
+        "notify-curator-absences-title",
+        group=p.get("group_name", ""),
+        date=fmt_date(p.get("date")),
+    )
+    return Description(title, "\n".join(lines), f"{v.urls.staff}/group/attendance/")
+
+
+def _teacher_temporary_marks(p: dict[str, Any], v: _View) -> Description:
+    lines = []
+    for item in p.get("items", []):
+        line = v.t(
+            "notify-teacher-temporary-marks-line",
+            date=fmt_date(item.get("lesson_date")),
+            period=item.get("period", ""),
+            group=item.get("group_name", ""),
+            subject=item.get("subject_name", ""),
+            student=item.get("student_name", ""),
+            value=item.get("value", ""),
+        )
+        if item.get("comment"):
+            line += " · " + v.t(
+                "notify-teacher-temporary-marks-comment", text=item["comment"]
+            )
+        lines.append(line)
+    lines.append(v.t("notify-teacher-temporary-marks-footer"))
+    title = v.t("notify-teacher-temporary-marks-title", count=p.get("count", 0))
+    return Description(title, "\n".join(lines), f"{v.urls.staff}/temporary-marks/")
+
+
 def _result_drop(p: dict[str, Any], v: _View) -> Description:
     key = (
         "notify-result-drop-gpa"
@@ -502,6 +571,9 @@ _BUILDERS: dict[NotificationType, _Builder] = {
     NotificationType.LIBRARY_SUGGESTION_APPROVED: _library_suggestion_approved,
     NotificationType.LIBRARY_SUGGESTION_DECLINED: _library_suggestion_declined,
     NotificationType.CURATOR_EXAM_MARK: _curator_exam_mark,
+    NotificationType.LESSON_ABSENCE: _lesson_absence,
+    NotificationType.CURATOR_ABSENCES: _curator_absences,
+    NotificationType.TEACHER_TEMPORARY_MARKS: _teacher_temporary_marks,
 }
 
 

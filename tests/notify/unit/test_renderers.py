@@ -408,3 +408,55 @@ async def test_ready_notebook_output_is_rendered_in_the_language_of_the_reader(
     assert [b["text"] for row in message.buttons or [] for b in row] == [
         "Открыть блокнот"
     ]
+
+
+async def test_lesson_absence_has_an_attendance_button(i18n: I18nCore) -> None:
+    """The student gets a mini app button to the attendance page."""
+    message = await World(i18n).render(
+        NotificationType.LESSON_ABSENCE,
+        {
+            "date": "2026-10-06",
+            "period": 3,
+            "subject_name": "Physics",
+            "teacher_name": "Rustamov Aziz",
+            "update": False,
+        },
+    )
+
+    assert message is not None
+    assert message.buttons == [
+        [{"text": "Open attendance", "web_app_url": f"{URLS.sp}/attendance/"}]
+    ]
+
+
+async def test_curator_absences_has_an_attendance_button(i18n: I18nCore) -> None:
+    """The curator gets a button to the group attendance page."""
+    message = await World(i18n).render(
+        NotificationType.CURATOR_ABSENCES,
+        {"date": "2026-10-06", "group_name": "2TN2", "items": []},
+        role=Role.TEACHER,
+    )
+
+    assert message is not None
+    assert message.buttons == [
+        [{"text": "Open attendance", "web_app_url": f"{URLS.staff}/group/attendance/"}]
+    ]
+
+
+async def test_teacher_temporary_marks_has_a_button(i18n: I18nCore) -> None:
+    """The teacher gets a button to the temporary marks page."""
+    message = await World(i18n).render(
+        NotificationType.TEACHER_TEMPORARY_MARKS,
+        {"date": "2026-10-20", "count": 0, "items": []},
+        role=Role.TEACHER,
+    )
+
+    assert message is not None
+    assert message.buttons == [
+        [
+            {
+                "text": "Open temporary marks",
+                "web_app_url": f"{URLS.staff}/temporary-marks/",
+            }
+        ]
+    ]

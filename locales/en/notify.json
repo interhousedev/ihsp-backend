@@ -148,5 +148,20 @@
   "notify-student-sync-failed-title": "Student sync gave up",
   "notify-student-sync-failed-body": "A student's initial EMIS sync failed {attempts} times. Open the monitor to see the reason.",
   "notify-knowledge-gap-title": "Knowledge base gap",
-  "notify-knowledge-gap-body": "An AI chat found nothing for: “{query}” ({chat_kind}, {user_role}). Add an entry to the knowledge base."
+  "notify-knowledge-gap-body": "An AI chat found nothing for: “{query}” ({chat_kind}, {user_role}). Add an entry to the knowledge base.",
+  "notify-btn-open-attendance": "Open attendance",
+  "notify-lesson-absence-title": "You were marked absent",
+  "notify-lesson-absence-title-update": "Work-off task updated",
+  "notify-lesson-absence-body": "{subject} ({teacher}), {date}, period {period}.",
+  "notify-lesson-absence-work-off": "Work-off task: {text}",
+  "notify-lesson-absence-due": "Due by {due}",
+  "notify-curator-absences-title": "Absences in {group}, {date}",
+  "notify-curator-absences-line": "{student} — period {period}. {subject} ({teacher})",
+  "notify-curator-absences-work-off": "work-off: {text}",
+  "notify-curator-absences-excused": "excused",
+  "notify-teacher-temporary-marks-title": "Temporary marks to move to EMIS ({count})",
+  "notify-teacher-temporary-marks-line": "{date}, period {period}, {group} · {subject}: {student} — {value}",
+  "notify-teacher-temporary-marks-comment": "comment: {text}",
+  "notify-teacher-temporary-marks-footer": "Enter these marks into EMIS. Once moved, they disappear automatically after the next EMIS sync.",
+  "notify-btn-open-temporary-marks": "Open temporary marks"
 }
