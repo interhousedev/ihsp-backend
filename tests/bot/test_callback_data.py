@@ -2,7 +2,17 @@
 
 from uuid import uuid4
 
-from app.interfaces.bot.callbacks import MailComposeCb
+from app.interfaces.bot.callbacks import (
+    JournalCb,
+    JournalMarkCb,
+    JournalStudentCb,
+    MailComposeCb,
+    WorkOffDoneCb,
+    WorkOffPageCb,
+    WorkOffPickCb,
+    WorkOffPromptCb,
+    WorkOffUndoCb,
+)
 from app.shared.contracts import callbacks
 from app.shared.ids import b64_to_uuid, uuid_to_b64
 
@@ -26,6 +36,14 @@ LARGEST: list[CallbackData] = [
     callbacks.NotMeCb(kind="otp"),
     callbacks.CancelCb(),
     MailComposeCb(action="send"),
+    WorkOffPromptCb(lesson=LESSON, action="cancel_text"),
+    WorkOffPickCb(lesson=LESSON, pos=LARGE),
+    WorkOffPageCb(page=LARGE),
+    WorkOffDoneCb(item=LESSON, page=LARGE),
+    WorkOffUndoCb(item=LESSON, page=LARGE),
+    JournalCb(lesson=LESSON, action="open"),
+    JournalStudentCb(lesson=LESSON, pos=LARGE),
+    JournalMarkCb(lesson=LESSON, pos=LARGE, value=5),
 ]
 
 

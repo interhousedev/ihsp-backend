@@ -47,6 +47,7 @@ async def test_linked_student_gets_the_student_menu(harness: Harness) -> None:
         "m:today",
         "m:marks",
         "m:homework",
+        "m:workoffs",
         "m:mail",
         "m:settings",
     ]
@@ -61,7 +62,12 @@ async def test_teacher_menu_has_current_lesson_and_the_staff_portal(
     """BOT-8, BOT-9: teachers see Today, Current lesson, Settings; Open app is staff."""
     await harness.send("/menu", user_id=TEACHER_TG)
 
-    assert harness.last_callbacks() == ["m:today", "m:lesson", "m:settings"]
+    assert harness.last_callbacks() == [
+        "m:today",
+        "m:lesson",
+        "m:workoffs",
+        "m:settings",
+    ]
     app_button = harness.last_buttons()[-1][0]
     assert app_button.web_app is not None
     assert app_button.web_app.url == "http://localhost:3003"

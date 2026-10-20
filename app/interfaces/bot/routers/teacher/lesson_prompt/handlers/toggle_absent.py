@@ -7,12 +7,14 @@ from app.shared.contracts.identity import UserRef
 from app.shared.i18n.core import I18nContext
 from app.shared.ids import b64_to_uuid
 
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
 
 async def toggle_absent(
     callback: CallbackQuery,
     callback_data: AttToggleCb,
+    state: FSMContext,
     user: UserRef,
     services: BotServices,
     i18n: I18nContext,
@@ -29,4 +31,5 @@ async def toggle_absent(
             lesson_id, user.id, callback_data.pos
         ),
         mode="edit",
+        fsm=state,
     )

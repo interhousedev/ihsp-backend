@@ -238,6 +238,9 @@ class FakeClassworkQueries:
         self.items: list[dict[str, Any]] = []
         self.missing: list[LessonRef] = []
         self.homework_starts: list[date | None] = []
+        self.templates: list[dict[str, Any]] = []
+        self.my_items: list[dict[str, Any]] = []
+        self.teacher_items: list[dict[str, Any]] = []
 
     async def homework(
         self, user_id: UUID, start: date | None, end: date | None, done: bool | None
@@ -252,6 +255,20 @@ class FakeClassworkQueries:
         """Return lessons without attendance."""
         return list(self.missing)
 
+    async def work_off_templates(self, teacher_id: UUID) -> list[dict[str, Any]]:
+        """Return the configured templates."""
+        return list(self.templates)
+
+    async def my_work_offs(self, student_id: UUID, locale: str) -> list[dict[str, Any]]:
+        """Return the configured student work-offs."""
+        return list(self.my_items)
+
+    async def teacher_open_work_offs(
+        self, teacher_id: UUID, locale: str
+    ) -> list[dict[str, Any]]:
+        """Return the open work-offs of the teacher (done ones drop out)."""
+        return [i for i in self.teacher_items if i.get("status", "assigned") != "done"]
+
 
 @dataclass
 class FakeClasswork:
@@ -261,6 +278,7 @@ class FakeClasswork:
     calls: list[tuple[str, Any]] = field(default_factory=list)
     prompt_error: Exception | None = None
     submit_error: Exception | None = None
+    work_off_items: list[dict[str, Any]] = field(default_factory=list)
 
     @classmethod
     def with_roster(cls, lesson: LessonRef, names: list[str]) -> "FakeClasswork":
@@ -321,6 +339,8 @@ class FakeClasswork:
         from_draft: bool,
         base_version: int,
         source: Literal["bot", "staff", "admin"],
+        work_off_mode: str = "per_student",
+        common_work_off: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Record the submission and mark attendance as submitted."""
         self.calls.append(
@@ -331,6 +351,8 @@ class FakeClasswork:
                     "from_draft": from_draft,
                     "base_version": base_version,
                     "source": source,
+                    "work_off_mode": work_off_mode,
+                    "common_work_off": common_work_off,
                 },
             )
         )
@@ -366,6 +388,16 @@ class FakeClasswork:
     ) -> None:
         """Record the tick."""
         self.calls.append(("homework_done", (lesson_id, done)))
+
+    async def set_work_off_status(
+        self, work_off_id: UUID, actor: Actor, status: str
+    ) -> dict[str, Any]:
+        """Record the status; the queries fake shows done ones no more."""
+        self.calls.append(("work_off_status", (work_off_id, status)))
+        for item in self.work_off_items:
+            if str(item["id"]) == str(work_off_id):
+                item["status"] = status
+        return {"id": str(work_off_id), "status": status}
 
 
 class FakeMarks:
@@ -563,6 +595,68 @@ class FakeNotify:
 
 
 @dataclass
+class FakeTemporaryMarks:
+    """The three temporary-mark use cases over one dict (student -> value)."""
+
+    marks: dict[tuple[UUID, UUID], int] = field(default_factory=dict)
+    calls: list[tuple[str, Any]] = field(default_factory=list)
+    error: Exception | None = None
+
+    def _view(self, lesson_id: UUID, student_id: UUID) -> SimpleNamespace:
+        value = self.marks[(lesson_id, student_id)]
+        return SimpleNamespace(mark=SimpleNamespace(student_id=student_id, value=value))
+
+    @property
+    def list(self) -> SimpleNamespace:
+        """``list_lesson_temporary_marks``."""
+
+        async def execute(
+            lesson_id: UUID, actor: Actor, *, locale: str | None = None
+        ) -> list[SimpleNamespace]:
+            self.calls.append(("list", lesson_id))
+            return [
+                self._view(lesson, student)
+                for lesson, student in self.marks
+                if lesson == lesson_id
+            ]
+
+        return SimpleNamespace(execute=execute)
+
+    @property
+    def set(self) -> SimpleNamespace:
+        """``set_temporary_mark``."""
+
+        async def execute(
+            lesson_id: UUID,
+            student_id: UUID,
+            actor: Actor,
+            *,
+            value: int,
+            comment: str | None = None,
+            locale: str | None = None,
+        ) -> SimpleNamespace:
+            self.calls.append(("set", (student_id, value)))
+            if self.error is not None:
+                raise self.error
+            self.marks[(lesson_id, student_id)] = value
+            return self._view(lesson_id, student_id)
+
+        return SimpleNamespace(execute=execute)
+
+    @property
+    def delete(self) -> SimpleNamespace:
+        """``delete_temporary_mark``."""
+
+        async def execute(lesson_id: UUID, student_id: UUID, actor: Actor) -> None:
+            self.calls.append(("delete", student_id))
+            if self.error is not None:
+                raise self.error
+            del self.marks[(lesson_id, student_id)]
+
+        return SimpleNamespace(execute=execute)
+
+
+@dataclass
 class World:
     """Everything a bot test needs: the container, the fakes and two users."""
 
@@ -581,11 +675,13 @@ class World:
     mail: FakeMail
     notify: FakeNotify
     i18n: KeyI18nCore
+    temporary_marks: FakeTemporaryMarks
     classwork: FakeClasswork = field(init=False)
 
     def use_classwork(self, classwork: FakeClasswork) -> FakeClasswork:
         """Install the classwork fake in the container."""
         self.classwork = classwork
+        classwork.work_off_items = self.classwork_queries.teacher_items
         self.container.academic.classwork.commands = classwork
         return classwork
 
@@ -604,6 +700,7 @@ def build_world() -> World:
     mail, notify = FakeMail(), FakeNotify()
     clock = FixedClock(NOW)
     i18n = KeyI18nCore()
+    temporary_marks = FakeTemporaryMarks()
     container = SimpleNamespace(
         settings=Settings(env="test", telegram={"admin_chat_id": ADMIN_CHAT}),
         clock=clock,
@@ -616,7 +713,13 @@ def build_world() -> World:
         ),
         academic=SimpleNamespace(
             schedule=SimpleNamespace(queries=schedule),
-            classwork=SimpleNamespace(queries=queries, commands=None),
+            classwork=SimpleNamespace(
+                queries=queries,
+                commands=None,
+                list_lesson_temporary_marks=temporary_marks.list,
+                set_temporary_mark=temporary_marks.set,
+                delete_temporary_mark=temporary_marks.delete,
+            ),
             marks=SimpleNamespace(queries=marks),
         ),
         links=SimpleNamespace(public=links),
@@ -640,6 +743,7 @@ def build_world() -> World:
         mail=mail,
         notify=notify,
         i18n=i18n,
+        temporary_marks=temporary_marks,
     )
     lesson = make_lesson(teacher_id=teacher.id)
     world.use_classwork(FakeClasswork.with_roster(lesson, ["Alice", "Bob", "Carol"]))

@@ -67,7 +67,14 @@ async def test_submit_saves_the_draft_with_the_version_it_started_from(
 
     submit = [data for name, data in harness.world.classwork.calls if name == "submit"]
     assert submit == [
-        {"absent": None, "from_draft": True, "base_version": 3, "source": "bot"}
+        {
+            "absent": None,
+            "from_draft": True,
+            "base_version": 3,
+            "source": "bot",
+            "work_off_mode": "none",
+            "common_work_off": None,
+        }
     ]
 
 
@@ -85,6 +92,7 @@ async def test_after_submit_the_message_shows_the_count_and_the_homework_step(
         "bot-btn-add-homework",
         "bot-btn-no-homework",
         "bot-btn-topic",
+        "bot-btn-journal",
     ]
 
 

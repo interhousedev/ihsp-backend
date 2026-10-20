@@ -29,6 +29,9 @@ def build_routers() -> list[Router]:
     )
     from app.interfaces.bot.routers.student.mail.router import build_router as mail
     from app.interfaces.bot.routers.student.marks.router import build_router as marks
+    from app.interfaces.bot.routers.student.work_offs.router import (
+        build_router as student_work_offs,
+    )
     from app.interfaces.bot.routers.teacher.current_lesson.router import (
         build_router as current_lesson,
     )
@@ -40,6 +43,9 @@ def build_routers() -> list[Router]:
     )
     from app.interfaces.bot.routers.teacher.resources.router import (
         build_router as resources,
+    )
+    from app.interfaces.bot.routers.teacher.work_offs.router import (
+        build_router as teacher_work_offs,
     )
 
     builders = [
@@ -57,6 +63,8 @@ def build_routers() -> list[Router]:
         lesson_prompt,
         homework_prompt,
         resources,
+        teacher_work_offs,
+        student_work_offs,
         unexpected,
     ]
     return [build() for build in builders]

@@ -13,17 +13,20 @@ from app.interfaces.bot.screens.lesson_prompt_expired import (
 )
 from app.interfaces.bot.services import BotServices
 from app.interfaces.bot.utilities.reply_edit import show
+from app.interfaces.bot.work_off_choice import load_choice
 from app.shared.base_error import ConflictError, ForbiddenError
 from app.shared.contracts.identity import UserRef
 from app.shared.i18n.core import I18nContext
+from app.shared.ids import uuid_to_b64
 
-from aiogram.types import CallbackQuery
+from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, Message
 
 Action = Callable[[], Awaitable[dict[str, Any]]]
 
 
 async def show_blocked(
-    request: CallbackQuery,
+    request: Message | CallbackQuery,
     error: ForbiddenError,
     lesson_id: UUID,
     services: BotServices,
@@ -38,7 +41,7 @@ async def show_blocked(
 
 
 async def load_state(
-    request: CallbackQuery,
+    request: Message | CallbackQuery,
     *,
     user: UserRef,
     lesson_id: UUID,
@@ -60,7 +63,7 @@ async def load_state(
 
 
 async def run_prompt_action(
-    request: CallbackQuery,
+    request: Message | CallbackQuery,
     *,
     user: UserRef,
     lesson_id: UUID,
@@ -68,11 +71,13 @@ async def run_prompt_action(
     i18n: I18nContext,
     action: Action,
     mode: PromptMode = "auto",
+    fsm: FSMContext | None = None,
 ) -> None:
     """Run a classwork command and edit the prompt with the state it returns.
 
     A version conflict shows the current list with a note; an expired or
-    reassigned lesson shows the matching message instead.
+    reassigned lesson shows the matching message instead. With ``fsm`` the
+    checklist also shows the teacher's work-off choice (WO-5).
     """
     note: str | None = None
     try:
@@ -87,6 +92,9 @@ async def run_prompt_action(
     if state.expired:
         await show(request, build_prompt_expired(lesson_id, i18n, services.urls))
         return
+    work_off = None
+    if fsm is not None:
+        work_off = await load_choice(fsm, services, user.id, uuid_to_b64(lesson_id))
     rendered = build_lesson_prompt(
         state,
         i18n,
@@ -94,5 +102,6 @@ async def run_prompt_action(
         urls=services.urls,
         mode=mode,
         note=note,
+        work_off=work_off,
     )
     await show(request, rendered)

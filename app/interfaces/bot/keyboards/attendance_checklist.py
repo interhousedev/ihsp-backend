@@ -3,6 +3,7 @@
 from collections.abc import Sequence
 from uuid import UUID
 
+from app.interfaces.bot.callbacks import WorkOffPromptCb
 from app.interfaces.bot.prompt_state import RosterItem
 from app.interfaces.bot.utilities.markup import (
     Button,
@@ -65,7 +66,7 @@ def roster_rows(
 
 
 def get(i18n: I18nContext, lesson_id: UUID, roster: Sequence[RosterItem]) -> Rows:
-    """Return the checklist: students, Everyone present / Submit, Set topic."""
+    """Return the checklist: students, save buttons, work-off buttons, Set topic."""
     lesson = uuid_to_b64(lesson_id)
     rows = roster_rows(i18n, lesson_id, roster)
     rows.append(
@@ -76,6 +77,26 @@ def get(i18n: I18nContext, lesson_id: UUID, roster: Sequence[RosterItem]) -> Row
             ),
             cb_button(
                 i18n("bot-btn-submit"), AttActionCb(lesson=lesson, action="submit")
+            ),
+        ]
+    )
+    rows.append(
+        [
+            cb_button(
+                i18n("bot-btn-submit-no-work-off"),
+                AttActionCb(lesson=lesson, action="submit_none"),
+            )
+        ]
+    )
+    rows.append(
+        [
+            cb_button(
+                i18n("bot-btn-work-off-choose"),
+                WorkOffPromptCb(lesson=lesson, action="menu"),
+            ),
+            cb_button(
+                i18n("bot-btn-work-off-text"),
+                WorkOffPromptCb(lesson=lesson, action="text"),
             ),
         ]
     )

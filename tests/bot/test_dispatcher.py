@@ -70,6 +70,7 @@ def test_commands_follow_the_menu(world: World) -> None:
         "marks",
         "homework",
         "mail",
+        "workoffs",
         "settings",
         "help",
     ]

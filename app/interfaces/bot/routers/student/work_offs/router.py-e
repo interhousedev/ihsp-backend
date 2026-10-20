@@ -1,0 +1,28 @@
+"""Router of the student's work-off list (WO-5)."""
+
+from app.interfaces.bot.filters.has_role import HasRole
+from app.interfaces.bot.routers.student.work_offs.handlers.show_student_work_offs import (
+    show_student_work_offs,
+)
+from app.shared.actor import Role
+from app.shared.contracts.callbacks import MenuCb
+
+from aiogram import F, Router
+from aiogram.filters import Command
+
+
+def register_filters(router: Router) -> None:
+    """The list belongs to students."""
+    router.message.filter(HasRole(Role.STUDENT))
+    router.callback_query.filter(HasRole(Role.STUDENT))
+
+
+def build_router() -> Router:
+    """Build the student work-offs router."""
+    router = Router(name="student.work_offs")
+    register_filters(router)
+    router.message.register(show_student_work_offs, Command("workoffs"))
+    router.callback_query.register(
+        show_student_work_offs, MenuCb.filter(F.screen == "workoffs")
+    )
+    return router

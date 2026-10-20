@@ -7,12 +7,14 @@ from app.shared.contracts.identity import UserRef
 from app.shared.i18n.core import I18nContext
 from app.shared.ids import b64_to_uuid
 
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
 
 async def edit_attendance(
     callback: CallbackQuery,
     callback_data: AttActionCb,
+    state: FSMContext,
     user: UserRef,
     services: BotServices,
     i18n: I18nContext,
@@ -27,4 +29,5 @@ async def edit_attendance(
         i18n=i18n,
         action=lambda: services.classwork.prompt_state(lesson_id, user.id),
         mode="edit",
+        fsm=state,
     )

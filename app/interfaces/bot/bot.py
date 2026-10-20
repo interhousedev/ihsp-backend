@@ -30,6 +30,7 @@ COMMAND_KEYS = {
     "marks": "bot-command-marks",
     "homework": "bot-command-homework",
     "mail": "bot-command-mail",
+    "workoffs": "bot-command-workoffs",
     "settings": "bot-command-settings",
     "help": "bot-command-help",
 }

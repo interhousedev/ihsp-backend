@@ -5,7 +5,9 @@ from typing import Any, Protocol
 from uuid import UUID
 
 from app.interfaces.bot.urls import BotUrls
+from app.modules.academic.domain.classwork.temporary_mark import TemporaryMarkView
 from app.settings import Settings
+from app.shared.actor import Actor
 from app.shared.clock import Clock
 from app.shared.contracts.academic import (
     ClassworkCommands,
@@ -31,6 +33,50 @@ class CancelOtpReset(Protocol):
         ...
 
 
+class ListLessonMarks(Protocol):
+    """The classwork use case ``list_lesson_temporary_marks``."""
+
+    async def execute(
+        self, lesson_id: UUID, actor: Actor, *, locale: str | None = None
+    ) -> list[TemporaryMarkView]:
+        """Return the lesson's temporary marks."""
+        ...
+
+
+class SetLessonMark(Protocol):
+    """The classwork use case ``set_temporary_mark``."""
+
+    async def execute(
+        self,
+        lesson_id: UUID,
+        student_id: UUID,
+        actor: Actor,
+        *,
+        value: int,
+        comment: str | None = None,
+        locale: str | None = None,
+    ) -> TemporaryMarkView:
+        """Save the student's temporary mark."""
+        ...
+
+
+class DeleteLessonMark(Protocol):
+    """The classwork use case ``delete_temporary_mark``."""
+
+    async def execute(self, lesson_id: UUID, student_id: UUID, actor: Actor) -> None:
+        """Delete the student's temporary mark."""
+        ...
+
+
+@dataclass(frozen=True, slots=True)
+class TemporaryMarks:
+    """The temporary gradebook use cases the lesson journal calls."""
+
+    list: ListLessonMarks
+    set: SetLessonMark
+    delete: DeleteLessonMark
+
+
 @dataclass(frozen=True, slots=True)
 class BotServices:
     """Everything handlers need, typed by contract."""
@@ -46,6 +92,7 @@ class BotServices:
     schedule: ScheduleQueries
     classwork_queries: ClassworkQueries
     classwork: ClassworkCommands
+    temporary_marks: TemporaryMarks
     marks: MarksQueries
     links: LinksApi
     files: FilesApi
@@ -68,6 +115,11 @@ def services_from_container(container: Any) -> BotServices:
         schedule=container.academic.schedule.queries,
         classwork_queries=container.academic.classwork.queries,
         classwork=container.academic.classwork.commands,
+        temporary_marks=TemporaryMarks(
+            list=container.academic.classwork.list_lesson_temporary_marks,
+            set=container.academic.classwork.set_temporary_mark,
+            delete=container.academic.classwork.delete_temporary_mark,
+        ),
         marks=container.academic.marks.queries,
         links=container.links.public,
         files=container.files.public,

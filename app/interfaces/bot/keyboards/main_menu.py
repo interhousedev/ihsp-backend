@@ -14,14 +14,15 @@ from app.shared.actor import Role
 from app.shared.contracts.callbacks import MenuCb
 from app.shared.i18n.core import I18nContext
 
-STUDENT_SCREENS = ("today", "marks", "homework", "mail")
-TEACHER_SCREENS = ("today", "lesson")
+STUDENT_SCREENS = ("today", "marks", "homework", "workoffs", "mail")
+TEACHER_SCREENS = ("today", "lesson", "workoffs")
 LABELS = {
     "today": "bot-btn-today",
     "marks": "bot-btn-marks",
     "homework": "bot-btn-homework",
     "mail": "bot-btn-mail",
     "lesson": "bot-btn-current-lesson",
+    "workoffs": "bot-btn-workoffs",
 }
 
 
