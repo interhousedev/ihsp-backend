@@ -273,6 +273,17 @@ class FakeClasswork:
         self.missing_calls.append((teacher_id, start, end))
         return list(self.missing)
 
+    async def work_off_templates(self, teacher_id: UUID) -> list[dict[str, Any]]:
+        return []
+
+    async def my_work_offs(self, student_id: UUID, locale: str) -> list[dict[str, Any]]:
+        return []
+
+    async def teacher_open_work_offs(
+        self, teacher_id: UUID, locale: str
+    ) -> list[dict[str, Any]]:
+        return []
+
 
 class FakeMarks:
     """MarksQueries with canned data."""

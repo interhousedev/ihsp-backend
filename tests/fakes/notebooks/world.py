@@ -11,6 +11,7 @@ from tests.fakes.notebooks.library import FakeLibrarySourceReader
 from tests.fakes.notebooks.links import FakeLessonLinks
 from tests.fakes.notebooks.lms import FakeLms
 from tests.fakes.notebooks.schedule import FakeLessonSchedule
+from tests.fakes.notebooks.transcripts import FakeTranscriptProvider
 
 
 @dataclass(slots=True)
@@ -25,6 +26,7 @@ class World:
     lms: FakeLms = field(default_factory=FakeLms)
     library: FakeLibrarySourceReader = field(default_factory=FakeLibrarySourceReader)
     fetcher: FakeWebFetcher = field(default_factory=FakeWebFetcher)
+    transcripts: FakeTranscriptProvider = field(default_factory=FakeTranscriptProvider)
     terms: FakeTermCalendar = field(default_factory=FakeTermCalendar)
     classwork: FakeClasswork = field(init=False)
 

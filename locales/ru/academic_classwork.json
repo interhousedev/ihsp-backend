@@ -24,5 +24,16 @@
   "academic-csv-first-name": "Имя",
   "academic-csv-semester-mark": "Оценка за семестр",
   "academic-csv-absent": "Н",
-  "academic-csv-excused-short": "У"
+  "academic-csv-excused-short": "У",
+  "academic-work-off-template-not-found": "Шаблон отработки не найден.",
+  "academic-work-off-not-found": "Отработка не найдена.",
+  "academic-work-off-template-limit": "Шаблонов отработки может быть не больше {max}.",
+  "academic-work-off-text-invalid": "Текст отработки должен быть от 1 до {max} символов.",
+  "academic-work-off-text-required": "Выберите шаблон или напишите текст отработки.",
+  "academic-work-off-not-absent": "Отработку можно задать только отсутствующему ученику.",
+  "academic-work-off-status-invalid": "Статус отработки: назначена или выполнена.",
+  "academic-temporary-mark-value-invalid": "Оценка во временном журнале должна быть целым числом от {min} до {max}.",
+  "academic-temporary-mark-comment-invalid": "Комментарий должен быть не длиннее {max} символов.",
+  "academic-temporary-mark-not-found": "Оценка во временном журнале не найдена.",
+  "academic-temporary-mark-student-not-in-lesson": "Этого ученика нет в списке урока."
 }

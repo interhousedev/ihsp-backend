@@ -89,4 +89,5 @@ class SetExcuse:
                 actor,
                 local_today(self.clock),
                 visible_groups=curated,
+                work_offs=await uow.work_offs.for_lesson(lesson_id),
             )

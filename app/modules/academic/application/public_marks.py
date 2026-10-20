@@ -7,6 +7,7 @@ from uuid import UUID
 
 from app.modules.academic.application.marks.ports.unit_of_work import MarksUowFactory
 from app.modules.academic.application.marks.semester_range import semester_range
+from app.modules.academic.application.marks.temporary_gpa import with_temporary
 from app.modules.academic.application.marks.view_context import (
     ViewContext,
     build_context,
@@ -57,6 +58,7 @@ class MarksQueriesImpl:
                 if rng is None
                 else await reader.attendance_counts(user_id, *rng, semester=sem)
             )
+            temporary = await with_temporary(reader, [user_id], sem, rng)
             teachers = (
                 {} if rng is None else await reader.teacher_ids(ctx, subject_ids, *rng)
             )
@@ -76,6 +78,7 @@ class MarksQueriesImpl:
                     name=view.subject_name(sid),
                     teacher_names=_names(view, teachers.get(sid, [])),
                     semester_mark=None if row is None else num(row.value),
+                    gpa_with_temporary=temporary.get((user_id, sid)),
                     emis_rating=None if row is None else row.emis_rating,
                     absences=0 if count is None else count.absences,
                     lessons_with_attendance=(

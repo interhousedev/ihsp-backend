@@ -584,6 +584,146 @@
         "title": "AdminUserDetailResponse",
         "type": "object"
       },
+      "AdminWorkOffItemResponse": {
+        "description": "One work-off in the administration list.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "done_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Done At"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "group_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Name"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lesson_id": {
+            "format": "uuid",
+            "title": "Lesson Id",
+            "type": "string"
+          },
+          "period": {
+            "title": "Period",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "assigned",
+              "done"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "student_id": {
+            "format": "uuid",
+            "title": "Student Id",
+            "type": "string"
+          },
+          "student_name": {
+            "title": "Student Name",
+            "type": "string"
+          },
+          "subject_name": {
+            "title": "Subject Name",
+            "type": "string"
+          },
+          "teacher_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Name"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lesson_id",
+          "date",
+          "period",
+          "subject_name",
+          "teacher_name",
+          "group_name",
+          "student_id",
+          "student_name",
+          "text",
+          "status",
+          "due_date",
+          "done_at",
+          "created_at"
+        ],
+        "title": "AdminWorkOffItemResponse",
+        "type": "object"
+      },
+      "AdminWorkOffListResponse": {
+        "description": "A page of work-offs and the total count.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AdminWorkOffItemResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "items"
+        ],
+        "title": "AdminWorkOffListResponse",
+        "type": "object"
+      },
       "AgentStepResponse": {
         "description": "AgentStep: one action of the assistant while it answered.\n\n`target` is a name to show (a file, a count of results); `ref` an id the web can\nopen (a file id, a tool call id, a plan id).",
         "properties": {
@@ -2533,6 +2673,13 @@
           "version": {
             "title": "Version",
             "type": "integer"
+          },
+          "work_offs": {
+            "items": {
+              "$ref": "#/components/schemas/WorkOffResponse"
+            },
+            "title": "Work Offs",
+            "type": "array"
           }
         },
         "required": [
@@ -5645,6 +5792,48 @@
           "item_count"
         ],
         "title": "CollectionResponse",
+        "type": "object"
+      },
+      "CommonWorkOffBody": {
+        "description": "One work-off choice: a template, a text or both, and a due date.",
+        "properties": {
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "title": "CommonWorkOffBody",
         "type": "object"
       },
       "CompareStepView": {
@@ -11448,6 +11637,17 @@
             ],
             "title": "Final Avg"
           },
+          "gpa_with_temporary": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gpa With Temporary"
+          },
           "lesson_avg": {
             "anyOf": [
               {
@@ -11525,6 +11725,17 @@
               }
             ],
             "title": "Final Avg"
+          },
+          "gpa_with_temporary": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gpa With Temporary"
           },
           "lesson_avg": {
             "anyOf": [
@@ -11871,6 +12082,17 @@
               }
             ],
             "title": "Final Avg"
+          },
+          "gpa_with_temporary": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gpa With Temporary"
           },
           "lesson_avg": {
             "anyOf": [
@@ -18799,6 +19021,101 @@
         "title": "MyTeacherResponse",
         "type": "object"
       },
+      "MyWorkOffResponse": {
+        "description": "A work-off task of the student (WO-6).",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "done_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Done At"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lesson_id": {
+            "format": "uuid",
+            "title": "Lesson Id",
+            "type": "string"
+          },
+          "period": {
+            "title": "Period",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "assigned",
+              "done"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "subject_name": {
+            "title": "Subject Name",
+            "type": "string"
+          },
+          "teacher_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Name"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lesson_id",
+          "date",
+          "period",
+          "subject_name",
+          "teacher_name",
+          "text",
+          "status",
+          "due_date",
+          "done_at",
+          "created_at"
+        ],
+        "title": "MyWorkOffResponse",
+        "type": "object"
+      },
       "NamesBody": {
         "additionalProperties": false,
         "description": "Names in the three languages of the lyceum.",
@@ -24188,6 +24505,17 @@
             ],
             "title": "Emis Rating"
           },
+          "gpa_with_temporary": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gpa With Temporary"
+          },
           "semester_mark": {
             "anyOf": [
               {
@@ -27522,6 +27850,7 @@
         "enum": [
           "unsupported_type",
           "no_text",
+          "no_transcript",
           "too_large",
           "fetch_failed",
           "forbidden",
@@ -30208,6 +30537,17 @@
             ],
             "title": "Emis Rating"
           },
+          "gpa_with_temporary": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gpa With Temporary"
+          },
           "lates": {
             "default": 0,
             "title": "Lates",
@@ -30334,6 +30674,17 @@
               }
             ],
             "title": "Emis Rating"
+          },
+          "gpa_with_temporary": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gpa With Temporary"
           },
           "lessons": {
             "items": {
@@ -31316,6 +31667,16 @@
             "title": "Base Version",
             "type": "integer"
           },
+          "common_work_off": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CommonWorkOffBody"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "late": {
             "items": {
               "format": "uuid",
@@ -31330,6 +31691,23 @@
               "type": "string"
             },
             "title": "Present Unassigned",
+            "type": "array"
+          },
+          "work_off_mode": {
+            "default": "per_student",
+            "enum": [
+              "per_student",
+              "none",
+              "common"
+            ],
+            "title": "Work Off Mode",
+            "type": "string"
+          },
+          "work_offs": {
+            "items": {
+              "$ref": "#/components/schemas/WorkOffChoiceBody"
+            },
+            "title": "Work Offs",
             "type": "array"
           }
         },
@@ -32720,6 +33098,17 @@
             ],
             "title": "Average"
           },
+          "gpa_with_temporary": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gpa With Temporary"
+          },
           "group_id": {
             "format": "uuid",
             "title": "Group Id",
@@ -32978,6 +33367,176 @@
           "init_data"
         ],
         "title": "TelegramTokenBody",
+        "type": "object"
+      },
+      "TemporaryMarkBody": {
+        "description": "A temporary mark on the EMIS scale (2 to 5) with an optional comment.",
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "value": {
+            "maximum": 5.0,
+            "minimum": 2.0,
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "value"
+        ],
+        "title": "TemporaryMarkBody",
+        "type": "object"
+      },
+      "TemporaryMarkListResponse": {
+        "description": "Temporary marks, oldest lesson first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TemporaryMarkResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "TemporaryMarkListResponse",
+        "type": "object"
+      },
+      "TemporaryMarkResponse": {
+        "description": "A temporary mark with student, group, subject and lesson names.",
+        "properties": {
+          "author_id": {
+            "format": "uuid",
+            "title": "Author Id",
+            "type": "string"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
+          "group_name": {
+            "title": "Group Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lesson_date": {
+            "format": "date",
+            "title": "Lesson Date",
+            "type": "string"
+          },
+          "lesson_id": {
+            "format": "uuid",
+            "title": "Lesson Id",
+            "type": "string"
+          },
+          "lesson_period": {
+            "title": "Lesson Period",
+            "type": "integer"
+          },
+          "student_id": {
+            "format": "uuid",
+            "title": "Student Id",
+            "type": "string"
+          },
+          "student_name": {
+            "title": "Student Name",
+            "type": "string"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "subject_name": {
+            "title": "Subject Name",
+            "type": "string"
+          },
+          "teacher_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Teacher Id"
+          },
+          "teacher_name": {
+            "title": "Teacher Name",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "lesson_id",
+          "lesson_date",
+          "lesson_period",
+          "student_id",
+          "student_name",
+          "group_id",
+          "group_name",
+          "subject_id",
+          "subject_name",
+          "teacher_id",
+          "teacher_name",
+          "value",
+          "comment",
+          "author_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "TemporaryMarkResponse",
         "type": "object"
       },
       "TermChoice": {
@@ -36980,6 +37539,330 @@
           "text_color"
         ],
         "title": "WidgetResponse",
+        "type": "object"
+      },
+      "WorkOffChoiceBody": {
+        "description": "A work-off choice for one absent student.",
+        "properties": {
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "student_id": {
+            "format": "uuid",
+            "title": "Student Id",
+            "type": "string"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "required": [
+          "student_id"
+        ],
+        "title": "WorkOffChoiceBody",
+        "type": "object"
+      },
+      "WorkOffPatchBody": {
+        "description": "Body of ``PATCH /v1/staff/work-offs/{id}``; only sent fields change.",
+        "properties": {
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "assigned",
+                  "done"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "title": "WorkOffPatchBody",
+        "type": "object"
+      },
+      "WorkOffResponse": {
+        "description": "A work-off task given to one absent student (WO-3).",
+        "properties": {
+          "assigned_by": {
+            "format": "uuid",
+            "title": "Assigned By",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "done_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Done At"
+          },
+          "due_date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Date"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lesson_id": {
+            "format": "uuid",
+            "title": "Lesson Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "assigned",
+              "done"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "student_id": {
+            "format": "uuid",
+            "title": "Student Id",
+            "type": "string"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lesson_id",
+          "student_id",
+          "template_id",
+          "text",
+          "status",
+          "due_date",
+          "done_at",
+          "assigned_by",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "WorkOffResponse",
+        "type": "object"
+      },
+      "WorkOffStatsResponse": {
+        "description": "Work-off statistics (the JSON keys are ``from`` and ``to``).",
+        "properties": {
+          "from": {
+            "format": "date",
+            "title": "From",
+            "type": "string"
+          },
+          "group_by": {
+            "enum": [
+              "subject",
+              "teacher",
+              "group",
+              "student"
+            ],
+            "title": "Group By",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/WorkOffStatsRowResponse"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "to": {
+            "format": "date",
+            "title": "To",
+            "type": "string"
+          },
+          "total_open": {
+            "title": "Total Open",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "group_by",
+          "from",
+          "to",
+          "total_open",
+          "rows"
+        ],
+        "title": "WorkOffStatsResponse",
+        "type": "object"
+      },
+      "WorkOffStatsRowResponse": {
+        "description": "Open and done counts of one subject, teacher, group or student.",
+        "properties": {
+          "done_count": {
+            "title": "Done Count",
+            "type": "integer"
+          },
+          "key": {
+            "format": "uuid",
+            "title": "Key",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "open_count": {
+            "title": "Open Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "open_count",
+          "done_count"
+        ],
+        "title": "WorkOffStatsRowResponse",
+        "type": "object"
+      },
+      "WorkOffTemplateBody": {
+        "description": "Body of ``POST`` and ``PUT /v1/staff/work-off-templates``.",
+        "properties": {
+          "is_default": {
+            "default": false,
+            "title": "Is Default",
+            "type": "boolean"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "WorkOffTemplateBody",
+        "type": "object"
+      },
+      "WorkOffTemplateResponse": {
+        "description": "A reusable work-off text of a teacher.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_default": {
+            "title": "Is Default",
+            "type": "boolean"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "is_default",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "WorkOffTemplateResponse",
         "type": "object"
       },
       "app__interfaces__http__v1__admin_broadcasts__schemas__AudienceBody": {
@@ -47571,6 +48454,264 @@
         "summary": "Post Unblock",
         "tags": [
           "admin-users"
+        ]
+      }
+    },
+    "/v1/admin/work-offs": {
+      "get": {
+        "description": "Return one page of work-offs matching the filters.",
+        "operationId": "list_admin_work_offs_v1_admin_work_offs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subject_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "teacher_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Teacher Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Group Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "student_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Student Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "open",
+                "done",
+                "all"
+              ],
+              "title": "Status",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminWorkOffListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Admin Work Offs",
+        "tags": [
+          "admin-work-offs"
+        ]
+      }
+    },
+    "/v1/admin/work-offs/stats": {
+      "get": {
+        "description": "Return open and done counts per subject, teacher, group or student.",
+        "operationId": "get_work_off_stats_v1_admin_work_offs_stats_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group_by",
+            "required": false,
+            "schema": {
+              "default": "subject",
+              "enum": [
+                "subject",
+                "teacher",
+                "group",
+                "student"
+              ],
+              "title": "Group By",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOffStatsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Work Off Stats",
+        "tags": [
+          "admin-work-offs"
         ]
       }
     },
@@ -62378,6 +63519,58 @@
         ]
       }
     },
+    "/v1/me/work-offs": {
+      "get": {
+        "description": "Return the student's work-offs, newest lesson first.",
+        "operationId": "list_my_work_offs_v1_me_work_offs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "open",
+              "enum": [
+                "open",
+                "all"
+              ],
+              "title": "Status",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MyWorkOffResponse"
+                  },
+                  "title": "Response List My Work Offs V1 Me Work Offs Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List My Work Offs",
+        "tags": [
+          "me-classwork"
+        ]
+      }
+    },
     "/v1/notebooks": {
       "get": {
         "description": "List the student's notebooks, pinned first, then the last opened.",
@@ -65717,6 +66910,60 @@
         ]
       }
     },
+    "/v1/notebooks/{notebook_id}/sources/{source_id}/reread": {
+      "post": {
+        "description": "Extract the source's text again; a source still being read is returned as is.",
+        "operationId": "reread_source_v1_notebooks__notebook_id__sources__source_id__reread_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notebook_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notebook Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "source_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Source Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceItemResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reread Source",
+        "tags": [
+          "notebooks"
+        ]
+      }
+    },
     "/v1/notebooks/{notebook_id}/sources/{source_id}/sync": {
       "post": {
         "description": "Read the source again (a changed file, a chat with new messages).",
@@ -67506,6 +68753,159 @@
         ]
       }
     },
+    "/v1/staff/lessons/{id}/temporary-marks": {
+      "get": {
+        "description": "Return the lesson's temporary marks.",
+        "operationId": "list_lesson_temporary_marks_v1_staff_lessons__id__temporary_marks_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemporaryMarkListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Lesson Temporary Marks",
+        "tags": [
+          "staff-temporary-marks"
+        ]
+      }
+    },
+    "/v1/staff/lessons/{id}/temporary-marks/{student_id}": {
+      "delete": {
+        "description": "Delete the student's temporary mark for the lesson.",
+        "operationId": "delete_temporary_mark_v1_staff_lessons__id__temporary_marks__student_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "student_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Student Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Temporary Mark",
+        "tags": [
+          "staff-temporary-marks"
+        ]
+      },
+      "put": {
+        "description": "Create or replace the student's temporary mark for the lesson.",
+        "operationId": "set_temporary_mark_v1_staff_lessons__id__temporary_marks__student_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "student_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Student Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemporaryMarkBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemporaryMarkResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Temporary Mark",
+        "tags": [
+          "staff-temporary-marks"
+        ]
+      }
+    },
     "/v1/staff/lessons/{id}/topic": {
       "put": {
         "description": "Save the topic.",
@@ -68615,6 +70015,57 @@
         ]
       }
     },
+    "/v1/staff/temporary-marks/pending": {
+      "get": {
+        "description": "The caller's pending marks; Administration may pick a teacher or see all.",
+        "operationId": "list_pending_temporary_marks_v1_staff_temporary_marks_pending_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "teacher_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Teacher Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemporaryMarkListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Pending Temporary Marks",
+        "tags": [
+          "staff-temporary-marks"
+        ]
+      }
+    },
     "/v1/staff/timetable": {
       "get": {
         "description": "Return the lessons the teacher teaches between two dates.",
@@ -68706,6 +70157,250 @@
         "summary": "Get Today",
         "tags": [
           "staff-classwork"
+        ]
+      }
+    },
+    "/v1/staff/work-off-templates": {
+      "get": {
+        "description": "Return the actor's templates, oldest first.",
+        "operationId": "list_work_off_templates_v1_staff_work_off_templates_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WorkOffTemplateResponse"
+                  },
+                  "title": "Response List Work Off Templates V1 Staff Work Off Templates Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Work Off Templates",
+        "tags": [
+          "staff-work-offs"
+        ]
+      },
+      "post": {
+        "description": "Create a template for the actor.",
+        "operationId": "create_work_off_template_v1_staff_work_off_templates_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkOffTemplateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOffTemplateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Work Off Template",
+        "tags": [
+          "staff-work-offs"
+        ]
+      }
+    },
+    "/v1/staff/work-off-templates/{id}": {
+      "delete": {
+        "description": "Delete one of the actor's templates.",
+        "operationId": "delete_work_off_template_v1_staff_work_off_templates__id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Work Off Template",
+        "tags": [
+          "staff-work-offs"
+        ]
+      },
+      "put": {
+        "description": "Save one of the actor's templates.",
+        "operationId": "update_work_off_template_v1_staff_work_off_templates__id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkOffTemplateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOffTemplateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Work Off Template",
+        "tags": [
+          "staff-work-offs"
+        ]
+      }
+    },
+    "/v1/staff/work-offs/{id}": {
+      "delete": {
+        "description": "Delete one work-off of a lesson the actor teaches.",
+        "operationId": "delete_work_off_v1_staff_work_offs__id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Work Off",
+        "tags": [
+          "staff-work-offs"
+        ]
+      },
+      "patch": {
+        "description": "Apply the sent fields; an absent ``due_date`` stays, ``null`` clears it.",
+        "operationId": "update_work_off_v1_staff_work_offs__id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkOffPatchBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkOffResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Work Off",
+        "tags": [
+          "staff-work-offs"
         ]
       }
     }

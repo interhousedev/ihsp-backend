@@ -50,6 +50,8 @@ CRON_JOBS: tuple[CronJob, ...] = (
     *(CronJob("academic.sync_all", cron, {"slot": slot}) for slot, cron in SYNC_SLOTS),
     CronJob("academic.generate_lessons", "0 2 * * *"),
     CronJob("academic.lesson_reminders", EVERY_MINUTE),
+    CronJob("academic.absence_digests", "*/15 12-20 * * 1-5"),
+    CronJob("academic.temporary_mark_reminders", "*/15 12-20 * * 1-5"),
     CronJob("academic.generate_assessments", "30 2,20 * * *"),
     CronJob("academic.assessment_reminders", "30 7 * * *"),
     CronJob("academic.retry_student_syncs", EVERY_5_MINUTES),

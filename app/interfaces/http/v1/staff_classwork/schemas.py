@@ -49,6 +49,22 @@ class RosterItemResponse(BaseModel):
     counted: bool
 
 
+class WorkOffResponse(BaseModel):
+    """A work-off task given to one absent student (WO-3)."""
+
+    id: UUID
+    lesson_id: UUID
+    student_id: UUID
+    template_id: UUID | None
+    text: str
+    status: Literal["assigned", "done"]
+    due_date: dt.date | None
+    done_at: dt.datetime | None
+    assigned_by: UUID
+    created_at: dt.datetime
+    updated_at: dt.datetime
+
+
 class AttendanceSheetResponse(BaseModel):
     """``AttendanceSheet``."""
 
@@ -59,6 +75,7 @@ class AttendanceSheetResponse(BaseModel):
     roster: list[RosterItemResponse]
     submitted_at: dt.datetime | None
     submitted_by: PersonRefResponse | None
+    work_offs: list[WorkOffResponse] = Field(default_factory=list)
 
 
 class StaffHomeworkResponse(BaseModel):
@@ -185,6 +202,20 @@ class SetTopicBody(BaseModel):
     topic: str
 
 
+class CommonWorkOffBody(BaseModel):
+    """One work-off choice: a template, a text or both, and a due date."""
+
+    template_id: UUID | None = None
+    text: str | None = None
+    due_date: dt.date | None = None
+
+
+class WorkOffChoiceBody(CommonWorkOffBody):
+    """A work-off choice for one absent student."""
+
+    student_id: UUID
+
+
 class SubmitAttendanceBody(BaseModel):
     """Body of ``PUT /v1/staff/lessons/{id}/attendance``."""
 
@@ -192,6 +223,9 @@ class SubmitAttendanceBody(BaseModel):
     late: list[UUID] = Field(default_factory=list)
     present_unassigned: list[UUID] = Field(default_factory=list)
     base_version: int
+    work_off_mode: Literal["per_student", "none", "common"] = "per_student"
+    work_offs: list[WorkOffChoiceBody] = Field(default_factory=list)
+    common_work_off: CommonWorkOffBody | None = None
 
 
 class ExcuseBody(BaseModel):

@@ -190,10 +190,12 @@ def build_marks(
             uow_factory=uow_factory, identity=identity
         ),
         get_semester_grades=GetSemesterGrades(
-            uow_factory=uow_factory, identity=identity
+            uow_factory=uow_factory, identity=identity, clock=deps.clock
         ),
         get_day_grades=GetDayGrades(uow_factory=uow_factory, identity=identity),
-        get_record_book=GetRecordBook(uow_factory=uow_factory, identity=identity),
+        get_record_book=GetRecordBook(
+            uow_factory=uow_factory, identity=identity, clock=deps.clock
+        ),
         get_sync_failures=GetSyncFailures(uow_factory=uow_factory),
         get_group_progress=GetGroupProgress(
             uow_factory=uow_factory, identity=identity, clock=deps.clock

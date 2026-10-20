@@ -39,6 +39,7 @@ class GetAttendanceSheet:
             lesson = await require_lesson(uow, lesson_id)
             ensure_lesson_staff(lesson, actor)
             roster = await self.roster_loader.load(uow, lesson)
+            work_offs = await uow.work_offs.for_lesson(lesson_id)
             return await self.sheets.build(
-                lesson, roster, actor, local_today(self.clock)
+                lesson, roster, actor, local_today(self.clock), work_offs=work_offs
             )

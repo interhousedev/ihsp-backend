@@ -1,5 +1,8 @@
 """The classwork unit of work over one SQLAlchemy session."""
 
+from app.modules.academic.infrastructure.classwork.absence_digest_reader import (
+    SqlAbsenceDigestReader,
+)
 from app.modules.academic.infrastructure.classwork.attendance_reports import (
     SqlAttendanceReports,
 )
@@ -16,8 +19,18 @@ from app.modules.academic.infrastructure.classwork.results_reader import (
 from app.modules.academic.infrastructure.classwork.student_repository import (
     SqlStudentRepository,
 )
+from app.modules.academic.infrastructure.classwork.temporary_mark_repository import (
+    SqlTemporaryMarkRepository,
+)
 from app.modules.academic.infrastructure.classwork.todo_repository import (
     SqlTodoRepository,
+)
+from app.modules.academic.infrastructure.classwork.work_off_reader import (
+    SqlWorkOffReader,
+)
+from app.modules.academic.infrastructure.classwork.work_off_repository import (
+    SqlWorkOffRepository,
+    SqlWorkOffTemplateRepository,
 )
 from app.shared.db.uow import SqlUnitOfWork
 
@@ -32,6 +45,11 @@ class SqlClassworkUnitOfWork(SqlUnitOfWork):
     reports: SqlAttendanceReports
     journal: SqlJournalReader
     results: SqlResultsReader
+    work_off_templates: SqlWorkOffTemplateRepository
+    work_offs: SqlWorkOffRepository
+    work_off_reader: SqlWorkOffReader
+    digest: SqlAbsenceDigestReader
+    temporary_marks: SqlTemporaryMarkRepository
 
     def _init_repos(self) -> None:
         """Create the repositories bound to the open session."""
@@ -42,3 +60,8 @@ class SqlClassworkUnitOfWork(SqlUnitOfWork):
         self.reports = SqlAttendanceReports(self.session)
         self.journal = SqlJournalReader(self.session)
         self.results = SqlResultsReader(self.session)
+        self.work_off_templates = SqlWorkOffTemplateRepository(self.session)
+        self.work_offs = SqlWorkOffRepository(self.session)
+        self.work_off_reader = SqlWorkOffReader(self.session)
+        self.digest = SqlAbsenceDigestReader(self.session)
+        self.temporary_marks = SqlTemporaryMarkRepository(self.session)

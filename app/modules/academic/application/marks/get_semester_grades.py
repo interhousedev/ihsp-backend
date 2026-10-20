@@ -3,6 +3,9 @@
 from typing import Any
 
 from app.modules.academic.application.marks.ports.unit_of_work import MarksUowFactory
+from app.modules.academic.application.marks.temporary_gpa import (
+    for_student,
+)
 from app.modules.academic.application.marks.view_context import (
     build_context,
     caller_locale,
@@ -11,6 +14,7 @@ from app.modules.academic.application.marks.view_context import (
 from app.modules.academic.domain.marks.errors import StudentNotFoundError
 from app.modules.academic.domain.marks.semesters import resolve_semester
 from app.shared.actor import Actor
+from app.shared.clock import Clock
 from app.shared.contracts.identity import IdentityDirectory
 
 
@@ -18,9 +22,14 @@ class GetSemesterGrades:
     """Builds `SemesterGrades` for a semester (default: the current one)."""
 
     def __init__(
-        self, *, uow_factory: MarksUowFactory, identity: IdentityDirectory
+        self,
+        *,
+        uow_factory: MarksUowFactory,
+        identity: IdentityDirectory,
+        clock: Clock,
     ) -> None:
         """Store collaborators."""
+        self._clock = clock
         self._uow_factory = uow_factory
         self._identity = identity
 
@@ -41,6 +50,7 @@ class GetSemesterGrades:
             subject_ids = set(rows)
             if sem == ctx.current_semester:
                 subject_ids |= set(ctx.curriculum_subject_ids)
+            temporary = await for_student(uow.reader, ctx, sem, self._clock)
             view = await build_context(
                 uow.reader, self._identity, locale=locale, subject_ids=subject_ids
             )
@@ -54,6 +64,7 @@ class GetSemesterGrades:
                     "midterm_avg": None if row is None else num(row.midterm_avg),
                     "final_avg": None if row is None else num(row.final_avg),
                     "semester_mark": None if row is None else num(row.value),
+                    "gpa_with_temporary": temporary.get(subject_id),
                     "emis_rating": None if row is None else row.emis_rating,
                     "marks_count": 0 if row is None else row.marks_count,
                 }

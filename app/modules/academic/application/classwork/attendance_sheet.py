@@ -1,7 +1,7 @@
 """Builds the ``AttendanceSheet`` JSON of a lesson (STF-8)."""
 
 import datetime as dt
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from typing import Any
 from uuid import UUID
 
@@ -9,6 +9,7 @@ from app.modules.academic.application.classwork.people import PeopleDirectory
 from app.modules.academic.domain.classwork.attendance_rules import attendance_editable
 from app.modules.academic.domain.classwork.lesson import Lesson
 from app.modules.academic.domain.classwork.roster import Roster
+from app.modules.academic.domain.classwork.work_off import WorkOff
 from app.shared.actor import Actor
 
 
@@ -27,8 +28,12 @@ class AttendanceSheetBuilder:
         today: dt.date,
         *,
         visible_groups: Collection[UUID] | None = None,
+        work_offs: Sequence[WorkOff] = (),
     ) -> dict[str, Any]:
-        """Return the sheet; ``visible_groups`` limits it to a curator's groups."""
+        """Return the sheet; ``visible_groups`` limits it to a curator's groups.
+
+        ``work_offs`` are the lesson's tasks; only visible students' ones are shown.
+        """
         students = [
             student
             for student in roster.entries
@@ -75,4 +80,9 @@ class AttendanceSheetBuilder:
                 lesson.attendance_at.isoformat() if lesson.attendance_at else None
             ),
             "submitted_by": None if author is None else author.to_json(),
+            "work_offs": [
+                w.to_json()
+                for w in work_offs
+                if any(w.student_id == s.user_id for s in students)
+            ],
         }

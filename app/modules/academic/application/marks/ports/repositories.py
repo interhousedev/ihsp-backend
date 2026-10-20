@@ -204,6 +204,21 @@ class MarksReader(Protocol):
         """Return non-removed marks, newest date first."""
         ...
 
+    async def temporary_values(
+        self,
+        student_ids: Collection[UUID],
+        start: dt.date | None,
+        end: dt.date | None,
+    ) -> dict[tuple[UUID, UUID], list[int]]:
+        """Return temporary mark values per (student, subject) dated in a range."""
+        ...
+
+    async def mark_values(
+        self, student_ids: Collection[UUID], semester: int
+    ) -> dict[tuple[UUID, UUID], dict[str, list[int]]]:
+        """Return non-removed mark values per (student, subject) grouped by type."""
+        ...
+
     async def new_marks(
         self, student_id: UUID, since: dt.datetime | None, limit: int
     ) -> list[MarkRow]:

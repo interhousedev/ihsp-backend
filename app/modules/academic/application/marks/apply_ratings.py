@@ -52,6 +52,7 @@ class ApplyRatings:
         result = ApplyResult()
         touched: set[int] = set()
         for item in fetched:
+            await self._reconcile(uow, state, item)
             change = await self._apply_subject(uow, state, item, locale, result)
             if change is not None:
                 result.subject_changes.append(change)
@@ -59,6 +60,21 @@ class ApplyRatings:
         for semester in sorted(touched):
             result.gpa_changes.append(await self._refresh_gpa(uow, state, semester))
         return result
+
+    @staticmethod
+    async def _reconcile(
+        uow: MarksUnitOfWork, state: StudentSyncState, item: FetchedRatings
+    ) -> None:
+        """TMP-2: drop temporary marks of the dates EMIS now has a mark on.
+
+        Runs on every fetch (not only on changed responses), so a temporary mark
+        added after its EMIS mark was synced still goes on the next sync.
+        """
+        await uow.temporary_marks.delete_in_emis(
+            state.user_id,
+            item.subject.subject_id,
+            {mark.date for mark in item.ratings.marks},
+        )
 
     async def _apply_subject(
         self,

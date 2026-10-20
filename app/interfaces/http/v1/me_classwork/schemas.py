@@ -199,3 +199,19 @@ class HomeworkNoteBody(BaseModel):
     """Body of ``PUT /v1/me/homework/{lesson_id}/note``."""
 
     note: str | None
+
+
+class MyWorkOffResponse(BaseModel):
+    """A work-off task of the student (WO-6)."""
+
+    id: UUID
+    lesson_id: UUID
+    date: dt.date
+    period: int
+    subject_name: str
+    teacher_name: str | None
+    text: str
+    status: Literal["assigned", "done"]
+    due_date: dt.date | None
+    done_at: dt.datetime | None
+    created_at: dt.datetime

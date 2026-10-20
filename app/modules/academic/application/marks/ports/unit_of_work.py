@@ -13,6 +13,9 @@ from app.modules.academic.application.marks.ports.repositories import (
     StudentSyncRepository,
     SyncRunsRepository,
 )
+from app.modules.academic.application.marks.ports.temporary_marks import (
+    TemporaryMarkReconciler,
+)
 from app.shared.notifications import AuditDraft, NotificationDraft
 
 
@@ -47,6 +50,11 @@ class MarksUnitOfWork(Protocol):
     @property
     def emis_attendance(self) -> EmisAttendanceRepository:
         """Attendance the sync read from EMIS."""
+        ...
+
+    @property
+    def temporary_marks(self) -> TemporaryMarkReconciler:
+        """Temporary marks removed once EMIS has them."""
         ...
 
     @property

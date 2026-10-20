@@ -41,6 +41,9 @@ class NotificationType(StrEnum):
     LIBRARY_SUGGESTION_APPROVED = "library_suggestion_approved"
     LIBRARY_SUGGESTION_DECLINED = "library_suggestion_declined"
     CURATOR_EXAM_MARK = "curator_exam_mark"
+    LESSON_ABSENCE = "lesson_absence"
+    CURATOR_ABSENCES = "curator_absences"
+    TEACHER_TEMPORARY_MARKS = "teacher_temporary_marks"
 
 
 @dataclass(frozen=True, slots=True)

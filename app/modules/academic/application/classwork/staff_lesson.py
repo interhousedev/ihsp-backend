@@ -65,8 +65,14 @@ class StaffLesson:
                 if not visible:
                     raise NotLessonTeacherError(params={"lesson_id": str(lesson_id)})
             roster = await self.roster_loader.load(uow, lesson)
+            work_offs = await uow.work_offs.for_lesson(lesson_id)
         sheet = await self.sheets.build(
-            lesson, roster, actor, local_today(self.clock), visible_groups=visible
+            lesson,
+            roster,
+            actor,
+            local_today(self.clock),
+            visible_groups=visible,
+            work_offs=work_offs,
         )
         refs = await self.links.lesson_resources(lesson_id, include_hidden=True)
         return {

@@ -143,4 +143,5 @@ class GetTeachingStudent:
                 summary.lessons_with_attendance if summary else None
             ),
             absent_lessons=absent,
+            gpa_with_temporary=summary.gpa_with_temporary if summary else None,
         )

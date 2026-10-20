@@ -1,6 +1,6 @@
 """Use case: submit attendance from the bot, using the draft if there is one."""
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 from uuid import UUID
 
@@ -23,6 +23,11 @@ from app.modules.academic.domain.classwork.errors import (
     AttendanceConflictError,
     LessonReassignedError,
     NotLessonTeacherError,
+)
+from app.modules.academic.domain.classwork.work_off import (
+    WorkOffChoice,
+    WorkOffEntry,
+    WorkOffMode,
 )
 from app.shared.actor import Actor
 
@@ -54,6 +59,9 @@ class SubmitFromDraft:
         from_draft: bool,
         base_version: int,
         source: Source,
+        work_off_mode: WorkOffMode = "per_student",
+        work_offs: Sequence[WorkOffEntry | Mapping[str, Any]] = (),
+        common_work_off: WorkOffChoice | Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Submit and return the prompt state; a stale draft is dropped on conflict.
 
@@ -71,6 +79,9 @@ class SubmitFromDraft:
                 absent=absent_ids,
                 base_version=version,
                 source=source,
+                work_off_mode=work_off_mode,
+                work_offs=work_offs,
+                common_work_off=common_work_off,
             )
         except AttendanceConflictError:
             await self.drafts.delete(lesson_id)

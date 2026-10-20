@@ -24,5 +24,16 @@
   "academic-csv-first-name": "Ism",
   "academic-csv-semester-mark": "Semestr bahosi",
   "academic-csv-absent": "Q",
-  "academic-csv-excused-short": "S"
+  "academic-csv-excused-short": "S",
+  "academic-work-off-template-not-found": "Qayta topshirish shabloni topilmadi.",
+  "academic-work-off-not-found": "Qayta topshirish vazifasi topilmadi.",
+  "academic-work-off-template-limit": "Qayta topshirish shablonlari {max} tadan oshmasligi kerak.",
+  "academic-work-off-text-invalid": "Qayta topshirish matni 1 dan {max} gacha belgidan iborat bo'lishi kerak.",
+  "academic-work-off-text-required": "Shablonni tanlang yoki qayta topshirish matnini yozing.",
+  "academic-work-off-not-absent": "Qayta topshirish vazifasi faqat darsga kelmagan talabaga beriladi.",
+  "academic-work-off-status-invalid": "Qayta topshirish holati: berilgan yoki bajarilgan.",
+  "academic-temporary-mark-value-invalid": "Vaqtinchalik jurnaldagi baho {min} dan {max} gacha butun son bo'lishi kerak.",
+  "academic-temporary-mark-comment-invalid": "Izoh {max} belgidan oshmasligi kerak.",
+  "academic-temporary-mark-not-found": "Vaqtinchalik jurnaldagi baho topilmadi.",
+  "academic-temporary-mark-student-not-in-lesson": "Bu o'quvchi dars ro'yxatida yo'q."
 }

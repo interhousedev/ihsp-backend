@@ -43,6 +43,21 @@ def semester_mark(
     return _round(sum(means) / Decimal(len(means)))
 
 
+def semester_mark_with_temporary(
+    lesson: Sequence[int],
+    midterm: Sequence[int],
+    final: Sequence[int],
+    temporary: Sequence[int],
+) -> Decimal | None:
+    """The semester mark as if the temporary lesson marks were in EMIS already.
+
+    None when there are no temporary marks: the plain `semester_mark` stands then.
+    """
+    if not temporary:
+        return None
+    return semester_mark([*lesson, *temporary], midterm, final)
+
+
 def gpa(all_marks: Sequence[int]) -> Decimal | None:
     """ACA-16: average of all marks of the semester (all subjects, all types)."""
     return average(all_marks)

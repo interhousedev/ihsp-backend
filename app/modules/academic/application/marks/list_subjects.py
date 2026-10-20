@@ -5,6 +5,9 @@ from uuid import UUID
 
 from app.modules.academic.application.marks.ports.unit_of_work import MarksUowFactory
 from app.modules.academic.application.marks.semester_range import semester_range
+from app.modules.academic.application.marks.temporary_gpa import (
+    with_temporary,
+)
 from app.modules.academic.application.marks.view_context import (
     ViewContext,
     build_context,
@@ -61,6 +64,12 @@ class ListSubjects:
                 if rng is None
                 else await reader.attendance_counts(actor.user_id, *rng, semester=sem)
             )
+            temporary = {
+                subject: value
+                for (_sid, subject), value in (
+                    await with_temporary(reader, [actor.user_id], sem, rng)
+                ).items()
+            }
             teachers = (
                 {} if rng is None else await reader.teacher_ids(ctx, subject_ids, *rng)
             )
@@ -79,7 +88,9 @@ class ListSubjects:
                 with_photos=True,
             )
         cards = [
-            _card(view, sid, rows.get(sid), counts, teachers, upcoming)
+            _card(
+                view, sid, rows.get(sid), counts, teachers, upcoming, temporary.get(sid)
+            )
             for sid in subject_ids
         ]
         return sorted(cards, key=lambda c: str(c["subject"]["name"]).casefold())
@@ -92,6 +103,7 @@ def _card(
     counts: dict[UUID, AttendanceCount],
     teachers: dict[UUID, list[UUID]],
     upcoming: dict[UUID, LessonRow],
+    with_temp: float | None,
 ) -> dict[str, Any]:
     people = (view.person(t, photo=True) for t in teachers.get(subject_id, []))
     count = counts.get(subject_id)
@@ -100,6 +112,7 @@ def _card(
         "subject": view.subject_ref(subject_id),
         "teachers": [p for p in people if p is not None],
         "semester_mark": None if row is None else num(row.value),
+        "gpa_with_temporary": with_temp,
         "emis_rating": None if row is None else row.emis_rating,
         "absences": 0 if count is None else count.absences,
         "lates": 0 if count is None else count.lates,

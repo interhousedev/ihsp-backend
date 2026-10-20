@@ -108,6 +108,20 @@ class Classwork:
         """Return the absences."""
         return self.absence_items
 
+    async def work_off_templates(self, teacher_id: UUID) -> list[dict[str, Any]]:
+        """Return no templates."""
+        return []
+
+    async def my_work_offs(self, student_id: UUID, locale: str) -> list[dict[str, Any]]:
+        """Return no work-offs."""
+        return []
+
+    async def teacher_open_work_offs(
+        self, teacher_id: UUID, locale: str
+    ) -> list[dict[str, Any]]:
+        """Return no work-offs."""
+        return []
+
 
 def lesson(
     day: dt.date, *keys: str, subject: UUID = PHYSICS, teacher: UUID | None = None

@@ -4,6 +4,7 @@ from typing import Any
 from uuid import UUID
 
 from app.modules.academic.application.marks.ports.unit_of_work import MarksUowFactory
+from app.modules.academic.application.marks.temporary_gpa import with_temporary
 from app.modules.academic.application.marks.view_context import (
     build_context,
     caller_locale,
@@ -33,11 +34,15 @@ _NO_COUNT = AttendanceCount(absences=0, with_attendance=0)
 
 
 def _cell(
-    subject_id: UUID, row: ResultRow | None, count: AttendanceCount
+    subject_id: UUID,
+    row: ResultRow | None,
+    count: AttendanceCount,
+    with_temp: float | None = None,
 ) -> dict[str, Any]:
     return {
         "subject_id": subject_id,
         "semester_mark": None if row is None else num(row.value),
+        "gpa_with_temporary": with_temp,
         "midterm_avg": None if row is None else num(row.midterm_avg),
         "final_avg": None if row is None else num(row.final_avg),
         "lesson_avg": None if row is None else num(row.lesson_avg),
@@ -114,6 +119,16 @@ class GetGroupProgress:
                     counts[sid] = await reader.attendance_counts(
                         sid, start, end, semester=sem
                     )
+            temporary = await with_temporary(
+                reader,
+                group.student_ids,
+                sem,
+                (
+                    window
+                    if window is not None
+                    else ((None, None) if sem == group.current_semester else None)
+                ),
+            )
             subject_ids = {
                 r.subject_id
                 for rows in results.values()
@@ -157,6 +172,7 @@ class GetGroupProgress:
                             ref["id"],
                             rows.get(ref["id"]),
                             per.get(ref["id"], _NO_COUNT),
+                            temporary.get((sid, ref["id"])),
                         )
                         for ref in subjects
                     ],

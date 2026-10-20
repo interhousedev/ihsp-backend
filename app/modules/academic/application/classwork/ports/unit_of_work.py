@@ -3,6 +3,9 @@
 from types import TracebackType
 from typing import Protocol, Self
 
+from app.modules.academic.application.classwork.ports.absence_digest_reader import (
+    AbsenceDigestReader,
+)
 from app.modules.academic.application.classwork.ports.attendance_reports import (
     AttendanceReports,
 )
@@ -19,8 +22,18 @@ from app.modules.academic.application.classwork.ports.results_reader import (
 from app.modules.academic.application.classwork.ports.student_repository import (
     StudentRepository,
 )
+from app.modules.academic.application.classwork.ports.temporary_mark_repository import (
+    TemporaryMarkRepository,
+)
 from app.modules.academic.application.classwork.ports.todo_repository import (
     TodoRepository,
+)
+from app.modules.academic.application.classwork.ports.work_off_reader import (
+    WorkOffReader,
+)
+from app.modules.academic.application.classwork.ports.work_off_repository import (
+    WorkOffRepository,
+    WorkOffTemplateRepository,
 )
 from app.shared.db.uow import AfterCommit
 from app.shared.notifications import AuditDraft, NotificationDraft
@@ -76,6 +89,25 @@ class AttendanceUnitOfWork(LessonUnitOfWork, Protocol):
         """Students of the groups."""
         ...
 
+    @property
+    def work_off_templates(self) -> WorkOffTemplateRepository:
+        """The teacher's work-off templates."""
+        ...
+
+    @property
+    def work_offs(self) -> WorkOffRepository:
+        """Work-off tasks of absent students."""
+        ...
+
+
+class TemporaryMarkUnitOfWork(AttendanceUnitOfWork, Protocol):
+    """The temporary gradebook needs the lesson, its roster and the marks."""
+
+    @property
+    def temporary_marks(self) -> TemporaryMarkRepository:
+        """Temporary marks (TMP-1)."""
+        ...
+
 
 class ReaderUnitOfWork(UnitOfWork, Protocol):
     """Lesson read models (reminders)."""
@@ -100,7 +132,7 @@ class TodoUnitOfWork(ReaderUnitOfWork, Protocol):
         ...
 
 
-class ViewUnitOfWork(AttendanceUnitOfWork, TodoUnitOfWork, Protocol):
+class ViewUnitOfWork(TemporaryMarkUnitOfWork, TodoUnitOfWork, Protocol):
     """Everything the read use cases need (the SQL unit of work has it all)."""
 
     @property
@@ -116,4 +148,14 @@ class ViewUnitOfWork(AttendanceUnitOfWork, TodoUnitOfWork, Protocol):
     @property
     def results(self) -> ResultsReader:
         """Marks, results and terms."""
+        ...
+
+    @property
+    def work_off_reader(self) -> WorkOffReader:
+        """Work-off lists and statistics."""
+        ...
+
+    @property
+    def digest(self) -> AbsenceDigestReader:
+        """Reads for the curator absence digest."""
         ...

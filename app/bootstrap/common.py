@@ -76,6 +76,9 @@ from app.modules.links.wiring import build as build_links
 from app.modules.lms.wiring import build as build_lms
 from app.modules.notebooks.application.export.render import DocumentExporter
 from app.modules.notebooks.infrastructure.web_fetcher import HttpWebFetcher
+from app.modules.notebooks.infrastructure.youtube_transcript import (
+    YouTubeTranscriptProvider,
+)
 from app.modules.notebooks.wiring import build as build_notebooks
 from app.modules.notebooks.wiring_studio import LmsApplyPorts
 from app.modules.notify.infrastructure.outbox_writer import write_notifications
@@ -543,6 +546,7 @@ class _Assembler:
             knowledge=self.knowledge_lookup,
             knowledge_gaps=self.knowledge_gaps,
             fetcher=HttpWebFetcher(),
+            transcripts=YouTubeTranscriptProvider(),
             classwork=c.academic.classwork.queries,
             terms=NotebookTermsAdapter(c.academic.schedule.current_term),
             web_search=c.ai.web_search,

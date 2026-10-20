@@ -107,3 +107,26 @@ def test_drop_amount_only_counts_falls() -> None:
     assert drop_amount(Decimal("4.00"), Decimal("4.50")) == 0
     assert drop_amount(None, Decimal("4.00")) == 0
     assert drop_amount(Decimal("4.00"), None) == 0
+
+
+@pytest.mark.parametrize(
+    ("lesson", "midterm", "final", "temporary", "expected"),
+    [
+        ([5, 4], [], [], [], None),
+        ([5, 4], [], [], [3], "4.00"),
+        ([], [], [], [3, 4], "3.50"),
+        ([5, 4, 3], [5], [], [2, 2], "4.10"),
+        ([5, 4], [3], [5], [3], "4.00"),
+    ],
+)
+def test_semester_mark_with_temporary(
+    lesson: list[int],
+    midterm: list[int],
+    final: list[int],
+    temporary: list[int],
+    expected: str | None,
+) -> None:
+    """Temporary marks join the lesson mean; None without any."""
+    result = grading.semester_mark_with_temporary(lesson, midterm, final, temporary)
+
+    assert result == (None if expected is None else Decimal(expected))

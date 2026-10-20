@@ -7,6 +7,9 @@ from uuid import UUID
 from app.modules.academic.application.classwork.resource_items import file_item
 from app.modules.academic.application.marks.ports.unit_of_work import MarksUowFactory
 from app.modules.academic.application.marks.semester_range import semester_range
+from app.modules.academic.application.marks.temporary_gpa import (
+    with_temporary,
+)
 from app.modules.academic.application.marks.view_context import (
     ViewContext,
     build_context,
@@ -82,6 +85,12 @@ class GetSubjectDetail:
             marks = await reader.marks(
                 actor.user_id, semester=sem, subject_id=subject_id
             )
+            temporary = {
+                subject: value
+                for (_sid, subject), value in (
+                    await with_temporary(reader, [actor.user_id], sem, rng)
+                ).items()
+            }
             counts = (
                 {}
                 if rng is None
@@ -119,6 +128,7 @@ class GetSubjectDetail:
             resources,
             counts.get(subject_id),
             emis.get(subject_id),
+            temporary.get(subject_id),
         )
 
 
@@ -133,6 +143,7 @@ def _detail(
     resources: dict[UUID, list[ResourceRef]],
     count: AttendanceCount | None,
     emis: EmisAttendanceReport | None = None,
+    with_temp: float | None = None,
 ) -> dict[str, Any]:
     by_lesson: dict[UUID, list[dict[str, Any]]] = {}
     for mark in marks:
@@ -153,6 +164,7 @@ def _detail(
             "final": None if row is None else num(row.final_avg),
         },
         "semester_mark": None if row is None else num(row.value),
+        "gpa_with_temporary": with_temp,
         "emis_rating": None if row is None else row.emis_rating,
         "absence_rate": _rate(count),
         "attendance_source": "platform" if count is None else count.source,

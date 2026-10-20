@@ -8,6 +8,7 @@ from app.modules.academic.infrastructure.marks.repositories import (
     results_repository,
     student_sync_repository,
     sync_runs_repository,
+    temporary_mark_reconciler,
 )
 from app.shared.db.uow import SqlUnitOfWork
 
@@ -21,6 +22,7 @@ class SqlMarksUnitOfWork(SqlUnitOfWork):
     lessons: lesson_matcher.SqlLessonMatcher
     sync_runs: sync_runs_repository.SqlSyncRunsRepository
     reader: marks_reader.SqlMarksReader
+    temporary_marks: temporary_mark_reconciler.SqlTemporaryMarkReconciler
     emis_attendance: emis_attendance_repository.SqlEmisAttendanceRepository
 
     def _init_repos(self) -> None:
@@ -31,6 +33,9 @@ class SqlMarksUnitOfWork(SqlUnitOfWork):
         self.lessons = lesson_matcher.SqlLessonMatcher(self.session)
         self.sync_runs = sync_runs_repository.SqlSyncRunsRepository(self.session)
         self.reader = marks_reader.SqlMarksReader(self.session)
+        self.temporary_marks = temporary_mark_reconciler.SqlTemporaryMarkReconciler(
+            self.session
+        )
         self.emis_attendance = emis_attendance_repository.SqlEmisAttendanceRepository(
             self.session
         )

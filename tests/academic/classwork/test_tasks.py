@@ -4,6 +4,7 @@ import datetime as dt
 from types import SimpleNamespace
 
 from app.interfaces.jobs.broker import broker
+from app.interfaces.jobs.tasks.academic.absence_digests import absence_digests
 from app.interfaces.jobs.tasks.academic.lesson_reminders import lesson_reminders
 from app.interfaces.jobs.tasks.academic.recompute_due_dates import (
     recompute_due_dates,
@@ -17,6 +18,7 @@ import pytest
 def test_tasks_are_registered_under_their_contract_names() -> None:
     """§ 3.11: task names are "<module>.<task>"."""
     assert broker.find_task("academic.lesson_reminders") is not None
+    assert broker.find_task("academic.absence_digests") is not None
     assert broker.find_task("academic.recompute_due_dates") is not None
 
 
@@ -54,3 +56,23 @@ async def test_recompute_task_takes_string_ids_from_the_json_payload(env: Env) -
     assert (await lesson_row(env.maker, given)).homework_due_date == DAY + dt.timedelta(
         days=2
     )
+
+
+@pytest.mark.usefixtures("worker_container")
+async def test_absence_digests_task_queues_the_curator_digest(env: Env) -> None:
+    """WO-4: the job runs the use case; the curator gets one digest."""
+    w = env.world
+    lesson_id = await add_lesson(env.maker, w, day=DAY)
+    await env.services.submit_attendance.execute(
+        lesson_id=lesson_id,
+        actor=env.teacher,
+        absent=[w.aziz.id],
+        base_version=0,
+        source="staff",
+        work_off_mode="common",
+        common_work_off={"text": "Redo"},
+    )
+
+    result = await absence_digests()
+
+    assert result == {"queued": 1}

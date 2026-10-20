@@ -76,6 +76,7 @@ class SubjectSummary:
     emis_rating: int | None
     absences: int
     lessons_with_attendance: int
+    gpa_with_temporary: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -221,6 +222,27 @@ class ClassworkQueries(Protocol):
         """Return finished lessons without submitted attendance."""
         ...
 
+    async def work_off_templates(self, teacher_id: UUID) -> list[dict[str, Any]]:
+        """Return the teacher's templates as {"id", "text", "is_default"}."""
+        ...
+
+    async def my_work_offs(self, student_id: UUID, locale: str) -> list[dict[str, Any]]:
+        """Return the student's open work-offs.
+
+        Keys: id, lesson_id, date, period, subject_name, teacher_name, text,
+        status, due_date, done_at, created_at.
+        """
+        ...
+
+    async def teacher_open_work_offs(
+        self, teacher_id: UUID, locale: str
+    ) -> list[dict[str, Any]]:
+        """Return the teacher's open work-offs.
+
+        Keys: id, student_name, group_name, lesson_id, date, subject_name, text.
+        """
+        ...
+
 
 class MarksQueries(Protocol):
     """Read access to marks and results (provider: B5)."""
@@ -289,8 +311,14 @@ class ClassworkCommands(Protocol):
         from_draft: bool,
         base_version: int,
         source: Literal["bot", "staff", "admin"],
+        work_off_mode: str = "per_student",
+        common_work_off: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Save attendance and return the prompt state."""
+        """Save attendance and return the prompt state.
+
+        ``work_off_mode`` is per_student, none or common; ``common_work_off`` is
+        {"template_id", "text", "due_date"} and gives every absent student a task.
+        """
         ...
 
     async def set_homework(
@@ -311,6 +339,12 @@ class ClassworkCommands(Protocol):
         self, lesson_id: UUID, actor: Actor, done: bool
     ) -> None:
         """Mark the student's homework as done or not done."""
+        ...
+
+    async def set_work_off_status(
+        self, work_off_id: UUID, actor: Actor, status: str
+    ) -> dict[str, Any]:
+        """Mark a work-off assigned or done; return its WorkOffResponse dict."""
         ...
 
 

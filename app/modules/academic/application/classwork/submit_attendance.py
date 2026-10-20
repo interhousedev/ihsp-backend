@@ -1,9 +1,10 @@
 """Use case: submit exactly who was absent from a lesson (ACA-11, UF-STF-06)."""
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal
 from uuid import UUID
 
+from app.modules.academic.application.classwork.apply_work_offs import WorkOffApplier
 from app.modules.academic.application.classwork.attendance_sheet import (
     AttendanceSheetBuilder,
 )
@@ -20,6 +21,13 @@ from app.modules.academic.domain.classwork.attendance_rules import (
     ensure_attendance_editable,
 )
 from app.modules.academic.domain.classwork.lesson import Lesson
+from app.modules.academic.domain.classwork.work_off import (
+    WorkOffChoice,
+    WorkOffEntry,
+    WorkOffMode,
+    as_choice,
+    as_entry,
+)
 from app.shared.actor import Actor, Role
 from app.shared.clock import Clock, local_today
 
@@ -46,12 +54,14 @@ class SubmitAttendance:
         clock: Clock,
         roster_loader: RosterLoader,
         sheets: AttendanceSheetBuilder,
+        work_offs: WorkOffApplier,
     ) -> None:
         """Initialize the use case."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.roster_loader = roster_loader
         self.sheets = sheets
+        self.work_offs = work_offs
 
     async def execute(
         self,
@@ -63,11 +73,17 @@ class SubmitAttendance:
         present_unassigned: Sequence[UUID] = (),
         base_version: int,
         source: Source,
+        work_off_mode: WorkOffMode = "per_student",
+        work_offs: Sequence[WorkOffEntry | Mapping[str, Any]] = (),
+        common_work_off: WorkOffChoice | Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Save the list and return the new ``AttendanceSheet``.
+        """Save the list and the work-offs (WO-3) and return the new sheet.
 
         Raises:
             AttendanceConflictError: the version moved on; params hold the sheet.
+            WorkOffNotAbsentError: a work-off entry names a student who is present.
+            WorkOffTextRequiredError: common mode without a template or text.
+            WorkOffTemplateNotFoundError: a template is unknown or not the actor's.
         """
         today = local_today(self.clock)
         async with self.uow_factory() as uow:
@@ -92,6 +108,46 @@ class SubmitAttendance:
                 fresh = await require_lesson(uow, lesson_id)
                 sheet = await self.sheets.build(fresh, roster, actor, today)
                 raise conflict_with(sheet)
+            await self.work_offs_after_save(
+                uow,
+                lesson,
+                actor,
+                absent,
+                version,
+                work_off_mode,
+                [as_entry(w) for w in work_offs],
+                as_choice(common_work_off),
+            )
             await uow.commit()
             fresh = await require_lesson(uow, lesson_id)
-            return await self.sheets.build(fresh, roster, actor, today)
+            return await self.sheets.build(
+                fresh,
+                roster,
+                actor,
+                today,
+                work_offs=await uow.work_offs.for_lesson(lesson_id),
+            )
+
+    async def work_offs_after_save(
+        self,
+        uow: AttendanceUnitOfWork,
+        lesson: Lesson,
+        actor: Actor,
+        absent: Sequence[UUID],
+        version: int,
+        mode: WorkOffMode,
+        entries: Sequence[WorkOffEntry],
+        common: WorkOffChoice | None,
+    ) -> None:
+        """Write work-offs and notices in the same transaction as the list."""
+        await self.work_offs.after_submit(
+            uow,
+            lesson,
+            actor_id=actor.user_id,
+            absent=absent,
+            version=version,
+            mode=mode,
+            entries=entries,
+            common=common,
+            now=self.clock.now(),
+        )

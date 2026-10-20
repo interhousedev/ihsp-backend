@@ -115,6 +115,7 @@ class GradeRowResponse(BaseModel):
     midterm_avg: float | None
     final_avg: float | None
     semester_mark: float | None
+    gpa_with_temporary: float | None = None
     emis_rating: int | None
     marks_count: int
 

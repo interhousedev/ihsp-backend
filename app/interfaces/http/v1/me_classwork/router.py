@@ -4,6 +4,9 @@ from app.interfaces.http.v1.me_classwork.handlers.get_attendance import get_atte
 from app.interfaces.http.v1.me_classwork.handlers.get_lesson import get_lesson
 from app.interfaces.http.v1.me_classwork.handlers.get_today import get_today
 from app.interfaces.http.v1.me_classwork.handlers.list_homework import list_homework
+from app.interfaces.http.v1.me_classwork.handlers.list_my_work_offs import (
+    list_my_work_offs,
+)
 from app.interfaces.http.v1.me_classwork.handlers.set_homework_done import (
     set_homework_done,
 )
@@ -20,3 +23,4 @@ router.add_api_route("/homework", list_homework, methods=["GET"])
 router.add_api_route("/homework/{lesson_id}/done", set_homework_done, methods=["PUT"])
 router.add_api_route("/homework/{lesson_id}/note", set_homework_note, methods=["PUT"])
 router.add_api_route("/attendance", get_attendance, methods=["GET"])
+router.add_api_route("/work-offs", list_my_work_offs, methods=["GET"])

@@ -30,6 +30,7 @@ from app.modules.academic.infrastructure.orm.result import Result
 from app.modules.academic.infrastructure.orm.room import Room
 from app.modules.academic.infrastructure.orm.student import Student
 from app.modules.academic.infrastructure.orm.subject import Subject
+from app.modules.academic.infrastructure.orm.temporary_mark import TemporaryMark
 from app.modules.academic.infrastructure.orm.term import Term
 from app.modules.academic.infrastructure.school_days import not_on_saturday
 
@@ -221,6 +222,44 @@ class SqlMarksReader:
             stmt = stmt.where(Mark.date <= end)
         stmt = stmt.order_by(Mark.date.desc(), Mark.type, Mark.ordinal)
         return [_mark_row(r) for r in (await self.session.execute(stmt)).all()]
+
+    async def temporary_values(
+        self,
+        student_ids: Collection[UUID],
+        start: dt.date | None,
+        end: dt.date | None,
+    ) -> dict[tuple[UUID, UUID], list[int]]:
+        """Return temporary mark values per (student, subject) dated in a range."""
+        if not student_ids:
+            return {}
+        stmt = sa.select(
+            TemporaryMark.student_id, TemporaryMark.subject_id, TemporaryMark.value
+        ).where(TemporaryMark.student_id.in_(list(student_ids)))
+        if start is not None:
+            stmt = stmt.where(TemporaryMark.date >= start)
+        if end is not None:
+            stmt = stmt.where(TemporaryMark.date <= end)
+        out: dict[tuple[UUID, UUID], list[int]] = {}
+        for r in (await self.session.execute(stmt)).all():
+            out.setdefault((r.student_id, r.subject_id), []).append(r.value)
+        return out
+
+    async def mark_values(
+        self, student_ids: Collection[UUID], semester: int
+    ) -> dict[tuple[UUID, UUID], dict[str, list[int]]]:
+        """Return non-removed mark values per (student, subject) grouped by type."""
+        if not student_ids:
+            return {}
+        stmt = sa.select(Mark.student_id, Mark.subject_id, Mark.type, Mark.value).where(
+            Mark.student_id.in_(list(student_ids)),
+            Mark.semester == semester,
+            Mark.removed_at.is_(None),
+        )
+        out: dict[tuple[UUID, UUID], dict[str, list[int]]] = {}
+        for r in (await self.session.execute(stmt)).all():
+            per = out.setdefault((r.student_id, r.subject_id), {})
+            per.setdefault(r.type, []).append(r.value)
+        return out
 
     async def new_marks(
         self, student_id: UUID, since: dt.datetime | None, limit: int

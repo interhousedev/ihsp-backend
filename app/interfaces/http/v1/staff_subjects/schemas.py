@@ -104,6 +104,7 @@ class TeachingStudentResponse(_Attrs):
     marks: list[TeachingMarkResponse]
     average: float | None
     semester_mark: float | None
+    gpa_with_temporary: float | None = None
     homework: list[HomeworkEntryResponse]
     absences: int
     lessons_with_attendance: int | None

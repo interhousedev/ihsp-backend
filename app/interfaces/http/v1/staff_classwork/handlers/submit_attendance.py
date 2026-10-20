@@ -24,5 +24,10 @@ async def submit_attendance(
         present_unassigned=body.present_unassigned,
         base_version=body.base_version,
         source="staff",
+        work_off_mode=body.work_off_mode,
+        work_offs=[w.model_dump() for w in body.work_offs],
+        common_work_off=(
+            None if body.common_work_off is None else body.common_work_off.model_dump()
+        ),
     )
     return AttendanceSheetResponse.model_validate(data)

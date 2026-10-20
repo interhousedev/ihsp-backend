@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from app.modules.academic.application.classwork.absence_notices import AbsenceNotices
+from app.modules.academic.application.classwork.apply_work_offs import WorkOffApplier
 from app.modules.academic.application.classwork.attendance_report import (
     AttendanceReport,
 )
@@ -12,8 +14,18 @@ from app.modules.academic.application.classwork.attendance_sheet import (
     AttendanceSheetBuilder,
 )
 from app.modules.academic.application.classwork.clear_homework import ClearHomework
+from app.modules.academic.application.classwork.create_work_off_template import (
+    CreateWorkOffTemplate,
+)
 from app.modules.academic.application.classwork.curator_students import (
     CuratorStudents,
+)
+from app.modules.academic.application.classwork.delete_temporary_mark import (
+    DeleteTemporaryMark,
+)
+from app.modules.academic.application.classwork.delete_work_off import DeleteWorkOff
+from app.modules.academic.application.classwork.delete_work_off_template import (
+    DeleteWorkOffTemplate,
 )
 from app.modules.academic.application.classwork.get_attendance_sheet import (
     GetAttendanceSheet,
@@ -34,6 +46,22 @@ from app.modules.academic.application.classwork.lesson_items import LessonItemBu
 from app.modules.academic.application.classwork.lesson_reminders import (
     LessonReminders,
 )
+from app.modules.academic.application.classwork.list_admin_work_offs import (
+    ListAdminWorkOffs,
+)
+from app.modules.academic.application.classwork.list_lesson_temporary_marks import (
+    ListLessonTemporaryMarks,
+)
+from app.modules.academic.application.classwork.list_my_work_offs import ListMyWorkOffs
+from app.modules.academic.application.classwork.list_pending_temporary_marks import (
+    ListPendingTemporaryMarks,
+)
+from app.modules.academic.application.classwork.list_teacher_work_offs import (
+    ListTeacherWorkOffs,
+)
+from app.modules.academic.application.classwork.list_work_off_templates import (
+    ListWorkOffTemplates,
+)
 from app.modules.academic.application.classwork.missing_attendance import (
     MissingAttendance,
 )
@@ -46,6 +74,12 @@ from app.modules.academic.application.classwork.recompute_due_dates import (
 )
 from app.modules.academic.application.classwork.report_format import ReportFormatter
 from app.modules.academic.application.classwork.roster_loader import RosterLoader
+from app.modules.academic.application.classwork.send_absence_digests import (
+    SendAbsenceDigests,
+)
+from app.modules.academic.application.classwork.send_temporary_mark_reminders import (
+    SendTemporaryMarkReminders,
+)
 from app.modules.academic.application.classwork.set_excuse import SetExcuse
 from app.modules.academic.application.classwork.set_homework import SetHomework
 from app.modules.academic.application.classwork.set_homework_done import (
@@ -53,6 +87,9 @@ from app.modules.academic.application.classwork.set_homework_done import (
 )
 from app.modules.academic.application.classwork.set_homework_note import (
     SetHomeworkNote,
+)
+from app.modules.academic.application.classwork.set_temporary_mark import (
+    SetTemporaryMark,
 )
 from app.modules.academic.application.classwork.set_topic import SetTopic
 from app.modules.academic.application.classwork.staff_clear_homework import (
@@ -74,12 +111,20 @@ from app.modules.academic.application.classwork.submit_attendance import (
     SubmitAttendance,
 )
 from app.modules.academic.application.classwork.submit_from_draft import SubmitFromDraft
+from app.modules.academic.application.classwork.temporary_mark_views import (
+    TemporaryMarkViews,
+)
 from app.modules.academic.application.classwork.toggle_draft_absent import (
     ToggleDraftAbsent,
 )
 from app.modules.academic.application.classwork.toggle_journal_cell import (
     ToggleJournalCell,
 )
+from app.modules.academic.application.classwork.update_work_off import UpdateWorkOff
+from app.modules.academic.application.classwork.update_work_off_template import (
+    UpdateWorkOffTemplate,
+)
+from app.modules.academic.application.classwork.work_off_stats import WorkOffStats
 from app.modules.academic.application.public_classwork import (
     ClassworkCommandsImpl,
     ClassworkQueriesImpl,
@@ -130,6 +175,22 @@ class ClassworkServices:
     journal_csv: JournalCsv
     curator_students: CuratorStudents
     lesson_reminders: LessonReminders
+    list_work_off_templates: ListWorkOffTemplates
+    create_work_off_template: CreateWorkOffTemplate
+    update_work_off_template: UpdateWorkOffTemplate
+    delete_work_off_template: DeleteWorkOffTemplate
+    update_work_off: UpdateWorkOff
+    delete_work_off: DeleteWorkOff
+    list_my_work_offs: ListMyWorkOffs
+    list_teacher_work_offs: ListTeacherWorkOffs
+    list_admin_work_offs: ListAdminWorkOffs
+    work_off_stats: WorkOffStats
+    send_absence_digests: SendAbsenceDigests
+    list_lesson_temporary_marks: ListLessonTemporaryMarks
+    set_temporary_mark: SetTemporaryMark
+    delete_temporary_mark: DeleteTemporaryMark
+    list_pending_temporary_marks: ListPendingTemporaryMarks
+    send_temporary_mark_reminders: SendTemporaryMarkReminders
     queries: ClassworkQueriesImpl
     commands: ClassworkCommandsImpl
 
@@ -164,7 +225,16 @@ def build_classwork(
     drafts = RedisAttendanceDraftStore(deps.redis)
     prompts = PromptStateBuilder(clock, roster_loader, drafts)
 
-    submit = SubmitAttendance(uow_factory, clock, roster_loader, sheets)
+    temporary_views = TemporaryMarkViews(people)
+    notices = AbsenceNotices(people)
+    work_off_applier = WorkOffApplier(notices)
+    submit = SubmitAttendance(
+        uow_factory, clock, roster_loader, sheets, work_off_applier
+    )
+    update_work_off = UpdateWorkOff(uow_factory, clock, notices)
+    list_my_work_offs = ListMyWorkOffs(uow_factory, people)
+    list_teacher_work_offs = ListTeacherWorkOffs(uow_factory, people)
+    list_work_off_templates = ListWorkOffTemplates(uow_factory)
     set_homework = SetHomework(uow_factory, clock)
     clear_homework = ClearHomework(uow_factory, clock)
     set_topic = SetTopic(uow_factory, clock)
@@ -193,7 +263,7 @@ def build_classwork(
         ),
         submit_attendance=submit,
         toggle_journal_cell=ToggleJournalCell(
-            uow_factory, clock, roster_loader, sheets
+            uow_factory, clock, roster_loader, sheets, work_off_applier
         ),
         set_excuse=SetExcuse(uow_factory, clock, roster_loader, sheets, schedule),
         get_prompt_state=get_prompt_state,
@@ -236,7 +306,38 @@ def build_classwork(
         lesson_reminders=LessonReminders(
             uow_factory, clock, people, schedule, links, settings.urls.rooms
         ),
-        queries=ClassworkQueriesImpl(uow_factory, clock, people),
+        list_work_off_templates=list_work_off_templates,
+        create_work_off_template=CreateWorkOffTemplate(uow_factory, clock),
+        update_work_off_template=UpdateWorkOffTemplate(uow_factory, clock),
+        delete_work_off_template=DeleteWorkOffTemplate(uow_factory),
+        update_work_off=update_work_off,
+        delete_work_off=DeleteWorkOff(uow_factory),
+        list_my_work_offs=list_my_work_offs,
+        list_teacher_work_offs=list_teacher_work_offs,
+        list_admin_work_offs=ListAdminWorkOffs(uow_factory, people),
+        work_off_stats=WorkOffStats(uow_factory, clock, people),
+        send_absence_digests=SendAbsenceDigests(uow_factory, clock, people),
+        list_lesson_temporary_marks=ListLessonTemporaryMarks(
+            uow_factory, temporary_views
+        ),
+        set_temporary_mark=SetTemporaryMark(
+            uow_factory, clock, roster_loader, temporary_views
+        ),
+        delete_temporary_mark=DeleteTemporaryMark(uow_factory),
+        list_pending_temporary_marks=ListPendingTemporaryMarks(
+            uow_factory, temporary_views
+        ),
+        send_temporary_mark_reminders=SendTemporaryMarkReminders(
+            uow_factory, clock, people, temporary_views
+        ),
+        queries=ClassworkQueriesImpl(
+            uow_factory,
+            clock,
+            people,
+            list_work_off_templates,
+            list_my_work_offs,
+            list_teacher_work_offs,
+        ),
         commands=ClassworkCommandsImpl(
             people,
             get_prompt_state,
@@ -246,5 +347,6 @@ def build_classwork(
             clear_homework,
             set_topic,
             set_homework_done,
+            update_work_off,
         ),
     )

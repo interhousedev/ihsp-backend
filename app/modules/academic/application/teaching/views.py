@@ -73,3 +73,4 @@ class TeachingStudentView:
     absences: int
     lessons_with_attendance: int | None
     absent_lessons: list[AbsentLesson]
+    gpa_with_temporary: float | None = None

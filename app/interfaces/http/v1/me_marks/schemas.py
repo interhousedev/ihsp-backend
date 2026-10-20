@@ -110,6 +110,7 @@ class SubjectCardResponse(BaseModel):
     subject: SubjectRef
     teachers: list[PersonRef]
     semester_mark: float | None
+    gpa_with_temporary: float | None = None
     emis_rating: int | None
     absences: int
     lates: int = 0
@@ -133,6 +134,7 @@ class SubjectDetailResponse(BaseModel):
     teachers: list[PersonRef]
     averages: Averages
     semester_mark: float | None
+    gpa_with_temporary: float | None = None
     emis_rating: int | None
     absence_rate: float | None
     attendance_source: Literal["emis", "platform", "mixed"] = "platform"
@@ -149,6 +151,7 @@ class GradeRow(BaseModel):
     midterm_avg: float | None
     final_avg: float | None
     semester_mark: float | None
+    gpa_with_temporary: float | None = None
     emis_rating: int | None
     marks_count: int
 
@@ -182,6 +185,7 @@ class RecordBookSubject(BaseModel):
 
     subject: SubjectRef
     semester_mark: float | None
+    gpa_with_temporary: float | None = None
     emis_rating: int | None
 
 
@@ -240,6 +244,7 @@ class GroupProgressCell(BaseModel):
 
     subject_id: UUID
     semester_mark: float | None
+    gpa_with_temporary: float | None = None
     midterm_avg: float | None
     final_avg: float | None
     lesson_avg: float | None

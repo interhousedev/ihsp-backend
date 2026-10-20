@@ -7,6 +7,13 @@ from uuid import UUID
 
 from app.modules.academic.application.classwork.clear_homework import ClearHomework
 from app.modules.academic.application.classwork.get_prompt_state import GetPromptState
+from app.modules.academic.application.classwork.list_my_work_offs import ListMyWorkOffs
+from app.modules.academic.application.classwork.list_teacher_work_offs import (
+    ListTeacherWorkOffs,
+)
+from app.modules.academic.application.classwork.list_work_off_templates import (
+    ListWorkOffTemplates,
+)
 from app.modules.academic.application.classwork.people import PeopleDirectory
 from app.modules.academic.application.classwork.ports.unit_of_work import (
     ViewUnitOfWork,
@@ -24,6 +31,8 @@ from app.modules.academic.application.classwork.submit_from_draft import SubmitF
 from app.modules.academic.application.classwork.toggle_draft_absent import (
     ToggleDraftAbsent,
 )
+from app.modules.academic.application.classwork.update_work_off import UpdateWorkOff
+from app.modules.academic.domain.classwork.work_off import WorkOffMode
 from app.shared.actor import Actor
 from app.shared.clock import Clock, local_today
 from app.shared.contracts.academic import LessonRef
@@ -40,11 +49,17 @@ class ClassworkQueriesImpl:
         uow_factory: Callable[[], ViewUnitOfWork],
         clock: Clock,
         people: PeopleDirectory,
+        templates: ListWorkOffTemplates,
+        my_items: ListMyWorkOffs,
+        teacher_items: ListTeacherWorkOffs,
     ) -> None:
         """Initialize the queries."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.people = people
+        self._templates = templates
+        self._my_work_offs = my_items
+        self._teacher_work_offs = teacher_items
 
     async def subject_lessons(
         self,
@@ -127,6 +142,23 @@ class ClassworkQueriesImpl:
             )
         return [lesson.to_ref(DEFAULT_LOCALE) for lesson in lessons]
 
+    async def work_off_templates(self, teacher_id: UUID) -> list[dict[str, Any]]:
+        """Return the teacher's templates ``{"id", "text", "is_default"}``."""
+        found = await self._templates.execute(teacher_id)
+        return [
+            {"id": str(t.id), "text": t.text, "is_default": t.is_default} for t in found
+        ]
+
+    async def my_work_offs(self, student_id: UUID, locale: str) -> list[dict[str, Any]]:
+        """Return the student's open work-offs (``MyWorkOffResponse`` shape)."""
+        return await self._my_work_offs.execute(student_id, locale, "open")
+
+    async def teacher_open_work_offs(
+        self, teacher_id: UUID, locale: str
+    ) -> list[dict[str, Any]]:
+        """Return the teacher's open work-offs for quick marking."""
+        return await self._teacher_work_offs.execute(teacher_id, locale)
+
 
 class ClassworkCommandsImpl:
     """Actions for the Telegram bot (ClassworkCommands)."""
@@ -141,6 +173,7 @@ class ClassworkCommandsImpl:
         clear_homework: ClearHomework,
         set_topic: SetTopic,
         set_homework_done: SetHomeworkDone,
+        update_work_off: UpdateWorkOff,
     ) -> None:
         """Initialize the commands."""
         self.people = people
@@ -151,6 +184,7 @@ class ClassworkCommandsImpl:
         self._clear_homework = clear_homework
         self._set_topic = set_topic
         self._set_done = set_homework_done
+        self._update_work_off = update_work_off
 
     async def prompt_state(self, lesson_id: UUID, teacher_id: UUID) -> dict[str, Any]:
         """Return the end-of-lesson prompt state."""
@@ -171,6 +205,8 @@ class ClassworkCommandsImpl:
         from_draft: bool,
         base_version: int,
         source: Literal["bot", "staff", "admin"],
+        work_off_mode: str = "per_student",
+        common_work_off: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Save attendance and return the prompt state."""
         return await self._submit.execute(
@@ -180,6 +216,8 @@ class ClassworkCommandsImpl:
             from_draft=from_draft,
             base_version=base_version,
             source=source,
+            work_off_mode=_mode(work_off_mode),
+            common_work_off=common_work_off,
         )
 
     async def set_homework(
@@ -203,3 +241,18 @@ class ClassworkCommandsImpl:
     ) -> None:
         """Mark the student's homework as done or not done."""
         await self._set_done.execute(lesson_id, actor, done)
+
+    async def set_work_off_status(
+        self, work_off_id: UUID, actor: Actor, status: str
+    ) -> dict[str, Any]:
+        """Mark a work-off assigned or done; return the ``WorkOffResponse`` dict."""
+        saved = await self._update_work_off.execute(work_off_id, actor, status=status)
+        return saved.to_json()
+
+
+def _mode(value: str) -> WorkOffMode:
+    if value == "none":
+        return "none"
+    if value == "common":
+        return "common"
+    return "per_student"

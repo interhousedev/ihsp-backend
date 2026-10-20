@@ -110,3 +110,80 @@ class TopicTooLongError(ValidationFailedError):
 
     code = "academic/topic-too-long"
     message_key = "academic-topic-too-long"
+
+
+class WorkOffTemplateNotFoundError(NotFoundError):
+    """The work-off template does not exist or belongs to someone else (WO-1)."""
+
+    code = "work-off/template-not-found"
+    message_key = "academic-work-off-template-not-found"
+
+
+class WorkOffNotFoundError(NotFoundError):
+    """The work-off task does not exist (WO-3)."""
+
+    code = "work-off/not-found"
+    message_key = "academic-work-off-not-found"
+
+
+class WorkOffTemplateLimitError(ValidationFailedError):
+    """A teacher already has the maximum number of work-off templates (WO-1)."""
+
+    code = "work-off/template-limit"
+    message_key = "academic-work-off-template-limit"
+
+
+class WorkOffTextInvalidError(ValidationFailedError):
+    """Work-off text is empty or too long (WO-1, WO-3)."""
+
+    code = "work-off/text-invalid"
+    message_key = "academic-work-off-text-invalid"
+
+
+class WorkOffTextRequiredError(ValidationFailedError):
+    """A common work-off needs a template or a text (WO-3)."""
+
+    code = "work-off/text-required"
+    message_key = "academic-work-off-text-required"
+
+
+class WorkOffNotAbsentError(ValidationFailedError):
+    """A work-off can only go to a student marked absent (WO-3)."""
+
+    code = "work-off/not-absent"
+    message_key = "academic-work-off-not-absent"
+
+
+class WorkOffStatusInvalidError(ValidationFailedError):
+    """The work-off status is not assigned or done (WO-3)."""
+
+    code = "work-off/status-invalid"
+    message_key = "academic-work-off-status-invalid"
+
+
+class TemporaryMarkValueInvalidError(ValidationFailedError):
+    """A temporary mark must be on the EMIS scale (TMP-1)."""
+
+    code = "temporary-mark/value-invalid"
+    message_key = "academic-temporary-mark-value-invalid"
+
+
+class TemporaryMarkCommentInvalidError(ValidationFailedError):
+    """A temporary mark comment is too long (TMP-1)."""
+
+    code = "temporary-mark/comment-invalid"
+    message_key = "academic-temporary-mark-comment-invalid"
+
+
+class TemporaryMarkNotFoundError(NotFoundError):
+    """The student has no temporary mark for the lesson (TMP-1)."""
+
+    code = "temporary-mark/not-found"
+    message_key = "academic-temporary-mark-not-found"
+
+
+class StudentNotInLessonError(ValidationFailedError):
+    """The student is not on the lesson's roster (TMP-1)."""
+
+    code = "temporary-mark/student-not-in-lesson"
+    message_key = "academic-temporary-mark-student-not-in-lesson"
