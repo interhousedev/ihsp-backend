@@ -24,6 +24,7 @@ from app.modules.notebooks.domain.entities import Source
 from app.modules.notebooks.domain.enums import SourceKind
 from app.modules.notebooks.domain.errors import SourceUnsupportedError
 from app.modules.notebooks.domain.source_input import SourceInput
+from app.modules.notebooks.ports.transcript import TranscriptProvider
 from app.modules.notebooks.ports.web_fetcher import WebFetcher
 from app.shared.contracts.academic import ScheduleQueries
 from app.shared.contracts.ai import AiQueries
@@ -51,6 +52,7 @@ class SourceReaders:
         lms: LmsSourceReader | None,
         fetcher: WebFetcher | None,
         blocked_domains: Sequence[str] = (),
+        transcripts: TranscriptProvider | None = None,
         workspace: LmsWorkspace | None = None,
         library: LibrarySourceReader | None = None,
         identity: IdentityDirectory | None = None,
@@ -65,7 +67,7 @@ class SourceReaders:
         cap a whole book must stay under.
         """
         self.file_reader = FileReader(files)
-        url_reader = UrlReader(fetcher, blocked_domains)
+        url_reader = UrlReader(fetcher, blocked_domains, transcripts)
         self.url_reader = url_reader
         self.lesson_reader = LessonResourceReader(
             links=links,

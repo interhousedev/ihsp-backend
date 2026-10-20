@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 from typing import Any, cast
 
 from app.modules.notebooks.domain.entities import Notebook
+from app.modules.notebooks.ports.transcript import TranscriptProvider
 from app.modules.notebooks.ports.unit_of_work import UowFactory
 from app.modules.notebooks.wiring_core import CoreOverrides, build_core
 from app.modules.notebooks.wiring_sources import SourcesServices, build_sources
@@ -124,6 +125,7 @@ def build(
             flashcards=cast(FlashcardsApi, world.flashcards),
             lms=cast(LmsSourceReader, world.lms) if lms else None,
             fetcher=world.fetcher if fetcher else None,
+            transcripts=cast(TranscriptProvider, world.transcripts),
             library=cast(LibrarySourceReader, world.library) if library else None,
             identity=cast(IdentityDirectory, identity),  # the owner's roles only
             sleep=sleep,

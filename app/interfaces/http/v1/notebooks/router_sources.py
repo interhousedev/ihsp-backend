@@ -9,6 +9,7 @@ from app.interfaces.http.v1.notebooks.handlers import (
     list_passages,
     list_sources,
     remove_source,
+    reread_source,
     search_sources,
     select_sources,
     sync_source,
@@ -54,6 +55,11 @@ router.add_api_route(
 )
 router.add_api_route(
     "/{notebook_id}/sources/{source_id}/sync", sync_source.sync_source, methods=["POST"]
+)
+router.add_api_route(
+    "/{notebook_id}/sources/{source_id}/reread",
+    reread_source.reread_source,
+    methods=["POST"],
 )
 router.add_api_route(
     "/{notebook_id}/sources/{source_id}/file-url",

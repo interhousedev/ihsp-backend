@@ -80,6 +80,7 @@ from app.modules.notebooks.application.remove_default_material import (
 from app.modules.notebooks.application.remove_source import RemoveSource
 from app.modules.notebooks.application.rename_artifact import RenameArtifact
 from app.modules.notebooks.application.request_artifact import RequestArtifact
+from app.modules.notebooks.application.reread_source import RereadSource
 from app.modules.notebooks.application.retry_artifact import RetryArtifact
 from app.modules.notebooks.application.revise_slides import ReviseSlides
 from app.modules.notebooks.application.save_as_source import SaveAsSource
@@ -118,6 +119,7 @@ from app.modules.notebooks.infrastructure.repositories.shared_passage_repository
     SqlSharedPassageReader,
 )
 from app.modules.notebooks.ports.term_calendar import TermCalendar
+from app.modules.notebooks.ports.transcript import TranscriptProvider
 from app.modules.notebooks.ports.web_fetcher import WebFetcher
 from app.modules.notebooks.wiring_auto import build_auto
 from app.modules.notebooks.wiring_chat import build_chat
@@ -167,6 +169,7 @@ class NotebooksServices:
     update_source: UpdateSource
     select_sources: SelectSources
     sync_source: SyncSource
+    reread_source: RereadSource
     remove_source: RemoveSource
     list_passages: ListPassages
     get_passage: GetPassage
@@ -248,6 +251,7 @@ def build(
     flashcards: FlashcardsApi,
     lms: LmsSourceReader | None = None,
     fetcher: WebFetcher | None = None,
+    transcripts: TranscriptProvider | None = None,
     classwork: ClassworkQueries | None = None,
     terms: TermCalendar | None = None,
     overrides: CoreOverrides | None = None,
@@ -296,6 +300,7 @@ def build(
         flashcards=flashcards,
         lms=lms,
         fetcher=fetcher,
+        transcripts=transcripts,
         sleep=sleep,
         library=library,
         identity=identity,
@@ -340,6 +345,7 @@ def build(
         update_source=sources.update_source,
         select_sources=sources.select_sources,
         sync_source=sources.sync_source,
+        reread_source=sources.reread_source,
         remove_source=sources.remove_source,
         list_passages=sources.list_passages,
         get_passage=sources.get_passage,

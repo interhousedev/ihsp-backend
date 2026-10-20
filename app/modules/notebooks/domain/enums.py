@@ -55,6 +55,7 @@ class SourceFailure(StrEnum):
 
     UNSUPPORTED_TYPE = "unsupported_type"
     NO_TEXT = "no_text"
+    NO_TRANSCRIPT = "no_transcript"  # a YouTube video without captions (or disabled)
     TOO_LARGE = "too_large"
     FETCH_FAILED = "fetch_failed"
     FORBIDDEN = "forbidden"

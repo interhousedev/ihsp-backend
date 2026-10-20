@@ -17,6 +17,7 @@ from app.modules.notebooks.application.process_source import ProcessSource
 from app.modules.notebooks.application.readers.registry import SourceReaders
 from app.modules.notebooks.application.refresh_summaries import RefreshSummaries
 from app.modules.notebooks.application.remove_source import RemoveSource
+from app.modules.notebooks.application.reread_source import RereadSource
 from app.modules.notebooks.application.search_sources import SearchSources
 from app.modules.notebooks.application.select_sources import SelectSources
 from app.modules.notebooks.application.sweep_sources import SweepSources
@@ -25,6 +26,7 @@ from app.modules.notebooks.application.update_source import UpdateSource
 from app.modules.notebooks.infrastructure.material_fetcher import HttpMaterialFetcher
 from app.modules.notebooks.infrastructure.redis_guide_lock import RedisGuideLock
 from app.modules.notebooks.infrastructure.web_fetcher import HttpWebFetcher
+from app.modules.notebooks.ports.transcript import TranscriptProvider
 from app.modules.notebooks.ports.web_fetcher import WebFetcher
 from app.modules.notebooks.ports.web_materials import MaterialFetcher
 from app.modules.notebooks.wiring_core import NotebooksCore
@@ -50,6 +52,7 @@ class SourcesServices:
     update_source: UpdateSource
     select_sources: SelectSources
     sync_source: SyncSource
+    reread_source: RereadSource
     remove_source: RemoveSource
     list_passages: ListPassages
     get_passage: GetPassage
@@ -77,6 +80,7 @@ def build_sources(
     library: LibrarySourceReader | None = None,
     identity: IdentityDirectory | None = None,
     materials: MaterialFetcher | None = None,
+    transcripts: TranscriptProvider | None = None,
 ) -> SourcesServices:
     """Build the source use cases over the shared services and other modules' APIs.
 
@@ -97,6 +101,7 @@ def build_sources(
         lms=lms,
         fetcher=fetcher,
         blocked_domains=deps.settings.web_search.blocked_domains,
+        transcripts=transcripts,
         workspace=core.workspace,
         library=library,
         identity=identity,
@@ -126,6 +131,9 @@ def build_sources(
         ),
         select_sources=SelectSources(uow_factory=core.uow_factory, clock=deps.clock),
         sync_source=SyncSource(
+            uow_factory=core.uow_factory, clock=deps.clock, kicker=deps.kicker
+        ),
+        reread_source=RereadSource(
             uow_factory=core.uow_factory, clock=deps.clock, kicker=deps.kicker
         ),
         remove_source=RemoveSource(uow_factory=core.uow_factory, clock=deps.clock),
