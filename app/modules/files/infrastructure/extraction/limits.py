@@ -1,0 +1,11 @@
+"""Caps that keep text extraction from exhausting memory or time."""
+
+MAX_PDF_PAGES = 300
+MAX_TEXT_CHARS = 2_000_000
+MAX_ZIP_ENTRIES = 2000
+MAX_ZIP_UNCOMPRESSED = 100_000_000
+EXTRACT_TIMEOUT_SECONDS = 60
+MAX_EPUB_ENTRIES = 20_000  # illustrated books hold many images
+MAX_EPUB_CHAPTERS = 5000
+MAX_OUTLINE_ENTRIES = 2000
+MAX_OUTLINE_TITLE = 200
