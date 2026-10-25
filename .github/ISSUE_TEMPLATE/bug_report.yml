@@ -1,0 +1,67 @@
+name: Bug report
+description: The backend, the bot, the MCP servers or the deployment scripts do not work as documented.
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. **Security bugs do not belong here**: follow [SECURITY.md](https://github.com/interhousedev/ihsp-backend/security/policy).
+        Remove tokens, passwords, keys and any real student or staff data from what you paste.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Image tag or commit.
+      placeholder: 1.2.0, sha-abc1234
+    validations:
+      required: true
+  - type: dropdown
+    id: setup
+    attributes:
+      label: How do you run it?
+      options:
+        - scripts/dev.sh (code on the host)
+        - scripts/local_up.sh (full stack in Docker)
+        - Production compose (cloud_deploy.sh)
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - Sign-in / IHT ID / Hydra
+        - Academic (timetable, marks, journal, attendance)
+        - AI assistant / notebooks / Studio
+        - Library
+        - LMS / certificates
+        - Files / links / shares
+        - Telegram bot
+        - Mail / notifications
+        - Admin console API
+        - MCP
+        - Deployment / compose / nginx / Vault
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Requests, bot commands or a failing test. Fake modes are fine.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant log lines, with secrets and personal data removed.
+      render: text
