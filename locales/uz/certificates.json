@@ -1,0 +1,14 @@
+{
+  "cert-type-not-found": "Sertifikat turi topilmadi.",
+  "cert-type-builtin": "Oʻrnatilgan sertifikat turini oʻchirib yoki kodini oʻzgartirib boʻlmaydi.",
+  "cert-type-in-use": "Bu turdagi sertifikatlar mavjud, shuning uchun uni oʻchirib boʻlmaydi.",
+  "cert-type-code-taken": "Bu kodli sertifikat turi allaqachon mavjud.",
+  "cert-entry-not-found": "Sertifikat topilmadi.",
+  "cert-file-not-found": "Sertifikat fayli topilmadi.",
+  "cert-invalid": "«{field}» maydonining qiymati bu sertifikat uchun yaroqsiz.",
+  "cert-not-curator": "Siz faqat oʻzingiz kuratorlik qiladigan guruhlarning sertifikatlarini koʻra olasiz.",
+  "cert-download-failed": "Sertifikat faylini yuklab boʻlmadi.",
+  "cert-url-unsafe": "Sertifikat havolasiga ruxsat berilmagan.",
+  "cert-custom-field-required": "«{field}» maydoni majburiy.",
+  "cert-custom-field-invalid": "«{field}» maydonining qiymati yaroqsiz."
+}
