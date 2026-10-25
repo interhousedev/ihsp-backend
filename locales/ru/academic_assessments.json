@@ -1,0 +1,8 @@
+{
+  "academic-assessment-not-found": "Контроль не найден",
+  "academic-not-assessment-teacher": "Менять контроли может только преподаватель этого предмета в этой группе или администрация",
+  "academic-not-head-student": "Предложить дату контроля может только староста вашей группы",
+  "academic-assessment-subject-not-found": "Предмет не найден",
+  "academic-invalid-assessment": "Контроль задан неверно: проверьте аудиторию, дату, время начала и длину текстов",
+  "academic-assessment-exists": "Такой контроль уже есть в календаре вашей группы"
+}

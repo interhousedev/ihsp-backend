@@ -1,0 +1,21 @@
+{
+  "lms-learn-course-not-found": "Kurs topilmadi.",
+  "lms-learn-step-not-found": "Bu qadam e'lon qilingan kursda yo'q.",
+  "lms-learn-block-not-found": "Qadamda bunday blok yo'q.",
+  "lms-learn-card-not-found": "Bu kartochka endi mavjud emas.",
+  "lms-learn-attempt-not-found": "Urinish topilmadi.",
+  "lms-learn-invite-not-valid": "Taklif yaroqsiz.",
+  "lms-learn-not-enrolled": "Bu qadamni ochish uchun kursga yoziling.",
+  "lms-learn-permission-denied": "Sizda kursda \"{permission}\" huquqi yo'q.",
+  "lms-learn-no-attempts-left": "Bu test uchun urinishlar qolmadi.",
+  "lms-learn-attempt-cooldown": "Keyingi urinish {available_at} da mumkin bo'ladi.",
+  "lms-learn-attempt-closed": "Urinish allaqachon yuborilgan yoki vaqt tugagan.",
+  "lms-learn-attempt-not-submitted": "Bu urinishning hali natijasi yo'q.",
+  "lms-learn-attempt-start-conflict": "Urinishni boshlab bo'lmadi. Qayta urinib ko'ring.",
+  "lms-learn-answer-invalid": "{question_id} savoliga javob yaroqsiz.",
+  "lms-learn-score-invalid": "Baho 0 dan {max_score} gacha bo'lishi kerak.",
+  "lms-learn-attempt-preview": "Sinov urinishlarini tekshirib bo'lmaydi.",
+  "lms-learn-video-not-found": "Bu blokda yuklangan video yo'q.",
+  "lms-learn-h5p-not-found": "Bu blokda H5P paketi yoʻq.",
+  "lms-learn-interaction-not-found": "Bu videoda bunday savol yoʻq."
+}

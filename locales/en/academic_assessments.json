@@ -1,0 +1,8 @@
+{
+  "academic-assessment-not-found": "This control was not found",
+  "academic-not-assessment-teacher": "Only a teacher of this subject in this group, or Administration, can change its controls",
+  "academic-not-head-student": "Only the head student of your group can suggest a control date",
+  "academic-assessment-subject-not-found": "This subject was not found",
+  "academic-invalid-assessment": "The control is not valid: check the audience, the date, the start time and the text lengths",
+  "academic-assessment-exists": "A control like this is already on the calendar for your group"
+}
