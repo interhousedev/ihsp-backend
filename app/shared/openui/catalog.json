@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "fence": "openui",
+  "root": "Stack",
+  "limits": {
+    "max_block_chars": 6000,
+    "max_statements": 60,
+    "max_blocks": 3,
+    "max_string_chars": 400,
+    "max_list_items": 40
+  },
+  "link_schemes": ["https"],
+  "image_hosts": [],
+  "components": [
+    {
+      "name": "Stack",
+      "subsets": ["chat", "studio"],
+      "description": "Vertical layout of other components. The usual root.",
+      "props": [
+        { "name": "children", "type": "list", "of": { "type": "component" }, "required": true }
+      ]
+    },
+    {
+      "name": "Card",
+      "subsets": ["chat"],
+      "description": "A titled card that groups a few components.",
+      "props": [
+        { "name": "title", "type": "string", "required": true },
+        { "name": "children", "type": "list", "of": { "type": "component" }, "required": true },
+        { "name": "subtitle", "type": "string" }
+      ]
+    },
+    {
+      "name": "TextBlock",
+      "subsets": ["chat", "studio"],
+      "description": "A short paragraph of plain text inside a card or stack.",
+      "props": [
+        { "name": "text", "type": "string", "required": true },
+        { "name": "tone", "type": "enum", "values": ["body", "muted", "heading"] }
+      ]
+    },
+    {
+      "name": "StatGrid",
+      "subsets": ["chat"],
+      "description": "A grid of key numbers (averages, counts, totals).",
+      "props": [
+        {
+          "name": "items",
+          "type": "list",
+          "max": 8,
+          "required": true,
+          "of": {
+            "type": "object",
+            "fields": [
+              { "name": "label", "type": "string", "required": true },
+              { "name": "value", "type": "text", "required": true },
+              { "name": "hint", "type": "string" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Table",
+      "subsets": ["chat", "studio"],
+      "description": "A table: column headers and rows of cells (strings or numbers).",
+      "props": [
+        { "name": "columns", "type": "list", "of": { "type": "string" }, "max": 8, "required": true },
+        { "name": "rows", "type": "list", "of": { "type": "list", "of": { "type": "text" }, "max": 8 }, "max": 40, "required": true },
+        { "name": "caption", "type": "string" }
+      ]
+    },
+    {
+      "name": "BarChart",
+      "subsets": ["chat", "studio"],
+      "description": "A bar chart of one series: category labels and their numbers.",
+      "props": [
+        { "name": "labels", "type": "list", "of": { "type": "string" }, "max": 24, "required": true },
+        { "name": "values", "type": "list", "of": { "type": "number" }, "max": 24, "required": true },
+        { "name": "title", "type": "string" },
+        { "name": "unit", "type": "string" }
+      ]
+    },
+    {
+      "name": "LineChart",
+      "subsets": ["chat", "studio"],
+      "description": "A line chart of one series over time: x labels and their numbers (progress, trends).",
+      "props": [
+        { "name": "labels", "type": "list", "of": { "type": "string" }, "max": 40, "required": true },
+        { "name": "values", "type": "list", "of": { "type": "number" }, "max": 40, "required": true },
+        { "name": "title", "type": "string" },
+        { "name": "unit", "type": "string" }
+      ]
+    },
+    {
+      "name": "Progress",
+      "subsets": ["chat"],
+      "description": "A progress bar: a label, the value and the maximum.",
+      "props": [
+        { "name": "label", "type": "string", "required": true },
+        { "name": "value", "type": "number", "required": true },
+        { "name": "max", "type": "number", "required": true }
+      ]
+    },
+    {
+      "name": "Timetable",
+      "subsets": ["chat"],
+      "description": "A day or week schedule: one entry per lesson or event.",
+      "props": [
+        {
+          "name": "entries",
+          "type": "list",
+          "max": 40,
+          "required": true,
+          "of": {
+            "type": "object",
+            "fields": [
+              { "name": "day", "type": "string", "required": true },
+              { "name": "time", "type": "string", "required": true },
+              { "name": "title", "type": "string", "required": true },
+              { "name": "place", "type": "string" }
+            ]
+          }
+        },
+        { "name": "title", "type": "string" }
+      ]
+    },
+    {
+      "name": "LinkList",
+      "subsets": ["chat"],
+      "description": "A list of https links with short descriptions.",
+      "props": [
+        {
+          "name": "links",
+          "type": "list",
+          "max": 12,
+          "required": true,
+          "of": {
+            "type": "object",
+            "fields": [
+              { "name": "title", "type": "string", "required": true },
+              { "name": "url", "type": "url", "required": true },
+              { "name": "description", "type": "string" }
+            ]
+          }
+        },
+        { "name": "title", "type": "string" }
+      ]
+    },
+    {
+      "name": "Flow",
+      "subsets": ["chat", "studio"],
+      "description": "A simple diagram: steps in order, drawn as boxes joined by arrows.",
+      "props": [
+        { "name": "steps", "type": "list", "of": { "type": "string" }, "max": 10, "required": true },
+        { "name": "title", "type": "string" }
+      ]
+    }
+  ]
+}
