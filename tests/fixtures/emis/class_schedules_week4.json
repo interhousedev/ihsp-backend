@@ -1,0 +1,1202 @@
+{
+  "results": [
+    {
+      "date": "26.10.2026",
+      "classes": [
+        {
+          "id": 3273225,
+          "is_seperated": false,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 0,
+          "teachers": [
+            {
+              "id": 4273225,
+              "edu_subject_id": 105,
+              "edu_subject": {
+                "id": 105,
+                "name": {
+                  "uz": "O'zbek tili",
+                  "ru": "Узбекский язык",
+                  "en": "Uzbek"
+                },
+                "status": "ACTIVE",
+                "can_be_divided": false,
+                "is_custom": false
+              },
+              "class_type_id": 1,
+              "class_type": {
+                "id": 1,
+                "name": "Ma'ruza",
+                "description": ""
+              },
+              "teacher_id": 9003,
+              "teacher": {
+                "id": 9003,
+                "citizen": {
+                  "id": 49003,
+                  "birth_date": "04.01.1969",
+                  "first_name": "MADINA",
+                  "middle_name": null,
+                  "last_name": "ISMOILOVA",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "room_id": 2025,
+              "room": {
+                "id": 2025,
+                "name": "101",
+                "capacity": 30
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        },
+        {
+          "id": 3680877,
+          "is_seperated": false,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 1,
+          "teachers": [
+            {
+              "id": 4680877,
+              "edu_subject_id": 106,
+              "edu_subject": {
+                "id": 106,
+                "name": {
+                  "uz": "Tarix",
+                  "ru": "История",
+                  "en": "History"
+                },
+                "status": "ACTIVE",
+                "can_be_divided": false,
+                "is_custom": false
+              },
+              "class_type_id": 2,
+              "class_type": {
+                "id": 2,
+                "name": "Amaliyot",
+                "description": ""
+              },
+              "teacher_id": 9004,
+              "teacher": {
+                "id": 9004,
+                "citizen": {
+                  "id": 49004,
+                  "birth_date": "04.01.1969",
+                  "first_name": "TIMUR",
+                  "middle_name": "ALIYEVICH",
+                  "last_name": "NAZAROV",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "room_id": 2077,
+              "room": {
+                "id": 2077,
+                "name": "101",
+                "capacity": 30
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        },
+        {
+          "id": 3052862,
+          "is_seperated": true,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 2,
+          "teachers": [
+            {
+              "id": 4052862,
+              "edu_subject_id": 107,
+              "edu_subject": {
+                "id": 107,
+                "name": {
+                  "uz": "Informatika",
+                  "ru": "Информатика",
+                  "en": "Informatics"
+                },
+                "status": "ACTIVE",
+                "can_be_divided": true,
+                "is_custom": false
+              },
+              "class_type_id": 1,
+              "class_type": {
+                "id": 1,
+                "name": "Ma'ruza",
+                "description": ""
+              },
+              "teacher_id": 9005,
+              "teacher": {
+                "id": 9005,
+                "citizen": {
+                  "id": 49005,
+                  "birth_date": "04.01.1969",
+                  "first_name": "OYBEK",
+                  "middle_name": null,
+                  "last_name": "RAHIMOV",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "room_id": 2062,
+              "room": {
+                "id": 2062,
+                "name": "101",
+                "capacity": 30
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        },
+        {
+          "id": 3283550,
+          "is_seperated": false,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 3,
+          "teachers": [
+            {
+              "id": 4283550,
+              "edu_subject_id": 108,
+              "edu_subject": {
+                "id": 108,
+                "name": {
+                  "uz": "Kimyo",
+                  "ru": "Химия",
+                  "en": "Chemistry"
+                },
+                "status": "ACTIVE",
+                "can_be_divided": false,
+                "is_custom": false
+              },
+              "class_type_id": 2,
+              "class_type": {
+                "id": 2,
+                "name": "Amaliyot",
+                "description": ""
+              },
+              "teacher_id": 9005,
+              "teacher": {
+                "id": 9005,
+                "citizen": {
+                  "id": 49005,
+                  "birth_date": "04.01.1969",
+                  "first_name": "OYBEK",
+                  "middle_name": null,
+                  "last_name": "RAHIMOV",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "room_id": 2050,
+              "room": {
+                "id": 2050,
+                "name": "101",
+                "capacity": 30
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "27.10.2026",
+      "classes": [
+        {
+          "id": 3132540,
+          "is_seperated": false,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 0,
+          "teachers": [
+            {
+              "id": 4132540,
+              "edu_subject_id": 101,
+              "edu_subject": {
+                "id": 101,
+                "name": {
+                  "uz": "Matematika",
+                  "ru": "Математика",
+                  "en": "Mathematics"
+                },
+                "status": "ACTIVE",
+                "can_be_divided": false,
+                "is_custom": false
+              },
+              "class_type_id": 1,
+              "class_type": {
+                "id": 1,
+                "name": "Ma'ruza",
+                "description": ""
+              },
+              "teacher_id": 9001,
+              "teacher": {
+                "id": 9001,
+                "citizen": {
+                  "id": 49001,
+                  "birth_date": "04.01.1969",
+                  "first_name": "GULNORA",
+                  "middle_name": "AKBAROVNA",
+                  "last_name": "KALANDAROVA",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "room_id": 2040,
+              "room": {
+                "id": 2040,
+                "name": "101",
+                "capacity": 30
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        },
+        {
+          "id": 3717355,
+          "is_seperated": false,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 1,
+          "teachers": [
+            {
+              "id": 4717355,
+              "edu_subject_id": 102,
+              "edu_subject": {
+                "id": 102,
+                "name": {
+                  "uz": "Fizika",
+                  "ru": "Физика",
+                  "en": "Physics"
+                },
+                "status": "ACTIVE",
+                "can_be_divided": false,
+                "is_custom": false
+              },
+              "class_type_id": 2,
+              "class_type": {
+                "id": 2,
+                "name": "Amaliyot",
+                "description": ""
+              },
+              "teacher_id": 9001,
+              "teacher": {
+                "id": 9001,
+                "citizen": {
+                  "id": 49001,
+                  "birth_date": "04.01.1969",
+                  "first_name": "GULNORA",
+                  "middle_name": "AKBAROVNA",
+                  "last_name": "KALANDAROVA",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "room_id": 2055,
+              "room": {
+                "id": 2055,
+                "name": "101",
+                "capacity": 30
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        },
+        {
+          "id": 3671645,
+          "is_seperated": true,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 2,
+          "teachers": [
+            {
+              "id": 4671645,
+              "edu_subject_id": 103,
+              "edu_subject": {
+                "id": 103,
+                "name": {
+                  "uz": "Ingliz tili",
+                  "ru": "Английский язык",
+                  "en": "English"
+                },
+                "status": "ACTIVE",
+                "can_be_divided": true,
+                "is_custom": false
+              },
+              "class_type_id": 1,
+              "class_type": {
+                "id": 1,
+                "name": "Ma'ruza",
+                "description": ""
+              },
+              "teacher_id": 9002,
+              "teacher": {
+                "id": 9002,
+                "citizen": {
+                  "id": 49002,
+                  "birth_date": "04.01.1969",
+                  "first_name": "SARDOR",
+                  "middle_name": "RUSTAMOVICH",
+                  "last_name": "YULDASHEV",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "room_id": 2045,
+              "room": {
+                "id": 2045,
+                "name": "101",
+                "capacity": 30
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        },
+        {
+          "id": 3655219,
+          "is_seperated": false,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 3,
+          "teachers": [
+            {
+              "id": 4655219,
+              "edu_subject_id": 104,
+              "edu_subject": {
+                "id": 104,
+                "name": {
+                  "uz": "Rus tili",
+                  "ru": "Русский язык",
+                  "en": "Russian"
+                },
+                "status": "ACTIVE",
+                "can_be_divided": false,
+                "is_custom": false
+              },
+              "class_type_id": 2,
+              "class_type": {
+                "id": 2,
+                "name": "Amaliyot",
+                "description": ""
+              },
+              "teacher_id": 9002,
+              "teacher": {
+                "id": 9002,
+                "citizen": {
+                  "id": 49002,
+                  "birth_date": "04.01.1969",
+                  "first_name": "SARDOR",
+                  "middle_name": "RUSTAMOVICH",
+                  "last_name": "YULDASHEV",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "room_id": 2019,
+              "room": {
+                "id": 2019,
+                "name": "101",
+                "capacity": 30
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "28.10.2026",
+      "classes": [
+        {
+          "id": 3119341,
+          "is_seperated": false,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 0,
+          "teachers": [
+            {
+              "id": 4119341,
+              "edu_subject_id": 105,
+              "edu_subject": {
+                "id": 105,
+                "name": {
+                  "uz": "O'zbek tili",
+                  "ru": "Узбекский язык",
+                  "en": "Uzbek"
+                },
+                "status": "ACTIVE",
+                "can_be_divided": false,
+                "is_custom": false
+              },
+              "class_type_id": 1,
+              "class_type": {
+                "id": 1,
+                "name": "Ma'ruza",
+                "description": ""
+              },
+              "teacher_id": 9003,
+              "teacher": {
+                "id": 9003,
+                "citizen": {
+                  "id": 49003,
+                  "birth_date": "04.01.1969",
+                  "first_name": "MADINA",
+                  "middle_name": null,
+                  "last_name": "ISMOILOVA",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "room_id": 2041,
+              "room": {
+                "id": 2041,
+                "name": "101",
+                "capacity": 30
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        },
+        {
+          "id": 3888214,
+          "is_seperated": false,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 1,
+          "teachers": [
+            {
+              "id": 4888214,
+              "edu_subject_id": 106,
+              "edu_subject": {
+                "id": 106,
+                "name": {
+                  "uz": "Tarix",
+                  "ru": "История",
+                  "en": "History"
+                },
+                "status": "ACTIVE",
+                "can_be_divided": false,
+                "is_custom": false
+              },
+              "class_type_id": 2,
+              "class_type": {
+                "id": 2,
+                "name": "Amaliyot",
+                "description": ""
+              },
+              "teacher_id": 9004,
+              "teacher": {
+                "id": 9004,
+                "citizen": {
+                  "id": 49004,
+                  "birth_date": "04.01.1969",
+                  "first_name": "TIMUR",
+                  "middle_name": "ALIYEVICH",
+                  "last_name": "NAZAROV",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "room_id": 2014,
+              "room": {
+                "id": 2014,
+                "name": "101",
+                "capacity": 30
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        },
+        {
+          "id": 3695949,
+          "is_seperated": true,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 2,
+          "teachers": [
+            {
+              "id": 4695949,
+              "edu_subject_id": 107,
+              "edu_subject": {
+                "id": 107,
+                "name": {
+                  "uz": "Informatika",
+                  "ru": "Информатика",
+                  "en": "Informatics"
+                },
+                "status": "ACTIVE",
+                "can_be_divided": true,
+                "is_custom": false
+              },
+              "class_type_id": 1,
+              "class_type": {
+                "id": 1,
+                "name": "Ma'ruza",
+                "description": ""
+              },
+              "teacher_id": 9005,
+              "teacher": {
+                "id": 9005,
+                "citizen": {
+                  "id": 49005,
+                  "birth_date": "04.01.1969",
+                  "first_name": "OYBEK",
+                  "middle_name": null,
+                  "last_name": "RAHIMOV",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "room_id": 2049,
+              "room": {
+                "id": 2049,
+                "name": "101",
+                "capacity": 30
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        },
+        {
+          "id": 3583195,
+          "is_seperated": false,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 3,
+          "teachers": [
+            {
+              "id": 4583195,
+              "edu_subject_id": 108,
+              "edu_subject": {
+                "id": 108,
+                "name": {
+                  "uz": "Kimyo",
+                  "ru": "Химия",
+                  "en": "Chemistry"
+                },
+                "status": "ACTIVE",
+                "can_be_divided": false,
+                "is_custom": false
+              },
+              "class_type_id": 2,
+              "class_type": {
+                "id": 2,
+                "name": "Amaliyot",
+                "description": ""
+              },
+              "teacher_id": 9005,
+              "teacher": {
+                "id": 9005,
+                "citizen": {
+                  "id": 49005,
+                  "birth_date": "04.01.1969",
+                  "first_name": "OYBEK",
+                  "middle_name": null,
+                  "last_name": "RAHIMOV",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "room_id": 2095,
+              "room": {
+                "id": 2095,
+                "name": "101",
+                "capacity": 30
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "29.10.2026",
+      "classes": [
+        {
+          "id": 3062185,
+          "is_seperated": false,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 0,
+          "teachers": [
+            {
+              "id": 4062185,
+              "edu_subject_id": 101,
+              "edu_subject": {
+                "id": 101,
+                "name": {
+                  "uz": "Matematika",
+                  "ru": "Математика",
+                  "en": "Mathematics"
+                },
+                "status": "ACTIVE",
+                "can_be_divided": false,
+                "is_custom": false
+              },
+              "class_type_id": 1,
+              "class_type": {
+                "id": 1,
+                "name": "Ma'ruza",
+                "description": ""
+              },
+              "teacher_id": 9001,
+              "teacher": {
+                "id": 9001,
+                "citizen": {
+                  "id": 49001,
+                  "birth_date": "04.01.1969",
+                  "first_name": "GULNORA",
+                  "middle_name": "AKBAROVNA",
+                  "last_name": "KALANDAROVA",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "room_id": 2085,
+              "room": {
+                "id": 2085,
+                "name": "101",
+                "capacity": 30
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        },
+        {
+          "id": 3582321,
+          "is_seperated": false,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 1,
+          "teachers": [
+            {
+              "id": 4582321,
+              "edu_subject_id": 102,
+              "edu_subject": {
+                "id": 102,
+                "name": {
+                  "uz": "Fizika",
+                  "ru": "Физика",
+                  "en": "Physics"
+                },
+                "status": "ACTIVE",
+                "can_be_divided": false,
+                "is_custom": false
+              },
+              "class_type_id": 2,
+              "class_type": {
+                "id": 2,
+                "name": "Amaliyot",
+                "description": ""
+              },
+              "teacher_id": 9001,
+              "teacher": {
+                "id": 9001,
+                "citizen": {
+                  "id": 49001,
+                  "birth_date": "04.01.1969",
+                  "first_name": "GULNORA",
+                  "middle_name": "AKBAROVNA",
+                  "last_name": "KALANDAROVA",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "room_id": 2021,
+              "room": {
+                "id": 2021,
+                "name": "101",
+                "capacity": 30
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        },
+        {
+          "id": 3311460,
+          "is_seperated": true,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 2,
+          "teachers": [
+            {
+              "id": 4311460,
+              "edu_subject_id": 103,
+              "edu_subject": {
+                "id": 103,
+                "name": {
+                  "uz": "Ingliz tili",
+                  "ru": "Английский язык",
+                  "en": "English"
+                },
+                "status": "ACTIVE",
+                "can_be_divided": true,
+                "is_custom": false
+              },
+              "class_type_id": 1,
+              "class_type": {
+                "id": 1,
+                "name": "Ma'ruza",
+                "description": ""
+              },
+              "teacher_id": 9002,
+              "teacher": {
+                "id": 9002,
+                "citizen": {
+                  "id": 49002,
+                  "birth_date": "04.01.1969",
+                  "first_name": "SARDOR",
+                  "middle_name": "RUSTAMOVICH",
+                  "last_name": "YULDASHEV",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "room_id": 2060,
+              "room": {
+                "id": 2060,
+                "name": "101",
+                "capacity": 30
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        },
+        {
+          "id": 3493352,
+          "is_seperated": false,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 3,
+          "teachers": [
+            {
+              "id": 4493352,
+              "edu_subject_id": 104,
+              "edu_subject": {
+                "id": 104,
+                "name": {
+                  "uz": "Rus tili",
+                  "ru": "Русский язык",
+                  "en": "Russian"
+                },
+                "status": "ACTIVE",
+                "can_be_divided": false,
+                "is_custom": false
+              },
+              "class_type_id": 2,
+              "class_type": {
+                "id": 2,
+                "name": "Amaliyot",
+                "description": ""
+              },
+              "teacher_id": 9002,
+              "teacher": {
+                "id": 9002,
+                "citizen": {
+                  "id": 49002,
+                  "birth_date": "04.01.1969",
+                  "first_name": "SARDOR",
+                  "middle_name": "RUSTAMOVICH",
+                  "last_name": "YULDASHEV",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "room_id": 2052,
+              "room": {
+                "id": 2052,
+                "name": "101",
+                "capacity": 30
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "30.10.2026",
+      "classes": [
+        {
+          "id": 3440734,
+          "is_seperated": false,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 0,
+          "teachers": [
+            {
+              "id": 4440734,
+              "edu_subject_id": 105,
+              "edu_subject": {
+                "id": 105,
+                "name": {
+                  "uz": "O'zbek tili",
+                  "ru": "Узбекский язык",
+                  "en": "Uzbek"
+                },
+                "status": "ACTIVE",
+                "can_be_divided": false,
+                "is_custom": false
+              },
+              "class_type_id": 1,
+              "class_type": {
+                "id": 1,
+                "name": "Ma'ruza",
+                "description": ""
+              },
+              "teacher_id": 9003,
+              "teacher": {
+                "id": 9003,
+                "citizen": {
+                  "id": 49003,
+                  "birth_date": "04.01.1969",
+                  "first_name": "MADINA",
+                  "middle_name": null,
+                  "last_name": "ISMOILOVA",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "room_id": 2034,
+              "room": {
+                "id": 2034,
+                "name": "101",
+                "capacity": 30
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        },
+        {
+          "id": 3291837,
+          "is_seperated": false,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 1,
+          "teachers": [
+            {
+              "id": 4291837,
+              "edu_subject_id": 106,
+              "edu_subject": {
+                "id": 106,
+                "name": {
+                  "uz": "Tarix",
+                  "ru": "История",
+                  "en": "History"
+                },
+                "status": "ACTIVE",
+                "can_be_divided": false,
+                "is_custom": false
+              },
+              "class_type_id": 2,
+              "class_type": {
+                "id": 2,
+                "name": "Amaliyot",
+                "description": ""
+              },
+              "teacher_id": 9004,
+              "teacher": {
+                "id": 9004,
+                "citizen": {
+                  "id": 49004,
+                  "birth_date": "04.01.1969",
+                  "first_name": "TIMUR",
+                  "middle_name": "ALIYEVICH",
+                  "last_name": "NAZAROV",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "room_id": 2037,
+              "room": {
+                "id": 2037,
+                "name": "101",
+                "capacity": 30
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        },
+        {
+          "id": 3736623,
+          "is_seperated": true,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 2,
+          "teachers": [
+            {
+              "id": 4736623,
+              "edu_subject_id": 107,
+              "edu_subject": {
+                "id": 107,
+                "name": {
+                  "uz": "Informatika",
+                  "ru": "Информатика",
+                  "en": "Informatics"
+                },
+                "status": "ACTIVE",
+                "can_be_divided": true,
+                "is_custom": false
+              },
+              "class_type_id": 1,
+              "class_type": {
+                "id": 1,
+                "name": "Ma'ruza",
+                "description": ""
+              },
+              "teacher_id": 9005,
+              "teacher": {
+                "id": 9005,
+                "citizen": {
+                  "id": 49005,
+                  "birth_date": "04.01.1969",
+                  "first_name": "OYBEK",
+                  "middle_name": null,
+                  "last_name": "RAHIMOV",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "room_id": 2023,
+              "room": {
+                "id": 2023,
+                "name": "101",
+                "capacity": 30
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        },
+        {
+          "id": 3816184,
+          "is_seperated": false,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 3,
+          "teachers": [
+            {
+              "id": 4816184,
+              "edu_subject_id": 108,
+              "edu_subject": {
+                "id": 108,
+                "name": {
+                  "uz": "Kimyo",
+                  "ru": "Химия",
+                  "en": "Chemistry"
+                },
+                "status": "ACTIVE",
+                "can_be_divided": false,
+                "is_custom": false
+              },
+              "class_type_id": 2,
+              "class_type": {
+                "id": 2,
+                "name": "Amaliyot",
+                "description": ""
+              },
+              "teacher_id": 9005,
+              "teacher": {
+                "id": 9005,
+                "citizen": {
+                  "id": 49005,
+                  "birth_date": "04.01.1969",
+                  "first_name": "OYBEK",
+                  "middle_name": null,
+                  "last_name": "RAHIMOV",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "room_id": 2084,
+              "room": {
+                "id": 2084,
+                "name": "101",
+                "capacity": 30
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "31.10.2026",
+      "classes": null
+    },
+    {
+      "date": "01.11.2026",
+      "classes": null
+    }
+  ],
+  "total_results": 7,
+  "total_pages": 1,
+  "code": 200,
+  "success": true,
+  "error": null
+}

@@ -1,0 +1,26 @@
+{
+  "result": {
+    "ratings": [
+      {
+        "name": "Joriy nazorat",
+        "dailyRatings": [
+          {"class_date": "04.09.2026", "rating": 5},
+          {"class_date": "04.09.2026", "rating": 4},
+          {"class_date": "11.09.2026", "rating": "3"}
+        ]
+      },
+      {
+        "name": "Oraliq nazorat",
+        "dailyRatings": [{"class_date": "20.10.2026", "rating": 4}]
+      },
+      {
+        "name": "Yakuniy nazorat",
+        "dailyRatings": [{"class_date": "25.12.2026", "rating": 5}]
+      }
+    ],
+    "semester_rating": 4
+  },
+  "code": 200,
+  "success": true,
+  "error": null
+}

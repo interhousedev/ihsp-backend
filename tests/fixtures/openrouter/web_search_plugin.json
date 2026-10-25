@@ -1,0 +1,83 @@
+{
+  "id": "gen-1791359100-web",
+  "object": "chat.completion",
+  "created": 1791359100,
+  "model": "google/gemini-3.5-flash-lite",
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "native_finish_reason": "STOP",
+      "message": {
+        "role": "assistant",
+        "content": "- [Photosynthesis - Wikipedia](https://en.wikipedia.org/wiki/Photosynthesis) - A full article on how plants turn light into sugar.\n- [Photosynthesis in plants | Khan Academy](https://www.khanacademy.org/science/biology/photosynthesis-in-plants) - Short lessons with diagrams for each stage.\n- [Photosynthesis again](https://en.wikipedia.org/wiki/Photosynthesis/) - A duplicate of the first page.\n- [Unsuitable](https://de.pornhub.com/view) - Must never reach a student.\n- [Local](ftp://files.example.org/photosynthesis.txt) - Not a web page.\n",
+        "annotations": [
+          {
+            "type": "url_citation",
+            "url_citation": {
+              "url": "https://en.wikipedia.org/wiki/Photosynthesis",
+              "title": "Photosynthesis - Wikipedia",
+              "content": "Photosynthesis is a biological process.\n[...]\nLight reactions happen in the thylakoid membranes.\n[...]\nThe Calvin cycle fixes carbon.",
+              "start_index": 2,
+              "end_index": 80
+            }
+          },
+          {
+            "type": "url_citation",
+            "url_citation": {
+              "url": "https://www.khanacademy.org/science/biology/photosynthesis-in-plants",
+              "title": "Photosynthesis in plants | Khan Academy",
+              "content": "Learn the stages of photosynthesis.",
+              "start_index": 90,
+              "end_index": 200
+            }
+          },
+          {
+            "type": "url_citation",
+            "url_citation": {
+              "url": "https://en.wikipedia.org/wiki/Photosynthesis/",
+              "title": "Photosynthesis again",
+              "content": "Same page with a slash.",
+              "start_index": 210,
+              "end_index": 300
+            }
+          },
+          {
+            "type": "url_citation",
+            "url_citation": {
+              "url": "https://de.pornhub.com/view",
+              "title": "Unsuitable",
+              "content": "x",
+              "start_index": 310,
+              "end_index": 400
+            }
+          },
+          {
+            "type": "url_citation",
+            "url_citation": {
+              "url": "ftp://files.example.org/photosynthesis.txt",
+              "title": "Local",
+              "content": "y",
+              "start_index": 410,
+              "end_index": 500
+            }
+          },
+          {
+            "type": "file_citation",
+            "file_citation": {
+              "file_id": "f"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 4200,
+    "completion_tokens": 150,
+    "total_tokens": 4350,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "cost": 0.0081
+  }
+}

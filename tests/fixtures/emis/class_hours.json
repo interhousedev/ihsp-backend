@@ -1,0 +1,14 @@
+{
+  "results": [
+    {"pair_number": 0, "begin_time": "08:30", "end_time": "09:50"},
+    {"pair_number": 1, "begin_time": "10:10", "end_time": "11:30"},
+    {"pair_number": 2, "begin_time": "12:10", "end_time": "13:30"},
+    {"pair_number": 3, "begin_time": "13:40", "end_time": "15:00"},
+    {"pair_number": 4, "begin_time": "15:10", "end_time": "16:30"}
+  ],
+  "total_results": 5,
+  "total_pages": 1,
+  "code": 200,
+  "success": true,
+  "error": null
+}

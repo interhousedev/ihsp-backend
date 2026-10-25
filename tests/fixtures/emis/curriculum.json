@@ -1,0 +1,26 @@
+{
+  "result": {
+    "id": 2124,
+    "edu_subject": [
+      {
+        "edu_subject_id": 35,
+        "edu_subject": {
+          "id": 35,
+          "name": {"uz": "Geometriya", "ru": "", "en": "Geometry"},
+          "can_be_divided": false
+        }
+      },
+      {
+        "edu_subject_id": 19,
+        "edu_subject": {
+          "id": 19,
+          "name": {"uz": "Ingliz tili", "ru": "Английский язык", "en": "English"},
+          "can_be_divided": true
+        }
+      }
+    ]
+  },
+  "code": 200,
+  "success": true,
+  "error": null
+}

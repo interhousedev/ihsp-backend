@@ -1,0 +1,51 @@
+{
+  "result": {
+    "id": 78218,
+    "citizen_id": 80695,
+    "citizen": {
+      "birth_date": "20.05.2009",
+      "first_name": "ALEKSEY",
+      "middle_name": "MIXAYLOVICH",
+      "last_name": "BRASTILOV",
+      "gender_id": 1,
+      "gender": "Erkak",
+      "citizenship_type_id": 2,
+      "citizenship_type": {"id": 2, "name": "Chet el fuqarosi"}
+    },
+    "institution_id": 10815,
+    "institution": {
+      "id": 10815,
+      "name": {
+        "uz": "\"TIQXMMI\" MTU \"International House - Toshkent\" akademik litseyi",
+        "ru": "Академический лицей \"International House - Ташкент\" НИУ \"ТИИИМСХ\"",
+        "en": "\"TIIAME\" NRU \"International House Tashkent \"academic lyceum"
+      },
+      "tin": "201724968",
+      "email": "contact@iht.uz"
+    },
+    "edu_group_id": 3292,
+    "edu_group": {
+      "id": 3292,
+      "name": "2ТН2",
+      "institution_id": 10815,
+      "curriculum_id": 2124,
+      "start_year_code": 2025,
+      "end_year_code": 2026,
+      "number_of_students": 30,
+      "current_number_of_students": 27,
+      "current_semester": 3,
+      "status": "ACTIVE"
+    },
+    "subjects": {},
+    "absent_count": 0,
+    "avg_rating": 4.6,
+    "course": 2,
+    "dtm_certificate_info": {
+      "cefr": [{"level": "B2", "subject": "Ingliz tili", "subject_id": 19, "ball": "59"}],
+      "national": [{"ball": "98.28", "level": "B+", "science_name": "Matematika (O‘zbek)"}]
+    }
+  },
+  "code": 200,
+  "success": true,
+  "error": null
+}

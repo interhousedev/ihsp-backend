@@ -1,0 +1,151 @@
+{
+  "results": [
+    {
+      "date": "05.10.2026",
+      "classes": [
+        {
+          "id": 3185314,
+          "is_seperated": true,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 0,
+          "teachers": [
+            {
+              "id": 4868470,
+              "edu_subject_id": 34,
+              "edu_subject": {
+                "id": 34,
+                "name": {
+                  "uz": "Algebra",
+                  "ru": "",
+                  "en": "Algebra"
+                },
+                "edu_subject_type_id": 2,
+                "edu_subject_type": {
+                  "id": 2,
+                  "name": "Chuqurlashtirilgan fanlar"
+                },
+                "status": "ACTIVE",
+                "parent_id": 233,
+                "can_be_divided": false,
+                "is_custom": false
+              },
+              "class_type_id": 2,
+              "class_type": {
+                "id": 2,
+                "name": "Amaliyot",
+                "description": ""
+              },
+              "teacher_id": 2976,
+              "teacher": {
+                "id": 2976,
+                "citizen_id": 44898,
+                "citizen": {
+                  "id": 44898,
+                  "birth_date": "04.01.1969",
+                  "first_name": "ALEKSANDR",
+                  "middle_name": "VIKTOROVICH",
+                  "last_name": "DRYAXLOV",
+                  "gender_id": 1,
+                  "gender": "Erkak"
+                },
+                "status": "ACTIVE"
+              },
+              "building_id": 118,
+              "building": {
+                "id": 118,
+                "name": "Adminstrator binosi",
+                "institution_id": 10815
+              },
+              "room_id": 2176,
+              "room": {
+                "id": 2176,
+                "name": "23",
+                "institution_id": 10815,
+                "building_id": 118,
+                "capacity": 30,
+                "storey": 2,
+                "description": ""
+              },
+              "pair_number": 0,
+              "is_seperated": null,
+              "group_number": 1,
+              "topic_id": 0,
+              "topic": null,
+              "rating": null
+            }
+          ]
+        },
+        {
+          "id": 3185325,
+          "is_seperated": false,
+          "class_type_id": 0,
+          "class_type": null,
+          "edu_group_id": 3292,
+          "edu_group": null,
+          "pair_number": 3,
+          "teachers": [
+            {
+              "id": 4868499,
+              "edu_subject_id": 28,
+              "edu_subject": {
+                "id": 28,
+                "name": {
+                  "uz": "O‘zbekiston tarixi",
+                  "ru": "История Узбекистана",
+                  "en": "History of Uzbekistan"
+                }
+              },
+              "class_type_id": 5,
+              "class_type": {
+                "id": 5,
+                "name": "Oraliq nazorat"
+              },
+              "teacher_id": 5125,
+              "teacher": {
+                "id": 5125,
+                "citizen": {
+                  "first_name": "IRINA",
+                  "middle_name": "MATKARIMOVNA",
+                  "last_name": "SADULLAYEVA"
+                }
+              },
+              "room_id": 2146,
+              "room": {
+                "id": 2146,
+                "name": "102"
+              },
+              "pair_number": 0,
+              "group_number": 1,
+              "topic_id": 1148972,
+              "topic": {
+                "id": 1148972,
+                "name": "Движение джадидов. Наука и культура в Туркестане. ПК-1",
+                "description": "освоить тему",
+                "topic_file": "4a5c9ef7-0001.pdf",
+                "topic_file_url": "https://cdn-emis.edu.uz/files/4a5c9ef7-0001.pdf",
+                "video_url": "https://www.youtube.com/watch?v=q0sUmfmG7gI",
+                "homework_file": "ceb51d0d-0002.pdf",
+                "homework_file_url": "https://cdn-emis.edu.uz/files/ceb51d0d-0002.pdf",
+                "teacher_topic_id": 46282,
+                "order_no": 6
+              },
+              "rating": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "10.10.2026",
+      "classes": null
+    }
+  ],
+  "total_results": 7,
+  "total_pages": 1,
+  "code": 200,
+  "success": true,
+  "error": null
+}

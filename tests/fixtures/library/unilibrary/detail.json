@@ -1,0 +1,39 @@
+{
+  "result": [
+    {
+      "id": 355186,
+      "resource_category_id": 1,
+      "name": "Elektronika va sxemalar 1",
+      "authors": "SH.K.Ismailov",
+      "publisher_year": 2021,
+      "publisher_name": "Toshkent",
+      "resource_type_id": 9,
+      "resource_type_name": "Darslik",
+      "resource_field_id": 27,
+      "resource_field_name": "Fizika",
+      "resource_language_id": 2,
+      "resource_language_name": "O'zbek",
+      "resource_modifier_id": 1,
+      "resource_modifier_name": "To'liq ochiq",
+      "resource_intended_id": 1,
+      "status": "active",
+      "count_view": 54,
+      "count_download": 12,
+      "abstract_name": "Elektron sxemalar asoslari: diod, tranzistor, kuchaytirgichlar.",
+      "keywords": "elektronika, sxema, tranzistor",
+      "isbn": "978-9943-00-111-1",
+      "resource_page_count": 288,
+      "publisher_resource_icon": "https://api.unilibrary.uz/storage/PublisherResourceImage/355186/images/1691471316.png",
+      "publisher_resource_file": "https://api.unilibrary.uz/storage/PublisherResourceFile/355186/images/1691471337.pdf",
+      "access_other_resource": null,
+      "publisher_resource_university": [
+        {
+          "id": 11,
+          "name": "Toshkent davlat texnika universiteti",
+          "address": "Universitet ko'chasi 2",
+          "phone": "+998 71 000 00 00"
+        }
+      ]
+    }
+  ]
+}
