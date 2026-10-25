@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}{{ t("links-page-rate-limited-title") }}{% endblock %}
+{% block body %}
+<h1>{{ t("links-page-rate-limited-title") }}</h1>
+<p>{{ t("links-page-rate-limited-body", seconds=seconds) }}</p>
+{% endblock %}

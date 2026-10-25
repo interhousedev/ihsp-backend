@@ -1,0 +1,132 @@
+"""Result objects returned by use cases (mapped to JSON by the interfaces)."""
+
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any, Literal
+from uuid import UUID
+
+from app.modules.links.domain.link import Link
+from app.shared.contracts.files import FileRef
+
+
+@dataclass(frozen=True, slots=True)
+class PersonView:
+    """Id and names of a user (PersonRef)."""
+
+    id: UUID
+    first_name: str
+    last_name: str
+
+
+@dataclass(frozen=True, slots=True)
+class LinkView:
+    """A link with its public URL and file."""
+
+    link: Link
+    url: str
+    file: FileRef | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class LinkPage:
+    """A page of the owner's links."""
+
+    items: list[LinkView]
+    next_cursor: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class ResourceView:
+    """A lesson resource: link, display data, author and file."""
+
+    link: Link
+    short_url: str
+    title: str
+    author: PersonView
+    file: FileRef | None
+
+
+@dataclass(frozen=True, slots=True)
+class ModerationView:
+    """A link in the moderation queue with its owner."""
+
+    link: LinkView
+    owner: PersonView | None
+
+
+@dataclass(frozen=True, slots=True)
+class ModerationPage:
+    """A page of the moderation queue."""
+
+    items: list[ModerationView]
+    next_cursor: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class ChatShareView:
+    """One message of a shared chat."""
+
+    role: Literal["user", "assistant"]
+    text: str
+    tool_notes: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class CardShareView:
+    """One card of a shared flash card set."""
+
+    id: str
+    front: str
+    back: str
+
+
+@dataclass(frozen=True, slots=True)
+class ArtifactShareView:
+    """A shared Studio output: its kind and content."""
+
+    kind: str
+    content: dict[str, Any]
+    options: dict[str, Any]
+
+
+@dataclass(frozen=True, slots=True)
+class PublicShareView:
+    """What anyone with a share link sees."""
+
+    kind: Literal["chat", "flashcard_set", "artifact"]
+    title: str
+    author_first_name: str
+    created_at: datetime
+    chat: tuple[ChatShareView, ...] | None
+    flashcards: tuple[CardShareView, ...] | None
+    artifact: ArtifactShareView | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class SetCookie:
+    """A cookie the interface sets on the answer (HttpOnly, SameSite=Lax)."""
+
+    name: str
+    value: str
+    path: str
+    max_age: int
+
+
+@dataclass(frozen=True, slots=True)
+class WebResponse:
+    """An HTTP answer of a public page: status, headers and body."""
+
+    status_code: int
+    html: str | None = None
+    location: str | None = None
+    retry_after: int | None = None
+    cookie: SetCookie | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class PublicMessageView:
+    """A shared answer: its text (with valid OpenUI blocks only) and dates."""
+
+    text: str
+    created_at: datetime
+    expires_at: datetime
