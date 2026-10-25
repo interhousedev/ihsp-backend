@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<questestinterop xmlns="http://www.imsglobal.org/xsd/ims_qtiasiv1p2">
+ <assessment ident="A1" title="Chapter quiz">
+  <qtimetadata>
+   <qtimetadatafield><fieldlabel>cc_maxattempts</fieldlabel><fieldentry>2</fieldentry></qtimetadatafield>
+  </qtimetadata>
+  <section ident="root_section">
+   <item ident="q1" title="MC">
+    <itemmetadata><qtimetadata><qtimetadatafield><fieldlabel>cc_profile</fieldlabel>
+     <fieldentry>cc.multiple_choice.v0p1</fieldentry></qtimetadatafield></qtimetadata></itemmetadata>
+    <presentation><material><mattext texttype="text/html">&lt;p&gt;What is &lt;b&gt;2+2&lt;/b&gt;?&lt;/p&gt;&lt;img src="$IMS-CC-FILEBASE$/img/q.png"/&gt;</mattext></material>
+     <response_lid ident="r1" rcardinality="Single"><render_choice>
+      <response_label ident="a"><material><mattext>3</mattext></material></response_label>
+      <response_label ident="b"><material><mattext>4</mattext></material></response_label>
+     </render_choice></response_lid></presentation>
+    <resprocessing><outcomes><decvar/></outcomes>
+     <respcondition continue="No"><conditionvar><varequal respident="r1">b</varequal></conditionvar>
+      <setvar action="Set" varname="SCORE">100</setvar></respcondition></resprocessing>
+    <itemfeedback ident="general_fb"><flow_mat><material><mattext>Count.</mattext></material></flow_mat></itemfeedback>
+   </item>
+   <item ident="q2" title="TF">
+    <itemmetadata><qtimetadata><qtimetadatafield><fieldlabel>cc_profile</fieldlabel>
+     <fieldentry>cc.true_false.v0p1</fieldentry></qtimetadatafield></qtimetadata></itemmetadata>
+    <presentation><material><mattext>The sky is blue.</mattext></material>
+     <response_lid ident="r1" rcardinality="Single"><render_choice>
+      <response_label ident="t"><material><mattext>True</mattext></material></response_label>
+      <response_label ident="f"><material><mattext>False</mattext></material></response_label>
+     </render_choice></response_lid></presentation>
+    <resprocessing><respcondition><conditionvar><varequal respident="r1">t</varequal></conditionvar>
+     <setvar action="Set">100</setvar></respcondition></resprocessing>
+   </item>
+   <item ident="q3" title="MR">
+    <itemmetadata><qtimetadata><qtimetadatafield><fieldlabel>cc_profile</fieldlabel>
+     <fieldentry>cc.multiple_response.v0p1</fieldentry></qtimetadatafield></qtimetadata></itemmetadata>
+    <presentation><material><mattext>Primes?</mattext></material>
+     <response_lid ident="r1" rcardinality="Multiple"><render_choice>
+      <response_label ident="x2"><material><mattext>2</mattext></material></response_label>
+      <response_label ident="x3"><material><mattext>3</mattext></material></response_label>
+      <response_label ident="x4"><material><mattext>4</mattext></material></response_label>
+     </render_choice></response_lid></presentation>
+    <resprocessing><respcondition><conditionvar><and>
+     <varequal respident="r1">x2</varequal><varequal respident="r1">x3</varequal>
+     <not><varequal respident="r1">x4</varequal></not></and></conditionvar>
+     <setvar action="Set">100</setvar></respcondition></resprocessing>
+   </item>
+   <item ident="q4" title="FIB">
+    <itemmetadata><qtimetadata><qtimetadatafield><fieldlabel>cc_profile</fieldlabel>
+     <fieldentry>cc.fib.v0p1</fieldentry></qtimetadatafield></qtimetadata></itemmetadata>
+    <presentation><material><mattext>Capital of France?</mattext></material>
+     <response_str ident="r1"><render_fib/></response_str></presentation>
+    <resprocessing><respcondition><conditionvar><or>
+     <varequal respident="r1">Paris</varequal><varequal respident="r1">paris</varequal></or>
+     </conditionvar><setvar action="Set">100</setvar></respcondition></resprocessing>
+   </item>
+   <item ident="q5" title="Essay">
+    <itemmetadata><qtimetadata><qtimetadatafield><fieldlabel>cc_profile</fieldlabel>
+     <fieldentry>cc.essay.v0p1</fieldentry></qtimetadatafield></qtimetadata></itemmetadata>
+    <presentation><material><mattext>Explain gravity.</mattext></material>
+     <response_str ident="r1"><render_fib/></response_str></presentation>
+   </item>
+  </section>
+ </assessment>
+</questestinterop>
