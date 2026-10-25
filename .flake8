@@ -1,0 +1,46 @@
+[flake8]
+max-line-length = 88
+select = E,F,W,B,C4,C90,ANN,D,N,RET
+extend-ignore = E203, W503, D100, D104, ANN101, ANN102, ANN401, B042
+# ANN101/ANN102: self and cls need no annotation. ANN401: `Any` is checked by mypy and
+# CODESTYLE (comment why); **kwargs: Any is part of the plan's contracts.
+# B042: kwargs-only BaseError.__init__ is the plan's design (errors are never pickled).
+per-file-ignores =
+    tests/*:D,ANN201
+exclude =
+    .venv,
+    __pycache__,
+    migrations/versions
+
+max-complexity = 8
+
+# FastAPI parameter markers are safe defaults (B008)
+extend-immutable-calls =
+    fastapi.Depends,
+    fastapi.Query,
+    fastapi.Body,
+    fastapi.Header,
+    fastapi.Cookie,
+    fastapi.Path,
+    fastapi.Form,
+    fastapi.File,
+    fastapi.Security,
+    taskiq.TaskiqDepends
+
+# Type annotation rules
+# ---------------------
+# Require annotations everywhere
+annotations = yes
+allow-untyped-defs = no
+allow-untyped-nested = no
+allow-untyped-globals = no
+allow-untyped-args = no
+allow-untyped-return = no
+
+# Naming rules
+# ------------
+classmethod-decorators = classmethod
+
+# Docstrings
+# ----------
+docstring-convention = google
