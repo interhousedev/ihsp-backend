@@ -1,0 +1,32 @@
+# gitleaks configuration, used by scripts/security_scan.sh in both modes (git history and --no-history dir).
+# Extends the default rule set; only the path allowlist below is local.
+# gitleaks allows a single [allowlist] table, so every entry is one line in `paths`, with its reason above it.
+title = "ihsp gitleaks"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Ignored, generated, local-only and reviewed false-positive paths"
+paths = [
+  # Ignored and build directories: never committed, or third-party code.
+  '''(^|/)\.venv/''',                 # virtualenv: third-party code
+  '''(^|/)\.mypy_cache/''',           # mypy cache
+  '''(^|/)reports/''',                # scanner output of scripts/security_scan.sh (git-ignored)
+  '''(^|/)node_modules/''',           # JavaScript dependencies
+
+  # Test fixtures: fake passwords, tokens and push keys that generic-api-key flags on entropy.
+  '''(^|/)tests/factories/notify\.py$''',                    # fake auth/p256dh push-subscription fixtures
+  '''(^|/)tests/identity/http/test_account_routes\.py$''',   # fake test passwords
+  '''(^|/)tests/identity/http/test_admin_routes\.py$''',     # fake test passwords
+  '''(^|/)tests/identity/http/test_login_routes\.py$''',     # fake test passwords
+  '''(^|/)tests/identity/integration/test_sql_flows\.py$''', # fake test passwords
+  '''(^|/)tests/identity/unit/test_account\.py$''',          # fake test passwords
+  '''(^|/)tests/identity/unit/test_admin\.py$''',            # fake test passwords
+  '''(^|/)tests/identity/unit/test_recovery\.py$''',         # fake test passwords
+
+  # Source false positives: the rule flags an identifier, i18n key or docstring on entropy, not a credential.
+  '''(^|/)app/interfaces/http/dependencies\.py$''',                       # 'token' argument name
+  '''(^|/)app/modules/lms/domain/authoring/errors\.py$''',                # i18n key 'lms-h5p-invalid'
+  '''(^|/)app/modules/notify/infrastructure/pywebpush_sender\.py$''',     # module docstring only
+]

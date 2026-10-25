@@ -1,0 +1,23 @@
+# gitleaks fingerprints (commit:file:rule:line) reviewed and accepted: all are fake test values or false positives.
+# Test passwords (N3w..., Wr0...) and the auth/p256dh fixtures in tests/factories/notify.py are fixture data;
+# the rest are message keys, route strings, and docstrings the generic-api-key rule flags on entropy.
+047574e3f643fe39dd493a1e4154e8338454d019:tests/identity/http/test_account_routes.py:generic-api-key:222
+047574e3f643fe39dd493a1e4154e8338454d019:tests/identity/http/test_login_routes.py:generic-api-key:444
+047574e3f643fe39dd493a1e4154e8338454d019:tests/identity/http/test_login_routes.py:generic-api-key:530
+047574e3f643fe39dd493a1e4154e8338454d019:tests/identity/integration/test_sql_flows.py:generic-api-key:173
+047574e3f643fe39dd493a1e4154e8338454d019:tests/identity/unit/test_account.py:generic-api-key:112
+047574e3f643fe39dd493a1e4154e8338454d019:tests/identity/unit/test_account.py:generic-api-key:116
+047574e3f643fe39dd493a1e4154e8338454d019:tests/identity/unit/test_account.py:generic-api-key:133
+047574e3f643fe39dd493a1e4154e8338454d019:tests/identity/unit/test_admin.py:generic-api-key:196
+047574e3f643fe39dd493a1e4154e8338454d019:tests/identity/unit/test_admin.py:generic-api-key:210
+047574e3f643fe39dd493a1e4154e8338454d019:tests/identity/unit/test_admin.py:generic-api-key:228
+047574e3f643fe39dd493a1e4154e8338454d019:tests/identity/unit/test_admin.py:generic-api-key:239
+047574e3f643fe39dd493a1e4154e8338454d019:tests/identity/unit/test_admin.py:generic-api-key:283
+047574e3f643fe39dd493a1e4154e8338454d019:tests/identity/unit/test_admin.py:generic-api-key:449
+047574e3f643fe39dd493a1e4154e8338454d019:tests/identity/unit/test_admin.py:generic-api-key:454
+047574e3f643fe39dd493a1e4154e8338454d019:tests/identity/unit/test_recovery.py:generic-api-key:32
+37a840d62d03f641600961d5c819c24dff6396a9:tests/identity/http/test_admin_routes.py:generic-api-key:363
+43089aaa35333ef70027691a63a9d75d662abbe3:tests/factories/notify.py:generic-api-key:23
+9caf7d1cacc07f2f5ffa38f1ab332d9106805ee4:app/interfaces/http/dependencies.py:generic-api-key:34
+eb97afb373d15463c90e5de50733ee6f80c2e18f:app/modules/notify/infrastructure/pywebpush_sender.py:generic-api-key:1
+fc99d59b353d89c35f6416ff5981bb34ec313dc1:app/modules/lms/domain/authoring/errors.py:generic-api-key:159
