@@ -1,0 +1,84 @@
+"""Router of the attendance step of the end-of-lesson prompt (BOT-17)."""
+
+from app.interfaces.bot.callbacks import (
+    JournalCb,
+    JournalMarkCb,
+    JournalStudentCb,
+    WorkOffPickCb,
+    WorkOffPromptCb,
+)
+from app.interfaces.bot.filters.has_role import HasRole
+from app.interfaces.bot.routers.teacher.homework_prompt.handlers.not_text import (
+    reject_non_text,
+)
+from app.interfaces.bot.routers.teacher.lesson_prompt.handlers.edit_attendance import (
+    edit_attendance,
+)
+from app.interfaces.bot.routers.teacher.lesson_prompt.handlers.journal import (
+    close_journal,
+    open_journal,
+    open_student,
+    set_mark,
+)
+from app.interfaces.bot.routers.teacher.lesson_prompt.handlers.submit import (
+    submit_attendance,
+)
+from app.interfaces.bot.routers.teacher.lesson_prompt.handlers.toggle_absent import (
+    toggle_absent,
+)
+from app.interfaces.bot.routers.teacher.lesson_prompt.handlers.wo_ask import (
+    ask_work_off_text,
+)
+from app.interfaces.bot.routers.teacher.lesson_prompt.handlers.wo_cancel import (
+    cancel_work_off_text,
+)
+from app.interfaces.bot.routers.teacher.lesson_prompt.handlers.wo_menu import (
+    open_work_off_menu,
+)
+from app.interfaces.bot.routers.teacher.lesson_prompt.handlers.wo_pick import (
+    pick_work_off,
+)
+from app.interfaces.bot.routers.teacher.lesson_prompt.handlers.wo_text import (
+    receive_work_off_text,
+)
+from app.interfaces.bot.routers.teacher.lesson_prompt.states import WorkOffStates
+from app.shared.actor import Role
+from app.shared.contracts.callbacks import AttActionCb, AttToggleCb
+
+from aiogram import F, Router
+from aiogram.filters import StateFilter
+
+
+def register_filters(router: Router) -> None:
+    """The prompt belongs to teachers."""
+    router.message.filter(HasRole(Role.TEACHER))
+    router.callback_query.filter(HasRole(Role.TEACHER))
+
+
+def build_router() -> Router:
+    """Build the attendance prompt router."""
+    router = Router(name="teacher.lesson_prompt")
+    register_filters(router)
+    router.callback_query.register(toggle_absent, AttToggleCb.filter())
+    router.callback_query.register(
+        submit_attendance,
+        AttActionCb.filter(F.action.in_({"submit", "submit_none", "all_present"})),
+    )
+    router.callback_query.register(
+        edit_attendance, AttActionCb.filter(F.action == "edit")
+    )
+    cb = router.callback_query
+    cb.register(open_work_off_menu, WorkOffPromptCb.filter(F.action == "menu"))
+    cb.register(ask_work_off_text, WorkOffPromptCb.filter(F.action == "text"))
+    cb.register(cancel_work_off_text, WorkOffPromptCb.filter(F.action == "cancel_text"))
+    cb.register(pick_work_off, WorkOffPickCb.filter())
+    cb.register(open_journal, JournalCb.filter(F.action == "open"))
+    cb.register(close_journal, JournalCb.filter(F.action == "back"))
+    cb.register(open_student, JournalStudentCb.filter())
+    cb.register(set_mark, JournalMarkCb.filter())
+    waiting = StateFilter(WorkOffStates.waiting_text)
+    router.message.register(
+        receive_work_off_text, waiting, F.text & ~F.text.startswith("/")
+    )
+    router.message.register(reject_non_text, waiting, ~F.text)
+    return router
