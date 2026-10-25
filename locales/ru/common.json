@@ -1,0 +1,19 @@
+{
+  "error-internal": "Что-то пошло не так. Попробуйте позже.",
+  "error-not-found": "Не найдено.",
+  "error-forbidden": "У вас нет прав на это действие.",
+  "error-unauthorized": "Войдите, чтобы продолжить.",
+  "error-conflict": "Данные изменил кто-то другой. Обновите страницу и повторите.",
+  "error-validation": "Некоторые введённые данные неверны.",
+  "error-rate-limited": "Слишком много попыток. Повторите через {retry_after} с.",
+  "error-gone": "Это больше недоступно.",
+  "common-yes": "Да",
+  "common-no": "Нет",
+  "common-cancel": "Отмена",
+  "common-back": "Назад",
+  "common-save": "Сохранить",
+  "admin-platform-settings-invalid": "Недопустимое значение настройки платформы.",
+  "admin-limit-invalid": "Недопустимое значение лимита.",
+  "admin-limit-extension-invalid": "Недопустимое увеличение лимита.",
+  "admin-limit-user-not-found": "Ученик не найден."
+}

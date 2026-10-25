@@ -1,0 +1,6 @@
+{
+  "web-search-busy": "Web search is busy right now. Try again in {seconds} seconds.",
+  "web-search-disabled": "Web search is not available.",
+  "web-search-quota-exceeded": "You have used all web searches for today ({limit}). They reset at midnight.",
+  "web-search-unavailable": "Web search is unavailable right now. Try again in a minute or turn it off."
+}

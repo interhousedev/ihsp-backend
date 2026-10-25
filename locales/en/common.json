@@ -1,0 +1,19 @@
+{
+  "error-internal": "Something went wrong. Please try again later.",
+  "error-not-found": "Not found.",
+  "error-forbidden": "You do not have permission to do this.",
+  "error-unauthorized": "Please sign in to continue.",
+  "error-conflict": "The data was changed by someone else. Reload and try again.",
+  "error-validation": "Some of the entered data is not valid.",
+  "error-rate-limited": "Too many attempts. Try again in {retry_after} s.",
+  "error-gone": "This is no longer available.",
+  "common-yes": "Yes",
+  "common-no": "No",
+  "common-cancel": "Cancel",
+  "common-back": "Back",
+  "common-save": "Save",
+  "admin-platform-settings-invalid": "Invalid platform setting value.",
+  "admin-limit-invalid": "Invalid limit value.",
+  "admin-limit-extension-invalid": "Invalid limit extension.",
+  "admin-limit-user-not-found": "Student not found."
+}

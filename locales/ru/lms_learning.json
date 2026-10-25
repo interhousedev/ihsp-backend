@@ -1,0 +1,21 @@
+{
+  "lms-learn-course-not-found": "Курс не найден.",
+  "lms-learn-step-not-found": "Этого шага нет в опубликованном курсе.",
+  "lms-learn-block-not-found": "В шаге нет такого блока.",
+  "lms-learn-card-not-found": "Этой карточки больше нет.",
+  "lms-learn-attempt-not-found": "Попытка не найдена.",
+  "lms-learn-invite-not-valid": "Приглашение недействительно.",
+  "lms-learn-not-enrolled": "Запишитесь на курс, чтобы открыть этот шаг.",
+  "lms-learn-permission-denied": "У вас нет права «{permission}» в этом курсе.",
+  "lms-learn-no-attempts-left": "Попыток для этого теста не осталось.",
+  "lms-learn-attempt-cooldown": "Следующая попытка будет доступна в {available_at}.",
+  "lms-learn-attempt-closed": "Попытка уже отправлена или время вышло.",
+  "lms-learn-attempt-not-submitted": "У этой попытки ещё нет результата.",
+  "lms-learn-attempt-start-conflict": "Не удалось начать попытку. Повторите.",
+  "lms-learn-answer-invalid": "Ответ на вопрос {question_id} недопустим.",
+  "lms-learn-score-invalid": "Оценка должна быть от 0 до {max_score}.",
+  "lms-learn-attempt-preview": "Пробные попытки нельзя проверять.",
+  "lms-learn-video-not-found": "В этом блоке нет загруженного видео.",
+  "lms-learn-h5p-not-found": "В этом блоке нет пакета H5P.",
+  "lms-learn-interaction-not-found": "В этом видео нет такого вопроса."
+}

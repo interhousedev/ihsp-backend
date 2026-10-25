@@ -1,0 +1,19 @@
+{
+  "error-internal": "Nimadir xato ketdi. Keyinroq qayta urinib ko'ring.",
+  "error-not-found": "Topilmadi.",
+  "error-forbidden": "Bu amalni bajarishga ruxsatingiz yo'q.",
+  "error-unauthorized": "Davom etish uchun tizimga kiring.",
+  "error-conflict": "Ma'lumotni boshqa kimdir o'zgartirgan. Sahifani yangilab, qayta urinib ko'ring.",
+  "error-validation": "Kiritilgan ma'lumotlarning ba'zilari noto'g'ri.",
+  "error-rate-limited": "Juda ko'p urinish. {retry_after} soniyadan keyin qayta urinib ko'ring.",
+  "error-gone": "Bu endi mavjud emas.",
+  "common-yes": "Ha",
+  "common-no": "Yo'q",
+  "common-cancel": "Bekor qilish",
+  "common-back": "Orqaga",
+  "common-save": "Saqlash",
+  "admin-platform-settings-invalid": "Platforma sozlamasining qiymati notoʻgʻri.",
+  "admin-limit-invalid": "Limit qiymati notoʻgʻri.",
+  "admin-limit-extension-invalid": "Limit kengaytmasi notoʻgʻri.",
+  "admin-limit-user-not-found": "O‘quvchi topilmadi."
+}
