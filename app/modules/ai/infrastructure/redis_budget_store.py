@@ -1,0 +1,90 @@
+"""Redis counters for the AI token budgets (spec → Redis keys)."""
+
+from datetime import date, datetime, timedelta
+from uuid import UUID
+
+from app.modules.ai.ports.budget_store import SessionWindow
+from app.shared.redis_util import wait
+
+from redis.asyncio import Redis
+
+DAY_TTL = timedelta(hours=48)
+
+
+def _text(value: bytes | str) -> str:
+    return value.decode() if isinstance(value, bytes) else value
+
+
+STUDENT_PREFIX = "ai"
+COURSE_PREFIX = "ai:lms"  # the course staff pool, shared with the notebooks module
+
+
+class RedisBudgetStore:
+    """Implements BudgetStore with `{prefix}:session:{user}` and `{prefix}:day:...`.
+
+    The assistants' pool uses the prefix `ai`; the course staff pool `ai:lms` has
+    the same key layout as the notebooks module's store with that prefix, so the
+    author assistant and the workspace chat and Studio count against one pool.
+    """
+
+    def __init__(self, redis: Redis, prefix: str = STUDENT_PREFIX) -> None:
+        """Store the Redis client and the key prefix of the pool."""
+        self.redis = redis
+        self.prefix = prefix
+
+    def _session_key(self, user_id: UUID) -> str:
+        return f"{self.prefix}:session:{user_id}"
+
+    def _day_key(self, user_id: UUID, day: date) -> str:
+        return f"{self.prefix}:day:{user_id}:{day.isoformat()}"
+
+    async def session(self, user_id: UUID) -> SessionWindow | None:
+        """Return the open session window, if there is one."""
+        raw = await wait(self.redis.hgetall(self._session_key(user_id)))
+        data = {_text(k): _text(v) for k, v in raw.items()}
+        if "ends_at" not in data:
+            return None
+        return SessionWindow(
+            used=int(data.get("used", "0")),
+            ends_at=datetime.fromisoformat(data["ends_at"]),
+        )
+
+    async def open_session(self, user_id: UUID, ends_at: datetime) -> None:
+        """Start a new window with zero tokens used; it expires at `ends_at`."""
+        key = self._session_key(user_id)
+        await self.redis.delete(key)
+        fields = {"used": 0, "ends_at": ends_at.isoformat()}
+        await wait(self.redis.hset(key, mapping=fields))
+        await self.redis.expireat(key, int(ends_at.timestamp()))
+
+    async def add_session(self, user_id: UUID, tokens: int) -> None:
+        """Add tokens to the open window."""
+        await wait(self.redis.hincrby(self._session_key(user_id), "used", tokens))
+
+    async def day_used(self, user_id: UUID, day: date) -> int:
+        """Return the tokens used on a Tashkent day."""
+        value = await self.redis.get(self._day_key(user_id, day))
+        return int(_text(value)) if value is not None else 0
+
+    async def add_day(self, user_id: UUID, day: date, tokens: int) -> None:
+        """Add tokens to a day's counter (kept for 48 hours)."""
+        key = self._day_key(user_id, day)
+        await wait(self.redis.incrby(key, tokens))
+        await self.redis.expire(key, int(DAY_TTL.total_seconds()))
+
+    def _week_key(self, user_id: UUID, week: date) -> str:
+        return f"{self.prefix}:smart:{user_id}:{week.isoformat()}"
+
+    async def week_used(self, user_id: UUID, week: date) -> int:
+        """Return the smart-tier requests counted in a week."""
+        value = await self.redis.get(self._week_key(user_id, week))
+        return int(_text(value)) if value is not None else 0
+
+    async def add_week(
+        self, user_id: UUID, week: date, count: int, expires_at: datetime
+    ) -> int:
+        """Add to a week's smart-tier requests; the key expires with the week."""
+        key = self._week_key(user_id, week)
+        total = int(await wait(self.redis.incrby(key, count)))
+        await self.redis.expireat(key, int(expires_at.timestamp()))
+        return total
