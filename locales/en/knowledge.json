@@ -1,0 +1,5 @@
+{
+  "knowledge-not-found": "Knowledge entry not found.",
+  "knowledge-key-taken": "A knowledge entry with this key already exists.",
+  "knowledge-invalid": "The value of the field \"{field}\" is not valid."
+}
