@@ -1,0 +1,402 @@
+"""Request and response schemas of the certificates routes."""
+
+from datetime import date, datetime
+from typing import Literal
+from uuid import UUID
+
+from app.modules.certificates.application.get_staff_ranking import RankedStudent
+from app.modules.certificates.application.get_staff_stats import TypeStats
+from app.modules.certificates.application.import_emis import ImportResult
+from app.modules.certificates.application.list_custom_field_values import (
+    CustomFieldValues,
+)
+from app.modules.certificates.application.list_staff_entries import (
+    StaffEntriesPage,
+    StaffEntryView,
+)
+from app.modules.certificates.application.staff_scope import StaffFilters
+from app.modules.certificates.domain.certificate_type import CertificateType
+from app.modules.certificates.domain.custom_fields import CustomField
+from app.modules.certificates.domain.entry import CertificateEntry, EntryFile
+from app.modules.certificates.ports.student_directory import GroupInfo
+
+from pydantic import BaseModel, Field
+
+Text = Field(min_length=1, max_length=120)
+
+
+class TypeName(BaseModel):
+    """A name in the three languages."""
+
+    uz: str = Text
+    ru: str = Text
+    en: str = Text
+
+
+# A custom field value: text or one choice, a number, or several choices.
+CustomValue = str | float | list[str]
+
+
+class CustomFieldInput(BaseModel):
+    """A custom input field of a type (admin)."""
+
+    key: str = Field(min_length=1, max_length=32, pattern=r"^[a-z][a-z0-9_]*$")
+    kind: Literal["text", "number", "single", "multi"]
+    label: TypeName
+    required: bool = False
+    options: list[str] = Field(default_factory=list, max_length=50)
+    allow_other: bool = False
+    min: float | None = None
+    """Number fields: the lowest value (null: open)."""
+    max: float | None = None
+    """Number fields: the highest value (null: open)."""
+
+
+class CustomFieldResponse(CustomFieldInput):
+    """CustomField."""
+
+    @classmethod
+    def from_domain(cls, item: CustomField) -> "CustomFieldResponse":
+        """Build the response from the domain field."""
+        return cls(
+            key=item.key,
+            kind=item.kind.value,
+            label=TypeName(**item.label),
+            required=item.required,
+            options=list(item.options),
+            allow_other=item.allow_other,
+            min=item.min_value,
+            max=item.max_value,
+        )
+
+
+class CertificateTypeInput(BaseModel):
+    """Body of POST /admin/types."""
+
+    code: str = Field(min_length=1, max_length=40)
+    name: TypeName
+    position: int | None = Field(default=None, ge=0, le=10_000)
+    custom_fields: list[CustomFieldInput] = Field(default_factory=list, max_length=20)
+
+
+class CertificateTypePatch(BaseModel):
+    """Body of PATCH /admin/types/{id}: only the sent fields change."""
+
+    code: str | None = Field(default=None, min_length=1, max_length=40)
+    name: TypeName | None = None
+    position: int | None = Field(default=None, ge=0, le=10_000)
+    custom_fields: list[CustomFieldInput] | None = Field(default=None, max_length=20)
+
+
+class CertificateTypeResponse(BaseModel):
+    """CertificateType."""
+
+    id: UUID
+    code: str
+    name: TypeName
+    builtin: bool
+    position: int
+    custom_fields: list[CustomFieldResponse]
+
+    @classmethod
+    def from_domain(cls, kind: CertificateType) -> "CertificateTypeResponse":
+        """Build the response from the domain type."""
+        return cls(
+            id=kind.id,
+            code=kind.code,
+            name=TypeName(
+                uz=kind.name.get("uz", ""),
+                ru=kind.name.get("ru", ""),
+                en=kind.name.get("en", ""),
+            ),
+            builtin=kind.builtin,
+            position=kind.position,
+            custom_fields=[
+                CustomFieldResponse.from_domain(item) for item in kind.custom_fields
+            ],
+        )
+
+
+class CertificateFileResponse(BaseModel):
+    """CertificateFile."""
+
+    id: UUID
+    name: str
+    size: int
+    content_type: str
+
+    @classmethod
+    def from_domain(cls, file: EntryFile) -> "CertificateFileResponse":
+        """Build the response from the domain file."""
+        return cls(
+            id=file.id, name=file.name, size=file.size, content_type=file.content_type
+        )
+
+
+class EntryValues(BaseModel):
+    """Values a student fills in for a certificate: its type's custom fields.
+
+    Level, score, percent, subject, year and serial are custom fields by key.
+    """
+
+    custom: dict[str, CustomValue] | None = None
+
+
+class CreateEntryBody(EntryValues):
+    """Body of POST /me."""
+
+    type_id: UUID
+
+
+class UpdateEntryBody(EntryValues):
+    """Body of PATCH /me/{entry_id}: only the sent fields change."""
+
+
+class CertificateEntryResponse(BaseModel):
+    """CertificateEntry."""
+
+    id: UUID
+    type_id: UUID
+    source: Literal["manual", "emis"]
+    issued_at: date | None
+    expires_at: date | None
+    files: list[CertificateFileResponse]
+    custom_values: dict[str, CustomValue]
+    created_at: datetime
+
+    @classmethod
+    def from_domain(cls, entry: CertificateEntry) -> "CertificateEntryResponse":
+        """Build the response from the domain entry."""
+        return cls(
+            id=entry.id,
+            type_id=entry.type_id,
+            source=entry.source.value,
+            issued_at=entry.issued_at,
+            expires_at=entry.expires_at,
+            files=[CertificateFileResponse.from_domain(f) for f in entry.files],
+            custom_values=dict(entry.custom_values),
+            created_at=entry.created_at,
+        )
+
+
+class ImportEmisResponse(BaseModel):
+    """Result of POST /me/import-emis."""
+
+    created: int
+    updated: int
+    files: int
+    skipped: int
+
+    @classmethod
+    def from_result(cls, result: ImportResult) -> "ImportEmisResponse":
+        """Build the response from the import result."""
+        return cls(
+            created=result.created,
+            updated=result.updated,
+            files=result.files,
+            skipped=result.skipped,
+        )
+
+
+class StaffStudent(BaseModel):
+    """The student of a staff entry."""
+
+    id: UUID
+    name: str
+    group_id: UUID
+    group_name: str
+    subgroup: str | None
+
+
+class StaffEntryResponse(CertificateEntryResponse):
+    """StaffEntry: an entry with its student."""
+
+    student: StaffStudent
+
+    @classmethod
+    def from_view(cls, view: StaffEntryView) -> "StaffEntryResponse":
+        """Build the response from an entry and its student."""
+        base = CertificateEntryResponse.from_domain(view.entry)
+        student = view.student
+        return cls(
+            **base.model_dump(),
+            student=StaffStudent(
+                id=student.id,
+                name=student.name,
+                group_id=student.group_id,
+                group_name=student.group_name,
+                subgroup=student.subgroup,
+            ),
+        )
+
+
+class StaffEntriesResponse(BaseModel):
+    """A page of staff entries."""
+
+    items: list[StaffEntryResponse]
+    total: int
+
+    @classmethod
+    def from_page(cls, page: StaffEntriesPage) -> "StaffEntriesResponse":
+        """Build the response from a page."""
+        return cls(
+            items=[StaffEntryResponse.from_view(v) for v in page.items],
+            total=page.total,
+        )
+
+
+class GroupCountsResponse(BaseModel):
+    """Counts per level of one group."""
+
+    group_id: UUID
+    group_name: str
+    counts: dict[str, int]
+
+
+class TypeStatsResponse(BaseModel):
+    """Levels of a type and the counts per group."""
+
+    type_id: UUID
+    levels: list[str]
+    groups: list[GroupCountsResponse]
+
+
+class StaffStatsResponse(BaseModel):
+    """Response of GET /staff/stats."""
+
+    types: list[TypeStatsResponse]
+
+    @classmethod
+    def from_stats(cls, stats: list[TypeStats]) -> "StaffStatsResponse":
+        """Build the response from the use case result."""
+        return cls(
+            types=[
+                TypeStatsResponse(
+                    type_id=item.type_id,
+                    levels=item.levels,
+                    groups=[
+                        GroupCountsResponse(
+                            group_id=g.group_id,
+                            group_name=g.group_name,
+                            counts=g.counts,
+                        )
+                        for g in item.groups
+                    ],
+                )
+                for item in stats
+            ]
+        )
+
+
+class RankingItem(BaseModel):
+    """One ranked student: ``value`` is the best score of the type (null: none)."""
+
+    student_id: UUID
+    name: str
+    group_name: str
+    count: int
+    value: float | None = None
+
+
+class StaffRankingResponse(BaseModel):
+    """Response of GET /staff/ranking."""
+
+    items: list[RankingItem]
+
+    @classmethod
+    def from_ranked(cls, ranked: list[RankedStudent]) -> "StaffRankingResponse":
+        """Build the response from the ranked students."""
+        return cls(
+            items=[
+                RankingItem(
+                    student_id=r.student_id,
+                    name=r.name,
+                    group_name=r.group_name,
+                    count=r.count,
+                    value=r.value,
+                )
+                for r in ranked
+            ]
+        )
+
+
+class StaffGroupResponse(BaseModel):
+    """A group for the filter dropdown."""
+
+    id: UUID
+    name: str
+    subgroups: list[str]
+
+    @classmethod
+    def from_info(cls, info: GroupInfo) -> "StaffGroupResponse":
+        """Build the response from the group info."""
+        return cls(id=info.id, name=info.name, subgroups=list(info.subgroups))
+
+
+class NumberRange(BaseModel):
+    """Bounds of a number custom field filter; an open end is null."""
+
+    min: float | None = None
+    max: float | None = None
+
+
+class StaffFiltersBody(BaseModel):
+    """Staff filters as a JSON object (export body)."""
+
+    group_id: UUID | None = None
+    subgroup: str | None = None
+    type_id: UUID | None = None
+    subject: str | None = None
+    level: str | None = None
+    student_id: UUID | None = None
+    q: str | None = None
+    custom: dict[str, list[str]] = Field(default_factory=dict, max_length=20)
+    ranges: dict[str, NumberRange] = Field(default_factory=dict, max_length=20)
+
+    def to_filters(self) -> StaffFilters:
+        """Convert to the use case filters."""
+        return StaffFilters(
+            group_id=self.group_id,
+            subgroup=self.subgroup,
+            type_id=self.type_id,
+            subject=self.subject,
+            level=self.level,
+            student_id=self.student_id,
+            q=self.q,
+            custom={k: tuple(v) for k, v in self.custom.items()},
+            ranges={k: (r.min, r.max) for k, r in self.ranges.items()},
+        )
+
+
+class CustomFieldValuesResponse(BaseModel):
+    """Response of GET /staff/fields/{key}/values.
+
+    ``other_values`` holds the free-text values of a choice field (all distinct
+    texts for a text field); ``min`` and ``max`` are set for a number field.
+    """
+
+    key: str
+    kind: Literal["text", "number", "single", "multi"]
+    options: list[str]
+    other_values: list[str]
+    min: float | None
+    max: float | None
+
+    @classmethod
+    def from_values(cls, values: CustomFieldValues) -> "CustomFieldValuesResponse":
+        """Build the response from the use case result."""
+        return cls(
+            key=values.field.key,
+            kind=values.field.kind.value,
+            options=values.options,
+            other_values=values.other_values,
+            min=values.min,
+            max=values.max,
+        )
+
+
+class ExportBody(BaseModel):
+    """Body of POST /staff/export: file ids, or filters that pick the files."""
+
+    file_ids: list[UUID] | None = Field(default=None, max_length=1000)
+    filters: StaffFiltersBody | None = None
