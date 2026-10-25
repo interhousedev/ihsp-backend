@@ -1,0 +1,9 @@
+{
+  "feedback-not-found": "Feedback not found.",
+  "feedback-invalid": "The value of the field \"{field}\" is not valid.",
+  "feedback-attachment-invalid": "This file cannot be attached. Upload images, videos, PDF or documents of your own, wait until they are processed, and attach at most 10.",
+  "feedback-mail-subject": "Reply to your feedback: {title}",
+  "feedback-mail-body": "<p>Thank you for your feedback “{title}”. The platform team replied:</p><p>{text}</p>",
+  "feedback-mail-attachments": "Files are attached to the reply on the platform:",
+  "feedback-rate-limited": "You have sent 10 feedback items today. Try again tomorrow."
+}
