@@ -1,0 +1,16 @@
+{
+  "mail-not-found": "Xat topilmadi.",
+  "mail-purged": "Xatning to'liq matni 30 kundan keyin o'chirilgan.",
+  "mail-mailbox-unavailable": "Sizda faol pochta qutisi yo'q.",
+  "mail-suspended": "Pochta qutingizdan yuborish to'xtatilgan. Xatlarni qabul qilish davom etadi.",
+  "mail-daily-limit": "Kunlik limitga yetildi: kuniga {limit} ta xat. Ertaga qayta urinib ko'ring.",
+  "mail-global-limit": "Bugungi umumiy yuborish limiti tugadi. Ertaga qayta urinib ko'ring.",
+  "mail-invalid-recipient": "\"{address}\" elektron pochta manzili emas.",
+  "mail-no-recipients": "Kamida bitta qabul qiluvchi qo'shing.",
+  "mail-too-many-recipients": "Xatda {limit} tadan ortiq qabul qiluvchi bo'lishi mumkin emas.",
+  "mail-too-large": "Xat yuborish uchun juda katta. Chegara — 25 MB.",
+  "mail-not-inbound": "Faqat qabul qilingan xatlarni spam deb belgilash mumkin.",
+  "mail-outbound-disabled": "Platformadan xat yuborish oʻchirilgan.",
+  "mail-outbound-failed": "Xatni yuborib boʻlmadi. Keyinroq urinib koʻring.",
+  "mail-attachment-not-found": "Biriktirilgan fayl sizning fayllaringiz orasida topilmadi."
+}
