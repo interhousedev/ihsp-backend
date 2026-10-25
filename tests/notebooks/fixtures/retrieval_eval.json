@@ -1,0 +1,191 @@
+{
+  "description": "Small multilingual retrieval set: 8 documents (Uzbek Latin x2, Uzbek Cyrillic x2, Russian x2, English x2), 64 passages, 64 questions. `kind` says why the question is hard for word matching. Not a public benchmark.",
+  "documents": [
+    {
+      "id": "bio",
+      "title": "Biologiya (uz, Latin)",
+      "lang": "uz-latn",
+      "passages": [
+        {"id": "bio1", "text": "Hujayra tirik organizmlarning tuzilish va hayot faoliyatining asosiy birligidir. Hujayra membranasi moddalarning hujayraga kirishi va chiqishini boshqaradi, yadro esa irsiy axborotni saqlaydi. Mitoxondriyalar hujayrani energiya bilan taʼminlaydi."},
+        {"id": "bio2", "text": "Fotosintez jarayonida oʻsimliklar quyosh nuri energiyasidan foydalanib, karbonat angidrid va suvdan glyukoza hosil qiladi va havoga kislorod chiqaradi. Bu jarayon barglardagi xloroplastlarda, xlorofill pigmenti ishtirokida sodir boʻladi."},
+        {"id": "bio3", "text": "Hujayrada nafas olish jarayonida glyukoza kislorod ishtirokida parchalanadi, natijada energiya (ATF), karbonat angidrid va suv ajralib chiqadi. Bu jarayonning asosiy qismi mitoxondriyalarda kechadi."},
+        {"id": "bio4", "text": "DNK ikki zanjirli spiral shaklidagi molekula boʻlib, irsiy axborotni saqlaydi. Uning tarkibida toʻrt xil nukleotid — adenin, timin, guanin va sitozin bor. Gen DNKning maʼlum bir oqsilni kodlovchi qismidir."},
+        {"id": "bio5", "text": "Mendel noʻxat oʻsimligi ustida tajribalar oʻtkazib, belgilarning avlodlarga oʻtish qonuniyatlarini aniqladi. Birinchi avlod duragaylarida faqat dominant belgi namoyon boʻladi, ikkinchi avlodda esa belgilar 3:1 nisbatda ajraladi."},
+        {"id": "bio6", "text": "Ekotizim — bu tirik organizmlar va ularning yashash muhitining oʻzaro bogʻliq majmuasidir. Oziq zanjirida ishlab chiqaruvchilar (oʻsimliklar), isteʼmolchilar (hayvonlar) va parchalovchilar (bakteriya, zamburugʻlar) boʻladi."},
+        {"id": "bio7", "text": "Hazm qilish tizimida ovqat ogʻiz boʻshligʻida mexanik maydalanadi, oshqozonda xlorid kislota va fermentlar taʼsirida parchalanadi. Oziq moddalarning asosiy qismi ingichka ichakda qonga soʻriladi."},
+        {"id": "bio8", "text": "Yurak qonni tomirlar orqali butun tanaga haydaydi. Arteriyalar qonni yurakdan organlarga, venalar esa organlardan yurakka olib boradi. Qon aylanishining katta va kichik doiralari mavjud."}
+      ]
+    },
+    {
+      "id": "hist",
+      "title": "Ўзбекистон тарихи (uz, Cyrillic)",
+      "lang": "uz-cyrl",
+      "passages": [
+        {"id": "hist1", "text": "Амир Темур 1370 йилда Мовароуннаҳрда ҳокимиятни қўлга олиб, Темурийлар давлатига асос солди. Пойтахти Самарқанд бўлган бу давлат Ўрта Осиё, Эрон ва Кавказнинг катта қисмини ўз ичига олган."},
+        {"id": "hist2", "text": "Мирзо Улуғбек Самарқандда расадхона қурдирган буюк астроном олим эди. Унинг «Зижи Курагоний» асарида 1018 та юлдузнинг ҳолати аниқланган. У Самарқанд, Бухоро ва Ғиждувонда мадрасалар барпо этган."},
+        {"id": "hist3", "text": "Алишер Навоий ўзбек адабий тилининг асосчиси, мутафаккир шоир ва давлат арбоби бўлган. Унинг «Хамса» асари беш достондан иборат бўлиб, жаҳон адабиётининг дурдоналарига киради."},
+        {"id": "hist4", "text": "Буюк ипак йўли Шарқ ва Ғарбни боғлаган қадимий савдо тармоғи бўлиб, Самарқанд, Бухоро ва Хива шу йўлдаги йирик шаҳарлар эди. Карвонлар ипак, зираворлар, қоғоз ва қимматбаҳо тошлар ташиган."},
+        {"id": "hist5", "text": "XIX асрда Туркистонда учта давлат — Бухоро амирлиги, Хива ва Қўқон хонликлари мавжуд эди. 1860—1870-йилларда Россия империяси бу ҳудудларни босиб олиб, Туркистон генерал-губернаторлигини ташкил қилди."},
+        {"id": "hist6", "text": "Жадидлар XX аср бошида маърифатпарварлик ҳаракатини бошлаб, янги усулдаги мактаблар очдилар. Маҳмудхўжа Беҳбудий, Абдулла Авлоний ва Мунаввар қори уларнинг машҳур вакиллари эди."},
+        {"id": "hist7", "text": "Ўзбекистон Республикаси мустақиллиги 1991 йил 31 августда эълон қилинган. 1 сентябрь — Мустақиллик куни умумхалқ байрами сифатида нишонланади."},
+        {"id": "hist8", "text": "Ўзбекистон Республикаси Конституцияси 1992 йил 8 декабрда қабул қилинган. Конституция давлат ҳокимиятининг ижро этувчи, қонун чиқарувчи ва суд ҳокимиятига бўлинишини белгилайди."}
+      ]
+    },
+    {
+      "id": "phys",
+      "title": "Физика (ru)",
+      "lang": "ru",
+      "passages": [
+        {"id": "phys1", "text": "Первый закон Ньютона (закон инерции): тело сохраняет состояние покоя или равномерного прямолинейного движения, пока на него не подействуют другие тела. Системы отсчёта, в которых выполняется этот закон, называют инерциальными."},
+        {"id": "phys2", "text": "Второй закон Ньютона утверждает, что ускорение тела прямо пропорционально равнодействующей силе и обратно пропорционально массе тела: a = F / m. Сила измеряется в ньютонах."},
+        {"id": "phys3", "text": "Согласно третьему закону Ньютона, силы взаимодействия двух тел равны по модулю и противоположны по направлению. Эти силы приложены к разным телам, поэтому не уравновешивают друг друга."},
+        {"id": "phys4", "text": "Закон Ома для участка цепи: сила тока прямо пропорциональна напряжению на участке и обратно пропорциональна его сопротивлению, I = U / R. Сопротивление проводника измеряется в омах."},
+        {"id": "phys5", "text": "Закон сохранения энергии: энергия не возникает из ничего и не исчезает, а лишь переходит из одного вида в другой. Кинетическая энергия зависит от массы и скорости тела, потенциальная — от высоты над землёй."},
+        {"id": "phys6", "text": "Давление — физическая величина, равная отношению силы, действующей перпендикулярно поверхности, к площади этой поверхности. Единица давления — паскаль. Атмосферное давление уменьшается с увеличением высоты."},
+        {"id": "phys7", "text": "Теплопередача происходит тремя способами: теплопроводностью, конвекцией и излучением. Металлы хорошо проводят тепло, а в жидкостях и газах оно переносится потоками вещества — конвекцией."},
+        {"id": "phys8", "text": "Закон Архимеда: на тело, погружённое в жидкость, действует выталкивающая сила, равная весу вытесненной жидкости. Тело плавает, если его плотность меньше плотности жидкости."}
+      ]
+    },
+    {
+      "id": "cs",
+      "title": "Computer science (en)",
+      "lang": "en",
+      "passages": [
+        {"id": "cs1", "text": "Big O notation describes how the running time of an algorithm grows with the size of its input. A linear search takes O(n) steps, while sorting with merge sort takes O(n log n)."},
+        {"id": "cs2", "text": "Binary search finds an item in a sorted array by repeatedly halving the search interval. It compares the target with the middle element and discards half of the elements each step, so it runs in O(log n) time."},
+        {"id": "cs3", "text": "A hash table stores key-value pairs and uses a hash function to compute the index of a bucket. Lookups take constant time on average, but collisions must be resolved by chaining or open addressing."},
+        {"id": "cs4", "text": "An SQL JOIN combines rows from two tables based on a related column. An INNER JOIN returns only matching rows, whereas a LEFT JOIN also keeps the unmatched rows of the left table with NULL values."},
+        {"id": "cs5", "text": "A database index is a data structure, usually a B-tree, that speeds up queries on a column at the cost of extra storage and slower writes. Without an index the database must scan the whole table."},
+        {"id": "cs6", "text": "TCP provides reliable, ordered delivery of data between two hosts by using sequence numbers, acknowledgements and retransmission. IP is responsible for addressing and routing packets across networks."},
+        {"id": "cs7", "text": "HTTP is the request-response protocol of the web. A client sends a request with a method such as GET or POST, and the server replies with a status code, for example 200 for success or 404 when the page is not found."},
+        {"id": "cs8", "text": "Recursion is a technique where a function calls itself to solve a smaller instance of the same problem. Every recursive function needs a base case that stops the calls, otherwise it causes a stack overflow."}
+      ]
+    },
+    {
+      "id": "econ",
+      "title": "Экономика (ru)",
+      "lang": "ru",
+      "passages": [
+        {"id": "econ1", "text": "Закон спроса гласит: чем выше цена товара, тем меньше количество, которое покупатели готовы приобрести. Закон предложения: с ростом цены производители предлагают больше товара. Рыночное равновесие достигается там, где кривые спроса и предложения пересекаются."},
+        {"id": "econ2", "text": "Инфляция — устойчивое повышение общего уровня цен в экономике, при котором деньги обесцениваются: на ту же сумму можно купить меньше товаров. Её измеряют индексом потребительских цен."},
+        {"id": "econ3", "text": "Валовой внутренний продукт (ВВП) — рыночная стоимость всех конечных товаров и услуг, произведённых в стране за год. ВВП на душу населения показывает средний уровень благосостояния."},
+        {"id": "econ4", "text": "Безработными считают людей трудоспособного возраста, которые не имеют работы, но активно её ищут. Различают фрикционную, структурную и циклическую безработицу."},
+        {"id": "econ5", "text": "Налоги — обязательные платежи, которые государство взимает с граждан и предприятий для финансирования общественных расходов: образования, здравоохранения, обороны. Налоги бывают прямые (на доходы) и косвенные (на товары, НДС)."},
+        {"id": "econ6", "text": "Монополия — рыночная структура, в которой единственный продавец контролирует предложение товара, не имеющего близких заменителей. Монополист может устанавливать цену выше конкурентной, поэтому государство ограничивает монополии антимонопольным законодательством."},
+        {"id": "econ7", "text": "Центральный банк проводит денежно-кредитную политику: регулирует ключевую ставку, количество денег в обращении и надзирает за коммерческими банками. Повышение процентной ставки сдерживает инфляцию."},
+        {"id": "econ8", "text": "Обменный курс показывает, сколько единиц одной валюты нужно отдать за единицу другой. Если национальная валюта дешевеет, импортные товары становятся дороже, а экспорт — выгоднее для иностранных покупателей."}
+      ]
+    },
+    {
+      "id": "chem",
+      "title": "Kimyo (uz, Latin)",
+      "lang": "uz-latn",
+      "passages": [
+        {"id": "chem1", "text": "Atom musbat zaryadlangan yadro va uning atrofida harakatlanuvchi manfiy zaryadli elektronlardan iborat. Yadro proton va neytronlardan tashkil topgan. Elementning tartib raqami uning yadrosidagi protonlar soniga teng."},
+        {"id": "chem2", "text": "Mendeleyevning davriy jadvalida kimyoviy elementlar atom massasi va xossalarining takrorlanishiga qarab joylashtirilgan. Jadvalning gorizontal qatorlari davrlar, vertikal ustunlari guruhlar deb ataladi."},
+        {"id": "chem3", "text": "Kimyoviy bogʻ atomlarni molekulaga birlashtiradi. Ion bogʻ metall va metallmas atomlar orasida elektronlarning oʻtishi natijasida, kovalent bogʻ esa atomlar elektron juftlarini umumlashtirishi natijasida hosil boʻladi."},
+        {"id": "chem4", "text": "Kislotalar suvli eritmada vodorod ionlarini hosil qiladi va lakmusni qizil rangga boʻyaydi. Asoslar gidroksid ionlarini hosil qiladi, lakmusni koʻk rangga oʻtkazadi. Kislota va asos oʻzaro taʼsirlashganda tuz va suv hosil boʻladi, bu neytrallanish reaksiyasidir."},
+        {"id": "chem5", "text": "Oksidlanish-qaytarilish reaksiyalarida elementlarning oksidlanish darajasi oʻzgaradi. Elektron beradigan modda qaytaruvchi, elektron qabul qiladigan modda esa oksidlovchi deyiladi."},
+        {"id": "chem6", "text": "Eritma erituvchi va erigan moddadan iborat bir jinsli aralashmadir. Eritmaning konsentratsiyasi bir litr eritmada erigan moddaning mol sonini koʻrsatadi. Haroratning ortishi bilan koʻpchilik qattiq moddalarning eruvchanligi ortadi."},
+        {"id": "chem7", "text": "Metan CH4 — eng oddiy organik birikma, alkanlar qatorining birinchi vakili. U tabiiy gazning asosiy qismini tashkil qiladi va yonganda karbonat angidrid va suv hosil qiladi."},
+        {"id": "chem8", "text": "Kimyoviy reaksiya tezligi reagentlar konsentratsiyasiga, haroratga va katalizatorga bogʻliq. Harorat oshirilganda molekulalar tez harakatlanadi, toʻqnashuvlar koʻpayadi va reaksiya tezlashadi."}
+      ]
+    },
+    {
+      "id": "lit",
+      "title": "Адабиёт (uz, Cyrillic)",
+      "lang": "uz-cyrl",
+      "passages": [
+        {"id": "lit1", "text": "Заҳириддин Муҳаммад Бобур Бобурийлар сулоласи асосчиси, шоир ва ёзувчидир. Унинг «Бобурнома» асари муаллифнинг хотира-мемуарлари бўлиб, Ўрта Осиё, Афғонистон ва Ҳиндистоннинг табиати ва аҳолиси ҳақида қимматли маълумот беради."},
+        {"id": "lit2", "text": "Абдулла Қодирий ўзбек адабиётида биринчи роман — «Ўтган кунлар»ни ёзган. Романда Отабек ва Кумушбиби муҳаббати ҳамда XIX аср ўртасидаги Тошкент ва Марғилон ҳаёти тасвирланган."},
+        {"id": "lit3", "text": "Абдулҳамид Чўлпон ўзбек жадид адабиётининг йирик вакили, шоир ва драматургдир. «Кеча ва кундуз» романи, «Буғун» шеърий тўплами унинг машҳур асарларидир. У 1938 йилда қатағон қилинган."},
+        {"id": "lit4", "text": "Метафора — бир нарса ёки ҳодисанинг белгисини бошқасига ўхшатиб кўчирма маънода қўллаш бадиий тасвир воситасидир. Масалан, «ҳаёт — бу дарё» ибораси метафорага мисол бўлади."},
+        {"id": "lit5", "text": "Адабиётда уч асосий тур мавжуд: лирика, эпос ва драма. Лирик асарда шоирнинг ҳис-туйғулари ифодаланади, эпик асарда воқеалар баён қилинади, драмада эса воқеа саҳнада персонажлар ҳаракати орқали кўрсатилади."},
+        {"id": "lit6", "text": "Аруз — шеър ўлчови тизими бўлиб, унда ҳижолар узун ва қисқа бўлишига қараб мисралар тузилади. Навоий, Бобур ва Огаҳий каби шоирлар ғазалларини аруз вазнида ёзганлар."},
+        {"id": "lit7", "text": "Ғазал — шарқ лирикасининг асосий жанри бўлиб, одатда беш-ўн икки байтдан иборат. Унинг биринчи байтида иккала мисра қофияланади, кейинги байтларда эса фақат иккинчи мисра қофияга эга бўлади. Охирги байт мақта дейилади."},
+        {"id": "lit8", "text": "Ҳамза Ҳакимзода Ниёзий ўзбек янги адабиёти ва театрининг асосчиларидан бири. У «Бой ила хизматчи» драмасини ёзган ва Қўқонда янги усулдаги мактаб очган."}
+      ]
+    },
+    {
+      "id": "geo",
+      "title": "Geography (en)",
+      "lang": "en",
+      "passages": [
+        {"id": "geo1", "text": "Earth's climate zones depend mainly on latitude. The tropical zone near the equator is hot and wet, the temperate zones have four distinct seasons, and the polar zones are cold all year round."},
+        {"id": "geo2", "text": "According to the theory of plate tectonics, the lithosphere is broken into large plates that move slowly over the mantle. Earthquakes and volcanoes occur mostly at the boundaries where plates collide, separate or slide past each other."},
+        {"id": "geo3", "text": "The Amu Darya and the Syr Darya are the two largest rivers of Central Asia. Both start in the mountains, are fed by melting snow and glaciers, and flow across deserts towards the Aral Sea."},
+        {"id": "geo4", "text": "The Aral Sea has shrunk dramatically since the 1960s because water from its two feeder rivers was diverted for irrigating cotton fields. The exposed seabed became a salty desert, which damaged local fishing, health and climate."},
+        {"id": "geo5", "text": "The Kyzylkum and Karakum are sandy deserts in Central Asia with a sharply continental climate: very hot, dry summers and cold winters. Plants and animals there are adapted to scarce water."},
+        {"id": "geo6", "text": "The Tian Shan and Pamir-Alay mountain systems run along the eastern borders of Uzbekistan. They are young fold mountains with high peaks and glaciers, and they are the main source of fresh water for the lowlands."},
+        {"id": "geo7", "text": "A monsoon is a seasonal reversal of winds that brings heavy rain in summer and dry weather in winter. South Asia receives most of its annual precipitation during the summer monsoon."},
+        {"id": "geo8", "text": "Population density is the number of people per square kilometre. It is highest in fertile river valleys and coastal plains, such as the Ferghana Valley, and lowest in deserts, mountains and polar regions."}
+      ]
+    }
+  ],
+  "questions": [
+    {"id": "q01", "lang": "uz-latn", "kind": "keyword", "text": "Fotosintez jarayonida qaysi gaz chiqariladi?", "relevant": ["bio2"]},
+    {"id": "q02", "lang": "uz-latn", "kind": "morphology", "text": "O'simliklarda xloroplastlarning vazifasi nima?", "relevant": ["bio2"]},
+    {"id": "q03", "lang": "uz-latn", "kind": "paraphrase", "text": "Yashil o'simliklar yorug'likdan qanday qilib shakar hosil qiladi?", "relevant": ["bio2"]},
+    {"id": "q04", "lang": "uz-latn", "kind": "paraphrase", "text": "Energiya hujayrada qayerda ishlab chiqariladi?", "relevant": ["bio1", "bio3"]},
+    {"id": "q05", "lang": "ru", "kind": "cross-language", "text": "Что такое ДНК и где хранится наследственная информация?", "relevant": ["bio4"]},
+    {"id": "q06", "lang": "en", "kind": "cross-language", "text": "How do arteries differ from veins?", "relevant": ["bio8"]},
+    {"id": "q07", "lang": "ru", "kind": "cross-language", "text": "Опыты Менделя с горохом", "relevant": ["bio5"]},
+    {"id": "q08", "lang": "uz-latn", "kind": "morphology", "text": "Ichakda oziq moddalar qonga so'rilishi", "relevant": ["bio7"]},
+    {"id": "q09", "lang": "uz-latn", "kind": "typo", "text": "Fotosentez jarayoni qanday kechadi", "relevant": ["bio2"]},
+    {"id": "q10", "lang": "uz-cyrl", "kind": "keyword", "text": "Амир Темур давлати пойтахти қайси шаҳар?", "relevant": ["hist1"]},
+    {"id": "q11", "lang": "uz-latn", "kind": "cross-script", "text": "Mirzo Ulug'bek rasadxonasi qayerda qurilgan?", "relevant": ["hist2"]},
+    {"id": "q12", "lang": "uz-latn", "kind": "cross-script", "text": "Alisher Navoiy Xamsa asari nechta dostondan iborat?", "relevant": ["hist3"]},
+    {"id": "q13", "lang": "uz-cyrl", "kind": "paraphrase", "text": "Қадимда Шарқ ва Ғарб ўртасида қандай товарлар олиб юрилган?", "relevant": ["hist4"]},
+    {"id": "q14", "lang": "ru", "kind": "cross-language", "text": "Когда Узбекистан провозгласил независимость?", "relevant": ["hist7"]},
+    {"id": "q15", "lang": "en", "kind": "cross-language", "text": "When was the constitution of Uzbekistan adopted?", "relevant": ["hist8"]},
+    {"id": "q16", "lang": "uz-latn", "kind": "cross-script", "text": "Jadidlar kimlar va ular qanday maktablar ochgan?", "relevant": ["hist6"]},
+    {"id": "q17", "lang": "uz-cyrl", "kind": "morphology", "text": "XIX асрда Туркистондаги хонликлар", "relevant": ["hist5"]},
+    {"id": "q18", "lang": "ru", "kind": "cross-language", "text": "Какие три государства существовали в Туркестане в XIX веке?", "relevant": ["hist5"]},
+    {"id": "q19", "lang": "ru", "kind": "keyword", "text": "Что утверждает второй закон Ньютона?", "relevant": ["phys2"]},
+    {"id": "q20", "lang": "ru", "kind": "morphology", "text": "Как формулируется закон инерции?", "relevant": ["phys1"]},
+    {"id": "q21", "lang": "ru", "kind": "paraphrase", "text": "Почему лёд плавает на воде?", "relevant": ["phys8"]},
+    {"id": "q22", "lang": "ru", "kind": "paraphrase", "text": "Почему на горе дышать труднее, чем у моря?", "relevant": ["phys6"]},
+    {"id": "q23", "lang": "en", "kind": "cross-language", "text": "What is the law of conservation of energy?", "relevant": ["phys5"]},
+    {"id": "q24", "lang": "uz-latn", "kind": "cross-language", "text": "Nyutonning uchinchi qonuni nima deydi?", "relevant": ["phys3"]},
+    {"id": "q25", "lang": "ru", "kind": "paraphrase", "text": "Как тепло от Солнца доходит до Земли?", "relevant": ["phys7"]},
+    {"id": "q26", "lang": "en", "kind": "keyword", "text": "How does binary search work?", "relevant": ["cs2"]},
+    {"id": "q27", "lang": "en", "kind": "paraphrase", "text": "Why is looking up a dictionary key so fast?", "relevant": ["cs3"]},
+    {"id": "q28", "lang": "en", "kind": "keyword", "text": "What is the difference between inner join and left join?", "relevant": ["cs4"]},
+    {"id": "q29", "lang": "en", "kind": "morphology", "text": "How do indexes make queries faster?", "relevant": ["cs5"]},
+    {"id": "q30", "lang": "ru", "kind": "cross-language", "text": "Что такое хеш-таблица и как решаются коллизии?", "relevant": ["cs3"]},
+    {"id": "q31", "lang": "uz-latn", "kind": "cross-language", "text": "Rekursiya nima va bazaviy holat nima uchun kerak?", "relevant": ["cs8"]},
+    {"id": "q32", "lang": "en", "kind": "keyword", "text": "What does a 404 error mean?", "relevant": ["cs7"]},
+    {"id": "q33", "lang": "en", "kind": "paraphrase", "text": "How is reliable delivery of data guaranteed on the internet?", "relevant": ["cs6"]},
+    {"id": "q34", "lang": "uz-cyrl", "kind": "cross-language", "text": "Алгоритмнинг мураккаблиги қандай ўлчанади?", "relevant": ["cs1"]},
+    {"id": "q35", "lang": "ru", "kind": "keyword", "text": "Что такое инфляция?", "relevant": ["econ2"]},
+    {"id": "q36", "lang": "ru", "kind": "paraphrase", "text": "Почему деньги дешевеют и на них можно купить меньше?", "relevant": ["econ2"]},
+    {"id": "q37", "lang": "ru", "kind": "morphology", "text": "Как налоги финансируют образование?", "relevant": ["econ5"]},
+    {"id": "q38", "lang": "ru", "kind": "paraphrase", "text": "Что делает государство, чтобы один продавец не диктовал цены?", "relevant": ["econ6"]},
+    {"id": "q39", "lang": "en", "kind": "cross-language", "text": "How does the central bank fight rising prices?", "relevant": ["econ7"]},
+    {"id": "q40", "lang": "uz-latn", "kind": "cross-language", "text": "Ishsizlik turlari va ishsiz deb kimlarni hisoblashadi?", "relevant": ["econ4"]},
+    {"id": "q41", "lang": "uz-latn", "kind": "cross-language", "text": "Milliy valyuta qadrsizlansa import tovarlar narxi nima bo'ladi?", "relevant": ["econ8"]},
+    {"id": "q42", "lang": "ru", "kind": "keyword", "text": "Что показывает ВВП на душу населения?", "relevant": ["econ3"]},
+    {"id": "q43", "lang": "uz-latn", "kind": "keyword", "text": "Atom yadrosi nimalardan iborat?", "relevant": ["chem1"]},
+    {"id": "q44", "lang": "uz-latn", "kind": "morphology", "text": "Kislotalar lakmusni qanday rangga bo'yaydi?", "relevant": ["chem4"]},
+    {"id": "q45", "lang": "uz-latn", "kind": "paraphrase", "text": "Nima uchun tuzni tezroq eritish uchun suvni qizdirishadi?", "relevant": ["chem6"]},
+    {"id": "q46", "lang": "ru", "kind": "cross-language", "text": "Что такое окислитель и восстановитель?", "relevant": ["chem5"]},
+    {"id": "q47", "lang": "uz-cyrl", "kind": "cross-script", "text": "Метан формуласи ва хоссалари", "relevant": ["chem7"]},
+    {"id": "q48", "lang": "en", "kind": "cross-language", "text": "Which factors affect the rate of a chemical reaction?", "relevant": ["chem8"]},
+    {"id": "q49", "lang": "uz-latn", "kind": "keyword", "text": "Davriy jadvalda qatorlar va ustunlar nima deyiladi?", "relevant": ["chem2"]},
+    {"id": "q50", "lang": "uz-latn", "kind": "typo", "text": "Kimyoviy reaksiya tizligi nimaga bog'liq", "relevant": ["chem8"]},
+    {"id": "q51", "lang": "uz-cyrl", "kind": "keyword", "text": "«Ўтган кунлар» романи муаллифи ким?", "relevant": ["lit2"]},
+    {"id": "q52", "lang": "uz-latn", "kind": "cross-script", "text": "Bobur Boburnoma asarida nimalar haqida yozgan?", "relevant": ["lit1"]},
+    {"id": "q53", "lang": "uz-latn", "kind": "cross-script", "text": "Cho'lpon qachon qatag'on qilingan?", "relevant": ["lit3"]},
+    {"id": "q54", "lang": "uz-cyrl", "kind": "paraphrase", "text": "Шеърда ўхшатиш орқали кўчирма маъно ҳосил қилиш нима дейилади?", "relevant": ["lit4"]},
+    {"id": "q55", "lang": "ru", "kind": "cross-language", "text": "Что такое газель в восточной поэзии и как рифмуются её строки?", "relevant": ["lit7"]},
+    {"id": "q56", "lang": "en", "kind": "cross-language", "text": "Who wrote the first Uzbek novel?", "relevant": ["lit2"]},
+    {"id": "q57", "lang": "uz-cyrl", "kind": "keyword", "text": "Лирика, эпос ва драма ўртасидаги фарқ нимада?", "relevant": ["lit5"]},
+    {"id": "q58", "lang": "en", "kind": "keyword", "text": "Which rivers flow into the Aral Sea?", "relevant": ["geo3", "geo4"]},
+    {"id": "q59", "lang": "en", "kind": "paraphrase", "text": "Why did the big lake in Central Asia dry up?", "relevant": ["geo4"]},
+    {"id": "q60", "lang": "en", "kind": "morphology", "text": "What causes earthquakes?", "relevant": ["geo2"]},
+    {"id": "q61", "lang": "ru", "kind": "cross-language", "text": "Какой климат в пустыне Кызылкум?", "relevant": ["geo5"]},
+    {"id": "q62", "lang": "uz-latn", "kind": "cross-language", "text": "Tyan-Shan tog'lari qayerda joylashgan?", "relevant": ["geo6"]},
+    {"id": "q63", "lang": "en", "kind": "paraphrase", "text": "Why is it so rainy in India in summer?", "relevant": ["geo7"]},
+    {"id": "q64", "lang": "uz-cyrl", "kind": "cross-language", "text": "Аҳоли зичлиги қаерда энг юқори?", "relevant": ["geo8"]}
+  ]
+}

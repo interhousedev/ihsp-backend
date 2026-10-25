@@ -1,0 +1,141 @@
+"""Subject and lesson notebooks the system keeps in step with the lessons (NB-AUTO)."""
+
+from dataclasses import dataclass
+
+from app.modules.notebooks.application.add_default_material import AddDefaultMaterial
+from app.modules.notebooks.application.auto_targets import AutoTargets
+from app.modules.notebooks.application.default_material_sources import (
+    DefaultMaterialSources,
+)
+from app.modules.notebooks.application.list_default_materials import (
+    ListDefaultMaterials,
+)
+from app.modules.notebooks.application.list_subject_slots import ListSubjectSlots
+from app.modules.notebooks.application.open_auto_notebook import OpenAutoNotebook
+from app.modules.notebooks.application.provision_student_notebooks import (
+    BackfillSubjectNotebooks,
+    ProvisionStudentNotebooks,
+)
+from app.modules.notebooks.application.readers.registry import SourceReaders
+from app.modules.notebooks.application.reconcile_subject_materials import (
+    ReconcileSubjectMaterials,
+)
+from app.modules.notebooks.application.remove_default_material import (
+    RemoveDefaultMaterial,
+)
+from app.modules.notebooks.application.staff_subject_materials import (
+    StaffSubjectMaterials,
+)
+from app.modules.notebooks.application.sweep_auto_notebooks import SweepAutoNotebooks
+from app.modules.notebooks.application.sync_auto_notebook import SyncAutoNotebook
+from app.modules.notebooks.application.sync_lesson_notebooks import SyncLessonNotebooks
+from app.modules.notebooks.application.teaching_directory import TeachingDirectory
+from app.modules.notebooks.application.update_auto_settings import UpdateAutoSettings
+from app.modules.notebooks.ports.term_calendar import TermCalendar
+from app.modules.notebooks.wiring_core import NotebooksCore
+from app.shared.contracts.academic import ClassworkQueries, ScheduleQueries
+from app.shared.contracts.files import FilesApi
+from app.shared.contracts.identity import IdentityDirectory
+from app.shared.contracts.library import LibraryQueries
+from app.shared.contracts.links import LinksApi
+
+
+@dataclass(frozen=True, slots=True)
+class AutoServices:
+    """Use cases and jobs of auto notebooks (attribute = file name)."""
+
+    open_auto_notebook: OpenAutoNotebook
+    list_subject_slots: ListSubjectSlots
+    update_auto_settings: UpdateAutoSettings
+    sync_auto_notebook: SyncAutoNotebook
+    sync_lesson_notebooks: SyncLessonNotebooks
+    sweep_auto_notebooks: SweepAutoNotebooks
+    provision_student_notebooks: ProvisionStudentNotebooks
+    backfill_subject_notebooks: BackfillSubjectNotebooks
+    list_default_materials: ListDefaultMaterials
+    add_default_material: AddDefaultMaterial
+    remove_default_material: RemoveDefaultMaterial
+    staff_subject_materials: StaffSubjectMaterials
+    reconcile_subject_materials: ReconcileSubjectMaterials
+
+
+def build_auto(
+    core: NotebooksCore,
+    *,
+    readers: SourceReaders,
+    links: LinksApi,
+    schedule: ScheduleQueries,
+    classwork: ClassworkQueries | None,
+    terms: TermCalendar | None,
+    library: LibraryQueries | None = None,
+    identity: IdentityDirectory | None = None,
+    files: FilesApi | None = None,
+) -> AutoServices:
+    """Build the auto notebook use cases.
+
+    Without `classwork` and `terms` they answer "feature disabled" (the lessons of a
+    subject in this term are unknown). `files` (the admin's uploads) is needed for
+    file default materials; without it those are refused and not copied.
+    """
+    deps = core.deps
+    targets = AutoTargets(
+        schedule=schedule, classwork=classwork, terms=terms, clock=deps.clock
+    )
+    defaults = DefaultMaterialSources(readers=readers, files=files)
+    sync = SyncAutoNotebook(
+        uow_factory=core.uow_factory,
+        clock=deps.clock,
+        settings=deps.settings,
+        readers=readers,
+        links=links,
+        targets=targets,
+        kicker=deps.kicker,
+        defaults=defaults,
+        library=library,
+    )
+    open_auto = OpenAutoNotebook(
+        uow_factory=core.uow_factory,
+        clock=deps.clock,
+        targets=targets,
+        sync=sync,
+        kicker=deps.kicker,
+    )
+    provision = ProvisionStudentNotebooks(
+        schedule=schedule, terms=terms, clock=deps.clock, open_auto=open_auto
+    )
+    return AutoServices(
+        open_auto_notebook=open_auto,
+        list_subject_slots=ListSubjectSlots(
+            uow_factory=core.uow_factory, targets=targets
+        ),
+        update_auto_settings=UpdateAutoSettings(
+            uow_factory=core.uow_factory, clock=deps.clock, sync=sync
+        ),
+        sync_auto_notebook=sync,
+        sync_lesson_notebooks=SyncLessonNotebooks(
+            uow_factory=core.uow_factory, schedule=schedule, kicker=deps.kicker
+        ),
+        sweep_auto_notebooks=SweepAutoNotebooks(
+            uow_factory=core.uow_factory, clock=deps.clock, kicker=deps.kicker
+        ),
+        provision_student_notebooks=provision,
+        backfill_subject_notebooks=BackfillSubjectNotebooks(
+            identity=identity, provision=provision, kicker=deps.kicker
+        ),
+        list_default_materials=ListDefaultMaterials(uow_factory=core.uow_factory),
+        add_default_material=AddDefaultMaterial(
+            uow_factory=core.uow_factory, clock=deps.clock, files=files
+        ),
+        remove_default_material=RemoveDefaultMaterial(uow_factory=core.uow_factory),
+        reconcile_subject_materials=ReconcileSubjectMaterials(
+            uow_factory=core.uow_factory, sync=sync
+        ),
+        staff_subject_materials=StaffSubjectMaterials(
+            uow_factory=core.uow_factory,
+            clock=deps.clock,
+            teaching=TeachingDirectory(
+                schedule=schedule, terms=terms, clock=deps.clock
+            ),
+            files=files,
+        ),
+    )
