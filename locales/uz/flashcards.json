@@ -1,0 +1,7 @@
+{
+  "fc-card-not-found": "Kartochka topilmadi.",
+  "fc-invalid-cards": "Kartochkaning har bir tomoni 1 dan {max_chars} gacha belgidan iborat bo'lishi kerak, to'plamda esa {max_cards} tadan ortiq kartochka bo'lmaydi.",
+  "fc-invalid-set": "«{field}» maydonining qiymati {min} dan {max} gacha bo'lishi kerak.",
+  "fc-set-not-found": "Kartochkalar to'plami topilmadi.",
+  "fc-share-not-found": "Bu havola kartochkalar to'plamiga olib bormaydi."
+}
