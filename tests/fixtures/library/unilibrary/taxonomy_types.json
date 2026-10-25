@@ -1,0 +1,76 @@
+{
+  "result": [
+    {
+      "id": 9,
+      "language": "uz",
+      "name": "Darslik",
+      "resource_category_id": 1
+    },
+    {
+      "id": 9,
+      "language": "ru",
+      "name": "Учебник",
+      "resource_category_id": 1
+    },
+    {
+      "id": 9,
+      "language": "en",
+      "name": "Textbook",
+      "resource_category_id": 1
+    },
+    {
+      "id": 2,
+      "language": "uz",
+      "name": "O'quv qo'llanma",
+      "resource_category_id": 1
+    },
+    {
+      "id": 2,
+      "language": "ru",
+      "name": "Учебное пособие",
+      "resource_category_id": 1
+    },
+    {
+      "id": 2,
+      "language": "en",
+      "name": "Study manual",
+      "resource_category_id": 1
+    },
+    {
+      "id": 19,
+      "language": "uz",
+      "name": "Badiiy adabiyot",
+      "resource_category_id": 1
+    },
+    {
+      "id": 19,
+      "language": "ru",
+      "name": "Художественная литература",
+      "resource_category_id": 1
+    },
+    {
+      "id": 19,
+      "language": "en",
+      "name": "Imaginative literature",
+      "resource_category_id": 1
+    },
+    {
+      "id": 31,
+      "language": "uz",
+      "name": "Monografiya",
+      "resource_category_id": 2
+    },
+    {
+      "id": 31,
+      "language": "ru",
+      "name": "Монография",
+      "resource_category_id": 2
+    },
+    {
+      "id": 31,
+      "language": "en",
+      "name": "Monograph",
+      "resource_category_id": 2
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "result": {
+    "ratings": [
+      {
+        "name": "Joriy nazorat",
+        "dailyRatings": [{"class_date": "04.09.2026", "rating": 5}]
+      },
+      {"name": "Mustaqil ish", "dailyRatings": [{"class_date": "05.09.2026", "rating": 3}]}
+    ],
+    "semester_rating": null
+  },
+  "code": 200,
+  "success": true,
+  "error": null
+}

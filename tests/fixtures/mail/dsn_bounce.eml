@@ -1,0 +1,34 @@
+From: MAILER-DAEMON@relay.example.net
+To: aleksey.brastilov@mail.ihsu.uz
+Subject: Undelivered Mail Returned to Sender
+Date: Tue, 06 Oct 2026 08:30:00 +0000
+Message-ID: <dsn-1@relay.example.net>
+MIME-Version: 1.0
+Content-Type: multipart/report; report-type=delivery-status; boundary="dsnb"
+
+--dsnb
+Content-Type: text/plain; charset=utf-8
+
+This is the mail system. Your message could not be delivered.
+
+--dsnb
+Content-Type: message/delivery-status
+
+Reporting-MTA: dns; relay.example.net
+
+Final-Recipient: rfc822; nobody@example.org
+Action: failed
+Status: 5.1.1
+Diagnostic-Code: smtp; 550 5.1.1 <nobody@example.org>: Recipient address rejected
+
+--dsnb
+Content-Type: message/rfc822
+
+From: Aleksey Brastilov <aleksey.brastilov@mail.ihsu.uz>
+To: nobody@example.org
+Subject: Question about the course
+Message-ID: @@ORIGINAL_ID@@
+
+Hello!
+
+--dsnb--

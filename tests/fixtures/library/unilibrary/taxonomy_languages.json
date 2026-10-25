@@ -1,0 +1,64 @@
+{
+  "result": [
+    {
+      "id": 2,
+      "language": "uz",
+      "name": "O'zbek"
+    },
+    {
+      "id": 2,
+      "language": "ru",
+      "name": "Узбекский"
+    },
+    {
+      "id": 2,
+      "language": "en",
+      "name": "Uzbek"
+    },
+    {
+      "id": 3,
+      "language": "uz",
+      "name": "Rus"
+    },
+    {
+      "id": 3,
+      "language": "ru",
+      "name": "Русский"
+    },
+    {
+      "id": 3,
+      "language": "en",
+      "name": "Russian"
+    },
+    {
+      "id": 7,
+      "language": "uz",
+      "name": "Ingliz"
+    },
+    {
+      "id": 7,
+      "language": "ru",
+      "name": "Английский"
+    },
+    {
+      "id": 7,
+      "language": "en",
+      "name": "English"
+    },
+    {
+      "id": 26,
+      "language": "uz",
+      "name": "Lotin"
+    },
+    {
+      "id": 26,
+      "language": "ru",
+      "name": "Латинский"
+    },
+    {
+      "id": 26,
+      "language": "en",
+      "name": "Latin"
+    }
+  ]
+}

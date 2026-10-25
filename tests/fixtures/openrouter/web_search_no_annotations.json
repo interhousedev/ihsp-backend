@@ -1,0 +1,19 @@
+{
+  "id": "gen-1791359200-web",
+  "object": "chat.completion",
+  "model": "google/gemini-3.5-flash-lite",
+  "choices": [
+    {
+      "finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "- [Made up](https://example.org/made-up) - I invented this link."
+      }
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 80,
+    "completion_tokens": 30,
+    "total_tokens": 110
+  }
+}

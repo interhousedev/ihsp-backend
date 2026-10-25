@@ -1,0 +1,81 @@
+{
+  "result": {
+    "current_page": 1,
+    "data": [
+      {
+        "id": 355186,
+        "resource_category_id": 1,
+        "name": "Elektronika va sxemalar 1",
+        "authors": "SH.K.Ismailov",
+        "publisher_year": 2021,
+        "publisher_name": "Toshkent",
+        "resource_type_id": 9,
+        "resource_type_name": "Darslik",
+        "resource_field_id": 27,
+        "resource_field_name": "Fizika",
+        "resource_language_id": 2,
+        "resource_language_name": "O'zbek",
+        "resource_modifier_id": 1,
+        "status": "active",
+        "count_view": 53,
+        "abstract_name": "Elektron sxemalar asoslari: diod, tranzistor, kuchaytirgichlar.",
+        "publisher_resource_icon": "https://api.unilibrary.uz/storage/PublisherResourceImage/355186/images/1691471316.png",
+        "media": [
+          {
+            "id": 730309,
+            "directory": "PublisherResourceImage/355186/images",
+            "filename": "1691471316",
+            "extension": "png",
+            "mime_type": "image/png",
+            "size": 1318159,
+            "pivot": {"tag": "publisher_resource_icon", "order": 1}
+          },
+          {
+            "id": 730310,
+            "directory": "PublisherResourceFile/355186/images",
+            "filename": "1691471337",
+            "extension": "pdf",
+            "mime_type": "application/pdf",
+            "size": 17420537,
+            "pivot": {"tag": "publisher_resource_file", "order": 1}
+          }
+        ]
+      },
+      {
+        "id": 896986,
+        "resource_category_id": 1,
+        "name": "Kvant mexanikasi asoslari",
+        "authors": "B. Yo'ldoshev",
+        "publisher_year": 2026,
+        "publisher_name": "Fan va texnologiya",
+        "resource_type_id": 2,
+        "resource_type_name": "O'quv qo'llanma",
+        "resource_field_id": 27,
+        "resource_field_name": "Fizika",
+        "resource_language_id": 26,
+        "resource_language_name": "Lotin",
+        "resource_modifier_id": 2,
+        "status": "active",
+        "count_view": 7,
+        "abstract_name": "Kvant mexanikasining boshlang'ich kursi.",
+        "publisher_resource_icon": null,
+        "media": []
+      }
+    ],
+    "first_page_url": "https://api.unilibrary.uz/api/user/guest-publisher-resources-with-media?page=1",
+    "from": 1,
+    "last_page": 12,
+    "last_page_url": "https://api.unilibrary.uz/api/user/guest-publisher-resources-with-media?page=12",
+    "links": [
+      {"url": null, "label": "&laquo; Previous", "active": false},
+      {"url": "https://api.unilibrary.uz/api/user/guest-publisher-resources-with-media?page=1", "label": "1", "active": true},
+      {"url": "https://api.unilibrary.uz/api/user/guest-publisher-resources-with-media?page=2", "label": "Next &raquo;", "active": false}
+    ],
+    "next_page_url": "https://api.unilibrary.uz/api/user/guest-publisher-resources-with-media?page=2",
+    "path": "https://api.unilibrary.uz/api/user/guest-publisher-resources-with-media",
+    "per_page": 2,
+    "prev_page_url": null,
+    "to": 2,
+    "total": 23
+  }
+}
