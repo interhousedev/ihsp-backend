@@ -1,0 +1,493 @@
+# IHSP full stack on one machine, for trying the whole product (project name `ihsp-local`).
+# Same services as production, with local overrides: plain HTTP, hosts under *.localhost
+# (browsers resolve them to 127.0.0.1), Vault in dev mode, RustFS as S3, Mailpit as the mail
+# relay, and fake EMIS / OpenRouter / Telegram unless .env.local says otherwise.
+#
+#   scripts/local_up.sh        build, start, bootstrap Hydra, seed demo data
+#   scripts/local_down.sh      stop (add --wipe to delete the volumes)
+#
+# Hosts (LOCAL_DOMAIN defaults to `localhost`):
+#   id.localhost  my.localhost  app.localhost  staff.localhost  admin.localhost  lms.localhost
+#   library.localhost (books and materials; /b/, /sitemap.xml, /robots.txt, /opds/ come from the api)
+#   s.localhost (short links, /ai/ share viewer)  api.localhost  mcp.localhost
+#   localhost/r/<slug> (room pages)
+# Nothing here is a secret: every password and token below is a development value.
+#
+# This is not the development mode of scripts/dev.sh (that runs one backend process on the
+# host against docker-compose.dev.yaml, project `ihsp-dev`). Both can coexist: this file
+# publishes different host ports (S3 9100/9101, Mailpit 8026) and uses no dev-compose volumes.
+name: ihsp-local
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-healthcheck: &healthcheck
+  interval: 5s
+  timeout: 5s
+  retries: 30
+  start_period: 20s
+  start_interval: 2s
+
+x-backend: &backend
+  image: ihsp-backend:local # built once, by the `migrate` service (scripts/local_up.sh)
+  pull_policy: never
+  restart: unless-stopped
+  logging: *logging
+  volumes:
+    - ./healthcheck:/healthcheck:ro
+  secrets:
+    - source: jwt_bearer
+      target: jwt_bearer
+
+x-backend-env: &backend-env
+  IHSP_ENV: dev
+  IHSP_LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  # Dev stack only: the local nginx sits on a Docker bridge network, never on the internet.
+  IHSP_HTTP__TRUSTED_PROXIES: "172.16.0.0/12,192.168.0.0/16,10.0.0.0/8"
+  IHSP_DATABASE__URL: postgresql+asyncpg://ihsp:ihsp@postgres:5432/ihsp
+  IHSP_REDIS__URL: redis://redis:6379/0
+  IHSP_S3__ENDPOINT_URL: http://s3:9000
+  IHSP_S3__PUBLIC_ENDPOINT_URL: http://localhost:${LOCAL_S3_PORT:-9100}
+  IHSP_S3__REGION: us-east-1
+  IHSP_S3__ACCESS_KEY: minio
+  IHSP_S3__SECRET_KEY: minio12345
+  IHSP_S3__BUCKET: ihsp-local
+  IHSP_VAULT__URL: http://vault:8200
+  IHSP_VAULT__TOKEN: dev-root
+  IHSP_HYDRA__PUBLIC_URL: http://hydra:4444
+  IHSP_HYDRA__ADMIN_URL: http://hydra:4445
+  IHSP_HYDRA__ISSUER: http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}/
+  IHSP_JWT_BEARER__PRIVATE_KEY_PATH: /run/secrets/jwt_bearer
+  # *.localhost hosts are different sites: the cross-site fetch needs None+Secure
+  # (browsers accept Secure cookies on localhost over http).
+  IHSP_TOKENS__REFRESH_COOKIE_SECURE: "true"
+  IHSP_TOKENS__REFRESH_COOKIE_SAMESITE: none
+  IHSP_TOKENS__SERVICE_TOKEN: dev-service-token
+  IHSP_TELEGRAM__BOT_TOKEN: ${IHSP_TELEGRAM__BOT_TOKEN:-000:dev}
+  IHSP_TELEGRAM__BOT_USERNAME: ${IHSP_TELEGRAM__BOT_USERNAME:-ihspbot}
+  IHSP_TELEGRAM__MODE: ${IHSP_TELEGRAM__MODE:-fake}
+  IHSP_EMIS__MODE: ${IHSP_EMIS__MODE:-fake}
+  IHSP_EMIS__BASE_URL: ${IHSP_EMIS__BASE_URL:-https://emis.edu.uz/api/v1/}
+  IHSP_EMIS__PROFILE_PATH: ${IHSP_EMIS__PROFILE_PATH:-student-profiles/profile/}
+  IHSP_EMIS__INSTITUTION_ID: ${IHSP_EMIS__INSTITUTION_ID:-10815}
+  IHSP_EMIS__GATEWAY_URL: http://identity:8001/internal/emis
+  IHSP_OPENROUTER__MODE: ${IHSP_OPENROUTER__MODE:-fake}
+  IHSP_OPENROUTER__API_KEY: # optional: set it in .env.local together with OPENROUTER__MODE=real
+  IHSP_OPENROUTER__APP_URL: http://my.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+  IHSP_EXA__MODE: ${IHSP_EXA__MODE:-fake}
+  IHSP_EXA__API_KEY: # optional: set it in .env.local together with EXA__MODE=real
+  # Models per task and feature flags (materials/.env.sample); override them in
+  # .env.local. An empty value means "not set".
+  IHSP_AI__DEFAULT__MODEL: ${IHSP_AI__DEFAULT__MODEL:-anthropic/claude-haiku-5.5}
+  IHSP_AI__TASKS__STUDENT_CHAT_SMART__MODEL: ${IHSP_AI__TASKS__STUDENT_CHAT_SMART__MODEL:-}
+  IHSP_FEATURES__NOTEBOOKS: ${IHSP_FEATURES__NOTEBOOKS:-true}
+  IHSP_FEATURES__AI_ASSISTANT: ${IHSP_FEATURES__AI_ASSISTANT:-true}
+  IHSP_FEATURES__MAIL: ${IHSP_FEATURES__MAIL:-true}
+  IHSP_FEATURES__EMIS_SYNC: ${IHSP_FEATURES__EMIS_SYNC:-true}
+  IHSP_SMTP_OUT__HOST: mailpit
+  IHSP_SMTP_OUT__PORT: "1025"
+  IHSP_SMTP_OUT__STARTTLS: "false"
+  IHSP_SMTP_OUT__MAIL_DOMAIN: mail.ihsu.uz
+  IHSP_SMTP_OUT__SYSTEM_FROM: no-reply@ihsu.uz
+  IHSP_URLS__ID: http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+  IHSP_URLS__SP: http://my.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+  IHSP_URLS__APP: http://app.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+  IHSP_URLS__STAFF: http://staff.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+  IHSP_URLS__ADMIN: http://admin.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+  IHSP_URLS__LMS: http://lms.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+  IHSP_URLS__LIBRARY: http://library.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+  IHSP_URLS__SHARE: http://s.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+  IHSP_URLS__SHORT_LINKS: http://s.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+  IHSP_URLS__ROOMS: http://${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}/r
+  IHSP_URLS__API: http://api.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+  IHSP_URLS__MCP: http://mcp.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+  # Installable app version served by GET /v1/app/version: `latest` is the newest build,
+  # `min_supported` the oldest one allowed to keep running (older clients update at once).
+  IHSP_APP__LATEST: ${IHSP_APP__LATEST:-1.0.0}
+  IHSP_APP__MIN_SUPPORTED: ${IHSP_APP__MIN_SUPPORTED:-1.0.0}
+
+x-cors-origins: &cors-origins http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://my.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://app.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://staff.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://admin.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://lms.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://library.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+
+services:
+  # ---------------------------------------------------------------- data stores
+  postgres:
+    image: pgvector/pgvector:0.8.7-pg16
+    # HNSW index builds use parallel workers that need more than Docker's 64 MB /dev/shm.
+    shm_size: 256mb
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      POSTGRES_USER: ihsp
+      POSTGRES_PASSWORD: ihsp
+      POSTGRES_DB: ihsp
+      HYDRA_DB_PASSWORD: hydra
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./postgres/init-hydra.sh:/docker-entrypoint-initdb.d/10-hydra.sh:ro
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "pg_isready -U ihsp -d ihsp"]
+
+  redis:
+    image: redis:7.4.11-alpine
+    restart: unless-stopped
+    logging: *logging
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "redis-cli", "ping"]
+
+  # Dev mode: in memory, unsealed, root token dev-root, KV v2 at secret/. A restart wipes
+  # it, which is why vault-init runs on every `up`.
+  vault:
+    image: hashicorp/vault:2.1.2
+    restart: unless-stopped
+    logging: *logging
+    cap_add: [IPC_LOCK]
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: dev-root
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "vault", "status", "-address=http://127.0.0.1:8200"]
+
+  vault-init:
+    <<: *backend
+    restart: "no"
+    command: ["python", "/init/setup.py"]
+    environment:
+      VAULT_ADDR: http://vault:8200
+      VAULT_TOKEN: dev-root
+    volumes:
+      - ./vault:/init:ro
+    depends_on:
+      vault:
+        condition: service_healthy
+
+  # S3-compatible object store (MinIO images are no longer distributed).
+  s3:
+    image: rustfs/rustfs:1.0.1
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      RUSTFS_ACCESS_KEY: minio
+      RUSTFS_SECRET_KEY: minio12345
+    ports:
+      - "127.0.0.1:${LOCAL_S3_PORT:-9100}:9000" # presigned URLs point here
+      - "127.0.0.1:${LOCAL_S3_CONSOLE_PORT:-9101}:9001"
+    volumes:
+      - s3_data:/data
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/health"]
+
+  s3-init:
+    <<: *backend
+    restart: "no"
+    command: ["python", "/init/init.py"]
+    environment:
+      S3_ENDPOINT_URL: http://s3:9000
+      S3_ACCESS_KEY: minio
+      S3_SECRET_KEY: minio12345
+      S3_BUCKET: ihsp-local
+      S3_CORS_ORIGINS: *cors-origins
+    volumes:
+      - ./s3:/init:ro
+    depends_on:
+      s3:
+        condition: service_healthy
+
+  mailpit:
+    image: axllent/mailpit:v1.31.5
+    restart: unless-stopped
+    logging: *logging
+    ports:
+      - "127.0.0.1:${LOCAL_MAILPIT_PORT:-8026}:8025" # web UI and API
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "/mailpit", "readyz"]
+
+  # ------------------------------------------------------------------- Ory Hydra
+  hydra-migrate:
+    image: oryd/hydra:v26.2.0
+    restart: "no"
+    logging: *logging
+    command: migrate -c /etc/config/hydra/hydra.yml sql up -e --yes
+    environment:
+      DSN: postgres://hydra:hydra@postgres:5432/hydra?sslmode=disable&max_conns=5&max_idle_conns=2
+    volumes:
+      - ./hydra/hydra.prod.yml:/etc/config/hydra/hydra.yml:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Same config file as production; the environment turns it into the local variant
+  # (HTTP issuer on id.localhost, `--dev` as the issuer is not HTTPS).
+  hydra:
+    image: oryd/hydra:v26.2.0
+    restart: unless-stopped
+    logging: *logging
+    entrypoint: ["sh", "-c"]
+    command:
+      - >-
+        sed "s|REPLACE_WITH_TOKENS__SERVICE_TOKEN|$$IHSP_TOKENS__SERVICE_TOKEN|"
+        /etc/config/hydra/hydra.yml > /tmp/hydra.yml
+        && exec hydra serve -c /tmp/hydra.yml all --dev
+    environment:
+      DSN: postgres://hydra:hydra@postgres:5432/hydra?sslmode=disable&max_conns=20&max_idle_conns=4
+      SECRETS_SYSTEM: ihsp-local-hydra-system-secret-0001
+      SECRETS_COOKIE: ihsp-local-hydra-cookie-secret-0001
+      SECRETS_PAGINATION: ihsp-local-hydra-paging-secret-0001
+      IHSP_TOKENS__SERVICE_TOKEN: dev-service-token
+      URLS_SELF_ISSUER: http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}/
+      URLS_LOGIN: http://api.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}/v1/oauth/flow/login
+      URLS_CONSENT: http://api.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}/v1/oauth/flow/consent
+      URLS_LOGOUT: http://api.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}/v1/oauth/flow/logout
+      URLS_POST_LOGOUT_REDIRECT: http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}/
+      SERVE_PUBLIC_CORS_ALLOWED_ORIGINS: *cors-origins
+      SQA_OPT_OUT: "true"
+    volumes:
+      - ./hydra/hydra.prod.yml:/etc/config/hydra/hydra.yml:ro
+    depends_on:
+      hydra-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:4445/health/ready"]
+
+  # ---------------------------------------------------------- application processes
+  migrate:
+    <<: *backend
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    restart: "no"
+    command: ["python", "-m", "app", "migrate"]
+    environment:
+      <<: *backend-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  identity:
+    <<: *backend
+    command: ["python", "-m", "app", "identity"]
+    environment:
+      <<: *backend-env
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "python", "/healthcheck/check.py", "http", "http://127.0.0.1:8001/health"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      hydra:
+        condition: service_healthy
+      vault-init:
+        condition: service_completed_successfully
+
+  api:
+    <<: *backend
+    command: ["python", "-m", "app", "api"]
+    environment:
+      <<: *backend-env
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "python", "/healthcheck/check.py", "http", "http://127.0.0.1:8000/health"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      hydra:
+        condition: service_healthy
+      s3-init:
+        condition: service_completed_successfully
+
+  bot:
+    <<: *backend
+    command: ["python", "-m", "app", "bot"]
+    environment:
+      <<: *backend-env
+      IHSP_TELEGRAM__WEBHOOK_SECRET: local-webhook-secret
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "python", "/healthcheck/check.py", "proc", "app", "bot"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  # Inbound SMTP for mail.ihsu.uz addresses; send test mail to localhost:2525.
+  mail:
+    <<: *backend
+    command: ["python", "-m", "app", "mail"]
+    ports:
+      - "127.0.0.1:${LOCAL_SMTP_PORT:-2525}:2525"
+    environment:
+      <<: *backend-env
+      IHSP_SMTP_IN__HOST: 0.0.0.0
+      IHSP_SMTP_IN__PORT: "2525"
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "python", "/healthcheck/check.py", "smtp", "127.0.0.1", "2525"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      s3-init:
+        condition: service_completed_successfully
+
+  worker:
+    <<: *backend
+    # One taskiq child process keeps memory low on a laptop (production runs two).
+    command: ["python", "-m", "app", "worker", "--workers", "1"]
+    environment:
+      <<: *backend-env
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "python", "/healthcheck/check.py", "proc", "app", "worker"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      s3-init:
+        condition: service_completed_successfully
+
+  scheduler:
+    <<: *backend
+    command: ["python", "-m", "app", "scheduler"]
+    environment:
+      <<: *backend-env
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "python", "/healthcheck/check.py", "proc", "app", "scheduler"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+
+  # ----------------------------------------------------------------------- edge
+  web:
+    image: ihsp-web:local
+    build:
+      # Sibling checkout of the iht-web repo (override with IHSP_WEB_DIR, relative to materials/).
+      context: ${IHSP_WEB_DIR:-../../iht-web}
+      # local_up.sh packs the apps it built on the host (deploy/Dockerfile.prebuilt); with
+      # --full-build it sets WEB_DOCKERFILE=deploy/Dockerfile and `next build` runs in Docker.
+      dockerfile: ${WEB_DOCKERFILE:-deploy/Dockerfile.prebuilt}
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      APP_ENV: dev
+      APP_HOST_ID: id.${LOCAL_DOMAIN:-localhost}
+      APP_HOST_MY: my.${LOCAL_DOMAIN:-localhost}
+      APP_HOST_APP: app.${LOCAL_DOMAIN:-localhost}
+      APP_HOST_STAFF: staff.${LOCAL_DOMAIN:-localhost}
+      APP_HOST_ADMIN: admin.${LOCAL_DOMAIN:-localhost}
+      APP_HOST_LMS: lms.${LOCAL_DOMAIN:-localhost}
+      APP_HOST_LIBRARY: library.${LOCAL_DOMAIN:-localhost}
+      PWA_APPS: "${PWA_APPS:-lms library staff admin}"
+      APP_HOST_SHARE: s.${LOCAL_DOMAIN:-localhost}
+      API_HOST: api.${LOCAL_DOMAIN:-localhost}
+      MCP_HOST: mcp.${LOCAL_DOMAIN:-localhost}
+      ROOT_HOST: ${LOCAL_DOMAIN:-localhost}
+      # The web image has backend routes of its own (iht-web deploy/sites/api.conf and others).
+      # The edge nginx in front of it never sends that traffic here, but nginx resolves
+      # these upstreams when it starts, so they point at a closed local port instead of at
+      # services that may still be starting.
+      HYDRA_UPSTREAM: 127.0.0.1:9
+      IDENTITY_UPSTREAM: 127.0.0.1:9
+      API_UPSTREAM: 127.0.0.1:9
+      BOT_UPSTREAM: 127.0.0.1:9
+      BACKEND_UPSTREAM: 127.0.0.1:9
+      IHSP_WEB_API_URL: http://api.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+      IHSP_WEB_ID_URL: http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+      IHSP_WEB_HYDRA_URL: http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+      IHSP_WEB_SP_URL: http://my.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+      IHSP_WEB_APP_URL: http://app.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+      IHSP_WEB_STAFF_URL: http://staff.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+      IHSP_WEB_ADMIN_URL: http://admin.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+      IHSP_WEB_LMS_URL: http://lms.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+      IHSP_WEB_LIBRARY_URL: http://library.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+      IHSP_WEB_SHARE_URL: http://s.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}/ai
+      IHSP_WEB_SHORT_LINKS_URL: http://s.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+      IHSP_WEB_ROOMS_URL: http://${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+      IHSP_WEB_MCP_URL: http://mcp.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+      # id app footer: plain text, unset = the default contact, empty = no button
+      IHSP_WEB_SECURITY_CONTACT: "${IHSP_WEB_SECURITY_CONTACT-alex@sayfi.uz, @megaplov (Telegram)}"
+      IHSP_BOT_USERNAME: ${IHSP_TELEGRAM__BOT_USERNAME:-ihspbot}
+      IHSP_STORAGE_ORIGIN: http://localhost:${LOCAL_S3_PORT:-9100}
+      # connect-src / img-src of the CSP header: plain-HTTP API and storage of this stack
+      CSP_CONNECT_SRC: "'self' http://api.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-} http://localhost:${LOCAL_S3_PORT:-9100}"
+      CSP_IMG_SRC: "'self' data: blob: http://localhost:${LOCAL_S3_PORT:-9100}"
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/health"]
+
+  # Routing by host and path, plain HTTP on port 80 (materials/nginx/local).
+  nginx:
+    image: nginx:1.28.3-alpine
+    restart: unless-stopped
+    logging: *logging
+    ports:
+      - "${LOCAL_HTTP_PORT:-80}:80"
+    environment:
+      NGINX_ENVSUBST_FILTER: ^HOST_
+      HOST_ID: id.${LOCAL_DOMAIN:-localhost}
+      HOST_MY: my.${LOCAL_DOMAIN:-localhost}
+      HOST_APP: app.${LOCAL_DOMAIN:-localhost}
+      HOST_STAFF: staff.${LOCAL_DOMAIN:-localhost}
+      HOST_ADMIN: admin.${LOCAL_DOMAIN:-localhost}
+      HOST_LMS: lms.${LOCAL_DOMAIN:-localhost}
+      HOST_LIBRARY: library.${LOCAL_DOMAIN:-localhost}
+      HOST_S: s.${LOCAL_DOMAIN:-localhost}
+      HOST_API: api.${LOCAL_DOMAIN:-localhost}
+      HOST_MCP: mcp.${LOCAL_DOMAIN:-localhost}
+      HOST_APEX: ${LOCAL_DOMAIN:-localhost}
+      HOST_PORT_SUFFIX: ${LOCAL_PORT_SUFFIX:-}
+    volumes:
+      - ./nginx/local:/etc/nginx/templates:ro
+      - ./nginx/common:/etc/nginx/ihsp:ro
+    depends_on:
+      web:
+        condition: service_healthy
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/health"]
+
+  # ----------------------------------------------------------- one-off tool jobs
+  bootstrap: # registers the first-party OAuth clients and the JWT-bearer trust in Hydra
+    <<: *backend
+    profiles: [tools]
+    restart: "no"
+    command: ["python", "/scripts/hydra_bootstrap.py"]
+    environment:
+      <<: *backend-env
+      PYTHONPATH: /app
+    volumes:
+      - ../scripts:/scripts:ro
+    depends_on:
+      hydra:
+        condition: service_healthy
+
+volumes:
+  pg_data:
+  redis_data:
+  s3_data:
+
+secrets:
+  # RSA key of identity's JWT-bearer assertions (a development key, generated by
+  # scripts/local_up.sh; the same key must reach the bootstrap job and identity).
+  jwt_bearer:
+    file: ./dev-keys/jwt-bearer.pem

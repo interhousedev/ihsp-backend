@@ -1,0 +1,82 @@
+# Ory Hydra v26.2.0, development.
+# The DSN comes from the DSN environment variable (see docker-compose.dev.yaml).
+# Run with `serve all --dev`; never use this file in production.
+
+serve:
+  public:
+    cors:
+      enabled: true
+      allowed_origins:
+        - http://localhost:3001
+        - http://localhost:3002
+        - http://localhost:3003
+        - http://localhost:3004
+        - http://localhost:3005
+        - http://localhost:3006
+        - http://localhost:3007
+        - http://localhost:3008
+  cookies:
+    same_site_mode: Lax
+
+urls:
+  self:
+    issuer: http://localhost:4444/ # trailing slash: the form MCP clients compare
+  # Redirect endpoints of the identity process: they accept silently (single sign-on,
+  # first-party consent, logout) and only send the browser to the static login app
+  # (http://localhost:3001/login/ ...) when a form is really needed.
+  login: http://localhost:8000/v1/oauth/flow/login
+  consent: http://localhost:8000/v1/oauth/flow/consent
+  logout: http://localhost:8000/v1/oauth/flow/logout
+  post_logout_redirect: http://localhost:3001/
+
+secrets:
+  system:
+    - ihsp-dev-hydra-system-secret-0001
+  cookie:
+    - ihsp-dev-hydra-cookie-secret-0001
+  pagination:
+    - ihsp-dev-hydra-paging-secret-0001
+
+strategies:
+  access_token: jwt
+  jwt:
+    scope_claim: list # claim `scp`
+
+ttl:
+  access_token: 15m # durations use h/m/s, never d
+  refresh_token: 720h
+  authentication_session: 8760h # cap of `remember_for` (IHSP_IDENTITY__REMEMBER_DAYS=365)
+
+oauth2:
+  pkce:
+    enforced_for_public_clients: true
+  grant:
+    refresh_token:
+      rotation_grace_period: 30s
+  token_hook:
+    url: http://host.docker.internal:8000/v1/oauth/token-hook
+    auth:
+      type: api_key
+      config:
+        in: header
+        name: Authorization
+        value: "Bearer dev-service-token" # IHSP_TOKENS__SERVICE_TOKEN
+
+clients:
+  http:
+    disallow_private_ip_ranges: true # as in production; only the hook (on the host) is private
+    private_ip_exception_urls:
+      - http://host.docker.internal:8000/v1/oauth/token-hook
+
+oidc:
+  dynamic_client_registration:
+    enabled: true
+    default_scope:
+      - openid
+
+sqa:
+  opt_out: true
+
+log:
+  level: info
+  format: json

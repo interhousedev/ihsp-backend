@@ -1,0 +1,94 @@
+# Ory Hydra v26.2.0, production.
+#
+# Mirrors hydra.dev.yml; only the environment-specific parts differ. Everything
+# secret or domain-specific comes from the container environment, which wins over
+# this file (docker-compose.prod.yaml and docker-compose.local.yaml set them):
+#   DSN, SECRETS_SYSTEM, SECRETS_COOKIE, SECRETS_PAGINATION,
+#   URLS_SELF_ISSUER, URLS_LOGIN, URLS_CONSENT, URLS_LOGOUT, URLS_POST_LOGOUT_REDIRECT,
+#   SERVE_PUBLIC_CORS_ALLOWED_ORIGINS
+# The token hook secret is the placeholder below; the compose entrypoint replaces it
+# with IHSP_TOKENS__SERVICE_TOKEN before Hydra starts (Hydra has no ${VAR} support).
+# Run with `serve all` and no --dev: the issuer must be HTTPS and cookies are Secure.
+
+serve:
+  public:
+    cors:
+      enabled: true
+      # Overridden by SERVE_PUBLIC_CORS_ALLOWED_ORIGINS from DOMAIN.
+      allowed_origins:
+        - https://id.ihsu.uz
+        - https://my.ihsu.uz
+        - https://app.ihsu.uz
+        - https://staff.ihsu.uz
+        - https://admin.ihsu.uz
+        - https://lms.ihsu.uz
+        - https://lib.ihsu.uz
+  cookies:
+    same_site_mode: Lax # plain top-level redirects; `None` would need more than we use
+
+urls:
+  self:
+    issuer: https://id.ihsu.uz/ # == JWT `iss` == HYDRA__ISSUER of the backend; keep the trailing slash
+  # Redirect endpoints of the identity process (nginx routes /v1/oauth/ on the api host
+  # to it): they accept silently (single sign-on, first-party consent, logout) and only
+  # send the browser to the static login app (https://id.ihsu.uz/login/ ...) when a
+  # form is really needed.
+  login: https://api.ihsu.uz/v1/oauth/flow/login
+  consent: https://api.ihsu.uz/v1/oauth/flow/consent
+  logout: https://api.ihsu.uz/v1/oauth/flow/logout
+  post_logout_redirect: https://id.ihsu.uz/
+
+strategies:
+  access_token: jwt
+  jwt:
+    scope_claim: list # claim `scp`
+
+ttl:
+  access_token: 15m # durations use h/m/s, never d
+  refresh_token: 720h
+  authentication_session: 8760h # cap of `remember_for` (IHSP_IDENTITY__REMEMBER_DAYS=365)
+
+oauth2:
+  pkce:
+    enforced_for_public_clients: true
+  grant:
+    refresh_token:
+      rotation_grace_period: 30s
+  token_hook:
+    # The token hook is part of the token handler, which the identity process serves.
+    url: http://identity:8001/v1/oauth/token-hook
+    auth:
+      type: api_key
+      config:
+        in: header
+        name: Authorization
+        value: "Bearer REPLACE_WITH_TOKENS__SERVICE_TOKEN"
+
+clients:
+  http:
+    # Client-supplied URLs (jwks_uri, backchannel_logout_uri, request_uris) must not point
+    # at the internal network (identity:8001, hydra:4445, vault:8200): a registered client
+    # would otherwise be a request forger. The one private address Hydra may call is the
+    # token hook of the identity process.
+    disallow_private_ip_ranges: true
+    private_ip_exception_urls:
+      - http://identity:8001/v1/oauth/token-hook
+
+oidc:
+  # Dynamic Client Registration stays on: MCP clients register themselves (product-spec
+  # MCP-3). Mitigations: the edge nginx rate-limits POST /oauth2/register
+  # (materials/nginx/common/route-id.inc), the default scope has no offline_access (a client
+  # that wants refresh tokens asks for it and the consent screen shows it), and the consent
+  # app treats every client without an admin-set metadata flag as unverified
+  # (identity/application/consent_support.py).
+  dynamic_client_registration:
+    enabled: true
+    default_scope:
+      - openid
+
+sqa:
+  opt_out: true
+
+log:
+  level: info
+  format: json
