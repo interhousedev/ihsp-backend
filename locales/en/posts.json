@@ -1,0 +1,11 @@
+{
+  "posts-not-found": "Post not found.",
+  "posts-invalid": "The post is invalid: {field} ({reason}).",
+  "posts-slug-taken": "Another post already uses this slug.",
+  "posts-root-protected": "The main menu post cannot be deleted or moved.",
+  "posts-has-children": "The post has sub-posts. Delete or move them first.",
+  "posts-cycle": "A post cannot be moved under itself or its sub-posts.",
+  "posts-reorder-mismatch": "The list must contain exactly the sub-posts of the parent.",
+  "posts-guest-limit": "Too many questions. Please try again later.",
+  "posts-guest-busy": "The assistant is busy right now. Please try again later."
+}

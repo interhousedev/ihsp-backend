@@ -1,0 +1,11 @@
+{
+  "posts-not-found": "Post topilmadi.",
+  "posts-invalid": "Post noto‘g‘ri to‘ldirilgan: {field} ({reason}).",
+  "posts-slug-taken": "Bu slug boshqa postda band.",
+  "posts-root-protected": "Asosiy menyu postini o‘chirib yoki ko‘chirib bo‘lmaydi.",
+  "posts-has-children": "Postning ichki postlari bor. Avval ularni o‘chiring yoki ko‘chiring.",
+  "posts-cycle": "Postni o‘zining yoki ichki postlarining ichiga ko‘chirib bo‘lmaydi.",
+  "posts-reorder-mismatch": "Ro‘yxatda aynan ota postning ichki postlari bo‘lishi kerak.",
+  "posts-guest-limit": "Savollar juda ko‘p. Keyinroq urinib ko‘ring.",
+  "posts-guest-busy": "Hozir yordamchi band. Keyinroq urinib ko‘ring."
+}
