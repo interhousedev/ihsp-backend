@@ -1,0 +1,1 @@
+"""SQL side of assessments."""
