@@ -1,0 +1,6 @@
+# Domains that links may not point to (SL-8), one per line; subdomains are included.
+# Lines starting with # and empty lines are ignored. Administration extends this list
+# from a malware/phishing feed; entries below are reserved examples.
+blocked.example
+phishing.example
+malware.example

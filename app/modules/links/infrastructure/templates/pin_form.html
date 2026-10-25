@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ t("room-pin-title", name=room_name) }}{% endblock %}
+{% block body %}
+<h1>{{ t("room-pin-title", name=room_name) }}</h1>
+{% if wrong %}
+<p><strong>{{ t("room-pin-wrong") }}</strong></p>
+{% endif %}
+<form method="post" action="">
+<p><label>{{ t("room-pin-prompt") }}<br><input name="pin" type="password" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="off" autofocus></label></p>
+{% if day %}
+<input type="hidden" name="date" value="{{ day }}">
+{% endif %}
+<p><button type="submit">{{ t("room-pin-submit") }}</button></p>
+</form>
+{% endblock %}

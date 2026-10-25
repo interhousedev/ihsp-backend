@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex">
+<meta name="referrer" content="no-referrer">
+<title>{{ day.heading }}</title>
+</head>
+<body>
+<pre style="white-space:pre-wrap">{{ day.heading }}
+
+{% if day.empty_text %}
+{{ day.empty_text }}
+
+{% endif %}
+{% for lesson in day.lessons %}
+{{ lesson.prefix }}{{ lesson.period }}  {{ lesson.time }}  {{ lesson.summary }}{% if lesson.cancelled %} [cancelled]{% endif %}
+
+{% if lesson.materials %}
+      Materials: {% for item in lesson.materials %}<a href="{{ item.href }}">{{ item.text }}</a> ({{ item.title }}) <a href="{{ item.report_href }}">[report]</a>{% if not loop.last %}, {% endif %}{% endfor %}
+
+{% endif %}
+{% for author in lesson.authors %}
+      {{ author.name }} - {% for item in author.items %}<a href="{{ item.href }}">{{ item.text }}</a> ({{ item.title }}) <a href="{{ item.report_href }}">[report]</a>{% if not loop.last %}, {% endif %}{% endfor %}
+
+{% endfor %}
+{% endfor %}
+{% if day.today_href %}
+<a href="{{ day.today_href }}">Today</a>
+
+{% endif %}
+
+Previous days: {% for prev in day.previous %}<a href="{{ prev.href }}">{{ prev.label }}</a>{% if not loop.last %} · {% endif %}{% endfor %}
+</pre>
+</body>
+</html>

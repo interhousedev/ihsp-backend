@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}{{ t("links-report-title") }}{% endblock %}
+{% block body %}
+<h1>{{ t("links-report-title") }}</h1>
+<form method="post" action="{{ action }}">
+<p>{{ t("links-report-reason") }}</p>
+{% for reason in reasons %}
+<p><label><input type="radio" name="reason" value="{{ reason }}"{% if loop.last %} checked{% endif %}> {{ t("links-report-reason-" ~ reason) }}</label></p>
+{% endfor %}
+<p><label>{{ t("links-report-comment") }}<br><textarea name="comment" rows="4" cols="40" maxlength="500"></textarea></label></p>
+<p><button type="submit">{{ t("links-report-submit") }}</button></p>
+</form>
+{% endblock %}
