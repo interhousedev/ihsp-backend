@@ -1,0 +1,38 @@
+"""Task academic.sync_all: one EMIS sync run for every student (SYNC-1).
+
+Schedule for I1 (``cron_offset="Asia/Tashkent"``): ``SYNC_SLOTS`` below, one
+entry per slot with ``kwargs={"slot": <slot>}``.
+"""
+
+from app.bootstrap.container import Container
+from app.interfaces.jobs.broker import broker
+from app.interfaces.jobs.context import get_container
+from app.modules.academic.domain.marks.errors import SyncAlreadyRunningError
+
+import structlog
+
+log = structlog.get_logger(__name__)
+
+SYNC_SLOTS: tuple[tuple[str, str], ...] = (
+    ("11:30", "30 11 * * *"),
+    ("15:00", "0 15 * * *"),
+    ("20:00", "0 20 * * *"),
+)
+
+
+@broker.task(task_name="academic.sync_all")
+async def sync_all(slot: str = "manual") -> None:
+    """Run the sync for a slot: 11:30, 15:00, 20:00 (adds profile) or manual."""
+    container: Container = get_container()
+    try:
+        await container.academic.marks.sync_all.execute(slot)
+    except SyncAlreadyRunningError:
+        # A previous slot (or a redelivered message) is still syncing; it covers us.
+        log.warning("sync_all_skipped_overlap", slot=slot)
+
+
+@broker.task(task_name="academic.resume_sync_all")
+async def resume_sync_all() -> bool:
+    """Run again a sync that EMIS paused, once EMIS may be called; True if it ran."""
+    container: Container = get_container()
+    return await container.academic.marks.resume_paused_sync.execute()
