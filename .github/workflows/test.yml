@@ -1,0 +1,121 @@
+# Full test run on every pull request to main: the whole pytest suite against the dev services
+# (Postgres with pgvector, Redis, S3, Vault), the deployment checks and the OpenAPI export check.
+name: Test
+
+on:
+  pull_request:
+    branches: [main]
+  merge_group:
+
+permissions: {}
+
+concurrency:
+  group: test-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Tests (dev compose services)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Python 3.13
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+
+      - name: uv (same version as the Dockerfile)
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          version: "0.12.23"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install the locked dependencies, dev group included
+        run: uv sync --frozen
+
+      # The development signing key is git-ignored; scripts/dev.sh creates it the same way.
+      - name: Generate the development JWT-bearer key
+        run: |
+          mkdir -p materials/dev-keys
+          openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out materials/dev-keys/jwt-bearer.pem
+
+      # The dev compose file is the environment the defaults of app/settings.py were written for
+      # (materials/dev.env). The `*-init` services create the S3 bucket and the Vault transit key.
+      - name: Start the dev services
+        run: >
+          docker compose -f materials/docker-compose.dev.yaml
+          up -d --wait postgres redis s3 s3-init vault vault-init
+
+      # Everything: units, HTTP, migrations (tests/models), integration over fakes and the
+      # deployment checks (Dockerfiles, nginx, compose files, entrypoint).
+      - name: Whole test suite
+        run: >
+          uv run pytest -q -p no:cacheprovider
+          --junitxml=test-results/junit.xml
+
+      - name: Stop the dev services
+        if: always()
+        run: docker compose -f materials/docker-compose.dev.yaml down -v
+
+      - name: Upload the JUnit report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: junit
+          path: test-results/junit.xml
+          if-no-files-found: warn
+          retention-days: 14
+
+  openapi:
+    name: Committed openapi.json is up to date
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Python 3.13
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.13"
+
+      - name: uv (same version as the Dockerfile)
+        uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          version: "0.12.23"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install the locked dependencies
+        run: uv sync --frozen
+
+      # The export contacts no service; the dev settings file is enough.
+      - name: Export the OpenAPI document
+        env:
+          IHSP_ENV_FILE: materials/dev.env
+        run: uv run python scripts/export_openapi.py
+
+      - name: Fail when the committed document is stale
+        run: |
+          git diff --exit-code -- openapi
+          test -z "$(git status --porcelain --untracked-files=all -- openapi)"

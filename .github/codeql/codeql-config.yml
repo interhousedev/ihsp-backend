@@ -1,0 +1,3 @@
+name: ihsp-codeql
+paths-ignore:
+  - tests

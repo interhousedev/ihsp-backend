@@ -1,0 +1,76 @@
+# Weekly dependency updates, grouped per ecosystem and split into a patch group and a minor group, so that
+# dependabot-automerge.yml can queue the patch PR for merge (after the required checks pass) while the minor
+# PR and every major update wait for a review. A 7-day cooldown (as bunfig.toml minimumReleaseAge) skips releases that are pulled right away.
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Asia/Tashkent
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "build(deps)"
+    groups:
+      python-patch:
+        update-types: ["patch"]
+      python-minor:
+        update-types: ["minor"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Asia/Tashkent
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "ci(deps)"
+    groups:
+      actions-patch:
+        update-types: ["patch"]
+      actions-minor:
+        update-types: ["minor"]
+
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Asia/Tashkent
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "build(deps)"
+    groups:
+      base-images-patch:
+        update-types: ["patch"]
+      base-images-minor:
+        update-types: ["minor"]
+
+  - package-ecosystem: docker-compose
+    directory: "/materials"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "05:00"
+      timezone: Asia/Tashkent
+    open-pull-requests-limit: 10
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: "build(deps)"
+    groups:
+      compose-images-patch:
+        update-types: ["patch"]
+      compose-images-minor:
+        update-types: ["minor"]

@@ -1,0 +1,38 @@
+# Auto-merge for Dependabot patch updates. `gh pr merge --auto` only queues the merge: GitHub merges once
+# the required status checks of the branch protection (lint, test, security, CodeQL) have passed.
+# Minor and major updates wait for a human review. Uses pull_request (never pull_request_target) and checks
+# out no code.
+name: Dependabot auto-merge
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: dependabot-automerge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  automerge:
+    name: Queue patch updates for merge
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository_owner == 'interhousedev'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write      # merge
+      pull-requests: write # enable auto-merge
+    steps:
+      - uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+      - name: Dependabot metadata
+        id: meta
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+      - name: Enable auto-merge (patch only)
+        if: steps.meta.outputs.update-type == 'version-update:semver-patch'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash "$PR_URL"

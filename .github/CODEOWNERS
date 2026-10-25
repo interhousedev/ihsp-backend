@@ -1,0 +1,11 @@
+# Code owners review every pull request to the paths below.
+
+*                                   @interhousedev
+
+# Trust boundaries
+/app/modules/identity/              @interhousedev
+/app/interfaces/http/v1/id/         @interhousedev
+/app/modules/ai/                    @interhousedev
+/materials/                         @interhousedev
+/.github/                           @interhousedev
+/SECURITY.md                        @interhousedev
