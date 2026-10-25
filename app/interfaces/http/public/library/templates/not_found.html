@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block head %}
+<title>{{ t('library-page-not-found-title') }} · {{ t('library-page-site-name') }}</title>
+<meta name="robots" content="noindex, nofollow">
+{% endblock %}
+{% block home %}{{ home_url }}{% endblock %}
+{% block content %}
+<h1>{{ t('library-page-not-found-title') }}</h1>
+<p>{{ t('library-page-not-found-text') }}</p>
+<p><a class="button" href="{{ home_url }}">{{ t('library-page-home') }}</a></p>
+{% endblock %}
