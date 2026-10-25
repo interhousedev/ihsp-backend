@@ -1,0 +1,9 @@
+{
+  "feedback-not-found": "Murojaat topilmadi.",
+  "feedback-invalid": "\"{field}\" maydonining qiymati yaroqsiz.",
+  "feedback-attachment-invalid": "Bu faylni biriktirib boʻlmaydi. Oʻzingizning rasm, video, PDF yoki hujjatlaringizni yuklang, ishlov berilishini kuting va koʻpi bilan 10 ta biriktiring.",
+  "feedback-mail-subject": "Murojaatingizga javob: {title}",
+  "feedback-mail-body": "<p>«{title}» murojaatingiz uchun rahmat. Platforma jamoasi javob berdi:</p><p>{text}</p>",
+  "feedback-mail-attachments": "Platformadagi javobga fayllar biriktirilgan:",
+  "feedback-rate-limited": "Bugun 10 ta murojaat yubordingiz. Ertaga qayta urinib koʻring."
+}
