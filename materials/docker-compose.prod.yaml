@@ -241,7 +241,7 @@ services:
   # prefer the cloud provider's S3 and leave this off. Presigned URLs need a public host:
   # set STORAGE_PUBLIC_HOST (nginx proxies it to this service).
   s3:
-    image: rustfs/rustfs:1.0.1
+    image: rustfs/rustfs:1.0.3
     profiles: [rustfs]
     restart: unless-stopped
     logging: *logging

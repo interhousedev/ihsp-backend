@@ -171,7 +171,7 @@ services:
 
   # S3-compatible object store (MinIO images are no longer distributed).
   s3:
-    image: rustfs/rustfs:1.0.1
+    image: rustfs/rustfs:1.0.3
     restart: unless-stopped
     logging: *logging
     environment:
@@ -203,7 +203,7 @@ services:
         condition: service_healthy
 
   mailpit:
-    image: axllent/mailpit:v1.31.5
+    image: axllent/mailpit:v1.31.6
     restart: unless-stopped
     logging: *logging
     ports:
