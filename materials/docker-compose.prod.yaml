@@ -637,6 +637,9 @@ services:
       DATABASE_URL: postgresql://bugsink:${BUGSINK_DB_PASSWORD:?}@${BUGSINK_DB_HOST:-postgres}:5432/bugsink
       BASE_URL: https://logs.${DOMAIN}
       ALLOWED_HOSTS: logs.${DOMAIN}
+      # The edge nginx terminates TLS and sends X-Forwarded-Proto; without this Django sees
+      # http and refuses every form post (login included) with "CSRF verification failed".
+      BEHIND_HTTPS_PROXY: "True"
       PORT: "8000"
       TASK_ALWAYS_EAGER: "False" # event processing runs in bugsink_worker
       WAKEUP_CALLS_DIR: /wakeup
