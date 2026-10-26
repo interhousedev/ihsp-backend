@@ -23,7 +23,15 @@ def get_bugsink_client(
     token = cfg.api_token.get_secret_value()
     if not cfg.api_url or not token:
         return None
-    return BugsinkClient(cfg.api_url, token)
+    return BugsinkClient(cfg.api_url, token, _project_ids(cfg.projects, cfg.dsn))
+
+
+def _project_ids(projects: list[str], dsn: str) -> list[str]:
+    """Configured project ids, or the project of the DSN (its last path segment)."""
+    if projects:
+        return projects
+    tail = dsn.rstrip("/").rsplit("/", 1)[-1] if dsn else ""
+    return [tail] if tail.isdigit() else []
 
 
 def _issue(client: BugsinkClient, row: dict[str, Any]) -> LogIssue:

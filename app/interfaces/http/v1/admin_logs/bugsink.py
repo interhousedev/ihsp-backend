@@ -13,19 +13,30 @@ class BugsinkUnavailableError(Exception):
     """Bugsink did not answer with a usable issue list."""
 
 
+MAX_REQUESTS_PER_PROJECT = 4
+"""Cursor pages read per project for one admin page (up to 250 rows each)."""
+
+
 class BugsinkClient:
-    """Lists issues; the token is sent only as a bearer header, never logged."""
+    """Lists issues; the token is sent only as a bearer header, never logged.
+
+    Bugsink 2.6 lists issues of one numeric project at a time (``?project=<id>``)
+    with cursor pagination, so the client queries each configured project, follows
+    ``next`` links and filters by level and pages locally.
+    """
 
     def __init__(
         self,
         api_url: str,
         api_token: str,
+        projects: list[str] | None = None,
         transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
-        """Store origin and token; ``transport`` lets tests avoid the network."""
+        """Store origin, token and default project ids; ``transport`` is for tests."""
         self.ui_base = api_url.rstrip("/")
         self.api_url = f"{self.ui_base}/api/canonical/0"
         self.api_token = api_token
+        self.projects = [p for p in (projects or []) if p.isdigit()]
         self.transport = transport
 
     async def list_issues(
@@ -36,8 +47,12 @@ class BugsinkClient:
         page: int,
         size: int,
     ) -> tuple[list[dict[str, Any]], bool]:
-        """Return the raw rows of one page and whether another page follows."""
-        params = _params(project, level, page, size)
+        """Return one page of rows, newest first, and whether another page follows."""
+        projects = [project] if project else self.projects
+        if not projects or not all(p.isdigit() for p in projects):
+            raise BugsinkUnavailableError("project")
+        wanted = page * size + 1
+        rows: list[dict[str, Any]] = []
         try:
             async with httpx.AsyncClient(
                 timeout=httpx.Timeout(TIMEOUT_SECONDS),
@@ -47,39 +62,62 @@ class BugsinkClient:
                 },
                 transport=self.transport,
             ) as client:
-                response = await client.get(f"{self.api_url}/issues/", params=params)
+                for project_id in projects:
+                    rows += await self._project_rows(client, project_id, level, wanted)
         except httpx.HTTPError as exc:
             raise BugsinkUnavailableError("transport") from exc
-        if response.status_code != 200:
-            raise BugsinkUnavailableError(f"status {response.status_code}")
-        return _page(response, size)
+        rows.sort(key=lambda row: str(row.get("last_seen") or ""), reverse=True)
+        start = (page - 1) * size
+        return rows[start : start + size], len(rows) > start + size
+
+    async def _project_rows(
+        self,
+        client: httpx.AsyncClient,
+        project_id: str,
+        level: str | None,
+        wanted: int,
+    ) -> list[dict[str, Any]]:
+        """Rows of one project, following cursor links until enough rows are read."""
+        url: str | None = f"{self.api_url}/issues/"
+        params: dict[str, str] | None = {
+            "project": project_id,
+            "sort": "last_seen",
+            "order": "desc",
+        }
+        rows: list[dict[str, Any]] = []
+        for _ in range(MAX_REQUESTS_PER_PROJECT):
+            if url is None or len(rows) >= wanted:
+                break
+            response = await client.get(url, params=params)
+            if response.status_code != 200:
+                raise BugsinkUnavailableError(f"status {response.status_code}")
+            batch, url = _page(response, self.ui_base)
+            params = None  # the next link carries the cursor and the filters
+            rows += [row for row in batch if _level_matches(row, level)]
+        return rows
 
     def deep_link(self, issue_id: str) -> str:
         """Bugsink page of one issue."""
         return f"{self.ui_base}/issues/issue/{issue_id}/"
 
 
-def _params(
-    project: str | None, level: str | None, page: int, size: int
-) -> dict[str, str | int]:
-    params: dict[str, str | int] = {"page": page, "per_page": size}
-    if project:
-        params["project"] = project
-    if level:
-        params["level"] = level
-    return params
+def _level_matches(row: dict[str, Any], level: str | None) -> bool:
+    return level is None or str(row.get("level") or "error") == level
 
 
-def _page(response: httpx.Response, size: int) -> tuple[list[dict[str, Any]], bool]:
+def _page(
+    response: httpx.Response, origin: str
+) -> tuple[list[dict[str, Any]], str | None]:
     try:
         body = response.json()
     except ValueError as exc:
         raise BugsinkUnavailableError("json") from exc
-    if isinstance(body, list):
-        return _rows(body), len(body) >= size
-    if isinstance(body, dict) and isinstance(body.get("results"), list):
-        return _rows(body["results"]), body.get("next") is not None
-    raise BugsinkUnavailableError("shape")
+    if not (isinstance(body, dict) and isinstance(body.get("results"), list)):
+        raise BugsinkUnavailableError("shape")
+    next_url = body.get("next")
+    if not isinstance(next_url, str) or not next_url.startswith(f"{origin}/"):
+        next_url = None  # never follow a link off the configured Bugsink host
+    return _rows(body["results"]), next_url
 
 
 def _rows(rows: list[Any]) -> list[dict[str, Any]]:

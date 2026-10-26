@@ -50,7 +50,7 @@ async def _enabled(http_client: HttpClientFactory, handler: Any) -> AsyncClient:
         overrides={
             get_actor: _actor,
             get_bugsink_client: lambda: BugsinkClient(
-                "https://bugsink.example", "tok", transport=transport
+                "https://bugsink.example", "tok", ["1"], transport=transport
             ),
         },
     )
@@ -58,8 +58,8 @@ async def _enabled(http_client: HttpClientFactory, handler: Any) -> AsyncClient:
 
 async def test_maps_issues_with_deep_links(http_client: HttpClientFactory) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
-        assert request.url.params["level"] == "error"
-        return httpx.Response(200, json={"results": ROWS, "next": "x"})
+        assert request.url.params["project"] == "1"
+        return httpx.Response(200, json={"results": ROWS, "next": None})
 
     client = await _enabled(http_client, handler)
 
@@ -68,7 +68,7 @@ async def test_maps_issues_with_deep_links(http_client: HttpClientFactory) -> No
     assert response.status_code == 200
     body = response.json()
     assert body["disabled"] is False
-    assert body["has_next"] is True
+    assert body["has_next"] is False
     assert body["items"] == [
         {
             "id": "issue-1",
