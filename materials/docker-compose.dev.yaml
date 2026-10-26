@@ -55,7 +55,7 @@ services:
       retries: 30
 
   s3-init:
-    image: python:3.13.16-slim
+    image: python:3.14.7-slim
     command:
       - sh
       - -c
@@ -74,7 +74,7 @@ services:
     restart: "no"
 
   vault:
-    image: hashicorp/vault:2.1.2
+    image: hashicorp/vault:2.2.0
     cap_add:
       - IPC_LOCK
     environment:
@@ -90,7 +90,7 @@ services:
 
   # Dev mode keeps nothing on disk: the bootstrap runs on every `up`.
   vault-init:
-    image: python:3.13.16-slim
+    image: python:3.14.7-slim
     command:
       - sh
       - -c

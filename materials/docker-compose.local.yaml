@@ -145,7 +145,7 @@ services:
   # Dev mode: in memory, unsealed, root token dev-root, KV v2 at secret/. A restart wipes
   # it, which is why vault-init runs on every `up`.
   vault:
-    image: hashicorp/vault:2.1.2
+    image: hashicorp/vault:2.2.0
     restart: unless-stopped
     logging: *logging
     cap_add: [IPC_LOCK]
@@ -437,7 +437,7 @@ services:
 
   # Routing by host and path, plain HTTP on port 80 (materials/nginx/local).
   nginx:
-    image: nginx:1.28.3-alpine
+    image: nginx:1.31.0-alpine
     restart: unless-stopped
     logging: *logging
     ports:
