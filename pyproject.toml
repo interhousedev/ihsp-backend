@@ -43,7 +43,7 @@ dependencies = [
     "sentry-sdk==2.*",
     "sqlalchemy[asyncio]>=2.0.54,<2.1",
     "structlog>=26.1.0",
-    "taskiq>=0.12.6,<0.13",
+    "taskiq>=0.12.6,<0.14",
     "taskiq-redis==1.2.2",
     "tzdata>=2026.5",
     "uuid-utils>=1.0.0",
