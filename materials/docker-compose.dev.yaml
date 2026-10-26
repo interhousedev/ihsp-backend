@@ -39,7 +39,7 @@ services:
   # S3-compatible server. MinIO images are no longer distributed, so dev uses RustFS.
   # The app talks plain S3 (settings S3__*).
   s3:
-    image: rustfs/rustfs:1.0.1
+    image: rustfs/rustfs:1.0.3
     environment:
       RUSTFS_ACCESS_KEY: minio
       RUSTFS_SECRET_KEY: minio12345
@@ -139,7 +139,7 @@ services:
       retries: 30
 
   mailpit:
-    image: axllent/mailpit:v1.31.5
+    image: axllent/mailpit:v1.31.6
     ports:
       - "127.0.0.1:1025:1025" # SMTP
       - "127.0.0.1:8025:8025" # web UI
