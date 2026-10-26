@@ -4,5 +4,5 @@ contact_links:
     url: https://github.com/interhousedev/ihsp-backend/security/advisories/new
     about: Report privately through a GitHub security advisory (or alex@sayfi.uz, Telegram @megaplov). Never open a public issue.
   - name: Web app problem
-    url: https://github.com/interhousedev/ihsp-web/issues
+    url: https://github.com/interhousedev/ihsp-frontend/issues
     about: Problems with the screens themselves belong to the iht-web repository.

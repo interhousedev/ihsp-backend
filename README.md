@@ -32,7 +32,7 @@
 
 IHSP (Interhouse Student Platform) connects to students' EMIS accounts and covers daily school life: calendar and timetable, marks and the teacher journal, homework, attendance and work-offs, an AI study assistant with notebooks and a Studio for quizzes, flash cards and slides, a library, courses (LMS), files and links, a student mailbox and a Telegram bot. Every user-facing text exists in Uzbek, Russian and English.
 
-This repository holds the Python backend, the compose files, the edge nginx, the Hydra and Vault configuration and the deployment scripts. The web apps live in the sibling repository [`iht-web`](https://github.com/interhousedev/ihsp-web); the two meet at [`openapi/openapi.json`](openapi/openapi.json).
+This repository holds the Python backend, the compose files, the edge nginx, the Hydra and Vault configuration and the deployment scripts. The web apps live in the sibling repository [`iht-web`](https://github.com/interhousedev/ihsp-frontend); the two meet at [`openapi/openapi.json`](openapi/openapi.json).
 
 ## Feature tour
 
