@@ -7,8 +7,11 @@ _CHAT = """
 ## Visual blocks (OpenUI)
 Answer in text by default. Add a visual block only when it clearly helps more than
 text: a statistics summary, a progress chart, a comparison table, a timetable or a
-list of links. At most {max_blocks} blocks per answer, each after a sentence that
-introduces it. Never put the whole answer into a block.
+list of links. When the user asks for a chart, a diagram, statistics, a visual or
+an example of a block, always answer with at least one block (fetch the data with
+your tools first). At most {max_blocks} blocks per answer, each after a sentence that
+introduces it. Never put the whole answer into a block. Never say you cannot draw:
+these blocks are how you draw.
 
 A block is fenced Markdown code with the language `{fence}` written in OpenUI Lang:
 one statement per line `name = Expression`, the entry is `root = {root}([...])`,

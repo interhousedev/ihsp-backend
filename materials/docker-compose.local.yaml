@@ -46,6 +46,8 @@ x-backend-env: &backend-env
   IHSP_ENV: dev
   IHSP_LOG_LEVEL: ${LOG_LEVEL:-INFO}
   # Dev stack only: the local nginx sits on a Docker bridge network, never on the internet.
+  IHSP_AI__OPENUI_ENABLED: ${IHSP_AI__OPENUI_ENABLED:-1}
+  IHSP_AI__OPENUI_STUDIO_ENABLED: ${IHSP_AI__OPENUI_STUDIO_ENABLED:-0}
   IHSP_HTTP__TRUSTED_PROXIES: "172.16.0.0/12,192.168.0.0/16,10.0.0.0/8"
   IHSP_DATABASE__URL: postgresql+asyncpg://ihsp:ihsp@postgres:5432/ihsp
   IHSP_REDIS__URL: redis://redis:6379/0
