@@ -39,7 +39,7 @@ services:
   # S3-compatible server. MinIO images are no longer distributed, so dev uses RustFS.
   # The app talks plain S3 (settings S3__*).
   s3:
-    image: rustfs/rustfs:1.0.1
+    image: rustfs/rustfs:1.0.4
     environment:
       RUSTFS_ACCESS_KEY: minio
       RUSTFS_SECRET_KEY: minio12345
