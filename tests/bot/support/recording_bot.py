@@ -201,6 +201,20 @@ def voice_update(bot: Bot, *, user_id: int = 2002, update_id: int = 4) -> Update
     return _update(bot, update_id, message=_message(user_id, update_id, voice=voice))
 
 
+def media_update(
+    bot: Bot,
+    field: str,
+    payload: dict[str, Any],
+    *,
+    user_id: int = 2002,
+    update_id: int = 4,
+) -> Update:
+    """A message whose media field (voice, audio, video, video_note) is ``payload``."""
+    return _update(
+        bot, update_id, message=_message(user_id, update_id, **{field: payload})
+    )
+
+
 def blocked_update(bot: Bot, *, new_status: str, user_id: int = 1001) -> Update:
     """A my_chat_member update: the user blocked (kicked) or unblocked (member)."""
     member: dict[str, Any] = {

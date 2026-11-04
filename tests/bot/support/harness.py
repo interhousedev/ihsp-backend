@@ -9,6 +9,7 @@ from tests.bot.support.recording_bot import (
     blocked_update,
     callback_update,
     document_update,
+    media_update,
     message_update,
     session_of,
     voice_update,
@@ -68,6 +69,13 @@ class Harness:
     async def send_voice(self, *, user_id: int) -> None:
         """The user sends a voice message."""
         update = voice_update(self.bot, user_id=user_id)
+        await self.dp.feed_update(self.bot, update, container=self.world.container)
+
+    async def send_media(
+        self, field: str, payload: dict[str, Any], *, user_id: int = STUDENT_TG
+    ) -> None:
+        """The user sends voice, audio, video or video_note media."""
+        update = media_update(self.bot, field, payload, user_id=user_id)
         await self.dp.feed_update(self.bot, update, container=self.world.container)
 
     async def block(self, *, kicked: bool, user_id: int = STUDENT_TG) -> None:

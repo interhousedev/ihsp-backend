@@ -16,6 +16,7 @@ from app.interfaces.bot.routers.common.assistant.handlers.new_chat import new_ch
 from app.interfaces.bot.routers.common.assistant.handlers.visualize import (
     visualize,
 )
+from app.interfaces.bot.routers.common.assistant.handlers.voice import ask_voice
 
 from aiogram import F, Router
 from aiogram.filters import Command, Filter, StateFilter
@@ -39,6 +40,7 @@ def build_router() -> Router:
     idle = StateFilter(None)
     router.message.register(ask, idle, F.text, ~F.text.startswith("/"))
     router.message.register(ask, idle, F.caption, F.photo | F.document)
+    router.message.register(ask_voice, idle, F.voice | F.audio | F.video | F.video_note)
     router.callback_query.register(decide, AiCallCb.filter())
     router.callback_query.register(visualize, AiVizCb.filter())
     return router

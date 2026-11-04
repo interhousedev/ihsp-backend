@@ -41,6 +41,12 @@ def build_router() -> Router:
     router.callback_query.register(handlers.open_post, PostCb.filter())
     router.message.register(handlers.show_menu, Command("menu"), unlinked, IsGuest())
     router.message.register(
+        handlers.guest_voice,
+        F.voice | F.audio | F.video | F.video_note,
+        unlinked,
+        IsGuest(),
+    )
+    router.message.register(
         handlers.ask_assistant,
         F.text,
         ~F.text.startswith("/"),

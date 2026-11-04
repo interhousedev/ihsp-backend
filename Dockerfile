@@ -7,7 +7,7 @@
 # source tree (app/shared/paths.py: BACKEND_ROOT is the directory above the package), so the source is
 # copied next to the venv instead of into site-packages.
 #
-# Runtime: the same Python base image, the venv and the source. The only OS package added is libmagic1
+# Runtime: the same Python base image, the venv and the source. The OS packages added are libmagic1 and ffmpeg
 # (python-magic loads it when the file sniffer is used). No uv, no pip, no compiler, no git, no shell
 # history. The wheels bundle their own native libraries (asyncpg, cryptography, lxml, pypdfium2, ...).
 
@@ -30,9 +30,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # ---------------------------------------------------------------------------------------------------
 FROM python:3.13.16-slim AS runtime
 
-# python-magic needs libmagic at import time. Nothing else needs an OS package.
+# python-magic needs libmagic at import time; ffmpeg cuts the audio out of bot videos.
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libmagic1 \
+    && apt-get install -y --no-install-recommends libmagic1 ffmpeg \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

@@ -81,6 +81,10 @@ class FakeAi:
     sent: list[dict[str, Any]] = field(default_factory=list)
     decided: list[dict[str, Any]] = field(default_factory=list)
     scripts: deque[Script] = field(default_factory=deque)
+    transcribed: list[dict[str, Any]] = field(default_factory=list)
+    transcripts: deque[str | Exception] = field(default_factory=deque)
+    prechecks: list[Actor] = field(default_factory=list)
+    precheck_refusal: Exception | None = None
 
     def __post_init__(self) -> None:
         """Expose the use cases under the AiServices attribute names."""
@@ -88,6 +92,31 @@ class FakeAi:
         self.send_message = SimpleNamespace(stream=self._send)
         self.approve_tool_call = SimpleNamespace(stream=self._approve)
         self.reject_tool_call = SimpleNamespace(stream=self._reject)
+        self.transcribe_audio = SimpleNamespace(
+            execute=self._transcribe, precheck=self._precheck
+        )
+
+    async def _precheck(self, actor: Actor) -> None:
+        """Record the access and rate check; refuse when a refusal is scripted."""
+        self.prechecks.append(actor)
+        if self.precheck_refusal is not None:
+            raise self.precheck_refusal
+
+    async def _transcribe(
+        self,
+        actor: Actor,
+        *,
+        data: bytes,
+        duration_ms: int,
+    ) -> str:
+        """Record the recording; answer the next scripted transcript."""
+        self.transcribed.append({"data": data, "duration_ms": duration_ms})
+        if not self.transcripts:
+            return "transcript"
+        item = self.transcripts.popleft()
+        if isinstance(item, Exception):
+            raise item
+        return item
 
     def play(self, *scripts: Script) -> None:
         """Queue the events of the next turns."""
@@ -103,19 +132,33 @@ class FakeAi:
         return SimpleNamespace(id=chat_id, assistant=assistant)
 
     def _send(
-        self, *, actor: Actor, chat_id: UUID, text: str, file_ids: list[UUID]
+        self,
+        *,
+        actor: Actor,
+        chat_id: UUID,
+        text: str,
+        file_ids: list[UUID],
+        surface: str = "web",
     ) -> AsyncIterator[TurnEvent]:
-        self.sent.append({"chat_id": chat_id, "text": text, "file_ids": file_ids})
+        self.sent.append(
+            {"chat_id": chat_id, "text": text, "file_ids": file_ids, "surface": surface}
+        )
         return self._next()
 
     def _approve(
-        self, *, actor: Actor, chat_id: UUID, call_id: str
+        self, *, actor: Actor, chat_id: UUID, call_id: str, surface: str = "web"
     ) -> AsyncIterator[TurnEvent]:
         self.decided.append({"chat_id": chat_id, "call_id": call_id, "ok": True})
         return self._next()
 
     def _reject(
-        self, *, actor: Actor, chat_id: UUID, call_id: str, reason: str | None
+        self,
+        *,
+        actor: Actor,
+        chat_id: UUID,
+        call_id: str,
+        reason: str | None,
+        surface: str = "web",
     ) -> AsyncIterator[TurnEvent]:
         self.decided.append({"chat_id": chat_id, "call_id": call_id, "ok": False})
         return self._next()

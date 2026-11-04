@@ -11,10 +11,11 @@ BLOCK = (
 
 
 def test_block_becomes_text() -> None:
-    """AI-OPENUI: a table block arrives as readable lines, not code."""
+    """AI-OPENUI: a table block arrives as an aligned table, not as code."""
     html = "".join(c.text for c in render_telegram(f"Your marks:\n{BLOCK}"))
-    assert "Mon | 5" in html
-    assert "root =" not in html and "<pre" not in html
+    assert "<pre>Day  Mark" in html
+    assert "Mon  5" in html and "Tue  4" in html
+    assert "root =" not in html and "|" not in html
 
 
 def test_streaming_hides_an_unfinished_block() -> None:

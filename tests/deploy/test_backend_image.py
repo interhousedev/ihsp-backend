@@ -44,12 +44,14 @@ def test_the_runtime_stage_copies_the_venv_and_the_source_only() -> None:
     ]
 
 
-def test_the_runtime_stage_adds_only_libmagic_and_no_installer_or_compiler() -> None:
+def test_the_runtime_stage_adds_only_libmagic_ffmpeg_and_no_installer_or_compiler() -> (
+    None
+):
     runtime = _instructions(_runtime_stage())
-    packages = re.findall(
-        r"apt-get install -y --no-install-recommends (\S+)", " ".join(runtime)
+    installed = re.findall(
+        r"apt-get install -y --no-install-recommends ([^&\\]+)", " ".join(runtime)
     )
-    assert packages == ["libmagic1"]
+    assert [" ".join(installed[0].split())] == ["libmagic1 ffmpeg"]
     assert not any("uv " in line or "gcc" in line for line in runtime)
 
 

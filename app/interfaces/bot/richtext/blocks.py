@@ -16,6 +16,8 @@ _QUOTE = re.compile(r"^\s{0,3}>\s?(.*)$")
 _BULLET = re.compile(r"^(\s*)[-*+]\s+(.*)$")
 _NUMBERED = re.compile(r"^(\s*)(\d{1,3})[.)]\s+(.*)$")
 _RULE = re.compile(r"^\s*([-*_])(\s*\1){2,}\s*$")
+_TABLE_RULE = re.compile(r"^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$")
+_EMPHASIS = re.compile(r"\*\*|__|~~|`")
 
 
 @dataclass(frozen=True, slots=True)
@@ -90,9 +92,58 @@ def _parse_one(lines: list[str], i: int) -> tuple[int, Block]:
     body = match_button_line(line)
     if body is not None:
         return i + 1, _button_line(body)
+    if _is_table_start(lines, i):
+        return _table(lines, i)
     if _QUOTE.match(line):
         return _quote(lines, i)
     return i + 1, _single_line(line)
+
+
+def _is_table_start(lines: list[str], i: int) -> bool:
+    """A header row with a pipe, and a rule row (with pipes) under it."""
+    return (
+        i + 1 < len(lines)
+        and "|" in lines[i]
+        and "|" in lines[i + 1]
+        and _TABLE_RULE.match(lines[i + 1]) is not None
+    )
+
+
+def _cells(line: str) -> list[str]:
+    """The cells of a pipe row; the outer pipes are optional."""
+    text = line.strip()
+    if text.startswith("|"):
+        text = text[1:]
+    if text.endswith("|"):
+        text = text[:-1]
+    return [cell.strip() for cell in text.split("|")]
+
+
+def _table(lines: list[str], i: int) -> tuple[int, Block]:
+    """A Markdown table as aligned monospace text (Telegram has no table tag).
+
+    Cells keep their text and lose only emphasis markers; the columns are padded
+    so that every row lines up in a `pre` block.
+    """
+    grid = [_cells(lines[i])]
+    j = i + 2
+    while j < len(lines) and "|" in lines[j] and lines[j].strip():
+        grid.append(_cells(lines[j]))
+        j += 1
+    width = len(grid[0])
+    rows = [[_plain(cell) for cell in (row + [""] * width)[:width]] for row in grid]
+    widths = [max(len(row[c]) for row in rows) for c in range(width)]
+    text = [
+        "  ".join(cell.ljust(widths[c]) for c, cell in enumerate(row)).rstrip()
+        for row in rows
+    ]
+    text.insert(1, "  ".join("-" * w for w in widths))
+    return j, Block(html=f"<pre>{escape(chr(10).join(text))}</pre>")
+
+
+def _plain(cell: str) -> str:
+    """A table cell without the emphasis markers (its text stays)."""
+    return _EMPHASIS.sub("", cell)
 
 
 def _single_line(line: str) -> Block:

@@ -11,8 +11,6 @@ from app.interfaces.bot.richtext import (
 
 from aiogram.types import InlineKeyboardButton
 
-DRAFT_TAIL = 3500  # a draft shows the end of a long answer (4096 is the limit)
-
 
 @dataclass(slots=True)
 class Chunk:
@@ -46,6 +44,10 @@ def render_final(markdown: str) -> list[Chunk]:
 
 
 def render_draft(markdown: str) -> str:
-    """The unfinished answer as one message for the live draft (its last chunk)."""
-    chunks = render_partial(markdown[-DRAFT_TAIL:])
+    """The unfinished answer as one message for the live draft (its last chunk).
+
+    The same renderer as the final answer, on the whole text: the draft is the last
+    final chunk once the answer is complete, so nothing changes shape at the end.
+    """
+    chunks = render_partial(markdown)
     return chunks[-1].text if chunks else ""

@@ -8,6 +8,7 @@ from app.interfaces.bot.assistant.store import AssistantStore
 from app.modules.ai.application.turn_events import TurnEvent
 from app.modules.ai.domain.assistant import ASSISTANT_ROLE, default_assistant
 from app.modules.ai.domain.errors import ChatNotFoundError, WrongAssistantError
+from app.modules.ai.domain.prompts import SURFACE_TELEGRAM
 from app.shared.actor import Actor
 from app.shared.contracts.files import FilesApi
 from app.shared.usage_context import bind_usage_actor
@@ -64,7 +65,11 @@ class BotAssistant:
 
         def start(chat_id: UUID) -> Events:
             return self.ai.send_message.stream(  # type: ignore[no-any-return]
-                actor=actor, chat_id=chat_id, text=text, file_ids=file_ids
+                actor=actor,
+                chat_id=chat_id,
+                text=text,
+                file_ids=file_ids,
+                surface=SURFACE_TELEGRAM,
             )
 
         chat_id = await self.chat_for(actor)
@@ -74,6 +79,23 @@ class BotAssistant:
             chat_id = await self.chat_for(actor, fresh=True)
             return chat_id, await _primed(start(chat_id))
 
+    async def check_transcribe(self, actor: Actor) -> None:
+        """Refuse a recording before it is downloaded (access, minute's limit)."""
+        await self.ai.transcribe_audio.precheck(actor)
+
+    async def transcribe(
+        self,
+        actor: Actor,
+        *,
+        data: bytes,
+        duration_ms: int,
+    ) -> str:
+        """Speech to text for one recording; the use case keeps no copy of it."""
+        bind_usage_actor(actor)
+        return await self.ai.transcribe_audio.execute(  # type: ignore[no-any-return]
+            actor, data=data, duration_ms=duration_ms
+        )
+
     async def decide(
         self, actor: Actor, chat_id: UUID, call_id: str, *, approve: bool
     ) -> Events:
@@ -81,11 +103,15 @@ class BotAssistant:
         bind_usage_actor(actor)
         if approve:
             events = self.ai.approve_tool_call.stream(
-                actor=actor, chat_id=chat_id, call_id=call_id
+                actor=actor, chat_id=chat_id, call_id=call_id, surface=SURFACE_TELEGRAM
             )
         else:
             events = self.ai.reject_tool_call.stream(
-                actor=actor, chat_id=chat_id, call_id=call_id, reason=None
+                actor=actor,
+                chat_id=chat_id,
+                call_id=call_id,
+                reason=None,
+                surface=SURFACE_TELEGRAM,
             )
         return await _primed(events)
 

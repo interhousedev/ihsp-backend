@@ -9,12 +9,16 @@ draft shows Telegram's own "Thinking…" placeholder, which may stay on screen).
 The Bot API has no call that clears a draft: a draft disappears by itself after
 about 30 seconds or as soon as the bot sends a message to the chat. So every turn
 ends with a `sendMessage` (the answer, or an error notice), which removes it.
+
+Every message is HTML. If Telegram refuses the markup, the same words go out as
+plain text, so a parse error never leaves the answer unshown.
 """
 
 import time
 from collections.abc import Callable
 
 from app.interfaces.bot.assistant.render import Chunk, render_draft
+from app.interfaces.bot.utilities.parse_fallback import is_markup_error, plain_fallback
 from app.interfaces.bot.utilities.reply_edit import is_not_modified
 
 import structlog
@@ -85,24 +89,49 @@ class AnswerStream:
             except TelegramAPIError as error:
                 log.info("bot.ai.drafts_unavailable", error=str(error))
                 self.drafts = False
+                if is_markup_error(error):
+                    html = plain_fallback(html)
         await self._put(html, None)
 
     async def _put(self, html: str, markup: InlineKeyboardMarkup | None) -> None:
+        """Send or edit the fallback message; plain text if the markup is refused."""
+        try:
+            await self._write(html, markup)
+        except TelegramAPIError as error:
+            if not is_markup_error(error):
+                raise
+            log.info("bot.ai.markup_fallback")
+            await self._write(plain_fallback(html), markup)
+        self.shown = html
+
+    async def _write(self, html: str, markup: InlineKeyboardMarkup | None) -> None:
         if self.message_id is None:
             sent = await self.bot.send_message(self.chat_id, html, reply_markup=markup)
             self.message_id = sent.message_id
-        else:
-            try:
-                await self.bot.edit_message_text(
-                    html,
-                    chat_id=self.chat_id,
-                    message_id=self.message_id,
-                    reply_markup=markup,
-                )
-            except TelegramBadRequest as error:
-                if not is_not_modified(error):
-                    raise
-        self.shown = html
+            return
+        try:
+            await self.bot.edit_message_text(
+                html,
+                chat_id=self.chat_id,
+                message_id=self.message_id,
+                reply_markup=markup,
+            )
+        except TelegramBadRequest as error:
+            if not is_not_modified(error):
+                raise
+
+    async def _new_message(
+        self, html: str, markup: InlineKeyboardMarkup | None
+    ) -> None:
+        try:
+            await self.bot.send_message(self.chat_id, html, reply_markup=markup)
+        except TelegramAPIError as error:
+            if not is_markup_error(error):
+                raise
+            log.info("bot.ai.markup_fallback")
+            await self.bot.send_message(
+                self.chat_id, plain_fallback(html), reply_markup=markup
+            )
 
     async def finish(
         self, chunks: list[Chunk], extra: list[list[InlineKeyboardButton]]
@@ -116,9 +145,7 @@ class AnswerStream:
             if index == 0 and self.message_id is not None:
                 await self._put(chunk.html, markup)
             else:
-                await self.bot.send_message(
-                    self.chat_id, chunk.html, reply_markup=markup
-                )
+                await self._new_message(chunk.html, markup)
 
     async def abort(self) -> None:
         """Remove the half-written message of the fallback mode."""

@@ -9,6 +9,7 @@ from app.interfaces.bot.routers.auth.login.handlers.show_login import show_login
 from app.interfaces.bot.routers.guest.callbacks import PostCb, StartModeCb
 from app.interfaces.bot.routers.guest.screens import build_choice, build_post
 from app.interfaces.bot.services import BotServices
+from app.interfaces.bot.utilities.parse_fallback import is_markup_error, plain_fallback
 from app.interfaces.bot.utilities.reply_edit import answer_callback, show
 from app.modules.posts.application.guest_assistant import GuestAssistant
 from app.modules.posts.domain.bot_mode import BotMode
@@ -104,7 +105,23 @@ async def _edit(bot: Bot, message: Message, text: str) -> None:
             text=text, chat_id=message.chat.id, message_id=message.message_id
         )
     except TelegramBadRequest as error:
-        log.info("guest.edit_failed", error=error.message)
+        if not is_markup_error(error):
+            log.info("guest.edit_failed", error=error.message)
+            return
+        log.info("guest.markup_fallback")
+        try:
+            await bot.edit_message_text(
+                text=plain_fallback(text),
+                chat_id=message.chat.id,
+                message_id=message.message_id,
+            )
+        except TelegramBadRequest as again:
+            log.info("guest.edit_failed", error=again.message)
+
+
+async def guest_voice(message: Message, i18n: I18nContext) -> None:
+    """Voice and video are for signed-in users: a guest is asked to type."""
+    await message.answer(i18n("bot-guest-voice-unsupported"))
 
 
 async def _stream(bot: Bot, reply: Message, deltas: AsyncIterator[str]) -> str:
@@ -162,4 +179,14 @@ async def ask_assistant(
         return
     await _edit(bot, reply, chunks[0].text)
     for chunk in chunks[1:]:
-        await bot.send_message(message.chat.id, chunk.text)
+        await _send_html(bot, message.chat.id, chunk.text)
+
+
+async def _send_html(bot: Bot, chat_id: int, html: str) -> None:
+    """A further answer message; plain text if Telegram refuses the markup."""
+    try:
+        await bot.send_message(chat_id, html)
+    except TelegramBadRequest as error:
+        if not is_markup_error(error):
+            raise
+        await bot.send_message(chat_id, plain_fallback(html))

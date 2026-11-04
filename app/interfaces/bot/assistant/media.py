@@ -54,13 +54,15 @@ async def wait_ready(
         await sleep(POLL_INTERVAL)
 
 
-async def download_capped(bot: Bot, file_id: str, *, size: int | None = None) -> bytes:
-    """Download a Telegram file; FileTooLargeError above the 20 MB bot limit.
+async def download_capped(
+    bot: Bot, file_id: str, *, size: int | None = None, limit: int = MAX_FILE_BYTES
+) -> bytes:
+    """Download a Telegram file; FileTooLargeError above `limit` (20 MB by default).
 
     `size` is the file size Telegram reports: a file over the limit is refused before
     any byte is downloaded. The size of the downloaded bytes is checked as well.
     """
-    if size is not None and size > MAX_FILE_BYTES:
+    if size is not None and size > limit:
         raise FileTooLargeError
     buffer = io.BytesIO()
     try:
@@ -70,7 +72,7 @@ async def download_capped(bot: Bot, file_id: str, *, size: int | None = None) ->
             raise FileTooLargeError from error
         raise
     data = buffer.getvalue()
-    if len(data) > MAX_FILE_BYTES:
+    if len(data) > limit:
         raise FileTooLargeError
     return data
 
