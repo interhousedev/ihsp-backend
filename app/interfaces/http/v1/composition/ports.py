@@ -218,6 +218,18 @@ class BroadcastViews(Protocol):
         ...
 
 
+class AiClientViews(Protocol):
+    """AI client connection and the chat AI access revoked by Administration."""
+
+    async def has_connected_client(self, user_id: UUID) -> bool:
+        """True when an MCP connector of the user is not revoked."""
+        ...
+
+    async def chat_blocked(self, user_id: UUID) -> bool:
+        """True when Administration revoked the chat AI from the user."""
+        ...
+
+
 @dataclass(frozen=True, slots=True)
 class CompositionPorts:
     """Everything `build_composition` needs beyond the cross-module contracts."""
@@ -232,3 +244,4 @@ class CompositionPorts:
     teachers: TeacherViews
     accounts: AccountViews
     broadcasts: BroadcastViews
+    ai_clients: AiClientViews

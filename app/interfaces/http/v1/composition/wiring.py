@@ -66,6 +66,7 @@ def build_composition(
             ai=ai,
             files=ports.files,
             sync=ports.sync,
+            ai_clients=ports.ai_clients,
             clock=clock,
             urls=settings.urls,
         ),

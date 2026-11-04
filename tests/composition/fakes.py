@@ -595,3 +595,19 @@ class FakeBroadcasts:
     async def scheduled(self, actor: Actor, limit: int) -> list[JsonObject]:
         self.limits.append(limit)
         return list(self.items)
+
+
+class FakeAiClients:
+    """Students with a connected AI client, and students whose chat AI is revoked."""
+
+    def __init__(self) -> None:
+        self.connected: set[UUID] = set()
+        self.revoked: set[UUID] = set()
+
+    async def has_connected_client(self, user_id: UUID) -> bool:
+        """True for the students given a connected client."""
+        return user_id in self.connected
+
+    async def chat_blocked(self, user_id: UUID) -> bool:
+        """True for the students whose chat AI is revoked."""
+        return user_id in self.revoked

@@ -17,6 +17,7 @@ from app.shared.contracts.identity import UserRef, UserStatus
 from tests.composition.fakes import (
     FakeAccounts,
     FakeAi,
+    FakeAiClients,
     FakeAttendance,
     FakeBroadcasts,
     FakeCalendarTokens,
@@ -65,6 +66,7 @@ class World:
     teachers: FakeTeacherViews = field(default_factory=FakeTeacherViews)
     accounts: FakeAccounts = field(default_factory=FakeAccounts)
     broadcasts: FakeBroadcasts = field(default_factory=FakeBroadcasts)
+    ai_clients: FakeAiClients = field(default_factory=FakeAiClients)
 
     def add_student(
         self,
@@ -74,8 +76,12 @@ class World:
         last_name: str = "Karimova",
         status: UserStatus = UserStatus.ACTIVE,
         emis_status: Literal["active", "needs_reauth"] | None = "active",
+        connected_ai: bool = True,
     ) -> UserRef:
-        """Register a student in identity, the schedule and the token store."""
+        """Register a student in identity, the schedule and the token store.
+
+        A student has a connected AI client unless `connected_ai` is False (MCP-5).
+        """
         student = self.identity.add(
             make_user(
                 Role.STUDENT,
@@ -87,6 +93,8 @@ class World:
         )
         self.schedule.students[student.id] = make_student(student.id, subgroup=subgroup)
         self.tokens.known_students.add(student.id)
+        if connected_ai:
+            self.ai_clients.connected.add(student.id)
         return student
 
     def add_user(
@@ -110,6 +118,7 @@ def _build_world(settings: Settings, clock: FixedClock) -> World:
     students, teachers = FakeStudentViews(), FakeTeacherViews()
     accounts, broadcasts = FakeAccounts(), FakeBroadcasts()
     search_sources = FakeSearchSources()
+    ai_clients = FakeAiClients()
     ports = CompositionPorts(
         files=files,
         search_sources=search_sources,
@@ -121,6 +130,7 @@ def _build_world(settings: Settings, clock: FixedClock) -> World:
         teachers=teachers,
         accounts=accounts,
         broadcasts=broadcasts,
+        ai_clients=ai_clients,
     )
     composition = build_composition(
         settings=settings,
@@ -138,6 +148,7 @@ def _build_world(settings: Settings, clock: FixedClock) -> World:
         clock=clock,
         composition=composition,
         ports=ports,
+        ai_clients=ai_clients,
         identity=identity,
         schedule=schedule,
         classwork=classwork,

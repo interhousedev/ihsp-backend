@@ -10,6 +10,7 @@ that the port documents.
 """
 
 from app.bootstrap.adapters.composition.account_views import AccountViewsAdapter
+from app.bootstrap.adapters.composition.ai_clients import AiClientViewsAdapter
 from app.bootstrap.adapters.composition.attendance_stats import AttendanceStatsAdapter
 from app.bootstrap.adapters.composition.broadcast_views import BroadcastViewsAdapter
 from app.bootstrap.adapters.composition.calendar_token_store import (
@@ -84,4 +85,7 @@ def build_composition_ports(container: Container) -> CompositionPorts:
         ),
         accounts=AccountViewsAdapter(identity.auth.get_user_detail),
         broadcasts=BroadcastViewsAdapter(admin.list_broadcasts),
+        ai_clients=AiClientViewsAdapter(
+            identity.auth.connector_status, _built(container.limits, "limits")
+        ),
     )

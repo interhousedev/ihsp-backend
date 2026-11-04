@@ -280,6 +280,7 @@ class _Assembler:
             self.deps,
             identity=identity.directory,
             identity_commands=identity.commands,
+            files=self.files_proxy.view,
         )
         c.academic = AcademicModule(schedule=schedule)
         if self.plan.emis:
@@ -313,7 +314,7 @@ class _Assembler:
         self.files_proxy.bind(files.public)
         self.add_closer(files.close)
 
-    def make_sniffer(self) -> ContentSniffer | None:
+    def make_sniffer(self) -> ContentSniffer:
         """libmagic, or in development a signature look-up when it is missing."""
         try:
             from app.modules.files.infrastructure.sniffing.magic_sniffer import (
@@ -485,6 +486,7 @@ class _Assembler:
         ai = build_ai(
             self.deps,
             llm=self.llm,
+            sniffer=self.make_sniffer(),
             identity=c.identity.directory,
             schedule=c.academic.schedule.queries,
             classwork=c.academic.classwork.queries,

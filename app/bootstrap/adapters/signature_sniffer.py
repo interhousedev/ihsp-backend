@@ -9,21 +9,34 @@ PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 JPEG_SIGNATURE = b"\xff\xd8\xff"
 ZIP_SIGNATURE = b"PK\x03\x04"
 PDF_SIGNATURE = b"%PDF-"
+OGG_SIGNATURE = b"OggS"
+FLAC_SIGNATURE = b"fLaC"
+MP3_TAG = b"ID3"
+WEBM_SIGNATURE = b"\x1a\x45\xdf\xa3"
+
+
+_SIGNATURES: tuple[tuple[bytes, str], ...] = (
+    (PDF_SIGNATURE, "application/pdf"),
+    (PNG_SIGNATURE, "image/png"),
+    (JPEG_SIGNATURE, "image/jpeg"),
+    (ZIP_SIGNATURE, "application/zip"),
+    (OGG_SIGNATURE, "audio/ogg"),
+    (FLAC_SIGNATURE, "audio/flac"),
+    (MP3_TAG, "audio/mpeg"),
+    (WEBM_SIGNATURE, "video/webm"),
+)
 
 
 class SignatureSniffer:
-    """ContentSniffer that knows PDF, PNG, JPEG, ZIP (Office) and plain text."""
+    """ContentSniffer that knows PDF, PNG, JPEG, ZIP (Office), audio and plain text."""
 
     async def sniff(self, head: bytes) -> str:
         """Return the MIME type of the first bytes of a file."""
-        if head.startswith(PDF_SIGNATURE):
-            return "application/pdf"
-        if head.startswith(PNG_SIGNATURE):
-            return "image/png"
-        if head.startswith(JPEG_SIGNATURE):
-            return "image/jpeg"
-        if head.startswith(ZIP_SIGNATURE):
-            return "application/zip"
+        for signature, mime in _SIGNATURES:
+            if head.startswith(signature):
+                return mime
+        if head[:4] == b"RIFF" and head[8:12] == b"WAVE":
+            return "audio/wav"
         if _is_text(head):
             return "text/plain"
         return "application/octet-stream"

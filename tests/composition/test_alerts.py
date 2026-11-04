@@ -4,7 +4,9 @@ import datetime as dt
 from dataclasses import replace
 
 from app.shared.actor import Role
+from app.shared.ids import new_id
 from tests.composition.conftest import ClientFor, World, actor_of
+from tests.composition.fakes import make_lesson
 
 ALERT_KINDS = [
     "emis_reauth",
@@ -183,3 +185,81 @@ async def test_alerts_need_a_login(client_for: ClientFor) -> None:
     response = await client.get("/v1/me/alerts")
 
     assert response.status_code == 401
+
+
+async def test_a_seminar_starting_soon_is_alerted_and_a_lecture_is_not(
+    world: World,
+) -> None:
+    """Alerts: a practice lesson (seminar) starting within 3 hours is alerted."""
+    student = world.add_student()
+    now = world.clock.now()
+    day = now.date()
+    seminar = replace(
+        make_lesson(day=day, period=1, subject="Algebra"),
+        starts_at=now + dt.timedelta(hours=1),
+        ends_at=now + dt.timedelta(hours=2),
+        kind="practice",
+    )
+    lecture = replace(seminar, id=new_id(), kind="lecture")
+    world.schedule.projected = [lecture, seminar]
+
+    alerts = await world.composition.build_alerts.execute(actor_of(student))
+
+    assert [a for a in alerts if a["kind"] == "seminar_soon"] == [
+        {
+            "kind": "seminar_soon",
+            "params": {
+                "subject_name": "Algebra",
+                "starts_at": (now + dt.timedelta(hours=1)).isoformat(),
+                "period": 1,
+            },
+            "action_url": f"{world.settings.urls.sp}/schedule/",
+        }
+    ]
+
+
+async def test_a_student_without_a_connected_ai_client_is_told_to_connect(
+    world: World,
+) -> None:
+    """MCP-5: no active AI connector gives one `connect_ai` alert to the wizard."""
+    student = world.add_student(connected_ai=False)
+
+    alerts = await world.composition.build_alerts.execute(actor_of(student))
+
+    assert alerts == [
+        {
+            "kind": "connect_ai",
+            "params": {},
+            "action_url": f"{world.settings.urls.id}/connectors/new/",
+        }
+    ]
+
+
+async def test_connect_ai_is_not_shown_once_a_client_is_connected(
+    world: World,
+) -> None:
+    """MCP-5: the alert is gone after the first connected client."""
+    student = world.add_student()
+
+    alerts = await world.composition.build_alerts.execute(actor_of(student))
+
+    assert all(alert["kind"] != "connect_ai" for alert in alerts)
+
+
+async def test_connect_ai_respects_revoked_chat_access(world: World) -> None:
+    """AI-8: an Administration block on the chat AI is not solved by a client."""
+    student = world.add_student(connected_ai=False)
+    world.ai_clients.revoked.add(student.id)
+
+    alerts = await world.composition.build_alerts.execute(actor_of(student))
+
+    assert all(alert["kind"] != "connect_ai" for alert in alerts)
+
+
+async def test_connect_ai_is_only_for_students(world: World) -> None:
+    """MCP-5: a teacher is not offered the student's AI wizard alert."""
+    teacher = world.add_user(Role.TEACHER)
+
+    alerts = await world.composition.build_alerts.execute(actor_of(teacher))
+
+    assert all(alert["kind"] != "connect_ai" for alert in alerts)

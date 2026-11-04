@@ -20,9 +20,11 @@ class AlertResponse(BaseModel):
     kind: Literal[
         "emis_reauth",
         "no_subgroup",
+        "seminar_soon",
         "files_expiring",
         "pending_approvals",
         "sync_failed",
+        "connect_ai",
     ]
     # Values for the alert text, e.g. `{count: 2}`; the keys depend on `kind`.
     params: dict[str, Any]
