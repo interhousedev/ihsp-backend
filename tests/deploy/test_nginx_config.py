@@ -198,15 +198,18 @@ def test_login_oauth_registration_and_webhook_are_rate_limited() -> None:
     telegram = api.split("location ^~ /telegram/", 1)[1].split("}", 1)[0]
     assert "limit_req zone=ihsp_auth" in telegram and "access_log off" in telegram
     ident = _route("route-id.inc")
-    register = ident.split("location = /oauth2/register", 1)[1].split("}", 1)[0]
+    closed = ident.split("location = /oauth2/register", 1)[1].split("}", 1)[0]
+    assert "return 404" in closed
+    register = api.split("location = /v1/oauth/mcp/register", 1)[1].split("}", 1)[0]
     assert "limit_req zone=ihsp_register" in register
+    assert "$up_identity" in register
     assert "limit_conn ihsp_mcp" in _route("route-mcp.inc")
     for mode in ("prod", "local"):
         template = (MATERIALS_DIR / "nginx" / mode / "default.conf.template").read_text(
             encoding="utf-8"
         )
         assert "zone=ihsp_auth:10m rate=10r/s" in template
-        assert "zone=ihsp_register:10m rate=1r/m" in template
+        assert "zone=ihsp_register:10m rate=10r/m" in template
         assert "limit_conn_zone $binary_remote_addr zone=ihsp_mcp" in template
         assert "log_format ihsp" in template and '"$request"' not in template
 

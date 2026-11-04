@@ -14,6 +14,14 @@ location ~ ^/v1/admin/teachers/[^/]+/profile$ {
     proxy_pass $up_api;
 }
 
+# Dynamic Client Registration of MCP clients: open to the internet, so limited more tightly.
+location = /v1/oauth/mcp/register {
+    include /etc/nginx/ihsp/proxy.inc;
+    include /etc/nginx/ihsp/headers-api.inc;
+    limit_req zone=ihsp_register burst=20 nodelay;
+    proxy_pass $up_identity;
+}
+
 location ~ ^/v1/(id|oauth)/ {
     include /etc/nginx/ihsp/proxy.inc;
     include /etc/nginx/ihsp/headers-api.inc;

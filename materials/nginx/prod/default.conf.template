@@ -18,7 +18,7 @@ log_format ihsp '$remote_addr - [$time_local] "$request_method $uri $server_prot
 # Rate limits per client address (the backend has its own, finer limits once a request
 # reaches uvicorn; these protect Hydra and the login endpoints before that).
 limit_req_zone $binary_remote_addr zone=ihsp_auth:10m rate=10r/s;
-limit_req_zone $binary_remote_addr zone=ihsp_register:10m rate=1r/m;
+limit_req_zone $binary_remote_addr zone=ihsp_register:10m rate=10r/m;
 limit_conn_zone $binary_remote_addr zone=ihsp_mcp:10m;
 limit_req_status 429;
 limit_conn_status 429;
