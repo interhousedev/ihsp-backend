@@ -66,12 +66,7 @@ class StudentLesson:
         shown = [
             ref for ref in refs if not ref.hidden or ref.author_id == actor.user_id
         ]
-        homework = None
-        if lesson.has_homework:
-            built = await self.homework.build_many(
-                [HomeworkRecord(lesson, todo)], locale
-            )
-            homework = built[0]
+        built = await self.homework.build_many([HomeworkRecord(lesson, todo)], locale)
         offset = (lesson.date - today).days
         return {
             "lesson": await self.lesson_items.build(lesson, locale),
@@ -81,7 +76,8 @@ class StudentLesson:
             "attachments": student_resource_items(
                 [ref for ref in shown if ref.role == "attachment"]
             ),
-            "homework": homework,
+            # Always present: text is "" without homework, the note still works.
+            "homework": built[0],
             "my_mark": [mark_item(mark, locale) for mark in marks],
             "my_attendance": attendance_state(lesson, actor.user_id),
             "can_attach": -ATTACH_DAYS_BACK <= offset <= ATTACH_DAYS_AHEAD,

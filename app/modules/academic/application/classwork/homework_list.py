@@ -3,6 +3,7 @@
 import datetime as dt
 from collections.abc import Callable
 from typing import Any, Literal
+from uuid import UUID
 
 from app.modules.academic.application.classwork.homework_items import (
     HomeworkItemBuilder,
@@ -22,6 +23,7 @@ from app.modules.academic.domain.classwork.homework_rules import (
 )
 from app.modules.academic.domain.classwork.records import HomeworkRecord
 from app.shared.actor import Actor
+from app.shared.base_error import ValidationFailedError
 from app.shared.clock import Clock, local_today
 
 Status = Literal["overdue", "upcoming", "later", "done"]
@@ -72,9 +74,39 @@ class HomeworkList:
             picked[where].append(record)
         return [r for s in statuses for r in _ordered(picked[s], s)]
 
-    async def execute(self, actor: Actor, status: Status) -> list[dict[str, Any]]:
-        """Return ``HomeworkItem`` JSON for the chosen list."""
+    async def execute(
+        self,
+        actor: Actor,
+        status: Status,
+        *,
+        subject_id: UUID | None = None,
+        date_from: dt.date | None = None,
+        date_to: dt.date | None = None,
+    ) -> list[dict[str, Any]]:
+        """Return ``HomeworkItem`` JSON for the chosen list.
+
+        `subject_id` keeps one subject's homework; `date_from` and `date_to` (both
+        inclusive) keep the homework whose due date is in that range, so homework
+        without a due date is left out when a range is given.
+
+        Raises:
+            ValidationFailedError: `date_from` is after `date_to`.
+        """
+        if date_from is not None and date_to is not None and date_from > date_to:
+            raise ValidationFailedError(
+                params={"details": ["from: must not be after to"]}
+            )
         records = await self.records(actor, status)
+        if subject_id is not None:
+            records = [r for r in records if r.lesson.subject_id == subject_id]
+        if date_from is not None or date_to is not None:
+            records = [
+                r
+                for r in records
+                if (due := r.lesson.homework_due_date) is not None
+                and (date_from is None or due >= date_from)
+                and (date_to is None or due <= date_to)
+            ]
         locale = await self.people.locale(actor.user_id)
         return await self.items.build_many(records, locale)
 

@@ -8,6 +8,8 @@ from app.modules.academic.application.marks.get_day_grades import GetDayGrades
 from app.modules.academic.application.marks.get_group_progress import (
     GetGroupProgress,
 )
+from app.modules.academic.application.marks.get_group_rating import GetGroupRating
+from app.modules.academic.application.marks.get_my_group import GetMyGroup
 from app.modules.academic.application.marks.get_record_book import GetRecordBook
 from app.modules.academic.application.marks.get_semester_grades import (
     GetSemesterGrades,
@@ -91,6 +93,8 @@ class MarksServices:
     get_record_book: GetRecordBook
     get_sync_failures: GetSyncFailures
     get_group_progress: GetGroupProgress
+    get_group_rating: GetGroupRating
+    get_my_group: GetMyGroup
     queries: MarksQueriesImpl
 
 
@@ -200,6 +204,8 @@ def build_marks(
         get_group_progress=GetGroupProgress(
             uow_factory=uow_factory, identity=identity, clock=deps.clock
         ),
+        get_group_rating=GetGroupRating(uow_factory=uow_factory, identity=identity),
+        get_my_group=GetMyGroup(uow_factory=uow_factory, identity=identity),
         queries=MarksQueriesImpl(
             uow_factory=uow_factory, identity=identity, clock=deps.clock
         ),

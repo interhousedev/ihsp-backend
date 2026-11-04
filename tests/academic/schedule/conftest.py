@@ -103,5 +103,6 @@ async def api(env: Env, http_client: HttpClientFactory) -> Api:
         routers,
         {get_actor: lambda: holder["actor"]},
         academic=SimpleNamespace(schedule=env.services),
+        identity=SimpleNamespace(directory=env.identity),
     )
     return Api(client, holder)

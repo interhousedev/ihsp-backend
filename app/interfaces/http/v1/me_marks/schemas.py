@@ -4,6 +4,7 @@ import datetime as dt
 from typing import Any, Literal
 from uuid import UUID
 
+from app.shared.contracts.identity import TeacherContacts
 from app.shared.lesson_kind import LessonKind, TopicSource
 
 from pydantic import BaseModel
@@ -266,6 +267,54 @@ class GroupProgressStudent(BaseModel):
     absence_rate: float | None
     attendance_source: Literal["emis", "platform", "mixed"] = "platform"
     cells: list[GroupProgressCell]
+
+
+class GroupPersonRef(BaseModel):
+    """A person of the group, by name."""
+
+    id: UUID
+    first_name: str
+    last_name: str
+
+
+class GroupTeacherRef(GroupPersonRef):
+    """The homeroom teacher, with the public contacts shown to students."""
+
+    contacts: TeacherContacts
+
+
+class GroupMemberRow(GroupPersonRef):
+    """One active student of the caller's group."""
+
+    is_head_student: bool
+    is_me: bool
+
+
+class MyGroupResponse(BaseModel):
+    """The caller's group: homeroom teacher, head student and members.
+
+    `homeroom_teacher` and `head_student` are null when not assigned.
+    `is_head_student` tells whether group progress and rating are open to the caller.
+    """
+
+    id: UUID
+    name: str
+    size: int
+    is_head_student: bool
+    homeroom_teacher: GroupTeacherRef | None
+    head_student: GroupPersonRef | None
+    members: list[GroupMemberRow]
+
+
+class GroupRatingRow(BaseModel):
+    """One student of the group in the GPA rating (`rank` None when no GPA)."""
+
+    name: str
+    gpa: float | None
+    emis_rating: int | None = None
+    """The EMIS rating stored with the semester GPA; null when none was stored."""
+    rank: int | None
+    is_me: bool
 
 
 class GroupProgressResponse(BaseModel):

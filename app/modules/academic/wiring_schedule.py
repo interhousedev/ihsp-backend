@@ -29,6 +29,9 @@ from app.modules.academic.application.schedule.create_term import CreateTerm
 from app.modules.academic.application.schedule.current_term import CurrentTerm
 from app.modules.academic.application.schedule.delete_entry import DeleteEntry
 from app.modules.academic.application.schedule.ensure_room import EnsureRoom
+from app.modules.academic.application.schedule.export_group_photos import (
+    ExportGroupPhotos,
+)
 from app.modules.academic.application.schedule.generate_lessons import GenerateLessons
 from app.modules.academic.application.schedule.get_group_detail import GetGroupDetail
 from app.modules.academic.application.schedule.get_my_teachers import (
@@ -94,6 +97,7 @@ from app.modules.academic.infrastructure.schedule.student_sync_jobs import (
 )
 from app.modules.academic.infrastructure.schedule.uow import SqlScheduleUnitOfWork
 from app.shared.clock import Clock
+from app.shared.contracts.files import FilesApi
 from app.shared.contracts.identity import IdentityCommands, IdentityDirectory
 from app.shared.tasks import TaskKicker
 from app.shared.wiring import ModuleDeps
@@ -110,6 +114,7 @@ class ScheduleServices:
     create_group: CreateGroup
     update_group: UpdateGroup
     assign_subgroups: AssignSubgroups
+    export_group_photos: ExportGroupPhotos
     get_group_detail: GetGroupDetail
     get_group_curriculum: GetGroupCurriculum
     get_my_curriculum: GetMyCurriculum
@@ -161,6 +166,7 @@ def assemble_schedule(
     kicker: TaskKicker,
     identity: IdentityDirectory,
     identity_commands: IdentityCommands,
+    files: FilesApi,
     rooms_url: str,
     mail_domain: str,
     sync_jobs: StudentSyncJobs | None = None,
@@ -207,6 +213,7 @@ def assemble_schedule(
         ),
         teacher_deactivated=TeacherDeactivated(uow_factory, clock),
         list_students=ListStudents(uow_factory, identity),
+        export_group_photos=ExportGroupPhotos(uow_factory, identity, files),
         import_preview=ImportPreview(uow_factory, identity, import_store),
         import_confirm=ImportConfirm(uow_factory, identity_commands, import_store),
         get_student_profile=GetStudentProfile(uow_factory, identity, mail_domain),
@@ -242,6 +249,7 @@ def build_schedule(
     *,
     identity: IdentityDirectory,
     identity_commands: IdentityCommands,
+    files: FilesApi,
 ) -> ScheduleServices:
     """Build the schedule services on PostgreSQL and Redis."""
     return assemble_schedule(
@@ -253,6 +261,7 @@ def build_schedule(
         kicker=deps.kicker,
         identity=identity,
         identity_commands=identity_commands,
+        files=files,
         rooms_url=deps.settings.urls.rooms,
         mail_domain=deps.settings.smtp_out.mail_domain,
         sync_jobs=SqlStudentSyncJobs(sql_schedule_uow_factory(deps)),

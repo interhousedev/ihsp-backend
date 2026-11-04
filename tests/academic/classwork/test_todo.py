@@ -9,6 +9,7 @@ from app.modules.academic.domain.classwork.errors import (
     HomeworkNotFoundError,
     LessonNotFoundError,
 )
+from app.shared.base_error import ValidationFailedError
 from tests.academic.classwork.conftest import Env
 from tests.academic.classwork.world import add_lesson, local
 
@@ -117,6 +118,27 @@ async def test_note_is_saved_cleared_and_limited(env: Env) -> None:
         await env.services.set_homework_note.execute(lessons["mon"], aziz, "x" * 1001)
 
 
+async def test_note_is_allowed_on_a_future_lesson_without_homework(env: Env) -> None:
+    """Notes are personal: a lesson of the audience takes one before homework is set."""
+    env.clock.set(local(FRIDAY, 12))
+    lesson_id = await add_lesson(env.maker, env.world, day=MONDAY, period=1)
+    aziz = env.student("aziz")
+
+    item = await env.services.set_homework_note.execute(
+        lesson_id, aziz, "bring the lab book"
+    )
+    lesson = await env.services.student_lesson.execute(lesson_id, aziz)
+
+    assert item["note"] == "bring the lab book"
+    assert item["text"] == ""
+    assert lesson["homework"]["note"] == "bring the lab book"
+    assert await _texts(env, "upcoming") == []
+    with pytest.raises(LessonNotFoundError):
+        await env.services.set_homework_note.execute(
+            lesson_id, env.student("outsider"), "not mine"
+        )
+
+
 async def test_teacher_edit_shows_updated_until_the_student_touches_it(
     env: Env,
 ) -> None:
@@ -200,3 +222,33 @@ async def test_subgroup_homework_reaches_that_subgroup_and_unassigned_students(
     assert await _texts(env, "upcoming", "bobur") == ["subgroup two"]
     assert await _texts(env, "upcoming", "camila") == ["subgroup two"]
     assert await _texts(env, "upcoming", "aziz") == []
+
+
+async def test_homework_can_be_filtered_by_subject_and_due_range(env: Env) -> None:
+    """Homework list: `subject_id` keeps one subject; `from`/`to` filter by due date."""
+    await _friday_world(env)
+    actor = env.student("aziz")
+    everything = await env.services.homework_list.execute(actor, "later")
+    subject = everything[0]["subject"]["id"]
+
+    due_tuesday = await env.services.homework_list.execute(
+        actor, "later", date_from=TUESDAY, date_to=TUESDAY
+    )
+    from_monday = await env.services.homework_list.execute(
+        actor, "later", date_from=MONDAY
+    )
+    of_subject = await env.services.homework_list.execute(
+        actor, "later", subject_id=UUID(str(subject))
+    )
+    of_nobody = await env.services.homework_list.execute(
+        actor, "later", subject_id=UUID(int=1)
+    )
+
+    assert [i["text"] for i in due_tuesday] == ["due Tuesday"]
+    assert [i["text"] for i in from_monday] == ["due Tuesday"]
+    assert [i["text"] for i in of_subject] == [i["text"] for i in everything]
+    assert of_nobody == []
+    with pytest.raises(ValidationFailedError):
+        await env.services.homework_list.execute(
+            actor, "later", date_from=TUESDAY, date_to=MONDAY
+        )

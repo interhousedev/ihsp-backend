@@ -44,6 +44,7 @@ from tests.fakes.academic.schedule.identity import (
     FakeIdentityCommands,
     make_user,
 )
+from tests.fakes.academic.schedule.photo_files import FakePhotoFiles
 from tests.fakes.academic.schedule.reader import FakeScheduleReader
 from tests.fakes.academic.schedule.room_cache import FakeRoomPageCache
 from tests.fakes.academic.schedule.store import ScheduleStore
@@ -104,6 +105,7 @@ class Env:
     clock: FixedClock
     cache: FakeRoomPageCache
     redis: Redis
+    files: FakePhotoFiles
     store: ScheduleStore | None = None
     maker: async_sessionmaker[AsyncSession] | None = None
     outbox: InMemoryOutbox | None = None
@@ -423,6 +425,7 @@ def build_env(
         uow_factory = sql_factory  # type: ignore[assignment]
         reader = SqlScheduleReader(maker)
     sync_jobs = MemoryStudentSyncJobs()
+    files = FakePhotoFiles()
     services = assemble_schedule(
         uow_factory=uow_factory,
         reader=reader,
@@ -435,6 +438,7 @@ def build_env(
         rooms_url=ROOMS_URL,
         mail_domain=MAIL_DOMAIN,
         sync_jobs=sync_jobs,
+        files=files,  # type: ignore[arg-type]
     )
     emis = FakeEmisSource()
     urls = FakeLessonUrls()
@@ -465,6 +469,7 @@ def build_env(
         clock=clock,
         cache=cache,
         redis=redis,
+        files=files,
         store=store,
         maker=maker,
         outbox=outbox,
