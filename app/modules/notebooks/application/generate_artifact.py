@@ -147,6 +147,7 @@ class _Run:
     model: str | None = None
     superseded: bool = False  # a retry queued the row again
     course: bool = False  # in a course workspace: the course pool pays
+    silent: bool = False  # no bell entry: the open card editor is waiting for it
 
 
 @dataclass(frozen=True, slots=True)
@@ -416,7 +417,10 @@ class GenerateArtifact:
             notebook = await uow.notebooks.get(artifact.notebook_id)
             await uow.commit()
         course = notebook is not None and notebook.is_course_workspace
-        return _Run(artifact=artifact, attempt=artifact.attempts, course=course)
+        silent = notebook is not None and notebook.is_flashcard_workspace
+        return _Run(
+            artifact=artifact, attempt=artifact.attempts, course=course, silent=silent
+        )
 
     async def _settle(self, run: _Run, apply: Apply, *, notify: bool = False) -> bool:
         """Write an outcome if this run still owns the row; False if it was dropped.
@@ -452,7 +456,7 @@ class GenerateArtifact:
     async def _store(self, run: _Run, plan: _Plan, output: ProcessedOutput) -> None:
         """Write `ready` with the content and one notification; share the result."""
         apply = partial(_apply_ready, run, plan, output)
-        if await self._settle(run, apply, notify=True):
+        if await self._settle(run, apply, notify=not run.silent):
             await self._share(run, plan, output)
 
     async def _share(self, run: _Run, plan: _Plan, output: ProcessedOutput) -> None:

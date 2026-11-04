@@ -6,6 +6,7 @@ from app.interfaces.http.v1.notebooks.handlers import (
     delete_notebook,
     find_lesson_notebook,
     find_subject_notebook,
+    flashcard_workspace,
     get_notebook,
     get_notebook_usage,
     get_usage,
@@ -33,6 +34,12 @@ router.add_api_route(
 )
 # Before `/{notebook_id}`, or "usage" would be read as a notebook id.
 router.add_api_route("/usage", get_usage.get_usage, methods=["GET"])
+# The hidden notebook that feeds AI cards of a flash card set.
+router.add_api_route(
+    "/flashcard-workspace",
+    flashcard_workspace.flashcard_workspace,
+    methods=["POST"],
+)
 # The shared notebook of an LMS course's staff (get-or-create).
 router.add_api_route(
     "/course-workspaces",

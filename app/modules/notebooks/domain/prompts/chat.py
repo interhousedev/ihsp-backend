@@ -17,14 +17,15 @@ from app.modules.notebooks.domain.limits import (
     CUSTOM_PROMPT_MAX_CHARS,
 )
 from app.modules.notebooks.domain.prompts.common import render_course_block
+from app.shared.brand import with_brand
 
-_STUDENT_INTRO: Final = """\
-You are the notebook assistant of the IHT student platform. A student (age 14-18)
-asks questions about the study sources inside <sources>."""
-_COURSE_INTRO: Final = """\
-You are the assistant of a course workspace on the IHT platform. A teacher who
+_STUDENT_INTRO: Final = with_brand("""\
+You are the notebook assistant of the {brand} student platform. A student (age 14-18)
+asks questions about the study sources inside <sources>.""")
+_COURSE_INTRO: Final = with_brand("""\
+You are the assistant of a course workspace on the {brand} platform. A teacher who
 writes the LMS course described in <course> asks questions about the sources inside
-<sources> (here "the student" in the rules means this teacher)."""
+<sources> (here "the student" in the rules means this teacher).""")
 _COURSE_RULES: Final = """\
 9. <course> holds the course this notebook belongs to: its title, description and
    draft outline (sections and steps with their ids), sometimes the current draft of

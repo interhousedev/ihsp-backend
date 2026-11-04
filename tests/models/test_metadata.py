@@ -47,6 +47,8 @@ EXPECTED_TABLES = {
     "ai.usage_events",
     "ai.web_pages",
     "ai.web_queries",
+    "ai.projects",
+    "ai.project_files",
     # notify (2), admin (1), mail (1)
     "notify.notifications",
     "notify.push_subscriptions",
@@ -134,10 +136,10 @@ EXPECTED_TABLES = {
 
 
 def test_metadata_contains_every_table_of_the_models_readme() -> None:
-    """spec -> Models plus the later modules (111 tables)."""
+    """spec -> Models plus the later modules (113 tables)."""
     actual = {table.fullname for table in Base.metadata.tables.values()}
 
-    assert len(EXPECTED_TABLES) == 111
+    assert len(EXPECTED_TABLES) == 113
     assert actual == EXPECTED_TABLES
 
 

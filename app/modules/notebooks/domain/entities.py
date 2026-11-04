@@ -185,6 +185,11 @@ class Notebook:
         return self.origin is NotebookOrigin.COURSE
 
     @property
+    def is_flashcard_workspace(self) -> bool:
+        """True for the hidden notebook behind "Add new questions with AI"."""
+        return self.origin is NotebookOrigin.FLASHCARDS
+
+    @property
     def is_course_student(self) -> bool:
         """True for the student's own notebook of an LMS course they are enrolled in."""
         return self.origin is NotebookOrigin.COURSE_STUDENT

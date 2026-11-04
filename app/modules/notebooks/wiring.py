@@ -29,6 +29,9 @@ from app.modules.notebooks.application.edit_slides import EditSlides
 from app.modules.notebooks.application.embed_passages import EmbedPassages
 from app.modules.notebooks.application.exercise_feedback import ExerciseFeedback
 from app.modules.notebooks.application.extract_source_vision import ExtractSourceVision
+from app.modules.notebooks.application.flashcard_workspace import (
+    OpenFlashcardWorkspace,
+)
 from app.modules.notebooks.application.gather_web_materials import GatherWebMaterials
 from app.modules.notebooks.application.generate_artifact import GenerateArtifact
 from app.modules.notebooks.application.get_artifact import GetArtifact
@@ -159,6 +162,7 @@ class NotebooksServices:
     get_notebook: GetNotebook
     update_notebook: UpdateNotebook
     copy_notebook: CopyNotebook
+    flashcard_workspace: OpenFlashcardWorkspace
     delete_notebook: DeleteNotebook
     purge_deleted: PurgeDeleted
     purge_shared: PurgeShared
@@ -337,6 +341,16 @@ def build(
         get_notebook=notebooks.get_notebook,
         update_notebook=notebooks.update_notebook,
         copy_notebook=notebooks.copy_notebook,
+        flashcard_workspace=OpenFlashcardWorkspace(
+            uow_factory=core.uow_factory,
+            clock=deps.clock,
+            settings=deps.settings,
+            rate_limiter=deps.rate_limiter,
+            kicker=deps.kicker,
+            add_sources=sources.add_sources,
+            quota=core.quota,
+            limits=deps.effective_limits,
+        ),
         delete_notebook=notebooks.delete_notebook,
         purge_deleted=notebooks.purge_deleted,
         purge_shared=notebooks.purge_shared,

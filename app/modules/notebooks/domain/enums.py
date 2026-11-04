@@ -11,6 +11,7 @@ class NotebookOrigin(StrEnum):
     LESSON_AUTO = "lesson_auto"
     COURSE = "course"  # the workspace of an LMS course, shared by its staff
     COURSE_STUDENT = "course_student"  # an enrolled student's notebook of a course
+    FLASHCARDS = "flashcards"  # hidden: the sources of AI cards for a flash card set
 
     @property
     def is_auto(self) -> bool:

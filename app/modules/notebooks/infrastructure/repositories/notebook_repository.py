@@ -38,6 +38,7 @@ from sqlalchemy.orm.attributes import flag_modified
 _USABLE = [SourceStatus.READY.value, SourceStatus.STALE.value]
 _MANUAL = NotebookOrigin.MANUAL.value
 _COURSE = NotebookOrigin.COURSE.value
+_UNLISTED = [_COURSE, NotebookOrigin.FLASHCARDS.value]
 # Subject and lesson notebooks; manual notebooks and course workspaces are not auto.
 _AUTO = [NotebookOrigin.SUBJECT_AUTO.value, NotebookOrigin.LESSON_AUTO.value]
 
@@ -280,6 +281,10 @@ class SqlNotebookRepository:
         """
         return await self._add_unique(notebook)
 
+    async def add_flashcard_workspace(self, notebook: Notebook) -> bool:
+        """Insert the hidden flash card notebook unless the owner has a live one."""
+        return await self._add_unique(notebook)
+
     async def _add_unique(self, notebook: Notebook) -> bool:
         """Insert under a savepoint; False when a unique index refuses the row."""
         row = NotebookRow(id=notebook.id)
@@ -373,10 +378,13 @@ class SqlNotebookRepository:
         stmt = _select_notebooks().where(
             NotebookRow.owner_id == owner_id,
             NotebookRow.deleted_at.is_(None),
-            NotebookRow.origin != _COURSE,
         )
-        if origin is not None:
+        if origin is NotebookOrigin.FLASHCARDS:
             stmt = stmt.where(NotebookRow.origin == origin.value)
+        else:
+            stmt = stmt.where(NotebookRow.origin.not_in(_UNLISTED))
+            if origin is not None:
+                stmt = stmt.where(NotebookRow.origin == origin.value)
         if query:
             stmt = stmt.where(NotebookRow.title.icontains(query, autoescape=True))
         if after is not None:

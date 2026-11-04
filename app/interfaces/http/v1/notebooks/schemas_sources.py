@@ -6,6 +6,7 @@ from uuid import UUID
 
 from app.interfaces.http.errors import problem_body
 from app.interfaces.http.v1.notebooks.schemas_common import SourceItemResponse
+from app.modules.notebooks.application.flashcard_workspace import FlashcardWorkspace
 from app.modules.notebooks.application.views import AddSourcesResult, PassageDetailView
 from app.modules.notebooks.domain.entities import Citation, Passage, Source, SourceGuide
 from app.modules.notebooks.domain.enums import SourceKind
@@ -23,6 +24,37 @@ class AddSourcesBody(BaseModel):
     """POST /v1/notebooks/{id}/sources: 1 to 20 items, each of its own `kind`."""
 
     items: list[SourceInput] = Field(min_length=1, max_length=BATCH_MAX)
+
+
+class NotebookSourceRef(BaseModel):
+    """A source of one of the caller's notebooks."""
+
+    notebook_id: UUID
+    source_id: UUID
+
+
+class FlashcardWorkspaceBody(BaseModel):
+    """POST /v1/notebooks/flashcard-workspace: 1 to 20 sources and files together."""
+
+    notebook_sources: list[NotebookSourceRef] = Field(
+        default_factory=list, max_length=BATCH_MAX
+    )
+    file_ids: list[UUID] = Field(default_factory=list, max_length=BATCH_MAX)
+
+
+class FlashcardWorkspaceResponse(BaseModel):
+    """The hidden notebook to call the Studio routes with, and its sources."""
+
+    notebook_id: UUID
+    sources: list[SourceItemResponse]
+
+    @classmethod
+    def from_result(cls, result: FlashcardWorkspace) -> Self:
+        """Build from the use case's result."""
+        return cls(
+            notebook_id=result.notebook.id,
+            sources=[SourceItemResponse.from_entity(s) for s in result.sources],
+        )
 
 
 class SelectSourcesBody(BaseModel):

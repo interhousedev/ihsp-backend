@@ -32,7 +32,7 @@ async def sources_changed(
     notebook.source_count = len(sources)
     notebook.char_count = sum(s.char_count for s in sources if s.usable)
     usable = [s for s in sources if s.selected and s.usable]
-    if not usable:
+    if not usable or notebook.is_flashcard_workspace:
         notebook.summary_status = SummaryStatus.NONE
         notebook.summary_due_at = None
     elif selection_hash(sources) != notebook.summary_hash:

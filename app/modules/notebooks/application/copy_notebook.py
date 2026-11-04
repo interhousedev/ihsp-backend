@@ -1,5 +1,6 @@
 """Use case: make a normal, editable copy of a notebook (NB-AUTO)."""
 
+from datetime import datetime
 from functools import partial
 from uuid import UUID
 
@@ -136,38 +137,43 @@ class CopyNotebook:
         self, uow: NotebooksUnitOfWork, copy: Notebook, source: Source
     ) -> Source:
         """Store the source in the copy, with its passages when it has any."""
-        now = self.clock.now()
-        waiting = source.status in UNFINISHED
-        clone = Source(
-            id=new_id(),
-            notebook_id=copy.id,
-            owner_id=copy.owner_id,
-            kind=source.kind,
-            title=source.title,
-            position=source.position,
-            created_at=now,
-            updated_at=now,
-            ref=dict(source.ref),
-            ref_key=source.ref_key,
-            origin=None if source.origin is None else dict(source.origin),
-            selected=source.selected,
-            status=SourceStatus.PENDING if waiting else source.status,
-            failure=None if waiting else source.failure,
-            body_md=source.body_md,
-            citations=source.citations,
-            content_hash=None if waiting else source.content_hash,
-            document_id=None if waiting else source.document_id,
-            upstream_version=source.upstream_version,
-            word_count=0 if waiting else source.word_count,
-            char_count=0 if waiting else source.char_count,
-            token_estimate=0 if waiting else source.token_estimate,
-            passage_count=0 if waiting else source.passage_count,
-            guide=None if waiting else source.guide,
-            guide_status=_guide_status(source, waiting),
-            text_synced_at=None if waiting else source.text_synced_at,
-        )
+        clone = cloned_source(source, copy, self.clock.now())
         await uow.sources.add(clone)
         return clone
+
+
+def cloned_source(source: Source, copy: Notebook, now: datetime) -> Source:
+    """A new row of `copy` that points at the same shared document as `source`."""
+    waiting = source.status in UNFINISHED
+    clone = Source(
+        id=new_id(),
+        notebook_id=copy.id,
+        owner_id=copy.owner_id,
+        kind=source.kind,
+        title=source.title,
+        position=source.position,
+        created_at=now,
+        updated_at=now,
+        ref=dict(source.ref),
+        ref_key=source.ref_key,
+        origin=None if source.origin is None else dict(source.origin),
+        selected=source.selected,
+        status=SourceStatus.PENDING if waiting else source.status,
+        failure=None if waiting else source.failure,
+        body_md=source.body_md,
+        citations=source.citations,
+        content_hash=None if waiting else source.content_hash,
+        document_id=None if waiting else source.document_id,
+        upstream_version=source.upstream_version,
+        word_count=0 if waiting else source.word_count,
+        char_count=0 if waiting else source.char_count,
+        token_estimate=0 if waiting else source.token_estimate,
+        passage_count=0 if waiting else source.passage_count,
+        guide=None if waiting else source.guide,
+        guide_status=_guide_status(source, waiting),
+        text_synced_at=None if waiting else source.text_synced_at,
+    )
+    return clone
 
 
 def _summary_is_current(original: Notebook, sources: list[Source]) -> bool:

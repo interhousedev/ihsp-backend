@@ -77,6 +77,10 @@ class NotebookRepository(Protocol):
         """The student's live notebook of an LMS course, if they have one."""
         ...
 
+    async def add_flashcard_workspace(self, notebook: Notebook) -> bool:
+        """Insert the hidden flash card notebook; False if the owner has a live one."""
+        ...
+
     async def add_course_student(self, notebook: Notebook) -> bool:
         """Insert a student's course notebook; False when they already have one."""
         ...

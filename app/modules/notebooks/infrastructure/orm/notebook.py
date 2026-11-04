@@ -34,7 +34,9 @@ AUTO_TARGET = (
     "AND subject_id IS NOT NULL AND auto_settings IS NOT NULL "
     "AND course_id IS NULL) "
     "OR (origin IN ('course', 'course_student') AND course_id IS NOT NULL "
-    "AND subject_id IS NULL AND lesson_id IS NULL AND auto_settings IS NULL)"
+    "AND subject_id IS NULL AND lesson_id IS NULL AND auto_settings IS NULL) "
+    "OR (origin = 'flashcards' AND course_id IS NULL AND subject_id IS NULL "
+    "AND lesson_id IS NULL AND auto_settings IS NULL)"
 )
 CHAT_CONFIG_DEFAULT = (
     '{"style": "default", "custom_prompt": null, "length": "default", '
@@ -94,6 +96,13 @@ class Notebook(IdMixin, TimestampMixin, Base):
             "subject_id",
             # nosemgrep: avoid-sqlalchemy-text -- constant predicate, no input
             postgresql_where=text(f"{AUTO_ORIGINS} AND deleted_at IS NULL"),
+        ),
+        # One live hidden notebook of AI flash cards per owner.
+        Index(
+            "ix_notebooks_owner_id_flashcards",
+            "owner_id",
+            unique=True,
+            postgresql_where=text("origin = 'flashcards' AND deleted_at IS NULL"),
         ),
         Index(
             "ix_notebooks_lesson_id_auto",
