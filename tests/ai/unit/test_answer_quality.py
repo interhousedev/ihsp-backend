@@ -93,6 +93,7 @@ def test_prompt_and_tools_fit_the_token_budget() -> None:
         flashcards=None,  # type: ignore[arg-type]
         bindings=LateBindings(),
         limits=_limits(1),
+        uow_factory=None,  # type: ignore[arg-type]
     )
     tools.append(ReadChatHistory(None))  # type: ignore[arg-type]
     schemas = json.dumps([t.spec().to_llm() for t in tools], ensure_ascii=False)

@@ -9,6 +9,7 @@ from uuid import UUID
 
 from app.modules.ai.domain.assistant import Assistant
 from app.modules.ai.domain.chat import Chat, ChatMessage
+from app.modules.ai.domain.project import Project
 from app.shared.notifications import AuditDraft
 from tests.fakes.ai.web_pages import InMemoryWebPageStore
 
@@ -23,6 +24,8 @@ class FakeAiStore:
         self.audits: list[AuditDraft] = []
         self.commits = 0
         self.web_pages = InMemoryWebPageStore()
+        self.projects: dict[UUID, Project] = {}
+        self.project_files: dict[UUID, list[UUID]] = {}
 
     def chat_messages(self, chat_id: UUID) -> list[ChatMessage]:
         """Return copies of a chat's messages (for assertions)."""
@@ -63,6 +66,7 @@ class FakeChatRepository:
         limit: int,
         title_contains: str | None = None,
         course_id: UUID | None = None,
+        project_id: UUID | None = None,
     ) -> list[Chat]:
         """Newest first, live chats of the owner after the cursor."""
         needle = (title_contains or "").casefold()
@@ -74,6 +78,7 @@ class FakeChatRepository:
             and c.deleted_at is None
             and needle in c.title.casefold()
             and (course_id is None or c.course_id == course_id)
+            and (project_id is None or c.project_id == project_id)
         ]
         rows.sort(key=lambda c: (c.last_message_at, c.id), reverse=True)
         if before is not None:
@@ -101,6 +106,57 @@ class FakeChatRepository:
             del self.store.chats[chat_id]
             self.store.messages.pop(chat_id, None)
         return len(old)
+
+
+class FakeProjectRepository:
+    """Projects and their files of a FakeAiStore (copies in and out)."""
+
+    def __init__(self, store: FakeAiStore) -> None:
+        """Bind to the store."""
+        self.store = store
+
+    async def add(self, project: Project) -> None:
+        """Insert a project."""
+        self.store.projects[project.id] = copy.deepcopy(project)
+
+    async def get(self, project_id: UUID) -> Project | None:
+        """Return a copy of the project."""
+        project = self.store.projects.get(project_id)
+        return copy.deepcopy(project) if project else None
+
+    async def save(self, project: Project) -> None:
+        """Store the project's fields."""
+        self.store.projects[project.id] = copy.deepcopy(project)
+
+    async def delete(self, project_id: UUID) -> None:
+        """Delete the project and unlink its chats."""
+        self.store.projects.pop(project_id, None)
+        self.store.project_files.pop(project_id, None)
+        for chat in self.store.chats.values():
+            if chat.project_id == project_id:
+                chat.project_id = None
+
+    async def list_for_owner(self, owner_id: UUID) -> list[Project]:
+        """Newest first."""
+        rows = [p for p in self.store.projects.values() if p.owner_id == owner_id]
+        rows.sort(key=lambda p: (p.created_at, p.id), reverse=True)
+        return copy.deepcopy(rows)
+
+    async def add_file(self, project_id: UUID, file_id: UUID) -> None:
+        """Attach a file once."""
+        files = self.store.project_files.setdefault(project_id, [])
+        if file_id not in files:
+            files.append(file_id)
+
+    async def remove_file(self, project_id: UUID, file_id: UUID) -> None:
+        """Detach a file."""
+        files = self.store.project_files.get(project_id, [])
+        if file_id in files:
+            files.remove(file_id)
+
+    async def file_ids(self, project_id: UUID) -> list[UUID]:
+        """The attached files, oldest first."""
+        return list(self.store.project_files.get(project_id, []))
 
 
 class FakeMessageRepository:
@@ -175,6 +231,7 @@ class FakeAiUnitOfWork:
         self.store = store
         self.chats = FakeChatRepository(store)
         self.messages = FakeMessageRepository(store)
+        self.projects = FakeProjectRepository(store)
         self.web_pages = store.web_pages
         self._audit: list[AuditDraft] = []
 

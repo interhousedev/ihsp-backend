@@ -7,13 +7,20 @@ from app.interfaces.http.v1.ai.handlers import (
     get_chat,
     get_usage,
     list_chats,
+    projects,
     regenerate_answer,
     reject_tool_call,
     rename_chat,
     send_message,
     set_message_feedback,
+    transcribe,
 )
-from app.interfaces.http.v1.ai.schemas import TurnResultResponse
+from app.interfaces.http.v1.ai.schemas import (
+    ProjectFileResponse,
+    ProjectResponse,
+    TranscriptionResponse,
+    TurnResultResponse,
+)
 
 from fastapi import APIRouter, status
 
@@ -60,3 +67,52 @@ router.add_api_route(
     response_model=TurnResultResponse,
 )
 router.add_api_route("/usage", get_usage.get_usage, methods=["GET"])
+router.add_api_route("/projects", projects.list_projects, methods=["GET"])
+router.add_api_route(
+    "/projects",
+    projects.create_project,
+    methods=["POST"],
+    response_model=ProjectResponse,
+)
+router.add_api_route(
+    "/projects/{project_id}",
+    projects.get_project,
+    methods=["GET"],
+    response_model=ProjectResponse,
+)
+router.add_api_route(
+    "/projects/{project_id}",
+    projects.patch_project,
+    methods=["PATCH"],
+    response_model=ProjectResponse,
+)
+router.add_api_route(
+    "/projects/{project_id}",
+    projects.delete_project,
+    methods=["DELETE"],
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+router.add_api_route(
+    "/projects/{project_id}/files",
+    projects.list_project_files,
+    methods=["GET"],
+    response_model=list[ProjectFileResponse],
+)
+router.add_api_route(
+    "/projects/{project_id}/files",
+    projects.attach_project_file,
+    methods=["POST"],
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+router.add_api_route(
+    "/projects/{project_id}/files/{file_id}",
+    projects.detach_project_file,
+    methods=["DELETE"],
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+router.add_api_route(
+    "/transcriptions",
+    transcribe.transcribe,
+    methods=["POST"],
+    response_model=TranscriptionResponse,
+)

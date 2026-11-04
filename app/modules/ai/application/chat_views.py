@@ -40,6 +40,7 @@ class ChatViews:
             pending_approvals=chat.pending_approvals,
             tier=chat.tier.value,
             course_id=chat.course_id,
+            project_id=chat.project_id,
         )
 
     def note(self, tool: str, locale: str) -> str:

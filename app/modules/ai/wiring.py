@@ -17,6 +17,7 @@ from app.modules.ai.application.late_bindings import LateBindings
 from app.modules.ai.application.list_chats import ListChats
 from app.modules.ai.application.locale import LocaleResolver
 from app.modules.ai.application.owned_chat import ChatGuard
+from app.modules.ai.application.project_service import ProjectService
 from app.modules.ai.application.public_api import AiQueriesImpl
 from app.modules.ai.application.purge_admin_chats import PurgeAdminChats
 from app.modules.ai.application.purge_usage_events import PurgeUsageEvents
@@ -26,7 +27,10 @@ from app.modules.ai.application.reject_tool_call import RejectToolCall
 from app.modules.ai.application.rename_chat import RenameChat
 from app.modules.ai.application.send_message import SendMessage
 from app.modules.ai.application.set_message_feedback import SetMessageFeedback
-from app.modules.ai.application.system_prompts import SystemPrompts
+from app.modules.ai.application.system_prompts import (
+    SystemPrompts,
+    project_instructions_from,
+)
 from app.modules.ai.application.tool_runner import ToolRunner
 from app.modules.ai.application.tools.add_flashcards import AddFlashcards
 from app.modules.ai.application.tools.add_notebook_sources import AddNotebookSources
@@ -65,7 +69,11 @@ from app.modules.ai.application.tools.search_knowledge_base import (
     SearchKnowledgeBase,
 )
 from app.modules.ai.application.tools.search_notebook import SearchNotebook
+from app.modules.ai.application.tools.search_project_files import (
+    SearchProjectFiles,
+)
 from app.modules.ai.application.tools.search_web import SearchWeb
+from app.modules.ai.application.transcribe_audio import AudioSniffer, TranscribeAudio
 from app.modules.ai.application.turn_result import TurnResults
 from app.modules.ai.application.usage_report import UsageReport
 from app.modules.ai.application.web_pages import WebPageIndex
@@ -135,6 +143,8 @@ class AiServices:
     usage_report: UsageReport
     purge_usage_events: PurgeUsageEvents
     purge_web_pages: PurgeWebPages
+    transcribe_audio: TranscribeAudio
+    projects: ProjectService
 
 
 @dataclass(frozen=True, slots=True)
@@ -158,6 +168,7 @@ def make_student_tools(
     flashcards: FlashcardsApi,
     bindings: LateBindings,
     limits: LimitsProvider,
+    uow_factory: UowFactory,
 ) -> list[Tool]:
     """Return the student assistant's tools in their fixed order."""
     return [
@@ -178,6 +189,7 @@ def make_student_tools(
         ListNotebookArtifacts(bindings),
         SearchWeb(bindings, limits),
         SearchKnowledgeBase(bindings, "student"),
+        SearchProjectFiles(uow_factory, files),
         ListFlashcardSets(flashcards),
         GetFlashcardSet(flashcards),
         CreateFlashcardSet(flashcards),
@@ -221,6 +233,7 @@ def build(
     web_search: WebSearchGateway | None = None,
     embeddings: Callable[[], EmbeddingIndex | None] | None = None,
     overrides: AiOverrides | None = None,
+    sniffer: AudioSniffer,
     free_usage: FreeUsage | None = None,
 ) -> AiServices:
     """Wire the module.
@@ -256,6 +269,7 @@ def build(
                 flashcards=flashcards,
                 bindings=bindings,
                 limits=deps.effective_limits,
+                uow_factory=uow_factory,
             ),
             history,
         ],
@@ -285,7 +299,11 @@ def build(
         budget=budget,
         summarizer=summarizer,
         prompts=SystemPrompts(
-            gate, deps.clock, limits, openui=settings.ai.openui_enabled
+            gate,
+            deps.clock,
+            limits,
+            openui=settings.ai.openui_enabled,
+            projects=project_instructions_from(uow_factory),
         ),
         clock=deps.clock,
         settings=settings,
@@ -397,6 +415,15 @@ def build(
         ),
         purge_admin_chats=PurgeAdminChats(uow_factory=uow_factory, clock=deps.clock),
         purge_web_pages=PurgeWebPages(pages),
+        projects=ProjectService(uow_factory=uow_factory, files=files, clock=deps.clock),
+        transcribe_audio=TranscribeAudio(
+            llm=llm,
+            budget=budget,
+            rate_limiter=deps.rate_limiter,
+            settings=settings,
+            locale=locale,
+            sniffer=sniffer,
+        ),
         public=AiQueriesImpl(
             uow_factory=uow_factory, clock=deps.clock, locale=locale, views=views
         ),

@@ -23,5 +23,6 @@ async def create_chat(
         assistant=Assistant(body.assistant),
         tier=ChatTier(body.tier) if body.tier else None,
         course_id=body.course_id,
+        project_id=body.project_id,
     )
     return ChatItemResponse.from_view(view)

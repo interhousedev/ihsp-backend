@@ -44,7 +44,13 @@ class RejectToolCall:
         self.results = results
 
     def stream(
-        self, *, actor: Actor, chat_id: UUID, call_id: str, reason: str | None
+        self,
+        *,
+        actor: Actor,
+        chat_id: UUID,
+        call_id: str,
+        reason: str | None,
+        surface: str = "web",
     ) -> AsyncIterator[TurnEvent]:
         """The turn as live events; a refusal raises before the first one."""
         events = TurnEvents()
@@ -56,6 +62,7 @@ class RejectToolCall:
                 call_id=call_id,
                 reason=reason,
                 events=events,
+                surface=surface,
             ),
         )
 
@@ -67,6 +74,7 @@ class RejectToolCall:
         call_id: str,
         reason: str | None,
         events: TurnEvents | None = None,
+        surface: str = "web",
     ) -> TurnResultView:
         """Reject the call and let the assistant answer."""
         locale = await self.locale.locale_of(actor.user_id)
@@ -90,5 +98,6 @@ class RejectToolCall:
                     locale=locale,
                     changed=[claim.message],
                     events=events,
+                    surface=surface,
                 )
         return await self.results.build(actor, locale, progress)

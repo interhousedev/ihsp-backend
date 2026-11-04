@@ -41,7 +41,7 @@ from app.shared.contracts.web_search import WebResult
 from app.shared.i18n.core import I18nCore
 from app.shared.ids import new_id
 from app.shared.limits import LimitsProvider, StaticLimits
-from app.shared.openui.finalize import OpenUiFinalizer
+from app.shared.openui.finalize import OpenUiFinalizer, UsageCounter
 from app.shared.web_citations import rewrite_markers
 
 MAX_OUTPUT_TOKENS = 4096
@@ -74,6 +74,7 @@ class _Run:
     span: int = TAIL_MESSAGES  # messages read per step (AI-EFF-3)
     message_seq: int | None = None  # the one assistant message of this answer
     events: TurnEvents | None = None  # the live events of a streamed turn
+    surface: str = "web"  # "telegram" adds the bot's formatting rules to the prompt
     seen: dict[str, ToolCall] = field(default_factory=dict)  # read calls by key
 
 
@@ -121,6 +122,7 @@ class ContinueTurn:
         locale: str,
         changed: list[ChatMessage] | None = None,
         events: TurnEvents | None = None,
+        surface: str = "web",
     ) -> TurnProgress:
         """Run model steps; `changed` carries messages the caller already touched.
 
@@ -136,7 +138,15 @@ class ContinueTurn:
         )
         progress = TurnProgress(chat=chat, changed=list(changed or []))
         ctx = ToolContext(actor, chat_id, locale, scope=chat.scope)
-        run = _Run(chat_id, ctx, summary, after, progress, history_span(history))
+        run = _Run(
+            chat_id,
+            ctx,
+            summary,
+            after,
+            progress,
+            history_span(history),
+            surface=surface,
+        )
         run.events = events
         if tail and tail[-1].role is MessageRole.ASSISTANT:
             run.message_seq = tail[-1].seq
@@ -163,7 +173,7 @@ class ContinueTurn:
     async def _step(self, run: _Run) -> TurnStatus | None:
         """Do one model request; return the final status or None to continue."""
         chat, tail = await self._load(run.chat_id, run.span)
-        system = await self.prompts.build(chat, run.ctx.locale)
+        system = await self.prompts.build(chat, run.ctx.locale, surface=run.surface)
         window = select_window(tail, run.after_seq)
         messages = to_llm_messages(window, run.summary)
         tools = self.registry.llm_tools(chat.assistant)
@@ -197,7 +207,7 @@ class ContinueTurn:
         if raw_calls and text.strip():  # a progress note between tool rounds
             record_step(StepKind.THINK, text)
         if not raw_calls:  # the answer: repair or drop broken OpenUI blocks
-            text = await self.openui.finalize(text)
+            text = await self.openui.finalize(text, count=self._repair_counter(chat))
         calls = await self.runner.propose(
             chat.assistant, run.ctx, raw_calls, taken, run.seen
         )
@@ -253,6 +263,16 @@ class ContinueTurn:
     def _weight(self, chat: Chat) -> int:
         """Return how many budget tokens one model token of this chat costs."""
         return profile_for(chat.assistant, self.settings, chat.tier).weight
+
+    def _repair_counter(self, chat: Chat) -> UsageCounter:
+        """Count the tokens of an OpenUI repair in the chat's budget (AI-OPENUI)."""
+
+        async def count(tokens: int) -> None:
+            await self.budget.add(
+                chat.owner_id, tokens * self._weight(chat), chat.assistant
+            )
+
+        return count
 
     async def _over_budget(
         self,

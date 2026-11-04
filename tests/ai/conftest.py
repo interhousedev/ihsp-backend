@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
 
+from app.bootstrap.adapters.signature_sniffer import SignatureSniffer
 from app.modules.ai.domain.assistant import Assistant
 from app.modules.ai.ports.turn_lock import TurnLock
 from app.modules.ai.ports.unit_of_work import UowFactory
@@ -195,6 +196,7 @@ def make_harness(
             admin_tools=parts["admin_backend"],
             links=parts["links"],
             web_search=search,
+            sniffer=SignatureSniffer(),
             overrides=AiOverrides(
                 budget_store=budget,
                 course_budget_store=course_budget,

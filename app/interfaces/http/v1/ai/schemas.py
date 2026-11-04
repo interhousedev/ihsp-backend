@@ -7,6 +7,7 @@ from uuid import UUID
 from app.interfaces.http.v1.agent_steps import AgentStepResponse
 from app.interfaces.http.v1.web_search.schemas import WebResultResponse
 from app.modules.ai.application.budget import UsageInfo
+from app.modules.ai.application.project_service import ProjectView
 from app.modules.ai.application.views import (
     ChatDetailView,
     ChatItemView,
@@ -27,6 +28,29 @@ class CreateChatBody(BaseModel):
     course_id: UUID | None = None
     """Required for `lms_author` (422 `ai/course-required` without it): the course
     the chat works on; the caller needs the course's ``edit`` permission (403)."""
+    project_id: UUID | None = None
+    """A student chat inside one of the caller's projects (404 `ai/project-not-found`
+    for another student's project; 409 `ai/wrong-assistant` for other assistants)."""
+
+
+class ProjectBody(BaseModel):
+    """POST /v1/ai/projects."""
+
+    name: str = Field(min_length=1, max_length=120)
+    instructions: str = Field(default="", max_length=4000)
+
+
+class ProjectPatchBody(BaseModel):
+    """PATCH /v1/ai/projects/{id}: only the fields sent change."""
+
+    name: str | None = Field(default=None, min_length=1, max_length=120)
+    instructions: str | None = Field(default=None, max_length=4000)
+
+
+class AttachFileBody(BaseModel):
+    """POST /v1/ai/projects/{id}/files: one of the caller's own ready files."""
+
+    file_id: UUID
 
 
 class RenameChatBody(BaseModel):
@@ -84,6 +108,8 @@ class ChatItemResponse(_Response):
     tier: TierName
     course_id: UUID | None = None
     """The course of an `lms_author` chat; null for the other assistants."""
+    project_id: UUID | None = None
+    """The project of a student chat; null outside projects."""
 
     @classmethod
     def from_view(cls, view: ChatItemView) -> Self:
@@ -197,6 +223,35 @@ class UsageInfoResponse(_Response):
                 "ai_notebooks_blocked": view.access.notebooks_blocked,
             }
         )
+
+
+class TranscriptionResponse(BaseModel):
+    """`Transcription`: the words of a recording, as spoken."""
+
+    text: str
+
+
+class ProjectResponse(_Response):
+    """Project: a named group of chats with files and instructions."""
+
+    id: UUID
+    name: str
+    instructions: str
+    created_at: datetime
+    updated_at: datetime
+
+    @classmethod
+    def from_view(cls, view: ProjectView) -> Self:
+        """Build from the use case view."""
+        return cls.model_validate(view)
+
+
+class ProjectFileResponse(_Response):
+    """A file attached to a project."""
+
+    file_id: UUID
+    name: str
+    status: str
 
 
 class ChatDetailResponse(ChatItemResponse):

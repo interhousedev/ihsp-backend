@@ -10,7 +10,11 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any
 
-CHAT_SYSTEM_PREFIX = "You are the notebook assistant of the IHT student platform"
+from app.shared.brand import with_brand
+
+CHAT_SYSTEM_PREFIX = with_brand(
+    "You are the notebook assistant of the {brand} student platform"
+)
 NO_ANSWER = "(fake) The sources do not say.\n<followups>[]</followups>"
 FOLLOWUPS = '["First follow-up?","Second follow-up?","Third follow-up?"]'
 ANSWER_CHARS = 100

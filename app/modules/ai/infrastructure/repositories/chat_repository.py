@@ -25,6 +25,7 @@ def _to_entity(row: ChatRow) -> Chat:
         deleted_at=row.deleted_at,
         tier=ChatTier(row.tier),
         scope=ChatScope.model_validate(row.scope) if row.scope else None,
+        project_id=row.project_id,
     )
 
 
@@ -38,6 +39,7 @@ def _apply(row: ChatRow, chat: Chat) -> None:
     row.deleted_at = chat.deleted_at
     row.tier = chat.tier.value
     row.scope = chat.scope.model_dump(mode="json") if chat.scope else None
+    row.project_id = chat.project_id
 
 
 def _like_pattern(query: str) -> str:
@@ -93,6 +95,7 @@ class SqlChatRepository:
         limit: int,
         title_contains: str | None = None,
         course_id: UUID | None = None,
+        project_id: UUID | None = None,
     ) -> list[Chat]:
         """Return the owner's live chats, newest first, after the cursor."""
         stmt = select(ChatRow).where(
@@ -100,6 +103,8 @@ class SqlChatRepository:
             ChatRow.assistant == assistant.value,
             ChatRow.deleted_at.is_(None),
         )
+        if project_id is not None:
+            stmt = stmt.where(ChatRow.project_id == project_id)
         if course_id is not None:
             stmt = stmt.where(ChatRow.scope["course_id"].astext == str(course_id))
         if title_contains:

@@ -19,6 +19,8 @@ from app.shared.contracts.ai import LlmTuning
 from app.shared.ids import new_id
 
 CARD_COUNT = 3
+VOICE_TASK = "voice_transcribe"
+FAKE_TRANSCRIPT = "Fake transcript of the voice message."
 KEPT_REQUESTS = 50
 STREAM_CHUNK_CHARS = 12
 
@@ -56,6 +58,18 @@ class FakeLlmGateway:
         self._record(
             model, system, messages, tools=tools, provider=provider, tuning=tuning
         )
+        if tuning is not None and tuning.task == VOICE_TASK:
+            # The fake hears no audio: a fixed phrase, usage from its size.
+            return {
+                "text": FAKE_TRANSCRIPT,
+                "tool_calls": [],
+                "usage": {
+                    "input": 1,
+                    "output": len(FAKE_TRANSCRIPT) // 4,
+                    "cached": 0,
+                    "cost_micro": None,
+                },
+            }
         text, calls = self._answer(system, messages)
         usage = _usage(system, messages, text)
         return {"text": text, "tool_calls": calls, "usage": usage}

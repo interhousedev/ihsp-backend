@@ -21,10 +21,12 @@ async def list_chats(
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
     q: Annotated[str | None, Query(min_length=1, max_length=100)] = None,
     course_id: UUID | None = None,
+    project_id: UUID | None = None,
 ) -> Page[ChatItemResponse]:
     """List the caller's chats of one assistant, newest first; `q` searches titles.
 
     `lms_author` chats are listed per course: `course_id` is required for them.
+    `project_id` lists the chats of one of the caller's projects.
     """
     chosen = Assistant(assistant) if assistant else default_assistant(actor)
     page = await container.ai.list_chats.execute(
@@ -34,6 +36,7 @@ async def list_chats(
         limit=limit,
         q=q,
         course_id=course_id,
+        project_id=project_id,
     )
     return Page(
         items=[ChatItemResponse.from_view(v) for v in page.items],

@@ -4,6 +4,8 @@ import json
 from typing import Any
 
 from app.modules.ai.infrastructure.openrouter import OpenRouterGateway, build_payload
+from app.settings_ai import AiSettings
+from app.shared.ai_tasks import AiTask
 from app.shared.contracts.ai import LlmTuning
 from tests.ai.unit.test_openrouter_gateway import URL, fixture
 
@@ -89,6 +91,30 @@ def gateway() -> OpenRouterGateway:
         app_title="IHT",
         timeout_seconds=5,
     )
+
+
+@pytest.mark.parametrize(
+    "task",
+    [
+        AiTask.STUDENT_CHAT,
+        AiTask.ADMIN_CHAT,
+        AiTask.GUEST_CHAT,
+        AiTask.NOTEBOOK_CHAT,
+    ],
+)
+def test_chat_tasks_on_haiku_send_reasoning_off(task: AiTask) -> None:
+    """The default profile of a chat task puts `enabled: false` in the request."""
+    profile = AiSettings().profile(task)
+    body = build_payload(
+        profile.model,
+        "system",
+        [{"role": "user", "content": "hi"}],
+        [],
+        100,
+        profile.tuning,
+    )
+    assert body["model"] == MODEL
+    assert body["reasoning"] == {"enabled": False}
 
 
 def test_reasoning_none_switches_reasoning_off() -> None:

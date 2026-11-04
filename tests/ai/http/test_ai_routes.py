@@ -68,6 +68,7 @@ async def test_chat_crud_follows_the_contract(
         "pending_approvals",
         "tier",
         "course_id",
+        "project_id",
     }
     assert chat["assistant"] == "student" and chat["pending_approvals"] == 0
     assert chat["tier"] == "fast"

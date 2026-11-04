@@ -21,7 +21,8 @@ OFFICE_TOOLS = ["create_presentation", "create_document", "create_spreadsheet"]
 STUDENT_TOOLS = {
     "get_my_subjects", "get_subject_lessons", "get_lesson_materials", "get_schedule",
     "get_homework", "get_marks", "get_attendance", "list_files", "read_file",
-    "search_files", "list_notebooks", "get_notebook", "search_notebook",
+    "search_files", "search_project_files", "list_notebooks", "get_notebook",
+    "search_notebook",
     "read_notebook_source", "list_notebook_artifacts", "search_web",
     "search_knowledge_base",
     "list_flashcard_sets",

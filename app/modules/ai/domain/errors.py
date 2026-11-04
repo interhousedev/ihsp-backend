@@ -123,6 +123,34 @@ class AttachmentInvalidError(ValidationFailedError):
     message_key = "ai-attachment-invalid"
 
 
+class ProjectNotFoundError(NotFoundError):
+    """The project does not exist or is not the caller's (params: project_id)."""
+
+    code = "ai/project-not-found"
+    message_key = "ai-project-not-found"
+
+
+class VoiceTooLargeError(ValidationFailedError):
+    """The recording is larger than the cap (params: max_mb)."""
+
+    code = "ai/voice-too-large"
+    message_key = "ai-voice-too-large"
+
+
+class VoiceTooLongError(ValidationFailedError):
+    """The recording is longer than the cap (params: max_seconds)."""
+
+    code = "ai/voice-too-long"
+    message_key = "ai-voice-too-long"
+
+
+class VoiceFormatError(ValidationFailedError):
+    """The recording is not an audio format the model reads (params: formats)."""
+
+    code = "ai/voice-format"
+    message_key = "ai-voice-format"
+
+
 class ToolArgumentsError(ValidationFailedError):
     """The model sent arguments that break the tool's schema or rules."""
 

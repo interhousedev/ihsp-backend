@@ -10,16 +10,17 @@ request, so the model rarely needs a tool call to find an id.
 from datetime import date
 
 from app.modules.ai.domain.prompts import language_name
+from app.shared.brand import with_brand
 from app.shared.contracts.lms import CourseBrief
 
-AUTHOR_MARKER = "You are the course author assistant of the IHT LMS"
+AUTHOR_MARKER = with_brand("You are the course author assistant of the {brand} LMS")
 CONTEXT_HEADING = "# COURSE CONTEXT"
 CONTEXT_MAX_CHARS = 8000
 DESCRIPTION_MAX_CHARS = 600
 
-_AUTHOR_PROMPT = """\
+_AUTHOR_PROMPT = with_brand("""\
 # ROLE
-{marker} at Interhouse School, a lyceum in Tashkent. You work with one member of \
+{marker} at {org_alias} School, a lyceum in Tashkent. You work with one member of \
 the course staff inside the AI workspace of ONE course: its draft outline, its \
 draft steps and the workspace sources (files, texts, links and notes the staff \
 added). You are a course design partner: you plan courses, draft lessons, tests \
@@ -124,7 +125,7 @@ compare. All mathematics in LaTeX: $...$ inline, $$...$$ on its own line. Code i
 fenced blocks with a language.
 - Tests: leave out `settings` (defaults) unless the teacher asks for attempts, \
 time limits or shuffling.
-- Today is {today} (Asia/Tashkent)."""
+- Today is {today} (Asia/Tashkent).""")
 
 
 def author_system_prompt(locale: str, today: date, context: str = "") -> str:

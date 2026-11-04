@@ -36,12 +36,13 @@ class ChatRepository(Protocol):
         limit: int,
         title_contains: str | None = None,
         course_id: UUID | None = None,
+        project_id: UUID | None = None,
     ) -> list[Chat]:
         """Return the owner's live chats, newest first, after the cursor.
 
         `title_contains` keeps the chats whose title has this text (any case,
         wildcards are literal characters); `course_id` keeps the author chats of
-        that course (``scope.course_id``).
+        that course (``scope.course_id``); `project_id` keeps the chats of a project.
         """
         ...
 

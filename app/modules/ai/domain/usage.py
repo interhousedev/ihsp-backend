@@ -76,6 +76,7 @@ _FEATURE_OF: dict[str, str] = {
     "web_material_triage": "web_search",
     "media_describe": "notebook_prep",
     "openui_repair": "assistant",
+    "voice_transcribe": "assistant",
 }
 
 

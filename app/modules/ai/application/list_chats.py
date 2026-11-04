@@ -41,6 +41,7 @@ class ListChats:
         limit: int,
         q: str | None = None,
         course_id: UUID | None = None,
+        project_id: UUID | None = None,
     ) -> Page[ChatItemView]:
         """Return one page of the caller's live chats; `q` searches the titles.
 
@@ -63,6 +64,7 @@ class ListChats:
                 limit=limit + 1,
                 title_contains=needle or None,
                 course_id=course_id,
+                project_id=project_id,
             )
             page, more = rows[:limit], len(rows) > limit
             if any(chat.pending_approvals for chat in page):

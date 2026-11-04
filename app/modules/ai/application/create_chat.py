@@ -10,6 +10,7 @@ from app.modules.ai.application.owned_chat import ChatGuard
 from app.modules.ai.application.views import ChatItemView
 from app.modules.ai.domain.assistant import Assistant
 from app.modules.ai.domain.chat import Chat, ChatTier
+from app.modules.ai.domain.errors import ProjectNotFoundError, WrongAssistantError
 from app.modules.ai.ports.unit_of_work import AiUnitOfWork
 from app.settings import Settings
 from app.shared.actor import Actor
@@ -48,6 +49,7 @@ class CreateChat:
         assistant: Assistant,
         tier: ChatTier | None = None,
         course_id: UUID | None = None,
+        project_id: UUID | None = None,
     ) -> ChatItemView:
         """Create the chat; the title is replaced by the first message.
 
@@ -57,6 +59,8 @@ class CreateChat:
         the course and the course workspace for good.
         """
         scope = await self.guard.scope_for(actor, assistant, course_id)
+        if project_id is not None and assistant is not Assistant.STUDENT:
+            raise WrongAssistantError(params={"assistant": assistant.value})
         locale = await self.locale.locale_of(actor.user_id)
         chosen = effective_tier(assistant, tier)
         chat = Chat(
@@ -70,6 +74,11 @@ class CreateChat:
             scope=scope,
         )
         async with self.uow_factory() as uow:
+            if project_id is not None:
+                project = await uow.projects.get(project_id)
+                if project is None or project.owner_id != actor.user_id:
+                    raise ProjectNotFoundError(params={"project_id": str(project_id)})
+                chat.project_id = project_id
             await uow.chats.add(chat)
             await uow.commit()
         return self.views.chat_item(chat)

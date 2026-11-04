@@ -6,7 +6,16 @@ from uuid import UUID
 
 from app.shared.db.base import Base, IdMixin, TimestampMixin
 
-from sqlalchemy import DateTime, Enum, Index, SmallInteger, String, Uuid, text
+from sqlalchemy import (
+    DateTime,
+    Enum,
+    ForeignKey,
+    Index,
+    SmallInteger,
+    String,
+    Uuid,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -18,6 +27,7 @@ class Chat(IdMixin, TimestampMixin, Base):
     __table_args__ = (
         Index("ix_chats_owner_id_last_message_at", "owner_id", "last_message_at"),
         Index("ix_chats_scope_course_id", text("(scope ->> 'course_id')")),
+        Index("ix_chats_project_id", "project_id"),
         {"schema": "ai"},
     )
 
@@ -46,4 +56,8 @@ class Chat(IdMixin, TimestampMixin, Base):
     )
     # Author chats: {"course_id", "notebook_id"} (domain ChatScope); NULL otherwise.
     scope: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    # The student's project (ai.projects); NULL outside projects.
+    project_id: Mapped[UUID | None] = mapped_column(
+        Uuid, ForeignKey("ai.projects.id", ondelete="SET NULL"), nullable=True
+    )
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

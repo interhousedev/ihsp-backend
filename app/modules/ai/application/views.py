@@ -30,6 +30,7 @@ class ChatItemView:
     pending_approvals: int
     tier: Literal["fast", "smart"]
     course_id: UUID | None = None  # author chats: the course they belong to
+    project_id: UUID | None = None  # student chats: the project they belong to
 
 
 @dataclass(frozen=True, slots=True)

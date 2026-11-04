@@ -77,6 +77,7 @@ class Chat:
     deleted_at: datetime | None = None
     tier: ChatTier = ChatTier.FAST
     scope: ChatScope | None = None  # author chats: the course and its workspace
+    project_id: UUID | None = None  # student chats inside a project
 
     @property
     def course_id(self) -> UUID | None:
