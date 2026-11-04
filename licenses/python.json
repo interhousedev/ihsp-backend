@@ -1,0 +1,823 @@
+{
+  "packages": [
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache-2.0",
+      "name": "aiobotocore",
+      "url": "https://github.com/aio-libs/aiobotocore",
+      "version": "3.9.2"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache-2.0",
+      "name": "aiofiles",
+      "url": "https://github.com/Tinche/aiofiles",
+      "version": "25.1.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "aiogram",
+      "url": "https://aiogram.dev/",
+      "version": "3.31.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "PSF-2.0",
+      "name": "aiohappyeyeballs",
+      "url": "https://github.com/aio-libs/aiohappyeyeballs",
+      "version": "2.7.1"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache-2.0 AND MIT",
+      "name": "aiohttp",
+      "url": "https://github.com/aio-libs/aiohttp",
+      "version": "3.14.4"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "aioitertools",
+      "url": "https://pypi.org/project/aioitertools/",
+      "version": "0.13.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache 2.0",
+      "name": "aiosignal",
+      "url": "https://github.com/aio-libs/aiosignal",
+      "version": "1.4.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache-2.0",
+      "name": "aiosmtpd",
+      "url": "https://github.com/aio-libs/aiosmtpd",
+      "version": "1.4.6"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "aiosmtplib",
+      "url": "https://pypi.org/project/aiosmtplib/",
+      "version": "5.1.3"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "alembic",
+      "url": "https://alembic.sqlalchemy.org",
+      "version": "1.20.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "annotated-doc",
+      "url": "https://github.com/fastapi/annotated-doc",
+      "version": "0.0.5"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "annotated-types",
+      "url": "https://github.com/annotated-types/annotated-types",
+      "version": "0.8.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "anthropic",
+      "url": "https://github.com/anthropics/anthropic-sdk-python",
+      "version": "1.14.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "anyio",
+      "url": "https://github.com/agronholm/anyio",
+      "version": "4.15.1"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "argon2-cffi",
+      "url": "https://pypi.org/project/argon2-cffi/",
+      "version": "25.1.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "argon2-cffi-bindings",
+      "url": "https://pypi.org/project/argon2-cffi-bindings/",
+      "version": "26.1.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache-2.0",
+      "name": "asyncpg",
+      "url": "https://pypi.org/project/asyncpg/",
+      "version": "0.32.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache-2.0",
+      "name": "atpublic",
+      "url": "https://gitlab.com/flufl/public.git",
+      "version": "8.0.1"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "attrs",
+      "url": "https://pypi.org/project/attrs/",
+      "version": "26.1.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache-2.0",
+      "name": "botocore",
+      "url": "https://github.com/boto/botocore",
+      "version": "1.43.106"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "cbor2",
+      "url": "https://github.com/agronholm/cbor2",
+      "version": "6.1.5"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MPL-2.0",
+      "name": "certifi",
+      "url": "https://github.com/certifi/python-certifi",
+      "version": "2026.10.23"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT-0",
+      "name": "cffi",
+      "url": "https://github.com/python-cffi/cffi",
+      "version": "2.1.1"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "charset-normalizer",
+      "url": "https://pypi.org/project/charset-normalizer/",
+      "version": "3.5.2"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-3-Clause",
+      "name": "click",
+      "url": "https://github.com/pallets/click/",
+      "version": "8.5.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache-2.0 OR BSD-3-Clause",
+      "name": "cryptography",
+      "url": "https://github.com/pyca/cryptography",
+      "version": "50.0.2"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "PSFL",
+      "name": "defusedxml",
+      "url": "https://github.com/tiran/defusedxml",
+      "version": "0.7.1"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-like",
+      "name": "dkimpy",
+      "url": "https://launchpad.net/dkimpy",
+      "version": "1.1.8"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "ISC",
+      "name": "dnspython",
+      "url": "https://www.dnspython.org",
+      "version": "2.8.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "docstring_parser",
+      "url": "https://github.com/rr-/docstring_parser",
+      "version": "0.18.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Unlicense",
+      "name": "email-validator",
+      "url": "https://github.com/JoshData/python-email-validator",
+      "version": "2.3.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "et_xmlfile",
+      "url": "https://foss.heptapod.net/openpyxl/et_xmlfile",
+      "version": "2.0.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "fastapi",
+      "url": "https://github.com/fastapi/fastapi",
+      "version": "0.142.2"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache-2.0",
+      "name": "frozenlist",
+      "url": "https://github.com/aio-libs/frozenlist",
+      "version": "1.8.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT AND PSF-2.0",
+      "name": "greenlet",
+      "url": "https://greenlet.readthedocs.io",
+      "version": "3.5.6"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "h11",
+      "url": "https://github.com/python-hyper/h11",
+      "version": "0.16.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "hiredis",
+      "url": "https://github.com/redis/hiredis-py",
+      "version": "3.4.2"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "http_ece",
+      "url": "https://github.com/martinthomson/encrypted-content-encoding",
+      "version": "1.2.1"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-3-Clause",
+      "name": "httpcore",
+      "url": "https://www.encode.io/httpcore/",
+      "version": "1.0.9"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-3-Clause",
+      "name": "httpcore2",
+      "url": "https://github.com/pydantic/httpx2",
+      "version": "2.13.1"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "httptools",
+      "url": "https://github.com/MagicStack/httptools",
+      "version": "0.8.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-3-Clause",
+      "name": "httpx",
+      "url": "https://github.com/encode/httpx",
+      "version": "0.28.1"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "httpx-sse",
+      "url": "https://github.com/florimondmanca/httpx-sse",
+      "version": "0.4.3"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-3-Clause",
+      "name": "httpx2",
+      "url": "https://github.com/pydantic/httpx2",
+      "version": "2.13.1"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache-2.0",
+      "name": "hvac",
+      "url": "https://github.com/hvac/hvac",
+      "version": "2.4.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-2-Clause",
+      "name": "icalendar",
+      "url": "https://icalendar.readthedocs.io/en/stable/",
+      "version": "7.3.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-3-Clause",
+      "name": "idna",
+      "url": "https://github.com/kjd/idna",
+      "version": "3.20"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD License",
+      "name": "Jinja2",
+      "url": "https://github.com/pallets/jinja/",
+      "version": "3.1.6"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "jiter",
+      "url": "https://github.com/pydantic/jiter/",
+      "version": "0.17.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "jmespath",
+      "url": "https://github.com/jmespath/jmespath.py",
+      "version": "1.1.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-3-Clause",
+      "name": "joserfc",
+      "url": "https://github.com/authlib/joserfc",
+      "version": "1.7.5"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "jsonschema",
+      "url": "https://github.com/python-jsonschema/jsonschema",
+      "version": "4.26.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "jsonschema-specifications",
+      "url": "https://github.com/python-jsonschema/jsonschema-specifications",
+      "version": "2025.9.1"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-3-Clause",
+      "name": "lxml",
+      "url": "https://github.com/lxml/lxml",
+      "version": "6.1.3"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "magic-filter",
+      "url": "https://github.com/aiogram/magic-filter",
+      "version": "1.0.12"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "Mako",
+      "url": "https://www.makotemplates.org/",
+      "version": "1.4.3"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-3-Clause",
+      "name": "MarkupSafe",
+      "url": "https://github.com/pallets/markupsafe/",
+      "version": "3.0.4"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "mcp",
+      "url": "https://modelcontextprotocol.io",
+      "version": "1.30.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache License 2.0",
+      "name": "multidict",
+      "url": "https://github.com/aio-libs/multidict",
+      "version": "6.9.1"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "nh3",
+      "url": "https://github.com/messense/nh3",
+      "version": "0.3.7"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "openpyxl",
+      "url": "https://foss.heptapod.net/openpyxl/openpyxl",
+      "version": "3.1.5"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache-2.0",
+      "name": "opentelemetry-api",
+      "url": "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-api",
+      "version": "1.45.1"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache-2.0 OR BSD-2-Clause",
+      "name": "packaging",
+      "url": "https://github.com/pypa/packaging",
+      "version": "26.3"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT-CMU",
+      "name": "pillow",
+      "url": "https://python-pillow.org",
+      "version": "13.0.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache-2.0",
+      "name": "propcache",
+      "url": "https://github.com/aio-libs/propcache",
+      "version": "0.5.4"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MPL-2.0",
+      "name": "py-vapid",
+      "url": "https://github.com/mozilla-services/vapid",
+      "version": "1.9.4"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-2-Clause",
+      "name": "pyasn1",
+      "url": "https://github.com/pyasn1/pyasn1",
+      "version": "0.6.4"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD",
+      "name": "pyasn1_modules",
+      "url": "https://github.com/pyasn1/pyasn1-modules",
+      "version": "0.4.2"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-3-Clause",
+      "name": "pycparser",
+      "url": "https://github.com/eliben/pycparser",
+      "version": "3.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "pycron",
+      "url": "https://github.com/kipe/pycron",
+      "version": "3.3.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "pydantic",
+      "url": "https://github.com/pydantic/pydantic",
+      "version": "2.13.5"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "pydantic-settings",
+      "url": "https://github.com/pydantic/pydantic-settings",
+      "version": "2.15.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "pydantic_core",
+      "url": "https://github.com/pydantic",
+      "version": "2.46.5"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "PyJWT",
+      "url": "https://github.com/jpadilla/pyjwt",
+      "version": "2.15.1"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache License, Version 2.0",
+      "name": "pyOpenSSL",
+      "url": "https://github.com/pyca/pyopenssl",
+      "version": "26.4.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "PyOTP",
+      "url": "https://github.com/pyauth/pyotp",
+      "version": "2.10.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-3-Clause",
+      "name": "pypdf",
+      "url": "https://github.com/py-pdf/pypdf",
+      "version": "6.21.2"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-3-Clause, Apache-2.0, dependency licenses",
+      "name": "pypdfium2",
+      "url": "https://github.com/pypdfium2-team/pypdfium2",
+      "version": "5.14.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Python Software Foundation License",
+      "name": "pyspf",
+      "url": "https://github.com/sdgathman/pyspf/",
+      "version": "2.0.14"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Dual License",
+      "name": "python-dateutil",
+      "url": "https://github.com/dateutil/dateutil",
+      "version": "2.9.0.post0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "python-docx",
+      "url": "https://github.com/python-openxml/python-docx",
+      "version": "1.2.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-3-Clause",
+      "name": "python-dotenv",
+      "url": "https://github.com/theskumar/python-dotenv",
+      "version": "1.2.4"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "python-magic",
+      "url": "https://pypi.org/project/python-magic/",
+      "version": "0.4.27"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache-2.0",
+      "name": "python-multipart",
+      "url": "https://github.com/Kludex/python-multipart",
+      "version": "0.0.32"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "python-pptx",
+      "url": "https://github.com/scanny/python-pptx",
+      "version": "1.0.2"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MPL-2.0",
+      "name": "pywebpush",
+      "url": "https://github.com/web-push-libs/pywebpush",
+      "version": "2.5.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "PyYAML",
+      "url": "https://github.com/yaml/pyyaml",
+      "version": "6.0.3"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "redis",
+      "url": "https://github.com/redis/redis-py",
+      "version": "7.4.1"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "referencing",
+      "url": "https://github.com/python-jsonschema/referencing",
+      "version": "0.37.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache-2.0 AND CNRI-Python",
+      "name": "regex",
+      "url": "https://github.com/mrabarnett/mrab-regex",
+      "version": "2026.9.29"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache-2.0",
+      "name": "requests",
+      "url": "https://github.com/psf/requests",
+      "version": "2.34.2"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "rpds-py",
+      "url": "https://github.com/crate-py/rpds",
+      "version": "2026.9.1"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "sentry-sdk",
+      "url": "https://github.com/getsentry/sentry-python",
+      "version": "2.72.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "six",
+      "url": "https://github.com/benjaminp/six",
+      "version": "1.17.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT OR Apache-2.0",
+      "name": "sniffio",
+      "url": "https://github.com/python-trio/sniffio",
+      "version": "1.3.1"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "SQLAlchemy",
+      "url": "https://www.sqlalchemy.org",
+      "version": "2.0.54"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-3-Clause",
+      "name": "sse-starlette",
+      "url": "https://github.com/sysid/sse-starlette",
+      "version": "3.5.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-3-Clause",
+      "name": "starlette",
+      "url": "https://github.com/Kludex/starlette",
+      "version": "1.7.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT OR Apache-2.0",
+      "name": "structlog",
+      "url": "https://pypi.org/project/structlog/",
+      "version": "26.1.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "taskiq",
+      "url": "https://taskiq-python.github.io/",
+      "version": "0.12.6"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "UNKNOWN",
+      "name": "taskiq-dependencies",
+      "url": "https://pypi.org/project/taskiq-dependencies/",
+      "version": "1.5.7"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "taskiq-redis",
+      "url": "https://github.com/taskiq-python/taskiq-redis",
+      "version": "1.2.2"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "truststore",
+      "url": "https://github.com/sethmlarson/truststore",
+      "version": "0.10.5"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "typing-inspection",
+      "url": "https://github.com/pydantic/typing-inspection",
+      "version": "0.4.4"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "PSF-2.0",
+      "name": "typing_extensions",
+      "url": "https://github.com/python/typing_extensions",
+      "version": "4.16.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache-2.0",
+      "name": "tzdata",
+      "url": "https://github.com/python/tzdata",
+      "version": "2026.5"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "urllib3",
+      "url": "https://pypi.org/project/urllib3/",
+      "version": "2.8.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-3-Clause",
+      "name": "uuid_utils",
+      "url": "https://github.com/aminalaee/uuid-utils",
+      "version": "1.0.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-3-Clause",
+      "name": "uvicorn",
+      "url": "https://uvicorn.dev/",
+      "version": "0.54.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT License",
+      "name": "uvloop",
+      "url": "https://pypi.org/project/uvloop/",
+      "version": "0.23.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "watchfiles",
+      "url": "https://github.com/samuelcolvin/watchfiles",
+      "version": "1.3.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-3-Clause",
+      "name": "webauthn",
+      "url": "https://github.com/duo-labs/py_webauthn",
+      "version": "3.0.1"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-3-Clause",
+      "name": "websockets",
+      "url": "https://github.com/python-websockets/websockets",
+      "version": "17.2"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-2-Clause",
+      "name": "wrapt",
+      "url": "https://github.com/GrahamDumpleton/wrapt",
+      "version": "2.5.0"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "BSD-2-Clause",
+      "name": "xlsxwriter",
+      "url": "https://github.com/jmcnamara/XlsxWriter",
+      "version": "3.2.9"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "Apache-2.0",
+      "name": "yarl",
+      "url": "https://github.com/aio-libs/yarl",
+      "version": "1.25.1"
+    },
+    {
+      "ecosystem": "PyPI",
+      "license": "MIT",
+      "name": "youtube-transcript-api",
+      "url": "https://github.com/jdepoix/youtube-transcript-api",
+      "version": "1.2.4"
+    }
+  ]
+}
