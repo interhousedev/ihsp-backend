@@ -355,7 +355,7 @@
       "license": "BSD-3-Clause",
       "name": "joserfc",
       "url": "https://github.com/authlib/joserfc",
-      "version": "1.7.5"
+      "version": "1.8.0"
     },
     {
       "ecosystem": "PyPI",

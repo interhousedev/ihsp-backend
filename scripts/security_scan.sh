@@ -18,7 +18,7 @@
 # Reports go to reports/security/ (git-ignored): one machine-readable file (SARIF or JSON) and one log per
 # scanner. The scanners run sequentially (Docker has little memory); every scanner runs even when an earlier
 # one fails. The exit code is non-zero when any scanner reports findings or cannot run.
-# Accepted findings: .trivyignore (Trivy), .gitleaksignore (gitleaks fingerprints), # nosec (bandit),
+# Accepted findings: .trivyignore and trivy-secret.yaml (Trivy), .gitleaksignore (gitleaks fingerprints), # nosec (bandit),
 # # nosemgrep (semgrep).
 set -uo pipefail
 
