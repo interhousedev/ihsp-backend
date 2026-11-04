@@ -201,7 +201,7 @@
       "license": "ISC",
       "name": "dnspython",
       "url": "https://www.dnspython.org",
-      "version": "2.8.0"
+      "version": "2.9.2"
     },
     {
       "ecosystem": "PyPI",
@@ -467,7 +467,7 @@
       "license": "BSD-2-Clause",
       "name": "pyasn1",
       "url": "https://github.com/pyasn1/pyasn1",
-      "version": "0.6.4"
+      "version": "0.6.5"
     },
     {
       "ecosystem": "PyPI",
@@ -537,7 +537,7 @@
       "license": "BSD-3-Clause",
       "name": "pypdf",
       "url": "https://github.com/py-pdf/pypdf",
-      "version": "6.21.2"
+      "version": "6.21.4"
     },
     {
       "ecosystem": "PyPI",
