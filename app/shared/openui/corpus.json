@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "blocks": [
+    { "name": "stack_stats_chart", "subset": "chat", "valid": true, "source": "root = Stack([stats, chart])\nstats = StatGrid([{label: \"Average\", value: 4.5}, {label: \"Lessons\", value: 12}])\nchart = BarChart([\"Mon\", \"Tue\"], [3, 5], \"Marks\")\n" },
+    { "name": "table", "subset": "chat", "valid": true, "source": "root = Table([\"Subject\", \"Mark\"], [[\"Math\", 5], [\"Art\", \"4\"]], \"Marks\")\n" },
+    { "name": "line_chart", "subset": "chat", "valid": true, "source": "root = LineChart([\"W1\", \"W2\"], [4.2, 4.5], \"Average\")\n" },
+    { "name": "progress", "subset": "chat", "valid": true, "source": "root = Progress(\"Attendance\", 0.9, 1)\n" },
+    { "name": "timetable", "subset": "chat", "valid": true, "source": "root = Timetable([{day: \"Mon\", time: \"09:00\", title: \"Math\"}])\n" },
+    { "name": "link_list", "subset": "chat", "valid": true, "source": "root = LinkList([{title: \"Site\", url: \"https://iht.uz\"}])\n" },
+    { "name": "card_with_tone", "subset": "chat", "valid": true, "source": "root = Card(\"Title\", [TextBlock(\"Hello\", \"heading\")])\n" },
+    { "name": "stat_hint", "subset": "chat", "valid": true, "source": "root = StatGrid([{label: \"Avg\", value: 4.5, hint: \"term\"}])\n" },
+    { "name": "studio_table", "subset": "studio", "valid": true, "source": "root = Table([\"a\"], [[\"1\"]])\n" },
+    { "name": "studio_flow", "subset": "studio", "valid": true, "source": "root = Flow([\"a\", \"b\"], \"Steps\")\n" },
+    { "name": "studio_bar", "subset": "studio", "valid": true, "source": "root = BarChart([\"a\"], [1])\n" },
+
+    { "name": "missing_required_values", "subset": "chat", "valid": false, "source": "root = BarChart([\"Mon\", \"Tue\"])\n" },
+    { "name": "unknown_component", "subset": "chat", "valid": false, "source": "root = Stack([x])\nx = Unknown(\"a\")\n" },
+    { "name": "enum_out_of_range", "subset": "chat", "valid": false, "source": "root = TextBlock(\"a\", \"shout\")\n" },
+    { "name": "number_given_as_string", "subset": "chat", "valid": false, "source": "root = BarChart([\"a\"], [\"3\"])\n" },
+    { "name": "http_link", "subset": "chat", "valid": false, "source": "root = LinkList([{title: \"a\", url: \"http://iht.uz\"}])\n" },
+    { "name": "javascript_link", "subset": "chat", "valid": false, "source": "root = LinkList([{title: \"a\", url: \"javascript:alert(1)\"}])\n" },
+    { "name": "too_many_stat_items", "subset": "chat", "valid": false, "source": "root = StatGrid([{label: \"a\", value: 1}, {label: \"b\", value: 2}, {label: \"c\", value: 3}, {label: \"d\", value: 4}, {label: \"e\", value: 5}, {label: \"f\", value: 6}, {label: \"g\", value: 7}, {label: \"h\", value: 8}, {label: \"i\", value: 9}])\n" },
+    { "name": "too_many_bars", "subset": "chat", "valid": false, "source": "root = BarChart([\"d1\", \"d2\", \"d3\", \"d4\", \"d5\", \"d6\", \"d7\", \"d8\", \"d9\", \"d10\", \"d11\", \"d12\", \"d13\", \"d14\", \"d15\", \"d16\", \"d17\", \"d18\", \"d19\", \"d20\", \"d21\", \"d22\", \"d23\", \"d24\", \"d25\"], [1])\n" },
+    { "name": "script_in_text", "subset": "chat", "valid": false, "source": "root = TextBlock(\"<script>alert(1)</script>\")\n" },
+    { "name": "state_reference", "subset": "chat", "valid": false, "source": "root = TextBlock($state)\n" },
+    { "name": "no_root", "subset": "chat", "valid": false, "source": "chart = BarChart([\"a\"], [1])\n" },
+    { "name": "missing_reference", "subset": "chat", "valid": false, "source": "root = Stack([missing])\n" },
+    { "name": "too_many_arguments", "subset": "chat", "valid": false, "source": "root = Progress(\"a\", 1, 2, 3)\n" },
+    { "name": "syntax_error", "subset": "chat", "valid": false, "source": "root = Stack([\n" },
+    { "name": "link_list_not_in_studio", "subset": "studio", "valid": false, "source": "root = LinkList([{title: \"a\", url: \"https://a.uz\"}])\n" },
+    { "name": "card_not_in_studio", "subset": "studio", "valid": false, "source": "root = Card(\"t\", [TextBlock(\"a\")])\n" }
+  ],
+  "fences": [
+    { "name": "fence_at_column_zero", "text": "a\n```openui\nroot = Stack([])\n```\nb", "blocks": 1, "pending": 0 },
+    { "name": "fence_indented_three_spaces", "text": "   ```openui\nroot = Stack([])\n   ```\n", "blocks": 1, "pending": 0 },
+    { "name": "fence_indented_four_spaces", "text": "    ```openui\nroot = Stack([])\n    ```\n", "blocks": 0, "pending": 0 },
+    { "name": "other_language_is_text", "text": "```python\nprint(1)\n```", "blocks": 0, "pending": 0 },
+    { "name": "unclosed_trailing_fence_is_pending", "text": "x\n```openui\nroot = Sta", "blocks": 0, "pending": 1 }
+  ]
+}

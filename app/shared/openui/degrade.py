@@ -99,11 +99,16 @@ def _stats(props: dict[str, Value]) -> str:
 
 
 def _table(props: dict[str, Value]) -> str:
-    head = " | ".join(_texts(props["columns"]))
+    """A Markdown pipe table, so every surface renders it as a table."""
+    head = _texts(props["columns"])
     rows = props["rows"] if isinstance(props["rows"], list) else []
-    lines = [" | ".join(_texts(row)) for row in rows]
     caption = f"**{props['caption']}**\n" if props.get("caption") else ""
-    return caption + "\n".join([f"**{head}**", *lines])
+    lines = [_pipes(head), _pipes(["---"] * len(head)), *map(_pipes, map(_texts, rows))]
+    return caption + "\n".join(lines)
+
+
+def _pipes(cells: list[str]) -> str:
+    return "| " + " | ".join(cells) + " |"
 
 
 def _chart(props: dict[str, Value]) -> str:

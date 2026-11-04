@@ -18,15 +18,20 @@ class Part:
     raw: str = ""  # a block with its fence, as written
 
 
+# Up to three spaces of indent, as CommonMark allows and as the web splitter
+# (`packages/features-core/src/openui/split.ts`) reads it; four spaces is code.
+_INDENT = r"[ \t]{0,3}"
+
+
 def _fence() -> re.Pattern[str]:
     name = re.escape(load_catalog().fence)
     return re.compile(
-        rf"^[ \t]*```{name}[ \t]*\n(.*?)^[ \t]*```[ \t]*$\n?", re.M | re.S
+        rf"^{_INDENT}```{name}[ \t]*\n(.*?)^{_INDENT}```[ \t]*$\n?", re.M | re.S
     )
 
 
 def _opening() -> re.Pattern[str]:
-    return re.compile(rf"^[ \t]*```{re.escape(load_catalog().fence)}[ \t]*$", re.M)
+    return re.compile(rf"^{_INDENT}```{re.escape(load_catalog().fence)}[ \t]*$", re.M)
 
 
 def split_blocks(text: str) -> list[Part]:
