@@ -64,17 +64,13 @@ class ApplyOutline(AuthorWriteTool[ApplyOutlineArgs]):
 
     name = "apply_outline"
     description = (
-        "Write an agreed outline into the course draft in ONE call (needs approval). "
-        "Give the whole outline in order: sections with their steps. A section or "
-        "step whose title already exists (case-insensitive) is reused; only missing "
-        "ones are created at the end; nothing is renamed, moved or deleted. With "
-        "add_briefs every NEW step gets its `brief` (Markdown goals and plan) as a "
-        "first text block. Use it only after the teacher approved the outline. "
-        "Limits: 30 sections, 30 steps each. Result: created_sections [{id, title}], "
-        "created_steps [{step_id, section_id, title}], draft_seq. Example: "
-        'apply_outline {"sections": [{"title": "Limits", "steps": [{"title": '
-        '"What is a limit", "brief": "**Goals**\\n- explain a limit"}]}], '
-        '"add_briefs": true}'
+        "Write an agreed outline into the course draft in ONE call (needs "
+        "approval). Give the whole outline in order: sections with their steps."
+        " A section or step whose title already exists (case-insensitive) is "
+        "reused; only missing ones are created at the end; nothing is renamed, "
+        "moved or deleted. With add_briefs every NEW step gets its `brief` "
+        "(Markdown goals and plan) as a first text block. Use it only after the"
+        " teacher approved the outline. Limits: 30 sections, 30 steps each."
     )
     args_model = ApplyOutlineArgs
 

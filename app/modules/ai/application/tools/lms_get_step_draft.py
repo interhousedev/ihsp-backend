@@ -29,13 +29,13 @@ class GetStepDraft(AuthorReadTool[GetStepDraftArgs]):
 
     name = "get_step_draft"
     description = (
-        "Read the DRAFT of one step of this course: title, lock_version and its "
-        "blocks numbered from 1 (text: markdown; test: settings and questions with "
-        "options, correct flags and answers; flashcards: cards). Call it before you "
-        "change or extend an existing step, and again after a draft-conflict. "
-        "Long steps come back shortened (see `note`); pass `block` to read one "
-        "block in full. Pass lock_version unchanged to replace_step_content. "
-        'Example: get_step_draft {"step_id": "0192f0c4-...-7d1e"}'
+        "Read the DRAFT of one step of this course: title, lock_version and its"
+        " blocks numbered from 1 (text: markdown; test: settings and questions "
+        "with options, correct flags and answers; flashcards: cards). Call it "
+        "before you change or extend an existing step, and again after a draft-"
+        "conflict. Long steps come back shortened (see `note`); pass `block` to"
+        " read one block in full. Pass lock_version unchanged to "
+        "replace_step_content."
     )
     args_model = GetStepDraftArgs
 

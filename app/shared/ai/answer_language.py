@@ -10,6 +10,10 @@ from typing import Final
 
 LANGUAGE_NAMES: Final = {"uz": "Uzbek (Latin script)", "ru": "Russian", "en": "English"}
 
+UZBEK_LETTERS_RULE: Final = (
+    "Write oʼ, gʼ and tutuq belgisi with ʼ (U+02BC), never ' ‘ ’ or ʻ."
+)
+
 _WORD: Final = re.compile(r"[^\W\d_]+(?:['ʼʻ’‘`][^\W\d_]+)*", re.UNICODE)
 _CYRILLIC: Final = re.compile(r"[Ѐ-ӿ]")
 _UZBEK_CYRILLIC: Final = re.compile(r"[ўқғҳЎҚҒҲ]")
@@ -72,7 +76,8 @@ def answer_language(text: str, locale: str) -> str:
 def language_line(language: str) -> str:
     """The dedicated last line of a system prompt."""
     name = LANGUAGE_NAMES.get(language, LANGUAGE_NAMES["en"])
-    return (
-        f"Write everything the user reads in {name}, including text before tool "
-        "calls, even when tools, sources or examples use another language."
+    line = (
+        f"Write all text the user reads in {name}, including text before tool calls, "
+        "even when tools or sources use another language."
     )
+    return f"{line} {UZBEK_LETTERS_RULE}" if language == "uz" else line

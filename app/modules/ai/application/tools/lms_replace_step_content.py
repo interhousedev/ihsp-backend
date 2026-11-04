@@ -72,18 +72,13 @@ class ReplaceStepContent(AuthorWriteTool[ReplaceStepContentArgs]):
     name = "replace_step_content"
     description = (
         "Rewrite a whole step of this course in ONE call (needs approval): its "
-        "title and all its blocks in order. Call get_step_draft first and pass its "
-        "lock_version. Each block is new (type text, video {url, caption}, test or "
-        "flashcards, as in add_*) or an existing block kept unchanged: "
-        '{"type": "keep", "block": N} '
-        "(N from get_step_draft; never copy a kept block's content). Existing "
-        "blocks you leave out are REMOVED: say so in your proposal. Use it to write "
-        "a lesson into an empty step or to restructure a step. On draft-conflict "
-        "re-read the step once and retry. Result: step_id, blocks_total, "
-        'lock_version. Example: replace_step_content {"step_id": '
-        '"0192f0c4-...-7d1e", "lock_version": 3, "title": "Limits", "blocks": '
-        '[{"type": "text", "markdown": "### Idea\\n..."}, {"type": "keep", '
-        '"block": 2}]}'
+        "title and all its blocks in order. Call get_step_draft first and pass "
+        "its lock_version. Each block is new (type text, video {url, caption}, "
+        "test or flashcards, as in add_*) or an existing block kept unchanged: "
+        '{"type": "keep", "block": N} (N from get_step_draft; never copy a kept'
+        " block's content). Existing blocks you leave out are REMOVED: say so "
+        "in your proposal. Use it to write a lesson into an empty step or to "
+        "restructure a step. On draft-conflict re-read the step once and retry."
     )
     args_model = ReplaceStepContentArgs
 

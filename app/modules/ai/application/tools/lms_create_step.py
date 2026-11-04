@@ -40,11 +40,11 @@ class CreateStep(AuthorWriteTool[CreateStepArgs]):
     name = "create_step"
     description = (
         "Add ONE step at the end of a section of this course (needs approval). "
-        "Give `brief` (Markdown learning goals and plan) to start the step with it "
-        "as a text block; fill it afterwards with replace_step_content or the add_* "
-        "tools. A step with the same title in that section is not created twice. "
-        "For several steps use apply_outline. Result: step_id, section_id, title. "
-        'Example: create_step {"section_id": "s-3f2a", "title": "Chain rule"}'
+        "Give `brief` (Markdown learning goals and plan) to start the step with"
+        " it as a text block; fill it afterwards with replace_step_content or "
+        "the add_* tools. A step with the same title in that section is not "
+        "created twice. For several steps use apply_outline. Result: step_id, "
+        "section_id, title."
     )
     args_model = CreateStepArgs
 

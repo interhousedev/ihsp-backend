@@ -7,6 +7,7 @@ from app.modules.notebooks.domain.prompts.chat import (
     chat_system_prompt,
     question_message,
 )
+from app.shared.ai.prompt_cache import split_system
 
 import pytest
 
@@ -59,12 +60,13 @@ def test_prompt_has_the_seven_rules_in_order() -> None:
     ("code", "name"),
     [("uz", "Uzbek (Latin script)"), ("ru", "Russian"), ("en", "English")],
 )
-def test_answer_language_is_named_in_rules_one_and_four(code: str, name: str) -> None:
+def test_answer_language_is_named_in_the_volatile_tail(code: str, name: str) -> None:
     """NB-7: the language code is turned into its English name."""
     text = prompt(language=code)
 
-    assert text.count(name) == 2
-    assert f"Write in {name}." in rule_line(text, 4)
+    stable, tail = split_system(text)
+    assert name not in stable
+    assert f"in {name}," in tail
 
 
 def test_default_style_and_length_blocks() -> None:

@@ -91,16 +91,15 @@ class GenerateStudioOutput(AuthorWriteTool[GenerateStudioOutputArgs]):
 
     name = "generate_studio_output"
     description = (
-        "Start a Studio output in this course's workspace (needs approval; it is a "
-        "slow background job and uses one of the teacher's daily outputs). Use it "
-        "ONLY when the teacher asks for a Studio output; otherwise write the "
-        "content yourself with the other tools. kind: course_plan {depth?, "
-        "sections_hint?}, lesson_draft {step_id? (an existing step) or topic?, "
-        "include_test?, include_flashcards?, length?}, quiz or flashcards {count?, "
-        "difficulty?}; any kind {language?, prompt?}. Result: id, kind, status. "
-        "Check list_workspace_outputs later; write a ready output into the course "
-        "with apply_studio_output. Example: generate_studio_output "
-        '{"kind": "course_plan", "depth": "detailed", "sections_hint": 5}'
+        "Start a Studio output in this course's workspace (needs approval; it "
+        "is a slow background job and uses one of the teacher's daily outputs)."
+        " Use it ONLY when the teacher asks for a Studio output; otherwise "
+        "write the content yourself with the other tools. kind: course_plan "
+        "{depth?, sections_hint?}, lesson_draft {step_id? (an existing step) or"
+        " topic?, include_test?, include_flashcards?, length?}, quiz or "
+        "flashcards {count?, difficulty?}; any kind {language?, prompt?}. Check"
+        " list_workspace_outputs later; write a ready output into the course "
+        "with apply_studio_output."
     )
     args_model = GenerateStudioOutputArgs
 

@@ -41,6 +41,7 @@ from app.shared.ai.narration import (
     mentions_a_student,
     strip_narration,
 )
+from app.shared.ai.uzbek import normalize_answer
 from app.shared.ai_tasks import AiTask
 from app.shared.clock import Clock
 from app.shared.contracts.ai import LlmGateway, LlmTuning
@@ -228,6 +229,7 @@ class ContinueTurn:
             record_step(StepKind.THINK, text)
         if not raw_calls:  # the answer: repair or drop broken OpenUI blocks
             text = await self.openui.finalize(text, count=self._repair_counter(chat))
+            text = normalize_answer(text)
         calls = await self.runner.propose(
             chat.assistant, run.ctx, raw_calls, taken, run.seen
         )
@@ -244,7 +246,6 @@ class ContinueTurn:
         self, run: _Run, chat: Chat, asked: str, request: dict[str, Any]
     ) -> tuple[dict[str, Any], str]:
         """One model request: the response and its text without a leading note."""
-        guarded = chat.assistant is not Assistant.LMS_AUTHOR
         options: dict[str, Any] = {
             "about_student": _about_student(chat, asked),
             "language": answer_language(asked, run.ctx.locale),
@@ -252,10 +253,10 @@ class ContinueTurn:
         if run.events is None:
             response = await self.llm.complete(**request)
         else:
-            guard = NarrationFilter(**options) if guarded else None
+            guard = NarrationFilter(**options)
             response = await self._streamed(run.events, request, guard)
         text = str(response.get("text") or "")
-        return response, strip_narration(text, **options) if guarded else text
+        return response, strip_narration(text, **options)
 
     def _tools(self, chat: Chat) -> list[dict[str, Any]]:
         """The tools offered in this chat; the list stays the same within it."""

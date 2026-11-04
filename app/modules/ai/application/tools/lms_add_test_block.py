@@ -49,16 +49,13 @@ class AddTestBlock(AuthorWriteTool[AddTestBlockArgs]):
 
     name = "add_test_block"
     description = (
-        "Append ONE test block with ALL its questions to the end of a step's draft "
-        "(needs approval). Question types: single (exactly one correct option), "
-        "multiple (one or more correct), text (accepted_answers or regex), number "
-        "(number and tolerance). Choice questions need 2 to 10 options with "
-        "plausible distractors; add an explanation. Ask only what the step teaches. "
-        "Leave out settings unless the teacher asked for attempts, time limits or "
-        "shuffling. Result: step_id, block, blocks_total. Example: add_test_block "
-        '{"step_id": "0192f0c4-...-7d1e", "questions": [{"type": "single", '
-        '"prompt": "2 + 2 = ?", "options": [{"text": "4", "correct": true}, '
-        '{"text": "5"}], "explanation": "2 + 2 is 4."}]}'
+        "Append ONE test block with ALL its questions to the end of a step's "
+        "draft (needs approval). Question types: single (exactly one correct "
+        "option), multiple (one or more correct), text (accepted_answers or "
+        "regex), number (number and tolerance). Choice questions need 2 to 10 "
+        "options with plausible distractors; add an explanation. Ask only what "
+        "the step teaches. Leave out settings unless the teacher asked for "
+        "attempts, time limits or shuffling."
     )
     args_model = AddTestBlockArgs
 

@@ -43,12 +43,12 @@ def brief(sections: int = 1, steps: int = 2, title: str = "Limits") -> CourseBri
 def test_the_head_is_fixed_and_the_context_comes_last() -> None:
     """Same locale and date give the same head; the context is appended at the end."""
     context = course_context(brief())
-    text = author_system_prompt("ru", TODAY, context)
+    text = author_system_prompt(TODAY, context)
 
     assert text.startswith("# ROLE\n" + AUTHOR_MARKER)
     assert text.endswith(context)
-    assert author_system_prompt("ru", TODAY) == text.split("\n\n" + CONTEXT_HEADING)[0]
-    assert "if unclear, in Russian" in text and "Today is 2026-10-09" in text
+    assert author_system_prompt(TODAY) == text.split("\n\n" + CONTEXT_HEADING)[0]
+    assert "Today is 2026-10-09" in text
 
 
 @pytest.mark.parametrize(
@@ -66,7 +66,7 @@ def test_the_head_is_fixed_and_the_context_comes_last() -> None:
 )
 def test_the_instructions_cover_the_workflow(rule: str) -> None:
     """Grounding, proposals, error recovery, safety and formatting are spelled out."""
-    assert rule in author_system_prompt("en", TODAY)
+    assert rule in author_system_prompt(TODAY)
 
 
 def test_the_context_lists_ids_in_order() -> None:
@@ -101,7 +101,7 @@ def test_a_long_outline_is_cut_with_a_note() -> None:
 def test_the_fake_model_writes_into_the_first_step_of_the_context() -> None:
     """Development without a key: keywords pick a scripted tool call."""
     outline = brief()
-    system = author_system_prompt("en", TODAY, course_context(outline))
+    system = author_system_prompt(TODAY, course_context(outline))
     first = str(outline.sections[0].steps[0].step_id)
 
     _, test = author_answer(system, "Make a test about limits")

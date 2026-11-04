@@ -32,12 +32,12 @@ class SearchWorkspace(AuthorReadTool[SearchWorkspaceArgs]):
     name = "search_workspace"
     description = (
         "Search the sources of this course's workspace. Call it BEFORE writing "
-        "facts, definitions, formulas or dates, and prefer what it finds. Returns "
-        "passages (source_id, source_title, seq, page, text up to 600 characters), "
-        "best match first; words are matched, not meaning, so use the key terms "
-        "(try a synonym or the other language if nothing is found). An empty result "
-        "means the sources do not cover it: say so before using general knowledge. "
-        'Example: search_workspace {"query": "derivative definition", "limit": 5}'
+        "facts, definitions, formulas or dates, and prefer what it finds. "
+        "Returns passages (source_id, source_title, seq, page, text up to 600 "
+        "characters), best match first; words are matched, not meaning, so use "
+        "the key terms (try a synonym or the other language if nothing is "
+        "found). An empty result means the sources do not cover it: say so "
+        "before using general knowledge."
     )
     args_model = SearchWorkspaceArgs
 

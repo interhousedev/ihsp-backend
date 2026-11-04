@@ -19,8 +19,8 @@ _PERSON_WORDS: Final = re.compile(
     r"\b(?:student|студент\w*|ученик\w*|ученица\w*|o['ʼʻ’‘`]?quvchi\w*|talaba\w*)\b",
     re.IGNORECASE | re.UNICODE,
 )
-_PERSON_EN: Final = r"(?:the\s+(?:student|user)|this\s+student)"
-_PERSON_RU: Final = r"(?:студент(?:ка)?|ученик|ученица|пользователь)"
+_PERSON_EN: Final = r"(?:the\s+(?:student|user|teacher)|this\s+student)"
+_PERSON_RU: Final = r"(?:студент(?:ка)?|ученик|ученица|пользователь|учитель)"
 _PERSON_UZ: Final = r"(?:o['ʼʻ’‘`]?quvchi|talaba|foydalanuvchi)"
 
 _META_OBJECT_EN: Final = (
@@ -50,6 +50,10 @@ _PATTERNS: Final = tuple(
         r"^(?:таблица|график|диаграмма|блок)\s+(?:\S+\s+)?(?:нужн\w*|требует\w*)\b",
         r"^let\s+me\s+(?:compute|calculate|think|check|look|use|fetch|see)\b",
         r"^keep\s+(?:one|a)\s+short\s+sentence\b",
+        r"^i(?:'ll|\s+will)\s+(?:look|check|search|find|compute|calculate)\b",
+        r"^(?:сейчас\s+)?(?:посмотрю|проверю|посчитаю|поищу|найду|вычислю)\b",
+        r"^(?:hozir\s+)?(?:tekshiraman|qarab\s+chiqaman|hisoblayman|hisoblab\s+"
+        r"chiqaman)\b",
         # Russian
         rf"^{_PERSON_RU}\s+(?:\S+\s+){{0,2}}(?:дал|дала|предоставил|предоставила|"
         r"просит|"
@@ -66,7 +70,8 @@ _PATTERNS: Final = tuple(
 # First words that can open a note; any other start is released at once when streaming.
 _OPENERS: Final = re.compile(
     r"^(?:the|this|since|because|as|given|i|no|tools?|without|a|an|let|keep|таблица|"
-    r"график|диаграмма|блок|студент\w*|"
+    r"график|диаграмма|блок|студент\w*|учитель|сейчас|посмотрю|проверю|посчитаю|"
+    r"поищу|найду|вычислю|hozir|tekshiraman|qarab|hisoblayman|hisoblab|"
     r"ученик\w*|ученица|пользователь|инструмент\w*|без|запрос|o['ʼʻ’‘`]?quvchi\w*|"
     r"talaba\w*|foydalanuvchi\w*|vosita\w*)\b",
     re.IGNORECASE | re.UNICODE,

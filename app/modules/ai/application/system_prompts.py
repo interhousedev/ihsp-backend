@@ -13,7 +13,11 @@ from app.modules.ai.domain.prompts import (
     TELEGRAM_RULES,
     system_prompt,
 )
-from app.modules.ai.domain.prompts_author import author_system_prompt, course_context
+from app.modules.ai.domain.prompts_author import (
+    author_language_line,
+    author_system_prompt,
+    course_context,
+)
 from app.modules.ai.ports.author_gate import AuthorGate
 from app.modules.ai.ports.unit_of_work import AiUnitOfWork
 from app.shared.ai.answer_language import answer_language, language_line
@@ -85,7 +89,7 @@ class SystemPrompts:
         `answer_now` (the last model request of a turn) go in a volatile tail after
         the cache breakpoint, so the stable part stays the same for everybody.
         """
-        prompt = await self._base(chat, locale)
+        prompt = await self._base(chat)
         block = await self._project_block(chat)
         if block:
             prompt = f"{prompt}\n\n{block}"
@@ -93,11 +97,16 @@ class SystemPrompts:
             prompt = f"{prompt}\n\n{TELEGRAM_RULES}"
         if self.openui:
             prompt += openui_prompt()
+        language = answer_language(last_user_text, locale)
         tail = [ANSWER_NOW] if answer_now else []
         if chat.assistant is Assistant.LMS_AUTHOR:
-            return with_volatile_tail(prompt, tail[0]) if tail else prompt
+            if chat.scope is not None:
+                brief = await self.gate.course_brief(chat.scope.course_id)
+                tail.insert(0, course_context(brief))
+            tail.append(author_language_line(language))
+            return with_volatile_tail(prompt, "\n\n".join(tail))
         prompt = f"{prompt}\n\n{PRIORITIES}"
-        tail.append(language_line(answer_language(last_user_text, locale)))
+        tail.append(language_line(language))
         return with_volatile_tail(prompt, "\n".join(tail))
 
     async def _project_block(self, chat: Chat) -> str:
@@ -105,7 +114,7 @@ class SystemPrompts:
             return ""
         return project_block(await self.projects(chat.project_id))
 
-    async def _base(self, chat: Chat, locale: str) -> str:
+    async def _base(self, chat: Chat) -> str:
         today = local_today(self.clock)
         if chat.assistant is not Assistant.LMS_AUTHOR or chat.scope is None:
             ask = True
@@ -113,5 +122,4 @@ class SystemPrompts:
                 current = await self.limits.current()
                 ask = bool(current.ai_ask_before_web_search)
             return system_prompt(chat.assistant, today, ask_before_web=ask)
-        brief = await self.gate.course_brief(chat.scope.course_id)
-        return author_system_prompt(locale, today, course_context(brief))
+        return author_system_prompt(today)

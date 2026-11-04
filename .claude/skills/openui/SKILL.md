@@ -14,11 +14,12 @@ Code: `app/shared/openui/` (`catalog.json`, `catalog.py`, `blocks.py`, `validate
 
 ## Chat safeguards
 
-The model's compliance is not relied on; `ContinueTurn` does this on the server. Narration and language cover student and Administration chats (the guest assistant uses the same two helpers); table conversion and the last-step rule also cover the author assistant. Notebook chat and Studio stay out of it.
+The model's compliance is not relied on; `ContinueTurn` does this on the server. Narration and language cover student, Administration and author chats (the guest assistant uses the same two helpers); table conversion and the last-step rule are the same for them. Notebook chat takes only the volatile language line and the Uzbek letters; Studio stays out of it.
 
 - `app/shared/ai/narration.py` removes leading notes about the user, the request or the tools, in the final text and over the stream (`NarrationFilter`). A pattern must name that kind of note: "the student" as a topic stays, and the student patterns are off in Administration chats and when the user's message mentions a student. Add a false-positive test with every pattern.
 - `tables.markdown_tables_to_blocks` (finalizer option `convert_tables`) turns a Markdown table into a Table block during finalize; links, citations, formulas, odd rows and code stay Markdown. The stream shows the Markdown table until `done` replaces it.
 - `app/shared/ai/answer_language.py` picks the answer language from the user's message, falling back to the locale. It goes in the last prompt line, after the cache breakpoint (`with_volatile_tail`), so the stable prefix stays cached.
+- `app/shared/ai/uzbek.py` corrects Uzbek apostrophes to ʼ in the final answer (chat, notebook; `UzbekStream` for the guest), leaving code, addresses and formulas alone.
 - The last step of a turn, or the step after a round of only repeated calls, sends `tool_choice: none` (`LlmTuning.answer_only`) and ignores any tool call the model still returns.
 
 ## Finalize (before an answer is stored)

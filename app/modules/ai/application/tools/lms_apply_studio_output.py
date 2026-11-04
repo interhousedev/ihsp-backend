@@ -54,14 +54,12 @@ class ApplyStudioOutput(AuthorWriteTool[ApplyStudioOutputArgs]):
 
     name = "apply_studio_output"
     description = (
-        "Write a READY Studio output of this course's workspace into the course "
-        "draft (needs approval). course_plan: creates the missing sections and "
-        "steps (nothing is renamed or removed). lesson_draft: fills "
-        "target_step_id (mode replace, the default, or append) or creates a new "
-        "step in target_section_id. quiz, flashcards: appended to target_step_id "
-        "as a test or flash cards block. Result: created_sections, created_steps, "
-        "step_id, lock_version, draft_seq. Example: apply_studio_output "
-        '{"artifact_id": "0192f0c4-...-c3d4", "target_step_id": "0192f0c4-...-7d1e"}'
+        "Write a READY Studio output of this course's workspace into the course"
+        " draft (needs approval). course_plan: creates the missing sections and"
+        " steps (nothing is renamed or removed). lesson_draft: fills "
+        "target_step_id (mode replace, the default, or append) or creates a new"
+        " step in target_section_id. quiz, flashcards: appended to "
+        "target_step_id as a test or flash cards block."
     )
     args_model = ApplyStudioOutputArgs
 

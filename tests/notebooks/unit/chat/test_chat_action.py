@@ -229,7 +229,7 @@ async def test_an_invalid_action_is_dropped_but_the_answer_is_clean(
 
     assert turn.action is None
     assert turn.assistant_message.content.text == "Done."
-    assert turn.assistant_message.content.followups == ["Another?"]
+    assert turn.assistant_message.content.followups == []
 
 
 async def test_the_streamed_answer_never_shows_the_tag_and_done_has_the_action(

@@ -456,11 +456,11 @@ async def test_chat_settings_change_the_system_prompt_and_the_token_cap(
 @pytest.mark.parametrize(
     ("locale", "language", "expected"),
     [
-        ("ru", ChatLanguage.AUTO, "Write in Russian."),
-        ("en", ChatLanguage.AUTO, "Write in English."),
-        ("uz", ChatLanguage.AUTO, "Write in Uzbek (Latin script)."),
-        ("ru", ChatLanguage.UZ, "Write in Uzbek (Latin script)."),
-        ("uz", ChatLanguage.EN, "Write in English."),
+        ("ru", ChatLanguage.AUTO, "in Russian,"),
+        ("en", ChatLanguage.AUTO, "in English,"),
+        ("uz", ChatLanguage.AUTO, "in Uzbek (Latin script),"),
+        ("ru", ChatLanguage.UZ, "in Uzbek (Latin script),"),
+        ("uz", ChatLanguage.EN, "in English,"),
     ],
 )
 async def test_language_auto_follows_the_users_locale(
@@ -678,3 +678,15 @@ async def test_no_selected_source_gives_a_general_answer_that_is_flagged(
     assert answer.grounded is False and answer.citations == []
     assert answer.source_ids == []
     assert scripted_llm.calls == 1
+
+
+async def test_an_answer_without_citations_has_no_followups(
+    core: NotebooksCore, chat: ChatServices, student: Actor, scripted_llm: ScriptedLlm
+) -> None:
+    """NB-6: "not in the sources" offers no follow-ups even if the model wrote some."""
+    notebook, _ = await notebook_with_source(core, student)
+    scripted_llm.queue_text('Not in the sources.\n<followups>["A?","B?"]</followups>')
+
+    turn = await chat.ask_notebook.execute(student, notebook.id, "Q?")
+
+    assert turn.assistant_message.content.followups == []

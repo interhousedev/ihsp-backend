@@ -35,11 +35,10 @@ class AddTextBlock(AuthorWriteTool[AddTextBlockArgs]):
     name = "add_text_block"
     description = (
         "Append ONE Markdown text block to the end of a step's draft (needs "
-        "approval); existing blocks stay as they are. Use it to add an explanation, "
-        "a worked example or a summary. To restructure a step or write a whole "
-        "lesson use replace_step_content (one call). Result: step_id, block (its "
-        "number), blocks_total. Example: add_text_block "
-        '{"step_id": "0192f0c4-...-7d1e", "markdown": "### Worked example\\n..."}'
+        "approval); existing blocks stay as they are. Use it to add an "
+        "explanation, a worked example or a summary. To restructure a step or "
+        "write a whole lesson use replace_step_content (one call). Result: "
+        "step_id, block (its number), blocks_total."
     )
     args_model = AddTextBlockArgs
 

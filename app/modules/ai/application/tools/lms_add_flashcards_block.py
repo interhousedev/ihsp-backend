@@ -30,12 +30,10 @@ class AddFlashcardsBlock(AuthorWriteTool[AddFlashcardsBlockArgs]):
     name = "add_flashcards_block"
     description = (
         "Append ONE flash cards block to the end of a step's draft (needs "
-        "approval). One fact per card: a short question or term on the front, a "
-        "short exact answer on the back; use the step's key terms and formulas. "
-        "Students review these cards with spaced repetition. Result: step_id, "
-        "block, blocks_total. Example: add_flashcards_block "
-        '{"step_id": "0192f0c4-...-7d1e", "cards": [{"front": "Derivative of '
-        'x^2", "back": "2x"}]}'
+        "approval). One fact per card: a short question or term on the front, a"
+        " short exact answer on the back; use the step's key terms and "
+        "formulas. Students review these cards with spaced repetition. Result: "
+        "step_id, block, blocks_total."
     )
     args_model = AddFlashcardsBlockArgs
 

@@ -75,6 +75,8 @@ from app.shared.agent_steps import (
     recording,
     step,
 )
+from app.shared.ai.prompt_cache import split_system, with_volatile_tail
+from app.shared.ai.uzbek import normalize_answer
 from app.shared.ai_tasks import AiTask
 from app.shared.base_error import BaseError
 from app.shared.clock import local_today
@@ -441,7 +443,7 @@ class AnswerPipeline:
         self, prepared: Prepared, streamed: Streamed, question: NotebookMessage
     ) -> StreamEvent:
         """Store the finished answer and build the ``done`` event."""
-        raw = await self._openui("".join(streamed.raw))
+        raw = normalize_answer(await self._openui("".join(streamed.raw)))
         parsed = process_answer(raw, prepared.pack)
         usage = streamed.usage or _estimated_usage(prepared, raw)
         outcome = _outcome(parsed, raw, usage, self.core.llm.model(), prepared.web)
@@ -674,7 +676,8 @@ class AnswerPipeline:
             course=course,
         )
         if self.core.deps.settings.ai.openui_enabled:  # AI-OPENUI
-            prompt += openui_prompt()
+            stable, tail = split_system(prompt)
+            prompt = with_volatile_tail(stable + openui_prompt(), tail)
         return prompt
 
     def _messages(
@@ -888,14 +891,16 @@ def _outcome(
     Web markers become chips here; an answer that cites only web pages is grounded.
     """
     text, used = rewrite_markers(answer.text, len(web)) if web else (answer.text, [])
+    action = split_action(raw)[1]
     return Outcome(
         text=text,
         citations=answer.citations,
-        followups=answer.followups,
+        # An answer from nothing has nothing to follow up on (rule 7 of the prompt).
+        followups=answer.followups if answer.grounded or used or action else [],
         grounded=answer.grounded or bool(used),
         usage=usage,
         model=model,
-        action=split_action(raw)[1],
+        action=action,
         web=_mark_cited(web, used),
     )
 
