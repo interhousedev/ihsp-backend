@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from app.shared.brand import current_brand
 from app.shared.i18n.core import I18nCore
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
@@ -24,6 +25,7 @@ class JinjaPageRenderer:
             trim_blocks=True,
             lstrip_blocks=True,
         )
+        self.env.globals["brand_name"] = current_brand().name
 
     def render(self, template: str, locale: str, context: Mapping[str, Any]) -> str:
         """Return the HTML of `template` in the locale."""

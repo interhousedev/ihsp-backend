@@ -1120,9 +1120,11 @@
             "enum": [
               "emis_reauth",
               "no_subgroup",
+              "seminar_soon",
               "files_expiring",
               "pending_approvals",
-              "sync_failed"
+              "sync_failed",
+              "connect_ai"
             ],
             "title": "Kind",
             "type": "string"
@@ -2640,6 +2642,21 @@
         "title": "AttachArtifactBody",
         "type": "object"
       },
+      "AttachFileBody": {
+        "description": "POST /v1/ai/projects/{id}/files: one of the caller's own ready files.",
+        "properties": {
+          "file_id": {
+            "format": "uuid",
+            "title": "File Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file_id"
+        ],
+        "title": "AttachFileBody",
+        "type": "object"
+      },
       "AttachedResourceResponse": {
         "description": "The lesson resource that was created from an output.",
         "properties": {
@@ -3720,6 +3737,26 @@
           "file"
         ],
         "title": "Body_start_cartridge_import_v1_lms_courses_import_post",
+        "type": "object"
+      },
+      "Body_transcribe_v1_ai_transcriptions_post": {
+        "properties": {
+          "duration_ms": {
+            "minimum": 1.0,
+            "title": "Duration Ms",
+            "type": "integer"
+          },
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file",
+          "duration_ms"
+        ],
+        "title": "Body_transcribe_v1_ai_transcriptions_post",
         "type": "object"
       },
       "Body_upload_h5p_v1_lms_courses__course_id__h5p_post": {
@@ -5586,6 +5623,18 @@
             "title": "Pending Approvals",
             "type": "integer"
           },
+          "project_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
           "shared": {
             "title": "Shared",
             "type": "boolean"
@@ -5703,6 +5752,18 @@
           "pending_approvals": {
             "title": "Pending Approvals",
             "type": "integer"
+          },
+          "project_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
           },
           "tier": {
             "enum": [
@@ -7679,6 +7740,18 @@
             ],
             "title": "Course Id"
           },
+          "project_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Project Id"
+          },
           "tier": {
             "anyOf": [
               {
@@ -7948,6 +8021,55 @@
           "kind"
         ],
         "title": "CreateLinkBody",
+        "type": "object"
+      },
+      "CreateMcpClientBody": {
+        "description": "POST /v1/id/me/mcp-clients.",
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "redirect_uri": {
+            "maxLength": 512,
+            "minLength": 1,
+            "title": "Redirect Uri",
+            "type": "string"
+          },
+          "server": {
+            "enum": [
+              "student",
+              "lms",
+              "admin"
+            ],
+            "title": "Server",
+            "type": "string"
+          },
+          "service": {
+            "enum": [
+              "chatgpt",
+              "gemini",
+              "claude",
+              "custom"
+            ],
+            "title": "Service",
+            "type": "string"
+          }
+        },
+        "required": [
+          "service",
+          "server",
+          "redirect_uri"
+        ],
+        "title": "CreateMcpClientBody",
         "type": "object"
       },
       "CreateNotebookBody": {
@@ -12457,6 +12579,53 @@
         "title": "FlashcardSetResponse",
         "type": "object"
       },
+      "FlashcardWorkspaceBody": {
+        "description": "POST /v1/notebooks/flashcard-workspace: 1 to 20 sources and files together.",
+        "properties": {
+          "file_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "File Ids",
+            "type": "array"
+          },
+          "notebook_sources": {
+            "items": {
+              "$ref": "#/components/schemas/NotebookSourceRef"
+            },
+            "maxItems": 20,
+            "title": "Notebook Sources",
+            "type": "array"
+          }
+        },
+        "title": "FlashcardWorkspaceBody",
+        "type": "object"
+      },
+      "FlashcardWorkspaceResponse": {
+        "description": "The hidden notebook to call the Studio routes with, and its sources.",
+        "properties": {
+          "notebook_id": {
+            "format": "uuid",
+            "title": "Notebook Id",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceItemResponse"
+            },
+            "title": "Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "notebook_id",
+          "sources"
+        ],
+        "title": "FlashcardWorkspaceResponse",
+        "type": "object"
+      },
       "FlashcardsBlock-Input": {
         "description": "A block of flash cards studied with spaced repetition.",
         "properties": {
@@ -13010,6 +13179,41 @@
         "title": "GroupDetailResponse",
         "type": "object"
       },
+      "GroupMemberRow": {
+        "description": "One active student of the caller's group.",
+        "properties": {
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_head_student": {
+            "title": "Is Head Student",
+            "type": "boolean"
+          },
+          "is_me": {
+            "title": "Is Me",
+            "type": "boolean"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "first_name",
+          "last_name",
+          "is_head_student",
+          "is_me"
+        ],
+        "title": "GroupMemberRow",
+        "type": "object"
+      },
       "GroupPatchBody": {
         "description": "Body of PATCH /v1/admin/groups/{id}; send null to clear curator or head.",
         "properties": {
@@ -13080,6 +13284,31 @@
           }
         },
         "title": "GroupPatchBody",
+        "type": "object"
+      },
+      "GroupPersonRef": {
+        "description": "A person of the group, by name.",
+        "properties": {
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "first_name",
+          "last_name"
+        ],
+        "title": "GroupPersonRef",
         "type": "object"
       },
       "GroupProgressCell": {
@@ -13319,6 +13548,60 @@
         "title": "GroupProgressStudent",
         "type": "object"
       },
+      "GroupRatingRow": {
+        "description": "One student of the group in the GPA rating (`rank` None when no GPA).",
+        "properties": {
+          "emis_rating": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emis Rating"
+          },
+          "gpa": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gpa"
+          },
+          "is_me": {
+            "title": "Is Me",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          }
+        },
+        "required": [
+          "name",
+          "gpa",
+          "rank",
+          "is_me"
+        ],
+        "title": "GroupRatingRow",
+        "type": "object"
+      },
       "GroupResponse": {
         "description": "A study group a reading list can be aimed at.",
         "properties": {
@@ -13431,6 +13714,35 @@
           "registered"
         ],
         "title": "GroupStudentResponse",
+        "type": "object"
+      },
+      "GroupTeacherRef": {
+        "description": "The homeroom teacher, with the public contacts shown to students.",
+        "properties": {
+          "contacts": {
+            "$ref": "#/components/schemas/TeacherContacts"
+          },
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "first_name",
+          "last_name",
+          "contacts"
+        ],
+        "title": "GroupTeacherRef",
         "type": "object"
       },
       "H5PBlock-Input": {
@@ -19830,6 +20142,163 @@
         "title": "MaterialPatchBody",
         "type": "object"
       },
+      "McpClientResponse": {
+        "description": "A user's own OAuth client (never the secret).",
+        "properties": {
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "redirect_uris": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Redirect Uris",
+            "type": "array"
+          },
+          "server": {
+            "anyOf": [
+              {
+                "enum": [
+                  "student",
+                  "lms",
+                  "admin"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Server"
+          },
+          "service": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Service"
+          }
+        },
+        "required": [
+          "client_id",
+          "name",
+          "service",
+          "server",
+          "redirect_uris"
+        ],
+        "title": "McpClientResponse",
+        "type": "object"
+      },
+      "McpSetupResponse": {
+        "description": "What the user enters. `notes` are machine codes the web app translates.",
+        "properties": {
+          "auth_modes": {
+            "items": {
+              "enum": [
+                "oauth_dcr",
+                "oauth_client",
+                "static_token"
+              ],
+              "type": "string"
+            },
+            "title": "Auth Modes",
+            "type": "array"
+          },
+          "availability": {
+            "enum": [
+              "available",
+              "limited",
+              "plan_gated"
+            ],
+            "title": "Availability",
+            "type": "string"
+          },
+          "docs_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Docs Url"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "oauth": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OAuthSettingsResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "server": {
+            "enum": [
+              "student",
+              "lms",
+              "admin"
+            ],
+            "title": "Server",
+            "type": "string"
+          },
+          "server_url": {
+            "title": "Server Url",
+            "type": "string"
+          },
+          "service": {
+            "enum": [
+              "chatgpt",
+              "gemini",
+              "claude",
+              "custom"
+            ],
+            "title": "Service",
+            "type": "string"
+          },
+          "token_route": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token Route"
+          }
+        },
+        "required": [
+          "service",
+          "server",
+          "server_url",
+          "availability",
+          "auth_modes",
+          "notes",
+          "docs_url",
+          "oauth",
+          "token_route"
+        ],
+        "title": "McpSetupResponse",
+        "type": "object"
+      },
       "MeLibraryResponse": {
         "description": "`MeLibrary`: continue reading, shelf counts and the offline limits.",
         "properties": {
@@ -20255,6 +20724,66 @@
         "title": "MovedDay",
         "type": "object"
       },
+      "MyGroupResponse": {
+        "description": "The caller's group: homeroom teacher, head student and members.\n\n`homeroom_teacher` and `head_student` are null when not assigned.\n`is_head_student` tells whether group progress and rating are open to the caller.",
+        "properties": {
+          "head_student": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GroupPersonRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "homeroom_teacher": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GroupTeacherRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_head_student": {
+            "title": "Is Head Student",
+            "type": "boolean"
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/GroupMemberRow"
+            },
+            "title": "Members",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "size",
+          "is_head_student",
+          "homeroom_teacher",
+          "head_student",
+          "members"
+        ],
+        "title": "MyGroupResponse",
+        "type": "object"
+      },
       "MySuggestionResponse": {
         "description": "`MySuggestion`: one of the signed-in person's suggestions and its status.",
         "properties": {
@@ -20631,6 +21160,30 @@
           "token"
         ],
         "title": "NewConnectorResponse",
+        "type": "object"
+      },
+      "NewMcpClientResponse": {
+        "description": "The client and its secret, shown once.",
+        "properties": {
+          "client": {
+            "$ref": "#/components/schemas/McpClientResponse"
+          },
+          "client_secret": {
+            "title": "Client Secret",
+            "type": "string"
+          },
+          "token_endpoint_auth_method": {
+            "const": "client_secret_post",
+            "default": "client_secret_post",
+            "title": "Token Endpoint Auth Method",
+            "type": "string"
+          }
+        },
+        "required": [
+          "client",
+          "client_secret"
+        ],
+        "title": "NewMcpClientResponse",
         "type": "object"
       },
       "NewPasswordLoginBody": {
@@ -21137,7 +21690,8 @@
           "subject_auto",
           "lesson_auto",
           "course",
-          "course_student"
+          "course_student",
+          "flashcards"
         ],
         "title": "NotebookOrigin",
         "type": "string"
@@ -21185,6 +21739,27 @@
           "matched_sources"
         ],
         "title": "NotebookSearchItemResponse",
+        "type": "object"
+      },
+      "NotebookSourceRef": {
+        "description": "A source of one of the caller's notebooks.",
+        "properties": {
+          "notebook_id": {
+            "format": "uuid",
+            "title": "Notebook Id",
+            "type": "string"
+          },
+          "source_id": {
+            "format": "uuid",
+            "title": "Source Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "notebook_id",
+          "source_id"
+        ],
+        "title": "NotebookSourceRef",
         "type": "object"
       },
       "NotebookSummary": {
@@ -21584,6 +22159,128 @@
           "last_used_at"
         ],
         "title": "OAuthClientResponse",
+        "type": "object"
+      },
+      "OAuthSettingsResponse": {
+        "description": "OAuth settings of a client configured by hand. Contains no secret.",
+        "properties": {
+          "audience": {
+            "title": "Audience",
+            "type": "string"
+          },
+          "authorization_endpoint": {
+            "title": "Authorization Endpoint",
+            "type": "string"
+          },
+          "client_scopes": {
+            "title": "Client Scopes",
+            "type": "string"
+          },
+          "code_challenge_method": {
+            "title": "Code Challenge Method",
+            "type": "string"
+          },
+          "discovery_url": {
+            "title": "Discovery Url",
+            "type": "string"
+          },
+          "grant_types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Grant Types",
+            "type": "array"
+          },
+          "issuer": {
+            "title": "Issuer",
+            "type": "string"
+          },
+          "jwks_uri": {
+            "title": "Jwks Uri",
+            "type": "string"
+          },
+          "own_client_route": {
+            "title": "Own Client Route",
+            "type": "string"
+          },
+          "protected_resource_metadata_url": {
+            "title": "Protected Resource Metadata Url",
+            "type": "string"
+          },
+          "redirect_uri_patterns": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Redirect Uri Patterns",
+            "type": "array"
+          },
+          "redirect_uris": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Redirect Uris",
+            "type": "array"
+          },
+          "registration_endpoint": {
+            "title": "Registration Endpoint",
+            "type": "string"
+          },
+          "resource": {
+            "title": "Resource",
+            "type": "string"
+          },
+          "response_types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Response Types",
+            "type": "array"
+          },
+          "revocation_endpoint": {
+            "title": "Revocation Endpoint",
+            "type": "string"
+          },
+          "scopes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Scopes",
+            "type": "array"
+          },
+          "token_endpoint": {
+            "title": "Token Endpoint",
+            "type": "string"
+          },
+          "token_endpoint_auth_methods": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Token Endpoint Auth Methods",
+            "type": "array"
+          }
+        },
+        "required": [
+          "issuer",
+          "discovery_url",
+          "authorization_endpoint",
+          "token_endpoint",
+          "revocation_endpoint",
+          "registration_endpoint",
+          "jwks_uri",
+          "protected_resource_metadata_url",
+          "resource",
+          "audience",
+          "scopes",
+          "client_scopes",
+          "code_challenge_method",
+          "grant_types",
+          "response_types",
+          "token_endpoint_auth_methods",
+          "redirect_uris",
+          "redirect_uri_patterns",
+          "own_client_route"
+        ],
+        "title": "OAuthSettingsResponse",
         "type": "object"
       },
       "OfflineLimits": {
@@ -24462,6 +25159,122 @@
         "title": "ProgressSchema",
         "type": "object"
       },
+      "ProjectBody": {
+        "description": "POST /v1/ai/projects.",
+        "properties": {
+          "instructions": {
+            "default": "",
+            "maxLength": 4000,
+            "title": "Instructions",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ProjectBody",
+        "type": "object"
+      },
+      "ProjectFileResponse": {
+        "description": "A file attached to a project.",
+        "properties": {
+          "file_id": {
+            "format": "uuid",
+            "title": "File Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file_id",
+          "name",
+          "status"
+        ],
+        "title": "ProjectFileResponse",
+        "type": "object"
+      },
+      "ProjectPatchBody": {
+        "description": "PATCH /v1/ai/projects/{id}: only the fields sent change.",
+        "properties": {
+          "instructions": {
+            "anyOf": [
+              {
+                "maxLength": 4000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instructions"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "title": "ProjectPatchBody",
+        "type": "object"
+      },
+      "ProjectResponse": {
+        "description": "Project: a named group of chats with files and instructions.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "instructions": {
+            "title": "Instructions",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "instructions",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ProjectResponse",
+        "type": "object"
+      },
       "ProposalBody": {
         "description": "A date a head student suggests for their group; it stays tentative.",
         "properties": {
@@ -24549,6 +25362,36 @@
           "date"
         ],
         "title": "ProposalBody",
+        "type": "object"
+      },
+      "ProvisionedMcpSetupResponse": {
+        "description": "A pre-created client; `client_secret` is set only when this call created it.",
+        "properties": {
+          "client": {
+            "$ref": "#/components/schemas/McpClientResponse"
+          },
+          "client_secret": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Secret"
+          },
+          "created": {
+            "title": "Created",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "client",
+          "client_secret",
+          "created"
+        ],
+        "title": "ProvisionedMcpSetupResponse",
         "type": "object"
       },
       "PublicShare": {
@@ -26407,6 +27250,145 @@
           "redirect_to"
         ],
         "title": "RedirectToResponse",
+        "type": "object"
+      },
+      "RegisterBody": {
+        "description": "The fields that are read; any other client metadata is ignored.",
+        "properties": {
+          "client_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Name"
+          },
+          "redirect_uris": {
+            "items": {
+              "maxLength": 512,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 5,
+            "minItems": 1,
+            "title": "Redirect Uris",
+            "type": "array"
+          },
+          "token_endpoint_auth_method": {
+            "anyOf": [
+              {
+                "maxLength": 40,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Token Endpoint Auth Method"
+          }
+        },
+        "required": [
+          "redirect_uris"
+        ],
+        "title": "RegisterBody",
+        "type": "object"
+      },
+      "RegisterError": {
+        "description": "RFC 7591 section 3.2.2.",
+        "properties": {
+          "error": {
+            "title": "Error",
+            "type": "string"
+          },
+          "error_description": {
+            "title": "Error Description",
+            "type": "string"
+          }
+        },
+        "required": [
+          "error",
+          "error_description"
+        ],
+        "title": "RegisterError",
+        "type": "object"
+      },
+      "RegisterResponse": {
+        "description": "RFC 7591 section 3.2.1. `client_secret` only for a confidential client.",
+        "properties": {
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
+          "client_name": {
+            "title": "Client Name",
+            "type": "string"
+          },
+          "client_secret": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Secret"
+          },
+          "client_secret_expires_at": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Secret Expires At"
+          },
+          "grant_types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Grant Types",
+            "type": "array"
+          },
+          "redirect_uris": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Redirect Uris",
+            "type": "array"
+          },
+          "response_types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Response Types",
+            "type": "array"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "token_endpoint_auth_method": {
+            "title": "Token Endpoint Auth Method",
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id",
+          "client_name",
+          "redirect_uris",
+          "grant_types",
+          "response_types",
+          "token_endpoint_auth_method",
+          "scope"
+        ],
+        "title": "RegisterResponse",
         "type": "object"
       },
       "RegistrationProfileResponse": {
@@ -31847,6 +32829,17 @@
             ],
             "title": "Login"
           },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
           "registered": {
             "title": "Registered",
             "type": "boolean"
@@ -36918,6 +37911,20 @@
           "otpauth_uri"
         ],
         "title": "TotpSetupResponse",
+        "type": "object"
+      },
+      "TranscriptionResponse": {
+        "description": "`Transcription`: the words of a recording, as spoken.",
+        "properties": {
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "TranscriptionResponse",
         "type": "object"
       },
       "TurnResultResponse": {
@@ -46221,6 +47228,46 @@
         ]
       }
     },
+    "/v1/admin/groups/{group_id}/photos.zip": {
+      "get": {
+        "description": "Return the group's active students' photos as a ZIP, named by full name.",
+        "operationId": "export_group_photos_v1_admin_groups__group_id__photos_zip_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Group Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/zip": {}
+            },
+            "description": "ZIP of the active students' photos, named by full name."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Group Photos",
+        "tags": [
+          "admin-schedule"
+        ]
+      }
+    },
     "/v1/admin/groups/{group_id}/subgroups": {
       "put": {
         "description": "Set the subgroup of several students at once.",
@@ -48563,7 +49610,7 @@
     },
     "/v1/admin/students": {
       "get": {
-        "description": "Search and filter students; names come from the identity module.",
+        "description": "Search and filter students; names and photo links come from identity.",
         "operationId": "list_students_v1_admin_students_get",
         "parameters": [
           {
@@ -51720,7 +52767,7 @@
     },
     "/v1/ai/chats": {
       "get": {
-        "description": "List the caller's chats of one assistant, newest first; `q` searches titles.\n\n`lms_author` chats are listed per course: `course_id` is required for them.",
+        "description": "List the caller's chats of one assistant, newest first; `q` searches titles.\n\n`lms_author` chats are listed per course: `course_id` is required for them.\n`project_id` lists the chats of one of the caller's projects.",
         "operationId": "list_chats_v1_ai_chats_get",
         "parameters": [
           {
@@ -51805,6 +52852,23 @@
                 }
               ],
               "title": "Course Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "project_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Project Id"
             }
           }
         ],
@@ -52280,6 +53344,385 @@
           }
         },
         "summary": "Reject Tool Call",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/v1/ai/projects": {
+      "get": {
+        "description": "The caller's projects, newest first.",
+        "operationId": "list_projects_v1_ai_projects_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectResponse"
+                  },
+                  "title": "Response List Projects V1 Ai Projects Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Projects",
+        "tags": [
+          "ai"
+        ]
+      },
+      "post": {
+        "description": "Start a project.",
+        "operationId": "create_project_v1_ai_projects_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Project",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/v1/ai/projects/{project_id}": {
+      "delete": {
+        "description": "Delete the project; its chats stay, outside any project.",
+        "operationId": "delete_project_v1_ai_projects__project_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Project",
+        "tags": [
+          "ai"
+        ]
+      },
+      "get": {
+        "description": "One of the caller's projects (another student's looks missing).",
+        "operationId": "get_project_v1_ai_projects__project_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Project",
+        "tags": [
+          "ai"
+        ]
+      },
+      "patch": {
+        "description": "Change the name and/or the instructions.",
+        "operationId": "patch_project_v1_ai_projects__project_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectPatchBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Project",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/v1/ai/projects/{project_id}/files": {
+      "get": {
+        "description": "The files attached to the project.",
+        "operationId": "list_project_files_v1_ai_projects__project_id__files_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectFileResponse"
+                  },
+                  "title": "Response List Project Files V1 Ai Projects  Project Id  Files Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Project Files",
+        "tags": [
+          "ai"
+        ]
+      },
+      "post": {
+        "description": "Attach one of the caller's own ready files to the project.",
+        "operationId": "attach_project_file_v1_ai_projects__project_id__files_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachFileBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Attach Project File",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/v1/ai/projects/{project_id}/files/{file_id}": {
+      "delete": {
+        "description": "Remove a file from the project (the file stays).",
+        "operationId": "detach_project_file_v1_ai_projects__project_id__files__file_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "file_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "File Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Detach Project File",
+        "tags": [
+          "ai"
+        ]
+      }
+    },
+    "/v1/ai/transcriptions": {
+      "post": {
+        "description": "Transcribe one recording (audio up to 1 MiB and 120 seconds, not stored).\n\n`duration_ms` is the length the client measured; the byte cap bounds the read.",
+        "operationId": "transcribe_v1_ai_transcriptions_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_transcribe_v1_ai_transcriptions_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Transcribe",
         "tags": [
           "ai"
         ]
@@ -55226,6 +56669,234 @@
         "summary": "Update Emis Password",
         "tags": [
           "id-registration"
+        ]
+      }
+    },
+    "/v1/id/me/mcp-clients": {
+      "get": {
+        "description": "The caller's own OAuth clients.",
+        "operationId": "get_mcp_clients_v1_id_me_mcp_clients_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/McpClientResponse"
+                  },
+                  "title": "Response Get Mcp Clients V1 Id Me Mcp Clients Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Mcp Clients",
+        "tags": [
+          "id-connectors"
+        ]
+      },
+      "post": {
+        "description": "Create a client for one exact redirect URI; the secret is shown only here.",
+        "operationId": "post_mcp_client_v1_id_me_mcp_clients_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMcpClientBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewMcpClientResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Mcp Client",
+        "tags": [
+          "id-connectors"
+        ]
+      }
+    },
+    "/v1/id/me/mcp-clients/{client_id}": {
+      "delete": {
+        "description": "Revoke the connectors of the client and delete it.",
+        "operationId": "delete_mcp_client_v1_id_me_mcp_clients__client_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "title": "Client Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Mcp Client",
+        "tags": [
+          "id-connectors"
+        ]
+      }
+    },
+    "/v1/id/me/mcp-setup/{service}": {
+      "get": {
+        "description": "What to enter to connect `server` to one AI service.",
+        "operationId": "get_mcp_setup_v1_id_me_mcp_setup__service__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "service",
+            "required": true,
+            "schema": {
+              "enum": [
+                "chatgpt",
+                "gemini",
+                "claude",
+                "custom"
+              ],
+              "title": "Service",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "server",
+            "required": false,
+            "schema": {
+              "default": "student",
+              "enum": [
+                "student",
+                "lms",
+                "admin"
+              ],
+              "title": "Server",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpSetupResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Mcp Setup",
+        "tags": [
+          "id-connectors"
+        ]
+      },
+      "post": {
+        "description": "Pre-create the OAuth client of `service` (MCP-5); a repeat has no secret.",
+        "operationId": "provision_mcp_setup_v1_id_me_mcp_setup__service__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "service",
+            "required": true,
+            "schema": {
+              "enum": [
+                "chatgpt",
+                "gemini",
+                "claude",
+                "custom"
+              ],
+              "title": "Service",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "server",
+            "required": false,
+            "schema": {
+              "default": "student",
+              "enum": [
+                "student",
+                "lms",
+                "admin"
+              ],
+              "title": "Server",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvisionedMcpSetupResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Provision Mcp Setup",
+        "tags": [
+          "id-connectors"
         ]
       }
     },
@@ -64666,6 +66337,28 @@
         ]
       }
     },
+    "/v1/me/group": {
+      "get": {
+        "description": "The group card and members; open to every student of the group.",
+        "operationId": "get_my_group_v1_me_group_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyGroupResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get My Group",
+        "tags": [
+          "marks"
+        ]
+      }
+    },
     "/v1/me/group/progress": {
       "get": {
         "description": "Return the group's marks and attendance; only for its head student.",
@@ -64718,9 +66411,65 @@
         ]
       }
     },
+    "/v1/me/group/rating": {
+      "get": {
+        "description": "The group's students by GPA; only for its head student (as group progress).",
+        "operationId": "get_my_group_rating_v1_me_group_rating_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "semester",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 4,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Semester"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GroupRatingRow"
+                  },
+                  "title": "Response Get My Group Rating V1 Me Group Rating Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get My Group Rating",
+        "tags": [
+          "marks"
+        ]
+      }
+    },
     "/v1/me/homework": {
       "get": {
-        "description": "Return the chosen list; ``upcoming`` is the default.",
+        "description": "Return the chosen list; ``upcoming`` is the default.\n\n``subject_id`` keeps one subject; ``from`` and ``to`` keep the homework due in\nthat range (inclusive), by due date.",
         "operationId": "list_homework_v1_me_homework_get",
         "parameters": [
           {
@@ -64737,6 +66486,57 @@
               ],
               "title": "Status",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subject_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
             }
           }
         ],
@@ -67289,6 +69089,48 @@
           }
         },
         "summary": "Open Course Notebook",
+        "tags": [
+          "notebooks"
+        ]
+      }
+    },
+    "/v1/notebooks/flashcard-workspace": {
+      "post": {
+        "description": "Put the chosen notebook sources and files into the hidden Studio notebook.",
+        "operationId": "flashcard_workspace_v1_notebooks_flashcard_workspace_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FlashcardWorkspaceBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlashcardWorkspaceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Flashcard Workspace",
         "tags": [
           "notebooks"
         ]
@@ -70589,6 +72431,58 @@
           }
         },
         "summary": "Post Logout",
+        "tags": [
+          "oauth"
+        ]
+      }
+    },
+    "/v1/oauth/mcp/register": {
+      "post": {
+        "description": "Register a client whose redirect URIs are on the allowlist.",
+        "operationId": "register_mcp_client",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterError"
+                }
+              }
+            },
+            "description": "Bad Request"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Register Mcp Client",
         "tags": [
           "oauth"
         ]

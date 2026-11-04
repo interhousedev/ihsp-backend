@@ -24,7 +24,7 @@ async def list_students(
     cursor: Annotated[str | None, Query()] = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
 ) -> StudentPageResponse:
-    """Search and filter students; names come from the identity module."""
+    """Search and filter students; names and photo links come from identity."""
     page = await container.academic.schedule.list_students.execute(
         query=query,
         group_id=group_id,
@@ -35,7 +35,12 @@ async def list_students(
         cursor=cursor,
         limit=limit,
     )
+    ids = [item.user_id for item in page.items]
+    photos = await container.identity.directory.photo_urls(ids) if ids else {}
     return StudentPageResponse(
-        items=[StudentItemResponse.from_data(item) for item in page.items],
+        items=[
+            StudentItemResponse.from_data(item, photos.get(item.user_id))
+            for item in page.items
+        ],
         next_cursor=page.next_cursor,
     )

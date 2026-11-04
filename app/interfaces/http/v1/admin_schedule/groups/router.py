@@ -10,6 +10,9 @@ from app.interfaces.http.v1.admin_schedule.groups.handlers.assign_subgroups impo
 from app.interfaces.http.v1.admin_schedule.groups.handlers.create_group import (
     create_group,
 )
+from app.interfaces.http.v1.admin_schedule.groups.handlers.export_group_photos import (
+    export_group_photos,
+)
 from app.interfaces.http.v1.admin_schedule.groups.handlers.get_curriculum import (
     get_curriculum,
 )
@@ -29,6 +32,7 @@ from app.interfaces.http.v1.admin_schedule.groups.schemas import (
 )
 
 from fastapi import APIRouter
+from fastapi.responses import StreamingResponse
 
 router = APIRouter(prefix="/v1/admin/groups", tags=["admin-schedule"])
 router.add_api_route(
@@ -42,6 +46,18 @@ router.add_api_route(
 )
 router.add_api_route(
     "/{group_id}", update_group, methods=["PATCH"], response_model=GroupDetailResponse
+)
+router.add_api_route(
+    "/{group_id}/photos.zip",
+    export_group_photos,
+    methods=["GET"],
+    response_class=StreamingResponse,
+    responses={
+        200: {
+            "description": "ZIP of the active students' photos, named by full name.",
+            "content": {"application/zip": {}},
+        }
+    },
 )
 router.add_api_route(
     "/{group_id}/subgroups",

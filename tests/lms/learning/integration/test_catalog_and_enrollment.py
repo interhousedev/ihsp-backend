@@ -69,6 +69,24 @@ async def test_enrolling_adds_the_course_to_my_courses_with_zero_progress(
     assert mine.managed == []
 
 
+async def test_the_catalog_shows_progress_for_the_viewers_enrolments(
+    maker: async_sessionmaker[AsyncSession],
+    learning: LearningServices,
+    student: Actor,
+) -> None:
+    """UF-LMS-01: an enrolled viewer sees their stored progress; others see None."""
+    enrolled = await seed_course(maker, slug="joined", steps=ONE_STEP)
+    await seed_course(maker, slug="other", steps=ONE_STEP)
+    await learning.enroll_in_course.execute(student, enrolled.id)
+
+    as_student = await learning.list_catalog.execute(actor=student)
+    anonymous = await learning.list_catalog.execute()
+
+    progress = {card.slug: card.progress_pct for card in as_student}
+    assert progress == {"joined": 0, "other": None}
+    assert {card.progress_pct for card in anonymous} == {None}
+
+
 async def test_enrolling_twice_keeps_one_enrollment(
     maker: async_sessionmaker[AsyncSession],
     learning: LearningServices,

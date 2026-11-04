@@ -172,5 +172,10 @@
   "ai-value-yes": "Ha",
   "ai-wrong-assistant": "Bu yordamchidan foydalana olmaysiz.",
   "ai-usage-range-invalid": "Sana oraligʻi notoʻgʻri yoki {max_days} kundan uzun.",
-  "ai-status-thinking": "Oʻylayapman…"
+  "ai-status-thinking": "Oʻylayapman…",
+  "ai-voice-too-large": "Yozuv {max_mb} MB dan katta.",
+  "ai-voice-too-long": "Yozuv {max_seconds} soniyadan uzun.",
+  "ai-voice-format": "Bu audio formati qoʼllab-quvvatlanmaydi. Quyidagilardan birini ishlating: {formats}.",
+  "ai-project-not-found": "Loyiha topilmadi.",
+  "ai-note-search-project-files": "Loyiha fayllaridan qidirildi"
 }

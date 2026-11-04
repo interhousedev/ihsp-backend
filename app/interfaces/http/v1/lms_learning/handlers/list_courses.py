@@ -13,13 +13,13 @@ from fastapi import Depends, Query, Response
 
 async def list_courses(
     response: Response,
-    _actor: Annotated[Actor, Depends(get_actor)],
+    actor: Annotated[Actor, Depends(get_actor)],
     container: Annotated[Container, Depends(get_container)],
     query: Annotated[str | None, Query(max_length=100)] = None,
 ) -> list[LearningCourseCardView]:
     """List published public courses, optionally filtered by title."""
     response.headers["Cache-Control"] = PRIVATE_CACHE
     cards: list[LearningCourseCardView] = (
-        await container.lms.learning.list_catalog.execute(query=query)
+        await container.lms.learning.list_catalog.execute(query=query, actor=actor)
     )
     return cards

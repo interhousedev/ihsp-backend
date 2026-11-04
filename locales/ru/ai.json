@@ -172,5 +172,10 @@
   "ai-value-yes": "Да",
   "ai-wrong-assistant": "Вам недоступен этот помощник.",
   "ai-usage-range-invalid": "Некорректный период или он длиннее {max_days} дней.",
-  "ai-status-thinking": "Думаю…"
+  "ai-status-thinking": "Думаю…",
+  "ai-voice-too-large": "Запись больше {max_mb} МБ.",
+  "ai-voice-too-long": "Запись длиннее {max_seconds} секунд.",
+  "ai-voice-format": "Этот формат аудио не поддерживается. Используйте один из: {formats}.",
+  "ai-project-not-found": "Проект не найден.",
+  "ai-note-search-project-files": "Поиск по файлам проекта"
 }

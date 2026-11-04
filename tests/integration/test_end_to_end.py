@@ -5,6 +5,7 @@ fake EMIS and the fake Telegram sender; nothing but the clock is stubbed in betw
 """
 
 import json
+from datetime import UTC, datetime
 from uuid import UUID
 
 from app.bootstrap.container import Container
@@ -57,12 +58,15 @@ async def test_registered_student_gets_a_marks_message_after_the_next_sync(
     make_container: ContainerFactory, world: IntegrationWorld, redis: FakeRedis
 ) -> None:
     """SYNC-4/SYNC-5, BOT-11: backfill is silent, a later sync tells about new marks."""
+    # Outbox rows are stamped with the database's real now(); the fixed clock must
+    # start at the real time too, or the alerts are due only after the clock catches up.
+    world.clock.set(datetime.now(UTC))
     container = await make_container("all")
     user_id = await _register(container, world)
     await _link_telegram(container, user_id)
 
-    assert "academic.backfill_student" in world.kicker.names()
-    await container.academic.marks.backfill_student.execute(user_id)
+    assert "academic.run_student_sync" in world.kicker.names()
+    await container.academic.marks.run_student_sync.execute(user_id)
     await container.notify.dispatch_due.execute()
     assert await _messages(redis) == []  # the backfill never alerts
 

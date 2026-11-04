@@ -35,10 +35,13 @@ class StudentItemResponse(BaseModel):
     emis_status: str | None
     registered: bool
     synced_at: dt.datetime | None
+    photo_url: str | None = None
 
     @classmethod
-    def from_data(cls, data: StudentItemData) -> "StudentItemResponse":
-        """Nest the group of the flat read model."""
+    def from_data(
+        cls, data: StudentItemData, photo_url: str | None = None
+    ) -> "StudentItemResponse":
+        """Nest the group of the flat read model; the photo link is short-lived."""
         group = (
             {"id": data.group_id, "name": data.group_name or ""}
             if data.group_id
@@ -56,6 +59,7 @@ class StudentItemResponse(BaseModel):
                 "emis_status": data.emis_status,
                 "registered": data.registered,
                 "synced_at": data.synced_at,
+                "photo_url": photo_url,
             }
         )
 

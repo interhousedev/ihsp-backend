@@ -13,6 +13,7 @@ from typing import Literal, Protocol
 from app.shared.actor import Actor
 from app.shared.ai_tasks import ModelProfile
 from app.shared.base_error import BaseError, NotFoundError, RateLimitedError
+from app.shared.brand import current_brand
 
 from pydantic import BaseModel, ConfigDict
 
@@ -188,7 +189,7 @@ class PlatformPassage:
     title: str
     url: str
     text: str
-    site: str = "IHT"
+    site: str = current_brand().name
     ref_kind: Literal["library_item", "notebook_source"] | None = None
     ref_id: str | None = None
 

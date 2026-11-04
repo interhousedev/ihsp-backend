@@ -82,6 +82,10 @@ Scopes are module or interface names (`academic`, `notebooks`, `bot`, `identity`
 
 Agents follow [CLAUDE.md](CLAUDE.md) and the project skills in [`.claude/skills/`](.claude/skills). The same rules apply to their output: tests first, layered commits, no secrets.
 
+## Dependencies and licenses
+
+When `pyproject.toml` or `uv.lock` changes, run `uv run python scripts/export_licenses.py` and commit `licenses/python.json` in the same pull request. The web repository regenerates its list from it.
+
 ## License
 
 By contributing you agree that your contribution is licensed under the project's [LICENSE](LICENSE).

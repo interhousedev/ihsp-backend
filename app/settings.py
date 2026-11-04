@@ -9,6 +9,7 @@ from app.settings_ai import AiSettings, fold_deprecated
 from app.settings_features import FeaturesSettings
 from app.settings_web_search import WebSearchSettings
 from app.shared.ai_tasks import AiTask, ModelProfile
+from app.shared.brand import DEFAULT_APP_NAME, BrandSettings
 from app.shared.client_ip import IPNetwork, parse_trusted_proxies
 from app.shared.versions import compare_versions, parse_version
 
@@ -596,6 +597,9 @@ class IdentitySettings(BaseModel):
     remember_days: int = Field(default=365, ge=1, le=3650)
     """Days a remembered device stays signed in to IHT ID (Hydra ``remember_for``)."""
 
+    mcp_extra_redirect_uris: list[str] = Field(default_factory=list)
+    """Exact redirect URIs MCP clients may self-register, beside the known services."""
+
 
 class FilesSettings(BaseModel):
     """Files module: limits of single purposes."""
@@ -1163,8 +1167,10 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     """Log level of every process (DEBUG, INFO, WARNING or ERROR)."""
 
-    public_app_name: str = "IHT"
-    """Product name shown in emails, Telegram messages and the apps."""
+    public_app_name: str = DEFAULT_APP_NAME
+    """Product name shown in emails, Telegram messages, AI prompts and display names."""
+
+    brand: BrandSettings = Field(default_factory=BrandSettings)
 
     database: DatabaseSettings = Field(default_factory=DatabaseSettings)
     redis: RedisSettings = Field(default_factory=RedisSettings)

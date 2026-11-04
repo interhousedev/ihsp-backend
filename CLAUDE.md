@@ -55,6 +55,12 @@ Changing a route or a schema means: export `openapi/openapi.json`, commit it wit
 
 The server only pulls images built by CI. `scripts/cloud_deploy.sh <host> --tag <version>` deploys and rolls back; migrations are forward only. Vault starts sealed after a reboot. Never put `.env.prod`, `secrets/` or the Vault unseal keys into git, chat or logs.
 
+- **Third-party licenses.** When `pyproject.toml` or `uv.lock` changes, run `uv run python scripts/export_licenses.py` and commit `licenses/python.json`. Then tell the user that `iht-web` needs `bun run generate-licenses`.
+
+## Rebranding
+
+Never write the brand literally in locales or prompts: use the placeholders of `with_brand` in `app/shared/brand.py` (settings `IHSP_PUBLIC_APP_NAME`, `IHSP_BRAND__*`). See README, "Rebranding".
+
 ## Documentation policy
 
 The repository is open source (AGPL-3.0-only). The allowed Markdown and documentation files are: `README.md` files, `CODESTYLE.md`, this file, the standard community files (`SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `CHANGELOG.md`, `LICENSE`), the `.github/` templates (issue templates, `PULL_REQUEST_TEMPLATE.md`, `CODEOWNERS`), images under `docs/assets/`, and project skills in `.claude/skills/<name>/SKILL.md`. Do not add design documents, plans, reports or dumps; put such text in the conversation or in the pull request. Update README.md, CODESTYLE.md, SECURITY.md or the relevant skill when behaviour, rules or a trust boundary change.

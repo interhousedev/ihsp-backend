@@ -85,6 +85,7 @@ class AiTask(StrEnum):
     WEB_MATERIAL_TRIAGE = "web_material_triage"
     MEDIA_DESCRIBE = "media_describe"
     OPENUI_REPAIR = "openui_repair"
+    VOICE_TRANSCRIBE = "voice_transcribe"
 
 
 @dataclass(frozen=True, slots=True)
@@ -351,6 +352,14 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
         "notebooks",
         "Media reading: describes a gathered image and transcribes gathered audio so "
         "they can be searched and cited (a vision and audio model).",
+        model=MEDIA_MODEL,
+        data_collection=_PRIVATE,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.VOICE_TRANSCRIBE: TaskSpec(
+        "assistant",
+        "Speech to text for the chat input: one short recording of the student's "
+        "voice, transcribed and never stored (an audio model).",
         model=MEDIA_MODEL,
         data_collection=_PRIVATE,
         reasoning_effort=_NO_REASONING,

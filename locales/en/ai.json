@@ -172,5 +172,10 @@
   "ai-value-yes": "Yes",
   "ai-wrong-assistant": "You cannot use this assistant.",
   "ai-usage-range-invalid": "The date range is invalid or longer than {max_days} days.",
-  "ai-status-thinking": "Thinking…"
+  "ai-status-thinking": "Thinking…",
+  "ai-voice-too-large": "The recording is larger than {max_mb} MB.",
+  "ai-voice-too-long": "The recording is longer than {max_seconds} seconds.",
+  "ai-voice-format": "This audio format is not supported. Use one of: {formats}.",
+  "ai-project-not-found": "The project was not found.",
+  "ai-note-search-project-files": "Searched the project's files"
 }

@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 from typing import Any, Self
 
+from app.shared.brand import with_brand
+
 FALLBACK_LOCALE = "ru"
 
 
@@ -77,7 +79,8 @@ class I18nCore:
         messages = self._translations.setdefault(locale, {})
         for path in files:
             with path.open(encoding="utf-8") as handle:
-                messages.update(json.load(handle))
+                loaded = json.load(handle)
+            messages.update({key: with_brand(text) for key, text in loaded.items()})
 
     def get_context(self, locale: str) -> I18nContext:
         """Return I18nContext for the locale with the default locale as fallback."""

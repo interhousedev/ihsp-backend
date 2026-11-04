@@ -130,6 +130,8 @@ flowchart LR
 
 ## Security
 
+MCP OAuth clients register only through `POST /v1/oauth/mcp/register`, which checks the redirect allowlist in `app/modules/identity/domain/mcp_clients.py`; Hydra's own registration is off. A user's own client (`/v1/id/me/mcp-clients`) passes consent for its owner only.
+
 The full policy and the disclosure process are in [SECURITY.md](SECURITY.md). In short:
 
 - **Sign-in.** IHT ID runs on Ory Hydra (OAuth 2.0 and OpenID Connect, authorization code with PKCE for every web app). Refresh tokens live in `HttpOnly` cookies behind a token handler on the `identity` process; passkeys, one-time admin codes and password policy are enforced server side. Only the `identity` process holds the Vault AppRole and the JWT-bearer signing key.
@@ -212,6 +214,10 @@ By default every external service runs in a fake, deterministic mode that needs 
 
 Secrets live only in git-ignored files: `.env.local` (copy `materials/.env.local.sample`, used by `local_up.sh`), `materials/dev-keys/secrets.env` (used by `scripts/dev.sh`), `.env.prod` and `secrets/`. Never commit or print a key.
 
+## Rebranding
+
+User-visible names come from `IHSP_PUBLIC_APP_NAME` and `IHSP_BRAND__ORG_NAME`, `__ORG_ALIAS`, `__LIBRARY_SITE` (`app/shared/brand.py`, documented in `materials/.env.sample`; production: `PUBLIC_APP_NAME`, `BRAND_*`). Locale files and AI prompts hold the placeholders `{brand}`, `{brand_id}`, `{org_name}`, `{org_alias}`, `{library_site}`. A rename changes these variables only. Changing the name changes the issuer shown for new TOTP enrolments; authenticators already set up keep the old label.
+
 ## Tests and checks
 
 The tests need the dev compose services (Postgres with pgvector, Redis, S3, Vault):
@@ -283,3 +289,7 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before you open a pull request: setup, t
 Copyright (C) 2026 Alex Sayfi and contributors.
 
 IHSP is free software under the [GNU Affero General Public License v3.0 only](LICENSE) (`AGPL-3.0-only`). You may use, study, change and share it. If you run a modified version as a network service, you must offer its users the corresponding source code of your version under the same licence.
+
+## Third-party licenses
+
+`licenses/python.json` lists the production Python dependencies with their licenses and project links. Write it with `uv sync --frozen && uv run python scripts/export_licenses.py`. The web repository reads the file to regenerate the license list that its Settings page shows (`bun run generate-licenses` in `iht-web`). Run the script after any dependency change and commit the file.

@@ -13,6 +13,7 @@ from app.modules.posts.domain.errors import GuestBusyError, GuestLimitError
 from app.modules.posts.ports.repositories import GuestKnowledge
 from app.shared.ai_tasks import AiTask, ModelProfile
 from app.shared.base_error import RateLimitedError
+from app.shared.brand import with_brand
 from app.shared.contracts.ai import LlmGateway
 
 SEARCH_TOOL: Final = "search_knowledge"
@@ -21,8 +22,8 @@ GUEST_TOOLS: Final[tuple[dict[str, Any], ...]] = (
         "type": "function",
         "function": {
             "name": SEARCH_TOOL,
-            "description": (
-                "Search the public information about International House Tashkent "
+            "description": with_brand(
+                "Search the public information about {org_name} "
                 "lyceum (admission, programmes, fees, contacts, events)."
             ),
             "parameters": {
@@ -38,14 +39,15 @@ MAX_ROUNDS: Final = 3
 MAX_QUESTION: Final = 2000
 LANGUAGE_NAMES: Final = {"uz": "Uzbek", "ru": "Russian", "en": "English"}
 
-SYSTEM: Final = (
-    "You are the public assistant of the Academic Lyceum International House "
-    "Tashkent (IHT) in Telegram. You talk to parents and applicants, not to "
+SYSTEM: Final = with_brand(
+    "You are the public assistant of the Academic Lyceum {org_name} "
+    "({brand}) in Telegram. You talk to parents and applicants, not to "
     "students. Answer only from the results of search_knowledge; when they do not "
     "answer the question, say so and suggest contacting the lyceum. Never invent "
     "facts, fees or dates. You have no access to any student, mark, schedule or "
     "personal data and must refuse such requests. Keep answers short. Use simple "
-    "Markdown (bold, lists, links). Reply in {language}."
+    "Markdown: bold, lists, links and small tables for comparisons; no images. "
+    "Reply in {language}."
 )
 
 
