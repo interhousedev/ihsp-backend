@@ -165,7 +165,7 @@ def test_prod_nginx_has_a_fixed_address_on_the_edge_network(
 def test_prod_images_are_pinned(prod_model: dict[str, Any]) -> None:
     images = {name: s["image"] for name, s in prod_model["services"].items()}
     assert images["hydra"] == "oryd/hydra:v26.2.0"
-    assert images["s3"] == "rustfs/rustfs:1.0.1"
+    assert images["s3"] == "rustfs/rustfs:1.0.4"
     assert images["vault"].startswith("hashicorp/vault:2.")
     assert images["postgres"] == "pgvector/pgvector:0.8.7-pg16"
     # Every third-party image names a full version: no floating tag, no :latest.
@@ -221,7 +221,7 @@ def test_local_does_not_publish_hydra_admin(local_model: dict[str, Any]) -> None
 
 def test_local_uses_the_bundled_services(local_model: dict[str, Any]) -> None:
     services = local_model["services"]
-    assert services["s3"]["image"] == "rustfs/rustfs:1.0.1"
+    assert services["s3"]["image"] == "rustfs/rustfs:1.0.4"
     assert "mailpit" in services["identity"]["environment"]["IHSP_SMTP_OUT__HOST"]
     assert services["identity"]["environment"]["IHSP_EMIS__MODE"] == "fake"
     assert services["identity"]["environment"]["IHSP_OPENROUTER__MODE"] == "fake"
@@ -494,7 +494,7 @@ def test_bugsink_has_its_own_database_and_is_only_reached_through_the_edge(
 ) -> None:
     services = prod_model["services"]
     bugsink = services["bugsink"]
-    assert bugsink["image"] == "bugsink/bugsink:2.6.1"
+    assert bugsink["image"] == "bugsink/bugsink:2.6.2"
     assert set(bugsink["networks"]) == {"data", "edge"}
     assert any(
         str(v.get("target", "")).endswith("11-bugsink.sh")
