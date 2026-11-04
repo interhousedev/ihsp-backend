@@ -35,7 +35,7 @@ async def test_protected_resource_metadata_is_served_at_the_host_root(
     assert response.status_code == 200
     assert body["resource"] == f"http://testserver/mcp/{server}"
     assert body["authorization_servers"] == [world.settings.hydra.issuer]
-    assert body["scopes_supported"] == list(SCOPES_BY_SERVER[server])
+    assert body["scopes_supported"] == [*SCOPES_BY_SERVER[server], "offline_access"]
     assert body["bearer_methods_supported"] == ["header"]
 
 

@@ -29,6 +29,7 @@ from app.modules.identity.application.confirm_otp_reset import ConfirmOtpReset
 from app.modules.identity.application.confirm_password_reset import (
     ConfirmPasswordReset,
 )
+from app.modules.identity.application.connector_status import ConnectorStatus
 from app.modules.identity.application.course_creators import ManageCourseCreators
 from app.modules.identity.application.create_connector import CreateConnector
 from app.modules.identity.application.create_staff_account import CreateStaffAccount
@@ -45,6 +46,7 @@ from app.modules.identity.application.factor_support import TotpVerifier
 from app.modules.identity.application.get_consent_info import GetConsentInfo
 from app.modules.identity.application.get_login_info import GetLoginInfo
 from app.modules.identity.application.get_mcp_scopes import GetMcpScopes
+from app.modules.identity.application.get_mcp_setup import GetMcpSetup, McpEndpoints
 from app.modules.identity.application.get_me import GetMe
 from app.modules.identity.application.get_user_detail import GetUserDetail
 from app.modules.identity.application.handle_token_hook import HandleTokenHook
@@ -66,6 +68,7 @@ from app.modules.identity.application.log_in_with_new_password import (
 from app.modules.identity.application.log_in_with_otp import LogInWithOtp
 from app.modules.identity.application.log_in_with_password import LogInWithPassword
 from app.modules.identity.application.log_out_client import LogOutClient
+from app.modules.identity.application.mcp_clients import McpClients, RegisterMcpClient
 from app.modules.identity.application.otp_service import OtpService
 from app.modules.identity.application.password_authenticator import (
     PasswordAuthenticator,
@@ -157,6 +160,7 @@ from app.modules.identity.wiring_factors import FactorServices, build_factors
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.notify import TelegramSender
 from app.shared.features import Feature, is_enabled
+from app.shared.redis_util import RedisKeyLock
 from app.shared.wiring import ModuleDeps
 
 
@@ -226,6 +230,10 @@ class AuthServices:
     list_connectors: ListConnectors
     create_connector: CreateConnector
     revoke_connector: RevokeConnector
+    register_mcp_client: RegisterMcpClient
+    mcp_clients: McpClients
+    get_mcp_setup: GetMcpSetup
+    connector_status: ConnectorStatus
     get_mcp_scopes: GetMcpScopes
     # - - - Recovery - - -
     request_password_reset: RequestPasswordReset
@@ -343,6 +351,9 @@ def build_auth(
         otp=otp, throttle=throttle, failures_per_day=limits.otp_failures_per_day
     )
     auto_accept = AutoAcceptConsent(uow_factory=uow_factory, hydra=hydra, clock=clock)
+    revoke_connector = RevokeConnector(
+        uow_factory=uow_factory, hydra=hydra, revocations=revocations, clock=clock
+    )
     init_max_age = timedelta(seconds=settings.telegram.init_data_max_age_seconds)
     links = ActivationLinks(clock=clock, email=email, id_app_url=settings.urls.id)
     users = ListUsers(uow_factory=uow_factory)
@@ -464,10 +475,17 @@ def build_auth(
         ),
         decline_account_restore=DeclineAccountRestore(hydra=hydra, tickets=tickets),
         get_consent_info=GetConsentInfo(
-            uow_factory=uow_factory, hydra=hydra, auto_accept=auto_accept
+            uow_factory=uow_factory,
+            hydra=hydra,
+            auto_accept=auto_accept,
+            mcp_base=settings.urls.mcp,
         ),
         send_consent_otp=SendConsentOtp(
-            uow_factory=uow_factory, hydra=hydra, otp=otp, rate_limiter=limiter
+            uow_factory=uow_factory,
+            hydra=hydra,
+            otp=otp,
+            rate_limiter=limiter,
+            mcp_base=settings.urls.mcp,
         ),
         accept_consent=AcceptConsent(
             uow_factory=uow_factory,
@@ -475,6 +493,7 @@ def build_auth(
             otp=otp,
             auto_accept=auto_accept,
             clock=clock,
+            mcp_base=settings.urls.mcp,
         ),
         accept_logout=accept_logout,
         route_login_request=RouteLoginRequest(
@@ -567,10 +586,28 @@ def build_auth(
         step_up=StepUp(uow_factory=uow_factory, otp=otp),
         list_connectors=ListConnectors(uow_factory=uow_factory),
         create_connector=CreateConnector(uow_factory=uow_factory, otp=otp, clock=clock),
-        revoke_connector=RevokeConnector(
-            uow_factory=uow_factory, hydra=hydra, revocations=revocations, clock=clock
+        revoke_connector=revoke_connector,
+        register_mcp_client=RegisterMcpClient(
+            hydra=hydra,
+            rate_limiter=limiter,
+            extra_redirects=tuple(settings.identity.mcp_extra_redirect_uris),
+        ),
+        mcp_clients=McpClients(
+            uow_factory=uow_factory,
+            hydra=hydra,
+            revoke_connector=revoke_connector,
+            lock=RedisKeyLock(redis),
+            extra_redirects=tuple(settings.identity.mcp_extra_redirect_uris),
+        ),
+        get_mcp_setup=GetMcpSetup(
+            endpoints=McpEndpoints(
+                issuer=settings.hydra.issuer,
+                api_url=settings.urls.api,
+                mcp_base=settings.urls.mcp,
+            )
         ),
         get_mcp_scopes=GetMcpScopes(),
+        connector_status=ConnectorStatus(uow_factory=uow_factory),
         request_password_reset=RequestPasswordReset(
             uow_factory=uow_factory, otp=otp, rate_limiter=limiter
         ),

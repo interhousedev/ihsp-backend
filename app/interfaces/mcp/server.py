@@ -18,6 +18,7 @@ from app.interfaces.mcp.lms.server import build_lms_server
 from app.interfaces.mcp.ports import ConnectorCoursesPort, McpAuditPort
 from app.interfaces.mcp.student.server import build_student_server
 from app.settings import Settings
+from app.shared.brand import current_brand
 from app.shared.contracts.ai import AdminToolBackend
 
 from mcp.server.auth.routes import create_protected_resource_routes
@@ -83,8 +84,10 @@ def protected_resource_routes(settings: Settings) -> list[Route]:
         created = create_protected_resource_routes(
             resource_url=url,
             authorization_servers=[issuer],
-            scopes_supported=list(SCOPES_BY_SERVER[server]),
-            resource_name=f"IHT {server}",
+            # offline_access: clients ask for what is listed; without it no refresh
+            # token, and a 15 minute access token means signing in again.
+            scopes_supported=[*SCOPES_BY_SERVER[server], "offline_access"],
+            resource_name=f"{current_brand().name} {server}",
         )
         routes.extend(created)
         routes.extend(_prefixed(created, url))

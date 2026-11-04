@@ -7,7 +7,10 @@ from app.modules.identity.domain.errors import (
     RoleMissingError,
     UserNotFoundError,
 )
-from app.modules.identity.domain.scopes import server_from_resource
+from app.modules.identity.domain.scopes import (
+    server_from_audience,
+    server_from_resource,
+)
 from app.shared.actor import Role
 from app.shared.contracts.identity import UserStatus
 from tests.identity.support import PASSWORD, World
@@ -242,8 +245,10 @@ async def test_staff_account_with_an_explicit_login_for_the_cli(
 
 def test_resources_map_to_mcp_servers() -> None:
     """MCP-3: audiences and resource URLs name the server."""
-    assert server_from_resource("mcp-admin") == "admin"
-    assert server_from_resource("https://mcp.ihsu.uz/mcp/lms/") == "lms"
-    assert server_from_resource("https://api.example/mcp/student") == "student"
-    assert server_from_resource("https://api.example/other") is None
-    assert server_from_resource("student") is None
+    base = "https://mcp.ihsu.uz"
+    assert server_from_audience("mcp-admin") == "admin"
+    assert server_from_audience("student") is None
+    assert server_from_resource("https://mcp.ihsu.uz/lms/", base) == "lms"
+    assert server_from_resource("https://api.example/mcp/student", base) is None
+    assert server_from_resource("https://mcp.ihsu.uz/other", base) is None
+    assert server_from_resource("mcp-admin", base) is None

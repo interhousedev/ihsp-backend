@@ -340,3 +340,86 @@ async def test_setting_metadata_of_an_unknown_client_is_a_404(
 
     with pytest.raises(InvalidChallengeError):
         await hydra.set_client_metadata("gone", {"verified": True})
+
+
+@respx.mock
+async def test_create_client_fixes_the_grants_and_returns_the_secret(
+    hydra: HydraAdmin,
+) -> None:
+    """MCP-3: authorization code only, through the admin API."""
+    route = respx.post(f"{ADMIN}/admin/clients").mock(
+        return_value=httpx.Response(
+            201,
+            json={
+                "client_id": "c1",
+                "client_name": "Claude",
+                "client_secret": "generated",
+                "redirect_uris": ["https://claude.ai/api/mcp/auth_callback"],
+            },
+        )
+    )
+
+    created = await hydra.create_client(
+        name="Claude",
+        redirect_uris=["https://claude.ai/api/mcp/auth_callback"],
+        scope="openid",
+        audience=["mcp-student"],
+        auth_method="client_secret_post",
+        metadata={"dynamic": True},
+    )
+
+    sent = json.loads(route.calls.last.request.content)
+    assert sent["grant_types"] == ["authorization_code", "refresh_token"]
+    assert sent["response_types"] == ["code"]
+    assert created.client.client_id == "c1"
+    assert created.client_secret == "generated"
+
+
+@respx.mock
+@pytest.mark.parametrize("status", [204, 404])
+async def test_delete_client_accepts_an_unknown_client(
+    hydra: HydraAdmin, status: int
+) -> None:
+    """MCP-3: deleting twice is not an error."""
+    respx.delete(f"{ADMIN}/admin/clients/c1").mock(return_value=httpx.Response(status))
+    await hydra.delete_client("c1")
+
+
+@respx.mock
+async def test_every_page_of_clients_is_listed(hydra: HydraAdmin) -> None:
+    """Hydra answers one page a call: the Link header's next page is followed.
+
+    Without this, clients past the first page vanish from the owner's list and the
+    MAX_OWN_CLIENTS count undercounts.
+    """
+    next_page = f"{ADMIN}/admin/clients?page_size=500&page_token=tok2"
+    # The second page first: respx matches params as a subset, so the first page's
+    # route (no page_token) would also answer the second request.
+    respx.get(
+        f"{ADMIN}/admin/clients", params={"page_size": "500", "page_token": "tok2"}
+    ).mock(return_value=httpx.Response(200, json=[{"client_id": "c2"}]))
+    respx.get(f"{ADMIN}/admin/clients", params={"page_size": "500"}).mock(
+        return_value=httpx.Response(
+            200,
+            json=[{"client_id": "c1"}],
+            headers={"Link": f'<{next_page}>; rel="next"'},
+        )
+    )
+
+    listed = await hydra.list_clients()
+
+    assert [c.client_id for c in listed] == ["c1", "c2"]
+
+
+@respx.mock
+async def test_a_listing_that_never_ends_is_refused(hydra: HydraAdmin) -> None:
+    """A Link that keeps pointing forward stops at the page cap, not forever."""
+    loop = f'<{ADMIN}/admin/clients?page_size=500&page_token=x>; rel="next"'
+    respx.get(f"{ADMIN}/admin/clients").mock(
+        return_value=httpx.Response(
+            200, json=[{"client_id": "c"}], headers={"Link": loop}
+        )
+    )
+
+    with pytest.raises(HydraUnavailableError):
+        await hydra.list_clients()

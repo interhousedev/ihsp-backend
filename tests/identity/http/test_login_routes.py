@@ -235,7 +235,7 @@ async def test_consent_screen_data_and_approval_for_an_mcp_client(api: Api) -> N
         client_id="claude",
         subject=str(user.id),
         request_url=(
-            "https://hydra/oauth2/auth?resource=https://api/mcp/student"
+            "https://hydra/oauth2/auth?resource=http://localhost:8000/mcp/student"
             "&redirect_uri=https://claude.ai/cb"
         ),
         requested_scope=("openid", "schedule:read"),
@@ -276,7 +276,9 @@ async def test_consent_otp_route_sends_the_step_up_code(api: Api) -> None:
         "cc-1",
         client_id="trusted",
         subject=str(admin.id),
-        request_url="https://hydra/oauth2/auth?resource=https://api/mcp/admin",
+        request_url=(
+            "https://hydra/oauth2/auth?resource=http://localhost:8000/mcp/admin"
+        ),
         requested_scope=("openid", "people:read"),
         context={"session_id": "x", "amr": ["pwd", "otp"], "mfa_at": mfa_at},
     )

@@ -12,6 +12,7 @@ from app.interfaces.mcp.ports import McpFilesApi
 from app.interfaces.mcp.server import build_apps, protected_resource_routes
 from app.settings import Settings
 from app.shared.actor import Actor, Role
+from app.shared.ai_access import AiAccess
 from app.shared.contracts.academic import (
     ClassworkQueries,
     MarksQueries,
@@ -24,6 +25,7 @@ from app.shared.contracts.links import LinksApi
 from app.shared.contracts.lms import LmsDraftCommands, LmsQueries
 from app.shared.i18n.core import I18nCore
 from app.shared.ids import new_id
+from app.shared.limits import LimitsProvider
 from app.shared.rate_limit import RateLimiter
 from tests.fakes.clock import FixedClock
 from tests.mcp.fakes import (
@@ -104,6 +106,7 @@ class World:
     lms_queries: FakeLmsQueries = field(default_factory=FakeLmsQueries)
     lms_commands: FakeLmsCommands = field(default_factory=FakeLmsCommands)
     admin_tools: FakeAdminTools = field(default_factory=FakeAdminTools)
+    revoked_ai: dict[UUID, AiAccess] = field(default_factory=dict)
 
     def deps(self, *, with_course_port: bool = False) -> McpDeps:
         """Collect the fakes into the dependencies of the servers."""
@@ -125,6 +128,7 @@ class World:
             lms_queries=cast(LmsQueries, self.lms_queries),
             lms_commands=cast(LmsDraftCommands, self.lms_commands),
             admin_tools=cast(AdminToolBackend, self.admin_tools),
+            limits=cast(LimitsProvider, RevokedAccess(self.revoked_ai)),
         )
 
     def connector_token(
@@ -194,6 +198,16 @@ class World:
         async with self.serve(with_course_port=with_course_port) as running:
             async with running.session(server, token) as session:
                 yield session
+
+
+class RevokedAccess:
+    """The LimitsProvider slice the MCP guard reads: the AI scopes revoked per user."""
+
+    def __init__(self, revoked: dict[UUID, AiAccess]) -> None:
+        self.revoked = revoked
+
+    async def ai_access(self, user_id: UUID) -> AiAccess:
+        return self.revoked.get(user_id, AiAccess())
 
 
 @pytest.fixture

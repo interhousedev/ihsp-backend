@@ -15,7 +15,9 @@ from app.interfaces.mcp.errors import (
 )
 from app.interfaces.mcp.jsonable import to_jsonable, to_jsonable_dict
 from app.shared.actor import Actor
+from app.shared.ai_access import AiScope
 from app.shared.base_error import BaseError, ForbiddenError, RateLimitedError
+from app.shared.contracts.ai import AiAccessRevokedError
 from app.shared.ids import new_id
 from app.shared.lms_scopes import effective_scopes
 from app.shared.notifications import AuditDraft
@@ -117,6 +119,7 @@ class ToolGuard:
     async def _enforce(self, actor: Actor, tool: str, scope: str) -> None:
         try:
             await self._limit(actor)
+            await self._ai_access(actor)
             if scope not in effective_scopes(actor.scopes):
                 raise McpScopeError(params={"scope": scope})
         except (RateLimitedError, ForbiddenError) as error:
@@ -131,6 +134,14 @@ class ToolGuard:
             )
         except RateLimitedError as error:
             raise McpRateLimitedError(params=error.params) from error
+
+    async def _ai_access(self, actor: Actor) -> None:
+        """Refuse a user whom Administration revoked the AI from (either scope)."""
+        access = await self.deps.limits.ai_access(actor.user_id)
+        scopes: tuple[AiScope, ...] = ("chat", "notebooks")
+        for scope in scopes:
+            if access.blocks(scope):
+                raise AiAccessRevokedError(params={"scope": scope})
 
     async def _audit_denied(
         self, actor: Actor, tool: str, reason: str, *, scope: str | None = None

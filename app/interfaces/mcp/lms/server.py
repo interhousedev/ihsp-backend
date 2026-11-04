@@ -24,6 +24,7 @@ from app.interfaces.mcp.lms.tools import (
     update_module,
     update_step,
 )
+from app.shared.brand import current_brand
 
 from mcp.server.fastmcp import FastMCP
 
@@ -56,7 +57,7 @@ def build_lms_server(deps: McpDeps) -> FastMCP:
     kit = make_toolkit(
         deps,
         "lms",
-        title="IHT LMS Course",
+        title=f"{current_brand().name} LMS Course",
         instructions_key="mcp-instructions-lms",
     )
     for module in TOOL_MODULES:

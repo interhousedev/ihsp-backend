@@ -8,23 +8,60 @@ from uuid import UUID
 from app.modules.identity.domain.errors import ConnectorInvalidError
 from app.modules.identity.domain.scopes import (
     SCOPE_CATALOG,
+    SERVERS,
     Server,
     scope_names,
+    server_from_audience,
     server_from_resource,
 )
 from app.modules.identity.domain.user import User
 from app.modules.identity.ports.hydra_gateway import ConsentRequest, HydraClient
 
 
-def mcp_server(request: ConsentRequest) -> Server:
-    """Which MCP server a client asks for: `resource` parameter or audience."""
+def mcp_server(request: ConsentRequest, mcp_base: str) -> Server:
+    """Which MCP server a client asks for, after the checks of the binding.
+
+    A `resource` parameter must be this deployment's exact URL of a server; without one
+    the requested audience decides, then the server a user's own client was made for.
+    A user's own client is usable by that user only, and PKCE must be S256.
+    """
     query = parse_qs(urlparse(request.request_url).query)
-    candidates = [*query.get("resource", []), *request.requested_audience]
-    for candidate in candidates:
-        server = server_from_resource(candidate)
+    _require_s256(query)
+    client = request.client
+    owner = client.metadata.get("owner_user_id")
+    if owner is not None and owner != request.subject:
+        raise ConnectorInvalidError(params={"reason": "client-owner"})
+    server = _named_server(request, query.get("resource", []), mcp_base)
+    bound = client.metadata.get("mcp_server")
+    if bound is not None and server is not None and bound != server:
+        raise ConnectorInvalidError(params={"reason": "client-server"})
+    server = server or (bound if bound in SERVERS else None)
+    if server is None:
+        raise ConnectorInvalidError(params={"reason": "unknown-server"})
+    return server
+
+
+def _require_s256(query: dict[str, list[str]]) -> None:
+    """Hydra also accepts `plain`, which OAuth 2.1 clients must not use."""
+    if not query.get("code_challenge"):
+        return  # Hydra enforces PKCE itself and refuses a request without it
+    if query.get("code_challenge_method") != ["S256"]:
+        raise ConnectorInvalidError(params={"reason": "pkce"})
+
+
+def _named_server(
+    request: ConsentRequest, resources: list[str], mcp_base: str
+) -> Server | None:
+    if resources:
+        servers = {server_from_resource(value, mcp_base) for value in resources}
+        if None in servers or len(servers) != 1:
+            raise ConnectorInvalidError(params={"reason": "resource"})
+        return servers.pop()
+    for audience in request.requested_audience:
+        server = server_from_audience(audience)
         if server is not None:
             return server
-    raise ConnectorInvalidError(params={"reason": "unknown-server"})
+    return None
 
 
 def redirect_domain(request: ConsentRequest) -> str:

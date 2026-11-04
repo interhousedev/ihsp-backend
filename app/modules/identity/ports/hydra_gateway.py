@@ -15,6 +15,15 @@ class HydraClient:
 
 
 @dataclass(frozen=True, slots=True)
+class NewHydraClient:
+    """A created client; the secret exists only here, and only for confidential ones."""
+
+    client: HydraClient
+    client_secret: str | None = None
+    auth_method: str = "none"
+
+
+@dataclass(frozen=True, slots=True)
 class LoginRequest:
     """Hydra's login request."""
 
@@ -126,6 +135,23 @@ class HydraGateway(Protocol):
         self, subject: str, client_id: str | None = None
     ) -> None:
         """Delete consent sessions (and their tokens) of a subject."""
+        ...
+
+    async def create_client(
+        self,
+        *,
+        name: str,
+        redirect_uris: list[str],
+        scope: str,
+        audience: list[str],
+        auth_method: str,
+        metadata: dict[str, Any],
+    ) -> NewHydraClient:
+        """Create an authorization code client through the admin API."""
+        ...
+
+    async def delete_client(self, client_id: str) -> None:
+        """Delete a client and its tokens; an unknown client is not an error."""
         ...
 
     async def list_clients(self) -> list[HydraClient]:

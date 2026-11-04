@@ -8,6 +8,7 @@ from app.modules.identity.ports.hydra_gateway import (
     HydraClient,
     LoginRequest,
     LogoutRequest,
+    NewHydraClient,
     TokenSet,
 )
 
@@ -176,6 +177,42 @@ class FakeHydra:
         self._record("revoke_consent_sessions", subject=subject, client_id=client_id)
 
     # - - - Clients - - -
+
+    async def create_client(
+        self,
+        *,
+        name: str,
+        redirect_uris: list[str],
+        scope: str,
+        audience: list[str],
+        auth_method: str,
+        metadata: dict[str, Any],
+    ) -> NewHydraClient:
+        """Store a client; a confidential one gets a generated secret."""
+        client_id = f"generated-{len(self.clients)}"
+        created = HydraClient(
+            client_id=client_id,
+            client_name=name,
+            metadata=dict(metadata),
+            redirect_uris=tuple(redirect_uris),
+        )
+        self.clients[client_id] = created
+        self._record(
+            "create_client",
+            client_id=client_id,
+            scope=scope,
+            audience=audience,
+            auth_method=auth_method,
+        )
+        secret = None if auth_method == "none" else f"secret-of-{client_id}"
+        return NewHydraClient(
+            client=created, client_secret=secret, auth_method=auth_method
+        )
+
+    async def delete_client(self, client_id: str) -> None:
+        """Forget a client."""
+        self._record("delete_client", client_id=client_id)
+        self.clients.pop(client_id, None)
 
     async def list_clients(self) -> list[HydraClient]:
         """All clients."""

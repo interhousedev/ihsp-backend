@@ -22,6 +22,7 @@ from app.shared.contracts.flashcards import FlashcardsApi
 from app.shared.contracts.links import LinksApi
 from app.shared.contracts.lms import LmsDraftCommands, LmsQueries
 from app.shared.i18n.core import I18nCore
+from app.shared.limits import LimitsProvider, StaticLimits
 from app.shared.rate_limit import RateLimiter
 
 if TYPE_CHECKING:
@@ -49,6 +50,8 @@ class McpDeps:
     lms_queries: LmsQueries
     lms_commands: LmsDraftCommands
     admin_tools: AdminToolBackend
+    # The AI scopes revoked per user (cached): the guard refuses revoked users.
+    limits: LimitsProvider
 
     def t(self, key: str, **params: Any) -> str:  # noqa: ANN401 - i18n params
         """Translate a message key into the language of tool errors."""
@@ -99,4 +102,6 @@ def deps_from_container(
         lms_queries=container.lms.authoring.queries,
         lms_commands=container.lms.authoring.draft_commands,
         admin_tools=admin_tools,
+        limits=getattr(container, "limits", None)
+        or StaticLimits(container.settings.limits),
     )

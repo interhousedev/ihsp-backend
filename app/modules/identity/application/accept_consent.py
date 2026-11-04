@@ -50,6 +50,7 @@ class AcceptConsent:
     otp: OtpService
     auto_accept: AutoAcceptConsent
     clock: Clock
+    mcp_base: str
 
     async def execute(
         self,
@@ -77,7 +78,7 @@ class AcceptConsent:
         otp_code: str | None,
         ctx: RequestContext,
     ) -> str:
-        server = mcp_server(request)
+        server = mcp_server(request, self.mcp_base)
         scopes = grantable(server, requested_scopes(request, server), grant_scopes)
         user_id = parse_uuid(request.subject)
         async with self.uow_factory() as uow:

@@ -143,14 +143,18 @@ def role_may_use_server(roles: frozenset[Role] | set[Role], server: str) -> bool
     return bool(allowed & set(roles))
 
 
-def server_from_resource(value: str) -> Server | None:
-    """Map an audience or resource URL to an MCP server (or None)."""
+def server_from_audience(value: str) -> Server | None:
+    """Map an audience name (`mcp-student`) to an MCP server (or None)."""
+    for server in SERVERS:
+        if value.strip() == AUDIENCE_BY_SERVER[server]:
+            return server
+    return None
+
+
+def server_from_resource(value: str, mcp_base: str) -> Server | None:
+    """Map an RFC 8707 resource to a server: only this deployment's exact URL."""
     cleaned = value.strip().rstrip("/")
     for server in SERVERS:
-        if cleaned == AUDIENCE_BY_SERVER[server]:
-            return server
-    last = cleaned.rsplit("/", 1)[-1]
-    for server in SERVERS:
-        if last == server and "/mcp" in cleaned:
+        if cleaned == f"{mcp_base.rstrip('/')}/{server}":
             return server
     return None

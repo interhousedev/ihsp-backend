@@ -28,7 +28,7 @@ def dev() -> dict[str, Any]:
 
 
 @pytest.mark.parametrize(
-    "section", ["strategies", "ttl", "oidc", "sqa", "log", "serve.cookies"]
+    "section", ["strategies", "ttl", "sqa", "log", "serve.cookies"]
 )
 def test_sections_that_must_match_dev(
     prod: dict[str, Any], dev: dict[str, Any], section: str
@@ -101,12 +101,19 @@ def test_client_urls_may_not_target_the_internal_network(prod: dict[str, Any]) -
     assert http["private_ip_exception_urls"] == [prod["oauth2"]["token_hook"]["url"]]
 
 
-def test_dynamic_client_registration_is_on_without_offline_access(
+def test_registration_goes_through_the_allowlist_of_the_identity_process(
     prod: dict[str, Any],
 ) -> None:
-    dcr = prod["oidc"]["dynamic_client_registration"]
-    assert dcr["enabled"] is True
-    assert dcr["default_scope"] == ["openid"]
+    """MCP-3: Hydra's own DCR would accept any redirect URI, so it stays off."""
+    assert "dynamic_client_registration" not in prod.get("oidc", {})
+    discovery = prod["webfinger"]["oidc_discovery"]
+    assert discovery["client_registration_url"].endswith("/v1/oauth/mcp/register")
+    assert "schedule:read" in discovery["supported_scope"]
+
+
+def test_pkce_is_enforced_for_every_client(prod: dict[str, Any]) -> None:
+    """OAuth 2.1: confidential clients too."""
+    assert prod["oauth2"]["pkce"]["enforced"] is True
 
 
 def test_the_compose_files_use_the_same_config_file() -> None:
@@ -127,3 +134,12 @@ def test_compose_files_point_hydra_at_the_flow_endpoints() -> None:
         for key in ("login", "consent", "logout"):
             line = f"URLS_{key.upper()}: {base}/v1/oauth/flow/{key}"
             assert line in text, (name, line)
+
+
+def test_discovery_lists_every_mcp_scope(prod: dict[str, Any]) -> None:
+    """MCP-3: the scopes in the metadata are the scope catalog."""
+    from app.modules.identity.domain.scopes import SCOPE_CATALOG
+
+    listed = set(prod["webfinger"]["oidc_discovery"]["supported_scope"])
+    catalog = {info.scope for infos in SCOPE_CATALOG.values() for info in infos}
+    assert listed == catalog

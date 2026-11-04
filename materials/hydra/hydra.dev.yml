@@ -49,6 +49,7 @@ ttl:
 
 oauth2:
   pkce:
+    enforced: true # OAuth 2.1: confidential clients too (Gemini Enterprise: turn PKCE on)
     enforced_for_public_clients: true
   grant:
     refresh_token:
@@ -68,11 +69,28 @@ clients:
     private_ip_exception_urls:
       - http://host.docker.internal:8000/v1/oauth/token-hook
 
-oidc:
-  dynamic_client_registration:
-    enabled: true
-    default_scope:
-      - openid
+webfinger:
+  oidc_discovery:
+    client_registration_url: http://localhost:8000/v1/oauth/mcp/register
+    # Listed so that clients find offline_access and the MCP scopes in the metadata.
+    supported_scope:
+      - schedule:read
+      - homework:read
+      - marks:read
+      - attendance:read
+      - materials:read
+      - files:read
+      - flashcards:read
+      - flashcards:write
+      - lms.courses.read
+      - lms.courses.write
+      - lms.courses.delete
+      - lms.modules.write
+      - people:read
+      - groups:read
+      - timetable:read
+      - broadcasts:read
+      - audit:read
 
 sqa:
   opt_out: true

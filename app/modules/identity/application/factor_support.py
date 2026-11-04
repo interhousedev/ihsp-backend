@@ -11,11 +11,12 @@ from uuid import UUID
 from app.modules.identity.domain.factors import UserFactors
 from app.modules.identity.ports.secret_cipher import SecretCipher
 from app.modules.identity.ports.unit_of_work import IdentityUnitOfWorkPort
+from app.shared.brand import current_brand
 from app.shared.clock import Clock
 
 import pyotp
 
-TOTP_ISSUER = "IHT ID"
+TOTP_ISSUER = current_brand().id_name
 TOTP_STEP_SECONDS = 30
 TOTP_WINDOW = 1
 """One step either side is accepted (clock drift of the phone)."""

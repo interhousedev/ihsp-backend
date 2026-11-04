@@ -5,7 +5,7 @@
 # this file (docker-compose.prod.yaml and docker-compose.local.yaml set them):
 #   DSN, SECRETS_SYSTEM, SECRETS_COOKIE, SECRETS_PAGINATION,
 #   URLS_SELF_ISSUER, URLS_LOGIN, URLS_CONSENT, URLS_LOGOUT, URLS_POST_LOGOUT_REDIRECT,
-#   SERVE_PUBLIC_CORS_ALLOWED_ORIGINS
+#   SERVE_PUBLIC_CORS_ALLOWED_ORIGINS, WEBFINGER_OIDC_DISCOVERY_CLIENT_REGISTRATION_URL
 # The token hook secret is the placeholder below; the compose entrypoint replaces it
 # with IHSP_TOKENS__SERVICE_TOKEN before Hydra starts (Hydra has no ${VAR} support).
 # Run with `serve all` and no --dev: the issuer must be HTTPS and cookies are Secure.
@@ -48,8 +48,13 @@ ttl:
   refresh_token: 720h
   authentication_session: 8760h # cap of `remember_for` (IHSP_IDENTITY__REMEMBER_DAYS=365)
 
+# Hydra's own Dynamic Client Registration stays off: it would accept any redirect URI.
+# Clients register at the identity process (/v1/oauth/mcp/register), which checks the
+# allowlist in app/modules/identity/domain/mcp_clients.py and creates the client through
+# the admin API; the discovery documents point there (webfinger below).
 oauth2:
   pkce:
+    enforced: true # OAuth 2.1: confidential clients too (Gemini Enterprise: turn PKCE on)
     enforced_for_public_clients: true
   grant:
     refresh_token:
@@ -74,17 +79,28 @@ clients:
     private_ip_exception_urls:
       - http://identity:8001/v1/oauth/token-hook
 
-oidc:
-  # Dynamic Client Registration stays on: MCP clients register themselves (product-spec
-  # MCP-3). Mitigations: the edge nginx rate-limits POST /oauth2/register
-  # (materials/nginx/common/route-id.inc), the default scope has no offline_access (a client
-  # that wants refresh tokens asks for it and the consent screen shows it), and the consent
-  # app treats every client without an admin-set metadata flag as unverified
-  # (identity/application/consent_support.py).
-  dynamic_client_registration:
-    enabled: true
-    default_scope:
-      - openid
+webfinger:
+  oidc_discovery:
+    client_registration_url: https://api.ihsu.uz/v1/oauth/mcp/register # overridden by WEBFINGER_OIDC_DISCOVERY_CLIENT_REGISTRATION_URL
+    # Listed so that clients find offline_access and the MCP scopes in the metadata.
+    supported_scope:
+      - schedule:read
+      - homework:read
+      - marks:read
+      - attendance:read
+      - materials:read
+      - files:read
+      - flashcards:read
+      - flashcards:write
+      - lms.courses.read
+      - lms.courses.write
+      - lms.courses.delete
+      - lms.modules.write
+      - people:read
+      - groups:read
+      - timetable:read
+      - broadcasts:read
+      - audit:read
 
 sqa:
   opt_out: true

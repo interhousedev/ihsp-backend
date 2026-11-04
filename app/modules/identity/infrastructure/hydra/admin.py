@@ -1,6 +1,7 @@
 """HTTP client for Ory Hydra's admin and public APIs."""
 
 from typing import Any
+from urllib.parse import parse_qs, urlsplit
 
 from app.modules.identity.domain.errors import (
     ChallengeUsedError,
@@ -12,6 +13,7 @@ from app.modules.identity.ports.hydra_gateway import (
     HydraClient,
     LoginRequest,
     LogoutRequest,
+    NewHydraClient,
     TokenSet,
 )
 from app.shared.base_error import UnauthorizedError
@@ -34,6 +36,20 @@ def _client(data: dict[str, Any]) -> HydraClient:
         metadata=dict(data.get("metadata") or {}),
         redirect_uris=tuple(data.get("redirect_uris") or ()),
     )
+
+
+CLIENT_PAGE_SIZE = 500
+MAX_CLIENT_PAGES = 200  # 100 000 clients: beyond that the listing is refused
+
+
+def _next_page_token(response: httpx.Response) -> str | None:
+    """The page_token of the Link header's rel="next"; None on the last page."""
+    link = response.links.get("next")
+    if not link:
+        return None
+    query = parse_qs(urlsplit(str(link.get("url", ""))).query)
+    token = query.get("page_token", [""])[0]
+    return token or None
 
 
 def _tokens(data: dict[str, Any]) -> TokenSet:
@@ -269,15 +285,68 @@ class HydraAdmin:
 
     # - - - Clients - - -
 
-    async def list_clients(self) -> list[HydraClient]:
-        """List OAuth clients."""
+    async def create_client(
+        self,
+        *,
+        name: str,
+        redirect_uris: list[str],
+        scope: str,
+        audience: list[str],
+        auth_method: str,
+        metadata: dict[str, Any],
+    ) -> NewHydraClient:
+        """Create an authorization code client; Hydra generates ID and secret."""
         response = await self._send(
-            "GET", f"{self._admin}/admin/clients", params={"page_size": 500}
+            "POST",
+            f"{self._admin}/admin/clients",
+            json={
+                "client_name": name,
+                "redirect_uris": redirect_uris,
+                "grant_types": ["authorization_code", "refresh_token"],
+                "response_types": ["code"],
+                "scope": scope,
+                "audience": audience,
+                "token_endpoint_auth_method": auth_method,
+                "metadata": metadata,
+            },
         )
-        if response.status_code != 200:
+        if response.status_code != 201:
             raise self._unexpected(response)
-        data = response.json()
-        return [_client(item) for item in data] if isinstance(data, list) else []
+        data = self._json(response)
+        return NewHydraClient(
+            client=_client(data),
+            client_secret=data.get("client_secret") or None,
+            auth_method=auth_method,
+        )
+
+    async def delete_client(self, client_id: str) -> None:
+        """Delete a client and its tokens."""
+        response = await self._send(
+            "DELETE", f"{self._admin}/admin/clients/{client_id}"
+        )
+        if response.status_code not in (204, 404):
+            raise self._unexpected(response)
+
+    async def list_clients(self) -> list[HydraClient]:
+        """Every OAuth client: Hydra answers one page a call, so all are followed."""
+        clients: list[HydraClient] = []
+        params: dict[str, Any] = {"page_size": CLIENT_PAGE_SIZE}
+        for _ in range(MAX_CLIENT_PAGES):
+            response = await self._send(
+                "GET", f"{self._admin}/admin/clients", params=params
+            )
+            if response.status_code != 200:
+                raise self._unexpected(response)
+            data = response.json()
+            if not isinstance(data, list):
+                return clients
+            clients.extend(_client(item) for item in data)
+            token = _next_page_token(response)
+            if token is None or not data:
+                return clients
+            params = {"page_size": CLIENT_PAGE_SIZE, "page_token": token}
+        # A partial list would hide clients and undercount the owner's limit.
+        raise HydraUnavailableError(support_details="hydra clients: too many pages")
 
     async def get_client(self, client_id: str) -> HydraClient | None:
         """Return one client or None."""

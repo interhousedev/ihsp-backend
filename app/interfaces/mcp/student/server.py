@@ -20,6 +20,7 @@ from app.interfaces.mcp.student.tools import (
     search_files,
     update_flashcard,
 )
+from app.shared.brand import current_brand
 
 from mcp.server.fastmcp import FastMCP
 
@@ -48,7 +49,7 @@ def build_student_server(deps: McpDeps) -> FastMCP:
     kit = make_toolkit(
         deps,
         "student",
-        title="IHT Students",
+        title=f"{current_brand().name} Students",
         instructions_key="mcp-instructions-student",
     )
     for module in TOOL_MODULES:

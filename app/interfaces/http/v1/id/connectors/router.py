@@ -6,6 +6,17 @@ from app.interfaces.http.v1.id.connectors.handlers.delete_connector import (
 from app.interfaces.http.v1.id.connectors.handlers.get_connectors import get_connectors
 from app.interfaces.http.v1.id.connectors.handlers.get_mcp_scopes import get_mcp_scopes
 from app.interfaces.http.v1.id.connectors.handlers.post_connector import post_connector
+from app.interfaces.http.v1.id.connectors.mcp_setup import (
+    McpClientResponse,
+    McpSetupResponse,
+    NewMcpClientResponse,
+    ProvisionedMcpSetupResponse,
+    delete_mcp_client,
+    get_mcp_clients,
+    get_mcp_setup,
+    post_mcp_client,
+    provision_mcp_setup,
+)
 from app.interfaces.http.v1.id.connectors.schemas import (
     ConnectorResponse,
     NewConnectorResponse,
@@ -41,4 +52,36 @@ router.add_api_route(
     get_mcp_scopes,
     methods=["GET"],
     response_model=ScopeCatalogResponse,
+)
+router.add_api_route(
+    "/me/mcp-setup/{service}",
+    get_mcp_setup,
+    methods=["GET"],
+    response_model=McpSetupResponse,
+)
+router.add_api_route(
+    "/me/mcp-setup/{service}",
+    provision_mcp_setup,
+    methods=["POST"],
+    response_model=ProvisionedMcpSetupResponse,
+)
+router.add_api_route(
+    "/me/mcp-clients",
+    get_mcp_clients,
+    methods=["GET"],
+    response_model=list[McpClientResponse],
+)
+router.add_api_route(
+    "/me/mcp-clients",
+    post_mcp_client,
+    methods=["POST"],
+    status_code=201,
+    response_model=NewMcpClientResponse,
+)
+router.add_api_route(
+    "/me/mcp-clients/{client_id}",
+    delete_mcp_client,
+    methods=["DELETE"],
+    status_code=204,
+    response_class=Response,
 )

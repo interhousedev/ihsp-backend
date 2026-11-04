@@ -24,6 +24,7 @@ class SendConsentOtp:
     hydra: HydraGateway
     otp: OtpService
     rate_limiter: RateLimiter
+    mcp_base: str
 
     async def execute(self, challenge: str, ctx: RequestContext) -> list[str]:
         """Send the step-up code (purpose step-up, key = user id); return channels."""
@@ -31,7 +32,9 @@ class SendConsentOtp:
         user_id = parse_uuid(request.subject)
         if user_id is None or is_first_party(request.client.client_id):
             raise UserNotFoundError(params={"user_id": request.subject})
-        mcp_server(request)  # refuses requests that do not name an MCP server
+        mcp_server(
+            request, self.mcp_base
+        )  # refuses requests that do not name an MCP server
         await self.rate_limiter.hit(
             f"consent-otp:{user_id}", limit=5, window_seconds=3600
         )

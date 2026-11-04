@@ -43,6 +43,7 @@ class GetConsentInfo:
     uow_factory: UowFactory
     hydra: HydraGateway
     auto_accept: AutoAcceptConsent
+    mcp_base: str
 
     async def execute(self, challenge: str) -> ConsentInfo:
         """Return the screen data, or ``redirect_to`` for first-party clients."""
@@ -74,7 +75,7 @@ class GetConsentInfo:
 
     async def _check_mcp(self, request: ConsentRequest) -> Server:
         """Server of the request; refuse roles and clients that may not use it."""
-        server = mcp_server(request)
+        server = mcp_server(request, self.mcp_base)
         user_id = parse_uuid(request.subject)
         async with self.uow_factory() as uow:
             user = await uow.users.get(user_id) if user_id else None

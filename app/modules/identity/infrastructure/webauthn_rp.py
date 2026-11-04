@@ -11,6 +11,7 @@ from app.modules.identity.ports.webauthn import (
     RegisteredCredential,
     VerifiedAssertion,
 )
+from app.shared.brand import current_brand
 
 from webauthn import (
     generate_authentication_options,
@@ -28,7 +29,7 @@ from webauthn.helpers.structs import (
     UserVerificationRequirement,
 )
 
-RP_NAME = "IHT ID"
+RP_NAME = current_brand().id_name
 _KNOWN_TRANSPORTS = {t.value for t in AuthenticatorTransport}
 
 

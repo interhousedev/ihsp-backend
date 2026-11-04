@@ -19,7 +19,7 @@ import pytest
 
 CTX = RequestContext(ip="203.0.113.5", user_agent="pytest")
 MCP_URL = (
-    "https://hydra/oauth2/auth?resource=https://api/mcp/{server}"
+    "https://hydra/oauth2/auth?resource=http://localhost:8000/mcp/{server}"
     "&redirect_uri=https://claude.example/cb"
 )
 

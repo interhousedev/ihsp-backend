@@ -16,6 +16,7 @@ from app.interfaces.mcp.admin.tools import (
 )
 from app.interfaces.mcp.deps import McpDeps
 from app.interfaces.mcp.factory import make_toolkit
+from app.shared.brand import current_brand
 
 from mcp.server.fastmcp import FastMCP
 
@@ -40,7 +41,7 @@ def build_admin_server(deps: McpDeps) -> FastMCP:
     kit = make_toolkit(
         deps,
         "admin",
-        title="IHT Administration",
+        title=f"{current_brand().name} Administration",
         instructions_key="mcp-instructions-admin",
     )
     for module in TOOL_MODULES:
