@@ -22,10 +22,7 @@ class SearchFiles(ReadTool[SearchFilesArgs]):
     """Search in the text of the student's files."""
 
     name = "search_files"
-    description = (
-        "Search the text of the student's own files; returns matching files "
-        "with snippets. Then use read_file to read a file."
-    )
+    description = "Use to find words or a topic inside the student's own files."
     args_model = SearchFilesArgs
 
     def __init__(self, files: FilesApi) -> None:

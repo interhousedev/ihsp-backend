@@ -23,7 +23,7 @@ from tests.fakes.clock import FixedClock
 
 import pytest
 
-MARKER = "## Visual blocks (OpenUI)"
+MARKER = "## Visual blocks"
 
 
 class NoCourseGate:
@@ -56,7 +56,7 @@ async def test_flag_on_appends_the_block_rules_to_the_prompt(
     on = await SystemPrompts(GATE, clock, openui=True).build(chat, "en")
     assert MARKER not in off
     assert MARKER in on
-    assert on == off + openui_prompt()
+    assert on.replace(openui_prompt(), "") == off
 
 
 async def test_flag_is_off_by_default() -> None:
@@ -90,19 +90,18 @@ async def test_wiring_passes_the_settings_flag_to_the_prompts(
 def test_tables_are_on_the_always_a_block_list_and_prose_stays_text() -> None:
     """AI-OPENUI: an asked-for table is a block; prose questions remain plain text."""
     prompt = " ".join(openui_prompt().split())
-    assert "When the user asks for a table," in prompt
+    assert "A requested table," in prompt
     assert "never a Markdown table" in prompt
-    assert "Answer in text by default." in prompt
-    assert "Prose questions stay plain text." in prompt
+    assert "Answer in text by default" in prompt
+    assert "prose questions stay plain text" in prompt
 
 
 def test_the_student_answer_starts_directly_without_meta_narration() -> None:
     """AI-OPENUI: the student prompt forbids describing the user or the tool choice."""
-    prompt = " ".join(system_prompt(Assistant.STUDENT, "en", date(2026, 11, 4)).split())
-    assert "Start the answer directly with its content" in prompt
-    assert "in the language of the student's last message" in prompt
-    assert "Never describe the student or their request" in prompt
-    assert "never say whether tools are needed" in prompt
+    prompt = " ".join(system_prompt(Assistant.STUDENT, date(2026, 11, 4)).split())
+    assert "Begin with the answer itself" in prompt
+    assert "Never describe the user or the request" in prompt
+    assert "never mention tools" in prompt
 
 
 def test_the_notebook_prompt_has_no_student_narration_rule() -> None:

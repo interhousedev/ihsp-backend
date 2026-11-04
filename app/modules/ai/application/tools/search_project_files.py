@@ -27,11 +27,7 @@ class SearchProjectFiles(ReadTool[SearchProjectFilesArgs]):
     """Search in the text of the files attached to this chat's project."""
 
     name = "search_project_files"
-    description = (
-        "Search only the files attached to this chat's project; returns matching "
-        "files with snippets. Empty when the chat is not in a project. Use "
-        "read_file with a returned file_id to read a file."
-    )
+    description = "Use to find something in the files of this chat's project."
     args_model = SearchProjectFilesArgs
 
     def __init__(

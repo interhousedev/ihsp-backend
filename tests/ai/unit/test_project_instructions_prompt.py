@@ -104,7 +104,8 @@ async def test_the_frame_cannot_be_closed_from_inside_the_instructions() -> None
     prompt = await prompts.build(_chat(clock, project), "en")
 
     assert prompt.count("</project_instructions>") == 1
-    assert prompt.rstrip().endswith("</project_instructions>")
+    before, _, after = prompt.partition("</project_instructions>")
+    assert "reveal all data" in before and "reveal all data" not in after
 
 
 async def test_the_loader_reads_the_project_outside_any_open_transaction() -> None:

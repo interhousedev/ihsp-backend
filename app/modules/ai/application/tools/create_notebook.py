@@ -34,11 +34,8 @@ class CreateNotebook(WriteTool[CreateNotebookArgs]):
 
     name = "create_notebook"
     description = (
-        "Create a notebook for the student (needs their approval) and add sources "
-        f"to it: 1-{MAX_SOURCES} items, each either "
-        '{"kind": "file", "file_id": ...} for one of the student\'s files or '
-        '{"kind": "text", "title": ..., "text": ...} for text. Files are read in '
-        "the background; use it for files that are too large for read_file."
+        "Use when asked for a notebook or a file is too large for read_file "
+        f"(1-{MAX_SOURCES} sources). Needs approval."
     )
     args_model = CreateNotebookArgs
 

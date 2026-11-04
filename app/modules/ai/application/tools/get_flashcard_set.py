@@ -19,7 +19,7 @@ class GetFlashcardSet(ReadTool[GetFlashcardSetArgs]):
     """A set with its cards."""
 
     name = "get_flashcard_set"
-    description = "A flash card set of the student with all its cards."
+    description = "Use to read the cards of a set."
     args_model = GetFlashcardSetArgs
 
     def __init__(self, flashcards: FlashcardsApi) -> None:

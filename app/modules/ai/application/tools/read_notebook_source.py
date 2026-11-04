@@ -23,11 +23,7 @@ class ReadNotebookSource(ReadTool[ReadNotebookSourceArgs]):
     """One 8 KB page of a source's text."""
 
     name = "read_notebook_source"
-    description = (
-        "Read one page (up to 8 KB of text) of a source of one of the student's "
-        "notebooks. Pages start at 1; the result tells how many pages the source "
-        "has."
-    )
+    description = "Use when search_notebook passages are not enough: reads one page."
     args_model = ReadNotebookSourceArgs
 
     def __init__(self, bindings: LateBindings) -> None:

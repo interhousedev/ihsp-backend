@@ -18,10 +18,7 @@ class ListFiles(ReadTool[ListFilesArgs]):
     """Files in My files."""
 
     name = "list_files"
-    description = (
-        "List the files in the student's My files: id, name, type and size. "
-        "Use read_file with an id to read a file."
-    )
+    description = "Use to find a file in My files by name."
     args_model = ListFilesArgs
 
     def __init__(self, files: FilesApi) -> None:

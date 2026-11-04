@@ -48,10 +48,7 @@ class SearchWeb(WriteTool[SearchWebArgs]):
     """Pages of the internet for a query (spends one web search of the day)."""
 
     name = "search_web"
-    description = (
-        "Search the internet when the school data has nothing; returns pages "
-        "(title, url, snippet). Cite the url."
-    )
+    description = "Use when the school data has nothing; cite the page url."
     args_model = SearchWebArgs
 
     def __init__(self, bindings: LateBindings, limits: LimitsProvider) -> None:

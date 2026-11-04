@@ -14,6 +14,26 @@ from typing import Any, Final
 CACHE_MARK: Final[dict[str, str]] = {"type": "ephemeral"}
 
 
+VOLATILE_MARK: Final = "\x1e"  # splits a system prompt: stable part, volatile tail
+
+
+def with_volatile_tail(stable: str, tail: str) -> str:
+    """A system prompt whose `tail` changes per request and must not break the cache."""
+    return f"{stable}{VOLATILE_MARK}{tail}"
+
+
+def split_system(system: str) -> tuple[str, str]:
+    """The stable part and the volatile tail of a system prompt (maybe empty)."""
+    stable, _, tail = system.partition(VOLATILE_MARK)
+    return stable, tail
+
+
+def plain_system(system: str) -> str:
+    """The system prompt as one text, for a gateway that does not mark the cache."""
+    stable, tail = split_system(system)
+    return f"{stable}\n\n{tail}" if tail else stable
+
+
 def supports_prompt_cache(model: str, prefixes: Sequence[str]) -> bool:
     """True when the model id starts with one of the caching prefixes."""
     return any(model.startswith(prefix) for prefix in prefixes if prefix)

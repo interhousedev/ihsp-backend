@@ -24,10 +24,7 @@ class GetMarks(ReadTool[GetMarksArgs]):
     """The student's marks."""
 
     name = "get_marks"
-    description = (
-        "The student's marks (lesson, midterm, final) with subject, date and "
-        "semester. Filter by subject and dates (YYYY-MM-DD)."
-    )
+    description = "Use for marks (lesson, ПК, ИК), optionally by subject or dates."
     args_model = GetMarksArgs
 
     def __init__(self, marks: MarksQueries) -> None:

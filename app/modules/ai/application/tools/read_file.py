@@ -23,11 +23,7 @@ class ReadFile(ReadTool[ReadFileArgs]):
     """One 8 KB page of a file's extracted text (FILE-7)."""
 
     name = "read_file"
-    description = (
-        "Read one page (up to 8 KB of text) of one of the student's own files or "
-        "a file attached to one of their lessons. Pages start at 1; the result "
-        "tells how many pages the file has."
-    )
+    description = "Use to read a page of an own file or a lesson attachment."
     args_model = ReadFileArgs
 
     def __init__(self, files: FilesApi, limits: LimitsProvider) -> None:

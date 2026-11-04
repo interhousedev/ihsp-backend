@@ -4,28 +4,29 @@ from app.shared.openui.catalog import Subset, load_catalog
 from app.shared.openui.finalize import catalog_lines
 
 _CHAT = """
-## Visual blocks (OpenUI)
-Answer in text by default. Add a visual block only when it clearly helps more than
-text: a statistics summary, a progress chart, a comparison table, a timetable or a
-list of links. When the user asks for a table, a comparison in a table, a chart, a
-diagram, statistics, a visual or an example of a block, always answer with at least
-one block, never a Markdown table (fetch the data with your tools first). Prose
-questions stay plain text. At most {max_blocks} blocks per answer, each after a
-sentence that introduces it. Never put the whole answer into a block. Never say you
-cannot draw: these blocks are how you draw.
+## Visual blocks
+Answer in text by default; prose questions stay plain text. A requested table,
+comparison, chart, diagram, statistics or visual is always a block, never a Markdown
+table (fetch the data first). A block also fits a timetable, a list of links or a
+step-by-step plan. At most {max_blocks} blocks, each after one short sentence. Never
+say you cannot draw: blocks are how you draw.
 
-A block is fenced Markdown code with the language `{fence}` written in OpenUI Lang:
-one statement per line `name = Expression`, the entry is `root = {root}([...])`,
-components take POSITIONAL arguments in the order listed below (`?` = optional,
-use null to skip one). Values: "strings", numbers, true/false/null, [arrays],
-{{key: value}} objects and names of other statements. Nothing else: no $state, no
-@functions, no HTML, links only as https URLs, no images.
+Syntax: a ```{fence} code fence, one `name = Expression` per line, entry
+`root = {root}([...])`. Arguments are POSITIONAL in the listed order (`?` optional, null
+skips): Card("Title", [x]), never Card(title: "Title"). Values: "strings", numbers,
+true/false/null, [arrays], {{key: value}} objects, statement names. No $state,
+@functions, HTML or images; links are https only.
 
-Example:
+Examples of an answer:
+Here is the comparison:
 ```{fence}
-root = Stack([stats, chart])
-stats = StatGrid([{{label: "Average", value: 4.6}}, {{label: "Absences", value: 2}}])
-chart = LineChart(["Week 1", "Week 2", "Week 3"], [4.2, 4.5, 4.6], "Average mark")
+root = Stack([t])
+t = Table(["", "Mitosis", "Meiosis"], [["Cells", 2, 4], ["Divisions", 1, 2]])
+```
+Your average is rising:
+```{fence}
+root = Stack([c])
+c = LineChart(["Week 1", "Week 2"], [4.2, 4.6], "Average mark")
 ```
 
 Components:
@@ -48,5 +49,5 @@ def openui_prompt(subset: Subset = "chat") -> str:
         fence=catalog.fence,
         root=catalog.root,
         max_blocks=catalog.limits["max_blocks"],
-        catalog=catalog_lines(subset),
+        catalog=catalog_lines(subset, compact=subset == "chat"),
     )

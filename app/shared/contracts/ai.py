@@ -24,6 +24,7 @@ class LlmTuning:
     reasoning_effort: ReasoningEffort | None = None
     fallbacks: tuple[str, ...] = ()  # tried after the model, in this order
     task: str | None = None  # the AiTask name the call runs for (usage ledger only)
+    answer_only: bool = False  # the tools stay listed but the model may not call them
 
 
 class AiAccessRevokedError(ForbiddenError):

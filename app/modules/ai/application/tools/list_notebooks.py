@@ -19,11 +19,7 @@ class ListNotebooks(ReadTool[ListNotebooksArgs]):
     """The student's notebooks."""
 
     name = "list_notebooks"
-    description = (
-        "List the student's notebooks (collections of sources with cited answers "
-        "and study materials): id, title, emoji, number of sources and when it was "
-        "last opened."
-    )
+    description = "Use to find a notebook id; subject notebooks hold lesson materials."
     args_model = ListNotebooksArgs
 
     def __init__(self, bindings: LateBindings) -> None:

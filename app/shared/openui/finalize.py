@@ -9,12 +9,14 @@ access is revoked is refused (the task is in the chat scope). The caller may als
 `count`, which receives the tokens of each repair so the chat budget sees them.
 """
 
+import re
 from collections.abc import Awaitable, Callable
 
 from app.shared.ai_tasks import ModelProfile
 from app.shared.contracts.ai import LlmGateway
 from app.shared.openui.blocks import Part, fenced, split_blocks, unfence
 from app.shared.openui.catalog import Prop, PropType, Subset, load_catalog
+from app.shared.openui.tables import markdown_tables_to_blocks
 from app.shared.openui.validate import validate_block
 
 import structlog
@@ -22,6 +24,7 @@ import structlog
 log = structlog.get_logger(__name__)
 
 UsageCounter = Callable[[int], Awaitable[None]]
+_LIST_MAX = re.compile(r"\[max \d+\]")
 REPAIR_MAX_TOKENS = 900  # the floor of the repair answer
 REPAIR_CHARS_PER_TOKEN = 2  # a conservative estimate for dense OpenUI source
 REPAIR_SYSTEM = (
@@ -51,11 +54,16 @@ def _field_text(prop: Prop) -> str:
     return prop.name + ("" if prop.required else "?") + f": {_kind_text(prop.kind)}"
 
 
-def catalog_lines(subset: Subset) -> str:
-    """One line per allowed component: `Name(prop, prop?: type)  description`."""
+def catalog_lines(subset: Subset, *, compact: bool = False) -> str:
+    """One line per allowed component: `Name(prop, prop?: type)  description`.
+
+    `compact` leaves out the list sizes; validation and repair still enforce them.
+    """
     lines = []
     for component in load_catalog().in_subset(subset):
         props = ", ".join(_field_text(p) for p in component.props)
+        if compact:
+            props = _LIST_MAX.sub("", props)
         lines.append(f"- {component.name}({props}) - {component.description}")
     return "\n".join(lines)
 
@@ -76,19 +84,29 @@ class OpenUiFinalizer:
         *,
         enabled: bool,
         subset: Subset = "chat",
+        convert_tables: bool = False,
     ) -> None:
-        """Keep the gateway, the repair task's profile and the feature flag."""
+        """Keep the gateway, the repair task's profile and the feature flag.
+
+        `convert_tables` turns Markdown tables into Table blocks. Notebook answers
+        leave it off: their table cells carry citation markers.
+        """
         self.llm = llm
         self.profile = profile
         self.enabled = enabled
         self.subset = subset
+        self.convert_tables = convert_tables
 
     async def finalize(self, text: str, *, count: UsageCounter | None = None) -> str:
         """The answer with every block valid, repaired or removed.
 
         `count` receives the tokens (input plus output) of every repair call.
         """
-        if not self.enabled or f"```{load_catalog().fence}" not in text:
+        if not self.enabled:
+            return text
+        if self.convert_tables:
+            text = markdown_tables_to_blocks(text)
+        if f"```{load_catalog().fence}" not in text:
             return text
         limit = load_catalog().limits["max_blocks"]
         out: list[str] = []

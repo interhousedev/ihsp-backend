@@ -16,7 +16,7 @@ class ListFlashcardSets(ReadTool[ListFlashcardSetsArgs]):
     """The student's sets."""
 
     name = "list_flashcard_sets"
-    description = "List the student's flash card sets with card counts."
+    description = "Use to find a flash card set id."
     args_model = ListFlashcardSetsArgs
 
     def __init__(self, flashcards: FlashcardsApi) -> None:

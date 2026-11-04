@@ -16,8 +16,7 @@ class GetMySubjects(ReadTool[GetMySubjectsArgs]):
 
     name = "get_my_subjects"
     description = (
-        "List the student's subjects of the current semester with teachers, "
-        "semester mark, EMIS rating and absences."
+        "Use for subject ids, teachers, semester marks, ratings or absence totals."
     )
     args_model = GetMySubjectsArgs
 

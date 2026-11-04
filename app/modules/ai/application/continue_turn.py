@@ -2,7 +2,7 @@
 
 import json
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 from uuid import UUID
 
@@ -15,6 +15,7 @@ from app.modules.ai.application.tools.base import ToolContext
 from app.modules.ai.application.tools.registry import ToolRegistry
 from app.modules.ai.application.turn_events import TurnEvents
 from app.modules.ai.application.views import TurnStatus
+from app.modules.ai.domain.assistant import Assistant
 from app.modules.ai.domain.chat import (
     Chat,
     ChatMessage,
@@ -34,9 +35,15 @@ from app.modules.ai.ports.unit_of_work import AiUnitOfWork
 from app.settings import Settings
 from app.shared.actor import Actor
 from app.shared.agent_steps import StepKind, current_steps, record_step
+from app.shared.ai.answer_language import answer_language
+from app.shared.ai.narration import (
+    NarrationFilter,
+    mentions_a_student,
+    strip_narration,
+)
 from app.shared.ai_tasks import AiTask
 from app.shared.clock import Clock
-from app.shared.contracts.ai import LlmGateway
+from app.shared.contracts.ai import LlmGateway, LlmTuning
 from app.shared.contracts.web_search import WebResult
 from app.shared.i18n.core import I18nCore
 from app.shared.ids import new_id
@@ -45,6 +52,7 @@ from app.shared.openui.finalize import OpenUiFinalizer, UsageCounter
 from app.shared.web_citations import rewrite_markers
 
 MAX_OUTPUT_TOKENS = 4096
+STEP_LIMIT_KEY = "ai-step-limit"
 TAIL_MESSAGES = WINDOW_MESSAGES + SUMMARY_EVERY + 20
 
 
@@ -76,6 +84,7 @@ class _Run:
     events: TurnEvents | None = None  # the live events of a streamed turn
     surface: str = "web"  # "telegram" adds the bot's formatting rules to the prompt
     seen: dict[str, ToolCall] = field(default_factory=dict)  # read calls by key
+    answer_now: bool = False  # the next model request may not call tools
 
 
 class ContinueTurn:
@@ -112,6 +121,7 @@ class ContinueTurn:
             llm,
             settings.ai_profile(AiTask.OPENUI_REPAIR),
             enabled=settings.ai.openui_enabled,
+            convert_tables=True,
         )
 
     async def execute(
@@ -153,7 +163,8 @@ class ContinueTurn:
         steps = profile_for(
             chat.assistant, self.settings, chat.tier, limits=limits
         ).max_tool_steps
-        for _ in range(steps):
+        for step in range(steps):
+            run.answer_now = run.answer_now or step == steps - 1
             status = await self._step(run)
             if status is not None:
                 progress.status = status
@@ -173,13 +184,23 @@ class ContinueTurn:
     async def _step(self, run: _Run) -> TurnStatus | None:
         """Do one model request; return the final status or None to continue."""
         chat, tail = await self._load(run.chat_id, run.span)
-        system = await self.prompts.build(chat, run.ctx.locale, surface=run.surface)
+        asked = _last_user_text(tail)
+        system = await self.prompts.build(
+            chat,
+            run.ctx.locale,
+            surface=run.surface,
+            last_user_text=asked,
+            answer_now=run.answer_now,
+        )
         window = select_window(tail, run.after_seq)
         messages = to_llm_messages(window, run.summary)
-        tools = self.registry.llm_tools(chat.assistant)
+        tools = self._tools(chat)
         if await self._over_budget(chat, system, messages, tools):
             return TurnStatus.LIMIT_REACHED
         task = profile_for(chat.assistant, self.settings, chat.tier).llm
+        tuning = task.tuning
+        if run.answer_now:
+            tuning = replace(tuning or LlmTuning(), answer_only=True)
         request: dict[str, Any] = {
             "model": chat.model,
             "system": system,
@@ -187,20 +208,19 @@ class ContinueTurn:
             "tools": tools,
             "max_tokens": task.output_tokens(MAX_OUTPUT_TOKENS),
             "provider": task.provider(),
-            "tuning": task.tuning,
+            "tuning": tuning,
         }
-        if run.events is None:
-            response = await self.llm.complete(**request)
-        else:
-            response = await self._streamed(run.events, request)
+        response, text = await self._ask(run, chat, asked, request)
         usage = response.get("usage") or {}
         tokens_in, tokens_out = int(usage.get("input", 0)), int(usage.get("output", 0))
         await self.budget.add(
             chat.owner_id, (tokens_in + tokens_out) * self._weight(chat), chat.assistant
         )
         taken = {call.id for message in tail for call in message.tool_calls}
-        text = str(response.get("text") or "")
         raw_calls = response.get("tool_calls") or []
+        if run.answer_now:  # a model that still calls tools is not obeyed: turn ends
+            raw_calls = []
+            text = text if text.strip() else self.i18n.t(run.ctx.locale, STEP_LIMIT_KEY)
         if raw_calls and run.events is not None:  # the streamed text was a note
             run.events.emit("round_end", {"text": text})
             run.events.status(text)
@@ -211,6 +231,8 @@ class ContinueTurn:
         calls = await self.runner.propose(
             chat.assistant, run.ctx, raw_calls, taken, run.seen
         )
+        if calls and all(_is_repeated(call) for call in calls):
+            run.answer_now = True  # nothing new can come: answer from what is there
         message, stored = await self._store(
             run, text, calls, (tokens_in, tokens_out), web=_turn_web(tail)
         )
@@ -218,21 +240,52 @@ class ContinueTurn:
         run.progress.chat = stored
         return _final_status(calls)
 
+    async def _ask(
+        self, run: _Run, chat: Chat, asked: str, request: dict[str, Any]
+    ) -> tuple[dict[str, Any], str]:
+        """One model request: the response and its text without a leading note."""
+        guarded = chat.assistant is not Assistant.LMS_AUTHOR
+        options: dict[str, Any] = {
+            "about_student": _about_student(chat, asked),
+            "language": answer_language(asked, run.ctx.locale),
+        }
+        if run.events is None:
+            response = await self.llm.complete(**request)
+        else:
+            guard = NarrationFilter(**options) if guarded else None
+            response = await self._streamed(run.events, request, guard)
+        text = str(response.get("text") or "")
+        return response, strip_narration(text, **options) if guarded else text
+
+    def _tools(self, chat: Chat) -> list[dict[str, Any]]:
+        """The tools offered in this chat; the list stays the same within it."""
+        return self.registry.llm_tools(
+            chat.assistant, in_project=chat.project_id is not None
+        )
+
     async def _streamed(
-        self, events: TurnEvents, request: dict[str, Any]
+        self,
+        events: TurnEvents,
+        request: dict[str, Any],
+        guard: NarrationFilter | None = None,
     ) -> dict[str, Any]:
         """One model request through `stream`: text pieces go out as `delta` events.
 
-        Returns the same shape as `complete` (text, tool_calls, usage).
+        `guard` holds back a leading note about the request. Returns the same shape
+        as `complete` (text, tool_calls, usage), with the text as the model wrote it.
         """
         pieces: list[str] = []
         last: dict[str, Any] = {}
         async for item in self.llm.stream(**request):
             if item.get("delta"):
                 pieces.append(item["delta"])
-                events.emit("delta", {"text": item["delta"]})
+                out = guard.feed(item["delta"]) if guard else item["delta"]
+                if out:
+                    events.emit("delta", {"text": out})
             if "usage" in item:
                 last = item
+        if guard is not None and (out := guard.finish()):
+            events.emit("delta", {"text": out})
         return {
             "text": "".join(pieces),
             "tool_calls": last.get("tool_calls") or [],
@@ -245,8 +298,7 @@ class ContinueTurn:
         window = select_window(tail[-WINDOW_MESSAGES:], 0)
         messages = [*to_llm_messages(window), {"role": "user", "content": text}]
         system = await self.prompts.build(chat, locale)
-        tools = self.registry.llm_tools(chat.assistant)
-        return await self._check(chat, system, messages, tools)
+        return await self._check(chat, system, messages, self._tools(chat))
 
     async def precheck_replay(self, chat: Chat, locale: str) -> LimitHit | None:
         """Return the limit answering the last user message again would run into."""
@@ -257,8 +309,9 @@ class ContinueTurn:
         history = tail[: len(tail) - len(turn[1])]
         window = select_window(history[-WINDOW_MESSAGES:], 0)
         system = await self.prompts.build(chat, locale)
-        tools = self.registry.llm_tools(chat.assistant)
-        return await self._check(chat, system, to_llm_messages(window), tools)
+        return await self._check(
+            chat, system, to_llm_messages(window), self._tools(chat)
+        )
 
     def _weight(self, chat: Chat) -> int:
         """Return how many budget tokens one model token of this chat costs."""
@@ -348,7 +401,7 @@ class ContinueTurn:
 
     async def _close_with_notice(self, run: _Run) -> None:
         """After the last allowed step, end the turn with a short assistant note."""
-        text = self.i18n.t(run.ctx.locale, "ai-step-limit")
+        text = self.i18n.t(run.ctx.locale, STEP_LIMIT_KEY)
         message, chat = await self._store(run, text, [], (0, 0))
         run.progress.changed.append(message)
         run.progress.chat = chat
@@ -378,6 +431,23 @@ def _add_round(
     message.tool_calls.extend(c.model_copy(update={"round": index}) for c in calls)
     message.tokens_in = (message.tokens_in or 0) + tokens[0]
     message.tokens_out = (message.tokens_out or 0) + tokens[1]
+
+
+def _last_user_text(tail: list[ChatMessage]) -> str:
+    """The text of the user message this turn answers."""
+    for message in reversed(tail):
+        if message.role is MessageRole.USER:
+            return message.content.text
+    return ""
+
+
+def _about_student(chat: Chat, asked: str) -> bool:
+    """True when "the student" in a leading sentence can only mean the user."""
+    return chat.assistant is Assistant.STUDENT and not mentions_a_student(asked)
+
+
+def _is_repeated(call: ToolCall) -> bool:
+    return isinstance(call.result, dict) and "repeated" in call.result
 
 
 def _turn_web(tail: list[ChatMessage]) -> list[WebResult]:

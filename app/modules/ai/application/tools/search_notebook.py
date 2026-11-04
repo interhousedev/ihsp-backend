@@ -29,10 +29,8 @@ class SearchNotebook(ReadTool[SearchNotebookArgs]):
 
     name = "search_notebook"
     description = (
-        "Search passages of one notebook's sources (files, PDFs, pages) by meaning "
-        "and words; returns source id and title, page and text. Give the topic as "
-        "`query` and spellings of names in other scripts (Cyrillic, Latin, Uzbek) "
-        "as `variants` in this one call. Cite the source title."
+        "Use for questions about a notebook's content; put other spellings of names "
+        "(Cyrillic, Latin, Uzbek) in `variants`."
     )
     args_model = SearchNotebookArgs
 

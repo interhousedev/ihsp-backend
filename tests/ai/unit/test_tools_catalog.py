@@ -61,7 +61,8 @@ async def test_student_tools_match_the_spec(h: AiHarness) -> None:
     """AI-5, NB-17: exactly the student tools, writes for flash cards and notebooks."""
     tools = await tools_of(h, Assistant.STUDENT)
 
-    assert {t["function"]["name"] for t in tools} == STUDENT_TOOLS
+    offered = STUDENT_TOOLS - set(OFFICE_TOOLS) - {"search_project_files"}
+    assert {t["function"]["name"] for t in tools} == offered
 
 
 async def test_notebook_tools_sit_after_the_file_tools_and_the_flash_card_writes(
@@ -76,7 +77,6 @@ async def test_notebook_tools_sit_after_the_file_tools_and_the_flash_card_writes
     assert names[names.index("add_flashcards") + 1 :] == [
         *NOTEBOOK_WRITE_TOOLS,
         "make_document",
-        *OFFICE_TOOLS,
         "read_chat_history",
     ]
 

@@ -8,6 +8,7 @@ from app.modules.ai.domain.errors import ChatNotFoundError
 from app.modules.ai.domain.prompts import system_prompt
 from app.modules.ai.domain.tool_call import ToolStatus
 from app.shared.agent_steps import StepKind
+from app.shared.ai.answer_language import answer_language, language_line
 from tests.ai.conftest import AiHarness
 from tests.fakes.ai.llm import text_reply, tool_reply
 
@@ -140,10 +141,10 @@ async def test_a_refusal_raises_before_the_stream_starts(h: AiHarness) -> None:
 
 def test_the_prompt_asks_for_the_language_of_the_user() -> None:
     """The answer and the progress notes follow the message language."""
-    prompt = system_prompt(Assistant.STUDENT, "en", date(2026, 10, 16))
+    line = language_line(answer_language("Покажи мои оценки", "en"))
 
-    assert "language of the user's last message" in prompt
-    assert "progress" in prompt and "English" in prompt
+    assert "Russian" in line and "text before tool calls" in line
+    assert "language" not in system_prompt(Assistant.STUDENT, date(2026, 10, 16))
 
 
 def _cards() -> list[dict[str, str]]:

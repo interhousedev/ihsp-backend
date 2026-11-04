@@ -7,6 +7,8 @@ from app.modules.ai.domain.assistant import Assistant
 from app.modules.ai.domain.chat import Chat
 from app.modules.ai.domain.project import project_block
 from app.modules.ai.domain.prompts import (
+    ANSWER_NOW,
+    PRIORITIES,
     SURFACE_TELEGRAM,
     TELEGRAM_RULES,
     system_prompt,
@@ -14,6 +16,8 @@ from app.modules.ai.domain.prompts import (
 from app.modules.ai.domain.prompts_author import author_system_prompt, course_context
 from app.modules.ai.ports.author_gate import AuthorGate
 from app.modules.ai.ports.unit_of_work import AiUnitOfWork
+from app.shared.ai.answer_language import answer_language, language_line
+from app.shared.ai.prompt_cache import with_volatile_tail
 from app.shared.clock import Clock, local_today
 from app.shared.limits import LimitsProvider
 from app.shared.openui.prompt import openui_prompt
@@ -65,11 +69,21 @@ class SystemPrompts:
         self.openui = openui
         self.projects = projects
 
-    async def build(self, chat: Chat, locale: str, *, surface: str = "web") -> str:
-        """Return the system prompt of the chat's assistant in the user's locale.
+    async def build(
+        self,
+        chat: Chat,
+        locale: str,
+        *,
+        surface: str = "web",
+        last_user_text: str = "",
+        answer_now: bool = False,
+    ) -> str:
+        """Return the system prompt of the chat's assistant.
 
         `surface` "telegram" adds the rich-formatting rules of the bot; the web prompt
-        is returned unchanged.
+        is returned unchanged. The language of `last_user_text` (else the locale) and
+        `answer_now` (the last model request of a turn) go in a volatile tail after
+        the cache breakpoint, so the stable part stays the same for everybody.
         """
         prompt = await self._base(chat, locale)
         block = await self._project_block(chat)
@@ -77,7 +91,14 @@ class SystemPrompts:
             prompt = f"{prompt}\n\n{block}"
         if surface == SURFACE_TELEGRAM:
             prompt = f"{prompt}\n\n{TELEGRAM_RULES}"
-        return prompt + openui_prompt() if self.openui else prompt
+        if self.openui:
+            prompt += openui_prompt()
+        tail = [ANSWER_NOW] if answer_now else []
+        if chat.assistant is Assistant.LMS_AUTHOR:
+            return with_volatile_tail(prompt, tail[0]) if tail else prompt
+        prompt = f"{prompt}\n\n{PRIORITIES}"
+        tail.append(language_line(answer_language(last_user_text, locale)))
+        return with_volatile_tail(prompt, "\n".join(tail))
 
     async def _project_block(self, chat: Chat) -> str:
         if chat.project_id is None or self.projects is None:
@@ -91,6 +112,6 @@ class SystemPrompts:
             if self.limits is not None:
                 current = await self.limits.current()
                 ask = bool(current.ai_ask_before_web_search)
-            return system_prompt(chat.assistant, locale, today, ask_before_web=ask)
+            return system_prompt(chat.assistant, today, ask_before_web=ask)
         brief = await self.gate.course_brief(chat.scope.course_id)
         return author_system_prompt(locale, today, course_context(brief))

@@ -20,11 +20,7 @@ class GetNotebook(ReadTool[GetNotebookArgs]):
     """Title, summary, key topics and the sources of a notebook."""
 
     name = "get_notebook"
-    description = (
-        "Open one of the student's notebooks: title, summary, key topics and its "
-        "sources (id, title, kind, status, number of words). Use search_notebook "
-        "to find passages in it."
-    )
+    description = "Use for a notebook's summary, topics and source ids."
     args_model = GetNotebookArgs
 
     def __init__(self, bindings: LateBindings) -> None:

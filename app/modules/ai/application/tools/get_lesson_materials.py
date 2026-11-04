@@ -20,10 +20,7 @@ class GetLessonMaterials(ReadTool[GetLessonMaterialsArgs]):
     """Materials, attachments and homework links of a lesson."""
 
     name = "get_lesson_materials"
-    description = (
-        "Materials and attachments of a lesson: title, kind, role, file id or URL. "
-        "It does not return file text; use read_file with the file id for that."
-    )
+    description = "Use for a lesson's attachments; read_file then opens their text."
     args_model = GetLessonMaterialsArgs
 
     def __init__(self, schedule: ScheduleQueries, bindings: LateBindings) -> None:

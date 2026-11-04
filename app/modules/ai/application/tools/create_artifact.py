@@ -64,23 +64,12 @@ class CreateArtifact(WriteTool[CreateArtifactArgs]):
 
     name = "create_artifact"
     description = (
-        "Generate a study material from the selected sources of one of the student's "
-        "notebooks (needs their approval; it uses one of their daily outputs). kind: "
-        "report, mind_map, flashcards, quiz, exercise, data_table, slides or "
-        "infographic. options: for a report {format: conspect | study_guide | "
-        "briefing | faq | timeline | article | custom, detail?: short | standard | "
-        "long}; flashcards {count?: fewer | standard | more, difficulty?: easy | "
-        "medium | hard}; quiz the same plus {types?: [single, multiple, true_false]};"
-        " exercise (an exam-style practice set: passages with typed questions, or a "
-        "writing task with a band rubric) {exam?: ielts_academic | sat | ap | "
-        "generic, skill?: reading | writing | listening_script | mixed, count?: 1-60,"
-        " difficulty?: easy | medium | hard}; mind_map {detail?: overview | "
-        "detailed}; data_table {max_rows?: 10-40}; slides {format?: presenter | "
-        "detailed, length?: short | default | long}; infographic {orientation?: "
-        "portrait | landscape | square, detail?: concise | standard | detailed, "
-        "style?: clean | sketch | bento | scientific | playful}; any kind may have "
-        "{language?: uz | ru | en}. prompt focuses the output (required for a custom "
-        "report). The output is generated in the background."
+        "Use when asked for a study material from a notebook. Needs approval and "
+        "uses a daily output. options: report needs {format: conspect|study_guide|"
+        "briefing|faq|timeline|article|custom}, custom also a prompt; quiz {types: "
+        "[single, multiple, true_false]}; exercise {exam: ielts_academic|sat|ap|"
+        "generic, skill: reading|writing|listening_script|mixed}; slides {format: "
+        "presenter|detailed}; any {language}."
     )
     args_model = CreateArtifactArgs
 

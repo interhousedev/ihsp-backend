@@ -34,10 +34,7 @@ class AddNotebookSources(WriteTool[AddNotebookSourcesArgs]):
 
     name = "add_notebook_sources"
     description = (
-        "Add sources to one of the student's notebooks (needs their approval): "
-        f"1-{MAX_SOURCES} items, each either "
-        '{"kind": "file", "file_id": ...} or {"kind": "text", "title": ..., '
-        '"text": ...}. Sources are read in the background.'
+        f"Use when asked to add notebook sources (1-{MAX_SOURCES}). Needs approval."
     )
     args_model = AddNotebookSourcesArgs
 

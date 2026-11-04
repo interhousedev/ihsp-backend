@@ -22,10 +22,7 @@ class GetAttendance(ReadTool[GetAttendanceArgs]):
     """The student's absences."""
 
     name = "get_attendance"
-    description = (
-        "The student's absences in a date range (YYYY-MM-DD), each with the "
-        "lesson and whether it was excused."
-    )
+    description = "Use for absences and whether they were excused."
     args_model = GetAttendanceArgs
 
     def __init__(self, classwork: ClassworkQueries) -> None:

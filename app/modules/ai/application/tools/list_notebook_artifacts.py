@@ -21,10 +21,7 @@ class ListNotebookArtifacts(ReadTool[ListNotebookArtifactsArgs]):
     """Reports, mind maps, quizzes and other outputs of a notebook."""
 
     name = "list_notebook_artifacts"
-    description = (
-        "List the study materials generated in one of the student's notebooks "
-        "(Studio): id, kind, title and status."
-    )
+    description = "Use to see which study materials a notebook already has."
     args_model = ListNotebookArtifactsArgs
 
     def __init__(self, bindings: LateBindings) -> None:

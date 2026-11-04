@@ -25,10 +25,7 @@ class GetSchedule(ReadTool[GetScheduleArgs]):
     """The student's lessons between two dates."""
 
     name = "get_schedule"
-    description = (
-        f"The student's lessons between two dates (YYYY-MM-DD), at most {MAX_DAYS} "
-        "days: time, subject, room, topic and homework."
-    )
+    description = f"Use for the timetable of a period (at most {MAX_DAYS} days)."
     args_model = GetScheduleArgs
 
     def __init__(self, schedule: ScheduleQueries) -> None:

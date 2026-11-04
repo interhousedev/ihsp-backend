@@ -24,10 +24,7 @@ class GetSubjectLessons(ReadTool[GetSubjectLessonsArgs]):
     """Lessons of a subject for the student's audience."""
 
     name = "get_subject_lessons"
-    description = (
-        "Lessons of one subject for the student: date, period, topic, homework, "
-        "the student's marks and absences. Dates are optional (YYYY-MM-DD)."
-    )
+    description = "Use for the topics, homework and marks of one subject's lessons."
     args_model = GetSubjectLessonsArgs
 
     def __init__(self, classwork: ClassworkQueries, marks: MarksQueries) -> None:

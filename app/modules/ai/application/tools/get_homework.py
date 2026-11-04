@@ -23,10 +23,7 @@ class GetHomework(ReadTool[GetHomeworkArgs]):
     """The student's homework."""
 
     name = "get_homework"
-    description = (
-        "The student's homework with the lesson, due date, done state and the "
-        "student's own note. Filter by dates (YYYY-MM-DD) and done."
-    )
+    description = "Use for what is due or done, optionally by dates."
     args_model = GetHomeworkArgs
 
     def __init__(self, classwork: ClassworkQueries) -> None:

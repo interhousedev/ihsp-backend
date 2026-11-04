@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Any
 
+from app.modules.ai.domain.json_schema import compact_parameters
 from app.modules.ai.domain.tool_call import ToolAccess
 
 MAX_RESULT_CHARS = 12_000
@@ -17,14 +18,19 @@ class ToolSpec:
     description: str
     parameters: dict[str, Any]
 
-    def to_llm(self) -> dict[str, Any]:
-        """Return the OpenAI function-format entry for the model request."""
+    def to_llm(self, *, compact: bool = False) -> dict[str, Any]:
+        """Return the OpenAI function-format entry for the model request.
+
+        `compact` sends the smaller schema; the arguments are still validated
+        against the full model when the tool runs.
+        """
+        parameters = compact_parameters(self.parameters) if compact else self.parameters
         return {
             "type": "function",
             "function": {
                 "name": self.name,
                 "description": self.description,
-                "parameters": self.parameters,
+                "parameters": parameters,
             },
         }
 

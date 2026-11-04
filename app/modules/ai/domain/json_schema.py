@@ -8,6 +8,18 @@ from pydantic import BaseModel
 
 _SCHEMA_LISTS = ("anyOf", "allOf", "oneOf", "prefixItems")
 _SCHEMA_VALUES = ("items", "additionalProperties", "not")
+_LIMIT_KEYS = frozenset(
+    {
+        "default",
+        "description",
+        "maxItems",
+        "maxLength",
+        "maximum",
+        "minItems",
+        "minLength",
+        "minimum",
+    }
+)
 
 
 def strict_tool_parameters(model: type[BaseModel]) -> dict[str, Any]:
@@ -48,6 +60,42 @@ def tool_parameters(model: type[BaseModel]) -> dict[str, Any]:
     definitions: dict[str, Any] = schema.pop("$defs", {})
     schema.pop("description", None)  # the model class docstring is not for the LLM
     return _clean(_plain(_inline(schema, definitions)))  # type: ignore[no-any-return]
+
+
+def compact_parameters(schema: dict[str, Any]) -> dict[str, Any]:
+    """The schema the model sees: shape only, no limits, defaults or null branches.
+
+    Limits stay enforced by the argument model: a value over a limit comes back to
+    the model as a tool error. Dropping the null branches also keeps a request far
+    from the 16 nullable parameters strict providers accept.
+    """
+    return _compact(schema, is_map=False)  # type: ignore[no-any-return]
+
+
+def _compact(node: Any, *, is_map: bool) -> Any:
+    if isinstance(node, list):
+        return [_compact(item, is_map=False) for item in node]
+    if not isinstance(node, dict):
+        return node
+    if is_map:  # a `properties` map: its keys are field names, never schema keywords
+        return {name: _compact(sub, is_map=False) for name, sub in node.items()}
+    kept = _without_null_branch(node)
+    return {
+        key: _compact(value, is_map=key == "properties")
+        for key, value in kept.items()
+        if key not in _LIMIT_KEYS and key != "format"
+    }
+
+
+def _without_null_branch(node: dict[str, Any]) -> dict[str, Any]:
+    any_of = node.get("anyOf")
+    if not isinstance(any_of, list):
+        return node
+    kept = [x for x in any_of if not (isinstance(x, dict) and x.get("type") == "null")]
+    if len(kept) != 1 or len(kept) == len(any_of):
+        return node
+    rest = {key: value for key, value in node.items() if key != "anyOf"}
+    return {**rest, **kept[0]}
 
 
 def _plain(node: Any) -> Any:

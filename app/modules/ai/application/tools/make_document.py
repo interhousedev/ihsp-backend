@@ -28,12 +28,9 @@ class MakeDocument(ReadTool[MakeDocumentArgs]):
 
     name = "make_document"
     description = (
-        "Create a downloadable file in the user's My files and show it in the chat. "
-        "kind docx: content is Markdown (# headings, - lists, | tables |, LaTeX stays "
-        "as text). kind xlsx: content is one table, Markdown or CSV, header row "
-        "first. kind pptx: content is a slide outline: a '# Title' line and '- ' "
-        "bullets per slide, slides separated by a line '---', optional 'Notes: ...' "
-        "line for speaker notes. Do not paste the file text again in your answer."
+        "Use only when the user asks for a file to download. content: docx Markdown; "
+        "xlsx one Markdown or CSV table; pptx slides of '# Title' and '- ' bullets, "
+        "split by a '---' line, optional 'Notes: ...'. Do not repeat it in the answer."
     )
     args_model = MakeDocumentArgs
 

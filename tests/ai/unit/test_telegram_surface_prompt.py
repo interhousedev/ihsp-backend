@@ -47,8 +47,9 @@ async def test_the_telegram_prompt_keeps_the_web_text_and_adds_the_rules() -> No
     prompts = _prompts(clock)
     web = await prompts.build(chat, "en")
     telegram = await prompts.build(chat, "en", surface="telegram")
-    assert telegram.startswith(web)
-    assert telegram.endswith(TELEGRAM_RULES)
+    assert TELEGRAM_RULES not in web
+    assert TELEGRAM_RULES in telegram
+    assert telegram.replace(f"\n\n{TELEGRAM_RULES}", "") == web
 
 
 def test_the_telegram_rules_are_short_and_name_the_rich_forms() -> None:

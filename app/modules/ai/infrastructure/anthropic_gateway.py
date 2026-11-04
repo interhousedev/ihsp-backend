@@ -13,7 +13,7 @@ from typing import Any, Final
 
 from app.modules.ai.domain.errors import AiProviderError
 from app.modules.ai.infrastructure.openrouter import parse_json_object
-from app.shared.ai.prompt_cache import text_part
+from app.shared.ai.prompt_cache import split_system, text_part
 from app.shared.contracts.ai import LlmTuning
 
 import anthropic
@@ -150,10 +150,13 @@ def build_request(
     """The `messages.create` keyword arguments of one OpenAI-format request.
 
     No `temperature` (non-default sampling is refused by the newest models) and the
-    tool choice stays `auto` (forced choices are refused too).
+    tool choice is `auto` or `none` (forcing a tool is refused too).
     """
     extra_system, converted = convert_messages(messages)
-    system_parts = [text_part(system, cache=True), *extra_system]
+    stable, tail = split_system(system)
+    system_parts = [text_part(stable, cache=True), *extra_system]
+    if tail:
+        system_parts.append(text_part(tail))
     params: dict[str, Any] = {
         "model": model,
         "max_tokens": max_tokens,
@@ -162,7 +165,8 @@ def build_request(
     }
     if tools:
         params["tools"] = [convert_tool(tool) for tool in tools]
-        params["tool_choice"] = {"type": "auto"}
+        answer_only = tuning is not None and tuning.answer_only
+        params["tool_choice"] = {"type": "none" if answer_only else "auto"}
     effort = tuning.reasoning_effort if tuning is not None else None
     if effort == "none":
         params["thinking"] = {"type": "disabled"}

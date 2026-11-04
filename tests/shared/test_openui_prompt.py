@@ -43,7 +43,7 @@ def test_every_component_line_names_its_props_fields_and_enum_values(
 def test_openui_prompt_carries_the_catalog_lines(subset: Subset) -> None:
     """AI-OPENUI: the prompt includes the per-component lines verbatim."""
     prompt = openui_prompt(subset)
-    assert catalog_lines(subset) in prompt
+    assert catalog_lines(subset, compact=subset == "chat") in prompt
 
 
 def test_enum_values_and_nested_items_are_spelled_out() -> None:

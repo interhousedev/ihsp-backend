@@ -15,7 +15,12 @@ from typing import Any, NoReturn
 
 from app.modules.ai.domain.errors import AiInvalidOutputError, AiProviderError
 from app.settings_ai import DEFAULT_CACHE_MODELS
-from app.shared.ai.prompt_cache import supports_prompt_cache, text_part
+from app.shared.ai.prompt_cache import (
+    plain_system,
+    split_system,
+    supports_prompt_cache,
+    text_part,
+)
 from app.shared.contracts.ai import LlmTuning
 from app.shared.retry_after import parse_retry_after
 
@@ -332,9 +337,12 @@ def build_payload(
     One breakpoint on the last system part caches the tools and the system prompt
     together, because the provider caches the prefix `tools, system, messages`.
     """
-    system_content: Any = system
+    system_content: Any = plain_system(system)
     if supports_prompt_cache(model, cache_models):  # `AI__PROMPT_CACHE_MODELS`
-        system_content = [text_part(system, cache=True)]
+        stable, tail = split_system(system)
+        system_content = [text_part(stable, cache=True)]
+        if tail:  # after the breakpoint: it changes without breaking the cache
+            system_content.append(text_part(tail))
     payload: dict[str, Any] = {
         "model": model,
         "messages": [{"role": "system", "content": system_content}, *messages],
@@ -345,7 +353,8 @@ def build_payload(
         _apply_tuning(payload, model, tuning)
     if tools:
         payload["tools"] = tools
-        payload["tool_choice"] = "auto"
+        answer_only = tuning is not None and tuning.answer_only
+        payload["tool_choice"] = "none" if answer_only else "auto"
     return payload
 
 

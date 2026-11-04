@@ -52,10 +52,8 @@ class ReadChatHistory(ReadTool[ReadChatHistoryArgs]):
 
     name = "read_chat_history"
     description = (
-        "Read earlier messages of this conversation that are not in your context. "
-        "offset counts back from the newest message (0 = newest), limit is at most "
-        f"{PAGE_MAX}; query keeps only messages containing that text. Returns seq, "
-        "role and text, oldest first."
+        "Use when the user refers to an earlier message you cannot see. offset 0 is "
+        f"the newest; limit at most {PAGE_MAX}."
     )
     args_model = ReadChatHistoryArgs
 

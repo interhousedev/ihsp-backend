@@ -71,15 +71,11 @@ def _limits(ask: int) -> StaticLimits:
 
 def test_student_prompt_has_language_and_tool_policy_rules() -> None:
     """The language rule covers notes and tool summaries; the policy caps searches."""
-    prompt = system_prompt(Assistant.STUDENT, "uz", date(2026, 10, 17))
+    prompt = system_prompt(Assistant.STUDENT, date(2026, 10, 17))
 
-    assert "language of the user's last message" in prompt
-    assert "summary of tool results" in prompt
-    assert "Tool policy" in prompt and "variants" in prompt
+    assert "At most 3" in prompt and "variants" in prompt
     assert "ask whether to search the internet" in prompt
-    auto = system_prompt(
-        Assistant.STUDENT, "uz", date(2026, 10, 17), ask_before_web=False
-    )
+    auto = system_prompt(Assistant.STUDENT, date(2026, 10, 17), ask_before_web=False)
     assert "call search_web once" in auto and "ask whether" not in auto
 
 
@@ -97,7 +93,7 @@ def test_prompt_and_tools_fit_the_token_budget() -> None:
     )
     tools.append(ReadChatHistory(None))  # type: ignore[arg-type]
     schemas = json.dumps([t.spec().to_llm() for t in tools], ensure_ascii=False)
-    prompt = system_prompt(Assistant.STUDENT, "ru", date(2026, 10, 17))
+    prompt = system_prompt(Assistant.STUDENT, date(2026, 10, 17))
 
     assert (len(prompt) + len(schemas)) // 4 <= TOKEN_BUDGET
 

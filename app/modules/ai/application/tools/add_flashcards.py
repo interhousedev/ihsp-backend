@@ -28,9 +28,7 @@ class AddFlashcards(WriteTool[AddFlashcardsArgs]):
     """Adds cards to a set after the student approves."""
 
     name = "add_flashcards"
-    description = (
-        "Add cards to one of the student's flash card sets (needs their approval)."
-    )
+    description = "Use when asked to extend a flash card set. Needs approval."
     args_model = AddFlashcardsArgs
 
     def __init__(self, flashcards: FlashcardsApi) -> None:

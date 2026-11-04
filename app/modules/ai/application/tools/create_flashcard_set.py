@@ -27,11 +27,7 @@ class CreateFlashcardSet(WriteTool[CreateFlashcardSetArgs]):
     """Creates a set after the student approves it."""
 
     name = "create_flashcard_set"
-    description = (
-        "Create a new flash card set for the student (needs their approval). "
-        f"Give a short title and 1-{MAX_CARDS} cards with a front (question) and "
-        "a back (answer)."
-    )
+    description = f"Use when asked for new flash cards (1-{MAX_CARDS}). Needs approval."
     args_model = CreateFlashcardSetArgs
 
     def __init__(self, flashcards: FlashcardsApi) -> None:

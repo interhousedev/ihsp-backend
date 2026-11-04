@@ -84,10 +84,7 @@ class SearchKnowledgeBase(ReadTool[SearchKnowledgeBaseArgs]):
 
     name = "search_knowledge_base"
     description = (
-        "Search the school knowledge base (rules, schedules, staff, procedures, "
-        "events, contacts, policies). Call it before answering any school-specific "
-        "question you cannot answer from the context. Returns key, title, value "
-        "and tags of the best entries, or says that nothing was found."
+        "Use first for school facts: rules, staff, procedures, events, contacts."
     )
     args_model = SearchKnowledgeBaseArgs
 
