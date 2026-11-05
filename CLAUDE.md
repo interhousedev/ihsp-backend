@@ -51,6 +51,10 @@ Changing a route or a schema means: export `openapi/openapi.json`, commit it wit
 - Web search uses Exa with a limiter of 10 requests per second shared by all processes (`IHSP_EXA__MAX_QPS`). Stored pages are searched first.
 - Fake modes (the default) need no key. Run real-service checks only when the user asks, with keys from the git-ignored files.
 
+## Releases
+
+Use the `release` skill to run CI locally, build images, or release a version. Every release moves its entries in `CHANGELOG.md` from `[Unreleased]` to the new version before the tag is created.
+
 ## Deployment notes
 
 The server only pulls images built by CI. `scripts/cloud_deploy.sh <host> --tag <version>` deploys and rolls back; migrations are forward only. Vault starts sealed after a reboot. Never put `.env.prod`, `secrets/` or the Vault unseal keys into git, chat or logs.
