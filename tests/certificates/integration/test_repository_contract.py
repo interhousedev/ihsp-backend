@@ -1,5 +1,6 @@
 """Types and entries: the same suite runs on the in-memory fake and on PostgreSQL."""
 
+from dataclasses import replace
 from datetime import UTC, date, datetime
 from uuid import UUID
 
@@ -57,6 +58,29 @@ def make_entry(student: UUID, type_id: UUID, **fields: object) -> CertificateEnt
     }
     values.update(fields)
     return CertificateEntry(**values)  # type: ignore[arg-type]
+
+
+async def test_the_starred_field_round_trips(uow_factory: UowFactory) -> None:
+    """PF-DB-01: the star of a field is kept in the types' jsonb on both stores."""
+    kind = make_type(
+        "sat",
+        custom_fields=[
+            replace(number_field("score"), primary=True),
+            text_field("note"),
+        ],
+    )
+    async with uow_factory() as uow:
+        await uow.types.add(kind)
+        await uow.commit()
+
+    async with uow_factory() as uow:
+        loaded = await uow.types.get(kind.id)
+
+    assert loaded is not None
+    assert [(f.key, f.primary) for f in loaded.custom_fields] == [
+        ("score", True),
+        ("note", False),
+    ]
 
 
 async def test_types_round_trip_in_position_order(uow_factory: UowFactory) -> None:

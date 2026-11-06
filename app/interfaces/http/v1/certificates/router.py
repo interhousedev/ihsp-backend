@@ -8,6 +8,7 @@ from app.interfaces.http.v1.certificates.handlers import (
     delete_type,
     download_file,
     export_entries,
+    get_file_url,
     get_staff_ranking,
     get_staff_stats,
     import_emis,
@@ -112,6 +113,11 @@ router.add_api_route(
     download_file.download_file,
     methods=["GET"],
     status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+)
+router.add_api_route(
+    "/files/{file_id}/download-url",
+    get_file_url.get_file_url,
+    methods=["GET"],
 )
 
 # - - - Staff - - -

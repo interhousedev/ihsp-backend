@@ -48,6 +48,8 @@ class CustomField:
     """Number fields only: the lowest allowed value (None: open)."""
     max_value: float | None = None
     """Number fields only: the highest allowed value (None: open)."""
+    primary: bool = False
+    """The priority star: statistics group or average by this field (one per type)."""
 
     def to_dict(self) -> dict[str, Any]:
         """Return the JSON form stored on the type."""
@@ -60,6 +62,7 @@ class CustomField:
             "allow_other": self.allow_other,
             "min": self.min_value,
             "max": self.max_value,
+            "primary": self.primary,
         }
 
 
@@ -78,6 +81,8 @@ def field_from_dict(raw: Mapping[str, Any]) -> CustomField:
         allow_other=bool(raw.get("allow_other", False)),
         min_value=_optional_float(raw.get("min")),
         max_value=_optional_float(raw.get("max")),
+        # A stored star on a multi choice (no single value) counts as no star.
+        primary=bool(raw.get("primary", False)) and kind is not FieldKind.MULTI,
     )
 
 
@@ -94,6 +99,14 @@ def check_fields(fields: list[CustomField]) -> None:
         raise _type_error()
     for item in fields:
         _check_field(item)
+    _check_primary(fields)
+
+
+def _check_primary(fields: list[CustomField]) -> None:
+    """At most one starred field, and never a multi choice (no single value)."""
+    starred = [f for f in fields if f.primary]
+    if len(starred) > 1 or any(f.kind is FieldKind.MULTI for f in starred):
+        raise _type_error()
 
 
 def _check_field(item: CustomField) -> None:

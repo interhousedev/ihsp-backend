@@ -50,6 +50,8 @@ class CustomFieldInput(BaseModel):
     """Number fields: the lowest value (null: open)."""
     max: float | None = None
     """Number fields: the highest value (null: open)."""
+    primary: bool = False
+    """The priority star: stats group or average by this field (one per type)."""
 
 
 class CustomFieldResponse(CustomFieldInput):
@@ -67,6 +69,7 @@ class CustomFieldResponse(CustomFieldInput):
             allow_other=item.allow_other,
             min=item.min_value,
             max=item.max_value,
+            primary=item.primary,
         )
 
 
@@ -246,19 +249,25 @@ class StaffEntriesResponse(BaseModel):
 
 
 class GroupCountsResponse(BaseModel):
-    """Counts per level of one group."""
+    """Counts per value of one group, and the group's average of a starred number."""
 
     group_id: UUID
     group_name: str
     counts: dict[str, int]
+    average: float | None = None
 
 
 class TypeStatsResponse(BaseModel):
-    """Levels of a type and the counts per group."""
+    """Values of a type and counts per group; grouped by the starred field if any."""
 
     type_id: UUID
     levels: list[str]
     groups: list[GroupCountsResponse]
+    primary_key: str | None = None
+    """The starred field's key; null when the type has no star (grouped by level)."""
+    primary_kind: Literal["text", "number", "single"] | None = None
+    average: float | None = None
+    """The average of the starred number field over the whole scope."""
 
 
 class StaffStatsResponse(BaseModel):
@@ -279,9 +288,13 @@ class StaffStatsResponse(BaseModel):
                             group_id=g.group_id,
                             group_name=g.group_name,
                             counts=g.counts,
+                            average=g.average,
                         )
                         for g in item.groups
                     ],
+                    primary_key=item.primary_key,
+                    primary_kind=item.primary_kind.value if item.primary_kind else None,
+                    average=item.average,
                 )
                 for item in stats
             ]
@@ -400,3 +413,9 @@ class ExportBody(BaseModel):
 
     file_ids: list[UUID] | None = Field(default=None, max_length=1000)
     filters: StaffFiltersBody | None = None
+
+
+class CertificateFileUrl(BaseModel):
+    """A short-lived address of an attached file."""
+
+    url: str

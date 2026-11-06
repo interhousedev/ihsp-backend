@@ -211,6 +211,22 @@ async def test_download_redirects_for_the_group_curator_only(
     assert denied.status_code == 403
 
 
+async def test_download_url_follows_the_same_access_rule(
+    h: CertificatesHarness, api: Api
+) -> None:
+    """The address goes to the group's curator; another group's curator gets 403."""
+    kind = await h.add_type("sat")
+    file_id = await h.add_file(h.ann, await h.add_entry(h.ann, kind))
+    path = f"/v1/certificates/files/{file_id}/download-url"
+
+    ok = await api.as_(h.curator).client.get(path)
+    denied = await api.as_(h.other_curator).client.get(path)
+
+    assert ok.status_code == 200
+    assert ok.json()["url"].startswith("https://storage.test/")
+    assert denied.status_code == 403
+
+
 async def test_import_emis_returns_the_counters(
     h: CertificatesHarness, api: Api
 ) -> None:
@@ -423,6 +439,46 @@ async def test_staff_filters_and_values_use_custom_fields(
     }
     assert (scores.json()["min"], scores.json()["max"]) == (200.0, 700.0)
     assert unknown.status_code == 422
+
+
+async def test_admin_stars_one_field_and_stats_average_it(
+    h: CertificatesHarness, api: Api
+) -> None:
+    """PF-API-01: one star per type is saved; the stats carry the starred number."""
+    two_stars = [
+        {"key": "score", "kind": "number", "label": CUSTOM_LABEL, "primary": True},
+        {"key": "note", "kind": "text", "label": CUSTOM_LABEL, "primary": True},
+    ]
+    refused = await api.client.post(
+        "/v1/certificates/admin/types",
+        json={"code": "exam", "name": NAME, "custom_fields": two_stars},
+    )
+    kind = await h.add_type(
+        "exam",
+        custom_fields=[
+            make_field("score", "number", primary=True),
+            make_field("note", "text"),
+        ],
+    )
+    await h.add_entry(h.ann, kind, custom={"score": 1200})
+    await h.add_entry(h.bob, kind, custom={"score": 1400})
+    await h.add_entry(h.cid, kind, custom={"score": 1000})
+    staff = api.as_(h.admin).client
+
+    stats = await staff.get("/v1/certificates/staff/stats")
+    listed = await api.client.get("/v1/certificates/types")
+
+    assert refused.status_code == 422
+    assert listed.status_code == 200
+    stored = next(t for t in listed.json() if t["id"] == str(kind.id))
+    assert [(f["key"], f["primary"]) for f in stored["custom_fields"]] == [
+        ("score", True),
+        ("note", False),
+    ]
+    [entry] = [t for t in stats.json()["types"] if t["type_id"] == str(kind.id)]
+    assert (entry["primary_key"], entry["primary_kind"]) == ("score", "number")
+    assert entry["levels"] == ["1000", "1200", "1400"]
+    assert entry["average"] == pytest.approx(3600 / 3)
 
 
 def make_field(key: str, kind: str, **over: object) -> object:
