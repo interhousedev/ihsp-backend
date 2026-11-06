@@ -6,11 +6,15 @@ from typing import Protocol, Self
 from app.modules.lms.ports.learning.attempt_repository import AttemptRepository
 from app.modules.lms.ports.learning.course_repository import CourseRepository
 from app.modules.lms.ports.learning.enrollment_repository import EnrollmentRepository
+from app.modules.lms.ports.learning.media_grant_repository import (
+    MediaGrantRepository,
+)
 from app.modules.lms.ports.learning.revision_repository import RevisionRepository
 from app.modules.lms.ports.learning.staff_repository import StaffRepository
 from app.modules.lms.ports.learning.step_repository import StepRepository
 from app.modules.lms.ports.learning.step_state_repository import StepStateRepository
 from app.modules.lms.ports.learning.version_repository import VersionRepository
+from app.shared.notifications import AuditDraft
 
 
 class LearningUnitOfWork(Protocol):
@@ -56,6 +60,11 @@ class LearningUnitOfWork(Protocol):
         """Test attempts."""
         ...
 
+    @property
+    def media_grants(self) -> MediaGrantRepository:
+        """Media links."""
+        ...
+
     async def __aenter__(self) -> Self:
         """Open the transaction."""
         ...
@@ -67,6 +76,10 @@ class LearningUnitOfWork(Protocol):
         tb: TracebackType | None,
     ) -> None:
         """Roll back unless committed, then close."""
+        ...
+
+    def audit(self, *drafts: AuditDraft) -> None:
+        """Queue audit events to insert at commit."""
         ...
 
     async def commit(self) -> None:

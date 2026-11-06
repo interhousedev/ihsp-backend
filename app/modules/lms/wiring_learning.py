@@ -15,6 +15,7 @@ from app.modules.lms.application.learning.get_course_page import GetCoursePage
 from app.modules.lms.application.learning.get_h5p_launch import GetH5PLaunch
 from app.modules.lms.application.learning.get_step_view import GetStepView
 from app.modules.lms.application.learning.get_video_stream import GetVideoStream
+from app.modules.lms.application.learning.issue_media_grant import IssueMediaGrant
 from app.modules.lms.application.learning.join_course import JoinCourse
 from app.modules.lms.application.learning.list_broadcast_audience import (
     ListBroadcastAudience,
@@ -27,8 +28,11 @@ from app.modules.lms.application.learning.list_my_courses import ListMyCourses
 from app.modules.lms.application.learning.mark_step_viewed import MarkStepViewed
 from app.modules.lms.application.learning.next_card import NextCard
 from app.modules.lms.application.learning.override_score import OverrideScore
+from app.modules.lms.application.learning.read_step_for_mcp import LearnerCourseReader
 from app.modules.lms.application.learning.record_h5p_result import RecordH5PResult
+from app.modules.lms.application.learning.redeem_media_grant import RedeemMediaGrant
 from app.modules.lms.application.learning.review_card import ReviewCard
+from app.modules.lms.application.learning.revoke_media_grants import RevokeMediaGrants
 from app.modules.lms.application.learning.save_answers import SaveAnswers
 from app.modules.lms.application.learning.source_reader import LmsSourceReaderImpl
 from app.modules.lms.application.learning.start_attempt import StartAttempt
@@ -71,6 +75,10 @@ class LearningServices:
     source_reader: LmsSourceReaderImpl
     list_broadcast_audience: ListBroadcastAudience
     get_course_landing: GetCourseLanding
+    issue_media_grant: IssueMediaGrant
+    redeem_media_grant: RedeemMediaGrant
+    revoke_media_grants: RevokeMediaGrants
+    learner_course_reader: LearnerCourseReader
 
 
 def build_learning(
@@ -127,4 +135,10 @@ def build_learning(
         source_reader=LmsSourceReaderImpl(uow_factory),
         list_broadcast_audience=ListBroadcastAudience(uow_factory),
         get_course_landing=GetCourseLanding(uow_factory, identity, clock),
+        issue_media_grant=IssueMediaGrant(uow_factory, clock, cache),
+        redeem_media_grant=RedeemMediaGrant(
+            uow_factory, clock, cache, identity, files, deps.rate_limiter
+        ),
+        revoke_media_grants=RevokeMediaGrants(uow_factory, clock),
+        learner_course_reader=LearnerCourseReader(uow_factory, cache),
     )

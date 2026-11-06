@@ -9,6 +9,9 @@ from app.modules.lms.infrastructure.learning.repositories.course_repository impo
 from app.modules.lms.infrastructure.learning.repositories.enrollment_repository import (
     SqlEnrollmentRepository,
 )
+from app.modules.lms.infrastructure.learning.repositories.media_grant_repository import (  # noqa: E501
+    SqlMediaGrantRepository,
+)
 from app.modules.lms.infrastructure.learning.repositories.revision_repository import (
     SqlRevisionRepository,
 )
@@ -38,6 +41,7 @@ class SqlLearningUnitOfWork(SqlUnitOfWork):
     enrollments: SqlEnrollmentRepository
     states: SqlStepStateRepository
     attempts: SqlAttemptRepository
+    media_grants: SqlMediaGrantRepository
 
     def _init_repos(self) -> None:
         """Create the repositories bound to the session."""
@@ -49,3 +53,4 @@ class SqlLearningUnitOfWork(SqlUnitOfWork):
         self.enrollments = SqlEnrollmentRepository(self.session)
         self.states = SqlStepStateRepository(self.session)
         self.attempts = SqlAttemptRepository(self.session)
+        self.media_grants = SqlMediaGrantRepository(self.session)

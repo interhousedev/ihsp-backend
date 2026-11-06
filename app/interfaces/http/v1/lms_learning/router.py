@@ -23,6 +23,11 @@ from app.interfaces.http.v1.lms_learning.handlers.list_my_courses import (
 )
 from app.interfaces.http.v1.lms_learning.handlers.list_students import list_students
 from app.interfaces.http.v1.lms_learning.handlers.mark_viewed import mark_viewed
+from app.interfaces.http.v1.lms_learning.handlers.media import (
+    list_media_grants,
+    redeem_media,
+    revoke_media_grant,
+)
 from app.interfaces.http.v1.lms_learning.handlers.next_card import next_card
 from app.interfaces.http.v1.lms_learning.handlers.override_attempt import (
     override_attempt,
@@ -36,6 +41,14 @@ from fastapi import APIRouter
 
 router = APIRouter(prefix="/v1/lms", tags=["lms"])
 
+router.add_api_route("/media/redeem", redeem_media, methods=["POST"])
+router.add_api_route("/media/grants", list_media_grants, methods=["GET"])
+router.add_api_route(
+    "/media/grants/{grant_id}",
+    revoke_media_grant,
+    methods=["DELETE"],
+    status_code=204,
+)
 router.add_api_route("/courses", list_courses, methods=["GET"])
 router.add_api_route("/my-courses", list_my_courses, methods=["GET"])
 router.add_api_route("/courses/{slug}", get_course, methods=["GET"])

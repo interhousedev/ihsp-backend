@@ -38,6 +38,13 @@ class VideoNotFoundError(NotFoundError):
     message_key = "lms-learn-video-not-found"
 
 
+class MediaNotAvailableError(NotFoundError):
+    """A media link that is unknown, stopped, expired or not for this viewer."""
+
+    code = "lms/media-not-available"
+    message_key = "lms-media-not-available"
+
+
 class H5PNotFoundError(NotFoundError):
     """The live step has no H5P block with a package and this ID."""
 
