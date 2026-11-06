@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Fixed
+
+- Gemini redirect sync received no query from nginx, so the `redirect_uri` error remained.
+
 ## [1.1.1] - 2026-11-06
 
 ### Added

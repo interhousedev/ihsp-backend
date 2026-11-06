@@ -10,10 +10,15 @@ location = /oauth2/register {
 # decide. A failed sync never blocks the authorization.
 location = /_mcp_redirect_sync {
     internal;
+    # An auth_request subrequest has no query of its own: take the client's.
+    set $sync_query "";
+    if ($request_uri ~ "\?(.*)$") {
+        set $sync_query $1;
+    }
     proxy_pass_request_body off;
     proxy_set_header Content-Length "";
     include /etc/nginx/ihsp/proxy.inc;
-    proxy_pass $up_identity/v1/oauth/mcp/redirect-sync$is_args$args;
+    proxy_pass $up_identity/v1/oauth/mcp/redirect-sync?$sync_query;
 }
 
 location = /oauth2/auth {
