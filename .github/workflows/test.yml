@@ -111,6 +111,12 @@ jobs:
       - name: Install the locked dependencies
         run: uv sync --frozen
 
+      # The settings read the git-ignored signing key, even for the export.
+      - name: Generate the development JWT-bearer key
+        run: |
+          mkdir -p materials/dev-keys
+          openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out materials/dev-keys/jwt-bearer.pem
+
       # The export contacts no service; the dev settings file is enough.
       - name: Export the OpenAPI document
         env:
