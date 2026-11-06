@@ -3,7 +3,7 @@
   "academic-term-overlap": "The dates overlap another term.",
   "academic-term-duplicate": "A term with this academic year and half already exists.",
   "academic-term-dates-invalid": "A term must start before it ends.",
-  "academic-term-bells-invalid": "The bell schedule is invalid: each period may appear once per weekday and must end after it starts.",
+  "academic-term-bells-invalid": "The bell schedule is invalid: each period may appear once per weekday and must end after it starts, and periods of one day must not overlap.",
   "academic-term-non-study-day-invalid": "A non-study day must fall inside the term.",
   "academic-term-moved-day-invalid": "A moved day must be a Monday-to-Friday date and follow a Monday-to-Friday weekday.",
   "academic-no-term-for-date": "No term contains this date.",

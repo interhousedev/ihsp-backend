@@ -10,13 +10,13 @@ Backend and web release together under the same version. Do the same steps in `i
 ## 1. Run CI locally
 
 ```bash
-scripts/ci_local.sh --fast      # lint, unit, openapi: before every push
+scripts/ci_local.sh --fast      # lint (with mypy and ty), unit, openapi: before every push
 scripts/ci_local.sh             # lint, test, openapi, security: before a release
 scripts/ci_local.sh test        # one stage
 scripts/security_scan.sh semgrep
 ```
 
-Logs are in `reports/ci-local/`. The GitHub Test workflow runs only on pull requests, so a direct push to `main` is not tested in CI. The `test` stage is the only full run: do it on the commit you will release.
+Logs are in `reports/ci-local/`. The GitHub Test workflow runs on pull requests and on pushes to `main`. Still run the `test` stage on the commit you will release.
 
 For prompt changes, run the real-model evals when the user asks (see the `testing` skill and `tests/ai/evals/conftest.py`). Each run costs about 150 model calls.
 
@@ -28,7 +28,7 @@ When `pyproject.toml` or `uv.lock` changed, also commit `licenses/python.json`. 
 
 ## 3. Push and wait for CI
 
-Commit in layers, signed, then push `main`. Wait until Security, Lint, CodeQL and Build image pass on that commit (`gh run list -c <sha>`).
+Commit in layers, signed, then push `main`. Wait until Test, Security, Lint, CodeQL and Build image pass on that commit (`gh run list -c <sha>`).
 
 ## 4. Tag
 

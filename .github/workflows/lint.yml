@@ -45,5 +45,5 @@ jobs:
       - name: Install the locked dependencies, dev group included
         run: uv sync --frozen
 
-      - name: Formatting, import order, lint and types
+      - name: Formatting, import order, lint and types (mypy, ty)
         run: scripts/style_check.sh

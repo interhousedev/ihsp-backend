@@ -13,5 +13,8 @@
   "files-no-text": "This file has no readable text.",
   "files-page-not-found": "This page of the file does not exist.",
   "files-image-count": "Choose from 1 to {max} images.",
-  "error-file-image-unsupported": "This image cannot be added to a PDF as it is. Save the photo as a JPEG and try again."
+  "error-file-image-unsupported": "This image cannot be added to a PDF as it is. Save the photo as a JPEG and try again.",
+  "files-share-unsupported": "Only your own student or staff files can be shared.",
+  "files-share-limit": "The limit of {limit} people is reached.",
+  "files-share-recipient-not-found": "This person was not found."
 }

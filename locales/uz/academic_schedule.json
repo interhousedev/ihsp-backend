@@ -3,7 +3,7 @@
   "academic-term-overlap": "Sanalar boshqa semestr bilan kesishadi.",
   "academic-term-duplicate": "Bu o‘quv yili va yarmi uchun semestr allaqachon mavjud.",
   "academic-term-dates-invalid": "Semestr tugashidan oldin boshlanishi kerak.",
-  "academic-term-bells-invalid": "Qo‘ng‘iroqlar jadvali noto‘g‘ri: har bir juftlik hafta kuniga bir marta bo‘lishi va boshlanishidan keyin tugashi kerak.",
+  "academic-term-bells-invalid": "Qo‘ng‘iroqlar jadvali noto‘g‘ri: har bir juftlik hafta kuniga bir marta bo‘lishi va boshlanishidan keyin tugashi kerak, bir kundagi juftliklar vaqti esa ustma-ust tushmasligi kerak.",
   "academic-term-non-study-day-invalid": "Dam olish kuni semestr ichida bo‘lishi kerak.",
   "academic-term-moved-day-invalid": "Ko‘chirilgan kun dushanbadan jumagacha bo‘lgan kunga to‘g‘ri kelishi va dushanbadan jumagacha bo‘lgan hafta kuniga ergashishi kerak.",
   "academic-no-term-for-date": "Bu sanani o‘z ichiga olgan semestr yo‘q.",

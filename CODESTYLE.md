@@ -25,7 +25,7 @@ How we write backend code. It follows the conventions of the 21ID bot and Auth A
 | Types | `mypy --strict` on `app` |
 | Tests | `pytest`, `pytest-asyncio` (`asyncio_mode = "auto"`, session loop scopes), `pytest-cov`, `hypothesis`, `testcontainers`, `respx` |
 
-`scripts/style_check.sh` runs black, isort, flake8 and mypy; CI runs the same on every push.
+`scripts/style_check.sh` runs black, isort, flake8, mypy and ty; CI runs the same on every push.
 
 ## Module and layer structure
 

@@ -17,6 +17,9 @@ Creates or updates
 * the trust relationship for the issuer `IHSP_JWT_BEARER__ISSUER` with the public
   key of the identity signing key (replaced on every run).
 
+With `--mcp-clients-only` it only adds new fixed redirect URIs to the OAuth clients the
+connect wizard pre-created earlier (`scripts/cloud_deploy.sh` runs this on each deploy).
+
 Re-running changes nothing that is already correct.
 """
 
@@ -27,11 +30,13 @@ import time
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
+from urllib.parse import parse_qs, urlparse
 
 from app.modules.identity.domain.client_policy import (
     LONG_SESSION_CLIENTS,
     refresh_days,
 )
+from app.modules.identity.domain.mcp_clients import EXACT_REDIRECTS
 from app.modules.identity.infrastructure.jwt_assertion import JoseAssertionSigner
 from app.settings import Settings, load_settings
 from app.shared.clock import SystemClock
@@ -56,6 +61,7 @@ MINIAPP = "miniapp"
 DEV_MINIAPP_SECRET = "dev-miniapp-secret"  # default of identity's own setting
 TRUST_YEARS = 2
 READY_WAIT_SECONDS = 60
+CLIENT_PAGE_SIZE = 500
 
 
 def out(message: str) -> None:
@@ -123,6 +129,21 @@ def miniapp_client(secret: str | None) -> dict[str, Any]:
     return client
 
 
+def synced_redirects(client: dict[str, Any]) -> list[str] | None:
+    """The new redirect URIs of a client the wizard pre-created; None if unchanged.
+
+    The wizard's client is recognised by its owner and by the first fixed URI of the
+    service. Self-registered clients and own clients with other URIs are left alone.
+    """
+    metadata = client.get("metadata") or {}
+    current = client.get("redirect_uris") or []
+    fixed = EXACT_REDIRECTS.get(metadata.get("service"), ())
+    if not metadata.get("owner_user_id") or not fixed or fixed[0] not in current:
+        return None
+    missing = [uri for uri in fixed if uri not in current]
+    return [*current, *missing] if missing else None
+
+
 class HydraAdminApi:
     """The few admin calls the bootstrap needs."""
 
@@ -153,6 +174,31 @@ class HydraAdminApi:
         existing.raise_for_status()
         self._http.put(f"/admin/clients/{client_id}", json=client).raise_for_status()
         return "updated"
+
+    def sync_mcp_clients(self) -> int:
+        """Add missing fixed redirect URIs to pre-created clients; return the count."""
+        changed = 0
+        params: dict[str, Any] = {"page_size": CLIENT_PAGE_SIZE}
+        while True:
+            response = self._http.get("/admin/clients", params=params)
+            response.raise_for_status()
+            clients = response.json()
+            for client in clients:
+                uris = synced_redirects(client)
+                if uris is None:
+                    continue
+                patch = [{"op": "replace", "path": "/redirect_uris", "value": uris}]
+                self._http.patch(
+                    f"/admin/clients/{client['client_id']}", json=patch
+                ).raise_for_status()
+                changed += 1
+            next_page = response.links.get("next", {}).get("url")
+            if not clients or not next_page:
+                return changed
+            token = parse_qs(urlparse(next_page).query).get("page_token")
+            if not token:
+                return changed
+            params = {"page_size": CLIENT_PAGE_SIZE, "page_token": token[0]}
 
     def replace_trust(self, issuer: str, grant: dict[str, Any]) -> None:
         """Delete the trust relationships of the issuer and create the new one."""
@@ -203,6 +249,9 @@ def main() -> int:
     settings = load_settings()
     api = HydraAdminApi(settings.hydra.admin_url)
     api.wait_ready()
+    if "--mcp-clients-only" in sys.argv[1:]:
+        out(f"mcp clients updated: {api.sync_mcp_clients()}")
+        return 0
     bases = web_app_bases(settings)
     for app in WEB_APPS:
         out(f"client {app}: {api.upsert_client(web_client(app, bases[app]))}")
@@ -220,6 +269,7 @@ def main() -> int:
         out("warning: no JWT_BEARER key; the trusted key dies with this script")
     api.replace_trust(settings.jwt_bearer.issuer, trust_grant(settings))
     out(f"trust {settings.jwt_bearer.issuer}: replaced")
+    out(f"mcp clients updated: {api.sync_mcp_clients()}")
     return 0
 
 

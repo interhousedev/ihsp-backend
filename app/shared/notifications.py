@@ -46,6 +46,7 @@ class NotificationType(StrEnum):
     TEACHER_TEMPORARY_MARKS = "teacher_temporary_marks"
     FEEDBACK_NEW = "feedback_new"
     FEEDBACK_RESPONSE = "feedback_response"
+    MCP_SCOPE_OFFER = "mcp_scope_offer"
 
 
 @dataclass(frozen=True, slots=True)

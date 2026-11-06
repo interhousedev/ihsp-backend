@@ -28,6 +28,7 @@ urls:
   consent: http://localhost:8000/v1/oauth/flow/consent
   logout: http://localhost:8000/v1/oauth/flow/logout
   post_logout_redirect: http://localhost:3001/
+  error: http://localhost:3001/error/
 
 secrets:
   system:
@@ -82,6 +83,17 @@ webfinger:
       - files:read
       - flashcards:read
       - flashcards:write
+      - sync:run
+      - teachers:read
+      - knowledge:read
+      - flashcards:delete
+      - tests:read
+      - tests:write
+      - notebooks:read
+      - notebooks:write
+      - library:read
+      - files:read.all
+      - learning:read
       - lms.courses.read
       - lms.courses.write
       - lms.courses.delete

@@ -1,0 +1,4 @@
+{
+  "mcp-material-pending": "EMIS has been asked. Call this tool again now with the same arguments; the server waits during the call.",
+  "mcp-material-timeout": "EMIS did not finish within 60 seconds. These are the materials that exist so far; try again later."
+}

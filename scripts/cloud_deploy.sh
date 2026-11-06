@@ -151,6 +151,10 @@ dc run --rm --no-deps hydra-migrate
 dc run --rm --no-deps migrate
 
 dc up -d --wait --remove-orphans --force-recreate
+# Pre-created MCP clients get new fixed redirect URIs; idempotent, and a failure here
+# must not fail a deploy whose containers are already up.
+dc --profile tools run --rm --no-deps -T bootstrap python /scripts/hydra_bootstrap.py --mcp-clients-only \
+    || echo "WARNING: MCP client redirect sync failed; rerun it after checking Hydra" >&2
 # Containers that an interrupted earlier deploy renamed to <id>_ihsp-... are left over.
 docker ps -a --format '{{.Names}}' | grep -E '^[0-9a-f]{12}_ihsp-' | xargs -r docker rm -f
 # The edge config is bind-mounted: a running nginx keeps the old upstreams until it reloads.

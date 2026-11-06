@@ -6,3 +6,4 @@ uv run black --check app tests
 uv run isort --check-only app tests
 uv run flake8 app tests
 uv run mypy app
+uv run ty check --output-format concise --exit-zero-on-warning

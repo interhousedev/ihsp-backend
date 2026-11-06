@@ -56,6 +56,7 @@ API_PACKAGES: tuple[str, ...] = (
     f"{V1}.admin_jobs",
     f"{V1}.admin_insights",
     f"{V1}.admin_logs",
+    f"{V1}.admin_mcp",
     f"{V1}.admin_broadcasts",
     f"{V1}.admin_settings",
     f"{V1}.admin_ai",

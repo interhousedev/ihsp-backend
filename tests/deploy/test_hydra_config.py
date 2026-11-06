@@ -143,3 +143,23 @@ def test_discovery_lists_every_mcp_scope(prod: dict[str, Any]) -> None:
     listed = set(prod["webfinger"]["oidc_discovery"]["supported_scope"])
     catalog = {info.scope for infos in SCOPE_CATALOG.values() for info in infos}
     assert listed == catalog
+
+
+def test_hydra_errors_land_on_the_friendly_page_of_the_id_app(
+    prod: dict[str, Any], dev: dict[str, Any]
+) -> None:
+    """Without `urls.error` Hydra shows its bare "key is not set" fallback."""
+    assert prod["urls"]["error"] == "https://id.ihsu.uz/error/"
+    assert dev["urls"]["error"] == "http://localhost:3001/error/"
+    compose = (MATERIALS_DIR / "docker-compose.prod.yaml").read_text(encoding="utf-8")
+    assert "URLS_ERROR: https://id.${DOMAIN}/error/" in compose
+    local = (MATERIALS_DIR / "docker-compose.local.yaml").read_text(encoding="utf-8")
+    assert "URLS_ERROR: http://id.${LOCAL_DOMAIN:-localhost}" in local
+
+
+def test_deploy_syncs_the_redirects_of_existing_mcp_clients() -> None:
+    """MCP-5: no operator step is needed to update pre-created clients."""
+    script = (MATERIALS_DIR.parent / "scripts" / "cloud_deploy.sh").read_text(
+        encoding="utf-8"
+    )
+    assert "hydra_bootstrap.py --mcp-clients-only" in script

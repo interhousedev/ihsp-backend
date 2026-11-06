@@ -106,6 +106,19 @@ class FakeIdentity:
         """Return the known users."""
         return {u: self.users[u] for u in user_ids if u in self.users}
 
+    async def search_users(
+        self, query: str, *, roles: Sequence[Role] = (), limit: int = 20
+    ) -> list[UserRef]:
+        """Users whose name contains the query."""
+        wanted = query.casefold()
+        found = [
+            u
+            for u in self.users.values()
+            if wanted in f"{u.first_name} {u.last_name}".casefold()
+            and (not roles or u.roles & set(roles))
+        ]
+        return found[:limit]
+
 
 class FakeMarks:
     """MarksQueries with canned data and a call log."""

@@ -944,6 +944,16 @@ class UrlsSettings(BaseModel):
     """Base URL of the MCP servers."""
 
 
+class McpSettings(BaseModel):
+    """The MCP servers: how long traces are kept, how often a sync may be asked."""
+
+    call_log_retention_days: int = Field(default=90, ge=1)
+    """Days a row of the MCP call log is kept."""
+
+    sync_cooldown_seconds: int = Field(default=1800, ge=60)
+    """Seconds between self-service EMIS syncs of one student through MCP."""
+
+
 class HttpSettings(BaseModel):
     """HTTP edge: which proxy may pass on the real client address."""
 
@@ -1196,6 +1206,7 @@ class Settings(BaseSettings):
     smtp_in: SmtpInSettings = Field(default_factory=SmtpInSettings)
     http: HttpSettings = Field(default_factory=HttpSettings)
     urls: UrlsSettings = Field(default_factory=UrlsSettings)
+    mcp: McpSettings = Field(default_factory=McpSettings)
     bugsink: BugsinkSettings = Field(default_factory=BugsinkSettings)
     app: AppSettings = Field(default_factory=AppSettings)
     limits: LimitsSettings = Field(default_factory=LimitsSettings)

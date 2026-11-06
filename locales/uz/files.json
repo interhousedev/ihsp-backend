@@ -13,5 +13,8 @@
   "files-no-text": "Bu faylda o'qiladigan matn yo'q.",
   "files-page-not-found": "Faylning bunday sahifasi yo'q.",
   "files-image-count": "1 tadan {max} tagacha rasm tanlang.",
-  "error-file-image-unsupported": "Bu rasmni PDF ga o'zgartirishsiz qo'shib bo'lmaydi. Suratni JPEG sifatida saqlab, qayta urinib ko'ring."
+  "error-file-image-unsupported": "Bu rasmni PDF ga o'zgartirishsiz qo'shib bo'lmaydi. Suratni JPEG sifatida saqlab, qayta urinib ko'ring.",
+  "files-share-unsupported": "Faqat oʼzingizning shaxsiy fayllaringizni ulashish mumkin.",
+  "files-share-limit": "{limit} kishilik chegaraga yetildi.",
+  "files-share-recipient-not-found": "Bu foydalanuvchi topilmadi."
 }

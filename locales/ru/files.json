@@ -13,5 +13,8 @@
   "files-no-text": "В этом файле нет читаемого текста.",
   "files-page-not-found": "Такой страницы файла нет.",
   "files-image-count": "Выберите от 1 до {max} изображений.",
-  "error-file-image-unsupported": "Это изображение нельзя добавить в PDF как есть. Сохраните фото в формате JPEG и повторите."
+  "error-file-image-unsupported": "Это изображение нельзя добавить в PDF как есть. Сохраните фото в формате JPEG и повторите.",
+  "files-share-unsupported": "Поделиться можно только своими личными файлами.",
+  "files-share-limit": "Достигнут предел: {limit} чел.",
+  "files-share-recipient-not-found": "Этот человек не найден."
 }

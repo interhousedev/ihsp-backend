@@ -88,6 +88,17 @@ class Link(IdMixin, TimestampMixin, Base):
             create_constraint=True,
         )
     )
+    lesson_material_kind: Mapped[str | None] = mapped_column(
+        Enum(
+            "homework",
+            "classwork",
+            "video",
+            "other",
+            name="lesson_material_kind",
+            native_enum=False,
+            create_constraint=True,
+        )
+    )
     share_mode: Mapped[str | None] = mapped_column(
         Enum(
             "snapshot",

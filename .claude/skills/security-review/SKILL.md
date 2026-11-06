@@ -21,6 +21,22 @@ Base rules: [SECURITY.md](../../../SECURITY.md), the README "Security" section a
 - Every handler that takes an id loads the object **scoped by the actor** (owner, group, course membership, curator, role) and answers 404, not 403, for someone else's object.
 - Tests per route: own object, another student's, another group's, a revoked or deleted user, a staff role without the scope. MCP tools and bot callbacks get the same tests as HTTP.
 
+## MCP media links and scope offers
+
+- A media link is a bearer capability: 5 hours without sign-in, always for the enrolled, refused for someone signed in and not enrolled (who can still sign out and use it). Every open checks live state; nothing is cached. An unbound connector check must deny: keep `bind_connector_check` in `build_lms`, and test any new process that serves `POST /v1/lms/media/redeem`.
+- A tool that changes state on a read, such as rotating a grant, passes `idempotent=False` to `kit.tool`. A new tool gets an entry in `tests/mcp/test_tool_catalog.py`.
+- A scope offer widens a key only through `DecideScopeOffer`, by token (Telegram) or by id for the signed-in owner (web). Both share one path. The token never leaves the notification, and `ListScopeOffers` must not return it. Never offer Administration scopes: those need a step-up code.
+- Second scopes inside a tool go through `guard.has_scope`: `list_files` shows flash card sets only with `flashcards:read`.
+
+## Sharing notebooks and files
+
+- `load_notebook` and `load_source` are closed to recipients by default; a use case opts in with `shared=True` and must then be read-only for the owner's data. Add a denial test for any new one. Recipients of a file read only through `/v1/files/shared/*`; `may_read` does not know about grants.
+- Only manual notebooks and personal files are shared. Shown, copied and attached sources are limited to `VIEWABLE_KINDS`: chats stay private, and lesson, course, flash card and library sources keep their own audience.
+- A viewer never gets the owner's chat settings, custom prompt, thread, labels, Studio outputs or, with hidden sources, the summary. Their chat uses their own budget and rate limit. Shared text is untrusted (`SHARED_SOURCES_RULE`), and a model-proposed Studio action is dropped.
+- Attached sets are re-checked on every turn, reach the host's owner only and are not followed further. Retrieval scopes by the chosen source ids.
+- Link tokens are 256-bit, stored only as SHA-256, sent in the body or URL fragment, shown once, and joining is rate limited. Unknown, disabled and revoked all answer the same 404. A revoked person stays out of the link until invited directly.
+- The picker needs 3 letters, is rate limited, returns at most 10 and shows only a name.
+
 ## Rate limits and enumeration
 
 - Sign-in, registration, codes, password reset, public shares and short links use `app/shared/rate_limit.py` with a key per IP (`client_ip.py`) and per account.

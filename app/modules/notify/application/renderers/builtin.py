@@ -63,6 +63,9 @@ from app.modules.notify.application.renderers.mail_suspended import (
     MailSuspendedRenderer,
 )
 from app.modules.notify.application.renderers.marks import MarksRenderer
+from app.modules.notify.application.renderers.mcp_scope_offer import (
+    McpScopeOfferRenderer,
+)
 from app.modules.notify.application.renderers.notebook_artifact_ready import (
     NotebookArtifactReadyRenderer,
 )
@@ -109,6 +112,9 @@ def register_builtin_renderers(
     )
     registry.register(
         NotificationType.LOGIN_FAILURES, LoginFailuresRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.MCP_SCOPE_OFFER, McpScopeOfferRenderer(i18n, urls)
     )
     registry.register(
         NotificationType.ACCOUNT_CLOSING, AccountClosingRenderer(i18n, urls)

@@ -220,6 +220,15 @@ PAYLOADS: dict[NotificationType, dict[str, Any]] = {
         "title": "Marks page is blank",
         "reporter_name": "Karimov Ali",
     },
+    NotificationType.MCP_SCOPE_OFFER: {
+        "token": "secret-token",
+        "release_id": "2026-11-mcp-1",
+        "summary_key": "mcp-release-2026-11-mcp-1",
+        "read_scopes": ["teachers:read", "files:read.all"],
+        "write_scopes": ["flashcards:delete"],
+        "connector_names": ["Claude"],
+        "expires_at": "2026-11-20T10:00:00+00:00",
+    },
     NotificationType.FEEDBACK_RESPONSE: {
         "feedback_id": "f",
         "response_id": "r",
@@ -527,3 +536,24 @@ def test_teacher_temporary_marks_list_one_line_per_item(i18n: I18nCore) -> None:
     )
     assert len(lines) == 3
     assert result.link == f"{URLS.staff}/temporary-marks/"
+
+
+@pytest.mark.parametrize("locale", ["uz", "ru", "en"])
+def test_mcp_offer_names_write_scopes_and_hides_the_token(
+    i18n: I18nCore, locale: str
+) -> None:
+    """A7: all three languages name the write scopes; the web never sees the token."""
+    described = describe(
+        NotificationType.MCP_SCOPE_OFFER,
+        PAYLOADS[NotificationType.MCP_SCOPE_OFFER],
+        locale,
+        i18n=i18n,
+        urls=UrlsSettings(),
+        staff=False,
+    )
+    t = i18n.get_context(locale)
+    assert t("mcp-scope-flashcards-delete") in described.body
+    assert t("mcp-scope-files-read-all") in described.body
+    assert "Claude" in described.body
+    assert "secret-token" not in f"{described.title}{described.body}{described.link}"
+    assert described.link is not None and described.link.endswith("/connectors/")

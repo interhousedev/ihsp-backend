@@ -78,6 +78,7 @@ dev = [
     "pytest-asyncio>=1.4.0",
     "pytest-cov>=7.1.0",
     "respx>=0.23.1",
+    "ty>=0.0.97",
     "types-defusedxml>=0.7.0.20260504",
 ]
 
@@ -91,6 +92,25 @@ line_length = 88
 py_version = 313
 sections = ["FUTURE", "STDLIB", "FIRSTPARTY", "THIRDPARTY", "LOCALFOLDER"]
 known_first_party = ["app"]
+
+[tool.ty.environment]
+python-version = "3.13"
+
+[tool.ty.src]
+include = ["app"]
+
+# mypy --strict with the pydantic plugin stays the gate. These rules report mostly
+# pydantic Lax*/Literal coercion, SQLAlchemy result types and lambda narrowing that ty
+# cannot follow yet, so they print as warnings. Every other rule is still an error.
+[tool.ty.rules]
+invalid-argument-type = "warn"
+invalid-assignment = "warn"
+invalid-await = "warn"
+invalid-method-override = "warn"
+invalid-mutable-override = "warn"
+invalid-return-type = "warn"
+not-subscriptable = "warn"
+unresolved-attribute = "warn"
 
 [tool.mypy]
 python_version = "3.13"

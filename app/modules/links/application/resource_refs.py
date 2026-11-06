@@ -25,4 +25,5 @@ def to_ref(view: ResourceView) -> ResourceRef:
         file=view.file,
         created_at=link.created_at,
         target_url=link.target_url,
+        material_kind=link.lesson_material_kind,  # type: ignore[arg-type]
     )

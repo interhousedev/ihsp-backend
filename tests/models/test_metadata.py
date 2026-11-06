@@ -9,6 +9,8 @@ EXPECTED_TABLES = {
     "id.sessions",
     "id.telegram_links",
     "id.mcp_connectors",
+    "id.mcp_call_log",
+    "id.mcp_scope_offers",
     "id.audit_events",
     "id.user_factors",
     "id.passkeys",
@@ -35,6 +37,8 @@ EXPECTED_TABLES = {
     "academic.temporary_marks",
     # files (1), links (1)
     "files.files",
+    "files.file_shares",
+    "files.file_share_links",
     "links.emis_hide_rules",
     "links.links",
     # ai (5: chats and messages of module ai; sets, cards and the review log of
@@ -58,7 +62,7 @@ EXPECTED_TABLES = {
     "admin.limit_extensions",
     "admin.ai_access_restrictions",
     "mail.mail_messages",
-    # lms (8)
+    # lms (9)
     "lms.courses",
     "lms.course_staff",
     "lms.course_steps",
@@ -67,6 +71,7 @@ EXPECTED_TABLES = {
     "lms.enrollments",
     "lms.step_states",
     "lms.test_attempts",
+    "lms.media_grants",
     # notebooks (12)
     "notebooks.notebooks",
     "notebooks.sources",
@@ -85,6 +90,9 @@ EXPECTED_TABLES = {
     "notebooks.source_label_runs",
     "notebooks.subject_default_materials",
     "notebooks.presentation_plans",
+    "notebooks.notebook_shares",
+    "notebooks.notebook_share_links",
+    "notebooks.notebook_linked_sets",
     # library (25)
     "library.subjects",
     "library.item_tags",
@@ -136,10 +144,10 @@ EXPECTED_TABLES = {
 
 
 def test_metadata_contains_every_table_of_the_models_readme() -> None:
-    """spec -> Models plus the later modules (113 tables)."""
+    """spec -> Models plus the later modules (121 tables)."""
     actual = {table.fullname for table in Base.metadata.tables.values()}
 
-    assert len(EXPECTED_TABLES) == 113
+    assert len(EXPECTED_TABLES) == 121
     assert actual == EXPECTED_TABLES
 
 

@@ -82,6 +82,7 @@ class Notification(IdMixin, TimestampMixin, Base):
             "teacher_temporary_marks",
             "feedback_new",
             "feedback_response",
+            "mcp_scope_offer",
             name="type",
             native_enum=False,
             create_constraint=True,

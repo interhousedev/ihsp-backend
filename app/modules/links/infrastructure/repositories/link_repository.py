@@ -36,6 +36,7 @@ def _to_entity(row: LinkRow) -> Link:
         title=row.title,
         lesson_id=row.lesson_id,
         lesson_role=LessonRole(row.lesson_role) if row.lesson_role else None,
+        lesson_material_kind=row.lesson_material_kind,
         share_mode=ShareMode(row.share_mode) if row.share_mode else None,
         snapshot_seq=row.snapshot_seq,
         expires_at=row.expires_at,
@@ -67,6 +68,7 @@ def _apply(row: LinkRow, link: Link) -> None:
     row.title = link.title
     row.lesson_id = link.lesson_id
     row.lesson_role = link.lesson_role.value if link.lesson_role else None
+    row.lesson_material_kind = link.lesson_material_kind
     row.share_mode = link.share_mode.value if link.share_mode else None
     row.snapshot_seq = link.snapshot_seq
     row.expires_at = link.expires_at

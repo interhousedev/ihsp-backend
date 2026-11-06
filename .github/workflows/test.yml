@@ -1,8 +1,10 @@
-# Full test run on every pull request to main: the whole pytest suite against the dev services
+# Full test run on every push and pull request to main: the whole pytest suite against the dev services
 # (Postgres with pgvector, Redis, S3, Vault), the deployment checks and the OpenAPI export check.
 name: Test
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
   merge_group:
@@ -56,7 +58,7 @@ jobs:
       - name: Start the dev services
         run: >
           docker compose -f materials/docker-compose.dev.yaml
-          up -d --wait postgres redis s3 s3-init vault vault-init
+          up -d --wait postgres redis s3 s3-init vault vault-init mailpit
 
       # Everything: units, HTTP, migrations (tests/models), integration over fakes and the
       # deployment checks (Dockerfiles, nginx, compose files, entrypoint).

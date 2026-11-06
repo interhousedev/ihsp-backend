@@ -150,6 +150,25 @@
         "title": "ActivationUrlResponse",
         "type": "object"
       },
+      "AddCardsBody": {
+        "description": "POST /v1/me/flashcard-sets/{id}/cards: a batch appended to the set.",
+        "properties": {
+          "cards": {
+            "items": {
+              "$ref": "#/components/schemas/CardBody"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Cards",
+            "type": "array"
+          }
+        },
+        "required": [
+          "cards"
+        ],
+        "title": "AddCardsBody",
+        "type": "object"
+      },
       "AddResourceBody": {
         "description": "Attach a URL or a file to a lesson.",
         "properties": {
@@ -659,6 +678,204 @@
           "next_cursor"
         ],
         "title": "AdminFeedbackListOut",
+        "type": "object"
+      },
+      "AdminMcpActivityItem": {
+        "description": "A call with the person it belongs to.",
+        "properties": {
+          "arguments": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arguments"
+          },
+          "client_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Id"
+          },
+          "connector_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connector Id"
+          },
+          "connector_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connector Name"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "duration_ms": {
+            "title": "Duration Ms",
+            "type": "integer"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "error_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "ip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip"
+          },
+          "outcome": {
+            "enum": [
+              "ok",
+              "denied",
+              "rate_limited",
+              "not_found",
+              "invalid",
+              "error"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "read_only": {
+            "title": "Read Only",
+            "type": "boolean"
+          },
+          "result_summary": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Summary"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "server": {
+            "enum": [
+              "student",
+              "lms",
+              "admin"
+            ],
+            "title": "Server",
+            "type": "string"
+          },
+          "tool": {
+            "title": "Tool",
+            "type": "string"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "connector_id",
+          "connector_name",
+          "client_id",
+          "server",
+          "tool",
+          "scope",
+          "read_only",
+          "outcome",
+          "error_code",
+          "error_id",
+          "duration_ms",
+          "arguments",
+          "result_summary",
+          "ip",
+          "user_id"
+        ],
+        "title": "AdminMcpActivityItem",
+        "type": "object"
+      },
+      "AdminMcpActivityPage": {
+        "description": "A page of anyone's calls.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AdminMcpActivityItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "AdminMcpActivityPage",
         "type": "object"
       },
       "AdminUserDetailResponse": {
@@ -2655,6 +2872,21 @@
           "file_id"
         ],
         "title": "AttachFileBody",
+        "type": "object"
+      },
+      "AttachLinkedSetBody": {
+        "description": "The notebook to attach as a live set of sources.",
+        "properties": {
+          "notebook_id": {
+            "format": "uuid",
+            "title": "Notebook Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "notebook_id"
+        ],
+        "title": "AttachLinkedSetBody",
         "type": "object"
       },
       "AttachedResourceResponse": {
@@ -4939,7 +5171,7 @@
         "type": "object"
       },
       "CardBody": {
-        "description": "One card of POST /v1/me/flashcard-sets.",
+        "description": "One new card; `hardness` sets how its schedule starts.",
         "properties": {
           "back": {
             "maxLength": 2000,
@@ -4951,6 +5183,16 @@
             "maxLength": 2000,
             "minLength": 1,
             "title": "Front",
+            "type": "string"
+          },
+          "hardness": {
+            "default": "medium",
+            "enum": [
+              "easy",
+              "medium",
+              "hard"
+            ],
+            "title": "Hardness",
             "type": "string"
           }
         },
@@ -4984,6 +5226,15 @@
             "title": "Front",
             "type": "string"
           },
+          "hardness": {
+            "enum": [
+              "easy",
+              "medium",
+              "hard"
+            ],
+            "title": "Hardness",
+            "type": "string"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -5004,13 +5255,72 @@
           "front",
           "back",
           "state",
-          "due_at"
+          "due_at",
+          "hardness"
         ],
         "title": "CardResponse",
         "type": "object"
       },
+      "CardStatsResponse": {
+        "description": "Answers on one card: Again is incorrect, any other button correct.",
+        "properties": {
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "card_id": {
+            "format": "uuid",
+            "title": "Card Id",
+            "type": "string"
+          },
+          "correct": {
+            "title": "Correct",
+            "type": "integer"
+          },
+          "front": {
+            "title": "Front",
+            "type": "string"
+          },
+          "hardness": {
+            "enum": [
+              "easy",
+              "medium",
+              "hard"
+            ],
+            "title": "Hardness",
+            "type": "string"
+          },
+          "incorrect": {
+            "title": "Incorrect",
+            "type": "integer"
+          },
+          "last_studied_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Studied At"
+          }
+        },
+        "required": [
+          "card_id",
+          "front",
+          "hardness",
+          "attempts",
+          "correct",
+          "incorrect",
+          "last_studied_at"
+        ],
+        "title": "CardStatsResponse",
+        "type": "object"
+      },
       "CardWithIdBody": {
-        "description": "One card of PUT /v1/me/flashcard-sets/{id}/cards; `id` keeps its progress.",
+        "description": "One card of PUT /v1/me/flashcard-sets/{id}/cards; `id` keeps its progress.\n\n`hardness` left out keeps a known card's value and means medium for a new card.",
         "properties": {
           "back": {
             "maxLength": 2000,
@@ -5023,6 +5333,22 @@
             "minLength": 1,
             "title": "Front",
             "type": "string"
+          },
+          "hardness": {
+            "anyOf": [
+              {
+                "enum": [
+                  "easy",
+                  "medium",
+                  "hard"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hardness"
           },
           "id": {
             "anyOf": [
@@ -5333,6 +5659,20 @@
           "content_type"
         ],
         "title": "CertificateFileResponse",
+        "type": "object"
+      },
+      "CertificateFileUrl": {
+        "description": "A short-lived address of an attached file.",
+        "properties": {
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "CertificateFileUrl",
         "type": "object"
       },
       "CertificateTypeInput": {
@@ -6543,6 +6883,13 @@
             ],
             "title": "Expires At"
           },
+          "extra_scopes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Extra Scopes",
+            "type": "array"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -6617,6 +6964,7 @@
           "name",
           "server",
           "scopes",
+          "extra_scopes",
           "course_ids",
           "kind",
           "token_prefix",
@@ -9105,6 +9453,11 @@
             "title": "Options",
             "type": "array"
           },
+          "primary": {
+            "default": false,
+            "title": "Primary",
+            "type": "boolean"
+          },
           "required": {
             "default": false,
             "title": "Required",
@@ -9176,6 +9529,11 @@
             "maxItems": 50,
             "title": "Options",
             "type": "array"
+          },
+          "primary": {
+            "default": false,
+            "title": "Primary",
+            "type": "boolean"
           },
           "required": {
             "default": false,
@@ -12413,6 +12771,81 @@
         "title": "FilePurpose",
         "type": "string"
       },
+      "FileShareLinkResponse": {
+        "description": "A new token: it is shown this once, only its hash is stored.",
+        "properties": {
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "FileShareLinkResponse",
+        "type": "object"
+      },
+      "FileSharePersonResponse": {
+        "description": "A person with access.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          },
+          "via": {
+            "$ref": "#/components/schemas/FileShareVia"
+          }
+        },
+        "required": [
+          "user_id",
+          "name",
+          "via",
+          "created_at"
+        ],
+        "title": "FileSharePersonResponse",
+        "type": "object"
+      },
+      "FileShareVia": {
+        "description": "How a person got access; turning a link off removes only ``link`` grants.",
+        "enum": [
+          "direct",
+          "link"
+        ],
+        "title": "FileShareVia",
+        "type": "string"
+      },
+      "FileSharesResponse": {
+        "description": "Who has access and whether a link works.",
+        "properties": {
+          "link_active": {
+            "title": "Link Active",
+            "type": "boolean"
+          },
+          "people": {
+            "items": {
+              "$ref": "#/components/schemas/FileSharePersonResponse"
+            },
+            "title": "People",
+            "type": "array"
+          }
+        },
+        "required": [
+          "link_active",
+          "people"
+        ],
+        "title": "FileSharesResponse",
+        "type": "object"
+      },
       "FileStatus": {
         "description": "Lifecycle of a stored file (spec -> Models -> File).",
         "enum": [
@@ -13009,8 +13442,19 @@
         "type": "object"
       },
       "GroupCountsResponse": {
-        "description": "Counts per level of one group.",
+        "description": "Counts per value of one group, and the group's average of a starred number.",
         "properties": {
+          "average": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average"
+          },
           "counts": {
             "additionalProperties": {
               "type": "integer"
@@ -14875,6 +15319,38 @@
           "counters"
         ],
         "title": "JobResponse",
+        "type": "object"
+      },
+      "JoinFileShareBody": {
+        "description": "The token of a share link, in the body so that it stays out of access logs.",
+        "properties": {
+          "token": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "JoinFileShareBody",
+        "type": "object"
+      },
+      "JoinShareBody": {
+        "description": "The token of a share link, in the body so that it stays out of access logs.",
+        "properties": {
+          "token": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "JoinShareBody",
         "type": "object"
       },
       "JournalCellResponse": {
@@ -19067,6 +19543,75 @@
         "title": "LinkResultView",
         "type": "object"
       },
+      "LinkedSetResponse": {
+        "description": "An attached notebook; only its id once the caller has no access to it.",
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
+          },
+          "notebook_id": {
+            "format": "uuid",
+            "title": "Notebook Id",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceItemResponse"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "required": [
+          "notebook_id",
+          "available",
+          "title",
+          "emoji",
+          "sources"
+        ],
+        "title": "LinkedSetResponse",
+        "type": "object"
+      },
+      "LinkedSetsResponse": {
+        "description": "`{items}` of the sets attached to a notebook.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LinkedSetResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "LinkedSetsResponse",
+        "type": "object"
+      },
       "ListRefSchema": {
         "description": "A reading list the item is on.",
         "properties": {
@@ -20142,6 +20687,215 @@
         "title": "MaterialPatchBody",
         "type": "object"
       },
+      "McpActivityItem": {
+        "description": "One MCP tool call: redacted arguments, counts, never content.",
+        "properties": {
+          "arguments": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Arguments"
+          },
+          "client_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Id"
+          },
+          "connector_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connector Id"
+          },
+          "connector_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connector Name"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "duration_ms": {
+            "title": "Duration Ms",
+            "type": "integer"
+          },
+          "error_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Code"
+          },
+          "error_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "ip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip"
+          },
+          "outcome": {
+            "enum": [
+              "ok",
+              "denied",
+              "rate_limited",
+              "not_found",
+              "invalid",
+              "error"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "read_only": {
+            "title": "Read Only",
+            "type": "boolean"
+          },
+          "result_summary": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Summary"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "server": {
+            "enum": [
+              "student",
+              "lms",
+              "admin"
+            ],
+            "title": "Server",
+            "type": "string"
+          },
+          "tool": {
+            "title": "Tool",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "connector_id",
+          "connector_name",
+          "client_id",
+          "server",
+          "tool",
+          "scope",
+          "read_only",
+          "outcome",
+          "error_code",
+          "error_id",
+          "duration_ms",
+          "arguments",
+          "result_summary",
+          "ip"
+        ],
+        "title": "McpActivityItem",
+        "type": "object"
+      },
+      "McpActivityPage": {
+        "description": "A page of the caller's calls.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/McpActivityItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "McpActivityPage",
+        "type": "object"
+      },
+      "McpActivitySummary": {
+        "description": "Calls and errors per tool, busiest first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/McpToolSummaryItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "McpActivitySummary",
+        "type": "object"
+      },
       "McpClientResponse": {
         "description": "A user's own OAuth client (never the secret).",
         "properties": {
@@ -20299,6 +21053,35 @@
         "title": "McpSetupResponse",
         "type": "object"
       },
+      "McpToolSummaryItem": {
+        "description": "Calls of one tool; `errors` counts every outcome other than ok.",
+        "properties": {
+          "calls": {
+            "title": "Calls",
+            "type": "integer"
+          },
+          "errors": {
+            "title": "Errors",
+            "type": "integer"
+          },
+          "server": {
+            "title": "Server",
+            "type": "string"
+          },
+          "tool": {
+            "title": "Tool",
+            "type": "string"
+          }
+        },
+        "required": [
+          "server",
+          "tool",
+          "calls",
+          "errors"
+        ],
+        "title": "McpToolSummaryItem",
+        "type": "object"
+      },
       "MeLibraryResponse": {
         "description": "`MeLibrary`: continue reading, shelf counts and the offline limits.",
         "properties": {
@@ -20329,6 +21112,191 @@
           "offline"
         ],
         "title": "MeLibraryResponse",
+        "type": "object"
+      },
+      "MediaGrantItem": {
+        "description": "A link I issued; the token is never stored, so never shown again.",
+        "properties": {
+          "block_id": {
+            "title": "Block Id",
+            "type": "string"
+          },
+          "course_id": {
+            "format": "uuid",
+            "title": "Course Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "redeem_count": {
+            "title": "Redeem Count",
+            "type": "integer"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "step_id": {
+            "format": "uuid",
+            "title": "Step Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "course_id",
+          "step_id",
+          "block_id",
+          "created_at",
+          "expires_at",
+          "revoked_at",
+          "redeem_count"
+        ],
+        "title": "MediaGrantItem",
+        "type": "object"
+      },
+      "MediaGrantsResponse": {
+        "description": "My media links.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MediaGrantItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "MediaGrantsResponse",
+        "type": "object"
+      },
+      "MediaRedeemBody": {
+        "description": "`POST /v1/lms/media/redeem`: the token from the fragment of the link.",
+        "properties": {
+          "token": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "MediaRedeemBody",
+        "type": "object"
+      },
+      "MediaRedeemResponse": {
+        "description": "A short-lived address; nothing about the course on refusal.",
+        "properties": {
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "tier": {
+            "enum": [
+              "anon",
+              "enrolled"
+            ],
+            "title": "Tier",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "expires_in",
+          "title",
+          "tier"
+        ],
+        "title": "MediaRedeemResponse",
+        "type": "object"
+      },
+      "MergeSetsBody": {
+        "description": "POST /v1/me/flashcard-sets/merge: the sets in the order of the new set.",
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "set_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 20,
+            "minItems": 2,
+            "title": "Set Ids",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "set_ids",
+          "title"
+        ],
+        "title": "MergeSetsBody",
+        "type": "object"
+      },
+      "MergedSetResponse": {
+        "description": "The new set and how many duplicate cards were left out.",
+        "properties": {
+          "duplicates_skipped": {
+            "title": "Duplicates Skipped",
+            "type": "integer"
+          },
+          "set": {
+            "$ref": "#/components/schemas/SetDetailResponse"
+          }
+        },
+        "required": [
+          "set",
+          "duplicates_skipped"
+        ],
+        "title": "MergedSetResponse",
         "type": "object"
       },
       "MessageFeedbackBody": {
@@ -21391,6 +22359,11 @@
             "title": "Selected Source Count",
             "type": "integer"
           },
+          "shared": {
+            "default": false,
+            "title": "Shared",
+            "type": "boolean"
+          },
           "source_count": {
             "title": "Source Count",
             "type": "integer"
@@ -21531,6 +22504,11 @@
           },
           "pinned": {
             "title": "Pinned",
+            "type": "boolean"
+          },
+          "shared": {
+            "default": false,
+            "title": "Shared",
             "type": "boolean"
           },
           "source_count": {
@@ -21739,6 +22717,36 @@
           "matched_sources"
         ],
         "title": "NotebookSearchItemResponse",
+        "type": "object"
+      },
+      "NotebookSharesResponse": {
+        "description": "Who has access, whether a link works and which kinds of source stay private.",
+        "properties": {
+          "hidden_source_kinds": {
+            "items": {
+              "$ref": "#/components/schemas/SourceKind"
+            },
+            "title": "Hidden Source Kinds",
+            "type": "array"
+          },
+          "link_active": {
+            "title": "Link Active",
+            "type": "boolean"
+          },
+          "people": {
+            "items": {
+              "$ref": "#/components/schemas/SharePersonResponse"
+            },
+            "title": "People",
+            "type": "array"
+          }
+        },
+        "required": [
+          "link_active",
+          "people",
+          "hidden_source_kinds"
+        ],
+        "title": "NotebookSharesResponse",
         "type": "object"
       },
       "NotebookSourceRef": {
@@ -29118,6 +30126,109 @@
         "title": "ScopeCatalogResponse",
         "type": "object"
       },
+      "ScopeOfferDecisionBody": {
+        "description": "POST /v1/id/me/connectors/offers/{offer_id}/decision.",
+        "properties": {
+          "grant": {
+            "title": "Grant",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "grant"
+        ],
+        "title": "ScopeOfferDecisionBody",
+        "type": "object"
+      },
+      "ScopeOfferDecisionResponse": {
+        "description": "How it ended: someone else's offer and an unknown one answer the same.",
+        "properties": {
+          "connector_names": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Connector Names",
+            "type": "array"
+          },
+          "result": {
+            "enum": [
+              "granted",
+              "declined",
+              "already_decided",
+              "expired",
+              "not_available"
+            ],
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result",
+          "connector_names"
+        ],
+        "title": "ScopeOfferDecisionResponse",
+        "type": "object"
+      },
+      "ScopeOfferResponse": {
+        "description": "New permissions offered for the caller's connectors; holds no token.",
+        "properties": {
+          "connector_names": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Connector Names",
+            "type": "array"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "read_scopes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Read Scopes",
+            "type": "array"
+          },
+          "release_id": {
+            "title": "Release Id",
+            "type": "string"
+          },
+          "server": {
+            "enum": [
+              "student",
+              "lms",
+              "admin"
+            ],
+            "title": "Server",
+            "type": "string"
+          },
+          "write_scopes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Write Scopes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "release_id",
+          "server",
+          "read_scopes",
+          "write_scopes",
+          "connector_names",
+          "expires_at"
+        ],
+        "title": "ScopeOfferResponse",
+        "type": "object"
+      },
       "ScopeResponse": {
         "description": "One scope and its tools.",
         "properties": {
@@ -29751,7 +30862,7 @@
         "type": "object"
       },
       "SetDetailResponse": {
-        "description": "FlashcardSetDetail = FlashcardSetItem plus limits and cards.",
+        "description": "FlashcardSetDetail = FlashcardSetItem plus limits, settings and cards.",
         "properties": {
           "card_count": {
             "title": "Card Count",
@@ -29808,6 +30919,10 @@
             "title": "Reviews Per Day",
             "type": "integer"
           },
+          "shuffle": {
+            "title": "Shuffle",
+            "type": "boolean"
+          },
           "source": {
             "enum": [
               "manual",
@@ -29836,6 +30951,7 @@
           "due_count",
           "new_per_day",
           "reviews_per_day",
+          "shuffle",
           "cards"
         ],
         "title": "SetDetailResponse",
@@ -30350,6 +31466,96 @@
         "title": "SettingsStatsView",
         "type": "object"
       },
+      "ShareLinkResponse": {
+        "description": "A new token: it is shown this once, only its hash is stored.",
+        "properties": {
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "ShareLinkResponse",
+        "type": "object"
+      },
+      "SharePersonResponse": {
+        "description": "A person with access.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          },
+          "via": {
+            "$ref": "#/components/schemas/ShareVia"
+          }
+        },
+        "required": [
+          "user_id",
+          "name",
+          "via",
+          "created_at"
+        ],
+        "title": "SharePersonResponse",
+        "type": "object"
+      },
+      "ShareRecipientResponse": {
+        "description": "A person found by name; never a login or a contact.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "ShareRecipientResponse",
+        "type": "object"
+      },
+      "ShareRecipientsResponse": {
+        "description": "`{items}` of the people found.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ShareRecipientResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ShareRecipientsResponse",
+        "type": "object"
+      },
+      "ShareVia": {
+        "description": "How a person got access; turning a link off removes only ``link`` grants.",
+        "enum": [
+          "direct",
+          "link"
+        ],
+        "title": "ShareVia",
+        "type": "string"
+      },
       "SharedArtifact": {
         "description": "A shared Studio output: its kind and the content the viewers render.",
         "properties": {
@@ -30432,6 +31638,213 @@
           "messages"
         ],
         "title": "SharedChat",
+        "type": "object"
+      },
+      "SharedFileItem": {
+        "description": "A file shared with the caller: no storage key, usage list or owner id.",
+        "properties": {
+          "byte_size": {
+            "title": "Byte Size",
+            "type": "integer"
+          },
+          "content_type": {
+            "title": "Content Type",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "owner_name": {
+            "title": "Owner Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "content_type",
+          "byte_size",
+          "created_at",
+          "owner_name"
+        ],
+        "title": "SharedFileItem",
+        "type": "object"
+      },
+      "SharedFilesResponse": {
+        "description": "`{items}` of the files shared with the caller.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SharedFileItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "SharedFilesResponse",
+        "type": "object"
+      },
+      "SharedNotebookResponse": {
+        "description": "A notebook shared with the caller.",
+        "properties": {
+          "can_write": {
+            "title": "Can Write",
+            "type": "boolean"
+          },
+          "course_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course Id"
+          },
+          "emoji": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Emoji"
+          },
+          "group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_opened_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Opened At"
+          },
+          "lesson_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lesson Id"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/NotebookOrigin"
+          },
+          "owner_name": {
+            "title": "Owner Name",
+            "type": "string"
+          },
+          "pinned": {
+            "title": "Pinned",
+            "type": "boolean"
+          },
+          "shared": {
+            "default": false,
+            "title": "Shared",
+            "type": "boolean"
+          },
+          "source_count": {
+            "title": "Source Count",
+            "type": "integer"
+          },
+          "subject_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "emoji",
+          "pinned",
+          "source_count",
+          "last_opened_at",
+          "updated_at",
+          "origin",
+          "subject_id",
+          "lesson_id",
+          "group_id",
+          "course_id",
+          "can_write",
+          "owner_name"
+        ],
+        "title": "SharedNotebookResponse",
+        "type": "object"
+      },
+      "SharedNotebooksResponse": {
+        "description": "`{items}` of the notebooks shared with the caller.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SharedNotebookResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "SharedNotebooksResponse",
         "type": "object"
       },
       "ShelfBody": {
@@ -33455,6 +34868,14 @@
               }
             ]
           },
+          "practice": {
+            "title": "Practice",
+            "type": "boolean"
+          },
+          "practice_remaining": {
+            "title": "Practice Remaining",
+            "type": "integer"
+          },
           "set_id": {
             "format": "uuid",
             "title": "Set Id",
@@ -33466,7 +34887,9 @@
           "card",
           "intervals",
           "counts",
-          "done_for_today"
+          "done_for_today",
+          "practice",
+          "practice_remaining"
         ],
         "title": "StudyNextResponse",
         "type": "object"
@@ -37143,7 +38566,7 @@
             "type": "string"
           },
           "weekday": {
-            "maximum": 6.0,
+            "maximum": 7.0,
             "minimum": 1.0,
             "title": "Weekday",
             "type": "integer"
@@ -37283,7 +38706,7 @@
           "weekday": {
             "anyOf": [
               {
-                "maximum": 6.0,
+                "maximum": 7.0,
                 "minimum": 1.0,
                 "type": "integer"
               },
@@ -37993,8 +39416,19 @@
         "type": "object"
       },
       "TypeStatsResponse": {
-        "description": "Levels of a type and the counts per group.",
+        "description": "Values of a type and counts per group; grouped by the starred field if any.",
         "properties": {
+          "average": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Average"
+          },
           "groups": {
             "items": {
               "$ref": "#/components/schemas/GroupCountsResponse"
@@ -38008,6 +39442,33 @@
             },
             "title": "Levels",
             "type": "array"
+          },
+          "primary_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Key"
+          },
+          "primary_kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "text",
+                  "number",
+                  "single"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Primary Kind"
           },
           "type_id": {
             "format": "uuid",
@@ -38247,6 +39708,55 @@
           }
         },
         "title": "UpdateAutoSettingsBody",
+        "type": "object"
+      },
+      "UpdateCardBody": {
+        "description": "PATCH /v1/me/flashcards/{id}; send only the fields to change.\n\nA new hardness reschedules a card only while it was never answered.",
+        "properties": {
+          "back": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Back"
+          },
+          "front": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Front"
+          },
+          "hardness": {
+            "anyOf": [
+              {
+                "enum": [
+                  "easy",
+                  "medium",
+                  "hard"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hardness"
+          }
+        },
+        "title": "UpdateCardBody",
         "type": "object"
       },
       "UpdateCollectionBody": {
@@ -38634,6 +40144,17 @@
               }
             ],
             "title": "Reviews Per Day"
+          },
+          "shuffle": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shuffle"
           },
           "title": {
             "anyOf": [
@@ -48801,6 +50322,255 @@
         ]
       }
     },
+    "/v1/admin/mcp/activity": {
+      "get": {
+        "description": "Newest first, 50 per page; every read writes `mcp.activity_viewed`.",
+        "operationId": "list_activity_v1_admin_mcp_activity_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "user_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "User Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "connector_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Connector Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "server",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "student",
+                    "lms",
+                    "admin"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Server"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tool",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tool"
+            }
+          },
+          {
+            "in": "query",
+            "name": "outcome",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "ok",
+                    "denied",
+                    "rate_limited",
+                    "not_found",
+                    "invalid",
+                    "error"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Outcome"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMcpActivityPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Activity",
+        "tags": [
+          "admin-mcp"
+        ]
+      }
+    },
+    "/v1/admin/mcp/activity/summary": {
+      "get": {
+        "description": "The last 7 days unless `from` says otherwise.",
+        "operationId": "get_summary_v1_admin_mcp_activity_summary_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpActivitySummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Summary",
+        "tags": [
+          "admin-mcp"
+        ]
+      }
+    },
     "/v1/admin/moderation/queue": {
       "get": {
         "description": "List reported links, most reported first (UF-ADM-10).",
@@ -54017,6 +55787,50 @@
         ]
       }
     },
+    "/v1/certificates/files/{file_id}/download-url": {
+      "get": {
+        "description": "Return a short-lived address, for clients that cannot follow a redirect.",
+        "operationId": "get_file_url_v1_certificates_files__file_id__download_url_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "file_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "File Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateFileUrl"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get File Url",
+        "tags": [
+          "certificates"
+        ]
+      }
+    },
     "/v1/certificates/me": {
       "get": {
         "description": "Return the caller's certificates.",
@@ -55177,6 +56991,145 @@
         ]
       }
     },
+    "/v1/files/shared/{file_id}": {
+      "delete": {
+        "description": "The recipient removes a shared file from their list.",
+        "operationId": "leave_shared_file_v1_files_shared__file_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "file_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "File Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Leave Shared File",
+        "tags": [
+          "files"
+        ]
+      }
+    },
+    "/v1/files/shared/{file_id}/url": {
+      "get": {
+        "description": "Presign a GET for a recipient; valid for 60 seconds.",
+        "operationId": "get_shared_file_url_v1_files_shared__file_id__url_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "file_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "File Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "inline",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Inline"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DownloadUrlResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Shared File Url",
+        "tags": [
+          "files"
+        ]
+      }
+    },
+    "/v1/files/shares/join": {
+      "post": {
+        "description": "Open a share link: a signed-in person gets their own grant.",
+        "operationId": "join_file_share_v1_files_shares_join_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinFileShareBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedFileItem"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Join File Share",
+        "tags": [
+          "files"
+        ]
+      }
+    },
     "/v1/files/{file_id}": {
       "delete": {
         "description": "Delete the caller's file; links and lessons that used it stop working.",
@@ -55354,6 +57307,221 @@
           }
         },
         "summary": "Complete Upload",
+        "tags": [
+          "files"
+        ]
+      }
+    },
+    "/v1/files/{file_id}/shares": {
+      "get": {
+        "description": "Who has access (the owner only).",
+        "operationId": "get_file_shares_v1_files__file_id__shares_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "file_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "File Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileSharesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get File Shares",
+        "tags": [
+          "files"
+        ]
+      }
+    },
+    "/v1/files/{file_id}/shares/link": {
+      "delete": {
+        "description": "Turn the link off and remove everyone who joined through it.",
+        "operationId": "delete_file_share_link_v1_files__file_id__shares_link_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "file_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "File Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete File Share Link",
+        "tags": [
+          "files"
+        ]
+      },
+      "post": {
+        "description": "Create the link or replace its token; the token is shown this once.",
+        "operationId": "create_file_share_link_v1_files__file_id__shares_link_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "file_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "File Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileShareLinkResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create File Share Link",
+        "tags": [
+          "files"
+        ]
+      }
+    },
+    "/v1/files/{file_id}/shares/{user_id}": {
+      "delete": {
+        "description": "Revoke a person's access at once.",
+        "operationId": "remove_file_share_person_v1_files__file_id__shares__user_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "file_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "File Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove File Share Person",
+        "tags": [
+          "files"
+        ]
+      },
+      "put": {
+        "description": "Give a person access to download the file.",
+        "operationId": "add_file_share_person_v1_files__file_id__shares__user_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "file_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "File Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add File Share Person",
         "tags": [
           "files"
         ]
@@ -56511,6 +58679,229 @@
           }
         },
         "summary": "Post Connector",
+        "tags": [
+          "id-connectors"
+        ]
+      }
+    },
+    "/v1/id/me/connectors/activity": {
+      "get": {
+        "description": "Newest first, 50 per page; scoped to the caller whatever the filter names.",
+        "operationId": "get_activity_v1_id_me_connectors_activity_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "connector_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Connector Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tool",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tool"
+            }
+          },
+          {
+            "in": "query",
+            "name": "outcome",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "ok",
+                    "denied",
+                    "rate_limited",
+                    "not_found",
+                    "invalid",
+                    "error"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Outcome"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 512,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/McpActivityPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Activity",
+        "tags": [
+          "id-connectors"
+        ]
+      }
+    },
+    "/v1/id/me/connectors/offers": {
+      "get": {
+        "description": "The caller's open offers.",
+        "operationId": "get_scope_offers_v1_id_me_connectors_offers_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ScopeOfferResponse"
+                  },
+                  "title": "Response Get Scope Offers V1 Id Me Connectors Offers Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Scope Offers",
+        "tags": [
+          "id-connectors"
+        ]
+      }
+    },
+    "/v1/id/me/connectors/offers/{offer_id}/decision": {
+      "post": {
+        "description": "Accept or decline; the same single-use rules as the Telegram buttons.",
+        "operationId": "post_scope_offer_decision_v1_id_me_connectors_offers__offer_id__decision_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "offer_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Offer Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScopeOfferDecisionBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeOfferDecisionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Scope Offer Decision",
         "tags": [
           "id-connectors"
         ]
@@ -62967,6 +65358,107 @@
         ]
       }
     },
+    "/v1/lms/media/grants": {
+      "get": {
+        "description": "Return the media links issued for the caller.",
+        "operationId": "list_media_grants_v1_lms_media_grants_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaGrantsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Media Grants",
+        "tags": [
+          "lms"
+        ]
+      }
+    },
+    "/v1/lms/media/grants/{grant_id}": {
+      "delete": {
+        "description": "Stop one of the caller's media links at once.",
+        "operationId": "revoke_media_grant_v1_lms_media_grants__grant_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "grant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Grant Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revoke Media Grant",
+        "tags": [
+          "lms"
+        ]
+      }
+    },
+    "/v1/lms/media/redeem": {
+      "post": {
+        "description": "Open a link: 5 hours anonymously, always when enrolled, never when not.",
+        "operationId": "redeem_media_v1_lms_media_redeem_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaRedeemBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaRedeemResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Redeem Media",
+        "tags": [
+          "lms"
+        ]
+      }
+    },
     "/v1/lms/my-courses": {
       "get": {
         "description": "Return the courses the caller studies and the courses they manage.",
@@ -65889,6 +68381,48 @@
         ]
       }
     },
+    "/v1/me/flashcard-sets/merge": {
+      "post": {
+        "description": "Create a set from copies of the cards of several sets; the sources stay.",
+        "operationId": "merge_sets_v1_me_flashcard_sets_merge_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MergeSetsBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MergedSetResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Merge Sets",
+        "tags": [
+          "flashcards"
+        ]
+      }
+    },
     "/v1/me/flashcard-sets/stats": {
       "get": {
         "description": "Return the review heatmap and streaks of one set or of all sets.",
@@ -66089,7 +68623,107 @@
         ]
       }
     },
+    "/v1/me/flashcard-sets/{set_id}/card-stats": {
+      "get": {
+        "description": "Return attempts, correct and incorrect answers and last study per card.",
+        "operationId": "get_card_stats_v1_me_flashcard_sets__set_id__card_stats_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "set_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Set Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CardStatsResponse"
+                  },
+                  "title": "Response Get Card Stats V1 Me Flashcard Sets  Set Id  Card Stats Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Card Stats",
+        "tags": [
+          "flashcards"
+        ]
+      }
+    },
     "/v1/me/flashcard-sets/{set_id}/cards": {
+      "post": {
+        "description": "Append a batch of new cards.",
+        "operationId": "add_cards_v1_me_flashcard_sets__set_id__cards_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "set_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Set Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddCardsBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Cards",
+        "tags": [
+          "flashcards"
+        ]
+      },
       "put": {
         "description": "Save the full ordered list of cards; ids that are missing are deleted.",
         "operationId": "replace_cards_v1_me_flashcard_sets__set_id__cards_put",
@@ -66182,6 +68816,139 @@
           }
         },
         "summary": "Study Next",
+        "tags": [
+          "flashcards"
+        ]
+      }
+    },
+    "/v1/me/flashcard-sets/{set_id}/study/restart": {
+      "post": {
+        "description": "Study every card again today; the schedule and limits stay untouched.",
+        "operationId": "restart_study_v1_me_flashcard_sets__set_id__study_restart_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "set_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Set Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyNextResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restart Study",
+        "tags": [
+          "flashcards"
+        ]
+      }
+    },
+    "/v1/me/flashcards/{card_id}": {
+      "delete": {
+        "description": "Delete one card.",
+        "operationId": "delete_card_v1_me_flashcards__card_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "card_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Card Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Card",
+        "tags": [
+          "flashcards"
+        ]
+      },
+      "patch": {
+        "description": "Change the text or the base hardness of one card.",
+        "operationId": "update_card_v1_me_flashcards__card_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "card_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Card Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCardBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Card",
         "tags": [
           "flashcards"
         ]
@@ -67961,6 +70728,28 @@
         ]
       }
     },
+    "/v1/me/shared-files": {
+      "get": {
+        "description": "The files shared with the caller.",
+        "operationId": "list_shared_files_v1_me_shared_files_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedFilesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Shared Files",
+        "tags": [
+          "files"
+        ]
+      }
+    },
     "/v1/me/storage": {
       "get": {
         "description": "Return bytes used, the quota and when this term's files are deleted.",
@@ -69131,6 +71920,115 @@
           }
         },
         "summary": "Flashcard Workspace",
+        "tags": [
+          "notebooks"
+        ]
+      }
+    },
+    "/v1/notebooks/share-recipients": {
+      "get": {
+        "description": "People to share with, by name (3 letters at least, 10 results at most).",
+        "operationId": "search_recipients_v1_notebooks_share_recipients_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 3,
+              "title": "Q",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareRecipientsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Recipients",
+        "tags": [
+          "notebooks"
+        ]
+      }
+    },
+    "/v1/notebooks/shared": {
+      "get": {
+        "description": "The notebooks shared with the caller.",
+        "operationId": "list_shared_v1_notebooks_shared_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SharedNotebooksResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Shared",
+        "tags": [
+          "notebooks"
+        ]
+      }
+    },
+    "/v1/notebooks/shares/join": {
+      "post": {
+        "description": "Open a share link: a signed-in person gets their own grant.",
+        "operationId": "join_share_v1_notebooks_shares_join_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinShareBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotebookItemResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Join Share",
         "tags": [
           "notebooks"
         ]
@@ -71195,6 +74093,184 @@
         ]
       }
     },
+    "/v1/notebooks/{notebook_id}/linked-sets": {
+      "get": {
+        "description": "The sets attached to the caller's notebook.",
+        "operationId": "list_linked_sets_v1_notebooks__notebook_id__linked_sets_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notebook_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notebook Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkedSetsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Linked Sets",
+        "tags": [
+          "notebooks"
+        ]
+      },
+      "post": {
+        "description": "Attach a notebook as a live set of sources.",
+        "operationId": "attach_linked_set_v1_notebooks__notebook_id__linked_sets_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notebook_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notebook Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AttachLinkedSetBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Attach Linked Set",
+        "tags": [
+          "notebooks"
+        ]
+      }
+    },
+    "/v1/notebooks/{notebook_id}/linked-sets/{linked_id}": {
+      "delete": {
+        "description": "Detach a set of sources.",
+        "operationId": "detach_linked_set_v1_notebooks__notebook_id__linked_sets__linked_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notebook_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notebook Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "linked_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Linked Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Detach Linked Set",
+        "tags": [
+          "notebooks"
+        ]
+      }
+    },
+    "/v1/notebooks/{notebook_id}/membership": {
+      "delete": {
+        "description": "The recipient removes a shared notebook from their list.",
+        "operationId": "leave_shared_v1_notebooks__notebook_id__membership_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notebook_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notebook Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Leave Shared",
+        "tags": [
+          "notebooks"
+        ]
+      }
+    },
     "/v1/notebooks/{notebook_id}/passages/{passage_id}": {
       "get": {
         "description": "Return a passage with its source and `context` passages on each side.",
@@ -71547,6 +74623,221 @@
           }
         },
         "summary": "Search Sources",
+        "tags": [
+          "notebooks"
+        ]
+      }
+    },
+    "/v1/notebooks/{notebook_id}/shares": {
+      "get": {
+        "description": "Who has access (the owner only).",
+        "operationId": "get_shares_v1_notebooks__notebook_id__shares_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notebook_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notebook Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotebookSharesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Shares",
+        "tags": [
+          "notebooks"
+        ]
+      }
+    },
+    "/v1/notebooks/{notebook_id}/shares/link": {
+      "delete": {
+        "description": "Turn the link off and remove everyone who joined through it.",
+        "operationId": "delete_share_link_v1_notebooks__notebook_id__shares_link_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notebook_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notebook Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Share Link",
+        "tags": [
+          "notebooks"
+        ]
+      },
+      "post": {
+        "description": "Create the link or replace its token; the token is shown this once.",
+        "operationId": "create_share_link_v1_notebooks__notebook_id__shares_link_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notebook_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notebook Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareLinkResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Share Link",
+        "tags": [
+          "notebooks"
+        ]
+      }
+    },
+    "/v1/notebooks/{notebook_id}/shares/{user_id}": {
+      "delete": {
+        "description": "Revoke a person's access at once and delete their thread.",
+        "operationId": "remove_share_person_v1_notebooks__notebook_id__shares__user_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notebook_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notebook Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Share Person",
+        "tags": [
+          "notebooks"
+        ]
+      },
+      "put": {
+        "description": "Give a person read-only access.",
+        "operationId": "add_share_person_v1_notebooks__notebook_id__shares__user_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notebook_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notebook Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Share Person",
         "tags": [
           "notebooks"
         ]

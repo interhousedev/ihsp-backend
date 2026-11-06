@@ -68,6 +68,8 @@ CRON_JOBS: tuple[CronJob, ...] = (
     CronJob("links.release_slugs", "45 3 * * *"),
     CronJob("identity.apply_otp_resets", EVERY_10_MINUTES),
     CronJob("identity.purge_deleted_users", "0 4 * * *"),
+    CronJob("identity.purge_mcp_call_log", "25 4 * * *"),
+    CronJob("identity.offer_mcp_scopes", "0 10 * * *"),
     CronJob("mail.purge", "30 4 * * *"),
     CronJob("mail.check_bounces", "5 * * * *"),
     CronJob("mail.sweep", EVERY_10_MINUTES),

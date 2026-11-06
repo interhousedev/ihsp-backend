@@ -65,6 +65,7 @@ class Link:
     title: str | None = None
     lesson_id: UUID | None = None
     lesson_role: LessonRole | None = None
+    lesson_material_kind: str | None = None  # homework, classwork, video or other
     share_mode: ShareMode | None = None
     snapshot_seq: int | None = None
     expires_at: datetime | None = None

@@ -1,5 +1,6 @@
 """Web description of every notification type: title, body and a link."""
 
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, NamedTuple
@@ -495,6 +496,26 @@ def _login_failures(p: dict[str, Any], v: _View) -> Description:
     )
 
 
+def _scope_names(scopes: Any, v: _View) -> str:
+    names = [v.t("mcp-scope-" + re.sub(r"[:.]", "-", str(s))) for s in scopes or []]
+    return ", ".join(names) or v.t("mcp-offer-none")
+
+
+def _mcp_scope_offer(p: dict[str, Any], v: _View) -> Description:
+    """The token stays out: it only ever goes into the Telegram buttons."""
+    body = v.t(
+        "mcp-offer-body",
+        summary=v.t(str(p.get("summary_key", ""))),
+        keys=", ".join(str(name) for name in p.get("connector_names", [])),
+        read=_scope_names(p.get("read_scopes"), v),
+    )
+    if p.get("write_scopes"):
+        body += v.t("mcp-offer-body-write", write=_scope_names(p["write_scopes"], v))
+    if p.get("expires_at"):
+        body += v.t("mcp-offer-body-expires", date=fmt_date(p["expires_at"]))
+    return Description(v.t("mcp-offer-title"), body, f"{v.urls.id}/connectors/")
+
+
 def _account_closing(p: dict[str, Any], v: _View) -> Description:
     return Description(
         v.t("notify-account-closing-title"),
@@ -598,6 +619,7 @@ _BUILDERS: dict[NotificationType, _Builder] = {
     NotificationType.TEACHER_TEMPORARY_MARKS: _teacher_temporary_marks,
     NotificationType.FEEDBACK_NEW: _feedback_new,
     NotificationType.FEEDBACK_RESPONSE: _feedback_response,
+    NotificationType.MCP_SCOPE_OFFER: _mcp_scope_offer,
 }
 
 

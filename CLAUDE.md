@@ -20,10 +20,10 @@ The Python backend of the IHT lyceum platform (internal name IHSP): FastAPI, aio
 
 ```bash
 uv sync --frozen
-scripts/style_check.sh                                     # black, isort, flake8, mypy
+scripts/style_check.sh                                     # black, isort, flake8, mypy, ty
 IHSP_ENV_FILE=materials/dev.env uv run pytest -q -p no:cacheprovider        # needs the dev compose services
 uv run pytest tests/<module>/unit -q                       # unit tests, no services
-docker compose -f materials/docker-compose.dev.yaml up -d --wait postgres redis s3 s3-init vault vault-init
+docker compose -f materials/docker-compose.dev.yaml up -d --wait postgres redis s3 s3-init vault vault-init mailpit
 IHSP_ENV_FILE=materials/dev.env uv run python scripts/export_openapi.py     # after any route or schema change
 ```
 

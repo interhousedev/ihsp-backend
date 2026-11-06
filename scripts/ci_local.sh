@@ -4,7 +4,7 @@
 #   scripts/ci_local.sh [STAGE...] [--fast]
 #
 # Stages (default: lint test openapi security):
-#   lint       black, isort, flake8, mypy (scripts/style_check.sh)
+#   lint       black, isort, flake8, mypy, ty (scripts/style_check.sh)
 #   unit       the unit tests only (tests/*/unit), no services
 #   test       the whole pytest suite against the dev compose services (starts them, stops them after)
 #   openapi    openapi/openapi.json matches the exported document
@@ -61,7 +61,7 @@ stage_lint() { uv sync --frozen && scripts/style_check.sh; }
 stage_unit() { uv sync --frozen && jwt_key && uv run pytest -q -p no:cacheprovider tests/*/unit; }
 stage_test() {
   uv sync --frozen && jwt_key || return 1
-  "${COMPOSE[@]}" up -d --wait postgres redis s3 s3-init vault vault-init || return 1
+  "${COMPOSE[@]}" up -d --wait postgres redis s3 s3-init vault vault-init mailpit || return 1
   local rc=0
   IHSP_ENV_FILE=materials/dev.env uv run pytest -q -p no:cacheprovider || rc=$?
   "${COMPOSE[@]}" down -v

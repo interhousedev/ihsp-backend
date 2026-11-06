@@ -142,6 +142,16 @@ The full policy and the disclosure process are in [SECURITY.md](SECURITY.md). In
 - **SSRF and uploads.** Outbound fetches (link checks, certificates, notebook sources) go through URL policies that refuse private, loopback and link-local addresses and handle redirects themselves; uploads are checked by content type (libmagic) against per-feature allowlists.
 - **Supply chain.** CI pins actions by commit, builds the image with an SBOM and provenance attestations, scans it with Trivy (fixable critical and high findings fail the build), signs it with keyless cosign, and runs CodeQL and a secrets scan. Dependabot updates dependencies weekly.
 
+## MCP servers
+
+Three servers let an AI app work for a signed-in person, each under scopes the person chose on the connectors page of IHT ID. Nothing can publish, and only the LMS server deletes, apart from a student's own flash cards.
+
+- **Students:** `get_schedule`, `get_my_subjects`, `get_subject_lessons`, `get_lesson_detail`, `get_lesson_materials`, `get_homework`, `get_marks`, `get_results`, `get_gpa`, `get_attendance`, `refresh_my_marks`, `get_sync_status`, `get_my_teachers`, `get_teacher_timetable`, `list_files`, `search_files`, `read_file`, `list_flashcard_sets`, `get_flashcard_set`, `create_flashcard_set`, `update_flashcard_set`, `add_flashcards`, `update_flashcard`, `batch_edit_flashcards`, `delete_flashcards`, `list_tests`, `get_test`, `create_test`, `batch_edit_test_questions`, `list_notebooks`, `get_notebook`, `search_notebooks`, `create_notebook`, `add_notebook_sources`, `read_notebook_source`, `list_notebook_outputs`, `generate_notebook_output`, `list_my_courses`, `get_course_curriculum`, `get_course_step`, `get_course_media_link`, `search_library`, `get_library_item`, `read_library_text`, `search_knowledge`.
+- **LMS:** `list_courses`, `get_course`, `create_course`, `update_course`, `delete_course`, `create_module`, `update_module`, `delete_module`, `create_section`, `get_step`, `create_step`, `update_step`, `delete_step`, `add_text_block`, `add_test_block`, `add_question`, `add_flashcards_block`, `list_attempts`, `list_pending_changes`, `list_versions`.
+- **Administration (read-only):** `search_users`, `get_student`, `list_groups`, `get_group`, `list_teachers`, `get_timetable`, `list_lessons`, `attendance_stats`, `missing_attendance`, `list_broadcasts`, `audit_log`, `sync_status`.
+
+`list_files` with origin `flashcards` also returns the person's sets as `flashcard_sets`, with links; this needs `flashcards:read`. The connectors page lists calls (kept 90 days), open offers of new scopes and media links. The trust rules are in [SECURITY.md](SECURITY.md#mcp-boundary).
+
 ## School knowledge base
 
 The `knowledge` module holds school facts (rules, schedules, staff, procedures, contacts). Administrators edit them on the admin "Knowledge" page (`iht-web` route `apps/admin/src/app/(console)/knowledge`), backed by `app/interfaces/http/v1/admin_knowledge/`.
@@ -227,7 +237,7 @@ docker compose -f materials/docker-compose.dev.yaml up -d --wait postgres redis 
 uv sync --frozen
 IHSP_ENV_FILE=materials/dev.env uv run pytest -q -p no:cacheprovider     # everything
 uv run pytest tests/<module>/unit -q                                      # unit tests need no services
-scripts/style_check.sh      # black --check, isort --check-only, flake8, mypy
+scripts/style_check.sh      # black --check, isort --check-only, flake8, mypy, ty
 scripts/test.sh             # pytest with coverage
 ```
 
@@ -273,8 +283,8 @@ Verify an image signature with `cosign verify ghcr.io/<owner>/ihsp-backend@<dige
 
 | Workflow | When | What |
 |---|---|---|
-| `lint.yml` | every push and pull request | black, isort, flake8, mypy |
-| `test.yml` | pull requests to `main` | the whole pytest suite against the dev compose services, the committed `openapi.json` check, a secrets scan |
+| `lint.yml` | every push and pull request | black, isort, flake8, mypy, ty |
+| `test.yml` | pull requests and pushes to `main` | the whole pytest suite against the dev compose services, the committed `openapi.json` check, a secrets scan |
 | `build.yml` | pushes to `main`, tags `v*`, manual | builds `ghcr.io/<owner>/ihsp-backend`, SBOM and provenance, Trivy scan (fails on fixable critical and high findings), keyless cosign signature, channel tags |
 | `codeql.yml` | pull requests, `main`, weekly | CodeQL for Python |
 

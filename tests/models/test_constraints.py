@@ -351,13 +351,24 @@ async def test_a_timetable_entry_generates_a_lesson_once_per_origin_date(
     )
 
 
-async def test_timetable_entry_weekday_is_monday_to_saturday(
+async def test_timetable_entry_weekday_is_0_to_7(
     db: AsyncSession,
 ) -> None:
-    """CHECK weekday BETWEEN 1 AND 6."""
+    """CHECK weekday BETWEEN 0 AND 7: Sunday (7) is allowed, 8 is not."""
     term, subject = await make_lesson_parents(db)
 
     await assert_rejected(
+        db,
+        TimetableEntry(
+            term_id=term.id,
+            weekday=8,
+            period=1,
+            subject_id=subject.id,
+            audience=[str(new_id())],
+            valid_from=date(2026, 9, 2),
+        ),
+    )
+    await saved(
         db,
         TimetableEntry(
             term_id=term.id,

@@ -42,5 +42,8 @@
   "notebooks-source-too-large": "The text is too long for one source. Split it into parts.",
   "notebooks-source-unsupported": "This kind of file or link is not supported as a source yet. Paste the text instead.",
   "notebooks-workspace-action": "This action is not available in a course workspace.",
-  "notebooks-workspace-readonly": "You can only read this course workspace. Ask a course editor for edit access."
+  "notebooks-workspace-readonly": "You can only read this course workspace. Ask a course editor for edit access.",
+  "notebooks-share-unsupported": "Only a notebook you created yourself can be shared.",
+  "notebooks-share-limit": "The limit of {limit} is reached.",
+  "notebooks-share-recipient-not-found": "This person was not found."
 }

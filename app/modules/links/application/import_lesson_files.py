@@ -82,6 +82,7 @@ class ImportLessonFiles:
                 source_url=item.source_url,
                 lesson_id=item.lesson_id,
                 lesson_role=LessonRole.MATERIAL,
+                lesson_material_kind=item.kind,
                 hidden_at=now if hidden_by else None,
                 hidden_by=hidden_by,
                 hidden_by_rule=hidden_by is not None,
