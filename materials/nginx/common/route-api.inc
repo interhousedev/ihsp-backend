@@ -29,7 +29,7 @@ location ~ ^/v1/(id|oauth)/ {
     proxy_pass $up_identity;
 }
 
-location ~ ^/v1/admin/(users|teachers|audit)(/|$) {
+location ~ ^/v1/admin/(users|teachers|audit|oauth-clients|login-cues)(/|$) {
     include /etc/nginx/ihsp/proxy.inc;
     include /etc/nginx/ihsp/headers-api.inc;
     proxy_pass $up_identity;

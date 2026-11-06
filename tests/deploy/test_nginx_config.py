@@ -109,8 +109,8 @@ def test_prod_config_routes_the_documented_hosts(tmp_path: Path) -> None:
 def test_the_api_routes_send_identity_paths_to_identity() -> None:
     route = (MATERIALS_DIR / "nginx" / "common" / "route-api.inc").read_text()
     assert "^/v1/(id|oauth)/" in route
-    assert "^/v1/admin/(users|teachers|audit)(/|$)" in route
-    assert route.index("teachers/[^/]+/profile") < route.index("(users|teachers|audit)")
+    assert "^/v1/admin/(users|teachers|audit|oauth-clients|login-cues)(/|$)" in route
+    assert route.index("teachers/[^/]+/profile") < route.index("(users|teachers|audit|")
     assert "location ^~ /telegram/" in route
     assert "location ^~ /internal/" in route
 

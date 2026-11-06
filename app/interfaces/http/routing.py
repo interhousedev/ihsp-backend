@@ -19,7 +19,9 @@ log = structlog.get_logger(__name__)
 V1 = "app.interfaces.http.v1"
 PUBLIC = "app.interfaces.http.public"
 
-# `/v1/id/*`, `/v1/oauth/*`, `/v1/admin/{users,teachers,audit}`, `/internal/emis/*`.
+# `/v1/id/*`, `/v1/oauth/*`, `/internal/emis/*` and
+# `/v1/admin/{users,teachers,audit,oauth-clients,login-cues}`; nginx (route-api.inc)
+# must list the same admin prefixes.
 IDENTITY_PACKAGES: tuple[str, ...] = (
     f"{V1}.id",
     f"{V1}.id_registration",
