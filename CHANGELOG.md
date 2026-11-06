@@ -21,6 +21,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - `/v1/admin/login-cues` and `/v1/admin/oauth-clients` answered 404 in production: nginx did not route them to the identity process.
 - Gemini connectors failed with a `redirect_uri` error: per-user Google redirect URIs are now added to Gemini clients at authorization.
 
+- `scripts/cloud_deploy.sh` could report success without restarting containers: `docker compose run` consumed the piped deploy script.
+
 ### Known issues
 
 - The Telegram step is enforced in the web flow only; an account that leaves the page stays without a link.

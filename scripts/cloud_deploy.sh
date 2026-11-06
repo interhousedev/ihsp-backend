@@ -88,8 +88,9 @@ if [ "$init" -eq 1 ]; then
 fi
 
 say "deploying"
-# shellcheck disable=SC2087
-ssh "$host" "cd '$dir' && PULL=$pull bash -s" << 'REMOTE'
+# The script is uploaded, not piped to `bash -s`: then stdin is the script itself, a
+# `docker compose run` reads the rest of it, and the deploy ends with success before `up`.
+ssh "$host" "cat > '$dir/.deploy.sh'" << 'REMOTE'
 set -euo pipefail
 dc() { docker compose --env-file .env.prod -f materials/docker-compose.prod.yaml "$@"; }
 domain=$(sed -n 's/^DOMAIN=//p' .env.prod | tail -n 1)
@@ -156,7 +157,8 @@ dc up -d --wait --remove-orphans --force-recreate
 dc --profile tools run --rm --no-deps -T bootstrap python /scripts/hydra_bootstrap.py --mcp-clients-only \
     || echo "WARNING: MCP client redirect sync failed; rerun it after checking Hydra" >&2
 # Containers that an interrupted earlier deploy renamed to <id>_ihsp-... are left over.
-docker ps -a --format '{{.Names}}' | grep -E '^[0-9a-f]{12}_ihsp-' | xargs -r docker rm -f
+# grep finds nothing on a clean server, which must not fail the deploy (pipefail).
+docker ps -a --format '{{.Names}}' | { grep -E '^[0-9a-f]{12}_ihsp-' || true; } | xargs -r docker rm -f
 # The edge config is bind-mounted: a running nginx keeps the old upstreams until it reloads.
 dc exec -T nginx nginx -s reload
 
@@ -165,5 +167,7 @@ if command -v curl > /dev/null; then
     curl -fsS --max-time 10 "https://api.$domain/health" && echo
     curl -fsS --max-time 10 "https://id.$domain/.well-known/openid-configuration" > /dev/null && echo "hydra discovery ok"
 fi
+echo "==> remote deploy finished"
 REMOTE
+ssh "$host" "cd '$dir' && PULL=$pull bash .deploy.sh < /dev/null; status=\$?; rm -f .deploy.sh; exit \$status"
 say "deployed"
