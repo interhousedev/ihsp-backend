@@ -13,7 +13,7 @@ from app.modules.academic.application.schedule.ports.reader import ScheduleReade
 from app.modules.academic.domain.schedule.audience_display import group_label
 from app.modules.academic.domain.schedule.errors import TeacherNotFoundError
 from app.modules.academic.domain.schedule.lesson_view import LessonView
-from app.modules.academic.domain.schedule.school_days import SCHOOL_DAYS
+from app.modules.academic.domain.schedule.school_days import WEEK_DAYS
 from app.shared.actor import Actor
 from app.shared.clock import Clock
 from app.shared.contracts.identity import IdentityDirectory
@@ -72,7 +72,7 @@ class GetTeacherTimetable:
         start: dt.date | None,
         end: dt.date | None,
     ) -> list[TeacherSlot]:
-        """Return the teacher's Monday-Friday lessons between two dates by start.
+        """Return the teacher's lessons between two dates by start.
 
         Cancelled lessons stay, with their status. `mine` marks the lessons of the
         caller's own group or subgroup.
@@ -89,7 +89,7 @@ class GetTeacherTimetable:
         slots = [
             _slot(view, keys)
             for view in views
-            if view.ref.date.isoweekday() in SCHOOL_DAYS
+            if view.ref.date.isoweekday() in WEEK_DAYS
         ]
         slots.sort(key=lambda slot: (slot.starts_at, str(slot.id)))
         return slots

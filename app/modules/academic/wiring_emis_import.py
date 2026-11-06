@@ -6,6 +6,9 @@ from app.modules.academic.application.curriculum.sync_group_curriculum import (
     SyncGroupCurriculum,
 )
 from app.modules.academic.application.schedule.common import UowFactory
+from app.modules.academic.application.schedule.fetch_lesson_materials import (
+    FetchLessonMaterials,
+)
 from app.modules.academic.application.schedule.generate_lessons import GenerateLessons
 from app.modules.academic.application.schedule.get_student_sync import (
     AdminGetStudentSync,
@@ -36,6 +39,9 @@ from app.modules.academic.application.schedule.sync_group_timetable import (
 )
 from app.modules.academic.application.schedule.sync_student_all import (
     SyncStudentAll,
+)
+from app.modules.academic.infrastructure.schedule.lesson_fetch_store import (
+    RedisLessonFetchStore,
 )
 from app.modules.academic.infrastructure.schedule.room_page_cache import (
     RedisRoomPageCache,
@@ -75,6 +81,7 @@ class EmisImportServices:
     admin_request_student_sync: AdminRequestStudentSync
     admin_get_student_sync: AdminGetStudentSync
     sync_jobs: StudentSyncJobs
+    fetch_lesson_materials: FetchLessonMaterials | None = None  # needs Redis
 
 
 def assemble_emis_import(
@@ -154,7 +161,7 @@ def build_emis_import(
         max_bytes=deps.settings.limits.file_max_bytes,
         concurrency=deps.settings.emis.download_concurrency,
     )
-    return assemble_emis_import(
+    services = assemble_emis_import(
         uow_factory=sql_schedule_uow_factory(deps),
         emis=emis,
         identity=identity,
@@ -168,3 +175,11 @@ def build_emis_import(
         sync_state=RedisSyncState(deps.redis),
         sync_jobs=SqlStudentSyncJobs(sql_schedule_uow_factory(deps)),
     )
+    services.fetch_lesson_materials = FetchLessonMaterials(
+        uow_factory=sql_schedule_uow_factory(deps),
+        emis=emis,
+        sync=services.sync_group_timetable,
+        store=RedisLessonFetchStore(deps.redis),
+        clock=deps.clock,
+    )
+    return services

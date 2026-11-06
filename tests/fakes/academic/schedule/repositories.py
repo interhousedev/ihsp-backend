@@ -15,7 +15,7 @@ from app.modules.academic.domain.schedule.errors import RoomSlugTakenError
 from app.modules.academic.domain.schedule.group import Group
 from app.modules.academic.domain.schedule.lesson import Lesson
 from app.modules.academic.domain.schedule.room import Room
-from app.modules.academic.domain.schedule.school_days import SCHOOL_DAYS
+from app.modules.academic.domain.schedule.school_days import WEEK_DAYS
 from app.modules.academic.domain.schedule.student import Student
 from app.modules.academic.domain.schedule.subject import LANGUAGES, Subject
 from app.modules.academic.domain.schedule.term import Term
@@ -410,11 +410,11 @@ class FakeTimetableEntryRepository:
                 lesson.timetable_entry_id = None
 
     async def list_for_term(self, term_id: UUID) -> list[TimetableEntry]:
-        """Return the term's entries; Saturday ones are skipped like in SQL."""
+        """Return the term's entries; retired ones are skipped like in SQL."""
         return [
             _copy(e)
             for e in self.store.entries.values()
-            if e.term_id == term_id and e.weekday in SCHOOL_DAYS
+            if e.term_id == term_id and e.weekday in WEEK_DAYS
         ]
 
     async def search(
@@ -428,7 +428,7 @@ class FakeTimetableEntryRepository:
         """Return entries of a group, teacher or room."""
         found = []
         for entry in self.store.entries.values():
-            if entry.term_id != term_id or entry.weekday not in SCHOOL_DAYS:
+            if entry.term_id != term_id or entry.weekday not in WEEK_DAYS:
                 continue
             groups = audience_keys.group_ids(entry.audience)
             if group_id is not None and group_id not in groups:
@@ -448,7 +448,7 @@ class FakeTimetableEntryRepository:
             _copy(e)
             for e in self.store.entries.values()
             if e.term_id == term_id
-            and e.weekday in SCHOOL_DAYS
+            and e.weekday in WEEK_DAYS
             and e.weekday == weekday
             and e.period == period
         ]

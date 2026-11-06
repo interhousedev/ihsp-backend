@@ -6,6 +6,9 @@ from uuid import UUID
 
 from app.modules.academic.application.marks.ports.unit_of_work import MarksUowFactory
 from app.modules.academic.application.marks.semester_range import semester_range
+from app.modules.academic.application.marks.semester_subjects import (
+    visible_subject_ids,
+)
 from app.modules.academic.application.marks.temporary_gpa import (
     with_temporary,
 )
@@ -46,8 +49,15 @@ class GetRecordBook:
             results = await uow.reader.results(actor.user_id, None)
             temporary: dict[tuple[int, UUID], float] = {}
             today = local_today(self._clock)
-            for sem in sorted({r.semester for r in results}):
+            visible: dict[int, set[UUID]] = {}
+            numbers = {r.semester for r in results}
+            if ctx.current_semester is not None:
+                numbers.add(ctx.current_semester)
+            for sem in sorted(numbers):
                 window = await semester_range(uow.reader, ctx, sem, today)
+                visible[sem] = await visible_subject_ids(
+                    uow.reader, ctx, sem, results, window
+                )
                 found = await with_temporary(uow.reader, [ctx.user_id], sem, window)
                 for (_sid, subject), value in found.items():
                     temporary[(sem, subject)] = value
@@ -55,23 +65,34 @@ class GetRecordBook:
                 uow.reader,
                 self._identity,
                 locale=locale,
-                subject_ids={r.subject_id for r in results if r.subject_id},
+                subject_ids=set().union(*visible.values()),
             )
         by_semester: dict[int, list[ResultRow]] = defaultdict(list)
         for row in results:
             by_semester[row.semester].append(row)
         semesters = []
-        for semester in sorted(by_semester):
+        for semester, subject_ids in sorted(visible.items()):
             rows = by_semester[semester]
+            # The current semester stays in the book only when it has something to show.
+            if not rows and not subject_ids:
+                continue
+            by_subject = {r.subject_id: r for r in rows if r.subject_id is not None}
             subjects: list[dict[str, Any]] = [
                 {
-                    "subject": view.subject_ref(r.subject_id),
-                    "semester_mark": num(r.value),
-                    "gpa_with_temporary": temporary.get((semester, r.subject_id)),
-                    "emis_rating": r.emis_rating,
+                    "subject": view.subject_ref(subject_id),
+                    "semester_mark": (
+                        num(by_subject[subject_id].value)
+                        if subject_id in by_subject
+                        else None
+                    ),
+                    "gpa_with_temporary": temporary.get((semester, subject_id)),
+                    "emis_rating": (
+                        by_subject[subject_id].emis_rating
+                        if subject_id in by_subject
+                        else None
+                    ),
                 }
-                for r in rows
-                if r.subject_id is not None
+                for subject_id in subject_ids
             ]
             subjects.sort(key=lambda s: str(s["subject"]["name"]).casefold())
             gpa = next((r.value for r in rows if r.subject_id is None), None)

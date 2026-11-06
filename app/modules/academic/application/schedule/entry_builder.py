@@ -13,13 +13,17 @@ from app.modules.academic.application.schedule.ports.unit_of_work import (
     ScheduleUnitOfWork,
 )
 from app.modules.academic.domain.schedule.audience_display import keys_from_input
+from app.modules.academic.domain.schedule.calendar import bell_for, has_blocks
 from app.modules.academic.domain.schedule.conflicts import Conflict, entry_conflicts
 from app.modules.academic.domain.schedule.errors import (
     EntryInvalidError,
+    EntryNotSchoolDayError,
     GroupNotFoundError,
+    NoBellError,
     SubjectNotFoundError,
     TermNotFoundError,
 )
+from app.modules.academic.domain.schedule.school_days import SCHOOL_DAYS
 from app.modules.academic.domain.schedule.timetable_entry import (
     TimetableEntry,
     WeekParity,
@@ -48,9 +52,14 @@ class EntryInput:
 async def check_references(
     uow: ScheduleUnitOfWork, entry: TimetableEntry, groups: Sequence[UUID]
 ) -> None:
-    """Raise unless the term, subject and groups of the entry exist."""
-    if await uow.terms.get(entry.term_id) is None:
+    """Raise unless term, subject and groups exist and the day has the block."""
+    term = await uow.terms.get(entry.term_id)
+    if term is None:
         raise TermNotFoundError()
+    if not has_blocks(term, entry.weekday) and entry.weekday not in SCHOOL_DAYS:
+        raise EntryNotSchoolDayError()
+    if bell_for(term, entry.period, entry.weekday) is None:
+        raise NoBellError(params={"period": entry.period, "weekday": entry.weekday})
     if await uow.subjects.get(entry.subject_id) is None:
         raise SubjectNotFoundError()
     found = await uow.groups.get_many(set(groups))

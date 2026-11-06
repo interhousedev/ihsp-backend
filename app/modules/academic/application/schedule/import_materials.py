@@ -113,11 +113,15 @@ class ImportLessonMaterials:
             ref = await self._store(item, file, by_hash)
             if file is None or ref is None:
                 fallback.append(
-                    ImportedUrl(item.lesson_id, item.url, material_title(item))
+                    ImportedUrl(
+                        item.lesson_id, item.url, material_title(item), item.kind
+                    )
                 )
             else:
                 title = file_name(item, file)  # the file may be shared: own name
-                stored.append(ImportedFile(item.lesson_id, item.url, ref.id, title))
+                stored.append(
+                    ImportedFile(item.lesson_id, item.url, ref.id, title, item.kind)
+                )
         added = await self.links.import_lesson_files(stored) if stored else 0
         if fallback:
             added += await self.links.import_lesson_urls(fallback)

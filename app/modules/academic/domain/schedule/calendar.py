@@ -15,18 +15,23 @@ def monday_of(day: dt.date) -> dt.date:
     return day - dt.timedelta(days=day.isoweekday() - 1)
 
 
-def effective_weekday(day: dt.date, term: Term) -> int | None:
-    """Return the weekday (1-5) whose timetable applies on the day, or None.
+def has_blocks(term: Term, weekday: int) -> bool:
+    """Return True if the term has at least one lesson block on the weekday."""
+    return any(weekday in bell.weekdays for bell in term.bells)
 
-    None means no lessons: a non-study day, or a Saturday or Sunday. Only Monday to
-    Friday can be a study day; a moved-day rule on a weekend (kept from before) is
-    ignored, and a moved day follows another Monday-to-Friday weekday.
+
+def effective_weekday(day: dt.date, term: Term) -> int | None:
+    """Return the weekday (1-7) whose timetable applies on the day, or None.
+
+    None means no lessons: a non-study day, or a Saturday or Sunday without blocks. A
+    moved-day rule on a weekend (kept from before) is ignored, and a moved day follows
+    another Monday-to-Friday weekday.
     """
     if day in term.non_study_days:
         return None
     weekday = day.isoweekday()
     if weekday not in SCHOOL_DAYS:
-        return None
+        return weekday if has_blocks(term, weekday) else None
     for moved in term.moved_days:
         if moved.date == day:
             follows = moved.follows_weekday

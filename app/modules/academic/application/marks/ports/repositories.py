@@ -204,6 +204,12 @@ class MarksReader(Protocol):
         """Return non-removed marks, newest date first."""
         ...
 
+    async def planned_subject_ids(
+        self, group_id: UUID, semester: int
+    ) -> set[UUID] | None:
+        """Return the curriculum's subjects of a semester; None if it lists none."""
+        ...
+
     async def temporary_values(
         self,
         student_ids: Collection[UUID],

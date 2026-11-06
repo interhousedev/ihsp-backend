@@ -82,17 +82,7 @@ def test_an_entry_on_a_school_day_is_valid(weekday: int) -> None:
     validate_entry(make_entry(weekday))
 
 
-def test_an_entry_on_a_saturday_is_rejected_as_not_a_school_day() -> None:
-    """Lessons are held Monday to Friday; a Saturday slot is not allowed."""
-    with pytest.raises(EntryNotSchoolDayError) as error:
-        validate_entry(make_entry(6))
-
-    assert error.value.code == "academic/entry-not-school-day"
-    assert error.value.message_key == "academic-entry-not-school-day"
-    assert error.value.status == 422
-
-
-@pytest.mark.parametrize("weekday", [0, 7, 8])
+@pytest.mark.parametrize("weekday", [0, 8])
 def test_any_other_weekday_stays_an_invalid_slot(weekday: int) -> None:
     """Out-of-range weekdays keep the general error."""
     with pytest.raises(EntryInvalidError) as error:
@@ -150,7 +140,7 @@ async def test_saturday_entries_from_before_are_neither_listed_nor_copied(
     group = await env.group()
     audience = [str(group.id)]
     await env.entry(term, weekday=1, period=1, subject=subject, audience=audience)
-    await env.entry(term, weekday=6, period=1, subject=subject, audience=audience)
+    await env.entry(term, weekday=0, period=1, subject=subject, audience=audience)
 
     listed = await env.services.list_entries.execute(ADMIN)
     created = await env.services.copy_timetable.execute(term.id, following.id)
@@ -261,7 +251,7 @@ async def test_the_next_study_day_after_friday_is_monday(env: Env) -> None:
             period=1,
             start=dt.time(8, 30),
             end=dt.time(9, 15),
-            weekdays=[1, 2, 3, 4, 5, 6],
+            weekdays=[1, 2, 3, 4, 5],
         )
     ]
     term = await env.term(bells=bells)
@@ -295,6 +285,25 @@ async def test_a_sunday_lesson_from_before_is_not_the_next_school_day(env: Env) 
         )
 
     assert found == MONDAY
+
+
+async def test_a_saturday_of_an_opened_weekend_is_the_next_school_day(env: Env) -> None:
+    """A lesson on an opened Saturday comes before Monday."""
+    if env.maker is None:
+        pytest.skip("the classwork lesson reader runs on a session")
+    term = await env.term()
+    subject = await env.subject()
+    group = await env.group()
+    audience = [str(group.id)]
+    friday, saturday = dt.date(2026, 11, 13), dt.date(2026, 11, 14)
+    await env.lesson(term, day=saturday, period=1, subject=subject, audience=audience)
+
+    async with env.maker() as session:
+        found = await SqlLessonReader(session).next_study_day(
+            audience_keys.student_keys(group.id, None), friday
+        )
+
+    assert found == saturday
 
 
 async def test_a_moved_sunday_rule_does_not_make_sunday_the_next_study_day(

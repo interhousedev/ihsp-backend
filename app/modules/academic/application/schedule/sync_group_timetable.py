@@ -396,6 +396,21 @@ class SyncGroupTimetable:
             total += await self._resync_term(term, day, group_id, fetchers, scope)
         return total
 
+    async def apply_lesson_materials(
+        self,
+        *,
+        term: Term,
+        group_id: UUID,
+        user_id: UUID,
+        classes: Sequence[EmisClass],
+        window: tuple[dt.date, dt.date],
+        lesson_id: UUID,
+    ) -> int:
+        """Add the classes' materials of one lesson; never deletes (MCP fallback)."""
+        return await self._apply_materials(
+            term, group_id, user_id, classes, window, lesson_id=lesson_id
+        )
+
     async def _resync_term(
         self,
         term: Term,
@@ -533,6 +548,7 @@ class SyncGroupTimetable:
         *,
         only: MaterialScope | None = None,
         skip: Collection[UUID] = (),
+        lesson_id: UUID | None = None,
     ) -> int:
         async with self.uow_factory() as uow:
             student = await uow.students.get(user_id)
@@ -547,6 +563,8 @@ class SyncGroupTimetable:
             allowed = set(await self._scoped(term, group_id, window, only))
             allowed.difference_update(skip)
             items = [item for item in items if item.lesson_id in allowed]
+        if lesson_id is not None:
+            items = [item for item in items if item.lesson_id == lesson_id]
         if not items:
             return 0
         return await self.urls.import_materials(user_id, items)

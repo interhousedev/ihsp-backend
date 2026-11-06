@@ -160,7 +160,9 @@ async def test_a_reversed_range_is_rejected(world: World) -> None:
         await world.timetable(THU, WED)
 
 
-async def test_saturday_and_sunday_lessons_are_left_out(world: World) -> None:
+async def test_an_old_saturday_stays_hidden_and_a_sunday_lesson_is_listed(
+    world: World,
+) -> None:
     await world.lesson(FRI, world.mine)
     await world.lesson(SAT, world.mine)
     await world.lesson(SUN, world.other)
@@ -168,8 +170,16 @@ async def test_saturday_and_sunday_lessons_are_left_out(world: World) -> None:
 
     slots = await world.timetable()
 
-    assert [s.date for s in slots] == [TUE, FRI, NEXT_MON]
-    assert all(s.date.isoweekday() <= 5 for s in slots)
+    assert [s.date for s in slots] == [TUE, FRI, SUN, NEXT_MON]
+
+
+async def test_a_saturday_of_an_opened_weekend_is_listed(world: World) -> None:
+    opened = dt.date(2026, 11, 14)
+    await world.lesson(opened, world.mine)
+
+    slots = await world.timetable(opened, opened)
+
+    assert [s.date for s in slots] == [opened]
 
 
 async def test_mine_is_true_only_for_the_students_own_group_and_subgroup(

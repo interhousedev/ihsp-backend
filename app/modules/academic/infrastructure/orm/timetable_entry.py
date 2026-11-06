@@ -25,7 +25,7 @@ class TimetableEntry(IdMixin, TimestampMixin, Base):
 
     __tablename__ = "timetable_entries"
     __table_args__ = (
-        CheckConstraint("weekday BETWEEN 1 AND 6", name="weekday"),
+        CheckConstraint("weekday BETWEEN 0 AND 7", name="weekday"),
         CheckConstraint("period >= 1", name="period"),
         CheckConstraint("cardinality(audience) > 0", name="audience_not_empty"),
         CheckConstraint(

@@ -203,3 +203,34 @@ async def test_resync_asks_each_group_through_two_students() -> None:
     by_group = {group: (terms, slots) for group, terms, slots in sync.resyncs}
     assert by_group[split] == (frozenset({THIS_TERM}), [[s1, s3], [s2]])
     assert by_group[whole] == (frozenset({THIS_TERM}), [[w1, w3], [w2]])
+
+
+async def test_one_lesson_fetch_adds_only_that_lesson_and_purges_nothing(
+    topics_env: Env,
+) -> None:
+    """A3: the MCP fallback imports one lesson; other lessons and old rows stay."""
+    env = topics_env
+    group_id, user_id = await set_up(env)
+    env.emis.classes = [
+        klass(0, 2, topic=files_topic()),
+        klass(0, 3, topic=files_topic()),
+    ]
+    sync = env.emis_import.sync_group_timetable
+    await sync.execute(group_id=group_id, user_id=user_id)
+    wanted = await lesson_id_on(env, day(0, 2))
+    env.urls.purged.clear()
+    before = list(env.urls.of(wanted))
+    async with env.uow_factory() as uow:
+        term = next(t for t in await uow.terms.list_all())
+
+    await sync.apply_lesson_materials(
+        term=term,
+        group_id=group_id,
+        user_id=user_id,
+        classes=env.emis.classes,
+        window=(day(0, 1), day(0, 5)),
+        lesson_id=wanted,
+    )
+
+    assert env.urls.purged == []
+    assert set(before) <= set(env.urls.of(wanted))

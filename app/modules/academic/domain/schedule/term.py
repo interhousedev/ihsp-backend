@@ -14,8 +14,8 @@ from app.modules.academic.domain.schedule.errors import (
     TermNonStudyDayInvalidError,
 )
 from app.modules.academic.domain.schedule.school_days import (
-    SATURDAY,
     SCHOOL_DAYS,
+    WEEK_DAYS,
 )
 
 from pydantic import BaseModel, ConfigDict, Field, PlainSerializer, TypeAdapter
@@ -104,17 +104,8 @@ _MOVED_DAYS = TypeAdapter(list[MovedDay])
 
 
 def bells_from_json(raw: Any) -> list[Bell]:
-    """Validate the jsonb stored in Term.bells.
-
-    A Saturday kept from before the lyceum dropped Saturday lessons is left out: a
-    bell held only on Saturdays vanishes, one held on more days loses that day.
-    """
-    bells: list[Bell] = []
-    for bell in _BELLS.validate_python(raw or []):
-        days = [day for day in bell.weekdays if day != SATURDAY]
-        if days:
-            bells.append(bell.model_copy(update={"weekdays": days}))
-    return bells
+    """Validate the jsonb stored in Term.bells."""
+    return _BELLS.validate_python(raw or [])
 
 
 def bells_to_json(bells: Sequence[Bell]) -> list[dict[str, Any]]:
@@ -197,16 +188,25 @@ def _validate_control_periods(term: Term) -> None:
 
 def _validate_bells(bells: Sequence[Bell]) -> None:
     seen: set[tuple[int, int]] = set()
+    days: dict[int, list[Bell]] = {}
     for bell in bells:
         if not bell.start < bell.end:
             raise TermBellsInvalidError(params={"period": bell.period})
         for weekday in bell.weekdays:
             slot = (bell.period, weekday)
-            if weekday not in SCHOOL_DAYS or slot in seen:
+            if weekday not in WEEK_DAYS or slot in seen:
                 raise TermBellsInvalidError(
                     params={"period": bell.period, "weekday": weekday}
                 )
             seen.add(slot)
+            days.setdefault(weekday, []).append(bell)
+    for weekday, column in days.items():
+        ordered = sorted(column, key=lambda bell: bell.start)
+        for first, second in zip(ordered, ordered[1:], strict=False):
+            if second.start < first.end:
+                raise TermBellsInvalidError(
+                    params={"period": second.period, "weekday": weekday}
+                )
 
 
 def pick_current_term(terms: Sequence[Term], today: dt.date) -> Term | None:

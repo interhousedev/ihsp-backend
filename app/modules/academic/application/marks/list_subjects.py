@@ -5,6 +5,9 @@ from uuid import UUID
 
 from app.modules.academic.application.marks.ports.unit_of_work import MarksUowFactory
 from app.modules.academic.application.marks.semester_range import semester_range
+from app.modules.academic.application.marks.semester_subjects import (
+    visible_subject_ids,
+)
 from app.modules.academic.application.marks.temporary_gpa import (
     with_temporary,
 )
@@ -55,10 +58,8 @@ class ListSubjects:
                 if r.semester == sem and r.subject_id is not None
             }
             current = sem == ctx.current_semester
-            subject_ids = set(rows) | (
-                set(ctx.curriculum_subject_ids) if current else set()
-            )
             rng = await semester_range(reader, ctx, sem, local_today(self._clock))
+            subject_ids = await visible_subject_ids(reader, ctx, sem, results, rng)
             counts = (
                 {}
                 if rng is None

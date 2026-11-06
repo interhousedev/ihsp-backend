@@ -60,9 +60,9 @@ def test_a_bell_must_end_after_it_starts() -> None:
         validate_term(make_term(bells=bad))
 
 
-@pytest.mark.parametrize("weekday", [0, 6, 7])
-def test_a_bell_must_be_on_a_school_day(weekday: int) -> None:
-    """ADM-8: bells apply to weekdays 1-5; there are no Saturday bells."""
+@pytest.mark.parametrize("weekday", [0, 8])
+def test_a_bell_must_be_on_a_day_of_the_week(weekday: int) -> None:
+    """ADM-8: bells apply to ISO weekdays 1-7."""
     bad = [Bell(period=1, start=dt.time(8, 0), end=dt.time(9, 0), weekdays=[weekday])]
 
     with pytest.raises(TermBellsInvalidError):
@@ -125,16 +125,13 @@ def test_bells_are_stored_as_hours_and_minutes() -> None:
     assert bells_from_json(stored) == default_bells()
 
 
-def test_saturday_bells_kept_from_before_are_left_out_on_read() -> None:
-    """A Saturday bell stored earlier is skipped; the other days of it stay."""
-    stored = [
-        {"period": 1, "start": "08:30", "end": "09:15", "weekdays": [1, 2, 6]},
-        {"period": 1, "start": "08:30", "end": "09:05", "weekdays": [6]},
-    ]
+def test_weekend_bells_are_read_as_stored() -> None:
+    """Administration may open a weekend day; academic_0011 removed the old ones."""
+    stored = [{"period": 1, "start": "08:30", "end": "09:15", "weekdays": [1, 6, 7]}]
 
     bells = bells_from_json(stored)
 
-    assert [(b.period, b.weekdays) for b in bells] == [(1, [1, 2])]
+    assert [(b.period, b.weekdays) for b in bells] == [(1, [1, 6, 7])]
     validate_term(make_term(bells=bells))
 
 

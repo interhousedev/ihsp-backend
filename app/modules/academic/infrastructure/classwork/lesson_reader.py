@@ -78,7 +78,7 @@ class SqlLessonReader:
     async def next_study_day(
         self, keys: Sequence[str], after: dt.date
     ) -> dt.date | None:
-        """Earliest date after ``after`` with a scheduled lesson (Monday to Friday)."""
+        """Earliest date after ``after`` with a scheduled lesson, weekends included."""
         stmt = sa.select(sa.func.min(LessonRow.date)).where(
             overlaps(LessonRow.audience, keys),
             LessonRow.status == "scheduled",

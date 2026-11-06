@@ -9,7 +9,7 @@ from app.modules.academic.application.schedule.ports.reader import ScheduleReade
 from app.modules.academic.domain.schedule.audience_display import group_label
 from app.modules.academic.domain.schedule.errors import TeacherNotFoundError
 from app.modules.academic.domain.schedule.lesson_view import LessonView
-from app.modules.academic.domain.schedule.school_days import SCHOOL_DAYS
+from app.modules.academic.domain.schedule.school_days import WEEK_DAYS
 from app.modules.academic.domain.schedule.teacher_status import current_and_next
 from app.shared.actor import Actor
 from app.shared.clock import Clock
@@ -103,7 +103,7 @@ def _lesson(view: LessonView) -> TeacherLessonData:
 
 
 def _school_days_only(views: list[LessonView]) -> list[LessonView]:
-    return [v for v in views if v.ref.date.isoweekday() in SCHOOL_DAYS]
+    return [v for v in views if v.ref.date.isoweekday() in WEEK_DAYS]
 
 
 def _by_teacher(views: list[LessonView]) -> dict[UUID, list[LessonView]]:

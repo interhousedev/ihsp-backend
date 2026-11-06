@@ -3,6 +3,10 @@
 from typing import Any
 
 from app.modules.academic.application.marks.ports.unit_of_work import MarksUowFactory
+from app.modules.academic.application.marks.semester_range import semester_range
+from app.modules.academic.application.marks.semester_subjects import (
+    visible_subject_ids,
+)
 from app.modules.academic.application.marks.temporary_gpa import (
     for_student,
 )
@@ -14,7 +18,7 @@ from app.modules.academic.application.marks.view_context import (
 from app.modules.academic.domain.marks.errors import StudentNotFoundError
 from app.modules.academic.domain.marks.semesters import resolve_semester
 from app.shared.actor import Actor
-from app.shared.clock import Clock
+from app.shared.clock import Clock, local_today
 from app.shared.contracts.identity import IdentityDirectory
 
 
@@ -47,9 +51,12 @@ class GetSemesterGrades:
             in_semester = [r for r in results if r.semester == sem]
             rows = {r.subject_id: r for r in in_semester if r.subject_id is not None}
             gpa = next((r.value for r in in_semester if r.subject_id is None), None)
-            subject_ids = set(rows)
-            if sem == ctx.current_semester:
-                subject_ids |= set(ctx.curriculum_subject_ids)
+            window = await semester_range(
+                uow.reader, ctx, sem, local_today(self._clock)
+            )
+            subject_ids = await visible_subject_ids(
+                uow.reader, ctx, sem, in_semester, window
+            )
             temporary = await for_student(uow.reader, ctx, sem, self._clock)
             view = await build_context(
                 uow.reader, self._identity, locale=locale, subject_ids=subject_ids

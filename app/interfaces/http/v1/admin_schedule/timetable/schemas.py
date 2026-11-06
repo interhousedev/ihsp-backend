@@ -22,7 +22,7 @@ class TimetableEntryInputBody(BaseModel):
     """TimetableEntryInput."""
 
     term_id: UUID
-    weekday: int = Field(ge=1, le=6)
+    weekday: int = Field(ge=1, le=7)
     period: int = Field(ge=1, le=20)
     week_parity: WeekParityName = "every"
     subject_id: UUID
@@ -37,7 +37,7 @@ class TimetableEntryPatchBody(BaseModel):
     """A partial TimetableEntryInput; send null to clear teacher, room or valid_to."""
 
     term_id: UUID | None = None
-    weekday: int | None = Field(default=None, ge=1, le=6)
+    weekday: int | None = Field(default=None, ge=1, le=7)
     period: int | None = Field(default=None, ge=1, le=20)
     week_parity: WeekParityName | None = None
     subject_id: UUID | None = None

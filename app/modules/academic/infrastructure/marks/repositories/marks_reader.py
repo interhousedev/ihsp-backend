@@ -22,6 +22,7 @@ from app.modules.academic.domain.marks.read_models import (
     SubjectInfo,
 )
 from app.modules.academic.infrastructure.marks.sql_helpers import has_uuid, overlaps
+from app.modules.academic.infrastructure.orm.curriculum import GroupCurriculumSubject
 from app.modules.academic.infrastructure.orm.emis_attendance import EmisAttendance
 from app.modules.academic.infrastructure.orm.group import Group
 from app.modules.academic.infrastructure.orm.lesson import Lesson
@@ -169,6 +170,27 @@ class SqlMarksReader:
             r.id: SubjectInfo(id=r.id, name=dict(r.name), short_name=r.short_name)
             for r in (await self.session.execute(stmt)).all()
         }
+
+    async def planned_subject_ids(
+        self, group_id: UUID, semester: int
+    ) -> set[UUID] | None:
+        """Return the curriculum's subjects of a semester; None if it lists none."""
+        stmt = (
+            sa.select(Subject.id)
+            .select_from(GroupCurriculumSubject)
+            .outerjoin(
+                Subject,
+                Subject.emis_subject_id == GroupCurriculumSubject.emis_subject_id,
+            )
+            .where(
+                GroupCurriculumSubject.group_id == group_id,
+                GroupCurriculumSubject.semester_number == semester,
+            )
+        )
+        found = (await self.session.execute(stmt)).scalars().all()
+        if not found:
+            return None
+        return {subject_id for subject_id in found if subject_id is not None}
 
     async def results(self, student_id: UUID, semester: int | None) -> list[ResultRow]:
         """Return result rows of one semester or of all semesters."""

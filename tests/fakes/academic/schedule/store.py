@@ -13,7 +13,10 @@ from app.modules.academic.domain.curriculum.records import (
 from app.modules.academic.domain.schedule.group import Group
 from app.modules.academic.domain.schedule.lesson import Lesson
 from app.modules.academic.domain.schedule.room import Room
-from app.modules.academic.domain.schedule.school_days import SATURDAY
+from app.modules.academic.domain.schedule.school_days import (
+    SATURDAY,
+    WEEKEND_LESSONS_SINCE,
+)
 from app.modules.academic.domain.schedule.student import Student
 from app.modules.academic.domain.schedule.subject import Subject
 from app.modules.academic.domain.schedule.term import Term
@@ -22,8 +25,8 @@ from app.shared.notifications import AuditDraft, NotificationDraft
 
 
 def on_a_saturday(day: dt.date) -> bool:
-    """True for a date the SQL reads skip: lessons are never read on a Saturday."""
-    return day.isoweekday() == SATURDAY
+    """True for a date the SQL reads skip: Saturdays from before they could open."""
+    return day.isoweekday() == SATURDAY and day < WEEKEND_LESSONS_SINCE
 
 
 @dataclass(slots=True)
