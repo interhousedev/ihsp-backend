@@ -25,6 +25,8 @@ class DeleteChat:
         """
         async with self.turn_lock.hold(notebook_id, actor.user_id):
             async with self.uow_factory() as uow:
-                await load_notebook(uow, actor.user_id, notebook_id, write=False)
+                await load_notebook(
+                    uow, actor.user_id, notebook_id, write=False, shared=True
+                )
                 await uow.messages.delete_all(notebook_id, actor.user_id)
                 await uow.commit()

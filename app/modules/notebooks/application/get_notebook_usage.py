@@ -29,7 +29,9 @@ class GetNotebookUsage:
             NotebookNotFoundError: Not a notebook the caller may read.
         """
         async with self.uow_factory() as uow:
-            notebook = await load_notebook(uow, actor.user_id, notebook_id, write=False)
+            notebook = await load_notebook(
+                uow, actor.user_id, notebook_id, write=False, shared=True
+            )
         return await self.usage.execute(
             actor.user_id, course=notebook.is_course_workspace
         )

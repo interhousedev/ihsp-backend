@@ -137,6 +137,12 @@ class FilesApiImpl:
         """Search the owner's files; returns ``{file_id, name, snippet}`` dicts."""
         return await self._search_text.execute(owner_id, query, limit)
 
+    async def search_text_in(
+        self, file_ids: Sequence[UUID], query: str, limit: int = 10
+    ) -> list[dict[str, Any]]:
+        """Search only these files; the caller has already decided they are allowed."""
+        return await self._search_text.execute_in(file_ids, query, limit)
+
     async def store_bytes(
         self,
         *,

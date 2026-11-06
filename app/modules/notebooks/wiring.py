@@ -8,6 +8,7 @@ from app.modules.notebooks.application.add_sources import AddSources
 from app.modules.notebooks.application.apply_course_artifact import ApplyCourseArtifact
 from app.modules.notebooks.application.ask_notebook import AskNotebook
 from app.modules.notebooks.application.attach_artifact import AttachArtifactToLesson
+from app.modules.notebooks.application.author_quiz import AuthorQuiz
 from app.modules.notebooks.application.build_source_guide import BuildSourceGuide
 from app.modules.notebooks.application.cancel_artifact import CancelArtifact
 from app.modules.notebooks.application.confirm_presentation_plan import (
@@ -46,6 +47,7 @@ from app.modules.notebooks.application.get_source import GetSource
 from app.modules.notebooks.application.get_usage import GetUsage
 from app.modules.notebooks.application.label_sources import LabelSources
 from app.modules.notebooks.application.light_json import Sleep
+from app.modules.notebooks.application.linked_sets import LinkedSets
 from app.modules.notebooks.application.list_artifacts import ListArtifacts
 from app.modules.notebooks.application.list_course_steps import ListCourseSteps
 from app.modules.notebooks.application.list_default_materials import (
@@ -56,6 +58,7 @@ from app.modules.notebooks.application.list_notebooks import ListNotebooks
 from app.modules.notebooks.application.list_passages import ListPassages
 from app.modules.notebooks.application.list_sources import ListSources
 from app.modules.notebooks.application.list_subject_slots import ListSubjectSlots
+from app.modules.notebooks.application.manage_shares import ManageShares
 from app.modules.notebooks.application.message_feedback import MessageFeedback
 from app.modules.notebooks.application.open_auto_notebook import OpenAutoNotebook
 from app.modules.notebooks.application.open_course_workspace import (
@@ -162,6 +165,8 @@ class NotebooksServices:
     get_notebook: GetNotebook
     update_notebook: UpdateNotebook
     copy_notebook: CopyNotebook
+    manage_shares: ManageShares
+    linked_sets: LinkedSets
     flashcard_workspace: OpenFlashcardWorkspace
     delete_notebook: DeleteNotebook
     purge_deleted: PurgeDeleted
@@ -243,6 +248,7 @@ class NotebooksServices:
     start_labeling: StartLabeling
     label_sources: LabelSources
     public: NotebooksQueries
+    author_quiz: AuthorQuiz
     commands: NotebooksCommands
     shared_search: SharedPassageSearch
 
@@ -341,6 +347,14 @@ def build(
         get_notebook=notebooks.get_notebook,
         update_notebook=notebooks.update_notebook,
         copy_notebook=notebooks.copy_notebook,
+        manage_shares=ManageShares(
+            uow_factory=core.uow_factory,
+            clock=deps.clock,
+            identity=identity,
+            schedule=schedule,
+            rate_limiter=deps.rate_limiter,
+        ),
+        linked_sets=LinkedSets(uow_factory=core.uow_factory, clock=deps.clock),
         flashcard_workspace=OpenFlashcardWorkspace(
             uow_factory=core.uow_factory,
             clock=deps.clock,
@@ -436,6 +450,14 @@ def build(
             library=library,
             schedule=schedule,
             embeddings=core.embeddings,
+        ),
+        author_quiz=AuthorQuiz(
+            uow_factory=core.uow_factory,
+            clock=core.deps.clock,
+            settings=core.deps.settings,
+            i18n=core.deps.i18n,
+            locale=core.locale,
+            create_notebook=notebooks.create_notebook,
         ),
         commands=NotebooksCommandsImpl(
             create_notebook=notebooks.create_notebook,

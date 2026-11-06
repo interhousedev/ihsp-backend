@@ -44,7 +44,7 @@ class PassageRepository(Protocol):
 
     async def search(
         self,
-        notebook_id: UUID,
+        notebook_id: UUID | Sequence[UUID],
         source_ids: Sequence[UUID],
         query: str,
         limit: int,

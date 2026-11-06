@@ -186,6 +186,13 @@ class InvalidOptionsError(ValidationFailedError):
     message_key = "notebooks-invalid-options"
 
 
+class QuizAuthoringError(ValidationFailedError):
+    """A test written directly breaks a rule; `reason` says which."""
+
+    code = "notebooks/quiz-invalid"
+    message_key = "mcp-quiz-invalid"
+
+
 class FeatureDisabledError(NotFoundError):
     """The feature (audio overview, notebooks) is switched off."""
 
@@ -248,3 +255,24 @@ class PlanConfirmedError(ConflictError):
 
     code = "notebooks/plan-confirmed"
     message_key = "notebooks-plan-confirmed"
+
+
+class ShareUnsupportedError(ConflictError):
+    """Only a manual notebook can be shared or take attached sets."""
+
+    code = "notebooks/share-unsupported"
+    message_key = "notebooks-share-unsupported"
+
+
+class ShareLimitError(ConflictError):
+    """The notebook has the maximum of people or attached sets (params: limit)."""
+
+    code = "notebooks/share-limit"
+    message_key = "notebooks-share-limit"
+
+
+class ShareRecipientNotFoundError(NotFoundError):
+    """No active account with this id."""
+
+    code = "notebooks/share-recipient-not-found"
+    message_key = "notebooks-share-recipient-not-found"

@@ -21,6 +21,7 @@ from app.shared.rank_fusion import CANDIDATES, reciprocal_rank_fusion
 
 from sqlalchemy import (
     ARRAY,
+    ColumnElement,
     Float,
     Row,
     Select,
@@ -160,7 +161,7 @@ class SqlPassageRepository:
 
     async def search(
         self,
-        notebook_id: UUID,
+        notebook_id: UUID | Sequence[UUID],
         source_ids: Sequence[UUID],
         query: str,
         limit: int,
@@ -192,7 +193,11 @@ class SqlPassageRepository:
         return [found[key] for key in order[:limit]]
 
     async def _lexical(
-        self, notebook_id: UUID, source_ids: Sequence[UUID], query: str, limit: int
+        self,
+        notebook_id: UUID | Sequence[UUID],
+        source_ids: Sequence[UUID],
+        query: str,
+        limit: int,
     ) -> list[Passage]:
         """Rank the passages of the sources for a question by its words.
 
@@ -222,7 +227,7 @@ class SqlPassageRepository:
             .join(SourceRow, SourceRow.document_id == PassageRow.document_id)
             .join(wanted, literal_column("true"))
             .where(
-                SourceRow.notebook_id == notebook_id,
+                _in_scope(notebook_id),
                 SourceRow.id.in_(source_ids),
                 PassageRow.search_vector.bool_op("@@")(wanted.c.tsq),
             )
@@ -233,7 +238,7 @@ class SqlPassageRepository:
 
     async def _semantic(
         self,
-        notebook_id: UUID,
+        notebook_id: UUID | Sequence[UUID],
         source_ids: Sequence[UUID],
         query_vector: QueryVector,
         limit: int,
@@ -260,7 +265,7 @@ class SqlPassageRepository:
                     EmbeddingRow.model == query_vector.model,
                 ),
             )
-            .where(SourceRow.notebook_id == notebook_id, SourceRow.id.in_(source_ids))
+            .where(_in_scope(notebook_id), SourceRow.id.in_(source_ids))
             .order_by(near, SourceRow.id, PassageRow.seq)
             .limit(limit)
         )
@@ -285,6 +290,13 @@ class SqlPassageRepository:
             stmt = stmt.where(PassageRow.document_id == document_id)
         rows = (await self.session.execute(stmt)).all()
         return [TextToEmbed(row.content_hash.strip(), row.text) for row in rows]
+
+
+def _in_scope(notebook_id: UUID | Sequence[UUID]) -> ColumnElement[bool]:
+    """Only sources of the notebook or, with attached sets, of the given notebooks."""
+    if isinstance(notebook_id, UUID):
+        return SourceRow.notebook_id == notebook_id
+    return SourceRow.notebook_id.in_(notebook_id)
 
 
 def _hit_key(passage: Passage) -> tuple[UUID, UUID]:

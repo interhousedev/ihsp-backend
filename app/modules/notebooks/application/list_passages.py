@@ -3,7 +3,9 @@
 from uuid import UUID
 
 from app.modules.notebooks.application.access import load_source
+from app.modules.notebooks.application.linked_sets import attached_source
 from app.modules.notebooks.domain.entities import Passage
+from app.modules.notebooks.domain.errors import NotebookNotFoundError
 from app.modules.notebooks.domain.limits import PASSAGES_PAGE_DEFAULT, PASSAGES_PAGE_MAX
 from app.modules.notebooks.domain.paging import Paged
 from app.modules.notebooks.ports.unit_of_work import UowFactory
@@ -36,7 +38,13 @@ class ListPassages:
         position = decode_cursor(cursor) or {}
         after_seq = _seq_of(position)
         async with self.uow_factory() as uow:
-            await load_source(uow, actor.user_id, notebook_id, source_id, write=False)
+            try:
+                await load_source(
+                    uow, actor.user_id, notebook_id, source_id, write=False, shared=True
+                )
+            except NotebookNotFoundError:
+                # A source of a set attached to this notebook (re-checked each time).
+                await attached_source(uow, actor.user_id, notebook_id, source_id)
             found = await uow.passages.list_for_source(
                 source_id, after_seq=after_seq, limit=size + 1
             )

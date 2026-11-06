@@ -108,7 +108,9 @@ class ContextBuilder:
             return build_pack(sources, _group(passages), "full")
         pinned = await self._pinned(uow, notebook_id, set(ids), anchor)
         query = retrieval_query(question, previous_user_text)
-        search = partial(self._search, uow, notebook_id, ids)
+        # Attached sets: every source's own notebook, and only the chosen sources.
+        scope = sorted({s.notebook_id for s in sources} | {notebook_id})
+        search = partial(self._search, uow, scope, ids)
         if self.expander is None:
             hits = await search(query, RETRIEVAL_HITS)
         else:
@@ -129,7 +131,7 @@ class ContextBuilder:
     async def _search(
         self,
         uow: NotebooksUnitOfWork,
-        notebook_id: UUID,
+        notebook_id: UUID | Sequence[UUID],
         source_ids: Sequence[UUID],
         query: str,
         limit: int,

@@ -20,6 +20,7 @@ from app.modules.notebooks.ports.passage_repository import PassageRepository
 from app.modules.notebooks.ports.presentation_plan_repository import (
     PresentationPlanRepository,
 )
+from app.modules.notebooks.ports.share_repository import ShareRepository
 from app.modules.notebooks.ports.shared_cache_repository import SharedCacheRepository
 from app.modules.notebooks.ports.source_repository import SourceRepository
 from app.shared.notifications import NotificationDraft
@@ -71,6 +72,11 @@ class NotebooksUnitOfWork(Protocol):
     @property
     def labels(self) -> LabelRepository:
         """Topic labels of sources and the state of the auto labeling."""
+        ...
+
+    @property
+    def shares(self) -> ShareRepository:
+        """Grants, links and attached source sets."""
         ...
 
     @property

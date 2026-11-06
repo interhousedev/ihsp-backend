@@ -86,6 +86,12 @@ class FileRepository(Protocol):
         """Return ready files of the owner whose text matches, best first."""
         ...
 
+    async def search_in(
+        self, file_ids: Sequence[UUID], query: str, limit: int
+    ) -> list[StoredFile]:
+        """Return ready files among these ids whose text matches the query."""
+        ...
+
     async def student_term_ids(self) -> list[UUID]:
         """Return the terms that have student files not yet deleted."""
         ...

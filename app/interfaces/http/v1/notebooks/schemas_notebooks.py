@@ -107,7 +107,8 @@ class NotebookItemResponse(BaseModel):
     lesson_id: UUID | None
     group_id: UUID | None  # a teacher's subject notebook: its group
     course_id: UUID | None  # a course workspace or a student course notebook
-    can_write: bool  # False for a course member who may only read
+    can_write: bool  # False for a course member who may only read, or a viewer
+    shared: bool = False  # the caller reads it through a share (NB-SHARE)
 
     @classmethod
     def from_entity(cls, notebook: Notebook) -> Self:
@@ -126,6 +127,7 @@ class NotebookItemResponse(BaseModel):
             group_id=notebook.group_id,
             course_id=notebook.course_id,
             can_write=notebook.can_write,
+            shared=notebook.shared_view,
         )
 
 

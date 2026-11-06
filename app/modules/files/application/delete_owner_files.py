@@ -23,6 +23,9 @@ class DeleteOwnerFiles:
     async def execute(self, user_id: UUID) -> int:
         """Delete the user's files in batches; return how many."""
         total = 0
+        async with self._uow_factory() as uow:
+            await uow.shares.delete_for_user(user_id)
+            await uow.commit()
         while True:
             async with self._uow_factory() as uow:
                 batch = await uow.files.list_for_owner_all(user_id, BATCH_FILES)

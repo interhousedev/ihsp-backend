@@ -2,7 +2,10 @@
 
 A personal notebook is its owner's alone. The workspace of an LMS course is shared
 by the course staff: ``edit`` reads and writes it, ``view_drafts`` only reads it, and
-everyone else gets the same 404 as for a missing notebook. Every row of a notebook
+everyone else gets the same 404 as for a missing notebook. A use case that is safe for
+a person the owner shared the notebook with passes ``shared=True``; every other use
+case keeps answering them with a 404, so a new use case is closed by default.
+Every row of a notebook
 (sources, outputs) carries the notebook's ``owner_id``, so rows are checked against
 the notebook, never against the caller.
 """
@@ -14,6 +17,7 @@ from app.modules.notebooks.domain.errors import (
     NotebookNotFoundError,
     WorkspaceReadOnlyError,
 )
+from app.modules.notebooks.domain.sharing import VIEWABLE_KINDS, is_shareable
 from app.modules.notebooks.ports.unit_of_work import NotebooksUnitOfWork
 
 
@@ -31,6 +35,19 @@ async def _check_workspace(
     notebook.can_write = access.can_write
 
 
+async def _check_share(
+    uow: NotebooksUnitOfWork, user_id: UUID, notebook: Notebook
+) -> None:
+    """Let in a person with a live grant, read-only; everyone else gets a 404."""
+    if (
+        not is_shareable(notebook)
+        or await uow.shares.active(notebook.id, user_id) is None
+    ):
+        raise NotebookNotFoundError()
+    notebook.can_write = False
+    notebook.shared_view = True
+
+
 async def load_notebook(
     uow: NotebooksUnitOfWork,
     user_id: UUID,
@@ -39,12 +56,14 @@ async def load_notebook(
     for_update: bool = False,
     include_deleted: bool = False,
     write: bool = True,
+    shared: bool = False,
 ) -> Notebook:
     """Return a notebook the user may use or raise `NotebookNotFoundError`.
 
     ``write=False`` is for reading (and for the reader's own data: their chat thread,
     their progress); a course member who may only read gets
-    `WorkspaceReadOnlyError` for anything else.
+    `WorkspaceReadOnlyError` for anything else. ``shared=True`` (reading only) also
+    admits a person the owner shared the notebook with, marked ``shared_view``.
     """
     notebooks = uow.notebooks
     found = await (
@@ -57,7 +76,9 @@ async def load_notebook(
     if found.is_course_workspace:
         await _check_workspace(uow, user_id, found, write=write)
     elif found.owner_id != user_id:
-        raise NotebookNotFoundError()
+        if not shared or write:
+            raise NotebookNotFoundError()
+        await _check_share(uow, user_id, found)
     return found
 
 
@@ -69,9 +90,12 @@ async def load_source(
     *,
     for_update: bool = False,
     write: bool = True,
+    shared: bool = False,
 ) -> Source:
     """Return a source of a notebook the user may use or raise a 404."""
-    notebook = await load_notebook(uow, user_id, notebook_id, write=write)
+    notebook = await load_notebook(
+        uow, user_id, notebook_id, write=write, shared=shared
+    )
     sources = uow.sources
     found = await (
         sources.get_for_update(source_id) if for_update else sources.get(source_id)
@@ -80,6 +104,7 @@ async def load_source(
         found is None
         or found.notebook_id != notebook_id
         or found.owner_id != notebook.owner_id
+        or (notebook.shared_view and found.kind not in VIEWABLE_KINDS)
     ):
         raise NotebookNotFoundError()
     return found

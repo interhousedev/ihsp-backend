@@ -7,6 +7,7 @@ from types import TracebackType
 from typing import Any, Self
 from uuid import UUID
 
+from app.modules.files.domain.sharing import FileShare, FileShareVia
 from app.modules.files.domain.status import FileStatus
 from app.modules.files.domain.stored_file import StoredFile
 from app.shared.contracts.files import FilePurpose, FileScope
@@ -21,6 +22,72 @@ def _study_file(file: StoredFile) -> bool:
     return file.scope != FileScope.LIBRARY
 
 
+class InMemoryFileShares:
+    """FileShareRepository over dictionaries of the store."""
+
+    def __init__(self, store: "FileStore") -> None:
+        """Work on the given (copied) store."""
+        self.store = store
+
+    async def find(self, file_id: UUID, user_id: UUID) -> FileShare | None:
+        """The person's row, revoked or not."""
+        return self.store.shares.get((file_id, user_id))
+
+    async def put(self, share: FileShare) -> None:
+        """Insert or replace the row."""
+        self.store.shares[(share.file_id, share.user_id)] = share
+
+    async def delete(self, file_id: UUID, user_id: UUID) -> None:
+        """Forget the row."""
+        self.store.shares.pop((file_id, user_id), None)
+
+    async def delete_via(self, file_id: UUID, via: FileShareVia) -> None:
+        """Forget the live grants of one kind."""
+        for key, share in list(self.store.shares.items()):
+            if key[0] == file_id and share.via is via and share.revoked_at is None:
+                del self.store.shares[key]
+
+    async def list_active(self, file_id: UUID) -> list[FileShare]:
+        """The live grants of the file."""
+        return [
+            share
+            for key, share in self.store.shares.items()
+            if key[0] == file_id and share.revoked_at is None
+        ]
+
+    async def files_of(self, user_id: UUID) -> list[UUID]:
+        """Files shared with the person."""
+        return [
+            key[0]
+            for key, share in self.store.shares.items()
+            if key[1] == user_id and share.revoked_at is None
+        ]
+
+    async def delete_for_user(self, user_id: UUID) -> None:
+        """Forget the person's rows."""
+        for key in [k for k in self.store.shares if k[1] == user_id]:
+            del self.store.shares[key]
+
+    async def link_exists(self, file_id: UUID) -> bool:
+        """True when the file has a link."""
+        return file_id in self.store.links
+
+    async def set_link(self, file_id: UUID, token_hash: str, now: datetime) -> None:
+        """Create or replace the link."""
+        self.store.links[file_id] = token_hash
+
+    async def delete_link(self, file_id: UUID) -> None:
+        """Turn the link off."""
+        self.store.links.pop(file_id, None)
+
+    async def file_of_token(self, token_hash: str) -> UUID | None:
+        """The file of an active link."""
+        for file_id, stored in self.store.links.items():
+            if stored == token_hash:
+                return file_id
+        return None
+
+
 class FileStore:
     """The 'database': rows and indexed texts shared by every transaction."""
 
@@ -28,6 +95,8 @@ class FileStore:
         """Start empty."""
         self.rows: dict[UUID, StoredFile] = {}
         self.texts: dict[UUID, str] = {}
+        self.shares: dict[tuple[UUID, UUID], FileShare] = {}
+        self.links: dict[UUID, str] = {}
 
 
 class InMemoryFileRepository:
@@ -151,6 +220,23 @@ class InMemoryFileRepository:
         self.store.rows[file_id] = row
         self.store.texts[file_id] = content
 
+    async def search_in(
+        self, file_ids: Sequence[UUID], query: str, limit: int
+    ) -> list[StoredFile]:
+        """All words must appear, among these files only."""
+        words = query.lower().split()
+        allowed = set(file_ids)
+        found = [
+            f
+            for f in self.store.rows.values()
+            if f.id in allowed
+            and _study_file(f)
+            and f.status == FileStatus.READY
+            and f.id in self.store.texts
+            and all(w in self.store.texts[f.id].lower() for w in words)
+        ]
+        return found[:limit]
+
     async def search(self, owner_id: UUID, query: str, limit: int) -> list[StoredFile]:
         """All words of the query must appear (case-insensitive)."""
         words = query.lower().split()
@@ -268,13 +354,17 @@ class FakeFilesUnitOfWork:
         self._notifications: list[NotificationDraft] = []
         self._after_commit: list[AfterCommit] = []
         self.files: InMemoryFileRepository
+        self.shares: InMemoryFileShares
 
     async def __aenter__(self) -> Self:
         """Start from a copy of the store."""
         work = FileStore()
         work.rows = dict(self._store.rows)  # entities are copied when written
         work.texts = dict(self._store.texts)
+        work.shares = dict(self._store.shares)
+        work.links = dict(self._store.links)
         self.files = InMemoryFileRepository(work)
+        self.shares = InMemoryFileShares(work)
         self._notifications, self._after_commit = [], []
         return self
 
@@ -301,6 +391,8 @@ class FakeFilesUnitOfWork:
         """Publish the working copy, record notifications and run hooks."""
         self._store.rows = self.files.store.rows
         self._store.texts = self.files.store.texts
+        self._store.shares = self.shares.store.shares
+        self._store.links = self.shares.store.links
         self._log.notifications.extend(self._notifications)
         self._log.commits += 1
         self._log.locked.extend(self.files.locked)

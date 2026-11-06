@@ -3,12 +3,33 @@
 from uuid import UUID
 
 from app.modules.notebooks.application.access import load_notebook
+from app.modules.notebooks.application.linked_sets import readable_linked
 from app.modules.notebooks.application.views import PassageDetailView
+from app.modules.notebooks.domain.entities import Notebook, Passage
 from app.modules.notebooks.domain.errors import NotebookNotFoundError
-from app.modules.notebooks.ports.unit_of_work import UowFactory
+from app.modules.notebooks.domain.sharing import VIEWABLE_KINDS
+from app.modules.notebooks.ports.unit_of_work import NotebooksUnitOfWork, UowFactory
 from app.shared.actor import Actor
 
 CONTEXT_MAX = 5
+
+
+async def _find(
+    uow: NotebooksUnitOfWork, actor: Actor, notebook: Notebook, passage_id: UUID
+) -> tuple[Passage, Notebook]:
+    """The passage in the notebook or, for its owner, in a set attached to it."""
+    passage = await uow.passages.get(passage_id, notebook.id)
+    if passage is not None:
+        return passage, notebook
+    if notebook.owner_id == actor.user_id:
+        for linked in await uow.shares.linked_sets(notebook.id):
+            home = await readable_linked(uow, actor.user_id, linked.linked_notebook_id)
+            if home is None:
+                continue
+            passage = await uow.passages.get(passage_id, home.id)
+            if passage is not None:
+                return passage, home
+    raise NotebookNotFoundError()
 
 
 class GetPassage:
@@ -29,12 +50,18 @@ class GetPassage:
         """
         around = min(max(context, 0), CONTEXT_MAX)
         async with self.uow_factory() as uow:
-            await load_notebook(uow, actor.user_id, notebook_id, write=False)
-            passage = await uow.passages.get(passage_id, notebook_id)
-            if passage is None:
-                raise NotebookNotFoundError()
+            notebook = await load_notebook(
+                uow, actor.user_id, notebook_id, write=False, shared=True
+            )
+            passage, home = await _find(uow, actor, notebook, passage_id)
             source = await uow.sources.get(passage.source_id)
-            if source is None or source.notebook_id != notebook_id:
+            if (
+                source is None
+                or source.notebook_id != home.id
+                or (
+                    home.owner_id != actor.user_id and source.kind not in VIEWABLE_KINDS
+                )
+            ):
                 raise NotebookNotFoundError()
             before, after = await uow.passages.neighbours(
                 passage.source_id, passage.seq, around

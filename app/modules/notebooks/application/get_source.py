@@ -6,6 +6,8 @@ from typing import Literal
 from uuid import UUID
 
 from app.modules.notebooks.application.access import load_notebook, load_source
+from app.modules.notebooks.application.linked_sets import attached_source
+from app.modules.notebooks.application.list_sources import viewer_source
 from app.modules.notebooks.application.notebook_state import sources_changed
 from app.modules.notebooks.application.readers.file_reader import file_id_of
 from app.modules.notebooks.application.readers.registry import SourceReaders
@@ -50,14 +52,26 @@ class GetSource:
             NotebookNotFoundError: Notebook or source is not the caller's.
         """
         async with self.uow_factory() as uow:
-            source = await load_source(
-                uow, actor.user_id, notebook_id, source_id, write=False
+            notebook = await load_notebook(
+                uow, actor.user_id, notebook_id, write=False, shared=True
             )
-        if source.status not in WITH_TEXT or not self.readers.is_file_backed(source):
-            return source
-        if source.id not in await self.readers.unavailable_files([source]):
-            return source
-        return await self._drop_text(actor, notebook_id, source_id)
+            try:
+                source = await load_source(
+                    uow, actor.user_id, notebook_id, source_id, write=False, shared=True
+                )
+            except NotebookNotFoundError:
+                # A source of a set attached to this notebook: read-only, re-checked.
+                attached = await attached_source(
+                    uow, actor.user_id, notebook_id, source_id
+                )
+                return viewer_source(attached)
+        if (
+            source.status in WITH_TEXT
+            and self.readers.is_file_backed(source)
+            and source.id in await self.readers.unavailable_files([source])
+        ):
+            source = await self._drop_text(actor, notebook_id, source_id)
+        return viewer_source(source) if notebook.shared_view else source
 
     async def file_of(self, source: Source) -> FileRef | None:
         """The uploaded file behind a `file` source or a file-based lesson material.
@@ -87,9 +101,14 @@ class GetSource:
                 source has no file (any more).
         """
         async with self.uow_factory() as uow:
-            source = await load_source(
-                uow, actor.user_id, notebook_id, source_id, write=False
-            )
+            try:
+                source = await load_source(
+                    uow, actor.user_id, notebook_id, source_id, write=False, shared=True
+                )
+            except NotebookNotFoundError:
+                source = await attached_source(
+                    uow, actor.user_id, notebook_id, source_id
+                )
         ref = await self.file_of(source)
         if ref is None:
             raise NotebookNotFoundError()
@@ -107,10 +126,21 @@ class GetSource:
         now = self.clock.now()
         async with self.uow_factory() as uow:
             notebook = await load_notebook(
-                uow, actor.user_id, notebook_id, for_update=True, write=False
+                uow,
+                actor.user_id,
+                notebook_id,
+                for_update=True,
+                write=False,
+                shared=True,
             )
             source = await load_source(
-                uow, actor.user_id, notebook_id, source_id, for_update=True, write=False
+                uow,
+                actor.user_id,
+                notebook_id,
+                source_id,
+                for_update=True,
+                write=False,
+                shared=True,
             )
             if source.status in WITH_TEXT:
                 await mark_unavailable(uow, source, now)

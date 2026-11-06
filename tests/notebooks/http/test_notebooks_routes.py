@@ -30,6 +30,7 @@ ITEM_KEYS = {
     "group_id",
     "course_id",
     "can_write",
+    "shared",
 }
 DETAIL_KEYS = ITEM_KEYS | {
     "auto",

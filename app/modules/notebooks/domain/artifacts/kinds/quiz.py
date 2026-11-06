@@ -3,6 +3,7 @@
 import random
 import re
 import string
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Annotated, Any, Final, Literal, Self
 
@@ -35,7 +36,13 @@ from app.modules.notebooks.domain.errors import OutputInvalidError
 from app.modules.notebooks.domain.limits import ARTIFACT_TITLE_MAX_CHARS
 from app.modules.notebooks.domain.prompts.common import difficulty_clause, focus_clause
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
 QuestionType = Literal["single", "multiple", "true_false"]
 Level = Literal["easy", "medium", "hard"]
@@ -297,6 +304,41 @@ def _finalise(draft: _Draft, number: int, seed: int) -> dict[str, Any]:
         "prompt": draft.prompt,
         "options": [{"id": new_ids[old], "text": text} for old, text in options],
         "correct": correct,
+        "explanation": draft.explanation,
+        "hint": draft.hint,
+        "difficulty": draft.difficulty,
+        "topic": draft.topic,
+        "refs": draft.refs,
+    }
+
+
+def authored_question(raw: Mapping[str, Any], question_id: str) -> dict[str, Any]:
+    """A question written by a person, under the rules of generated ones.
+
+    The options keep their order and are lettered afresh; `refs` stay as given.
+
+    Raises:
+        OutputInvalidError: The question breaks a rule; `problems` say which.
+    """
+    try:
+        item = QuestionOut.model_validate(dict(raw))
+    except ValidationError as exc:
+        raise OutputInvalidError([str(exc.errors()[0]["msg"])]) from exc
+    problems: list[str] = []
+    draft = _draft(item, 1, QuizOptions(), problems)
+    if draft is None:
+        raise OutputInvalidError(problems)
+    if draft.type == "true_false":
+        new_ids = {option_id: option_id for option_id, _ in draft.options}
+    else:
+        new_ids = {old: _OPTION_IDS[i] for i, (old, _) in enumerate(draft.options)}
+    order = list(new_ids.values())
+    return {
+        "id": question_id,
+        "type": draft.type,
+        "prompt": draft.prompt,
+        "options": [{"id": new_ids[old], "text": text} for old, text in draft.options],
+        "correct": sorted((new_ids[old] for old in draft.correct), key=order.index),
         "explanation": draft.explanation,
         "hint": draft.hint,
         "difficulty": draft.difficulty,

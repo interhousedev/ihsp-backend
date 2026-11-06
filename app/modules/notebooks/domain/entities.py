@@ -168,6 +168,8 @@ class Notebook:
     selected_source_count: int = 0
     # Not stored: set by the access check; False for a read-only member of the course.
     can_write: bool = True
+    # Not stored: True when the caller reads through a share (NB-SHARE).
+    shared_view: bool = False
 
     @property
     def is_deleted(self) -> bool:

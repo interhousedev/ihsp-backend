@@ -19,6 +19,7 @@ from app.modules.notebooks.application.history_compactor import (
     history_limit,
     window_only,
 )
+from app.modules.notebooks.application.linked_sets import linked_sources
 from app.modules.notebooks.application.llm import StreamItem
 from app.modules.notebooks.application.views import (
     NotebookUsageView,
@@ -44,6 +45,7 @@ from app.modules.notebooks.domain.entities import (
     ChatConfig,
     Citation,
     MessageContent,
+    Notebook,
     NotebookMessage,
     Source,
 )
@@ -61,7 +63,9 @@ from app.modules.notebooks.domain.prompts.chat import (
     chat_system_prompt,
     question_message,
 )
+from app.modules.notebooks.domain.prompts.shared import SHARED_SOURCES_RULE
 from app.modules.notebooks.domain.prompts.web import WEB_INTRO
+from app.modules.notebooks.domain.sharing import viewable
 from app.modules.notebooks.domain.sources_block import anchor_note, render_sources_block
 from app.modules.notebooks.domain.tokens import Usage, estimate_cost, estimate_tokens
 from app.modules.notebooks.ports.unit_of_work import NotebooksUnitOfWork
@@ -177,7 +181,7 @@ async def load_own_answer(
     uow: NotebooksUnitOfWork, user_id: UUID, notebook_id: UUID, message_id: UUID
 ) -> NotebookMessage:
     """Return an assistant message of the user's own thread, else a 404."""
-    await load_notebook(uow, user_id, notebook_id, write=False)
+    await load_notebook(uow, user_id, notebook_id, write=False, shared=True)
     message = await uow.messages.get(message_id)
     if (
         message is None
@@ -235,6 +239,7 @@ class Prepared:
     chars: int  # size of the prompt
     web: list[WebResult] = field(default_factory=list)  # pages the model was given
     course: bool = False  # a course workspace: the course pool pays
+    viewer: bool = False  # the asker reads through a share (NB-SHARE)
 
 
 @dataclass(frozen=True, slots=True)
@@ -334,7 +339,9 @@ class AnswerPipeline:
     async def _require_access(self, user_id: UUID, notebook_id: UUID) -> bool:
         """Check that the user may read the notebook; True for a course workspace."""
         async with self.core.uow_factory() as uow:
-            notebook = await load_notebook(uow, user_id, notebook_id, write=False)
+            notebook = await load_notebook(
+                uow, user_id, notebook_id, write=False, shared=True
+            )
         return notebook.is_course_workspace
 
     async def _rate_limit(self, user_id: UUID, *, course: bool) -> None:
@@ -504,13 +511,17 @@ class AnswerPipeline:
         """Read the context and build the prompt; refuse what the budget cannot pay."""
         user_id, notebook_id = request.user_id, request.notebook_id
         async with self.core.uow_factory() as uow:
-            notebook = await load_notebook(uow, user_id, notebook_id, write=False)
+            notebook = await load_notebook(
+                uow, user_id, notebook_id, write=False, shared=True
+            )
             # Refused before the source embeddings and retrieval below run.
             await self.core.budget.pool(notebook.is_course_workspace).require_access(
                 user_id
             )
             turn = await self._turn(uow, request)
-            sources = await self._sources(uow, notebook_id, turn.source_ids)
+            sources = await self._sources(uow, notebook, turn.source_ids)
+            attached = await linked_sources(uow, user_id, notebook)
+            sources = [*sources, *attached]
             pack = await self.core.context.for_chat(
                 uow,
                 notebook_id,
@@ -524,11 +535,14 @@ class AnswerPipeline:
         if course is not None:
             pack = replace(pack, course=course)
         locale = await self.core.locale.locale_of(user_id)
-        system = self._system(notebook.chat_config, locale, course)
+        # The owner's settings, custom prompt included, are not applied to a viewer.
+        config = ChatConfig() if notebook.shared_view else notebook.chat_config
+        foreign = notebook.shared_view or bool(attached)
+        system = self._system(config, locale, course, foreign=foreign)
         school = await self._school_facts(request, turn, pack)
         messages = self._messages(pack, turn, [], school)
         max_tokens = self.core.llm.max_tokens(
-            AiTask.NOTEBOOK_CHAT, MAX_TOKENS[notebook.chat_config.length]
+            AiTask.NOTEBOOK_CHAT, MAX_TOKENS[config.length]
         )
         wants_web = turn.web_search or bool(turn.web)
         reserve = WEB_RESERVE_CHARS if wants_web else 0
@@ -551,6 +565,7 @@ class AnswerPipeline:
             chars=chars,
             web=web,
             course=notebook.is_course_workspace,
+            viewer=notebook.shared_view,
         )
 
     async def _school_facts(
@@ -638,12 +653,20 @@ class AnswerPipeline:
     async def _sources(
         self,
         uow: NotebooksUnitOfWork,
-        notebook_id: UUID,
+        notebook: Notebook,
         requested: Sequence[UUID] | None,
     ) -> list[Source]:
-        """The usable sources of this notebook for the question, by position."""
-        everything = await uow.sources.list_for_notebook(notebook_id)
+        """The usable sources of this notebook for the question, by position.
+
+        A viewer never reaches a source that stays private, even by asking for its
+        id, and the owner's selection does not limit them.
+        """
+        everything = await uow.sources.list_for_notebook(notebook.id)
         wanted = None if requested is None else set(requested)
+        if notebook.shared_view:
+            everything = viewable(everything)
+            if wanted is None:
+                wanted = {source.id for source in everything}
         modalities = self.core.deps.settings.ai_profile(AiTask.NOTEBOOK_CHAT).modalities
         chosen = [
             source
@@ -663,7 +686,12 @@ class AnswerPipeline:
         return await self.core.openui.finalize(raw)
 
     def _system(
-        self, config: ChatConfig, locale: str, course: CourseContext | None = None
+        self,
+        config: ChatConfig,
+        locale: str,
+        course: CourseContext | None = None,
+        *,
+        foreign: bool = False,
     ) -> str:
         """The grounded system prompt of the notebook's chat settings."""
         prompt = chat_system_prompt(
@@ -678,6 +706,9 @@ class AnswerPipeline:
         if self.core.deps.settings.ai.openui_enabled:  # AI-OPENUI
             stable, tail = split_system(prompt)
             prompt = with_volatile_tail(stable + openui_prompt(), tail)
+        if foreign:  # NB-SHARE: sources written by someone else
+            stable, tail = split_system(prompt)
+            prompt = with_volatile_tail(stable + SHARED_SOURCES_RULE, tail)
         return prompt
 
     def _messages(
@@ -743,6 +774,14 @@ class AnswerPipeline:
     ) -> tuple[NotebookMessage, NotebookMessage]:
         """Store the answer (and the question, if it is new) in one transaction."""
         async with self.core.uow_factory() as uow:
+            if prepared.viewer:  # access revoked during the answer: nothing is kept
+                await load_notebook(
+                    uow,
+                    prepared.user_id,
+                    prepared.notebook_id,
+                    write=False,
+                    shared=True,
+                )
             known = (
                 question
                 or prepared.turn.user_message
@@ -822,7 +861,9 @@ class AnswerPipeline:
         if streamed is not None:
             streamed.stored = True
         usage = await self.core.usage.execute(prepared.user_id, course=prepared.course)
-        return TurnView(known, answer, usage, outcome.action)
+        # A viewer has no Studio here, and shared text must not be able to propose it.
+        action = None if prepared.viewer else outcome.action
+        return TurnView(known, answer, usage, action)
 
 
 def _step_events() -> list[StreamEvent]:

@@ -11,10 +11,11 @@ from app.modules.notebooks.application.notebook_state import (
     selection_hash,
     sources_changed,
 )
-from app.modules.notebooks.domain.entities import Notebook, Source
+from app.modules.notebooks.domain.entities import ChatConfig, Notebook, Source
 from app.modules.notebooks.domain.enums import (
     GuideStatus,
     NotebookOrigin,
+    SourceKind,
     SourceStatus,
     SummaryStatus,
 )
@@ -23,6 +24,7 @@ from app.modules.notebooks.domain.errors import (
     WorkspaceActionError,
 )
 from app.modules.notebooks.domain.limits import NOTEBOOK_TITLE_MAX_CHARS
+from app.modules.notebooks.domain.sharing import viewable
 from app.modules.notebooks.ports.unit_of_work import NotebooksUnitOfWork, UowFactory
 from app.settings import Settings
 from app.shared.actor import Actor
@@ -70,7 +72,9 @@ class CopyNotebook:
         """
         locale = await self.locale.locale_of(actor.user_id)
         async with self.uow_factory() as uow:
-            original = await load_notebook(uow, actor.user_id, notebook_id, write=False)
+            original = await load_notebook(
+                uow, actor.user_id, notebook_id, write=False, shared=True
+            )
             if original.is_course_workspace:
                 raise WorkspaceActionError(params={"action": "copy"})
             if await uow.notebooks.count_live(actor.user_id) >= (
@@ -82,6 +86,11 @@ class CopyNotebook:
             sources = await uow.sources.list_for_notebook(original.id)
             copy = self._new_notebook(original, actor, locale)
             await uow.notebooks.add(copy)
+            if original.shared_view:
+                await self._snapshot(uow, copy, sources)
+                await sources_changed(uow, copy, self.clock.now())
+                await uow.commit()
+                return await uow.notebooks.get(copy.id) or copy
             copied = [await self._copy_source(uow, copy, source) for source in sources]
             await copy_labels(
                 uow,
@@ -128,10 +137,32 @@ class CopyNotebook:
             created_at=now,
             updated_at=now,
             last_opened_at=now,
-            chat_config=original.chat_config.model_copy(deep=True),
+            # The settings of another person are private to them.
+            chat_config=(
+                ChatConfig()
+                if original.shared_view
+                else original.chat_config.model_copy(deep=True)
+            ),
             origin=NotebookOrigin.MANUAL,
             space_key=original.space_key,
         )
+
+    async def _snapshot(
+        self, uow: NotebooksUnitOfWork, copy: Notebook, sources: list[Source]
+    ) -> None:
+        """Store the text of what the person may see, tied to nothing of the owner.
+
+        Every copied source becomes pasted text: no file, link or citation points
+        back at the owner, so later changes and deletions cannot reach the copy.
+        """
+        now = self.clock.now()
+        for position, source in enumerate(viewable(sources), start=1):
+            if source.usable and source.document_id is not None:
+                passages = await uow.passages.list_for_sources([source.id])
+                body = source.body_md or "\n\n".join(p.text for p in passages)
+                await uow.sources.add(
+                    snapshot_source(source, copy, position, body, now)
+                )
 
     async def _copy_source(
         self, uow: NotebooksUnitOfWork, copy: Notebook, source: Source
@@ -174,6 +205,33 @@ def cloned_source(source: Source, copy: Notebook, now: datetime) -> Source:
         text_synced_at=None if waiting else source.text_synced_at,
     )
     return clone
+
+
+def snapshot_source(
+    source: Source, copy: Notebook, position: int, body: str, now: datetime
+) -> Source:
+    """A pasted-text source of `copy` that shares only the text with `source`."""
+    return Source(
+        id=new_id(),
+        notebook_id=copy.id,
+        owner_id=copy.owner_id,
+        kind=SourceKind.TEXT,
+        title=source.title,
+        position=position,
+        created_at=now,
+        updated_at=now,
+        status=SourceStatus.READY,
+        body_md=body,
+        content_hash=source.content_hash,
+        document_id=source.document_id,
+        word_count=source.word_count,
+        char_count=source.char_count,
+        token_estimate=source.token_estimate,
+        passage_count=source.passage_count,
+        guide=source.guide,
+        guide_status=_guide_status(source, False),
+        text_synced_at=now,
+    )
 
 
 def _summary_is_current(original: Notebook, sources: list[Source]) -> bool:

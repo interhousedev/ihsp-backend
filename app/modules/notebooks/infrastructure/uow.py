@@ -28,6 +28,9 @@ from app.modules.notebooks.infrastructure.repositories.presentation_plan_reposit
 from app.modules.notebooks.infrastructure.repositories.progress_repository import (
     SqlProgressRepository,
 )
+from app.modules.notebooks.infrastructure.repositories.share_repository import (
+    SqlShareRepository,
+)
 from app.modules.notebooks.infrastructure.repositories.shared_cache_repository import (
     SqlSharedCacheRepository,
 )
@@ -59,6 +62,7 @@ class SqlNotebooksUnitOfWork(SqlUnitOfWork):
     labels: SqlLabelRepository
     default_materials: SqlDefaultMaterialRepository
     plans: SqlPresentationPlanRepository
+    shares: SqlShareRepository
 
     def __init__(
         self,
@@ -88,3 +92,4 @@ class SqlNotebooksUnitOfWork(SqlUnitOfWork):
         self.labels = SqlLabelRepository(self.session)
         self.default_materials = SqlDefaultMaterialRepository(self.session)
         self.plans = SqlPresentationPlanRepository(self.session)
+        self.shares = SqlShareRepository(self.session)

@@ -1,12 +1,13 @@
 """Search the owner's files by their extracted text (assistant, global search)."""
 
 import asyncio
+from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
 
 from app.modules.files.domain.stored_file import StoredFile
 from app.modules.files.ports.storage import ObjectStorage
-from app.modules.files.ports.unit_of_work import UowFactory
+from app.modules.files.ports.unit_of_work import FilesUnitOfWork, UowFactory
 
 MIN_QUERY_LENGTH = 2
 MAX_LIMIT = 20  # each hit costs one S3 read of the extracted text
@@ -39,17 +40,34 @@ class SearchText:
             return []
         async with self._uow_factory() as uow:
             files = await uow.files.search(owner_id, query, size)
-            documents = await self._documents(files)
-            results: list[dict[str, Any]] = []
-            for file, document in zip(files, documents, strict=True):
-                snippet = await uow.files.headline(document, query)
-                results.append(
-                    {
-                        "file_id": file.id,
-                        "name": file.name,
-                        "snippet": snippet or document[:FALLBACK_SNIPPET_CHARS],
-                    }
-                )
+            return await self._hits(uow, files, query)
+
+    async def execute_in(
+        self, file_ids: Sequence[UUID], query: str, limit: int = 10
+    ) -> list[dict[str, Any]]:
+        """Like ``execute``, among these files only, whoever owns them."""
+        query = query.strip()
+        size = max(1, min(limit, MAX_LIMIT))
+        if len(query) < MIN_QUERY_LENGTH or not file_ids:
+            return []
+        async with self._uow_factory() as uow:
+            files = await uow.files.search_in(file_ids, query, size)
+            return await self._hits(uow, files, query)
+
+    async def _hits(
+        self, uow: FilesUnitOfWork, files: list[StoredFile], query: str
+    ) -> list[dict[str, Any]]:
+        documents = await self._documents(files)
+        results: list[dict[str, Any]] = []
+        for file, document in zip(files, documents, strict=True):
+            snippet = await uow.files.headline(document, query)
+            results.append(
+                {
+                    "file_id": file.id,
+                    "name": file.name,
+                    "snippet": snippet or document[:FALLBACK_SNIPPET_CHARS],
+                }
+            )
         return results
 
     async def _documents(self, files: list[StoredFile]) -> list[str]:

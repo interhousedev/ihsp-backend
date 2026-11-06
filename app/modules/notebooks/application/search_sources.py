@@ -21,6 +21,7 @@ from app.modules.notebooks.domain.limits import (
     SEARCH_QUERY_MIN_CHARS,
 )
 from app.modules.notebooks.domain.search_snippet import make_snippet
+from app.modules.notebooks.domain.sharing import viewable
 from app.modules.notebooks.ports.unit_of_work import UowFactory
 from app.settings import Settings
 from app.shared.actor import Actor
@@ -109,15 +110,20 @@ class SearchSources:
         clean = clean_query(query)
         size = max(1, min(limit, SEARCH_LIMIT_MAX))
         async with self.uow_factory() as uow:
-            await load_notebook(uow, actor.user_id, notebook_id, write=False)
+            notebook = await load_notebook(
+                uow, actor.user_id, notebook_id, write=False, shared=True
+            )
         await self.rate_limiter.hit(
             f"nb-search:{actor.user_id}",
             limit=(await self.limits.current()).nb_search_per_minute,
             window_seconds=RATE_WINDOW_SECONDS,
         )
         async with self.uow_factory() as uow:
+            sources = await uow.sources.list_for_notebook(notebook_id)
             usable = [
-                s for s in await uow.sources.list_for_notebook(notebook_id) if s.usable
+                s
+                for s in (viewable(sources) if notebook.shared_view else sources)
+                if s.usable
             ]
             found = (
                 await uow.passages.search(

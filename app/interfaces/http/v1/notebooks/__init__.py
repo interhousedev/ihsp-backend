@@ -10,6 +10,7 @@ from app.interfaces.http.v1.notebooks.router_admin_materials import (
 from app.interfaces.http.v1.notebooks.router_chat import router as chat_router
 from app.interfaces.http.v1.notebooks.router_labels import router as labels_router
 from app.interfaces.http.v1.notebooks.router_notebooks import router as notebooks_router
+from app.interfaces.http.v1.notebooks.router_shares import router as shares_router
 from app.interfaces.http.v1.notebooks.router_sources import router as sources_router
 from app.interfaces.http.v1.notebooks.router_staff_subjects import (
     router as staff_subjects_router,
@@ -19,6 +20,7 @@ from app.interfaces.http.v1.notebooks.router_studio import router as studio_rout
 from fastapi import APIRouter
 
 ROUTERS: list[APIRouter] = [
+    shares_router,  # before `/{notebook_id}`, or "shared" would be read as an id
     notebooks_router,
     sources_router,
     labels_router,

@@ -120,3 +120,24 @@ class ImageCountError(ValidationFailedError):
 
 class TextExtractionError(Exception):
     """A text extractor could not read the file (never shown to users)."""
+
+
+class FileShareLimitError(ConflictError):
+    """The file is shared with the maximum number of people (params: limit)."""
+
+    code = "files/share-limit"
+    message_key = "files-share-limit"
+
+
+class FileShareSelfError(ValidationFailedError):
+    """The owner tried to share a file with themselves."""
+
+    code = "files/share-self"
+    message_key = "files-share-unsupported"
+
+
+class FileShareRecipientNotFoundError(NotFoundError):
+    """No active account with this id."""
+
+    code = "files/share-recipient-not-found"
+    message_key = "files-share-recipient-not-found"

@@ -232,6 +232,24 @@ async def test_search_is_limited_to_the_owners_files(
     assert other == []
 
 
+async def test_search_in_reads_only_the_given_files(
+    fakes: FilesFakes, student: Actor, make_actor: Callable[..., Actor]
+) -> None:
+    """MCP-B4: search covers exactly the allowed ids, whoever owns them."""
+    other = make_actor(*student.roles)
+    allowed = await upload_ready(
+        fakes, other, name="a.txt", data=b"shared recipe", content_type="text/plain"
+    )
+    await upload_ready(
+        fakes, other, name="b.txt", data=b"private recipe", content_type="text/plain"
+    )
+
+    found = await fakes.services.public.search_text_in([allowed], "recipe")
+
+    assert [item["file_id"] for item in found] == [allowed]
+    assert await fakes.services.public.search_text_in([], "recipe") == []
+
+
 async def test_a_too_short_query_finds_nothing(
     fakes: FilesFakes, student: Actor
 ) -> None:

@@ -19,7 +19,9 @@ class GetChat:
     async def execute(self, actor: Actor, notebook_id: UUID) -> list[NotebookMessage]:
         """Return the last 200 messages of the student's own thread, oldest first."""
         async with self.uow_factory() as uow:
-            await load_notebook(uow, actor.user_id, notebook_id, write=False)
+            await load_notebook(
+                uow, actor.user_id, notebook_id, write=False, shared=True
+            )
             return await uow.messages.list_tail(
                 notebook_id, actor.user_id, CHAT_LIST_LIMIT
             )

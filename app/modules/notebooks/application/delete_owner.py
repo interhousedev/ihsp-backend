@@ -37,6 +37,7 @@ class DeleteOwner:
         async with self.uow_factory() as uow:
             await uow.messages.delete_for_user(user_id)
             await uow.progress.delete_for_user(user_id)
+            await uow.shares.delete_for_user(user_id)
             await uow.commit()
         await self.quota.clear_running(user_id)
         await self.quota.pool(True).clear_running(user_id)

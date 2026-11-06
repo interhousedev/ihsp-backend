@@ -2,6 +2,7 @@
 
 import dataclasses
 import datetime as dt
+from collections.abc import Sequence
 from uuid import UUID
 
 from app.shared.contracts.academic import LessonRef, StudentRef
@@ -99,3 +100,9 @@ class FakeLessonSchedule(FakeSchedule):
             status="active",
             synced_at=None,
         )
+
+    async def group_user_ids(
+        self, group_ids: Sequence[UUID], semesters: Sequence[int] = ()
+    ) -> list[UUID]:
+        """The students placed in the groups (unplaced students are not listed)."""
+        return [user for user, (group, _) in self.placed.items() if group in group_ids]

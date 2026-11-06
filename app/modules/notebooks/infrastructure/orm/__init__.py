@@ -24,6 +24,11 @@ from app.modules.notebooks.infrastructure.orm.passage import Passage
 from app.modules.notebooks.infrastructure.orm.presentation_plan import (
     PresentationPlan,
 )
+from app.modules.notebooks.infrastructure.orm.share import (
+    NotebookLinkedSetRow,
+    NotebookShareLinkRow,
+    NotebookShareRow,
+)
 from app.modules.notebooks.infrastructure.orm.shared_cache import (
     SharedArtifact,
     SharedSummary,
@@ -31,6 +36,9 @@ from app.modules.notebooks.infrastructure.orm.shared_cache import (
 from app.modules.notebooks.infrastructure.orm.source import Source
 
 __all__ = [
+    "NotebookLinkedSetRow",
+    "NotebookShareLinkRow",
+    "NotebookShareRow",
     "Artifact",
     "ArtifactAsset",
     "ArtifactProgress",

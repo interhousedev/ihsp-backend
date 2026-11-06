@@ -258,6 +258,24 @@ class SqlFileRepository:
         )
         return [_to_entity(row) for row in await self._session.scalars(stmt)]
 
+    async def search_in(
+        self, file_ids: Sequence[UUID], query: str, limit: int
+    ) -> list[StoredFile]:
+        """Return ready files among these ids whose text matches all query words."""
+        tsquery = func.plainto_tsquery(_SIMPLE, query)
+        stmt = (
+            select(File)
+            .where(
+                File.id.in_(file_ids),
+                _NOT_LIBRARY,
+                File.status == FileStatus.READY.value,
+                File.search_vector.op("@@")(tsquery),
+            )
+            .order_by(func.ts_rank(File.search_vector, tsquery).desc(), File.id)
+            .limit(limit)
+        )
+        return [_to_entity(row) for row in await self._session.scalars(stmt)]
+
     async def headline(self, document: str, query: str) -> str:
         """Return a short fragment of the document around the query words."""
         stmt = select(

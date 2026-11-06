@@ -5,6 +5,7 @@ from types import TracebackType
 from typing import Protocol, Self
 
 from app.modules.files.ports.file_repository import FileRepository
+from app.modules.files.ports.file_share_repository import FileShareRepository
 from app.shared.db.uow import AfterCommit
 from app.shared.notifications import AuditDraft, NotificationDraft
 
@@ -13,6 +14,7 @@ class FilesUnitOfWork(Protocol):
     """One transaction with the file repository, outbox and after-commit hooks."""
 
     files: FileRepository
+    shares: FileShareRepository
 
     async def __aenter__(self) -> Self:
         """Open the transaction."""

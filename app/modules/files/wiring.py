@@ -14,6 +14,7 @@ from app.modules.files.application.get_download_url import GetDownloadUrl
 from app.modules.files.application.get_file import GetFile
 from app.modules.files.application.list_my_files import ListMyFiles
 from app.modules.files.application.list_owned_files import ListOwnedFiles
+from app.modules.files.application.manage_file_shares import ManageFileShares
 from app.modules.files.application.process_file import ProcessFile
 from app.modules.files.application.public_api import FilesApiImpl
 from app.modules.files.application.purge_pending import PurgePending
@@ -48,6 +49,7 @@ from app.modules.files.ports.text_extractor import TextExtractor
 from app.modules.files.ports.unit_of_work import UowFactory
 from app.modules.files.ports.usage_resolver import UsageResolver
 from app.shared.clock import Clock
+from app.shared.rate_limit import RateLimiter
 from app.shared.tasks import TaskKicker
 from app.shared.wiring import ModuleDeps
 
@@ -65,6 +67,7 @@ class FilesServices:
     delete_file: DeleteFile
     list_my_files: ListMyFiles
     list_owned_files: ListOwnedFiles
+    manage_shares: ManageFileShares
     storage_usage: StorageUsage
     store_bytes: StoreBytes
     combine_images: CombineImagesToPdf
@@ -146,6 +149,7 @@ def build(
         extractor=extractor or FileTextExtractor(),
         limits=limits,
         closers=closers,
+        rate_limiter=deps.rate_limiter,
     )
 
 
@@ -162,6 +166,7 @@ def assemble(
     limits: FilesLimits,
     closers: list[Callable[[], Awaitable[None]]],
     image_pdf: ImagePdfBuilder | None = None,
+    rate_limiter: RateLimiter | None = None,
 ) -> FilesServices:
     """Create the use cases from ready-made adapters (tests pass fakes)."""
     views = FileViewBuilder(terms, usage, limits)
@@ -217,6 +222,12 @@ def assemble(
         ),
         list_my_files=ListMyFiles(uow_factory=uow_factory, views=views),
         list_owned_files=list_owned,
+        manage_shares=ManageFileShares(
+            uow_factory=uow_factory,
+            clock=clock,
+            links=links,
+            rate_limiter=rate_limiter,
+        ),
         storage_usage=StorageUsage(
             uow_factory=uow_factory, terms=terms, clock=clock, limits=limits
         ),
