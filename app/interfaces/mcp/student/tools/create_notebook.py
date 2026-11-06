@@ -18,7 +18,10 @@ def register(kit: ToolKit) -> None:
 
     @kit.tool(SCOPE, read_only=False, log=LogSpec())
     async def create_notebook(
-        title: Annotated[str, Field(min_length=1, max_length=200)],
+        title: Annotated[
+            str,
+            Field(min_length=1, max_length=200, description="Name of the notebook."),
+        ],
         idempotency_key: IdempotencyKey = None,
     ) -> dict[str, Any]:
         """Create an empty personal notebook for the student."""

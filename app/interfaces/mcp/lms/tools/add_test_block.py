@@ -22,7 +22,12 @@ def register(kit: ToolKit) -> None:
     @kit.tool(SCOPE, read_only=False, log=LogSpec(keep=("step_id",)))
     async def add_test_block(
         step_id: Annotated[UUID, Field(description="Step id from get_course.")],
-        questions: QuestionList | None = None,
+        questions: Annotated[
+            QuestionList | None,
+            Field(
+                description="Questions to add now; more can follow with add_question."
+            ),
+        ] = None,
         settings: Annotated[
             QuizSettingsInput | None,
             Field(description="Test settings; defaults apply if omitted."),

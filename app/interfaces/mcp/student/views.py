@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from typing import Any
 from uuid import UUID
 
+from app.shared.clock import to_local
 from app.shared.contracts.academic import LessonRef
 
 
@@ -19,6 +20,8 @@ def lesson_view(
         "period": lesson.period,
         "starts_at": lesson.starts_at,
         "ends_at": lesson.ends_at,
+        "start_local": to_local(lesson.starts_at).strftime("%H:%M"),
+        "end_local": to_local(lesson.ends_at).strftime("%H:%M"),
         "subject_id": lesson.subject_id,
         "subject_name": lesson.subject_name,
         "teacher_id": lesson.teacher_id,

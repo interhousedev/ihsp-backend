@@ -31,7 +31,13 @@ def register(kit: ToolKit) -> None:
             list[UUID] | None,
             Field(max_length=20, description="Ids from list_files (own files)."),
         ] = None,
-        texts: Annotated[list[TextSource] | None, Field(max_length=20)] = None,
+        texts: Annotated[
+            list[TextSource] | None,
+            Field(
+                max_length=20,
+                description="Pasted texts to add, each with a title, up to 20.",
+            ),
+        ] = None,
     ) -> dict[str, Any]:
         """Add the student's files or text as sources of their notebook; no web pages.
 

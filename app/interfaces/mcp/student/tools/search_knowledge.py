@@ -20,8 +20,13 @@ def register(kit: ToolKit) -> None:
 
     @kit.tool(SCOPE, limit=SEARCH_LIMIT, log=LogSpec(keep=("limit",)))
     async def search_knowledge(
-        query: Annotated[str, Field(min_length=2, max_length=500)],
-        limit: Annotated[int, Field(ge=1, le=10)] = 5,
+        query: Annotated[
+            str,
+            Field(min_length=2, max_length=500, description="Words to search for."),
+        ],
+        limit: Annotated[
+            int, Field(ge=1, le=10, description="Most hits to return, 1 to 10.")
+        ] = 5,
     ) -> dict[str, Any]:
         """Search the school knowledge base: rules, procedures, staff and contacts."""
         current_actor()

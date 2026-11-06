@@ -18,7 +18,10 @@ def register(kit: ToolKit) -> None:
     @kit.tool(SCOPE)
     async def read_library_text(
         item_id: Annotated[UUID, Field(description="Id from search_library.")],
-        page: Annotated[int, Field(ge=1, le=100_000)] = 1,
+        page: Annotated[
+            int,
+            Field(ge=1, le=100_000, description="Page of the text, from 1; 8 KB each."),
+        ] = 1,
     ) -> dict[str, Any]:
         """Read one 8 KB page of a library item's text."""
         actor = current_actor()

@@ -345,6 +345,19 @@ async def test_create_flashcard_set_validates_the_cards(world: World) -> None:
     assert world.flashcards.created == []
 
 
+async def test_create_flashcard_set_takes_more_than_200_cards(world: World) -> None:
+    """The MCP layer has no count cap of its own; the per-set cap is 500."""
+    token, _ = world.connector_token("student", *ALL)
+    cards = [{"front": f"q{n}", "back": f"a{n}"} for n in range(201)]
+
+    async with world.session("student", token) as session:
+        result = await call(session, "create_flashcard_set", title="Big", cards=cards)
+
+    data_of(result)
+    [created] = world.flashcards.created
+    assert len(created["cards"]) == 201
+
+
 async def test_add_flashcards_to_own_set_and_refuse_foreign_sets(world: World) -> None:
     """UF-MCP-03 3b: someone else's set is refused like a missing one."""
     token, actor = world.connector_token("student", *ALL)

@@ -21,6 +21,7 @@ from app.modules.academic.infrastructure.schedule.sync_cooldown import (
     RedisSyncCooldown,
 )
 from app.shared.actor import Actor
+from app.shared.clock import to_local
 from app.shared.contracts.links import ResourceRef
 from app.shared.contracts.mcp_academic import MaterialFetch, McpAcademicTools
 
@@ -121,7 +122,14 @@ class McpAcademicToolsAdapter:
             slots = await use_case.execute(actor, teacher_id, start, end)
         except TeacherNotFoundError as error:
             raise McpNotFoundError() from error
-        return [asdict(slot) for slot in slots]
+        return [
+            {
+                **asdict(slot),
+                "start_local": to_local(slot.starts_at).strftime("%H:%M"),
+                "end_local": to_local(slot.ends_at).strftime("%H:%M"),
+            }
+            for slot in slots
+        ]
 
     async def gpa(self, user_id: UUID, semester: int | None) -> dict[str, Any]:
         """GPA as the platform calculates it; temporary marks stay separate."""

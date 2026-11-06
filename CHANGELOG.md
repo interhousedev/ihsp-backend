@@ -16,6 +16,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
+- MCP lessons carry local start and end times, and `get_lesson_detail` returns material status and resources.
+- MCP tools have no 200-card limit per call. A set still holds at most 500 cards.
 - MCP create tools accept an optional `idempotency_key`: a retry within 24 hours returns the first result.
 - `GET /v1/certificates/files/{id}/download-url`, so a certificate file can be opened from the Telegram mini app.
 - The Test workflow also runs on pushes to `main`.
@@ -34,6 +36,9 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Fixed
 
+- Lessons EMIS still lists are no longer shown as cancelled when a weekday has different lesson times; a day without its own time borrows the nearest one until Administration sets it.
+- Injected instructions in tool output, search results and notebook passages are removed before the model sees them, and messages attacking the rules get a fixed refusal.
+- Assistant answers keep only the result of a worked sum, unless the question asks how or why.
 - A media link tied to a connector is refused if the process cannot check that connector. The check is now set up with the LMS rather than in a later step.
 - A star stored on a multiple-choice certificate field is ignored, so it can no longer break the statistics.
 - Gemini MCP: Gemini CLI loopback redirects can self-register, and pre-created Gemini clients list the fixed CLI redirects. Each deploy updates existing pre-created clients.
@@ -41,6 +46,9 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Known issues
 
+- Friday lesson times have not been checked against real EMIS data. EMIS sends no weekday times, so Administration sets them. Lessons wrongly cancelled earlier may need restoring by hand.
+- The student assistant sometimes answers a Russian question about marks in English.
+- The injection filter uses patterns: it can remove harmless text and miss new attacks.
 - Telegram behaviour has not been checked on a real device, and Gemini sign-in has not been tried against the real service.
 - MCP media links work as bearer links for 5 hours.
 

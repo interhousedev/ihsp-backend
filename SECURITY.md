@@ -75,3 +75,5 @@ If in doubt, ask first at the contacts above.
 ## Security design
 
 The [Security section of the README](README.md#security) summarises the controls: Hydra with PKCE, Vault for EMIS credentials, rate limits, AI access controls and the usage ledger, OpenUI validation, SSRF guards, upload allowlists, SBOM, Trivy and cosign.
+
+Untrusted text from tools, search results and notebook sources passes through a pattern filter (`app/shared/ai/injection.py`) before it reaches a model. This filter reduces prompt injection but does not prevent it, so tool approval and access checks remain the real boundary.

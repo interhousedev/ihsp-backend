@@ -19,12 +19,17 @@ def register(kit: ToolKit) -> None:
 
     @kit.tool(SCOPE, limit=SEARCH_LIMIT, log=LogSpec(keep=("notebook_id", "limit")))
     async def search_notebooks(
-        query: Annotated[str, Field(min_length=2, max_length=500)],
+        query: Annotated[
+            str,
+            Field(min_length=2, max_length=500, description="Words to search for."),
+        ],
         notebook_id: Annotated[
             UUID | None,
             Field(description="Left out: the 5 most recently opened notebooks."),
         ] = None,
-        limit: Annotated[int, Field(ge=1, le=20)] = 8,
+        limit: Annotated[
+            int, Field(ge=1, le=20, description="Most passages to return, 1 to 20.")
+        ] = 8,
     ) -> dict[str, Any]:
         """Find passages in the sources of the student's notebooks."""
         actor = current_actor()

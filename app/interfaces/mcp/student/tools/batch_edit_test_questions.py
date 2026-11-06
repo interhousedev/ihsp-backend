@@ -27,9 +27,17 @@ def register(kit: ToolKit) -> None:
     @kit.tool(SCOPE, read_only=False, log=LogSpec(keep=("test_id",)))
     async def batch_edit_test_questions(
         test_id: Annotated[UUID, Field(description="Test id from list_tests.")],
-        add: list[NewQuestion] | None = None,
-        update: list[QuestionChange] | None = None,
-        delete_ids: list[QuestionId] | None = None,
+        add: Annotated[
+            list[NewQuestion] | None, Field(description="Questions to add to the test.")
+        ] = None,
+        update: Annotated[
+            list[QuestionChange] | None,
+            Field(description="Questions to change, by their id."),
+        ] = None,
+        delete_ids: Annotated[
+            list[QuestionId] | None,
+            Field(description="Ids of the questions to delete."),
+        ] = None,
     ) -> dict[str, Any]:
         """Add, edit and delete questions of one of the student's tests at once.
 

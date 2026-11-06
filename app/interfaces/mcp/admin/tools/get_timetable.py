@@ -22,6 +22,10 @@ def register(kit: ToolKit) -> None:
         ] = None,
         room_id: Annotated[UUID | None, Field(description="Only this room.")] = None,
     ) -> dict[str, Any]:
-        """Show recurring weekly timetable entries, filtered by group, teacher, room."""
+        """Show recurring weekly timetable entries, filtered by group, teacher, room.
+
+        Entries have a period, not a time: a period's time differs by weekday. For the
+        real start, end and status of a lesson use `list_lessons`.
+        """
         arguments = {"group_id": group_id, "teacher_id": teacher_id, "room_id": room_id}
         return await call_admin_tool(kit, "get_timetable", arguments)

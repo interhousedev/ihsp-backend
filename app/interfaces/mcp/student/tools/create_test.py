@@ -20,8 +20,13 @@ def register(kit: ToolKit) -> None:
 
     @kit.tool(SCOPE, read_only=False, log=LogSpec(keep=("notebook_id",)))
     async def create_test(
-        title: Annotated[str, Field(min_length=1, max_length=200)],
-        questions: Annotated[list[NewQuestion], Field(min_length=1, max_length=100)],
+        title: Annotated[
+            str, Field(min_length=1, max_length=200, description="Name of the test.")
+        ],
+        questions: Annotated[
+            list[NewQuestion],
+            Field(min_length=1, max_length=100, description="Questions, 1 to 100."),
+        ],
         notebook_id: Annotated[
             UUID | None,
             Field(description="The student's notebook; left out: a default one."),

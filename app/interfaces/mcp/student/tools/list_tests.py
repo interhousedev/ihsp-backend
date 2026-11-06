@@ -17,7 +17,9 @@ def register(kit: ToolKit) -> None:
 
     @kit.tool(SCOPE)
     async def list_tests(
-        limit: Annotated[int, Field(ge=1, le=100)] = 50,
+        limit: Annotated[
+            int, Field(ge=1, le=100, description="Most tests to return, 1 to 100.")
+        ] = 50,
     ) -> dict[str, Any]:
         """List the student's own tests, without their questions."""
         actor = current_actor()

@@ -1,6 +1,6 @@
 """Students tool `batch_edit_flashcards`."""
 
-from typing import Annotated, Any, Final
+from typing import Annotated, Any
 from uuid import UUID
 
 from app.interfaces.mcp.call_log import LogSpec
@@ -14,15 +14,14 @@ from pydantic import BaseModel, Field
 
 SCOPE = "flashcards:write"
 DELETE_SCOPE = "flashcards:delete"
-MAX_OPERATIONS: Final = 100
 
 
 class CardEdit(BaseModel):
     """New text of one card; a side left out stays."""
 
     id: UUID = Field(description="Card id from get_flashcard_set.")
-    front: CardText | None = None
-    back: CardText | None = None
+    front: CardText | None = Field(default=None, description="New front side, if any.")
+    back: CardText | None = Field(default=None, description="New back side, if any.")
 
 
 def register(kit: ToolKit) -> None:
@@ -31,24 +30,27 @@ def register(kit: ToolKit) -> None:
     @kit.tool(SCOPE, read_only=False, log=LogSpec(keep=("set_id",)))
     async def batch_edit_flashcards(
         set_id: Annotated[UUID, Field(description="Set id from list_flashcard_sets.")],
-        add: list[FlashcardInput] | None = None,
-        update: list[CardEdit] | None = None,
+        add: Annotated[
+            list[FlashcardInput] | None,
+            Field(description="Cards to add to the set."),
+        ] = None,
+        update: Annotated[
+            list[CardEdit] | None,
+            Field(description="Cards to edit: card id plus the new front or back."),
+        ] = None,
         delete_ids: Annotated[
             list[UUID] | None, Field(description="Needs flashcards:delete as well.")
         ] = None,
     ) -> dict[str, Any]:
         """Add, edit and delete cards of one set at once: all of it, or nothing.
 
-        At most 100 operations, and a set holds at most 500 cards. Edited cards keep
-        their study progress. An id outside this set fails the whole batch.
+        At least one operation is needed; a set holds at most 500 cards. Edited cards
+        keep their study progress. An id outside this set fails the whole batch.
         """
         actor = current_actor()
         new, edits, gone = add or [], update or [], delete_ids or []
-        total = len(new) + len(edits) + len(gone)
-        if not 1 <= total <= MAX_OPERATIONS:
-            raise McpInvalidInputError(
-                params={"reason": f"give 1 to {MAX_OPERATIONS} operations"}
-            )
+        if len(new) + len(edits) + len(gone) < 1:
+            raise McpInvalidInputError(params={"reason": "give at least one operation"})
         if gone and not await kit.guard.has_scope(actor, DELETE_SCOPE):
             raise McpScopeError(params={"scope": DELETE_SCOPE})
         found = await kit.deps.content_tools.batch_edit_cards(

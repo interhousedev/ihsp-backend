@@ -19,8 +19,13 @@ def register(kit: ToolKit) -> None:
 
     @kit.tool(SCOPE, limit=SEARCH_LIMIT, log=LogSpec(keep=("limit",)))
     async def search_library(
-        query: Annotated[str, Field(min_length=2, max_length=500)],
-        limit: Annotated[int, Field(ge=1, le=20)] = 10,
+        query: Annotated[
+            str,
+            Field(min_length=2, max_length=500, description="Words to search for."),
+        ],
+        limit: Annotated[
+            int, Field(ge=1, le=20, description="Most items to return, 1 to 20.")
+        ] = 10,
     ) -> dict[str, Any]:
         """Search the school library's books and materials the student may see."""
         actor = current_actor()

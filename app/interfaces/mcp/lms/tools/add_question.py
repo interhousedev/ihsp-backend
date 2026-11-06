@@ -25,7 +25,10 @@ def register(kit: ToolKit) -> None:
         block_id: Annotated[
             str, Field(min_length=1, description="Id of a test block of the step.")
         ],
-        question: QuestionInput,
+        question: Annotated[
+            QuestionInput,
+            Field(description="The question to append, in its type's shape."),
+        ],
     ) -> dict[str, Any]:
         """Append one question to an existing test block of a step draft.
 

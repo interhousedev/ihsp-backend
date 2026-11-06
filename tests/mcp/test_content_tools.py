@@ -56,27 +56,29 @@ async def test_batch_edit_needs_the_delete_scope_only_for_deletes(world: World) 
 async def test_batch_with_the_delete_scope_passes_ids_and_is_bounded(
     world: World,
 ) -> None:
-    """MCP A2: both scopes allow deletes; more than 100 operations do not run."""
+    """MCP A2: both scopes allow deletes; a batch with no operation does not run."""
     token, actor = world.connector_token(
         "student", "flashcards:write", "flashcards:delete"
     )
     set_id = _set(world, actor.user_id)
     gone = new_id()
-    cards = [{"front": "f", "back": "b"}] * 101
+    cards = [{"front": "f", "back": "b"}] * 150
 
     async with world.session("student", token) as session:
         ok = await call(
             session, "batch_edit_flashcards", set_id=str(set_id), delete_ids=[str(gone)]
         )
-        too_many = await call(
+        many = await call(
             session, "batch_edit_flashcards", set_id=str(set_id), add=cards
         )
         nothing = await call(session, "batch_edit_flashcards", set_id=str(set_id))
 
     data_of(ok)
-    assert too_many.isError and nothing.isError
-    [(_, recorded)] = world.content_tools.calls
-    assert recorded["delete_ids"] == [gone]
+    data_of(many)
+    assert nothing.isError
+    [(_, first), (_, second)] = world.content_tools.calls
+    assert first["delete_ids"] == [gone]
+    assert len(second["add"]) == 150
 
 
 @pytest.mark.parametrize(

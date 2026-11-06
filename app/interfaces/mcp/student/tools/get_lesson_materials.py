@@ -26,24 +26,49 @@ SCOPE = "materials:read"
 _UNTRUSTED = ("resources[].title", "resources[].author")
 
 
-async def _resolve(kit: ToolKit, actor: Actor, lesson: LessonRef) -> dict[str, Any]:
+async def resolve_materials(
+    kit: ToolKit, actor: Actor, lesson: LessonRef, *, wait: bool = True
+) -> dict[str, Any]:
+    """Return the lesson's status and resources, asking EMIS when nothing is stored.
+
+    `wait` False starts a fetch when needed but does not long-poll it: the caller
+    answers `pending` with the job id at once.
+    """
     deps = kit.deps
     tools = deps.academic_tools
     fetch = await tools.material_fetch(lesson.id)
     resources = await deps.links.lesson_resources(lesson.id)
     running = fetch is not None and fetch.status == "running"
     if resources and not running:
-        return {"status": "ready", "resources": resources}
+        return _view({"status": "ready", "resources": resources})
     if fetch is None:
         if lesson.status == "cancelled" or lesson.date > local_today(deps.clock):
-            return {"status": "none", "resources": []}
+            return _view({"status": "none", "resources": []})
         # Only a new fetch costs the EMIS class: polling a running one is free.
         await kit.guard.charge(actor, EMIS_FETCH_LIMIT)
         fetch = await tools.start_material_fetch(actor.user_id, lesson.id)
-    if fetch.status == "running" and not is_past_ceiling(fetch, deps.clock):
+    if wait and fetch.status == "running" and not is_past_ceiling(fetch, deps.clock):
         fetch = await wait_for_fetch(tools, deps.clock, lesson.id, fetch)
     resources = await deps.links.lesson_resources(lesson.id)
-    return _outcome(deps, fetch, resources)
+    return _view(_outcome(deps, fetch, resources))
+
+
+def _view(result: dict[str, Any]) -> dict[str, Any]:
+    """Shape the resources for the client: no internal ids beyond the file id."""
+    result["resources"] = [
+        {
+            "link_id": item.link_id,
+            "role": item.role,
+            "kind": item.kind,
+            "material_kind": item.material_kind or "other",
+            "title": item.title,
+            "short_url": item.short_url,
+            "file_id": item.file_id,
+            "author": item.author_first_name,
+        }
+        for item in result["resources"]
+    ]
+    return result
 
 
 def _outcome(
@@ -125,20 +150,7 @@ def register(kit: ToolKit) -> None:
             raise McpNotFoundError()
         # `job_id` is never looked up: state comes from the lesson, after the audience
         # check, so an id of another lesson's job reads nothing.
-        result = await _resolve(kit, actor, lesson)
-        result["resources"] = [
-            {
-                "link_id": item.link_id,
-                "role": item.role,
-                "kind": item.kind,
-                "material_kind": item.material_kind or "other",
-                "title": item.title,
-                "short_url": item.short_url,
-                "file_id": item.file_id,
-                "author": item.author_first_name,
-            }
-            for item in result["resources"]
-        ]
+        result = await resolve_materials(kit, actor, lesson)
         return mark_untrusted(
             {
                 "lesson_id": lesson_id,

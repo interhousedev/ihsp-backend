@@ -28,7 +28,15 @@ def register(kit: ToolKit) -> None:
     @kit.tool(SCOPE, read_only=False, log=LogSpec(keep=("notebook_id", "kind")))
     async def generate_notebook_output(
         notebook_id: Annotated[UUID, Field(description="Id from list_notebooks.")],
-        kind: OutputKind,
+        kind: Annotated[
+            OutputKind,
+            Field(
+                description=(
+                    "What to make: report, mind_map, flashcards, quiz, data_table, "
+                    "slides, infographic or exercise."
+                )
+            ),
+        ],
         options: Annotated[
             dict[str, Any] | None,
             Field(description='Options of the kind, e.g. quiz: {"count": 10}.'),

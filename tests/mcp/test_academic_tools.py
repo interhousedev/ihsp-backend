@@ -4,10 +4,14 @@ from datetime import date, timedelta
 from typing import Any
 from uuid import uuid4
 
+from app.interfaces.mcp.student.tools import get_lesson_materials as glm
 from app.shared.contracts.academic import MarkRef
 from tests.mcp.conftest import World
-from tests.mcp.fakes import SUBJECT_ID, make_lesson
+from tests.mcp.fakes import SUBJECT_ID, make_lesson, make_resource
+from tests.mcp.fakes_academic import running
 from tests.mcp.helpers import call, data_of
+
+import pytest
 
 
 def _mark(subject_id: Any, semester: int, day: date, value: int = 5) -> MarkRef:
@@ -204,6 +208,10 @@ async def test_lesson_detail_marks_third_party_text(world: World) -> None:
     """B2: homework and materials are labelled untrusted; the page link is ours."""
     token, actor = world.connector_token("student", "materials:read")
     lesson_id = uuid4()
+    lesson = make_lesson(id=lesson_id, date=world.clock.now().date())
+    world.schedule.lessons[lesson_id] = lesson
+    world.schedule.audience.add((actor.user_id, lesson_id))
+    world.links.resources[lesson_id] = [make_resource(lesson_id=lesson_id)]
     world.academic_tools.details[(actor.user_id, lesson_id)] = {
         "lesson": {"id": lesson_id, "topic": "Limits​"},
         "homework": {"text": "Do​ it"},
@@ -226,6 +234,64 @@ async def test_lesson_detail_marks_third_party_text(world: World) -> None:
     assert data["homework"]["text"] == "Do it"
     assert "materials.classwork[].title" in data["untrusted_fields"]
     assert str(lesson_id) in data["links"]["open"]
+
+
+def _detail_lesson(world: World, user_id: Any) -> Any:
+    """A lesson of today in the student's audience, with empty academic details."""
+    lesson = make_lesson(id=uuid4(), date=world.clock.now().date())
+    world.schedule.lessons[lesson.id] = lesson
+    world.schedule.audience.add((user_id, lesson.id))
+    world.academic_tools.details[(user_id, lesson.id)] = {
+        "lesson": {"id": lesson.id},
+        "homework": None,
+        "materials": {"homework": [], "classwork": [], "video": [], "other": []},
+        "attachments": [],
+        "my_mark": [],
+        "my_attendance": None,
+    }
+    return lesson
+
+
+async def test_lesson_detail_includes_the_materials_status_and_resources(
+    world: World,
+) -> None:
+    """Detail carries the same resources and status as get_lesson_materials."""
+    token, actor = world.connector_token("student", "materials:read")
+    lesson = _detail_lesson(world, actor.user_id)
+    world.links.resources[lesson.id] = [make_resource(lesson_id=lesson.id)]
+
+    async with world.session("student", token) as session:
+        result = await call(session, "get_lesson_detail", lesson_id=str(lesson.id))
+
+    data = data_of(result)
+    assert data["status"] == "ready"
+    assert len(data["resources"]) == 1
+    assert data["resources"][0]["title"] == "Lecture slides"
+    assert "resources[].title" in data["untrusted_fields"]
+    assert world.academic_tools.started == []
+
+
+async def test_lesson_detail_starts_emis_but_does_not_wait(
+    world: World, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Nothing stored: detail answers pending with the job id at once."""
+    token, actor = world.connector_token("student", "materials:read")
+    lesson = _detail_lesson(world, actor.user_id)
+    world.academic_tools.next_fetch = running(world.clock.now())
+
+    async def no_long_poll(*_: Any, **__: Any) -> Any:
+        raise AssertionError("get_lesson_detail must not long-poll EMIS")
+
+    monkeypatch.setattr(glm, "wait_for_fetch", no_long_poll)
+
+    async with world.session("student", token) as session:
+        result = await call(session, "get_lesson_detail", lesson_id=str(lesson.id))
+
+    data = data_of(result)
+    assert data["status"] == "pending"
+    assert data["job_id"] == "a" * 32
+    assert data["resources"] == []
+    assert world.academic_tools.started == [(actor.user_id, lesson.id)]
 
 
 async def test_schedule_names_the_teacher(world: World) -> None:
