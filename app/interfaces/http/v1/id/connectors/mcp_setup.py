@@ -174,7 +174,7 @@ async def post_mcp_client(
         actor,
         service=body.service,
         server=body.server,
-        redirect_uri=body.redirect_uri,
+        redirect_uris=[body.redirect_uri],
         name=body.name,
     )
     assert created.client_secret is not None  # client_secret_post always has one

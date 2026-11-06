@@ -2,7 +2,7 @@
 
 import copy
 from collections.abc import Awaitable, Callable, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from datetime import datetime, timedelta
 from types import TracebackType
 from typing import Any, Self
@@ -11,12 +11,23 @@ from uuid import UUID
 from app.modules.identity.domain.audit_event import AuditEventRecord
 from app.modules.identity.domain.connector import McpConnector
 from app.modules.identity.domain.factors import Passkey, UserFactors
+from app.modules.identity.domain.scope_offer import (
+    OFFER_STATUS_EXPIRED,
+    OFFER_STATUS_PENDING,
+    ScopeOffer,
+)
 from app.modules.identity.domain.session import LoginSession
 from app.modules.identity.domain.telegram_link import TelegramLink
 from app.modules.identity.domain.user import User
+from app.modules.identity.ports.mcp_call_log import (
+    McpCallEntry,
+    McpCallFilter,
+    McpToolSummary,
+)
 from app.shared.actor import Role
 from app.shared.clock import Clock
 from app.shared.contracts.identity import UserStatus
+from app.shared.contracts.mcp_calls import McpCallRecord
 from app.shared.ids import new_id
 from app.shared.notifications import AuditDraft, NotificationDraft
 from app.shared.pagination import Page, decode_cursor, encode_cursor
@@ -30,6 +41,8 @@ class IdentityStore:
     sessions: dict[UUID, LoginSession] = field(default_factory=dict)
     links: dict[int, TelegramLink] = field(default_factory=dict)
     connectors: dict[UUID, McpConnector] = field(default_factory=dict)
+    scope_offers: dict[UUID, ScopeOffer] = field(default_factory=dict)
+    mcp_calls: list[McpCallEntry] = field(default_factory=list)
     events: list[AuditEventRecord] = field(default_factory=list)
     factors: dict[UUID, UserFactors] = field(default_factory=dict)
     passkeys: dict[UUID, Passkey] = field(default_factory=dict)
@@ -44,6 +57,8 @@ class IdentityStore:
                 self.sessions,
                 self.links,
                 self.connectors,
+                self.scope_offers,
+                self.mcp_calls,
                 self.events,
                 self.factors,
                 self.passkeys,
@@ -57,6 +72,8 @@ class IdentityStore:
             self.sessions,
             self.links,
             self.connectors,
+            self.scope_offers,
+            self.mcp_calls,
             self.events,
             self.factors,
             self.passkeys,
@@ -408,6 +425,16 @@ class FakeConnectorRepository:
         """Replace a connector."""
         self._s.connectors[connector.id] = _copy(connector)
 
+    async def lock_for_user(
+        self, connector_ids: Sequence[UUID], user_id: UUID
+    ) -> list[McpConnector]:
+        """Copies of the user's connectors among the ids."""
+        return [
+            _copy(c)
+            for c in self._s.connectors.values()
+            if c.id in connector_ids and c.user_id == user_id
+        ]
+
     async def revoke_all_for_user(
         self, user_id: UUID, now: datetime
     ) -> list[McpConnector]:
@@ -546,6 +573,171 @@ class FakeAuditEventRepository:
         return page.items
 
 
+class FakeScopeOfferRepository:
+    """ScopeOfferRepository over the store, with the unique (user, release)."""
+
+    def __init__(self, store: IdentityStore) -> None:
+        """Bind to the store."""
+        self._s = store
+
+    async def add_if_new(self, offer: ScopeOffer) -> bool:
+        """Insert unless the user already has an offer of this release."""
+        for row in self._s.scope_offers.values():
+            if row.user_id == offer.user_id and row.release_id == offer.release_id:
+                return False
+        self._s.scope_offers[offer.id] = _copy(offer)
+        return True
+
+    async def get_by_token_hash(self, token_hash: str) -> ScopeOffer | None:
+        """Find an offer by the hash of its token."""
+        for row in self._s.scope_offers.values():
+            if row.token_hash == token_hash:
+                return _copy(row)
+        return None
+
+    async def get(self, offer_id: UUID) -> ScopeOffer | None:
+        """Find an offer by id."""
+        row = self._s.scope_offers.get(offer_id)
+        return _copy(row) if row else None
+
+    async def list_open_for_user(
+        self, user_id: UUID, now: datetime
+    ) -> list[ScopeOffer]:
+        """The user's pending, unexpired offers, soonest to expire first."""
+        rows = [
+            row
+            for row in self._s.scope_offers.values()
+            if row.user_id == user_id
+            and row.status == OFFER_STATUS_PENDING
+            and row.expires_at > now
+        ]
+        return [_copy(row) for row in sorted(rows, key=lambda r: r.expires_at)]
+
+    async def decide(
+        self, offer_id: UUID, status: str, now: datetime
+    ) -> ScopeOffer | None:
+        """Pending and unexpired only."""
+        row = self._s.scope_offers.get(offer_id)
+        if row is None or row.status != OFFER_STATUS_PENDING or row.expires_at <= now:
+            return None
+        row.status = status
+        row.decided_at = now
+        return _copy(row)
+
+    async def expire_overdue(self, now: datetime) -> int:
+        """Close the pending offers past their expiry."""
+        count = 0
+        for row in self._s.scope_offers.values():
+            if row.status == OFFER_STATUS_PENDING and row.expires_at <= now:
+                row.status = OFFER_STATUS_EXPIRED
+                count += 1
+        return count
+
+    async def users_to_offer(
+        self,
+        release_id: str,
+        server: str,
+        scopes: Sequence[str],
+        now: datetime,
+        *,
+        after: UUID | None,
+        limit: int,
+    ) -> list[UUID]:
+        """Users with an active connector missing a scope and without an offer."""
+        offered = {
+            row.user_id
+            for row in self._s.scope_offers.values()
+            if row.release_id == release_id
+        }
+        found = {
+            c.user_id
+            for c in self._s.connectors.values()
+            if c.server == server
+            and c.is_active(now)
+            and not set(scopes) <= {*c.scopes, *c.extra_scopes}
+            and c.user_id not in offered
+            and (after is None or c.user_id > after)
+        }
+        return sorted(found)[:limit]
+
+
+class FakeMcpCallLogRepository:
+    """McpCallLogRepository over the store."""
+
+    def __init__(self, store: IdentityStore, clock: Clock) -> None:
+        """Bind to the store and the clock."""
+        self._s = store
+        self._clock = clock
+
+    async def add(self, entry: McpCallRecord) -> None:
+        """Insert one trace."""
+        self._s.mcp_calls.append(
+            McpCallEntry(
+                id=new_id(),
+                created_at=self._clock.now(),
+                connector_name=None,
+                **{f.name: getattr(entry, f.name) for f in fields(entry)},
+            )
+        )
+
+    async def search(
+        self, where: McpCallFilter, *, cursor: str | None, limit: int
+    ) -> Page[McpCallEntry]:
+        """Newest first with a (created_at, id) cursor."""
+        rows = sorted(
+            (r for r in self._s.mcp_calls if _matches(r, where)),
+            key=lambda r: (r.created_at, r.id),
+            reverse=True,
+        )
+        decoded = decode_cursor(cursor)
+        if decoded:
+            mark = (datetime.fromisoformat(decoded["at"]), UUID(decoded["id"]))
+            rows = [r for r in rows if (r.created_at, r.id) < mark]
+        items = rows[:limit]
+        next_cursor = None
+        if len(rows) > limit:
+            last = items[-1]
+            next_cursor = encode_cursor(
+                {"at": last.created_at.isoformat(), "id": str(last.id)}
+            )
+        return Page[McpCallEntry](items=items, next_cursor=next_cursor)
+
+    async def summary(self, where: McpCallFilter) -> list[McpToolSummary]:
+        """Calls and failures per server and tool, busiest first."""
+        totals: dict[tuple[str, str], list[int]] = {}
+        for row in self._s.mcp_calls:
+            if _matches(row, where):
+                counts = totals.setdefault((row.server, row.tool), [0, 0])
+                counts[0] += 1
+                counts[1] += row.outcome != "ok"
+        found = [
+            McpToolSummary(server=key[0], tool=key[1], calls=v[0], errors=v[1])
+            for key, v in totals.items()
+        ]
+        return sorted(found, key=lambda s: (-s.calls, s.server, s.tool))
+
+    async def purge_before(self, cutoff: datetime, *, limit: int) -> int:
+        """Delete up to `limit` rows older than the cutoff."""
+        old = [r for r in self._s.mcp_calls if r.created_at < cutoff][:limit]
+        self._s.mcp_calls = [r for r in self._s.mcp_calls if r not in old]
+        return len(old)
+
+
+def _matches(row: McpCallEntry, where: McpCallFilter) -> bool:
+    expected = {
+        "user_id": where.user_id,
+        "connector_id": where.connector_id,
+        "server": where.server,
+        "tool": where.tool,
+        "outcome": where.outcome,
+    }
+    if any(v is not None and getattr(row, k) != v for k, v in expected.items()):
+        return False
+    if where.since is not None and row.created_at < where.since:
+        return False
+    return where.until is None or row.created_at <= where.until
+
+
 class FakeIdentityUnitOfWork:
     """Transaction semantics over the store: rollback unless committed."""
 
@@ -557,6 +749,8 @@ class FakeIdentityUnitOfWork:
         self.sessions = FakeSessionRepository(store)
         self.telegram_links = FakeTelegramLinkRepository(store)
         self.connectors = FakeConnectorRepository(store)
+        self.scope_offers = FakeScopeOfferRepository(store)
+        self.mcp_calls = FakeMcpCallLogRepository(store, clock)
         self.audit_events = FakeAuditEventRepository(store)
         self.factors = FakeFactorRepository(store)
         self.committed = False

@@ -5,6 +5,7 @@ from types import SimpleNamespace
 from typing import Any
 
 from app.interfaces.http.dependencies import get_actor
+from app.interfaces.http.v1.admin_mcp import ROUTERS as ADMIN_MCP_ROUTERS
 from app.interfaces.http.v1.admin_users import ROUTERS as ADMIN_ROUTERS
 from app.interfaces.http.v1.id import ROUTERS as ID_ROUTERS
 from app.interfaces.http.v1.lms_authoring.creators.router import router as creators
@@ -71,7 +72,7 @@ async def api(auth_world: World, http_client: HttpClientFactory) -> Api:
 
     identity = SimpleNamespace(auth=auth_world.auth, token_verifier=None)
     client = await http_client(
-        [*OAUTH_ROUTERS, *ID_ROUTERS, *ADMIN_ROUTERS, creators],
+        [*OAUTH_ROUTERS, *ID_ROUTERS, *ADMIN_ROUTERS, *ADMIN_MCP_ROUTERS, creators],
         {get_actor: current_actor},
         identity=identity,
     )

@@ -31,6 +31,12 @@ class ConnectorRepository(Protocol):
         """Write every field of an existing connector."""
         ...
 
+    async def lock_for_user(
+        self, connector_ids: Sequence[UUID], user_id: UUID
+    ) -> list[McpConnector]:
+        """The user's connectors among the ids, locked until the transaction ends."""
+        ...
+
     async def revoke_all_for_user(
         self, user_id: UUID, now: datetime
     ) -> list[McpConnector]:

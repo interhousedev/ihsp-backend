@@ -311,6 +311,7 @@ async def test_connector_routes(api: Api) -> None:
         "name",
         "server",
         "scopes",
+        "extra_scopes",
         "course_ids",
         "kind",
         "token_prefix",

@@ -3,9 +3,14 @@
 from app.interfaces.http.v1.id.connectors.handlers.delete_connector import (
     delete_connector,
 )
+from app.interfaces.http.v1.id.connectors.handlers.get_activity import get_activity
 from app.interfaces.http.v1.id.connectors.handlers.get_connectors import get_connectors
 from app.interfaces.http.v1.id.connectors.handlers.get_mcp_scopes import get_mcp_scopes
 from app.interfaces.http.v1.id.connectors.handlers.post_connector import post_connector
+from app.interfaces.http.v1.id.connectors.handlers.scope_offers import (
+    get_scope_offers,
+    post_scope_offer_decision,
+)
 from app.interfaces.http.v1.id.connectors.mcp_setup import (
     McpClientResponse,
     McpSetupResponse,
@@ -19,8 +24,11 @@ from app.interfaces.http.v1.id.connectors.mcp_setup import (
 )
 from app.interfaces.http.v1.id.connectors.schemas import (
     ConnectorResponse,
+    McpActivityPage,
     NewConnectorResponse,
     ScopeCatalogResponse,
+    ScopeOfferDecisionResponse,
+    ScopeOfferResponse,
 )
 
 from fastapi import APIRouter, Response
@@ -39,6 +47,24 @@ router.add_api_route(
     methods=["POST"],
     status_code=201,
     response_model=NewConnectorResponse,
+)
+router.add_api_route(
+    "/me/connectors/activity",
+    get_activity,
+    methods=["GET"],
+    response_model=McpActivityPage,
+)
+router.add_api_route(
+    "/me/connectors/offers",
+    get_scope_offers,
+    methods=["GET"],
+    response_model=list[ScopeOfferResponse],
+)
+router.add_api_route(
+    "/me/connectors/offers/{offer_id}/decision",
+    post_scope_offer_decision,
+    methods=["POST"],
+    response_model=ScopeOfferDecisionResponse,
 )
 router.add_api_route(
     "/me/connectors/{id}",

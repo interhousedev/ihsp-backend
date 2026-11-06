@@ -12,6 +12,7 @@ from app.modules.identity.domain.errors import (
 )
 from app.shared.actor import Role
 from app.shared.base_error import RateLimitedError
+from app.shared.mcp_scopes import SCOPE_NAMES_BY_SERVER
 from tests.fakes.identity.hydra import client
 from tests.identity.support import World
 
@@ -129,7 +130,7 @@ async def test_mcp_client_asking_for_nothing_gets_all_scopes_of_the_server(
     info = await auth_world.auth.get_consent_info.execute(challenge)
 
     assert "flashcards:write" in info.requested_scopes
-    assert len(info.requested_scopes) == 8
+    assert set(info.requested_scopes) == set(SCOPE_NAMES_BY_SERVER["student"])
 
 
 async def test_student_cannot_consent_to_the_admin_server(auth_world: World) -> None:

@@ -46,6 +46,10 @@ class McpConnector(IdMixin, TimestampMixin, Base):
         )
     )
     scopes: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
+    # OAuth only: scopes granted after the token was issued (its `scp` cannot change).
+    extra_scopes: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), server_default=text("'{}'")
+    )
     course_ids: Mapped[list[UUID] | None] = mapped_column(ARRAY(Uuid))
     token_hash: Mapped[str | None] = mapped_column(String(64))
     token_prefix: Mapped[str | None] = mapped_column(String(16))

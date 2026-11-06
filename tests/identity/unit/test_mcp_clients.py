@@ -33,6 +33,11 @@ CLAUDE = "https://claude.ai/api/mcp/auth_callback"
         ("https://vertexaisearch.cloud.google.com/oauth-redirect", "gemini"),
         ("https://oauth-redirect.googleusercontent.com/r/my-app", "gemini"),
         ("https://oauth-redirect-test.googleusercontent.com/a/my-app", "gemini"),
+        ("http://localhost:7777/oauth/callback", "gemini"),
+        ("http://localhost:54321/oauth/callback", "gemini"),
+        ("http://127.0.0.1:54321/oauth/callback", "gemini"),
+        ("http://[::1]:54321/oauth/callback", "gemini"),
+        ("http://127.0.0.1/oauth/callback", "gemini"),
     ],
 )
 def test_known_redirects_map_to_their_service(uri: str, service: str) -> None:
@@ -53,6 +58,15 @@ def test_known_redirects_map_to_their_service(uri: str, service: str) -> None:
         "https://oauth-redirect.googleusercontent.com/x/my-app",
         "https://oauth-redirectXgoogleusercontent.com/r/my-app",
         "https://evil.example/cb",
+        "http://localhost:7777/other",
+        "http://localhost:7777/oauth/callback/",
+        "http://localhost:7777/oauth/callback?next=https://evil.example",
+        "http://localhost:7777/oauth/callback#x",
+        "https://localhost:7777/oauth/callback",
+        "http://localhost.evil.example:7777/oauth/callback",
+        "http://user@localhost:7777/oauth/callback",
+        "http://10.0.0.1:7777/oauth/callback",
+        "http://localhost:80/oauth/callback",
     ],
 )
 def test_anything_else_is_not_on_the_allowlist(uri: str) -> None:
@@ -120,6 +134,50 @@ async def test_registration_refuses_other_redirects(
         )
     assert refused.value.error == "invalid_redirect_uri"
     assert "create_client" not in auth_world.hydra.names()
+
+
+async def test_gemini_cli_registers_its_loopback_redirect(auth_world: World) -> None:
+    """MCP-3: Gemini CLI registers one port per run and cannot pose as Gemini web."""
+    created = await auth_world.auth.register_mcp_client.execute(
+        redirect_uris=["http://localhost:54321/oauth/callback"],
+        client_name="Google Gemini",
+        auth_method="none",
+        ctx=CTX,
+    )
+
+    assert created.client.client_name == "Gemini CLI"
+    assert created.client_secret is None
+
+
+async def test_registration_refuses_loopback_mixed_with_hosted_gemini(
+    auth_world: World,
+) -> None:
+    """MCP-3: a client with a local redirect cannot carry the hosted Gemini name."""
+    with pytest.raises(RegistrationRefusedError):
+        await auth_world.auth.register_mcp_client.execute(
+            redirect_uris=[
+                "https://vertexaisearch.cloud.google.com/oauth-redirect",
+                "http://localhost:54321/oauth/callback",
+            ],
+            client_name=None,
+            auth_method="none",
+            ctx=CTX,
+        )
+
+
+async def test_provisioned_gemini_client_has_every_fixed_gemini_redirect(
+    auth_world: World,
+) -> None:
+    """MCP-5: one pre-created client works in Gemini Enterprise and Gemini CLI."""
+    result = await auth_world.auth.mcp_clients.provision(
+        _actor(), service="gemini", server="student"
+    )
+
+    assert result.client.redirect_uris == (
+        "https://vertexaisearch.cloud.google.com/oauth-redirect",
+        "http://127.0.0.1/oauth/callback",
+        "http://localhost:7777/oauth/callback",
+    )
 
 
 async def test_registration_refuses_other_auth_methods(auth_world: World) -> None:
@@ -211,7 +269,7 @@ async def _own(auth_world: World, actor: Actor) -> str:
         actor,
         service="custom",
         server="student",
-        redirect_uri="https://client.example/cb",
+        redirect_uris=["https://client.example/cb"],
         name=None,
     )
     assert created.client_secret
@@ -238,7 +296,7 @@ async def test_own_client_redirect_must_fit_the_service(auth_world: World) -> No
             _actor(),
             service="claude",
             server="student",
-            redirect_uri="https://client.example/cb",
+            redirect_uris=["https://client.example/cb"],
             name=None,
         )
 

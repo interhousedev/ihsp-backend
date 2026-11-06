@@ -52,6 +52,8 @@ FACTS: Final[dict[Service, ServiceFacts]] = {
         notes=(
             "gemini_app_us_18_personal_account_keep_activity_on",
             "gemini_enterprise_admin_sets_up_client_and_pkce",
+            "gemini_web_generated_redirect",
+            "gemini_cli_redirect",
         ),
         docs_url="https://support.google.com/gemini/answer/17209137",
     ),

@@ -24,6 +24,7 @@ class McpConnector:
     server: str
     scopes: list[str]
     course_ids: list[UUID] | None = None
+    extra_scopes: list[str] = field(default_factory=list)
     token_hash: str | None = None
     token_prefix: str | None = None
     hydra_client_id: str | None = None

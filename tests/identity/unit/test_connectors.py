@@ -213,7 +213,7 @@ def test_scope_catalog_lists_three_servers_with_presets(auth_world: World) -> No
 
     assert set(catalog) == {"student", "lms", "admin"}
     student = {s.scope: s.tools for s in catalog["student"].scopes}
-    assert student["marks:read"] == ("get_marks", "get_results")
+    assert student["marks:read"] == ("get_marks", "get_results", "get_gpa")
     assert {p.key for p in catalog["student"].presets} == {
         "study-planner",
         "grades",

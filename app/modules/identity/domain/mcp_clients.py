@@ -11,6 +11,12 @@ Sources (checked 2026-11-04):
 - https://docs.cloud.google.com/gemini/enterprise/docs/connectors/custom-mcp-server/
   set-up-custom-mcp-server
 - https://claude.com/docs/connectors/building/authentication
+- https://github.com/google-gemini/gemini-cli (packages/core/src/utils/oauth-flow.ts)
+
+Gemini CLI listens on `http://localhost:<port>/oauth/callback`. Hydra lets the port vary
+only for a registered IP literal (RFC 8252 section 7.3, fosite `isMatchingAsLoopback`),
+never for `localhost`. So a pre-created client lists `127.0.0.1` without a port and the
+default `localhost:7777`; self-registration takes the exact port of that run.
 """
 
 import re
@@ -31,16 +37,23 @@ SERVICE_NAMES: Final[dict[Service, str]] = {
 
 EXACT_REDIRECTS: Final[dict[Service, tuple[str, ...]]] = {
     "chatgpt": ("https://chatgpt.com/connector_platform_oauth_redirect",),
-    "gemini": ("https://vertexaisearch.cloud.google.com/oauth-redirect",),
+    "gemini": (
+        "https://vertexaisearch.cloud.google.com/oauth-redirect",
+        "http://127.0.0.1/oauth/callback",
+        "http://localhost:7777/oauth/callback",
+    ),
     "claude": ("https://claude.ai/api/mcp/auth_callback",),
 }
 
 _SEGMENT = "[A-Za-z0-9_-]{1,128}"
 _GOOGLE_HOSTS = "oauth-redirect(?:-sandbox|-test)?\\.googleusercontent\\.com"
 
+_LOOPBACK = "(?:localhost|127\\.0\\.0\\.1|\\[::1\\])"
+_GEMINI_CLI = f"http://{_LOOPBACK}(?::[1-9][0-9]{{3,4}})?/oauth/callback"
+
 REDIRECT_TEMPLATES: Final[dict[Service, tuple[str, ...]]] = {
     "chatgpt": (f"https://chatgpt\\.com/connector/oauth/{_SEGMENT}",),
-    "gemini": (f"https://{_GOOGLE_HOSTS}/[ra]/{_SEGMENT}",),
+    "gemini": (f"https://{_GOOGLE_HOSTS}/[ra]/{_SEGMENT}", _GEMINI_CLI),
 }
 """Full-match patterns of the generated URIs; shown as they are in the setup data."""
 
@@ -61,6 +74,11 @@ def service_of_redirect(uri: str, *, extra: Iterable[str] = ()) -> Service | Non
         if any(re.fullmatch(pattern, uri) for pattern in patterns):
             return service
     return "custom" if uri in set(extra) else None
+
+
+def is_gemini_cli_redirect(uri: str) -> bool:
+    """Whether a URI is the local callback of Gemini CLI."""
+    return re.fullmatch(_GEMINI_CLI, uri) is not None
 
 
 def is_safe_own_redirect(uri: str) -> bool:

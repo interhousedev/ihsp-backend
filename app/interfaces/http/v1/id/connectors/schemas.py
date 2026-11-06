@@ -1,16 +1,18 @@
 """Schemas of the MCP connector endpoints."""
 
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
 from app.modules.identity.application.get_mcp_scopes import ServerCatalog
 from app.modules.identity.domain.connector import McpConnector
+from app.modules.identity.ports.mcp_call_log import McpCallEntry
 from app.shared.actor import Role
 
 from pydantic import BaseModel, Field
 
 Server = Literal["student", "lms", "admin"]
+McpOutcome = Literal["ok", "denied", "rate_limited", "not_found", "invalid", "error"]
 
 
 class ConnectorResponse(BaseModel):
@@ -20,6 +22,7 @@ class ConnectorResponse(BaseModel):
     name: str
     server: Server
     scopes: list[str]
+    extra_scopes: list[str]
     course_ids: list[UUID] | None
     kind: Literal["token", "oauth"]
     token_prefix: str | None
@@ -36,6 +39,7 @@ class ConnectorResponse(BaseModel):
             name=connector.name,
             server=connector.server,
             scopes=connector.scopes,
+            extra_scopes=connector.extra_scopes,
             course_ids=connector.course_ids,
             kind=connector.kind,
             token_prefix=connector.token_prefix,
@@ -107,3 +111,80 @@ class ScopeCatalogResponse(BaseModel):
     """ScopeCatalog."""
 
     servers: list[ServerCatalogResponse]
+
+
+class ScopeOfferResponse(BaseModel):
+    """New permissions offered for the caller's connectors; holds no token."""
+
+    id: UUID
+    release_id: str
+    server: Server
+    read_scopes: list[str]
+    write_scopes: list[str]
+    connector_names: list[str]
+    expires_at: datetime
+
+
+class ScopeOfferDecisionBody(BaseModel):
+    """POST /v1/id/me/connectors/offers/{offer_id}/decision."""
+
+    grant: bool
+
+
+class ScopeOfferDecisionResponse(BaseModel):
+    """How it ended: someone else's offer and an unknown one answer the same."""
+
+    result: Literal[
+        "granted", "declined", "already_decided", "expired", "not_available"
+    ]
+    connector_names: list[str]
+
+
+class McpActivityItem(BaseModel):
+    """One MCP tool call: redacted arguments, counts, never content."""
+
+    id: UUID
+    created_at: datetime
+    connector_id: UUID | None
+    connector_name: str | None
+    client_id: str | None
+    server: Server
+    tool: str
+    scope: str
+    read_only: bool
+    outcome: McpOutcome
+    error_code: str | None
+    error_id: str | None
+    duration_ms: int
+    arguments: dict[str, Any] | None
+    result_summary: dict[str, Any] | None
+    ip: str | None
+
+    @classmethod
+    def of(cls, entry: McpCallEntry) -> "McpActivityItem":
+        """Map a stored trace."""
+        return cls(
+            id=entry.id,
+            created_at=entry.created_at,
+            connector_id=entry.connector_id,
+            connector_name=entry.connector_name,
+            client_id=entry.client_id,
+            server=entry.server,
+            tool=entry.tool,
+            scope=entry.scope,
+            read_only=entry.read_only,
+            outcome=entry.outcome,
+            error_code=entry.error_code,
+            error_id=entry.error_id,
+            duration_ms=entry.duration_ms,
+            arguments=entry.arguments,
+            result_summary=entry.result_summary,
+            ip=entry.ip,
+        )
+
+
+class McpActivityPage(BaseModel):
+    """A page of the caller's calls."""
+
+    items: list[McpActivityItem]
+    next_cursor: str | None

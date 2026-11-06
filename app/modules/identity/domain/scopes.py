@@ -11,6 +11,9 @@ from app.shared.lms_scopes import (
     LEGACY_ALIASES,
     MODULES_WRITE,
 )
+from app.shared.mcp_scopes import SCOPE_CATALOG, ScopeInfo
+
+__all__ = ["SCOPE_CATALOG", "ScopeInfo"]
 
 Server = Literal["student", "lms", "admin"]
 SERVERS: tuple[Server, ...] = ("student", "lms", "admin")
@@ -33,78 +36,12 @@ AUDIENCE_BY_SERVER: dict[str, str] = {
 
 
 @dataclass(frozen=True, slots=True)
-class ScopeInfo:
-    """One scope and the tools it unlocks."""
-
-    scope: str
-    tools: tuple[str, ...]
-
-
-@dataclass(frozen=True, slots=True)
 class Preset:
     """A named set of scopes for a typical task."""
 
     key: str
     scopes: tuple[str, ...]
 
-
-SCOPE_CATALOG: dict[str, tuple[ScopeInfo, ...]] = {
-    "student": (
-        ScopeInfo(
-            "schedule:read",
-            ("get_schedule", "get_my_subjects", "get_subject_lessons"),
-        ),
-        ScopeInfo("homework:read", ("get_homework",)),
-        ScopeInfo("marks:read", ("get_marks", "get_results")),
-        ScopeInfo("attendance:read", ("get_attendance",)),
-        ScopeInfo("materials:read", ("get_lesson_materials",)),
-        ScopeInfo("files:read", ("list_files", "read_file", "search_files")),
-        ScopeInfo("flashcards:read", ("list_flashcard_sets", "get_flashcard_set")),
-        ScopeInfo(
-            "flashcards:write",
-            ("create_flashcard_set", "add_flashcards", "update_flashcard"),
-        ),
-    ),
-    "lms": (
-        ScopeInfo(
-            COURSES_READ,
-            (
-                "list_courses",
-                "get_course",
-                "get_step",
-                "list_pending_changes",
-                "list_versions",
-                "list_attempts",
-            ),
-        ),
-        ScopeInfo(COURSES_WRITE, ("create_course", "update_course")),
-        ScopeInfo(COURSES_DELETE, ("delete_course",)),
-        ScopeInfo(
-            MODULES_WRITE,
-            (
-                "create_module",
-                "update_module",
-                "delete_module",
-                "create_section",
-                "create_step",
-                "update_step",
-                "delete_step",
-                "add_text_block",
-                "add_test_block",
-                "add_question",
-                "add_flashcards_block",
-            ),
-        ),
-    ),
-    "admin": (
-        ScopeInfo("people:read", ("search_users", "get_student", "list_teachers")),
-        ScopeInfo("groups:read", ("list_groups", "get_group")),
-        ScopeInfo("timetable:read", ("get_timetable", "list_lessons")),
-        ScopeInfo("attendance:read", ("attendance_stats", "missing_attendance")),
-        ScopeInfo("broadcasts:read", ("list_broadcasts",)),
-        ScopeInfo("audit:read", ("audit_log", "sync_status")),
-    ),
-}
 
 PRESETS: dict[str, tuple[Preset, ...]] = {
     "student": (

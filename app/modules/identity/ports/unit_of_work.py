@@ -7,6 +7,8 @@ from typing import Protocol, Self
 from app.modules.identity.ports.audit_event_repository import AuditEventRepository
 from app.modules.identity.ports.connector_repository import ConnectorRepository
 from app.modules.identity.ports.factor_repository import FactorRepository
+from app.modules.identity.ports.mcp_call_log import McpCallLogRepository
+from app.modules.identity.ports.scope_offer_repository import ScopeOfferRepository
 from app.modules.identity.ports.session_repository import SessionRepository
 from app.modules.identity.ports.telegram_link_repository import (
     TelegramLinkRepository,
@@ -36,6 +38,16 @@ class IdentityUnitOfWorkPort(Protocol):
     @property
     def connectors(self) -> ConnectorRepository:
         """Connector repository."""
+        ...
+
+    @property
+    def scope_offers(self) -> ScopeOfferRepository:
+        """Offers of new MCP scopes."""
+        ...
+
+    @property
+    def mcp_calls(self) -> McpCallLogRepository:
+        """The MCP call log."""
         ...
 
     @property

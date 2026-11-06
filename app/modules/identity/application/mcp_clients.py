@@ -14,6 +14,7 @@ from app.modules.identity.domain.mcp_clients import (
     MAX_OWN_CLIENTS,
     SERVICE_NAMES,
     Service,
+    is_gemini_cli_redirect,
     is_safe_own_redirect,
     service_of_redirect,
 )
@@ -43,6 +44,9 @@ PROVISION_LOCK_TTL_SECONDS = 30
 PROVISION_LOCK_WAIT_SECONDS = 0.1
 PROVISION_LOCK_ATTEMPTS = 100
 """A second 'Yes' waits up to 10 s for the first one, then reads its client."""
+
+GEMINI_CLI_NAME = "Gemini CLI"
+"""Consent name of a loopback client: it is not the hosted Gemini."""
 
 PROVISIONED_SERVICES: frozenset[str] = frozenset({"chatgpt", "gemini", "claude"})
 """Services whose steps use a pre-created client (one fixed redirect URI)."""
@@ -120,6 +124,14 @@ class RegisterMcpClient:
                 "invalid_client_metadata", "unsupported token_endpoint_auth_method"
             )
         name = SERVICE_NAMES[service]
+        local = [is_gemini_cli_redirect(uri) for uri in redirect_uris]
+        if any(local) and not all(local):
+            # A local redirect must not sit on a client named like hosted Gemini.
+            raise RegistrationRefusedError(
+                "invalid_redirect_uri", "redirect_uris mix local and hosted addresses"
+            )
+        if all(local):
+            name = GEMINI_CLI_NAME
         if service == "custom" and client_name and client_name.strip():
             name = client_name.strip()[:80]
         return await self.hydra.create_client(
@@ -174,13 +186,13 @@ class McpClients:
         *,
         service: Service,
         server: Server,
-        redirect_uri: str,
+        redirect_uris: list[str],
         name: str | None,
     ) -> NewHydraClient:
         """Create a confidential client; the secret is in this result only."""
         if not role_may_use_server(actor.roles, server):
             raise RoleMissingError(params={"server": server})
-        if not self._allowed(service, redirect_uri):
+        if not all(self._allowed(service, uri) for uri in redirect_uris):
             raise ConnectorInvalidError(params={"reason": "redirect-uri"})
         if len(await self.owned(actor)) >= MAX_OWN_CLIENTS:
             raise ConnectorInvalidError(params={"reason": "too-many-clients"})
@@ -192,7 +204,7 @@ class McpClients:
         }
         return await self.hydra.create_client(
             name=(name or "").strip()[:80] or SERVICE_NAMES[service],
-            redirect_uris=[redirect_uri],
+            redirect_uris=redirect_uris,
             scope=client_scope(),
             audience=[AUDIENCE_BY_SERVER[server]],
             auth_method="client_secret_post",
@@ -239,7 +251,7 @@ class McpClients:
             actor,
             service=service,
             server=server,
-            redirect_uri=EXACT_REDIRECTS[service][0],
+            redirect_uris=list(EXACT_REDIRECTS[service]),
             name=None,
         )
         if created.client_secret is None:

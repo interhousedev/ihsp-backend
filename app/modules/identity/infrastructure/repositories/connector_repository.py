@@ -18,6 +18,7 @@ def _to_entity(row: ConnectorRow) -> McpConnector:
         name=row.name,
         server=row.server,
         scopes=list(row.scopes or []),
+        extra_scopes=list(row.extra_scopes or []),
         course_ids=list(row.course_ids) if row.course_ids is not None else None,
         token_hash=row.token_hash,
         token_prefix=row.token_prefix,
@@ -34,6 +35,7 @@ def _apply(row: ConnectorRow, connector: McpConnector) -> None:
     row.name = connector.name
     row.server = connector.server
     row.scopes = list(connector.scopes)
+    row.extra_scopes = list(connector.extra_scopes)
     row.course_ids = connector.course_ids
     row.token_hash = connector.token_hash
     row.token_prefix = connector.token_prefix
@@ -85,6 +87,22 @@ class SqlConnectorRepository:
             raise LookupError(f"connector {connector.id} does not exist")
         _apply(row, connector)
         await self._session.flush()
+
+    async def lock_for_user(
+        self, connector_ids: Sequence[UUID], user_id: UUID
+    ) -> list[McpConnector]:
+        """The user's connectors among the ids, locked until the transaction ends."""
+        rows = await self._session.scalars(
+            select(ConnectorRow)
+            .where(
+                ConnectorRow.id.in_(list(connector_ids)),
+                ConnectorRow.user_id == user_id,
+            )
+            .order_by(ConnectorRow.id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        return [_to_entity(row) for row in rows]
 
     async def revoke_all_for_user(
         self, user_id: UUID, now: datetime

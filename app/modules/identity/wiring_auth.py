@@ -35,6 +35,7 @@ from app.modules.identity.application.create_connector import CreateConnector
 from app.modules.identity.application.create_staff_account import CreateStaffAccount
 from app.modules.identity.application.create_teacher import CreateTeacher
 from app.modules.identity.application.deactivate_teacher import DeactivateTeacher
+from app.modules.identity.application.decide_scope_offer import DecideScopeOffer
 from app.modules.identity.application.deletion_notice import DeletionTelegramNotice
 from app.modules.identity.application.disable_otp import DisableOtp
 from app.modules.identity.application.enable_otp import EnableOtp
@@ -54,7 +55,9 @@ from app.modules.identity.application.link_telegram_account import LinkTelegramA
 from app.modules.identity.application.list_activity import ListActivity
 from app.modules.identity.application.list_audit import ListAudit
 from app.modules.identity.application.list_connectors import ListConnectors
+from app.modules.identity.application.list_mcp_activity import ListMcpActivity
 from app.modules.identity.application.list_oauth_clients import ListOAuthClients
+from app.modules.identity.application.list_scope_offers import ListScopeOffers
 from app.modules.identity.application.list_sessions import ListSessions
 from app.modules.identity.application.list_teachers import ListTeachers
 from app.modules.identity.application.list_telegram_accounts import (
@@ -69,6 +72,7 @@ from app.modules.identity.application.log_in_with_otp import LogInWithOtp
 from app.modules.identity.application.log_in_with_password import LogInWithPassword
 from app.modules.identity.application.log_out_client import LogOutClient
 from app.modules.identity.application.mcp_clients import McpClients, RegisterMcpClient
+from app.modules.identity.application.offer_mcp_scopes import OfferMcpScopes
 from app.modules.identity.application.otp_service import OtpService
 from app.modules.identity.application.password_authenticator import (
     PasswordAuthenticator,
@@ -80,6 +84,7 @@ from app.modules.identity.application.public_api import (
     IdentityDirectoryImpl,
 )
 from app.modules.identity.application.purge_deleted_users import PurgeDeletedUsers
+from app.modules.identity.application.purge_mcp_call_log import PurgeMcpCallLog
 from app.modules.identity.application.refresh_tokens import RefreshTokens
 from app.modules.identity.application.remove_user_photo import RemoveUserPhoto
 from app.modules.identity.application.request_email_change import RequestEmailChange
@@ -142,6 +147,9 @@ from app.modules.identity.infrastructure.redis.login_throttle import RedisLoginT
 from app.modules.identity.infrastructure.redis.otp_store import RedisOtpStore
 from app.modules.identity.infrastructure.redis.revocation_list import (
     RedisRevocationList,
+)
+from app.modules.identity.infrastructure.redis.scope_overlay_cache import (
+    RedisScopeOverlayCache,
 )
 from app.modules.identity.infrastructure.redis.ticket_store import RedisTicketStore
 from app.modules.identity.infrastructure.telegram.init_data import HmacInitDataVerifier
@@ -228,6 +236,11 @@ class AuthServices:
     list_activity: ListActivity
     step_up: StepUp
     list_connectors: ListConnectors
+    offer_mcp_scopes: OfferMcpScopes
+    decide_scope_offer: DecideScopeOffer
+    list_scope_offers: ListScopeOffers
+    list_mcp_activity: ListMcpActivity
+    purge_mcp_call_log: PurgeMcpCallLog
     create_connector: CreateConnector
     revoke_connector: RevokeConnector
     register_mcp_client: RegisterMcpClient
@@ -585,6 +598,19 @@ def build_auth(
         list_activity=ListActivity(uow_factory=uow_factory),
         step_up=StepUp(uow_factory=uow_factory, otp=otp),
         list_connectors=ListConnectors(uow_factory=uow_factory),
+        offer_mcp_scopes=OfferMcpScopes(uow_factory=uow_factory, clock=clock),
+        decide_scope_offer=DecideScopeOffer(
+            uow_factory=uow_factory,
+            clock=clock,
+            overlay_cache=RedisScopeOverlayCache(redis),
+        ),
+        list_scope_offers=ListScopeOffers(uow_factory=uow_factory, clock=clock),
+        list_mcp_activity=ListMcpActivity(uow_factory=uow_factory, clock=clock),
+        purge_mcp_call_log=PurgeMcpCallLog(
+            uow_factory=uow_factory,
+            clock=clock,
+            retention_days=settings.mcp.call_log_retention_days,
+        ),
         create_connector=CreateConnector(uow_factory=uow_factory, otp=otp, clock=clock),
         revoke_connector=revoke_connector,
         register_mcp_client=RegisterMcpClient(
