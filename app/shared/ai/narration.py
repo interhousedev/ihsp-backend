@@ -78,6 +78,16 @@ _OPENERS: Final = re.compile(
 )
 _SENTENCE_END: Final = re.compile(r"[.!?…:](?:\s+|$)|\n")
 _FENCE: Final = "```"
+_WORKED_SUM: Final = re.compile(
+    r"(?:\(\s*\d[\d\s+.,]*\)\s*/\s*\d+|\d+(?:[.,]\d+)?(?:\s*\+\s*\d+(?:[.,]\d+)?)+)"
+    r"\s*=\s*(?=\d)"
+)
+_PROTECTED_SPANS: Final = re.compile(r"(```.*?(?:```|\Z)|`[^`\n]*`|\$[^$\n]*\$)", re.S)
+_SHOWS_WORK: Final = re.compile(
+    r"\b(?:how|why|explain|solve|steps?|show\s+the\s+work\w*|как|почему|объясн\w*|"
+    r"реши\w*|шаг\w*|решени\w*|qanday|nega|tushuntir\w*|yech\w*|bosqich\w*)\b",
+    re.IGNORECASE | re.UNICODE,
+)
 
 
 def _first_sentence(text: str) -> tuple[str, str] | None:
@@ -170,6 +180,18 @@ def strip_narration(
         return text
     rest = _without_working_notes(rest, language)
     return _without_note_paragraphs(rest, about_student) or rest
+
+
+def strip_worked_sums(text: str, asked: str) -> str:
+    """Final numbers only: `(5 + 4) / 2 = 4,5` becomes `4,5` outside code and maths.
+
+    A question that asks for the way (how, why, solve, steps) keeps its working.
+    """
+    if _SHOWS_WORK.search(asked):
+        return text
+    parts = _PROTECTED_SPANS.split(text)
+    parts[::2] = [_WORKED_SUM.sub("", part) for part in parts[::2]]
+    return "".join(parts)
 
 
 class NarrationFilter:

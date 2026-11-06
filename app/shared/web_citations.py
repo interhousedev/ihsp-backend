@@ -12,6 +12,7 @@ import re
 from collections.abc import Collection, Iterable, Sequence
 from urllib.parse import urlsplit
 
+from app.shared.ai.injection import neutralize_text
 from app.shared.contracts.web_search import WebHit, WebResult
 
 WEB_OPEN = "⟦w"
@@ -126,7 +127,7 @@ def render_web_block(
         lines.append(head)
         lines.append(_inline(result.url))
         if full and result.snippet:
-            lines.append(_inline(result.snippet))
+            lines.append(_inline(neutralize_text(result.snippet)))
         if full:
             lines.append("")
     if lines[-1] == "":

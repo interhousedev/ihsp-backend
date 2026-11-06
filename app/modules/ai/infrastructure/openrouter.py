@@ -272,13 +272,7 @@ class OpenRouterGateway:
             ) as response:
                 if response.status_code != 200:
                     await self._raise_stream_error(response, payload)
-                parser = SseParser()
-                async for line in response.aiter_lines():
-                    for item in parser.feed(line):
-                        yield item
-                    if parser.done:
-                        break
-                for item in parser.finish():
+                async for item in _parsed_stream(response):
                     yield item
         except httpx.HTTPError as exc:
             raise _RetryLater(
@@ -518,6 +512,23 @@ def _first_object(text: str) -> dict[str, Any] | None:
             return value
         start = text.find("{", start + 1)
     return None
+
+
+async def _parsed_stream(
+    response: httpx.Response,
+) -> AsyncGenerator[dict[str, Any], None]:
+    """The items of a 200 stream; a broken stream may be retried, it is no refusal."""
+    parser = SseParser()
+    try:
+        async for line in response.aiter_lines():
+            for item in parser.feed(line):
+                yield item
+            if parser.done:
+                break
+        for item in parser.finish():
+            yield item
+    except AiProviderError as exc:
+        raise _RetryLater(DEFAULT_RETRY_SECONDS, exc) from exc
 
 
 async def _stream_status_error(response: httpx.Response) -> Exception:

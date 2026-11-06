@@ -129,7 +129,8 @@ async def _chat_turn(
     ]
     last = events[-1]
     if last.result is None:
-        return Outcome("", f"error: {last.name}")
+        reason = f"{last.data.get('type')}: {last.data.get('title')}"
+        return Outcome("", f"error: {last.name}: {reason}")
     messages = [m for m in last.result.new_messages if m.role == "assistant"]
     calls = [call for message in messages for call in message.tool_calls]
     return Outcome(

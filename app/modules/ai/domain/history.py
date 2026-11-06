@@ -7,6 +7,7 @@ from typing import Any
 from app.modules.ai.domain.chat import ChatMessage, MessageRole
 from app.modules.ai.domain.tool_call import ToolCall, ToolStatus
 from app.modules.ai.domain.tools import MAX_RESULT_CHARS
+from app.shared.ai.injection import neutralize
 from app.shared.slash_commands import expand
 from app.shared.web_citations import render_web_block
 
@@ -45,7 +46,7 @@ def tool_result_content(call: ToolCall) -> str:
 
 
 def _wrapped(result: dict[str, Any]) -> str:
-    text = json.dumps({UNTRUSTED: result}, ensure_ascii=False, default=str)
+    text = json.dumps({UNTRUSTED: neutralize(result)}, ensure_ascii=False, default=str)
     if len(text) <= MAX_RESULT_CHARS:
         return text
     cut = {"truncated": True, "first_characters": text[:MAX_RESULT_CHARS]}

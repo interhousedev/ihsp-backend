@@ -8,6 +8,7 @@ import re
 from collections.abc import Sequence
 
 from app.modules.notebooks.domain.context import ContextPack, PackSource
+from app.shared.ai.injection import neutralize_text
 
 DEFAULT_TITLE = "Untitled"
 
@@ -46,7 +47,10 @@ def _render_source(source: PackSource) -> str:
         flat = _WHITESPACE.sub(" ", source.guide_summary).strip()
         guide = _TAG_ANYWHERE.sub("< ", flat)
         lines.append(f"<guide>{guide}</guide>")
-    blocks = [f"[{p.label}] {escape_passage(p.text)}" for p in source.passages]
+    blocks = [
+        f"[{p.label}] {escape_passage(neutralize_text(p.text))}"
+        for p in source.passages
+    ]
     if blocks:
         lines.append("\n\n".join(blocks))
     lines.append("</source>")

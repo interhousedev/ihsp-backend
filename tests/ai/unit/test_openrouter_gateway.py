@@ -410,3 +410,55 @@ async def test_a_streamed_parameter_404_is_retried_without_temperature(
     assert [i.get("delta") for i in items if "delta" in i] == ["Hi"]
     sent = bodies(route)
     assert "temperature" in sent[0] and "temperature" not in sent[1]
+
+
+@respx.mock
+async def test_a_stream_that_breaks_before_any_text_is_retried(
+    gateway: OpenRouterGateway,
+) -> None:
+    """AI-13: an error event ahead of the first delta costs one retry, not the turn."""
+    good = (
+        'data: {"choices":[{"delta":{"content":"Hi"},"finish_reason":"stop"}],'
+        '"usage":{"prompt_tokens":1,"completion_tokens":1}}\n\ndata: [DONE]\n\n'
+    )
+    respx.post(URL).mock(
+        side_effect=[
+            httpx.Response(200, text='data: {"error":{"message":"overloaded"}}\n\n'),
+            httpx.Response(200, text=good),
+        ]
+    )
+
+    items = [
+        item
+        async for item in gateway.stream(
+            model="m",
+            system="s",
+            messages=[{"role": "user", "content": "hi"}],
+            max_tokens=50,
+        )
+    ]
+
+    assert [i["delta"] for i in items if "delta" in i] == ["Hi"]
+
+
+@respx.mock
+async def test_a_stream_that_breaks_after_text_is_not_retried(
+    gateway: OpenRouterGateway,
+) -> None:
+    """AI-13: text already shown cannot be taken back, so the failure is reported."""
+    route = respx.post(URL).mock(
+        return_value=httpx.Response(
+            200, text='data: {"choices":[{"delta":{"content":"Hi"}}]}\n\n'
+        )
+    )
+
+    with pytest.raises(AiProviderError):
+        async for _ in gateway.stream(
+            model="m",
+            system="s",
+            messages=[{"role": "user", "content": "hi"}],
+            max_tokens=50,
+        ):
+            pass
+
+    assert route.call_count == 1

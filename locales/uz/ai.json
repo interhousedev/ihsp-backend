@@ -161,6 +161,7 @@
   "ai-preview-update-timetable-entry": "Jadval yozuvini o'zgartirish",
   "ai-provider-error": "Sun'iy intellekt xizmati hozir mavjud emas. Bir daqiqadan keyin qayta urinib ko'ring.",
   "ai-smart-weekly-limit": "Aqlli yordamchi haftasiga {limit} ta so'rov bilan cheklangan. Keyingi yangilanish: {date}.",
+  "ai-rule-attack": "Bu soʼrovni bajara olmayman. Oʼqish yoki ishingiz boʼyicha savol bersangiz, yordam beraman.",
   "ai-step-limit": "Bitta javob uchun qadamlar limitiga yetdim. «Davom et» deb yozing, davom etaman.",
   "ai-tool-arguments": "Yordamchi vositaga noto'g'ri argumentlar yubordi.",
   "ai-tool-call-expired": "Yordamchining bu harakati muddati tugagan.",

@@ -12,6 +12,7 @@ from typing import Any, Final, Protocol
 from app.modules.posts.domain.errors import GuestBusyError, GuestLimitError
 from app.modules.posts.ports.repositories import GuestKnowledge
 from app.shared.ai.answer_language import answer_language, language_line
+from app.shared.ai.injection import is_rule_attack, neutralize
 from app.shared.ai.narration import NarrationFilter
 from app.shared.ai.prompt_cache import with_volatile_tail
 from app.shared.ai.uzbek import UzbekStream
@@ -41,6 +42,14 @@ GUEST_TOOLS: Final[tuple[dict[str, Any], ...]] = (
 )
 MAX_ROUNDS: Final = 3
 MAX_QUESTION: Final = 2000
+RULE_ATTACK_REFUSAL: Final[dict[str, str]] = {
+    "uz": "Bu soʼrovni bajara olmayman. Qabul, dasturlar, toʼlov yoki aloqa haqida "
+    "savol bersangiz, yordam beraman.",
+    "ru": "Этот запрос я выполнить не могу. Спросите о приёме, программах, оплате или "
+    "контактах лицея, и я помогу.",
+    "en": "I cannot do that. Ask about admission, programmes, fees or contacts of the "
+    "lyceum, and I will help.",
+}
 
 SYSTEM: Final = with_brand(
     "You are the public assistant of the Academic Lyceum {org_name} ({brand}) in "
@@ -128,9 +137,8 @@ class GuestAssistant:
                 args = {}
         query = str(args.get("query") or "")[:500]
         hits = await self.knowledge.search(query, limit=5) if query else []
-        return json.dumps(
-            [{"title": h.title, "text": h.value} for h in hits], ensure_ascii=False
-        )
+        found = [{"title": h.title, "text": h.value} for h in hits]
+        return json.dumps(neutralize(found), ensure_ascii=False)
 
     async def answer(
         self, telegram_user_id: int, question: str, *, locale: str
@@ -141,7 +149,13 @@ class GuestAssistant:
             yield delta
 
     async def stream_answer(self, question: str, *, locale: str) -> AsyncIterator[str]:
-        """Yield the answer piece by piece (the caller has checked the limits)."""
+        """Yield the answer piece by piece (the caller has checked the limits).
+
+        A message that attacks the rules gets a fixed refusal: no model, nothing echoed.
+        """
+        if is_rule_attack(question):
+            yield RULE_ATTACK_REFUSAL[answer_language(question, locale)]
+            return
         if answer_language(question, locale) != "uz":
             async for delta in self._model_answer(question, locale=locale):
                 yield delta

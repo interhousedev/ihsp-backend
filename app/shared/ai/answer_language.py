@@ -14,7 +14,8 @@ UZBEK_LETTERS_RULE: Final = (
     "Write oʼ, gʼ and tutuq belgisi with ʼ (U+02BC), never ' ‘ ’ or ʻ."
 )
 
-_WORD: Final = re.compile(r"[^\W\d_]+(?:['ʼʻ’‘`][^\W\d_]+)*", re.UNICODE)
+# Whole words only: the letters inside an id such as 01a1b059 are no English "a".
+_WORD: Final = re.compile(r"(?<!\w)[^\W\d_]+(?:['ʼʻ’‘`][^\W\d_]+)*(?!\w)", re.UNICODE)
 _CYRILLIC: Final = re.compile(r"[Ѐ-ӿ]")
 _UZBEK_CYRILLIC: Final = re.compile(r"[ўқғҳЎҚҒҲ]")
 _UZBEK_LETTERS: Final = re.compile(r"\b\w*[og]['ʼʻ’‘`]\w*", re.IGNORECASE)

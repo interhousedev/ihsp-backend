@@ -36,10 +36,12 @@ from app.settings import Settings
 from app.shared.actor import Actor
 from app.shared.agent_steps import StepKind, current_steps, record_step
 from app.shared.ai.answer_language import answer_language
+from app.shared.ai.injection import is_rule_attack
 from app.shared.ai.narration import (
     NarrationFilter,
     mentions_a_student,
     strip_narration,
+    strip_worked_sums,
 )
 from app.shared.ai.uzbek import normalize_answer
 from app.shared.ai_tasks import AiTask
@@ -54,6 +56,7 @@ from app.shared.web_citations import rewrite_markers
 
 MAX_OUTPUT_TOKENS = 4096
 STEP_LIMIT_KEY = "ai-step-limit"
+RULE_ATTACK_KEY = "ai-rule-attack"
 TAIL_MESSAGES = WINDOW_MESSAGES + SUMMARY_EVERY + 20
 
 
@@ -164,6 +167,10 @@ class ContinueTurn:
         steps = profile_for(
             chat.assistant, self.settings, chat.tier, limits=limits
         ).max_tool_steps
+        asked = _last_user_text(tail)
+        if is_rule_attack(asked):  # a fixed refusal: no model, nothing to echo
+            progress.status = await self._refuse_rule_attack(run, asked)
+            return progress
         for step in range(steps):
             run.answer_now = run.answer_now or step == steps - 1
             status = await self._step(run)
@@ -229,7 +236,7 @@ class ContinueTurn:
             record_step(StepKind.THINK, text)
         if not raw_calls:  # the answer: repair or drop broken OpenUI blocks
             text = await self.openui.finalize(text, count=self._repair_counter(chat))
-            text = normalize_answer(text)
+            text = normalize_answer(strip_worked_sums(text, asked))
         calls = await self.runner.propose(
             chat.assistant, run.ctx, raw_calls, taken, run.seen
         )
@@ -241,6 +248,17 @@ class ContinueTurn:
         run.progress.changed.append(message)
         run.progress.chat = stored
         return _final_status(calls)
+
+    async def _refuse_rule_attack(self, run: _Run, asked: str) -> TurnStatus:
+        """End the turn with the fixed refusal, in the language of the message."""
+        language = answer_language(asked, run.ctx.locale)
+        text = self.i18n.t(language, RULE_ATTACK_KEY)
+        if run.events is not None:
+            run.events.emit("delta", {"text": text})
+        message, chat = await self._store(run, text, [], (0, 0))
+        run.progress.changed.append(message)
+        run.progress.chat = chat
+        return TurnStatus.DONE
 
     async def _ask(
         self, run: _Run, chat: Chat, asked: str, request: dict[str, Any]
