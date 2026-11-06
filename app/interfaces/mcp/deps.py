@@ -4,10 +4,13 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from app.interfaces.mcp.constants import ERROR_LOCALE
+from app.interfaces.mcp.links import McpLinks
+from app.interfaces.mcp.not_wired import NotWired
 from app.interfaces.mcp.ports import (
     ConnectorCoursesPort,
     McpAuditPort,
     McpFilesApi,
+    McpScopeOverlayPort,
 )
 from app.settings import Settings
 from app.shared.clock import Clock
@@ -21,6 +24,10 @@ from app.shared.contracts.auth import AccessTokenVerifier, ConnectorTokenVerifie
 from app.shared.contracts.flashcards import FlashcardsApi
 from app.shared.contracts.links import LinksApi
 from app.shared.contracts.lms import LmsDraftCommands, LmsQueries
+from app.shared.contracts.mcp_academic import McpAcademicTools
+from app.shared.contracts.mcp_calls import McpCallLog
+from app.shared.contracts.mcp_content import McpContentTools
+from app.shared.contracts.mcp_files_courses import McpFilesCoursesTools
 from app.shared.i18n.core import I18nCore
 from app.shared.limits import LimitsProvider, StaticLimits
 from app.shared.rate_limit import RateLimiter
@@ -52,10 +59,21 @@ class McpDeps:
     admin_tools: AdminToolBackend
     # The AI scopes revoked per user (cached): the guard refuses revoked users.
     limits: LimitsProvider
+    call_log: McpCallLog
+    # Scopes granted to a connector after its OAuth token was issued; None: no overlay.
+    scope_overlay: McpScopeOverlayPort | None
+    academic_tools: McpAcademicTools
+    content_tools: McpContentTools
+    files_courses_tools: McpFilesCoursesTools
 
     def t(self, key: str, **params: Any) -> str:  # noqa: ANN401 - i18n params
         """Translate a message key into the language of tool errors."""
         return self.i18n.t(ERROR_LOCALE, key, **params)
+
+    @property
+    def web_links(self) -> McpLinks:
+        """Builders of our own links for tool results (`links.*`)."""
+        return McpLinks(self.settings)
 
 
 def deps_from_container(
@@ -77,11 +95,12 @@ def deps_from_container(
     connector_courses = connector_courses or getattr(
         container, "mcp_connector_courses", None
     )
-    if audit is None or admin_tools is None:
+    call_log = getattr(container, "mcp_call_log", None)
+    if audit is None or admin_tools is None or call_log is None:
         raise ValueError(
-            "MCP servers need an audit port and an AdminToolBackend "
-            "(pass audit= and admin_tools= or set container.mcp_audit and "
-            "container.admin_tools)"
+            "MCP servers need an audit port, a call log and an AdminToolBackend "
+            "(pass audit= and admin_tools= or set container.mcp_audit, "
+            "container.mcp_call_log and container.admin_tools)"
         )
     identity = container.identity
     return McpDeps(
@@ -104,4 +123,13 @@ def deps_from_container(
         admin_tools=admin_tools,
         limits=getattr(container, "limits", None)
         or StaticLimits(container.settings.limits),
+        call_log=call_log,
+        scope_overlay=getattr(container, "mcp_scope_overlay", None),
+        academic_tools=_backend(container, "mcp_academic_tools"),
+        content_tools=_backend(container, "mcp_content_tools"),
+        files_courses_tools=_backend(container, "mcp_files_courses_tools"),
     )
+
+
+def _backend(container: "Container", name: str) -> Any:  # noqa: ANN401 - a protocol
+    return getattr(container, name, None) or NotWired(name)

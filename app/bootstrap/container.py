@@ -19,7 +19,11 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
 if TYPE_CHECKING:
-    from app.interfaces.mcp.ports import ConnectorCoursesPort, McpAuditPort
+    from app.interfaces.mcp.ports import (
+        ConnectorCoursesPort,
+        McpAuditPort,
+        McpScopeOverlayPort,
+    )
     from app.modules.academic.wiring import AcademicModule
     from app.modules.admin.wiring import AdminServices
     from app.modules.ai.wiring import AiServices
@@ -37,6 +41,10 @@ if TYPE_CHECKING:
     from app.modules.notebooks.wiring import NotebooksServices
     from app.modules.notify.wiring import NotifyServices
     from app.modules.posts.wiring import PostsServices
+    from app.shared.contracts.mcp_academic import McpAcademicTools
+    from app.shared.contracts.mcp_calls import McpCallLog
+    from app.shared.contracts.mcp_content import McpContentTools
+    from app.shared.contracts.mcp_files_courses import McpFilesCoursesTools
 
 # A module the current process does not build stays None (tests set what they need).
 NOT_BUILT: Any = None
@@ -78,6 +86,11 @@ class Container:
     llm: LlmGateway = NOT_BUILT
     mcp_audit: "McpAuditPort" = NOT_BUILT
     mcp_connector_courses: "ConnectorCoursesPort" = NOT_BUILT
+    mcp_call_log: "McpCallLog" = NOT_BUILT
+    mcp_scope_overlay: "McpScopeOverlayPort | None" = None
+    mcp_academic_tools: "McpAcademicTools" = NOT_BUILT
+    mcp_content_tools: "McpContentTools" = NOT_BUILT
+    mcp_files_courses_tools: "McpFilesCoursesTools" = NOT_BUILT
     closers: list[Callable[[], Awaitable[None]]] = field(default_factory=list)
 
     async def close(self) -> None:

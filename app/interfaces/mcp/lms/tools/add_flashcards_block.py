@@ -3,6 +3,7 @@
 from typing import Annotated, Any
 from uuid import UUID
 
+from app.interfaces.mcp.call_log import LogSpec
 from app.interfaces.mcp.cards import CardList
 from app.interfaces.mcp.guard import current_actor
 from app.interfaces.mcp.lms.blocks import build_flashcards_block
@@ -18,7 +19,7 @@ SCOPE = MODULES_WRITE
 def register(kit: ToolKit) -> None:
     """Register `add_flashcards_block`."""
 
-    @kit.tool(SCOPE, read_only=False)
+    @kit.tool(SCOPE, read_only=False, log=LogSpec(keep=("step_id",)))
     async def add_flashcards_block(
         step_id: Annotated[UUID, Field(description="Step id from get_course.")],
         cards: CardList,

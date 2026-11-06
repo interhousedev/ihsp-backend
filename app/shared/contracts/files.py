@@ -153,6 +153,12 @@ class FilesApi(Protocol):
         """Search the owner's files by extracted text."""
         ...
 
+    async def search_text_in(
+        self, file_ids: Sequence[UUID], query: str, limit: int = 10
+    ) -> list[dict[str, Any]]:
+        """Search only these files; the caller has already decided they are allowed."""
+        ...
+
     async def store_bytes(
         self,
         *,

@@ -3,6 +3,7 @@
 from typing import Annotated, Any
 from uuid import UUID
 
+from app.interfaces.mcp.call_log import LogSpec
 from app.interfaces.mcp.errors import McpCourseNotAllowedError
 from app.interfaces.mcp.guard import current_actor
 from app.interfaces.mcp.lms.course_scope import allowed_courses
@@ -19,7 +20,7 @@ COURSE_ID = Annotated[UUID, Field(description="Course id from list_courses.")]
 def register(kit: ToolKit) -> None:
     """Register `create_course`."""
 
-    @kit.tool(SCOPE, read_only=False)
+    @kit.tool(SCOPE, read_only=False, log=LogSpec())
     async def create_course(
         title: Annotated[
             str, Field(min_length=1, max_length=200, description="Course title.")

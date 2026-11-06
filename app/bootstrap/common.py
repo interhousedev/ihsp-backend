@@ -25,7 +25,18 @@ from app.bootstrap.adapters.lazy_proxy import LazyProxy
 from app.bootstrap.adapters.library_academic import LibraryAcademicAdapter
 from app.bootstrap.adapters.library_lessons import LibraryLessonsAdapter
 from app.bootstrap.adapters.mail_suspension import MailSuspensionAdapter
-from app.bootstrap.adapters.mcp_ports import ConnectorCoursesAdapter, McpAuditAdapter
+from app.bootstrap.adapters.mcp_academic import build_academic_tools
+from app.bootstrap.adapters.mcp_content import build_content_tools
+from app.bootstrap.adapters.mcp_files import (
+    build_files_courses_tools,
+    connector_active_check,
+)
+from app.bootstrap.adapters.mcp_offers import build_scope_overlay
+from app.bootstrap.adapters.mcp_ports import (
+    ConnectorCoursesAdapter,
+    McpAuditAdapter,
+    McpCallLogAdapter,
+)
 from app.bootstrap.adapters.notebook_terms import NotebookTermsAdapter
 from app.bootstrap.adapters.school_knowledge import (
     KnowledgeGapAdapter,
@@ -528,6 +539,10 @@ class _Assembler:
             h5p_store=c.files.storage,
             groups=c.academic.schedule.queries,
         )
+        # Here, not with the MCP ports: every process serving media links needs it.
+        c.lms.learning.redeem_media_grant.bind_connector_check(
+            connector_active_check(c)
+        )
 
     def build_library(self) -> None:
         """Library: books, materials and the UniLibrary base; before notebooks."""
@@ -609,6 +624,13 @@ class _Assembler:
         c = self.container
         c.mcp_audit = McpAuditAdapter(c.sessionmaker)
         c.mcp_connector_courses = ConnectorCoursesAdapter(c.identity.auth.uow_factory)
+        c.mcp_call_log = McpCallLogAdapter(c.sessionmaker)
+        c.mcp_scope_overlay = build_scope_overlay(c)
+        c.mcp_academic_tools = build_academic_tools(c)
+        c.mcp_content_tools = build_content_tools(c)
+        # The bot is a full process without LMS and serves no MCP tools.
+        if self.plan.lms:
+            c.mcp_files_courses_tools = build_files_courses_tools(c)
 
 
 async def build_container(

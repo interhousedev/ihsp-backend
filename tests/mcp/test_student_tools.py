@@ -130,7 +130,8 @@ async def test_get_marks_and_results(world: World) -> None:
         marks = await call(session, "get_marks", subject_id=str(SUBJECT_ID))
         results = await call(session, "get_results", semester=3)
 
-    [mark] = data_of(marks)["marks"]
+    [subject] = data_of(marks)["subjects"]
+    [mark] = subject["marks"]
     assert mark["value"] == 5
     assert mark["type"] == "lesson"
     assert data_of(results)["gpa"] == 4.6
@@ -182,7 +183,7 @@ async def test_list_files_returns_own_files_without_their_text(world: World) -> 
     world.files.add(make_file(UUID(int=99)))
 
     async with world.session("student", token) as session:
-        result = await call(session, "list_files", limit=10)
+        result = await call(session, "list_files", limit=10, only_personal=True)
 
     [row] = data_of(result)["files"]
     assert row["file_id"] == str(mine.id)
@@ -275,7 +276,9 @@ async def test_search_files_searches_only_own_files(world: World) -> None:
     token, actor = world.connector_token("student", *ALL)
 
     async with world.session("student", token) as session:
-        result = await call(session, "search_files", query="limits", limit=5)
+        result = await call(
+            session, "search_files", query="limits", limit=5, only_personal=True
+        )
 
     assert data_of(result)["results"][0]["snippet"] == "limits"
     assert world.files.searches == [(actor.user_id, "limits", 5)]
@@ -343,7 +346,7 @@ async def test_create_flashcard_set_validates_the_cards(world: World) -> None:
 
 
 async def test_add_flashcards_to_own_set_and_refuse_foreign_sets(world: World) -> None:
-    """UF-MCP-03 3b: adding to someone else's set is refused and audited."""
+    """UF-MCP-03 3b: someone else's set is refused like a missing one."""
     token, actor = world.connector_token("student", *ALL)
     mine = await world.flashcards.create_set(actor.user_id, "Mine", [], source="manual")
     theirs = await world.flashcards.create_set(
@@ -363,11 +366,9 @@ async def test_add_flashcards_to_own_set_and_refuse_foreign_sets(world: World) -
     assert data_of(ok)["added"] == 1
     assert world.flashcards.added == [(actor.user_id, mine["id"], [("q", "a")])]
     assert refused.isError
-    assert "belongs to another user" in text_of(refused)
     assert missing.isError
-    [event] = world.audit.of_type("mcp.denied")
-    assert event.metadata is not None
-    assert event.metadata["reason"] == "mcp/not-owner"
+    assert text_of(refused) == text_of(missing)  # Rule 2: nothing confirms the id
+    assert len(world.flashcards.added) == 1
 
 
 async def test_update_flashcard_changes_text_and_needs_a_field(world: World) -> None:
@@ -383,3 +384,40 @@ async def test_update_flashcard_changes_text_and_needs_a_field(world: World) -> 
     assert world.flashcards.updated == [(actor.user_id, card_id, None, "new")]
     assert nothing.isError
     assert "give front, back or both" in text_of(nothing)
+
+
+async def test_list_files_with_flashcards_origin_lists_my_sets(world: World) -> None:
+    """MCP-8: sets are entries with links: mine and shared copies, no one else's."""
+    token, actor = world.connector_token("student", *ALL)
+    mine = await world.flashcards.create_set(
+        actor.user_id, "Mine", [("a", "b")], source="manual"
+    )
+    copy = await world.flashcards.create_set(
+        actor.user_id, "From a friend", [], source="copied"
+    )
+    await world.flashcards.create_set(UUID(int=99), "Theirs", [], source="manual")
+
+    async with world.session("student", token) as session:
+        result = await call(session, "list_files", origin="flashcards")
+        other = await call(session, "list_files", origin="personal")
+
+    rows = {row["id"]: row for row in data_of(result)["flashcard_sets"]}
+    assert set(rows) == {str(mine["id"]), str(copy["id"])}
+    assert rows[str(mine["id"])]["kind"] == "personal"
+    assert rows[str(copy["id"])]["kind"] == "shared"
+    assert rows[str(mine["id"])]["card_count"] == 1
+    assert "study" in rows[str(mine["id"])]["links"]
+    assert "flashcard_sets[].title" in data_of(result)["untrusted_fields"]
+    assert "flashcard_sets" not in data_of(other)
+
+
+async def test_list_files_hides_sets_without_the_flashcards_scope(world: World) -> None:
+    """MCP-8: `files:read` alone does not read flash card titles."""
+    token, actor = world.connector_token("student", "files:read")
+    await world.flashcards.create_set(actor.user_id, "Mine", [], source="manual")
+
+    async with world.session("student", token) as session:
+        result = await call(session, "list_files", origin="flashcards")
+
+    assert data_of(result)["flashcard_sets"] == []
+    assert data_of(result)["flashcard_sets_scope_limited"] is True

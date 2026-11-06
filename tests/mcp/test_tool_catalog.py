@@ -4,11 +4,23 @@ import re
 from typing import Any
 
 from app.interfaces.mcp.constants import ADMIN_READ_TOOLS, SCOPES_BY_SERVER, ServerName
+from app.shared.mcp_scopes import (
+    READ_ONLY_TOOLS_IN_WRITE_SCOPES,
+    SCOPE_CATALOG,
+    server_tools,
+    tool_scope,
+)
+from tests.mcp import pending_academic, pending_content, pending_files_courses
 from tests.mcp.conftest import World
 from tests.mcp.helpers import call, text_of
 
 import pytest
 from mcp.types import Tool
+
+# Tools in the registry whose package has not landed; each package shrinks its own.
+PENDING = (
+    pending_academic.PENDING | pending_content.PENDING | pending_files_courses.PENDING
+)
 
 COURSE = "00000000-0000-0000-0000-0000000000c1"
 STEP = "00000000-0000-0000-0000-0000000000a1"
@@ -114,7 +126,14 @@ async def test_server_offers_exactly_the_tools_of_mcp_8(
     async with world.session(server, token) as session:
         listed = await session.list_tools()
 
-    assert {tool.name for tool in listed.tools} == set(CATALOG[server])
+    assert {tool.name for tool in listed.tools} == server_tools(server) - PENDING
+
+
+@pytest.mark.parametrize("server", ["student", "lms", "admin"])
+def test_this_catalog_table_is_the_registry(server: ServerName) -> None:
+    """MCP-8: the argument table below agrees with the scope registry."""
+    for name, (scope, _) in CATALOG[server].items():
+        assert tool_scope(server, name) == scope, name
 
 
 @pytest.mark.parametrize("server", ["student", "lms", "admin"])
@@ -129,7 +148,10 @@ async def test_no_server_has_a_publish_tool_and_only_lms_deletes(
 
     names = [tool.name for tool in listed.tools]
     forbidden = LMS_FORBIDDEN_VERBS if server == "lms" else FORBIDDEN_VERBS
-    assert not [name for name in names if forbidden.search(name)]
+    # The one student delete: own cards only, under its own scope (`flashcards:delete`).
+    assert not [
+        name for name in names if forbidden.search(name) and name != "delete_flashcards"
+    ]
     assert ("create_course" in names) == (server == "lms")
 
 
@@ -165,17 +187,23 @@ async def test_lms_server_writes_drafts_only(world: World) -> None:
     assert destructive == {"delete_course", "delete_module", "delete_step"}
 
 
-async def test_students_server_flash_cards_can_be_created_and_edited_only(
+async def test_students_server_writes_only_under_write_scopes(
     world: World,
 ) -> None:
-    """MCP-6: the Students write tools are create, add and update."""
+    """MCP-6: the Students write tools are those the registry calls writes."""
     token, _ = world.connector_token("student", *SCOPES_BY_SERVER["student"])
 
     async with world.session("student", token) as session:
         listed = await session.list_tools()
 
-    writers = _writers(listed.tools)
-    assert writers == {"create_flashcard_set", "add_flashcards", "update_flashcard"}
+    expected = {
+        tool
+        for info in SCOPE_CATALOG["student"]
+        if info.write
+        for tool in info.tools
+        if tool not in READ_ONLY_TOOLS_IN_WRITE_SCOPES
+    }
+    assert _writers(listed.tools) == expected - PENDING
 
 
 async def test_administration_server_is_read_only(world: World) -> None:
@@ -219,3 +247,17 @@ async def test_tools_describe_their_arguments_for_ai_clients(world: World) -> No
     assert schema["date_from"]["description"]
     assert by_name["read_file"].description
     assert by_name["read_file"].inputSchema["required"] == ["file_id"]
+
+
+async def test_a_tool_that_rotates_a_grant_is_not_idempotent(world: World) -> None:
+    """MCP-B5: asking twice for a media link kills the first link."""
+    token, _ = world.connector_token("student", *SCOPES_BY_SERVER["student"])
+
+    async with world.session("student", token) as session:
+        listed = await session.list_tools()
+
+    by_name = {tool.name: tool for tool in listed.tools}
+    media = by_name["get_course_media_link"].annotations
+    assert media is not None and media.idempotentHint is False
+    plain = by_name["list_files"].annotations
+    assert plain is not None and plain.idempotentHint is True

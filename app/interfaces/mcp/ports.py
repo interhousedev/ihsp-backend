@@ -23,6 +23,14 @@ class ConnectorCoursesPort(Protocol):
         ...
 
 
+class McpScopeOverlayPort(Protocol):
+    """Scopes added to a connector after its OAuth token was issued (A7)."""
+
+    async def extra_scopes(self, connector_id: UUID) -> frozenset[str]:
+        """The extra scopes of a connector; the adapter caches them for 30 seconds."""
+        ...
+
+
 class McpFilesApi(FilesApi, Protocol):
     """FilesApi plus the listing of a user's own files (missing from the contract)."""
 

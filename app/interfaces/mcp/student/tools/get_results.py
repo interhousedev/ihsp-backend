@@ -17,7 +17,13 @@ def register(kit: ToolKit) -> None:
         """Show the student's semester results.
 
         Includes the GPA and, per subject, the lesson, midterm and final averages,
-        the semester mark and the EMIS rating.
+        the semester mark and the EMIS rating. Subjects without marks are left out.
         """
         actor = current_actor()
-        return await kit.deps.marks.results(actor.user_id, semester)
+        results = await kit.deps.marks.results(actor.user_id, semester)
+        return {
+            **results,
+            "subjects": [
+                subject for subject in results["subjects"] if subject["marks_count"]
+            ],
+        }

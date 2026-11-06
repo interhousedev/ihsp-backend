@@ -16,6 +16,7 @@ from app.shared.contracts.files import (
     TextPage,
 )
 from app.shared.contracts.links import ResourceRef
+from app.shared.contracts.mcp_calls import McpCallRecord
 from app.shared.ids import new_id
 from app.shared.notifications import AuditDraft
 
@@ -63,6 +64,34 @@ class RecordingAudit:
 
     def of_type(self, event_type: str) -> list[AuditDraft]:
         return [e for e in self.events if e.type == event_type]
+
+
+class RecordingCallLog:
+    """McpCallLog: keeps the rows; `fail` simulates a broken database."""
+
+    def __init__(self) -> None:
+        self.records: list[McpCallRecord] = []
+        self.fail = False
+
+    async def record(self, entry: McpCallRecord) -> None:
+        if self.fail:
+            raise RuntimeError("log database is down")
+        self.records.append(entry)
+
+
+class FakeScopeOverlay:
+    """McpScopeOverlayPort with one answer for every connector."""
+
+    def __init__(self) -> None:
+        self.extra: frozenset[str] = frozenset()
+        self.asked: list[UUID] = []
+        self.fail = False
+
+    async def extra_scopes(self, connector_id: UUID) -> frozenset[str]:
+        self.asked.append(connector_id)
+        if self.fail:
+            raise RuntimeError("overlay is down")
+        return self.extra
 
 
 class FakeConnectorCourses:
@@ -255,6 +284,9 @@ class FakeFiles:
     async def get(self, file_id: UUID) -> FileRef | None:
         return self.files.get(file_id)
 
+    async def get_many(self, file_ids: Sequence[UUID]) -> dict[UUID, FileRef]:
+        return {i: self.files[i] for i in file_ids if i in self.files}
+
     async def list_owned(self, owner_id: UUID, *, limit: int) -> list[FileRef]:
         owned = [f for f in self.files.values() if f.owner_id == owner_id]
         return owned[:limit]
@@ -313,6 +345,7 @@ class FakeFlashcards:
         self.created: list[dict[str, Any]] = []
         self.added: list[tuple[UUID, UUID, list[tuple[str, str]]]] = []
         self.updated: list[tuple[UUID, UUID, str | None, str | None]] = []
+        self.settings: list[tuple[UUID, UUID, bool | None, int | None, int | None]] = []
 
     async def list_sets(self, owner_id: UUID) -> list[dict[str, Any]]:
         return [s for set_id, s in self.sets.items() if self.owners[set_id] == owner_id]
@@ -357,7 +390,19 @@ class FakeFlashcards:
         self, owner_id: UUID, card_id: UUID, front: str | None, back: str | None
     ) -> dict[str, Any]:
         self.updated.append((owner_id, card_id, front, back))
-        return {"id": card_id, "front": front, "back": back}
+        return {"id": card_id, "set_id": UUID(int=0), "front": front, "back": back}
+
+    async def update_set_settings(
+        self,
+        owner_id: UUID,
+        set_id: UUID,
+        *,
+        shuffle: bool | None = None,
+        new_per_day: int | None = None,
+        reviews_per_day: int | None = None,
+    ) -> dict[str, Any]:
+        self.settings.append((owner_id, set_id, shuffle, new_per_day, reviews_per_day))
+        return {"id": set_id, "shuffle": shuffle}
 
     async def set_owner(self, set_id: UUID) -> UUID | None:
         return self.owners.get(set_id)

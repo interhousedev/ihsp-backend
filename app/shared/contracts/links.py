@@ -9,6 +9,8 @@ from uuid import UUID
 from app.shared.actor import Actor
 from app.shared.contracts.files import FileRef
 
+MaterialKind = Literal["homework", "classwork", "video", "other"]
+
 
 @dataclass(frozen=True, slots=True)
 class ResourceRef:
@@ -32,6 +34,8 @@ class ResourceRef:
     created_at: datetime | None = None
     # The web address a URL resource leads to (its short link opens a link page).
     target_url: str | None = None
+    # What EMIS said this material is; None for people's uploads and older rows.
+    material_kind: MaterialKind | None = None
 
 
 # Lesson resources that an outside system (EMIS) brought carry this author, who is no
@@ -47,6 +51,7 @@ class ImportedUrl:
     lesson_id: UUID
     url: str
     title: str
+    kind: MaterialKind | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,6 +62,7 @@ class ImportedFile:
     source_url: str  # the outside address: the re-sync key
     file_id: UUID
     title: str | None = None  # the resource's own name (the file may be shared)
+    kind: MaterialKind | None = None
 
 
 class LinksApi(Protocol):

@@ -3,10 +3,12 @@
 from typing import Annotated, Any
 from uuid import UUID
 
+from app.interfaces.mcp.call_log import LogSpec
 from app.interfaces.mcp.cards import CardText
 from app.interfaces.mcp.errors import McpInvalidInputError
 from app.interfaces.mcp.guard import current_actor
 from app.interfaces.mcp.toolkit import ToolKit
+from app.interfaces.mcp.untrusted import mark_untrusted
 
 from pydantic import Field
 
@@ -16,7 +18,7 @@ SCOPE = "flashcards:write"
 def register(kit: ToolKit) -> None:
     """Register `update_flashcard`."""
 
-    @kit.tool(SCOPE, read_only=False)
+    @kit.tool(SCOPE, read_only=False, log=LogSpec(keep=("card_id",)))
     async def update_flashcard(
         card_id: Annotated[UUID, Field(description="Card id from get_flashcard_set.")],
         front: Annotated[
@@ -31,6 +33,10 @@ def register(kit: ToolKit) -> None:
         actor = current_actor()
         if front is None and back is None:
             raise McpInvalidInputError(params={"reason": "give front, back or both"})
-        return await kit.deps.flashcards.update_card(
+        card = await kit.deps.flashcards.update_card(
             actor.user_id, card_id, front, back
         )
+        return {
+            **mark_untrusted(card, "front", "back"),
+            "links": kit.deps.web_links.flashcard_set(UUID(str(card["set_id"]))),
+        }

@@ -152,3 +152,50 @@ def test_trust_grant_carries_only_the_public_key(bootstrap: ModuleType) -> None:
     assert grant["jwk"]["alg"] == "RS256"
     assert "d" not in grant["jwk"]
     assert grant["allow_any_subject"] is True
+
+
+VERTEX = "https://vertexaisearch.cloud.google.com/oauth-redirect"
+OWNED = {"service": "gemini", "owner_user_id": "u"}
+
+
+def test_existing_pre_created_gemini_client_gets_the_new_redirects(
+    bootstrap: ModuleType,
+) -> None:
+    """MCP-5: clients created before the CLI redirects are updated at deploy."""
+    client = {"metadata": OWNED, "redirect_uris": [VERTEX]}
+
+    assert bootstrap.synced_redirects(client) == [
+        VERTEX,
+        "http://127.0.0.1/oauth/callback",
+        "http://localhost:7777/oauth/callback",
+    ]
+
+
+@pytest.mark.parametrize(
+    "client",
+    [
+        # Already right, a second run changes nothing.
+        {
+            "metadata": OWNED,
+            "redirect_uris": [
+                VERTEX,
+                "http://127.0.0.1/oauth/callback",
+                "http://localhost:7777/oauth/callback",
+            ],
+        },
+        # A user's own client for their generated Google URI is theirs to keep.
+        {
+            "metadata": OWNED,
+            "redirect_uris": ["https://oauth-redirect.googleusercontent.com/r/a"],
+        },
+        # A self-registered client has no owner: it asked for what it uses.
+        {"metadata": {"service": "gemini"}, "redirect_uris": [VERTEX]},
+        {"metadata": {"first_party": True}, "redirect_uris": [VERTEX]},
+        {"metadata": None, "redirect_uris": None},
+    ],
+)
+def test_other_clients_are_left_alone(
+    bootstrap: ModuleType, client: dict[str, object]
+) -> None:
+    """MCP-5: the sync widens only the clients the wizard pre-created."""
+    assert bootstrap.synced_redirects(client) is None

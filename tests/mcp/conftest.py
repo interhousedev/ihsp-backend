@@ -23,6 +23,9 @@ from app.shared.contracts.auth import AccessTokenVerifier, ConnectorTokenVerifie
 from app.shared.contracts.flashcards import FlashcardsApi
 from app.shared.contracts.links import LinksApi
 from app.shared.contracts.lms import LmsDraftCommands, LmsQueries
+from app.shared.contracts.mcp_academic import McpAcademicTools
+from app.shared.contracts.mcp_content import McpContentTools
+from app.shared.contracts.mcp_files_courses import McpFilesCoursesTools
 from app.shared.i18n.core import I18nCore
 from app.shared.ids import new_id
 from app.shared.limits import LimitsProvider
@@ -41,8 +44,13 @@ from tests.mcp.fakes import (
     FakeLmsQueries,
     FakeMarks,
     FakeSchedule,
+    FakeScopeOverlay,
     RecordingAudit,
+    RecordingCallLog,
 )
+from tests.mcp.fakes_academic import FakeAcademicTools
+from tests.mcp.fakes_content import FakeContentTools
+from tests.mcp.fakes_files_courses import FakeFilesCoursesTools
 
 import httpx
 import pytest
@@ -107,6 +115,13 @@ class World:
     lms_commands: FakeLmsCommands = field(default_factory=FakeLmsCommands)
     admin_tools: FakeAdminTools = field(default_factory=FakeAdminTools)
     revoked_ai: dict[UUID, AiAccess] = field(default_factory=dict)
+    call_log: RecordingCallLog = field(default_factory=RecordingCallLog)
+    overlay: FakeScopeOverlay = field(default_factory=FakeScopeOverlay)
+    academic_tools: FakeAcademicTools = field(default_factory=FakeAcademicTools)
+    content_tools: FakeContentTools = field(default_factory=FakeContentTools)
+    files_courses_tools: FakeFilesCoursesTools = field(
+        default_factory=FakeFilesCoursesTools
+    )
 
     def deps(self, *, with_course_port: bool = False) -> McpDeps:
         """Collect the fakes into the dependencies of the servers."""
@@ -129,6 +144,11 @@ class World:
             lms_commands=cast(LmsDraftCommands, self.lms_commands),
             admin_tools=cast(AdminToolBackend, self.admin_tools),
             limits=cast(LimitsProvider, RevokedAccess(self.revoked_ai)),
+            call_log=self.call_log,
+            scope_overlay=self.overlay,
+            academic_tools=cast(McpAcademicTools, self.academic_tools),
+            content_tools=cast(McpContentTools, self.content_tools),
+            files_courses_tools=cast(McpFilesCoursesTools, self.files_courses_tools),
         )
 
     def connector_token(

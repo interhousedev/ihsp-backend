@@ -3,6 +3,7 @@
 from typing import Annotated, Any
 from uuid import UUID
 
+from app.interfaces.mcp.call_log import LogSpec
 from app.interfaces.mcp.guard import current_actor
 from app.interfaces.mcp.lms.course_scope import ensure_course
 from app.interfaces.mcp.toolkit import ToolKit
@@ -16,7 +17,7 @@ SCOPE = MODULES_WRITE
 def register(kit: ToolKit) -> None:
     """Register `create_step`."""
 
-    @kit.tool(SCOPE, read_only=False)
+    @kit.tool(SCOPE, read_only=False, log=LogSpec(keep=("course_id",)))
     async def create_step(
         course_id: Annotated[UUID, Field(description="Course id from list_courses.")],
         section_id: Annotated[

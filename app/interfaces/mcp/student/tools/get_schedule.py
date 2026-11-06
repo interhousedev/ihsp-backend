@@ -20,7 +20,7 @@ def register(kit: ToolKit) -> None:
     ) -> dict[str, Any]:
         """List the student's own lessons in a date range (default: today + 6 days).
 
-        Each lesson has date, period, times (UTC), subject, room, status
+        Each lesson has date, period, times (UTC), subject, teacher, room, status
         (scheduled or cancelled), topic and homework.
         """
         actor = current_actor()
@@ -28,8 +28,11 @@ def register(kit: ToolKit) -> None:
         lessons = await kit.deps.schedule.projected_lessons_for_student(
             actor.user_id, start, end
         )
+        names = await kit.deps.academic_tools.teacher_names(
+            list({lesson.teacher_id for lesson in lessons if lesson.teacher_id})
+        )
         return {
             "date_from": start,
             "date_to": end,
-            "lessons": [lesson_view(lesson) for lesson in lessons],
+            "lessons": [lesson_view(lesson, names) for lesson in lessons],
         }

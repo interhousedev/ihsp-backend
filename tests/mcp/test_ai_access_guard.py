@@ -25,7 +25,9 @@ def _actor(world: World, user_id: UUID) -> Actor:
     )
 
 
-async def _call(world: World, monkeypatch: pytest.MonkeyPatch, actor: Actor) -> list:
+async def _call(
+    world: World, monkeypatch: pytest.MonkeyPatch, actor: Actor
+) -> list[str]:
     """Run one guarded tool as `actor`; return what the tool body recorded."""
     monkeypatch.setattr(guard_module, "_token_actor", lambda: actor)
     ran: list[str] = []
@@ -53,7 +55,7 @@ async def test_a_user_with_chat_revoked_is_refused_and_the_tool_does_not_run(
 
     assert ran == []
     denied = [e for e in world.audit.events if e.type == "mcp.denied"]
-    assert denied and denied[-1].metadata["reason"] == "ai/access-revoked"
+    assert denied and (denied[-1].metadata or {})["reason"] == "ai/access-revoked"
 
 
 async def test_a_user_with_notebooks_revoked_is_refused_too(

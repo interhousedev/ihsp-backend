@@ -20,6 +20,7 @@ from app.interfaces.mcp.student.tools import (
     search_files,
     update_flashcard,
 )
+from app.interfaces.mcp.student.tools.groups import academic, content, files_courses
 from app.shared.brand import current_brand
 
 from mcp.server.fastmcp import FastMCP
@@ -41,6 +42,9 @@ TOOL_MODULES = (
     create_flashcard_set,
     add_flashcards,
     update_flashcard,
+    *academic.TOOL_MODULES,
+    *content.TOOL_MODULES,
+    *files_courses.TOOL_MODULES,
 )
 
 

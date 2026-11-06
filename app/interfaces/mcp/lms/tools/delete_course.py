@@ -3,6 +3,7 @@
 from typing import Annotated, Any
 from uuid import UUID
 
+from app.interfaces.mcp.call_log import LogSpec
 from app.interfaces.mcp.guard import current_actor
 from app.interfaces.mcp.lms.course_scope import ensure_course
 from app.interfaces.mcp.toolkit import ToolKit
@@ -18,7 +19,9 @@ COURSE_ID = Annotated[UUID, Field(description="Course id from list_courses.")]
 def register(kit: ToolKit) -> None:
     """Register `delete_course`."""
 
-    @kit.tool(SCOPE, read_only=False, destructive=True)
+    @kit.tool(
+        SCOPE, read_only=False, destructive=True, log=LogSpec(keep=("course_id",))
+    )
     async def delete_course(course_id: COURSE_ID) -> dict[str, Any]:
         """Delete a course: it is archived and closed to students.
 

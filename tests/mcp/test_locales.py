@@ -7,6 +7,7 @@ from pathlib import Path
 
 from app.interfaces.mcp import errors
 from app.shared.base_error import BaseError
+from app.shared.mcp_scopes import RELEASES
 from app.shared.paths import LOCALES_DIR
 
 import pytest
@@ -16,8 +17,12 @@ PLACEHOLDER = re.compile(r"{(\w+)}")
 
 
 def _load(language: str) -> dict[str, str]:
-    path = Path(LOCALES_DIR) / language / "mcp.json"
-    data: dict[str, str] = json.loads(path.read_text(encoding="utf-8"))
+    """All MCP keys of a language: mcp.json and each package's mcp_<package>.json."""
+    data: dict[str, str] = {}
+    for path in sorted((Path(LOCALES_DIR) / language).glob("mcp*.json")):
+        loaded: dict[str, str] = json.loads(path.read_text(encoding="utf-8"))
+        assert not set(loaded) & set(data), path
+        data.update(loaded)
     return data
 
 
@@ -48,12 +53,16 @@ def test_every_key_has_the_mcp_prefix_and_text() -> None:
 
 def test_error_classes_and_prompts_are_translated() -> None:
     """Keys used by errors.py, the guard and the server instructions exist."""
-    used = _error_keys() | {
-        "mcp-internal-error",
-        "mcp-instructions-student",
-        "mcp-instructions-lms",
-        "mcp-instructions-admin",
-    }
+    used = (
+        _error_keys()
+        | {
+            "mcp-internal-error",
+            "mcp-instructions-student",
+            "mcp-instructions-lms",
+            "mcp-instructions-admin",
+        }
+        | {release.summary_key for release in RELEASES}
+    )
 
     for language in LANGUAGES:
         assert used <= set(_load(language)), language

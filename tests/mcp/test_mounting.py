@@ -132,6 +132,7 @@ async def test_build_mcp_apps_returns_the_three_servers_with_lifespans(
             )
         ),
         mcp_audit=world.audit,
+        mcp_call_log=world.call_log,
         admin_tools=world.admin_tools,
     )
 

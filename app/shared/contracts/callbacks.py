@@ -7,6 +7,13 @@ Every prefix has at most 4 characters; UUIDs are packed with uuid_to_b64
 from aiogram.filters.callback_data import CallbackData
 
 
+class McpScopeCb(CallbackData, prefix="ms"):
+    """Decide an offer of MCP scopes: `t` is its 128-bit token, `d` is g or n."""
+
+    t: str
+    d: str
+
+
 class MenuCb(CallbackData, prefix="m"):
     """Open a bot screen: today, marks, homework, mail, settings or lesson."""
 

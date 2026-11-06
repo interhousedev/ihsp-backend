@@ -3,7 +3,11 @@
 from uuid import UUID
 
 from app.modules.identity.infrastructure.audit_writer import write_audit_events
+from app.modules.identity.infrastructure.repositories.mcp_call_log_repository import (
+    SqlMcpCallLogRepository,
+)
 from app.modules.identity.ports.unit_of_work import UowFactory
+from app.shared.contracts.mcp_calls import McpCallRecord
 from app.shared.notifications import AuditDraft
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -20,6 +24,19 @@ class McpAuditAdapter:
         """Store one audit event."""
         async with self._sessionmaker() as session, session.begin():
             await write_audit_events(session, [event])
+
+
+class McpCallLogAdapter:
+    """McpCallLog: one `id.mcp_call_log` row per tool call, in its own transaction."""
+
+    def __init__(self, sessionmaker: async_sessionmaker[AsyncSession]) -> None:
+        """Keep the sessionmaker (a trace never joins the tool's work)."""
+        self._sessionmaker = sessionmaker
+
+    async def record(self, entry: McpCallRecord) -> None:
+        """Store one trace."""
+        async with self._sessionmaker() as session, session.begin():
+            await SqlMcpCallLogRepository(session).add(entry)
 
 
 class ConnectorCoursesAdapter:

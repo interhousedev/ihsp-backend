@@ -1,7 +1,8 @@
 """Names, scopes, audiences and role rules of the three MCP servers (MCP-1, MCP-8)."""
 
 from collections.abc import Mapping
-from typing import Final, Literal
+from dataclasses import dataclass
+from typing import Final, Literal, cast
 
 from app.shared.actor import Role
 from app.shared.contracts.auth import (
@@ -9,12 +10,7 @@ from app.shared.contracts.auth import (
     AUDIENCE_MCP_LMS,
     AUDIENCE_MCP_STUDENT,
 )
-from app.shared.lms_scopes import (
-    COURSES_DELETE,
-    COURSES_READ,
-    COURSES_WRITE,
-    MODULES_WRITE,
-)
+from app.shared.mcp_scopes import SCOPE_NAMES_BY_SERVER
 
 ServerName = Literal["student", "lms", "admin"]
 
@@ -28,27 +24,27 @@ CONNECTOR_TOKEN_PREFIX: Final = "ihsp_mcp_"
 
 CALLS_PER_MINUTE: Final = 60
 
-SCOPES_BY_SERVER: Final[Mapping[ServerName, tuple[str, ...]]] = {
-    "student": (
-        "schedule:read",
-        "homework:read",
-        "marks:read",
-        "attendance:read",
-        "materials:read",
-        "files:read",
-        "flashcards:read",
-        "flashcards:write",
-    ),
-    "lms": (COURSES_READ, COURSES_WRITE, COURSES_DELETE, MODULES_WRITE),
-    "admin": (
-        "people:read",
-        "groups:read",
-        "timetable:read",
-        "attendance:read",
-        "broadcasts:read",
-        "audit:read",
-    ),
-}
+# Second budget on top of the per-connector one: N connectors are not N budgets.
+USER_CALLS_PER_MINUTE: Final = 120
+
+
+@dataclass(frozen=True, slots=True)
+class ToolLimit:
+    """A cost class: `limit` calls per user in `window_seconds`, shared by its tools."""
+
+    name: str
+    limit: int
+    window_seconds: int
+
+
+WRITE_LIMIT: Final = ToolLimit("write", 30, 60)
+SEARCH_LIMIT: Final = ToolLimit("search", 20, 60)  # text search and embeddings
+EMIS_FETCH_LIMIT: Final = ToolLimit("emis", 30, 3600)
+MEDIA_LINK_LIMIT: Final = ToolLimit("media", 60, 3600)
+
+SCOPES_BY_SERVER: Final = cast(
+    Mapping[ServerName, tuple[str, ...]], SCOPE_NAMES_BY_SERVER
+)
 
 AUDIENCE_BY_SERVER: Final[Mapping[ServerName, str]] = {
     "student": AUDIENCE_MCP_STUDENT,

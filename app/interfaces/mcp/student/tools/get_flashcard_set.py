@@ -5,6 +5,7 @@ from uuid import UUID
 
 from app.interfaces.mcp.errors import McpNotFoundError
 from app.interfaces.mcp.guard import current_actor
+from app.interfaces.mcp.student.content_results import flashcard_set_result
 from app.interfaces.mcp.toolkit import ToolKit
 
 from pydantic import Field
@@ -24,4 +25,4 @@ def register(kit: ToolKit) -> None:
         found = await kit.deps.flashcards.get_set(set_id, actor.user_id)
         if found is None:
             raise McpNotFoundError()
-        return found
+        return flashcard_set_result(kit.deps, found)

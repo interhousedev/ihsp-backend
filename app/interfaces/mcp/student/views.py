@@ -1,13 +1,19 @@
 """JSON shapes of academic data returned by the Students server."""
 
+from collections.abc import Mapping
 from typing import Any
+from uuid import UUID
 
 from app.shared.contracts.academic import LessonRef
 
 
-def lesson_view(lesson: LessonRef) -> dict[str, Any]:
+def lesson_view(
+    lesson: LessonRef, teacher_names: Mapping[UUID, str] | None = None
+) -> dict[str, Any]:
     """Return the fields of a lesson that matter to a student."""
+    named = teacher_names or {}
     return {
+        "teacher_name": named.get(lesson.teacher_id) if lesson.teacher_id else None,
         "id": lesson.id,
         "date": lesson.date,
         "period": lesson.period,

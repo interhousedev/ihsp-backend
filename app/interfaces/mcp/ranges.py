@@ -23,11 +23,13 @@ def resolve_range(
     return start, end
 
 
-def check_range(start: date | None, end: date | None) -> None:
-    """Refuse a reversed range or one longer than MAX_RANGE_DAYS."""
+def check_range(
+    start: date | None, end: date | None, *, max_days: int = MAX_RANGE_DAYS
+) -> None:
+    """Refuse a reversed range or one longer than `max_days`."""
     if start is None or end is None:
         return
     if end < start:
         raise McpInvalidInputError(params={"reason": "date_to is before date_from"})
-    if (end - start).days > MAX_RANGE_DAYS:
-        raise McpRangeTooLongError(params={"max_days": MAX_RANGE_DAYS})
+    if (end - start).days > max_days:
+        raise McpRangeTooLongError(params={"max_days": max_days})
