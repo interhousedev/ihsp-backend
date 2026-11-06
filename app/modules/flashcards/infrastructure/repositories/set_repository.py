@@ -25,6 +25,7 @@ def _to_entity(row: SetRow) -> FlashcardSet:
         new_per_day=int(row.new_per_day),
         reviews_per_day=int(row.reviews_per_day),
         card_count=int(row.card_count),
+        shuffle=bool(row.shuffle),
     )
 
 
@@ -38,6 +39,7 @@ def _apply(row: SetRow, entity: FlashcardSet) -> None:
     row.new_per_day = entity.new_per_day
     row.reviews_per_day = entity.reviews_per_day
     row.card_count = entity.card_count
+    row.shuffle = entity.shuffle
 
 
 class SqlFlashcardSetRepository:

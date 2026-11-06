@@ -55,3 +55,14 @@ class Flashcard(IdMixin, TimestampMixin, Base):
     reps: Mapped[int] = mapped_column(Integer, server_default=text("0"))
     lapses: Mapped[int] = mapped_column(Integer, server_default=text("0"))
     last_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    hardness: Mapped[str] = mapped_column(
+        Enum(
+            "easy",
+            "medium",
+            "hard",
+            name="hardness",
+            native_enum=False,
+            create_constraint=True,
+        ),
+        server_default=text("'medium'"),
+    )

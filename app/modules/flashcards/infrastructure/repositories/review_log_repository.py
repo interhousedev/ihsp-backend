@@ -3,11 +3,12 @@
 from datetime import date, datetime
 from uuid import UUID
 
-from app.modules.flashcards.domain.review_log import ReviewLogEntry
+from app.modules.flashcards.domain.review_log import CardAttempts, ReviewLogEntry
 from app.modules.flashcards.infrastructure.orm.flashcard_review import (
     FlashcardReview as ReviewRow,
 )
 from app.shared.clock import TASHKENT
+from app.shared.srs import Rating
 
 from sqlalchemy import ColumnElement, Date, cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,6 +41,7 @@ class SqlReviewLogRepository:
                 interval_after_days=entry.interval_after_days,
                 reviewed_at=entry.reviewed_at,
                 duration_ms=entry.duration_ms,
+                practice=entry.practice,
             )
         )
         await self.session.flush()
@@ -53,6 +55,31 @@ class SqlReviewLogRepository:
         )
         stmt = select(day, func.count()).where(*_of_user(user_id, set_id)).group_by(day)
         return {row[0]: row[1] for row in (await self.session.execute(stmt)).all()}
+
+    async def card_attempts(
+        self, user_id: UUID, *, set_id: UUID
+    ) -> dict[UUID, CardAttempts]:
+        """Return the answers per card of one set; cards never answered are absent."""
+        incorrect = ReviewRow.rating == Rating.AGAIN.value
+        stmt = (
+            select(
+                ReviewRow.card_id,
+                func.count(),
+                func.count().filter(incorrect),
+                func.max(ReviewRow.reviewed_at),
+            )
+            .where(*_of_user(user_id, set_id), ReviewRow.card_id.is_not(None))
+            .group_by(ReviewRow.card_id)
+        )
+        return {
+            card_id: CardAttempts(
+                attempts=total,
+                correct=total - wrong,
+                incorrect=wrong,
+                last_studied_at=last,
+            )
+            for card_id, total, wrong, last in (await self.session.execute(stmt)).all()
+        }
 
     async def duration_ms_between(
         self,

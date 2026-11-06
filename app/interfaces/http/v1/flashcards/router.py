@@ -1,6 +1,7 @@
 """Routes of flash cards (`/v1/me/flashcard-sets*`, `/v1/me/flashcards/*`)."""
 
 from app.interfaces.http.v1.flashcards.handlers import (
+    card_routes,
     copy_from_share,
     create_set,
     delete_set,
@@ -44,4 +45,25 @@ router.add_api_route(
 )
 router.add_api_route(
     "/flashcards/{card_id}/review", review_card.review_card, methods=["POST"]
+)
+router.add_api_route("/flashcard-sets/merge", card_routes.merge_sets, methods=["POST"])
+router.add_api_route(
+    "/flashcard-sets/{set_id}/study/restart",
+    card_routes.restart_study,
+    methods=["POST"],
+)
+router.add_api_route(
+    "/flashcard-sets/{set_id}/card-stats", card_routes.get_card_stats, methods=["GET"]
+)
+router.add_api_route(
+    "/flashcard-sets/{set_id}/cards", card_routes.add_cards, methods=["POST"]
+)
+router.add_api_route(
+    "/flashcards/{card_id}", card_routes.update_card, methods=["PATCH"]
+)
+router.add_api_route(
+    "/flashcards/{card_id}",
+    card_routes.delete_card,
+    methods=["DELETE"],
+    status_code=status.HTTP_204_NO_CONTENT,
 )

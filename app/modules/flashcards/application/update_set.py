@@ -41,6 +41,7 @@ class UpdateSet:
         description: str | None | Unset = UNSET,
         new_per_day: int | None = None,
         reviews_per_day: int | None = None,
+        shuffle: bool | None = None,
     ) -> SetDetailView:
         """Validate and save; limits are 1-200 new and 1-2000 reviews per day."""
         async with self.uow_factory() as uow:
@@ -55,6 +56,8 @@ class UpdateSet:
                 flashcard_set.new_per_day = check_new_per_day(new_per_day)
             if reviews_per_day is not None:
                 flashcard_set.reviews_per_day = check_reviews_per_day(reviews_per_day)
+            if shuffle is not None:
+                flashcard_set.shuffle = shuffle
             await uow.sets.save(flashcard_set)
             await uow.commit()
             cards = await uow.cards.list_for_set(set_id)

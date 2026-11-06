@@ -5,6 +5,7 @@ from uuid import UUID
 from app.shared.db.base import Base, IdMixin, TimestampMixin
 
 from sqlalchemy import (
+    Boolean,
     Enum,
     ForeignKey,
     Index,
@@ -54,3 +55,4 @@ class FlashcardSet(IdMixin, TimestampMixin, Base):
         SmallInteger, server_default=text("200")
     )
     card_count: Mapped[int] = mapped_column(Integer, server_default=text("0"))
+    shuffle: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))

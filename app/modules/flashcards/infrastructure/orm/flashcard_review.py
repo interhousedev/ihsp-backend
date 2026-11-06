@@ -7,12 +7,14 @@ from app.shared.db.base import Base, IdMixin, TimestampMixin
 
 from sqlalchemy import (
     REAL,
+    Boolean,
     DateTime,
     Enum,
     ForeignKey,
     Index,
     Integer,
     Uuid,
+    text,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -65,3 +67,5 @@ class FlashcardReview(IdMixin, TimestampMixin, Base):
     interval_after_days: Mapped[float] = mapped_column(REAL)
     reviewed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     duration_ms: Mapped[int | None] = mapped_column(Integer)
+    # True for an answer of a restart round: it changed no schedule.
+    practice: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))

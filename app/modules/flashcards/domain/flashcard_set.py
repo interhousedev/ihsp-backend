@@ -35,6 +35,7 @@ class FlashcardSet:
     new_per_day: int = DEFAULT_NEW_PER_DAY
     reviews_per_day: int = DEFAULT_REVIEWS_PER_DAY
     card_count: int = 0
+    shuffle: bool = False
 
     def owned_by(self, user_id: UUID) -> bool:
         """Return True if the user owns the set."""

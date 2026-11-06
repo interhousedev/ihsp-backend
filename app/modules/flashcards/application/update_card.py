@@ -5,6 +5,7 @@ from uuid import UUID
 from app.modules.flashcards.application.set_views import card_view
 from app.modules.flashcards.application.views import CardView
 from app.modules.flashcards.domain.errors import CardNotFoundError
+from app.modules.flashcards.domain.flashcard import Hardness
 from app.modules.flashcards.domain.validation import check_card_text
 from app.modules.flashcards.ports.unit_of_work import UowFactory
 
@@ -17,9 +18,15 @@ class UpdateCard:
         self.uow_factory = uow_factory
 
     async def execute(
-        self, *, owner_id: UUID, card_id: UUID, front: str | None, back: str | None
+        self,
+        *,
+        owner_id: UUID,
+        card_id: UUID,
+        front: str | None = None,
+        back: str | None = None,
+        hardness: Hardness | None = None,
     ) -> CardView:
-        """Save the new text; a card of someone else's set is "not found"."""
+        """Save what was sent; a card of someone else's set is "not found"."""
         async with self.uow_factory() as uow:
             card = await uow.cards.get_for_update(card_id)
             flashcard_set = await uow.sets.get(card.set_id) if card else None
@@ -31,6 +38,8 @@ class UpdateCard:
             new_back = card.back if back is None else back
             check_card_text(new_front, new_back)
             card.front, card.back = new_front, new_back
+            if hardness is not None:
+                card.set_hardness(hardness)
             await uow.cards.save(card)
             await uow.commit()
         return card_view(card)

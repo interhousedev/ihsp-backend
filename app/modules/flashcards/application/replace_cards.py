@@ -24,10 +24,12 @@ def _merge(
     for position, draft in enumerate(drafts):
         card = existing.get(draft.id) if draft.id else None
         if card is None:
-            card = fresh_card(set_id, position, draft.front, draft.back)
+            card = fresh_card(set_id, position, draft.front, draft.back, draft.hardness)
             added.append(card)
         else:
             card.position, card.front, card.back = position, draft.front, draft.back
+            if draft.hardness is not None:
+                card.set_hardness(draft.hardness)
         ordered.append(card)
     return ordered, added
 

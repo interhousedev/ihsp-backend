@@ -5,7 +5,7 @@ from uuid import UUID
 
 from app.modules.flashcards.application.set_views import SetViews
 from app.modules.flashcards.application.views import SetDetailView
-from app.modules.flashcards.domain.flashcard import fresh_card
+from app.modules.flashcards.domain.flashcard import CardInput, as_draft, fresh_card
 from app.modules.flashcards.domain.flashcard_set import FlashcardSet, SetSource
 from app.modules.flashcards.domain.validation import (
     check_card_count,
@@ -33,7 +33,7 @@ class CreateSet:
         *,
         owner_id: UUID,
         title: str,
-        cards: Sequence[tuple[str, str]],
+        cards: Sequence[CardInput],
         source: SetSource,
         source_chat_id: UUID | None = None,
         description: str | None = None,
@@ -51,8 +51,8 @@ class CreateSet:
             card_count=len(cards),
         )
         built = [
-            fresh_card(flashcard_set.id, position, front, back)
-            for position, (front, back) in enumerate(cards)
+            fresh_card(flashcard_set.id, position, d.front, d.back, d.hardness)
+            for position, d in enumerate(as_draft(card) for card in cards)
         ]
         async with self.uow_factory() as uow:
             await uow.sets.add(flashcard_set)

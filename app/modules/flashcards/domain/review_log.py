@@ -23,6 +23,17 @@ class ReviewLogEntry:
     interval_after_days: float
     reviewed_at: datetime
     duration_ms: int | None = None
+    practice: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class CardAttempts:
+    """All answers on one card: Again is incorrect, any other button correct."""
+
+    attempts: int = 0
+    correct: int = 0
+    incorrect: int = 0
+    last_studied_at: datetime | None = None
 
 
 def clamp_duration(duration_ms: int | None) -> int | None:

@@ -60,7 +60,7 @@ def test_a_translation_uses_the_same_placeholders_as_english(key: str) -> None:
 
 def test_the_module_defines_errors() -> None:
     """Guards the discovery used by the tests below."""
-    assert len(_module_errors()) == 5
+    assert len(_module_errors()) == 7
 
 
 @pytest.mark.parametrize("language", LANGUAGES)
@@ -98,4 +98,6 @@ def test_error_codes_are_stable_and_prefixed_with_the_module_name() -> None:
         "flashcards/invalid-cards",
         "flashcards/invalid-set",
         "flashcards/share-not-found",
+        "flashcards/study-not-finished",
+        "flashcards/invalid-merge",
     }

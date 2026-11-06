@@ -23,6 +23,7 @@ from app.modules.flashcards.domain.study import (
     tally,
 )
 from app.modules.flashcards.ports.daily_counters import DailyCounters
+from app.modules.flashcards.ports.practice_rounds import PracticeRounds
 from app.shared.clock import Clock
 from app.shared.srs import Rating, preview
 
@@ -37,16 +38,20 @@ def card_view(card: Flashcard) -> CardView:
         back=card.back,
         state=card.state.value,
         due_at=card.due_at,
+        hardness=card.hardness.value,
     )
 
 
 class SetViews:
     """Turns entities into views; reads today's counters for `new_today`."""
 
-    def __init__(self, *, clock: Clock, counters: DailyCounters) -> None:
+    def __init__(
+        self, *, clock: Clock, counters: DailyCounters, practice: PracticeRounds
+    ) -> None:
         """Store the collaborators."""
         self.clock = clock
         self.counters = counters
+        self.practice = practice
 
     async def usage(self, flashcard_set: FlashcardSet) -> DailyUsage:
         """Return what the owner already studied in the set today."""
@@ -95,6 +100,7 @@ class SetViews:
             new_per_day=flashcard_set.new_per_day,
             reviews_per_day=flashcard_set.reviews_per_day,
             cards=tuple(card_view(card) for card in cards),
+            shuffle=flashcard_set.shuffle,
         )
 
     async def study(
@@ -108,12 +114,31 @@ class SetViews:
             reviews_per_day=flashcard_set.reviews_per_day,
             usage=await self.usage(flashcard_set),
             now=now,
+            shuffle=flashcard_set.shuffle,
         )
         counts = CountsView(
             learning=plan.counts.learning,
             review=plan.counts.review,
             new=plan.counts.new,
         )
+        by_id = {card.id: card for card in cards}
+        round_ids = await self.practice.remaining(
+            flashcard_set.owner_id, flashcard_set.id, study_day(now)
+        )
+        queue = [by_id[card_id] for card_id in round_ids if card_id in by_id]
+        if queue:
+            first = queue[0]
+            return StudyNextView(
+                set_id=flashcard_set.id,
+                card=StudyCardView(
+                    first.id, first.front, first.back, first.state.value
+                ),
+                intervals=None,
+                counts=counts,
+                done_for_today=False,
+                practice=True,
+                practice_remaining=len(queue),
+            )
         card = plan.card
         if card is None:
             return StudyNextView(flashcard_set.id, None, None, counts, True)

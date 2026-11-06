@@ -1,6 +1,20 @@
 """Errors of the flashcards module."""
 
-from app.shared.base_error import NotFoundError, ValidationFailedError
+from app.shared.base_error import ConflictError, NotFoundError, ValidationFailedError
+
+
+class StudyNotFinishedError(ConflictError):
+    """A restart was asked for while scheduled cards are still waiting today."""
+
+    code = "flashcards/study-not-finished"
+    message_key = "fc-study-not-finished"
+
+
+class InvalidMergeError(ValidationFailedError):
+    """A merge needs 2 to 20 different sets. Params: min, max."""
+
+    code = "flashcards/invalid-merge"
+    message_key = "fc-invalid-merge"
 
 
 class FlashcardSetNotFoundError(NotFoundError):

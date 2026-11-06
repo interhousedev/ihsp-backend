@@ -9,9 +9,10 @@ from uuid import UUID
 
 from app.modules.flashcards.domain.flashcard import Flashcard
 from app.modules.flashcards.domain.flashcard_set import FlashcardSet, SetCounts
-from app.modules.flashcards.domain.review_log import ReviewLogEntry
+from app.modules.flashcards.domain.review_log import CardAttempts, ReviewLogEntry
 from app.modules.flashcards.domain.study import tally
 from app.shared.clock import to_local
+from app.shared.srs import Rating
 
 
 class FakeFlashcardsStore:
@@ -140,6 +141,25 @@ class FakeReviewLogRepository:
             day = to_local(entry.reviewed_at).date()
             counts[day] = counts.get(day, 0) + 1
         return counts
+
+    async def card_attempts(
+        self, user_id: UUID, *, set_id: UUID
+    ) -> dict[UUID, CardAttempts]:
+        """Answers per card of one set."""
+        rows: dict[UUID, CardAttempts] = {}
+        for entry in self._of(user_id, set_id):
+            seen = rows.get(entry.card_id, CardAttempts())
+            wrong = int(entry.rating is Rating.AGAIN)
+            last = seen.last_studied_at
+            rows[entry.card_id] = CardAttempts(
+                attempts=seen.attempts + 1,
+                correct=seen.correct + 1 - wrong,
+                incorrect=seen.incorrect + wrong,
+                last_studied_at=(
+                    max(last, entry.reviewed_at) if last else entry.reviewed_at
+                ),
+            )
+        return rows
 
     async def duration_ms_between(
         self,

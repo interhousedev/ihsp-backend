@@ -3,13 +3,13 @@
 from datetime import UTC, date, datetime, timedelta
 from uuid import UUID
 
-from app.modules.flashcards.domain.flashcard import Flashcard
+from app.modules.flashcards.domain.flashcard import Flashcard, Hardness
 from app.modules.flashcards.domain.flashcard_set import (
     FlashcardSet,
     SetCounts,
     SetSource,
 )
-from app.modules.flashcards.domain.review_log import ReviewLogEntry
+from app.modules.flashcards.domain.review_log import CardAttempts, ReviewLogEntry
 from app.modules.flashcards.infrastructure.uow import SqlFlashcardsUnitOfWork
 from app.modules.flashcards.ports.unit_of_work import UowFactory
 from app.shared.db.uow_testing import noop_audit_writer, noop_outbox_writer
@@ -361,3 +361,40 @@ async def test_the_time_spent_is_summed_inside_the_window(
         )
 
     assert (total, empty) == (4000, 0)
+
+
+async def test_hardness_shuffle_and_practice_round_trip(
+    uow_factory: UowFactory,
+) -> None:
+    """The new columns are stored, and attempts are counted per card."""
+    flashcard_set = make_set(shuffle=True)
+    card = make_card(flashcard_set.id, 0)
+    card.hardness = Hardness.HARD
+    user = flashcard_set.owner_id
+    async with uow_factory() as uow:
+        await uow.sets.add(flashcard_set)
+        await uow.cards.add_many([card])
+        for rating, practice in ((Rating.AGAIN, False), (Rating.EASY, True)):
+            await uow.reviews.add(
+                ReviewLogEntry(
+                    id=new_id(),
+                    user_id=user,
+                    set_id=flashcard_set.id,
+                    card_id=card.id,
+                    rating=rating,
+                    state_before=CardState.NEW,
+                    interval_after_days=0.0,
+                    reviewed_at=NOW,
+                    practice=practice,
+                )
+            )
+        await uow.commit()
+
+    async with uow_factory() as uow:
+        found_set = await uow.sets.get(flashcard_set.id)
+        found_card = await uow.cards.get(card.id)
+        attempts = await uow.reviews.card_attempts(user, set_id=flashcard_set.id)
+
+    assert found_set is not None and found_set.shuffle
+    assert found_card is not None and found_card.hardness is Hardness.HARD
+    assert attempts[card.id] == CardAttempts(2, 1, 1, NOW)

@@ -16,6 +16,20 @@ class CardView:
     back: str
     state: str
     due_at: datetime | None
+    hardness: str = "medium"
+
+
+@dataclass(frozen=True, slots=True)
+class CardStatsView:
+    """What the student did with one card."""
+
+    card_id: UUID
+    front: str
+    hardness: str
+    attempts: int
+    correct: int
+    incorrect: int
+    last_studied_at: datetime | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -46,6 +60,7 @@ class SetDetailView(SetItemView):
     new_per_day: int
     reviews_per_day: int
     cards: tuple[CardView, ...]
+    shuffle: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,13 +94,19 @@ class CountsView:
 
 @dataclass(frozen=True, slots=True)
 class StudyNextView:
-    """The next card, the button labels and the queue sizes (StudyNext)."""
+    """The next card, the button labels and the queue sizes (StudyNext).
+
+    In a restart round `practice` is true and `intervals` is None: the buttons
+    schedule nothing, so there is no interval to show.
+    """
 
     set_id: UUID
     card: StudyCardView | None
     intervals: IntervalsView | None
     counts: CountsView
     done_for_today: bool
+    practice: bool = False
+    practice_remaining: int = 0
 
 
 @dataclass(frozen=True, slots=True)

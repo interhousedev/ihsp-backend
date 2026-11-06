@@ -15,6 +15,8 @@ from app.modules.flashcards.domain.limits import (
     CARD_TEXT_MIN,
     DESCRIPTION_MAX,
     MAX_CARDS_PER_SET,
+    MERGE_SETS_MAX,
+    MERGE_SETS_MIN,
     NEW_PER_DAY_MAX,
     NEW_PER_DAY_MIN,
     REVIEWS_PER_DAY_MAX,
@@ -31,19 +33,56 @@ STATS_YEAR_MAX = 2100
 
 SourceName = Literal["manual", "ai", "mcp", "copied"]
 RatingName = Literal["again", "hard", "medium", "easy"]
+HardnessName = Literal["easy", "medium", "hard"]
 
 
 class CardBody(BaseModel):
-    """One card of POST /v1/me/flashcard-sets."""
+    """One new card; `hardness` sets how its schedule starts."""
 
     front: str = Field(min_length=CARD_TEXT_MIN, max_length=CARD_TEXT_MAX)
     back: str = Field(min_length=CARD_TEXT_MIN, max_length=CARD_TEXT_MAX)
+    hardness: HardnessName = "medium"
 
 
-class CardWithIdBody(CardBody):
-    """One card of PUT /v1/me/flashcard-sets/{id}/cards; `id` keeps its progress."""
+class CardWithIdBody(BaseModel):
+    """One card of PUT /v1/me/flashcard-sets/{id}/cards; `id` keeps its progress.
 
+    `hardness` left out keeps a known card's value and means medium for a new card.
+    """
+
+    front: str = Field(min_length=CARD_TEXT_MIN, max_length=CARD_TEXT_MAX)
+    back: str = Field(min_length=CARD_TEXT_MIN, max_length=CARD_TEXT_MAX)
     id: UUID | None = None
+    hardness: HardnessName | None = None
+
+
+class AddCardsBody(BaseModel):
+    """POST /v1/me/flashcard-sets/{id}/cards: a batch appended to the set."""
+
+    cards: list[CardBody] = Field(min_length=1, max_length=MAX_CARDS_PER_SET)
+
+
+class UpdateCardBody(BaseModel):
+    """PATCH /v1/me/flashcards/{id}; send only the fields to change.
+
+    A new hardness reschedules a card only while it was never answered.
+    """
+
+    front: str | None = Field(
+        default=None, min_length=CARD_TEXT_MIN, max_length=CARD_TEXT_MAX
+    )
+    back: str | None = Field(
+        default=None, min_length=CARD_TEXT_MIN, max_length=CARD_TEXT_MAX
+    )
+    hardness: HardnessName | None = None
+
+
+class MergeSetsBody(BaseModel):
+    """POST /v1/me/flashcard-sets/merge: the sets in the order of the new set."""
+
+    set_ids: list[UUID] = Field(min_length=MERGE_SETS_MIN, max_length=MERGE_SETS_MAX)
+    title: str = Field(min_length=TITLE_MIN, max_length=TITLE_MAX)
+    description: str | None = Field(default=None, max_length=DESCRIPTION_MAX)
 
 
 class CreateSetBody(BaseModel):
@@ -65,6 +104,7 @@ class UpdateSetBody(BaseModel):
     reviews_per_day: int | None = Field(
         default=None, ge=REVIEWS_PER_DAY_MIN, le=REVIEWS_PER_DAY_MAX
     )
+    shuffle: bool | None = None
 
 
 class ReplaceCardsBody(BaseModel):
@@ -123,19 +163,40 @@ class CardResponse(_Response):
     back: str
     state: str
     due_at: datetime | None
+    hardness: HardnessName
 
 
 class SetDetailResponse(SetItemResponse):
-    """FlashcardSetDetail = FlashcardSetItem plus limits and cards."""
+    """FlashcardSetDetail = FlashcardSetItem plus limits, settings and cards."""
 
     new_per_day: int
     reviews_per_day: int
+    shuffle: bool
     cards: list[CardResponse]
 
     @classmethod
     def from_detail(cls, view: SetDetailView) -> Self:
         """Build from the use case view."""
         return cls.model_validate(view)
+
+
+class MergedSetResponse(_Response):
+    """The new set and how many duplicate cards were left out."""
+
+    set: SetDetailResponse
+    duplicates_skipped: int
+
+
+class CardStatsResponse(_Response):
+    """Answers on one card: Again is incorrect, any other button correct."""
+
+    card_id: UUID
+    front: str
+    hardness: HardnessName
+    attempts: int
+    correct: int
+    incorrect: int
+    last_studied_at: datetime | None
 
 
 class StudyCardResponse(_Response):
@@ -172,6 +233,8 @@ class StudyNextResponse(_Response):
     intervals: IntervalsResponse | None
     counts: CountsResponse
     done_for_today: bool
+    practice: bool
+    practice_remaining: int
 
     @classmethod
     def from_view(cls, view: StudyNextView) -> Self:

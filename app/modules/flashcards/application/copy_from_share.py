@@ -3,7 +3,7 @@
 from app.modules.flashcards.application.set_views import SetViews
 from app.modules.flashcards.application.views import SetDetailView
 from app.modules.flashcards.domain.errors import ShareNotFoundError
-from app.modules.flashcards.domain.flashcard import Flashcard
+from app.modules.flashcards.domain.flashcard import fresh_card
 from app.modules.flashcards.domain.flashcard_set import FlashcardSet, SetSource
 from app.modules.flashcards.ports.share_resolver import ShareResolver
 from app.modules.flashcards.ports.unit_of_work import UowFactory
@@ -52,7 +52,7 @@ class CopyFromShare:
                 card_count=len(originals),
             )
             cards = [
-                Flashcard(new_id(), copy.id, position, card.front, card.back)
+                fresh_card(copy.id, position, card.front, card.back, card.hardness)
                 for position, card in enumerate(originals)
             ]
             await uow.sets.add(copy)

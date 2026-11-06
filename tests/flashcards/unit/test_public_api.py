@@ -33,6 +33,11 @@ def test_every_contract_method_exists_with_the_same_parameters() -> None:
         "add_cards",
         "update_card",
         "set_owner",
+        "delete_card",
+        "update_set_settings",
+        "merge_sets",
+        "restart_study",
+        "card_stats",
     }
     for name, expected in contract.items():
         actual = inspect.signature(getattr(FlashcardsApiImpl, name))
@@ -77,7 +82,13 @@ async def test_get_set_for_the_owner_has_title_and_cards(h: FlashcardsHarness) -
     assert found["owner_id"] == h.student.user_id
     assert found["card_count"] == 2 and found["description"] is None
     assert found["cards"] == [
-        {"id": c.id, "position": i, "front": f"front {i}", "back": f"back {i}"}
+        {
+            "id": c.id,
+            "position": i,
+            "front": f"front {i}",
+            "back": f"back {i}",
+            "hardness": "medium",
+        }
         for i, c in enumerate(created.cards)
     ]
 
@@ -92,7 +103,7 @@ async def test_get_set_without_an_owner_is_the_public_read_for_shares(
     shared = await h.services.public.get_set(created.id, None)
 
     assert shared is not None and shared["owner_id"] == h.student.user_id
-    assert set(shared["cards"][0]) == {"id", "position", "front", "back"}
+    assert set(shared["cards"][0]) == {"id", "position", "front", "back", "hardness"}
     assert "state" not in str(shared) and "due_at" not in str(shared)
 
 
@@ -197,6 +208,7 @@ async def test_update_card_returns_the_card(h: FlashcardsHarness) -> None:
         "set_id": created.id,
         "position": 1,
         "front": "Better question",
+        "hardness": "medium",
         "back": "back 1",
     }
 

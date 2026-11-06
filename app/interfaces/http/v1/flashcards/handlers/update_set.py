@@ -19,5 +19,6 @@ async def update_set(
         description=body.description if sent_description else UNSET,
         new_per_day=body.new_per_day,
         reviews_per_day=body.reviews_per_day,
+        shuffle=body.shuffle,
     )
     return SetDetailResponse.from_detail(view)

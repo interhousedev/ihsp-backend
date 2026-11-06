@@ -13,7 +13,7 @@ async def create_set(
         owner_id=actor.user_id,
         title=body.title,
         description=body.description,
-        cards=[(card.front, card.back) for card in body.cards],
+        cards=[(card.front, card.back, card.hardness) for card in body.cards],
         source=SetSource.MANUAL,
     )
     return SetDetailResponse.from_detail(view)

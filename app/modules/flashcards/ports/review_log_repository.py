@@ -4,7 +4,7 @@ from datetime import date, datetime
 from typing import Protocol
 from uuid import UUID
 
-from app.modules.flashcards.domain.review_log import ReviewLogEntry
+from app.modules.flashcards.domain.review_log import CardAttempts, ReviewLogEntry
 
 
 class ReviewLogRepository(Protocol):
@@ -18,6 +18,12 @@ class ReviewLogRepository(Protocol):
         self, user_id: UUID, *, set_id: UUID | None
     ) -> dict[date, int]:
         """Return reviews per Tashkent day; one set, or all of the user's sets."""
+        ...
+
+    async def card_attempts(
+        self, user_id: UUID, *, set_id: UUID
+    ) -> dict[UUID, CardAttempts]:
+        """Return the answers per card of one set; cards never answered are absent."""
         ...
 
     async def duration_ms_between(

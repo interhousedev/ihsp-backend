@@ -24,9 +24,17 @@ SET_ITEM_KEYS = {
     "learning_count",
     "due_count",
 }
-SET_DETAIL_KEYS = SET_ITEM_KEYS | {"new_per_day", "reviews_per_day", "cards"}
-CARD_KEYS = {"id", "position", "front", "back", "state", "due_at"}
-STUDY_KEYS = {"set_id", "card", "intervals", "counts", "done_for_today"}
+SET_DETAIL_KEYS = SET_ITEM_KEYS | {"new_per_day", "reviews_per_day", "shuffle", "cards"}
+CARD_KEYS = {"id", "position", "front", "back", "state", "due_at", "hardness"}
+STUDY_KEYS = {
+    "set_id",
+    "card",
+    "intervals",
+    "counts",
+    "done_for_today",
+    "practice",
+    "practice_remaining",
+}
 STATS_KEYS = {
     "year",
     "set_id",
@@ -110,6 +118,12 @@ def test_the_routes_are_exactly_the_contract() -> None:
         ("POST", "/v1/me/flashcards/{card_id}/review"),
         ("POST", "/v1/me/flashcard-sets/copy"),
         ("GET", "/v1/me/flashcard-sets/stats"),
+        ("POST", "/v1/me/flashcard-sets/merge"),
+        ("POST", "/v1/me/flashcard-sets/{set_id}/study/restart"),
+        ("GET", "/v1/me/flashcard-sets/{set_id}/card-stats"),
+        ("POST", "/v1/me/flashcard-sets/{set_id}/cards"),
+        ("PATCH", "/v1/me/flashcards/{card_id}"),
+        ("DELETE", "/v1/me/flashcards/{card_id}"),
     }
 
 
@@ -293,6 +307,8 @@ async def test_the_last_review_ends_the_session(api: Api) -> None:
         "intervals": None,
         "counts": {"learning": 0, "review": 0, "new": 0},
         "done_for_today": True,
+        "practice": False,
+        "practice_remaining": 0,
     }
 
 
@@ -646,3 +662,81 @@ async def test_stats_is_for_students(api: Api) -> None:
     response = await api.client.get("/v1/me/flashcard-sets/stats")
 
     assert response.status_code == 403
+
+
+async def test_restart_round_over_http(api: Api) -> None:
+    """409 while cards wait; after that a round that the review route answers."""
+    created = await api.create(count=1)
+    url = f"/v1/me/flashcard-sets/{created['id']}/study/restart"
+    assert (await api.request("POST", url)).status_code == 409
+
+    card_id = created["cards"][0]["id"]
+    review = f"/v1/me/flashcards/{card_id}/review"
+    await api.request("POST", review, json={"rating": "easy"})
+
+    started = await api.request("POST", url)
+    assert started.status_code == 200, started.text
+    body = started.json()
+    assert body["practice"] is True
+    assert body["practice_remaining"] == 1
+    assert body["intervals"] is None
+
+
+async def test_merge_over_http(api: Api) -> None:
+    """The new set comes with the number of skipped duplicates."""
+    one = await api.create(title="One")
+    two = await api.create(title="Two")
+
+    response = await api.request(
+        "POST",
+        "/v1/me/flashcard-sets/merge",
+        json={"set_ids": [one["id"], two["id"]], "title": "Both"},
+    )
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["duplicates_skipped"] == 2
+    assert body["set"]["card_count"] == 2
+    assert set(body["set"]) == SET_DETAIL_KEYS
+
+
+async def test_card_stats_and_card_routes_over_http(api: Api) -> None:
+    """Batch add with hardness, edit, statistics and delete."""
+    created = await api.create(count=1)
+    set_url = f"/v1/me/flashcard-sets/{created['id']}"
+
+    added = await api.request(
+        "POST",
+        f"{set_url}/cards",
+        json={"cards": [{"front": "Q", "back": "A", "hardness": "hard"}]},
+    )
+    assert added.status_code == 200, added.text
+    card = added.json()["cards"][1]
+    assert card["hardness"] == "hard"
+
+    edited = await api.request(
+        "PATCH", f"/v1/me/flashcards/{card['id']}", json={"hardness": "easy"}
+    )
+    assert edited.status_code == 200, edited.text
+    assert edited.json()["hardness"] == "easy"
+
+    await api.request(
+        "POST", f"/v1/me/flashcards/{card['id']}/review", json={"rating": "again"}
+    )
+    stats = (await api.request("GET", f"{set_url}/card-stats")).json()
+    assert [row["attempts"] for row in stats] == [0, 1]
+    assert stats[1]["incorrect"] == 1
+
+    deleted = await api.request("DELETE", f"/v1/me/flashcards/{card['id']}")
+    assert deleted.status_code == 204
+
+
+async def test_shuffle_is_patched_over_http(api: Api) -> None:
+    """The set settings form uses this field."""
+    created = await api.create()
+
+    response = await api.request(
+        "PATCH", f"/v1/me/flashcard-sets/{created['id']}", json={"shuffle": True}
+    )
+
+    assert response.json()["shuffle"] is True

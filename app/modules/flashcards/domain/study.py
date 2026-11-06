@@ -3,6 +3,7 @@
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
+from hashlib import sha256
 
 from app.modules.flashcards.domain.flashcard import Flashcard
 from app.modules.flashcards.domain.flashcard_set import SetCounts
@@ -100,6 +101,27 @@ def _due_key(now: datetime) -> Callable[[Flashcard], datetime]:
     return lambda card: card.due_at or now
 
 
+def shuffled(cards: Sequence[Flashcard], salt: str) -> list[Flashcard]:
+    """Return the cards in a random-looking order that is stable for one salt.
+
+    A hash instead of `random`: reading the next card twice must offer the same card.
+    """
+
+    def key(card: Flashcard) -> str:
+        return sha256(f"{salt}:{card.id}".encode()).hexdigest()
+
+    return sorted(cards, key=key)
+
+
+def practice_order(
+    cards: Sequence[Flashcard], *, shuffle: bool, salt: str
+) -> list[Flashcard]:
+    """Return the order of a restart round: by position, or shuffled."""
+    if shuffle:
+        return shuffled(cards, salt)
+    return sorted(cards, key=lambda card: card.position)
+
+
 def plan_study(
     cards: Sequence[Flashcard],
     *,
@@ -107,12 +129,14 @@ def plan_study(
     reviews_per_day: int,
     usage: DailyUsage,
     now: datetime,
+    shuffle: bool = False,
 ) -> StudyPlan:
     """Pick the next card: due learning, then reviews, then new cards.
 
     Learning and relearning cards are never limited. Reviews due before the day
     ends are limited by what is left of `reviews_per_day`, new cards by what is
-    left of `new_per_day`.
+    left of `new_per_day`. `shuffle` reorders reviews and new cards with an order
+    fixed for the study day; learning cards always follow their due time.
     """
     end_of_day = day_end(now)
     due = _due_key(now)
@@ -122,8 +146,13 @@ def plan_study(
 
     learning_now = [card for card in learning if due(card) <= now]
     review_queue = [card for card in reviews if due(card) < end_of_day]
+    new_cards = _in_states(ordered, CardState.NEW)
+    if shuffle:
+        salt = study_day(now).isoformat()
+        review_queue = shuffled(review_queue, salt)
+        new_cards = shuffled(new_cards, salt)
     review_queue = review_queue[: max(0, reviews_per_day - usage.review)]
-    new_queue = _in_states(ordered, CardState.NEW)[: max(0, new_per_day - usage.new)]
+    new_queue = new_cards[: max(0, new_per_day - usage.new)]
 
     first = next((q[0] for q in (learning_now, review_queue, new_queue) if q), None)
     counts = StudyCounts(

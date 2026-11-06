@@ -49,9 +49,12 @@ class ReviewCard:
         """Save the new state and a log row; count the answer against today's limits.
 
         A first answer counts as a new card and an answer on a review card as a
-        review. `duration_ms` is the time the student looked at the card.
+        review. `duration_ms` is the time the student looked at the card. A card in
+        today's restart round is only logged: see `restart_study` for why the
+        schedule and the counters stay untouched.
         """
         now = self.clock.now()
+        day = study_day(now)
         async with self.uow_factory() as uow:
             card = await uow.cards.get_for_update(card_id)
             flashcard_set = await uow.sets.get(card.set_id) if card else None
@@ -59,6 +62,23 @@ class ReviewCard:
                 raise CardNotFoundError()
             if not flashcard_set.owned_by(owner_id):
                 raise CardNotFoundError()
+            round_ids = await self.views.practice.remaining(
+                owner_id, flashcard_set.id, day
+            )
+            if card_id in round_ids:
+                await uow.reviews.add(
+                    _practice_entry(owner_id, card, rating, now, duration_ms)
+                )
+                await uow.commit()
+                cards = await uow.cards.list_for_set(flashcard_set.id)
+                await self.views.practice.answered(
+                    owner_id,
+                    flashcard_set.id,
+                    day,
+                    card_id,
+                    again=rating is Rating.AGAIN,
+                )
+                return await self.views.study(flashcard_set, cards)
             before = card.answer(rating, now)
             await uow.cards.save(card)
             await uow.reviews.add(
@@ -72,6 +92,27 @@ class ReviewCard:
                 owner_id, flashcard_set.id, study_day(now), kind
             )
         return await self.views.study(flashcard_set, cards)
+
+
+def _practice_entry(
+    owner_id: UUID,
+    card: Flashcard,
+    rating: Rating,
+    now: datetime,
+    duration_ms: int | None,
+) -> ReviewLogEntry:
+    return ReviewLogEntry(
+        id=new_id(),
+        user_id=owner_id,
+        set_id=card.set_id,
+        card_id=card.id,
+        rating=rating,
+        state_before=card.state,
+        interval_after_days=0.0,
+        reviewed_at=now,
+        duration_ms=clamp_duration(duration_ms),
+        practice=True,
+    )
 
 
 def _log_entry(

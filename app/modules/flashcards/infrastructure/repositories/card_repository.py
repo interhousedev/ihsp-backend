@@ -4,7 +4,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from uuid import UUID
 
-from app.modules.flashcards.domain.flashcard import Flashcard
+from app.modules.flashcards.domain.flashcard import Flashcard, Hardness
 from app.modules.flashcards.domain.flashcard_set import SetCounts
 from app.modules.flashcards.infrastructure.orm.flashcard import Flashcard as CardRow
 from app.shared.srs import CardState, SrsState
@@ -30,6 +30,7 @@ def _to_entity(row: CardRow) -> Flashcard:
             lapses=int(row.lapses),
         ),
         last_reviewed_at=row.last_reviewed_at,
+        hardness=Hardness(row.hardness),
     )
 
 
@@ -46,6 +47,7 @@ def _apply(row: CardRow, entity: Flashcard) -> None:
     row.reps = entity.srs.reps
     row.lapses = entity.srs.lapses
     row.last_reviewed_at = entity.last_reviewed_at
+    row.hardness = entity.hardness.value
 
 
 class SqlFlashcardRepository:

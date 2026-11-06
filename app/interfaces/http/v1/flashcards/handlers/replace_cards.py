@@ -7,7 +7,7 @@ from app.interfaces.http.v1.flashcards.schemas import (
     ReplaceCardsBody,
     SetDetailResponse,
 )
-from app.modules.flashcards.domain.flashcard import CardDraft
+from app.modules.flashcards.domain.flashcard import CardDraft, Hardness
 
 
 async def replace_cards(
@@ -17,6 +17,11 @@ async def replace_cards(
     view = await container.flashcards.replace_cards.execute(
         owner_id=actor.user_id,
         set_id=set_id,
-        cards=[CardDraft(c.front, c.back, c.id) for c in body.cards],
+        cards=[
+            CardDraft(
+                c.front, c.back, c.id, Hardness(c.hardness) if c.hardness else None
+            )
+            for c in body.cards
+        ],
     )
     return SetDetailResponse.from_detail(view)

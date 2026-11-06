@@ -2,6 +2,8 @@
 
 from dataclasses import dataclass
 
+from app.modules.flashcards.application.batch_edit_cards import CardChange
+from app.modules.flashcards.domain.errors import CardNotFoundError
 from app.modules.flashcards.domain.flashcard import CardDraft
 from app.modules.flashcards.domain.flashcard_set import FlashcardSet, SetSource
 from app.modules.flashcards.domain.study import study_day
@@ -112,6 +114,42 @@ async def test_study_and_review_work_end_to_end(world: SqlWorld) -> None:
     )
     assert [c.state for c in opened.cards] == ["review", "learning", "new", "new"]
     assert (opened.due_today, opened.new_today) == (1, 0)
+
+
+async def test_batch_edit_on_postgres_is_whole_or_nothing(world: SqlWorld) -> None:
+    """MCP A2: progress stays, the count follows, a foreign id changes nothing."""
+    s, owner = world.services, world.student.user_id
+    created = await s.public.create_set(owner, "Cells", cards(3), source="mcp")
+    theirs = await s.public.create_set(world.other.user_id, "X", cards(1), source="mcp")
+    first, second, third = created["cards"]
+    await s.review_card.execute(owner_id=owner, card_id=first["id"], rating=Rating.EASY)
+
+    with pytest.raises(CardNotFoundError):
+        await s.batch_edit_cards.execute(
+            owner_id=owner,
+            set_id=created["id"],
+            add=[("a", "b")],
+            update=[CardChange(card_id=second["id"], front="lost")],
+            delete_ids=[theirs["cards"][0]["id"]],
+        )
+    untouched = await s.get_set.execute(owner_id=owner, set_id=created["id"])
+    assert [c.front for c in untouched.cards] == ["front 0", "front 1", "front 2"]
+
+    await s.batch_edit_cards.execute(
+        owner_id=owner,
+        set_id=created["id"],
+        add=[("a", "b")],
+        update=[CardChange(card_id=first["id"], front="edited")],
+        delete_ids=[third["id"]],
+    )
+
+    opened = await s.get_set.execute(owner_id=owner, set_id=created["id"])
+    assert [(c.front, c.state) for c in opened.cards] == [
+        ("edited", "review"),
+        ("front 1", "new"),
+        ("a", "new"),
+    ]
+    assert opened.card_count == 3
 
 
 async def test_replace_keeps_progress_on_postgres(world: SqlWorld) -> None:
