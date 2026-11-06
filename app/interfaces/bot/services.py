@@ -6,6 +6,7 @@ from uuid import UUID
 
 from app.interfaces.bot.urls import BotUrls
 from app.modules.academic.domain.classwork.temporary_mark import TemporaryMarkView
+from app.modules.identity.domain.scope_offer import ScopeDecision
 from app.settings import Settings
 from app.shared.actor import Actor
 from app.shared.clock import Clock
@@ -30,6 +31,14 @@ class CancelOtpReset(Protocol):
 
     async def execute(self, request_id: UUID, /) -> object:
         """Cancel the pending OTP reset."""
+        ...
+
+
+class DecideScopeOfferCase(Protocol):
+    """The identity use case ``decide_scope_offer``."""
+
+    async def execute(self, token: str, user_id: UUID, *, grant: bool) -> ScopeDecision:
+        """Decide the offer behind the token for this user."""
         ...
 
 
@@ -89,6 +98,7 @@ class BotServices:
     directory: IdentityDirectory
     identity_commands: IdentityCommands
     cancel_otp_reset: CancelOtpReset
+    decide_scope_offer: DecideScopeOfferCase
     schedule: ScheduleQueries
     classwork_queries: ClassworkQueries
     classwork: ClassworkCommands
@@ -112,6 +122,7 @@ def services_from_container(container: Any) -> BotServices:
         directory=container.identity.directory,
         identity_commands=container.identity.commands,
         cancel_otp_reset=container.identity.auth.cancel_otp_reset,
+        decide_scope_offer=container.identity.auth.decide_scope_offer,
         schedule=container.academic.schedule.queries,
         classwork_queries=container.academic.classwork.queries,
         classwork=container.academic.classwork.commands,

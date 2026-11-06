@@ -8,6 +8,7 @@ from types import SimpleNamespace
 from typing import Any, Literal
 from uuid import UUID
 
+from app.modules.identity.application.decide_scope_offer import DecideScopeOffer
 from app.settings import Settings
 from app.shared.actor import Actor, Role
 from app.shared.contracts.academic import (
@@ -27,6 +28,7 @@ from app.shared.contracts.mail import MailSummary
 from app.shared.ids import new_id
 from tests.bot.support.i18n import KeyI18nCore
 from tests.fakes.clock import FixedClock
+from tests.fakes.identity.uow import FakeIdentityUnitOfWork, IdentityStore
 from tests.fakes.posts import fake_posts_services
 
 NOW = datetime(2026, 10, 6, 9, 0, tzinfo=UTC)
@@ -661,6 +663,13 @@ class FakeTemporaryMarks:
         return SimpleNamespace(execute=execute)
 
 
+class NoScopeOverlayCache:
+    """ScopeOverlayCache with nothing to clear."""
+
+    async def invalidate(self, connector_ids: Sequence[UUID]) -> None:
+        """Nothing is cached in the bot tests."""
+
+
 @dataclass
 class World:
     """Everything a bot test needs: the container, the fakes and two users."""
@@ -672,6 +681,7 @@ class World:
     directory: FakeDirectory
     identity_commands: FakeIdentityCommands
     cancel_otp: FakeCancelOtpReset
+    identity_store: IdentityStore
     schedule: FakeSchedule
     classwork_queries: FakeClassworkQueries
     marks: FakeMarks
@@ -706,6 +716,12 @@ def build_world() -> World:
     clock = FixedClock(NOW)
     i18n = KeyI18nCore()
     temporary_marks = FakeTemporaryMarks()
+    identity_store = IdentityStore()
+    decide_scope_offer = DecideScopeOffer(
+        uow_factory=lambda: FakeIdentityUnitOfWork(identity_store, clock),
+        clock=clock,
+        overlay_cache=NoScopeOverlayCache(),
+    )
     container = SimpleNamespace(
         settings=Settings(env="test", telegram={"admin_chat_id": ADMIN_CHAT}),
         clock=clock,
@@ -714,7 +730,9 @@ def build_world() -> World:
         identity=SimpleNamespace(
             directory=directory,
             commands=identity_commands,
-            auth=SimpleNamespace(cancel_otp_reset=cancel_otp),
+            auth=SimpleNamespace(
+                cancel_otp_reset=cancel_otp, decide_scope_offer=decide_scope_offer
+            ),
         ),
         academic=SimpleNamespace(
             schedule=SimpleNamespace(queries=schedule),
@@ -741,6 +759,7 @@ def build_world() -> World:
         directory=directory,
         identity_commands=identity_commands,
         cancel_otp=cancel_otp,
+        identity_store=identity_store,
         schedule=schedule,
         classwork_queries=queries,
         marks=marks,

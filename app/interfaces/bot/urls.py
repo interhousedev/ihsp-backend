@@ -35,6 +35,11 @@ class BotUrls:
         return _join(self.id_app, "telegram/")
 
     @property
+    def connectors(self) -> str:
+        """The connectors page, where offered permissions are checked or revoked."""
+        return _join(self.id_app, "connectors/")
+
+    @property
     def security(self) -> str:
         """Security settings of the ID service (the Not me target)."""
         return _join(self.id_app, "security/")

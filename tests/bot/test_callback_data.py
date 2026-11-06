@@ -35,6 +35,7 @@ LARGEST: list[CallbackData] = [
     callbacks.OtpCancelCb(request=LESSON),
     callbacks.NotMeCb(kind="otp"),
     callbacks.CancelCb(),
+    callbacks.McpScopeCb(t="A" * 22, d="g"),
     MailComposeCb(action="send"),
     WorkOffPromptCb(lesson=LESSON, action="cancel_text"),
     WorkOffPickCb(lesson=LESSON, pos=LARGE),
