@@ -8,7 +8,8 @@ step lines them up with what EMIS lists on each date:
   video become resources (EMIS fills these in badly, so the setting is off by default);
 * a class with no lesson is a moved class (the lesson that holds its id follows it) or
   an added one (a new lesson, from today on);
-* a lesson EMIS confirmed before and no longer lists is cancelled.
+* a lesson EMIS confirmed before and no longer lists is cancelled; a class EMIS still
+  lists, at any pair, is never cancelled, and one that returns is revived.
 
 Lessons changed by hand (``is_overridden`` without an EMIS class id) and lessons of
 hand-made entries only get the details; their time, room and status stay as they are.
@@ -32,7 +33,11 @@ from app.modules.academic.application.schedule.ports.unit_of_work import (
     ScheduleUnitOfWork,
 )
 from app.modules.academic.domain import audience as audience_keys
-from app.modules.academic.domain.schedule.calendar import bell_for, lesson_times
+from app.modules.academic.domain.schedule.calendar import (
+    bell_for,
+    bell_or_nearest,
+    lesson_times,
+)
 from app.modules.academic.domain.schedule.emis_timetable import class_weekday
 from app.modules.academic.domain.schedule.lesson import Lesson
 from app.modules.academic.domain.schedule.lesson_changes import (
@@ -94,6 +99,7 @@ class LessonReconciler:
         self._tally = LessonTally()
         self._seen: set[int] = set()
         self._matched: set[UUID] = set()
+        self._superseded: set[UUID] = set()
 
     async def run(
         self,
@@ -118,6 +124,11 @@ class LessonReconciler:
                 continue
             key = audience_keys.key(self._group_id, item.subgroup)
             lesson = by_slot.get((item.date, item.pair_number + 1, key))
+            holder = holders.get(item.class_id)
+            if lesson is not None and holder is not None and holder.id != lesson.id:
+                lesson = await self._settle_two(lesson, holder, keys)
+            if lesson is not None and self._holds_another_class(lesson, item):
+                lesson = None  # that class has moved away; this one is not it
             if lesson is None:
                 lesson = await self._moved_or_added(item, key, holders)
             if lesson is not None:
@@ -127,6 +138,54 @@ class LessonReconciler:
         return self._tally
 
     # - - - Finding or making the lesson of a class - - -
+
+    def _holds_another_class(self, lesson: Lesson, item: EmisClass) -> bool:
+        """True for a future lesson of a class EMIS now lists somewhere else."""
+        return (
+            lesson.emis_class_id in self._seen
+            and lesson.emis_class_id != item.class_id
+            and lesson.id not in self._matched
+            and lesson.starts_after(self._now)
+            and self._managed(lesson)
+        )
+
+    async def _settle_two(
+        self, at_slot: Lesson, holder: Lesson, keys: set[str]
+    ) -> Lesson | None:
+        """The slot has a lesson while another one holds the class: leave one lesson.
+
+        The generator made the slot's lesson for the class's new weekly place. The
+        holder has the homework and attendance, so it stays and takes over the slot's
+        identity; with content on both sides the old one is a real leftover.
+        Returns the lesson at the slot, or None when the holder should move there.
+        """
+        movable = (
+            holder.id not in self._matched
+            and self._managed(holder)
+            and holder.starts_after(self._now)
+            and set(holder.audience) <= keys
+        )
+        fresh = (
+            at_slot.id not in self._matched
+            and self._managed(at_slot)
+            and at_slot.emis_class_id not in self._seen
+        )
+        if not movable or not fresh:
+            return at_slot
+        if at_slot.has_content:
+            if holder.has_content:
+                self._superseded.add(holder.id)
+            else:
+                await self._uow.lessons.delete_many([holder.id])
+                self._matched.add(holder.id)
+                self._note(holder)
+            return at_slot
+        await self._uow.lessons.delete_many([at_slot.id])
+        self._matched.add(at_slot.id)
+        self._note(at_slot)
+        holder.timetable_entry_id = at_slot.timetable_entry_id
+        holder.origin_date = at_slot.origin_date
+        return None
 
     async def _moved_or_added(
         self, item: EmisClass, key: str, holders: dict[int, Lesson]
@@ -142,11 +201,19 @@ class LessonReconciler:
         self, item: EmisClass
     ) -> tuple[int, dt.datetime, dt.datetime] | None:
         weekday = class_weekday(item.date, self._term)
-        bell = bell_for(self._term, item.pair_number + 1, weekday) if weekday else None
+        period = item.pair_number + 1
+        bell = bell_or_nearest(self._term, period, weekday) if weekday else None
         if bell is None:
             log.warning("emis_class_without_bell", class_id=item.class_id)
             self._tally.skipped += 1
             return None
+        if weekday and bell_for(self._term, period, weekday) is None:
+            log.warning(
+                "emis_class_bell_borrowed",
+                class_id=item.class_id,
+                period=period,
+                weekday=weekday,
+            )
         starts_at, ends_at = lesson_times(item.date, bell[0], bell[1])
         return item.pair_number + 1, starts_at, ends_at
 
@@ -170,6 +237,8 @@ class LessonReconciler:
         lesson.starts_at, lesson.ends_at = starts_at, ends_at
         lesson.status = "scheduled"
         lesson.changes = merge_changes(lesson.changes, changes)
+        if lesson.changes:
+            lesson.changes.pop("status", None)  # any EMIS cancellation is over
         lesson.is_overridden = True
         if not await self._uow.lessons.try_save(lesson):
             log.warning("emis_lesson_move_skipped", lesson_id=str(lesson.id))
@@ -266,12 +335,14 @@ class LessonReconciler:
             lesson.is_overridden,
             lesson.topic,
             lesson.emis_topic,
+            lesson.starts_at,
         )
         lesson.kind = item.kind
         if self._managed(lesson):
             self._adopt(lesson, item, keys)
             if lesson.status == "cancelled" and lesson.emis_class_id == item.class_id:
                 self._revive(lesson)
+            self._follow_bell(lesson, item)
         if self._import_topics:
             self._follow_topic(lesson, item)
         after = (
@@ -281,6 +352,7 @@ class LessonReconciler:
             lesson.is_overridden,
             lesson.topic,
             lesson.emis_topic,
+            lesson.starts_at,
         )
         if after != before:
             if await self._uow.lessons.try_save(lesson):
@@ -299,6 +371,29 @@ class LessonReconciler:
         if lesson.topic is None or lesson.topic == lesson.emis_topic:
             lesson.topic = topic
         lesson.emis_topic = topic
+
+    def _follow_bell(self, lesson: Lesson, item: EmisClass) -> None:
+        """A lesson EMIS moved is overridden: the generator leaves its time alone."""
+        if not lesson.is_overridden or lesson.emis_class_id != item.class_id:
+            return
+        if lesson.status != "scheduled" or not lesson.starts_after(self._now):
+            return
+        weekday = class_weekday(item.date, self._term)
+        bell = bell_for(self._term, lesson.period, weekday) if weekday else None
+        if bell is None:
+            return
+        starts_at, ends_at = lesson_times(lesson.date, bell[0], bell[1])
+        if (lesson.starts_at, lesson.ends_at) != (starts_at, ends_at):
+            lesson.changes = merge_changes(
+                lesson.changes,
+                {
+                    "time": [
+                        time_label(lesson.starts_at, lesson.ends_at),
+                        time_label(starts_at, ends_at),
+                    ]
+                },
+            )
+            lesson.starts_at, lesson.ends_at = starts_at, ends_at
 
     def _adopt(self, lesson: Lesson, item: EmisClass, keys: set[str]) -> None:
         """Remember which EMIS class the lesson is, unless it is another group's."""
@@ -344,13 +439,18 @@ class LessonReconciler:
                 or not set(lesson.audience) <= keys
             ):
                 continue
+            superseded = lesson.id in self._superseded
+            if lesson.emis_class_id in self._seen and not superseded:
+                # EMIS lists the class, it only could not move: never a cancellation.
+                log.warning("emis_listed_lesson_kept", lesson_id=str(lesson.id))
+                continue
             lesson.status = "cancelled"
             lesson.is_overridden = True
             lesson.changes = merge_changes(
                 lesson.changes, {"status": ["scheduled", "cancelled"]}
             )
-            if lesson.emis_class_id in self._seen:
-                lesson.emis_class_id = None  # the class lives on at another time
+            if superseded:
+                lesson.emis_class_id = None  # the class lives on in the other lesson
             if await self._uow.lessons.try_save(lesson):
                 self._tally.cancelled += 1
                 self._note(lesson)

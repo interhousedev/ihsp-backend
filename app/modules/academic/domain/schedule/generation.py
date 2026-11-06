@@ -11,6 +11,7 @@ from uuid import UUID
 
 from app.modules.academic.domain.schedule.calendar import (
     bell_for,
+    bell_or_nearest,
     effective_weekday,
     lesson_times,
     week_parity,
@@ -79,7 +80,10 @@ def _expand_day(
         bell = bell_for(term, entry.period, weekday)
         if bell is None:
             result.missing_bells.add(entry.id)
-            continue
+            if entry.source == "emis":  # EMIS lists the class: keep it at a near time
+                bell = bell_or_nearest(term, entry.period, weekday)
+            if bell is None:
+                continue
         starts_at, ends_at = lesson_times(day, bell[0], bell[1])
         planned = PlannedLesson(
             entry_id=entry.id,

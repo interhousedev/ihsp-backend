@@ -66,6 +66,26 @@ def bell_for(term: Term, period: int, weekday: int) -> tuple[dt.time, dt.time] |
     return None
 
 
+def bell_or_nearest(
+    term: Term, period: int, weekday: int
+) -> tuple[dt.time, dt.time] | None:
+    """Return the weekday's bell, else the same period on the closest other weekday.
+
+    For classes EMIS lists: EMIS says the class takes place, so a block missing from
+    the day must not lose it. None only when no day of the week has the period.
+    """
+    own = bell_for(term, period, weekday)
+    if own is not None:
+        return own
+    others = sorted(
+        (abs(day - weekday), day, bell.start, bell.end)
+        for bell in term.bells
+        if bell.period == period
+        for day in bell.weekdays
+    )
+    return (others[0][2], others[0][3]) if others else None
+
+
 def lesson_times(
     day: dt.date, start: dt.time, end: dt.time
 ) -> tuple[dt.datetime, dt.datetime]:
