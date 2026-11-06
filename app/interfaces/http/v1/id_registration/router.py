@@ -1,5 +1,8 @@
 """Routes of registration, reclaim, EMIS password update and account deletion."""
 
+from app.interfaces.http.v1.id_registration.handlers.change_emis_password import (
+    change_emis_password,
+)
 from app.interfaces.http.v1.id_registration.handlers.delete_account import (
     delete_account,
 )
@@ -15,6 +18,7 @@ from app.interfaces.http.v1.id_registration.handlers.reclaim_email import reclai
 from app.interfaces.http.v1.id_registration.handlers.reclaim_emis import reclaim_emis
 from app.interfaces.http.v1.id_registration.handlers.register_complete import (
     register_complete,
+    register_telegram_status,
 )
 from app.interfaces.http.v1.id_registration.handlers.register_email import (
     register_email,
@@ -31,9 +35,10 @@ from app.interfaces.http.v1.id_registration.schemas import (
     EmisPasswordResponse,
     RegistrationStartResponse,
     StartReclaimResponse,
+    TelegramLinkStatusResponse,
 )
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Response, status
 
 router = APIRouter(prefix="/v1/id", tags=["id-registration"])
 
@@ -90,6 +95,19 @@ router.add_api_route(
     reclaim_complete,
     methods=["POST"],
     status_code=status.HTTP_204_NO_CONTENT,
+)
+router.add_api_route(
+    "/register/telegram-status",
+    register_telegram_status,
+    methods=["POST"],
+    response_model=TelegramLinkStatusResponse,
+)
+router.add_api_route(
+    "/me/emis-password/change",
+    change_emis_password,
+    methods=["POST"],
+    status_code=204,
+    response_class=Response,
 )
 router.add_api_route(
     "/me/emis-password",

@@ -295,6 +295,7 @@ class FakeEmisClient:
     def __init__(self, clock: Clock) -> None:
         """Store the clock that defines the fake "today"."""
         self._clock = clock
+        self._passwords: dict[str, str] = {}
 
     async def aclose(self) -> None:
         """Nothing to close."""
@@ -304,9 +305,15 @@ class FakeEmisClient:
         name = login.strip().lower()
         if name == "down":
             raise EmisRequestError("fake EMIS is down")
-        if name not in _BY_LOGIN or password != FAKE_PASSWORD:
+        if name not in _BY_LOGIN or password != self._passwords.get(
+            name, FAKE_PASSWORD
+        ):
             raise EmisAuthError()
         return f"{_TOKEN_PREFIX}{name}"
+
+    async def change_password(self, token: str, new_password: str) -> None:
+        """Remember the new password of the token's student in this process."""
+        self._passwords[self._student(token).login] = new_password
 
     def token_for(self, emis_student_id: int) -> str | None:
         """Return the token of the fake student with this EMIS id, without a login."""

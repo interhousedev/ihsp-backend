@@ -244,5 +244,8 @@
   "bot-workoffs-student-title": "Work-off tasks",
   "bot-workoffs-teacher-empty": "No open work-offs.",
   "bot-workoffs-teacher-hint": "Tap a work-off to mark it as done.",
-  "bot-workoffs-teacher-title": "Open work-offs: {count}"
+  "bot-workoffs-teacher-title": "Open work-offs: {count}",
+  "bot-onboarding-linked": "Done: your Telegram is linked. Go back to the registration page to continue.",
+  "bot-onboarding-expired": "This link has expired or was already used. Open it again from the registration page.",
+  "bot-onboarding-linked-elsewhere": "This Telegram account is already linked to another account. Open the link from a different Telegram account."
 }

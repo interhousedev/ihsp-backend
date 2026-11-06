@@ -12,6 +12,7 @@ from uuid import UUID
 from app.modules.identity.application.register_models import (
     AccountSnapshot,
     EmisAuthError,
+    EmisPasswordRejectedError,
     EmisRequestError,
     NewStudentAccount,
 )
@@ -69,6 +70,16 @@ class ControlledEmis:
         token = await self._inner.login(login, FAKE_PASSWORD)
         self.revoked.discard(token)
         return token
+
+    async def change_password(self, token: str, new_password: str) -> None:
+        """Record the change; a password of ``weak`` is refused like EMIS does."""
+        self.calls.append("change_password")
+        if self.down:
+            raise EmisRequestError("EMIS is down")
+        if new_password == "weak":
+            raise EmisPasswordRejectedError()
+        login = token.rsplit(":", 1)[-1]
+        self.passwords[login] = new_password
 
     async def profile(self, token: str) -> EmisProfile:
         """Return the profile (``profiles[login]`` overrides the fake one)."""

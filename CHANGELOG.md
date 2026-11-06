@@ -4,6 +4,27 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.1.1] - 2026-11-06
+
+### Added
+
+- First-time EMIS registration with a typed EMIS ID and a date of birth or unique password, limited to 5 wrong passwords per ID per hour.
+- A required Telegram step in registration: a one-time `/start` link, or automatic linking inside the mini app.
+- `POST /v1/id/me/emis-password/change`: change the password in EMIS with the current EMIS password and a second factor.
+
+### Changed
+
+- The public registration picker shows initials instead of given names.
+
+### Fixed
+
+- `/v1/admin/login-cues` and `/v1/admin/oauth-clients` answered 404 in production: nginx did not route them to the identity process.
+- Gemini connectors failed with a `redirect_uri` error: per-user Google redirect URIs are now added to Gemini clients at authorization.
+
+### Known issues
+
+- The Telegram step is enforced in the web flow only; an account that leaves the page stays without a link.
+
 ## [1.1.0] - 2026-11-06
 
 - Sharing: share a notebook or file by sign-in link or with named people, chat read-only in a private thread on your own limits, copy a shared notebook, attach one as live base materials.

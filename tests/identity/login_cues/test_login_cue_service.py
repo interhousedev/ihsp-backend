@@ -291,8 +291,8 @@ async def test_delete_unknown_cue_raises(harness: Harness) -> None:
         await harness.service.delete(new_id())
 
 
-def test_public_names_are_given_names_only() -> None:
-    """Login cues: a public list shows given names only; repeats are numbered."""
+def test_public_names_are_initials_only() -> None:
+    """Login cues: a public list shows initials only; repeats are numbered."""
     names = short_names(
         [
             "Valiyev Ali Akramovich",
@@ -301,4 +301,4 @@ def test_public_names_are_given_names_only() -> None:
         ]
     )
 
-    assert names == ["Ali", "Dilnoza (1)", "Dilnoza (2)"]
+    assert names == ["A. V.", "D. K. (1)", "D. K. (2)"]

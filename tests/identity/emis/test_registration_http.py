@@ -26,6 +26,16 @@ USE_CASES = (
 )
 
 
+class _Onboarding:
+    """The Telegram step; its behaviour is tested in test_telegram_onboarding."""
+
+    async def issue(self, user_id: object) -> str:
+        return "link-code"
+
+    async def is_linked(self, code: str) -> bool:
+        return False
+
+
 class Api:
     """A client over the B2 routers with a switchable caller."""
 
@@ -52,7 +62,10 @@ async def api(world: World, http_client: HttpClientFactory) -> Api:
     client = await http_client(
         ROUTERS,
         {get_actor: current_actor},
-        identity=SimpleNamespace(emis=emis),
+        identity=SimpleNamespace(
+            emis=emis,
+            auth=SimpleNamespace(telegram_onboarding=_Onboarding()),
+        ),
     )
     return Api(client, holder)
 
@@ -142,6 +155,8 @@ async def test_register_complete_returns_login_and_redirect(
         "login": "abdullayev.alisher",
         "redirect_to": "https://hydra.test/continue?c=challenge-1",
         "login_ticket": None,
+        "telegram_linked": False,
+        "telegram_link_code": "link-code",
     }
 
 
@@ -379,6 +394,8 @@ def test_every_route_of_the_contract_exists() -> None:
         ("POST", "/v1/id/reclaim/email"),
         ("POST", "/v1/id/reclaim/complete"),
         ("POST", "/v1/id/me/emis-password"),
+        ("POST", "/v1/id/me/emis-password/change"),
+        ("POST", "/v1/id/register/telegram-status"),
         ("DELETE", "/v1/id/me"),
         ("GET", "/v1/id/login-cues/groups"),
         ("GET", "/v1/id/login-cues/groups/{group_id}"),

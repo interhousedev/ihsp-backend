@@ -22,6 +22,10 @@ class EmisRequestError(Exception):
     """EMIS did not answer, or answered with something unexpected."""
 
 
+class EmisPasswordRejectedError(Exception):
+    """EMIS refused the new password (HTTP 400 or 422)."""
+
+
 class EmisPausedError(EmisRequestError):
     """EMIS asked us to stop (429 or Retry-After): calls wait ``retry_after``."""
 

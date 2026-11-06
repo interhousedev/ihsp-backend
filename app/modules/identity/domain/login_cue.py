@@ -29,9 +29,16 @@ def first_name(full_name: str) -> str:
     return parts[1] if len(parts) > 1 else "".join(parts)
 
 
+def initials(full_name: str) -> str:
+    """Return "G. S." for a "Surname Given Patronymic" name, for public lists."""
+    parts = full_name.split()
+    ordered = [parts[1], parts[0]] if len(parts) > 1 else parts
+    return " ".join(f"{part[0].upper()}." for part in ordered)
+
+
 def short_names(full_names: list[str]) -> list[str]:
-    """Return given names only; repeated ones are numbered so rows stay distinct."""
-    names = [first_name(name) for name in full_names]
+    """Return initials only; repeated ones are numbered so rows stay distinct."""
+    names = [initials(name) for name in full_names]
     seen: dict[str, int] = {}
     numbered = []
     for name in names:

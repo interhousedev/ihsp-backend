@@ -244,5 +244,8 @@
   "bot-workoffs-student-title": "Отработки",
   "bot-workoffs-teacher-empty": "Открытых отработок нет.",
   "bot-workoffs-teacher-hint": "Нажмите на отработку, чтобы отметить её выполненной.",
-  "bot-workoffs-teacher-title": "Открытых отработок: {count}"
+  "bot-workoffs-teacher-title": "Открытых отработок: {count}",
+  "bot-onboarding-linked": "Готово: Telegram привязан. Вернитесь на страницу регистрации, чтобы продолжить.",
+  "bot-onboarding-expired": "Ссылка устарела или уже использована. Откройте её заново со страницы регистрации.",
+  "bot-onboarding-linked-elsewhere": "Этот Telegram уже привязан к другому аккаунту. Откройте ссылку из другого аккаунта Telegram."
 }

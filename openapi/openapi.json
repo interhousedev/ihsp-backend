@@ -5816,6 +5816,60 @@
         "title": "CertificateTypeResponse",
         "type": "object"
       },
+      "ChangeEmisPasswordBody": {
+        "description": "A change of the EMIS password; exactly one second factor is required.",
+        "properties": {
+          "account_password": {
+            "anyOf": [
+              {
+                "format": "password",
+                "maxLength": 200,
+                "type": "string",
+                "writeOnly": true
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Password"
+          },
+          "current_emis_password": {
+            "format": "password",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Current Emis Password",
+            "type": "string",
+            "writeOnly": true
+          },
+          "new_emis_password": {
+            "format": "password",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "New Emis Password",
+            "type": "string",
+            "writeOnly": true
+          },
+          "otp_code": {
+            "anyOf": [
+              {
+                "maxLength": 12,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Otp Code"
+          }
+        },
+        "required": [
+          "current_emis_password",
+          "new_emis_password"
+        ],
+        "title": "ChangeEmisPasswordBody",
+        "type": "object"
+      },
       "ChangePasswordBody": {
         "description": "POST /v1/id/me/password.",
         "properties": {
@@ -6728,6 +6782,20 @@
             "minLength": 10,
             "title": "Registration Token",
             "type": "string"
+          },
+          "telegram_init_data": {
+            "anyOf": [
+              {
+                "format": "password",
+                "maxLength": 8192,
+                "type": "string",
+                "writeOnly": true
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telegram Init Data"
           }
         },
         "required": [
@@ -6766,6 +6834,22 @@
               }
             ],
             "title": "Redirect To"
+          },
+          "telegram_link_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telegram Link Code"
+          },
+          "telegram_linked": {
+            "default": false,
+            "title": "Telegram Linked",
+            "type": "boolean"
           }
         },
         "required": [
@@ -37630,6 +37714,36 @@
         "title": "TeachingStudentResponse",
         "type": "object"
       },
+      "TelegramLinkStatusBody": {
+        "description": "The one-time code of the registration's Telegram step.",
+        "properties": {
+          "code": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "TelegramLinkStatusBody",
+        "type": "object"
+      },
+      "TelegramLinkStatusResponse": {
+        "description": "Whether the bot has redeemed the code.",
+        "properties": {
+          "linked": {
+            "title": "Linked",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "linked"
+        ],
+        "title": "TelegramLinkStatusResponse",
+        "type": "object"
+      },
       "TelegramLinkedResponse": {
         "description": "The Telegram account is linked.",
         "properties": {
@@ -59063,6 +59177,41 @@
         ]
       }
     },
+    "/v1/id/me/emis-password/change": {
+      "post": {
+        "description": "Check the second factor and the current EMIS password, then change it.",
+        "operationId": "change_emis_password_v1_id_me_emis_password_change_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeEmisPasswordBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change Emis Password",
+        "tags": [
+          "id-registration"
+        ]
+      }
+    },
     "/v1/id/me/mcp-clients": {
       "get": {
         "description": "The caller's own OAuth clients.",
@@ -60498,6 +60647,48 @@
           }
         },
         "summary": "Start Cue Registration",
+        "tags": [
+          "id-registration"
+        ]
+      }
+    },
+    "/v1/id/register/telegram-status": {
+      "post": {
+        "description": "Polled by the registration's Telegram step; the code is the credential.",
+        "operationId": "register_telegram_status_v1_id_register_telegram_status_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TelegramLinkStatusBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TelegramLinkStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Register Telegram Status",
         "tags": [
           "id-registration"
         ]
@@ -75722,6 +75913,53 @@
           }
         },
         "summary": "Post Logout",
+        "tags": [
+          "oauth"
+        ]
+      }
+    },
+    "/v1/oauth/mcp/redirect-sync": {
+      "get": {
+        "description": "Always 204: Hydra stays the one that accepts or refuses the request.",
+        "operationId": "redirect_sync_v1_oauth_mcp_redirect_sync_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "client_id",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Client Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "redirect_uri",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Redirect Uri",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Redirect Sync",
         "tags": [
           "oauth"
         ]

@@ -115,7 +115,13 @@ from app.modules.identity.application.set_user_photo import SetUserPhoto
 from app.modules.identity.application.start_login_session import LoginSessionStarter
 from app.modules.identity.application.step_up import StepUp
 from app.modules.identity.application.suspend_mail import SuspendMail
+from app.modules.identity.application.sync_gemini_redirect import SyncGeminiRedirect
 from app.modules.identity.application.telegram_login import TelegramLogin
+from app.modules.identity.application.telegram_onboarding import (
+    LINK_CODE_TTL,
+    OnboardingLink,
+    TelegramOnboarding,
+)
 from app.modules.identity.application.telegram_status import TelegramStatus
 from app.modules.identity.application.unblock_user import UnblockUser
 from app.modules.identity.application.unlink_telegram_account import (
@@ -135,6 +141,7 @@ from app.modules.identity.infrastructure.argon2_hasher import Argon2PasswordHash
 from app.modules.identity.infrastructure.connector_token_verifier import (
     DbConnectorTokenVerifier,
 )
+from app.modules.identity.infrastructure.emis.pending_store import RedisPendingStore
 from app.modules.identity.infrastructure.emis.uow import EmisSqlUnitOfWork
 from app.modules.identity.infrastructure.hydra.jwks import JwksCache
 from app.modules.identity.infrastructure.jwt_assertion import JoseAssertionSigner
@@ -235,6 +242,7 @@ class AuthServices:
     confirm_email_change: ConfirmEmailChange
     list_activity: ListActivity
     step_up: StepUp
+    telegram_onboarding: TelegramOnboarding
     list_connectors: ListConnectors
     offer_mcp_scopes: OfferMcpScopes
     decide_scope_offer: DecideScopeOffer
@@ -244,6 +252,7 @@ class AuthServices:
     create_connector: CreateConnector
     revoke_connector: RevokeConnector
     register_mcp_client: RegisterMcpClient
+    sync_gemini_redirect: SyncGeminiRedirect
     mcp_clients: McpClients
     get_mcp_setup: GetMcpSetup
     connector_status: ConnectorStatus
@@ -558,6 +567,18 @@ def build_auth(
             totp=totp,
             rate_limiter=limiter,
         ),
+        telegram_onboarding=TelegramOnboarding(
+            store=RedisPendingStore(
+                redis,
+                prefix="tg-onboarding",
+                model=OnboardingLink,
+                ttl=LINK_CODE_TTL,
+            ),
+            uow_factory=uow_factory,
+            linker=LinkTelegramAccount(email=email, clock=clock),
+            verifier=verifier,
+            max_age=init_max_age,
+        ),
         get_me=GetMe(
             uow_factory=uow_factory,
             mail_domain=settings.smtp_out.mail_domain,
@@ -613,6 +634,7 @@ def build_auth(
         ),
         create_connector=CreateConnector(uow_factory=uow_factory, otp=otp, clock=clock),
         revoke_connector=revoke_connector,
+        sync_gemini_redirect=SyncGeminiRedirect(hydra=hydra),
         register_mcp_client=RegisterMcpClient(
             hydra=hydra,
             rate_limiter=limiter,

@@ -47,6 +47,10 @@ class EmisApi(EmisTimetableSource, Protocol):
         """Return an access token; raise EmisAuthError on HTTP 401."""
         ...
 
+    async def change_password(self, token: str, new_password: str) -> None:
+        """Change the password; ``EmisPasswordRejectedError`` if EMIS refuses it."""
+        ...
+
     async def profile(self, token: str) -> EmisProfile:
         """Return the student's profile."""
         ...

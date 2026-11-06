@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 
+from app.modules.identity.application.change_emis_password import ChangeEmisPassword
 from app.modules.identity.application.delete_account import (
     DeleteAccount,
     TelegramNotice,
@@ -66,6 +67,7 @@ class EmisServices:
     reclaim_email_code: SendReclaimEmailCode
     reclaim_complete: CompleteReclaim
     update_emis_password: UpdateEmisPassword
+    change_emis_password: ChangeEmisPassword
     delete_account: DeleteAccount
     finalize_account_deletions: FinalizeAccountDeletions
     destroy_emis_secret: DestroyEmisSecret
@@ -196,6 +198,15 @@ def build_emis(
             emis=emis,
             store=store,
             uow_factory=uow_factory,
+            rate_limiter=deps.rate_limiter,
+            kicker=deps.kicker,
+        ),
+        change_emis_password=ChangeEmisPassword(
+            emis=emis,
+            store=store,
+            uow_factory=uow_factory,
+            hasher=hasher,
+            otp=otp_store,
             rate_limiter=deps.rate_limiter,
             kicker=deps.kicker,
         ),

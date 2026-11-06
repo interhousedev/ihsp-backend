@@ -7,7 +7,10 @@ from app.interfaces.http.dependencies import get_client_ip, get_container
 from app.interfaces.http.v1.id_registration.schemas import (
     CompleteRegistrationBody,
     CompleteRegistrationResponse,
+    TelegramLinkStatusBody,
+    TelegramLinkStatusResponse,
 )
+from app.modules.identity.application.request_context import RequestContext
 
 from fastapi import Depends, Request
 
@@ -28,8 +31,28 @@ async def register_complete(
         ip=ip,
         user_agent=request.headers.get("user-agent"),
     )
+    onboarding = container.identity.auth.telegram_onboarding
+    init_data = body.telegram_init_data
+    linked = init_data is not None and await onboarding.link_from_init_data(
+        registered.user_id,
+        init_data.get_secret_value(),
+        RequestContext(ip=ip, user_agent=request.headers.get("user-agent")),
+    )
     return CompleteRegistrationResponse(
         login=registered.login,
         redirect_to=registered.redirect_to,
         login_ticket=registered.login_ticket,
+        telegram_linked=linked,
+        telegram_link_code=(
+            None if linked else await onboarding.issue(registered.user_id)
+        ),
     )
+
+
+async def register_telegram_status(
+    body: TelegramLinkStatusBody,
+    container: Annotated[Container, Depends(get_container)],
+) -> TelegramLinkStatusResponse:
+    """Polled by the registration's Telegram step; the code is the credential."""
+    linked = await container.identity.auth.telegram_onboarding.is_linked(body.code)
+    return TelegramLinkStatusResponse(linked=linked)

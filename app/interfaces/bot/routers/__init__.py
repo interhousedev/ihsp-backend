@@ -33,6 +33,9 @@ def build_routers() -> list[Router]:
     from app.interfaces.bot.routers.common.unexpected.router import (
         build_router as unexpected,
     )
+    from app.interfaces.bot.routers.guest.onboarding_link import (
+        build_router as onboarding_link,
+    )
     from app.interfaces.bot.routers.guest.router import build_router as guest
     from app.interfaces.bot.routers.student.homework.router import (
         build_router as homework,
@@ -59,6 +62,7 @@ def build_routers() -> list[Router]:
     )
 
     builders = [
+        onboarding_link,
         cancel,
         chat_member,
         security,

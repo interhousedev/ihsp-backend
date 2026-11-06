@@ -168,6 +168,10 @@ class HydraGateway(Protocol):
         """Replace the client's metadata."""
         ...
 
+    async def set_client_redirects(self, client_id: str, uris: list[str]) -> None:
+        """Replace a client's redirect URIs."""
+        ...
+
     async def exchange_code(
         self, client_id: str, code: str, verifier: str, redirect_uri: str
     ) -> TokenSet:

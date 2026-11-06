@@ -348,6 +348,15 @@ class HydraAdmin:
         # A partial list would hide clients and undercount the owner's limit.
         raise HydraUnavailableError(support_details="hydra clients: too many pages")
 
+    async def set_client_redirects(self, client_id: str, uris: list[str]) -> None:
+        """Replace a client's redirect URIs with a JSON patch."""
+        patch = [{"op": "replace", "path": "/redirect_uris", "value": uris}]
+        response = await self._send(
+            "PATCH", f"{self._admin}/admin/clients/{client_id}", json=patch
+        )
+        if response.status_code != 200:
+            raise self._unexpected(response)
+
     async def get_client(self, client_id: str) -> HydraClient | None:
         """Return one client or None."""
         response = await self._send("GET", f"{self._admin}/admin/clients/{client_id}")

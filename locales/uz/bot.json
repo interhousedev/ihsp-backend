@@ -244,5 +244,8 @@
   "bot-workoffs-student-title": "Ishlab berish topshiriqlari",
   "bot-workoffs-teacher-empty": "Ochiq ishlab berishlar yoʻq.",
   "bot-workoffs-teacher-hint": "Bajarilgan deb belgilash uchun ishlab berishni bosing.",
-  "bot-workoffs-teacher-title": "Ochiq ishlab berishlar: {count}"
+  "bot-workoffs-teacher-title": "Ochiq ishlab berishlar: {count}",
+  "bot-onboarding-linked": "Tayyor: Telegram ulandi. Davom etish uchun roʻyxatdan oʻtish sahifasiga qayting.",
+  "bot-onboarding-expired": "Havola eskirgan yoki allaqachon ishlatilgan. Uni roʻyxatdan oʻtish sahifasidan qayta oching.",
+  "bot-onboarding-linked-elsewhere": "Bu Telegram boshqa hisobga ulangan. Havolani boshqa Telegram hisobidan oching."
 }

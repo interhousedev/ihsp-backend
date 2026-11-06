@@ -6,6 +6,29 @@ location = /oauth2/register {
     return 404;
 }
 
+# Gemini generates its redirect URI per user: teach the client that URI, then let Hydra
+# decide. A failed sync never blocks the authorization.
+location = /_mcp_redirect_sync {
+    internal;
+    proxy_pass_request_body off;
+    proxy_set_header Content-Length "";
+    include /etc/nginx/ihsp/proxy.inc;
+    proxy_pass $up_identity/v1/oauth/mcp/redirect-sync$is_args$args;
+}
+
+location = /oauth2/auth {
+    include /etc/nginx/ihsp/proxy.inc;
+    limit_req zone=ihsp_auth burst=20 nodelay;
+    auth_request /_mcp_redirect_sync;
+    error_page 500 = @hydra_auth;
+    proxy_pass $up_hydra;
+}
+
+location @hydra_auth {
+    include /etc/nginx/ihsp/proxy.inc;
+    proxy_pass $up_hydra;
+}
+
 location ~ ^/(oauth2/|\.well-known/|userinfo$) {
     include /etc/nginx/ihsp/proxy.inc;
     limit_req zone=ihsp_auth burst=20 nodelay;

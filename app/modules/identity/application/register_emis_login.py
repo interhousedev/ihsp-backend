@@ -1,5 +1,7 @@
 """Check EMIS credentials for registration and reclaim (ID-1, ID-2, ID-3)."""
 
+import hashlib
+from contextlib import suppress
 from dataclasses import dataclass
 
 from app.modules.identity.application.register_errors import (
@@ -7,12 +9,15 @@ from app.modules.identity.application.register_errors import (
     emis_errors,
 )
 from app.modules.identity.application.register_ports import CredentialStore, EmisApi
-from app.shared.contracts.emis import EmisProfile
+from app.shared.base_error import RateLimitedError
+from app.shared.contracts.emis import EmisAuthFailed, EmisProfile
 from app.shared.rate_limit import RateLimiter
 
 REG_IP_LIMIT = 10
 REG_GLOBAL_LIMIT = 300
 REG_WINDOW_SECONDS = 3600
+# Wrong passwords per EMIS login and hour: a date of birth has few possible values.
+REG_LOGIN_FAILURE_LIMIT = 5
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,6 +29,11 @@ class VerifiedEmisAccount:
     token: str
     token_enc: str
     profile: EmisProfile
+
+
+def _login_failures_key(login: str) -> str:
+    digest = hashlib.sha256(login.lower().encode()).hexdigest()
+    return f"reg-login-failures:{digest}"
 
 
 class VerifyEmisCredentials:
@@ -53,9 +63,11 @@ class VerifyEmisCredentials:
         """
         await self._check_limits(ip)
         login = emis_login.strip()
+        failures_key = _login_failures_key(login)
+        await self._rate_limiter.check(failures_key, limit=REG_LOGIN_FAILURE_LIMIT)
         with emis_errors():
             password_enc = await self._store.encrypt(emis_password)  # before EMIS
-            token = await self._emis.login(login, emis_password)
+            token = await self._log_in(login, emis_password, failures_key)
             token_enc = await self._store.encrypt(token)
             profile = await self._emis.profile(token)
         if profile.institution_id != self._institution_id:
@@ -69,6 +81,19 @@ class VerifyEmisCredentials:
             token_enc=token_enc,
             profile=profile,
         )
+
+    async def _log_in(self, login: str, password: str, failures_key: str) -> str:
+        try:
+            with emis_errors():
+                return await self._emis.login(login, password)
+        except EmisAuthFailed:
+            with suppress(RateLimitedError):
+                await self._rate_limiter.hit(
+                    failures_key,
+                    limit=REG_LOGIN_FAILURE_LIMIT,
+                    window_seconds=REG_WINDOW_SECONDS,
+                )
+            raise
 
     async def _check_limits(self, ip: str | None) -> None:
         await self._rate_limiter.hit(

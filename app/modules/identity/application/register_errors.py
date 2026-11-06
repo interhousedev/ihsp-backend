@@ -122,6 +122,20 @@ class WrongPasswordError(ForbiddenError):
     message_key = "id-wrong-password"
 
 
+class WrongEmisPasswordError(ForbiddenError):
+    """The current EMIS password is wrong (403, so the web client stays logged in)."""
+
+    code = "id/wrong-emis-password"
+    message_key = "id-wrong-emis-password"
+
+
+class EmisNewPasswordRejectedError(ValidationFailedError):
+    """EMIS refused the new password, for example because it is too weak."""
+
+    code = "id/emis-new-password-rejected"
+    message_key = "id-emis-new-password-rejected"
+
+
 class DeleteForbiddenError(ForbiddenError):
     """Only student accounts can delete themselves."""
 

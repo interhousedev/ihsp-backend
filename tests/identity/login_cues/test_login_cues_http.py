@@ -124,7 +124,7 @@ async def test_public_routes_never_contain_the_login(
     assert cues.status_code == 200
     assert LOGIN not in cues.text
     assert set(cues.json()[0]) == {"cue_id", "display_name"}
-    assert cues.json()[0]["display_name"] == "Ali"
+    assert cues.json()[0]["display_name"] == "A. V."
 
 
 async def test_public_cue_start_with_consumed_cue_is_gone(

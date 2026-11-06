@@ -203,10 +203,13 @@ async def test_a_taken_login_gets_a_number(world: World) -> None:
 
 async def test_the_eleventh_attempt_from_one_ip_is_rate_limited(world: World) -> None:
     """ID-3: 10 attempts per hour per IP."""
-    for _ in range(10):
+    for attempt in range(10):
         with pytest.raises(EmisAuthFailed):
             await world.register_start.execute(
-                emis_login="student01", emis_password="x", ip="10.0.0.1", locale="ru"
+                emis_login=f"unknown{attempt}",
+                emis_password="x",
+                ip="10.0.0.1",
+                locale="ru",
             )
 
     with pytest.raises(RateLimitedError) as caught:
@@ -218,10 +221,13 @@ async def test_the_eleventh_attempt_from_one_ip_is_rate_limited(world: World) ->
 
 async def test_another_ip_is_not_limited_by_the_first(world: World) -> None:
     """ID-3: the per-IP counter is per IP."""
-    for _ in range(10):
+    for attempt in range(10):
         with pytest.raises(EmisAuthFailed):
             await world.register_start.execute(
-                emis_login="student01", emis_password="x", ip="10.0.0.1", locale="ru"
+                emis_login=f"unknown{attempt}",
+                emis_password="x",
+                ip="10.0.0.1",
+                locale="ru",
             )
 
     assert await start(world, ip="10.0.0.2")

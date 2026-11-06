@@ -20,6 +20,8 @@
   "id-no-emis-link": "Your account is not linked to EMIS.",
   "id-emis-profile-mismatch": "These EMIS credentials belong to a different EMIS account.",
   "id-wrong-password": "The password is wrong.",
+  "id-wrong-emis-password": "The current EMIS password is wrong.",
+  "id-emis-new-password-rejected": "EMIS refused the new password. Choose a different one.",
   "id-delete-forbidden": "This account cannot be deleted here. Contact Administration.",
   "id-mail-reclaimed-notice": "Your account was reclaimed with EMIS credentials: the password was changed and all sessions, connectors and Telegram links were signed out. If this was not you, contact Administration.",
   "id-mail-deleted-notice": "Your account was deleted. Your personal data will be removed on {closes_on}; attendance and marks stay in the lyceum's records.",

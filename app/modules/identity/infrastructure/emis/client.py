@@ -9,6 +9,7 @@ from urllib.parse import SplitResult, unquote, urlsplit
 from app.modules.identity.application.register_models import (
     EmisAuthError,
     EmisFileRetryError,
+    EmisPasswordRejectedError,
     EmisPausedError,
     EmisRequestError,
 )
@@ -63,6 +64,8 @@ CLASS_HOURS_PATH = "student-profiles/class-hours/"
 CLASS_SCHEDULES_PATH = "student-profiles/class-schedules/"
 EMIS_DATE = "%d.%m.%Y"
 LOGIN_PATH = "student-profiles/login/"
+CHANGE_PASSWORD_PATH = "student-profiles/change-password/"
+_PASSWORD_REJECTED_REASONS = ("http_400", "http_422")
 _TIMEOUT = httpx.Timeout(20.0, connect=5.0)
 _DOWNLOAD_TIMEOUT = httpx.Timeout(60.0, connect=5.0)
 _DOWNLOAD_ATTEMPTS = 3
@@ -215,6 +218,16 @@ class EmisClient:
             "POST", LOGIN_PATH, body={"login": login, "password": password}
         )
         return parse_result(LoginResultV1DTO, result).access_token
+
+    async def change_password(self, token: str, new_password: str) -> None:
+        """Change the password of the token's student; the reply body is unused."""
+        body = {"new_password": new_password, "retry_password": new_password}
+        try:
+            await self._send("POST", CHANGE_PASSWORD_PATH, token=token, body=body)
+        except EmisRequestError as exc:
+            if str(exc) in _PASSWORD_REJECTED_REASONS:
+                raise EmisPasswordRejectedError() from exc
+            raise
 
     async def profile(self, token: str) -> EmisProfile:
         """Return the student's profile."""

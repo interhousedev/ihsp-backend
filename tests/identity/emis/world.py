@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from uuid import UUID
 
+from app.modules.identity.application.change_emis_password import ChangeEmisPassword
 from app.modules.identity.application.delete_account import DeleteAccount
 from app.modules.identity.application.destroy_emis_secret import DestroyEmisSecret
 from app.modules.identity.application.emis_gateway import EmisGatewayImpl
@@ -79,6 +80,7 @@ class World:
     reclaim_email_code: SendReclaimEmailCode
     reclaim_complete: CompleteReclaim
     update_emis_password: UpdateEmisPassword
+    change_emis_password: ChangeEmisPassword
     delete_account: DeleteAccount
     finalize_account_deletions: FinalizeAccountDeletions
     destroy_emis_secret: DestroyEmisSecret
@@ -217,6 +219,15 @@ def build_world(
             emis=emis,
             store=store,
             uow_factory=uow_factory,
+            rate_limiter=limiter,
+            kicker=kicker,
+        ),
+        change_emis_password=ChangeEmisPassword(
+            emis=emis,
+            store=store,
+            uow_factory=uow_factory,
+            hasher=hasher,
+            otp=otp,
             rate_limiter=limiter,
             kicker=kicker,
         ),
