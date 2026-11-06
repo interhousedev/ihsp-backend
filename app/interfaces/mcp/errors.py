@@ -91,3 +91,17 @@ class McpFileTooLargeError(ValidationFailedError):
 
     code = "mcp/file-too-large"
     message_key = "mcp-file-too-large"
+
+
+class McpIdempotencyConflictError(ValidationFailedError):
+    """The idempotency key was already used with other arguments."""
+
+    code = "mcp/idempotency-conflict"
+    message_key = "mcp-idempotency-conflict"
+
+
+class McpIdempotencyInProgressError(ValidationFailedError):
+    """The first call with this idempotency key is still running."""
+
+    code = "mcp/idempotency-in-progress"
+    message_key = "mcp-idempotency-in-progress"

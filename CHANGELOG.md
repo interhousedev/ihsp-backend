@@ -16,6 +16,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
+- MCP create tools accept an optional `idempotency_key`: a retry within 24 hours returns the first result.
 - `GET /v1/certificates/files/{id}/download-url`, so a certificate file can be opened from the Telegram mini app.
 - The Test workflow also runs on pushes to `main`.
 - MCP tools for students and course authors: flash cards, tests, notebooks, files, enrolled courses and media links. See the MCP section of the README for the list.

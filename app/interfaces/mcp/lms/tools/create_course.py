@@ -6,6 +6,7 @@ from uuid import UUID
 from app.interfaces.mcp.call_log import LogSpec
 from app.interfaces.mcp.errors import McpCourseNotAllowedError
 from app.interfaces.mcp.guard import current_actor
+from app.interfaces.mcp.idempotency import IdempotencyKey, once
 from app.interfaces.mcp.lms.course_scope import allowed_courses
 from app.interfaces.mcp.toolkit import ToolKit
 from app.shared.lms_scopes import COURSES_WRITE
@@ -40,6 +41,7 @@ def register(kit: ToolKit) -> None:
                 description="public: anyone may enroll; invite: by invite code.",
             ),
         ] = "invite",
+        idempotency_key: IdempotencyKey = None,
     ) -> dict[str, Any]:
         """Create an empty course (draft only; students see nothing until publishing).
 
@@ -49,6 +51,17 @@ def register(kit: ToolKit) -> None:
         actor = current_actor()
         if await allowed_courses(kit, actor) is not None:
             raise McpCourseNotAllowedError()
-        return await kit.deps.lms_commands.create_course(
-            actor, title=title, slug=slug, visibility=visibility
+
+        async def create() -> dict[str, Any]:
+            return await kit.deps.lms_commands.create_course(
+                actor, title=title, slug=slug, visibility=visibility
+            )
+
+        return await once(
+            kit,
+            user_id=actor.user_id,
+            tool="create_course",
+            key=idempotency_key,
+            arguments={"title": title, "slug": slug, "visibility": visibility},
+            create=create,
         )

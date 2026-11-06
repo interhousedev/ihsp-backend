@@ -5,6 +5,7 @@ from typing import Annotated, Any
 from app.interfaces.mcp.call_log import LogSpec
 from app.interfaces.mcp.cards import CardList, card_pairs
 from app.interfaces.mcp.guard import current_actor
+from app.interfaces.mcp.idempotency import IdempotencyKey, once
 from app.interfaces.mcp.student.content_results import flashcard_set_result
 from app.interfaces.mcp.toolkit import ToolKit
 
@@ -25,17 +26,33 @@ def register(kit: ToolKit) -> None:
         description: Annotated[
             str | None, Field(max_length=1000, description="Optional description.")
         ] = None,
+        idempotency_key: IdempotencyKey = None,
     ) -> dict[str, Any]:
         """Create a new flash card set for the student; it is marked as made via MCP.
 
         Sets cannot be deleted through MCP.
         """
         actor = current_actor()
-        found = await kit.deps.flashcards.create_set(
-            actor.user_id,
-            title,
-            card_pairs(cards),
-            source="mcp",
-            description=description,
+
+        async def create() -> dict[str, Any]:
+            found = await kit.deps.flashcards.create_set(
+                actor.user_id,
+                title,
+                card_pairs(cards),
+                source="mcp",
+                description=description,
+            )
+            return flashcard_set_result(kit.deps, found)
+
+        return await once(
+            kit,
+            user_id=actor.user_id,
+            tool="create_flashcard_set",
+            key=idempotency_key,
+            arguments={
+                "title": title,
+                "cards": card_pairs(cards),
+                "description": description,
+            },
+            create=create,
         )
-        return flashcard_set_result(kit.deps, found)

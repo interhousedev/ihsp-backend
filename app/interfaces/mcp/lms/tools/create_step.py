@@ -5,6 +5,7 @@ from uuid import UUID
 
 from app.interfaces.mcp.call_log import LogSpec
 from app.interfaces.mcp.guard import current_actor
+from app.interfaces.mcp.idempotency import IdempotencyKey, once
 from app.interfaces.mcp.lms.course_scope import ensure_course
 from app.interfaces.mcp.toolkit import ToolKit
 from app.shared.lms_scopes import MODULES_WRITE
@@ -26,6 +27,7 @@ def register(kit: ToolKit) -> None:
         title: Annotated[
             str, Field(min_length=1, max_length=200, description="Step title.")
         ],
+        idempotency_key: IdempotencyKey = None,
     ) -> dict[str, Any]:
         """Add a new empty step at the end of a section of a course draft.
 
@@ -34,6 +36,21 @@ def register(kit: ToolKit) -> None:
         """
         actor = current_actor()
         await ensure_course(kit, actor, course_id)
-        return await kit.deps.lms_commands.create_step(
-            actor, course_id, section_id, title, via_mcp=True
+
+        async def create() -> dict[str, Any]:
+            return await kit.deps.lms_commands.create_step(
+                actor, course_id, section_id, title, via_mcp=True
+            )
+
+        return await once(
+            kit,
+            user_id=actor.user_id,
+            tool="create_step",
+            key=idempotency_key,
+            arguments={
+                "course_id": course_id,
+                "section_id": section_id,
+                "title": title,
+            },
+            create=create,
         )
