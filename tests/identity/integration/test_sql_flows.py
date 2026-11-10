@@ -207,4 +207,5 @@ async def test_teacher_creation_and_activation_on_postgres(sql_auth: Rig) -> Non
     assert (
         teacher.status.value == "active" and teacher.recovery_email == "me@example.org"
     )
-    assert teacher.roles == {Role.TEACHER} and teacher.activation_token_hash is None
+    assert teacher.roles == {Role.TEACHER, Role.LMS_ADMIN}
+    assert teacher.activation_token_hash is None

@@ -99,9 +99,9 @@ async def ensure_teachers(container: Container) -> dict[str, UUID]:
             last_name=spec.last_name,
             password=TEACHER_PASSWORD,
             roles=(
-                {Role.TEACHER, Role.LMS_CREATOR}
+                {Role.TEACHER, Role.LMS_ADMIN, Role.LMS_CREATOR}
                 if spec.course_creator
-                else {Role.TEACHER}
+                else {Role.TEACHER, Role.LMS_ADMIN}
             ),
         )
         for spec in TEACHERS

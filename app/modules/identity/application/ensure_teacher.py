@@ -83,10 +83,14 @@ async def _create(
         last_name=last,
         middle_name=middle,
         login=next_free(base, await uow.users.logins_with_prefix(base)),
-        roles={Role.TEACHER},
+        roles={Role.TEACHER, Role.LMS_ADMIN},
         status=UserStatus.PENDING_ACTIVATION,
         emis_teacher_id=emis_teacher_id,
     )
     await uow.users.add(user)
-    uow.audit(make_audit(USER_CREATED, user_id=user.id, roles=["teacher"], via="emis"))
+    uow.audit(
+        make_audit(
+            USER_CREATED, user_id=user.id, roles=["teacher", "lms_admin"], via="emis"
+        )
+    )
     return user

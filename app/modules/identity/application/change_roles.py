@@ -35,9 +35,10 @@ COURSE_CREATOR_BASES = frozenset({Role.TEACHER, Role.ADMIN})
 class ChangeRoles:
     """Any role change logs the user out everywhere in the same transaction (ID-11).
 
-    `lms_admin` is an extra role of Administration: it is only granted to a user who
-    holds `admin`, and removing `admin` removes it too. `lms_creator` is only granted
-    to a teacher or an administrator.
+    `lms_admin` is granted to a teacher or an administrator (teachers get it by
+    default; an administrator can remove it) and goes along when the last of those
+    two roles is removed. `lms_creator` is only granted to a teacher or an
+    administrator.
     """
 
     uow_factory: UowFactory
@@ -92,11 +93,12 @@ class ChangeRoles:
     ) -> list[Role]:
         """Check the roles that lean on others; return `revoke` plus what goes along."""
         after = (user.roles | set(grant)) - set(revoke)
-        if Role.LMS_ADMIN in grant and Role.ADMIN not in after:
+        if Role.LMS_ADMIN in grant and not after & COURSE_CREATOR_BASES:
             raise LmsAdminNeedsAdminError()
         if Role.LMS_CREATOR in grant and not after & COURSE_CREATOR_BASES:
             raise CourseCreatorNotStaffError()
-        if Role.ADMIN in revoke and Role.LMS_ADMIN not in revoke:
+        has_base = Role.ADMIN in after or Role.TEACHER in after
+        if Role.ADMIN in revoke and Role.LMS_ADMIN not in revoke and not has_base:
             return [*revoke, Role.LMS_ADMIN]
         return list(revoke)
 

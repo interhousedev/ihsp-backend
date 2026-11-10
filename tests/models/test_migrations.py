@@ -557,3 +557,43 @@ async def test_lms_0002_allows_ai_as_the_origin_of_a_step_and_reverts(
     assert via == "mcp/mcp,mcp/mcp,ui/ui"
     with pytest.raises(DBAPIError):
         await _insert_step(url, course, "ai")
+
+
+async def test_identity_0013_gives_every_teacher_lms_admin_once(
+    new_database: DatabaseFactory,
+) -> None:
+    """Teachers get `lms_admin`; others stay as they were; a second run is a no-op."""
+    url = await new_database()
+    await _alembic(url, "upgrade", "identity_0012")
+    engine = create_async_engine(url)
+    insert = text(
+        "INSERT INTO id.users (id, first_name, last_name, roles, status) VALUES "
+        "(gen_random_uuid(), :n, 'X', :roles, 'active')"
+    )
+    try:
+        async with engine.begin() as conn:
+            for name, roles in (
+                ("plain", ["teacher"]),
+                ("both", ["teacher", "lms_admin"]),
+                ("admin", ["admin"]),
+                ("student", ["student"]),
+            ):
+                await conn.execute(insert, {"n": name, "roles": roles})
+        await _alembic(url, "upgrade", "identity@head")
+        await _alembic(url, "downgrade", "identity_0012")
+        await _alembic(url, "upgrade", "identity@head")
+        async with engine.connect() as conn:
+            rows = (
+                await conn.execute(
+                    text("SELECT first_name, roles FROM id.users ORDER BY first_name")
+                )
+            ).all()
+    finally:
+        await engine.dispose()
+
+    assert {name: sorted(roles) for name, roles in rows} == {
+        "admin": ["admin"],
+        "both": ["lms_admin", "teacher"],
+        "plain": ["lms_admin", "teacher"],
+        "student": ["student"],
+    }

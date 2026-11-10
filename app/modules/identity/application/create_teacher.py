@@ -34,6 +34,6 @@ class CreateTeacher:
             first_name=first_name,
             middle_name=middle_name,
             email=email,
-            roles=[Role.TEACHER],
+            roles=[Role.TEACHER, Role.LMS_ADMIN],
             ctx=ctx,
         )

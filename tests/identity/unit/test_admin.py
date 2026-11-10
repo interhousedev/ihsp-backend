@@ -62,7 +62,7 @@ async def test_creating_a_teacher_generates_the_login_and_a_72_hour_link(
 
     user = auth_world.user(created.user.id)
     assert user.login == "kalandarova.gavxar"
-    assert user.roles == {Role.TEACHER}
+    assert user.roles == {Role.TEACHER, Role.LMS_ADMIN}
     assert user.status == UserStatus.PENDING_ACTIVATION
     assert user.recovery_email == "teacher@example.org"
     assert user.activation_expires_at == auth_world.clock.now() + timedelta(hours=72)
@@ -467,46 +467,31 @@ async def test_the_librarian_grant_event_names_the_role_and_the_admin(
     assert event.metadata == {"role": "librarian"}
 
 
-async def test_lms_admin_is_granted_only_to_a_member_of_administration(
+async def test_lms_admin_is_granted_to_teachers_and_administration_only(
     auth_world: World,
 ) -> None:
-    """ADM-5: `lms_admin` rides on `admin`: refused for others, fine together."""
+    """ADM-5: `lms_admin` needs a teacher or admin base; a student is refused."""
     admin = await admin_of(auth_world)
     teacher = await auth_world.add_user(roles={Role.TEACHER}, login="t.plain")
     member = await auth_world.add_user(roles={Role.ADMIN}, login="a.member")
-    fresh = await auth_world.add_user(roles={Role.TEACHER}, login="t.fresh")
+    student = await auth_world.add_user(roles={Role.STUDENT}, login="s.plain")
 
-    for user in (teacher, fresh):
-        with pytest.raises(LmsAdminNeedsAdminError):
-            await auth_world.auth.change_roles.execute(
-                admin, user.id, grant=[Role.LMS_ADMIN], revoke=[], ctx=CTX
-            )
     with pytest.raises(LmsAdminNeedsAdminError):
         await auth_world.auth.change_roles.execute(
-            admin,
-            member.id,
-            grant=[Role.LMS_ADMIN],
-            revoke=[Role.ADMIN],
-            ctx=CTX,
+            admin, student.id, grant=[Role.LMS_ADMIN], revoke=[], ctx=CTX
         )
-    await auth_world.auth.change_roles.execute(
-        admin, member.id, grant=[Role.LMS_ADMIN], revoke=[], ctx=CTX
-    )
-    await auth_world.auth.change_roles.execute(
-        admin, fresh.id, grant=[Role.ADMIN, Role.LMS_ADMIN], revoke=[], ctx=CTX
-    )
+    for user in (teacher, member):
+        await auth_world.auth.change_roles.execute(
+            admin, user.id, grant=[Role.LMS_ADMIN], revoke=[], ctx=CTX
+        )
 
-    assert auth_world.user(teacher.id).roles == {Role.TEACHER}
+    assert auth_world.user(student.id).roles == {Role.STUDENT}
+    assert auth_world.user(teacher.id).roles == {Role.TEACHER, Role.LMS_ADMIN}
     assert auth_world.user(member.id).roles == {Role.ADMIN, Role.LMS_ADMIN}
-    assert auth_world.user(fresh.id).roles == {
-        Role.TEACHER,
-        Role.ADMIN,
-        Role.LMS_ADMIN,
-    }
 
 
-async def test_removing_admin_removes_lms_admin_too(auth_world: World) -> None:
-    """ADM-5: both revocations are audited; keeping `admin` keeps nothing extra."""
+async def test_removing_admin_keeps_lms_admin_of_a_teacher(auth_world: World) -> None:
+    """A teacher keeps `lms_admin` when `admin` goes; only `admin` is audited."""
     admin = await admin_of(auth_world)
     user = await auth_world.add_user(
         roles={Role.TEACHER, Role.ADMIN, Role.LMS_ADMIN}, login="t.both"
@@ -516,12 +501,44 @@ async def test_removing_admin_removes_lms_admin_too(auth_world: World) -> None:
         admin, user.id, grant=[], revoke=[Role.ADMIN], ctx=CTX
     )
 
-    assert auth_world.user(user.id).roles == {Role.TEACHER}
+    assert auth_world.user(user.id).roles == {Role.TEACHER, Role.LMS_ADMIN}
+    revoked = [a for a in auth_world.store.audits if a.type == "role.revoked"]
+    assert [(a.metadata or {})["role"] for a in revoked] == ["admin"]
+
+
+async def test_removing_admin_removes_lms_admin_of_a_non_teacher(
+    auth_world: World,
+) -> None:
+    """ADM-5: without a teacher role `lms_admin` goes along; both are audited."""
+    admin = await admin_of(auth_world)
+    user = await auth_world.add_user(roles={Role.ADMIN, Role.LMS_ADMIN}, login="a.both")
+
+    await auth_world.auth.change_roles.execute(
+        admin, user.id, grant=[], revoke=[Role.ADMIN], ctx=CTX
+    )
+
+    assert auth_world.user(user.id).roles == set()
     revoked = [a for a in auth_world.store.audits if a.type == "role.revoked"]
     assert sorted((a.metadata or {})["role"] for a in revoked) == [
         "admin",
         "lms_admin",
     ]
+
+
+async def test_an_admin_can_remove_lms_admin_from_a_teacher(
+    auth_world: World,
+) -> None:
+    """The default is only a default: revoking it leaves the teacher role."""
+    admin = await admin_of(auth_world)
+    user = await auth_world.add_user(
+        roles={Role.TEACHER, Role.LMS_ADMIN}, login="t.default"
+    )
+
+    await auth_world.auth.change_roles.execute(
+        admin, user.id, grant=[], revoke=[Role.LMS_ADMIN], ctx=CTX
+    )
+
+    assert auth_world.user(user.id).roles == {Role.TEACHER}
 
 
 async def test_revoking_lms_admin_alone_keeps_admin(auth_world: World) -> None:

@@ -26,7 +26,7 @@ async def test_a_new_teacher_waits_for_activation_without_an_email(
 
     stored = auth_world.user(ref.id)
     assert stored.status is UserStatus.PENDING_ACTIVATION
-    assert stored.roles == {Role.TEACHER}
+    assert stored.roles == {Role.TEACHER, Role.LMS_ADMIN}
     assert (stored.first_name, stored.last_name) == ("Gulnora", "Kalandarova")
     assert stored.middle_name == "Akbarovna"
     assert (stored.recovery_email, stored.password_hash) == (None, None)
