@@ -822,7 +822,8 @@
             "enum": [
               "student",
               "lms",
-              "admin"
+              "admin",
+              "teacher"
             ],
             "title": "Server",
             "type": "string"
@@ -2200,6 +2201,17 @@
             "title": "Source Map",
             "type": "object"
           },
+          "stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage"
+          },
           "status": {
             "$ref": "#/components/schemas/ArtifactStatus"
           },
@@ -2401,6 +2413,17 @@
           "source_count": {
             "title": "Source Count",
             "type": "integer"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage"
           },
           "status": {
             "$ref": "#/components/schemas/ArtifactStatus"
@@ -7116,7 +7139,8 @@
             "enum": [
               "student",
               "lms",
-              "admin"
+              "admin",
+              "teacher"
             ],
             "title": "Server",
             "type": "string"
@@ -7232,7 +7256,8 @@
                 "enum": [
                   "student",
                   "lms",
-                  "admin"
+                  "admin",
+                  "teacher"
                 ],
                 "type": "string"
               },
@@ -8397,7 +8422,8 @@
             "enum": [
               "student",
               "lms",
-              "admin"
+              "admin",
+              "teacher"
             ],
             "title": "Server",
             "type": "string"
@@ -8570,7 +8596,8 @@
             "enum": [
               "student",
               "lms",
-              "admin"
+              "admin",
+              "teacher"
             ],
             "title": "Server",
             "type": "string"
@@ -21924,7 +21951,8 @@
             "enum": [
               "student",
               "lms",
-              "admin"
+              "admin",
+              "teacher"
             ],
             "title": "Server",
             "type": "string"
@@ -22025,7 +22053,8 @@
                 "enum": [
                   "student",
                   "lms",
-                  "admin"
+                  "admin",
+                  "teacher"
                 ],
                 "type": "string"
               },
@@ -22113,7 +22142,8 @@
             "enum": [
               "student",
               "lms",
-              "admin"
+              "admin",
+              "teacher"
             ],
             "title": "Server",
             "type": "string"
@@ -31408,7 +31438,8 @@
             "enum": [
               "student",
               "lms",
-              "admin"
+              "admin",
+              "teacher"
             ],
             "title": "Server",
             "type": "string"
@@ -32050,7 +32081,8 @@
             "enum": [
               "student",
               "lms",
-              "admin"
+              "admin",
+              "teacher"
             ],
             "title": "Server",
             "type": "string"
@@ -52210,7 +52242,8 @@
                   "enum": [
                     "student",
                     "lms",
-                    "admin"
+                    "admin",
+                    "teacher"
                   ],
                   "type": "string"
                 },
@@ -61258,7 +61291,8 @@
               "enum": [
                 "student",
                 "lms",
-                "admin"
+                "admin",
+                "teacher"
               ],
               "title": "Server",
               "type": "string"
@@ -61320,7 +61354,8 @@
               "enum": [
                 "student",
                 "lms",
-                "admin"
+                "admin",
+                "teacher"
               ],
               "title": "Server",
               "type": "string"
