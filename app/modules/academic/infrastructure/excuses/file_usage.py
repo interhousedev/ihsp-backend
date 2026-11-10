@@ -3,6 +3,7 @@
 from collections.abc import Sequence
 from uuid import UUID
 
+from app.modules.academic.infrastructure.classwork.sql_helpers import uuid_array
 from app.modules.academic.infrastructure.orm.excuse import (
     Excuse,
     ExcuseMessage,
@@ -33,7 +34,11 @@ class SqlExcuseFileUsage:
                     select(ExcuseMessage.file_ids, Excuse.id, ExcuseTemplate.code)
                     .join(Excuse, Excuse.id == ExcuseMessage.excuse_id)
                     .join(ExcuseTemplate, ExcuseTemplate.id == Excuse.template_id)
-                    .where(ExcuseMessage.file_ids.overlap(list(wanted)))
+                    .where(
+                        ExcuseMessage.file_ids.op("&&", is_comparison=True)(
+                            uuid_array(list(wanted))
+                        )
+                    )
                 )
             ).all()
         used: dict[UUID, list[tuple[str, UUID, str]]] = {}

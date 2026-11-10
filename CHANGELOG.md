@@ -10,6 +10,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 - `POST /v1/admin/vault/unseal` takes only `{key}`: the `otp_code` field and the step-up code requirement are removed (administrator role, rate limit and audit stay). Other admin step-up flows are unchanged. `iht-web` needs `bun run sync:openapi`.
 
+### Fixed
+
+- `GET /v1/me/files` answered 500: the excuse attachment lookup used `.overlap` on a generic `ARRAY` column; it now uses the `&&` operator with a bound `uuid[]`.
+
 ## [1.2.0] - 2026-11-10
 
 ### Added
