@@ -215,6 +215,18 @@ class FakeSchedule:
         names = (x.subject_name for x in self.lessons if x.subject_id == subject_id)
         return next(names, None)
 
+    async def subject_titles(
+        self, subject_ids: list[UUID], locale: str
+    ) -> dict[UUID, str]:
+        """Names per language (`localized`), else the one name of the subject."""
+        found: dict[UUID, str] = {}
+        for subject_id in subject_ids:
+            name = getattr(self, "localized", {}).get((subject_id, locale))
+            name = name or await self.subject_title(subject_id)
+            if name is not None:
+                found[subject_id] = name
+        return found
+
 
 class FakeFiles:
     """FilesApi with files owned by users; check_access = ownership."""

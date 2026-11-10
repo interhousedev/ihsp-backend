@@ -83,6 +83,65 @@ LMS_TOOLS: dict[str, tuple[str, dict[str, Any]]] = {
         {"step_id": STEP, "block_id": "b", "question": QUESTION},
     ),
     "add_flashcards_block": ("lms.modules.write", {"step_id": STEP, "cards": CARDS}),
+    "move_section": (
+        "lms.modules.write",
+        {"course_id": COURSE, "section_id": "s", "position": 0},
+    ),
+    "move_step": (
+        "lms.modules.write",
+        {"course_id": COURSE, "step_id": STEP, "to_section_id": "s", "position": 0},
+    ),
+    "move_block": (
+        "lms.modules.write",
+        {"step_id": STEP, "block_id": "b", "position": 0},
+    ),
+    "move_question": (
+        "lms.modules.write",
+        {"step_id": STEP, "block_id": "b", "question_id": "q", "position": 0},
+    ),
+    "update_block": (
+        "lms.modules.write",
+        {
+            "step_id": STEP,
+            "block_id": "b",
+            "block": {"type": "text", "markdown": "m"},
+        },
+    ),
+    "delete_block": ("lms.modules.write", {"step_id": STEP, "block_id": "b"}),
+    "update_question": (
+        "lms.modules.write",
+        {"step_id": STEP, "block_id": "b", "question_id": "q", "question": QUESTION},
+    ),
+    "delete_question": (
+        "lms.modules.write",
+        {"step_id": STEP, "block_id": "b", "question_id": "q"},
+    ),
+    "build_course": (
+        "lms.modules.write",
+        {
+            "course_id": COURSE,
+            "sections": [{"title": "t", "steps": [{"title": "t"}]}],
+        },
+    ),
+    "generate_course_draft": ("lms.modules.write", {"topic": "Algebra"}),
+    "generate_lesson": ("lms.modules.write", {"topic": "Algebra"}),
+    "publish": ("lms.courses.write", {"course_id": COURSE}),
+    "restore_version": ("lms.courses.write", {"course_id": COURSE, "number": 1}),
+    "update_settings": ("lms.courses.write", {"course_id": COURSE}),
+    "add_staff": (
+        "lms.courses.write",
+        {"course_id": COURSE, "login": "t1", "role": "teacher"},
+    ),
+    "remove_staff": ("lms.courses.write", {"course_id": COURSE, "user_id": ID}),
+    "override_score": (
+        "lms.courses.write",
+        {"attempt_id": ID, "score": 5, "comment": "ok"},
+    ),
+    "get_settings": ("lms.courses.read", {"course_id": COURSE}),
+    "list_staff": ("lms.courses.read", {"course_id": COURSE}),
+    "list_students": ("lms.courses.read", {"course_id": COURSE}),
+    "course_progress": ("lms.courses.read", {"course_id": COURSE}),
+    "get_attempt": ("lms.courses.read", {"attempt_id": ID}),
 }
 ADMIN_TOOLS: dict[str, tuple[str, dict[str, Any]]] = {
     "search_users": ("people:read", {"query": "x"}),
@@ -116,7 +175,7 @@ def _writers(tools: list[Tool]) -> set[str]:
 
 
 FORBIDDEN_VERBS = re.compile(r"delete|remove|publish|restore|discard|drop|destroy")
-LMS_FORBIDDEN_VERBS = re.compile(r"publish|restore|discard|drop|destroy")
+LMS_FORBIDDEN_VERBS = re.compile(r"discard|drop|destroy")
 
 
 @pytest.mark.parametrize("server", ["student", "lms", "admin"])
@@ -143,7 +202,7 @@ def test_this_catalog_table_is_the_registry(server: ServerName) -> None:
 async def test_no_server_has_a_publish_tool_and_only_lms_deletes(
     world: World, server: ServerName
 ) -> None:
-    """MCP-6: nothing publishes; only the LMS server deletes."""
+    """MCP-6: only the LMS server publishes or deletes."""
     token, _ = world.connector_token(server, *SCOPES_BY_SERVER[server])
 
     async with world.session(server, token) as session:
@@ -158,8 +217,8 @@ async def test_no_server_has_a_publish_tool_and_only_lms_deletes(
     assert ("create_course" in names) == (server == "lms")
 
 
-async def test_lms_server_writes_drafts_only(world: World) -> None:
-    """MCP-6: the LMS write tools are the course and draft CRUD, never publishing."""
+async def test_lms_server_writes_drafts_and_course_operations(world: World) -> None:
+    """MCP-6: the LMS writers are the draft CRUD and the course operations."""
     token, _ = world.connector_token("lms", *SCOPES_BY_SERVER["lms"])
 
     async with world.session("lms", token) as session:
@@ -181,13 +240,37 @@ async def test_lms_server_writes_drafts_only(world: World) -> None:
         "add_test_block",
         "add_question",
         "add_flashcards_block",
+        "move_section",
+        "move_step",
+        "move_block",
+        "move_question",
+        "update_block",
+        "delete_block",
+        "update_question",
+        "delete_question",
+        "build_course",
+        "publish",
+        "restore_version",
+        "update_settings",
+        "add_staff",
+        "remove_staff",
+        "override_score",
+        "generate_course_draft",
+        "generate_lesson",
     }
     destructive = {
         t.name
         for t in listed.tools
         if t.annotations is not None and t.annotations.destructiveHint
     }
-    assert destructive == {"delete_course", "delete_module", "delete_step"}
+    assert destructive == {
+        "delete_course",
+        "delete_module",
+        "delete_step",
+        "delete_block",
+        "delete_question",
+        "remove_staff",
+    }
 
 
 async def test_students_server_writes_only_under_write_scopes(
@@ -264,3 +347,74 @@ async def test_a_tool_that_rotates_a_grant_is_not_idempotent(world: World) -> No
     assert media is not None and media.idempotentHint is False
     plain = by_name["list_files"].annotations
     assert plain is not None and plain.idempotentHint is True
+
+
+TEACHER_SCOPES = {
+    "schedule:read": {"get_today", "get_timetable", "get_lesson", "find_feature"},
+    "groups:read": {"list_my_groups", "get_group_roster"},
+    "journal:read": {"get_journal", "get_group_attendance", "my_missing_attendance"},
+    "homework:write": {"set_homework", "clear_homework"},
+    "marks:read": {"list_temporary_marks", "get_student_record"},
+    "marks:write": {"set_temporary_mark", "delete_temporary_mark"},
+    "assessments:read": {"list_assessments"},
+    "assessments:write": {"create_assessment", "update_assessment"},
+    "workoffs:read": {"get_unfinished_work_report"},
+    "materials:generate": {
+        "generate_questions",
+        "generate_handout",
+        "check_student_work",
+        "check_ai_authorship",
+    },
+    "lesson-plans:read": {"list_plan_templates"},
+    "lesson-plans:write": {"register_plan_template", "generate_lesson_plan"},
+}
+TEACHER_AI_TOOLS = (
+    TEACHER_SCOPES["materials:generate"]
+    | TEACHER_SCOPES["lesson-plans:read"]
+    | TEACHER_SCOPES["lesson-plans:write"]
+)
+
+
+def test_teacher_registry_agrees_with_the_scope_table() -> None:
+    """MCP-8: every teacher tool resolves to the scope that lists it."""
+    for scope, names in TEACHER_SCOPES.items():
+        for name in names:
+            assert tool_scope("teacher", name) == scope, name
+    assert server_tools("teacher") == set().union(*TEACHER_SCOPES.values())
+
+
+async def test_teacher_server_lists_its_tools_without_ai_when_unwired(
+    world: World,
+) -> None:
+    """Without the AI port the teacher server has no generation tools."""
+    token, _ = world.connector_token("teacher", *SCOPES_BY_SERVER["teacher"])
+
+    async with world.session("teacher", token) as session:
+        listed = await session.list_tools()
+
+    assert {t.name for t in listed.tools} == server_tools("teacher") - TEACHER_AI_TOOLS
+
+
+async def test_teacher_writes_are_the_marked_ones_and_deletes_destructive(
+    world: World,
+) -> None:
+    """MCP-6: only homework, temporary marks and assessments write."""
+    token, _ = world.connector_token("teacher", *SCOPES_BY_SERVER["teacher"])
+
+    async with world.session("teacher", token) as session:
+        listed = await session.list_tools()
+
+    assert _writers(listed.tools) == {
+        "set_homework",
+        "clear_homework",
+        "set_temporary_mark",
+        "delete_temporary_mark",
+        "create_assessment",
+        "update_assessment",
+    }
+    destructive = {
+        t.name
+        for t in listed.tools
+        if t.annotations is not None and t.annotations.destructiveHint
+    }
+    assert destructive == {"clear_homework", "delete_temporary_mark"}

@@ -15,8 +15,8 @@ from app.shared.mcp_scopes import SCOPE_CATALOG, ScopeInfo
 
 __all__ = ["SCOPE_CATALOG", "ScopeInfo"]
 
-Server = Literal["student", "lms", "admin"]
-SERVERS: tuple[Server, ...] = ("student", "lms", "admin")
+Server = Literal["student", "lms", "admin", "teacher"]
+SERVERS: tuple[Server, ...] = ("student", "lms", "admin", "teacher")
 
 # Roles that may connect to a server. For "lms" the real check (edit permission
 # on some course) happens at call time (MCP-5).
@@ -26,12 +26,14 @@ ALLOWED_SERVER_ROLES: dict[str, frozenset[Role]] = {
         {Role.TEACHER, Role.STUDENT, Role.LMS_ADMIN, Role.LMS_CREATOR, Role.ADMIN}
     ),
     "admin": frozenset({Role.ADMIN}),
+    "teacher": frozenset({Role.TEACHER, Role.ADMIN}),
 }
 
 AUDIENCE_BY_SERVER: dict[str, str] = {
     "student": "mcp-student",
     "lms": "mcp-lms",
     "admin": "mcp-admin",
+    "teacher": "mcp-teacher",
 }
 
 
@@ -64,6 +66,15 @@ PRESETS: dict[str, tuple[Preset, ...]] = {
     "admin": (
         Preset("attendance-analyst", ("attendance:read", "groups:read")),
         Preset("timetable-viewer", ("timetable:read", "groups:read")),
+    ),
+    "teacher": (
+        Preset("daily-planner", ("schedule:read", "groups:read", "journal:read")),
+        Preset("gradebook", ("journal:read", "marks:read", "marks:write")),
+        Preset(
+            "classroom-assistant",
+            ("schedule:read", "homework:write", "materials:generate"),
+        ),
+        Preset("lesson-planner", ("lesson-plans:write", "materials:generate")),
     ),
 }
 

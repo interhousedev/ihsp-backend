@@ -113,6 +113,15 @@ webfinger:
       - timetable:read
       - broadcasts:read
       - audit:read
+      - journal:read
+      - homework:write
+      - marks:write
+      - assessments:read
+      - assessments:write
+      - workoffs:read
+      - lesson-plans:read
+      - lesson-plans:write
+      - materials:generate
 
 sqa:
   opt_out: true

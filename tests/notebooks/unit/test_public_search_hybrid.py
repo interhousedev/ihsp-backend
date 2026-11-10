@@ -1,5 +1,6 @@
 """NB-14, NB-17: the assistant's `search_notebook` is hybrid when vectors exist."""
 
+from app.modules.notebooks.application.notebook_titles import NotebookTitles
 from app.modules.notebooks.application.public_api import NotebooksQueriesImpl
 from app.modules.notebooks.domain.passage_hash import passage_hash
 from app.modules.notebooks.ports.unit_of_work import UowFactory
@@ -19,6 +20,7 @@ async def test_a_question_without_a_matching_word_finds_the_passage_by_meaning(
     uow_factory: UowFactory,
     sessionmaker_in_tx: async_sessionmaker[AsyncSession],
     core: NotebooksCore,
+    titles: NotebookTitles,
     student: Actor,
 ) -> None:
     """NB-14: the same call, with an index, returns the passage the words miss."""
@@ -26,8 +28,8 @@ async def test_a_question_without_a_matching_word_finds_the_passage_by_meaning(
     await make_source(uow_factory, notebook, texts=(TARGET, OTHER))
     index, gateway = make_index(sessionmaker_in_tx)
     await index.ensure([TextToEmbed(passage_hash(t), t) for t in (TARGET, OTHER)])
-    lexical = NotebooksQueriesImpl(uow_factory, core.quota)
-    hybrid = NotebooksQueriesImpl(uow_factory, core.quota, index)
+    lexical = NotebooksQueriesImpl(uow_factory, core.quota, titles)
+    hybrid = NotebooksQueriesImpl(uow_factory, core.quota, titles, index)
 
     by_words = await lexical.search(student.user_id, notebook.id, "synthesis", 5)
     by_both = await hybrid.search(student.user_id, notebook.id, "synthesis", 5)
@@ -41,6 +43,7 @@ async def test_another_students_notebook_is_not_searched_or_embedded_for(
     uow_factory: UowFactory,
     sessionmaker_in_tx: async_sessionmaker[AsyncSession],
     core: NotebooksCore,
+    titles: NotebookTitles,
     student: Actor,
     other_student: Actor,
 ) -> None:
@@ -48,7 +51,7 @@ async def test_another_students_notebook_is_not_searched_or_embedded_for(
     notebook = await make_notebook(uow_factory, student.user_id)
     await make_source(uow_factory, notebook, texts=(TARGET,))
     index, gateway = make_index(sessionmaker_in_tx)
-    hybrid = NotebooksQueriesImpl(uow_factory, core.quota, index)
+    hybrid = NotebooksQueriesImpl(uow_factory, core.quota, titles, index)
 
     found = await hybrid.search(other_student.user_id, notebook.id, "synthesis", 5)
 

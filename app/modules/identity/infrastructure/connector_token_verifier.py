@@ -27,7 +27,7 @@ class DbConnectorTokenVerifier:
         self._clock = clock
 
     async def verify_connector(
-        self, token: str, *, server: Literal["student", "lms", "admin"]
+        self, token: str, *, server: Literal["student", "lms", "admin", "teacher"]
     ) -> Actor:
         """Return the actor with connector_id and scopes, or raise UnauthorizedError."""
         if not looks_like_token(token):

@@ -22,10 +22,11 @@ from app.shared.contracts.ai import AdminToolBackend
 from app.shared.contracts.auth import AccessTokenVerifier, ConnectorTokenVerifier
 from app.shared.contracts.flashcards import FlashcardsApi
 from app.shared.contracts.links import LinksApi
-from app.shared.contracts.lms import LmsDraftCommands, LmsQueries
+from app.shared.contracts.lms import LmsCourseOps, LmsDraftCommands, LmsQueries
 from app.shared.contracts.mcp_academic import McpAcademicTools
 from app.shared.contracts.mcp_content import McpContentTools
 from app.shared.contracts.mcp_files_courses import McpFilesCoursesTools
+from app.shared.contracts.mcp_teacher import McpTeacherTools
 from app.shared.i18n.core import I18nCore
 from app.shared.ids import new_id
 from app.shared.limits import LimitsProvider
@@ -41,6 +42,7 @@ from tests.mcp.fakes import (
     FakeFlashcards,
     FakeLinks,
     FakeLmsCommands,
+    FakeLmsOps,
     FakeLmsQueries,
     FakeMarks,
     FakeSchedule,
@@ -51,6 +53,7 @@ from tests.mcp.fakes import (
 from tests.mcp.fakes_academic import FakeAcademicTools
 from tests.mcp.fakes_content import FakeContentTools
 from tests.mcp.fakes_files_courses import FakeFilesCoursesTools
+from tests.mcp.fakes_teacher import FakeTeacherTools
 
 import httpx
 import pytest
@@ -113,6 +116,7 @@ class World:
     flashcards: FakeFlashcards = field(default_factory=FakeFlashcards)
     lms_queries: FakeLmsQueries = field(default_factory=FakeLmsQueries)
     lms_commands: FakeLmsCommands = field(default_factory=FakeLmsCommands)
+    lms_ops: FakeLmsOps = field(default_factory=FakeLmsOps)
     admin_tools: FakeAdminTools = field(default_factory=FakeAdminTools)
     revoked_ai: dict[UUID, AiAccess] = field(default_factory=dict)
     call_log: RecordingCallLog = field(default_factory=RecordingCallLog)
@@ -122,6 +126,7 @@ class World:
     files_courses_tools: FakeFilesCoursesTools = field(
         default_factory=FakeFilesCoursesTools
     )
+    teacher_tools: FakeTeacherTools = field(default_factory=FakeTeacherTools)
 
     def deps(self, *, with_course_port: bool = False) -> McpDeps:
         """Collect the fakes into the dependencies of the servers."""
@@ -142,6 +147,7 @@ class World:
             flashcards=cast(FlashcardsApi, self.flashcards),
             lms_queries=cast(LmsQueries, self.lms_queries),
             lms_commands=cast(LmsDraftCommands, self.lms_commands),
+            lms_ops=cast(LmsCourseOps, self.lms_ops),
             admin_tools=cast(AdminToolBackend, self.admin_tools),
             limits=cast(LimitsProvider, RevokedAccess(self.revoked_ai)),
             call_log=self.call_log,
@@ -149,6 +155,7 @@ class World:
             academic_tools=cast(McpAcademicTools, self.academic_tools),
             content_tools=cast(McpContentTools, self.content_tools),
             files_courses_tools=cast(McpFilesCoursesTools, self.files_courses_tools),
+            teacher_tools=cast(McpTeacherTools, self.teacher_tools),
         )
 
     def connector_token(
@@ -163,6 +170,7 @@ class World:
             "student": (Role.STUDENT,),
             "lms": (Role.TEACHER,),
             "admin": (Role.ADMIN,),
+            "teacher": (Role.TEACHER,),
         }[server]
         actor = Actor(
             user_id=user_id or new_id(),

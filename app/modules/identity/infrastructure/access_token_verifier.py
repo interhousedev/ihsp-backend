@@ -14,13 +14,16 @@ from app.shared.contracts.auth import (
     AUDIENCE_MCP_ADMIN,
     AUDIENCE_MCP_LMS,
     AUDIENCE_MCP_STUDENT,
+    AUDIENCE_MCP_TEACHER,
 )
 
 from joserfc import jwt
 from joserfc.errors import InvalidKeyIdError, JoseError
 
 ALGORITHMS = ["RS256", "ES256"]
-MCP_AUDIENCES = frozenset({AUDIENCE_MCP_STUDENT, AUDIENCE_MCP_LMS, AUDIENCE_MCP_ADMIN})
+MCP_AUDIENCES = frozenset(
+    {AUDIENCE_MCP_STUDENT, AUDIENCE_MCP_LMS, AUDIENCE_MCP_ADMIN, AUDIENCE_MCP_TEACHER}
+)
 EpochLoader = Callable[[UUID], Awaitable[int | None]]
 
 

@@ -11,7 +11,7 @@ from app.shared.actor import Role
 
 from pydantic import BaseModel, Field
 
-Server = Literal["student", "lms", "admin"]
+Server = Literal["student", "lms", "admin", "teacher"]
 McpOutcome = Literal["ok", "denied", "rate_limited", "not_found", "invalid", "error"]
 
 

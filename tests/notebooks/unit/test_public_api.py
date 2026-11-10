@@ -4,6 +4,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 from uuid import UUID
 
+from app.modules.notebooks.application.notebook_titles import NotebookTitles
 from app.modules.notebooks.application.public_api import (
     NotebooksQueriesImpl,
     SourcePageNotFoundError,
@@ -49,9 +50,11 @@ import pytest
 
 
 @pytest.fixture
-def queries(uow_factory: UowFactory, core: NotebooksCore) -> NotebooksQueriesImpl:
+def queries(
+    uow_factory: UowFactory, core: NotebooksCore, titles: NotebookTitles
+) -> NotebooksQueriesImpl:
     """The public queries over the SQL unit of work and the quota service."""
-    return NotebooksQueriesImpl(uow_factory, core.quota)
+    return NotebooksQueriesImpl(uow_factory, core.quota, titles)
 
 
 # - - - list_notebooks - - -

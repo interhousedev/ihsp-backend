@@ -9,12 +9,13 @@ from app.shared.contracts.auth import (
     AUDIENCE_MCP_ADMIN,
     AUDIENCE_MCP_LMS,
     AUDIENCE_MCP_STUDENT,
+    AUDIENCE_MCP_TEACHER,
 )
 from app.shared.mcp_scopes import SCOPE_NAMES_BY_SERVER
 
-ServerName = Literal["student", "lms", "admin"]
+ServerName = Literal["student", "lms", "admin", "teacher"]
 
-SERVERS: Final[tuple[ServerName, ...]] = ("student", "lms", "admin")
+SERVERS: Final[tuple[ServerName, ...]] = ("student", "lms", "admin", "teacher")
 
 # Every server is mounted under this prefix of the API app; in production nginx maps
 # the host mcp.ihsu.uz to it.
@@ -37,6 +38,7 @@ class ToolLimit:
     window_seconds: int
 
 
+AI_LIMIT: Final = ToolLimit("ai", 10, 60)  # model calls that cost tokens
 WRITE_LIMIT: Final = ToolLimit("write", 30, 60)
 SEARCH_LIMIT: Final = ToolLimit("search", 20, 60)  # text search and embeddings
 EMIS_FETCH_LIMIT: Final = ToolLimit("emis", 30, 3600)
@@ -50,6 +52,7 @@ AUDIENCE_BY_SERVER: Final[Mapping[ServerName, str]] = {
     "student": AUDIENCE_MCP_STUDENT,
     "lms": AUDIENCE_MCP_LMS,
     "admin": AUDIENCE_MCP_ADMIN,
+    "teacher": AUDIENCE_MCP_TEACHER,
 }
 
 # Same table as identity's ALLOWED_SERVER_ROLES; checked again on every call so that a
@@ -61,6 +64,7 @@ ALLOWED_ROLES_BY_SERVER: Final[Mapping[ServerName, frozenset[Role]]] = {
         {Role.TEACHER, Role.STUDENT, Role.LMS_ADMIN, Role.LMS_CREATOR, Role.ADMIN}
     ),
     "admin": frozenset({Role.ADMIN}),
+    "teacher": frozenset({Role.TEACHER, Role.ADMIN}),
 }
 
 # The Administration server is read-only: only these names reach AdminToolBackend.

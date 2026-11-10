@@ -8,6 +8,7 @@ AUDIENCE_API = "ihsp-api"
 AUDIENCE_MCP_STUDENT = "mcp-student"
 AUDIENCE_MCP_LMS = "mcp-lms"
 AUDIENCE_MCP_ADMIN = "mcp-admin"
+AUDIENCE_MCP_TEACHER = "mcp-teacher"
 
 
 class AccessTokenVerifier(Protocol):
@@ -22,7 +23,7 @@ class ConnectorTokenVerifier(Protocol):
     """Verifies MCP connector tokens."""
 
     async def verify_connector(
-        self, token: str, *, server: Literal["student", "lms", "admin"]
+        self, token: str, *, server: Literal["student", "lms", "admin", "teacher"]
     ) -> Actor:
         """Return the actor with connector_id and scopes set."""
         ...

@@ -21,7 +21,7 @@ def _settings(base: Settings, *, mcp: str, env: str = "test") -> Settings:
     return base.model_copy(update={"urls": urls, "env": env})
 
 
-@pytest.mark.parametrize("server", ["student", "lms", "admin"])
+@pytest.mark.parametrize("server", ["student", "lms", "admin", "teacher"])
 async def test_protected_resource_metadata_is_served_at_the_host_root(
     world: World, server: ServerName
 ) -> None:
@@ -129,16 +129,23 @@ async def test_build_mcp_apps_returns_the_three_servers_with_lifespans(
         lms=SimpleNamespace(
             authoring=SimpleNamespace(
                 queries=world.lms_queries, draft_commands=world.lms_commands
-            )
+            ),
+            course_ops=world.lms_ops,
         ),
         mcp_audit=world.audit,
         mcp_call_log=world.call_log,
         admin_tools=world.admin_tools,
+        mcp_teacher_tools=world.teacher_tools,
     )
 
     apps = build_mcp_apps(cast(Container, container))
 
-    assert [path for path, _, _ in apps] == ["/mcp/student", "/mcp/lms", "/mcp/admin"]
+    assert [path for path, _, _ in apps] == [
+        "/mcp/student",
+        "/mcp/lms",
+        "/mcp/admin",
+        "/mcp/teacher",
+    ]
     for _, app, lifespan in apps:
         assert callable(app)
         assert hasattr(lifespan, "__aenter__")

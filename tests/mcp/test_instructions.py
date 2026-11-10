@@ -13,7 +13,12 @@ import pytest
 from mcp.client.session import ClientSession
 
 LANGUAGES = ("en", "ru", "uz")
-KEYS = ("mcp-instructions-student", "mcp-instructions-lms", "mcp-instructions-admin")
+KEYS = (
+    "mcp-instructions-student",
+    "mcp-instructions-lms",
+    "mcp-instructions-admin",
+    "mcp-instructions-teacher",
+)
 
 
 def _texts(language: str) -> dict[str, str]:
@@ -61,7 +66,7 @@ def test_student_text_tells_the_client_that_results_are_data(language: str) -> N
     assert "insufficient_scope" in text
 
 
-@pytest.mark.parametrize("server", ["student", "lms", "admin"])
+@pytest.mark.parametrize("server", ["student", "lms", "admin", "teacher"])
 async def test_client_receives_the_brand_filled_in(
     world: World, server: ServerName
 ) -> None:

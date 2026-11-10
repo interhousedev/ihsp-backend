@@ -158,7 +158,7 @@ class ConsentInfoResponse(BaseModel):
     client_name: str
     verified: bool
     redirect_domain: str
-    server: Literal["student", "lms", "admin"] | None
+    server: Literal["student", "lms", "admin", "teacher"] | None
     requested_scopes: list[str]
     requires_otp: bool
     redirect_to: str | None

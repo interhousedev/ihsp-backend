@@ -4,11 +4,13 @@ import dataclasses
 from collections.abc import Callable
 from typing import cast
 
+from app.modules.notebooks.application.notebook_titles import NotebookTitles
 from app.modules.notebooks.infrastructure.uow import SqlNotebooksUnitOfWork
 from app.modules.notebooks.ports.unit_of_work import NotebooksUnitOfWork, UowFactory
 from app.modules.notebooks.wiring_core import CoreOverrides, NotebooksCore, build_core
 from app.settings import Settings
 from app.shared.actor import Actor, Role
+from app.shared.contracts.academic import ScheduleQueries
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.db.uow_testing import noop_audit_writer, noop_outbox_writer
 from app.shared.i18n.core import I18nCore
@@ -17,6 +19,7 @@ from app.shared.wiring import ModuleDeps
 from tests.fakes.ai.contracts import FakeIdentity, make_user
 from tests.fakes.clock import FixedClock
 from tests.fakes.notebooks.llm import ScriptedLlm
+from tests.fakes.notebooks.schedule import FakeLessonSchedule
 from tests.fakes.tasks import FakeTaskKicker
 
 import pytest
@@ -56,6 +59,18 @@ def identity(student: Actor, other_student: Actor) -> FakeIdentity:
         for actor in (student, other_student)
     ]
     return FakeIdentity(*users)
+
+
+@pytest.fixture
+def schedule() -> FakeLessonSchedule:
+    """The school schedule: subjects, lessons and their names per language."""
+    return FakeLessonSchedule()
+
+
+@pytest.fixture
+def titles(core: NotebooksCore, schedule: FakeLessonSchedule) -> NotebookTitles:
+    """Subject notebook titles in the reader's language over the fake schedule."""
+    return NotebookTitles(core.locale, cast(ScheduleQueries, schedule))
 
 
 @pytest.fixture

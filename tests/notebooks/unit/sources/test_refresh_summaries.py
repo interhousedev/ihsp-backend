@@ -10,13 +10,13 @@ from app.modules.notebooks.domain.enums import GuideStatus, SourceStatus, Summar
 from app.modules.notebooks.domain.language import language_name
 from app.modules.notebooks.ports.unit_of_work import UowFactory
 from app.modules.notebooks.wiring_core import NotebooksCore
-from app.modules.notebooks.wiring_notebooks import build_notebooks
 from app.modules.notebooks.wiring_sources import SourcesServices
 from app.shared.actor import Actor
 from app.shared.ai_tasks import AiTask
 from app.shared.contracts.ai import AiInvalidOutputError, AiProviderError
 from tests.factories.notebooks import make_notebook, make_source
 from tests.fakes.clock import FixedClock
+from tests.fakes.notebooks.schedule import build_lifecycle
 from tests.notebooks.unit.sources.conftest import Build
 from tests.notebooks.unit.sources.support import (
     SUMMARY,
@@ -455,7 +455,8 @@ async def test_a_building_summary_is_stamped_so_the_stuck_sweep_leaves_it_alone(
         seen["status"] = building.summary_status
         seen["updated_at"] = building.updated_at
         clock.advance(minutes=9)
-        seen["swept"] = (await build_notebooks(core).sweep_stuck.execute())["summaries"]
+        swept = await build_lifecycle(core).sweep_stuck.execute()
+        seen["swept"] = swept["summaries"]
 
     scripted_llm.before_json = look_while_the_model_works
     scripted_llm.queue_json(SUMMARY)

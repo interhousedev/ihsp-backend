@@ -566,3 +566,140 @@ class FakeAdminTools:
     ) -> dict[str, Any]:
         self.calls.append((tool, arguments, actor))
         return {"tool": tool, "rows": []}
+
+
+# - - - LMS course operations - - -
+
+
+@dataclass
+class FakeLmsOps:
+    """LmsCourseOps recording every call; attempts are canned by ID."""
+
+    calls: list[LmsCall] = field(default_factory=list)
+    attempts: dict[UUID, dict[str, Any]] = field(default_factory=dict)
+
+    def _log(self, name: str, actor: Actor, *args: object) -> dict[str, Any]:
+        self.calls.append(LmsCall(name, actor, args))
+        return {"op": name}
+
+    async def move_section(
+        self, actor: Actor, course_id: UUID, section_id: str, position: int
+    ) -> dict[str, Any]:
+        return self._log("move_section", actor, course_id, section_id, position)
+
+    async def move_step(
+        self,
+        actor: Actor,
+        course_id: UUID,
+        step_id: UUID,
+        to_section_id: str,
+        position: int,
+    ) -> dict[str, Any]:
+        args = (course_id, step_id, to_section_id, position)
+        return self._log("move_step", actor, *args)
+
+    async def update_block(
+        self, actor: Actor, step_id: UUID, block_id: str, block: dict[str, Any]
+    ) -> dict[str, Any]:
+        return self._log("update_block", actor, step_id, block_id, block)
+
+    async def delete_block(
+        self, actor: Actor, step_id: UUID, block_id: str
+    ) -> dict[str, Any]:
+        return self._log("delete_block", actor, step_id, block_id)
+
+    async def move_block(
+        self, actor: Actor, step_id: UUID, block_id: str, position: int
+    ) -> dict[str, Any]:
+        return self._log("move_block", actor, step_id, block_id, position)
+
+    async def update_question(
+        self,
+        actor: Actor,
+        step_id: UUID,
+        block_id: str,
+        question_id: str,
+        question: dict[str, Any],
+    ) -> dict[str, Any]:
+        args = (step_id, block_id, question_id, question)
+        return self._log("update_question", actor, *args)
+
+    async def delete_question(
+        self, actor: Actor, step_id: UUID, block_id: str, question_id: str
+    ) -> dict[str, Any]:
+        return self._log("delete_question", actor, step_id, block_id, question_id)
+
+    async def move_question(
+        self,
+        actor: Actor,
+        step_id: UUID,
+        block_id: str,
+        question_id: str,
+        position: int,
+    ) -> dict[str, Any]:
+        args = (step_id, block_id, question_id, position)
+        return self._log("move_question", actor, *args)
+
+    async def build_course(
+        self, actor: Actor, course_id: UUID, sections: Sequence[dict[str, Any]]
+    ) -> dict[str, Any]:
+        return self._log("build_course", actor, course_id, list(sections))
+
+    async def publish(
+        self, actor: Actor, course_id: UUID, note: str | None
+    ) -> dict[str, Any]:
+        return self._log("publish", actor, course_id, note)
+
+    async def restore_version(
+        self, actor: Actor, course_id: UUID, number: int
+    ) -> dict[str, Any]:
+        return self._log("restore_version", actor, course_id, number)
+
+    async def settings(self, actor: Actor, course_id: UUID) -> dict[str, Any]:
+        return self._log("settings", actor, course_id)
+
+    async def update_settings(
+        self,
+        actor: Actor,
+        course_id: UUID,
+        *,
+        visibility: str | None,
+        cover_file_id: UUID | None,
+        clear_cover: bool,
+    ) -> dict[str, Any]:
+        args = (course_id, visibility, cover_file_id, clear_cover)
+        return self._log("update_settings", actor, *args)
+
+    async def list_staff(self, actor: Actor, course_id: UUID) -> list[dict[str, Any]]:
+        self._log("list_staff", actor, course_id)
+        return [{"user_id": str(new_id()), "login": "t1"}]
+
+    async def add_staff(
+        self,
+        actor: Actor,
+        course_id: UUID,
+        *,
+        login: str,
+        role: str,
+        permissions: Sequence[str] | None,
+    ) -> dict[str, Any]:
+        perms = None if permissions is None else list(permissions)
+        return self._log("add_staff", actor, course_id, login, role, perms)
+
+    async def remove_staff(
+        self, actor: Actor, course_id: UUID, user_id: UUID
+    ) -> dict[str, Any]:
+        return self._log("remove_staff", actor, course_id, user_id)
+
+    async def students(self, actor: Actor, course_id: UUID) -> list[dict[str, Any]]:
+        self._log("students", actor, course_id)
+        return [{"user_id": str(new_id()), "progress": 50}]
+
+    async def attempt(self, actor: Actor, attempt_id: UUID) -> dict[str, Any]:
+        self.calls.append(LmsCall("attempt", actor, (attempt_id,)))
+        return self.attempts[attempt_id]
+
+    async def override_score(
+        self, actor: Actor, attempt_id: UUID, score: float, comment: str
+    ) -> dict[str, Any]:
+        return self._log("override_score", actor, attempt_id, score, comment)

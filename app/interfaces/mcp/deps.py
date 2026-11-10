@@ -23,11 +23,18 @@ from app.shared.contracts.ai import AdminToolBackend
 from app.shared.contracts.auth import AccessTokenVerifier, ConnectorTokenVerifier
 from app.shared.contracts.flashcards import FlashcardsApi
 from app.shared.contracts.links import LinksApi
-from app.shared.contracts.lms import LmsDraftCommands, LmsQueries
+from app.shared.contracts.lms import (
+    LmsAiTools,
+    LmsCourseOps,
+    LmsDraftCommands,
+    LmsQueries,
+)
 from app.shared.contracts.mcp_academic import McpAcademicTools
 from app.shared.contracts.mcp_calls import McpCallLog
 from app.shared.contracts.mcp_content import McpContentTools
 from app.shared.contracts.mcp_files_courses import McpFilesCoursesTools
+from app.shared.contracts.mcp_teacher import McpTeacherTools
+from app.shared.contracts.teacher_ai import TeacherAiTools
 from app.shared.i18n.core import I18nCore
 from app.shared.limits import LimitsProvider, StaticLimits
 from app.shared.rate_limit import RateLimiter
@@ -38,7 +45,7 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True, slots=True)
 class McpDeps:
-    """Services, settings and ports used by the tools of all three servers."""
+    """Services, settings and ports used by the tools of all the MCP servers."""
 
     settings: Settings
     clock: Clock
@@ -56,6 +63,7 @@ class McpDeps:
     flashcards: FlashcardsApi
     lms_queries: LmsQueries
     lms_commands: LmsDraftCommands
+    lms_ops: LmsCourseOps
     admin_tools: AdminToolBackend
     # The AI scopes revoked per user (cached): the guard refuses revoked users.
     limits: LimitsProvider
@@ -65,6 +73,11 @@ class McpDeps:
     academic_tools: McpAcademicTools
     content_tools: McpContentTools
     files_courses_tools: McpFilesCoursesTools
+    teacher_tools: McpTeacherTools
+    # The model-backed teacher tools; None leaves them off the teacher server.
+    teacher_ai: TeacherAiTools | None = None
+    # The model-backed LMS drafting tools; None leaves them off the LMS server.
+    lms_ai: LmsAiTools | None = None
 
     def t(self, key: str, **params: Any) -> str:  # noqa: ANN401 - i18n params
         """Translate a message key into the language of tool errors."""
@@ -120,6 +133,7 @@ def deps_from_container(
         flashcards=container.flashcards.public,
         lms_queries=container.lms.authoring.queries,
         lms_commands=container.lms.authoring.draft_commands,
+        lms_ops=container.lms.course_ops,
         admin_tools=admin_tools,
         limits=getattr(container, "limits", None)
         or StaticLimits(container.settings.limits),
@@ -128,6 +142,9 @@ def deps_from_container(
         academic_tools=_backend(container, "mcp_academic_tools"),
         content_tools=_backend(container, "mcp_content_tools"),
         files_courses_tools=_backend(container, "mcp_files_courses_tools"),
+        teacher_tools=_backend(container, "mcp_teacher_tools"),
+        teacher_ai=getattr(container, "teacher_ai_tools", None),
+        lms_ai=getattr(container, "lms_ai_tools", None),
     )
 
 

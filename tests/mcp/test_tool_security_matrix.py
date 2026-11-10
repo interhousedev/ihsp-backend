@@ -16,6 +16,7 @@ from app.interfaces.mcp.factory import make_toolkit
 from app.interfaces.mcp.guard import ToolRule
 from app.interfaces.mcp.lms.server import TOOL_MODULES as LMS_MODULES
 from app.interfaces.mcp.student.server import TOOL_MODULES as STUDENT_MODULES
+from app.interfaces.mcp.teacher.server import TOOL_MODULES as TEACHER_MODULES
 from app.settings import Settings
 from app.shared.ai_access import AiAccess
 from app.shared.mcp_scopes import READ_ONLY_TOOLS_IN_WRITE_SCOPES, scope_info
@@ -29,6 +30,7 @@ MODULES: dict[ServerName, tuple[ModuleType, ...]] = {
     "student": STUDENT_MODULES,
     "lms": LMS_MODULES,
     "admin": ADMIN_MODULES,
+    "teacher": TEACHER_MODULES,
 }
 CANARY = "CANARY-text-from-the-client"
 ACTOR_PARAMETERS = {"user_id", "owner_id", "student_id", "actor_id", "issued_to"}
@@ -83,9 +85,15 @@ def _value(schema: dict[str, Any], defs: dict[str, Any]) -> Any:  # noqa: C901
     if kind == "array":
         return [_value(schema.get("items", {}), defs)]
     if kind == "object":
-        required = schema.get("required", [])
         properties = schema.get("properties", {})
-        return {name: _value(properties[name], defs) for name in required}
+        required = set(schema.get("required", []))
+        # A discriminator has a default, so it is not required but must be sent.
+        required |= {name for name, prop in properties.items() if "const" in prop}
+        return {
+            name: _value(prop, defs)
+            for name, prop in properties.items()
+            if name in required
+        }
     return CANARY
 
 

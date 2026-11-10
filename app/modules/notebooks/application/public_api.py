@@ -13,9 +13,11 @@ from app.modules.notebooks.application.access import (
     load_notebook,
     load_source,
 )
+from app.modules.notebooks.application.notebook_titles import NotebookTitles
 from app.modules.notebooks.application.quota import QuotaService
+from app.modules.notebooks.application.slide_images import load_image_bytes
 from app.modules.notebooks.domain.entities import Notebook, Passage, Source
-from app.modules.notebooks.domain.enums import ArtifactStatus
+from app.modules.notebooks.domain.enums import ArtifactKind, ArtifactStatus
 from app.modules.notebooks.domain.errors import (
     NotebookNotFoundError,
     SourceNotReadyError,
@@ -24,6 +26,7 @@ from app.modules.notebooks.domain.text_pages import split_pages
 from app.modules.notebooks.ports.unit_of_work import NotebooksUnitOfWork, UowFactory
 from app.shared.base_error import NotFoundError
 from app.shared.contracts.embeddings import EmbeddingIndex, QueryVector
+from app.shared.contracts.files import FilesApi
 
 SEARCH_MAX = 20
 PASSAGE_CHARS = 600
@@ -73,15 +76,19 @@ class NotebooksQueriesImpl:
         self,
         uow_factory: UowFactory,
         quota: QuotaService,
+        titles: NotebookTitles,
         embeddings: EmbeddingIndex | None = None,
+        files: FilesApi | None = None,
     ) -> None:
-        """Store the unit of work factory and the quota service.
+        """Store the unit of work factory, the quota service and the titles.
 
         `embeddings` makes `search` hybrid (words and meaning); None keeps it lexical.
         """
         self.uow_factory = uow_factory
         self.quota = quota
+        self.titles = titles
         self.embeddings = embeddings
+        self.files = files
 
     async def list_notebooks(
         self, user_id: UUID, limit: int = 20
@@ -91,6 +98,7 @@ class NotebooksQueriesImpl:
             rows = await uow.notebooks.list_for_owner(
                 user_id, query=None, after=None, limit=max(1, min(limit, LIST_MAX))
             )
+        await self.titles.apply(user_id, rows)
         return [
             {
                 "id": str(n.id),
@@ -111,6 +119,7 @@ class NotebooksQueriesImpl:
             if notebook is None:
                 return None
             sources = await uow.sources.list_for_notebook(notebook_id)
+        await self.titles.apply(user_id, [notebook])
         summary = notebook.summary
         return {
             "id": str(notebook.id),
@@ -287,6 +296,8 @@ class NotebooksQueriesImpl:
     ) -> dict[str, Any] | None:
         """Return ``{id, kind, title, status, content}`` of a ready output.
 
+        A slide deck also carries ``images``: the picture bytes by file id.
+
         None when the output does not exist, is not ready or is not the user's to
         read.
         """
@@ -299,13 +310,17 @@ class NotebooksQueriesImpl:
                 return None
         if artifact.status is not ArtifactStatus.READY or artifact.content is None:
             return None
-        return {
+        content = artifact.content
+        found: dict[str, Any] = {
             "id": str(artifact.id),
             "kind": artifact.kind.value,
             "title": artifact.title,
             "status": artifact.status.value,
-            "content": artifact.content,
+            "content": content,
         }
+        if self.files is not None and artifact.kind is ArtifactKind.SLIDES:
+            found["images"] = await load_image_bytes(self.files, content)
+        return found
 
     async def shared_artifact(self, artifact_id: UUID) -> dict[str, Any] | None:
         """Return ``{id, owner_id, kind, title, content}`` of a ready output.

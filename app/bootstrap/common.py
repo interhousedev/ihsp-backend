@@ -32,12 +32,14 @@ from app.bootstrap.adapters.mcp_files import (
     build_files_courses_tools,
     connector_active_check,
 )
+from app.bootstrap.adapters.mcp_lms_ai import LmsAi
 from app.bootstrap.adapters.mcp_offers import build_scope_overlay
 from app.bootstrap.adapters.mcp_ports import (
     ConnectorCoursesAdapter,
     McpAuditAdapter,
     McpCallLogAdapter,
 )
+from app.bootstrap.adapters.mcp_teacher import build_teacher_tools
 from app.bootstrap.adapters.notebook_terms import NotebookTermsAdapter
 from app.bootstrap.adapters.school_knowledge import (
     KnowledgeGapAdapter,
@@ -655,10 +657,13 @@ class _Assembler:
         c.mcp_call_log = McpCallLogAdapter(c.sessionmaker)
         c.mcp_scope_overlay = build_scope_overlay(c)
         c.mcp_academic_tools = build_academic_tools(c)
+        c.mcp_teacher_tools = build_teacher_tools(c)
         c.mcp_content_tools = build_content_tools(c)
+        c.teacher_ai_tools = c.notebooks.teacher_ai
         # The bot is a full process without LMS and serves no MCP tools.
         if self.plan.lms:
             c.mcp_files_courses_tools = build_files_courses_tools(c)
+            c.lms_ai_tools = LmsAi(llm=c.llm, settings=c.settings)
 
 
 async def build_container(

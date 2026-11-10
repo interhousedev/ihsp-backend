@@ -60,6 +60,7 @@ from app.modules.notebooks.application.list_sources import ListSources
 from app.modules.notebooks.application.list_subject_slots import ListSubjectSlots
 from app.modules.notebooks.application.manage_shares import ManageShares
 from app.modules.notebooks.application.message_feedback import MessageFeedback
+from app.modules.notebooks.application.notebook_titles import NotebookTitles
 from app.modules.notebooks.application.open_auto_notebook import OpenAutoNotebook
 from app.modules.notebooks.application.open_course_workspace import (
     OpenCourseWorkspace,
@@ -116,6 +117,7 @@ from app.modules.notebooks.application.sync_course_notebook import (
 )
 from app.modules.notebooks.application.sync_lesson_notebooks import SyncLessonNotebooks
 from app.modules.notebooks.application.sync_source import SyncSource
+from app.modules.notebooks.application.teaching.tools import TeacherAi
 from app.modules.notebooks.application.update_auto_settings import UpdateAutoSettings
 from app.modules.notebooks.application.update_label import UpdateLabel
 from app.modules.notebooks.application.update_notebook import UpdateNotebook
@@ -228,6 +230,7 @@ class NotebooksServices:
     save_as_source: SaveAsSource
     attach_artifact: AttachArtifactToLesson | None
     save_to_files: SaveArtifactToFiles | None
+    teacher_ai: TeacherAi
     save_flashcard_set: SaveFlashcardSet
     edit_slides: EditSlides
     revise_slides: ReviseSlides
@@ -303,7 +306,7 @@ def build(
         knowledge=knowledge,
         knowledge_gaps=knowledge_gaps,
     )
-    notebooks = build_notebooks(core)
+    notebooks = build_notebooks(core, schedule)
     workspaces = build_workspace(core)
     sources = build_sources(
         core,
@@ -340,6 +343,8 @@ def build(
         links=links,
         sleep=sleep,
         lms_apply=lms_apply,
+        web_search=web_search,
+        fetcher=sources.gather_web_materials.fetcher,
     )
     return NotebooksServices(
         create_notebook=notebooks.create_notebook,
@@ -425,6 +430,7 @@ def build(
         save_as_source=studio.save_as_source,
         attach_artifact=studio.attach_artifact,
         save_to_files=studio.save_to_files,
+        teacher_ai=TeacherAi(llm=core.llm, files=files, locale=core.locale),
         save_flashcard_set=studio.save_flashcard_set,
         edit_slides=studio.edit_slides,
         revise_slides=studio.revise_slides,
@@ -444,7 +450,13 @@ def build(
         set_source_labels=labels.set_source_labels,
         start_labeling=labels.start_labeling,
         label_sources=labels.label_sources,
-        public=NotebooksQueriesImpl(core.uow_factory, core.quota, core.embeddings),
+        public=NotebooksQueriesImpl(
+            core.uow_factory,
+            core.quota,
+            NotebookTitles(core.locale, schedule),
+            core.embeddings,
+            files=files,
+        ),
         shared_search=SharedPassageSearch(
             reader=SqlSharedPassageReader(deps.sessionmaker),
             library=library,

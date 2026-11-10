@@ -25,7 +25,7 @@ async def test_search_returns_passages_of_a_file_source(
         title="lesson-12.pdf",
         texts=(OTHER_RU, JADIDS_RU),
     )
-    api = NotebooksQueriesImpl(uow_factory, None)  # type: ignore[arg-type]
+    api = NotebooksQueriesImpl(uow_factory, None, None)  # type: ignore[arg-type]
 
     rows = await api.search(student.user_id, notebook.id, "Абдурашидханов школа", 5)
 
