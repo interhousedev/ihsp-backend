@@ -16,7 +16,8 @@ from app.modules.ai.infrastructure.exa_search import (
 )
 from app.modules.ai.infrastructure.fake_exa import FakeExaClient
 from app.modules.ai.infrastructure.gateway_factory import make_web_search_gateway
-from app.settings import ExaSettings, Settings
+from app.modules.ai.infrastructure.parallel_search import ParallelFirstWebSearch
+from app.settings import ExaSettings, ParallelSettings, Settings
 from app.settings_web_search import WebSearchSettings
 from app.shared.ai_tasks import AiTask
 from app.shared.contracts.web_search import (
@@ -360,15 +361,23 @@ async def test_the_fake_can_report_a_charge_for_tests() -> None:
 
 def test_fake_mode_gets_the_fake_client_and_real_mode_needs_a_key() -> None:
     settings = Settings()
-    fake = make_web_search_gateway(settings, None)
+    both = make_web_search_gateway(settings, None)
+    assert isinstance(both, ParallelFirstWebSearch)
+    assert isinstance(both.exa, ExaWebSearch)
+    assert isinstance(both.exa.client, FakeExaClient)
+
+    no_parallel = settings.model_copy(
+        update={"parallel": ParallelSettings(mode="live", api_key=None)}
+    )
+    fake = make_web_search_gateway(no_parallel, None)
     assert isinstance(fake, ExaWebSearch)
     assert isinstance(fake.client, FakeExaClient)
 
-    real = settings.model_copy(update={"exa": ExaSettings(mode="real")})
+    real = no_parallel.model_copy(update={"exa": ExaSettings(mode="real")})
     with pytest.raises(ValueError, match="EXA__API_KEY is required"):
         make_web_search_gateway(real, FakeRedis())
 
-    keyed = settings.model_copy(
+    keyed = no_parallel.model_copy(
         update={"exa": ExaSettings(mode="real", api_key=SecretStr(KEY))}
     )
     with pytest.raises(ValueError, match="Redis is required"):

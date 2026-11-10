@@ -15,6 +15,7 @@ from app.modules.ai.infrastructure.fake_subjects import (
     SUBJECT_NAMES_SCHEMA,
     subject_names_document,
 )
+from app.modules.ai.infrastructure.fake_teacher import build_teacher_document
 from app.shared.contracts.ai import LlmTuning
 from app.shared.ids import new_id
 
@@ -102,6 +103,7 @@ class FakeLlmGateway:
             built = build_course_document(
                 schema_name, messages, system
             ) or build_exercise_document(schema_name, messages)
+            built = built or build_teacher_document(schema_name, messages)
             data = built or build_document(schema_name, messages)
         text = json.dumps(data)
         usage = _usage(system, messages, text)

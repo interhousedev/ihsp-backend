@@ -346,7 +346,14 @@ class WebSearchService:
         return await self._deep(query, language)
 
     async def _call(
-        self, query: str, language: str, task: AiTask, max_results: int, explain: bool
+        self,
+        query: str,
+        language: str,
+        task: AiTask,
+        max_results: int,
+        explain: bool,
+        *,
+        deep: bool = False,
     ) -> SearchReply:
         call = SearchCall(
             query=query,
@@ -355,6 +362,7 @@ class WebSearchService:
             explain=explain,
             profile=self.settings.ai_profile(task),
             exclude_domains=self.settings.web_search.blocked_domains,
+            deep=deep,
         )
         reply = await self.gateway.search(call)
         await self._remember(query, max_results, reply.hits)
@@ -390,6 +398,7 @@ class WebSearchService:
                     AiTask.DISCOVER,
                     limits.web_search_discover_results,
                     True,
+                    deep=True,
                 )
                 for q in queries
             ),

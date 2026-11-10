@@ -160,7 +160,7 @@ class ExaWebSearch:
                     "web_search_timeout", timeout_seconds=self.exa.timeout_seconds
                 )
                 return SearchReply(hits=(), usage={}, notice="timeout")
-            raise _unavailable(error) from error
+            raise unavailable_of(error) from error
         results = data.get("results")
         if not isinstance(results, list):
             log.warning("web_search_bad_answer")
@@ -171,6 +171,7 @@ class ExaWebSearch:
             hits=hits_of(results, call, self.config),
             usage={},
             cost_micro=cost_micro_of(data),
+            provider="exa",
         )
         # Never the query or the pages: counts, the charge and Exa's request id.
         log.info(
@@ -185,25 +186,32 @@ class ExaWebSearch:
         return reply
 
 
-def _unavailable(error: ExaCallError) -> WebSearchUnavailableError:
-    """The platform error of a failed Exa call; the key is never logged or shown."""
+def unavailable_of(
+    error: ExaCallError, provider: str = "Exa"
+) -> WebSearchUnavailableError:
+    """The platform error of a failed provider call; the key is never logged."""
     if error.status == 429:
         seconds = _busy_seconds(error.retry_after)
-        log.warning("web_search_rate_limited", retry_after=seconds)
+        log.warning("web_search_rate_limited", provider=provider, retry_after=seconds)
         return WebSearchBusyError(
-            params={"seconds": seconds}, support_details="Exa HTTP 429"
+            params={"seconds": seconds}, support_details=f"{provider} HTTP 429"
         )
     if error.status in {401, 403}:
-        log.error("web_search_key_refused", status=error.status)
+        log.error("web_search_key_refused", provider=provider, status=error.status)
         return WebSearchUnavailableError(
-            support_details=f"Exa HTTP {error.status}: the API key is refused"
+            support_details=f"{provider} HTTP {error.status}: the API key is refused"
         )
-    log.warning("web_search_failed", status=error.status, reason=error.details)
+    log.warning(
+        "web_search_failed",
+        provider=provider,
+        status=error.status,
+        reason=error.details,
+    )
     if error.status:
         return WebSearchUnavailableError(
-            support_details=f"Exa HTTP {error.status}: {error.details}"
+            support_details=f"{provider} HTTP {error.status}: {error.details}"
         )
-    return WebSearchUnavailableError(support_details=f"Exa {error.details}")
+    return WebSearchUnavailableError(support_details=f"{provider} {error.details}")
 
 
 def _busy_seconds(retry_after: float | None) -> int:

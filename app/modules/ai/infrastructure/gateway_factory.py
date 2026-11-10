@@ -7,6 +7,7 @@ from app.modules.ai.infrastructure.exa_search import ExaWebSearch
 from app.modules.ai.infrastructure.fake_embeddings import FakeEmbeddingGateway
 from app.modules.ai.infrastructure.fake_exa import FakeExaClient
 from app.modules.ai.infrastructure.fake_llm import FakeLlmGateway
+from app.modules.ai.infrastructure.fake_parallel import FakeParallelClient
 from app.modules.ai.infrastructure.fallback_gateway import (
     FallbackLlmGateway,
     is_limit_error,
@@ -17,6 +18,11 @@ from app.modules.ai.infrastructure.fallback_gateway import (
 )
 from app.modules.ai.infrastructure.openrouter import OpenRouterGateway
 from app.modules.ai.infrastructure.openrouter_embeddings import OpenRouterEmbeddings
+from app.modules.ai.infrastructure.parallel import ParallelApi, ParallelClient
+from app.modules.ai.infrastructure.parallel_search import (
+    ParallelFirstWebSearch,
+    ParallelWebSearch,
+)
 from app.modules.ai.infrastructure.unavailable import (
     UnavailableExaClient,
     UnavailableLlmGateway,
@@ -92,12 +98,46 @@ def make_llm_gateway(settings: Settings, *, required: bool = True) -> LlmGateway
 def make_web_search_gateway(
     settings: Settings, redis: Redis | None, *, required: bool = True
 ) -> WebSearchGateway:
+    """The web search: Parallel first, Exa as the fallback and the deep partner.
+
+    Parallel is on in `PARALLEL__MODE=fake` and in `live` with a key; `live` without
+    a key leaves Exa alone. Every real API is called through an allowance shared by
+    all processes (Redis), so `redis` is required then. See `make_exa_web_search`.
+    """
+    exa = make_exa_web_search(settings, redis, required=required)
+    config = settings.parallel
+    if not config.enabled:
+        return exa
+    client: ParallelApi
+    if config.mode == "fake":
+        client = FakeParallelClient()
+    else:
+        if config.api_key is None or redis is None:
+            if redis is None and required:
+                raise ValueError("Redis is required for the Parallel rate limit")
+            return exa
+        client = LimitedExa(
+            ParallelClient(
+                api_key=config.api_key.get_secret_value(),
+                base_url=config.base_url,
+                timeout_seconds=config.timeout_seconds,
+            ),
+            ExaRateLimiter(redis, prefix="ai:parallel"),
+            config,
+        )
+    return ParallelFirstWebSearch(
+        ParallelWebSearch(client, settings.web_search, config), exa
+    )
+
+
+def make_exa_web_search(
+    settings: Settings, redis: Redis | None, *, required: bool = True
+) -> WebSearchGateway:
     """The Exa search: the real API in `EXA__MODE=real`, else the deterministic fake.
 
     A real connection without `EXA__API_KEY` stops the start, like a missing OpenRouter
     key does (unless `required` is False: then searches fail when reached); the key
-    itself is never logged. The real API is called through the allowance shared by all
-    processes (Redis), so `redis` is required then.
+    itself is never logged.
     """
     config = settings.exa
     client: ExaApi

@@ -125,6 +125,8 @@ class SearchCall:
     explain: bool  # ask for a one-sentence reason per page
     profile: ModelProfile
     exclude_domains: tuple[str, ...] = ()
+    deep: bool = False
+    """One query of a deep search: every provider is asked, not only the first."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -136,6 +138,9 @@ class SearchReply:
     cost_micro: int = 0
     """What the provider charged for this call, in millionths of a dollar."""
     notice: SearchNotice | None = None
+    provider: str = ""
+    """Who answered: `exa`, `parallel`, or `parallel+exa` when a deep search merged
+    both; empty for a stand-in that names none."""
 
 
 class WebSearchGateway(Protocol):

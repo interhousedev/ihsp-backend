@@ -18,7 +18,7 @@ from typing import Any
 from uuid import uuid4
 
 from app.modules.ai.infrastructure.exa import ExaApi, ExaCallError
-from app.settings import ExaSettings
+from app.settings import ExaSettings, ParallelSettings
 from app.shared.redis_util import wait
 
 import structlog
@@ -54,11 +54,14 @@ class ExaRateLimiter:
         self,
         redis: Redis,
         *,
+        prefix: str = "ai:exa",
         now: Callable[[], float] = time.time,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     ) -> None:
-        """Keep the Redis client and the clock."""
+        """Keep the Redis client, the key prefix of one provider and the clock."""
         self.redis = redis
+        self.bucket_key = f"{prefix}:bucket"
+        self.inflight_key = f"{prefix}:inflight"
         self._now = now
         self._sleep = sleep
 
@@ -85,13 +88,13 @@ class ExaRateLimiter:
 
     async def release(self, lease: str) -> None:
         """Free the slot of a search that is over."""
-        await self.redis.zrem(INFLIGHT_KEY, lease)
+        await self.redis.zrem(self.inflight_key, lease)
 
     async def cool_down(self, seconds: float) -> None:
         """Hold every search for `seconds`: Exa answered 429 and said so."""
         until = self._now() + seconds
-        await wait(self.redis.hset(BUCKET_KEY, "cool", str(until)))
-        await self.redis.pexpire(BUCKET_KEY, STATE_TTL_MS + int(seconds * 1000))
+        await wait(self.redis.hset(self.bucket_key, "cool", str(until)))
+        await self.redis.pexpire(self.bucket_key, STATE_TTL_MS + int(seconds * 1000))
         log.warning("web_search_cool_down", seconds=round(seconds, 1))
 
     async def _attempt(
@@ -101,12 +104,12 @@ class ExaRateLimiter:
         now = self._now()
         pipe = self.redis.pipeline(transaction=True)
         try:
-            await pipe.watch(BUCKET_KEY, INFLIGHT_KEY)
-            bucket = await wait(pipe.hgetall(BUCKET_KEY))
+            await pipe.watch(self.bucket_key, self.inflight_key)
+            bucket = await wait(pipe.hgetall(self.bucket_key))
             cool_until = _number(bucket.get("cool"), 0.0)
             if cool_until > now:
                 return min(cool_until - now, MAX_POLL_SECONDS)
-            active = int(await wait(pipe.zcount(INFLIGHT_KEY, f"({now}", "+inf")))
+            active = int(await wait(pipe.zcount(self.inflight_key, f"({now}", "+inf")))
             if active >= max_concurrent:
                 return MAX_POLL_SECONDS
             tokens = min(
@@ -118,11 +121,11 @@ class ExaRateLimiter:
                 return min((1 - tokens) / max_qps, MAX_POLL_SECONDS)
             lease = uuid4().hex
             pipe.multi()  # type: ignore[no-untyped-call]
-            pipe.hset(BUCKET_KEY, mapping={"tokens": tokens - 1, "ts": now})
-            pipe.pexpire(BUCKET_KEY, STATE_TTL_MS)
-            pipe.zremrangebyscore(INFLIGHT_KEY, "-inf", now)
-            pipe.zadd(INFLIGHT_KEY, {lease: now + lease_seconds})
-            pipe.pexpire(INFLIGHT_KEY, int((lease_seconds + 60) * 1000))
+            pipe.hset(self.bucket_key, mapping={"tokens": tokens - 1, "ts": now})
+            pipe.pexpire(self.bucket_key, STATE_TTL_MS)
+            pipe.zremrangebyscore(self.inflight_key, "-inf", now)
+            pipe.zadd(self.inflight_key, {lease: now + lease_seconds})
+            pipe.pexpire(self.inflight_key, int((lease_seconds + 60) * 1000))
             await pipe.execute()
             return lease
         except WatchError:
@@ -139,9 +142,12 @@ class LimitedExa:
     """
 
     def __init__(
-        self, client: ExaApi, limiter: ExaRateLimiter, settings: ExaSettings
+        self,
+        client: ExaApi,
+        limiter: ExaRateLimiter,
+        settings: ExaSettings | ParallelSettings,
     ) -> None:
-        """Store the wrapped client, the Redis limiter and the Exa settings."""
+        """Store the wrapped client, the Redis limiter and the provider's settings."""
         self.client = client
         self.limiter = limiter
         self.settings = settings

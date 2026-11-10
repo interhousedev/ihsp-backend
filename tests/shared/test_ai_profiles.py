@@ -80,6 +80,11 @@ def test_the_catalog_lists_the_places_that_call_a_model() -> None:
         "media_describe",
         "openui_repair",
         "voice_transcribe",
+        "teacher_questions",
+        "teacher_handout",
+        "teacher_work_check",
+        "teacher_ai_check",
+        "teacher_lesson_plan",
     } == names
 
 

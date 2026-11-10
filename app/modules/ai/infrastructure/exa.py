@@ -57,8 +57,10 @@ class ExaClient:
         base_url: str,
         timeout_seconds: float,
         client: httpx.AsyncClient | None = None,
+        path: str = SEARCH_PATH,
     ) -> None:
         """Configure the HTTP client; the key is kept for the header only."""
+        self._path = path
         self._headers = {"x-api-key": api_key}
         self._client = client or httpx.AsyncClient(
             base_url=base_url.rstrip("/"),
@@ -78,7 +80,7 @@ class ExaClient:
         """
         try:
             response = await self._client.post(
-                SEARCH_PATH, json=body, headers=self._headers
+                self._path, json=body, headers=self._headers
             )
         except httpx.TimeoutException as error:
             raise ExaCallError(timeout=True) from error

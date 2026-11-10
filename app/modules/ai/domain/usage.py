@@ -77,6 +77,11 @@ _FEATURE_OF: dict[str, str] = {
     "media_describe": "notebook_prep",
     "openui_repair": "assistant",
     "voice_transcribe": "assistant",
+    "teacher_questions": "assistant",
+    "teacher_handout": "assistant",
+    "teacher_work_check": "assistant",
+    "teacher_ai_check": "assistant",
+    "teacher_lesson_plan": "assistant",
 }
 
 

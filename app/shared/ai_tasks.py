@@ -86,6 +86,11 @@ class AiTask(StrEnum):
     MEDIA_DESCRIBE = "media_describe"
     OPENUI_REPAIR = "openui_repair"
     VOICE_TRANSCRIBE = "voice_transcribe"
+    TEACHER_QUESTIONS = "teacher_questions"
+    TEACHER_HANDOUT = "teacher_handout"
+    TEACHER_WORK_CHECK = "teacher_work_check"
+    TEACHER_AI_CHECK = "teacher_ai_check"
+    TEACHER_LESSON_PLAN = "teacher_lesson_plan"
 
 
 @dataclass(frozen=True, slots=True)
@@ -254,6 +259,37 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
     ),
     AiTask.LMS_AUTHORING: TaskSpec(
         "lms", "The course author assistant (lms_author chats in a course workspace)."
+    ),
+    AiTask.TEACHER_QUESTIONS: TaskSpec(
+        "assistant",
+        "Teacher tools (MCP): questions with an answer key on a topic, from the "
+        "teacher's own materials when given.",
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.TEACHER_HANDOUT: TaskSpec(
+        "assistant",
+        "Teacher tools (MCP): a classroom handout in Markdown, saved as a DOCX.",
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.TEACHER_WORK_CHECK: TaskSpec(
+        "assistant",
+        "Teacher tools (MCP): feedback and a suggested mark for a student's work "
+        "against the teacher's rubric (the work is sent to the model).",
+        data_collection=_PRIVATE,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.TEACHER_AI_CHECK: TaskSpec(
+        "assistant",
+        "Teacher tools (MCP): an estimate of whether a student's text was written "
+        "by an AI (the text is sent to the model); never proof.",
+        data_collection=_PRIVATE,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.TEACHER_LESSON_PLAN: TaskSpec(
+        "assistant",
+        "Teacher tools (MCP): fills the teacher's own DOCX lesson plan template "
+        "section by section from the topics and materials.",
+        reasoning_effort=_NO_REASONING,
     ),
     AiTask.WEB_SEARCH: TaskSpec(
         "search",

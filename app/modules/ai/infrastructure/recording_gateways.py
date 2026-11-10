@@ -241,7 +241,13 @@ class RecordingWebSearch:
             await pending.finish(error=_error_name(exc))
             raise
         charge = reply.cost_micro or reply.usage.get("cost_micro", 0)
-        await pending.finish({**reply.usage, "cost_micro": charge})
+        await pending.finish(
+            {
+                **reply.usage,
+                "cost_micro": charge,
+                "model": reply.provider or SEARCH_ENGINE,
+            }
+        )
         return reply
 
 

@@ -874,8 +874,11 @@ def _both_refs(first: FakePassage, second: FakePassage) -> list[str]:
     return unique(first.refs + second.refs)
 
 
-def build_slides(passages: Sequence[FakePassage], _: str) -> Document:
-    """Title, agenda, four bullet slides, two columns and a summary (§ 3.4.6)."""
+def build_slides(passages: Sequence[FakePassage], text: str) -> Document:
+    """Title, agenda, four bullet slides, two columns and a summary (§ 3.4.6).
+
+    With image candidates in the task the second slide sits next to the first one.
+    """
     title = title_of(passages)
     content: list[Document] = []
     for number in range(4):
@@ -890,6 +893,8 @@ def build_slides(passages: Sequence[FakePassage], _: str) -> Document:
                 "refs": passage.refs,
             }
         )
+    if "<images>" in text and "I1" in text:
+        content[1] = {**content[1], "layout": "image_right", "image_id": "I1"}
     left, right = cycle(passages, 0), cycle(passages, 1)
     content.append(
         {

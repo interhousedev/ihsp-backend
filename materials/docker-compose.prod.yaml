@@ -92,6 +92,7 @@ x-backend-env: &backend-env
   IHSP_EMIS__GATEWAY_URL: http://identity:8001/internal/emis
   IHSP_OPENROUTER__MODE: ${IHSP_OPENROUTER__MODE:-real}
   IHSP_EXA__MODE: ${IHSP_EXA__MODE:-real}
+  IHSP_PARALLEL__MODE: ${IHSP_PARALLEL__MODE:-live}
   # Models per task (materials/.env.sample). An empty value means "not set": a task
   # without its own model uses IHSP_AI__DEFAULT__MODEL. More IHSP_AI__TASKS__<TASK>__*
   # variables can be added here, and set in .env.prod.
@@ -185,6 +186,7 @@ x-openrouter-env: &openrouter-env
 
 x-exa-env: &exa-env
   IHSP_EXA__API_KEY: ${IHSP_EXA__API_KEY:?}
+  IHSP_PARALLEL__API_KEY: ${IHSP_PARALLEL__API_KEY:-}
 
 # The same S3 settings feed the bucket bootstrap job.
 x-cors-origins: &cors-origins https://id.${DOMAIN},https://my.${DOMAIN},https://app.${DOMAIN},https://staff.${DOMAIN},https://admin.${DOMAIN},https://lms.${DOMAIN},https://lib.${DOMAIN}

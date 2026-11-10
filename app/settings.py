@@ -461,6 +461,55 @@ class ExaSettings(BaseModel):
         return value
 
 
+class ParallelSettings(BaseModel):
+    """Parallel Search API (`IHSP_PARALLEL__...`): the first web search, Exa the second.
+
+    A search goes to Parallel first and to Exa when Parallel fails, times out, is busy
+    or finds nothing; a deep search asks both and merges the pages.
+    """
+
+    mode: Literal["live", "fake"] = "fake"
+    """`live` calls Parallel; `fake` answers with deterministic pages (no key). Live
+    without a key leaves Parallel off: every search goes to Exa."""
+
+    api_key: SecretStr | None = None
+    """Parallel API key, sent only in the `x-api-key` header."""
+
+    base_url: str = "https://api.parallel.ai"
+    """Parallel API root; a search is `POST {base_url}/v1/search`."""
+
+    search_mode: Literal["turbo", "fast", "basic", "advanced"] = "fast"
+    """Parallel search `mode`: `turbo` and `fast` answer quickest, `advanced` digs."""
+
+    timeout_seconds: int = Field(default=15, ge=3, le=120)
+    """Timeout of one search call; a slower answer falls back to Exa."""
+
+    max_results: int = Field(default=10, ge=1, le=40)
+    """Most pages one Parallel search asks for (the call's own limit may be lower)."""
+
+    max_qps: int = Field(default=10, ge=1, le=100)
+    """Searches per second our key may make, counted across all processes."""
+
+    max_concurrent: int = Field(default=10, ge=1, le=100)
+    """Searches in flight at once across all processes."""
+
+    queue_timeout_seconds: float = Field(default=2.0, ge=0, le=60)
+    """How long a search waits for a free slot before it falls back to Exa."""
+
+    @field_validator("api_key", mode="before")
+    @classmethod
+    def _empty_is_none(cls, value: object) -> object:
+        """An empty variable from a compose file means "no key"."""
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
+
+    @property
+    def enabled(self) -> bool:
+        """True when Parallel is asked: the fake, or a live key."""
+        return self.mode == "fake" or self.api_key is not None
+
+
 class NotebooksSettings(BaseModel):
     """Notebooks (NotebookLM-style) limits and switches."""
 
@@ -555,6 +604,21 @@ class NotebooksSettings(BaseModel):
 
     web_materials_timeout_seconds: float = Field(default=15.0, gt=0, le=120)
     """Download timeout of one gathered file."""
+
+    slides_research_enabled: bool = True
+    """A confirmed presentation plan is researched per slide and gets images."""
+
+    slides_research_concurrency: int = Field(default=4, ge=1, le=16)
+    """Slides researched at the same time (a bounded semaphore)."""
+
+    slides_images_per_slide: int = Field(default=2, ge=0, le=5)
+    """Image candidates looked up per slide (0 turns the images off)."""
+
+    slides_image_max_bytes: int = Field(default=5_242_880, ge=1024)
+    """Largest slide image; bigger ones are skipped."""
+
+    slides_commons_enabled: bool = True
+    """Look up licensed images on Wikimedia Commons (needs network access)."""
 
 
 class VectorsSettings(BaseModel):
@@ -1219,6 +1283,7 @@ class Settings(BaseSettings):
     openrouter: OpenRouterSettings = Field(default_factory=OpenRouterSettings)
     anthropic: AnthropicSettings = Field(default_factory=AnthropicSettings)
     exa: ExaSettings = Field(default_factory=ExaSettings)
+    parallel: ParallelSettings = Field(default_factory=ParallelSettings)
     notebooks: NotebooksSettings = Field(default_factory=NotebooksSettings)
     vectors: VectorsSettings = Field(default_factory=VectorsSettings)
     knowledge: KnowledgeSettings = Field(default_factory=KnowledgeSettings)

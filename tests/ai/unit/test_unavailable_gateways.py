@@ -27,7 +27,10 @@ def keyless(settings: Settings) -> Settings:
         update={"mode": "real", "api_key": None}
     )
     exa = settings.exa.model_copy(update={"mode": "real", "api_key": None})
-    return settings.model_copy(update={"openrouter": openrouter, "exa": exa})
+    parallel = settings.parallel.model_copy(update={"mode": "live", "api_key": None})
+    return settings.model_copy(
+        update={"openrouter": openrouter, "exa": exa, "parallel": parallel}
+    )
 
 
 def test_api_and_worker_refuse_to_start_without_the_openrouter_key(

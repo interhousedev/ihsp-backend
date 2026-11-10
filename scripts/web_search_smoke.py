@@ -1,4 +1,4 @@
-"""One real Exa search, to check that the hits and the charge come back.
+"""One real web search (Parallel, Exa as fallback): check hits and the charge.
 
     IHSP_EXA__MODE=real IHSP_EXA__API_KEY=... \
         uv run python scripts/web_search_smoke.py "photosynthesis" [fast|chat]
