@@ -135,6 +135,7 @@ class AuthoringServices:
     draft_commands: LmsDraftCommandsImpl
     workspace: LmsWorkspaceImpl
     workspace_commands: LmsWorkspaceCommandsImpl
+    apply_course_plan: ApplyCoursePlan
     get_course_settings: GetCourseSettings
     update_course_details: UpdateCourseDetails
     regenerate_join_code: RegenerateJoinCode
@@ -200,6 +201,7 @@ def assemble_authoring(
     create_course = CreateCourse(uow_factory, clock, presenter)
     update_course_meta = UpdateCourseMeta(uow_factory, clock, presenter)
     apply_outline_ops = ApplyOutlineOps(uow_factory, editor, presenter)
+    apply_course_plan = ApplyCoursePlan(uow_factory, clock, writer)
     return AuthoringServices(
         create_course=create_course,
         update_course_settings=UpdateCourseSettings(uow_factory, presenter, writer),
@@ -260,9 +262,10 @@ def assemble_authoring(
             get_course_draft=get_course_draft,
         ),
         workspace_commands=LmsWorkspaceCommandsImpl(
-            apply_course_plan=ApplyCoursePlan(uow_factory, clock, writer),
+            apply_course_plan=apply_course_plan,
             save_step_draft=save_step_draft,
         ),
+        apply_course_plan=apply_course_plan,
         get_course_settings=GetCourseSettings(uow_factory),
         update_course_details=UpdateCourseDetails(uow_factory, writer, groups),
         regenerate_join_code=RegenerateJoinCode(uow_factory),

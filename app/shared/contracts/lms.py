@@ -371,3 +371,187 @@ class LmsWorkspaceCommands(Protocol):
         Returns ``{"step_id", "blocks", "lock_version"}``.
         """
         ...
+
+
+class LmsCourseOps(Protocol):
+    """Course operations beyond add-only drafts, for the LMS MCP (provider: lms).
+
+    Every method runs the LMS use case as ``actor``: the staff permission of the
+    course and the scope of the token are checked there. Results are JSON dicts.
+    A stale draft is retried once; invalid content raises ``ContentInvalidError``
+    with ``params={"reason", "block_id"?, "question_id"?}``.
+    """
+
+    async def move_section(
+        self, actor: Actor, course_id: UUID, section_id: str, position: int
+    ) -> dict[str, Any]:
+        """Move a section to a 0-based position; returns the draft outline."""
+        ...
+
+    async def move_step(
+        self,
+        actor: Actor,
+        course_id: UUID,
+        step_id: UUID,
+        to_section_id: str,
+        position: int,
+    ) -> dict[str, Any]:
+        """Move a step to a position of a section; returns the draft outline."""
+        ...
+
+    async def update_block(
+        self, actor: Actor, step_id: UUID, block_id: str, block: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Replace a block of the step draft, keeping its place and ID."""
+        ...
+
+    async def delete_block(
+        self, actor: Actor, step_id: UUID, block_id: str
+    ) -> dict[str, Any]:
+        """Remove a block of the step draft."""
+        ...
+
+    async def move_block(
+        self, actor: Actor, step_id: UUID, block_id: str, position: int
+    ) -> dict[str, Any]:
+        """Move a block to a 0-based position inside the step."""
+        ...
+
+    async def update_question(
+        self,
+        actor: Actor,
+        step_id: UUID,
+        block_id: str,
+        question_id: str,
+        question: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Replace a question of a test block, keeping its place and ID."""
+        ...
+
+    async def delete_question(
+        self, actor: Actor, step_id: UUID, block_id: str, question_id: str
+    ) -> dict[str, Any]:
+        """Remove a question of a test block."""
+        ...
+
+    async def move_question(
+        self,
+        actor: Actor,
+        step_id: UUID,
+        block_id: str,
+        question_id: str,
+        position: int,
+    ) -> dict[str, Any]:
+        """Move a question to a 0-based position inside its test block."""
+        ...
+
+    async def build_course(
+        self,
+        actor: Actor,
+        course_id: UUID,
+        sections: Sequence[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Create sections and steps with their blocks in one call.
+
+        ``sections`` is ``[{"title", "steps": [{"title", "blocks"?: [...]}]}]``;
+        sections and steps whose title exists are reused (never renamed or
+        overwritten). Blocks are saved only into steps created by this call.
+        Returns the plan result plus ``"filled": [{"step_id", "blocks"}]``.
+        """
+        ...
+
+    async def publish(
+        self, actor: Actor, course_id: UUID, note: str | None
+    ) -> dict[str, Any]:
+        """Publish the draft as a new version (needs the publish permission)."""
+        ...
+
+    async def restore_version(
+        self, actor: Actor, course_id: UUID, number: int
+    ) -> dict[str, Any]:
+        """Copy an earlier version into the draft; nothing is published."""
+        ...
+
+    async def settings(self, actor: Actor, course_id: UUID) -> dict[str, Any]:
+        """Return visibility, status, cover, invite code and similar settings."""
+        ...
+
+    async def update_settings(
+        self,
+        actor: Actor,
+        course_id: UUID,
+        *,
+        visibility: str | None,
+        cover_file_id: UUID | None,
+        clear_cover: bool,
+    ) -> dict[str, Any]:
+        """Change visibility and/or the cover (``clear_cover`` removes it)."""
+        ...
+
+    async def list_staff(self, actor: Actor, course_id: UUID) -> list[dict[str, Any]]:
+        """List the staff of the course."""
+        ...
+
+    async def add_staff(
+        self,
+        actor: Actor,
+        course_id: UUID,
+        *,
+        login: str,
+        role: str,
+        permissions: Sequence[str] | None,
+    ) -> dict[str, Any]:
+        """Add a user by login (needs manage_staff)."""
+        ...
+
+    async def remove_staff(
+        self, actor: Actor, course_id: UUID, user_id: UUID
+    ) -> dict[str, Any]:
+        """Remove a staff member (needs manage_staff)."""
+        ...
+
+    async def students(self, actor: Actor, course_id: UUID) -> list[dict[str, Any]]:
+        """List the enrolled students with their progress (needs review)."""
+        ...
+
+    async def attempt(self, actor: Actor, attempt_id: UUID) -> dict[str, Any]:
+        """Return one graded attempt with answers."""
+        ...
+
+    async def override_score(
+        self, actor: Actor, attempt_id: UUID, score: float, comment: str
+    ) -> dict[str, Any]:
+        """Set the score of an attempt by hand, with a comment."""
+        ...
+
+
+class LmsAiTools(Protocol):
+    """Model-backed drafting for the LMS MCP; one model call of ``LMS_AUTHORING``.
+
+    Both methods only draft: nothing is saved. Results are JSON dicts in the
+    shapes of ``CoursePlanInput`` and ``StepDraftInput``.
+    """
+
+    async def course_plan(
+        self,
+        actor: Actor,
+        *,
+        topic: str,
+        audience: str,
+        language: str,
+        sections: int,
+        steps_per_section: int,
+    ) -> dict[str, Any]:
+        """Draft a course plan: summary, goals and sections with steps."""
+        ...
+
+    async def lesson(
+        self,
+        actor: Actor,
+        *,
+        topic: str,
+        language: str,
+        guidance: str,
+    ) -> dict[str, Any]:
+        """Draft one lesson: ``{"title", "blocks": [...]}`` in the block input shape."""
+        ...

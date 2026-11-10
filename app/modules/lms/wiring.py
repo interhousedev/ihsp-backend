@@ -5,6 +5,7 @@ import hmac
 from dataclasses import dataclass
 
 from app.modules.lms.application.h5p_links import H5PLinks
+from app.modules.lms.application.public_course_ops import LmsCourseOpsImpl
 from app.modules.lms.ports.h5p_store import H5PObjectStore
 from app.modules.lms.wiring_authoring import AuthoringServices, build_authoring
 from app.modules.lms.wiring_cartridge import CartridgeServices, build_cartridge
@@ -22,6 +23,7 @@ class LmsModule:
     authoring: AuthoringServices
     learning: LearningServices
     cartridge: CartridgeServices
+    course_ops: LmsCourseOpsImpl
 
 
 def h5p_signing_key(deps: ModuleDeps) -> bytes:
@@ -55,4 +57,26 @@ def build(
         h5p_links=links,
     )
     cartridge = build_cartridge(deps, identity=identity, files=files)
-    return LmsModule(authoring=authoring, learning=learning, cartridge=cartridge)
+    course_ops = LmsCourseOpsImpl(
+        apply_outline_ops=authoring.apply_outline_ops,
+        apply_course_plan=authoring.apply_course_plan,
+        get_step_draft=authoring.get_step_draft,
+        save_step_draft=authoring.save_step_draft,
+        get_pending_changes=authoring.get_pending_changes,
+        publish_course=authoring.publish_course,
+        restore_version=authoring.restore_version,
+        get_course_settings=authoring.get_course_settings,
+        update_course_settings=authoring.update_course_settings,
+        list_course_staff=authoring.list_course_staff,
+        add_course_staff=authoring.add_course_staff,
+        remove_course_staff=authoring.remove_course_staff,
+        list_course_students=learning.list_course_students,
+        get_attempt=learning.get_attempt,
+        override_score=learning.override_score,
+    )
+    return LmsModule(
+        authoring=authoring,
+        learning=learning,
+        cartridge=cartridge,
+        course_ops=course_ops,
+    )
