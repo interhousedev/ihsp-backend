@@ -1,0 +1,16 @@
+{
+  "onboarding-welcome": "Siz <b>{login}</b> sifatida kirdingiz.\n\n<b>{brand}ga xush kelibsiz, {name}!</b> Maktab bir joyda: dars jadvali, baholar, uyga vazifalar, pochta va AI yordamchi. Qisqa tur bir daqiqa oladi.",
+  "onboarding-apps": "<b>Ilovalar</b>\nBot eng muhimini koʼrsatadi. Toʼliq ilovalar Telegramning oʼzida ochiladi.",
+  "onboarding-settings": "<b>Sozlamalar</b>\nTilni va baholar haqidagi qaysi bildirishnomalarni olishni tanlang. Keyin buni Sozlamalarda oʼzgartirish mumkin.",
+  "onboarding-ai": "<b>AI yordamchi</b>\nOddiy matn bilan yozing: dars jadvali, baholar yoki maktab qoidalari haqida soʼrang. Maʼlumotlaringizni boshqa AI xizmatlarida ishlatish uchun ularni konnektorlar sahifasida ulang.",
+  "onboarding-btn-next": "Keyingisi",
+  "onboarding-btn-done": "Menyuni ochish",
+  "onboarding-btn-language": "Til",
+  "onboarding-btn-notifications": "Bildirishnomalar",
+  "onboarding-btn-connect-ai": "AIni ulash",
+  "onboarding-app-sp": "Mening maktabim",
+  "onboarding-app-staff": "Oʼqituvchilarga",
+  "onboarding-app-lms": "Kurslar",
+  "onboarding-app-library": "Kutubxona",
+  "onboarding-app-admin": "Boshqaruv"
+}

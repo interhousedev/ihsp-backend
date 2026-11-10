@@ -1,0 +1,16 @@
+{
+  "onboarding-welcome": "Logged in as <b>{login}</b>.\n\n<b>Welcome to {brand}, {name}!</b> Your school in one place: schedule, marks, homework, mail and an AI assistant. A short tour takes a minute.",
+  "onboarding-apps": "<b>The apps</b>\nThe bot shows the essentials. The full apps open right here in Telegram.",
+  "onboarding-settings": "<b>Settings</b>\nChoose the language and which mark notifications you get. You can change it later in Settings.",
+  "onboarding-ai": "<b>AI assistant</b>\nWrite to me in free text to ask about your schedule, marks or school rules. To use your data in other AI tools, connect them on the connectors page.",
+  "onboarding-btn-next": "Next",
+  "onboarding-btn-done": "Open menu",
+  "onboarding-btn-language": "Language",
+  "onboarding-btn-notifications": "Notifications",
+  "onboarding-btn-connect-ai": "Connect AI",
+  "onboarding-app-sp": "My school",
+  "onboarding-app-staff": "Teachers",
+  "onboarding-app-lms": "Courses",
+  "onboarding-app-library": "Library",
+  "onboarding-app-admin": "Administration"
+}
