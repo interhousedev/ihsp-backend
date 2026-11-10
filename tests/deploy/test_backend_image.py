@@ -36,6 +36,7 @@ def test_the_runtime_stage_copies_the_venv_and_the_source_only() -> None:
         line for line in _instructions(_runtime_stage()) if line.startswith("COPY ")
     ]
     assert copies == [
+        "COPY scripts/download_face_models.sh /tmp/download_face_models.sh",
         "COPY --from=builder /app/.venv /app/.venv",
         "COPY app ./app",
         "COPY locales ./locales",
