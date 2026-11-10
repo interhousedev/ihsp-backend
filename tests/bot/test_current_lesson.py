@@ -27,6 +27,7 @@ async def test_current_lesson_offers_attendance_homework_and_resources(
         AttActionCb(lesson=encoded, action="edit").pack(),
         HomeworkPromptCb(lesson=encoded, action="add").pack(),
         ResourceLessonCb(lesson=encoded, role="p").pack(),
+        "m:today",
         "m:menu",
     ]
 

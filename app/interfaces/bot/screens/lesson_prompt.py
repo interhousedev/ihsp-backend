@@ -50,7 +50,8 @@ def _checklist(
     lines.append(i18n("bot-prompt-hint", absent=state.absent_count))
     if work_off is not None:
         lines.append(i18n("bot-prompt-work-off", task=escape(work_off.summary(i18n))))
-    rows = attendance_checklist.get(i18n, state.lesson.id, state.roster)
+    checklist = attendance_checklist.get(i18n, state.lesson.id, state.roster)
+    rows = checklist[:-1]
     rows.extend(lesson_journal.open_button(i18n, state.lesson.id))
     hidden = len(state.roster) - attendance_checklist.MAX_ROSTER_BUTTONS
     if hidden > 0:
@@ -62,6 +63,7 @@ def _checklist(
                 )
             ]
         )
+    rows.extend(checklist[-1:])
     return lines, rows
 
 
@@ -81,14 +83,16 @@ def _summary(
         lines.append(
             i18n("bot-prompt-no-homework" if closed else "bot-prompt-ask-homework")
         )
-    rows = (
-        []
-        if closed
-        else attendance_summary.get(
+    rows: Rows = []
+    if not closed:
+        summary = attendance_summary.get(
             i18n, state.lesson.id, has_homework=bool(state.homework_text)
         )
-        + lesson_journal.open_button(i18n, state.lesson.id)
-    )
+        rows = [
+            *summary[:-1],
+            *lesson_journal.open_button(i18n, state.lesson.id),
+            *summary[-1:],
+        ]
     return lines, rows
 
 

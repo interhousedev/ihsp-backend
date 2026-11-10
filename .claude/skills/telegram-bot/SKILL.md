@@ -18,6 +18,19 @@ description: Use when changing the aiogram bot in app/interfaces/bot - rendering
 - For anything that acts (approve a tool call, undo, share), put a short **server-side single-use token** in the callback and keep the payload in Redis bound to the user: `store.take_call(token, user_id)` consumes it. Test replay, another user and expiry.
 - Typed callbacks shared with notifications live in `app/shared/contracts/callbacks.py` (for example `ExcuseCb` for curator approve/reject, handled in `routers/common/excuses`); the decision goes through the excuse use case, which checks the actor.
 
+## Commands
+
+- `utilities/commands.py` holds `COMMAND_KEYS`; `bot.set_commands` publishes the full list per language, and `/start` or `/menu` narrows the chat's list to the user's roles (`set_role_commands`, reset on Log out). A new role-only command goes into `STUDENT_ONLY` or `TEACHER_ONLY`, with a `bot-command-*` key in all three locales.
+- `/help` lists the user's commands from the same catalogue; never hand-write the list in a locale string.
+
+## Hub, navigation, pagination, errors
+
+- `/menu`, `/start` and `m:menu` open one hub (`keyboards/main_menu.py`): Study (Work for teachers), Tools and Account sections with `none_button` headers, then the mini app button. Screens reached from the hub are edited in place (`reply_edit.show` falls back to a send).
+- Every sub-screen ends with `utilities/navigation.nav_rows(i18n, parent)`: `← Back` to the parent (the hub by default) and `⌂ Menu`. `keyboards/back_to_menu.get` is that footer for first-level screens.
+- Lists longer than 8 items use `utilities/pagination` (`paginate`, `pager_row`) and the one `PageCb(kind, page)`; register a handler per `kind` (`hw` for homework).
+- Layout: bold title, blank line, body, `<i>` footer. Errors go through `utilities/errors` (`error_html`, `error_text`). Empty states say what is missing and keep an action button.
+- Screens with a richer web page add an Open in app button via `BotUrls.page(roles, path)`.
+
 ## Streaming
 
 - `assistant/stream.py`: private chats use `sendMessageDraft` (Bot API 9) for the live answer; the draft is ephemeral, so the finished answer is always sent as a normal message. If drafts fail, fall back to one message edited at most once a second.

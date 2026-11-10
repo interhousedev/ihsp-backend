@@ -86,6 +86,7 @@ async def test_choose_lists_templates_with_none_and_marks_the_selected(
         "✅ Read chapter 5",
         "⬜ Solve the problems",
         "bot-btn-back",
+        "bot-btn-menu",
     ]
     assert harness.last_callbacks()[:3] == [pick(harness.world, i) for i in (0, 1, 2)]
 
@@ -297,7 +298,7 @@ async def test_teacher_empty_list(harness: Harness) -> None:
     await harness.send("/workoffs", user_id=TEACHER_TG)
 
     assert "bot-workoffs-teacher-empty" in harness.last_text()
-    assert harness.last_labels() == ["bot-btn-back"]
+    assert harness.last_labels() == ["bot-btn-back", "bot-btn-menu"]
 
 
 async def test_tap_marks_done_and_offers_undo(harness: Harness) -> None:
@@ -340,7 +341,7 @@ async def test_teacher_list_is_paged(harness: Harness) -> None:
 
     await harness.send("/workoffs", user_id=TEACHER_TG)
     assert WorkOffPageCb(page=1).pack() in harness.last_callbacks()
-    assert len(harness.last_callbacks()) == 8 + 1 + 1
+    assert len(harness.last_callbacks()) == 8 + 1 + 2
 
     await harness.press(WorkOffPageCb(page=1).pack(), user_id=TEACHER_TG)
 
@@ -381,4 +382,4 @@ async def test_student_menu_button_and_empty_list(harness: Harness) -> None:
     await harness.press(MenuCb(screen="workoffs").pack(), user_id=STUDENT_TG)
 
     assert "bot-workoffs-student-empty" in harness.last_text()
-    assert harness.last_labels() == ["bot-btn-back"]
+    assert harness.last_labels() == ["bot-btn-back", "bot-btn-menu"]

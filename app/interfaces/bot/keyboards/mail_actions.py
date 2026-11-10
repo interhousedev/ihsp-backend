@@ -3,7 +3,8 @@
 from uuid import UUID
 
 from app.interfaces.bot.utilities.markup import Rows, cb_button
-from app.shared.contracts.callbacks import MailCb
+from app.interfaces.bot.utilities.navigation import nav_rows
+from app.shared.contracts.callbacks import MailCb, MenuCb
 from app.shared.i18n.core import I18nContext
 from app.shared.ids import uuid_to_b64
 
@@ -23,4 +24,4 @@ def get(i18n: I18nContext, mail_id: UUID, *, truncated: bool) -> Rows:
             0, cb_button(i18n("bot-btn-full"), MailCb(mail=mail, action="full"))
         )
     rows.append(last)
-    return rows
+    return [*rows, *nav_rows(i18n, MenuCb(screen="mail"))]

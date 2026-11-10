@@ -5,6 +5,7 @@ from uuid import UUID
 from app.interfaces.bot.callbacks import WorkOffPickCb
 from app.interfaces.bot.utilities.html import shorten
 from app.interfaces.bot.utilities.markup import Rows, cb_button, toggle_text
+from app.interfaces.bot.utilities.navigation import nav_rows
 from app.interfaces.bot.work_off_choice import WorkOffChoice
 from app.shared.contracts.callbacks import AttActionCb
 from app.shared.i18n.core import I18nContext
@@ -36,7 +37,4 @@ def get(i18n: I18nContext, lesson_id: UUID, choice: WorkOffChoice) -> Rows:
                 )
             ]
         )
-    rows.append(
-        [cb_button(i18n("bot-btn-back"), AttActionCb(lesson=lesson, action="edit"))]
-    )
-    return rows
+    return [*rows, *nav_rows(i18n, AttActionCb(lesson=lesson, action="edit"))]

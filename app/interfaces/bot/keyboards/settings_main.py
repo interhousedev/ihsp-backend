@@ -3,8 +3,9 @@
 from collections.abc import Iterable
 
 from app.interfaces.bot.utilities.markup import Rows, cb_button
+from app.interfaces.bot.utilities.navigation import nav_rows
 from app.shared.actor import Role
-from app.shared.contracts.callbacks import MenuCb, SettingsCb
+from app.shared.contracts.callbacks import SettingsCb
 from app.shared.i18n.core import I18nContext
 
 
@@ -24,5 +25,4 @@ def get(i18n: I18nContext, roles: Iterable[Role]) -> Rows:
     rows.append(
         [cb_button(i18n("bot-btn-logout"), SettingsCb(key="logout", value="ask"))]
     )
-    rows.append([cb_button(i18n("bot-btn-back"), MenuCb(screen="menu"))])
-    return rows
+    return [*rows, *nav_rows(i18n)]

@@ -136,6 +136,8 @@ async def test_mail_renders_the_email_and_its_attachments_as_documents(
         "bot-btn-reply",
         "bot-btn-forward",
         "bot-btn-spam",
+        "bot-btn-back",
+        "bot-btn-menu",
     ]
 
 

@@ -3,6 +3,7 @@
 from uuid import UUID
 
 from app.interfaces.bot.utilities.markup import Rows, cb_button, web_app_button
+from app.interfaces.bot.utilities.navigation import nav_rows
 from app.shared.contracts.callbacks import (
     AttActionCb,
     HomeworkPromptCb,
@@ -35,5 +36,5 @@ def get(i18n: I18nContext, lesson_id: UUID, lesson_url: str) -> Rows:
             )
         ],
         [web_app_button(i18n("bot-btn-open-lesson"), lesson_url)],
-        [cb_button(i18n("bot-btn-back"), MenuCb(screen="menu"))],
+        *nav_rows(i18n, MenuCb(screen="today")),
     ]

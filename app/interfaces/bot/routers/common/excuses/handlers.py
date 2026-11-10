@@ -1,6 +1,8 @@
 """Approve or reject an excuse request from the curator's Telegram."""
 
 from app.interfaces.bot.services import BotServices
+from app.interfaces.bot.utilities.markup import web_app_button
+from app.interfaces.bot.utilities.navigation import menu_button
 from app.interfaces.bot.utilities.reply_edit import answer_callback, show
 from app.modules.academic.domain.excuses.errors import (
     ExcuseNotFoundError,
@@ -51,6 +53,15 @@ async def decide(
     await show(
         callback,
         RenderedMessage(
-            text_html=i18n(_RESULT_KEYS.get(status, "excuse-bot-approved")), buttons=[]
+            text_html=i18n(_RESULT_KEYS.get(status, "excuse-bot-approved")),
+            buttons=[
+                [
+                    web_app_button(
+                        i18n("bot-btn-open-in-app"),
+                        services.urls.page(user.roles, "excuses/"),
+                    )
+                ],
+                [menu_button(i18n)],
+            ],
         ),
     )

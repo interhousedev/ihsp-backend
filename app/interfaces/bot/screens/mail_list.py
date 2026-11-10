@@ -15,17 +15,19 @@ def build_mail_list(
     mails: Sequence[MailSummary],
     address: str,
     i18n: I18nContext,
+    app_url: str,
     *,
     is_first_page: bool,
 ) -> RenderedMessage:
     """Return the list with New email and paging buttons."""
-    lines = [i18n("bot-mail-title", address=escape(address))]
+    lines = [i18n("bot-mail-title", address=escape(address)), ""]
     if not mails:
         lines.append(i18n("bot-mail-empty"))
+    lines.extend(["", f"<i>{i18n('bot-mail-footer')}</i>"])
     older = int(mails[-1].occurred_at.timestamp()) if len(mails) >= PAGE_SIZE else None
     return RenderedMessage(
         text_html="\n".join(lines),
         buttons=mail_list.get(
-            i18n, mails, older_before=older, is_first_page=is_first_page
+            i18n, mails, app_url, older_before=older, is_first_page=is_first_page
         ),
     )

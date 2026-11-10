@@ -4,6 +4,7 @@ from typing import Any
 from uuid import UUID
 
 from app.interfaces.bot.routers.common.feedback.rules import RATE_LIMITED_CODE
+from app.interfaces.bot.utilities.navigation import menu_button
 from app.interfaces.bot.utilities.reply_edit import show
 from app.shared.actor import Actor
 from app.shared.base_error import BaseError
@@ -41,4 +42,4 @@ async def send_report(
         text = i18n("bot-feedback-rate-limited")
     else:
         text = i18n("bot-feedback-sent")
-    await show(callback, RenderedMessage(text_html=text, buttons=None))
+    await show(callback, RenderedMessage(text_html=text, buttons=[[menu_button(i18n)]]))

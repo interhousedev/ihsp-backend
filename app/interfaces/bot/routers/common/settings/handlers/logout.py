@@ -2,6 +2,7 @@
 
 from app.interfaces.bot.screens.login import build_login
 from app.interfaces.bot.services import BotServices
+from app.interfaces.bot.utilities.commands import reset_role_commands
 from app.interfaces.bot.utilities.menu_button import reset_menu_button
 from app.interfaces.bot.utilities.reply_edit import show
 from app.shared.i18n.core import I18nContext
@@ -22,4 +23,5 @@ async def logout(
     await services.identity_commands.unlink_telegram(callback.from_user.id)
     await state.clear()
     await reset_menu_button(bot, callback.from_user.id)
+    await reset_role_commands(bot, callback.from_user.id)
     await show(callback, build_login(i18n, services.urls))

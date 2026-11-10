@@ -2,6 +2,7 @@
 
 from app.interfaces.bot.screens.main_menu import build_main_menu
 from app.interfaces.bot.services import BotServices
+from app.interfaces.bot.utilities.commands import set_role_commands
 from app.interfaces.bot.utilities.menu_button import set_app_menu_button
 from app.interfaces.bot.utilities.reply_edit import show
 from app.shared.contracts.identity import UserRef
@@ -18,8 +19,9 @@ async def show_menu(
     services: BotServices,
     i18n: I18nContext,
 ) -> None:
-    """Show the menu; commands also point the chat's menu button at the app."""
+    """Show the menu; commands also set the chat's menu button and command list."""
     unread = await services.notify.unread_count(user.id)
     await show(request, build_main_menu(user, i18n, services.urls, unread=unread))
     if isinstance(request, Message):
         await set_app_menu_button(bot, request.chat.id, user, i18n, services.urls)
+        await set_role_commands(bot, request.chat.id, user, i18n)

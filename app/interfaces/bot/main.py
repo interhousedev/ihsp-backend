@@ -4,6 +4,7 @@ import asyncio
 from typing import Any
 
 from app.interfaces.bot.bot import (
+    allowed_updates,
     build_bot,
     build_dispatcher,
     build_storage,
@@ -24,7 +25,7 @@ async def _poll(bot: Bot, dispatcher: Dispatcher, container: Any) -> None:
     await dispatcher.start_polling(
         bot,
         container=container,
-        allowed_updates=dispatcher.resolve_used_update_types(),
+        allowed_updates=allowed_updates(dispatcher, container.settings),
     )
 
 

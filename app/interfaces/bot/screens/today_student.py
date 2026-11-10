@@ -3,9 +3,10 @@
 from collections.abc import Sequence
 from datetime import date
 
-from app.interfaces.bot.keyboards import back_to_menu
 from app.interfaces.bot.utilities.formatting import fmt_date, time_range
 from app.interfaces.bot.utilities.html import escape
+from app.interfaces.bot.utilities.markup import web_app_button
+from app.interfaces.bot.utilities.navigation import nav_rows
 from app.shared.contracts.academic import LessonRef
 from app.shared.contracts.notify import RenderedMessage
 from app.shared.i18n.core import I18nContext
@@ -21,13 +22,15 @@ def _line(lesson: LessonRef, i18n: I18nContext) -> str:
 
 
 def build_today_student(
-    lessons: Sequence[LessonRef], today: date, i18n: I18nContext
+    lessons: Sequence[LessonRef], today: date, i18n: I18nContext, app_url: str
 ) -> RenderedMessage:
     """List today's lessons in time order."""
-    lines = [f"<b>{i18n('bot-today-title', date=fmt_date(today))}</b>"]
+    lines = [f"<b>{i18n('bot-today-title', date=fmt_date(today))}</b>", ""]
     if lessons:
         ordered = sorted(lessons, key=lambda lesson: (lesson.starts_at, lesson.period))
         lines.extend(_line(lesson, i18n) for lesson in ordered)
     else:
         lines.append(i18n("bot-today-empty"))
-    return RenderedMessage(text_html="\n".join(lines), buttons=back_to_menu.get(i18n))
+    lines.extend(["", f"<i>{i18n('bot-today-footer')}</i>"])
+    rows = [[web_app_button(i18n("bot-btn-open-in-app"), app_url)], *nav_rows(i18n)]
+    return RenderedMessage(text_html="\n".join(lines), buttons=rows)

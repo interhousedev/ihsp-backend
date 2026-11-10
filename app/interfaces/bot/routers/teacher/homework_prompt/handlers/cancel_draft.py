@@ -1,5 +1,6 @@
 """Cancel on the homework preview: drop the draft text."""
 
+from app.interfaces.bot.utilities.navigation import menu_button
 from app.interfaces.bot.utilities.reply_edit import show
 from app.shared.contracts.notify import RenderedMessage
 from app.shared.i18n.core import I18nContext
@@ -13,4 +14,9 @@ async def cancel_homework(
 ) -> None:
     """Clear the FSM and tell the teacher nothing was saved."""
     await state.clear()
-    await show(callback, RenderedMessage(text_html=i18n("bot-homework-cancelled")))
+    await show(
+        callback,
+        RenderedMessage(
+            text_html=i18n("bot-homework-cancelled"), buttons=[[menu_button(i18n)]]
+        ),
+    )

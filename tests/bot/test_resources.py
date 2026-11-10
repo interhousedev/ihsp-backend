@@ -172,5 +172,5 @@ async def test_students_sending_files_get_the_hint(harness: Harness) -> None:
     """Only teachers can add resources; a student gets the generic hint."""
     await harness.send_document(user_id=STUDENT_TG)
 
-    assert harness.last_text().startswith("bot-hint-unexpected")
+    assert "bot-hint-unexpected" in harness.last_text()
     assert not harness.world.files.stored

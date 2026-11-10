@@ -11,6 +11,7 @@ from app.interfaces.bot.bot import (
 from app.interfaces.bot.routers import build_routers
 from app.interfaces.bot.webhook import build_webhook_app, webhook_path
 from app.settings import Settings
+from app.shared.actor import Role
 from tests.bot.support.fakes import World
 from tests.bot.support.recording_bot import make_bot, message_update, session_of
 
@@ -69,12 +70,19 @@ def test_commands_follow_the_menu(world: World) -> None:
         "today",
         "marks",
         "homework",
+        "lesson",
         "mail",
         "workoffs",
         "settings",
         "new",
         "feedback",
         "help",
+    ]
+    assert "lesson" not in [
+        c.command for c in build_commands(world.i18n, "en", {Role.STUDENT})
+    ]
+    assert "marks" not in [
+        c.command for c in build_commands(world.i18n, "en", {Role.TEACHER})
     ]
     assert set(COMMAND_KEYS.values()) == {c.description for c in commands}
 

@@ -3,7 +3,7 @@
 from tests.bot.support.fakes import STUDENT_TG, TEACHER_TG
 from tests.bot.support.harness import Harness
 
-from aiogram.methods import SetChatMenuButton
+from aiogram.methods import SetChatMenuButton, SetMyCommands
 from aiogram.types import MenuButtonWebApp
 
 UNLINKED = 7777
@@ -42,16 +42,20 @@ async def test_linked_student_gets_the_student_menu(harness: Harness) -> None:
     await harness.send("/start")
 
     assert harness.last_text() == (
-        "bot-menu-greeting[login=brastilov.aleksey,name=Aleksey]"
+        "<b>bot-menu-title</b>\n\n"
+        "bot-menu-greeting[login=brastilov.aleksey,name=Aleksey]\n\n"
+        "<i>bot-menu-footer</i>"
     )
-    assert harness.last_callbacks() == [
+    assert [c for c in harness.last_callbacks() if c != "none"] == [
         "m:today",
         "m:marks",
         "m:homework",
         "m:workoffs",
+        "m:assistant",
         "m:mail",
-        "m:feedback",
         "m:settings",
+        "m:feedback",
+        "m:help",
     ]
     app_button = harness.last_buttons()[-1][0]
     assert app_button.web_app is not None
@@ -64,12 +68,14 @@ async def test_teacher_menu_has_current_lesson_and_the_staff_portal(
     """BOT-8, BOT-9: teachers see Today, Current lesson, Settings; Open app is staff."""
     await harness.send("/menu", user_id=TEACHER_TG)
 
-    assert harness.last_callbacks() == [
+    assert [c for c in harness.last_callbacks() if c != "none"] == [
         "m:today",
         "m:lesson",
         "m:workoffs",
-        "m:feedback",
+        "m:assistant",
         "m:settings",
+        "m:feedback",
+        "m:help",
     ]
     app_button = harness.last_buttons()[-1][0]
     assert app_button.web_app is not None
@@ -86,6 +92,16 @@ async def test_menu_command_sets_the_per_role_menu_button(harness: Harness) -> N
     assert call.menu_button.web_app.url == "http://localhost:3003"
 
 
+async def test_start_narrows_the_chat_commands_to_the_role(harness: Harness) -> None:
+    """A teacher's chat does not list the student-only commands."""
+    await harness.send("/start", user_id=TEACHER_TG)
+
+    (call,) = harness.session.calls(SetMyCommands)
+    names = [c.command for c in call.commands]
+    assert "lesson" in names
+    assert "marks" not in names
+
+
 async def test_unread_notifications_are_shown_in_the_menu(harness: Harness) -> None:
     """The menu mentions unread notifications of the web center."""
     harness.world.notify.unread = 3
@@ -100,22 +116,25 @@ async def test_menu_button_press_edits_the_same_message(harness: Harness) -> Non
     await harness.press("m:menu")
 
     assert not harness.sent
-    assert (harness.edits[-1].text or "").startswith("bot-menu-greeting")
+    assert (harness.edits[-1].text or "").startswith("<b>bot-menu-title</b>")
 
 
 async def test_help_shows_help_text_and_menu(harness: Harness) -> None:
     """BOT-9: /help opens the help screen with the menu buttons."""
     await harness.send("/help")
 
-    assert harness.last_text() == "bot-help"
-    assert "m:today" in harness.last_callbacks()
+    text = harness.last_text()
+    assert text.startswith("bot-help\n\n/menu")
+    assert "/marks" in text
+    assert "/lesson" not in text
+    assert harness.last_callbacks() == ["m:menu", "m:menu"]
 
 
 async def test_unknown_text_gets_a_hint_and_the_menu(harness: Harness) -> None:
     """BOT-23: an unexpected message gets a short hint and the menu."""
     await harness.send("what is this")
 
-    assert harness.last_text().startswith("bot-hint-unexpected")
+    assert "bot-hint-unexpected" in harness.last_text()
     assert "m:today" in harness.last_callbacks()
 
 
@@ -153,3 +172,31 @@ async def test_the_label_buttons_do_nothing(harness: Harness) -> None:
 
     assert harness.toasts
     assert not harness.edits
+
+
+async def test_hub_groups_sections_and_links_the_app_pages(harness: Harness) -> None:
+    """The hub has Study, Tools and Account headers and deep links to web pages."""
+    await harness.send("/menu")
+
+    texts = [b.text for row in harness.last_buttons() for b in row]
+    assert texts[0] == "bot-menu-section-study"
+    assert "bot-menu-section-tools" in texts
+    assert "bot-menu-section-account" in texts
+    urls = [b.web_app.url for row in harness.last_buttons() for b in row if b.web_app]
+    assert "http://localhost:3002/timetable/" in urls
+    assert "http://localhost:3002/attendance/" in urls
+
+
+async def test_help_and_assistant_screens_go_back_to_the_hub(
+    harness: Harness,
+) -> None:
+    """Hub entries edit the message in place and carry Back and Menu buttons."""
+    await harness.press("m:help")
+    assert harness.last_callbacks() == ["m:menu", "m:menu"]
+
+    await harness.press("m:assistant")
+    assert harness.last_callbacks() == ["m:menu", "m:menu"]
+    assert not harness.sent
+
+    await harness.press("m:menu")
+    assert (harness.edits[-1].text or "").startswith("<b>bot-menu-title</b>")

@@ -10,6 +10,7 @@ from app.interfaces.bot.keyboards.attendance_checklist import (
 )
 from app.interfaces.bot.prompt_state import RosterItem
 from app.interfaces.bot.utilities.markup import Rows, cb_button, pairs
+from app.interfaces.bot.utilities.navigation import menu_button
 from app.modules.academic.domain.classwork.temporary_mark import MARK_SCALE
 from app.shared.i18n.core import I18nContext
 from app.shared.ids import uuid_to_b64
@@ -49,7 +50,7 @@ def students(
     rows.append(
         [cb_button(i18n("bot-btn-back"), JournalCb(lesson=lesson, action="back"))]
     )
-    return rows
+    return [*rows, [menu_button(i18n)]]
 
 
 def marks_for(
@@ -71,4 +72,4 @@ def marks_for(
     rows.append(
         [cb_button(i18n("bot-btn-back"), JournalCb(lesson=lesson, action="open"))]
     )
-    return rows
+    return [*rows, [menu_button(i18n)]]

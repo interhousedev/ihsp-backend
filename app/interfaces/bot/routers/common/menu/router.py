@@ -1,6 +1,9 @@
 """Router of the main menu and /help (linked users only)."""
 
 from app.interfaces.bot.filters.is_linked import IsLinked
+from app.interfaces.bot.routers.common.menu.handlers.show_assistant import (
+    show_assistant,
+)
 from app.interfaces.bot.routers.common.menu.handlers.show_help import show_help
 from app.interfaces.bot.routers.common.menu.handlers.show_menu import show_menu
 from app.shared.contracts.callbacks import MenuCb
@@ -22,4 +25,8 @@ def build_router() -> Router:
     router.message.register(show_menu, Command("start", "menu"))
     router.callback_query.register(show_menu, MenuCb.filter(F.screen == "menu"))
     router.message.register(show_help, Command("help"))
+    router.callback_query.register(show_help, MenuCb.filter(F.screen == "help"))
+    router.callback_query.register(
+        show_assistant, MenuCb.filter(F.screen == "assistant")
+    )
     return router

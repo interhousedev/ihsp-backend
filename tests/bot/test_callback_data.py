@@ -26,6 +26,7 @@ LARGE = 10**9  # more than any position or unix time the bot packs
 LARGEST: list[CallbackData] = [
     callbacks.MenuCb(screen="homework"),
     callbacks.HomeworkDoneCb(lesson=LESSON, done=True),
+    callbacks.PageCb(kind="homework", page=LARGE),
     callbacks.AttToggleCb(lesson=LESSON, pos=LARGE),
     callbacks.AttActionCb(lesson=LESSON, action="all_present"),
     callbacks.HomeworkPromptCb(lesson=LESSON, action="cancel"),

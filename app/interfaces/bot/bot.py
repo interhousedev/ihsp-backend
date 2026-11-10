@@ -1,5 +1,6 @@
 """Bot and dispatcher construction: storage, middlewares and routers."""
 
+from collections.abc import Iterable
 from typing import Any
 
 from app.interfaces.bot.middlewares.actor import ActorMiddleware
@@ -8,7 +9,10 @@ from app.interfaces.bot.middlewares.i18n import SUPPORTED_LOCALES, I18nMiddlewar
 from app.interfaces.bot.middlewares.reset_state import ResetStateMiddleware
 from app.interfaces.bot.middlewares.services import ServicesMiddleware
 from app.interfaces.bot.routers import build_routers
+from app.interfaces.bot.utilities.commands import COMMAND_KEYS, command_names_for
+from app.interfaces.bot.widgets.queries import WidgetQueryMiddleware
 from app.settings import Settings
+from app.shared.actor import Role
 from app.shared.i18n.core import I18nCore
 
 from aiogram import Bot, Dispatcher
@@ -21,21 +25,6 @@ from aiogram.types import BotCommand
 
 FSM_TTL_SECONDS = 3600  # BOT-4: conversation state lives one hour
 FSM_KEY_PREFIX = "ihsp:fsm"
-
-# BOT-9: slash commands and the i18n key of their description.
-COMMAND_KEYS = {
-    "start": "bot-command-start",
-    "menu": "bot-command-menu",
-    "today": "bot-command-today",
-    "marks": "bot-command-marks",
-    "homework": "bot-command-homework",
-    "mail": "bot-command-mail",
-    "workoffs": "bot-command-workoffs",
-    "settings": "bot-command-settings",
-    "new": "bot-command-new",
-    "feedback": "bot-command-feedback",
-    "help": "bot-command-help",
-}
 
 
 def build_bot(settings: Settings) -> Bot:
@@ -70,6 +59,8 @@ def build_dispatcher(container: Any, storage: BaseStorage) -> Dispatcher:
     dispatcher = Dispatcher(storage=storage, container=container)
     dispatcher.update.outer_middleware(ErrorMiddleware(settings.telegram.admin_chat_id))
     dispatcher.update.outer_middleware(ServicesMiddleware())
+    if settings.bot.widgets_enabled:
+        dispatcher.update.outer_middleware(WidgetQueryMiddleware())
     dispatcher.update.outer_middleware(ActorMiddleware())
     dispatcher.update.outer_middleware(I18nMiddleware())
     dispatcher.message.outer_middleware(ResetStateMiddleware())
@@ -78,12 +69,23 @@ def build_dispatcher(container: Any, storage: BaseStorage) -> Dispatcher:
     return dispatcher
 
 
-def build_commands(i18n_core: I18nCore, locale: str) -> list[BotCommand]:
-    """The command list in one language."""
+def allowed_updates(dispatcher: Dispatcher, settings: Settings) -> list[str]:
+    """The update types to ask Telegram for; widget queries only with widgets on."""
+    types = list(dispatcher.resolve_used_update_types())
+    if settings.bot.widgets_enabled:
+        types.extend(["widget_query", "shared_widget_query"])
+    return types
+
+
+def build_commands(
+    i18n_core: I18nCore, locale: str, roles: Iterable[Role] | None = None
+) -> list[BotCommand]:
+    """The command list in one language; ``roles`` narrows it to one user's."""
     context = i18n_core.get_context(locale)
+    names = list(COMMAND_KEYS) if roles is None else command_names_for(roles)
     return [
-        BotCommand(command=name, description=context(key))
-        for name, key in COMMAND_KEYS.items()
+        BotCommand(command=name, description=context(COMMAND_KEYS[name]))
+        for name in names
     ]
 
 

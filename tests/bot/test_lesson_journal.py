@@ -66,7 +66,13 @@ async def test_journal_lists_students_with_their_current_marks(
 
     await harness.press(journal(world), user_id=TEACHER_TG)
 
-    assert harness.last_labels() == ["Alice", "Bob · 4", "Carol", "bot-btn-back"]
+    assert harness.last_labels() == [
+        "Alice",
+        "Bob · 4",
+        "Carol",
+        "bot-btn-back",
+        "bot-btn-menu",
+    ]
     assert "bot-journal-title" in harness.last_text()
 
 
@@ -84,6 +90,7 @@ async def test_student_shows_the_scale_remove_and_back(harness: Harness) -> None
         "5",
         "bot-btn-journal-remove",
         "bot-btn-back",
+        "bot-btn-menu",
     ]
     assert "bot-journal-student[mark=3,name=Alice]" in harness.last_text()
 

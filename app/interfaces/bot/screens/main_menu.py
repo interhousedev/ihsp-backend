@@ -18,10 +18,12 @@ def build_main_menu(
 ) -> RenderedMessage:
     """Greet the user and show the buttons of their roles."""
     lines = [
-        i18n(intro_key, name=escape(user.first_name), login=escape(user.login or ""))
+        f"<b>{i18n('bot-menu-title')}</b>",
+        i18n(intro_key, name=escape(user.first_name), login=escape(user.login or "")),
     ]
     if unread > 0:
         lines.append(i18n("bot-menu-unread", count=unread))
+    lines.append(f"<i>{i18n('bot-menu-footer')}</i>")
     return RenderedMessage(
-        text_html="\n".join(lines), buttons=main_menu.get(i18n, user.roles, urls)
+        text_html="\n\n".join(lines), buttons=main_menu.get(i18n, user.roles, urls)
     )

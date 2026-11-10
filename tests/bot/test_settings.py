@@ -33,6 +33,7 @@ async def test_settings_menu_for_students(harness: Harness) -> None:
         "bot-btn-lesson-settings",
         "bot-btn-logout",
         "bot-btn-back",
+        "bot-btn-menu",
     ]
 
 
@@ -47,6 +48,7 @@ async def test_settings_menu_for_teachers_has_no_notifications(
         "bot-btn-lesson-settings",
         "bot-btn-logout",
         "bot-btn-back",
+        "bot-btn-menu",
     ]
 
 

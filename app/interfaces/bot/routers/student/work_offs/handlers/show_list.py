@@ -3,6 +3,7 @@
 from app.interfaces.bot.screens.student_work_offs import build_student_work_offs
 from app.interfaces.bot.services import BotServices
 from app.interfaces.bot.utilities.reply_edit import show
+from app.shared.contracts.callbacks import MenuCb, PageCb
 from app.shared.contracts.identity import UserRef
 from app.shared.i18n.core import I18nContext
 
@@ -14,7 +15,9 @@ async def show_student_work_offs(
     user: UserRef,
     services: BotServices,
     i18n: I18nContext,
+    callback_data: MenuCb | PageCb | None = None,
 ) -> None:
     """Re-read the open work-offs and show them."""
+    page = callback_data.page if isinstance(callback_data, PageCb) else 0
     items = await services.classwork_queries.my_work_offs(user.id, user.locale)
-    await show(request, build_student_work_offs(items, i18n))
+    await show(request, build_student_work_offs(items, i18n, page))

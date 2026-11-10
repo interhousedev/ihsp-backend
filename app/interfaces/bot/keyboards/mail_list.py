@@ -5,8 +5,9 @@ from collections.abc import Sequence
 from app.interfaces.bot.callbacks import MailComposeCb
 from app.interfaces.bot.utilities.formatting import fmt_date
 from app.interfaces.bot.utilities.html import shorten
-from app.interfaces.bot.utilities.markup import Button, Rows, cb_button
-from app.shared.contracts.callbacks import MailCb, MailListCb, MenuCb
+from app.interfaces.bot.utilities.markup import Button, Rows, cb_button, web_app_button
+from app.interfaces.bot.utilities.navigation import nav_rows
+from app.shared.contracts.callbacks import MailCb, MailListCb
 from app.shared.contracts.mail import MailSummary
 from app.shared.i18n.core import I18nContext
 from app.shared.ids import uuid_to_b64
@@ -24,6 +25,7 @@ def _label(mail: MailSummary) -> str:
 def get(
     i18n: I18nContext,
     mails: Sequence[MailSummary],
+    app_url: str,
     *,
     older_before: int | None,
     is_first_page: bool,
@@ -41,5 +43,5 @@ def get(
         paging.append(cb_button(i18n("bot-btn-older"), MailListCb(before=older_before)))
     if paging:
         rows.append(paging)
-    rows.append([cb_button(i18n("bot-btn-back"), MenuCb(screen="menu"))])
-    return rows
+    rows.append([web_app_button(i18n("bot-btn-open-in-app"), app_url)])
+    return [*rows, *nav_rows(i18n)]

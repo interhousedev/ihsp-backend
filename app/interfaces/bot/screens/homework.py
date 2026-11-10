@@ -6,11 +6,11 @@ from datetime import date
 from app.interfaces.bot.keyboards import homework_list
 from app.interfaces.bot.utilities.formatting import fmt_date
 from app.interfaces.bot.utilities.html import escape, shorten
+from app.interfaces.bot.utilities.pagination import paginate
 from app.shared.contracts.academic import LessonRef
 from app.shared.contracts.notify import RenderedMessage
 from app.shared.i18n.core import I18nContext
 
-MAX_ITEMS = 10
 TEXT_LIMIT = 200
 
 
@@ -24,17 +24,22 @@ def _line(lesson: LessonRef, i18n: I18nContext, today: date) -> str:
 
 
 def build_homework(
-    lessons: Sequence[LessonRef], i18n: I18nContext, app_url: str, today: date
+    lessons: Sequence[LessonRef],
+    i18n: I18nContext,
+    app_url: str,
+    today: date,
+    page: int = 0,
 ) -> RenderedMessage:
     """List the homework still to do, soonest due date first (overdue on top)."""
     items = sorted(lessons, key=lambda lesson: lesson.homework_due_date or lesson.date)
-    items = items[:MAX_ITEMS]
+    shown = paginate(items, page)
     lines = [f"<b>{i18n('bot-homework-title')}</b>"]
-    if items:
-        lines.extend(_line(lesson, i18n, today) for lesson in items)
+    if shown.items:
+        lines.extend(_line(lesson, i18n, today) for lesson in shown.items)
+        lines.append(f"<i>{i18n('bot-homework-footer')}</i>")
     else:
         lines.append(i18n("bot-homework-empty"))
     return RenderedMessage(
         text_html="\n\n".join(lines),
-        buttons=homework_list.get(i18n, items, app_url),
+        buttons=homework_list.get(i18n, shown, app_url),
     )

@@ -19,4 +19,9 @@ async def show_today_student(
     """Show the student's lessons of today."""
     today = local_today(services.clock)
     lessons = await services.schedule.lessons_for_student(user.id, today, today)
-    await show(request, build_today_student(lessons, today, i18n))
+    await show(
+        request,
+        build_today_student(
+            lessons, today, i18n, services.urls.page(user.roles, "timetable/")
+        ),
+    )

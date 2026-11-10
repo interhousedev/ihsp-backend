@@ -8,6 +8,7 @@ from app.interfaces.bot.assistant.render import Chunk, render_final
 from app.interfaces.bot.assistant.service import BotAssistant, Events
 from app.interfaces.bot.assistant.stream import AnswerStream
 from app.interfaces.bot.utilities.html import escape
+from app.interfaces.bot.widgets.deliver import WidgetPlan, plan_widgets, send_widgets
 from app.shared.i18n.core import I18nContext
 from app.shared.openui.visual import has_valid_blocks
 
@@ -61,6 +62,27 @@ async def _visual_rows(
             )
         ]
     ]
+
+
+async def _widget_plan(
+    assistant: BotAssistant,
+    stream: AnswerStream,
+    user_id: UUID,
+    chat_id: UUID,
+    answer: Any | None,
+    body: str,
+    i18n: I18nContext,
+) -> WidgetPlan | None:
+    """Widgets for a private chat's answer when the flag is on and all blocks fit."""
+    seq = getattr(answer, "seq", None)
+    if not assistant.widgets or stream.chat_id <= 0 or not isinstance(seq, int):
+        return None
+    if not has_valid_blocks(body):
+        return None
+    token = await assistant.store.remember_visual(user_id, chat_id, seq)
+    return plan_widgets(
+        body, viz_token=token, visualize_label=i18n("bot-ai-visualization")
+    )
 
 
 def _answer(result: Any) -> Any | None:
@@ -131,17 +153,10 @@ def _error_text(data: dict[str, Any], i18n: I18nContext) -> str:
     return escape(i18n.get(key, **(data.get("params") or {})))
 
 
-async def deliver(
-    bot: Bot,
-    stream: AnswerStream,
-    events: Events,
-    *,
-    assistant: BotAssistant,
-    user_id: UUID,
-    chat_id: UUID,
-    i18n: I18nContext,
-) -> None:
-    """Stream the answer text only; finish with buttons, documents and images."""
+async def _consume(
+    stream: AnswerStream, events: Events
+) -> tuple[str, Any, dict[str, Any] | None]:
+    """Drain the events: the streamed text, the final result and any error."""
     text, result, failure = "", None, None
     async for event in events:
         if event.name == "delta":
@@ -155,6 +170,30 @@ async def deliver(
             failure = event.data
         else:
             await stream.typing()
+    return text, result, failure
+
+
+def _made_calls(result: Any) -> list[Any]:
+    return [
+        call
+        for message in result.new_messages
+        if str(message.role) == "assistant"
+        for call in message.tool_calls
+    ]
+
+
+async def deliver(
+    bot: Bot,
+    stream: AnswerStream,
+    events: Events,
+    *,
+    assistant: BotAssistant,
+    user_id: UUID,
+    chat_id: UUID,
+    i18n: I18nContext,
+) -> None:
+    """Stream the answer text only; finish with buttons, documents and images."""
+    text, result, failure = await _consume(stream, events)
     if result is None:
         await stream.abort()
         await bot.send_message(stream.chat_id, _error_text(failure or {}, i18n))
@@ -163,18 +202,22 @@ async def deliver(
     body = answer.text if answer is not None else text
     calls = list(answer.tool_calls) if answer is not None else []
     pending = [call for call in calls if str(call.status) == PENDING]
-    chunks = render_final(body) if body.strip() else []
+    plan = await _widget_plan(assistant, stream, user_id, chat_id, answer, body, i18n)
+    text_body = plan.text if plan is not None else body
+    chunks = render_final(text_body) if text_body.strip() else []
     chunks.extend(Chunk(_card(call)) for call in pending)
-    if not chunks:
+    if not chunks and plan is None:
         chunks = [Chunk(escape(i18n("bot-ai-empty")))]
-    rows = await _visual_rows(assistant, user_id, chat_id, answer, body, i18n)
+    rows = (
+        []
+        if plan is not None
+        else await _visual_rows(assistant, user_id, chat_id, answer, body, i18n)
+    )
     rows += await _approval_rows(assistant, user_id, chat_id, pending, i18n)
+    if plan is not None and not chunks:
+        await stream.abort()
     await stream.finish(chunks, rows)
-    made = [
-        call
-        for message in result.new_messages
-        if str(message.role) == "assistant"
-        for call in message.tool_calls
-    ]
-    await _send_documents(bot, stream.chat_id, assistant, made)
+    if plan is not None:
+        await send_widgets(bot, stream.chat_id, plan)
+    await _send_documents(bot, stream.chat_id, assistant, _made_calls(result))
     await _send_images(bot, stream.chat_id, body)

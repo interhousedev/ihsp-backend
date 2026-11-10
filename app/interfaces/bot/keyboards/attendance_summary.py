@@ -3,7 +3,8 @@
 from uuid import UUID
 
 from app.interfaces.bot.utilities.markup import Rows, cb_button
-from app.shared.contracts.callbacks import AttActionCb, HomeworkPromptCb
+from app.interfaces.bot.utilities.navigation import nav_rows
+from app.shared.contracts.callbacks import AttActionCb, HomeworkPromptCb, MenuCb
 from app.shared.i18n.core import I18nContext
 from app.shared.ids import uuid_to_b64
 
@@ -37,4 +38,4 @@ def get(i18n: I18nContext, lesson_id: UUID, *, has_homework: bool) -> Rows:
             )
         ]
     )
-    return rows
+    return [*rows, *nav_rows(i18n, MenuCb(screen="lesson"))]

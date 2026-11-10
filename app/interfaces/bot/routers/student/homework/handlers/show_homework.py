@@ -7,6 +7,7 @@ from app.interfaces.bot.services import BotServices
 from app.interfaces.bot.utilities.reply_edit import show
 from app.shared.clock import local_today
 from app.shared.contracts.academic import LessonRef
+from app.shared.contracts.callbacks import MenuCb, PageCb
 from app.shared.contracts.identity import UserRef
 from app.shared.i18n.core import I18nContext
 
@@ -31,8 +32,12 @@ async def show_homework(
     user: UserRef,
     services: BotServices,
     i18n: I18nContext,
+    callback_data: MenuCb | PageCb | None = None,
 ) -> None:
-    """Show the homework still to do with a Done button per item."""
+    """Show the homework still to do with a Done button per item (one page)."""
+    page = callback_data.page if isinstance(callback_data, PageCb) else 0
     lessons = await load_upcoming(user, services)
     today = local_today(services.clock)
-    await show(request, build_homework(lessons, i18n, services.urls.homework, today))
+    await show(
+        request, build_homework(lessons, i18n, services.urls.homework, today, page)
+    )

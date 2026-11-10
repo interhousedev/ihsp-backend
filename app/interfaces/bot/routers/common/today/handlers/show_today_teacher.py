@@ -21,6 +21,11 @@ async def show_today_teacher(
     lessons = await services.schedule.lessons_for_teacher(user.id, today, today)
     missing = await services.classwork_queries.missing_attendance(user.id, today, today)
     rendered = build_today_teacher(
-        lessons, {lesson.id for lesson in missing}, today, services.clock.now(), i18n
+        lessons,
+        {lesson.id for lesson in missing},
+        today,
+        services.clock.now(),
+        i18n,
+        services.urls.page(user.roles, "journal/"),
     )
     await show(request, rendered)

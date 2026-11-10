@@ -32,5 +32,5 @@ async def test_a_button_on_an_inaccessible_message_writes_to_the_private_chat(
 
     (sent,) = harness.session.calls(SendMessage)
     assert sent.chat_id == STUDENT_TG
-    assert (sent.text or "").startswith("bot-menu-greeting")
+    assert "bot-menu-greeting" in (sent.text or "")
     assert harness.toasts

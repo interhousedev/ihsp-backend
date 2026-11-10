@@ -12,7 +12,13 @@ from app.interfaces.bot.utilities.markup import (
     none_button,
     pairs,
 )
-from app.shared.contracts.callbacks import AttActionCb, AttToggleCb, HomeworkPromptCb
+from app.interfaces.bot.utilities.navigation import nav_rows
+from app.shared.contracts.callbacks import (
+    AttActionCb,
+    AttToggleCb,
+    HomeworkPromptCb,
+    MenuCb,
+)
 from app.shared.i18n.core import I18nContext
 from app.shared.ids import uuid_to_b64
 
@@ -107,4 +113,4 @@ def get(i18n: I18nContext, lesson_id: UUID, roster: Sequence[RosterItem]) -> Row
             )
         ]
     )
-    return rows
+    return [*rows, *nav_rows(i18n, MenuCb(screen="lesson"))]

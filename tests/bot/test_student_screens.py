@@ -30,7 +30,7 @@ async def test_today_lists_the_students_lessons_with_times_and_rooms(
     text = harness.last_text()
     assert "bot-today-title[date=06.10]" in text
     assert "15:00–16:00 <b>Physics</b> · Room 102" in text
-    assert harness.last_callbacks() == ["m:menu"]
+    assert harness.last_callbacks() == ["m:menu", "m:menu"]
 
 
 async def test_cancelled_lessons_are_struck_through(harness: Harness) -> None:
@@ -75,9 +75,9 @@ async def test_teacher_today_marks_attendance_of_finished_lessons(
     await harness.send("/today", user_id=TEACHER_TG)
 
     lines = harness.last_text().splitlines()
-    assert lines[1].endswith("bot-today-attendance-done")
-    assert lines[2].endswith("bot-today-attendance-missing")
-    assert "attendance" not in lines[3]
+    assert lines[2].endswith("bot-today-attendance-done")
+    assert lines[3].endswith("bot-today-attendance-missing")
+    assert "attendance" not in lines[4]
     assert "m:lesson" in harness.last_callbacks()
 
 
@@ -187,3 +187,52 @@ async def test_done_button_ticks_the_homework_and_refreshes_the_list(
 
     assert ("homework_done", (lesson.id, True)) in world.classwork.calls
     assert "bot-homework-empty" in harness.last_text()
+
+
+async def test_long_homework_list_pages_and_the_pager_turns_pages(
+    harness: Harness,
+) -> None:
+    """More than 8 items paginate; the ‹ n/m › buttons edit the message."""
+    harness.world.classwork_queries.items = [
+        {
+            "lesson": make_lesson(
+                subject_name=f"S{i}",
+                homework_text="x",
+                homework_due_date=TODAY + timedelta(days=i + 1),
+            ),
+            "done_at": None,
+            "note": None,
+        }
+        for i in range(10)
+    ]
+
+    await harness.send("/homework")
+    assert "pg:hw:1" in harness.last_callbacks()
+    assert "S9" not in harness.last_text()
+
+    await harness.press("pg:hw:1")
+    assert "S9" in (harness.edits[-1].text or "")
+
+
+async def test_marks_are_paged_and_open_in_the_app(harness: Harness) -> None:
+    """Over eight recent marks: a pager, Open grades and the nav footer."""
+    harness.world.marks.mark_list = [
+        MarkRef(
+            subject_id=new_id(),
+            subject_name=f"Subject {index}",
+            semester=1,
+            type="lesson",
+            value=5,
+            date=TODAY,
+            lesson_id=None,
+        )
+        for index in range(10)
+    ]
+
+    await harness.send("/marks")
+    assert "pg:mk:1" in harness.last_callbacks()
+    assert harness.last_callbacks()[-2:] == ["m:menu", "m:menu"]
+    assert any(b.web_app for row in harness.last_buttons() for b in row)
+
+    await harness.press("pg:mk:1")
+    assert "pg:mk:0" in harness.last_callbacks()

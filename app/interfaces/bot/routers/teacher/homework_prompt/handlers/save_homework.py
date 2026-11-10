@@ -2,6 +2,7 @@
 
 from app.interfaces.bot.services import BotServices
 from app.interfaces.bot.utilities.html import escape
+from app.interfaces.bot.utilities.navigation import menu_button
 from app.interfaces.bot.utilities.reply_edit import show
 from app.shared.actor import Actor
 from app.shared.contracts.callbacks import HomeworkPromptCb
@@ -27,5 +28,8 @@ async def save_homework(
         b64_to_uuid(callback_data.lesson), actor, text, None
     )
     await state.clear()
-    saved = RenderedMessage(text_html=i18n("bot-homework-saved", text=escape(text)))
+    saved = RenderedMessage(
+        text_html=i18n("bot-homework-saved", text=escape(text)),
+        buttons=[[menu_button(i18n)]],
+    )
     await show(callback, saved)

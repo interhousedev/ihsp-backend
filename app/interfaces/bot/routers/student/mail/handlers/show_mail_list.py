@@ -24,5 +24,11 @@ async def show_mail_list(
     cutoff = datetime.fromtimestamp(before, UTC) if before else None
     mails = await services.mail.recent(user.id, limit=PAGE_SIZE, before=cutoff)
     address = services.mail.address_of(user.login or "")
-    rendered = build_mail_list(mails, address, i18n, is_first_page=before == 0)
+    rendered = build_mail_list(
+        mails,
+        address,
+        i18n,
+        services.urls.page(user.roles, "mail/"),
+        is_first_page=before == 0,
+    )
     await show(request, rendered)

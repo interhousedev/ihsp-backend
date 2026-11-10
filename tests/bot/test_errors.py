@@ -26,7 +26,7 @@ class BrokenError(BaseError):
 
 def error_id_of(text: str) -> str:
     """Extract the id from ``bot-error-id[error_id=<uuid>]``."""
-    return text.rsplit("error_id=", 1)[1].rstrip("]")
+    return text.rsplit("error_id=", 1)[1].split("]")[0]
 
 
 def texts_to(harness: Harness, chat_id: int) -> list[str]:
@@ -44,7 +44,7 @@ async def test_unexpected_error_tells_the_user_and_reports_to_the_admin(
 
     to_user = texts_to(harness, STUDENT_TG)
     report = "".join(texts_to(harness, ADMIN_CHAT))
-    assert to_user[0].startswith("bot-error-generic\n\nbot-error-id[error_id=")
+    assert to_user[0].startswith("<b>bot-error-title</b>\n\nbot-error-generic")
     assert "ValueError: database is on fire" in report
     assert error_id_of(to_user[0]) in report
 
@@ -58,9 +58,7 @@ async def test_expected_errors_are_shown_without_bothering_the_admin(
     await harness.send("/today")
 
     assert [m.chat_id for m in harness.sent] == [STUDENT_TG]
-    assert texts_to(harness, STUDENT_TG)[0].startswith(
-        "error-not-found\n\nbot-error-id"
-    )
+    assert "error-not-found" in texts_to(harness, STUDENT_TG)[0]
 
 
 async def test_server_side_domain_errors_are_reported_to_the_admin(

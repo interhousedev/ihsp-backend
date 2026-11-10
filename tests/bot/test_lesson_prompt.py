@@ -93,6 +93,8 @@ async def test_after_submit_the_message_shows_the_count_and_the_homework_step(
         "bot-btn-no-homework",
         "bot-btn-topic",
         "bot-btn-journal",
+        "bot-btn-back",
+        "bot-btn-menu",
     ]
 
 
@@ -199,7 +201,7 @@ async def test_a_huge_roster_stays_within_telegrams_100_button_limit(
 
     assert len(harness.last_labels()) <= 100
     assert "bot-prompt-roster-cut[count=70]" in harness.last_text()
-    assert harness.last_buttons()[-1][0].web_app is not None
+    assert harness.last_buttons()[-2][0].web_app is not None
 
 
 async def test_merged_lessons_group_students_under_group_headings(

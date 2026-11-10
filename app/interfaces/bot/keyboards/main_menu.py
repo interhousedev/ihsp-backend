@@ -1,4 +1,4 @@
-"""Main menu keyboard, built from the user's roles (BOT-8, BOT-9)."""
+"""The hub keyboard: sections by role, then the mini app (BOT-8, BOT-9)."""
 
 from collections.abc import Iterable
 
@@ -7,6 +7,7 @@ from app.interfaces.bot.utilities.markup import (
     Button,
     Rows,
     cb_button,
+    none_button,
     pairs,
     web_app_button,
 )
@@ -14,38 +15,74 @@ from app.shared.actor import Role
 from app.shared.contracts.callbacks import MenuCb
 from app.shared.i18n.core import I18nContext
 
-STUDENT_SCREENS = ("today", "marks", "homework", "workoffs", "mail")
-TEACHER_SCREENS = ("today", "lesson", "workoffs")
-LABELS = {
-    "today": "bot-btn-today",
-    "marks": "bot-btn-marks",
-    "homework": "bot-btn-homework",
-    "mail": "bot-btn-mail",
-    "lesson": "bot-btn-current-lesson",
-    "workoffs": "bot-btn-workoffs",
-}
+
+def _screen(i18n: I18nContext, label: str, screen: str) -> Button:
+    return cb_button(i18n(label), MenuCb(screen=screen))
 
 
-def screens_for(roles: Iterable[Role]) -> list[str]:
-    """Return the menu screens for the roles, without duplicates."""
-    held = set(roles)
-    screens: list[str] = []
-    if Role.STUDENT in held:
-        screens.extend(STUDENT_SCREENS)
-    if Role.TEACHER in held:
-        screens.extend(s for s in TEACHER_SCREENS if s not in screens)
-    return screens
+def _section(i18n: I18nContext, title: str, buttons: list[Button]) -> Rows:
+    return [[none_button(i18n(title))], *pairs(buttons)]
+
+
+def study_section(i18n: I18nContext, roles: set[Role], urls: BotUrls) -> Rows:
+    """Study for students, Work for teachers: today, lessons, marks, absences."""
+    page = urls.page
+    if Role.STUDENT in roles:
+        buttons = [
+            _screen(i18n, "bot-btn-today", "today"),
+            _screen(i18n, "bot-btn-marks", "marks"),
+            _screen(i18n, "bot-btn-homework", "homework"),
+            _screen(i18n, "bot-btn-workoffs", "workoffs"),
+            web_app_button(i18n("bot-btn-timetable"), page(roles, "timetable/")),
+            web_app_button(i18n("bot-btn-hub-attendance"), page(roles, "attendance/")),
+            web_app_button(i18n("bot-btn-excuses"), page(roles, "excuses/")),
+        ]
+        return _section(i18n, "bot-menu-section-study", buttons)
+    buttons = [
+        _screen(i18n, "bot-btn-today", "today"),
+        _screen(i18n, "bot-btn-current-lesson", "lesson"),
+        _screen(i18n, "bot-btn-workoffs", "workoffs"),
+        web_app_button(i18n("bot-btn-hub-journal"), page(roles, "journal/")),
+        web_app_button(i18n("bot-btn-excuses"), page(roles, "excuses/")),
+    ]
+    return _section(i18n, "bot-menu-section-work", buttons)
+
+
+def tools_section(i18n: I18nContext, roles: set[Role], urls: BotUrls) -> Rows:
+    """Tools: assistant, notebooks, flashcards, library (and mail for students)."""
+    page = urls.page
+    buttons = [_screen(i18n, "bot-btn-assistant", "assistant")]
+    if Role.STUDENT in roles:
+        buttons.append(_screen(i18n, "bot-btn-mail", "mail"))
+    buttons.append(web_app_button(i18n("bot-btn-notebooks"), page(roles, "notebooks/")))
+    if Role.STUDENT in roles:
+        buttons.append(
+            web_app_button(i18n("bot-btn-flashcards"), page(roles, "flashcards/"))
+        )
+    buttons.append(web_app_button(i18n("bot-btn-library"), urls.library))
+    return _section(i18n, "bot-menu-section-tools", buttons)
+
+
+def account_section(i18n: I18nContext, roles: set[Role], urls: BotUrls) -> Rows:
+    """Account: notifications, settings, feedback and help."""
+    buttons = [
+        web_app_button(
+            i18n("bot-btn-hub-notifications"), urls.page(roles, "notifications/")
+        ),
+        _screen(i18n, "bot-btn-settings", "settings"),
+        _screen(i18n, "bot-btn-feedback", "feedback"),
+        _screen(i18n, "bot-btn-help", "help"),
+    ]
+    return _section(i18n, "bot-menu-section-account", buttons)
 
 
 def get(i18n: I18nContext, roles: Iterable[Role], urls: BotUrls) -> Rows:
-    """Return the menu rows: role screens, Settings and Open app."""
-    held = list(roles)
-    buttons: list[Button] = [
-        cb_button(i18n(LABELS[screen]), MenuCb(screen=screen))
-        for screen in screens_for(held)
-    ]
-    buttons.append(cb_button(i18n("bot-btn-feedback"), MenuCb(screen="feedback")))
-    buttons.append(cb_button(i18n("bot-btn-settings"), MenuCb(screen="settings")))
-    rows = pairs(buttons)
+    """Return the hub rows: sections by role and the Open app button."""
+    held = set(roles)
+    rows: Rows = []
+    if held & {Role.STUDENT, Role.TEACHER}:
+        rows.extend(study_section(i18n, held, urls))
+        rows.extend(tools_section(i18n, held, urls))
+    rows.extend(account_section(i18n, held, urls))
     rows.append([web_app_button(i18n("bot-btn-open-app"), urls.app_for(held))])
     return rows

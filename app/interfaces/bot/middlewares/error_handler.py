@@ -6,7 +6,10 @@ from typing import Any
 from uuid import uuid4
 
 from app.interfaces.bot.middlewares.i18n import resolve_locale
+from app.interfaces.bot.utilities.errors import error_html, error_text
 from app.interfaces.bot.utilities.html import escape
+from app.interfaces.bot.utilities.markup import Rows, to_markup
+from app.interfaces.bot.utilities.navigation import menu_button
 from app.interfaces.bot.utilities.reply_edit import is_stale_query
 from app.shared.base_error import BaseError
 from app.shared.i18n.core import I18nContext
@@ -62,9 +65,12 @@ class ErrorMiddleware(BaseMiddleware):
             return
         if _is_unexpected(error):
             await self._report(bot, error_id, error, event)
-        text = _user_text(error, _i18n(data), error_id)
-        if text is not None:
-            await _tell_user(bot, event, data.get("event_chat"), data, text)
+        i18n = _i18n(data)
+        body = _user_body(error, i18n)
+        if body is not None:
+            await _tell_user(
+                bot, event, data.get("event_chat"), data, i18n, body, error_id
+            )
 
     async def _report(
         self, bot: Bot, error_id: str, error: Exception, event: TelegramObject
@@ -97,14 +103,12 @@ def _i18n(data: dict[str, Any]) -> I18nContext:
     return data["container"].i18n.get_context(locale)  # type: ignore[no-any-return]
 
 
-def _user_text(error: Exception, i18n: I18nContext, error_id: str) -> str | None:
+def _user_body(error: Exception, i18n: I18nContext) -> str | None:
     if isinstance(error, BaseError):
         if not error.notify_user:
             return None
-        text = i18n.get(error.message_key, **error.params)
-    else:
-        text = i18n.get("bot-error-generic")
-    return f"{text}\n\n{i18n.get('bot-error-id', error_id=error_id)}"
+        return i18n.get(error.message_key, **error.params)
+    return i18n.get("bot-error-generic")
 
 
 async def _tell_user(
@@ -112,19 +116,28 @@ async def _tell_user(
     event: TelegramObject,
     chat: Any,
     data: dict[str, Any],
-    text: str,
+    i18n: I18nContext,
+    body: str,
+    error_id: str,
 ) -> None:
     try:
         if isinstance(event, Update) and event.callback_query is not None:
             await bot.answer_callback_query(
                 event.callback_query.id,
-                text=text.replace("\n\n", " ")[:ALERT_LIMIT],
+                text=error_text(i18n, body, error_id).replace("\n\n", " ")[
+                    :ALERT_LIMIT
+                ],
                 show_alert=True,
             )
             return
         user: User | None = data.get("event_from_user")
         chat_id = chat.id if chat is not None else (user.id if user else None)
         if chat_id is not None:
-            await bot.send_message(chat_id, escape(text))
+            rows: Rows = [[menu_button(i18n)]]
+            await bot.send_message(
+                chat_id,
+                error_html(i18n, body, error_id),
+                reply_markup=to_markup(rows),
+            )
     except TelegramAPIError:
         log.exception("bot.error_notice_failed")

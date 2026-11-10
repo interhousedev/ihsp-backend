@@ -7,11 +7,12 @@ from typing import Any
 from app.interfaces.bot.keyboards import marks as marks_keyboard
 from app.interfaces.bot.utilities.formatting import MARK_TYPE_KEYS, fmt_date, number
 from app.interfaces.bot.utilities.html import escape
+from app.interfaces.bot.utilities.pagination import paginate
 from app.shared.contracts.academic import MarkRef
 from app.shared.contracts.notify import RenderedMessage
 from app.shared.i18n.core import I18nContext
 
-MAX_MARKS = 20
+MARKS_KIND = "mk"
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,13 +48,14 @@ def _mark_line(mark: MarkRef, i18n: I18nContext) -> str:
 
 
 def build_marks(
-    state: MarksState, i18n: I18nContext, grades_url: str
+    state: MarksState, i18n: I18nContext, grades_url: str, page: int = 0
 ) -> RenderedMessage:
-    """Return the marks screen with an Open grades button."""
-    lines = [f"<b>{i18n('bot-marks-recent')}</b>"]
-    recent = sorted(state.marks, key=lambda mark: mark.date, reverse=True)[:MAX_MARKS]
-    if recent:
-        lines.extend(_mark_line(mark, i18n) for mark in recent)
+    """Return the marks screen: a page of recent marks, the semester, Open grades."""
+    recent = sorted(state.marks, key=lambda mark: mark.date, reverse=True)
+    current = paginate(recent, page)
+    lines = [f"<b>{i18n('bot-marks-recent')}</b>", ""]
+    if current.items:
+        lines.extend(_mark_line(mark, i18n) for mark in current.items)
     else:
         lines.append(i18n("bot-marks-none"))
     lines.append("")
@@ -63,6 +65,8 @@ def build_marks(
         f"{escape(subject.name)}: {number(subject.semester_mark)}"
         for subject in state.subjects
     )
+    lines.extend(["", f"<i>{i18n('bot-marks-footer')}</i>"])
     return RenderedMessage(
-        text_html="\n".join(lines), buttons=marks_keyboard.get(i18n, grades_url)
+        text_html="\n".join(lines),
+        buttons=marks_keyboard.get(i18n, grades_url, current),
     )

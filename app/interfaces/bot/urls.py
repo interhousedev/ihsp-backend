@@ -65,6 +65,10 @@ class BotUrls:
         """Notification center of IHSP Web."""
         return _join(self.sp, "notifications/")
 
+    def page(self, roles: Iterable[Role], path: str) -> str:
+        """Return a page of the app that fits the roles (the Open in app links)."""
+        return _join(self.app_for(roles), path)
+
     def app_for(self, roles: Iterable[Role]) -> str:
         """Return the mini app for the roles: staff portal for teachers (BOT-8)."""
         held = set(roles)

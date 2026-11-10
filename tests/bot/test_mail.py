@@ -71,6 +71,8 @@ async def test_opening_an_email_shows_it_with_its_buttons(harness: Harness) -> N
         mail_cb(mail.id, "reply"),
         mail_cb(mail.id, "fwd"),
         mail_cb(mail.id, "spam"),
+        "m:mail",
+        "m:menu",
     ]
 
 
@@ -301,4 +303,4 @@ async def test_teachers_have_no_mailbox(harness: Harness) -> None:
     """Mail belongs to students (MAIL-1)."""
     await harness.send("/mail", user_id=2002)
 
-    assert harness.last_text().startswith("bot-hint-unexpected")
+    assert "bot-hint-unexpected" in harness.last_text()

@@ -3,6 +3,7 @@
 import asyncio
 from typing import Any
 
+from app.interfaces.bot.bot import allowed_updates
 from app.settings import Settings
 
 from aiogram import Bot, Dispatcher
@@ -34,7 +35,7 @@ def build_webhook_app(
         await bot.set_webhook(
             f"{base_url}{path}",
             secret_token=secret,
-            allowed_updates=dispatcher.resolve_used_update_types(),
+            allowed_updates=allowed_updates(dispatcher, settings),
         )
 
     dispatcher.startup.register(on_startup)

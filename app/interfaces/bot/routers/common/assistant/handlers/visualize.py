@@ -8,9 +8,13 @@ from typing import Any
 
 from app.interfaces.bot.assistant.deliver import AiVizCb
 from app.interfaces.bot.assistant.service import bot_assistant
+from app.interfaces.bot.assistant.visual import (
+    VisualFailedError,
+    VisualStaleError,
+    visual_url,
+)
 from app.interfaces.bot.utilities.reply_edit import answer_callback
 from app.shared.actor import Actor
-from app.shared.base_error import BaseError
 from app.shared.i18n.core import I18nContext
 
 import structlog
@@ -47,29 +51,17 @@ async def visualize(
 ) -> None:
     """Only the owner's press creates the share; others get the stale hint."""
     assistant = bot_assistant(container)
-    found = (
-        None
-        if assistant is None
-        else await assistant.store.visual_of(callback_data.token, actor.user_id)
-    )
-    if assistant is None or found is None:
+    if assistant is None:
         await answer_callback(callback, i18n("bot-stale-button"))
         return
-    url = await assistant.store.visual_url(callback_data.token)
-    if url is None:
-        chat_id, seq = found
-        try:
-            view = await container.links.share_message.execute(
-                actor, chat_id=chat_id, seq=seq
-            )
-        except BaseError as error:
-            log.info("bot.ai.visualization_failed", error=type(error).__name__)
-            await answer_callback(callback, i18n("bot-ai-visualization-failed"))
-            return
-        url = view.url
-        expires = view.link.expires_at
-        ttl = int((expires - view.link.created_at).total_seconds()) if expires else 1
-        await assistant.store.set_visual_url(callback_data.token, url, ttl)
+    try:
+        url = await visual_url(assistant, container, actor, callback_data.token)
+    except VisualStaleError:
+        await answer_callback(callback, i18n("bot-stale-button"))
+        return
+    except VisualFailedError:
+        await answer_callback(callback, i18n("bot-ai-visualization-failed"))
+        return
     await answer_callback(callback)
     origin = callback.message
     if isinstance(origin, Message):

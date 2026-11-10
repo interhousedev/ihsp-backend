@@ -7,10 +7,11 @@ from typing import Any
 from app.interfaces.bot.keyboards import student_work_offs
 from app.interfaces.bot.utilities.formatting import fmt_date
 from app.interfaces.bot.utilities.html import escape, shorten
+from app.interfaces.bot.utilities.pagination import paginate
 from app.shared.contracts.notify import RenderedMessage
 from app.shared.i18n.core import I18nContext
 
-MAX_ITEMS = 10
+WORK_OFFS_KIND = "wo"
 TEXT_LIMIT = 300
 
 
@@ -35,15 +36,16 @@ def _item(raw: dict[str, Any], i18n: I18nContext) -> str:
 
 
 def build_student_work_offs(
-    items: Sequence[dict[str, Any]], i18n: I18nContext
+    items: Sequence[dict[str, Any]], i18n: I18nContext, page: int = 0
 ) -> RenderedMessage:
-    """List the open work-offs, newest lesson first."""
+    """List the open work-offs, a page at a time."""
+    current = paginate(items, page)
     lines = [f"<b>{i18n('bot-workoffs-student-title')}</b>"]
     if not items:
         lines.append(i18n("bot-workoffs-student-empty"))
-    lines.extend(_item(raw, i18n) for raw in items[:MAX_ITEMS])
-    if len(items) > MAX_ITEMS:
-        lines.append(i18n("bot-workoffs-student-more", count=len(items) - MAX_ITEMS))
+    lines.extend(_item(raw, i18n) for raw in current.items)
+    lines.append(f"<i>{i18n('bot-workoffs-student-footer')}</i>")
     return RenderedMessage(
-        text_html="\n\n".join(lines), buttons=student_work_offs.get(i18n)
+        text_html="\n\n".join(lines),
+        buttons=student_work_offs.get(i18n, current),
     )

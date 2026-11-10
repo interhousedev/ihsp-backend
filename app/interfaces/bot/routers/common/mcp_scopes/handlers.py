@@ -1,6 +1,7 @@
 """Give or don't give the offered MCP permissions (A7)."""
 
 from app.interfaces.bot.services import BotServices
+from app.interfaces.bot.utilities.navigation import menu_button
 from app.interfaces.bot.utilities.reply_edit import answer_callback, show
 from app.modules.identity.domain.scope_offer import DecideResult
 from app.shared.contracts.callbacks import McpScopeCb
@@ -50,4 +51,7 @@ async def decide(
         else "mcp-offer-declined"
     )
     button = {"text": i18n("mcp-offer-btn-manage"), "url": services.urls.connectors}
-    await show(callback, RenderedMessage(text_html=i18n(key), buttons=[[button]]))
+    await show(
+        callback,
+        RenderedMessage(text_html=i18n(key), buttons=[[button], [menu_button(i18n)]]),
+    )

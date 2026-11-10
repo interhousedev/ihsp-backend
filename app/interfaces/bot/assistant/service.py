@@ -37,11 +37,19 @@ async def _primed(events: Events) -> Events:
 class BotAssistant:
     """Sends messages and approval decisions to the AI module's use cases."""
 
-    def __init__(self, ai: Any, files: FilesApi, store: AssistantStore) -> None:
-        """`ai` is the AI module's `AiServices` (create, send, approve, reject)."""
+    def __init__(
+        self,
+        ai: Any,
+        files: FilesApi,
+        store: AssistantStore,
+        *,
+        widgets: bool = False,
+    ) -> None:
+        """`ai` is the AI module's `AiServices`; `widgets` sends blocks as widgets."""
         self.ai = ai
         self.files = files
         self.store = store
+        self.widgets = widgets
 
     async def chat_for(self, actor: Actor, *, fresh: bool = False) -> UUID:
         """The user's ongoing chat; a new one when there is none or `fresh`."""
@@ -130,6 +138,13 @@ def bot_assistant(container: Any) -> BotAssistant | None:
     if cached is not None and cached.ai is ai:
         return cached
     files: FilesApi = container.files.public
-    built = BotAssistant(ai, files, AssistantStore(getattr(container, "redis", None)))
+    settings = getattr(container, "settings", None)
+    widgets = bool(getattr(getattr(settings, "bot", None), "widgets_enabled", False))
+    built = BotAssistant(
+        ai,
+        files,
+        AssistantStore(getattr(container, "redis", None)),
+        widgets=widgets,
+    )
     _CACHE[id(container)] = built
     return built

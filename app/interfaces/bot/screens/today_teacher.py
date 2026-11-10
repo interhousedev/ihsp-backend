@@ -45,12 +45,16 @@ def build_today_teacher(
     today: date,
     now: datetime,
     i18n: I18nContext,
+    app_url: str,
 ) -> RenderedMessage:
     """List the teacher's lessons; finished ones show whether attendance is done."""
-    lines = [f"<b>{i18n('bot-today-title', date=fmt_date(today))}</b>"]
+    lines = [f"<b>{i18n('bot-today-title', date=fmt_date(today))}</b>", ""]
     if lessons:
         ordered = sorted(lessons, key=lambda lesson: lesson.starts_at)
         lines.extend(_line(lesson, missing_attendance, now, i18n) for lesson in ordered)
     else:
         lines.append(i18n("bot-today-empty"))
-    return RenderedMessage(text_html="\n".join(lines), buttons=today_teacher.get(i18n))
+    lines.extend(["", f"<i>{i18n('bot-today-footer')}</i>"])
+    return RenderedMessage(
+        text_html="\n".join(lines), buttons=today_teacher.get(i18n, app_url)
+    )

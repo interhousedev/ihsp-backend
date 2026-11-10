@@ -5,7 +5,7 @@ from app.interfaces.bot.routers.student.work_offs.handlers.show_list import (
     show_student_work_offs,
 )
 from app.shared.actor import Role
-from app.shared.contracts.callbacks import MenuCb
+from app.shared.contracts.callbacks import MenuCb, PageCb
 
 from aiogram import F, Router
 from aiogram.filters import Command
@@ -24,5 +24,8 @@ def build_router() -> Router:
     router.message.register(show_student_work_offs, Command("workoffs"))
     router.callback_query.register(
         show_student_work_offs, MenuCb.filter(F.screen == "workoffs")
+    )
+    router.callback_query.register(
+        show_student_work_offs, PageCb.filter(F.kind == "wo")
     )
     return router

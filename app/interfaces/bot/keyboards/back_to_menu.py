@@ -1,10 +1,10 @@
-"""Keyboard with one button: back to the main menu."""
+"""Footer of first-level screens: ← Back and ⌂ Menu, both to the hub."""
 
-from app.interfaces.bot.utilities.markup import Rows, cb_button
-from app.shared.contracts.callbacks import MenuCb
+from app.interfaces.bot.utilities.markup import Rows
+from app.interfaces.bot.utilities.navigation import nav_rows
 from app.shared.i18n.core import I18nContext
 
 
 def get(i18n: I18nContext) -> Rows:
-    """Return the Back button row."""
-    return [[cb_button(i18n("bot-btn-back"), MenuCb(screen="menu"))]]
+    """Return the Back and Menu row."""
+    return nav_rows(i18n)
