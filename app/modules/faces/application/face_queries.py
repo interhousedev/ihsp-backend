@@ -4,6 +4,7 @@ from uuid import UUID
 
 from app.modules.faces.application.enroll import FaceEnroller
 from app.modules.faces.application.views import FaceView
+from app.modules.faces.domain.errors import FaceNotFoundError
 from app.modules.faces.ports.unit_of_work import UowFactory
 from app.shared.contracts.files import FilesApi
 
@@ -52,3 +53,23 @@ class DeleteMyFace:
     async def execute(self, user_id: UUID) -> None:
         """Delete the face; raises `FaceLockedError` when staff set it."""
         await self._enroller.remove(user_id, by_staff=False)
+
+
+class GetUserFacePhoto:
+    """An administrator reads any user's face photo as a short-lived link."""
+
+    def __init__(self, *, uow_factory: UowFactory, files: FilesApi) -> None:
+        """Store the dependencies."""
+        self._uow_factory = uow_factory
+        self._files = files
+
+    async def execute(self, user_id: UUID) -> FaceView:
+        """Return the face with a link; raises `FaceNotFoundError` without one."""
+        async with self._uow_factory() as uow:
+            profile = await uow.profiles.get(user_id)
+        if profile is None:
+            raise FaceNotFoundError()
+        url = await self._files.download_url(
+            profile.photo_file_id, inline=True, ttl_seconds=300
+        )
+        return FaceView(True, profile.locked, profile.updated_at, url)

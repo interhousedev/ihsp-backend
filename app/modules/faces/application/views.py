@@ -35,7 +35,7 @@ class CallView:
     status: str
     matched_user_id: UUID | None
     matched_name: str | None
-    excused: bool | None
+    excused: bool
 
 
 @dataclass(frozen=True, slots=True)

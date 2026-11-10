@@ -116,7 +116,7 @@ class ListDeviceCalls:
                 matched_name=(
                     names.get(c.matched_user_id) if c.matched_user_id else None
                 ),
-                excused=c.excused,
+                excused=bool(c.excused),
             )
             for c in calls
         ]

@@ -14,6 +14,7 @@ from app.modules.faces.application.enroll import FaceEnroller
 from app.modules.faces.application.face_queries import (
     DeleteMyFace,
     GetMyFace,
+    GetUserFacePhoto,
     UploadMyFace,
 )
 from app.modules.faces.application.identify_face import (
@@ -43,6 +44,7 @@ class FacesServices:
     get_my_face: GetMyFace
     upload_my_face: UploadMyFace
     delete_my_face: DeleteMyFace
+    admin_get_face: GetUserFacePhoto
     staff_upload: StaffUploadFace
     staff_delete: StaffDeleteFace
     create_device: CreateDevice
@@ -89,6 +91,7 @@ def build(
         get_my_face=reader,
         upload_my_face=UploadMyFace(enroller=enroller, reader=reader),
         delete_my_face=DeleteMyFace(enroller=enroller),
+        admin_get_face=GetUserFacePhoto(uow_factory=uow_factory, files=files),
         staff_upload=StaffUploadFace(guard=guard, enroller=enroller, reader=reader),
         staff_delete=StaffDeleteFace(guard=guard, enroller=enroller),
         create_device=CreateDevice(uow_factory=uow_factory, clock=deps.clock),
