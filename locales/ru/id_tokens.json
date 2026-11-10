@@ -1,0 +1,6 @@
+{
+  "id-personal-token-invalid": "Настройки токена недопустимы.",
+  "id-token-scope": "Этому токену это действие недоступно.",
+  "id-vault-unavailable": "Vault не отвечает. Попробуйте позже.",
+  "id-vault-key-rejected": "Vault не принял этот ключ."
+}

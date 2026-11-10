@@ -10,6 +10,9 @@ from app.modules.identity.infrastructure.connector_token_verifier import (
     DbConnectorTokenVerifier,
 )
 from app.modules.identity.infrastructure.hydra.factory import build_hydra_admin
+from app.modules.identity.infrastructure.personal_token_verifier import (
+    DbPersonalTokenVerifier,
+)
 from app.modules.identity.ports.email_sender import EmailSender
 from app.modules.identity.ports.hydra_gateway import HydraGateway
 from app.modules.identity.wiring_auth import AuthServices, build_auth
@@ -30,6 +33,7 @@ class IdentityModule:
     commands: IdentityCommands
     token_verifier: HydraAccessTokenVerifier
     connector_verifier: DbConnectorTokenVerifier
+    personal_token_verifier: DbPersonalTokenVerifier
     emis_services: EmisServices | None = None
 
     @property
@@ -93,6 +97,7 @@ def build(
         commands=auth.commands,
         token_verifier=auth.token_verifier,
         connector_verifier=auth.connector_verifier,
+        personal_token_verifier=auth.personal_token_verifier,
     )
     if academic_enrollment is not None:
         module.attach_emis(deps, academic_enrollment=academic_enrollment)

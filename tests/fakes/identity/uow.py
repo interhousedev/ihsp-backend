@@ -11,6 +11,7 @@ from uuid import UUID
 from app.modules.identity.domain.audit_event import AuditEventRecord
 from app.modules.identity.domain.connector import McpConnector
 from app.modules.identity.domain.factors import Passkey, UserFactors
+from app.modules.identity.domain.personal_token import PersonalToken
 from app.modules.identity.domain.scope_offer import (
     OFFER_STATUS_EXPIRED,
     OFFER_STATUS_PENDING,
@@ -41,6 +42,7 @@ class IdentityStore:
     sessions: dict[UUID, LoginSession] = field(default_factory=dict)
     links: dict[int, TelegramLink] = field(default_factory=dict)
     connectors: dict[UUID, McpConnector] = field(default_factory=dict)
+    personal_tokens: dict[UUID, PersonalToken] = field(default_factory=dict)
     scope_offers: dict[UUID, ScopeOffer] = field(default_factory=dict)
     mcp_calls: list[McpCallEntry] = field(default_factory=list)
     events: list[AuditEventRecord] = field(default_factory=list)
@@ -62,6 +64,7 @@ class IdentityStore:
                 self.events,
                 self.factors,
                 self.passkeys,
+                self.personal_tokens,
             )
         )
 
@@ -77,6 +80,7 @@ class IdentityStore:
             self.events,
             self.factors,
             self.passkeys,
+            self.personal_tokens,
         ) = snap
 
     def audit_types(self, user_id: UUID | None = None) -> list[str]:
@@ -471,6 +475,54 @@ class FakeConnectorRepository:
             connector.last_used_at = now
 
 
+class FakePersonalTokenRepository:
+    """PersonalTokenRepository over the store."""
+
+    def __init__(self, store: IdentityStore) -> None:
+        """Bind to the store."""
+        self._s = store
+
+    async def add(self, token: PersonalToken) -> None:
+        """Insert a token."""
+        self._s.personal_tokens[token.id] = _copy(token)
+
+    async def get(self, token_id: UUID) -> PersonalToken | None:
+        """Return a copy."""
+        found = self._s.personal_tokens.get(token_id)
+        return _copy(found) if found else None
+
+    async def get_by_hash(self, token_hash: str) -> PersonalToken | None:
+        """Lookup by token hash."""
+        found = next(
+            (t for t in self._s.personal_tokens.values() if t.token_hash == token_hash),
+            None,
+        )
+        return _copy(found) if found else None
+
+    async def list_for_user(self, user_id: UUID) -> list[PersonalToken]:
+        """Newest first."""
+        found = sorted(
+            (t for t in self._s.personal_tokens.values() if t.user_id == user_id),
+            key=lambda t: t.id,
+            reverse=True,
+        )
+        return [_copy(t) for t in found]
+
+    async def save(self, token: PersonalToken) -> None:
+        """Replace a token."""
+        self._s.personal_tokens[token.id] = _copy(token)
+
+    async def touch_last_used(
+        self, token_id: UUID, now: datetime, *, min_interval: timedelta
+    ) -> None:
+        """Update last_used_at unless touched recently."""
+        token = self._s.personal_tokens.get(token_id)
+        if token and (
+            token.last_used_at is None or token.last_used_at < now - min_interval
+        ):
+            token.last_used_at = now
+
+
 class FakeFactorRepository:
     """FactorRepository over the store."""
 
@@ -749,6 +801,7 @@ class FakeIdentityUnitOfWork:
         self.sessions = FakeSessionRepository(store)
         self.telegram_links = FakeTelegramLinkRepository(store)
         self.connectors = FakeConnectorRepository(store)
+        self.personal_tokens = FakePersonalTokenRepository(store)
         self.scope_offers = FakeScopeOfferRepository(store)
         self.mcp_calls = FakeMcpCallLogRepository(store, clock)
         self.audit_events = FakeAuditEventRepository(store)

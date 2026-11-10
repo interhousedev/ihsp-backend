@@ -280,3 +280,32 @@ class TotpStateError(ConflictError):
 
     code = "id/totp-state"
     message_key = "id-totp-state"
+
+
+class PersonalTokenInvalidError(ValidationFailedError):
+    """The personal token request breaks the rules (name, scopes, expiry)."""
+
+    code = "id/personal-token-invalid"
+    message_key = "id-personal-token-invalid"
+
+
+class TokenScopeError(ForbiddenError):
+    """The personal token's scopes do not allow this request."""
+
+    code = "id/token-scope"
+    message_key = "id-token-scope"
+
+
+class VaultUnavailableError(BaseError):
+    """Vault does not answer."""
+
+    code = "id/vault-unavailable"
+    status = 503
+    message_key = "id-vault-unavailable"
+
+
+class VaultKeyRejectedError(ValidationFailedError):
+    """Vault refused the unseal key share."""
+
+    code = "id/vault-key-rejected"
+    message_key = "id-vault-key-rejected"

@@ -78,6 +78,11 @@ from app.modules.identity.application.password_authenticator import (
     PasswordAuthenticator,
 )
 from app.modules.identity.application.passwordless_otp_check import PasswordlessOtpCheck
+from app.modules.identity.application.personal_tokens import (
+    CreatePersonalToken,
+    ListPersonalTokens,
+    RevokePersonalToken,
+)
 from app.modules.identity.application.photo_files import PhotoUrls
 from app.modules.identity.application.public_api import (
     IdentityCommandsImpl,
@@ -133,6 +138,7 @@ from app.modules.identity.application.update_telegram_account import (
     UpdateTelegramAccount,
 )
 from app.modules.identity.application.update_user import UpdateUser
+from app.modules.identity.application.vault_unseal import GetVaultStatus, UnsealVault
 from app.modules.identity.application.verify_oauth_client import VerifyOAuthClient
 from app.modules.identity.infrastructure.access_token_verifier import (
     HydraAccessTokenVerifier,
@@ -143,10 +149,14 @@ from app.modules.identity.infrastructure.connector_token_verifier import (
 )
 from app.modules.identity.infrastructure.emis.pending_store import RedisPendingStore
 from app.modules.identity.infrastructure.emis.uow import EmisSqlUnitOfWork
+from app.modules.identity.infrastructure.http_vault_seal import HttpVaultSeal
 from app.modules.identity.infrastructure.hydra.jwks import JwksCache
 from app.modules.identity.infrastructure.jwt_assertion import JoseAssertionSigner
 from app.modules.identity.infrastructure.mailer.smtp import SmtpEmailSender
 from app.modules.identity.infrastructure.otp_sender import ChannelOtpSender
+from app.modules.identity.infrastructure.personal_token_verifier import (
+    DbPersonalTokenVerifier,
+)
 from app.modules.identity.infrastructure.redis.auth_epoch_cache import (
     RedisAuthEpochCache,
 )
@@ -170,6 +180,7 @@ from app.modules.identity.ports.otp_sender import OtpSender
 from app.modules.identity.ports.password_hasher import PasswordHasher
 from app.modules.identity.ports.secret_cipher import SecretCipher
 from app.modules.identity.ports.unit_of_work import UowFactory
+from app.modules.identity.ports.vault_seal import VaultSeal
 from app.modules.identity.ports.webauthn import WebAuthn
 from app.modules.identity.wiring_factors import FactorServices, build_factors
 from app.shared.contracts.files import FilesApi
@@ -250,6 +261,12 @@ class AuthServices:
     list_mcp_activity: ListMcpActivity
     purge_mcp_call_log: PurgeMcpCallLog
     create_connector: CreateConnector
+    personal_token_verifier: DbPersonalTokenVerifier
+    create_personal_token: CreatePersonalToken
+    list_personal_tokens: ListPersonalTokens
+    revoke_personal_token: RevokePersonalToken
+    get_vault_status: GetVaultStatus
+    unseal_vault: UnsealVault
     revoke_connector: RevokeConnector
     register_mcp_client: RegisterMcpClient
     sync_gemini_redirect: SyncGeminiRedirect
@@ -312,6 +329,7 @@ def build_auth(
     uow_factory: UowFactory | None = None,
     cipher: SecretCipher | None = None,
     webauthn: WebAuthn | None = None,
+    vault_seal: VaultSeal | None = None,
 ) -> AuthServices:
     """Build every identity auth service.
 
@@ -321,6 +339,7 @@ def build_auth(
     module needs the academic terms, which need identity).
     """
     settings, clock, redis = deps.settings, deps.clock, deps.redis
+    seal = vault_seal or HttpVaultSeal(settings.vault)
     uow_factory = uow_factory or make_uow_factory(deps)
     email = email_sender or SmtpEmailSender(
         settings=settings.smtp_out, i18n=deps.i18n, app_name=settings.public_app_name
@@ -633,6 +652,18 @@ def build_auth(
             retention_days=settings.mcp.call_log_retention_days,
         ),
         create_connector=CreateConnector(uow_factory=uow_factory, otp=otp, clock=clock),
+        personal_token_verifier=DbPersonalTokenVerifier(
+            uow_factory=uow_factory, clock=clock
+        ),
+        create_personal_token=CreatePersonalToken(
+            uow_factory=uow_factory, otp=otp, clock=clock
+        ),
+        list_personal_tokens=ListPersonalTokens(uow_factory=uow_factory),
+        revoke_personal_token=RevokePersonalToken(uow_factory=uow_factory, clock=clock),
+        get_vault_status=GetVaultStatus(seal=seal),
+        unseal_vault=UnsealVault(
+            uow_factory=uow_factory, otp=otp, seal=seal, rate_limiter=limiter
+        ),
         revoke_connector=revoke_connector,
         sync_gemini_redirect=SyncGeminiRedirect(hydra=hydra),
         register_mcp_client=RegisterMcpClient(

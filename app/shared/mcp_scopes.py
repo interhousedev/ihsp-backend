@@ -51,7 +51,7 @@ SCOPE_CATALOG: Final[dict[str, tuple[ScopeInfo, ...]]] = {
     "student": (
         ScopeInfo(
             "schedule:read",
-            ("get_schedule", "get_my_subjects", "get_subject_lessons"),
+            ("get_schedule", "get_my_subjects", "get_subject_lessons", "find_feature"),
         ),
         ScopeInfo("homework:read", ("get_homework",)),
         ScopeInfo("marks:read", ("get_marks", "get_results", "get_gpa")),
@@ -145,6 +145,7 @@ SCOPE_CATALOG: Final[dict[str, tuple[ScopeInfo, ...]]] = {
                 "list_pending_changes",
                 "list_versions",
                 "list_attempts",
+                "find_feature",
             ),
         ),
         ScopeInfo(COURSES_WRITE, ("create_course", "update_course"), write=True),
@@ -168,7 +169,10 @@ SCOPE_CATALOG: Final[dict[str, tuple[ScopeInfo, ...]]] = {
         ),
     ),
     "admin": (
-        ScopeInfo("people:read", ("search_users", "get_student", "list_teachers")),
+        ScopeInfo(
+            "people:read",
+            ("search_users", "get_student", "list_teachers", "find_feature"),
+        ),
         ScopeInfo("groups:read", ("list_groups", "get_group")),
         ScopeInfo("timetable:read", ("get_timetable", "list_lessons")),
         ScopeInfo("attendance:read", ("attendance_stats", "missing_attendance")),

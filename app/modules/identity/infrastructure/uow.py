@@ -12,6 +12,9 @@ from app.modules.identity.infrastructure.repositories.factor_repository import (
 from app.modules.identity.infrastructure.repositories.mcp_call_log_repository import (
     SqlMcpCallLogRepository,
 )
+from app.modules.identity.infrastructure.repositories.personal_token_repository import (
+    SqlPersonalTokenRepository,
+)
 from app.modules.identity.infrastructure.repositories.scope_offer_repository import (
     SqlScopeOfferRepository,
 )
@@ -37,6 +40,7 @@ class IdentityUnitOfWork(SqlUnitOfWork):
     telegram_links: SqlTelegramLinkRepository
     connectors: SqlConnectorRepository
     scope_offers: SqlScopeOfferRepository
+    personal_tokens: SqlPersonalTokenRepository
     mcp_calls: SqlMcpCallLogRepository
     audit_events: SqlAuditEventRepository
     factors: SqlFactorRepository
@@ -48,6 +52,7 @@ class IdentityUnitOfWork(SqlUnitOfWork):
         self.telegram_links = SqlTelegramLinkRepository(self.session)
         self.connectors = SqlConnectorRepository(self.session)
         self.scope_offers = SqlScopeOfferRepository(self.session)
+        self.personal_tokens = SqlPersonalTokenRepository(self.session)
         self.mcp_calls = SqlMcpCallLogRepository(self.session)
         self.audit_events = SqlAuditEventRepository(self.session)
         self.factors = SqlFactorRepository(self.session)
