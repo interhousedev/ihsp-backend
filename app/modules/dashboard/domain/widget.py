@@ -23,8 +23,10 @@ WidgetKind = Literal[
     "new_marks",
     "alerts",
     "get_started",
+    "library_loans",
+    "notebook_recents",
 ]
-WidgetSize = Literal["1x1", "1x2", "2x1", "2x2", "2x4"]
+WidgetSize = Literal["1x1", "1x2", "2x1", "2x2", "2x4", "4x1"]
 
 # Sizes are columns x rows; the desktop grid has 4 columns, the phone grid 2.
 WIDGET_SIZES: dict[str, set[str]] = {
@@ -38,12 +40,14 @@ WIDGET_SIZES: dict[str, set[str]] = {
     "clock_next_lesson": {"1x1", "2x1", "2x2"},
     "upcoming_controls": {"1x1", "2x1", "2x2"},
     "next_lesson": {"1x1", "2x1", "2x2"},
-    "today_lessons": {"2x1", "2x2", "2x4"},
+    "today_lessons": {"2x1", "2x2", "2x4", "4x1"},
     "semester_summary": {"1x1", "2x1", "2x2"},
-    "announcements": {"2x1", "2x2", "2x4"},
+    "announcements": {"2x1", "2x2", "2x4", "4x1"},
     "new_marks": {"1x1", "2x1", "2x2"},
-    "alerts": {"1x1", "2x1", "2x2"},
+    "alerts": {"1x1", "2x1", "2x2", "4x1"},
     "get_started": {"2x1", "2x2"},
+    "library_loans": {"1x1", "2x1", "2x2"},
+    "notebook_recents": {"2x1", "2x2", "2x4"},
 }
 # Stored on every widget of a layout that already has the Today widget kinds.
 LAYOUT_MARK = ("layout", "2")

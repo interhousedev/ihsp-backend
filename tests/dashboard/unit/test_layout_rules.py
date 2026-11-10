@@ -31,6 +31,22 @@ def test_size_must_be_allowed_for_kind() -> None:
         widget("timetable", "1x1")
 
 
+def test_strip_widgets_take_the_full_width() -> None:
+    """Strip-like kinds accept 4x1 at x=0 and refuse it further right."""
+    for kind in ("announcements", "alerts", "today_lessons"):
+        assert widget(kind, "4x1").size == "4x1"
+        with pytest.raises(ValidationError):
+            widget(kind, "4x1", x=1)
+    with pytest.raises(ValidationError):
+        widget("library_loans", "4x1")
+
+
+def test_new_kinds_are_known() -> None:
+    """Library loans and recent notebooks are valid kinds."""
+    assert widget("library_loans", "2x1").kind == "library_loans"
+    assert widget("notebook_recents", "2x4").kind == "notebook_recents"
+
+
 def test_every_allowed_size_is_accepted() -> None:
     """Each kind accepts all of its sizes."""
     for kind, sizes in WIDGET_SIZES.items():
