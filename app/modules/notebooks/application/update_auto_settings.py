@@ -6,6 +6,7 @@ from uuid import UUID
 
 from app.modules.notebooks.application.access import load_notebook
 from app.modules.notebooks.application.notebook_fields import invalid
+from app.modules.notebooks.application.notebook_titles import NotebookTitles
 from app.modules.notebooks.application.sync_auto_notebook import (
     SyncAutoNotebook,
     is_managed,
@@ -26,12 +27,18 @@ class UpdateAutoSettings:
     """
 
     def __init__(
-        self, *, uow_factory: UowFactory, clock: Clock, sync: SyncAutoNotebook
+        self,
+        *,
+        uow_factory: UowFactory,
+        clock: Clock,
+        sync: SyncAutoNotebook,
+        titles: NotebookTitles,
     ) -> None:
         """Store the collaborators."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.sync = sync
+        self.titles = titles
 
     async def execute(
         self, actor: Actor, notebook_id: UUID, changes: Mapping[str, Any]
@@ -64,7 +71,9 @@ class UpdateAutoSettings:
             await uow.commit()
         await self.sync.execute(notebook_id)
         async with self.uow_factory() as uow:
-            return await load_notebook(uow, actor.user_id, notebook_id)
+            notebook = await load_notebook(uow, actor.user_id, notebook_id)
+        await self.titles.apply(actor.user_id, [notebook])
+        return notebook
 
     async def _merged(
         self, uow: NotebooksUnitOfWork, notebook: Notebook, changes: Mapping[str, Any]

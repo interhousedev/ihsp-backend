@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from app.modules.notebooks.application.auto_targets import AutoTargets, SubjectSlot
+from app.modules.notebooks.application.notebook_titles import NotebookTitles
 from app.modules.notebooks.domain.entities import Notebook
 from app.modules.notebooks.ports.unit_of_work import UowFactory
 from app.shared.actor import Actor, Role
@@ -30,10 +31,13 @@ class ListSubjectSlots:
     this term are listed after the current slots, so none disappears.
     """
 
-    def __init__(self, *, uow_factory: UowFactory, targets: AutoTargets) -> None:
+    def __init__(
+        self, *, uow_factory: UowFactory, targets: AutoTargets, titles: NotebookTitles
+    ) -> None:
         """Store the collaborators."""
         self.uow_factory = uow_factory
         self.targets = targets
+        self.titles = titles
 
     async def execute(self, actor: Actor) -> list[SubjectNotebookSlot]:
         """Return the user's slots, grouped by subject name."""
@@ -44,6 +48,7 @@ class ListSubjectSlots:
             slots += await self.targets.teacher_slots(actor.user_id)
         async with self.uow_factory() as uow:
             made = await uow.notebooks.list_subject_auto(actor.user_id)
+        await self.titles.apply(actor.user_id, made)
         by_key = {(n.subject_id, n.group_id): n for n in made}
         result = [
             self._slot(slot, by_key.pop((slot.subject_id, slot.group_id), None))

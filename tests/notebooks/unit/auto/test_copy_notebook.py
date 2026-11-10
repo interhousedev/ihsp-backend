@@ -16,12 +16,12 @@ from app.modules.notebooks.domain.source_input import TextInput
 from app.modules.notebooks.ports.unit_of_work import UowFactory
 from app.modules.notebooks.wiring_auto import AutoServices
 from app.modules.notebooks.wiring_core import NotebooksCore
-from app.modules.notebooks.wiring_notebooks import build_notebooks
 from app.modules.notebooks.wiring_sources import SourcesServices
 from app.shared.actor import Actor
 from app.shared.contracts.academic import LessonRef
 from tests.factories.notebooks import make_notebook, make_source
 from tests.fakes.clock import FixedClock
+from tests.fakes.notebooks.schedule import build_lifecycle
 from tests.fakes.notebooks.world import World
 from tests.fakes.tasks import FakeTaskKicker
 from tests.notebooks.unit.auto.conftest import open_subject, teacher_file
@@ -47,7 +47,7 @@ async def test_the_copy_of_an_auto_notebook_is_a_normal_notebook_with_the_same_s
     await sources.process_source.execute(waiting.id)
     async with uow_factory() as uow:
         [source] = await uow.sources.list_for_notebook(original.id)
-    lifecycle = build_notebooks(core)
+    lifecycle = build_lifecycle(core)
 
     copy = await lifecycle.copy_notebook.execute(student, original.id)
 
@@ -104,7 +104,7 @@ async def test_the_copy_takes_the_chat_settings_and_a_current_summary(
     )
     scripted_llm.queue_json(SUMMARY)
     assert await sources.refresh_summaries.execute() == 1
-    lifecycle = build_notebooks(core)
+    lifecycle = build_lifecycle(core)
     calls = scripted_llm.calls
 
     copy = await lifecycle.copy_notebook.execute(student, original.id)
@@ -134,7 +134,7 @@ async def test_unfinished_sources_are_read_again_in_the_copy(
         )
     ).items[0]
     kicker.calls.clear()
-    lifecycle = build_notebooks(core)
+    lifecycle = build_lifecycle(core)
 
     copy = await lifecycle.copy_notebook.execute(student, notebook.id)
 
@@ -148,7 +148,7 @@ async def test_only_the_owner_can_copy(
     core: NotebooksCore, other_student: Actor, notebook: Notebook
 ) -> None:
     """NB-AUTO: someone else's notebook is a 404."""
-    lifecycle = build_notebooks(core)
+    lifecycle = build_lifecycle(core)
 
     with pytest.raises(NotebookNotFoundError):
         await lifecycle.copy_notebook.execute(other_student, notebook.id)
@@ -163,7 +163,7 @@ async def test_a_copy_counts_against_the_notebook_limit(
     """NB-AUTO: copying cannot get round the 50 notebooks per student."""
     for _ in range(core.deps.settings.notebooks.max_notebooks - 1):
         await make_notebook(uow_factory, student.user_id)
-    lifecycle = build_notebooks(core)
+    lifecycle = build_lifecycle(core)
 
     with pytest.raises(NotebookLimitError):
         await lifecycle.copy_notebook.execute(student, notebook.id)

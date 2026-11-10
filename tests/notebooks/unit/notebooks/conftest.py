@@ -1,6 +1,7 @@
 """Fixtures of the notebook CRUD and lifecycle tests."""
 
 import dataclasses
+from typing import cast
 
 from app.modules.notebooks.wiring_core import NotebooksCore
 from app.modules.notebooks.wiring_notebooks import (
@@ -8,7 +9,9 @@ from app.modules.notebooks.wiring_notebooks import (
     build_notebooks,
 )
 from app.shared.actor import Actor, Role
+from app.shared.contracts.academic import ScheduleQueries
 from tests.fakes.ai.contracts import FakeIdentity, make_user
+from tests.fakes.notebooks.schedule import FakeLessonSchedule
 
 import pytest
 
@@ -32,6 +35,8 @@ def identity(student: Actor, other_student: Actor, user_locale: str) -> FakeIden
 
 
 @pytest.fixture
-def lifecycle(core: NotebooksCore) -> NotebooksLifecycleServices:
+def lifecycle(
+    core: NotebooksCore, schedule: FakeLessonSchedule
+) -> NotebooksLifecycleServices:
     """The use cases and jobs under test, over the test fakes."""
-    return build_notebooks(core)
+    return build_notebooks(core, cast(ScheduleQueries, schedule))

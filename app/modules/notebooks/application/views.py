@@ -92,3 +92,4 @@ class ArtifactDetailView:
 
     artifact: Artifact
     progress_state: dict[str, Any] | None
+    image_data: dict[str, bytes] | None = None  # slide pictures, for an export

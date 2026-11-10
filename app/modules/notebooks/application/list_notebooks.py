@@ -3,6 +3,7 @@
 from datetime import datetime
 from uuid import UUID
 
+from app.modules.notebooks.application.notebook_titles import NotebookTitles
 from app.modules.notebooks.domain.entities import Notebook
 from app.modules.notebooks.domain.enums import NotebookOrigin
 from app.modules.notebooks.domain.paging import Paged
@@ -54,9 +55,10 @@ def decode_notebook_cursor(cursor: str | None) -> NotebookCursor | None:
 class ListNotebooks:
     """Pinned notebooks first, then the most recently opened; cursor paginated."""
 
-    def __init__(self, *, uow_factory: UowFactory) -> None:
-        """Store the unit of work factory."""
+    def __init__(self, *, uow_factory: UowFactory, titles: NotebookTitles) -> None:
+        """Store the collaborators."""
         self.uow_factory = uow_factory
+        self.titles = titles
 
     async def execute(
         self,
@@ -82,6 +84,7 @@ class ListNotebooks:
                 origin=origin,
             )
         page = rows[:size]
+        await self.titles.apply(actor.user_id, page)
         more = len(rows) > size
         return Paged(
             items=page,

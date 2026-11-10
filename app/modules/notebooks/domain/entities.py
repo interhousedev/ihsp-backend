@@ -139,6 +139,9 @@ class Notebook:
     created_at: datetime
     updated_at: datetime
     title_auto: bool = True
+    # Auto notebooks: the title follows the subject name in the reader's language;
+    # `""` or the suffix (" · 2TN2") is appended to it. None: the title is stored.
+    subject_title_suffix: str | None = None
     emoji: str | None = None
     emoji_auto: bool = True
     pinned: bool = False
@@ -358,6 +361,7 @@ class Artifact:
     cost_micro: int | None = None
     attempts: int = 0
     progress: int | None = None
+    stage: str | None = None  # slide pipeline step while generating
     parent_id: UUID | None = None
     flashcard_set_id: UUID | None = None
     cache_key: str | None = (

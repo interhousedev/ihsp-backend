@@ -146,6 +146,7 @@ class Notebook(IdMixin, TimestampMixin, Base):
     owner_id: Mapped[UUID] = mapped_column(Uuid)
     title: Mapped[str] = mapped_column(String(120))
     title_auto: Mapped[bool] = mapped_column(Boolean, server_default=text("true"))
+    subject_title_suffix: Mapped[str | None] = mapped_column(String(80))
     emoji: Mapped[str | None] = mapped_column(String(16))
     emoji_auto: Mapped[bool] = mapped_column(Boolean, server_default=text("true"))
     pinned: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))

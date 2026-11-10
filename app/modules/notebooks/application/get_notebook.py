@@ -5,6 +5,7 @@ from functools import partial
 from uuid import UUID
 
 from app.modules.notebooks.application.access import load_notebook
+from app.modules.notebooks.application.notebook_titles import NotebookTitles
 from app.modules.notebooks.domain.auto_notebook import sync_is_stale
 from app.modules.notebooks.domain.entities import ChatConfig, Notebook, Source
 from app.modules.notebooks.domain.sharing import viewable
@@ -37,12 +38,18 @@ class GetNotebook:
     """Returns the student's notebook and notes that it was opened."""
 
     def __init__(
-        self, *, uow_factory: UowFactory, clock: Clock, kicker: TaskKicker
+        self,
+        *,
+        uow_factory: UowFactory,
+        clock: Clock,
+        kicker: TaskKicker,
+        titles: NotebookTitles,
     ) -> None:
         """Store the collaborators."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.kicker = kicker
+        self.titles = titles
 
     async def execute(self, actor: Actor, notebook_id: UUID) -> Notebook:
         """Set `last_opened_at` and return the notebook.
@@ -56,7 +63,9 @@ class GetNotebook:
             )
             if notebook.shared_view:
                 sources = await uow.sources.list_for_notebook(notebook_id)
-                return _viewer_notebook(notebook, sources)
+                viewer = _viewer_notebook(notebook, sources)
+                await self.titles.apply(actor.user_id, [viewer])
+                return viewer
             notebook = await load_notebook(
                 uow, actor.user_id, notebook_id, for_update=True, write=False
             )
@@ -72,4 +81,5 @@ class GetNotebook:
                     )
                 )
             await uow.commit()
+        await self.titles.apply(actor.user_id, [notebook])
         return notebook

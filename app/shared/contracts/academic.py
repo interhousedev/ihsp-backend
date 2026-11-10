@@ -111,6 +111,12 @@ class ScheduleQueries(Protocol):
         """The subject's display name; None when there is no such subject."""
         ...
 
+    async def subject_titles(
+        self, subject_ids: list[UUID], locale: str
+    ) -> dict[UUID, str]:
+        """Display names of the subjects in a language; unknown subjects are absent."""
+        ...
+
     async def lessons_for_student(
         self, user_id: UUID, start: dt.date, end: dt.date
     ) -> list[LessonRef]:

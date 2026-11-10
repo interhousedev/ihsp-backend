@@ -3,11 +3,24 @@
 import dataclasses
 import datetime as dt
 from collections.abc import Sequence
+from typing import cast
 from uuid import UUID
 
-from app.shared.contracts.academic import LessonRef, StudentRef
+from app.modules.notebooks.wiring_core import NotebooksCore
+from app.modules.notebooks.wiring_notebooks import (
+    NotebooksLifecycleServices,
+    build_notebooks,
+)
+from app.shared.contracts.academic import LessonRef, ScheduleQueries, StudentRef
 from app.shared.ids import new_id
 from tests.fakes.ai.contracts import FakeSchedule
+
+
+def build_lifecycle(
+    core: NotebooksCore, schedule: FakeSchedule | None = None
+) -> NotebooksLifecycleServices:
+    """The notebook use cases over the fakes; a fresh schedule unless one is given."""
+    return build_notebooks(core, cast(ScheduleQueries, schedule or FakeSchedule()))
 
 
 class FakeLessonSchedule(FakeSchedule):
@@ -21,6 +34,7 @@ class FakeLessonSchedule(FakeSchedule):
         self.taught: list[tuple[UUID, LessonRef]] = []  # (teacher id, lesson)
         self.placed: dict[UUID, tuple[UUID, int | None]] = {}  # student -> group, sub
         self.subject_names: dict[UUID, str] = {}  # subjects known without lessons
+        self.localized: dict[tuple[UUID, str], str] = {}  # (subject, locale) -> name
 
     def place(self, user_id: UUID, group_id: UUID, subgroup: int | None = None) -> None:
         """Put the student in this group (and subgroup) instead of the default one."""
@@ -37,6 +51,10 @@ class FakeLessonSchedule(FakeSchedule):
     def name_subject(self, subject_id: UUID, name: str) -> None:
         """The school knows the subject (EMIS mapping) though it has no lessons yet."""
         self.subject_names[subject_id] = name
+
+    def localize_subject(self, subject_id: UUID, locale: str, name: str) -> None:
+        """The subject's name in a language (the default name stays for others)."""
+        self.localized[(subject_id, locale)] = name
 
     async def subject_title(self, subject_id: UUID) -> str | None:
         """The subject's name: a named subject, else one of its lessons."""

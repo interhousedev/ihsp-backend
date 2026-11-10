@@ -11,6 +11,7 @@ from app.modules.notebooks.application.list_default_materials import (
     ListDefaultMaterials,
 )
 from app.modules.notebooks.application.list_subject_slots import ListSubjectSlots
+from app.modules.notebooks.application.notebook_titles import NotebookTitles
 from app.modules.notebooks.application.open_auto_notebook import OpenAutoNotebook
 from app.modules.notebooks.application.provision_student_notebooks import (
     BackfillSubjectNotebooks,
@@ -93,12 +94,14 @@ def build_auto(
         defaults=defaults,
         library=library,
     )
+    titles = NotebookTitles(core.locale, schedule)
     open_auto = OpenAutoNotebook(
         uow_factory=core.uow_factory,
         clock=deps.clock,
         targets=targets,
         sync=sync,
         kicker=deps.kicker,
+        titles=titles,
     )
     provision = ProvisionStudentNotebooks(
         schedule=schedule, terms=terms, clock=deps.clock, open_auto=open_auto
@@ -106,10 +109,10 @@ def build_auto(
     return AutoServices(
         open_auto_notebook=open_auto,
         list_subject_slots=ListSubjectSlots(
-            uow_factory=core.uow_factory, targets=targets
+            uow_factory=core.uow_factory, targets=targets, titles=titles
         ),
         update_auto_settings=UpdateAutoSettings(
-            uow_factory=core.uow_factory, clock=deps.clock, sync=sync
+            uow_factory=core.uow_factory, clock=deps.clock, sync=sync, titles=titles
         ),
         sync_auto_notebook=sync,
         sync_lesson_notebooks=SyncLessonNotebooks(

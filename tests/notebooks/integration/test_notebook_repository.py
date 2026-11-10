@@ -4,6 +4,7 @@ from datetime import timedelta
 from uuid import UUID
 
 from app.modules.notebooks.domain.entities import (
+    AutoSettings,
     ChatConfig,
     Notebook,
     NotebookSummary,
@@ -12,6 +13,7 @@ from app.modules.notebooks.domain.enums import (
     ArtifactKind,
     ChatLanguage,
     ChatStyle,
+    NotebookOrigin,
     SourceStatus,
     SummaryStatus,
 )
@@ -133,6 +135,31 @@ async def test_save_writes_changes_and_ignores_the_counters(
     assert loaded.summary_due_at == NOW + timedelta(seconds=20)
     assert loaded.is_deleted
     assert loaded.ready_source_count == 0
+
+
+async def test_subject_title_suffix_round_trips_and_can_be_cleared(
+    uow_factory: UowFactory, student: Actor
+) -> None:
+    """NB-1: the suffix of an auto subject title is stored; save can clear it."""
+    notebook = await make_notebook(
+        uow_factory,
+        student.user_id,
+        origin=NotebookOrigin.SUBJECT_AUTO,
+        subject_id=new_id(),
+        auto_settings=AutoSettings(),
+        subject_title_suffix=" (2)",
+    )
+    async with uow_factory() as uow:
+        loaded = await uow.notebooks.get(notebook.id)
+    assert loaded is not None and loaded.subject_title_suffix == " (2)"
+
+    loaded.subject_title_suffix = None
+    async with uow_factory() as uow:
+        await uow.notebooks.save(loaded)
+        await uow.commit()
+    async with uow_factory() as uow:
+        again = await uow.notebooks.get(notebook.id)
+    assert again is not None and again.subject_title_suffix is None
 
 
 async def test_save_of_a_missing_notebook_does_nothing(

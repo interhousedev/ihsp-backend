@@ -4,6 +4,7 @@ from functools import partial
 from uuid import UUID
 
 from app.modules.notebooks.application.auto_targets import AutoTarget, AutoTargets
+from app.modules.notebooks.application.notebook_titles import NotebookTitles
 from app.modules.notebooks.application.sync_auto_notebook import SyncAutoNotebook
 from app.modules.notebooks.domain.auto_notebook import sync_is_stale
 from app.modules.notebooks.domain.entities import AutoSettings, Notebook
@@ -38,6 +39,7 @@ class OpenAutoNotebook:
         targets: AutoTargets,
         sync: SyncAutoNotebook,
         kicker: TaskKicker,
+        titles: NotebookTitles,
     ) -> None:
         """Store the collaborators."""
         self.uow_factory = uow_factory
@@ -45,6 +47,7 @@ class OpenAutoNotebook:
         self.targets = targets
         self.sync = sync
         self.kicker = kicker
+        self.titles = titles
 
     async def execute(
         self,
@@ -71,6 +74,18 @@ class OpenAutoNotebook:
             SubjectNotFoundError: The subject is unknown to the school.
             AutoNotebookLimitError: Too many subject and lesson notebooks.
         """
+        notebook = await self._open(actor, origin, target_id, create, group_id)
+        await self.titles.apply(actor.user_id, [notebook])
+        return notebook
+
+    async def _open(
+        self,
+        actor: Actor,
+        origin: NotebookOrigin,
+        target_id: UUID,
+        create: bool,
+        group_id: UUID | None,
+    ) -> Notebook:
         if not origin.is_auto:
             raise InvalidOptionsError(params={"field": "origin"})
         found = await self._existing(actor, origin, target_id, group_id, touch=create)
@@ -143,6 +158,7 @@ class OpenAutoNotebook:
             subject_id=target.subject_id,
             lesson_id=target.lesson_id,
             group_id=target.group_id,
+            subject_title_suffix=target.title_suffix,
             auto_settings=AutoSettings(),
             space_key=target.space_key,
         )

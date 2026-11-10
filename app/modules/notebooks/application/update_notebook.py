@@ -12,6 +12,7 @@ from app.modules.notebooks.application.notebook_fields import (
     invalid,
     merge_chat_config,
 )
+from app.modules.notebooks.application.notebook_titles import NotebookTitles
 from app.modules.notebooks.domain.entities import Notebook
 from app.modules.notebooks.ports.unit_of_work import UowFactory
 from app.shared.actor import Actor
@@ -23,10 +24,13 @@ EDITABLE = frozenset({"title", "emoji", "pinned", "chat_config"})
 class UpdateNotebook:
     """Applies the fields of a `PATCH /notebooks/{id}` to the student's notebook."""
 
-    def __init__(self, *, uow_factory: UowFactory, clock: Clock) -> None:
+    def __init__(
+        self, *, uow_factory: UowFactory, clock: Clock, titles: NotebookTitles
+    ) -> None:
         """Store the collaborators."""
         self.uow_factory = uow_factory
         self.clock = clock
+        self.titles = titles
 
     async def execute(
         self, actor: Actor, notebook_id: UUID, changes: Mapping[str, Any]
@@ -50,6 +54,7 @@ class UpdateNotebook:
                 notebook.updated_at = self.clock.now()
                 await uow.notebooks.save(notebook)
                 await uow.commit()
+        await self.titles.apply(actor.user_id, [notebook])
         return notebook
 
     @staticmethod
@@ -66,6 +71,7 @@ class UpdateNotebook:
         if title is not None:
             notebook.title = title
             notebook.title_auto = False
+            notebook.subject_title_suffix = None
         if "emoji" in changes:
             notebook.emoji = emoji
             notebook.emoji_auto = False

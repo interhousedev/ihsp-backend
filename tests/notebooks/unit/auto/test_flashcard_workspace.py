@@ -6,6 +6,7 @@ from app.modules.notebooks.application.flashcard_workspace import (
     OpenFlashcardWorkspace,
 )
 from app.modules.notebooks.application.list_notebooks import ListNotebooks
+from app.modules.notebooks.application.notebook_titles import NotebookTitles
 from app.modules.notebooks.domain.entities import Notebook
 from app.modules.notebooks.domain.enums import (
     NotebookOrigin,
@@ -57,6 +58,7 @@ async def test_notebook_sources_are_copied_into_one_hidden_notebook(
     workspace: OpenFlashcardWorkspace,
     uow_factory: UowFactory,
     student: Actor,
+    titles: NotebookTitles,
 ) -> None:
     """NB-FC: copies without reading again; hidden from the list; no summary."""
     notebook, source_id = await _notebook_with_source(uow_factory, student)
@@ -69,7 +71,9 @@ async def test_notebook_sources_are_copied_into_one_hidden_notebook(
     assert [s.title for s in second.sources] == ["Mitosis"]
     assert second.sources[0].status is SourceStatus.READY
     assert second.notebook.summary_status is SummaryStatus.NONE
-    listed = await ListNotebooks(uow_factory=uow_factory).execute(student)
+    listed = await ListNotebooks(uow_factory=uow_factory, titles=titles).execute(
+        student
+    )
     assert notebook.id in [item.id for item in listed.items]
     assert first.notebook.id not in [item.id for item in listed.items]
 

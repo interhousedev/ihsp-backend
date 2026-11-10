@@ -4,9 +4,9 @@ from app.modules.notebooks.domain.entities import Notebook
 from app.modules.notebooks.domain.labels import LabelOrigin
 from app.modules.notebooks.ports.unit_of_work import UowFactory
 from app.modules.notebooks.wiring_core import NotebooksCore
-from app.modules.notebooks.wiring_notebooks import build_notebooks
 from app.shared.actor import Actor
 from tests.factories.notebooks import make_notebook, make_source
+from tests.fakes.notebooks.schedule import build_lifecycle
 from tests.notebooks.unit.labels.support import store_label, store_link
 
 import pytest
@@ -30,7 +30,7 @@ async def test_the_copy_has_the_labels_and_their_links(
     await store_link(uow_factory, one.id, exam.id, LabelOrigin.MANUAL)
     await store_link(uow_factory, two.id, exam.id, LabelOrigin.MANUAL)
 
-    copy = await build_notebooks(core).copy_notebook.execute(student, original.id)
+    copy = await build_lifecycle(core).copy_notebook.execute(student, original.id)
 
     async with uow_factory() as uow:
         copied = await uow.labels.list_for_notebook(copy.id)
@@ -53,7 +53,7 @@ async def test_a_notebook_without_labels_copies_as_before(
     """G12: no labels, no rows."""
     await make_source(uow_factory, original)
 
-    copy = await build_notebooks(core).copy_notebook.execute(student, original.id)
+    copy = await build_lifecycle(core).copy_notebook.execute(student, original.id)
 
     async with uow_factory() as uow:
         assert await uow.labels.list_for_notebook(copy.id) == []

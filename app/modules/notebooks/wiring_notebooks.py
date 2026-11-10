@@ -8,11 +8,13 @@ from app.modules.notebooks.application.delete_notebook import DeleteNotebook
 from app.modules.notebooks.application.delete_owner import DeleteOwner
 from app.modules.notebooks.application.get_notebook import GetNotebook
 from app.modules.notebooks.application.list_notebooks import ListNotebooks
+from app.modules.notebooks.application.notebook_titles import NotebookTitles
 from app.modules.notebooks.application.purge_deleted import PurgeDeleted
 from app.modules.notebooks.application.purge_shared import PurgeShared
 from app.modules.notebooks.application.sweep_stuck import SweepStuck
 from app.modules.notebooks.application.update_notebook import UpdateNotebook
 from app.modules.notebooks.wiring_core import NotebooksCore
+from app.shared.contracts.academic import ScheduleQueries
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,9 +33,12 @@ class NotebooksLifecycleServices:
     sweep_stuck: SweepStuck
 
 
-def build_notebooks(core: NotebooksCore) -> NotebooksLifecycleServices:
+def build_notebooks(
+    core: NotebooksCore, schedule: ScheduleQueries
+) -> NotebooksLifecycleServices:
     """Build the notebook use cases and jobs over the shared services."""
     deps = core.deps
+    titles = NotebookTitles(core.locale, schedule)
     return NotebooksLifecycleServices(
         create_notebook=CreateNotebook(
             uow_factory=core.uow_factory,
@@ -42,11 +47,16 @@ def build_notebooks(core: NotebooksCore) -> NotebooksLifecycleServices:
             i18n=deps.i18n,
             locale=core.locale,
         ),
-        list_notebooks=ListNotebooks(uow_factory=core.uow_factory),
+        list_notebooks=ListNotebooks(uow_factory=core.uow_factory, titles=titles),
         get_notebook=GetNotebook(
-            uow_factory=core.uow_factory, clock=deps.clock, kicker=deps.kicker
+            uow_factory=core.uow_factory,
+            clock=deps.clock,
+            kicker=deps.kicker,
+            titles=titles,
         ),
-        update_notebook=UpdateNotebook(uow_factory=core.uow_factory, clock=deps.clock),
+        update_notebook=UpdateNotebook(
+            uow_factory=core.uow_factory, clock=deps.clock, titles=titles
+        ),
         copy_notebook=CopyNotebook(
             uow_factory=core.uow_factory,
             clock=deps.clock,

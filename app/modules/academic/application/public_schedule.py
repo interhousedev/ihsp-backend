@@ -70,6 +70,17 @@ class ScheduleQueriesImpl:
         """The subject's display name; None when there is no such subject."""
         return await self.reader.subject_title(subject_id, self.locale)
 
+    async def subject_titles(
+        self, subject_ids: list[UUID], locale: str
+    ) -> dict[UUID, str]:
+        """Display names of the subjects in the language; unknown ones are absent."""
+        found: dict[UUID, str] = {}
+        for subject_id in dict.fromkeys(subject_ids):
+            name = await self.reader.subject_title(subject_id, locale)
+            if name is not None:
+                found[subject_id] = name
+        return found
+
     async def lessons_for_student(
         self, user_id: UUID, start: dt.date, end: dt.date
     ) -> list[LessonRef]:

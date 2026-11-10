@@ -73,6 +73,7 @@ def _to_entity(row: NotebookRow, ready: int, selected: int) -> Notebook:
         created_at=row.created_at,
         updated_at=row.updated_at,
         title_auto=row.title_auto,
+        subject_title_suffix=row.subject_title_suffix,
         emoji=row.emoji,
         emoji_auto=row.emoji_auto,
         pinned=row.pinned,
@@ -110,6 +111,7 @@ def _apply(row: NotebookRow, notebook: Notebook) -> None:
     row.owner_id = notebook.owner_id
     row.title = notebook.title
     row.title_auto = notebook.title_auto
+    row.subject_title_suffix = notebook.subject_title_suffix
     row.emoji = notebook.emoji
     row.emoji_auto = notebook.emoji_auto
     row.pinned = notebook.pinned

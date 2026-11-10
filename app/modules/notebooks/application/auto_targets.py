@@ -47,6 +47,11 @@ def teacher_title(subject_name: str, group_name: str) -> str:
     return subject_name[: max(NOTEBOOK_TITLE_MAX_CHARS - len(suffix), 1)] + suffix
 
 
+def title_with_suffix(subject_name: str, suffix: str) -> str:
+    """The subject name and the suffix as a title, the name cut to the limit."""
+    return subject_name[: max(NOTEBOOK_TITLE_MAX_CHARS - len(suffix), 1)] + suffix
+
+
 @dataclass(frozen=True, slots=True)
 class AutoTarget:
     """A subject or lesson the student can open an auto notebook for."""
@@ -59,6 +64,7 @@ class AutoTarget:
     lessons: list[LessonRef]
     space_key: str
     group_id: UUID | None = None  # a teacher's notebook: the group it is for
+    title_suffix: str | None = None  # appended to the subject name in the title
 
 
 def lesson_title(subject_name: str, day: date) -> str:
@@ -200,6 +206,7 @@ class AutoTargets:
             emoji=SUBJECT_EMOJI,
             lessons=lessons,
             space_key=f"subject:{subject_id}:{start or 'open'}:{group}",
+            title_suffix="",
         )
 
     async def _teacher_subject(
@@ -226,6 +233,7 @@ class AutoTargets:
             lessons=lessons,
             space_key=f"subject:{subject_id}:{window[0] or 'open'}:g{group_id}",
             group_id=group_id,
+            title_suffix=f"{TITLE_SEPARATOR}{names.get(group_id, str(group_id))}",
         )
 
     async def _teacher_lessons(
@@ -260,6 +268,7 @@ class AutoTargets:
             emoji=LESSON_EMOJI,
             lessons=[lesson],
             space_key=f"lesson:{lesson.id}",
+            title_suffix=f"{TITLE_SEPARATOR}{lesson.date:%d.%m.%Y}",
         )
 
     async def _attended(self, user_id: UUID, lesson_id: UUID) -> LessonRef | None:
