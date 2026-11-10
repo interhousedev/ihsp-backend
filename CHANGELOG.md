@@ -4,6 +4,26 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-11
+
+### Added
+
+- LMS MCP tool set: teachers can build whole courses from ChatGPT (`build_course`, AI drafts, block and question editing, `publish`, `restore_version`, staff, students, progress, attempts and `override_score`).
+- Teachers MCP server at `/mcp/teacher` with tools over the teacher's own schedule, groups, journal, homework, temporary marks, ПК/ИК assessments and unfinished work, plus the teacher AI tools when the AI backend is wired.
+- Teacher AI tools (questions, handouts, work checks, AI-authorship estimate with a caveat, lesson plan templates and plans) in the notebooks module; new AI tasks `teacher_questions`, `teacher_handout`, `teacher_work_check`, `teacher_ai_check`, `teacher_lesson_plan`. Templates and plans are the teacher's own files.
+- Studio slides: a research step per planned slide and free pictures from Wikimedia Commons (credit shown on the slide and in the pptx notes), new image, stats, timeline and comparison layouts, and a build stage (`planning`, `researching`, `images`, `designing`) on the artifact. Settings `IHSP_NOTEBOOKS__SLIDES_*`; `iht-web` needs `bun run sync:openapi`.
+
+### Changed
+
+- Teachers are LMS administrators by default: new teachers (admin creation, EMIS sync, seed) get `lms_admin`, and migration `identity_0013` grants it once to every existing teacher. `ChangeRoles` lets `lms_admin` be granted to a teacher or an administrator; revoking `admin` removes `lms_admin` only from users who are not teachers. The admin role editor follows the same rule.
+- Web search asks Parallel first (`IHSP_PARALLEL__*`, shared Redis limiter) and falls back to Exa on an error, a timeout, a rate limit or an empty answer; a deep search asks both and merges the pages by URL. The usage ledger and the logs name the provider.
+- New subject and lesson notebooks keep a title suffix (`notebooks.subject_title_suffix`, migration `notebooks_0016`) and show the subject's current name in the reader's language when opened (`NotebookTitles`, `ScheduleQueries.subject_titles`); a renamed notebook keeps its typed title.
+- Teacher AI tools write questions and handouts in the language of the topic when no language is given.
+
+### Fixed
+
+- The Hydra discovery metadata lists the teacher MCP scopes, and the production env sample documents `IHSP_PARALLEL__MODE` and `IHSP_PARALLEL__API_KEY`.
+
 ## [1.2.1] - 2026-11-11
 
 ### Changed
