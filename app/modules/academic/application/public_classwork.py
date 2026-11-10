@@ -32,6 +32,8 @@ from app.modules.academic.application.classwork.toggle_draft_absent import (
     ToggleDraftAbsent,
 )
 from app.modules.academic.application.classwork.update_work_off import UpdateWorkOff
+from app.modules.academic.domain.classwork.excuse_ref import excuse_of_mark
+from app.modules.academic.domain.classwork.lesson import Lesson
 from app.modules.academic.domain.classwork.work_off import WorkOffMode
 from app.shared.actor import Actor
 from app.shared.clock import Clock, local_today
@@ -120,7 +122,7 @@ class ClassworkQueriesImpl:
     async def absences(
         self, user_id: UUID, start: dt.date | None, end: dt.date | None
     ) -> list[dict[str, Any]]:
-        """Return items ``{"lesson": LessonRef, "excused": bool}``."""
+        """Return items of the lesson ref, ``excused`` and ``excuse_template``."""
         today = local_today(self.clock)
         locale = await self.people.locale(user_id)
         async with self.uow_factory() as uow:
@@ -128,7 +130,11 @@ class ClassworkQueriesImpl:
                 user_id, start or today - dt.timedelta(days=WIDE_DAYS), end or today
             )
         return [
-            {"lesson": lesson.to_ref(locale), "excused": excused}
+            {
+                "lesson": lesson.to_ref(locale),
+                "excused": excused,
+                "excuse_template": _excuse_template(lesson, user_id),
+            }
             for lesson, excused in missed
         ]
 
@@ -256,3 +262,10 @@ def _mode(value: str) -> WorkOffMode:
     if value == "common":
         return "common"
     return "per_student"
+
+
+def _excuse_template(lesson: Lesson, student_id: UUID) -> str | None:
+    """Template code of the official excuse behind the absence, if there is one."""
+    mark = (lesson.attendance_excused or {}).get(str(student_id))
+    excuse = excuse_of_mark(mark)
+    return excuse["template_code"] if excuse else None

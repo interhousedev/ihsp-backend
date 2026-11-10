@@ -16,6 +16,7 @@ from app.modules.academic.application.classwork.roster_loader import RosterLoade
 from app.modules.academic.domain import audience as audience_keys
 from app.modules.academic.domain.classwork.attendance_rules import attendance_editable
 from app.modules.academic.domain.classwork.errors import JournalNotFoundError
+from app.modules.academic.domain.classwork.excuse_ref import excuse_of_mark
 from app.modules.academic.domain.classwork.lesson import Lesson
 from app.modules.academic.domain.classwork.names import localized
 from app.modules.academic.domain.classwork.records import JournalOption, TermRecord
@@ -193,6 +194,13 @@ def _student_row(
                 "absent": absent,
                 "late": student.user_id in (lesson.attendance_late or ()),
                 "excused": absent and str(student.user_id) in lesson.excused_ids(),
+                "excuse": (
+                    excuse_of_mark(
+                        (lesson.attendance_excused or {}).get(str(student.user_id))
+                    )
+                    if absent
+                    else None
+                ),
                 "marks": marks.get((lesson.id, student.user_id), []),
                 "temporary_mark": _temporary_cell(
                     temporary.get((lesson.id, student.user_id))

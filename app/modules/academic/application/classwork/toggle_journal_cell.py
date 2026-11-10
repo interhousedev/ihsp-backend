@@ -11,6 +11,9 @@ from app.modules.academic.application.classwork.lookup import (
     conflict_with,
     require_lesson,
 )
+from app.modules.academic.application.classwork.ports.excuse_coverage import (
+    ExcuseCoverage,
+)
 from app.modules.academic.application.classwork.ports.unit_of_work import (
     AttendanceUnitOfWork,
 )
@@ -22,6 +25,7 @@ from app.modules.academic.domain.classwork.attendance_rules import (
     ensure_attendance_editable,
 )
 from app.modules.academic.domain.classwork.errors import AbsentOutsideRosterError
+from app.modules.academic.domain.excuses.errors import AttendanceExcusedLockedError
 from app.shared.actor import Actor
 from app.shared.clock import Clock, local_today
 
@@ -36,6 +40,7 @@ class ToggleJournalCell:
         roster_loader: RosterLoader,
         sheets: AttendanceSheetBuilder,
         work_offs: WorkOffApplier,
+        excuse_coverage: ExcuseCoverage,
     ) -> None:
         """Initialize the use case."""
         self.uow_factory = uow_factory
@@ -43,6 +48,7 @@ class ToggleJournalCell:
         self.roster_loader = roster_loader
         self.sheets = sheets
         self.work_offs = work_offs
+        self.excuse_coverage = excuse_coverage
 
     async def execute(
         self,
@@ -69,6 +75,10 @@ class ToggleJournalCell:
             expected, unassigned = roster.expected_ids(), roster.unassigned_ids()
             if student_id not in expected | unassigned:
                 raise AbsentOutsideRosterError(params={"user_ids": [str(student_id)]})
+            if student_id in await self.excuse_coverage.covering(lesson, [student_id]):
+                raise AttendanceExcusedLockedError(
+                    params={"student_id": str(student_id)}
+                )
             initial = [s.user_id for s in roster.expected]
             if (absent or late) and student_id in unassigned:
                 initial.append(student_id)

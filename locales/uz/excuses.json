@@ -1,0 +1,19 @@
+{
+  "excuse-not-found": "Uzr topilmadi",
+  "excuse-template-not-found": "Bu uzr sababi mavjud emas",
+  "excuse-not-pending": "Bu ariza boʻyicha qaror qabul qilingan yoki ariza qaytarib olingan",
+  "excuse-not-approved": "Faqat tasdiqlangan uzrni shunday oʻzgartirish mumkin",
+  "excuse-not-curator": "Buni faqat oʻquvchi guruhining kuratori qila oladi",
+  "excuse-invalid": "Uzr sanalari va matnini tekshiring",
+  "excuse-document-required": "Bu sabab uchun tasdiqlovchi hujjat kerak",
+  "excuse-attachment-invalid": "Biriktirilgan fayl mos emas yoki hali tayyor emas",
+  "attendance-excused-locked": "Oʻquvchining bu darsdan tasdiqlangan uzri bor, davomatni oʻzgartirib boʻlmaydi",
+  "excuse-workoff-text": "Uzr bilan oʻtkazib yuborilgan darsni qayta ishlang",
+  "excuse-btn-approve": "Tasdiqlash",
+  "excuse-btn-reject": "Rad etish",
+  "excuse-btn-open": "Ochish",
+  "excuse-bot-approved": "Ozod etish tasdiqlandi.",
+  "excuse-bot-rejected": "Ozod etish rad etildi.",
+  "excuse-bot-already-decided": "Bu ariza boʻyicha qaror allaqachon qabul qilingan.",
+  "excuse-bot-not-available": "Bu tugma endi amal qilmaydi."
+}

@@ -6,6 +6,11 @@ from app.modules.academic.infrastructure.orm.curriculum import (
     GroupCurriculumSubject,
 )
 from app.modules.academic.infrastructure.orm.emis_attendance import EmisAttendance
+from app.modules.academic.infrastructure.orm.excuse import (
+    Excuse,
+    ExcuseMessage,
+    ExcuseTemplate,
+)
 from app.modules.academic.infrastructure.orm.group import Group
 from app.modules.academic.infrastructure.orm.homework_todo import HomeworkTodo
 from app.modules.academic.infrastructure.orm.lesson import Lesson
@@ -24,6 +29,9 @@ from app.modules.academic.infrastructure.orm.work_off import WorkOff, WorkOffTem
 __all__ = [
     "Assessment",
     "EmisAttendance",
+    "Excuse",
+    "ExcuseMessage",
+    "ExcuseTemplate",
     "Group",
     "GroupCurriculum",
     "GroupCurriculumSubject",

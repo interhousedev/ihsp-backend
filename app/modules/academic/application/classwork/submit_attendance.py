@@ -12,6 +12,9 @@ from app.modules.academic.application.classwork.lookup import (
     conflict_with,
     require_lesson,
 )
+from app.modules.academic.application.classwork.ports.excuse_coverage import (
+    ExcuseCoverage,
+)
 from app.modules.academic.application.classwork.ports.unit_of_work import (
     AttendanceUnitOfWork,
 )
@@ -28,6 +31,7 @@ from app.modules.academic.domain.classwork.work_off import (
     as_choice,
     as_entry,
 )
+from app.modules.academic.domain.excuses.errors import AttendanceExcusedLockedError
 from app.shared.actor import Actor, Role
 from app.shared.clock import Clock, local_today
 
@@ -55,6 +59,7 @@ class SubmitAttendance:
         roster_loader: RosterLoader,
         sheets: AttendanceSheetBuilder,
         work_offs: WorkOffApplier,
+        excuse_coverage: ExcuseCoverage,
     ) -> None:
         """Initialize the use case."""
         self.uow_factory = uow_factory
@@ -62,6 +67,7 @@ class SubmitAttendance:
         self.roster_loader = roster_loader
         self.sheets = sheets
         self.work_offs = work_offs
+        self.excuse_coverage = excuse_coverage
 
     async def execute(
         self,
@@ -93,6 +99,14 @@ class SubmitAttendance:
             if base_version != lesson.attendance_version:
                 sheet = await self.sheets.build(lesson, roster, actor, today)
                 raise conflict_with(sheet)
+            covered = await self.excuse_coverage.covering(
+                lesson, sorted(roster.expected_ids() | roster.unassigned_ids())
+            )
+            if covered and any(s in covered for s in (*late, *present_unassigned)):
+                raise AttendanceExcusedLockedError(
+                    params={"student_ids": [str(s) for s in covered]}
+                )
+            absent = [*absent, *(s for s in covered if s not in absent)]
             snapshot = build_snapshot(roster, absent, present_unassigned, late)
             version = await uow.lessons.save_attendance(
                 lesson_id,
@@ -118,6 +132,15 @@ class SubmitAttendance:
                 [as_entry(w) for w in work_offs],
                 as_choice(common_work_off),
             )
+            for student_id, ref in covered.items():
+                await uow.lessons.set_excuse(
+                    lesson_id,
+                    student_id=student_id,
+                    excused=True,
+                    comment=ref.comment(),
+                    by=actor.user_id,
+                    at=self.clock.now(),
+                )
             await uow.commit()
             fresh = await require_lesson(uow, lesson_id)
             return await self.sheets.build(

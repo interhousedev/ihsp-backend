@@ -24,6 +24,18 @@ from fakeredis.aioredis import FakeRedis
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 
+class FakeCoverage:
+    """Approved excuses by lesson-independent student id (test double)."""
+
+    def __init__(self) -> None:
+        """Start with nobody covered."""
+        self.covered: dict[Any, Any] = {}
+
+    async def covering(self, lesson: Any, student_ids: Any) -> dict[Any, Any]:
+        """Return the covered subset."""
+        return {s: self.covered[s] for s in student_ids if s in self.covered}
+
+
 @dataclass(slots=True)
 class Env:
     """Everything a classwork test touches."""
@@ -37,6 +49,7 @@ class Env:
     clock: FixedClock
     redis: FakeRedis
     outbox: InMemoryOutbox
+    coverage: "FakeCoverage"
 
     def actor(self, role: Role, user_id: Any) -> Actor:
         """Build an actor for a seeded user."""
@@ -113,13 +126,16 @@ async def env(
             status="active",
             synced_at=None,
         )
+    coverage = FakeCoverage()
     services = build_classwork(
         deps,
         identity=identity,
         schedule=schedule,
         links=links,
+        excuse_coverage=coverage,
     )
     return Env(
+        coverage=coverage,
         services=services,
         world=world,
         identity=identity,

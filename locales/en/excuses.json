@@ -1,0 +1,19 @@
+{
+  "excuse-not-found": "Excuse not found",
+  "excuse-template-not-found": "This excuse reason is not available",
+  "excuse-not-pending": "This request has already been decided or withdrawn",
+  "excuse-not-approved": "Only an approved excuse can be changed this way",
+  "excuse-not-curator": "Only the curator of the student's group can do this",
+  "excuse-invalid": "Check the dates and text of the excuse",
+  "excuse-document-required": "This reason needs a supporting document",
+  "excuse-attachment-invalid": "The attached file is not allowed or not ready",
+  "attendance-excused-locked": "The student has an approved excuse for this lesson, so the attendance cannot be changed",
+  "excuse-workoff-text": "Work off the lesson you missed with an excuse",
+  "excuse-btn-approve": "Approve",
+  "excuse-btn-reject": "Reject",
+  "excuse-btn-open": "Open",
+  "excuse-bot-approved": "Excuse approved.",
+  "excuse-bot-rejected": "Excuse rejected.",
+  "excuse-bot-already-decided": "This request has already been decided.",
+  "excuse-bot-not-available": "This button is no longer available."
+}

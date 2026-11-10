@@ -7,6 +7,7 @@ from uuid import UUID
 
 from app.modules.academic.application.classwork.people import PeopleDirectory
 from app.modules.academic.domain.classwork.attendance_rules import attendance_editable
+from app.modules.academic.domain.classwork.excuse_ref import excuse_of_mark
 from app.modules.academic.domain.classwork.lesson import Lesson
 from app.modules.academic.domain.classwork.roster import Roster
 from app.modules.academic.domain.classwork.work_off import WorkOff
@@ -59,7 +60,12 @@ class AttendanceSheetBuilder:
                     "absent": is_absent,
                     "late": student.user_id in late,
                     "excused": is_absent and mark is not None,
-                    "excuse_comment": mark.get("comment") if mark else None,
+                    "excuse": excuse_of_mark(mark) if is_absent else None,
+                    "excuse_comment": (
+                        None
+                        if excuse_of_mark(mark) or not mark
+                        else mark.get("comment")
+                    ),
                     # Unassigned students count only once the teacher marked them.
                     "counted": (
                         student.user_id in saved

@@ -66,6 +66,9 @@ from app.modules.academic.application.classwork.missing_attendance import (
     MissingAttendance,
 )
 from app.modules.academic.application.classwork.people import PeopleDirectory
+from app.modules.academic.application.classwork.ports.excuse_coverage import (
+    ExcuseCoverage,
+)
 from app.modules.academic.application.classwork.prompt_state_builder import (
     PromptStateBuilder,
 )
@@ -201,6 +204,7 @@ def build_classwork(
     identity: IdentityDirectory,
     schedule: ScheduleQueries,
     links: LinksApi,
+    excuse_coverage: ExcuseCoverage,
 ) -> ClassworkServices:
     """Wire the classwork use cases over the shared infrastructure."""
     settings = deps.settings
@@ -229,7 +233,7 @@ def build_classwork(
     notices = AbsenceNotices(people)
     work_off_applier = WorkOffApplier(notices)
     submit = SubmitAttendance(
-        uow_factory, clock, roster_loader, sheets, work_off_applier
+        uow_factory, clock, roster_loader, sheets, work_off_applier, excuse_coverage
     )
     update_work_off = UpdateWorkOff(uow_factory, clock, notices)
     list_my_work_offs = ListMyWorkOffs(uow_factory, people)
@@ -263,9 +267,16 @@ def build_classwork(
         ),
         submit_attendance=submit,
         toggle_journal_cell=ToggleJournalCell(
-            uow_factory, clock, roster_loader, sheets, work_off_applier
+            uow_factory,
+            clock,
+            roster_loader,
+            sheets,
+            work_off_applier,
+            excuse_coverage,
         ),
-        set_excuse=SetExcuse(uow_factory, clock, roster_loader, sheets, schedule),
+        set_excuse=SetExcuse(
+            uow_factory, clock, roster_loader, sheets, schedule, excuse_coverage
+        ),
         get_prompt_state=get_prompt_state,
         toggle_draft_absent=toggle_draft,
         submit_from_draft=submit_from_draft,

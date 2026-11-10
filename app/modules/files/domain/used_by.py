@@ -9,6 +9,6 @@ from uuid import UUID
 class UsedBy:
     """One place that refers to a file."""
 
-    kind: Literal["link", "lesson", "chat", "notebook"]
+    kind: Literal["link", "lesson", "chat", "notebook", "excuse"]
     id: UUID
     label: str

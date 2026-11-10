@@ -13,6 +13,7 @@ from app.modules.academic.application.classwork.student_context import (
     keys_of,
     require_student,
 )
+from app.modules.academic.domain.classwork.excuse_ref import excuse_of_mark
 from app.modules.academic.domain.classwork.names import localized
 from app.modules.academic.domain.classwork.reports import rate
 from app.shared.actor import Actor
@@ -77,8 +78,14 @@ class StudentAttendance:
                 {"date": day.isoformat(), "absences": count} for day, count in data.days
             ],
             "missed": [
-                {"lesson": item, "excused": excused}
-                for item, (_, excused) in zip(missed, data.missed, strict=True)
+                {
+                    "lesson": item,
+                    "excused": excused,
+                    "excuse": excuse_of_mark(
+                        (lesson.attendance_excused or {}).get(str(student.user_id))
+                    ),
+                }
+                for item, (lesson, excused) in zip(missed, data.missed, strict=True)
             ],
             "not_taken": data.not_taken,
         }

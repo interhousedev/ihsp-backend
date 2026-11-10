@@ -1,0 +1,19 @@
+{
+  "excuse-not-found": "Освобождение не найдено",
+  "excuse-template-not-found": "Эта причина освобождения недоступна",
+  "excuse-not-pending": "По этой заявке уже принято решение или она отозвана",
+  "excuse-not-approved": "Так можно изменить только одобренное освобождение",
+  "excuse-not-curator": "Это может сделать только куратор группы ученика",
+  "excuse-invalid": "Проверьте даты и текст освобождения",
+  "excuse-document-required": "Для этой причины нужен подтверждающий документ",
+  "excuse-attachment-invalid": "Прикреплённый файл не подходит или ещё не готов",
+  "attendance-excused-locked": "У ученика одобренное освобождение от этого урока, посещаемость изменить нельзя",
+  "excuse-workoff-text": "Отработайте урок, который вы пропустили по освобождению",
+  "excuse-btn-approve": "Одобрить",
+  "excuse-btn-reject": "Отклонить",
+  "excuse-btn-open": "Открыть",
+  "excuse-bot-approved": "Освобождение одобрено.",
+  "excuse-bot-rejected": "Освобождение отклонено.",
+  "excuse-bot-already-decided": "По этой заявке уже принято решение.",
+  "excuse-bot-not-available": "Эта кнопка больше не действует."
+}

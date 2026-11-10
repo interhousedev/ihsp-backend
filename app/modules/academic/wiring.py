@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Any
 
+from app.modules.academic.application.excuses.excuse_status import ExcuseStatusQuery
 from app.modules.academic.wiring_assessments import (
     AssessmentServices,
     build_assessments,
@@ -12,6 +13,7 @@ from app.modules.academic.wiring_emis_import import (
     EmisImportServices,
     build_emis_import,
 )
+from app.modules.academic.wiring_excuses import ExcuseServices, build_excuses
 from app.modules.academic.wiring_marks import MarksServices, build_marks
 from app.modules.academic.wiring_schedule import ScheduleServices, build_schedule
 from app.modules.academic.wiring_teaching import TeachingServices, build_teaching
@@ -21,12 +23,14 @@ __all__ = [
     "AssessmentServices",
     "ClassworkServices",
     "EmisImportServices",
+    "ExcuseServices",
     "MarksServices",
     "ScheduleServices",
     "TeachingServices",
     "build_assessments",
     "build_classwork",
     "build_emis_import",
+    "build_excuses",
     "build_marks",
     "build_schedule",
     "build_teaching",
@@ -51,3 +55,9 @@ class AcademicModule:
     emis_import: EmisImportServices = _NOT_BUILT
     assessments: AssessmentServices = _NOT_BUILT
     teaching: TeachingServices = _NOT_BUILT
+    excuses: ExcuseServices = _NOT_BUILT
+
+    @property
+    def excuse_status(self) -> ExcuseStatusQuery:
+        """The cross-module excuse reader (gate and mini app)."""
+        return self.excuses.status

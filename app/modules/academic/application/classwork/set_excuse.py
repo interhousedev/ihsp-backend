@@ -8,6 +8,9 @@ from app.modules.academic.application.classwork.attendance_sheet import (
     AttendanceSheetBuilder,
 )
 from app.modules.academic.application.classwork.lookup import require_lesson
+from app.modules.academic.application.classwork.ports.excuse_coverage import (
+    ExcuseCoverage,
+)
 from app.modules.academic.application.classwork.ports.unit_of_work import (
     AttendanceUnitOfWork,
 )
@@ -17,6 +20,7 @@ from app.modules.academic.domain.classwork.errors import (
     NotCuratorError,
     StudentNotFoundError,
 )
+from app.modules.academic.domain.excuses.errors import AttendanceExcusedLockedError
 from app.shared.actor import Actor, Role
 from app.shared.clock import Clock, local_today
 from app.shared.contracts.academic import ScheduleQueries
@@ -34,6 +38,7 @@ class SetExcuse:
         roster_loader: RosterLoader,
         sheets: AttendanceSheetBuilder,
         schedule: ScheduleQueries,
+        excuse_coverage: ExcuseCoverage,
     ) -> None:
         """Initialize the use case."""
         self.uow_factory = uow_factory
@@ -41,6 +46,7 @@ class SetExcuse:
         self.roster_loader = roster_loader
         self.sheets = sheets
         self.schedule = schedule
+        self.excuse_coverage = excuse_coverage
 
     async def _curated(self, student_id: UUID, actor: Actor) -> set[UUID] | None:
         """Groups the actor curates, or None for Administration."""
@@ -70,6 +76,12 @@ class SetExcuse:
             lesson = await require_lesson(uow, lesson_id)
             if excused and student_id not in (lesson.attendance_absent or ()):
                 raise ExcuseNotAbsentError(params={"student_id": str(student_id)})
+            if not excused and student_id in await self.excuse_coverage.covering(
+                lesson, [student_id]
+            ):
+                raise AttendanceExcusedLockedError(
+                    params={"student_id": str(student_id)}
+                )
             version = await uow.lessons.set_excuse(
                 lesson_id,
                 student_id=student_id,
