@@ -108,6 +108,7 @@ from app.modules.academic.application.classwork.student_attendance import (
     StudentAttendance,
 )
 from app.modules.academic.application.classwork.student_context import StudyDays
+from app.modules.academic.application.classwork.student_excuses import StudentExcuses
 from app.modules.academic.application.classwork.student_lesson import StudentLesson
 from app.modules.academic.application.classwork.student_today import StudentToday
 from app.modules.academic.application.classwork.submit_attendance import (
@@ -167,6 +168,7 @@ class ClassworkServices:
     student_lesson: StudentLesson
     staff_today: StaffToday
     staff_lesson: StaffLesson
+    student_excuses: StudentExcuses
     student_attendance: StudentAttendance
     group_attendance: GroupAttendance
     group_attendance_csv: GroupAttendanceCsv
@@ -223,7 +225,7 @@ def build_classwork(
     lesson_items = LessonItemBuilder(people)
     homework_items = HomeworkItemBuilder(people, clock)
     roster_loader = RosterLoader(people)
-    sheets = AttendanceSheetBuilder(people)
+    sheets = AttendanceSheetBuilder(people, excuse_coverage)
     study_days = StudyDays(schedule)
     formatter = ReportFormatter(people)
     drafts = RedisAttendanceDraftStore(deps.redis)
@@ -259,7 +261,7 @@ def build_classwork(
     )
     group_attendance = GroupAttendance(uow_factory, clock, people, formatter, schedule)
     attendance_report = AttendanceReport(uow_factory, clock, people, formatter)
-    get_journal = GetJournal(uow_factory, clock, people, roster_loader)
+    get_journal = GetJournal(uow_factory, clock, people, roster_loader, excuse_coverage)
 
     return ClassworkServices(
         get_attendance_sheet=GetAttendanceSheet(
@@ -300,11 +302,20 @@ def build_classwork(
             links,
         ),
         student_lesson=StudentLesson(
-            uow_factory, clock, people, lesson_items, homework_items, links
+            uow_factory,
+            clock,
+            people,
+            lesson_items,
+            homework_items,
+            links,
+            excuse_coverage,
         ),
         staff_today=StaffToday(uow_factory, clock, people, lesson_items, edit_days),
         staff_lesson=staff_lesson,
-        student_attendance=StudentAttendance(uow_factory, clock, people, lesson_items),
+        student_excuses=StudentExcuses(uow_factory, excuse_coverage),
+        student_attendance=StudentAttendance(
+            uow_factory, clock, people, lesson_items, excuse_coverage
+        ),
         group_attendance=group_attendance,
         group_attendance_csv=GroupAttendanceCsv(group_attendance, people, deps.i18n),
         attendance_report=attendance_report,
@@ -327,7 +338,9 @@ def build_classwork(
         list_teacher_work_offs=list_teacher_work_offs,
         list_admin_work_offs=ListAdminWorkOffs(uow_factory, people),
         work_off_stats=WorkOffStats(uow_factory, clock, people),
-        send_absence_digests=SendAbsenceDigests(uow_factory, clock, people),
+        send_absence_digests=SendAbsenceDigests(
+            uow_factory, clock, people, excuse_coverage
+        ),
         list_lesson_temporary_marks=ListLessonTemporaryMarks(
             uow_factory, temporary_views
         ),
@@ -348,6 +361,7 @@ def build_classwork(
             list_work_off_templates,
             list_my_work_offs,
             list_teacher_work_offs,
+            excuse_coverage,
         ),
         commands=ClassworkCommandsImpl(
             people,

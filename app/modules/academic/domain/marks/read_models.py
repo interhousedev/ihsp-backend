@@ -81,10 +81,10 @@ class LessonRow:
     homework_text: str | None
     attendance_roster: tuple[UUID, ...] | None
     attendance_absent: tuple[UUID, ...] | None
-    attendance_excused: dict[str, Any] | None
     kind: str = "other"
     emis_topic: str | None = None
     attendance_late: tuple[UUID, ...] | None = None
+    excused: bool = False
 
 
 @dataclass(frozen=True, slots=True)

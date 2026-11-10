@@ -9,6 +9,9 @@ from app.modules.academic.application.classwork.journal_options import (
     audience_key_of,
 )
 from app.modules.academic.application.classwork.people import PeopleDirectory
+from app.modules.academic.application.classwork.ports.excuse_coverage import (
+    ExcuseCoverage,
+)
 from app.modules.academic.application.classwork.ports.unit_of_work import (
     ViewUnitOfWork,
 )
@@ -16,7 +19,7 @@ from app.modules.academic.application.classwork.roster_loader import RosterLoade
 from app.modules.academic.domain import audience as audience_keys
 from app.modules.academic.domain.classwork.attendance_rules import attendance_editable
 from app.modules.academic.domain.classwork.errors import JournalNotFoundError
-from app.modules.academic.domain.classwork.excuse_ref import excuse_of_mark
+from app.modules.academic.domain.classwork.excuse_ref import ExcuseRef
 from app.modules.academic.domain.classwork.lesson import Lesson
 from app.modules.academic.domain.classwork.names import localized
 from app.modules.academic.domain.classwork.records import JournalOption, TermRecord
@@ -47,12 +50,14 @@ class GetJournal:
         clock: Clock,
         people: PeopleDirectory,
         roster_loader: RosterLoader,
+        excuse_coverage: ExcuseCoverage,
     ) -> None:
         """Initialize the use case."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.people = people
         self.roster_loader = roster_loader
+        self.excuse_coverage = excuse_coverage
 
     async def _term(
         self, uow: ViewUnitOfWork, term_id: UUID | None, today: dt.date
@@ -113,6 +118,7 @@ class GetJournal:
                 uow, subject_id, semester_of, current
             )
         subject = _subject(matched, lessons, subject_id, locale)
+        excuses = await self.excuse_coverage.effective(lessons)
         return {
             "subject": subject,
             "audience_key": audience_key_of(keys),
@@ -123,6 +129,7 @@ class GetJournal:
                     lessons,
                     marks,
                     temporary,
+                    excuses,
                     semester_marks.get(student.user_id),
                 )
                 for student in roster.entries
@@ -183,24 +190,20 @@ def _student_row(
     lessons: list[Lesson],
     marks: dict[tuple[UUID, UUID], list[int]],
     temporary: dict[tuple[UUID, UUID], tuple[int, str | None]],
+    excuses: dict[UUID, dict[UUID, ExcuseRef]],
     semester_mark: float | None,
 ) -> dict[str, Any]:
     cells = []
     for lesson in lessons:
         absent = student.user_id in (lesson.attendance_absent or ())
+        excuse = excuses.get(lesson.id, {}).get(student.user_id)
         cells.append(
             {
                 "lesson_id": str(lesson.id),
                 "absent": absent,
                 "late": student.user_id in (lesson.attendance_late or ()),
-                "excused": absent and str(student.user_id) in lesson.excused_ids(),
-                "excuse": (
-                    excuse_of_mark(
-                        (lesson.attendance_excused or {}).get(str(student.user_id))
-                    )
-                    if absent
-                    else None
-                ),
+                "excused": excuse is not None,
+                "excuse": None if excuse is None else excuse.as_dict(),
                 "marks": marks.get((lesson.id, student.user_id), []),
                 "temporary_mark": _temporary_cell(
                     temporary.get((lesson.id, student.user_id))

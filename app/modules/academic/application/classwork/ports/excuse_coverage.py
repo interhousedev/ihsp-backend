@@ -16,3 +16,13 @@ class ExcuseCoverage(Protocol):
     ) -> dict[UUID, ExcuseRef]:
         """Return ``{student_id: ExcuseRef}`` for covered students of the lesson."""
         ...
+
+    async def effective(
+        self, lessons: Sequence[Lesson]
+    ) -> dict[UUID, dict[UUID, ExcuseRef]]:
+        """Return ``{lesson_id: {student_id: ExcuseRef}}`` of the excused absences.
+
+        The one rule of "excused": absent and (an excuse mark or an approved excuse
+        that covers the lesson).
+        """
+        ...

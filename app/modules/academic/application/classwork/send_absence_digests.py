@@ -7,8 +7,12 @@ from typing import Any
 from uuid import UUID
 
 from app.modules.academic.application.classwork.people import PeopleDirectory
+from app.modules.academic.application.classwork.ports.excuse_coverage import (
+    ExcuseCoverage,
+)
 from app.modules.academic.application.classwork.ports.unit_of_work import ViewUnitOfWork
 from app.modules.academic.application.classwork.work_off_items import names_of
+from app.modules.academic.domain.classwork.excuse_ref import ExcuseRef
 from app.modules.academic.domain.classwork.lesson import Lesson
 from app.modules.academic.domain.classwork.records import StudentRecord
 from app.shared.clock import Clock, local_today
@@ -26,11 +30,13 @@ class SendAbsenceDigests:
         uow_factory: Callable[[], ViewUnitOfWork],
         clock: Clock,
         people: PeopleDirectory,
+        excuse_coverage: ExcuseCoverage,
     ) -> None:
         """Initialize the use case."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.people = people
+        self.excuse_coverage = excuse_coverage
 
     async def execute(self) -> dict[str, int]:
         """Queue today's digests; ``{"skipped": 1}``, ``{"waiting": 1}`` or counts.
@@ -55,7 +61,10 @@ class SendAbsenceDigests:
                 (w.lesson_id, w.student_id): w.text
                 for w in await uow.work_offs.for_lessons([x.id for x in lessons])
             }
-            drafts = await self._drafts(today, lessons, students, curators, tasks)
+            excuses = await self.excuse_coverage.effective(lessons)
+            drafts = await self._drafts(
+                today, lessons, students, curators, tasks, excuses
+            )
             uow.notify(*drafts)
             await uow.commit()
         return {"queued": len(drafts)}
@@ -74,6 +83,7 @@ class SendAbsenceDigests:
         students: dict[UUID, StudentRecord],
         curators: dict[UUID, UUID | None],
         tasks: dict[tuple[UUID, UUID], str],
+        excuses: dict[UUID, dict[UUID, ExcuseRef]],
     ) -> list[NotificationDraft]:
         grouped: dict[tuple[UUID, UUID], list[tuple[Lesson, UUID]]] = defaultdict(list)
         for lesson in lessons:
@@ -90,7 +100,7 @@ class SendAbsenceDigests:
         drafts = []
         for (curator, group_id), pairs in grouped.items():
             locale = await self.people.locale(curator)
-            items = _items(pairs, names, tasks, locale)
+            items = _items(pairs, names, tasks, excuses, locale)
             group_name = students[pairs[0][1]].group_name
             payload: dict[str, Any] = {
                 "date": day.isoformat(),
@@ -114,6 +124,7 @@ def _items(
     pairs: list[tuple[Lesson, UUID]],
     names: dict[UUID, str],
     tasks: dict[tuple[UUID, UUID], str],
+    excuses: dict[UUID, dict[UUID, ExcuseRef]],
     locale: str,
 ) -> list[dict[str, Any]]:
     items = [
@@ -126,7 +137,7 @@ def _items(
             "teacher_name": (
                 "" if lesson.teacher_id is None else names.get(lesson.teacher_id, "")
             ),
-            "excused": str(student_id) in lesson.excused_ids(),
+            "excused": student_id in excuses.get(lesson.id, {}),
             "work_off_text": tasks.get((lesson.id, student_id)),
         }
         for lesson, student_id in pairs

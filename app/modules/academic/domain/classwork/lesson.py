@@ -79,10 +79,6 @@ class Lesson:
         """Subject name in the locale with the uz, ru, en fallback."""
         return localized(self.subject_names, locale)
 
-    def excused_ids(self) -> set[str]:
-        """Student ids (as text) whose absence is excused."""
-        return set(self.attendance_excused or {})
-
     def to_ref(self, locale: str) -> LessonRef:
         """Return the cross-module view of the lesson."""
         return LessonRef(

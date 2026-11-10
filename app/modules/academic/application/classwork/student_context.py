@@ -58,12 +58,15 @@ class StudyDays:
         return min(dates) if dates else None
 
 
-def attendance_state(lesson: Lesson, student_id: UUID) -> str:
-    """present, late, absent, excused or not_taken for one student (WEB-9)."""
+def attendance_state(lesson: Lesson, student_id: UUID, *, excused: bool) -> str:
+    """present, late, absent, excused or not_taken for one student (WEB-9).
+
+    ``excused`` comes from ``ExcuseCoverage.effective``, the one rule.
+    """
     if lesson.attendance_absent is None:
         return "not_taken"
     if student_id in lesson.attendance_absent:
-        return "excused" if str(student_id) in lesson.excused_ids() else "absent"
+        return "excused" if excused else "absent"
     if student_id in (lesson.attendance_roster or ()):
         return "late" if student_id in (lesson.attendance_late or ()) else "present"
     return "not_taken"

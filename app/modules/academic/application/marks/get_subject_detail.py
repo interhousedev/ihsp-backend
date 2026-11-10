@@ -195,8 +195,8 @@ def _lesson(
         student_id,
         lesson.attendance_roster,
         lesson.attendance_absent,
-        lesson.attendance_excused,
         lesson.attendance_late,
+        excused=lesson.excused,
     )
     item["attendance_source"] = "platform"
     if emis is not None and emis.absent_dates and lesson.date in emis.absent_dates:

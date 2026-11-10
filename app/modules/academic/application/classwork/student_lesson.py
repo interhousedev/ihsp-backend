@@ -9,6 +9,9 @@ from app.modules.academic.application.classwork.homework_items import (
 )
 from app.modules.academic.application.classwork.lesson_items import LessonItemBuilder
 from app.modules.academic.application.classwork.people import PeopleDirectory
+from app.modules.academic.application.classwork.ports.excuse_coverage import (
+    ExcuseCoverage,
+)
 from app.modules.academic.application.classwork.ports.unit_of_work import (
     ViewUnitOfWork,
 )
@@ -42,6 +45,7 @@ class StudentLesson:
         lesson_items: LessonItemBuilder,
         homework: HomeworkItemBuilder,
         links: LinksApi,
+        excuse_coverage: ExcuseCoverage,
     ) -> None:
         """Initialize the use case."""
         self.uow_factory = uow_factory
@@ -50,6 +54,7 @@ class StudentLesson:
         self.lesson_items = lesson_items
         self.homework = homework
         self.links = links
+        self.excuse_coverage = excuse_coverage
 
     async def execute(self, lesson_id: UUID, actor: Actor) -> dict[str, Any]:
         """Return the ``StudentLesson`` JSON; not-in-audience is "not found"."""
@@ -68,6 +73,7 @@ class StudentLesson:
         ]
         built = await self.homework.build_many([HomeworkRecord(lesson, todo)], locale)
         offset = (lesson.date - today).days
+        excuses = await self.excuse_coverage.effective([lesson])
         return {
             "lesson": await self.lesson_items.build(lesson, locale),
             "materials": student_resource_items(
@@ -79,6 +85,10 @@ class StudentLesson:
             # Always present: text is "" without homework, the note still works.
             "homework": built[0],
             "my_mark": [mark_item(mark, locale) for mark in marks],
-            "my_attendance": attendance_state(lesson, actor.user_id),
+            "my_attendance": attendance_state(
+                lesson,
+                actor.user_id,
+                excused=actor.user_id in excuses.get(lesson.id, {}),
+            ),
             "can_attach": -ATTACH_DAYS_BACK <= offset <= ATTACH_DAYS_AHEAD,
         }

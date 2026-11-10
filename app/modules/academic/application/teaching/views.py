@@ -2,6 +2,7 @@
 
 import datetime as dt
 from dataclasses import dataclass
+from typing import Any
 from uuid import UUID
 
 from app.shared.contracts.academic import LessonRef, MarkRef
@@ -54,6 +55,7 @@ class AbsentLesson:
     lesson_id: UUID
     date: dt.date
     excused: bool
+    excuse: dict[str, Any] | None
 
 
 @dataclass(frozen=True, slots=True)

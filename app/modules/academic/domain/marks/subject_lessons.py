@@ -50,8 +50,8 @@ def _attendance(student_id: UUID, lesson: LessonRow) -> str | None:
         student_id,
         lesson.attendance_roster,
         lesson.attendance_absent,
-        lesson.attendance_excused,
         lesson.attendance_late,
+        excused=lesson.excused,
     )
     if state in ("present", "late"):
         return state

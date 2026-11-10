@@ -150,8 +150,8 @@ class SqlLessonReader:
 
     async def student_absences(
         self, student_id: UUID, start: dt.date, end: dt.date
-    ) -> list[tuple[Lesson, bool]]:
-        """Lessons the student missed and whether each absence is excused."""
+    ) -> list[Lesson]:
+        """Lessons the student missed; excuses come from ``ExcuseCoverage``."""
         stmt = (
             lesson_select()
             .where(
@@ -162,9 +162,7 @@ class SqlLessonReader:
             )
             .order_by(LessonRow.date.desc(), LessonRow.period.desc())
         )
-        lessons = await fetch_lessons(self.session, stmt)
-        key = str(student_id)
-        return [(lesson, key in lesson.excused_ids()) for lesson in lessons]
+        return await fetch_lessons(self.session, stmt)
 
     async def missing_attendance(
         self,

@@ -6,6 +6,9 @@ from typing import Any
 from uuid import UUID
 
 from app.modules.academic.application.classwork.people import PeopleDirectory
+from app.modules.academic.application.classwork.ports.excuse_coverage import (
+    ExcuseCoverage,
+)
 from app.modules.academic.domain.classwork.attendance_rules import attendance_editable
 from app.modules.academic.domain.classwork.excuse_ref import excuse_of_mark
 from app.modules.academic.domain.classwork.lesson import Lesson
@@ -17,9 +20,12 @@ from app.shared.actor import Actor
 class AttendanceSheetBuilder:
     """Combines the lesson's saved lists with the current roster."""
 
-    def __init__(self, people: PeopleDirectory) -> None:
-        """Store the people directory."""
+    def __init__(
+        self, people: PeopleDirectory, excuse_coverage: ExcuseCoverage
+    ) -> None:
+        """Store the people directory and the excuse rule."""
         self.people = people
+        self.excuse_coverage = excuse_coverage
 
     async def build(
         self,
@@ -44,11 +50,13 @@ class AttendanceSheetBuilder:
         late = set(lesson.attendance_late or ())
         saved = set(lesson.attendance_roster or ())
         expected = roster.expected_ids()
-        excused = lesson.attendance_excused or {}
+        marks = lesson.attendance_excused or {}
+        excuses = (await self.excuse_coverage.effective([lesson])).get(lesson.id, {})
         items = []
         for position, student in enumerate(students):
-            mark = excused.get(str(student.user_id))
+            mark = marks.get(str(student.user_id))
             is_absent = student.user_id in absent
+            excuse = excuses.get(student.user_id)
             items.append(
                 {
                     "position": position,
@@ -59,8 +67,8 @@ class AttendanceSheetBuilder:
                     "subgroup_unset": student.user_id not in expected,
                     "absent": is_absent,
                     "late": student.user_id in late,
-                    "excused": is_absent and mark is not None,
-                    "excuse": excuse_of_mark(mark) if is_absent else None,
+                    "excused": excuse is not None,
+                    "excuse": None if excuse is None else excuse.as_dict(),
                     "excuse_comment": (
                         None
                         if excuse_of_mark(mark) or not mark

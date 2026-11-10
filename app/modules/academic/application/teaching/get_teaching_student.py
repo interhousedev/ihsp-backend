@@ -64,6 +64,7 @@ def _absent(items: list[dict[str, Any]], subject_id: UUID) -> list[AbsentLesson]
             lesson_id=item["lesson"].id,
             date=item["lesson"].date,
             excused=bool(item.get("excused")),
+            excuse=item.get("excuse"),
         )
         for item in items
         if item["lesson"].subject_id == subject_id

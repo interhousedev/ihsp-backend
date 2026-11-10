@@ -55,8 +55,8 @@ class LessonReader(Protocol):
 
     async def student_absences(
         self, student_id: UUID, start: dt.date, end: dt.date
-    ) -> list[tuple[Lesson, bool]]:
-        """Lessons the student missed and whether each absence is excused."""
+    ) -> list[Lesson]:
+        """Lessons the student missed; ``ExcuseCoverage`` says which are excused."""
         ...
 
     async def missing_attendance(

@@ -21,6 +21,7 @@ from app.modules.academic.domain.marks.read_models import (
     StudentContext,
     SubjectInfo,
 )
+from app.modules.academic.infrastructure.classwork.excused_sql import excused_sql
 from app.modules.academic.infrastructure.marks.sql_helpers import has_uuid, overlaps
 from app.modules.academic.infrastructure.orm.curriculum import GroupCurriculumSubject
 from app.modules.academic.infrastructure.orm.emis_attendance import EmisAttendance
@@ -57,7 +58,6 @@ _LESSON_COLUMNS = (
     Lesson.homework_text,
     Lesson.attendance_roster,
     Lesson.attendance_absent,
-    Lesson.attendance_excused,
     Lesson.attendance_late,
     Lesson.kind,
     Lesson.emis_topic,
@@ -88,12 +88,12 @@ def _lesson_row(r: Any) -> LessonRow:
         attendance_absent=(
             None if r.attendance_absent is None else tuple(r.attendance_absent)
         ),
-        attendance_excused=r.attendance_excused,
         attendance_late=(
             None if r.attendance_late is None else tuple(r.attendance_late)
         ),
         kind=r.kind,
         emis_topic=r.emis_topic,
+        excused=r.excused,
     )
 
 
@@ -298,8 +298,11 @@ class SqlMarksReader:
     def _lesson_select(self, ctx: StudentContext) -> sa.Select[Any]:
         """Select the lessons of the student's audience with their rooms."""
         keys = student_keys(ctx.group_id, ctx.subgroup)
+        excused: sa.Label[Any] = sa.literal_column(
+            excused_sql("academic.lessons", f"CAST('{ctx.user_id}' AS uuid)")
+        ).label("excused")
         return (
-            sa.select(*_LESSON_COLUMNS)
+            sa.select(*_LESSON_COLUMNS, excused)
             .select_from(Lesson)
             .outerjoin(Room, Room.id == Lesson.room_id)
             .where(overlaps(Lesson.audience, keys), not_on_saturday(Lesson.date))

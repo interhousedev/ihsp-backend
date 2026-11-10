@@ -94,6 +94,13 @@ class Api:
         return actor
 
 
+class _NoExcuses:
+    """The timetable's excuse lookup; the schedule tests record no excuses."""
+
+    async def execute(self, *_: object) -> dict[UUID, object]:
+        return {}
+
+
 @pytest_asyncio.fixture
 async def api(env: Env, http_client: HttpClientFactory) -> Api:
     """Every B3 router on a test app over the same services as `env`."""
@@ -102,7 +109,10 @@ async def api(env: Env, http_client: HttpClientFactory) -> Api:
     client = await http_client(
         routers,
         {get_actor: lambda: holder["actor"]},
-        academic=SimpleNamespace(schedule=env.services),
+        academic=SimpleNamespace(
+            schedule=env.services,
+            classwork=SimpleNamespace(student_excuses=_NoExcuses()),
+        ),
         identity=SimpleNamespace(directory=env.identity),
     )
     return Api(client, holder)

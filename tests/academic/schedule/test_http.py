@@ -699,8 +699,11 @@ async def test_student_profile_and_timetable(env: Env, api: Api) -> None:
         "absent_count",
         "late_count",
         "subgroup",
+        "excused",
+        "excuse",
     }
     assert item["subgroup"] is None
+    assert item["excused"] is False and item["excuse"] is None
 
 
 async def test_student_timetable_marks_the_other_subgroup(env: Env, api: Api) -> None:

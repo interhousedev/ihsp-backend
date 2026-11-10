@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Any
 
+from app.modules.academic.domain.classwork.excuse_ref import effective_excuses
 from app.modules.academic.wiring_classwork import ClassworkServices, build_classwork
 from app.settings import Settings
 from app.shared.actor import Actor, Role
@@ -34,6 +35,21 @@ class FakeCoverage:
     async def covering(self, lesson: Any, student_ids: Any) -> dict[Any, Any]:
         """Return the covered subset."""
         return {s: self.covered[s] for s in student_ids if s in self.covered}
+
+    async def effective(self, lessons: Any) -> dict[Any, Any]:
+        """Return the excuses of absent students per lesson, by the real rule."""
+        return {
+            lesson.id: effective_excuses(
+                lesson.attendance_absent,
+                lesson.attendance_excused,
+                {
+                    s: self.covered[s]
+                    for s in lesson.attendance_absent or ()
+                    if s in self.covered
+                },
+            )
+            for lesson in lessons
+        }
 
 
 @dataclass(slots=True)

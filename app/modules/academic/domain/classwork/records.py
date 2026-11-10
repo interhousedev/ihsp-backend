@@ -108,5 +108,5 @@ class StudentAttendanceData:
 
     subjects: list[SubjectStat] = field(default_factory=list)
     days: list[tuple[dt.date, int]] = field(default_factory=list)
-    missed: list[tuple[Lesson, bool]] = field(default_factory=list)
+    missed: list[Lesson] = field(default_factory=list)
     not_taken: int = 0

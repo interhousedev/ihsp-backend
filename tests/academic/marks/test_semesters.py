@@ -62,4 +62,4 @@ def test_attendance_state() -> None:
     assert attendance_state(me, [other], [], None) == "not_taken"
     assert attendance_state(me, [me, other], [other], None) == "present"
     assert attendance_state(me, [me, other], [me], None) == "absent"
-    assert attendance_state(me, [me], [me], {str(me): {"by": "x"}}) == "excused"
+    assert attendance_state(me, [me], [me], excused=True) == "excused"

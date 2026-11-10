@@ -47,7 +47,6 @@ def _lesson(day_offset: int, *, absent: bool = False, late: bool = False) -> Les
         homework_text=None,
         attendance_roster=(ME,),
         attendance_absent=(ME,) if absent else (),
-        attendance_excused=None,
         attendance_late=(ME,) if late else None,
     )
 

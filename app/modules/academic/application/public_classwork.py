@@ -15,6 +15,9 @@ from app.modules.academic.application.classwork.list_work_off_templates import (
     ListWorkOffTemplates,
 )
 from app.modules.academic.application.classwork.people import PeopleDirectory
+from app.modules.academic.application.classwork.ports.excuse_coverage import (
+    ExcuseCoverage,
+)
 from app.modules.academic.application.classwork.ports.unit_of_work import (
     ViewUnitOfWork,
 )
@@ -32,8 +35,7 @@ from app.modules.academic.application.classwork.toggle_draft_absent import (
     ToggleDraftAbsent,
 )
 from app.modules.academic.application.classwork.update_work_off import UpdateWorkOff
-from app.modules.academic.domain.classwork.excuse_ref import excuse_of_mark
-from app.modules.academic.domain.classwork.lesson import Lesson
+from app.modules.academic.domain.classwork.excuse_ref import ExcuseRef
 from app.modules.academic.domain.classwork.work_off import WorkOffMode
 from app.shared.actor import Actor
 from app.shared.clock import Clock, local_today
@@ -54,6 +56,7 @@ class ClassworkQueriesImpl:
         templates: ListWorkOffTemplates,
         my_items: ListMyWorkOffs,
         teacher_items: ListTeacherWorkOffs,
+        excuse_coverage: ExcuseCoverage,
     ) -> None:
         """Initialize the queries."""
         self.uow_factory = uow_factory
@@ -62,6 +65,7 @@ class ClassworkQueriesImpl:
         self._templates = templates
         self._my_work_offs = my_items
         self._teacher_work_offs = teacher_items
+        self.excuse_coverage = excuse_coverage
 
     async def subject_lessons(
         self,
@@ -122,21 +126,26 @@ class ClassworkQueriesImpl:
     async def absences(
         self, user_id: UUID, start: dt.date | None, end: dt.date | None
     ) -> list[dict[str, Any]]:
-        """Return items of the lesson ref, ``excused`` and ``excuse_template``."""
+        """Return items of the lesson ref, ``excused``, ``excuse``, template."""
         today = local_today(self.clock)
         locale = await self.people.locale(user_id)
         async with self.uow_factory() as uow:
             missed = await uow.lesson_reader.student_absences(
                 user_id, start or today - dt.timedelta(days=WIDE_DAYS), end or today
             )
-        return [
-            {
-                "lesson": lesson.to_ref(locale),
-                "excused": excused,
-                "excuse_template": _excuse_template(lesson, user_id),
-            }
-            for lesson, excused in missed
-        ]
+        excuses = await self.excuse_coverage.effective(missed)
+        items = []
+        for lesson in missed:
+            ref = excuses.get(lesson.id, {}).get(user_id)
+            items.append(
+                {
+                    "lesson": lesson.to_ref(locale),
+                    "excused": ref is not None,
+                    "excuse": None if ref is None else ref.as_dict(),
+                    "excuse_template": _excuse_template(ref),
+                }
+            )
+        return items
 
     async def missing_attendance(
         self, teacher_id: UUID | None, start: dt.date, end: dt.date
@@ -264,8 +273,6 @@ def _mode(value: str) -> WorkOffMode:
     return "per_student"
 
 
-def _excuse_template(lesson: Lesson, student_id: UUID) -> str | None:
+def _excuse_template(ref: ExcuseRef | None) -> str | None:
     """Template code of the official excuse behind the absence, if there is one."""
-    mark = (lesson.attendance_excused or {}).get(str(student_id))
-    excuse = excuse_of_mark(mark)
-    return excuse["template_code"] if excuse else None
+    return ref.template_code or None if ref else None

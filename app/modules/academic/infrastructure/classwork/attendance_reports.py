@@ -23,6 +23,7 @@ from app.modules.academic.domain.classwork.records import (
     StudentAttendanceData,
     SubjectStat,
 )
+from app.modules.academic.infrastructure.classwork.excused_sql import excused_sql
 from app.modules.academic.infrastructure.classwork.lesson_reader import SqlLessonReader
 from app.modules.academic.infrastructure.classwork.sql_helpers import (
     has_uuid,
@@ -48,7 +49,8 @@ _ENTRY_KEY = {
     "group": "e.group_id",
 }
 
-_ENTRIES = """
+_ENTRIES = (
+    """
 SELECT {key} AS key,
        count(*) FILTER (WHERE e.absent) AS absences,
        count(*) FILTER (WHERE e.absent AND e.excused) AS excused,
@@ -58,9 +60,9 @@ FROM (
          l.teacher_id AS teacher_id, u.student_id AS student_id,
          s.group_id AS group_id,
          COALESCE(l.attendance_absent @> ARRAY[u.student_id], false) AS absent,
-         COALESCE(
-           jsonb_exists(l.attendance_excused, CAST(u.student_id AS text)), false
-         ) AS excused
+         COALESCE("""
+    + excused_sql("l", "u.student_id")
+    + """, false) AS excused
   FROM academic.lessons l
   CROSS JOIN LATERAL unnest(l.attendance_roster) AS u(student_id)
   LEFT JOIN academic.students s ON s.user_id = u.student_id
@@ -70,6 +72,7 @@ FROM (
 WHERE {where}
 GROUP BY 1
 """
+)
 
 _NOT_TAKEN_BASE = (
     "l.status = 'scheduled' AND l.attendance_absent IS NULL "
@@ -158,7 +161,10 @@ class SqlAttendanceReports:
             LessonRow.date <= end,
         )
         excused = sa.and_(
-            absent, sa.func.jsonb_exists(LessonRow.attendance_excused, str(student_id))
+            absent,
+            sa.literal_column(
+                excused_sql("academic.lessons", f"CAST('{student_id}' AS uuid)")
+            ),
         )
         per_subject = (
             sa.select(
