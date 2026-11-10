@@ -9,21 +9,25 @@ from app.interfaces.bot.routers.auth.login.handlers.show_login import show_login
 from app.interfaces.bot.routers.guest.callbacks import PostCb, StartModeCb
 from app.interfaces.bot.routers.guest.screens import build_choice, build_post
 from app.interfaces.bot.services import BotServices
+from app.interfaces.bot.utilities.markup import to_markup, web_app_button
 from app.interfaces.bot.utilities.parse_fallback import is_markup_error, plain_fallback
 from app.interfaces.bot.utilities.reply_edit import answer_callback, show
+from app.interfaces.bot.widgets.deliver import WidgetPlan, plan_widgets, send_widgets
 from app.modules.posts.application.guest_assistant import GuestAssistant
 from app.modules.posts.domain.bot_mode import BotMode
 from app.modules.posts.domain.errors import GuestBusyError, GuestLimitError
 from app.modules.posts.domain.post import Viewer
 from app.modules.posts.wiring import PostsServices
+from app.shared.base_error import BaseError
 from app.shared.contracts.identity import UserRef
 from app.shared.i18n.core import I18nContext
+from app.shared.openui.visual import has_valid_blocks
 
 import structlog
 from aiogram import Bot
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message
 
 log = structlog.get_logger(__name__)
 
@@ -99,10 +103,18 @@ async def open_post(
     await show(callback, build_post(screen, locale, i18n, guest=user is None))
 
 
-async def _edit(bot: Bot, message: Message, text: str) -> None:
+async def _edit(
+    bot: Bot,
+    message: Message,
+    text: str,
+    markup: InlineKeyboardMarkup | None = None,
+) -> None:
     try:
         await bot.edit_message_text(
-            text=text, chat_id=message.chat.id, message_id=message.message_id
+            text=text,
+            chat_id=message.chat.id,
+            message_id=message.message_id,
+            reply_markup=markup,
         )
     except TelegramBadRequest as error:
         if not is_markup_error(error):
@@ -114,6 +126,7 @@ async def _edit(bot: Bot, message: Message, text: str) -> None:
                 text=plain_fallback(text),
                 chat_id=message.chat.id,
                 message_id=message.message_id,
+                reply_markup=markup,
             )
         except TelegramBadRequest as again:
             log.info("guest.edit_failed", error=again.message)
@@ -173,20 +186,71 @@ async def ask_assistant(
         log.exception("guest.assistant_failed")
         await _edit(bot, reply, i18n("bot-guest-error"))
         return
-    chunks = render_telegram(text) if text.strip() else []
-    if not chunks:
+    await _deliver(message, bot, reply, container, text, i18n)
+
+
+async def _deliver(
+    message: Message,
+    bot: Bot,
+    reply: Message,
+    container: Any,
+    text: str,
+    i18n: I18nContext,
+) -> None:
+    """Send the answer text, its Mini App button and its widgets."""
+    assert message.from_user is not None
+    plan = _widget_plan(message, container, text) if has_valid_blocks(text) else None
+    chunks = render_telegram(plan.text if plan else text) if text.strip() else []
+    markup = await _visual_markup(container, message.from_user.id, text, i18n)
+    if not chunks and plan is not None:
+        await _edit(bot, reply, i18n("bot-ai-visualization"), markup)
+    elif not chunks:
         await _edit(bot, reply, i18n("bot-guest-no-answer"))
         return
-    await _edit(bot, reply, chunks[0].text)
-    for chunk in chunks[1:]:
-        await _send_html(bot, message.chat.id, chunk.text)
+    else:
+        last = len(chunks) - 1
+        await _edit(bot, reply, chunks[0].text, markup if last == 0 else None)
+        for index, chunk in enumerate(chunks[1:], 1):
+            await _send_html(
+                bot, message.chat.id, chunk.text, markup if index == last else None
+            )
+    if plan is not None:
+        await send_widgets(bot, message.chat.id, plan)
 
 
-async def _send_html(bot: Bot, chat_id: int, html: str) -> None:
+def _widget_plan(message: Message, container: Any, text: str) -> WidgetPlan | None:
+    """Widgets for a private chat when the flag is on and every block has one."""
+    settings = getattr(container, "settings", None)
+    if not getattr(getattr(settings, "bot", None), "widgets_enabled", False):
+        return None
+    if message.chat.type != "private":
+        return None
+    return plan_widgets(text, viz_token=None, visualize_label="")
+
+
+async def _visual_markup(
+    container: Any, telegram_user_id: int, text: str, i18n: I18nContext
+) -> InlineKeyboardMarkup | None:
+    """The Mini App button of an answer with blocks; None when it cannot be shared."""
+    if not has_valid_blocks(text):
+        return None
+    try:
+        url = await container.links.share_guest_answer.execute(
+            telegram_user_id=telegram_user_id, text=text
+        )
+    except BaseError as error:
+        log.info("guest.share_skipped", code=error.code)
+        return None
+    return to_markup([[web_app_button(i18n("bot-ai-visualization"), url)]])
+
+
+async def _send_html(
+    bot: Bot, chat_id: int, html: str, markup: InlineKeyboardMarkup | None = None
+) -> None:
     """A further answer message; plain text if Telegram refuses the markup."""
     try:
-        await bot.send_message(chat_id, html)
+        await bot.send_message(chat_id, html, reply_markup=markup)
     except TelegramBadRequest as error:
         if not is_markup_error(error):
             raise
-        await bot.send_message(chat_id, plain_fallback(html))
+        await bot.send_message(chat_id, plain_fallback(html), reply_markup=markup)

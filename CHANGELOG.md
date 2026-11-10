@@ -7,6 +7,8 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Added
 
 - Bot: with `IHSP_BOT__WIDGETS_ENABLED=true`, OpenUI blocks in private-chat answers are sent as Telegram widgets (Bot API 10.4) that follow the Telegram theme; group chats, unsupported or oversized blocks and API errors keep the Markdown rendering.
+- Bot: every answer with OpenUI blocks gets a "See visualization" Mini App button (a URL button in groups) that opens the share app, for clients without widget support.
+- Guest bot: answers may contain OpenUI blocks, sent as widgets in private chats (or degraded to Markdown), with a Mini App button to a 7-day public `g-` share stored in Redis.
 - Excuses: curators exclude a student from lessons ("officially excused", from a date with an optional end, whole days, specific lessons or subjects); students request an excuse with a template (illness, volunteering, olympiad, family, other), dates, lessons, documents and a message thread; the curator approves or rejects from the web or Telegram. Excused lessons are locked in the journal, counted absent and excused, and get a work-off; the AI and MCP show them as officially excused.
 - Face photos for entrance devices: students upload their own unless a curator or administrator has set one; administrators issue, revoke and audit entrance device keys (7-day call log); `POST /v1/device/identify` returns the student and the excuse status and tells the curator when a student who is not excused leaves during lessons. New dependency `opencv-python-headless` (YuNet and SFace models baked into the image).
 - Personal API tokens (`ihsp_pat_`, scopes `me:read`/`me:write`, expiry, revocation, last use) for the `/v1/me/*` API.
