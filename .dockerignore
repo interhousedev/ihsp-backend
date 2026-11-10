@@ -7,6 +7,7 @@
 !locales
 !migrations
 !alembic.ini
+!scripts/download_face_models.sh
 
 # Never shipped, even inside the allowed trees: bytecode and tool caches, tests and docs,
 # keys, env files, local data and backups.

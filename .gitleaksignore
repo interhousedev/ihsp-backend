@@ -21,4 +21,4 @@
 9caf7d1cacc07f2f5ffa38f1ab332d9106805ee4:app/interfaces/http/dependencies.py:generic-api-key:34
 eb97afb373d15463c90e5de50733ee6f80c2e18f:app/modules/notify/infrastructure/pywebpush_sender.py:generic-api-key:1
 fc99d59b353d89c35f6416ff5981bb34ec313dc1:app/modules/lms/domain/authoring/errors.py:generic-api-key:159
-7c424a5c1b5e8fb380896903d279d052e4ab23e1:tests/bot/test_widgets_render.py:generic-api-key:57
+031db541dcf8bfcbcd59846c23dbd1fd69d9c0e6:tests/bot/test_widgets_render.py:generic-api-key:57
