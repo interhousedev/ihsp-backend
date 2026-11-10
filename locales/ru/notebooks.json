@@ -45,5 +45,7 @@
   "notebooks-workspace-readonly": "Это рабочее пространство курса доступно вам только для чтения. Попросите редактора курса дать доступ к редактированию.",
   "notebooks-share-unsupported": "Поделиться можно только блокнотом, который вы создали сами.",
   "notebooks-share-limit": "Достигнут предел: {limit}.",
-  "notebooks-share-recipient-not-found": "Этот человек не найден."
+  "notebooks-share-recipient-not-found": "Этот человек не найден.",
+  "notebooks-teacher-file-not-found": "Этот файл не найден среди ваших файлов.",
+  "notebooks-teacher-input-invalid": "Запрос не может быть выполнен: {detail}"
 }

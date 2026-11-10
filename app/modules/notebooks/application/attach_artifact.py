@@ -10,6 +10,7 @@ from app.modules.notebooks.application.export.render import (
     KIND_FORMATS,
     export_artifact,
 )
+from app.modules.notebooks.application.slide_images import load_image_bytes
 from app.modules.notebooks.domain.entities import Artifact
 from app.modules.notebooks.domain.enums import ArtifactKind
 from app.modules.notebooks.domain.errors import InvalidOptionsError
@@ -53,7 +54,11 @@ class AttachArtifactToLesson:
             raise InvalidOptionsError(params={"kind": artifact.kind.value})
         content = require_ready(artifact, *KIND_FORMATS)
         rendered = await asyncio.to_thread(
-            export_artifact, artifact.kind, _title(artifact), content
+            export_artifact,
+            artifact.kind,
+            _title(artifact),
+            content,
+            await load_image_bytes(self.files, content),
         )
         stored = await self.files.store_bytes(
             owner_id=actor.user_id,

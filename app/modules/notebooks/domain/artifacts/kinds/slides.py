@@ -7,9 +7,11 @@ like; generation, the student's edits (`slides_edit`) and revisions
 `prompts.slides_task`.
 """
 
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Final, Literal
+from uuid import UUID
 
 from app.modules.notebooks.domain.artifacts.handler import (
     ArtifactHandler,
@@ -56,6 +58,12 @@ Layout = Literal[
     "quote",
     "table",
     "summary",
+    "image_left",
+    "image_right",
+    "full_image",
+    "stats",
+    "timeline",
+    "comparison",
 ]
 Length = Literal["short", "default", "long"]
 
@@ -72,6 +80,9 @@ ATTRIBUTION_CHARS: Final = 120
 HEADING_CHARS: Final = 60
 BULLET_CHARS: Final = 300
 TABLE_COLUMNS: Final = 6
+STAT_VALUE_CHARS: Final = 24
+IMAGE_LAYOUTS: Final = frozenset({"image_left", "image_right", "full_image"})
+_LABEL: Final = re.compile(r"I\d{1,2}")
 TABLE_ROWS: Final = 10
 TABLE_CELL_CHARS: Final = 80
 COLUMN_BULLETS: Final = 6
@@ -145,6 +156,31 @@ class TableOut(BaseModel):
     rows: list[list[str]] = Field(description="At most 6 rows, one cell per column.")
 
 
+class StatOut(BaseModel):
+    """One big number of a stats slide."""
+
+    value: str = Field(description="The number or short figure, e.g. 72% or 1.4 bn.")
+    label: str = Field(description="What it measures, at most 8 words.")
+
+
+class TimelineOut(BaseModel):
+    """One step of a timeline slide."""
+
+    label: str = Field(description="A date or step name, at most 4 words.")
+    text: str = Field(description="What happened, one short sentence.")
+
+
+class ImageOut(BaseModel):
+    """A picture stored in the files module, with its attribution."""
+
+    file_id: str
+    alt: str = ""
+    attribution: str = ""
+    source_url: str | None = None
+    license: str | None = None
+    url: str | None = None  # output only: a short-lived link, never stored
+
+
 class SlideOut(BaseModel):
     """A slide as the model writes it (`Slide` of § 4.4); also the edit format."""
 
@@ -164,6 +200,21 @@ class SlideOut(BaseModel):
     refs: list[str] | None = Field(
         None, description='1 to 3 labels from <sources>, e.g. "S1:P4".'
     )
+    image_id: str | None = Field(
+        None,
+        description='image_left, image_right, full_image: a label "I1" from <images>, '
+        'or "".',
+        json_schema_extra=NOT_NULL,
+    )
+    image: ImageOut | None = Field(None, description="Stored; never written.")
+    stats: list[StatOut] | None = Field(
+        None, description="stats only: 2 to 4 big numbers.", json_schema_extra=NOT_NULL
+    )
+    timeline: list[TimelineOut] | None = Field(
+        None,
+        description="timeline only: 2 to 6 steps in order.",
+        json_schema_extra=NOT_NULL,
+    )
 
 
 class SlidesOut(BaseModel):
@@ -172,6 +223,14 @@ class SlidesOut(BaseModel):
     title: str = Field(description="The topic of the deck, at most 8 words.")
     subtitle: str | None = Field(None, description="One line: subject or audience.")
     slides: list[SlideOut]
+
+
+def without_stored_image(schema: dict[str, Any]) -> dict[str, Any]:
+    """Drop the stored-only `image` from the slide items of a strict schema."""
+    item = schema["properties"]["slides"]["items"]
+    item["properties"].pop("image", None)
+    item["required"] = [k for k in item["required"] if k != "image"]
+    return schema
 
 
 def slide_refs(slide: SlideOut) -> list[str]:
@@ -202,7 +261,7 @@ def _flow(slide: SlideOut, limits: BulletLimits) -> dict[str, Any] | None:
     body = slide_text(slide.body, chars=limits.body_chars)
     if body:
         fields["body"] = body
-    needs_text = slide.layout in ("bullets", "summary")
+    needs_text = slide.layout in ("bullets", "summary", "image_left", "image_right")
     if needs_text and not (fields["bullets"] or body):
         return None
     if slide.layout == "agenda" and len(fields["bullets"]) < MIN_AGENDA_ITEMS:
@@ -257,6 +316,52 @@ def _table(slide: SlideOut, limits: BulletLimits) -> dict[str, Any] | None:
     return {"table": {"columns": heads, "rows": rows[:TABLE_ROWS]}}
 
 
+def _stats(slide: SlideOut, limits: BulletLimits) -> dict[str, Any] | None:
+    """2 to 4 big numbers, each with a value and a label."""
+    items = []
+    for stat in slide.stats or []:
+        value = slide_text(stat.value, chars=STAT_VALUE_CHARS)
+        label = slide_text(stat.label, chars=HEADING_CHARS)
+        if value and label:
+            items.append({"value": value, "label": label})
+    if len(items) < 2:
+        return None
+    return {"stats": items[:4]}
+
+
+def _timeline(slide: SlideOut, limits: BulletLimits) -> dict[str, Any] | None:
+    """2 to 6 steps, each with a short label (a date) and a text."""
+    items = []
+    for step in slide.timeline or []:
+        label = slide_text(step.label, chars=HEADING_CHARS)
+        text = slide_text(step.text, words=limits.words, chars=BULLET_CHARS)
+        if label and text:
+            items.append({"label": label, "text": text})
+    if len(items) < 2:
+        return None
+    return {"timeline": items[:6]}
+
+
+def _image(raw: ImageOut | None) -> dict[str, Any] | None:
+    """A stored image reference rebuilt from explicit fields (drops `url`)."""
+    if raw is None:
+        return None
+    try:
+        UUID(raw.file_id)
+    except ValueError:
+        return None
+    image: dict[str, Any] = {
+        "file_id": raw.file_id,
+        "alt": slide_text(raw.alt, chars=HINT_CHARS),
+        "attribution": slide_text(raw.attribution, chars=ATTRIBUTION_CHARS * 2),
+    }
+    for key in ("source_url", "license"):
+        value = getattr(raw, key)
+        if value:
+            image[key] = str(value)[:300]
+    return image
+
+
 _LAYOUTS: Final[
     dict[str, Callable[[SlideOut, BulletLimits], dict[str, Any] | None]]
 ] = {
@@ -265,9 +370,15 @@ _LAYOUTS: Final[
     "section": _flow,
     "bullets": _flow,
     "summary": _flow,
+    "image_left": _flow,
+    "image_right": _flow,
+    "full_image": _flow,
     "two_columns": _two_columns,
+    "comparison": _two_columns,
     "quote": _quote,
     "table": _table,
+    "stats": _stats,
+    "timeline": _timeline,
 }
 _TITLE_FALLBACK: Final = frozenset({"title", "summary"})
 
@@ -297,7 +408,47 @@ def repair_slide(
     hint = slide_text(strip_urls(slide.visual_hint or ""), chars=HINT_CHARS)
     if hint:
         repaired["visual_hint"] = hint
+    _add_image(repaired, slide)
     return repaired
+
+
+def _add_image(repaired: dict[str, Any], slide: SlideOut) -> None:
+    """Set `image` or a valid `image_id` on an image-layout slide."""
+    if slide.layout not in IMAGE_LAYOUTS:
+        return
+    image = _image(slide.image)
+    label = (slide.image_id or "").strip().upper()
+    if image:
+        repaired["image"] = image
+    elif _LABEL.fullmatch(label):
+        repaired["image_id"] = label
+
+
+def resolve_images(
+    slides: list[dict[str, Any]], candidates: dict[str, dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Swap each slide's `image_id` for the stored image of that candidate.
+
+    An image layout without a resolved image falls back to `bullets` (`section` for
+    a full-bleed slide), so a deck never shows an empty picture frame.
+    """
+    out: list[dict[str, Any]] = []
+    for slide in slides:
+        slide = dict(slide)
+        label = slide.pop("image_id", None)
+        if label and label in candidates and "image" not in slide:
+            slide["image"] = candidates[label]
+        if slide["layout"] in IMAGE_LAYOUTS and "image" not in slide:
+            slide["layout"] = (
+                "section" if slide["layout"] == "full_image" else "bullets"
+            )
+            slide.setdefault("bullets", [])
+            if slide["layout"] == "bullets" and not (
+                slide["bullets"] or slide.get("body")
+            ):
+                continue
+        out.append(slide)
+    return out
 
 
 def _with_agenda_title(slide: SlideOut, language: str) -> SlideOut:
@@ -392,8 +543,8 @@ class SlidesHandler:
         return studio_context_tokens
 
     def strict_schema(self) -> dict[str, Any]:
-        """The strict schema of `SlidesOut`."""
-        return to_strict_schema(SlidesOut)
+        """The strict schema of `SlidesOut` without the stored-only `image`."""
+        return without_stored_image(to_strict_schema(SlidesOut))
 
     def task_block(self, options: BaseModel, prompt: str | None) -> str:
         """The English task text (§ 3.4.6) for the last user message."""

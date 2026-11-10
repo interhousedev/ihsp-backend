@@ -11,6 +11,7 @@ from app.modules.notebooks.application.export.render import (
     export_as,
 )
 from app.modules.notebooks.application.export.text import TEXT_KINDS
+from app.modules.notebooks.application.slide_images import load_image_bytes
 from app.modules.notebooks.domain.errors import InvalidOptionsError
 from app.modules.notebooks.ports.unit_of_work import UowFactory
 from app.shared.actor import Actor, Role
@@ -53,7 +54,12 @@ class SaveArtifactToFiles:
         content = require_ready(artifact, *KIND_FORMATS, *TEXT_KINDS)
         try:
             rendered = await asyncio.to_thread(
-                export_as, artifact.kind, artifact.title, content, wanted
+                export_as,
+                artifact.kind,
+                artifact.title,
+                content,
+                wanted,
+                await load_image_bytes(self.files, content),
             )
         except ValueError as error:
             raise InvalidOptionsError(

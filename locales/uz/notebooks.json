@@ -45,5 +45,7 @@
   "notebooks-workspace-readonly": "Bu kurs ish maydonini faqat o'qishingiz mumkin. Tahrirlash huquqini kurs muharriridan so'rang.",
   "notebooks-share-unsupported": "Faqat oʼzingiz yaratgan daftarni ulashish mumkin.",
   "notebooks-share-limit": "{limit} ta chegaraga yetildi.",
-  "notebooks-share-recipient-not-found": "Bu foydalanuvchi topilmadi."
+  "notebooks-share-recipient-not-found": "Bu foydalanuvchi topilmadi.",
+  "notebooks-teacher-file-not-found": "Bu fayl sizning fayllaringiz orasida topilmadi.",
+  "notebooks-teacher-input-invalid": "Soʼrovni bajarib boʼlmadi: {detail}"
 }

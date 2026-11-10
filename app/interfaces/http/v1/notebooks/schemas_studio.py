@@ -222,6 +222,7 @@ def _item_fields(artifact: Artifact) -> dict[str, Any]:
         "sampled": artifact.sampled,
         "unread": artifact.unread,
         "progress": artifact.progress,
+        "stage": artifact.stage,
         "parent_id": artifact.parent_id,
         "flashcard_set_id": artifact.flashcard_set_id,
         "created_at": artifact.created_at,
@@ -245,6 +246,7 @@ class _ArtifactBase(BaseModel):
     sampled: bool
     unread: bool
     progress: int | None
+    stage: str | None = None  # planning | researching | images | designing
     has_assets: bool = False  # always false: there is no audio overview
     parent_id: UUID | None
     flashcard_set_id: UUID | None

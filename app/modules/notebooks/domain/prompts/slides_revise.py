@@ -11,9 +11,12 @@ from typing import Any, Final
 from app.modules.notebooks.domain.artifacts.kind_support import clean_text, refs_among
 from app.modules.notebooks.domain.artifacts.kinds.slides import (
     BULLET_LIMITS,
+    IMAGE_LAYOUTS,
     SlideOut,
     repair_slide,
+    resolve_images,
     slide_refs,
+    without_stored_image,
 )
 from app.modules.notebooks.domain.artifacts.strict import to_strict_schema
 from app.modules.notebooks.domain.prompts.slides_task import GUIDES, SlideFormat
@@ -83,7 +86,7 @@ def revise_user_message(
 
 def revise_schema() -> dict[str, Any]:
     """The strict schema of the answer: ``{"slides": [<changed slides>]}``."""
-    return to_strict_schema(SlidesReviseOut)
+    return without_stored_image(to_strict_schema(SlidesReviseOut))
 
 
 def _revised_slide(
@@ -106,7 +109,14 @@ def _revised_slide(
     if original is None or body is None:
         return None
     refs = refs_among(slide_refs(slide), labels) or list(original.get("refs") or [])
-    return slide_id, {"id": slide_id, **body, "refs": refs}
+    revised_slide: dict[str, Any] = {"id": slide_id, **body, "refs": refs}
+    if revised_slide["layout"] in IMAGE_LAYOUTS:
+        revised_slide.pop("image_id", None)
+        kept = original.get("image")
+        if kept and "image" not in revised_slide:
+            revised_slide["image"] = kept
+        revised_slide = resolve_images([revised_slide], {})[0]
+    return slide_id, revised_slide
 
 
 def merge_revised(

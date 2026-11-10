@@ -33,7 +33,9 @@ async def download_artifact(
 
     Every kind can also be asked for as ``json``.
     """
-    view = await notebooks.get_artifact.execute(actor, notebook_id, artifact_id)
+    view = await notebooks.get_artifact.execute(
+        actor, notebook_id, artifact_id, with_image_data=True
+    )
     artifact = view.artifact
     wanted = format or default_format(artifact.kind)
     if wanted is None:
@@ -43,7 +45,9 @@ async def download_artifact(
     if artifact.status is not ArtifactStatus.READY or not artifact.content:
         raise ArtifactNotReadyError()
     try:
-        document = export_as(artifact.kind, artifact.title, artifact.content, wanted)
+        document = export_as(
+            artifact.kind, artifact.title, artifact.content, wanted, view.image_data
+        )
     except ValueError as error:
         raise InvalidOptionsError(
             params={"kind": artifact.kind.value, "format": wanted}

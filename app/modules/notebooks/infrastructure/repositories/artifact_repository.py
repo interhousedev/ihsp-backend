@@ -41,6 +41,7 @@ def _to_entity(row: ArtifactRow, *, with_content: bool = True) -> Artifact:
         cost_micro=row.cost_micro,
         attempts=int(row.attempts),
         progress=row.progress,
+        stage=row.stage,
         parent_id=row.parent_id,
         flashcard_set_id=row.flashcard_set_id,
         cache_key=row.cache_key,
@@ -76,6 +77,7 @@ def _apply(row: ArtifactRow, artifact: Artifact) -> None:
     row.cost_micro = artifact.cost_micro
     row.attempts = artifact.attempts
     row.progress = artifact.progress
+    row.stage = artifact.stage
     row.parent_id = artifact.parent_id
     row.flashcard_set_id = artifact.flashcard_set_id
     row.cache_key = artifact.cache_key

@@ -120,8 +120,8 @@ async def test_download_returns_the_exact_bytes_as_pptx() -> None:
         content=DECK,
     )
 
-    async def execute(*_: Any) -> Any:
-        return SimpleNamespace(artifact=artifact)
+    async def execute(*_: Any, **__: Any) -> Any:
+        return SimpleNamespace(artifact=artifact, image_data={})
 
     services = SimpleNamespace(get_artifact=SimpleNamespace(execute=execute))
     app = FastAPI()

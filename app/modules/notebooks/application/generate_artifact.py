@@ -43,13 +43,21 @@ from app.modules.notebooks.application.llm import JsonCompletion, NotebookLlm
 from app.modules.notebooks.application.locale import LocaleResolver
 from app.modules.notebooks.application.owner_usage import owner_usage
 from app.modules.notebooks.application.quota import QuotaService
+from app.modules.notebooks.application.slide_pipeline import (
+    STAGE_PLANNING,
+    SlidePipeline,
+    SlideResearch,
+)
 from app.modules.notebooks.domain.artifacts.handler import (
     ArtifactHandler,
     ProcessContext,
     ProcessedOutput,
 )
 from app.modules.notebooks.domain.artifacts.kind_support import expect_options
-from app.modules.notebooks.domain.artifacts.kinds.slides import SlidesOptions
+from app.modules.notebooks.domain.artifacts.kinds.slides import (
+    SlidesOptions,
+    resolve_images,
+)
 from app.modules.notebooks.domain.artifacts.registry import handler_for
 from app.modules.notebooks.domain.assessment.cost import pipeline_estimate
 from app.modules.notebooks.domain.context import ContextPack
@@ -228,9 +236,17 @@ def _process_fresh(
     options: BaseModel,
     ctx: ProcessContext,
     data: dict[str, Any],
+    images: dict[str, dict[str, Any]] | None = None,
 ) -> ProcessedOutput:
-    """Validate and fix the model's document; it must fit in 512 KB."""
+    """Validate and fix the model's document; it must fit in 512 KB.
+
+    `images` are the stored pictures of a deck; the slides' `image_id` labels are
+    swapped for them.
+    """
     output = handler.process(data, options, ctx)
+    if images is not None and isinstance(output.content.get("slides"), list):
+        slides = resolve_images(output.content["slides"], images)
+        output = replace(output, content={**output.content, "slides": slides})
     ensure_fits(output.content)
     return output
 
@@ -290,6 +306,7 @@ def _apply_ready(
     run: _Run, plan: _Plan, output: ProcessedOutput, row: Artifact, now: datetime
 ) -> None:
     """Fill the row with the result."""
+    row.stage = None
     if row.title == run.artifact.title:  # a rename meanwhile wins over the model
         title = " ".join(output.title.split())[:ARTIFACT_TITLE_MAX_CHARS]
         row.title = title or row.title
@@ -305,6 +322,7 @@ def _apply_ready(
 
 def _apply_failed(run: _Run, failure: _Failure, row: Artifact, now: datetime) -> None:
     """Mark the row `failed` with the code and message key."""
+    row.stage = None
     _apply_usage(row, run)
     row.status = ArtifactStatus.FAILED
     row.error = artifact_error(failure.code, failure.params)
@@ -344,6 +362,7 @@ class GenerateArtifact:
         course_context: CourseContextLoader | None = None,
         faithfulness: FaithfulnessCheck | None = None,
         assessment: AssessmentPipeline | None = None,
+        slide_pipeline: SlidePipeline | None = None,
         limits: LimitsProvider | None = None,
     ) -> None:
         """Store the collaborators; `sleep` is injected for the retry backoff.
@@ -366,6 +385,7 @@ class GenerateArtifact:
         self.course_context = course_context or CourseContextLoader(None)
         self.faithfulness = faithfulness
         self.assessment = assessment
+        self.slide_pipeline = slide_pipeline
         self.limits = limits
 
     async def execute(self, artifact_id: UUID | str) -> None:
@@ -445,6 +465,30 @@ class GenerateArtifact:
                 uow.notify(_ready_notification(row))
             await uow.commit()
         return True
+
+    async def _stage(self, run: _Run, value: str) -> None:
+        """Show which step a deck is in (the page polls the output)."""
+        await self._settle(run, lambda row, now: setattr(row, "stage", value))
+
+    async def _research(
+        self, run: _Run, options: BaseModel, language: str
+    ) -> SlideResearch | None:
+        """Notes and pictures for a confirmed deck plan; None for other outputs."""
+        pipeline = self.slide_pipeline
+        if (
+            pipeline is None
+            or run.artifact.kind is not ArtifactKind.SLIDES
+            or not isinstance(options, SlidesOptions)
+            or not options.outline
+        ):
+            return None
+        await self._stage(run, STAGE_PLANNING)
+        return await pipeline.run(
+            user_id=run.artifact.charged_to,
+            outline=options.outline,
+            locale=language,
+            on_stage=partial(self._stage, run),
+        )
 
     async def _fail(self, run: _Run, failure: _Failure) -> None:
         """Write `failed`; give the daily count back when the model gave nothing."""
@@ -571,6 +615,9 @@ class GenerateArtifact:
         )
         if not general:
             task = _with_thin_note(task, pack)
+        research = await self._research(run, options, language)
+        if research is not None:
+            task += research.task_suffix()
         max_tokens = self.llm.max_tokens(ai_task, handler.max_tokens(options))
         block = render_sources_block(pack)
         context = self.llm.context_message(block, ai_task)
@@ -591,7 +638,13 @@ class GenerateArtifact:
             schema=handler.strict_schema(),
             max_tokens=max_tokens,
             estimate=self._estimate(pack, max_tokens, job, artifact.kind, options),
-            process=partial(_process_fresh, handler, options, ctx),
+            process=partial(
+                _process_fresh,
+                handler,
+                options,
+                ctx,
+                images=None if research is None else research.images,
+            ),
             sampled=pack.sampled,
             source_map={label: str(sid) for label, sid in pack.source_map.items()},
             sources_text="" if general else block,

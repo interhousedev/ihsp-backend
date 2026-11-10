@@ -80,7 +80,16 @@ has one short cell per column.
 the deck is in another language) in `quote.text`, at most 40 words, with \
 `quote.attribution` = its author or the source title; at most one quote slide.
 - "section", "agenda", "title", "summary" as described above.
-Leave every field the layout does not use null.
+- "comparison": two options side by side, `left` and `right` as in "two_columns".
+- "stats": 2 to 4 big numbers from the sources in `stats` (`value`, `label`); each \
+`value` is a number, amount, percentage or year (e.g. "1370", "27 %", "3 mln"), never \
+a word or a name; without such numbers use "bullets".
+- "timeline": 2 to 6 dated steps in order in `timeline` (`label`, `text`).
+- "image_left", "image_right": `bullets` or `body` next to a picture; "full_image": \
+a picture with only a `title`. When the message has <images>, set `image_id` to the \
+label of the best candidate ("I1"), each label at most once and only when the \
+picture fits the slide; otherwise "" and pick another layout.
+Leave every field the layout does not use null, "" or [].
 
 Plain text only: no Markdown (no **, #, `), no bullet characters or numbering at the \
 start of a bullet, no citation markers in any text. Write formulas and code as plain \

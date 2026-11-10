@@ -45,5 +45,7 @@
   "notebooks-workspace-readonly": "You can only read this course workspace. Ask a course editor for edit access.",
   "notebooks-share-unsupported": "Only a notebook you created yourself can be shared.",
   "notebooks-share-limit": "The limit of {limit} is reached.",
-  "notebooks-share-recipient-not-found": "This person was not found."
+  "notebooks-share-recipient-not-found": "This person was not found.",
+  "notebooks-teacher-file-not-found": "This file was not found among your files.",
+  "notebooks-teacher-input-invalid": "The request cannot be completed: {detail}"
 }

@@ -123,6 +123,9 @@ SAMPLES: dict[str, dict[str, Any]] = {
                 "notes": "Welcome",
                 "visual_hint": None,
                 "refs": [],
+                "image_id": "",
+                "stats": [],
+                "timeline": [],
             },
             {
                 "id": "s2",
@@ -140,6 +143,9 @@ SAMPLES: dict[str, dict[str, Any]] = {
                 "notes": "",
                 "visual_hint": "Two-box diagram",
                 "refs": ["S1:P2"],
+                "image_id": "",
+                "stats": [],
+                "timeline": [],
             },
             {
                 "id": "s3",
@@ -154,6 +160,9 @@ SAMPLES: dict[str, dict[str, Any]] = {
                 "notes": "Recap",
                 "visual_hint": None,
                 "refs": ["S1:P1"],
+                "image_id": "",
+                "stats": [],
+                "timeline": [],
             },
         ],
     },
@@ -319,8 +328,8 @@ def test_quiz_schema_has_the_fields_of_the_contract() -> None:
     }
 
 
-def test_slides_schema_lists_the_eight_layouts() -> None:
-    """NB-14: layouts of § 3.4.6 plus the agenda."""
+def test_slides_schema_lists_the_layouts() -> None:
+    """NB-14: layouts of § 3.4.6 plus the agenda, images, stats and timeline."""
     schema = slides.HANDLER.strict_schema()
 
     layout = schema["properties"]["slides"]["items"]["properties"]["layout"]
@@ -333,6 +342,12 @@ def test_slides_schema_lists_the_eight_layouts() -> None:
         "quote",
         "table",
         "summary",
+        "image_left",
+        "image_right",
+        "full_image",
+        "stats",
+        "timeline",
+        "comparison",
     ]
 
 

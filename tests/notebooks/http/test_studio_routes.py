@@ -37,6 +37,7 @@ ITEM_KEYS = {
     "sampled",
     "unread",
     "progress",
+    "stage",
     "has_assets",
     "parent_id",
     "flashcard_set_id",

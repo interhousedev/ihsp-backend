@@ -32,15 +32,23 @@ from app.modules.notebooks.application.save_as_source import SaveAsSource
 from app.modules.notebooks.application.save_flashcard_set import SaveFlashcardSet
 from app.modules.notebooks.application.save_progress import SaveProgress
 from app.modules.notebooks.application.save_to_files import SaveArtifactToFiles
+from app.modules.notebooks.application.slide_pipeline import SlidePipeline
 from app.modules.notebooks.application.update_presentation_plan import (
     UpdatePresentationPlan,
 )
+from app.modules.notebooks.infrastructure.commons_images import CommonsImageSearch
+from app.modules.notebooks.infrastructure.fake_images import (
+    FakeImageFetcher,
+    FakeImageSearch,
+)
+from app.modules.notebooks.ports.web_materials import MaterialFetcher
 from app.modules.notebooks.wiring_core import NotebooksCore
 from app.settings import Settings
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.flashcards import FlashcardsApi
 from app.shared.contracts.links import LinksApi
 from app.shared.contracts.lms import LmsDraftCommands, LmsQueries, LmsWorkspaceCommands
+from app.shared.contracts.web_search import WebSearchApi
 from app.shared.openui.finalize import OpenUiFinalizer
 
 
@@ -93,6 +101,8 @@ def build_studio(
     links: LinksApi | None = None,
     sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     lms_apply: LmsApplyPorts | None = None,
+    web_search: WebSearchApi | None = None,
+    fetcher: MaterialFetcher | None = None,
 ) -> StudioServices:
     """Build the Studio use cases over the shared services.
 
@@ -104,10 +114,20 @@ def build_studio(
         sleep: Waits between provider retries (replaced in tests).
         lms_apply: The LMS ports of "Apply to the course" (None: the routes answer
             feature-disabled).
+        web_search: Researches the slides of a plan (None: no research).
+        fetcher: Downloads the pictures of the slides (fake mode serves a stub).
     """
     deps = core.deps
     uow_factory, clock, settings = core.uow_factory, deps.clock, deps.settings
     ports = lms_apply or LmsApplyPorts()
+    fake = settings.openrouter.mode == "fake"
+    slide_pipeline = SlidePipeline(
+        web_search=web_search,
+        images=FakeImageSearch() if fake else CommonsImageSearch(),
+        fetcher=FakeImageFetcher() if fake else fetcher,
+        files=files,
+        settings=settings,
+    )
     request = RequestArtifact(
         uow_factory=uow_factory,
         budget=core.budget,
@@ -151,9 +171,10 @@ def build_studio(
                 core.llm, settings, _studio_openui(core.openui, settings)
             ),
             limits=deps.effective_limits,
+            slide_pipeline=slide_pipeline,
         ),
         list_artifacts=ListArtifacts(uow_factory=uow_factory),
-        get_artifact=GetArtifact(uow_factory=uow_factory, clock=clock),
+        get_artifact=GetArtifact(uow_factory=uow_factory, clock=clock, files=files),
         rename_artifact=RenameArtifact(uow_factory=uow_factory, clock=clock),
         delete_artifact=DeleteArtifact(
             uow_factory=uow_factory, quota=core.quota, clock=clock
@@ -182,7 +203,7 @@ def build_studio(
         save_flashcard_set=SaveFlashcardSet(
             uow_factory=uow_factory, flashcards=flashcards, clock=clock
         ),
-        edit_slides=EditSlides(uow_factory=uow_factory, clock=clock),
+        edit_slides=EditSlides(uow_factory=uow_factory, clock=clock, files=files),
         revise_slides=ReviseSlides(
             uow_factory=uow_factory,
             budget=core.budget,

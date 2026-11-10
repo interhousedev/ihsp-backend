@@ -40,7 +40,9 @@ async def artifact_file(
     if fmt is None:
         return None
     try:
-        document = export_as(kind, found["title"], found["content"], fmt)
+        document = export_as(
+            kind, found["title"], found["content"], fmt, found.get("images")
+        )
     except ValueError:
         log.info("bot.artifact_notice.export_failed", kind=kind.value)
         return None

@@ -79,6 +79,7 @@ class Artifact(IdMixin, TimestampMixin, Base):
     cost_micro: Mapped[int | None] = mapped_column(BigInteger)
     attempts: Mapped[int] = mapped_column(SmallInteger, server_default=text("0"))
     progress: Mapped[int | None] = mapped_column(SmallInteger)
+    stage: Mapped[str | None] = mapped_column(String(24))
     parent_id: Mapped[UUID | None] = mapped_column(Uuid)
     flashcard_set_id: Mapped[UUID | None] = mapped_column(Uuid)
     cache_key: Mapped[str | None] = mapped_column(CHAR(64))  # shared Studio cache

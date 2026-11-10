@@ -3,7 +3,7 @@
 import csv
 import io
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any, Final
 
 from app.modules.notebooks.application.export.docx import markdown_to_docx
@@ -71,7 +71,11 @@ def default_format(kind: ArtifactKind) -> str | None:
 
 
 def export_as(
-    kind: ArtifactKind, title: str, content: dict[str, Any], fmt: str
+    kind: ArtifactKind,
+    title: str,
+    content: dict[str, Any],
+    fmt: str,
+    images: Mapping[str, bytes] | None = None,
 ) -> RenderedDocument:
     """Render a ready output as ``fmt``: its Office format, Markdown or JSON.
 
@@ -79,7 +83,7 @@ def export_as(
         ValueError: The kind has no such format.
     """
     if fmt == KIND_FORMATS.get(kind):
-        return export_artifact(kind, title, content)
+        return export_artifact(kind, title, content, images)
     if fmt == "json" and (kind in KIND_FORMATS or kind in TEXT_KINDS):
         text, ctype = to_json(title, content), "application/json"
     elif fmt == "md" and kind in TEXT_KINDS:
@@ -90,7 +94,10 @@ def export_as(
 
 
 def export_artifact(
-    kind: ArtifactKind, title: str, content: dict[str, Any]
+    kind: ArtifactKind,
+    title: str,
+    content: dict[str, Any],
+    images: Mapping[str, bytes] | None = None,
 ) -> RenderedDocument:
     """Render a ready Studio output in the format of its kind."""
     fmt = KIND_FORMATS[kind]
@@ -108,7 +115,7 @@ def export_artifact(
     elif fmt == "xlsx":
         data = data_table_to_xlsx({**content, "title": content.get("title") or title})
     else:
-        data = deck_to_pptx({**content, "title": content.get("title") or title})
+        data = deck_to_pptx({**content, "title": content.get("title") or title}, images)
     return RenderedDocument(file_name(title, fmt), CONTENT_TYPES[fmt], data)
 
 

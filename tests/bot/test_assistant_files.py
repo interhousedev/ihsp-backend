@@ -82,7 +82,7 @@ async def test_a_ready_report_is_attached_as_a_file(
     monkeypatch.setattr(
         artifact_notice,
         "export_as",
-        lambda kind, title, content, fmt: SimpleNamespace(
+        lambda kind, title, content, fmt, images=None: SimpleNamespace(
             name=f"{title}.{fmt}", data=b"# Optics"
         ),
     )

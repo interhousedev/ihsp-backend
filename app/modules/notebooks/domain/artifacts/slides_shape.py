@@ -17,7 +17,19 @@ Slide = dict[str, Any]
 TOLERANCE: Final = 2
 # Layouts whose text is taken from the sources and must cite them.
 CONTENT_LAYOUTS: Final = frozenset(
-    {"bullets", "two_columns", "table", "quote", "summary"}
+    {
+        "bullets",
+        "two_columns",
+        "table",
+        "quote",
+        "summary",
+        "image_left",
+        "image_right",
+        "full_image",
+        "stats",
+        "timeline",
+        "comparison",
+    }
 )
 _NOT_CONTENT_KEYS: Final = frozenset({"notes", "refs", "visual_hint", "id"})
 
