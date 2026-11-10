@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- `POST /v1/admin/vault/unseal` takes only `{key}`: the `otp_code` field and the step-up code requirement are removed (administrator role, rate limit and audit stay). Other admin step-up flows are unchanged. `iht-web` needs `bun run sync:openapi`.
+
 ## [1.2.0] - 2026-11-10
 
 ### Added

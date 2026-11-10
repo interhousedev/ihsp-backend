@@ -28,4 +28,3 @@ class VaultUnsealBody(BaseModel):
     """POST /v1/admin/vault/unseal; the key is never echoed or logged."""
 
     key: SecretStr
-    otp_code: str | None = None

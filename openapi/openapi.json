@@ -42784,17 +42784,6 @@
             "title": "Key",
             "type": "string",
             "writeOnly": true
-          },
-          "otp_code": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Otp Code"
           }
         },
         "required": [

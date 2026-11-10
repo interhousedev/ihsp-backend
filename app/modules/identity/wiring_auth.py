@@ -662,7 +662,7 @@ def build_auth(
         revoke_personal_token=RevokePersonalToken(uow_factory=uow_factory, clock=clock),
         get_vault_status=GetVaultStatus(seal=seal),
         unseal_vault=UnsealVault(
-            uow_factory=uow_factory, otp=otp, seal=seal, rate_limiter=limiter
+            uow_factory=uow_factory, seal=seal, rate_limiter=limiter
         ),
         revoke_connector=revoke_connector,
         sync_gemini_redirect=SyncGeminiRedirect(hydra=hydra),

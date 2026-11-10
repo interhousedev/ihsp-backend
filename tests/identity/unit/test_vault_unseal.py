@@ -1,11 +1,10 @@
-"""Vault unseal: admin only, OTP step-up, rate limit, key never leaks."""
+"""Vault unseal: admin only, rate limit, key never leaks."""
 
 import dataclasses
 import logging
 
 from app.modules.identity.application.request_context import RequestContext
 from app.modules.identity.domain.errors import (
-    SecondFactorRequiredError,
     VaultKeyRejectedError,
     VaultUnavailableError,
 )
@@ -40,14 +39,7 @@ async def with_fake(world: World) -> FakeVaultSeal:
     return fake
 
 
-async def step_up(world: World, admin: User) -> str:
-    """Request and return a step-up code (the code cooldown is cleared)."""
-    await world.redis.delete(f"otp:cooldown:step-up:{admin.id}")
-    await world.auth.step_up.execute(actor_of(admin), CTX)
-    return str(world.otp.last("step-up").code)
-
-
-async def test_unseal_forwards_the_key_after_otp_and_audits_without_it(
+async def test_unseal_forwards_the_key_and_audits_without_it(
     auth_world: World, caplog: pytest.LogCaptureFixture
 ) -> None:
     """The key reaches Vault only; logs, audit and repr never hold it."""
@@ -55,9 +47,8 @@ async def test_unseal_forwards_the_key_after_otp_and_audits_without_it(
     fake = await with_fake(auth_world)
     admin = await auth_world.add_user(roles={Role.ADMIN})
 
-    code = await step_up(auth_world, admin)
     state = await auth_world.auth.unseal_vault.execute(
-        actor_of(admin), key=KEY, otp_code=code, ctx=CTX
+        actor_of(admin), key=KEY, ctx=CTX
     )
 
     assert fake.received == [KEY.get_secret_value()]
@@ -69,15 +60,12 @@ async def test_unseal_forwards_the_key_after_otp_and_audits_without_it(
     assert secret not in repr(KEY)
 
 
-async def test_unseal_needs_the_otp(auth_world: World) -> None:
-    """No code, no call to Vault."""
+async def test_unseal_needs_no_code(auth_world: World) -> None:
+    """An administrator with a key and no code gets the share submitted."""
     fake = await with_fake(auth_world)
     admin = await auth_world.add_user(roles={Role.ADMIN})
-    with pytest.raises(SecondFactorRequiredError):
-        await auth_world.auth.unseal_vault.execute(
-            actor_of(admin), key=KEY, otp_code=None, ctx=CTX
-        )
-    assert fake.received == []
+    await auth_world.auth.unseal_vault.execute(actor_of(admin), key=KEY, ctx=CTX)
+    assert fake.received == [KEY.get_secret_value()]
 
 
 async def test_only_administrators_may_use_it(auth_world: World) -> None:
@@ -87,9 +75,7 @@ async def test_only_administrators_may_use_it(auth_world: World) -> None:
     with pytest.raises(ForbiddenError):
         await auth_world.auth.get_vault_status.execute(actor_of(user))
     with pytest.raises(ForbiddenError):
-        await auth_world.auth.unseal_vault.execute(
-            actor_of(user), key=KEY, otp_code="1", ctx=CTX
-        )
+        await auth_world.auth.unseal_vault.execute(actor_of(user), key=KEY, ctx=CTX)
 
 
 async def test_status_reports_the_seal(auth_world: World) -> None:
@@ -111,12 +97,9 @@ async def test_attempts_are_rate_limited(auth_world: World) -> None:
     admin = await auth_world.add_user(roles={Role.ADMIN})
     with pytest.raises(RateLimitedError):
         for _ in range(50):
-            try:
-                await auth_world.auth.unseal_vault.execute(
-                    actor_of(admin), key=KEY, otp_code=None, ctx=CTX
-                )
-            except SecondFactorRequiredError:
-                pass
+            await auth_world.auth.unseal_vault.execute(
+                actor_of(admin), key=KEY, ctx=CTX
+            )
 
 
 async def test_vault_errors_pass_through(auth_world: World) -> None:
@@ -125,10 +108,9 @@ async def test_vault_errors_pass_through(auth_world: World) -> None:
     admin = await auth_world.add_user(roles={Role.ADMIN})
     for error in (VaultUnavailableError(), VaultKeyRejectedError()):
         fake.error = error
-        code = await step_up(auth_world, admin)
         with pytest.raises(type(error)):
             await auth_world.auth.unseal_vault.execute(
-                actor_of(admin), key=KEY, otp_code=code, ctx=CTX
+                actor_of(admin), key=KEY, ctx=CTX
             )
 
 

@@ -1,4 +1,4 @@
-"""Routes /v1/admin/vault*: seal status and unseal (admin, OTP step-up)."""
+"""Routes /v1/admin/vault*: seal status and unseal (administrators only)."""
 
 from app.interfaces.http.v1.admin_users.vault.schemas import (
     VaultStatusResponse,
@@ -22,7 +22,5 @@ async def vault_unseal(
     body: VaultUnsealBody, admin: AdminDep, auth: AuthDep, ctx: CtxDep
 ) -> VaultStatusResponse:
     """Submit one unseal key share."""
-    state = await auth.unseal_vault.execute(
-        admin, key=body.key, otp_code=body.otp_code, ctx=ctx
-    )
+    state = await auth.unseal_vault.execute(admin, key=body.key, ctx=ctx)
     return VaultStatusResponse.of(state)
