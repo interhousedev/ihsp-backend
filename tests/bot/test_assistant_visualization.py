@@ -94,8 +94,11 @@ async def test_press_creates_share_and_links_it(
     assert shares.calls[0]["chat_id"] == ai.chats[0]
     assert shares.calls[0]["seq"] == 2
     edits = harness.session.calls(EditMessageReplyMarkup)
-    urls = [b.url for row in edits[-1].reply_markup.inline_keyboard for b in row]
-    assert "https://s.ihsu.uz/ai/m-abc" in urls
+    buttons = [b for row in edits[-1].reply_markup.inline_keyboard for b in row]
+    # the harness chat is private: the legacy Mini App button
+    assert "https://s.ihsu.uz/ai/m-abc" in [
+        b.web_app.url for b in buttons if b.web_app is not None
+    ]
 
 
 async def test_only_the_owner_can_press(

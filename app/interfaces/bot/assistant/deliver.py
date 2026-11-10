@@ -208,13 +208,11 @@ async def deliver(
     chunks.extend(Chunk(_card(call)) for call in pending)
     if not chunks and plan is None:
         chunks = [Chunk(escape(i18n("bot-ai-empty")))]
-    rows = (
-        []
-        if plan is not None
-        else await _visual_rows(assistant, user_id, chat_id, answer, body, i18n)
-    )
+    rows = await _visual_rows(assistant, user_id, chat_id, answer, body, i18n)
     rows += await _approval_rows(assistant, user_id, chat_id, pending, i18n)
-    if plan is not None and not chunks:
+    if plan is not None and not chunks and rows:
+        chunks = [Chunk(escape(i18n("bot-ai-visualization")))]
+    elif plan is not None and not chunks:
         await stream.abort()
     await stream.finish(chunks, rows)
     if plan is not None:

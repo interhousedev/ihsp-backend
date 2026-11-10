@@ -24,6 +24,7 @@ from aiogram.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     Message,
+    WebAppInfo,
 )
 
 log = structlog.get_logger(__name__)
@@ -64,10 +65,20 @@ async def visualize(
         return
     await answer_callback(callback)
     origin = callback.message
-    if isinstance(origin, Message):
-        button = InlineKeyboardButton(text=i18n("bot-ai-visualization"), url=url)
-        markup = _with_url(origin.reply_markup, callback.data or "", button)
-        try:
-            await origin.edit_reply_markup(reply_markup=markup)
-        except TelegramBadRequest:
-            log.info("bot.ai.visualization_edit_failed")
+    if not isinstance(origin, Message):
+        return
+    markup = _with_url(
+        origin.reply_markup, callback.data or "", _button(origin, url, i18n)
+    )
+    try:
+        await origin.edit_reply_markup(reply_markup=markup)
+    except TelegramBadRequest:
+        log.info("bot.ai.visualization_edit_failed")
+
+
+def _button(origin: Message, url: str, i18n: I18nContext) -> InlineKeyboardButton:
+    """A Mini App button in a private chat, a URL button elsewhere."""
+    label = i18n("bot-ai-visualization")
+    if origin.chat.type == "private":
+        return InlineKeyboardButton(text=label, web_app=WebAppInfo(url=url))
+    return InlineKeyboardButton(text=label, url=url)
