@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-10
+
 ### Added
 
 - Bot: with `IHSP_BOT__WIDGETS_ENABLED=true`, OpenUI blocks in private-chat answers are sent as Telegram widgets (Bot API 10.4) that follow the Telegram theme; group chats, unsupported or oversized blocks and API errors keep the Markdown rendering.
@@ -28,6 +30,13 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Fixed
 
 - Gemini redirect sync received no query from nginx, so the `redirect_uri` error remained.
+
+### Known issues
+
+- Telegram widget method field names are not yet confirmed against the live Bot API; widgets stay off by default.
+- Guest visualization links are public to anyone holding the link for 7 days.
+- A sealed Vault is detected by matching the error text.
+- A first deploy has no previous tag to roll back to.
 
 ## [1.1.1] - 2026-11-06
 
