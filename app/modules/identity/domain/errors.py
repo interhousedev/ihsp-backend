@@ -304,6 +304,14 @@ class VaultUnavailableError(BaseError):
     message_key = "id-vault-unavailable"
 
 
+class VaultSealedError(BaseError):
+    """Vault is sealed: TOTP keys and other secrets cannot be read."""
+
+    code = "id/vault-sealed"
+    status = 503
+    message_key = "id-vault-sealed"
+
+
 class VaultKeyRejectedError(ValidationFailedError):
     """Vault refused the unseal key share."""
 

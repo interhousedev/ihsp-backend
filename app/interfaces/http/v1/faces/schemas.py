@@ -33,6 +33,18 @@ class FaceOut(BaseModel):
         )
 
 
+class FacePhotoOut(BaseModel):
+    """A user's face photo for administrators."""
+
+    photo_url: str = Field(description="Link to the photo, valid for five minutes.")
+    updated_at: datetime | None
+
+    @classmethod
+    def of(cls, view: FaceView) -> "FacePhotoOut":
+        """Map the view; the caller guarantees a link."""
+        return cls(photo_url=view.photo_url or "", updated_at=view.updated_at)
+
+
 class DeviceOut(BaseModel):
     """An entrance device (never its token)."""
 
@@ -97,7 +109,7 @@ class DeviceCallOut(BaseModel):
     status: str
     matched_user_id: UUID | None
     matched_name: str | None
-    excused: bool | None
+    excused: bool
 
     @classmethod
     def of(cls, call: CallView) -> "DeviceCallOut":

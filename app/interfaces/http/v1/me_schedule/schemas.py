@@ -8,6 +8,7 @@ from app.interfaces.http.v1.admin_schedule.shared_schemas import (
     LessonItemResponse,
     PersonRefResponse,
 )
+from app.interfaces.http.v1.me_classwork.schemas import ExcuseRefResponse
 from app.modules.academic.application.schedule.results import StudentProfileData
 
 from pydantic import BaseModel
@@ -70,3 +71,5 @@ class StudentLessonItemResponse(LessonItemResponse):
     """A LessonItem of the student's timetable; `subgroup` is None for the group."""
 
     subgroup: LessonSubgroupResponse | None = None
+    excused: bool = False
+    excuse: ExcuseRefResponse | None = None

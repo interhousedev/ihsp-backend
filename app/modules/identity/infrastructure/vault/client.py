@@ -13,10 +13,11 @@ from app.modules.identity.application.register_models import (
     CredentialStoreError,
     EmisSecret,
 )
+from app.modules.identity.domain.errors import VaultSealedError
 from app.settings import VaultSettings
 
 import hvac
-from hvac.exceptions import InvalidPath, VaultError
+from hvac.exceptions import InvalidPath, VaultDown, VaultError
 
 _TRANSIT_MOUNT = "transit"
 _RENEW_MARGIN_SECONDS = 60
@@ -73,6 +74,10 @@ class VaultCredentialStore:
             try:
                 self._ensure_auth()
                 return call()
+            except VaultDown as exc:
+                if "sealed" in str(exc).lower():
+                    raise VaultSealedError(support_details="vault: sealed") from exc
+                raise CredentialStoreError(f"{type(exc).__name__}: {exc}") from exc
             except InvalidPath as exc:
                 raise CredentialNotFoundError(str(exc)) from exc
             except (VaultError, OSError, KeyError, ValueError) as exc:

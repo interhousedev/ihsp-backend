@@ -4,6 +4,7 @@ import datetime as dt
 from typing import Literal
 from uuid import UUID
 
+from app.interfaces.http.v1.me_classwork.schemas import ExcuseRefResponse
 from app.modules.academic.application.teaching.views import TeachingGroupView
 
 from pydantic import BaseModel, ConfigDict
@@ -87,6 +88,7 @@ class AbsentLessonResponse(_Attrs):
     lesson_id: UUID
     date: dt.date
     excused: bool
+    excuse: ExcuseRefResponse | None = None
 
 
 class TeachingStudentResponse(_Attrs):

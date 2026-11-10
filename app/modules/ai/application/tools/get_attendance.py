@@ -38,5 +38,6 @@ class GetAttendance(ReadTool[GetAttendanceArgs]):
         for item in items:
             row = lesson_dict(item["lesson"])
             row["excused"] = bool(item["excused"])
+            row["excuse"] = item.get("excuse")
             rows.append(row)
         return capped(rows)

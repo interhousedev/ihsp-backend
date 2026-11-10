@@ -2,5 +2,6 @@
   "id-personal-token-invalid": "The token settings are not valid.",
   "id-token-scope": "This token is not allowed to do that.",
   "id-vault-unavailable": "Vault is not responding. Please try again later.",
+  "id-vault-sealed": "The secrets vault is sealed, so the authenticator app cannot be checked. Sign in with a one-time code instead and unseal the vault in the admin app.",
   "id-vault-key-rejected": "Vault did not accept this key."
 }

@@ -142,13 +142,17 @@ async def test_get_marks_and_results(world: World) -> None:
 async def test_get_attendance_lists_absences_with_lessons(world: World) -> None:
     """MCP-8 (new): own absences with their lessons."""
     token, _ = world.connector_token("student", *ALL)
-    world.classwork.absence_rows = [{"lesson": make_lesson(), "excused": True}]
+    excuse = {"id": None, "template_code": "", "origin": "teacher"}
+    world.classwork.absence_rows = [
+        {"lesson": make_lesson(), "excused": True, "excuse": excuse}
+    ]
 
     async with world.session("student", token) as session:
         result = await call(session, "get_attendance")
 
     [row] = data_of(result)["absences"]
     assert row["excused"] is True
+    assert row["excuse"] == excuse
     assert row["lesson"]["subject_name"] == "Algebra"
 
 

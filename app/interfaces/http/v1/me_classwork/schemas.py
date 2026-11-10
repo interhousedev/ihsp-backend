@@ -12,9 +12,9 @@ from pydantic import BaseModel, ConfigDict, Field
 class ExcuseRefResponse(BaseModel):
     """The official excuse that covers an absence."""
 
-    id: UUID
+    id: UUID | None
     template_code: str
-    origin: Literal["request", "curator"]
+    origin: Literal["request", "curator", "teacher"]
 
 
 class PersonRefResponse(BaseModel):

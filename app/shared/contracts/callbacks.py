@@ -27,6 +27,13 @@ class MenuCb(CallbackData, prefix="m"):
     screen: str
 
 
+class PageCb(CallbackData, prefix="pg"):
+    """Turn a list of the bot to ``page`` (0-based); ``kind`` names the list."""
+
+    kind: str
+    page: int
+
+
 class HomeworkDoneCb(CallbackData, prefix="hd"):
     """Mark a lesson's homework as done or not done."""
 

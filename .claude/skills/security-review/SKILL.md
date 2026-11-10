@@ -57,6 +57,12 @@ Base rules: [SECURITY.md](../../../SECURITY.md), the README "Security" section a
 - Personal tokens (`ihsp_pat_`, scopes `me:read`/`me:write`) and entrance device keys are stored hashed, shown once, revocable, and record last use. Never log the secret. A new `/v1/me` write route is reachable with `me:write`; decide whether it should be.
 - Vault unseal keys from `POST /v1/admin/vault/unseal` are forwarded to Vault and never logged, stored or echoed.
 
+## Telegram widgets
+
+- A widget (`app/interfaces/bot/widgets`, flag `IHSP_BOT__WIDGETS_ENABLED`) is HTML that runs in Telegram's sandbox. Every string of a block is model output: escape it with `esc()` as text or as a double-quoted attribute, never place it in `<script>`, `style`, an inline handler or a URL except a vetted `data-url`. The only script is the fixed click delegate; `audit()` rejects `http(s):`, `//`, `url(`, `@import`, `on*=`, script sources and form or embed tags, and a failed audit means the Markdown fallback.
+- Widget code and state are public. Put no secret, token or personal data in `public_data`, `chat_data` or the HTML beyond what the answer shows. Send widgets only in private chats; a widget is non-forwardable.
+- `widget_query` data is untrusted and at most 64 bytes: parse only `viz:<token>`, check the token for the sender with `visual_url`, always call `answerWidgetQuery` within 15 s, and never act on a query of an unlinked or blocked account.
+
 ## Secrets and settings
 
 - No key in code, tests, logs, error messages or `openapi.json`. Real keys only in git-ignored files. `materials/dev.env` keeps `IHSP_OPENROUTER__API_KEY=` empty.

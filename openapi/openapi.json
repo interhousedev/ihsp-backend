@@ -9,6 +9,16 @@
             "title": "Date",
             "type": "string"
           },
+          "excuse": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExcuseRefResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "excused": {
             "title": "Excused",
             "type": "boolean"
@@ -10324,15 +10334,8 @@
             "type": "string"
           },
           "excused": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Excused"
+            "title": "Excused",
+            "type": "boolean"
           },
           "id": {
             "format": "uuid",
@@ -12337,14 +12340,22 @@
         "description": "The official excuse that covers an absence.",
         "properties": {
           "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
           },
           "origin": {
             "enum": [
               "request",
-              "curator"
+              "curator",
+              "teacher"
             ],
             "title": "Origin",
             "type": "string"
@@ -13031,6 +13042,34 @@
           "photo_url"
         ],
         "title": "FaceOut",
+        "type": "object"
+      },
+      "FacePhotoOut": {
+        "description": "A user's face photo for administrators.",
+        "properties": {
+          "photo_url": {
+            "description": "Link to the photo, valid for five minutes.",
+            "title": "Photo Url",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "photo_url",
+          "updated_at"
+        ],
+        "title": "FacePhotoOut",
         "type": "object"
       },
       "FeedAction": {
@@ -35524,6 +35563,21 @@
             "title": "Ends At",
             "type": "string"
           },
+          "excuse": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExcuseRefResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "excused": {
+            "default": false,
+            "title": "Excused",
+            "type": "boolean"
+          },
           "has_homework": {
             "title": "Has Homework",
             "type": "boolean"
@@ -43245,7 +43299,9 @@
               "announcements",
               "new_marks",
               "alerts",
-              "get_started"
+              "get_started",
+              "library_loans",
+              "notebook_recents"
             ],
             "title": "Kind",
             "type": "string"
@@ -43256,7 +43312,8 @@
               "1x2",
               "2x1",
               "2x2",
-              "2x4"
+              "2x4",
+              "4x1"
             ],
             "title": "Size",
             "type": "string"
@@ -43323,7 +43380,9 @@
               "announcements",
               "new_marks",
               "alerts",
-              "get_started"
+              "get_started",
+              "library_loans",
+              "notebook_recents"
             ],
             "title": "Kind",
             "type": "string"
@@ -43334,7 +43393,8 @@
               "1x2",
               "2x1",
               "2x2",
-              "2x4"
+              "2x4",
+              "4x1"
             ],
             "title": "Size",
             "type": "string"
@@ -56064,6 +56124,50 @@
         "summary": "Post Unblock",
         "tags": [
           "admin-users"
+        ]
+      }
+    },
+    "/v1/admin/users/{user_id}/face-photo": {
+      "get": {
+        "description": "A student's or teacher's face photo as a short-lived link; 404 without one.",
+        "operationId": "get_user_face_photo_v1_admin_users__user_id__face_photo_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacePhotoOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get User Face Photo",
+        "tags": [
+          "faces"
         ]
       }
     },

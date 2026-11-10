@@ -20,10 +20,12 @@ def register(kit: ToolKit) -> None:
     ) -> dict[str, Any]:
         """List the student's own absences.
 
-        Each absence has its lesson and whether it is excused; `excuse_template`
-        names the official excuse reason (illness, family, ...) when one covers
-        it. Lessons the student
-        attended are not listed.
+        Each absence has its lesson and whether it is excused. `excuse` says why:
+        `origin` is `teacher` (the teacher marked it) or the official excuse's
+        origin, and `template_code` names the reason (illness, family, ...) when
+        an approved excuse covers the lesson; it is null for an unexcused absence.
+        `excuse_template` is the localized reason of that excuse. Lessons the
+        student attended are not listed.
         """
         actor = current_actor()
         check_range(date_from, date_to)

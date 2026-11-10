@@ -2,5 +2,6 @@
   "id-personal-token-invalid": "Token sozlamalari yaroqsiz.",
   "id-token-scope": "Bu token bu amalga ruxsat bermaydi.",
   "id-vault-unavailable": "Vault javob bermayapti. Keyinroq urinib ko'ring.",
+  "id-vault-sealed": "Sirlar ombori muhrlangan, shuning uchun autentifikator ilovasini tekshirib bo‘lmaydi. Bir martalik kod bilan kiring va omborni administrator ilovasida oching.",
   "id-vault-key-rejected": "Vault bu kalitni qabul qilmadi."
 }

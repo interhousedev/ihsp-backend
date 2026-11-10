@@ -1,6 +1,7 @@
 """Routes of face recognition."""
 
 from app.interfaces.http.v1.faces.handlers import (
+    admin_face,
     devices,
     identify,
     me_face,
@@ -12,6 +13,7 @@ from app.interfaces.http.v1.faces.schemas import (
     DeviceListOut,
     DeviceOut,
     FaceOut,
+    FacePhotoOut,
     IdentifyOut,
 )
 
@@ -42,6 +44,12 @@ router.add_api_route(
     staff_face.delete_student_face,
     methods=["DELETE"],
     status_code=status.HTTP_204_NO_CONTENT,
+)
+router.add_api_route(
+    "/v1/admin/users/{user_id}/face-photo",
+    admin_face.get_user_face_photo,
+    methods=["GET"],
+    response_model=FacePhotoOut,
 )
 router.add_api_route(
     "/v1/admin/devices",

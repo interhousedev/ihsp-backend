@@ -285,6 +285,14 @@ class TelegramSettings(BaseModel):
     """Cost ceiling: guest assistant questions of all guests together per day."""
 
 
+class BotSettings(BaseModel):
+    """Bot output features."""
+
+    widgets_enabled: bool = False
+    """Send OpenUI blocks as Telegram widgets (Bot API 10.4 `sendWidget`) in private
+    chats; the Markdown rendering stays the fallback. Off by default."""
+
+
 class EmisSettings(BaseModel):
     """EMIS client and the identity-process gateway."""
 
@@ -1206,6 +1214,7 @@ class Settings(BaseSettings):
     jwt_bearer: JwtBearerSettings = Field(default_factory=JwtBearerSettings)
     tokens: TokensSettings = Field(default_factory=TokensSettings)
     telegram: TelegramSettings = Field(default_factory=TelegramSettings)
+    bot: BotSettings = Field(default_factory=BotSettings)
     emis: EmisSettings = Field(default_factory=EmisSettings)
     openrouter: OpenRouterSettings = Field(default_factory=OpenRouterSettings)
     anthropic: AnthropicSettings = Field(default_factory=AnthropicSettings)
