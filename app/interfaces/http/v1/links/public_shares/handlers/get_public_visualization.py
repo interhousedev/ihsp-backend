@@ -14,7 +14,7 @@ async def get_public_visualization(
     container: Annotated[Container, Depends(get_container)],
     ip: Annotated[str | None, Depends(get_client_ip)],
 ) -> PublicVisualization:
-    """Return a shared bot answer: 404 unknown or revoked, 410 expired."""
+    """Return a shared bot answer (`m-` or guest `g-`): 404 unknown, 410 expired."""
     view = await container.links.get_public_message.execute(slug, ip=ip)
     return PublicVisualization(
         text=view.text, created_at=view.created_at, expires_at=view.expires_at

@@ -47,11 +47,13 @@ from app.modules.links.application.revoke_owner import RevokeOwner
 from app.modules.links.application.room_cache_invalidator import RoomCacheInvalidator
 from app.modules.links.application.room_day_builder import RoomDayBuilder
 from app.modules.links.application.search_moderation import SearchModeration
+from app.modules.links.application.share_guest_answer import ShareGuestAnswer
 from app.modules.links.application.share_message import ShareMessage
 from app.modules.links.application.slug_allocator import SlugAllocator
 from app.modules.links.application.target_resolver import TargetResolver
 from app.modules.links.domain.url_policy import UrlPolicy
 from app.modules.links.infrastructure.blocklist import load_blocklist
+from app.modules.links.infrastructure.guest_answers import RedisGuestAnswerStore
 from app.modules.links.infrastructure.hit_counter import RedisHitCounter
 from app.modules.links.infrastructure.page_renderer import JinjaPageRenderer
 from app.modules.links.infrastructure.pin_limiter import RedisPinLimiter
@@ -59,6 +61,7 @@ from app.modules.links.infrastructure.room_page_cache import RedisRoomPageCache
 from app.modules.links.infrastructure.room_sessions import RedisRoomSessions
 from app.modules.links.infrastructure.title_fetcher import HttpTitleFetcher
 from app.modules.links.infrastructure.uow import LinksSqlUnitOfWork
+from app.modules.links.ports.guest_answers import GuestAnswerStore
 from app.modules.links.ports.hit_counter import HitCounter
 from app.modules.links.ports.page_renderer import PageRenderer
 from app.modules.links.ports.pin_limiter import PinLimiter
@@ -97,6 +100,7 @@ class LinksServices:
     open_short_link: OpenShortLink
     get_public_share: GetPublicShare
     share_message: ShareMessage
+    share_guest_answer: ShareGuestAnswer
     get_public_message: GetPublicMessage
     report_link: ReportLink
     report_pages: ReportPages
@@ -124,6 +128,7 @@ class LinksOverrides:
     pin_limiter: PinLimiter | None = None
     room_sessions: RoomSessions | None = None
     blocked_domains: frozenset[str] | None = None
+    guest_answers: GuestAnswerStore | None = None
 
 
 class _NoLessonGroups:
@@ -170,6 +175,7 @@ def build(
     policy = UrlPolicy(blocked if blocked is not None else load_blocklist())
     renderer = custom.renderer or JinjaPageRenderer(deps.i18n)
     hits = custom.hit_counter or RedisHitCounter(deps.redis)
+    guest_store = custom.guest_answers or RedisGuestAnswerStore(deps.redis)
     cache = custom.room_cache or RedisRoomPageCache(deps.redis)
     pin_limiter = custom.pin_limiter or RedisPinLimiter(deps.redis)
     room_sessions = custom.room_sessions or RedisRoomSessions(deps.redis)
@@ -285,11 +291,18 @@ def build(
             clock=deps.clock,
             urls=urls,
         ),
+        share_guest_answer=ShareGuestAnswer(
+            store=guest_store,
+            rate_limiter=deps.rate_limiter,
+            clock=deps.clock,
+            urls=urls,
+        ),
         get_public_message=GetPublicMessage(
             uow_factory=uow_factory,
             ai=ai,
             hits=hits,
             not_found=not_found,
+            guest_answers=guest_store,
             clock=deps.clock,
         ),
         report_link=report_link,

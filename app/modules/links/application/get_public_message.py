@@ -1,9 +1,15 @@
 """Read a shared answer without logging in: `s.ihsu.uz/ai/m-{uuid}`."""
 
 from app.modules.links.application.not_found_counter import NotFoundCounter
+from app.modules.links.application.share_guest_answer import (
+    GUEST_PREFIX,
+    GUEST_SHARE_TTL,
+    TOKEN_HEX_LENGTH,
+)
 from app.modules.links.application.views import PublicMessageView
 from app.modules.links.domain.errors import LinkGoneError, LinkNotFoundError
 from app.modules.links.domain.link import LinkKind
+from app.modules.links.ports.guest_answers import GuestAnswerStore
 from app.modules.links.ports.hit_counter import HitCounter
 from app.modules.links.ports.unit_of_work import UowFactory
 from app.shared.clock import Clock
@@ -23,6 +29,7 @@ class GetPublicMessage:
         ai: AiQueries,
         hits: HitCounter,
         not_found: NotFoundCounter,
+        guest_answers: GuestAnswerStore,
         clock: Clock,
     ) -> None:
         """Initialize the use case."""
@@ -30,10 +37,30 @@ class GetPublicMessage:
         self.ai = ai
         self.hits = hits
         self.not_found = not_found
+        self.guest_answers = guest_answers
         self.clock = clock
+
+    async def _guest(self, slug: str, ip: str | None) -> PublicMessageView:
+        """Read a guest answer (`g-{token}`) from the store; 404 when missing."""
+        token = slug[len(GUEST_PREFIX) :]
+        valid = len(token) == TOKEN_HEX_LENGTH and all(
+            c in "0123456789abcdef" for c in token
+        )
+        answer = await self.guest_answers.get(token) if valid else None
+        if answer is None:
+            await self.not_found.count(ip)
+            raise LinkNotFoundError()
+        return PublicMessageView(
+            text=keep_valid_blocks(answer.text),
+            created_at=answer.created_at,
+            expires_at=answer.created_at + GUEST_SHARE_TTL,
+        )
 
     async def execute(self, slug: str, *, ip: str | None) -> PublicMessageView:
         """Return the answer; blocks are validated again on every read."""
+        if slug.startswith(GUEST_PREFIX):
+            return await self._guest(slug, ip)
+
         link = None
         if slug.startswith(PREFIX) and len(slug) <= 64:
             async with self.uow_factory() as uow:
