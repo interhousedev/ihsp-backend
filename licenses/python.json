@@ -68,7 +68,7 @@
       "license": "MIT",
       "name": "alembic",
       "url": "https://alembic.sqlalchemy.org",
-      "version": "1.20.0"
+      "version": "1.20.1"
     },
     {
       "ecosystem": "PyPI",
@@ -600,7 +600,7 @@
       "license": "Apache-2.0",
       "name": "python-multipart",
       "url": "https://github.com/Kludex/python-multipart",
-      "version": "0.0.32"
+      "version": "0.0.33"
     },
     {
       "ecosystem": "PyPI",
