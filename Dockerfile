@@ -11,7 +11,7 @@
 # (python-magic loads it when the file sniffer is used). No uv, no pip, no compiler, no git, no shell
 # history. The wheels bundle their own native libraries (asyncpg, cryptography, lxml, pypdfium2, ...).
 
-FROM python:3.13.16-slim@sha256:cf50a4f6ac4f026458b08d5222023d700ac806410dff5e9ca8728fa44f2b850f AS builder
+FROM python:3.15.0-slim@sha256:f5b92f2a669a4c347044f29367f31983280b648250ca94dea66f98c53bc87e58 AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:0.12.23 /uv /uvx /bin/
 
@@ -28,7 +28,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev --no-install-project
 
 # ---------------------------------------------------------------------------------------------------
-FROM python:3.13.16-slim@sha256:cf50a4f6ac4f026458b08d5222023d700ac806410dff5e9ca8728fa44f2b850f AS runtime
+FROM python:3.15.0-slim@sha256:f5b92f2a669a4c347044f29367f31983280b648250ca94dea66f98c53bc87e58 AS runtime
 
 # Debian security fixes newer than the pinned base image come in with the upgrade.
 # python-magic needs libmagic at import time; ffmpeg cuts the audio out of bot videos.
