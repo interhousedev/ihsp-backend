@@ -17,8 +17,8 @@
 </p>
 
 <p align="center">
-  <a href="#quick-start">Quick start</a> ·
-  <a href="#feature-tour">Features</a> ·
+  <a href="#run">Run</a> ·
+  <a href="#screens">Screens</a> ·
   <a href="#architecture">Architecture</a> ·
   <a href="#security">Security</a> ·
   <a href="#deployment">Deployment</a> ·
@@ -28,24 +28,24 @@
 
 ---
 
-## What is IHSP
+## Overview
 
 IHSP (Interhouse Student Platform) connects to students' EMIS accounts and covers daily school life: calendar and timetable, marks and the teacher journal, homework, attendance and work-offs, an AI study assistant with notebooks and a Studio for quizzes, flash cards and slides, a library, courses (LMS), files and links, a student mailbox and a Telegram bot. Every user-facing text exists in Uzbek, Russian and English.
 
 This repository holds the Python backend, the compose files, the edge nginx, the Hydra and Vault configuration and the deployment scripts. The web apps live in the sibling repository [`iht-web`](https://github.com/interhousedev/ihsp-frontend); the two meet at [`openapi/openapi.json`](openapi/openapi.json).
 
-## Feature tour
+## Screens
 
 | | |
 |---|---|
-| <img src="docs/assets/screens/sp-home.webp" alt="Student home" width="420"><br>**Home.** Today's lessons, deadlines, marks and notices in one view. | <img src="docs/assets/screens/sp-timetable.webp" alt="Timetable" width="420"><br>**Timetable.** Synced from EMIS, Monday to Friday, with room pages. |
-| <img src="docs/assets/screens/sp-marks.webp" alt="Marks" width="420"><br>**Marks.** Current and temporary marks, GPA, ПК and ИК, a planner. | <img src="docs/assets/screens/staff-journal.webp" alt="Teacher journal" width="420"><br>**Teacher journal.** Marks, attendance, work-offs, EMIS reconciliation. |
-| <img src="docs/assets/screens/sp-assistant.webp" alt="AI assistant" width="420"><br>**AI assistant.** Tools for the school knowledge base, web search and generative UI blocks, with soft limits and a usage ledger. | <img src="docs/assets/screens/sp-notebooks.webp" alt="Notebooks" width="420"><br>**Notebooks and Studio.** Sources in, grounded answers, quizzes, flash cards and slides out. |
-| <img src="docs/assets/screens/library-catalog.webp" alt="Library" width="420"><br>**Library.** Catalogue, loans, a reader with reading plans, public book pages. | <img src="docs/assets/screens/lms-course.webp" alt="LMS course" width="420"><br>**Courses (LMS).** Authoring, Common Cartridge import, certificates. |
+| <img src="docs/assets/screens/sp-home.png" alt="Student home" width="420"><br>**Home.** Today's lessons, deadlines, marks and notices in one view. | <img src="docs/assets/screens/sp-timetable.png" alt="Timetable" width="420"><br>**Timetable.** Synced from EMIS, Monday to Friday, with room pages. |
+| <img src="docs/assets/screens/sp-marks.png" alt="Marks" width="420"><br>**Marks.** Current and temporary marks, GPA, ПК and ИК, a planner. | <img src="docs/assets/screens/staff-journal.png" alt="Teacher journal" width="420"><br>**Teacher journal.** Marks, attendance, work-offs, EMIS reconciliation. |
+| <img src="docs/assets/screens/sp-assistant.png" alt="AI assistant" width="420"><br>**AI assistant.** Tools for the school knowledge base, web search and generative UI blocks, with soft limits and a usage ledger. | <img src="docs/assets/screens/sp-notebooks.png" alt="Notebooks" width="420"><br>**Notebooks and Studio.** Sources in, grounded answers, quizzes, flash cards and slides out. |
+| <img src="docs/assets/screens/library-catalog.png" alt="Library" width="420"><br>**Library.** Catalogue, loans, a reader with reading plans, public book pages. | <img src="docs/assets/screens/lms-catalog.png" alt="LMS courses" width="420"><br>**Courses (LMS).** Authoring, Common Cartridge import, certificates. |
 
 Also: IHT ID single sign-on with passkeys, a Telegram bot (`@ihspbot`), inbound student mail, short links and shares, MCP servers, an admin console with limits, logs, knowledge and feedback.
 
-## Quick start
+## Run
 
 ```bash
 git clone https://github.com/interhousedev/ihsp-backend.git iht-backend
@@ -272,6 +272,10 @@ One Docker host runs everything: PostgreSQL, Redis, Vault, Hydra, the backend pr
 
 Updates and rollback: `scripts/cloud_deploy.sh deploy@<server> --tag 1.1.0`. It keeps the server's `.env.prod` (`--push-env` overwrites it), pulls images, runs the Hydra and app migrations (a failing migration stops the deploy before any process is replaced) and starts everything. Rollback is `--tag <previous>`; migrations are forward only, so a schema-changing release may need a restored backup.
 
+Local one-command deploy: `cp deploy.local.env.sample deploy.local.env` (git-ignored; set `IHSP_DEPLOY_HOST`, `IHSP_REMOTE_DIR`), then `scripts/deploy.sh --tag <version>`. Before replacing anything it records the running tag and takes a `pg_dump` into `backups/pre-<tag>-<ts>.sql.gz`, then migrates and starts the new images. A stability gate (`IHSP_DEPLOY_STABLE_SECS`, default 60) watches restart counts and running state of every service and `/health`; on failure it restores the previous tag and recreates the services. The database is never restored automatically: use the pre-deploy dump if a migration must be undone. A first deploy has no previous tag to fall back to.
+
+When Vault is sealed, TOTP sign-in answers `id/vault-sealed`; administrators sign in with the one-time e-mail code and the admin app shows an unseal banner.
+
 Vault is a single node and starts sealed after every reboot. Until it is unsealed, registration and EMIS sync pause. Unseal with `ssh -t deploy@<server> 'cd /opt/ihsp && scripts/prod_init.sh unseal'`.
 
 Backups: `scripts/backup.sh` dumps both databases, a Redis snapshot and a Vault Raft snapshot, encrypts them to the public key `BACKUP_AGE_RECIPIENT` (keep the private key off the server) and optionally uploads them to a versioned S3 bucket.
@@ -293,6 +297,11 @@ Verify an image signature with `cosign verify ghcr.io/<owner>/ihsp-backend@<dige
 | `codeql.yml` | pull requests, `main`, weekly | CodeQL for Python |
 
 Dependabot updates the actions, the base images, the compose images and the Python dependencies weekly. Release: push a tag `v1.2.3`; the image is published as `1.2.3`, `1.2` and `sha-<commit>`.
+
+## Links
+
+- Web apps: the sibling repository [`iht-web`](https://github.com/interhousedev/ihsp-frontend); the contract is [`openapi/openapi.json`](openapi/openapi.json).
+- [CONTRIBUTING.md](CONTRIBUTING.md), [CODESTYLE.md](CODESTYLE.md), [SECURITY.md](SECURITY.md), [CHANGELOG.md](CHANGELOG.md)
 
 ## Contributing
 

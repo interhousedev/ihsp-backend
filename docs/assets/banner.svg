@@ -1,27 +1,37 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320" role="img" aria-labelledby="t d">
-  <title id="t">IHSP backend</title>
-  <desc id="d">Interhouse Student Platform: the backend of the IHT lyceum platform</desc>
+  <title id="t">IHSP Backend</title>
+  <desc id="d">The Python backend of the Interhouse Student Platform</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#1c2c63"/>
-      <stop offset="0.55" stop-color="#273d88"/>
-      <stop offset="1" stop-color="#3d56b8"/>
+      <stop offset="0.6" stop-color="#273d88"/>
+      <stop offset="1" stop-color="['FastAPI', 'aiogram', 'taskiq', 'MCP']"/>
     </linearGradient>
-    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
-      <path d="M32 0H0V32" fill="none" stroke="#a9b8f0" stroke-opacity="0.08" stroke-width="1"/>
-    </pattern>
+    <radialGradient id="glow1" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#a9b8f0" stop-opacity="0.75"/><stop offset="1" stop-color="#a9b8f0" stop-opacity="0"/></radialGradient>
+    <radialGradient id="glow2" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="['FastAPI', 'aiogram', 'taskiq', 'MCP']" stop-opacity="0.9"/><stop offset="1" stop-color="['FastAPI', 'aiogram', 'taskiq', 'MCP']" stop-opacity="0"/></radialGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.38"/><stop offset="1" stop-color="#ffffff" stop-opacity="0.06"/>
+    </linearGradient>
+    <filter id="blur" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="28"/></filter>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2"/></filter>
+    <clipPath id="card"><rect width="1280" height="320" rx="24"/></clipPath>
+    <clipPath id="tile"><rect width="500" height="500" rx="110"/></clipPath>
   </defs>
-  <rect width="1280" height="320" rx="24" fill="url(#bg)"/>
-  <rect width="1280" height="320" rx="24" fill="url(#grid)"/>
-  <circle cx="1120" cy="60" r="180" fill="#4c66cc" fill-opacity="0.25"/>
-  <circle cx="1210" cy="290" r="120" fill="#a9b8f0" fill-opacity="0.12"/>
-  <g transform="translate(88 92)">
-    <rect width="136" height="136" rx="32" fill="#eef1fa"/>
-    <text x="68" y="90" text-anchor="middle" font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif" font-size="56" font-weight="800" fill="#273d88">iht</text>
-  </g>
-  <g font-family="Inter, Segoe UI, Helvetica, Arial, sans-serif">
-    <text x="264" y="148" font-size="60" font-weight="800" fill="#ffffff">Interhouse Student Platform</text>
-    <text x="266" y="196" font-size="26" fill="#eef1fa">Backend for students, teachers and staff of International House Tashkent</text>
-    <text x="266" y="240" font-size="20" fill="#a9b8f0">FastAPI · aiogram · SQLAlchemy 2 · taskiq · PostgreSQL + pgvector · Hydra · Vault</text>
+  <g clip-path="url(#card)">
+    <rect width="1280" height="320" fill="url(#bg)"/>
+    <g filter="url(#blur)">
+      <circle cx="1040" cy="40" r="170" fill="url(#glow1)"/>
+      <circle cx="820" cy="300" r="150" fill="url(#glow2)"/>
+      <circle cx="140" cy="300" r="130" fill="url(#glow1)" opacity="0.6"/>
+    </g>
+    <rect x="40" y="36" width="1200" height="248" rx="28" fill="url(#sheen)" stroke="#ffffff" stroke-opacity="0.4" stroke-width="1.5"/>
+    <rect x="41" y="37" width="1198" height="60" rx="27" fill="#ffffff" fill-opacity="0.08" filter="url(#soft)"/>
+    <g transform="translate(84 84) scale(0.3)" >
+      <g clip-path="url(#tile)"><rect width="500" height="500" fill="#273D88"/><path d="M192 224.5C192 257.929 217.071 283 250.5 283C283.929 283 309 257.929 309 224.5C309 191.071 283.929 166 250.5 166C217.071 166 192 191.071 192 224.5ZM275.571 224.5C275.571 239.209 265.209 249.571 250.5 249.571C235.791 249.571 225.429 239.209 225.429 224.5C225.429 209.791 235.791 199.429 250.5 199.429C265.209 199.429 275.571 209.791 275.571 224.5Z" fill="white"/><path d="M394.088 167.776L259.422 83.5275C254.035 80.1575 246.965 80.1575 241.578 83.5275L106.912 167.776C102.03 170.809 99 176.201 99 182.099V316.897C99 322.626 102.03 328.187 106.912 331.22L241.578 415.469C244.26 417.124 247.349 418 250.5 418C253.651 418 256.74 417.124 259.422 415.469L394.088 331.22C398.97 328.187 402 322.795 402 316.897V182.099C402 176.37 398.97 170.809 394.088 167.776ZM250.5 381.263L198.317 348.575C207.575 339.139 220.032 333.747 233.667 333.747H267.333C280.8 333.747 293.425 339.139 302.683 348.575L250.5 381.263ZM368.333 307.461L331.468 330.546C323.667 321.065 313.877 313.419 302.793 308.148C291.71 302.878 279.604 300.112 267.333 300.047H233.667C208.753 300.047 185.355 311.505 169.532 330.546L132.667 307.461V191.366L250.5 117.564L368.333 191.366V307.461Z" fill="white"/></g>
+    </g>
+    <rect x="84" y="84" width="150" height="150" rx="33" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="2"/>
+    <text x="268" y="150" font-family="Inter, system-ui, sans-serif" font-size="58" font-weight="700" fill="#ffffff">IHSP Backend</text>
+    <text x="270" y="192" font-family="Inter, system-ui, sans-serif" font-size="22" fill="#e1e7fa">The Python backend of the Interhouse Student Platform</text>
+    <g transform="translate(270 218)" font-family="Inter, system-ui, sans-serif" font-size="15" font-weight="600" fill="#ffffff"><rect x="0" width="46" height="34" rx="17" fill="#ffffff" fill-opacity="0.16" stroke="#ffffff" stroke-opacity="0.35"/><text x="23.0" y="22" text-anchor="middle">#</text><rect x="58" width="46" height="34" rx="17" fill="#ffffff" fill-opacity="0.16" stroke="#ffffff" stroke-opacity="0.35"/><text x="81.0" y="22" text-anchor="middle">4</text><rect x="116" width="46" height="34" rx="17" fill="#ffffff" fill-opacity="0.16" stroke="#ffffff" stroke-opacity="0.35"/><text x="139.0" y="22" text-anchor="middle">c</text><rect x="174" width="46" height="34" rx="17" fill="#ffffff" fill-opacity="0.16" stroke="#ffffff" stroke-opacity="0.35"/><text x="197.0" y="22" text-anchor="middle">6</text><rect x="232" width="46" height="34" rx="17" fill="#ffffff" fill-opacity="0.16" stroke="#ffffff" stroke-opacity="0.35"/><text x="255.0" y="22" text-anchor="middle">6</text><rect x="290" width="46" height="34" rx="17" fill="#ffffff" fill-opacity="0.16" stroke="#ffffff" stroke-opacity="0.35"/><text x="313.0" y="22" text-anchor="middle">c</text><rect x="348" width="46" height="34" rx="17" fill="#ffffff" fill-opacity="0.16" stroke="#ffffff" stroke-opacity="0.35"/><text x="371.0" y="22" text-anchor="middle">c</text></g>
   </g>
 </svg>
