@@ -56,3 +56,6 @@ Thumbs.db
 
 # Local CI and security scan reports (scripts/ci_local.sh, scripts/security_scan.sh)
 /reports/
+
+# Local deploy target (scripts/deploy.sh)
+deploy.local.env

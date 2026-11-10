@@ -2,6 +2,10 @@
 # Deploy the production stack to a server over SSH (run it from your machine).
 #
 # Usage: scripts/cloud_deploy.sh <ssh-host> [--init] [--push-env] [--no-pull] [--tag TAG]
+# (scripts/deploy.sh wraps this with deploy.local.env, a plan and a confirmation.)
+# A deploy takes a pre-migration pg_dump (backups/pre-<tag>-<ts>.sql.gz), runs the
+# migrations, starts the services and watches them for IHSP_DEPLOY_STABLE_SECS (60); if they
+# restart or /health fails, the previous TAG is redeployed (the database is not restored).
 #   <ssh-host>   anything `ssh` accepts: deploy@203.0.113.7, a Host from ~/.ssh/config
 #   --init       first deployment: after copying the files run scripts/prod_init.sh on the
 #                server (secrets, Vault, certificates, Hydra, first administrator)
@@ -30,7 +34,7 @@ while [ $# -gt 0 ]; do
         --push-env) push_env=1; shift ;;
         --no-pull) pull=0; shift ;;
         --tag) tag=${2:?--tag needs a value}; shift 2 ;;
-        -h | --help) sed -n '2,19p' "$0"; exit 0 ;;
+        -h | --help) sed -n '2,24p' "$0"; exit 0 ;;
         -*) echo "unknown argument: $1" >&2; exit 2 ;;
         *) host=$1; shift ;;
     esac
@@ -73,6 +77,8 @@ set_tag() {
     say "setting TAG=$tag in $dir/.env.prod"
     ssh "$host" "cd '$dir' && test -f .env.prod && sed -i.bak 's/^TAG=.*/TAG=$tag/' .env.prod && rm -f .env.prod.bak && chmod 600 .env.prod"
 }
+# The tag now in .env.prod is the rollback target if this release fails.
+prev_tag=$(ssh "$host" "sed -n 's/^TAG=//p' '$dir/.env.prod' 2> /dev/null | tail -n 1" || true)
 [ "$init" -eq 1 ] || set_tag
 
 if [ "$init" -eq 1 ]; then
@@ -95,16 +101,38 @@ set -euo pipefail
 dc() { docker compose --env-file .env.prod -f materials/docker-compose.prod.yaml "$@"; }
 domain=$(sed -n 's/^DOMAIN=//p' .env.prod | tail -n 1)
 tag=$(sed -n 's/^TAG=//p' .env.prod | tail -n 1)
-echo "==> deploying TAG=$tag"
+prev_tag=${PREV_TAG:-$tag}
+phase=init
+predump=
+echo "==> deploying TAG=$tag (previous: $prev_tag)"
+set_env_tag() { sed -i.bak "s/^TAG=.*/TAG=$1/" .env.prod && rm -f .env.prod.bak && chmod 600 .env.prod; }
 # On any failure show why: the state of every service and the last log lines of the ones
-# that are not running (a backend that refuses its settings exits at once).
+# that are not running (a backend that refuses its settings exits at once). Then undo:
+#   phase init/pre  nothing was replaced (the migration runs first): restore the previous TAG.
+#   phase post      migrations are applied: redeploy the previous TAG (rollback).
+# The database is never restored automatically; migrations are forward only.
 on_error() {
-    echo "DEPLOY FAILED. Services:" >&2
+    trap - ERR
+    echo "DEPLOY FAILED (phase: $phase). Services:" >&2
     dc ps -a >&2 || true
     for svc in migrate api worker identity bot mail scheduler web; do
         echo "--- $svc (last 30 lines)" >&2
         dc logs --no-color --tail 30 "$svc" >&2 2> /dev/null || true
     done
+    set_env_tag "$prev_tag" || true
+    if [ "$phase" = "post" ]; then
+        echo "ROLLBACK: redeploying TAG=$prev_tag" >&2
+        if dc pull --ignore-buildable >&2 && dc up -d --wait --force-recreate >&2; then
+            echo "ROLLBACK done: containers run TAG=$prev_tag." >&2
+        else
+            echo "ROLLBACK FAILED: fix by hand (TAG=$prev_tag is set in .env.prod)." >&2
+        fi
+        echo "Migrations are forward-only and stay applied; the previous schema is NOT restored." >&2
+        [ -z "$predump" ] || echo "Pre-deploy database dump for a manual restore: $PWD/$predump" >&2
+    else
+        echo "Nothing was replaced; TAG restored to $prev_tag." >&2
+    fi
+    exit 1
 }
 trap on_error ERR
 
@@ -146,12 +174,59 @@ sealed=$(dc exec -T vault vault status 2> /dev/null | awk '$1 == "Sealed" { prin
 if [ "$sealed" != "false" ]; then
     echo "WARNING: Vault is sealed. Registration and EMIS sync pause until: scripts/prod_init.sh unseal" >&2
 fi
+# --- point of no return for the schema: take a dump first (forward-only migrations).
+phase=pre
+stamp=$(date -u +%Y%m%dT%H%M%SZ)
+mkdir -p backups && chmod 700 backups
+predump="backups/pre-${tag}-${stamp}.sql.gz"
+echo "==> pre-migration dump: $predump"
+dc exec -T postgres pg_dump -U ihsp -d ihsp | gzip > "$predump"
+[ -s "$predump" ] || { echo "pre-migration dump is empty" >&2; exit 1; }
+chmod 600 "$predump"
+
 dc run --rm --no-deps hydra-migrate
 # The migration runs the new image first: a bad .env.prod (for example an S3 endpoint
 # with a path) stops here, before any running container is touched.
 dc run --rm --no-deps migrate
 
+# Migrations are applied: from here a failure rolls the containers back to PREV_TAG.
+phase=post
+# Services whose restart counters and health the stability gate watches.
+gate_services="api worker identity bot mail scheduler web nginx"
 dc up -d --wait --remove-orphans --force-recreate
+
+stable_gate() {
+    local secs=${IHSP_DEPLOY_STABLE_SECS:-60} svc id state base now deadline
+    declare -A ids=() restarts=()
+    for svc in $gate_services; do
+        id=$(dc ps -q "$svc" 2> /dev/null | head -n 1 || true)
+        [ -n "$id" ] || continue
+        ids[$svc]=$id
+        restarts[$svc]=$(docker inspect -f '{{.RestartCount}}' "$id")
+    done
+    echo "==> stability gate: ${secs}s, services: ${!ids[*]}"
+    deadline=$((SECONDS + secs))
+    while :; do
+        for svc in "${!ids[@]}"; do
+            state=$(docker inspect -f '{{.State.Running}} {{.State.Restarting}} {{.RestartCount}}' "${ids[$svc]}") || return 1
+            base=${restarts[$svc]}
+            if [ "$state" != "true false $base" ]; then
+                echo "gate: $svc is unstable (running/restarting/count: $state, was count $base)" >&2
+                return 1
+            fi
+        done
+        if command -v curl > /dev/null; then
+            curl -fsS --max-time 10 -o /dev/null "https://api.$domain/health" \
+                || { echo "gate: https://api.$domain/health failed" >&2; return 1; }
+        fi
+        now=$SECONDS
+        [ "$now" -lt "$deadline" ] || break
+        sleep 5
+    done
+    echo "==> stable"
+}
+stable_gate
+
 # Pre-created MCP clients get new fixed redirect URIs; idempotent, and a failure here
 # must not fail a deploy whose containers are already up.
 dc --profile tools run --rm --no-deps -T bootstrap python /scripts/hydra_bootstrap.py --mcp-clients-only \
@@ -167,7 +242,8 @@ if command -v curl > /dev/null; then
     curl -fsS --max-time 10 "https://api.$domain/health" && echo
     curl -fsS --max-time 10 "https://id.$domain/.well-known/openid-configuration" > /dev/null && echo "hydra discovery ok"
 fi
+trap - ERR
 echo "==> remote deploy finished"
 REMOTE
-ssh "$host" "cd '$dir' && PULL=$pull bash .deploy.sh < /dev/null; status=\$?; rm -f .deploy.sh; exit \$status"
+ssh "$host" "cd '$dir' && PREV_TAG='$prev_tag' PULL=$pull IHSP_DEPLOY_STABLE_SECS='${IHSP_DEPLOY_STABLE_SECS:-60}' bash .deploy.sh < /dev/null; status=\$?; rm -f .deploy.sh; exit \$status"
 say "deployed"
