@@ -84,6 +84,7 @@ def test_the_dockerignore_denies_by_default_and_allows_only_what_is_copied() -> 
         "locales",
         "migrations",
         "alembic.ini",
+        "scripts/download_face_models.sh",
     }
     for ignored in ("tests", "materials", "scripts", "openapi", "eval"):
         assert ignored not in allowed
