@@ -23,6 +23,7 @@ MODULES = (
     "knowledge",
     "posts",
     "feedback",
+    "faces",
 )
 
 

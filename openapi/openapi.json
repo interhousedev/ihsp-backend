@@ -458,7 +458,7 @@
           },
           "attachments": {
             "items": {
-              "$ref": "#/components/schemas/AttachmentOut"
+              "$ref": "#/components/schemas/app__interfaces__http__v1__feedback__schemas__AttachmentOut"
             },
             "title": "Attachments",
             "type": "array"
@@ -576,7 +576,7 @@
           },
           "attachments": {
             "items": {
-              "$ref": "#/components/schemas/AttachmentOut"
+              "$ref": "#/components/schemas/app__interfaces__http__v1__feedback__schemas__AttachmentOut"
             },
             "title": "Attachments",
             "type": "array"
@@ -1685,6 +1685,75 @@
           }
         },
         "title": "AnswerConfig",
+        "type": "object"
+      },
+      "AppMapItem": {
+        "description": "One page of an app (or a bot command, which has no URL).",
+        "properties": {
+          "app": {
+            "title": "App",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "keywords": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Keywords",
+            "type": "array"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "title": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Title",
+            "type": "object"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "id",
+          "app",
+          "path",
+          "url",
+          "title",
+          "keywords"
+        ],
+        "title": "AppMapItem",
+        "type": "object"
+      },
+      "AppMapResponse": {
+        "description": "The pages the user may open.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AppMapItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "AppMapResponse",
         "type": "object"
       },
       "AppVersionResponse": {
@@ -2920,41 +2989,6 @@
         "title": "AttachedResourceResponse",
         "type": "object"
       },
-      "AttachmentOut": {
-        "description": "An attached file; ``download_url`` is presigned and valid for one hour.",
-        "properties": {
-          "download_url": {
-            "title": "Download Url",
-            "type": "string"
-          },
-          "file_id": {
-            "format": "uuid",
-            "title": "File Id",
-            "type": "string"
-          },
-          "mime": {
-            "title": "Mime",
-            "type": "string"
-          },
-          "name": {
-            "title": "Name",
-            "type": "string"
-          },
-          "size": {
-            "title": "Size",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "file_id",
-          "name",
-          "mime",
-          "size",
-          "download_url"
-        ],
-        "title": "AttachmentOut",
-        "type": "object"
-      },
       "AttendanceLessonResponse": {
         "description": "A lesson of today with attendance and homework badges.",
         "properties": {
@@ -3915,6 +3949,24 @@
         "title": "Body_add_entry_file_v1_certificates_me__entry_id__files_post",
         "type": "object"
       },
+      "Body_identify_v1_device_identify_post": {
+        "properties": {
+          "direction": {
+            "$ref": "#/components/schemas/Direction"
+          },
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file",
+          "direction"
+        ],
+        "title": "Body_identify_v1_device_identify_post",
+        "type": "object"
+      },
       "Body_import_preview_v1_admin_students_import_post": {
         "properties": {
           "file": {
@@ -3927,6 +3979,20 @@
           "file"
         ],
         "title": "Body_import_preview_v1_admin_students_import_post",
+        "type": "object"
+      },
+      "Body_put_my_face_v1_me_face_put": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_put_my_face_v1_me_face_put",
         "type": "object"
       },
       "Body_put_my_photo_v1_staff_me_photo_put": {
@@ -3955,6 +4021,20 @@
           "file"
         ],
         "title": "Body_put_photo_v1_admin_users__id__photo_put",
+        "type": "object"
+      },
+      "Body_put_student_face_v1_staff_students__student_id__face_put": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_put_student_face_v1_staff_students__student_id__face_put",
         "type": "object"
       },
       "Body_start_cartridge_import_v1_lms_courses_import_post": {
@@ -8535,6 +8615,56 @@
         "title": "CreateNotebookBody",
         "type": "object"
       },
+      "CreatePersonalTokenBody": {
+        "description": "POST /v1/id/personal-tokens.",
+        "properties": {
+          "expires_in_days": {
+            "enum": [
+              30,
+              90,
+              365
+            ],
+            "title": "Expires In Days",
+            "type": "integer"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "otp_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Otp Code"
+          },
+          "scopes": {
+            "items": {
+              "enum": [
+                "me:read",
+                "me:write"
+              ],
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Scopes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "scopes",
+          "expires_in_days"
+        ],
+        "title": "CreatePersonalTokenBody",
+        "type": "object"
+      },
       "CreateReadingListBody": {
         "additionalProperties": false,
         "description": "`ReadingListInput`.",
@@ -10168,6 +10298,221 @@
         "title": "DeliveryOut",
         "type": "object"
       },
+      "DeviceCallListOut": {
+        "description": "The last 7 days of a device.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DeviceCallOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "DeviceCallListOut",
+        "type": "object"
+      },
+      "DeviceCallOut": {
+        "description": "One request of a device.",
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "title": "At",
+            "type": "string"
+          },
+          "excused": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Excused"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "matched_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matched Name"
+          },
+          "matched_user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matched User Id"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "status",
+          "matched_user_id",
+          "matched_name",
+          "excused"
+        ],
+        "title": "DeviceCallOut",
+        "type": "object"
+      },
+      "DeviceCreateIn": {
+        "description": "A new device.",
+        "properties": {
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "DeviceCreateIn",
+        "type": "object"
+      },
+      "DeviceCreatedOut": {
+        "description": "A new device; `token` is shown only in this response.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "key_prefix": {
+            "title": "Key Prefix",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "key_prefix",
+          "created_at",
+          "token"
+        ],
+        "title": "DeviceCreatedOut",
+        "type": "object"
+      },
+      "DeviceListOut": {
+        "description": "All devices.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DeviceOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "DeviceListOut",
+        "type": "object"
+      },
+      "DeviceOut": {
+        "description": "An entrance device (never its token).",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "key_prefix": {
+            "title": "Key Prefix",
+            "type": "string"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "key_prefix",
+          "created_at",
+          "revoked_at",
+          "last_used_at"
+        ],
+        "title": "DeviceOut",
+        "type": "object"
+      },
+      "Direction": {
+        "description": "Which way a person went through the entrance.",
+        "enum": [
+          "in",
+          "out"
+        ],
+        "title": "Direction",
+        "type": "string"
+      },
       "DisableBody": {
         "description": "Why a link is disabled.",
         "properties": {
@@ -11614,6 +11959,525 @@
         "title": "ExcuseBody",
         "type": "object"
       },
+      "ExcuseDecisionIn": {
+        "description": "Body of approve, reject and revoke.",
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          }
+        },
+        "title": "ExcuseDecisionIn",
+        "type": "object"
+      },
+      "ExcuseEndIn": {
+        "description": "Body of PATCH /v1/staff/excuses/{id}.",
+        "properties": {
+          "ends_on": {
+            "format": "date",
+            "title": "Ends On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ends_on"
+        ],
+        "title": "ExcuseEndIn",
+        "type": "object"
+      },
+      "ExcuseExclusionIn": {
+        "description": "Body of POST /v1/staff/excuses; ``starts_on`` defaults to today.",
+        "properties": {
+          "ends_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends On"
+          },
+          "lesson_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 200,
+            "title": "Lesson Ids",
+            "type": "array"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "starts_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts On"
+          },
+          "student_id": {
+            "format": "uuid",
+            "title": "Student Id",
+            "type": "string"
+          },
+          "subject_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 200,
+            "title": "Subject Ids",
+            "type": "array"
+          },
+          "template_id": {
+            "format": "uuid",
+            "title": "Template Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "student_id",
+          "template_id"
+        ],
+        "title": "ExcuseExclusionIn",
+        "type": "object"
+      },
+      "ExcuseListOut": {
+        "description": "A page of excuses, newest first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ExcuseOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "ExcuseListOut",
+        "type": "object"
+      },
+      "ExcuseMessageIn": {
+        "description": "Body of POST /v1/*/excuses/{id}/messages.",
+        "properties": {
+          "body": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          },
+          "file_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 10,
+            "title": "File Ids",
+            "type": "array"
+          }
+        },
+        "title": "ExcuseMessageIn",
+        "type": "object"
+      },
+      "ExcuseMessageOut": {
+        "description": "One line of the thread.",
+        "properties": {
+          "attachments": {
+            "items": {
+              "$ref": "#/components/schemas/app__interfaces__http__v1__me_excuses__schemas__AttachmentOut"
+            },
+            "title": "Attachments",
+            "type": "array"
+          },
+          "author_id": {
+            "format": "uuid",
+            "title": "Author Id",
+            "type": "string"
+          },
+          "author_name": {
+            "title": "Author Name",
+            "type": "string"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "author_id",
+          "author_name",
+          "body",
+          "attachments",
+          "created_at"
+        ],
+        "title": "ExcuseMessageOut",
+        "type": "object"
+      },
+      "ExcuseOut": {
+        "description": "An excuse; ``thread`` is filled on the detail and after a mutation.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "format": "uuid",
+            "title": "Created By",
+            "type": "string"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "decided_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided By"
+          },
+          "decision_comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decision Comment"
+          },
+          "ends_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends On"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lesson_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Lesson Ids",
+            "type": "array"
+          },
+          "origin": {
+            "enum": [
+              "request",
+              "curator"
+            ],
+            "title": "Origin",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "starts_on": {
+            "format": "date",
+            "title": "Starts On",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "approved",
+              "rejected",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "student_id": {
+            "format": "uuid",
+            "title": "Student Id",
+            "type": "string"
+          },
+          "student_name": {
+            "title": "Student Name",
+            "type": "string"
+          },
+          "subject_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Subject Ids",
+            "type": "array"
+          },
+          "template": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExcuseTemplateOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "thread": {
+            "items": {
+              "$ref": "#/components/schemas/ExcuseMessageOut"
+            },
+            "title": "Thread",
+            "type": "array"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "student_id",
+          "student_name",
+          "origin",
+          "status",
+          "template",
+          "reason",
+          "starts_on",
+          "ends_on",
+          "lesson_ids",
+          "subject_ids",
+          "created_by",
+          "decided_by",
+          "decided_at",
+          "decision_comment",
+          "created_at",
+          "updated_at",
+          "thread"
+        ],
+        "title": "ExcuseOut",
+        "type": "object"
+      },
+      "ExcuseRefResponse": {
+        "description": "The official excuse that covers an absence.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "origin": {
+            "enum": [
+              "request",
+              "curator"
+            ],
+            "title": "Origin",
+            "type": "string"
+          },
+          "template_code": {
+            "title": "Template Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "template_code",
+          "origin"
+        ],
+        "title": "ExcuseRefResponse",
+        "type": "object"
+      },
+      "ExcuseRequestIn": {
+        "description": "Body of POST /v1/me/excuses.",
+        "properties": {
+          "ends_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends On"
+          },
+          "file_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 10,
+            "title": "File Ids",
+            "type": "array"
+          },
+          "lesson_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 200,
+            "title": "Lesson Ids",
+            "type": "array"
+          },
+          "reason": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Reason",
+            "type": "string"
+          },
+          "starts_on": {
+            "format": "date",
+            "title": "Starts On",
+            "type": "string"
+          },
+          "subject_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 200,
+            "title": "Subject Ids",
+            "type": "array"
+          },
+          "template_id": {
+            "format": "uuid",
+            "title": "Template Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "template_id",
+          "starts_on"
+        ],
+        "title": "ExcuseRequestIn",
+        "type": "object"
+      },
+      "ExcuseTemplateListOut": {
+        "description": "GET /v1/me/excuse-templates.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ExcuseTemplateOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ExcuseTemplateListOut",
+        "type": "object"
+      },
+      "ExcuseTemplateOut": {
+        "description": "A ready reason of the request form.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "requires_document": {
+            "title": "Requires Document",
+            "type": "boolean"
+          },
+          "title": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Title",
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "title",
+          "requires_document"
+        ],
+        "title": "ExcuseTemplateOut",
+        "type": "object"
+      },
       "ExerciseCreate": {
         "description": "A practice exercise (passages and typed questions).",
         "properties": {
@@ -12124,6 +12988,51 @@
         "title": "ExtraLessonInputBody",
         "type": "object"
       },
+      "FaceOut": {
+        "description": "Whether a face is on file.",
+        "properties": {
+          "has_face": {
+            "title": "Has Face",
+            "type": "boolean"
+          },
+          "locked": {
+            "description": "Set by staff: the student cannot change it.",
+            "title": "Locked",
+            "type": "boolean"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "has_face",
+          "locked",
+          "updated_at",
+          "photo_url"
+        ],
+        "title": "FaceOut",
+        "type": "object"
+      },
       "FeedAction": {
         "description": "`POST .../feeds/{id}/{action}`; only enable and disable work without a sync.",
         "enum": [
@@ -12397,7 +13306,7 @@
           },
           "attachments": {
             "items": {
-              "$ref": "#/components/schemas/AttachmentOut"
+              "$ref": "#/components/schemas/app__interfaces__http__v1__feedback__schemas__AttachmentOut"
             },
             "title": "Attachments",
             "type": "array"
@@ -12589,7 +13498,7 @@
           },
           "attachments": {
             "items": {
-              "$ref": "#/components/schemas/AttachmentOut"
+              "$ref": "#/components/schemas/app__interfaces__http__v1__feedback__schemas__AttachmentOut"
             },
             "title": "Attachments",
             "type": "array"
@@ -14521,6 +15430,69 @@
         "title": "HomeworkNoteBody",
         "type": "object"
       },
+      "IdentifiedStudentOut": {
+        "description": "The student the entrance recognised.",
+        "properties": {
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "full_name",
+          "group"
+        ],
+        "title": "IdentifiedStudentOut",
+        "type": "object"
+      },
+      "IdentifyOut": {
+        "description": "The answer to the entrance device.",
+        "properties": {
+          "excuse_until": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Excuse Until"
+          },
+          "excused": {
+            "title": "Excused",
+            "type": "boolean"
+          },
+          "student": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IdentifiedStudentOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "student",
+          "excused",
+          "excuse_until"
+        ],
+        "title": "IdentifyOut",
+        "type": "object"
+      },
       "ImportBody": {
         "description": "`POST /manage/library/import`: the CSV is uploaded first.",
         "properties": {
@@ -15443,6 +16415,16 @@
           "absent": {
             "title": "Absent",
             "type": "boolean"
+          },
+          "excuse": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExcuseRefResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "excused": {
             "title": "Excused",
@@ -22267,6 +23249,24 @@
         "title": "NewPasswordLoginBody",
         "type": "object"
       },
+      "NewPersonalTokenResponse": {
+        "description": "The new token; `token` is shown once.",
+        "properties": {
+          "personal_token": {
+            "$ref": "#/components/schemas/PersonalTokenResponse"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "personal_token",
+          "token"
+        ],
+        "title": "NewPersonalTokenResponse",
+        "type": "object"
+      },
       "NextSectionResponse": {
         "description": "`{item_id, item_title, section}`: the suggested section.",
         "properties": {
@@ -24671,6 +25671,77 @@
           "name"
         ],
         "title": "PersonResponse",
+        "type": "object"
+      },
+      "PersonalTokenResponse": {
+        "description": "Personal token metadata (never the secret).",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_used_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Used At"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "prefix": {
+            "title": "Prefix",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "scopes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Scopes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "prefix",
+          "scopes",
+          "created_at",
+          "expires_at",
+          "last_used_at",
+          "revoked_at"
+        ],
+        "title": "PersonalTokenResponse",
         "type": "object"
       },
       "PinExternalBody": {
@@ -29205,7 +30276,7 @@
         "properties": {
           "attachments": {
             "items": {
-              "$ref": "#/components/schemas/AttachmentOut"
+              "$ref": "#/components/schemas/app__interfaces__http__v1__feedback__schemas__AttachmentOut"
             },
             "title": "Attachments",
             "type": "array"
@@ -29833,6 +30904,16 @@
           "counted": {
             "title": "Counted",
             "type": "boolean"
+          },
+          "excuse": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExcuseRefResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "excuse_comment": {
             "anyOf": [
@@ -40999,7 +42080,8 @@
               "link",
               "lesson",
               "chat",
-              "notebook"
+              "notebook",
+              "excuse"
             ],
             "title": "Kind",
             "type": "string"
@@ -41030,7 +42112,8 @@
               "link",
               "lesson",
               "chat",
-              "notebook"
+              "notebook",
+              "excuse"
             ],
             "title": "Kind",
             "type": "string"
@@ -41061,7 +42144,8 @@
               "link",
               "lesson",
               "chat",
-              "notebook"
+              "notebook",
+              "excuse"
             ],
             "title": "Kind",
             "type": "string"
@@ -41607,6 +42691,62 @@
           "max"
         ],
         "title": "VariableInput",
+        "type": "object"
+      },
+      "VaultStatusResponse": {
+        "description": "Seal state.",
+        "properties": {
+          "progress": {
+            "title": "Progress",
+            "type": "integer"
+          },
+          "sealed": {
+            "title": "Sealed",
+            "type": "boolean"
+          },
+          "shares": {
+            "title": "Shares",
+            "type": "integer"
+          },
+          "threshold": {
+            "title": "Threshold",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sealed",
+          "progress",
+          "threshold",
+          "shares"
+        ],
+        "title": "VaultStatusResponse",
+        "type": "object"
+      },
+      "VaultUnsealBody": {
+        "description": "POST /v1/admin/vault/unseal; the key is never echoed or logged.",
+        "properties": {
+          "key": {
+            "format": "password",
+            "title": "Key",
+            "type": "string",
+            "writeOnly": true
+          },
+          "otp_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Otp Code"
+          }
+        },
+        "required": [
+          "key"
+        ],
+        "title": "VaultUnsealBody",
         "type": "object"
       },
       "VerifyBody": {
@@ -44025,6 +45165,16 @@
       "app__interfaces__http__v1__composition__shared_schemas__MissedLessonResponse": {
         "description": "A row of `StudentAttendance.missed`.",
         "properties": {
+          "excuse": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExcuseRefResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "excused": {
             "title": "Excused",
             "type": "boolean"
@@ -44364,6 +45514,41 @@
           "linked_at"
         ],
         "title": "TelegramAccountResponse",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__feedback__schemas__AttachmentOut": {
+        "description": "An attached file; ``download_url`` is presigned and valid for one hour.",
+        "properties": {
+          "download_url": {
+            "title": "Download Url",
+            "type": "string"
+          },
+          "file_id": {
+            "format": "uuid",
+            "title": "File Id",
+            "type": "string"
+          },
+          "mime": {
+            "title": "Mime",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "file_id",
+          "name",
+          "mime",
+          "size",
+          "download_url"
+        ],
+        "title": "AttachmentOut",
         "type": "object"
       },
       "app__interfaces__http__v1__files__schemas__FileItem": {
@@ -45217,6 +46402,16 @@
       "app__interfaces__http__v1__me_classwork__schemas__MissedLessonResponse": {
         "description": "A missed lesson.",
         "properties": {
+          "excuse": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExcuseRefResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "excused": {
             "title": "Excused",
             "type": "boolean"
@@ -45409,6 +46604,41 @@
           "short_name"
         ],
         "title": "SubjectRefResponse",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__me_excuses__schemas__AttachmentOut": {
+        "description": "A file of a thread line with a one-hour download URL.",
+        "properties": {
+          "download_url": {
+            "title": "Download Url",
+            "type": "string"
+          },
+          "file_id": {
+            "format": "uuid",
+            "title": "File Id",
+            "type": "string"
+          },
+          "mime": {
+            "title": "Mime",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "file_id",
+          "name",
+          "mime",
+          "size",
+          "download_url"
+        ],
+        "title": "AttachmentOut",
         "type": "object"
       },
       "app__interfaces__http__v1__me_marks__schemas__PersonRef": {
@@ -48257,6 +49487,452 @@
         "summary": "Get Dashboard",
         "tags": [
           "composition"
+        ]
+      }
+    },
+    "/v1/admin/devices": {
+      "get": {
+        "description": "Every device, newest first.",
+        "operationId": "list_devices_v1_admin_devices_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Devices",
+        "tags": [
+          "faces"
+        ]
+      },
+      "post": {
+        "description": "Create a device; the token is in this response only.",
+        "operationId": "create_device_v1_admin_devices_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceCreateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCreatedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Device",
+        "tags": [
+          "faces"
+        ]
+      }
+    },
+    "/v1/admin/devices/{device_id}/calls": {
+      "get": {
+        "description": "The device's requests of the last 7 days.",
+        "operationId": "list_device_calls_v1_admin_devices__device_id__calls_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "device_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Device Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCallListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Device Calls",
+        "tags": [
+          "faces"
+        ]
+      }
+    },
+    "/v1/admin/devices/{device_id}/revoke": {
+      "post": {
+        "description": "Stop the device's token from working.",
+        "operationId": "revoke_device_v1_admin_devices__device_id__revoke_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "device_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Device Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revoke Device",
+        "tags": [
+          "faces"
+        ]
+      }
+    },
+    "/v1/admin/excuses": {
+      "get": {
+        "description": "Every excuse, newest first.",
+        "operationId": "list_excuses_v1_admin_excuses_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pending",
+                    "approved",
+                    "rejected",
+                    "cancelled"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "student_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Student Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcuseListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Excuses",
+        "tags": [
+          "admin-excuses"
+        ]
+      }
+    },
+    "/v1/admin/excuses/{excuse_id}": {
+      "get": {
+        "description": "One excuse with its thread.",
+        "operationId": "get_excuse_v1_admin_excuses__excuse_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "excuse_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Excuse Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcuseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Excuse",
+        "tags": [
+          "admin-excuses"
+        ]
+      }
+    },
+    "/v1/admin/excuses/{excuse_id}/approve": {
+      "post": {
+        "description": "Approve a pending request.",
+        "operationId": "approve_v1_admin_excuses__excuse_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "excuse_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Excuse Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExcuseDecisionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcuseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve",
+        "tags": [
+          "admin-excuses"
+        ]
+      }
+    },
+    "/v1/admin/excuses/{excuse_id}/messages": {
+      "post": {
+        "description": "Write in the thread.",
+        "operationId": "post_message_v1_admin_excuses__excuse_id__messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "excuse_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Excuse Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExcuseMessageIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcuseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Message",
+        "tags": [
+          "admin-excuses"
+        ]
+      }
+    },
+    "/v1/admin/excuses/{excuse_id}/reject": {
+      "post": {
+        "description": "Reject a pending request.",
+        "operationId": "reject_v1_admin_excuses__excuse_id__reject_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "excuse_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Excuse Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExcuseDecisionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcuseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reject",
+        "tags": [
+          "admin-excuses"
         ]
       }
     },
@@ -54391,6 +56067,70 @@
         ]
       }
     },
+    "/v1/admin/vault/status": {
+      "get": {
+        "description": "Seal state of Vault.",
+        "operationId": "vault_status_v1_admin_vault_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VaultStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Vault Status",
+        "tags": [
+          "admin-vault"
+        ]
+      }
+    },
+    "/v1/admin/vault/unseal": {
+      "post": {
+        "description": "Submit one unseal key share.",
+        "operationId": "vault_unseal_v1_admin_vault_unseal_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VaultUnsealBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VaultStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Vault Unseal",
+        "tags": [
+          "admin-vault"
+        ]
+      }
+    },
     "/v1/admin/work-offs": {
       "get": {
         "description": "Return one page of work-offs matching the filters.",
@@ -55706,6 +57446,28 @@
         ]
       }
     },
+    "/v1/app-map": {
+      "get": {
+        "description": "List the pages of every app that the caller's roles may open.",
+        "operationId": "get_app_map_v1_app_map_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppMapResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get App Map",
+        "tags": [
+          "app"
+        ]
+      }
+    },
     "/v1/app/version": {
       "get": {
         "description": "Return the latest and the minimum supported app version; public, never cached.",
@@ -56952,6 +58714,66 @@
         "summary": "List Types",
         "tags": [
           "certificates"
+        ]
+      }
+    },
+    "/v1/device/identify": {
+      "post": {
+        "description": "Recognise the student on the photo and record the passage.",
+        "operationId": "identify_v1_device_identify_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_identify_v1_device_identify_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentifyOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Identify",
+        "tags": [
+          "faces"
         ]
       }
     },
@@ -60142,6 +61964,109 @@
         "summary": "Post Totp Setup",
         "tags": [
           "id-factors"
+        ]
+      }
+    },
+    "/v1/id/personal-tokens": {
+      "get": {
+        "description": "The caller's tokens, newest first.",
+        "operationId": "list_personal_tokens_v1_id_personal_tokens_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PersonalTokenResponse"
+                  },
+                  "title": "Response List Personal Tokens V1 Id Personal Tokens Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Personal Tokens",
+        "tags": [
+          "id-personal-tokens"
+        ]
+      },
+      "post": {
+        "description": "Create a token (OTP step-up); the secret is in this response only.",
+        "operationId": "create_personal_token_v1_id_personal_tokens_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePersonalTokenBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewPersonalTokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Personal Token",
+        "tags": [
+          "id-personal-tokens"
+        ]
+      }
+    },
+    "/v1/id/personal-tokens/{token_id}": {
+      "delete": {
+        "description": "Revoke at once.",
+        "operationId": "revoke_personal_token_v1_id_personal_tokens__token_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Token Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revoke Personal Token",
+        "tags": [
+          "id-personal-tokens"
         ]
       }
     },
@@ -68292,6 +70217,358 @@
         "summary": "Put Dashboard",
         "tags": [
           "dashboard"
+        ]
+      }
+    },
+    "/v1/me/excuse-templates": {
+      "get": {
+        "description": "Active reasons for the request form, in display order.",
+        "operationId": "list_templates_v1_me_excuse_templates_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcuseTemplateListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Templates",
+        "tags": [
+          "excuses"
+        ]
+      }
+    },
+    "/v1/me/excuses": {
+      "get": {
+        "description": "The caller's excuses, newest first.",
+        "operationId": "list_mine_v1_me_excuses_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pending",
+                    "approved",
+                    "rejected",
+                    "cancelled"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcuseListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Mine",
+        "tags": [
+          "excuses"
+        ]
+      },
+      "post": {
+        "description": "Ask the curator to excuse absences; the request starts pending.",
+        "operationId": "request_excuse_v1_me_excuses_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExcuseRequestIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcuseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request Excuse",
+        "tags": [
+          "excuses"
+        ]
+      }
+    },
+    "/v1/me/excuses/{excuse_id}": {
+      "get": {
+        "description": "One of the caller's excuses with its thread; a stranger's answers 404.",
+        "operationId": "get_mine_v1_me_excuses__excuse_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "excuse_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Excuse Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcuseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Mine",
+        "tags": [
+          "excuses"
+        ]
+      }
+    },
+    "/v1/me/excuses/{excuse_id}/cancel": {
+      "post": {
+        "description": "Withdraw a pending request.",
+        "operationId": "cancel_v1_me_excuses__excuse_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "excuse_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Excuse Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcuseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel",
+        "tags": [
+          "excuses"
+        ]
+      }
+    },
+    "/v1/me/excuses/{excuse_id}/messages": {
+      "post": {
+        "description": "Write to the curator; files must be the caller's ready files.",
+        "operationId": "post_message_v1_me_excuses__excuse_id__messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "excuse_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Excuse Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExcuseMessageIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcuseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Message",
+        "tags": [
+          "excuses"
+        ]
+      }
+    },
+    "/v1/me/face": {
+      "delete": {
+        "description": "Remove the caller's face; refused while staff hold it.",
+        "operationId": "delete_my_face_v1_me_face_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Delete My Face",
+        "tags": [
+          "faces"
+        ]
+      },
+      "get": {
+        "description": "Whether the caller has a face on file and whether staff locked it.",
+        "operationId": "get_my_face_v1_me_face_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FaceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get My Face",
+        "tags": [
+          "faces"
+        ]
+      },
+      "put": {
+        "description": "Upload the caller's face (JPEG or PNG, up to 5 MB, exactly one face).",
+        "operationId": "put_my_face_v1_me_face_put",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_put_my_face_v1_me_face_put"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FaceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put My Face",
+        "tags": [
+          "faces"
         ]
       }
     },
@@ -76694,6 +78971,448 @@
         ]
       }
     },
+    "/v1/staff/excuses": {
+      "get": {
+        "description": "Excuses of the students the caller curates (all students for Administration).",
+        "operationId": "list_excuses_v1_staff_excuses_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pending",
+                    "approved",
+                    "rejected",
+                    "cancelled"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "student_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Student Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcuseListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Excuses",
+        "tags": [
+          "staff-excuses"
+        ]
+      },
+      "post": {
+        "description": "Excuse a student from the curator's side; approved at once.",
+        "operationId": "create_exclusion_v1_staff_excuses_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExcuseExclusionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcuseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Exclusion",
+        "tags": [
+          "staff-excuses"
+        ]
+      }
+    },
+    "/v1/staff/excuses/{excuse_id}": {
+      "get": {
+        "description": "One excuse with its thread; a stranger's student answers 404.",
+        "operationId": "get_excuse_v1_staff_excuses__excuse_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "excuse_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Excuse Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcuseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Excuse",
+        "tags": [
+          "staff-excuses"
+        ]
+      },
+      "patch": {
+        "description": "Close an approved excuse on a date.",
+        "operationId": "end_excuse_v1_staff_excuses__excuse_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "excuse_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Excuse Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExcuseEndIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcuseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "End Excuse",
+        "tags": [
+          "staff-excuses"
+        ]
+      }
+    },
+    "/v1/staff/excuses/{excuse_id}/approve": {
+      "post": {
+        "description": "Approve a pending request.",
+        "operationId": "approve_v1_staff_excuses__excuse_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "excuse_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Excuse Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExcuseDecisionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcuseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve",
+        "tags": [
+          "staff-excuses"
+        ]
+      }
+    },
+    "/v1/staff/excuses/{excuse_id}/messages": {
+      "post": {
+        "description": "Write to the student.",
+        "operationId": "post_message_v1_staff_excuses__excuse_id__messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "excuse_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Excuse Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExcuseMessageIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcuseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Message",
+        "tags": [
+          "staff-excuses"
+        ]
+      }
+    },
+    "/v1/staff/excuses/{excuse_id}/reject": {
+      "post": {
+        "description": "Reject a pending request.",
+        "operationId": "reject_v1_staff_excuses__excuse_id__reject_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "excuse_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Excuse Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExcuseDecisionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcuseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reject",
+        "tags": [
+          "staff-excuses"
+        ]
+      }
+    },
+    "/v1/staff/excuses/{excuse_id}/revoke": {
+      "post": {
+        "description": "Withdraw an approved excuse.",
+        "operationId": "revoke_v1_staff_excuses__excuse_id__revoke_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "excuse_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Excuse Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExcuseDecisionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcuseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revoke",
+        "tags": [
+          "staff-excuses"
+        ]
+      }
+    },
     "/v1/staff/groups": {
       "get": {
         "description": "List the groups the caller curates.",
@@ -78293,6 +81012,95 @@
         "summary": "Put My Photo",
         "tags": [
           "photo"
+        ]
+      }
+    },
+    "/v1/staff/students/{student_id}/face": {
+      "delete": {
+        "description": "Remove a student's face and release the lock.",
+        "operationId": "delete_student_face_v1_staff_students__student_id__face_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "student_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Student Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Student Face",
+        "tags": [
+          "faces"
+        ]
+      },
+      "put": {
+        "description": "Set a student's face; the student cannot change it afterwards.",
+        "operationId": "put_student_face_v1_staff_students__student_id__face_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "student_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Student Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_put_student_face_v1_staff_students__student_id__face_put"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FaceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Student Face",
+        "tags": [
+          "faces"
         ]
       }
     },

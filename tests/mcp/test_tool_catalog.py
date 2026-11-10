@@ -35,6 +35,7 @@ QUESTION = {
 # tool -> (scope of MCP-8, minimal valid arguments)
 STUDENT_TOOLS: dict[str, tuple[str, dict[str, Any]]] = {
     "get_schedule": ("schedule:read", {}),
+    "find_feature": ("schedule:read", {"query": "marks"}),
     "get_my_subjects": ("schedule:read", {}),
     "get_subject_lessons": ("schedule:read", {"subject_id": ID}),
     "get_homework": ("homework:read", {}),
@@ -53,6 +54,7 @@ STUDENT_TOOLS: dict[str, tuple[str, dict[str, Any]]] = {
 }
 LMS_TOOLS: dict[str, tuple[str, dict[str, Any]]] = {
     "list_courses": ("lms.courses.read", {}),
+    "find_feature": ("lms.courses.read", {"query": "courses"}),
     "get_course": ("lms.courses.read", {"course_id": COURSE}),
     "get_step": ("lms.courses.read", {"step_id": STEP}),
     "list_pending_changes": ("lms.courses.read", {"course_id": COURSE}),
@@ -84,6 +86,7 @@ LMS_TOOLS: dict[str, tuple[str, dict[str, Any]]] = {
 }
 ADMIN_TOOLS: dict[str, tuple[str, dict[str, Any]]] = {
     "search_users": ("people:read", {"query": "x"}),
+    "find_feature": ("people:read", {"query": "users"}),
     "get_student": ("people:read", {"user_id": ID}),
     "list_teachers": ("people:read", {}),
     "list_groups": ("groups:read", {}),

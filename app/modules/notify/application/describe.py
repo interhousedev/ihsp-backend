@@ -573,6 +573,75 @@ def _feedback_response(p: dict[str, Any], v: _View) -> Description:
     )
 
 
+def _gate_unexcused_exit(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-gate-unexcused-exit-title"),
+        v.t(
+            "notify-gate-unexcused-exit-body",
+            student=p.get("student_name", ""),
+            group=p.get("group_name", ""),
+            time=fmt_datetime(p.get("at")),
+        ),
+        None,
+    )
+
+
+def _excuse_base(v: _View) -> str:
+    return v.urls.staff if v.staff else v.urls.sp
+
+
+def _excuse_link(p: dict[str, Any], v: _View) -> str:
+    return f"{_excuse_base(v)}/excuses/?id={p.get('excuse_id', '')}"
+
+
+def _excuse_requested(p: dict[str, Any], v: _View) -> Description:
+    start = fmt_date(p.get("starts_on"))
+    if p.get("ends_on"):
+        period = v.t(
+            "notify-excuse-period-range", start=start, end=fmt_date(p["ends_on"])
+        )
+    else:
+        period = v.t("notify-excuse-period-open", start=start)
+    return Description(
+        v.t("notify-excuse-requested-title"),
+        v.t(
+            "notify-excuse-requested-body",
+            student=p.get("student_name", ""),
+            period=period,
+        ),
+        _excuse_link(p, v),
+    )
+
+
+def _excuse_decided(p: dict[str, Any], v: _View) -> Description:
+    comment = p.get("comment")
+    return Description(
+        v.t(
+            "notify-excuse-decided-title",
+            status=v.t(f"notify-excuse-status-{p.get('status', 'pending')}"),
+        ),
+        v.t(
+            "notify-excuse-decided-body",
+            date=fmt_date(p.get("starts_on")),
+            comment=(
+                v.t("notify-excuse-decided-comment", comment=comment) if comment else ""
+            ),
+        ),
+        _excuse_link(p, v),
+    )
+
+
+def _excuse_message(p: dict[str, Any], v: _View) -> Description:
+    body = v.t(
+        "notify-excuse-message-body",
+        author=p.get("author_name", ""),
+        preview=p.get("preview", ""),
+    )
+    if p.get("files"):
+        body += "\n" + v.t("notify-excuse-message-files", count=p["files"])
+    return Description(v.t("notify-excuse-message-title"), body, _excuse_link(p, v))
+
+
 def _sync_alert(p: dict[str, Any], v: _View) -> Description:
     body = v.t(
         "notify-sync-alert-body", failed=p.get("failed", ""), total=p.get("total", "")
@@ -620,6 +689,10 @@ _BUILDERS: dict[NotificationType, _Builder] = {
     NotificationType.FEEDBACK_NEW: _feedback_new,
     NotificationType.FEEDBACK_RESPONSE: _feedback_response,
     NotificationType.MCP_SCOPE_OFFER: _mcp_scope_offer,
+    NotificationType.GATE_UNEXCUSED_EXIT: _gate_unexcused_exit,
+    NotificationType.EXCUSE_REQUESTED: _excuse_requested,
+    NotificationType.EXCUSE_DECIDED: _excuse_decided,
+    NotificationType.EXCUSE_MESSAGE: _excuse_message,
 }
 
 

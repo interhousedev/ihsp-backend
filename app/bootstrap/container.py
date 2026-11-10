@@ -29,6 +29,7 @@ if TYPE_CHECKING:
     from app.modules.ai.wiring import AiServices
     from app.modules.certificates.wiring import CertificatesServices
     from app.modules.dashboard.wiring import DashboardServices
+    from app.modules.faces.wiring import FacesServices
     from app.modules.feedback.wiring import FeedbackServices
     from app.modules.files.wiring import FilesServices
     from app.modules.flashcards.wiring import FlashcardsServices
@@ -81,6 +82,7 @@ class Container:
     certificates: "CertificatesServices" = NOT_BUILT
     knowledge: "KnowledgeServices" = NOT_BUILT
     feedback: "FeedbackServices" = NOT_BUILT
+    faces: "FacesServices" = NOT_BUILT
     posts: "PostsServices" = NOT_BUILT
     admin_tools: AdminToolBackend = NOT_BUILT
     llm: LlmGateway = NOT_BUILT

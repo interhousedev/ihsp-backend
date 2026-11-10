@@ -130,13 +130,14 @@ async def test_only_read_tools_can_be_forwarded(world: World) -> None:
     ]
 
 
-async def test_all_twelve_tools_forward_their_own_name(world: World) -> None:
-    """MCP-8: each tool forwards exactly its own name."""
+async def test_backend_tools_forward_their_own_name(world: World) -> None:
+    """MCP-8: each tool forwards exactly its own name (find_feature is local)."""
     token, _ = world.connector_token("admin", *ALL)
     arguments = {
         "search_users": {"query": "a"},
         "get_student": {"user_id": str(USER)},
         "get_group": {"group_id": str(GROUP)},
+        "find_feature": {"query": "users"},
     }
 
     async with world.session("admin", token) as session:
@@ -145,5 +146,5 @@ async def test_all_twelve_tools_forward_their_own_name(world: World) -> None:
             assert not result.isError, (name, text_of(result))
 
     assert sorted(tool for tool, _, _ in world.admin_tools.calls) == sorted(
-        ADMIN_READ_TOOLS
+        ADMIN_READ_TOOLS - {"find_feature"}
     )

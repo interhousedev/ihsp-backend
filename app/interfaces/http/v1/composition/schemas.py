@@ -34,7 +34,7 @@ class AlertResponse(BaseModel):
 class UsedByResponse(BaseModel):
     """`UsedBy`: where a file is used."""
 
-    kind: Literal["link", "lesson", "chat", "notebook"]
+    kind: Literal["link", "lesson", "chat", "notebook", "excuse"]
     id: UUID
     label: str
 

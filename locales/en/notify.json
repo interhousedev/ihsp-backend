@@ -173,5 +173,21 @@
   "notify-feedback-kind-bug": "Bug report",
   "notify-feedback-kind-other": "Feedback",
   "notify-feedback-response-title": "Reply to your feedback “{title}”",
-  "notify-btn-open-feedback": "Open feedback"
+  "notify-btn-open-feedback": "Open feedback",
+  "notify-gate-unexcused-exit-title": "Unexcused exit",
+  "notify-gate-unexcused-exit-body": "{student} ({group}) left the building at {time} during a lesson without an excuse.",
+  "notify-excuse-requested-title": "Excuse request",
+  "notify-excuse-requested-body": "{student} asks to be excused from {period}.",
+  "notify-excuse-decided-title": "Your excuse: {status}",
+  "notify-excuse-decided-body": "Valid from {date}.{comment}",
+  "notify-excuse-decided-comment": " Comment: {comment}",
+  "notify-excuse-status-approved": "approved",
+  "notify-excuse-status-rejected": "rejected",
+  "notify-excuse-status-cancelled": "withdrawn",
+  "notify-excuse-status-pending": "pending",
+  "notify-excuse-period-open": "{start} until further notice",
+  "notify-excuse-period-range": "{start} to {end}",
+  "notify-excuse-message-title": "New message about an excuse",
+  "notify-excuse-message-body": "{author}: {preview}",
+  "notify-excuse-message-files": "{count} file(s) attached"
 }

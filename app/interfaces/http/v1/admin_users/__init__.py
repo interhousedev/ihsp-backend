@@ -9,6 +9,7 @@ from app.interfaces.http.v1.admin_users.oauth_clients.router import (
 )
 from app.interfaces.http.v1.admin_users.teachers.router import router as teachers_router
 from app.interfaces.http.v1.admin_users.users.router import router as users_router
+from app.interfaces.http.v1.admin_users.vault.router import router as vault_router
 
 from fastapi import APIRouter
 
@@ -18,4 +19,5 @@ ROUTERS: list[APIRouter] = [
     audit_router,
     oauth_clients_router,
     login_cues_router,
+    vault_router,
 ]

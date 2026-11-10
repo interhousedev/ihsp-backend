@@ -20,7 +20,9 @@ def register(kit: ToolKit) -> None:
     ) -> dict[str, Any]:
         """List the student's own absences.
 
-        Each absence has its lesson and whether it is excused. Lessons the student
+        Each absence has its lesson and whether it is excused; `excuse_template`
+        names the official excuse reason (illness, family, ...) when one covers
+        it. Lessons the student
         attended are not listed.
         """
         actor = current_actor()

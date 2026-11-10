@@ -170,10 +170,10 @@ async def test_a_long_email_is_cut_to_fit_and_gets_show_full(
     assert "bot-btn-full" in labels(message.buttons)
 
 
-async def test_telegram_linked_greets_the_linked_account_with_the_menu(
+async def test_telegram_linked_starts_the_onboarding_tour(
     world: World, registry: Registry
 ) -> None:
-    """UF-BOT-01 step 6: "Logged in as ..." and the main menu."""
+    """UF-BOT-01 step 6: "Logged in as ..." and the first onboarding step."""
     payload = {"telegram_user_id": STUDENT_TG, "telegram_username": "student"}
 
     message = await registry.renderers[NotificationType.TELEGRAM_LINKED](
@@ -181,9 +181,9 @@ async def test_telegram_linked_greets_the_linked_account_with_the_menu(
     )
 
     assert message is not None
-    assert message.text_html.startswith("bot-linked-as[login=brastilov.aleksey")
+    assert message.text_html.startswith("onboarding-welcome[")
     assert message.buttons is not None
-    assert message.buttons[0][0]["callback_data"] == "m:today"
+    assert "ob:apps" in [b.get("callback_data") for row in message.buttons for b in row]
 
 
 async def test_telegram_linked_tells_other_accounts_with_a_security_link(

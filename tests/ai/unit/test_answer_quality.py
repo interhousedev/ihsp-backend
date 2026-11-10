@@ -17,7 +17,7 @@ from app.modules.ai.domain.prompts import system_prompt
 from app.modules.ai.domain.tool_args import ToolArgs
 from app.modules.ai.domain.tool_call import ToolAccess, ToolStatus
 from app.modules.ai.wiring import make_student_tools
-from app.settings import LimitsSettings
+from app.settings import LimitsSettings, UrlsSettings
 from app.shared.actor import Actor, Role
 from app.shared.limits import StaticLimits
 from tests.ai.conftest import AiHarness
@@ -90,6 +90,7 @@ def test_prompt_and_tools_fit_the_token_budget() -> None:
         bindings=LateBindings(),
         limits=_limits(1),
         uow_factory=None,  # type: ignore[arg-type]
+        urls=UrlsSettings(),
     )
     tools.append(ReadChatHistory(None))  # type: ignore[arg-type]
     schemas = json.dumps([t.spec().to_llm() for t in tools], ensure_ascii=False)

@@ -14,6 +14,7 @@ from app.interfaces.mcp.lms.tools import (
     delete_course,
     delete_module,
     delete_step,
+    find_feature,
     get_course,
     get_step,
     list_attempts,
@@ -30,6 +31,7 @@ from mcp.server.fastmcp import FastMCP
 
 TOOL_MODULES = (
     list_courses,
+    find_feature,
     get_course,
     get_step,
     list_pending_changes,

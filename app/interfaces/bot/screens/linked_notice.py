@@ -1,7 +1,7 @@
 """Messages sent when a Telegram account gets linked (UF-BOT-01)."""
 
 from app.interfaces.bot.keyboards import security_link
-from app.interfaces.bot.screens.main_menu import build_main_menu
+from app.interfaces.bot.screens.onboarding import build_onboarding
 from app.interfaces.bot.urls import BotUrls
 from app.interfaces.bot.utilities.html import escape
 from app.shared.contracts.identity import UserRef
@@ -12,8 +12,8 @@ from app.shared.i18n.core import I18nContext
 def build_linked_here(
     user: UserRef, i18n: I18nContext, urls: BotUrls
 ) -> RenderedMessage:
-    """The linked account itself: Logged in as ..., then the main menu."""
-    return build_main_menu(user, i18n, urls, intro_key="bot-linked-as")
+    """The linked account itself: step one of the onboarding tour."""
+    return build_onboarding(user, i18n, urls)
 
 
 def build_linked_elsewhere(

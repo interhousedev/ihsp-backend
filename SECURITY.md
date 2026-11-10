@@ -62,6 +62,12 @@ Students and teachers can share a manual notebook or a personal file with a sign
 - **Call log.** Each MCP tool call is logged with redacted arguments and counts, never content. Traces are removed after 90 days. Users see their own calls; administrators' reads are audited.
 - **Scope offers.** A new release may offer new scopes for existing student and LMS connectors, never Administration ones. Nothing widens until the owner accepts, from the Telegram buttons or the signed-in connectors page. An offer is single use, lasts 14 days and re-checks the user's status, role and each key at the moment of the grant. Someone else's offer answers the same as an unknown one. The web path needs no step-up code, the same bar as creating a student or LMS connector.
 
+## Faces and entrance devices
+
+- **A face is biometric data.** The embedding and the photo of a student are kept in `faces.face_profiles` and the files module, shown only to their owner and to the curator or an administrator who set them, and removed with the profile. A face a curator or an administrator sets is locked: the student cannot replace or delete it, only staff can.
+- **A device token is a bearer secret.** An administrator creates an entrance device and sees its `ihsp_dev_` token once; only its SHA-256 is stored, with a short prefix for recognition. Anyone holding the token can ask who is on a photo, so it lives only in the device. Revoking applies to the next request, and each device is rate limited per minute.
+- **Calls and passages are short lived.** What a device sent and who it recognised is kept for 7 days and then purged by `faces.purge_old`; photos sent to `/v1/device/identify` are not stored.
+
 ## Safe harbour
 
 We will not pursue or support legal action against you for research that:

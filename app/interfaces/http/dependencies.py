@@ -4,6 +4,11 @@ from collections.abc import Awaitable, Callable
 from typing import Annotated
 
 from app.bootstrap.container import Container
+from app.modules.identity.domain.errors import TokenScopeError
+from app.modules.identity.domain.personal_token import (
+    PersonalTokenScope,
+    looks_like_token,
+)
 from app.shared.actor import Actor, Role
 from app.shared.base_error import UnauthorizedError
 from app.shared.client_ip import IPNetwork, client_address
@@ -29,12 +34,28 @@ def _bearer_token(request: Request) -> str | None:
     return token.strip()
 
 
-async def _verify(container: Container, token: str) -> Actor:
+def _personal_token_scope(request: Request) -> PersonalTokenScope | None:
+    """Scope a personal token needs for this request; None when none fits."""
+    path = request.url.path
+    if path != "/v1/me" and not path.startswith("/v1/me/"):
+        return None
+    if request.method in ("GET", "HEAD"):
+        return PersonalTokenScope.ME_READ
+    return PersonalTokenScope.ME_WRITE
+
+
+async def _verify(container: Container, request: Request, token: str) -> Actor:
     if container.identity is None:
         raise UnauthorizedError(support_details="identity module is not wired")
-    actor: Actor = await container.identity.token_verifier.verify(
-        token, audience=AUDIENCE_API
-    )
+    if looks_like_token(token):
+        actor = await container.identity.personal_token_verifier.verify_personal(token)
+        needed = _personal_token_scope(request)
+        if needed is None or needed.value not in actor.scopes:
+            raise TokenScopeError()
+    else:
+        actor = await container.identity.token_verifier.verify(
+            token, audience=AUDIENCE_API
+        )
     # The model calls this request makes are counted for this actor (usage ledger).
     bind_usage_actor(actor)
     return actor
@@ -47,7 +68,7 @@ async def get_actor(
     token = _bearer_token(request)
     if token is None:
         raise UnauthorizedError(support_details="missing Authorization header")
-    return await _verify(container, token)
+    return await _verify(container, request, token)
 
 
 async def get_optional_actor(
@@ -57,7 +78,7 @@ async def get_optional_actor(
     token = _bearer_token(request)
     if token is None:
         return None
-    return await _verify(container, token)
+    return await _verify(container, request, token)
 
 
 def require_roles(*roles: Role) -> Callable[..., Awaitable[Actor]]:

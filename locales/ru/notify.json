@@ -173,5 +173,21 @@
   "notify-feedback-kind-bug": "Сообщение об ошибке",
   "notify-feedback-kind-other": "Отзыв",
   "notify-feedback-response-title": "Ответ на ваше обращение «{title}»",
-  "notify-btn-open-feedback": "Открыть обращение"
+  "notify-btn-open-feedback": "Открыть обращение",
+  "notify-gate-unexcused-exit-title": "Выход без уважительной причины",
+  "notify-gate-unexcused-exit-body": "{student} ({group}) покинул(а) здание в {time} во время урока без уважительной причины.",
+  "notify-excuse-requested-title": "Заявка на освобождение",
+  "notify-excuse-requested-body": "{student} просит освободить от занятий: {period}.",
+  "notify-excuse-decided-title": "Ваше освобождение: {status}",
+  "notify-excuse-decided-body": "Действует с {date}.{comment}",
+  "notify-excuse-decided-comment": " Комментарий: {comment}",
+  "notify-excuse-status-approved": "одобрено",
+  "notify-excuse-status-rejected": "отклонено",
+  "notify-excuse-status-cancelled": "отозвано",
+  "notify-excuse-status-pending": "на рассмотрении",
+  "notify-excuse-period-open": "с {start} до особого распоряжения",
+  "notify-excuse-period-range": "с {start} по {end}",
+  "notify-excuse-message-title": "Новое сообщение по освобождению",
+  "notify-excuse-message-body": "{author}: {preview}",
+  "notify-excuse-message-files": "Файлов: {count}"
 }

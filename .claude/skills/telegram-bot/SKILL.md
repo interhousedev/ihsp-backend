@@ -16,6 +16,7 @@ description: Use when changing the aiogram bot in app/interfaces/bot - rendering
 
 - Callback data is at most **64 bytes UTF-8** (`richtext/buttons.py`, `callback_data_fits`). Never put ids that can grow, text or JSON in it.
 - For anything that acts (approve a tool call, undo, share), put a short **server-side single-use token** in the callback and keep the payload in Redis bound to the user: `store.take_call(token, user_id)` consumes it. Test replay, another user and expiry.
+- Typed callbacks shared with notifications live in `app/shared/contracts/callbacks.py` (for example `ExcuseCb` for curator approve/reject, handled in `routers/common/excuses`); the decision goes through the excuse use case, which checks the actor.
 
 ## Streaming
 

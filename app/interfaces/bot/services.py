@@ -6,9 +6,10 @@ from uuid import UUID
 
 from app.interfaces.bot.urls import BotUrls
 from app.modules.academic.domain.classwork.temporary_mark import TemporaryMarkView
+from app.modules.academic.domain.excuses.excuse import ExcuseStatus
 from app.modules.identity.domain.scope_offer import ScopeDecision
 from app.settings import Settings
-from app.shared.actor import Actor
+from app.shared.actor import Actor, Role
 from app.shared.clock import Clock
 from app.shared.contracts.academic import (
     ClassworkCommands,
@@ -39,6 +40,16 @@ class DecideScopeOfferCase(Protocol):
 
     async def execute(self, token: str, user_id: UUID, *, grant: bool) -> ScopeDecision:
         """Decide the offer behind the token for this user."""
+        ...
+
+
+class DecideExcuseByTokenCase(Protocol):
+    """The academic use case ``excuses.decide_by_token``."""
+
+    async def execute(
+        self, *, user_id: UUID, token: str, roles: frozenset[Role]
+    ) -> ExcuseStatus:
+        """Consume the button's token and decide the request."""
         ...
 
 
@@ -99,6 +110,7 @@ class BotServices:
     identity_commands: IdentityCommands
     cancel_otp_reset: CancelOtpReset
     decide_scope_offer: DecideScopeOfferCase
+    decide_excuse_by_token: DecideExcuseByTokenCase
     schedule: ScheduleQueries
     classwork_queries: ClassworkQueries
     classwork: ClassworkCommands
@@ -123,6 +135,7 @@ def services_from_container(container: Any) -> BotServices:
         identity_commands=container.identity.commands,
         cancel_otp_reset=container.identity.auth.cancel_otp_reset,
         decide_scope_offer=container.identity.auth.decide_scope_offer,
+        decide_excuse_by_token=container.academic.excuses.decide_by_token,
         schedule=container.academic.schedule.queries,
         classwork_queries=container.academic.classwork.queries,
         classwork=container.academic.classwork.commands,

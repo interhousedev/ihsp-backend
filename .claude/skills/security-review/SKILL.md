@@ -50,6 +50,12 @@ Base rules: [SECURITY.md](../../../SECURITY.md), the README "Security" section a
 ## Uploads
 
 - Check content by libmagic against a per-feature allowlist, not the extension or the client's content type. Cap size before reading the whole body. Serve user files from storage with `Content-Disposition` and never from the API origin as HTML.
+- Images (faces) also pass `check_image` in `app/modules/faces/domain/image.py`: the PNG/JPEG header dimensions are capped before decoding (decompression bombs).
+
+## Bearer tokens and devices
+
+- Personal tokens (`ihsp_pat_`, scopes `me:read`/`me:write`) and entrance device keys are stored hashed, shown once, revocable, and record last use. Never log the secret. A new `/v1/me` write route is reachable with `me:write`; decide whether it should be.
+- Vault unseal keys from `POST /v1/admin/vault/unseal` are forwarded to Vault and never logged, stored or echoed.
 
 ## Secrets and settings
 

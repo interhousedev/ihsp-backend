@@ -140,6 +140,7 @@ The full policy and the disclosure process are in [SECURITY.md](SECURITY.md). In
 - **AI access controls.** Every model call is a named AI task, passes an access guard (per-role and per-user access, soft limits changed at runtime) and is written to the usage ledger. Tools that change data need explicit user approval; guest bot users only reach the public knowledge base.
 - **Generative UI.** OpenUI blocks in AI answers are parsed against a fixed catalogue, validated and repaired once by a small model; a block that is still broken or unsafe is dropped, and clients without OpenUI get a Markdown rendering. The model never ships raw HTML or script to a browser.
 - **SSRF and uploads.** Outbound fetches (link checks, certificates, notebook sources) go through URL policies that refuse private, loopback and link-local addresses and handle redirects themselves; uploads are checked by content type (libmagic) against per-feature allowlists.
+- **Faces and entrance devices.** Face embeddings are biometric data: a face set by staff is locked against the student. Entrance devices authenticate with a hashed bearer token (`ihsp_dev_…`) shown once, are rate limited, and their calls and passages are purged after 7 days. See [SECURITY.md](SECURITY.md).
 - **Supply chain.** CI pins actions by commit, builds the image with an SBOM and provenance attestations, scans it with Trivy (fixable critical and high findings fail the build), signs it with keyless cosign, and runs CodeQL and a secrets scan. Dependabot updates dependencies weekly.
 
 ## MCP servers
@@ -221,6 +222,7 @@ By default every external service runs in a fake, deterministic mode that needs 
 | OpenRouter | `IHSP_OPENROUTER__MODE` | `IHSP_OPENROUTER__API_KEY` |
 | Exa | `IHSP_EXA__MODE` | `IHSP_EXA__API_KEY` |
 | Telegram | `IHSP_TELEGRAM__MODE` | `IHSP_TELEGRAM__BOT_TOKEN`, `IHSP_TELEGRAM__BOT_USERNAME` |
+| Faces | `IHSP_FACES__MODE` (`opencv`) | the YuNet and SFace models in `IHSP_FACES__MODEL_DIR` (`scripts/download_face_models.sh`; the image bakes them into `/opt/face-models`) |
 
 Secrets live only in git-ignored files: `.env.local` (copy `materials/.env.local.sample`, used by `local_up.sh`), `materials/dev-keys/secrets.env` (used by `scripts/dev.sh`), `.env.prod` and `secrets/`. Never commit or print a key.
 
@@ -244,6 +246,8 @@ scripts/test.sh             # pytest with coverage
 `tests/deploy` parses the Dockerfiles, nginx templates and compose files and runs `docker compose config` and `nginx -t`, so it needs Docker.
 
 ## API contract with iht-web
+
+When adding a feature page, add it to `app/shared/app_map.py` (the assistant `find_feature`, the MCP tool and `GET /v1/app-map` read it).
 
 `openapi/openapi.json` is the contract. After any change of a route or schema:
 

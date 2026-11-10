@@ -744,6 +744,7 @@ def build_world() -> World:
                 delete_temporary_mark=temporary_marks.delete,
             ),
             marks=SimpleNamespace(queries=marks),
+            excuses=SimpleNamespace(decide_by_token=None),
         ),
         links=SimpleNamespace(public=links),
         files=SimpleNamespace(public=files),

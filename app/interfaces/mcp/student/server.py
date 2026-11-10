@@ -5,6 +5,7 @@ from app.interfaces.mcp.factory import make_toolkit
 from app.interfaces.mcp.student.tools import (
     add_flashcards,
     create_flashcard_set,
+    find_feature,
     get_attendance,
     get_flashcard_set,
     get_homework,
@@ -27,6 +28,7 @@ from mcp.server.fastmcp import FastMCP
 
 TOOL_MODULES = (
     get_schedule,
+    find_feature,
     get_my_subjects,
     get_subject_lessons,
     get_homework,

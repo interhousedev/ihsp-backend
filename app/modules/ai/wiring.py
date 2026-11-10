@@ -43,6 +43,7 @@ from app.modules.ai.application.tools.create_artifact import CreateArtifact
 from app.modules.ai.application.tools.create_flashcard_set import CreateFlashcardSet
 from app.modules.ai.application.tools.create_notebook import CreateNotebook
 from app.modules.ai.application.tools.create_office_file import make_office_tools
+from app.modules.ai.application.tools.find_feature import FindFeature
 from app.modules.ai.application.tools.get_attendance import GetAttendance
 from app.modules.ai.application.tools.get_flashcard_set import GetFlashcardSet
 from app.modules.ai.application.tools.get_homework import GetHomework
@@ -105,6 +106,7 @@ from app.modules.ai.ports.summary_store import SummaryStore
 from app.modules.ai.ports.turn_lock import TurnLock
 from app.modules.ai.ports.unit_of_work import UowFactory
 from app.modules.ai.ports.usage import FreeUsage
+from app.settings import UrlsSettings
 from app.shared.contracts.academic import (
     ClassworkQueries,
     MarksQueries,
@@ -169,6 +171,7 @@ def make_student_tools(
     bindings: LateBindings,
     limits: LimitsProvider,
     uow_factory: UowFactory,
+    urls: UrlsSettings,
 ) -> list[Tool]:
     """Return the student assistant's tools in their fixed order."""
     return [
@@ -189,6 +192,7 @@ def make_student_tools(
         ListNotebookArtifacts(bindings),
         SearchWeb(bindings, limits),
         SearchKnowledgeBase(bindings, "student"),
+        FindFeature(urls),
         SearchProjectFiles(uow_factory, files),
         ListFlashcardSets(flashcards),
         GetFlashcardSet(flashcards),
@@ -203,7 +207,10 @@ def make_student_tools(
 
 
 def make_admin_tools(
-    backend: AdminToolBackend, identity: IdentityDirectory, bindings: LateBindings
+    backend: AdminToolBackend,
+    identity: IdentityDirectory,
+    bindings: LateBindings,
+    urls: UrlsSettings,
 ) -> list[Tool]:
     """Return the Administration assistant's tools in their fixed order."""
     tools: list[Tool] = [
@@ -215,6 +222,7 @@ def make_admin_tools(
         for d in ADMIN_TOOLS
     ]
     tools.append(SearchKnowledgeBase(bindings, "admin"))
+    tools.append(FindFeature(urls))
     return tools
 
 
@@ -270,10 +278,11 @@ def build(
                 bindings=bindings,
                 limits=deps.effective_limits,
                 uow_factory=uow_factory,
+                urls=settings.urls,
             ),
             history,
         ],
-        [*make_admin_tools(admin_tools, identity, bindings), history],
+        [*make_admin_tools(admin_tools, identity, bindings, settings.urls), history],
         [
             *make_author_tools(bindings, deps.i18n),
             *make_office_tools(files, bindings),

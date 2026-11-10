@@ -45,11 +45,13 @@ class UsageResolverAdapter:
         links: LinkUsage,
         ai: ChatUsage,
         notebooks: NotebookUsage | None = None,
+        excuses: NotebookUsage | None = None,
     ) -> None:
         """Keep the providers (they may be lazy proxies)."""
         self._links = links
         self._ai = ai
         self._notebooks = notebooks
+        self._excuses = excuses
 
     async def used_by(self, file_ids: Sequence[UUID]) -> dict[UUID, list[UsedBy]]:
         """Return the places that refer to each file (missing key = unused)."""
@@ -60,7 +62,10 @@ class UsageResolverAdapter:
             for kind, item_id, label in items:
                 used.setdefault(file_id, []).append(
                     UsedBy(
-                        kind=cast(Literal["link", "lesson", "chat", "notebook"], kind),
+                        kind=cast(
+                            Literal["link", "lesson", "chat", "notebook", "excuse"],
+                            kind,
+                        ),
                         id=item_id,
                         label=label,
                     )
@@ -70,16 +75,22 @@ class UsageResolverAdapter:
                 used.setdefault(file_id, []).append(
                     UsedBy(kind="chat", id=chat_id, label=title)
                 )
-        for file_id, books in (await self._notebook_uses(file_ids)).items():
-            for _, notebook_id, title in books:
-                used.setdefault(file_id, []).append(
-                    UsedBy(kind="notebook", id=notebook_id, label=title)
-                )
+        await self._add_owned(used, file_ids)
         return used
 
-    async def _notebook_uses(
-        self, file_ids: Sequence[UUID]
-    ) -> dict[UUID, list[tuple[str, UUID, str]]]:
-        if self._notebooks is None:
-            return {}
-        return await self._notebooks.used_by_files(file_ids)
+    async def _add_owned(
+        self, used: dict[UUID, list[UsedBy]], file_ids: Sequence[UUID]
+    ) -> None:
+        """Add the notebooks and the excuses a file is attached to."""
+        sources: list[tuple[Literal["notebook", "excuse"], NotebookUsage | None]] = [
+            ("notebook", self._notebooks),
+            ("excuse", self._excuses),
+        ]
+        for kind, provider in sources:
+            if provider is None:
+                continue
+            for file_id, places in (await provider.used_by_files(file_ids)).items():
+                for _, item_id, label in places:
+                    used.setdefault(file_id, []).append(
+                        UsedBy(kind=kind, id=item_id, label=label)
+                    )

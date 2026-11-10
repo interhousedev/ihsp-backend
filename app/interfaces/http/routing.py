@@ -20,8 +20,8 @@ V1 = "app.interfaces.http.v1"
 PUBLIC = "app.interfaces.http.public"
 
 # `/v1/id/*`, `/v1/oauth/*`, `/internal/emis/*` and
-# `/v1/admin/{users,teachers,audit,oauth-clients,login-cues}`; nginx (route-api.inc)
-# must list the same admin prefixes.
+# `/v1/admin/{users,teachers,audit,oauth-clients,login-cues,vault}`; nginx
+# (route-api.inc) must list the same admin prefixes.
 IDENTITY_PACKAGES: tuple[str, ...] = (
     f"{V1}.id",
     f"{V1}.id_registration",
@@ -69,6 +69,7 @@ API_PACKAGES: tuple[str, ...] = (
     f"{V1}.notifications",
     f"{V1}.push",
     f"{V1}.app_version",
+    f"{V1}.app_map",
     f"{V1}.ai",
     f"{V1}.web_search",
     f"{V1}.outbound_mail",
@@ -77,6 +78,10 @@ API_PACKAGES: tuple[str, ...] = (
     f"{V1}.admin_knowledge",
     f"{V1}.admin_feedback",
     f"{V1}.feedback",
+    f"{V1}.faces",
+    f"{V1}.me_excuses",
+    f"{V1}.staff_excuses",
+    f"{V1}.admin_excuses",
     f"{V1}.notebooks",
     f"{V1}.library",
     f"{V1}.lms_authoring",

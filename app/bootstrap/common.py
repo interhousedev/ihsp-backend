@@ -19,6 +19,7 @@ from app.bootstrap.adapters.composition.shared_platform_search import (
     SharedPlatformSearch,
 )
 from app.bootstrap.adapters.emis_source import make_emis_source
+from app.bootstrap.adapters.faces import FacesDirectoryAdapter, LazyExcuseStatus
 from app.bootstrap.adapters.feedback import FeedbackMailAdapter, FeedbackPeopleAdapter
 from app.bootstrap.adapters.guest_knowledge import GuestKnowledgeAdapter
 from app.bootstrap.adapters.lazy_proxy import LazyProxy
@@ -52,6 +53,7 @@ from app.modules.academic.wiring import (
     build_assessments,
     build_classwork,
     build_emis_import,
+    build_excuses,
     build_marks,
     build_schedule,
     build_teaching,
@@ -74,6 +76,7 @@ from app.modules.ai.infrastructure.usage_store import SqlUsageStore
 from app.modules.ai.wiring import build as build_ai
 from app.modules.certificates.wiring import build as build_certificates
 from app.modules.dashboard.wiring import build as build_dashboard
+from app.modules.faces.wiring import build as build_faces
 from app.modules.feedback.wiring import build as build_feedback
 from app.modules.files.ports.content_sniffer import ContentSniffer
 from app.modules.files.wiring import build as build_files
@@ -216,6 +219,7 @@ class _Assembler:
         self.usage_ai: LazyProxy[Any] = LazyProxy("ai (files usage)")
         self.ai_proxy: LazyProxy[AiQueries] = LazyProxy("ai (links)")
         self.usage_notebooks: LazyProxy[Any] = LazyProxy("notebooks (files usage)")
+        self.usage_excuses: LazyProxy[Any] = LazyProxy("excuses (files usage)")
         self.notebooks_proxy: LazyProxy[NotebooksQueries] = LazyProxy(
             "notebooks (links)"
         )
@@ -311,6 +315,7 @@ class _Assembler:
                 self.usage_links.view,
                 self.usage_ai.view,
                 self.usage_notebooks.view,
+                self.usage_excuses.view,
             )
             if self.plan.full
             else None
@@ -361,11 +366,19 @@ class _Assembler:
         c.flashcards = flashcards
         c.dashboard = build_dashboard(self.deps)
         c.links = links
+        excuses = build_excuses(
+            self.deps,
+            identity=identity.directory,
+            schedule=schedule.queries,
+            files=c.files.public,
+        )
+        self.usage_excuses.bind(excuses.file_usage)
         classwork = build_classwork(
             self.deps,
             identity=identity.directory,
             schedule=schedule.queries,
             links=links.public,
+            excuse_coverage=excuses.coverage,
         )
         source, closer = make_emis_source(
             c.settings,
@@ -421,6 +434,7 @@ class _Assembler:
                 marks=marks.queries,
                 classwork=classwork.queries,
             ),
+            excuses=excuses,
         )
 
     def build_mail(self) -> None:
@@ -460,6 +474,20 @@ class _Assembler:
             self.deps, identity=c.identity.directory, schedule=schedule
         )
         self.build_feedback()
+        self.build_faces()
+
+    def build_faces(self) -> None:
+        """Entrance face recognition; excuses are read from academic lazily."""
+        c = self.container
+        c.faces = build_faces(
+            self.deps,
+            files=c.files.public,
+            directory=FacesDirectoryAdapter(
+                c.identity.directory, c.academic.schedule.queries
+            ),
+            excuses=LazyExcuseStatus(lambda: c.academic.excuse_status),
+            sniffer=self.make_sniffer(),
+        )
 
     def build_feedback(self) -> None:
         """Platform feedback; responses go out through notify and mail."""

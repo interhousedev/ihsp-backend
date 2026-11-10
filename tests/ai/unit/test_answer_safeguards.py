@@ -9,6 +9,7 @@ from app.modules.ai.domain.assistant import Assistant
 from app.modules.ai.domain.prompts import system_prompt
 from app.modules.ai.infrastructure.openrouter import build_payload
 from app.modules.ai.wiring import make_admin_tools
+from app.settings import UrlsSettings
 from app.shared.ai.answer_language import answer_language, detect_language
 from app.shared.ai.narration import NarrationFilter, strip_narration
 from app.shared.ai.prompt_cache import split_system, with_volatile_tail
@@ -41,7 +42,7 @@ async def _request(h: AiHarness, assistant: Assistant) -> dict[str, Any]:
 
 
 @pytest.mark.parametrize(
-    ("assistant", "budget"), [(Assistant.STUDENT, 15_000), (Assistant.ADMIN, 14_500)]
+    ("assistant", "budget"), [(Assistant.STUDENT, 15_000), (Assistant.ADMIN, 14_700)]
 )
 async def test_the_request_stays_within_its_size_budget(
     h: AiHarness, assistant: Assistant, budget: int
@@ -116,9 +117,10 @@ async def test_the_admin_is_offered_no_student_or_author_tools(h: AiHarness) -> 
         t["function"]["name"] for t in (await _request(h, Assistant.ADMIN))["tools"]
     }
     assert not names & {"get_marks", "read_file", "make_document", "search_web"}
-    assert {t.name for t in make_admin_tools(MagicMock(), MagicMock(), MagicMock())} | {
-        "read_chat_history"
-    } == names
+    assert {
+        t.name
+        for t in make_admin_tools(MagicMock(), MagicMock(), MagicMock(), UrlsSettings())
+    } | {"read_chat_history"} == names
 
 
 async def test_every_student_tool_says_when_to_use_it_and_stays_small(

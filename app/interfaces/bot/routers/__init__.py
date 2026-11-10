@@ -19,6 +19,7 @@ def build_routers() -> list[Router]:
     from app.interfaces.bot.routers.common.chat_member.router import (
         build_router as chat_member,
     )
+    from app.interfaces.bot.routers.common.excuses.router import build_router as excuses
     from app.interfaces.bot.routers.common.feedback.router import (
         build_router as feedback,
     )
@@ -26,6 +27,9 @@ def build_routers() -> list[Router]:
         build_router as mcp_scopes,
     )
     from app.interfaces.bot.routers.common.menu.router import build_router as menu
+    from app.interfaces.bot.routers.common.onboarding.router import (
+        build_router as onboarding,
+    )
     from app.interfaces.bot.routers.common.settings.router import (
         build_router as settings,
     )
@@ -66,10 +70,12 @@ def build_routers() -> list[Router]:
         cancel,
         chat_member,
         security,
+        excuses,  # before guest: a stranger gets the generic answer here
         mcp_scopes,  # before guest: a stranger gets the generic answer here
         guest,  # before Log in and before any linked catch-all
         login,
         menu,
+        onboarding,
         today,
         marks,
         homework,

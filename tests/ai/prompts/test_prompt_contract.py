@@ -35,8 +35,8 @@ class Budget(NamedTuple):
 
 
 BUDGETS: Final = {
-    "student": Budget(5068, 9713, 399),
-    "admin": Budget(4599, 9816, 104),
+    "student": Budget(5068, 9990, 399),
+    "admin": Budget(4599, 10100, 104),
     "author": Budget(9371, 32320, 568),
     "notebook": Budget(4985, 2, 0),
     "guest": Budget(833, 336, 120),
@@ -61,7 +61,8 @@ TOOLS: Final = {
         "add_flashcards", "add_notebook_sources", "create_artifact",
         "create_flashcard_set", "create_notebook", "get_attendance",
         "get_flashcard_set", "get_homework", "get_lesson_materials", "get_marks",
-        "get_my_subjects", "get_notebook", "get_schedule", "get_subject_lessons",
+        "find_feature", "get_my_subjects", "get_notebook", "get_schedule",
+        "get_subject_lessons",
         "list_files", "list_flashcard_sets", "list_notebook_artifacts",
         "list_notebooks", "make_document", "read_chat_history", "read_file",
         "read_notebook_source", "search_files", "search_knowledge_base",
@@ -72,7 +73,8 @@ TOOLS: Final = {
         "create_lesson", "create_teacher", "create_timetable_entry",
         "delete_timetable_entry", "get_group", "get_student", "get_timetable",
         "list_broadcasts", "list_groups", "list_lessons", "list_teachers",
-        "missing_attendance", "read_chat_history", "search_knowledge_base",
+        "find_feature", "missing_attendance", "read_chat_history",
+        "search_knowledge_base",
         "search_users", "sync_status", "update_group", "update_lesson",
         "update_teacher", "update_timetable_entry",
     },

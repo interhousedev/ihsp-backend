@@ -21,12 +21,18 @@ class BotUrls:
     staff: str
     admin: str
     lms: str
+    library: str
 
     @classmethod
     def from_settings(cls, urls: UrlsSettings) -> "BotUrls":
         """Copy the origins the bot links to."""
         return cls(
-            id_app=urls.id, sp=urls.sp, staff=urls.staff, admin=urls.admin, lms=urls.lms
+            id_app=urls.id,
+            sp=urls.sp,
+            staff=urls.staff,
+            admin=urls.admin,
+            lms=urls.lms,
+            library=urls.library,
         )
 
     @property

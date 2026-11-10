@@ -146,7 +146,6 @@
   "bot-lesson-current": "Joriy dars",
   "bot-lesson-next": "Keyingi dars",
   "bot-lesson-none": "Kelgusi kunlarda dars yoʻq.",
-  "bot-linked-as": "Siz <b>{login}</b> sifatida kirdingiz.\nBoʻlimni tanlang:",
   "bot-linked-elsewhere": "Telegram akkaunti {who} {brand} hisobingizga ulandi. Agar bu siz boʻlmasangiz, xavfsizlik sozlamalarini oching.",
   "bot-linked-unknown": "yangi akkaunt",
   "bot-login-welcome": "{brand} ga xush kelibsiz. Kirish yoki roʻyxatdan oʻtish uchun «Kirish» tugmasini bosing.",

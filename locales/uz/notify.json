@@ -173,5 +173,21 @@
   "notify-feedback-kind-bug": "Xatolik haqida xabar",
   "notify-feedback-kind-other": "Fikr",
   "notify-feedback-response-title": "«{title}» murojaatingizga javob",
-  "notify-btn-open-feedback": "Murojaatni ochish"
+  "notify-btn-open-feedback": "Murojaatni ochish",
+  "notify-gate-unexcused-exit-title": "Sababsiz chiqish",
+  "notify-gate-unexcused-exit-body": "{student} ({group}) soat {time} da dars paytida sababsiz binodan chiqdi.",
+  "notify-excuse-requested-title": "Ozod etish uchun ariza",
+  "notify-excuse-requested-body": "{student} darslardan ozod etilishni soʻramoqda: {period}.",
+  "notify-excuse-decided-title": "Ozod etilishingiz: {status}",
+  "notify-excuse-decided-body": "{date} dan amal qiladi.{comment}",
+  "notify-excuse-decided-comment": " Izoh: {comment}",
+  "notify-excuse-status-approved": "tasdiqlandi",
+  "notify-excuse-status-rejected": "rad etildi",
+  "notify-excuse-status-cancelled": "qaytarib olindi",
+  "notify-excuse-status-pending": "koʻrib chiqilmoqda",
+  "notify-excuse-period-open": "{start} dan keyingi ogohlantirishgacha",
+  "notify-excuse-period-range": "{start} dan {end} gacha",
+  "notify-excuse-message-title": "Ozod etish boʻyicha yangi xabar",
+  "notify-excuse-message-body": "{author}: {preview}",
+  "notify-excuse-message-files": "Fayllar: {count}"
 }

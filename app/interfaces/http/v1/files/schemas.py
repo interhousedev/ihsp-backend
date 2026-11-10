@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 class UsedByItem(BaseModel):
     """A place that uses a file."""
 
-    kind: Literal["link", "lesson", "chat", "notebook"]
+    kind: Literal["link", "lesson", "chat", "notebook", "excuse"]
     id: UUID
     label: str
 

@@ -47,6 +47,10 @@ class NotificationType(StrEnum):
     FEEDBACK_NEW = "feedback_new"
     FEEDBACK_RESPONSE = "feedback_response"
     MCP_SCOPE_OFFER = "mcp_scope_offer"
+    GATE_UNEXCUSED_EXIT = "gate_unexcused_exit"
+    EXCUSE_REQUESTED = "excuse_requested"
+    EXCUSE_DECIDED = "excuse_decided"
+    EXCUSE_MESSAGE = "excuse_message"
 
 
 @dataclass(frozen=True, slots=True)

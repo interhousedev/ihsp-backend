@@ -78,6 +78,7 @@ ADMIN_READ_TOOLS: Final = frozenset(
         "list_broadcasts",
         "audit_log",
         "sync_status",
+        "find_feature",
     }
 )
 

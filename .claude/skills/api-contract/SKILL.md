@@ -16,6 +16,7 @@ IHSP_ENV_FILE=materials/dev.env uv run python scripts/export_openapi.py
 1. Commit `openapi/openapi.json` **in the same commit** as the change; say "contract export" in the subject.
 2. CI (`test.yml`) fails when the committed file differs from the export.
 3. Tell the user that `iht-web` needs `bun run sync:openapi` (regenerates the typed client) and a commit there.
+4. When adding a feature page, add it to `app/shared/app_map.py` (the assistant `find_feature`, the MCP tool and `GET /v1/app-map` read it).
 
 ## Compatibility
 

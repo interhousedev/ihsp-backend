@@ -27,7 +27,7 @@ class PersonRef(BaseModel):
 class UsedBy(BaseModel):
     """Where a file is used."""
 
-    kind: Literal["link", "lesson", "chat", "notebook"]
+    kind: Literal["link", "lesson", "chat", "notebook", "excuse"]
     id: UUID
     label: str
 

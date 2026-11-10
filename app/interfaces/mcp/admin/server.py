@@ -3,6 +3,7 @@
 from app.interfaces.mcp.admin.tools import (
     attendance_stats,
     audit_log,
+    find_feature,
     get_group,
     get_student,
     get_timetable,
@@ -33,6 +34,7 @@ TOOL_MODULES = (
     list_broadcasts,
     audit_log,
     sync_status,
+    find_feature,
 )
 
 

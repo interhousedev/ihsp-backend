@@ -608,6 +608,22 @@ class FilesSettings(BaseModel):
     """Largest lesson video uploaded to an LMS video block, in MiB (default 500)."""
 
 
+class FacesSettings(BaseModel):
+    """Face recognition at the entrance (module faces)."""
+
+    mode: Literal["fake", "opencv"] = "fake"
+    """`fake` hashes the image (tests, development); `opencv` runs YuNet and SFace."""
+
+    model_dir: str = "/opt/face-models"
+    """Folder with the YuNet and SFace ONNX files (scripts/download_face_models.sh)."""
+
+    match_threshold: float = 0.363
+    """Cosine similarity at or above which two faces are one person (SFace default)."""
+
+    device_rate_per_minute: int = 60
+    """Most identify requests per minute of one entrance device."""
+
+
 class LibrarySettings(BaseModel):
     """The library (`lib.ihsu.uz`): sizes, quotas, limits and UniLibrary.
 
@@ -1200,6 +1216,7 @@ class Settings(BaseSettings):
     identity: IdentitySettings = Field(default_factory=IdentitySettings)
     files: FilesSettings = Field(default_factory=FilesSettings)
     library: LibrarySettings = Field(default_factory=LibrarySettings)
+    faces: FacesSettings = Field(default_factory=FacesSettings)
     push: PushSettings = Field(default_factory=PushSettings)
     smtp_out: SmtpOutSettings = Field(default_factory=SmtpOutSettings)
     mail: MailSettings = Field(default_factory=MailSettings)

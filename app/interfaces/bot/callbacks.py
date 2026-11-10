@@ -63,3 +63,9 @@ class JournalMarkCb(CallbackData, prefix="jm"):
     lesson: str
     pos: int
     value: int
+
+
+class OnboardingCb(CallbackData, prefix="ob"):
+    """Step of the tour after linking: welcome, apps, settings or ai."""
+
+    step: str

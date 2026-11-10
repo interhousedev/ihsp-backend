@@ -4,6 +4,7 @@ import datetime as dt
 from typing import Any, Literal
 from uuid import UUID
 
+from app.interfaces.http.v1.me_classwork.schemas import ExcuseRefResponse
 from app.shared.lesson_kind import LessonKind, TopicSource
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -151,6 +152,7 @@ class MissedLessonResponse(BaseModel):
 
     lesson: LessonItemResponse
     excused: bool
+    excuse: ExcuseRefResponse | None = None
 
 
 class StudentAttendanceResponse(BaseModel):

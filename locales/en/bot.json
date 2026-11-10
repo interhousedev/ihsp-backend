@@ -146,7 +146,6 @@
   "bot-lesson-current": "Current lesson",
   "bot-lesson-next": "Next lesson",
   "bot-lesson-none": "No lessons in the coming days.",
-  "bot-linked-as": "Logged in as <b>{login}</b>.\nChoose a section:",
   "bot-linked-elsewhere": "Telegram account {who} was linked to your {brand} account. If it was not you, open the security settings.",
   "bot-linked-unknown": "a new Telegram account",
   "bot-login-welcome": "Welcome to {brand}. Press Log in to sign in or to register.",

@@ -5,6 +5,7 @@ from typing import Literal
 from uuid import UUID
 
 from app.interfaces.http.v1.me_classwork.schemas import (
+    ExcuseRefResponse,
     LessonItemResponse,
     PersonRefResponse,
     ResourceItemResponse,
@@ -45,6 +46,7 @@ class RosterItemResponse(BaseModel):
     absent: bool
     late: bool = False
     excused: bool
+    excuse: ExcuseRefResponse | None = None
     excuse_comment: str | None
     counted: bool
 
@@ -121,6 +123,7 @@ class JournalCellResponse(BaseModel):
     absent: bool
     late: bool = False
     excused: bool
+    excuse: ExcuseRefResponse | None = None
     marks: list[int]
     temporary_mark: JournalTemporaryMarkResponse | None = None
 

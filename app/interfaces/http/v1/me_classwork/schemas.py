@@ -9,6 +9,14 @@ from app.shared.lesson_kind import LessonKind, TopicSource
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class ExcuseRefResponse(BaseModel):
+    """The official excuse that covers an absence."""
+
+    id: UUID
+    template_code: str
+    origin: Literal["request", "curator"]
+
+
 class PersonRefResponse(BaseModel):
     """``PersonRef``."""
 
@@ -174,6 +182,7 @@ class MissedLessonResponse(BaseModel):
 
     lesson: LessonItemResponse
     excused: bool
+    excuse: ExcuseRefResponse | None = None
 
 
 class StudentAttendanceResponse(BaseModel):

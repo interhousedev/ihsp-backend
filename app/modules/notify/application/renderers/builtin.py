@@ -14,9 +14,21 @@ from app.modules.notify.application.renderers.curator_exam_mark import (
     CuratorExamMarkRenderer,
 )
 from app.modules.notify.application.renderers.emis_reauth import EmisReauthRenderer
+from app.modules.notify.application.renderers.excuse_decided import (
+    ExcuseDecidedRenderer,
+)
+from app.modules.notify.application.renderers.excuse_message import (
+    ExcuseMessageRenderer,
+)
+from app.modules.notify.application.renderers.excuse_requested import (
+    ExcuseRequestedRenderer,
+)
 from app.modules.notify.application.renderers.feedback_new import FeedbackNewRenderer
 from app.modules.notify.application.renderers.files_expiring import (
     FilesExpiringRenderer,
+)
+from app.modules.notify.application.renderers.gate_unexcused_exit import (
+    GateUnexcusedExitRenderer,
 )
 from app.modules.notify.application.renderers.knowledge_gap import KnowledgeGapRenderer
 from app.modules.notify.application.renderers.lesson_absence import (
@@ -117,6 +129,15 @@ def register_builtin_renderers(
         NotificationType.MCP_SCOPE_OFFER, McpScopeOfferRenderer(i18n, urls)
     )
     registry.register(
+        NotificationType.EXCUSE_REQUESTED, ExcuseRequestedRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.EXCUSE_DECIDED, ExcuseDecidedRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.EXCUSE_MESSAGE, ExcuseMessageRenderer(i18n, urls)
+    )
+    registry.register(
         NotificationType.ACCOUNT_CLOSING, AccountClosingRenderer(i18n, urls)
     )
     registry.register(
@@ -127,6 +148,9 @@ def register_builtin_renderers(
         NotificationType.STUDENT_SYNC_FAILED, StudentSyncFailedRenderer(i18n, urls)
     )
     registry.register(NotificationType.KNOWLEDGE_GAP, KnowledgeGapRenderer(i18n, urls))
+    registry.register(
+        NotificationType.GATE_UNEXCUSED_EXIT, GateUnexcusedExitRenderer(i18n, urls)
+    )
     registry.register(NotificationType.FEEDBACK_NEW, FeedbackNewRenderer(i18n, urls))
     registry.register(
         NotificationType.NOTEBOOK_ARTIFACT_READY,
