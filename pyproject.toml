@@ -26,6 +26,7 @@ dependencies = [
     "joserfc>=1.7.6",
     "mcp>=1.30,<2",
     "nh3>=0.3.7",
+    "opencv-python-headless==5.0.0.93",
     "openpyxl>=3.1.5",
     "pydantic>=2.13.5",
     "pydantic-settings>=2.15.0",

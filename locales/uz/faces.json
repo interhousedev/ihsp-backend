@@ -1,0 +1,14 @@
+{
+  "faces-locked": "Rasm xodim tomonidan qoʻyilgan, uni bu yerda oʻzgartirib boʻlmaydi.",
+  "faces-not-found": "Yuz rasmi yuklanmagan.",
+  "faces-student-not-found": "Oʻquvchi topilmadi.",
+  "faces-not-curator": "Buni faqat oʻquvchi guruhining kuratori yoki administrator qila oladi.",
+  "faces-image-empty": "Rasm boʻsh.",
+  "faces-image-too-large": "Rasm {max_mb} MB dan katta.",
+  "faces-image-type": "JPEG yoki PNG rasm yuklang.",
+  "faces-no-face": "Rasmda yuz topilmadi.",
+  "faces-multiple-faces": "Bir nechta yuz topildi, bitta yuzli rasm yuklang.",
+  "faces-device-not-found": "Qurilma topilmadi.",
+  "faces-device-name": "Qurilma nomini kiriting.",
+  "faces-device-unauthorized": "Qurilma tokeni yaroqsiz."
+}

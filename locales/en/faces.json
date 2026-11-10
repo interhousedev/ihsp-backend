@@ -1,0 +1,14 @@
+{
+  "faces-locked": "Your face was set by staff and cannot be changed here.",
+  "faces-not-found": "No face on file.",
+  "faces-student-not-found": "Student not found.",
+  "faces-not-curator": "Only the curator of this student's group or an administrator can do this.",
+  "faces-image-empty": "The image is empty.",
+  "faces-image-too-large": "The image is larger than {max_mb} MB.",
+  "faces-image-type": "Upload a JPEG or PNG image.",
+  "faces-no-face": "No face was found in the image.",
+  "faces-multiple-faces": "Several faces were found; upload a photo with one face.",
+  "faces-device-not-found": "Device not found.",
+  "faces-device-name": "Enter a device name.",
+  "faces-device-unauthorized": "The device token is not valid."
+}

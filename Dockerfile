@@ -52,6 +52,12 @@ RUN groupadd --system --gid 10001 ihsp \
     && useradd --system --no-log-init --uid 10001 --gid ihsp \
                --no-create-home --home-dir /nonexistent --shell /usr/sbin/nologin ihsp
 
+# Face models (YuNet detector, SFace recogniser), pinned by sha256 in the script.
+COPY scripts/download_face_models.sh /tmp/download_face_models.sh
+RUN apt-get update && apt-get install -y --no-install-recommends curl ca-certificates \
+    && sh /tmp/download_face_models.sh /opt/face-models \
+    && apt-get purge -y curl && apt-get autoremove -y && rm -rf /var/lib/apt/lists/* /tmp/download_face_models.sh
+
 WORKDIR /app
 
 COPY --from=builder /app/.venv /app/.venv
