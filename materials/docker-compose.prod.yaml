@@ -667,6 +667,7 @@ services:
     volumes:
       - bugsink_data:/data
       - bugsink_wakeup:/wakeup
+      - bugsink_queue:/tmp
       - ./healthcheck:/healthcheck:ro
     healthcheck:
       <<: *healthcheck
@@ -694,6 +695,8 @@ services:
     networks: [data]
 
   # Snappea: processes the events the web process queues (same image, its own process).
+  # The queue is /tmp/snappea.sqlite3 (hard-coded by the image); the shared bugsink_queue
+  # volume lets both containers see it, and the web container migrates it at start.
   bugsink_worker:
     image: bugsink/bugsink:2.6.2
     command: ["bugsink-runsnappea"]
@@ -716,6 +719,7 @@ services:
     volumes:
       - bugsink_data:/data
       - bugsink_wakeup:/wakeup
+      - bugsink_queue:/tmp
     depends_on:
       bugsink:
         condition: service_healthy
@@ -784,6 +788,7 @@ volumes:
   s3_data:
   bugsink_data:
   bugsink_wakeup:
+  bugsink_queue:
   bugsink_db_data:
 
 secrets:
