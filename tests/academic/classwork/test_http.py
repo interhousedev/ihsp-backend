@@ -208,6 +208,7 @@ async def test_homework_put_delete_and_topic(
         "text": "Read page 5",
         "due_date": "2026-10-13",
         "due_auto": True,
+        "submissions": {"submitted": 0, "total": 3},
     }
     assert topic.json()["lesson"]["topic"] == "Waves"
     assert removed.status_code == 200

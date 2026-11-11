@@ -88,6 +88,14 @@ class ResourceItemResponse(BaseModel):
     source: Literal["user", "emis"] = "user"
 
 
+class SubmissionSummaryResponse(BaseModel):
+    """What the student handed in for a homework item."""
+
+    status: Literal["submitted", "late"]
+    file_count: int
+    submitted_at: dt.datetime
+
+
 class HomeworkItemResponse(BaseModel):
     """``HomeworkItem``; ``days_overdue`` is 0 unless the open item is past due."""
 
@@ -101,6 +109,7 @@ class HomeworkItemResponse(BaseModel):
     updated: bool
     done_at: dt.datetime | None
     note: str | None
+    submission: SubmissionSummaryResponse | None = None
 
 
 class MarkItemResponse(BaseModel):
@@ -208,6 +217,32 @@ class HomeworkNoteBody(BaseModel):
     """Body of ``PUT /v1/me/homework/{lesson_id}/note``."""
 
     note: str | None
+
+
+class SubmissionFileResponse(BaseModel):
+    """A stored file attached to a homework submission."""
+
+    id: UUID
+    name: str
+    size: int
+    content_type: str
+
+
+class HomeworkSubmissionResponse(BaseModel):
+    """``HomeworkSubmission``: the student's own submission."""
+
+    lesson_id: UUID
+    status: Literal["submitted", "late"]
+    files: list[SubmissionFileResponse]
+    comment: str | None
+    submitted_at: dt.datetime
+
+
+class HomeworkSubmissionBody(BaseModel):
+    """Body of ``PUT /v1/me/homework/{lesson_id}/submission``."""
+
+    file_ids: list[UUID] = Field(min_length=1, max_length=10)
+    comment: str | None = None
 
 
 class MyWorkOffResponse(BaseModel):

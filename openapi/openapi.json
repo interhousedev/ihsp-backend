@@ -15496,6 +15496,114 @@
         "title": "HomeworkNoteBody",
         "type": "object"
       },
+      "HomeworkSubmissionBody": {
+        "description": "Body of ``PUT /v1/me/homework/{lesson_id}/submission``.",
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "file_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "File Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "file_ids"
+        ],
+        "title": "HomeworkSubmissionBody",
+        "type": "object"
+      },
+      "HomeworkSubmissionResponse": {
+        "description": "``HomeworkSubmission``: the student's own submission.",
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/SubmissionFileResponse"
+            },
+            "title": "Files",
+            "type": "array"
+          },
+          "lesson_id": {
+            "format": "uuid",
+            "title": "Lesson Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "submitted",
+              "late"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "submitted_at": {
+            "format": "date-time",
+            "title": "Submitted At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lesson_id",
+          "status",
+          "files",
+          "comment",
+          "submitted_at"
+        ],
+        "title": "HomeworkSubmissionResponse",
+        "type": "object"
+      },
+      "HomeworkSubmissionsResponse": {
+        "description": "``HomeworkSubmissions``: the teacher's view of a lesson's homework.",
+        "properties": {
+          "counts": {
+            "$ref": "#/components/schemas/SubmissionCountsResponse"
+          },
+          "lesson_id": {
+            "format": "uuid",
+            "title": "Lesson Id",
+            "type": "string"
+          },
+          "students": {
+            "items": {
+              "$ref": "#/components/schemas/StaffSubmissionRowResponse"
+            },
+            "title": "Students",
+            "type": "array"
+          }
+        },
+        "required": [
+          "lesson_id",
+          "counts",
+          "students"
+        ],
+        "title": "HomeworkSubmissionsResponse",
+        "type": "object"
+      },
       "IdentifiedStudentOut": {
         "description": "The student the entrance recognised.",
         "properties": {
@@ -34313,6 +34421,16 @@
             ],
             "title": "Due Date"
           },
+          "submissions": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubmissionCountsShortResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "text": {
             "title": "Text",
             "type": "string"
@@ -34623,6 +34741,114 @@
           "groups"
         ],
         "title": "StaffSubjectResponse",
+        "type": "object"
+      },
+      "StaffSubmissionFileResponse": {
+        "description": "A handed-in file with a time-limited download link.",
+        "properties": {
+          "content_type": {
+            "title": "Content Type",
+            "type": "string"
+          },
+          "download_url": {
+            "title": "Download Url",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "size",
+          "content_type",
+          "download_url"
+        ],
+        "title": "StaffSubmissionFileResponse",
+        "type": "object"
+      },
+      "StaffSubmissionRowResponse": {
+        "description": "One student of the lesson and what they handed in.",
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/StaffSubmissionFileResponse"
+            },
+            "title": "Files",
+            "type": "array"
+          },
+          "group_name": {
+            "title": "Group Name",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "submitted",
+              "late",
+              "missing"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "student": {
+            "$ref": "#/components/schemas/app__interfaces__http__v1__me_classwork__schemas__PersonRefResponse"
+          },
+          "subgroup": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subgroup"
+          },
+          "submitted_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitted At"
+          }
+        },
+        "required": [
+          "student",
+          "group_name",
+          "subgroup",
+          "status",
+          "files",
+          "comment",
+          "submitted_at"
+        ],
+        "title": "StaffSubmissionRowResponse",
         "type": "object"
       },
       "StaffTodayResponse": {
@@ -37336,6 +37562,113 @@
         ],
         "title": "SubjectRole",
         "type": "string"
+      },
+      "SubmissionCountsResponse": {
+        "description": "Totals over the lesson's students.",
+        "properties": {
+          "late": {
+            "title": "Late",
+            "type": "integer"
+          },
+          "missing": {
+            "title": "Missing",
+            "type": "integer"
+          },
+          "submitted": {
+            "title": "Submitted",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "submitted",
+          "late",
+          "missing",
+          "total"
+        ],
+        "title": "SubmissionCountsResponse",
+        "type": "object"
+      },
+      "SubmissionCountsShortResponse": {
+        "description": "How many students handed the homework in.",
+        "properties": {
+          "submitted": {
+            "title": "Submitted",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "submitted",
+          "total"
+        ],
+        "title": "SubmissionCountsShortResponse",
+        "type": "object"
+      },
+      "SubmissionFileResponse": {
+        "description": "A stored file attached to a homework submission.",
+        "properties": {
+          "content_type": {
+            "title": "Content Type",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "size",
+          "content_type"
+        ],
+        "title": "SubmissionFileResponse",
+        "type": "object"
+      },
+      "SubmissionSummaryResponse": {
+        "description": "What the student handed in for a homework item.",
+        "properties": {
+          "file_count": {
+            "title": "File Count",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "submitted",
+              "late"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "submitted_at": {
+            "format": "date-time",
+            "title": "Submitted At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "file_count",
+          "submitted_at"
+        ],
+        "title": "SubmissionSummaryResponse",
+        "type": "object"
       },
       "SubmitAttendanceBody": {
         "description": "Body of ``PUT /v1/staff/lessons/{id}/attendance``.",
@@ -46294,6 +46627,16 @@
           },
           "subject": {
             "$ref": "#/components/schemas/app__interfaces__http__v1__me_classwork__schemas__SubjectRefResponse"
+          },
+          "submission": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SubmissionSummaryResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "teacher": {
             "anyOf": [
@@ -72043,6 +72386,137 @@
         ]
       }
     },
+    "/v1/me/homework/{lesson_id}/submission": {
+      "delete": {
+        "description": "Delete the caller's submission; the files stay in their storage.",
+        "operationId": "withdraw_homework_submission_v1_me_homework__lesson_id__submission_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lesson_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lesson Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Withdraw Homework Submission",
+        "tags": [
+          "me-classwork"
+        ]
+      },
+      "get": {
+        "description": "Return the caller's submission or 404.",
+        "operationId": "get_homework_submission_v1_me_homework__lesson_id__submission_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lesson_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lesson Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HomeworkSubmissionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Homework Submission",
+        "tags": [
+          "me-classwork"
+        ]
+      },
+      "put": {
+        "description": "Save or replace the submission; after the due date it counts as late.",
+        "operationId": "submit_homework_v1_me_homework__lesson_id__submission_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lesson_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lesson Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HomeworkSubmissionBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HomeworkSubmissionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit Homework",
+        "tags": [
+          "me-classwork"
+        ]
+      }
+    },
     "/v1/me/lesson-results": {
       "get": {
         "description": "Return attendance and the mark of each lesson that has already started.",
@@ -80607,6 +81081,50 @@
           }
         },
         "summary": "Set Topic",
+        "tags": [
+          "staff-classwork"
+        ]
+      }
+    },
+    "/v1/staff/lessons/{lesson_id}/homework/submissions": {
+      "get": {
+        "description": "Return who handed the homework in, with the files.",
+        "operationId": "list_homework_submissions_v1_staff_lessons__lesson_id__homework_submissions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lesson_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lesson Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HomeworkSubmissionsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Homework Submissions",
         "tags": [
           "staff-classwork"
         ]

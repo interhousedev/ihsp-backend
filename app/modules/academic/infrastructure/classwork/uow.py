@@ -19,6 +19,9 @@ from app.modules.academic.infrastructure.classwork.results_reader import (
 from app.modules.academic.infrastructure.classwork.student_repository import (
     SqlStudentRepository,
 )
+from app.modules.academic.infrastructure.classwork.submission_repository import (
+    SqlSubmissionRepository,
+)
 from app.modules.academic.infrastructure.classwork.temporary_mark_repository import (
     SqlTemporaryMarkRepository,
 )
@@ -42,6 +45,7 @@ class SqlClassworkUnitOfWork(SqlUnitOfWork):
     lesson_reader: SqlLessonReader
     students: SqlStudentRepository
     todos: SqlTodoRepository
+    submissions: SqlSubmissionRepository
     reports: SqlAttendanceReports
     journal: SqlJournalReader
     results: SqlResultsReader
@@ -57,6 +61,7 @@ class SqlClassworkUnitOfWork(SqlUnitOfWork):
         self.lesson_reader = SqlLessonReader(self.session)
         self.students = SqlStudentRepository(self.session)
         self.todos = SqlTodoRepository(self.session)
+        self.submissions = SqlSubmissionRepository(self.session)
         self.reports = SqlAttendanceReports(self.session)
         self.journal = SqlJournalReader(self.session)
         self.results = SqlResultsReader(self.session)

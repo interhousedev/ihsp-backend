@@ -29,6 +29,12 @@ class McpTeacherTools(Protocol):
         """One lesson as its teacher (or the curator) sees it: roster, homework."""
         ...
 
+    async def homework_submissions(
+        self, actor: Actor, lesson_id: UUID
+    ) -> dict[str, Any]:
+        """Who handed in the homework of a lesson, with download links."""
+        ...
+
     async def my_groups(self, actor: Actor) -> dict[str, Any]:
         """`{"curated": GroupItem[], "teaching": {subject, audience_key, label}[]}`."""
         ...

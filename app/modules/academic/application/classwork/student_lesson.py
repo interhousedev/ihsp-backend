@@ -66,12 +66,14 @@ class StudentLesson:
             if lesson is None:
                 raise LessonNotFoundError(params={"lesson_id": str(lesson_id)})
             todo = await uow.todos.get(student.user_id, lesson_id)
+            submission = await uow.submissions.get(student.user_id, lesson_id)
             marks = await uow.results.lesson_marks(student.user_id, lesson_id)
         refs = await self.links.lesson_resources(lesson_id, include_hidden=True)
         shown = [
             ref for ref in refs if not ref.hidden or ref.author_id == actor.user_id
         ]
-        built = await self.homework.build_many([HomeworkRecord(lesson, todo)], locale)
+        record = HomeworkRecord(lesson, todo, submission)
+        built = await self.homework.build_many([record], locale)
         offset = (lesson.date - today).days
         excuses = await self.excuse_coverage.effective([lesson])
         return {

@@ -66,6 +66,7 @@ class StaffLesson:
                     raise NotLessonTeacherError(params={"lesson_id": str(lesson_id)})
             roster = await self.roster_loader.load(uow, lesson)
             work_offs = await uow.work_offs.for_lesson(lesson_id)
+            submitted = len(await uow.submissions.for_lesson(lesson_id))
         sheet = await self.sheets.build(
             lesson,
             roster,
@@ -92,6 +93,10 @@ class StaffLesson:
                         else None
                     ),
                     "due_auto": lesson.homework_due_auto,
+                    "submissions": {
+                        "submitted": submitted,
+                        "total": len(roster.expected),
+                    },
                 }
                 if lesson.has_homework
                 else None

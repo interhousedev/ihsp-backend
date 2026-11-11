@@ -35,5 +35,8 @@
   "academic-temporary-mark-value-invalid": "Оценка во временном журнале должна быть целым числом от {min} до {max}.",
   "academic-temporary-mark-comment-invalid": "Комментарий должен быть не длиннее {max} символов.",
   "academic-temporary-mark-not-found": "Оценка во временном журнале не найдена.",
-  "academic-temporary-mark-student-not-in-lesson": "Этого ученика нет в списке урока."
+  "academic-temporary-mark-student-not-in-lesson": "Этого ученика нет в списке урока.",
+  "homework-submission-not-found": "Вы ещё ничего не сдали по этому уроку.",
+  "homework-submission-files-invalid": "Файлы нельзя сдать: прикрепите от 1 до {max} своих загруженных файлов.",
+  "homework-submission-comment-too-long": "Комментарий может содержать до {max} символов."
 }

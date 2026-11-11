@@ -35,5 +35,8 @@
   "academic-temporary-mark-value-invalid": "A temporary mark must be a whole number from {min} to {max}.",
   "academic-temporary-mark-comment-invalid": "The comment must be at most {max} characters.",
   "academic-temporary-mark-not-found": "This temporary mark was not found.",
-  "academic-temporary-mark-student-not-in-lesson": "This student is not on the lesson's list."
+  "academic-temporary-mark-student-not-in-lesson": "This student is not on the lesson's list.",
+  "homework-submission-not-found": "You have not submitted anything for this lesson.",
+  "homework-submission-files-invalid": "The files cannot be submitted: attach 1 to {max} of your own uploaded files.",
+  "homework-submission-comment-too-long": "A comment can have up to {max} characters."
 }

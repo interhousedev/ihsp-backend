@@ -54,6 +54,20 @@ class McpAcademicTools(Protocol):
         """Lesson, homework, materials by kind, own mark and attendance."""
         ...
 
+    async def submit_homework(
+        self,
+        actor: Actor,
+        lesson_id: UUID,
+        file_ids: Sequence[UUID],
+        comment: str | None,
+    ) -> dict[str, Any]:
+        """Hand in ready files the student owns for a lesson's homework."""
+        ...
+
+    async def withdraw_homework_submission(self, actor: Actor, lesson_id: UUID) -> None:
+        """Withdraw the student's submission."""
+        ...
+
     async def teacher_names(self, teacher_ids: Sequence[UUID]) -> dict[UUID, str]:
         """Display names of the teachers of lessons the caller already sees."""
         ...

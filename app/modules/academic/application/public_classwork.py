@@ -36,6 +36,7 @@ from app.modules.academic.application.classwork.toggle_draft_absent import (
 )
 from app.modules.academic.application.classwork.update_work_off import UpdateWorkOff
 from app.modules.academic.domain.classwork.excuse_ref import ExcuseRef
+from app.modules.academic.domain.classwork.submission_rules import submission_status
 from app.modules.academic.domain.classwork.work_off import WorkOffMode
 from app.shared.actor import Actor
 from app.shared.clock import Clock, local_today
@@ -119,6 +120,7 @@ class ClassworkQueriesImpl:
                     "lesson": lesson.to_ref(locale),
                     "done_at": todo.done_at if todo else None,
                     "note": todo.note if todo else None,
+                    "submission": _submission(record.submission, lesson),
                 }
             )
         return items
@@ -276,3 +278,14 @@ def _mode(value: str) -> WorkOffMode:
 def _excuse_template(ref: ExcuseRef | None) -> str | None:
     """Template code of the official excuse behind the absence, if there is one."""
     return ref.template_code or None if ref else None
+
+
+def _submission(record: Any, lesson: Any) -> dict[str, Any] | None:  # noqa: ANN401
+    """Status of the student's submission for the assistant and MCP, or None."""
+    if record is None:
+        return None
+    return {
+        "status": submission_status(record.submitted_at, lesson.homework_due_date),
+        "file_count": len(record.file_ids),
+        "submitted_at": record.submitted_at,
+    }

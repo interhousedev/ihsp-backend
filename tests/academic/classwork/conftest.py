@@ -15,6 +15,7 @@ from tests.academic.classwork.world import Maker, World, seed_world
 from tests.fakes.academic.classwork.identity import FakeIdentity
 from tests.fakes.academic.classwork.links import FakeLinks
 from tests.fakes.academic.classwork.schedule import FakeSchedule
+from tests.fakes.academic.excuses.world import FakeFiles
 from tests.fakes.clock import FixedClock
 from tests.fakes.outbox import InMemoryOutbox
 from tests.fakes.tasks import FakeTaskKicker
@@ -66,6 +67,7 @@ class Env:
     redis: FakeRedis
     outbox: InMemoryOutbox
     coverage: "FakeCoverage"
+    files: FakeFiles
 
     def actor(self, role: Role, user_id: Any) -> Actor:
         """Build an actor for a seeded user."""
@@ -143,14 +145,17 @@ async def env(
             synced_at=None,
         )
     coverage = FakeCoverage()
+    files = FakeFiles()
     services = build_classwork(
         deps,
         identity=identity,
         schedule=schedule,
         links=links,
         excuse_coverage=coverage,
+        files=files,
     )
     return Env(
+        files=files,
         coverage=coverage,
         services=services,
         world=world,

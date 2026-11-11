@@ -5,7 +5,11 @@ from collections.abc import Sequence
 from uuid import UUID
 
 from app.modules.academic.domain.classwork.lesson import Lesson
-from app.modules.academic.domain.classwork.records import HomeworkRecord, TodoRecord
+from app.modules.academic.domain.classwork.records import (
+    HomeworkRecord,
+    SubmissionRecord,
+    TodoRecord,
+)
 from app.modules.academic.infrastructure.classwork.lesson_queries import (
     fetch_lessons,
     group_name_map,
@@ -15,6 +19,9 @@ from app.modules.academic.infrastructure.classwork.lesson_queries import (
 from app.modules.academic.infrastructure.classwork.sql_helpers import (
     has_uuid,
     overlaps,
+)
+from app.modules.academic.infrastructure.orm.homework_submission import (
+    HomeworkSubmission,
 )
 from app.modules.academic.infrastructure.orm.homework_todo import HomeworkTodo
 from app.modules.academic.infrastructure.orm.lesson import Lesson as LessonRow
@@ -116,12 +123,24 @@ class SqlLessonReader:
                 HomeworkTodo.note.label("todo_note"),
                 HomeworkTodo.updated_at.label("todo_updated_at"),
                 HomeworkTodo.id.label("todo_id"),
+                HomeworkSubmission.id.label("submission_id"),
+                HomeworkSubmission.file_ids.label("submission_file_ids"),
+                HomeworkSubmission.comment.label("submission_comment"),
+                HomeworkSubmission.submitted_at.label("submission_submitted_at"),
+                HomeworkSubmission.updated_at.label("submission_updated_at"),
             )
             .outerjoin(
                 HomeworkTodo,
                 sa.and_(
                     HomeworkTodo.lesson_id == LessonRow.id,
                     HomeworkTodo.student_id == student_id,
+                ),
+            )
+            .outerjoin(
+                HomeworkSubmission,
+                sa.and_(
+                    HomeworkSubmission.lesson_id == LessonRow.id,
+                    HomeworkSubmission.student_id == student_id,
                 ),
             )
             .where(
@@ -145,7 +164,19 @@ class SqlLessonReader:
                     note=row.todo_note,
                     updated_at=row.todo_updated_at,
                 )
-            records.append(HomeworkRecord(lesson=lesson, todo=todo))
+            submission = None
+            if row.submission_id is not None:
+                submission = SubmissionRecord(
+                    lesson_id=lesson.id,
+                    student_id=student_id,
+                    file_ids=tuple(row.submission_file_ids),
+                    comment=row.submission_comment,
+                    submitted_at=row.submission_submitted_at,
+                    updated_at=row.submission_updated_at,
+                )
+            records.append(
+                HomeworkRecord(lesson=lesson, todo=todo, submission=submission)
+            )
         return records
 
     async def student_absences(

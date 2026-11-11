@@ -284,6 +284,33 @@ class FakeFiles:
     async def get(self, file_id: UUID) -> FileRef | None:
         return self.files.get(file_id)
 
+    async def store_bytes(
+        self,
+        *,
+        owner_id: UUID,
+        scope: FileScope,
+        purpose: FilePurpose,
+        name: str,
+        data: bytes,
+        expires_days: int | None = None,
+    ) -> FileRef:
+        """Keep the bytes; the file is ready at once unless `store_status` says not."""
+        stored = make_file(
+            owner_id,
+            scope=scope,
+            purpose=purpose,
+            name=name,
+            byte_size=len(data),
+            content_type="text/plain",
+            status=getattr(self, "store_status", "ready"),
+        )
+        self.files[stored.id] = stored
+        self.uploads: list[tuple[UUID, bytes]] = [
+            *getattr(self, "uploads", []),
+            (stored.id, data),
+        ]
+        return stored
+
     async def get_many(self, file_ids: Sequence[UUID]) -> dict[UUID, FileRef]:
         return {i: self.files[i] for i in file_ids if i in self.files}
 

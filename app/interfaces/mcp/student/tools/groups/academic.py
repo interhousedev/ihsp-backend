@@ -9,6 +9,7 @@ from app.interfaces.mcp.student.tools import (
     get_sync_status,
     get_teacher_timetable,
     refresh_my_marks,
+    submit_homework,
 )
 
 TOOL_MODULES: tuple[ModuleType, ...] = (
@@ -18,4 +19,5 @@ TOOL_MODULES: tuple[ModuleType, ...] = (
     get_teacher_timetable,
     get_gpa,
     get_lesson_detail,
+    submit_homework,
 )

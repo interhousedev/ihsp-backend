@@ -94,6 +94,8 @@ webfinger:
       - library:read
       - files:read.all
       - learning:read
+      - files:write
+      - homework:submit
       - lms.courses.read
       - lms.courses.write
       - lms.courses.delete

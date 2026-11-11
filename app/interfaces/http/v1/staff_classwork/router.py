@@ -21,6 +21,9 @@ from app.interfaces.http.v1.staff_classwork.handlers.get_today import get_today
 from app.interfaces.http.v1.staff_classwork.handlers.list_group_students import (
     list_group_students,
 )
+from app.interfaces.http.v1.staff_classwork.handlers.list_homework_submissions import (  # noqa: E501
+    list_homework_submissions,
+)
 from app.interfaces.http.v1.staff_classwork.handlers.set_excuse import set_excuse
 from app.interfaces.http.v1.staff_classwork.handlers.set_homework import set_homework
 from app.interfaces.http.v1.staff_classwork.handlers.set_topic import set_topic
@@ -38,6 +41,11 @@ router.add_api_route("/today", get_today, methods=["GET"])
 router.add_api_route("/lessons/{id}", get_lesson, methods=["GET"])
 router.add_api_route("/lessons/{id}/homework", set_homework, methods=["PUT"])
 router.add_api_route("/lessons/{id}/homework", clear_homework, methods=["DELETE"])
+router.add_api_route(
+    "/lessons/{lesson_id}/homework/submissions",
+    list_homework_submissions,
+    methods=["GET"],
+)
 router.add_api_route("/lessons/{id}/topic", set_topic, methods=["PUT"])
 router.add_api_route("/lessons/{id}/attendance", submit_attendance, methods=["PUT"])
 router.add_api_route("/lessons/{id}/attendance/excuse", set_excuse, methods=["PUT"])

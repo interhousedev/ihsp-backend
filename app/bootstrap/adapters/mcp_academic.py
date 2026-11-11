@@ -90,6 +90,24 @@ class McpAcademicToolsAdapter:
             "retry_after_seconds": outcome.retry_after_seconds,
         }
 
+    async def submit_homework(
+        self,
+        actor: Actor,
+        lesson_id: UUID,
+        file_ids: Sequence[UUID],
+        comment: str | None,
+    ) -> dict[str, Any]:
+        """Hand in files for a lesson's homework."""
+        return await self._c.academic.classwork.submit_homework.execute(
+            lesson_id, actor, file_ids, comment
+        )
+
+    async def withdraw_homework_submission(self, actor: Actor, lesson_id: UUID) -> None:
+        """Withdraw the submission."""
+        await self._c.academic.classwork.withdraw_homework_submission.execute(
+            lesson_id, actor
+        )
+
     async def sync_status(self, user_id: UUID) -> dict[str, Any]:
         """The user's sync job; errors only as fixed codes, never raw text."""
         job = await self._c.academic.emis_import.sync_jobs.get(user_id)

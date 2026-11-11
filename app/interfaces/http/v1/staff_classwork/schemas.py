@@ -80,12 +80,20 @@ class AttendanceSheetResponse(BaseModel):
     work_offs: list[WorkOffResponse] = Field(default_factory=list)
 
 
+class SubmissionCountsShortResponse(BaseModel):
+    """How many students handed the homework in."""
+
+    submitted: int
+    total: int
+
+
 class StaffHomeworkResponse(BaseModel):
     """Homework of a lesson as the teacher sees it."""
 
     text: str
     due_date: dt.date | None
     due_auto: bool
+    submissions: SubmissionCountsShortResponse | None = None
 
 
 class StaffLessonResponse(BaseModel):
@@ -255,3 +263,42 @@ class ToggleBody(BaseModel):
     absent: bool
     late: bool = False
     base_version: int
+
+
+class StaffSubmissionFileResponse(BaseModel):
+    """A handed-in file with a time-limited download link."""
+
+    id: UUID
+    name: str
+    size: int
+    content_type: str
+    download_url: str
+
+
+class StaffSubmissionRowResponse(BaseModel):
+    """One student of the lesson and what they handed in."""
+
+    student: PersonRefResponse
+    group_name: str
+    subgroup: int | None
+    status: Literal["submitted", "late", "missing"]
+    files: list[StaffSubmissionFileResponse]
+    comment: str | None
+    submitted_at: dt.datetime | None
+
+
+class SubmissionCountsResponse(BaseModel):
+    """Totals over the lesson's students."""
+
+    submitted: int
+    late: int
+    missing: int
+    total: int
+
+
+class HomeworkSubmissionsResponse(BaseModel):
+    """``HomeworkSubmissions``: the teacher's view of a lesson's homework."""
+
+    lesson_id: UUID
+    counts: SubmissionCountsResponse
+    students: list[StaffSubmissionRowResponse]

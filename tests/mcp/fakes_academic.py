@@ -1,5 +1,6 @@
 """Fake of McpAcademicTools: scripted answers, and a record of what was started."""
 
+from collections.abc import Sequence
 from datetime import date, datetime
 from typing import Any
 from uuid import UUID
@@ -24,11 +25,24 @@ class FakeAcademicTools:
         self.gpa_answer: dict[str, Any] = {"semester": 3, "gpa": 4.5, "subjects": []}
         self.details: dict[tuple[UUID, UUID], dict[str, Any]] = {}
         self.names: dict[UUID, str] = {}
-        self.calls: list[tuple[str, UUID]] = []
+        self.calls: list[tuple[Any, ...]] = []
 
     async def request_refresh(self, actor: Actor) -> dict[str, Any]:
         self.calls.append(("request_refresh", actor.user_id))
         return self.refresh_answer
+
+    async def submit_homework(
+        self,
+        actor: Actor,
+        lesson_id: UUID,
+        file_ids: Sequence[UUID],
+        comment: str | None,
+    ) -> dict[str, Any]:
+        self.calls.append(("submit_homework", actor, lesson_id, file_ids, comment))
+        return {"lesson_id": str(lesson_id), "status": "submitted"}
+
+    async def withdraw_homework_submission(self, actor: Actor, lesson_id: UUID) -> None:
+        self.calls.append(("withdraw_homework_submission", actor, lesson_id))
 
     async def sync_status(self, user_id: UUID) -> dict[str, Any]:
         self.calls.append(("sync_status", user_id))

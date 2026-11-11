@@ -187,3 +187,24 @@ class StudentNotInLessonError(ValidationFailedError):
 
     code = "temporary-mark/student-not-in-lesson"
     message_key = "academic-temporary-mark-student-not-in-lesson"
+
+
+class SubmissionNotFoundError(NotFoundError):
+    """The student has not submitted anything for this lesson."""
+
+    code = "homework/submission-not-found"
+    message_key = "homework-submission-not-found"
+
+
+class SubmissionFilesError(ValidationFailedError):
+    """A submitted file is missing, not the student's, not ready, or too many."""
+
+    code = "homework/submission-files-invalid"
+    message_key = "homework-submission-files-invalid"
+
+
+class SubmissionCommentTooLongError(ValidationFailedError):
+    """A submission comment is longer than 2000 characters."""
+
+    code = "homework/submission-comment-too-long"
+    message_key = "homework-submission-comment-too-long"

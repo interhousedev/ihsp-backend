@@ -34,11 +34,20 @@ QUESTION = {
 
 # tool -> (scope of MCP-8, minimal valid arguments)
 STUDENT_TOOLS: dict[str, tuple[str, dict[str, Any]]] = {
+    "upload_file": ("files:write", {"name": "a.txt", "content_base64": "aGk="}),
     "get_schedule": ("schedule:read", {}),
     "find_feature": ("schedule:read", {"query": "marks"}),
     "get_my_subjects": ("schedule:read", {}),
     "get_subject_lessons": ("schedule:read", {"subject_id": ID}),
     "get_homework": ("homework:read", {}),
+    "submit_homework": (
+        "homework:submit",
+        {"lesson_id": ID, "file_ids": [ID]},
+    ),
+    "withdraw_homework_submission": (
+        "homework:submit",
+        {"lesson_id": ID},
+    ),
     "get_marks": ("marks:read", {}),
     "get_results": ("marks:read", {}),
     "get_attendance": ("attendance:read", {}),
@@ -353,9 +362,11 @@ TEACHER_SCOPES = {
     "schedule:read": {"get_today", "get_timetable", "get_lesson", "find_feature"},
     "groups:read": {"list_my_groups", "get_group_roster"},
     "journal:read": {"get_journal", "get_group_attendance", "my_missing_attendance"},
+    "homework:read": {"list_homework_submissions"},
     "homework:write": {"set_homework", "clear_homework"},
     "marks:read": {"list_temporary_marks", "get_student_record"},
     "marks:write": {"set_temporary_mark", "delete_temporary_mark"},
+    "files:write": {"upload_file"},
     "assessments:read": {"list_assessments"},
     "assessments:write": {"create_assessment", "update_assessment"},
     "workoffs:read": {"get_unfinished_work_report"},
@@ -411,6 +422,7 @@ async def test_teacher_writes_are_the_marked_ones_and_deletes_destructive(
         "delete_temporary_mark",
         "create_assessment",
         "update_assessment",
+        "upload_file",
     }
     destructive = {
         t.name

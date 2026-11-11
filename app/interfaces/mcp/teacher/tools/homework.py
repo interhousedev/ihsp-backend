@@ -42,6 +42,17 @@ def register(kit: ToolKit) -> None:
             current_actor(), lesson_id, text.strip(), due_date
         )
 
+    @kit.tool("homework:read")
+    async def list_homework_submissions(lesson_id: LessonIdParam) -> dict[str, Any]:
+        """Who handed in the homework of one of the teacher's lessons.
+
+        Every student of the group has a status (submitted, late, missing); handed-in
+        files carry a time-limited `download_url`.
+        """
+        return await kit.deps.teacher_tools.homework_submissions(
+            current_actor(), lesson_id
+        )
+
     @kit.tool(
         SCOPE,
         read_only=False,

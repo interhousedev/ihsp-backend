@@ -22,6 +22,9 @@ from app.modules.academic.application.classwork.ports.results_reader import (
 from app.modules.academic.application.classwork.ports.student_repository import (
     StudentRepository,
 )
+from app.modules.academic.application.classwork.ports.submission_repository import (
+    SubmissionRepository,
+)
 from app.modules.academic.application.classwork.ports.temporary_mark_repository import (
     TemporaryMarkRepository,
 )
@@ -90,6 +93,11 @@ class AttendanceUnitOfWork(LessonUnitOfWork, Protocol):
         ...
 
     @property
+    def submissions(self) -> SubmissionRepository:
+        """Homework submissions."""
+        ...
+
+    @property
     def work_off_templates(self) -> WorkOffTemplateRepository:
         """The teacher's work-off templates."""
         ...
@@ -129,6 +137,11 @@ class TodoUnitOfWork(ReaderUnitOfWork, Protocol):
     @property
     def todos(self) -> TodoRepository:
         """To-do rows."""
+        ...
+
+    @property
+    def submissions(self) -> SubmissionRepository:
+        """Homework submissions."""
         ...
 
 

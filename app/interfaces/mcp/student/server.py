@@ -1,5 +1,6 @@
 """The Students MCP server: the student's own data and own flash cards (MCP-1)."""
 
+from app.interfaces.mcp import upload_file
 from app.interfaces.mcp.deps import McpDeps
 from app.interfaces.mcp.factory import make_toolkit
 from app.interfaces.mcp.student.tools import (
@@ -47,6 +48,7 @@ TOOL_MODULES = (
     *academic.TOOL_MODULES,
     *content.TOOL_MODULES,
     *files_courses.TOOL_MODULES,
+    upload_file,
 )
 
 

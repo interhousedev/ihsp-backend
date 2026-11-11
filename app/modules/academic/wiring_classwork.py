@@ -30,6 +30,9 @@ from app.modules.academic.application.classwork.delete_work_off_template import 
 from app.modules.academic.application.classwork.get_attendance_sheet import (
     GetAttendanceSheet,
 )
+from app.modules.academic.application.classwork.get_homework_submission import (
+    GetHomeworkSubmission,
+)
 from app.modules.academic.application.classwork.get_journal import GetJournal
 from app.modules.academic.application.classwork.get_prompt_state import GetPromptState
 from app.modules.academic.application.classwork.group_attendance import GroupAttendance
@@ -48,6 +51,9 @@ from app.modules.academic.application.classwork.lesson_reminders import (
 )
 from app.modules.academic.application.classwork.list_admin_work_offs import (
     ListAdminWorkOffs,
+)
+from app.modules.academic.application.classwork.list_homework_submissions import (
+    ListHomeworkSubmissions,
 )
 from app.modules.academic.application.classwork.list_lesson_temporary_marks import (
     ListLessonTemporaryMarks,
@@ -111,10 +117,14 @@ from app.modules.academic.application.classwork.student_context import StudyDays
 from app.modules.academic.application.classwork.student_excuses import StudentExcuses
 from app.modules.academic.application.classwork.student_lesson import StudentLesson
 from app.modules.academic.application.classwork.student_today import StudentToday
+from app.modules.academic.application.classwork.submission_views import (
+    SubmissionViewBuilder,
+)
 from app.modules.academic.application.classwork.submit_attendance import (
     SubmitAttendance,
 )
 from app.modules.academic.application.classwork.submit_from_draft import SubmitFromDraft
+from app.modules.academic.application.classwork.submit_homework import SubmitHomework
 from app.modules.academic.application.classwork.temporary_mark_views import (
     TemporaryMarkViews,
 )
@@ -128,6 +138,9 @@ from app.modules.academic.application.classwork.update_work_off import UpdateWor
 from app.modules.academic.application.classwork.update_work_off_template import (
     UpdateWorkOffTemplate,
 )
+from app.modules.academic.application.classwork.withdraw_homework_submission import (
+    WithdrawHomeworkSubmission,
+)
 from app.modules.academic.application.classwork.work_off_stats import WorkOffStats
 from app.modules.academic.application.public_classwork import (
     ClassworkCommandsImpl,
@@ -136,8 +149,12 @@ from app.modules.academic.application.public_classwork import (
 from app.modules.academic.infrastructure.classwork.draft_store import (
     RedisAttendanceDraftStore,
 )
+from app.modules.academic.infrastructure.classwork.submission_file_usage import (
+    SqlSubmissionFileUsage,
+)
 from app.modules.academic.infrastructure.classwork.uow import SqlClassworkUnitOfWork
 from app.shared.contracts.academic import ScheduleQueries
+from app.shared.contracts.files import FilesApi
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.contracts.links import LinksApi
 from app.shared.wiring import ModuleDeps
@@ -164,6 +181,11 @@ class ClassworkServices:
     homework_list: HomeworkList
     set_homework_done: SetHomeworkDone
     set_homework_note: SetHomeworkNote
+    submit_homework: SubmitHomework
+    withdraw_homework_submission: WithdrawHomeworkSubmission
+    get_homework_submission: GetHomeworkSubmission
+    list_homework_submissions: ListHomeworkSubmissions
+    file_usage: SqlSubmissionFileUsage
     student_today: StudentToday
     student_lesson: StudentLesson
     staff_today: StaffToday
@@ -207,6 +229,7 @@ def build_classwork(
     schedule: ScheduleQueries,
     links: LinksApi,
     excuse_coverage: ExcuseCoverage,
+    files: FilesApi,
 ) -> ClassworkServices:
     """Wire the classwork use cases over the shared infrastructure."""
     settings = deps.settings
@@ -225,6 +248,7 @@ def build_classwork(
     lesson_items = LessonItemBuilder(people)
     homework_items = HomeworkItemBuilder(people, clock)
     roster_loader = RosterLoader(people)
+    submission_views = SubmissionViewBuilder(files)
     sheets = AttendanceSheetBuilder(people, excuse_coverage)
     study_days = StudyDays(schedule)
     formatter = ReportFormatter(people)
@@ -264,6 +288,7 @@ def build_classwork(
     get_journal = GetJournal(uow_factory, clock, people, roster_loader, excuse_coverage)
 
     return ClassworkServices(
+        file_usage=SqlSubmissionFileUsage(deps.sessionmaker),
         get_attendance_sheet=GetAttendanceSheet(
             uow_factory, clock, roster_loader, sheets
         ),
@@ -292,6 +317,12 @@ def build_classwork(
         homework_list=homework_list,
         set_homework_done=set_homework_done,
         set_homework_note=SetHomeworkNote(uow_factory, clock, people, homework_items),
+        submit_homework=SubmitHomework(uow_factory, clock, files, submission_views),
+        withdraw_homework_submission=WithdrawHomeworkSubmission(uow_factory),
+        get_homework_submission=GetHomeworkSubmission(uow_factory, submission_views),
+        list_homework_submissions=ListHomeworkSubmissions(
+            uow_factory, roster_loader, submission_views
+        ),
         student_today=StudentToday(
             uow_factory,
             clock,

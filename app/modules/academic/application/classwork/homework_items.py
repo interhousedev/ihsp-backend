@@ -10,6 +10,7 @@ from app.modules.academic.domain.classwork.homework_rules import (
     is_updated,
 )
 from app.modules.academic.domain.classwork.records import HomeworkRecord
+from app.modules.academic.domain.classwork.submission_rules import submission_status
 from app.shared.clock import Clock, local_today
 
 
@@ -33,7 +34,7 @@ class HomeworkItemBuilder:
         )
         items = []
         for record in records:
-            lesson, todo = record.lesson, record.todo
+            lesson, todo, submission = record.lesson, record.todo, record.submission
             teacher_id = lesson.teacher_id
             teacher = teachers.get(teacher_id) if teacher_id else None
             items.append(
@@ -60,6 +61,17 @@ class HomeworkItemBuilder:
                         todo.done_at.isoformat() if todo and todo.done_at else None
                     ),
                     "note": todo.note if todo else None,
+                    "submission": (
+                        None
+                        if submission is None
+                        else {
+                            "status": submission_status(
+                                submission.submitted_at, lesson.homework_due_date
+                            ),
+                            "file_count": len(submission.file_ids),
+                            "submitted_at": submission.submitted_at.isoformat(),
+                        }
+                    ),
                 }
             )
         return items

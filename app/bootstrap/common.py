@@ -222,6 +222,7 @@ class _Assembler:
         self.ai_proxy: LazyProxy[AiQueries] = LazyProxy("ai (links)")
         self.usage_notebooks: LazyProxy[Any] = LazyProxy("notebooks (files usage)")
         self.usage_excuses: LazyProxy[Any] = LazyProxy("excuses (files usage)")
+        self.usage_homework: LazyProxy[Any] = LazyProxy("homework (files usage)")
         self.notebooks_proxy: LazyProxy[NotebooksQueries] = LazyProxy(
             "notebooks (links)"
         )
@@ -318,6 +319,7 @@ class _Assembler:
                 self.usage_ai.view,
                 self.usage_notebooks.view,
                 self.usage_excuses.view,
+                self.usage_homework.view,
             )
             if self.plan.full
             else None
@@ -381,7 +383,9 @@ class _Assembler:
             schedule=schedule.queries,
             links=links.public,
             excuse_coverage=excuses.coverage,
+            files=c.files.public,
         )
+        self.usage_homework.bind(classwork.file_usage)
         source, closer = make_emis_source(
             c.settings,
             gateway=identity.emis_services.gateway if identity.emis_services else None,

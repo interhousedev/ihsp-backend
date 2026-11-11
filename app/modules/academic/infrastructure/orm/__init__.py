@@ -12,6 +12,9 @@ from app.modules.academic.infrastructure.orm.excuse import (
     ExcuseTemplate,
 )
 from app.modules.academic.infrastructure.orm.group import Group
+from app.modules.academic.infrastructure.orm.homework_submission import (
+    HomeworkSubmission,
+)
 from app.modules.academic.infrastructure.orm.homework_todo import HomeworkTodo
 from app.modules.academic.infrastructure.orm.lesson import Lesson
 from app.modules.academic.infrastructure.orm.mark import Mark
@@ -35,6 +38,7 @@ __all__ = [
     "Group",
     "GroupCurriculum",
     "GroupCurriculumSubject",
+    "HomeworkSubmission",
     "HomeworkTodo",
     "Lesson",
     "Mark",

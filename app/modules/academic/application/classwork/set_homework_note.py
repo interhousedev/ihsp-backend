@@ -54,7 +54,9 @@ class SetHomeworkNote:
             if lesson is None:
                 raise LessonNotFoundError(params={"lesson_id": str(lesson_id)})
             todo = await uow.todos.upsert_note(student.user_id, lesson_id, clean, now)
+            submission = await uow.submissions.get(student.user_id, lesson_id)
             await uow.commit()
         locale = await self.people.locale(actor.user_id)
-        built = await self.items.build_many([HomeworkRecord(lesson, todo)], locale)
+        record = HomeworkRecord(lesson, todo, submission)
+        built = await self.items.build_many([record], locale)
         return built[0]

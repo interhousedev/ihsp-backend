@@ -364,6 +364,7 @@ async def test_the_staff_portal_still_shows_what_the_teacher_added(
         "text": "Late task",
         "due_date": MONDAY_BEFORE.isoformat(),
         "due_auto": True,
+        "submissions": {"submitted": 0, "total": 3},
     }
     assert page["lesson"]["has_homework"] is True
 

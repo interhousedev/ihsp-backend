@@ -134,6 +134,18 @@ SCOPE_CATALOG: Final[dict[str, tuple[ScopeInfo, ...]]] = {
             ),
             since=RELEASE_2026_11,
         ),
+        ScopeInfo(
+            "files:write",
+            ("upload_file",),
+            write=True,
+            since=RELEASE_2026_11,
+        ),
+        ScopeInfo(
+            "homework:submit",
+            ("submit_homework", "withdraw_homework_submission"),
+            write=True,
+            since=RELEASE_2026_11,
+        ),
     ),
     "lms": (
         ScopeInfo(
@@ -218,6 +230,7 @@ SCOPE_CATALOG: Final[dict[str, tuple[ScopeInfo, ...]]] = {
             "journal:read",
             ("get_journal", "get_group_attendance", "my_missing_attendance"),
         ),
+        ScopeInfo("homework:read", ("list_homework_submissions",)),
         ScopeInfo("homework:write", ("set_homework", "clear_homework"), write=True),
         ScopeInfo("marks:read", ("list_temporary_marks", "get_student_record")),
         ScopeInfo(
@@ -247,6 +260,7 @@ SCOPE_CATALOG: Final[dict[str, tuple[ScopeInfo, ...]]] = {
             ("register_plan_template", "generate_lesson_plan"),
             write=True,
         ),
+        ScopeInfo("files:write", ("upload_file",), write=True),
     ),
 }
 
@@ -269,6 +283,8 @@ RELEASES: Final[tuple[ScopeRelease, ...]] = (
             "library:read",
             "files:read.all",
             "learning:read",
+            "files:write",
+            "homework:submit",
         ),
         summary_key="mcp-release-2026-11-mcp-1",
     ),

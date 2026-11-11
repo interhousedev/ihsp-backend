@@ -46,12 +46,14 @@ class UsageResolverAdapter:
         ai: ChatUsage,
         notebooks: NotebookUsage | None = None,
         excuses: NotebookUsage | None = None,
+        homework: NotebookUsage | None = None,
     ) -> None:
         """Keep the providers (they may be lazy proxies)."""
         self._links = links
         self._ai = ai
         self._notebooks = notebooks
         self._excuses = excuses
+        self._homework = homework
 
     async def used_by(self, file_ids: Sequence[UUID]) -> dict[UUID, list[UsedBy]]:
         """Return the places that refer to each file (missing key = unused)."""
@@ -82,9 +84,12 @@ class UsageResolverAdapter:
         self, used: dict[UUID, list[UsedBy]], file_ids: Sequence[UUID]
     ) -> None:
         """Add the notebooks and the excuses a file is attached to."""
-        sources: list[tuple[Literal["notebook", "excuse"], NotebookUsage | None]] = [
+        sources: list[
+            tuple[Literal["notebook", "excuse", "lesson"], NotebookUsage | None]
+        ] = [
             ("notebook", self._notebooks),
             ("excuse", self._excuses),
+            ("lesson", self._homework),
         ]
         for kind, provider in sources:
             if provider is None:

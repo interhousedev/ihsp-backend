@@ -104,6 +104,14 @@ class McpTeacherToolsAdapter:
             lesson_id, actor, text, due_date
         )
 
+    async def homework_submissions(
+        self, actor: Actor, lesson_id: UUID
+    ) -> dict[str, Any]:
+        """Return the submissions of a lesson the actor teaches."""
+        return await self._c.academic.classwork.list_homework_submissions.execute(
+            lesson_id, actor
+        )
+
     async def clear_homework(self, actor: Actor, lesson_id: UUID) -> dict[str, Any]:
         """Clear the homework of a lesson."""
         return await self._c.academic.classwork.staff_clear_homework.execute(

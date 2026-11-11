@@ -55,7 +55,9 @@ class SetHomeworkDone:
             todo = await uow.todos.upsert_done(
                 student.user_id, lesson_id, now if done else None, now
             )
+            submission = await uow.submissions.get(student.user_id, lesson_id)
             await uow.commit()
         locale = await self.people.locale(actor.user_id)
-        built = await self.items.build_many([HomeworkRecord(lesson, todo)], locale)
+        record = HomeworkRecord(lesson, todo, submission)
+        built = await self.items.build_many([record], locale)
         return built[0]

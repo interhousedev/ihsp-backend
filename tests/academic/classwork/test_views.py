@@ -365,6 +365,7 @@ async def test_staff_lesson_has_audience_homework_materials_and_the_sheet(
         "text": "Task",
         "due_date": "2026-10-06",
         "due_auto": False,
+        "submissions": {"submitted": 0, "total": 3},
     }
     assert len(page["materials"]) == 1
     assert page["attachments"][0]["author"]["id"] == str(w.aziz.id)

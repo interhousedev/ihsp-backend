@@ -61,6 +61,8 @@ async def test_an_offer_lists_read_and_write_scopes_and_the_keys(
         "flashcards:delete",
         "tests:write",
         "notebooks:write",
+        "files:write",
+        "homework:submit",
     ]
     assert "teachers:read" in draft.payload["read_scopes"]
     assert "sync:run" not in draft.payload["read_scopes"]

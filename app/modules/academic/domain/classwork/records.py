@@ -33,11 +33,24 @@ class TodoRecord:
 
 
 @dataclass(frozen=True, slots=True)
+class SubmissionRecord:
+    """The files a student handed in for a lesson's homework."""
+
+    lesson_id: UUID
+    student_id: UUID
+    file_ids: tuple[UUID, ...]
+    comment: str | None
+    submitted_at: dt.datetime
+    updated_at: dt.datetime
+
+
+@dataclass(frozen=True, slots=True)
 class HomeworkRecord:
-    """A lesson with homework and the student's to-do state, if any."""
+    """A lesson with homework, the student's to-do state and submission, if any."""
 
     lesson: Lesson
     todo: TodoRecord | None
+    submission: SubmissionRecord | None = None
 
 
 @dataclass(frozen=True, slots=True)

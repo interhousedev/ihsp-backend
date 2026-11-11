@@ -4,6 +4,11 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- Homework submissions: a student hands in files (`PUT/GET/DELETE /v1/me/homework/{lesson_id}/submission`, files uploaded through `/v1/files`), the teacher sees who submitted, who is late or missing, with download links (`GET /v1/staff/lessons/{lesson_id}/homework/submissions`); MCP tools `submit_homework`, `withdraw_homework_submission` (scope `homework:submit`) and `list_homework_submissions` (teacher scope `homework:read`); `get_homework` shows the submission status. New table `academic.homework_submissions`; `iht-web` needs `bun run sync:openapi`.
+- MCP tool `upload_file` (scope `files:write`) on the student and teacher servers: a ChatGPT file parameter or base64 content becomes a ready file in the caller's Files; unsafe URLs are refused before any connection.
+
 ## [1.3.0] - 2026-11-11
 
 ### Added
@@ -17,6 +22,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 - Teachers are LMS administrators by default: new teachers (admin creation, EMIS sync, seed) get `lms_admin`, and migration `identity_0013` grants it once to every existing teacher. `ChangeRoles` lets `lms_admin` be granted to a teacher or an administrator; revoking `admin` removes `lms_admin` only from users who are not teachers. The admin role editor follows the same rule.
 - Web search asks Parallel first (`IHSP_PARALLEL__*`, shared Redis limiter) and falls back to Exa on an error, a timeout, a rate limit or an empty answer; a deep search asks both and merges the pages by URL. The usage ledger and the logs name the provider.
+- Parallel web search works without a key: in live mode without `IHSP_PARALLEL__API_KEY` it uses Parallel's free MCP endpoint (`IHSP_PARALLEL__MCP_URL`, `IHSP_PARALLEL__KEYLESS`, `IHSP_PARALLEL__KEYLESS_MAX_QPS`), with Exa as the fallback; a keyed setup still uses the Parallel API.
 - New subject and lesson notebooks keep a title suffix (`notebooks.subject_title_suffix`, migration `notebooks_0016`) and show the subject's current name in the reader's language when opened (`NotebookTitles`, `ScheduleQueries.subject_titles`); a renamed notebook keeps its typed title.
 - Teacher AI tools write questions and handouts in the language of the topic when no language is given.
 

@@ -95,6 +95,9 @@ def test_every_planned_tool_is_named() -> None:
         "batch_edit_flashcards": "flashcards:write",
         "get_lesson_detail": "materials:read",
         "get_gpa": "marks:read",
+        "upload_file": "files:write",
+        "submit_homework": "homework:submit",
+        "withdraw_homework_submission": "homework:submit",
     }
 
     for tool, scope in expected.items():
