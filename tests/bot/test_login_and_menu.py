@@ -14,11 +14,16 @@ async def test_start_unlinked_shows_login_web_app_button(harness: Harness) -> No
     await harness.send("/start", user_id=UNLINKED)
     await harness.press("sm:student", user_id=UNLINKED)
 
-    button = harness.last_buttons()[0][0]
+    rows = harness.last_buttons()
     assert harness.last_text() == "bot-login-welcome"
-    assert button.text == "bot-btn-login"
-    assert button.web_app is not None
-    assert button.web_app.url == "http://localhost:3001/telegram/"
+    assert len(rows) == 2
+    have, register = rows[0][0], rows[1][0]
+    assert have.text == "bot-btn-login-have-account"
+    assert have.web_app is not None
+    assert have.web_app.url == "http://localhost:3001/telegram/"
+    assert register.text == "bot-btn-register-emis"
+    assert register.web_app is not None
+    assert register.web_app.url == "http://localhost:3001/register/"
 
 
 async def test_start_with_a_payload_behaves_like_start(harness: Harness) -> None:

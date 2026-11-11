@@ -8,6 +8,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 - Homework submissions: a student hands in files (`PUT/GET/DELETE /v1/me/homework/{lesson_id}/submission`, files uploaded through `/v1/files`), the teacher sees who submitted, who is late or missing, with download links (`GET /v1/staff/lessons/{lesson_id}/homework/submissions`); MCP tools `submit_homework`, `withdraw_homework_submission` (scope `homework:submit`) and `list_homework_submissions` (teacher scope `homework:read`); `get_homework` shows the submission status. New table `academic.homework_submissions`; `iht-web` needs `bun run sync:openapi`.
 - MCP tool `upload_file` (scope `files:write`) on the student and teacher servers: a ChatGPT file parameter or base64 content becomes a ready file in the caller's Files; unsafe URLs are refused before any connection.
+- Bot: the sign-in screen for an unlinked account offers two buttons, one to sign in with an existing ID account and one to register a new account with EMIS.
 
 ## [1.3.0] - 2026-11-11
 

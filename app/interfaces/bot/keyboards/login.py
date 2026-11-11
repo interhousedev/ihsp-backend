@@ -6,5 +6,8 @@ from app.shared.i18n.core import I18nContext
 
 
 def get(i18n: I18nContext, urls: BotUrls) -> Rows:
-    """Return the Log in row; it must be an inline web_app button (initData)."""
-    return [[web_app_button(i18n("bot-btn-login"), urls.login)]]
+    """Return the sign-in and register rows; inline web_app buttons (initData)."""
+    return [
+        [web_app_button(i18n("bot-btn-login-have-account"), urls.login)],
+        [web_app_button(i18n("bot-btn-register-emis"), urls.register)],
+    ]

@@ -41,6 +41,11 @@ class BotUrls:
         return _join(self.id_app, "telegram/")
 
     @property
+    def register(self) -> str:
+        """Registration page of the ID app, which also runs as a mini app."""
+        return _join(self.id_app, "register/")
+
+    @property
     def connectors(self) -> str:
         """The connectors page, where offered permissions are checked or revoked."""
         return _join(self.id_app, "connectors/")

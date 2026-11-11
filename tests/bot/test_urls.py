@@ -41,6 +41,7 @@ def test_lesson_links_point_to_the_app_of_the_role() -> None:
 def test_login_and_security_pages_are_on_the_id_service() -> None:
     """ID-19: the Log in button opens {URLS__ID}/telegram/."""
     assert URLS.login == "http://localhost:3001/telegram/"
+    assert URLS.register == "http://localhost:3001/register/"
     assert URLS.security == "http://localhost:3001/security/"
 
 
