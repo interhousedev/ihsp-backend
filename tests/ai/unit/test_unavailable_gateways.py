@@ -27,7 +27,9 @@ def keyless(settings: Settings) -> Settings:
         update={"mode": "real", "api_key": None}
     )
     exa = settings.exa.model_copy(update={"mode": "real", "api_key": None})
-    parallel = settings.parallel.model_copy(update={"mode": "live", "api_key": None})
+    parallel = settings.parallel.model_copy(
+        update={"mode": "live", "api_key": None, "keyless": True}
+    )
     return settings.model_copy(
         update={"openrouter": openrouter, "exa": exa, "parallel": parallel}
     )

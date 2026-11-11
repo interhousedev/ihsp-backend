@@ -18,7 +18,11 @@ from app.modules.ai.infrastructure.fallback_gateway import (
 )
 from app.modules.ai.infrastructure.openrouter import OpenRouterGateway
 from app.modules.ai.infrastructure.openrouter_embeddings import OpenRouterEmbeddings
-from app.modules.ai.infrastructure.parallel import ParallelApi, ParallelClient
+from app.modules.ai.infrastructure.parallel import (
+    ParallelApi,
+    ParallelClient,
+    ParallelMcpClient,
+)
 from app.modules.ai.infrastructure.parallel_search import (
     ParallelFirstWebSearch,
     ParallelWebSearch,
@@ -100,9 +104,10 @@ def make_web_search_gateway(
 ) -> WebSearchGateway:
     """The web search: Parallel first, Exa as the fallback and the deep partner.
 
-    Parallel is on in `PARALLEL__MODE=fake` and in `live` with a key; `live` without
-    a key leaves Exa alone. Every real API is called through an allowance shared by
-    all processes (Redis), so `redis` is required then. See `make_exa_web_search`.
+    Parallel is on in `PARALLEL__MODE=fake` and in `live`: with a key through its API,
+    without one through the free MCP endpoint (`PARALLEL__KEYLESS`, on by default).
+    Every real API is called through an allowance shared by all processes (Redis), so
+    `redis` is required then. See `make_exa_web_search`.
     """
     exa = make_exa_web_search(settings, redis, required=required)
     config = settings.parallel
@@ -112,19 +117,28 @@ def make_web_search_gateway(
     if config.mode == "fake":
         client = FakeParallelClient()
     else:
-        if config.api_key is None or redis is None:
-            if redis is None and required:
+        if redis is None:
+            if required:
                 raise ValueError("Redis is required for the Parallel rate limit")
             return exa
-        client = LimitedExa(
-            ParallelClient(
-                api_key=config.api_key.get_secret_value(),
-                base_url=config.base_url,
-                timeout_seconds=config.timeout_seconds,
-            ),
-            ExaRateLimiter(redis, prefix="ai:parallel"),
-            config,
-        )
+        if config.api_key is not None:
+            client = LimitedExa(
+                ParallelClient(
+                    api_key=config.api_key.get_secret_value(),
+                    base_url=config.base_url,
+                    timeout_seconds=config.timeout_seconds,
+                ),
+                ExaRateLimiter(redis, prefix="ai:parallel"),
+                config,
+            )
+        else:
+            client = LimitedExa(
+                ParallelMcpClient(
+                    url=config.mcp_url, timeout_seconds=config.timeout_seconds
+                ),
+                ExaRateLimiter(redis, prefix="ai:parallel-mcp"),
+                config.model_copy(update={"max_qps": config.keyless_max_qps}),
+            )
     return ParallelFirstWebSearch(
         ParallelWebSearch(client, settings.web_search, config), exa
     )

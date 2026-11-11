@@ -367,7 +367,7 @@ def test_fake_mode_gets_the_fake_client_and_real_mode_needs_a_key() -> None:
     assert isinstance(both.exa.client, FakeExaClient)
 
     no_parallel = settings.model_copy(
-        update={"parallel": ParallelSettings(mode="live", api_key=None)}
+        update={"parallel": ParallelSettings(mode="live", keyless=False)}
     )
     fake = make_web_search_gateway(no_parallel, None)
     assert isinstance(fake, ExaWebSearch)

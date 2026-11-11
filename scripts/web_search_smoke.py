@@ -1,4 +1,4 @@
-"""One real web search (Parallel, Exa as fallback): check hits and the charge.
+"""One real web search (Parallel, keyless MCP without a key; Exa as fallback).
 
     IHSP_EXA__MODE=real IHSP_EXA__API_KEY=... \
         uv run python scripts/web_search_smoke.py "photosynthesis" [fast|chat]

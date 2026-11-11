@@ -9,7 +9,7 @@ from app.modules.ai.infrastructure.exa_rate_limit import ExaRateLimiter, Limited
 from app.modules.ai.infrastructure.exa_search import ExaWebSearch
 from app.modules.ai.infrastructure.fake_parallel import FakeParallelClient
 from app.modules.ai.infrastructure.gateway_factory import make_web_search_gateway
-from app.modules.ai.infrastructure.parallel import ParallelClient
+from app.modules.ai.infrastructure.parallel import ParallelClient, ParallelMcpClient
 from app.modules.ai.infrastructure.parallel_search import (
     ParallelFirstWebSearch,
     ParallelWebSearch,
@@ -32,6 +32,7 @@ from pydantic import SecretStr
 
 KEY = "parallel-key-for-tests-only"
 QUERY = "why is the sky blue"
+MCP_URL = "https://search.parallel.ai/mcp"
 
 
 class Stub:
@@ -110,6 +111,78 @@ def test_the_body_keeps_max_results_inside_advanced_settings() -> None:
         "max_results": 5,
         "source_policy": {"exclude_domains": ["bad.example"]},
     }
+
+
+def mcp_answer(n: int = 2) -> dict[str, Any]:
+    """A JSON-RPC answer of the MCP endpoint with `n` pages."""
+    return {
+        "jsonrpc": "2.0",
+        "id": 1,
+        "result": {
+            "structuredContent": {
+                "search_id": "s1",
+                "results": [p_page(i) for i in range(1, n + 1)],
+            }
+        },
+    }
+
+
+def mcp_search() -> ParallelWebSearch:
+    """The adapter over the keyless MCP client."""
+    client = ParallelMcpClient(url=MCP_URL, timeout_seconds=5)
+    return ParallelWebSearch(client, WebSearchSettings(), ParallelSettings())
+
+
+@respx.mock
+async def test_the_mcp_client_posts_without_a_key_and_truncates() -> None:
+    route = respx.post(MCP_URL).mock(
+        return_value=httpx.Response(200, json=mcp_answer(8))
+    )
+
+    reply = await mcp_search().search(call())
+
+    request = route.calls.last.request
+    assert "x-api-key" not in request.headers
+    assert "text/event-stream" in request.headers["accept"]
+    sent = json.loads(request.content)
+    assert sent["method"] == "tools/call"
+    assert sent["params"]["name"] == "web_search"
+    arguments = sent["params"]["arguments"]
+    assert arguments["search_queries"] == [QUERY]
+    assert len(arguments["session_id"]) <= 100
+    assert len(reply.hits) == 5
+    assert reply.provider == "parallel"
+
+
+@respx.mock
+async def test_the_mcp_client_reads_an_sse_answer() -> None:
+    text = "event: message\ndata: " + json.dumps(mcp_answer(1)) + "\n\n"
+    respx.post(MCP_URL).mock(
+        return_value=httpx.Response(
+            200, text=text, headers={"content-type": "text/event-stream"}
+        )
+    )
+
+    reply = await mcp_search().search(call())
+
+    assert [h.title for h in reply.hits] == ["Page 1"]
+
+
+@respx.mock
+@pytest.mark.parametrize(
+    "answer",
+    [
+        {"jsonrpc": "2.0", "id": 1, "error": {"code": -32000, "message": "x"}},
+        {"jsonrpc": "2.0", "id": 1, "result": {"isError": True}},
+    ],
+)
+async def test_an_mcp_error_falls_back_to_exa(answer: dict[str, Any]) -> None:
+    respx.post(MCP_URL).mock(return_value=httpx.Response(200, json=answer))
+
+    reply = await both(mcp_search(), exa({"results": [e_page(2)]})).search(call())
+
+    assert reply.provider == "exa"
+    assert [h.title for h in reply.hits] == ["Exa 2"]
 
 
 @respx.mock
@@ -244,8 +317,19 @@ async def test_the_parallel_limiter_has_its_own_keys() -> None:
 
 def test_the_factory_builds_parallel_only_when_it_is_enabled() -> None:
     settings = Settings()
+    off = settings.model_copy(
+        update={"parallel": ParallelSettings(mode="live", keyless=False)}
+    )
+    assert isinstance(make_web_search_gateway(off, None), ExaWebSearch)
+
     keyless = settings.model_copy(update={"parallel": ParallelSettings(mode="live")})
-    assert isinstance(make_web_search_gateway(keyless, None), ExaWebSearch)
+    with pytest.raises(ValueError, match="Redis is required"):
+        make_web_search_gateway(keyless, None)
+    free = make_web_search_gateway(keyless, FakeRedis())
+    assert isinstance(free, ParallelFirstWebSearch)
+    assert isinstance(free.parallel, ParallelWebSearch)
+    assert isinstance(free.parallel.client, LimitedExa)
+    assert isinstance(free.parallel.client.client, ParallelMcpClient)
 
     keyed = settings.model_copy(
         update={"parallel": ParallelSettings(mode="live", api_key=SecretStr(KEY))}
