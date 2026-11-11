@@ -720,6 +720,10 @@ services:
       - bugsink_data:/data
       - bugsink_wakeup:/wakeup
       - bugsink_queue:/tmp
+    healthcheck:
+      <<: *healthcheck
+      # The image's default probe calls the web server on :8000, which the worker does not run.
+      test: ["CMD", "sh", "-c", "grep -qs runsnappea /proc/1/cmdline"]
     depends_on:
       bugsink:
         condition: service_healthy
