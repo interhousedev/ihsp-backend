@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-11-13
+
 ### Added
 
 - Homework submissions: a student hands in files (`PUT/GET/DELETE /v1/me/homework/{lesson_id}/submission`, files uploaded through `/v1/files`), the teacher sees who submitted, who is late or missing, with download links (`GET /v1/staff/lessons/{lesson_id}/homework/submissions`); MCP tools `submit_homework`, `withdraw_homework_submission` (scope `homework:submit`) and `list_homework_submissions` (teacher scope `homework:read`); `get_homework` shows the submission status. New table `academic.homework_submissions`; `iht-web` needs `bun run sync:openapi`.
