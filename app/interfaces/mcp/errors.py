@@ -105,3 +105,31 @@ class McpIdempotencyInProgressError(ValidationFailedError):
 
     code = "mcp/idempotency-in-progress"
     message_key = "mcp-idempotency-in-progress"
+
+
+class McpUploadUrlNotAllowedError(ValidationFailedError):
+    """The download URL is not an allowed https address of a permitted host."""
+
+    code = "mcp/upload-url-not-allowed"
+    message_key = "mcp-upload-url-not-allowed"
+
+
+class McpUploadDownloadFailedError(ValidationFailedError):
+    """The file could not be downloaded from the allowed URL."""
+
+    code = "mcp/upload-download-failed"
+    message_key = "mcp-upload-download-failed"
+
+
+class McpUploadTooLargeError(ValidationFailedError):
+    """The upload is larger than the limit (params: max_bytes)."""
+
+    code = "mcp/upload-too-large"
+    message_key = "mcp-upload-too-large"
+
+
+class McpUploadNotReadyError(ValidationFailedError):
+    """The stored file was refused or not processed in time."""
+
+    code = "mcp/upload-not-ready"
+    message_key = "mcp-upload-not-ready"

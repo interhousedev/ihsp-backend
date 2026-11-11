@@ -6,7 +6,9 @@ from mcp.client.session import ClientSession
 from mcp.types import CallToolResult, TextContent
 
 
-async def call(session: ClientSession, name: str, **arguments: Any) -> CallToolResult:
+async def call(
+    session: ClientSession, name: str, /, **arguments: Any
+) -> CallToolResult:
     """Call a tool and return the raw result."""
     return await session.call_tool(name, arguments)
 

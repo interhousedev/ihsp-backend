@@ -470,13 +470,23 @@ class ParallelSettings(BaseModel):
 
     mode: Literal["live", "fake"] = "fake"
     """`live` calls Parallel; `fake` answers with deterministic pages (no key). Live
-    without a key leaves Parallel off: every search goes to Exa."""
+    without a key uses the free MCP endpoint (`KEYLESS`), or leaves Parallel off."""
 
     api_key: SecretStr | None = None
     """Parallel API key, sent only in the `x-api-key` header."""
 
     base_url: str = "https://api.parallel.ai"
     """Parallel API root; a search is `POST {base_url}/v1/search`."""
+
+    keyless: bool = True
+    """Live without a key searches through the free MCP endpoint; false leaves Parallel
+    off then (every search goes to Exa)."""
+
+    mcp_url: str = "https://search.parallel.ai/mcp"
+    """The free keyless MCP endpoint (JSON-RPC `tools/call` of `web_search`)."""
+
+    keyless_max_qps: int = Field(default=2, ge=1, le=100)
+    """Searches per second through the keyless endpoint, across all processes."""
 
     search_mode: Literal["turbo", "fast", "basic", "advanced"] = "fast"
     """Parallel search `mode`: `turbo` and `fast` answer quickest, `advanced` digs."""
@@ -507,7 +517,7 @@ class ParallelSettings(BaseModel):
     @property
     def enabled(self) -> bool:
         """True when Parallel is asked: the fake, or a live key."""
-        return self.mode == "fake" or self.api_key is not None
+        return self.mode == "fake" or self.api_key is not None or self.keyless
 
 
 class NotebooksSettings(BaseModel):
@@ -1040,6 +1050,11 @@ class McpSettings(BaseModel):
 
     sync_cooldown_seconds: int = Field(default=1800, ge=60)
     """Seconds between self-service EMIS syncs of one student through MCP."""
+
+    upload_hosts: str = "files.oaiusercontent.com,*.oaiusercontent.com"
+    """Comma list of host names `upload_file` may download from (a ChatGPT file
+    parameter's download_url). `*.example.com` matches sub-domains. https only; the
+    host must also resolve to public addresses only."""
 
 
 class HttpSettings(BaseModel):

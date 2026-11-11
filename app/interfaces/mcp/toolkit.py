@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from app.interfaces.mcp.call_log import LogSpec
 from app.interfaces.mcp.constants import WRITE_LIMIT, ToolLimit
@@ -29,6 +30,7 @@ class ToolKit:
         idempotent: bool | None = None,
         limit: ToolLimit | None = None,
         log: LogSpec | None = None,
+        meta: dict[str, Any] | None = None,
     ) -> Callable[[ToolFn], ToolFn]:
         """Register a tool that needs `scope` (guard first, then the SDK decorator).
 
@@ -42,7 +44,8 @@ class ToolKit:
                 destructiveHint=destructive,
                 idempotentHint=read_only if idempotent is None else idempotent,
                 openWorldHint=False,
-            )
+            ),
+            meta=meta,
         )
         if limit is None and not read_only and self.guard.server == "student":
             limit = WRITE_LIMIT
