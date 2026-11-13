@@ -10,6 +10,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
+- `python -m app seed-review`: creates or resets the public test accounts of the ChatGPT app review (student, teacher and LMS) with made-up data (group, timetable, lessons, marks, attendance, homework, a quiz, flash cards and a published course); safe on production, reruns change nothing that is right. The reviewer guide is `docs/chatgpt-review.md`.
 - Login cues kill switch `IHSP_FEATURES__LOGIN_CUES` (off by default: admin and public cue routes answer 404, the admin page leaves the app map), `POST /v1/admin/login-cues/bulk-delete`, and the public `GET /v1/public/client-config` (feature flags and `IHSP_DOCS__*` links).
 - A group added without an EMIS id is adopted by a normalized name match (case, spaces, hyphens, Cyrillic look-alikes), and the first EMIS link of a group kicks the new task `academic.repull_group`: it forces the curriculum and a full timetable backfill and queues a sync for every other member with a working EMIS link. Later registrations do nothing extra.
 - Step-up and other one-time codes: a failed Telegram send is retried once, falls back to the verified recovery email, and when nothing delivers the code and cooldown are dropped and the request answers 503 `id/otp-delivery-failed` instead of a silent 202.

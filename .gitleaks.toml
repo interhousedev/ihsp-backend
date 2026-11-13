@@ -29,4 +29,8 @@ paths = [
   '''(^|/)app/interfaces/http/dependencies\.py$''',                       # 'token' argument name
   '''(^|/)app/modules/lms/domain/authoring/errors\.py$''',                # i18n key 'lms-h5p-invalid'
   '''(^|/)app/modules/notify/infrastructure/pywebpush_sender\.py$''',     # module docstring only
+
+  # Public ChatGPT review credentials, intentionally published.
+  '''(^|/)app/bootstrap/seed/review_accounts\.py$''',  # public ChatGPT review credentials, intentionally published
+  '''(^|/)docs/chatgpt-review\.md$''',                  # public ChatGPT review credentials, intentionally published
 ]

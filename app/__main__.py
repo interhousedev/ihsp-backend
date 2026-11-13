@@ -19,6 +19,7 @@ PROCESSES = (
     "migrate",
     "create-user",
     "seed-demo",
+    "seed-review",
     "backfill-subject-notebooks",
     "backfill-course-notebooks",
 )

@@ -59,6 +59,24 @@ def test_the_bootstrap_run_function_gets_settings_and_args(
     assert calls[0][1].extra == ["--months", "3"]
 
 
+def test_seed_review_dispatches_to_its_bootstrap(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`seed-review` runs app.bootstrap.seed_review:run."""
+    calls: list[argparse.Namespace] = []
+    fake = ModuleType("app.bootstrap.seed_review")
+
+    def run(settings: Settings, args: argparse.Namespace) -> int:
+        calls.append(args)
+        return 0
+
+    fake.run = run  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "app.bootstrap.seed_review", fake)
+
+    assert cli.main(["seed-review"]) == 0
+    assert calls[0].process == "seed-review"
+
+
 def test_a_broken_import_inside_a_bootstrap_is_not_hidden(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

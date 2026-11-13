@@ -1,5 +1,6 @@
 """Builds the marks and EMIS sync services (task B5)."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from app.modules.academic.application.marks.apply_ratings import ApplyRatings
@@ -100,6 +101,8 @@ class MarksServices:
     get_honours: GetHonours
     get_rating_book: GetRatingBook
     queries: MarksQueriesImpl
+    apply_ratings: ApplyRatings
+    uow_factory: Callable[[], SqlMarksUnitOfWork]
 
 
 def build_marks(
@@ -127,13 +130,15 @@ def build_marks(
             deps.outbox_committed_hook,
         )
 
+    apply_ratings = ApplyRatings(clock=deps.clock)
+
     sync_student = SyncStudent(
         uow_factory=uow_factory,
         emis=emis,
         identity=identity,
         identity_commands=identity_commands,
         enrollment=enrollment,
-        apply=ApplyRatings(clock=deps.clock),
+        apply=apply_ratings,
         clock=deps.clock,
         kicker=deps.kicker,
         institution_id=deps.settings.emis.institution_id,
@@ -215,4 +220,6 @@ def build_marks(
         queries=MarksQueriesImpl(
             uow_factory=uow_factory, identity=identity, clock=deps.clock
         ),
+        apply_ratings=apply_ratings,
+        uow_factory=uow_factory,
     )

@@ -211,6 +211,8 @@ scripts/local_down.sh        # stop; add --wipe to delete the data
 
 Demo logins (local stack only): `admin.ihsp` / `AdminDemo1` (the admin one-time code arrives in Mailpit), `usmonov.bobur` / `TeacherDemo1`, `abdullayev.alisher` / `StudentDemo1`, `tursunov.sardor` / `LibrarianDemo1`.
 
+`python -m app seed-review` (idempotent, safe on production) creates or resets the three public accounts of the ChatGPT app review and their made-up data; it needs a current term. See [docs/chatgpt-review.md](docs/chatgpt-review.md).
+
 ## Configuration, fake and real modes
 
 All settings are `IHSP_*` environment variables, nested with `__` (for example `IHSP_DATABASE__POOL_SIZE`). `IHSP_ENV_FILE` takes a comma-separated list of dotenv files; later files override earlier ones and a `?` prefix marks a file optional. Templates are `materials/.env.sample`, `materials/.env.local.sample` and `materials/.env.prod.sample`. With `IHSP_ENV=prod` the app refuses development secrets, fake modes and `localhost` URLs.

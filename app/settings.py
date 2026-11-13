@@ -35,7 +35,7 @@ DEV_DATABASE_URL = "postgresql+asyncpg://ihsp:ihsp@localhost:5433/ihsp"
 # Processes that hold EMIS secrets (Vault AppRole) and the JWT-bearer signing key. The
 # others (api, bot, mail, scheduler, migrate) never see either in production.
 SECRET_HOLDING_PROCESSES = frozenset(
-    {"identity", "worker", "all", "create-user", "seed-demo"}
+    {"identity", "worker", "all", "create-user", "seed-demo", "seed-review"}
 )
 
 # Processes that call OpenRouter and Exa (the other processes get neither key), and the
