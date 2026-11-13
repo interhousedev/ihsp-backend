@@ -32,3 +32,7 @@ class OtpStore(Protocol):
     async def discard(self, purpose: str, subject_key: str) -> None:
         """Drop the code."""
         ...
+
+    async def release(self, purpose: str, subject_key: str) -> None:
+        """Drop the code and the resend cooldown (the code never reached the user)."""
+        ...

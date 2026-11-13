@@ -1,5 +1,6 @@
 """Delivers one-time codes through linked Telegram accounts and the recovery email."""
 
+import asyncio
 from collections.abc import Sequence
 from datetime import timedelta
 from html import escape
@@ -43,6 +44,7 @@ class ChannelOtpSender:
         clock: Clock,
         id_app_url: str,
         app_name: str = "IHT",
+        retry_delay: float = 0.5,
     ) -> None:
         """Keep the collaborators; ``telegram`` is None until the sender is wired."""
         self._uow_factory = uow_factory
@@ -53,6 +55,7 @@ class ChannelOtpSender:
         self._clock = clock
         self._security_url = f"{id_app_url.rstrip('/')}/security/"
         self._app_name = app_name
+        self._retry_delay = retry_delay
 
     async def send_code(
         self,
@@ -62,15 +65,24 @@ class ChannelOtpSender:
         purpose: str,
         channels: Sequence[str],
         context: OtpContext | None = None,
-    ) -> None:
-        """Send the code to each requested channel."""
+    ) -> list[str]:
+        """Send the code to each requested channel; return those that delivered."""
         async with self._uow_factory() as uow:
             entity = await uow.users.get(user.id)
             links = await uow.telegram_links.list_for_user(user.id)
-        if CHANNEL_TELEGRAM in channels:
-            await self._to_telegram(user, code, links, context or OtpContext())
-        if CHANNEL_EMAIL in channels and entity and entity.recovery_email:
-            await self._to_email(entity.recovery_email, code, user.locale, purpose)
+        delivered: list[str] = []
+        if CHANNEL_TELEGRAM in channels and await self._to_telegram(
+            user, code, links, context or OtpContext()
+        ):
+            delivered.append(CHANNEL_TELEGRAM)
+        if (
+            CHANNEL_EMAIL in channels
+            and entity
+            and entity.recovery_email
+            and await self._to_email(entity.recovery_email, code, user.locale, purpose)
+        ):
+            delivered.append(CHANNEL_EMAIL)
+        return delivered
 
     async def _to_telegram(
         self,
@@ -78,11 +90,12 @@ class ChannelOtpSender:
         code: str,
         links: list[TelegramLink],
         context: OtpContext,
-    ) -> None:
+    ) -> bool:
+        """True when at least one linked chat received the code."""
         telegram = self._telegram
         if telegram is None:
             log.warning("otp_telegram_skipped", reason="no telegram sender")
-            return
+            return False
         ctx = self._i18n.get_context(user.locale)
         text = ctx.get(
             "id-otp-telegram",
@@ -92,10 +105,13 @@ class ChannelOtpSender:
             device=escape((context.user_agent or "?")[:80]),
         )
         buttons = [[{"text": ctx.get("id-btn-not-me"), "url": self._security_url}]]
+        sent = False
         for link in links:
             if not link.can_receive_otp:
                 continue
-            await self._send_one(telegram, link.telegram_user_id, text, buttons)
+            if await self._send_one(telegram, link.telegram_user_id, text, buttons):
+                sent = True
+        return sent
 
     async def _send_one(
         self,
@@ -103,22 +119,36 @@ class ChannelOtpSender:
         chat_id: int,
         text: str,
         buttons: list[list[dict[str, Any]]],
-    ) -> None:
-        try:
-            message_id = await telegram.send_message(chat_id, text, buttons)
-        except Exception:  # noqa: BLE001 - one dead chat must not block other channels
-            log.warning("otp_telegram_failed", chat_id=chat_id, exc_info=True)
-            return
+    ) -> bool:
+        message_id: int | None = None
+        for attempt in (1, 2):
+            try:
+                message_id = await telegram.send_message(chat_id, text, buttons)
+                break
+            except Exception:  # noqa: BLE001 - one dead chat must not block others
+                log.warning(
+                    "otp_telegram_failed",
+                    chat_id=chat_id,
+                    attempt=attempt,
+                    exc_info=True,
+                )
+                if attempt == 1:  # a dropped connection is usually transient
+                    await asyncio.sleep(self._retry_delay)
+        if message_id is None:
+            return False
         delete_at = (self._clock.now() + CLEANUP_AFTER).timestamp()
         await self._redis.zadd(CLEANUP_KEY, {f"{chat_id}:{message_id}": delete_at})
         await self._redis.expire(CLEANUP_KEY, CLEANUP_KEY_TTL_SECONDS)
+        return True
 
     async def _to_email(
         self, address: str, code: str, locale: str, purpose: str
-    ) -> None:
+    ) -> bool:
         try:
             await self._email.send(
                 address, "otp", {"code": code, "purpose": purpose}, locale
             )
         except EmailDeliveryError:
             log.warning("otp_email_failed", purpose=purpose)
+            return False
+        return True

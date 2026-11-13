@@ -7,7 +7,10 @@ from app.modules.identity.application.find_user_for_recovery import (
 )
 from app.modules.identity.application.otp_service import OtpService
 from app.modules.identity.application.request_context import RequestContext
-from app.modules.identity.domain.errors import EmailDeliveryError
+from app.modules.identity.domain.errors import (
+    EmailDeliveryError,
+    OtpDeliveryFailedError,
+)
 from app.modules.identity.ports.otp_sender import CHANNEL_EMAIL
 from app.modules.identity.ports.unit_of_work import UowFactory
 from app.shared.base_error import RateLimitedError
@@ -47,5 +50,5 @@ class RequestPasswordReset:
                     ctx=ctx,
                     channels=[CHANNEL_EMAIL],
                 )
-            except (RateLimitedError, EmailDeliveryError):
+            except (RateLimitedError, EmailDeliveryError, OtpDeliveryFailedError):
                 log.info("password_reset_not_sent", user_id=str(user.id))

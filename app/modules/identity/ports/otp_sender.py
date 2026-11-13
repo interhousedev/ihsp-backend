@@ -29,6 +29,9 @@ class OtpSender(Protocol):
         purpose: str,
         channels: Sequence[str],
         context: OtpContext | None = None,
-    ) -> None:
-        """Deliver the code; a failing channel never blocks the others."""
+    ) -> list[str]:
+        """Deliver the code; return the channels that really delivered it.
+
+        A failing channel never blocks the others and never raises.
+        """
         ...

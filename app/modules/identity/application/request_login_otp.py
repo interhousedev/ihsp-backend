@@ -5,7 +5,10 @@ from uuid import UUID
 
 from app.modules.identity.application.otp_service import OtpService
 from app.modules.identity.application.request_context import RequestContext
-from app.modules.identity.domain.errors import OtpChannelMissingError
+from app.modules.identity.domain.errors import (
+    OtpChannelMissingError,
+    OtpDeliveryFailedError,
+)
 from app.modules.identity.ports.login_throttle import LoginThrottle
 from app.modules.identity.ports.unit_of_work import IdentityUnitOfWorkPort, UowFactory
 from app.shared.base_error import RateLimitedError
@@ -57,7 +60,7 @@ class RequestLoginOtp:
                 await self.otp.send(
                     user, links, purpose="login", subject_key=str(user.id), ctx=ctx
                 )
-            except (RateLimitedError, OtpChannelMissingError):
+            except (RateLimitedError, OtpChannelMissingError, OtpDeliveryFailedError):
                 log.info("login_otp_not_sent", user_id=str(user.id))
 
     async def _notify_limit(

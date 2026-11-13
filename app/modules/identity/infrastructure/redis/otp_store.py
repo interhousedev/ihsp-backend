@@ -86,3 +86,10 @@ class RedisOtpStore:
     async def discard(self, purpose: str, subject_key: str) -> None:
         """Drop the code."""
         await self._redis.delete(self._key(purpose, subject_key))
+
+    async def release(self, purpose: str, subject_key: str) -> None:
+        """Drop the code and the cooldown so the user can ask again at once."""
+        await self._redis.delete(
+            self._key(purpose, subject_key),
+            f"otp:cooldown:{purpose}:{subject_key}",
+        )

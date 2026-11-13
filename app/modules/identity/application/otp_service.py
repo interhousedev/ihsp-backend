@@ -5,7 +5,11 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.modules.identity.application.request_context import RequestContext
-from app.modules.identity.domain.errors import OtpChannelMissingError, OtpInvalidError
+from app.modules.identity.domain.errors import (
+    OtpChannelMissingError,
+    OtpDeliveryFailedError,
+    OtpInvalidError,
+)
 from app.modules.identity.domain.telegram_link import TelegramLink
 from app.modules.identity.domain.user import User
 from app.modules.identity.ports.email_sender import EmailSender
@@ -62,24 +66,36 @@ class OtpService:
         ctx: RequestContext,
         channels: Sequence[str] | None = None,
     ) -> list[str]:
-        """Issue a code and deliver it; return the channels used.
+        """Issue a code and deliver it; return the channels that delivered it.
+
+        When the requested channels all fail and the account has a verified recovery
+        email that was not among them, the code goes there. When nothing delivers,
+        the code and the resend cooldown are dropped.
 
         Raises:
             OtpChannelMissingError: the account has no way to receive a code.
             RateLimitedError: a code was sent less than 60 seconds ago.
+            OtpDeliveryFailedError: no channel delivered the code.
         """
         chosen = list(channels) if channels is not None else channels_for(user, links)
         if not chosen:
             raise OtpChannelMissingError(params={"user_id": str(user.id)})
         code = await self.otp_store.issue(purpose, subject_key)
-        await self.otp_sender.send_code(
-            user.to_ref(),
-            code,
-            purpose=purpose,
-            channels=chosen,
-            context=OtpContext(ip=ctx.valid_ip, user_agent=ctx.device or None),
+        ref = user.to_ref()
+        context = OtpContext(ip=ctx.valid_ip, user_agent=ctx.device or None)
+        delivered = await self.otp_sender.send_code(
+            ref, code, purpose=purpose, channels=chosen, context=context
         )
-        return chosen
+        if not delivered and CHANNEL_EMAIL not in chosen and user.has_verified_email:
+            delivered = await self.otp_sender.send_code(
+                ref, code, purpose=purpose, channels=[CHANNEL_EMAIL], context=context
+            )
+        if not delivered:
+            await self.otp_store.release(purpose, subject_key)
+            raise OtpDeliveryFailedError(
+                params={"user_id": str(user.id), "purpose": purpose}
+            )
+        return delivered
 
     async def send_to_email(
         self, address: str, *, purpose: str, subject_key: str, locale: str

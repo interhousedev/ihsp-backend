@@ -122,6 +122,14 @@ class OtpChannelMissingError(ValidationFailedError):
     message_key = "id-otp-no-channel"
 
 
+class OtpDeliveryFailedError(BaseError):
+    """A code was issued but no channel delivered it (the code is discarded)."""
+
+    code = "id/otp-delivery-failed"
+    status = 503
+    message_key = "id-otp-delivery-failed"
+
+
 class SelfActionForbiddenError(ForbiddenError):
     """An administrator cannot do this to their own account."""
 

@@ -21,11 +21,15 @@ class SentCode:
 
 
 class FakeOtpSender:
-    """Implements OtpSender; `codes` lists everything sent, in order."""
+    """Implements OtpSender; `codes` lists everything sent, in order.
+
+    `failing` lists channels that never deliver (not recorded, not returned).
+    """
 
     def __init__(self) -> None:
         """Start with nothing sent."""
         self.codes: list[SentCode] = []
+        self.failing: set[str] = set()
 
     async def send_code(
         self,
@@ -35,9 +39,12 @@ class FakeOtpSender:
         purpose: str,
         channels: Sequence[str],
         context: OtpContext | None = None,
-    ) -> None:
-        """Record the code."""
-        self.codes.append(SentCode(user.id, code, purpose, tuple(channels), context))
+    ) -> list[str]:
+        """Record the code; return the channels that did not fail."""
+        ok = [c for c in channels if c not in self.failing]
+        if ok:
+            self.codes.append(SentCode(user.id, code, purpose, tuple(ok), context))
+        return ok
 
     def last(self, purpose: str | None = None) -> SentCode:
         """The latest code (optionally of one purpose)."""
