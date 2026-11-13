@@ -53,6 +53,7 @@ class FakeEmis:
         self.error: Exception | None = None
         self.unavailable_for: set[UUID] = set()
         self.calls: list[tuple[str, int | None, int | None]] = []
+        self.rating_book_url = "https://cdn-emis.edu.uz/rating-books/test.pdf"
 
     def set(self, ratings: EmisSubjectRatings) -> None:
         """Answer this (subject, semester) with the given response."""
@@ -71,6 +72,12 @@ class FakeEmis:
         self._check(user_id)
         assert self.profile_result is not None, "profile not scripted"
         return self.profile_result
+
+    async def rating_book(self, user_id: UUID) -> str:
+        """Return the scripted rating book link."""
+        self.calls.append(("rating_book", None, None))
+        self._check(user_id)
+        return self.rating_book_url
 
     async def subjects(self, user_id: UUID) -> list[EmisSubject]:
         """Return the scripted subjects."""

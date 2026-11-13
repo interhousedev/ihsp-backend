@@ -67,10 +67,16 @@ class EmisProfileResponse(BaseModel):
     group_name: str
     current_semester: int | None
     curriculum_id: int | None
+    institution_name: "EmisNameResponse | None" = None
+    school_certificate_serial: str | None = None
+    school_certificate_number: str | None = None
+    direction: str | None = None
+    speciality: str | None = None
 
     @classmethod
     def from_contract(cls, profile: EmisProfile) -> "EmisProfileResponse":
         """Build the response from the contract dataclass."""
+        name = profile.institution_name
         return cls(
             emis_student_id=profile.emis_student_id,
             first_name=profile.first_name,
@@ -81,7 +87,20 @@ class EmisProfileResponse(BaseModel):
             group_name=profile.group_name,
             current_semester=profile.current_semester,
             curriculum_id=profile.curriculum_id,
+            institution_name=(
+                None if name is None else EmisNameResponse.from_contract(name)
+            ),
+            school_certificate_serial=profile.school_certificate_serial,
+            school_certificate_number=profile.school_certificate_number,
+            direction=profile.direction,
+            speciality=profile.speciality,
         )
+
+
+class EmisRatingBookResponse(BaseModel):
+    """The address of the student's rating book PDF."""
+
+    url: str
 
 
 class EmisSubjectResponse(BaseModel):

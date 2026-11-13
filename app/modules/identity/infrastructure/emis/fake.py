@@ -41,6 +41,7 @@ from app.shared.contracts.emis import (
     EmisFile,
     EmisMark,
     EmisMarkType,
+    EmisName,
     EmisProfile,
     EmisSemesterDates,
     EmisSubject,
@@ -54,6 +55,7 @@ FAKE_PASSWORD = "password"
 FAKE_CURRICULUM_PATH = Path(__file__).parent / "fake_data" / "curriculum.json"
 _YEAR = timedelta(weeks=52)  # the next cohort's semesters, on the same weekdays
 FAKE_INSTITUTION_ID = 10815
+FAKE_RATING_BOOK_BASE = "https://cdn-emis.edu.uz/rating-books"
 _TOKEN_PREFIX = "fake-token:"
 _SEMESTER_START = date(2026, 9, 2)  # first day of the current semester
 _SEMESTER_LENGTH = timedelta(days=116)
@@ -340,7 +342,19 @@ class FakeEmisClient:
             group_name=normalize_group_name(student.group_name),
             current_semester=student.current_semester,
             curriculum_id=student.curriculum_id,
+            institution_name=EmisName(
+                uz="Akademik litsey", ru="Академический лицей", en="Academic lyceum"
+            ),
+            school_certificate_serial="TM-A" if student.emis_student_id % 2 else "AB",
+            school_certificate_number=f"{student.emis_student_id:07d}",
+            direction="Aniq fanlar-2",
+            speciality="Texnik-dasturchi",
         )
+
+    async def rating_book(self, token: str) -> str:
+        """Return a stable CDN-like address of the student's rating book."""
+        student = self._student(token)
+        return f"{FAKE_RATING_BOOK_BASE}/{student.login}.pdf"
 
     async def curriculum(self, token: str) -> list[EmisSubject]:
         """Return the same 8 subjects for everyone (from the sample curriculum)."""

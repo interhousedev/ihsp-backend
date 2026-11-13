@@ -37,6 +37,9 @@ from app.modules.identity.infrastructure.emis.models.responses.login import (
 from app.modules.identity.infrastructure.emis.models.responses.profile import (
     ProfileV1DTO,
 )
+from app.modules.identity.infrastructure.emis.models.responses.rating_book import (
+    RatingBookV1DTO,
+)
 from app.modules.identity.infrastructure.emis.models.responses.ratings import (
     RatingsV1DTO,
 )
@@ -61,6 +64,7 @@ from redis.asyncio import Redis
 
 CURRICULUM_PATH = "student-profiles/curriculum/"
 CLASS_HOURS_PATH = "student-profiles/class-hours/"
+RATING_BOOK_PATH = "student-profiles/rating-book/"
 CLASS_SCHEDULES_PATH = "student-profiles/class-schedules/"
 EMIS_DATE = "%d.%m.%Y"
 LOGIN_PATH = "student-profiles/login/"
@@ -238,6 +242,11 @@ class EmisClient:
         """Return the CEFR and national certificates of the profile."""
         result = await self._request("GET", self._profile_path, token=token)
         return to_certificates(result)
+
+    async def rating_book(self, token: str) -> str:
+        """Ask EMIS to build the rating book and return the PDF address."""
+        result = await self._request("POST", RATING_BOOK_PATH, token=token)
+        return parse_result(RatingBookV1DTO, result).url
 
     async def curriculum(self, token: str) -> list[EmisSubject]:
         """Return the subjects of the curriculum."""

@@ -33,6 +33,7 @@ if TYPE_CHECKING:
     from app.modules.feedback.wiring import FeedbackServices
     from app.modules.files.wiring import FilesServices
     from app.modules.flashcards.wiring import FlashcardsServices
+    from app.modules.identity.application.student_card import StudentCardService
     from app.modules.identity.wiring import IdentityModule
     from app.modules.knowledge.wiring import KnowledgeServices
     from app.modules.library.wiring import LibraryServices
@@ -70,6 +71,7 @@ class Container:
     # The limits in force (overrides, extensions, staff), set at build time.
     limits: LimitsProvider | None = None
     identity: "IdentityModule" = NOT_BUILT
+    student_card: "StudentCardService" = NOT_BUILT
     academic: "AcademicModule" = NOT_BUILT
     files: "FilesServices" = NOT_BUILT
     links: "LinksServices" = NOT_BUILT

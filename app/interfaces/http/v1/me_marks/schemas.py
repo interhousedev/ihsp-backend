@@ -326,3 +326,42 @@ class GroupProgressResponse(BaseModel):
     semesters: list[int]
     subjects: list[SubjectRef]
     students: list[GroupProgressStudent]
+
+
+class RatingBookResponse(BaseModel):
+    """Link to the EMIS rating book PDF."""
+
+    url: str
+
+
+class HonourBlocking(BaseModel):
+    """A mark that keeps a rule from passing."""
+
+    subject_id: UUID
+    subject_name: str
+    semester: int
+    type: Literal["semester", "midterm", "final"]
+    value: int
+
+
+class HonourRule(BaseModel):
+    """One enabled honours rule and its outcome."""
+
+    rule: str
+    passed: bool
+    blocking: list[HonourBlocking]
+
+
+class HonourAward(BaseModel):
+    """An award with its enabled rules."""
+
+    kind: Literal["red_diploma", "gold_medal", "silver_medal"]
+    eligible: bool
+    rules: list[HonourRule]
+
+
+class HonoursResponse(BaseModel):
+    """Eligibility for the red diploma and the medals."""
+
+    awards: list[HonourAward]
+    school_certificate_serial: str | None

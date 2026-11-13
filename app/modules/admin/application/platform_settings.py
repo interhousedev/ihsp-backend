@@ -31,7 +31,8 @@ class PlatformSettingsService:
         """Validate and save the given keys; the rest keep their values."""
         actor.require(Role.ADMIN)
         updated = apply_changes(await self.current(), changes)
+        stored = updated.as_stored()
         await self.store.write(
-            {key: getattr(updated, key) for key in changes}, updated_by=actor.user_id
+            {key: stored[key] for key in changes}, updated_by=actor.user_id
         )
         return updated

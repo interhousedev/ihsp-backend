@@ -126,6 +126,10 @@ class EmisGatewayImpl:
         """Return the CEFR and national certificates of the student's profile."""
         return await self._call(user_id, self._emis.certificates)
 
+    async def rating_book(self, user_id: UUID) -> str:
+        """Return the URL of the student's rating book PDF."""
+        return await self._call(user_id, self._emis.rating_book)
+
     # - - - Token handling - - -
 
     async def _call(self, user_id: UUID, fetch: Callable[[str], Awaitable[T]]) -> T:

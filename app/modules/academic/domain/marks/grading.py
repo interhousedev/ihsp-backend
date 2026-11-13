@@ -63,6 +63,11 @@ def gpa(all_marks: Sequence[int]) -> Decimal | None:
     return average(all_marks)
 
 
+def rounded_mark(value: Decimal) -> int:
+    """A semester mark as the whole mark of the record (halves up)."""
+    return int(value.quantize(Decimal(1), rounding=ROUND_HALF_UP))
+
+
 def present_types(
     lesson_avg: Decimal | None,
     midterm_avg: Decimal | None,

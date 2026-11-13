@@ -252,3 +252,57 @@ async def test_admin_sync_monitor(
 def test_fixed_clock_is_shared(env: Env) -> None:
     """The use cases and the tests share one clock (guards the fixtures)."""
     assert isinstance(env.clock, FixedClock)
+
+
+async def test_rating_book_link(
+    http_client: Any, services: MarksServices, env: Env, make_actor: Any
+) -> None:
+    """The student gets the EMIS rating book link; a teacher gets 403."""
+    client = await _client(
+        http_client,
+        services,
+        make_actor(Role.STUDENT, user_id=env.world.user_id),
+        MARKS_ROUTERS,
+    )
+
+    response = await client.get("/v1/me/emis/rating-book")
+
+    assert response.status_code == 200
+    assert response.json() == {"url": env.emis.rating_book_url}
+    teacher = await _client(
+        http_client, services, make_actor(Role.TEACHER), MARKS_ROUTERS
+    )
+    assert (await teacher.get("/v1/me/emis/rating-book")).status_code == 403
+
+
+async def test_honours(
+    http_client: Any, services: MarksServices, env: Env, make_actor: Any
+) -> None:
+    """The honours page lists the awards with blocking marks and the serial."""
+    from app.shared.contracts.honours import HonoursRules
+
+    env.emis.profile_result = SimpleNamespace(  # type: ignore[assignment]
+        school_certificate_serial=" tm-a "
+    )
+
+    async def current() -> Any:
+        return SimpleNamespace(honours=HonoursRules())
+
+    client = await http_client(
+        MARKS_ROUTERS,
+        {get_actor: lambda: make_actor(Role.STUDENT, user_id=env.world.user_id)},
+        academic=SimpleNamespace(marks=services),
+        admin=SimpleNamespace(platform_settings=SimpleNamespace(current=current)),
+    )
+
+    response = await client.get("/v1/me/honours")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["school_certificate_serial"] == " tm-a "
+    awards = {a["kind"]: a for a in body["awards"]}
+    assert set(awards) == {"red_diploma", "gold_medal", "silver_medal"}
+    assert not awards["gold_medal"]["eligible"]
+    gold = {r["rule"]: r for r in awards["gold_medal"]["rules"]}
+    assert gold["medal_certificate"]["passed"]
+    assert gold["gold_semester_all_five"]["blocking"]

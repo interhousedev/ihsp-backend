@@ -31,6 +31,11 @@ class EmisProfile:
     group_name: str  # normalized, e.g. "2TN2"
     current_semester: int | None
     curriculum_id: int | None
+    institution_name: "EmisName | None" = None
+    school_certificate_serial: str | None = None
+    school_certificate_number: str | None = None
+    direction: str | None = None
+    speciality: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -343,4 +348,8 @@ class EmisSource(Protocol):
 
     async def certificates(self, user_id: UUID) -> list[EmisCertificate]:
         """Return the certificates of the student's EMIS profile (CEFR, national)."""
+        ...
+
+    async def rating_book(self, user_id: UUID) -> str:
+        """Return the URL of the student's rating book PDF (EMIS builds it)."""
         ...

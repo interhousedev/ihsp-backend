@@ -125,6 +125,12 @@ class ControlledEmis:
             raise self.timetable_error
         return await self._inner.timetable(token, begin, end)
 
+    async def rating_book(self, token: str) -> str:
+        """Return the rating book address."""
+        self.calls.append("rating_book")
+        self._check(token)
+        return await self._inner.rating_book(token)
+
 
 # - - - Services of B1 and B3 - - -
 

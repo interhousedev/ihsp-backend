@@ -81,7 +81,20 @@ def to_profile(dto: ProfileV1DTO) -> EmisProfile:
         group_name=normalize_group_name(dto.edu_group.name),
         current_semester=dto.edu_group.current_semester,
         curriculum_id=dto.edu_group.curriculum_id,
+        institution_name=_institution_name(dto),
+        school_certificate_serial=dto.school_certificate_serial,
+        school_certificate_number=dto.school_certificate_number,
+        direction=dto.edu_group.direction,
+        speciality=dto.edu_group.speciality,
     )
+
+
+def _institution_name(dto: ProfileV1DTO) -> EmisName | None:
+    """The lyceum's name in three languages; None when EMIS sent none."""
+    name = dto.institution.name if dto.institution else None
+    if name is None or not (name.uz or name.ru or name.en):
+        return None
+    return EmisName(uz=name.uz or "", ru=name.ru or "", en=name.en or "")
 
 
 # - - - Curriculum - - -

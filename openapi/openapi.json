@@ -11435,6 +11435,17 @@
             ],
             "title": "Curriculum Id"
           },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
           "emis_student_id": {
             "title": "Emis Student Id",
             "type": "integer"
@@ -11455,6 +11466,16 @@
             "title": "Institution Id",
             "type": "integer"
           },
+          "institution_name": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EmisNameResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "last_name": {
             "title": "Last Name",
             "type": "string"
@@ -11469,6 +11490,39 @@
               }
             ],
             "title": "Middle Name"
+          },
+          "school_certificate_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School Certificate Number"
+          },
+          "school_certificate_serial": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School Certificate Serial"
+          },
+          "speciality": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speciality"
           }
         },
         "required": [
@@ -11539,6 +11593,20 @@
           }
         },
         "title": "EmisPullBody",
+        "type": "object"
+      },
+      "EmisRatingBookResponse": {
+        "description": "The address of the student's rating book PDF.",
+        "properties": {
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "EmisRatingBookResponse",
         "type": "object"
       },
       "EmisSemesterDatesResponse": {
@@ -15602,6 +15670,230 @@
           "students"
         ],
         "title": "HomeworkSubmissionsResponse",
+        "type": "object"
+      },
+      "HonourAward": {
+        "description": "An award with its enabled rules.",
+        "properties": {
+          "eligible": {
+            "title": "Eligible",
+            "type": "boolean"
+          },
+          "kind": {
+            "enum": [
+              "red_diploma",
+              "gold_medal",
+              "silver_medal"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/HonourRule"
+            },
+            "title": "Rules",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind",
+          "eligible",
+          "rules"
+        ],
+        "title": "HonourAward",
+        "type": "object"
+      },
+      "HonourBlocking": {
+        "description": "A mark that keeps a rule from passing.",
+        "properties": {
+          "semester": {
+            "title": "Semester",
+            "type": "integer"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "subject_name": {
+            "title": "Subject Name",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "semester",
+              "midterm",
+              "final"
+            ],
+            "title": "Type",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "subject_id",
+          "subject_name",
+          "semester",
+          "type",
+          "value"
+        ],
+        "title": "HonourBlocking",
+        "type": "object"
+      },
+      "HonourRule": {
+        "description": "One enabled honours rule and its outcome.",
+        "properties": {
+          "blocking": {
+            "items": {
+              "$ref": "#/components/schemas/HonourBlocking"
+            },
+            "title": "Blocking",
+            "type": "array"
+          },
+          "passed": {
+            "title": "Passed",
+            "type": "boolean"
+          },
+          "rule": {
+            "title": "Rule",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rule",
+          "passed",
+          "blocking"
+        ],
+        "title": "HonourRule",
+        "type": "object"
+      },
+      "HonoursBody": {
+        "additionalProperties": false,
+        "description": "Which rules count for the red diploma and the gold and silver medals.",
+        "properties": {
+          "gold_controls_all_five": {
+            "$ref": "#/components/schemas/HonoursFlagBody"
+          },
+          "gold_semester_all_five": {
+            "$ref": "#/components/schemas/HonoursFlagBody"
+          },
+          "medal_certificate": {
+            "$ref": "#/components/schemas/HonoursSerialsBody"
+          },
+          "red_diploma_max_fours": {
+            "$ref": "#/components/schemas/HonoursMaxFoursBody"
+          },
+          "silver_controls_all_five": {
+            "$ref": "#/components/schemas/HonoursFlagBody"
+          },
+          "silver_semester_max_fours": {
+            "$ref": "#/components/schemas/HonoursMaxFoursBody"
+          }
+        },
+        "required": [
+          "red_diploma_max_fours",
+          "medal_certificate",
+          "gold_controls_all_five",
+          "gold_semester_all_five",
+          "silver_controls_all_five",
+          "silver_semester_max_fours"
+        ],
+        "title": "HonoursBody",
+        "type": "object"
+      },
+      "HonoursFlagBody": {
+        "additionalProperties": false,
+        "description": "A honours rule without a parameter.",
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "HonoursFlagBody",
+        "type": "object"
+      },
+      "HonoursMaxFoursBody": {
+        "additionalProperties": false,
+        "description": "A honours rule limiting the semester marks of 4.",
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "max": {
+            "maximum": 20.0,
+            "minimum": 0.0,
+            "title": "Max",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "enabled",
+          "max"
+        ],
+        "title": "HonoursMaxFoursBody",
+        "type": "object"
+      },
+      "HonoursResponse": {
+        "description": "Eligibility for the red diploma and the medals.",
+        "properties": {
+          "awards": {
+            "items": {
+              "$ref": "#/components/schemas/HonourAward"
+            },
+            "title": "Awards",
+            "type": "array"
+          },
+          "school_certificate_serial": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School Certificate Serial"
+          }
+        },
+        "required": [
+          "awards",
+          "school_certificate_serial"
+        ],
+        "title": "HonoursResponse",
+        "type": "object"
+      },
+      "HonoursSerialsBody": {
+        "additionalProperties": false,
+        "description": "The school certificate serials that count as a medal certificate.",
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "serials": {
+            "items": {
+              "maxLength": 32,
+              "minLength": 1,
+              "type": "string"
+            },
+            "title": "Serials",
+            "type": "array"
+          }
+        },
+        "required": [
+          "enabled",
+          "serials"
+        ],
+        "title": "HonoursSerialsBody",
         "type": "object"
       },
       "IdentifiedStudentOut": {
@@ -21358,6 +21650,30 @@
         "title": "LogoutResponse",
         "type": "object"
       },
+      "LyceumNameOut": {
+        "description": "The lyceum name in the three languages.",
+        "properties": {
+          "en": {
+            "title": "En",
+            "type": "string"
+          },
+          "ru": {
+            "title": "Ru",
+            "type": "string"
+          },
+          "uz": {
+            "title": "Uz",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uz",
+          "ru",
+          "en"
+        ],
+        "title": "LyceumNameOut",
+        "type": "object"
+      },
       "ManageCollectionResponse": {
         "description": "`ManageCollection`: all languages and the stored item ids.",
         "properties": {
@@ -26362,6 +26678,44 @@
         "title": "PlannerPair",
         "type": "object"
       },
+      "PlannerPath": {
+        "description": "A Pareto-minimal way to reach the target.",
+        "properties": {
+          "extra_lesson_fives": {
+            "title": "Extra Lesson Fives",
+            "type": "integer"
+          },
+          "final": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final"
+          },
+          "midterm": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Midterm"
+          }
+        },
+        "required": [
+          "extra_lesson_fives",
+          "midterm",
+          "final"
+        ],
+        "title": "PlannerPath",
+        "type": "object"
+      },
       "PlannerPrediction": {
         "description": "The semester mark if pending controls get the assumed marks.",
         "properties": {
@@ -26508,6 +26862,13 @@
             "title": "Pairs",
             "type": "array"
           },
+          "paths": {
+            "items": {
+              "$ref": "#/components/schemas/PlannerPath"
+            },
+            "title": "Paths",
+            "type": "array"
+          },
           "status": {
             "enum": [
               "secured",
@@ -26530,7 +26891,8 @@
           "control",
           "min_value",
           "min_both",
-          "pairs"
+          "pairs",
+          "paths"
         ],
         "title": "PlannerTarget",
         "type": "object"
@@ -26575,6 +26937,17 @@
             ],
             "title": "Default Language",
             "type": "string"
+          },
+          "honours": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HonoursBody"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Left out: the saved rules stay."
           },
           "school_name": {
             "maxLength": 120,
@@ -26621,6 +26994,9 @@
             "title": "Features",
             "type": "object"
           },
+          "honours": {
+            "$ref": "#/components/schemas/HonoursBody"
+          },
           "school_name": {
             "maxLength": 120,
             "title": "School Name",
@@ -26637,6 +27013,7 @@
           "support_contact",
           "change_password_on_login",
           "default_language",
+          "honours",
           "features"
         ],
         "title": "PlatformSettingsResponse",
@@ -27801,6 +28178,95 @@
         "title": "PublicShare",
         "type": "object"
       },
+      "PublicStudentCardResponse": {
+        "description": "The card seen through a token; the owner's id is not part of it.",
+        "properties": {
+          "course": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group"
+          },
+          "has_photo": {
+            "title": "Has Photo",
+            "type": "boolean"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "lyceum_name": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LyceumNameOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "speciality": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speciality"
+          }
+        },
+        "required": [
+          "first_name",
+          "last_name",
+          "group",
+          "course",
+          "lyceum_name",
+          "direction",
+          "speciality",
+          "has_photo",
+          "expires_at"
+        ],
+        "title": "PublicStudentCardResponse",
+        "type": "object"
+      },
       "PublicVisualization": {
         "additionalProperties": false,
         "description": "A shared answer with OpenUI blocks: nothing but its text and dates.",
@@ -28852,6 +29318,20 @@
         ],
         "title": "Rating",
         "type": "string"
+      },
+      "RatingBookResponse": {
+        "description": "Link to the EMIS rating book PDF.",
+        "properties": {
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "RatingBookResponse",
+        "type": "object"
       },
       "ReadingListCardResponse": {
         "description": "`ReadingListCard`.",
@@ -35659,6 +36139,114 @@
           "audit"
         ],
         "title": "Student360Response",
+        "type": "object"
+      },
+      "StudentCardResponse": {
+        "description": "The student's own card.",
+        "properties": {
+          "course": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "group": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group"
+          },
+          "has_photo": {
+            "title": "Has Photo",
+            "type": "boolean"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "lyceum_name": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LyceumNameOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "speciality": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speciality"
+          }
+        },
+        "required": [
+          "first_name",
+          "last_name",
+          "group",
+          "course",
+          "lyceum_name",
+          "direction",
+          "speciality",
+          "has_photo"
+        ],
+        "title": "StudentCardResponse",
+        "type": "object"
+      },
+      "StudentCardTokenResponse": {
+        "description": "A share token: shown as a QR code, valid for two minutes.",
+        "properties": {
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "refresh_in": {
+            "title": "Refresh In",
+            "type": "integer"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "expires_at",
+          "refresh_in"
+        ],
+        "title": "StudentCardTokenResponse",
         "type": "object"
       },
       "StudentItemResponse": {
@@ -48169,6 +48757,50 @@
           }
         },
         "summary": "Get Profile",
+        "tags": [
+          "internal-emis"
+        ]
+      }
+    },
+    "/internal/emis/{user_id}/rating-book": {
+      "get": {
+        "description": "Have EMIS build the student's rating book and return its PDF address.",
+        "operationId": "get_rating_book_internal_emis__user_id__rating_book_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmisRatingBookResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Rating Book",
         "tags": [
           "internal-emis"
         ]
@@ -70691,6 +71323,28 @@
         ]
       }
     },
+    "/v1/me/emis/rating-book": {
+      "get": {
+        "description": "Return the link to the student's EMIS rating book.",
+        "operationId": "get_rating_book_v1_me_emis_rating_book_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RatingBookResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Rating Book",
+        "tags": [
+          "marks"
+        ]
+      }
+    },
     "/v1/me/excuse-templates": {
       "get": {
         "description": "Active reasons for the request form, in display order.",
@@ -72517,6 +73171,28 @@
         ]
       }
     },
+    "/v1/me/honours": {
+      "get": {
+        "description": "Return the student's eligibility for the red diploma and the medals.",
+        "operationId": "get_honours_v1_me_honours_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HonoursResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Honours",
+        "tags": [
+          "marks"
+        ]
+      }
+    },
     "/v1/me/lesson-results": {
       "get": {
         "description": "Return attendance and the mark of each lesson that has already started.",
@@ -73839,6 +74515,50 @@
         "summary": "Get Storage",
         "tags": [
           "files"
+        ]
+      }
+    },
+    "/v1/me/student-card": {
+      "get": {
+        "description": "Return the caller's student card.",
+        "operationId": "get_student_card_v1_me_student_card_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentCardResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Student Card",
+        "tags": [
+          "student-card"
+        ]
+      }
+    },
+    "/v1/me/student-card/tokens": {
+      "post": {
+        "description": "Issue a two-minute token that shows the card to a verifier.",
+        "operationId": "issue_student_card_token_v1_me_student_card_tokens_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentCardTokenResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Issue Student Card Token",
+        "tags": [
+          "student-card"
         ]
       }
     },
@@ -79156,6 +79876,88 @@
         "summary": "Get Public Share",
         "tags": [
           "public"
+        ]
+      }
+    },
+    "/v1/public/student-cards/{token}": {
+      "get": {
+        "description": "Return the card behind a token; 404 when it is unknown or expired.",
+        "operationId": "get_public_student_card_v1_public_student_cards__token__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicStudentCardResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Public Student Card",
+        "tags": [
+          "student-card"
+        ]
+      }
+    },
+    "/v1/public/student-cards/{token}/photo": {
+      "get": {
+        "description": "Return the photo behind a token; never cached.",
+        "operationId": "get_public_student_card_photo_v1_public_student_cards__token__photo_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/*": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Public Student Card Photo",
+        "tags": [
+          "student-card"
         ]
       }
     },

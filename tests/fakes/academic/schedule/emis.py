@@ -81,6 +81,10 @@ class FakeEmisSource:
         """Not used by the schedule."""
         raise NotImplementedError
 
+    async def rating_book(self, user_id: UUID) -> str:
+        """Not used by the schedule."""
+        raise NotImplementedError
+
     async def subjects(self, user_id: UUID) -> list[EmisSubject]:
         """Not used by the schedule."""
         raise NotImplementedError

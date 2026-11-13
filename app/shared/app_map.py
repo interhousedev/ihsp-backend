@@ -99,6 +99,20 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "baholar baho оценки оценка отметки grades marks gpa журнал ПК ИК",
     ),
     _d(
+        "sp-honours",
+        "sp",
+        "/honours/",
+        _ST,
+        (
+            "Qizil diplom va medallar",
+            "Красный диплом и медали",
+            "Red diploma and medals",
+        ),
+        "qizil diplom medal oltin kumush красный диплом медаль золотая серебряная "
+        "аттестат reyting kitobi рейтинг-книжка red diploma gold silver medal "
+        "rating book honours",
+    ),
+    _d(
         "sp-homework",
         "sp",
         "/homework/",

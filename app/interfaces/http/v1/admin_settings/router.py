@@ -32,5 +32,7 @@ async def put_settings(
     body: PlatformSettingsBody, container: ContainerDep, actor: AdminActor
 ) -> PlatformSettingsResponse:
     """Save every editable setting."""
-    updated = await container.admin.platform_settings.update(actor, body.model_dump())
+    updated = await container.admin.platform_settings.update(
+        actor, body.model_dump(exclude_none=True)
+    )
     return PlatformSettingsResponse.of(updated, container.settings.features)

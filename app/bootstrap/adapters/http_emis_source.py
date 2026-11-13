@@ -98,6 +98,11 @@ class HttpEmisSource:
             group_name=body["group_name"],
             current_semester=body["current_semester"],
             curriculum_id=body["curriculum_id"],
+            institution_name=_optional_name(body.get("institution_name")),
+            school_certificate_serial=body.get("school_certificate_serial"),
+            school_certificate_number=body.get("school_certificate_number"),
+            direction=body.get("direction"),
+            speciality=body.get("speciality"),
         )
 
     async def subjects(self, user_id: UUID) -> list[EmisSubject]:
@@ -168,6 +173,11 @@ class HttpEmisSource:
         body = await self._get(f"{user_id}/certificates")
         return [_emis_certificate(item) for item in body]
 
+    async def rating_book(self, user_id: UUID) -> str:
+        """Return the URL of the student's rating book PDF."""
+        body = await self._get(f"{user_id}/rating-book")
+        return str(body["url"])
+
     async def download(self, user_id: UUID, url: str, *, max_bytes: int) -> EmisFile:
         """Download a material through the gateway (it holds the EMIS session)."""
         try:
@@ -234,6 +244,10 @@ def _optional_date(value: str | None) -> date | None:
 
 def _name(body: dict[str, str]) -> EmisName:
     return EmisName(uz=body["uz"], ru=body["ru"], en=body["en"])
+
+
+def _optional_name(body: dict[str, str] | None) -> EmisName | None:
+    return None if body is None else _name(body)
 
 
 def _year(body: dict[str, Any] | None) -> EmisYear | None:

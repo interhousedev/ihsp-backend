@@ -85,8 +85,10 @@ from app.modules.files.wiring import build as build_files
 from app.modules.flashcards.ports.share_resolver import ShareResolver
 from app.modules.flashcards.wiring import build as build_flashcards
 from app.modules.identity.application.register_ports import CredentialStore
+from app.modules.identity.application.student_card import StudentCardService
 from app.modules.identity.infrastructure.audit_writer import write_audit_events
 from app.modules.identity.infrastructure.hydra.factory import build_hydra_admin
+from app.modules.identity.infrastructure.redis.ticket_store import RedisTicketStore
 from app.modules.identity.ports.email_sender import EmailSender
 from app.modules.identity.ports.hydra_gateway import HydraGateway
 from app.modules.identity.wiring import build as build_identity
@@ -393,6 +395,14 @@ class _Assembler:
         )
         if closer is not None:
             self.add_closer(closer)
+        c.student_card = StudentCardService(
+            directory=identity.directory,
+            emis=source,
+            files=c.files.public,
+            store=RedisTicketStore(c.redis),
+            limiter=c.rate_limiter,
+            clock=c.clock,
+        )
         c.certificates = build_certificates(
             self.deps,
             files=c.files.public,

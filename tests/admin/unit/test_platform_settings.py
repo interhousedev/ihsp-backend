@@ -100,3 +100,25 @@ def test_a_broken_stored_value_falls_back_to_the_default() -> None:
     assert from_stored(stored) == apply_changes(
         PlatformSettings(), {"school_name": "IHSU"}
     )
+
+
+def test_honours_defaults_and_validation() -> None:
+    """The honours rules default on, are stored as JSON and reject bad values."""
+    base = PlatformSettings()
+    assert base.honours.red_diploma_max_fours.max == 1
+    assert base.honours.medal_certificate.serials == ("TM-A", "TMA")
+    assert not base.honours.silver_controls_all_five.enabled
+    full = base.honours.as_stored()
+    full["red_diploma_max_fours"] = {"enabled": True, "max": 3}
+    changed = apply_changes(
+        base,
+        {"honours": full},
+    )
+    assert changed.honours.red_diploma_max_fours.max == 3
+    assert from_stored(changed.as_stored()) == changed
+    for bad in (
+        {"red_diploma_max_fours": {"enabled": True, "max": 21}},
+        {"medal_certificate": {"enabled": True, "serials": []}},
+    ):
+        with pytest.raises(PlatformSettingsInvalidError):
+            apply_changes(base, {"honours": {**full, **bad}})

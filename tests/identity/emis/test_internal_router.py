@@ -74,6 +74,15 @@ async def test_profile_is_returned_as_json(
         "group_name": "2TN2",
         "current_semester": 3,
         "curriculum_id": 2124,
+        "institution_name": {
+            "uz": "Akademik litsey",
+            "ru": "Академический лицей",
+            "en": "Academic lyceum",
+        },
+        "school_certificate_serial": "TM-A",
+        "school_certificate_number": "0078201",
+        "direction": "Aniq fanlar-2",
+        "speciality": "Texnik-dasturchi",
     }
 
 

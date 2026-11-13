@@ -9,7 +9,9 @@ from app.modules.academic.application.marks.get_group_progress import (
     GetGroupProgress,
 )
 from app.modules.academic.application.marks.get_group_rating import GetGroupRating
+from app.modules.academic.application.marks.get_honours import GetHonours
 from app.modules.academic.application.marks.get_my_group import GetMyGroup
+from app.modules.academic.application.marks.get_rating_book import GetRatingBook
 from app.modules.academic.application.marks.get_record_book import GetRecordBook
 from app.modules.academic.application.marks.get_semester_grades import (
     GetSemesterGrades,
@@ -95,6 +97,8 @@ class MarksServices:
     get_group_progress: GetGroupProgress
     get_group_rating: GetGroupRating
     get_my_group: GetMyGroup
+    get_honours: GetHonours
+    get_rating_book: GetRatingBook
     queries: MarksQueriesImpl
 
 
@@ -206,6 +210,8 @@ def build_marks(
         ),
         get_group_rating=GetGroupRating(uow_factory=uow_factory, identity=identity),
         get_my_group=GetMyGroup(uow_factory=uow_factory, identity=identity),
+        get_honours=GetHonours(uow_factory=uow_factory, identity=identity, emis=emis),
+        get_rating_book=GetRatingBook(emis=emis),
         queries=MarksQueriesImpl(
             uow_factory=uow_factory, identity=identity, clock=deps.clock
         ),

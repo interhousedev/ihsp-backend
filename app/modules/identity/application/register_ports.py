@@ -81,6 +81,10 @@ class EmisApi(EmisTimetableSource, Protocol):
         """Return the CEFR and national certificates of the profile."""
         ...
 
+    async def rating_book(self, token: str) -> str:
+        """Return the URL of the student's rating book PDF."""
+        ...
+
 
 class CredentialStore(Protocol):
     """Vault: Transit encryption and the KV secret of each student."""

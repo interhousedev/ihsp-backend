@@ -7,6 +7,7 @@ from app.interfaces.http.internal.emis.handlers.get_class_hours import get_class
 from app.interfaces.http.internal.emis.handlers.get_curriculum import get_curriculum
 from app.interfaces.http.internal.emis.handlers.get_file import get_file
 from app.interfaces.http.internal.emis.handlers.get_profile import get_profile
+from app.interfaces.http.internal.emis.handlers.get_rating_book import get_rating_book
 from app.interfaces.http.internal.emis.handlers.get_ratings import get_ratings
 from app.interfaces.http.internal.emis.handlers.get_subjects import get_subjects
 from app.interfaces.http.internal.emis.handlers.get_timetable import get_timetable
@@ -16,6 +17,7 @@ from app.interfaces.http.internal.emis.schemas import (
     EmisClassResponse,
     EmisCurriculumResponse,
     EmisProfileResponse,
+    EmisRatingBookResponse,
     EmisSubjectRatingsResponse,
     EmisSubjectResponse,
 )
@@ -70,5 +72,11 @@ router.add_api_route(
     get_certificates,
     methods=["GET"],
     response_model=list[EmisCertificateResponse],
+)
+router.add_api_route(
+    "/{user_id}/rating-book",
+    get_rating_book,
+    methods=["GET"],
+    response_model=EmisRatingBookResponse,
 )
 router.add_api_route("/{user_id}/file", get_file, methods=["GET"])
