@@ -317,3 +317,10 @@ class VaultKeyRejectedError(ValidationFailedError):
 
     code = "id/vault-key-rejected"
     message_key = "id-vault-key-rejected"
+
+
+class StudentCardNotFoundError(NotFoundError):
+    """The student card token is unknown or expired."""
+
+    code = "student_card_not_found"
+    message_key = "id-student-card-not-found"
