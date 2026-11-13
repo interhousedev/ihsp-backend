@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-11-14
+
 ### Changed
 
 - `GET /v1/me/today` is faster: the student, the next study day, the homework and the lesson items are resolved once per request, and all teachers come from one identity lookup (response unchanged).
@@ -18,6 +20,16 @@ All notable changes to this project are documented here. The format follows [Kee
 - Planner: each target of `GET /v1/me/marks/subjects/{id}/planner` has `paths`, up to five minimal ways to reach it (`extra_lesson_fives`, lowest `midterm` and `final`).
 - Student card: `GET /v1/me/student-card`, `POST /v1/me/student-card/tokens` (a two-minute token, only its SHA-256 is kept in Redis) and the public `GET /v1/public/student-cards/{token}` with `/photo` (404 `student_card_not_found`); `iht-web` needs `bun run sync:openapi`.
 - Honours: `GET /v1/me/honours` (red diploma, gold and silver medal rules with the blocking marks), admin rules under `honours` of `PUT /v1/admin/settings`, `GET /v1/me/emis/rating-book` (the EMIS rating book link); the EMIS profile gains the institution name, school certificate serial and number, direction and speciality; `iht-web` needs `bun run sync:openapi`.
+- CORS exposes the `Date` header so the share card counts down by server time.
+
+### Security
+
+- `opentelemetry-api` 1.45.2.
+
+### Known issues
+
+- The assistant `find_feature` still lists the login cues page when cues are switched off.
+- `seed-review` has no ПК/ИК period marks or notebooks; the admin MCP server has no review account.
 
 ## [1.4.0] - 2026-11-11
 
