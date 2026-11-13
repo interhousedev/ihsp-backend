@@ -446,7 +446,7 @@
       "license": "Apache-2.0",
       "name": "opentelemetry-api",
       "url": "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-api",
-      "version": "1.45.1"
+      "version": "1.45.2"
     },
     {
       "ecosystem": "PyPI",

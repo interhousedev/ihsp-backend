@@ -22,3 +22,6 @@
 eb97afb373d15463c90e5de50733ee6f80c2e18f:app/modules/notify/infrastructure/pywebpush_sender.py:generic-api-key:1
 fc99d59b353d89c35f6416ff5981bb34ec313dc1:app/modules/lms/domain/authoring/errors.py:generic-api-key:159
 031db541dcf8bfcbcd59846c23dbd1fd69d9c0e6:tests/bot/test_widgets_render.py:generic-api-key:57
+# docs: curl examples with truncated placeholder tokens (ihsp_pat_..., ihsp_dev_...)
+849c8572de2d3616ee9fadb5488d7e63bebd6fad:docs/entrance-devices.md:curl-auth-header:61
+849c8572de2d3616ee9fadb5488d7e63bebd6fad:docs/personal-tokens.md:curl-auth-header:60
