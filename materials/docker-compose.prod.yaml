@@ -139,6 +139,9 @@ x-backend-env: &backend-env
   IHSP_FEATURES__LIBRARY: ${IHSP_FEATURES__LIBRARY:-true}
   IHSP_FEATURES__WEB_SEARCH: ${IHSP_FEATURES__WEB_SEARCH:-true}
   IHSP_FEATURES__VECTOR_SEARCH: ${IHSP_FEATURES__VECTOR_SEARCH:-true}
+  IHSP_FEATURES__LOGIN_CUES: ${IHSP_FEATURES__LOGIN_CUES:-false}
+  IHSP_DOCS__PERSONAL_TOKENS_URL: ${IHSP_DOCS__PERSONAL_TOKENS_URL:-https://interhousedev.github.io/ihsp-backend/personal-tokens/}
+  IHSP_DOCS__ENTRANCE_DEVICES_URL: ${IHSP_DOCS__ENTRANCE_DEVICES_URL:-https://interhousedev.github.io/ihsp-backend/entrance-devices/}
   IHSP_OPENROUTER__APP_URL: https://my.${DOMAIN}
   IHSP_SMTP_OUT__MAIL_DOMAIN: mail.${DOMAIN}
   IHSP_SMTP_OUT__SYSTEM_FROM: no-reply@${DOMAIN}
