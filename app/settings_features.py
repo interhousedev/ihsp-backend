@@ -49,3 +49,7 @@ class FeaturesSettings(BaseModel):
     change_password_on_login: bool = False
     """Opt-in (default off): a user whose password an administrator set must choose a
     new one right after signing in; the id app shows a change-password step."""
+
+    login_cues: bool = False
+    """Login cues (default off, hidden for now): the admin `/v1/admin/login-cues` routes
+    and the public cue picker of the id app answer 404 while off."""

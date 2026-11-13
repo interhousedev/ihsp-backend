@@ -5,17 +5,25 @@ from uuid import UUID
 
 from app.bootstrap.container import Container
 from app.interfaces.http.dependencies import get_container
+from app.interfaces.http.feature_gate import require_feature
 from app.interfaces.http.v1.admin_users.login_cues.schemas import (
+    BulkDeleteLoginCuesBody,
+    BulkDeleteLoginCuesResponse,
     BulkLoginCuesBody,
     BulkLoginCuesResponse,
     LoginCueBody,
     LoginCueResponse,
 )
 from app.interfaces.http.v1.id.dependencies import AdminDep
+from app.shared.features import Feature
 
 from fastapi import APIRouter, Depends, Response, status
 
-router = APIRouter(prefix="/v1/admin/login-cues", tags=["admin-login-cues"])
+router = APIRouter(
+    prefix="/v1/admin/login-cues",
+    tags=["admin-login-cues"],
+    dependencies=[Depends(require_feature(Feature.LOGIN_CUES))],
+)
 
 
 @router.get("", response_model=list[LoginCueResponse])
@@ -55,6 +63,17 @@ async def bulk_create_login_cues(
     return BulkLoginCuesResponse(
         created=[LoginCueResponse.from_view(view) for view in views]
     )
+
+
+@router.post("/bulk-delete", response_model=BulkDeleteLoginCuesResponse)
+async def bulk_delete_login_cues(
+    body: BulkDeleteLoginCuesBody,
+    _admin: AdminDep,
+    container: Annotated[Container, Depends(get_container)],
+) -> BulkDeleteLoginCuesResponse:
+    """Delete several cues (consumed ones too); unknown ids are skipped."""
+    deleted = await container.identity.emis.login_cues.delete_many(body.ids)
+    return BulkDeleteLoginCuesResponse(deleted=deleted)
 
 
 @router.delete("/{cue_id}", status_code=status.HTTP_204_NO_CONTENT)

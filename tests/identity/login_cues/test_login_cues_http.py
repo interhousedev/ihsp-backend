@@ -6,7 +6,9 @@ from types import SimpleNamespace
 from app.interfaces.http.dependencies import get_actor
 from app.interfaces.http.v1.admin_users.login_cues import ROUTERS as ADMIN_ROUTERS
 from app.interfaces.http.v1.id_registration import ROUTERS as PUBLIC_ROUTERS
+from app.interfaces.http.v1.public_config import ROUTERS as CONFIG_ROUTERS
 from app.modules.identity.application.login_cues import LoginCueService
+from app.settings import Settings
 from app.shared.actor import Actor, Role
 from app.shared.ids import new_id
 from app.shared.rate_limit import RateLimiter
@@ -25,6 +27,12 @@ from httpx import AsyncClient
 
 LOGIN = "20249988771"
 GROUP = new_id()
+
+
+@pytest.fixture(autouse=True)
+def cues_on(settings: Settings, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The feature is opt-in; these tests run with it on."""
+    monkeypatch.setattr(settings.features, "login_cues", True)
 
 
 @pytest.fixture
@@ -147,3 +155,59 @@ async def test_public_cue_start_with_consumed_cue_is_gone(
         "/v1/id/register/emis/cue", json={"cue_id": cue_id, "emis_password": "pw"}
     )
     assert second.status_code == 404
+
+
+async def test_routes_answer_404_while_the_flag_is_off(
+    http_client: HttpClientFactory,
+    service: LoginCueService,
+    settings: Settings,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(settings.features, "login_cues", False)
+    admin = await _client(http_client, service, frozenset({Role.ADMIN}))
+    assert (await admin.get("/v1/admin/login-cues")).status_code == 404
+    body = {"ids": [str(new_id())]}
+    assert (
+        await admin.post("/v1/admin/login-cues/bulk-delete", json=body)
+    ).status_code == 404
+    assert (await admin.get("/v1/login-cues/groups")).status_code == 404
+
+
+async def test_bulk_delete_counts_and_validates(
+    http_client: HttpClientFactory, service: LoginCueService
+) -> None:
+    admin = await _client(http_client, service, frozenset({Role.ADMIN}))
+    gone = new_id()
+    response = await admin.post(
+        "/v1/admin/login-cues/bulk-delete", json={"ids": [str(gone)]}
+    )
+    assert response.status_code == 200
+    assert response.json() == {"deleted": 0}
+    for ids in ([], [str(new_id()) for _ in range(501)]):
+        bad = await admin.post("/v1/admin/login-cues/bulk-delete", json={"ids": ids})
+        assert bad.status_code == 422
+    student = await _client(http_client, service, frozenset({Role.STUDENT}))
+    denied = await student.post(
+        "/v1/admin/login-cues/bulk-delete", json={"ids": [str(gone)]}
+    )
+    assert denied.status_code == 403
+
+
+async def test_client_config_is_public(
+    http_client: HttpClientFactory,
+    settings: Settings,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = await http_client(CONFIG_ROUTERS)
+    response = await client.get("/v1/public/client-config")
+    assert response.status_code == 200
+    assert response.json() == {
+        "features": {"login_cues": True},
+        "docs": {
+            "personal_tokens_url": settings.docs.personal_tokens_url,
+            "entrance_devices_url": settings.docs.entrance_devices_url,
+        },
+    }
+    monkeypatch.setattr(settings.features, "login_cues", False)
+    off = await client.get("/v1/public/client-config")
+    assert off.json()["features"] == {"login_cues": False}

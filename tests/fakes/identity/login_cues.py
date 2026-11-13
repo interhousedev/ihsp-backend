@@ -33,6 +33,10 @@ class InMemoryLoginCueRepository:
         """Remove the cue if present."""
         return self.cues.pop(cue_id, None) is not None
 
+    async def delete_many(self, cue_ids: Sequence[UUID]) -> int:
+        """Remove the cues that are present."""
+        return sum(self.cues.pop(cue_id, None) is not None for cue_id in cue_ids)
+
     async def open_group_ids(self) -> list[UUID]:
         """Return the distinct groups of unconsumed cues."""
         return list({c.group_id for c in self.cues.values() if not c.consumed})

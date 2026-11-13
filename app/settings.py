@@ -1262,6 +1262,20 @@ class LimitsSettings(BaseModel):
     """Most model requests (tool rounds) in one author assistant turn."""
 
 
+class DocsSettings(BaseModel):
+    """Links to the public documentation site, shown by the web apps."""
+
+    personal_tokens_url: str | None = (
+        "https://interhousedev.github.io/ihsp-backend/personal-tokens/"
+    )
+    """Guide to personal access tokens (`IHSP_DOCS__PERSONAL_TOKENS_URL`)."""
+
+    entrance_devices_url: str | None = (
+        "https://interhousedev.github.io/ihsp-backend/entrance-devices/"
+    )
+    """Guide to entrance devices (`IHSP_DOCS__ENTRANCE_DEVICES_URL`)."""
+
+
 class Settings(BaseSettings):
     """All settings of one process; development defaults match materials/dev.env."""
 
@@ -1318,6 +1332,7 @@ class Settings(BaseSettings):
     limits: LimitsSettings = Field(default_factory=LimitsSettings)
     ai: AiSettings = Field(default_factory=AiSettings)
     features: FeaturesSettings = Field(default_factory=FeaturesSettings)
+    docs: DocsSettings = Field(default_factory=DocsSettings)
     web_search: WebSearchSettings = Field(default_factory=WebSearchSettings)
 
     @model_validator(mode="after")

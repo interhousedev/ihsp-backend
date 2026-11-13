@@ -28,7 +28,7 @@ def test_every_feature_has_a_flag_and_every_flag_a_feature() -> None:
     assert {feature.value for feature in Feature} == set(FeaturesSettings.model_fields)
 
 
-OPT_IN = {Feature.CHANGE_PASSWORD_ON_LOGIN}
+OPT_IN = {Feature.CHANGE_PASSWORD_ON_LOGIN, Feature.LOGIN_CUES}
 
 
 def test_every_feature_is_on_by_default_except_the_opt_in_ones() -> None:

@@ -72,6 +72,16 @@ class SqlLoginCueRepository:
             deleted = (await session.execute(stmt)).first()
         return deleted is not None
 
+    async def delete_many(self, cue_ids: Sequence[UUID]) -> int:
+        """Delete the cues with these ids; return how many existed."""
+        stmt = (
+            delete(LoginCueRow)
+            .where(LoginCueRow.id.in_(cue_ids))
+            .returning(LoginCueRow.id)
+        )
+        async with self._sessionmaker.begin() as session:
+            return len((await session.execute(stmt)).all())
+
     async def open_group_ids(self) -> list[UUID]:
         """Return the groups that still have unconsumed cues."""
         stmt = (

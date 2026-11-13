@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from typing import Final, Literal
 
 from app.settings import UrlsSettings
+from app.settings_features import FeaturesSettings
 from app.shared.actor import Role
 
 AppName = Literal["sp", "staff", "admin", "lms", "library", "id", "bot"]
@@ -926,9 +927,26 @@ def visible_to(destination: Destination, roles: frozenset[Role]) -> bool:
     return not destination.roles or bool(destination.roles & roles)
 
 
-def for_roles(urls: UrlsSettings, roles: frozenset[Role]) -> list[Found]:
-    """Every destination the roles may open, in map order."""
-    return [resolve(d, urls) for d in APP_MAP if visible_to(d, roles)]
+# Pages of a switchable feature: hidden while its flag is off.
+FEATURE_PAGES: Final[dict[str, str]] = {"admin-login-cues": "login_cues"}
+
+
+def hidden_pages(features: FeaturesSettings) -> frozenset[str]:
+    """Ids of the pages whose feature flag is off."""
+    return frozenset(
+        page for page, name in FEATURE_PAGES.items() if not getattr(features, name)
+    )
+
+
+def for_roles(
+    urls: UrlsSettings,
+    roles: frozenset[Role],
+    hidden: frozenset[str] = frozenset(),
+) -> list[Found]:
+    """Every destination the roles may open, in map order, minus the hidden pages."""
+    return [
+        resolve(d, urls) for d in APP_MAP if visible_to(d, roles) and d.id not in hidden
+    ]
 
 
 def _score(destination: Destination, query: str, tokens: list[str], locale: str) -> int:
@@ -961,6 +979,7 @@ def search(
     roles: frozenset[Role],
     urls: UrlsSettings,
     limit: int = 5,
+    hidden: frozenset[str] = frozenset(),
 ) -> list[Found]:
     """Pages that fit the query, best first; only pages the roles may open."""
     normal = _normal(query).strip()
@@ -968,7 +987,7 @@ def search(
     scored = [
         (_score(d, normal, tokens, locale), index, d)
         for index, d in enumerate(APP_MAP)
-        if visible_to(d, roles)
+        if visible_to(d, roles) and d.id not in hidden
     ]
     ranked = sorted((s for s in scored if s[0] > 0), key=lambda s: (-s[0], s[1]))
     return [resolve(d, urls) for _, _, d in ranked[:limit]]

@@ -1,5 +1,6 @@
 """Routes of registration, reclaim, EMIS password update and account deletion."""
 
+from app.interfaces.http.feature_gate import require_feature
 from app.interfaces.http.v1.id_registration.handlers.change_emis_password import (
     change_emis_password,
 )
@@ -37,10 +38,13 @@ from app.interfaces.http.v1.id_registration.schemas import (
     StartReclaimResponse,
     TelegramLinkStatusResponse,
 )
+from app.shared.features import Feature
 
-from fastapi import APIRouter, Response, status
+from fastapi import APIRouter, Depends, Response, status
 
 router = APIRouter(prefix="/v1/id", tags=["id-registration"])
+
+_CUES_ON = [Depends(require_feature(Feature.LOGIN_CUES))]
 
 router.add_api_route(
     "/register/emis",
@@ -53,18 +57,21 @@ router.add_api_route(
     list_cue_groups,
     methods=["GET"],
     response_model=list[CueGroupResponse],
+    dependencies=_CUES_ON,
 )
 router.add_api_route(
     "/login-cues/groups/{group_id}",
     list_group_cues,
     methods=["GET"],
     response_model=list[CueOptionResponse],
+    dependencies=_CUES_ON,
 )
 router.add_api_route(
     "/register/emis/cue",
     start_cue_registration,
     methods=["POST"],
     response_model=RegistrationStartResponse,
+    dependencies=_CUES_ON,
 )
 router.add_api_route(
     "/register/email",

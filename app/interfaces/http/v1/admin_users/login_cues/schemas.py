@@ -61,3 +61,15 @@ class BulkLoginCuesResponse(BaseModel):
     """The created cues, in request order."""
 
     created: list[LoginCueResponse]
+
+
+class BulkDeleteLoginCuesBody(BaseModel):
+    """Cue ids to delete."""
+
+    ids: list[UUID] = Field(min_length=1, max_length=MAX_BULK)
+
+
+class BulkDeleteLoginCuesResponse(BaseModel):
+    """How many cues were deleted."""
+
+    deleted: int

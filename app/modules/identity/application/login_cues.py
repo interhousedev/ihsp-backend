@@ -152,6 +152,10 @@ class LoginCueService:
         if not await self._repository.delete(cue_id):
             raise LoginCueNotFoundError()
 
+    async def delete_many(self, cue_ids: list[UUID]) -> int:
+        """Delete the cues that exist; return how many were deleted."""
+        return await self._repository.delete_many(list(dict.fromkeys(cue_ids)))
+
     # --- public picker (no auth) ----------------------------------------
 
     async def groups_with_cues(self, ip: str | None) -> list[CueGroup]:

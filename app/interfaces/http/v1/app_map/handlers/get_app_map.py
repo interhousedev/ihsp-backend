@@ -6,7 +6,7 @@ from app.bootstrap.container import Container
 from app.interfaces.http.dependencies import get_actor, get_container
 from app.interfaces.http.v1.app_map.schemas import AppMapItem, AppMapResponse
 from app.shared.actor import Actor
-from app.shared.app_map import for_roles
+from app.shared.app_map import for_roles, hidden_pages
 
 from fastapi import Depends
 
@@ -16,7 +16,11 @@ async def get_app_map(
     container: Annotated[Container, Depends(get_container)],
 ) -> AppMapResponse:
     """List the pages of every app that the caller's roles may open."""
-    found = for_roles(container.settings.urls, actor.roles)
+    found = for_roles(
+        container.settings.urls,
+        actor.roles,
+        hidden_pages(container.settings.features),
+    )
     return AppMapResponse(
         items=[
             AppMapItem(

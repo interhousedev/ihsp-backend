@@ -5121,6 +5121,40 @@
         "title": "BudgetResponse",
         "type": "object"
       },
+      "BulkDeleteLoginCuesBody": {
+        "description": "Cue ids to delete.",
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "title": "BulkDeleteLoginCuesBody",
+        "type": "object"
+      },
+      "BulkDeleteLoginCuesResponse": {
+        "description": "How many cues were deleted.",
+        "properties": {
+          "deleted": {
+            "title": "Deleted",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "deleted"
+        ],
+        "title": "BulkDeleteLoginCuesResponse",
+        "type": "object"
+      },
       "BulkLoginCuesBody": {
         "description": "Several cues at once; all of them are created or none.",
         "properties": {
@@ -6564,6 +6598,70 @@
           "client_id"
         ],
         "title": "ClientBody",
+        "type": "object"
+      },
+      "ClientConfigResponse": {
+        "description": "Public client configuration.",
+        "properties": {
+          "docs": {
+            "$ref": "#/components/schemas/ClientDocs"
+          },
+          "features": {
+            "$ref": "#/components/schemas/ClientFeatures"
+          }
+        },
+        "required": [
+          "features",
+          "docs"
+        ],
+        "title": "ClientConfigResponse",
+        "type": "object"
+      },
+      "ClientDocs": {
+        "description": "Links to the documentation pages; null when not configured.",
+        "properties": {
+          "entrance_devices_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entrance Devices Url"
+          },
+          "personal_tokens_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Personal Tokens Url"
+          }
+        },
+        "required": [
+          "personal_tokens_url",
+          "entrance_devices_url"
+        ],
+        "title": "ClientDocs",
+        "type": "object"
+      },
+      "ClientFeatures": {
+        "description": "Feature flags the web apps need before sign-in.",
+        "properties": {
+          "login_cues": {
+            "title": "Login Cues",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "login_cues"
+        ],
+        "title": "ClientFeatures",
         "type": "object"
       },
       "CodeBody": {
@@ -53040,6 +53138,48 @@
         ]
       }
     },
+    "/v1/admin/login-cues/bulk-delete": {
+      "post": {
+        "description": "Delete several cues (consumed ones too); unknown ids are skipped.",
+        "operationId": "bulk_delete_login_cues_v1_admin_login_cues_bulk_delete_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkDeleteLoginCuesBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkDeleteLoginCuesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Bulk Delete Login Cues",
+        "tags": [
+          "admin-login-cues"
+        ]
+      }
+    },
     "/v1/admin/login-cues/{cue_id}": {
       "delete": {
         "description": "Delete a cue (consumed ones too).",
@@ -79793,6 +79933,28 @@
         "summary": "Post Token Hook",
         "tags": [
           "oauth"
+        ]
+      }
+    },
+    "/v1/public/client-config": {
+      "get": {
+        "description": "Return the public feature flags and documentation links.",
+        "operationId": "get_client_config_v1_public_client_config_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientConfigResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Client Config",
+        "tags": [
+          "public"
         ]
       }
     },

@@ -4,7 +4,7 @@ from typing import Annotated, Any
 
 from app.interfaces.mcp.deps import McpDeps
 from app.shared.actor import Actor
-from app.shared.app_map import search
+from app.shared.app_map import hidden_pages, search
 
 from pydantic import Field
 
@@ -21,7 +21,14 @@ HIT_LIMIT = 5
 
 def find_feature_result(deps: McpDeps, actor: Actor, query: str) -> dict[str, Any]:
     """Pages of the apps that fit the query and that the actor's roles may open."""
-    found = search(query, "en", actor.roles, deps.settings.urls, limit=HIT_LIMIT)
+    found = search(
+        query,
+        "en",
+        actor.roles,
+        deps.settings.urls,
+        limit=HIT_LIMIT,
+        hidden=hidden_pages(deps.settings.features),
+    )
     return {
         "found": bool(found),
         "items": [
