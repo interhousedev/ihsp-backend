@@ -211,7 +211,7 @@ scripts/local_down.sh        # stop; add --wipe to delete the data
 
 Demo logins (local stack only): `admin.ihsp` / `AdminDemo1` (the admin one-time code arrives in Mailpit), `usmonov.bobur` / `TeacherDemo1`, `abdullayev.alisher` / `StudentDemo1`, `tursunov.sardor` / `LibrarianDemo1`.
 
-`python -m app seed-review` (idempotent, safe on production) creates or resets the three public accounts of the ChatGPT app review and their made-up data; it needs a current term. See [docs/chatgpt-review.md](docs/chatgpt-review.md).
+`python -m app seed-review` (idempotent, safe on production) creates or resets the three public accounts of the ChatGPT app review and their made-up data; it needs a current term and the Vault AppRole, so on a server run it in the `identity` container (`docker compose --env-file .env.prod -f materials/docker-compose.prod.yaml exec identity python -m app seed-review`). See [docs/chatgpt-review.md](docs/chatgpt-review.md).
 
 ## Configuration, fake and real modes
 

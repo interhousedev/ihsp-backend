@@ -65,4 +65,4 @@ LMS server:
 
 ## Reset
 
-The accounts are created, and put back to the state above, by `python -m app seed-review`. It is safe to run on production and can be run again at any time.
+The accounts are created, and put back to the state above, by `python -m app seed-review`, run on the server in the `identity` container (it needs the Vault AppRole). It is safe to run on production and can be run again at any time.
