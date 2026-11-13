@@ -1,7 +1,8 @@
 """Builds the ``LessonItem`` and ``SubjectRef`` JSON of lessons."""
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
+from uuid import UUID
 
 from app.modules.academic.application.classwork.people import PeopleDirectory, Person
 from app.modules.academic.domain import audience as audience_keys
@@ -56,12 +57,19 @@ class LessonItemBuilder:
         )
 
     async def build_many(
-        self, lessons: Sequence[Lesson], locale: str
+        self,
+        lessons: Sequence[Lesson],
+        locale: str,
+        teachers: Mapping[UUID, Person] | None = None,
     ) -> list[dict[str, Any]]:
-        """Build items for many lessons with one identity lookup."""
-        teachers = await self.people.people(
-            lesson.teacher_id for lesson in lessons if lesson.teacher_id is not None
-        )
+        """Build items for many lessons with one identity lookup.
+
+        `teachers` are the already resolved people; when given, no lookup is made.
+        """
+        if teachers is None:
+            teachers = await self.people.people(
+                lesson.teacher_id for lesson in lessons if lesson.teacher_id is not None
+            )
         return [
             self.item(
                 lesson,

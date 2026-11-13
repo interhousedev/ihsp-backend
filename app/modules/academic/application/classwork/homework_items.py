@@ -1,10 +1,11 @@
 """Builds ``HomeworkItem`` JSON from lessons and the student's to-do rows."""
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
+from uuid import UUID
 
 from app.modules.academic.application.classwork.lesson_items import subject_ref
-from app.modules.academic.application.classwork.people import PeopleDirectory
+from app.modules.academic.application.classwork.people import PeopleDirectory, Person
 from app.modules.academic.domain.classwork.homework_rules import (
     days_overdue,
     is_updated,
@@ -23,15 +24,23 @@ class HomeworkItemBuilder:
         self.clock = clock
 
     async def build_many(
-        self, records: Sequence[HomeworkRecord], locale: str
+        self,
+        records: Sequence[HomeworkRecord],
+        locale: str,
+        teachers: Mapping[UUID, Person] | None = None,
     ) -> list[dict[str, Any]]:
-        """Build one item per record, in order."""
+        """Build one item per record, in order.
+
+        `teachers` are the already resolved people; without them one identity
+        lookup resolves the teachers.
+        """
         today = local_today(self.clock)
-        teachers = await self.people.people(
-            record.lesson.teacher_id
-            for record in records
-            if record.lesson.teacher_id is not None
-        )
+        if teachers is None:
+            teachers = await self.people.people(
+                record.lesson.teacher_id
+                for record in records
+                if record.lesson.teacher_id is not None
+            )
         items = []
         for record in records:
             lesson, todo, submission = record.lesson, record.todo, record.submission

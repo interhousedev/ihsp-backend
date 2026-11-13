@@ -9,6 +9,7 @@ from app.modules.academic.application.classwork.homework_items import (
     HomeworkItemBuilder,
 )
 from app.modules.academic.application.classwork.people import PeopleDirectory
+from app.modules.academic.application.classwork.ports.lesson_reader import LessonReader
 from app.modules.academic.application.classwork.ports.unit_of_work import (
     TodoUnitOfWork,
 )
@@ -21,7 +22,7 @@ from app.modules.academic.domain.classwork.homework_rules import (
     DONE_RETENTION_DAYS,
     bucket,
 )
-from app.modules.academic.domain.classwork.records import HomeworkRecord
+from app.modules.academic.domain.classwork.records import HomeworkRecord, StudentRecord
 from app.shared.actor import Actor
 from app.shared.base_error import ValidationFailedError
 from app.shared.clock import Clock, local_today
@@ -51,17 +52,30 @@ class HomeworkList:
 
     async def records(self, actor: Actor, *statuses: Status) -> list[HomeworkRecord]:
         """Return the records of the chosen lists, the lists in the order given."""
-        now = self.clock.now()
         today = local_today(self.clock)
         async with self.uow_factory() as uow:
             student = await require_student(uow, actor.user_id)
             keys = keys_of(student)
-            found = await uow.lesson_reader.homework_records(
-                student.user_id, keys, today - dt.timedelta(days=HISTORY_DAYS)
-            )
             next_day = await self.study_days.next_after(
                 uow.lesson_reader, student.user_id, keys, today
             )
+            return await self.pick(uow.lesson_reader, student, next_day, statuses)
+
+    async def pick(
+        self,
+        reader: LessonReader,
+        student: StudentRecord,
+        next_day: dt.date | None,
+        statuses: tuple[Status, ...],
+    ) -> list[HomeworkRecord]:
+        """Return the chosen lists for a student whose next study day is known."""
+        now = self.clock.now()
+        today = local_today(self.clock)
+        found = await reader.homework_records(
+            student.user_id,
+            keys_of(student),
+            today - dt.timedelta(days=HISTORY_DAYS),
+        )
         cutoff = now - dt.timedelta(days=DONE_RETENTION_DAYS)
         picked: dict[Status, list[HomeworkRecord]] = {s: [] for s in statuses}
         for record in found:

@@ -4,7 +4,7 @@ import datetime as dt
 from collections.abc import Callable
 from typing import Any
 
-from app.modules.academic.application.classwork.homework_list import HomeworkList
+from app.modules.academic.application.classwork.homework_list import DUE, HomeworkList
 from app.modules.academic.application.classwork.lesson_items import LessonItemBuilder
 from app.modules.academic.application.classwork.people import PeopleDirectory
 from app.modules.academic.application.classwork.ports.unit_of_work import (
@@ -80,19 +80,34 @@ class StudentToday:
             )
             term = await uow.results.current_term(today)
             semester = await self._semester(uow, student, term)
-        items = await self.lesson_items.build_many(
-            [lesson for lesson, _ in states], locale
-        )
-        lessons = [
-            {**item, "state": state}
-            for item, (_, state) in zip(items, states, strict=True)
-        ]
+            due_records = await self.homework.pick(
+                uow.lesson_reader, student, next_day, DUE
+            )
         card, state = focus if focus else (upcoming_first, None)
+        lessons_all = [lesson for lesson, _ in states]
+        if focus is None and card is not None:
+            lessons_all.append(card)
+        teacher_ids = [
+            lesson.teacher_id for lesson in lessons_all if lesson.teacher_id is not None
+        ] + [
+            r.lesson.teacher_id for r in due_records if r.lesson.teacher_id is not None
+        ]
+        teachers = await self.people.people(teacher_ids)
+        items = await self.lesson_items.build_many(lessons_all, locale, teachers)
+        lessons = [
+            {**item, "state": lesson_state}
+            for item, (_, lesson_state) in zip(items, states, strict=False)
+        ]
+        card_item = None
+        if card is not None:
+            card_item = items[
+                len(states) if focus is None else [x for x, _ in states].index(card)
+            ]
         return {
-            "now_or_next": await self._now_or_next(card, state, now, locale),
+            "now_or_next": await self._now_or_next(card, card_item, state, now),
             "lessons": lessons,
             "next_study_day": None if next_day is None else next_day.isoformat(),
-            "due": await self.homework.due(actor),
+            "due": await self.homework.items.build_many(due_records, locale, teachers),
             "new_marks": [mark_item(mark, locale) for mark in marks],
             "semester": semester,
             "synced_at": student.synced_at.isoformat() if student.synced_at else None,
@@ -101,13 +116,12 @@ class StudentToday:
     async def _now_or_next(
         self,
         lesson: Lesson | None,
+        item: dict[str, Any] | None,
         state: LessonState | None,
         now: dt.datetime,
-        locale: str,
     ) -> dict[str, Any] | None:
-        if lesson is None:
+        if lesson is None or item is None:
             return None
-        item = await self.lesson_items.build(lesson, locale)
         minutes: int | None = None
         if state is not None:
             target = lesson.ends_at if state == "now" else lesson.starts_at
