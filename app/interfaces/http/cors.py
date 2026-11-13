@@ -27,7 +27,7 @@ PUBLIC_PREFIXES = ("/v1/public/",)
 APP_PREFIXES = ("/v1/",)
 
 _METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
-_EXPOSE = ["X-Request-ID", "Retry-After", "Content-Disposition"]
+_EXPOSE = ["X-Request-ID", "Retry-After", "Content-Disposition", "Date"]
 # Credentials forbid a wildcard, so the cookie group lists its headers.
 _COOKIE_HEADERS = [
     "Content-Type",
