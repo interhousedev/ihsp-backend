@@ -163,6 +163,12 @@ class SyncStudent:
             await self._kicker.kick(
                 "academic.sync_group_curriculum", group_id=str(ref.group_id)
             )
+        if ref.group_first_linked:  # the group got its EMIS id just now
+            await self._kicker.kick(
+                "academic.repull_group",
+                group_id=str(ref.group_id),
+                user_id=str(user_id),
+            )
         if import_timetable and ref.needs_timetable:
             await self._kicker.kick(
                 "academic.sync_group_timetable",

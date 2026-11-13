@@ -27,6 +27,10 @@ class StudentRef:
     # True when the group has no stored EMIS curriculum: kick
     # `academic.sync_group_curriculum`.
     needs_curriculum: bool = False
+    # True when this call gave the group its EMIS id for the first time (adopted a
+    # group made in advance, or created it): kick `academic.repull_group` once the
+    # student's account is committed.
+    group_first_linked: bool = False
 
 
 @dataclass(frozen=True, slots=True)

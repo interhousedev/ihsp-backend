@@ -21,7 +21,11 @@ from app.modules.academic.domain.schedule.errors import (
     GroupNameTakenError,
     GroupNotFoundError,
 )
-from app.modules.academic.domain.schedule.group import Group, clean_group_name
+from app.modules.academic.domain.schedule.group import (
+    Group,
+    clean_group_name,
+    group_match_key,
+)
 from app.modules.academic.domain.schedule.student import (
     CLOSING_GRACE_DAYS,
     Student,
@@ -215,7 +219,7 @@ class AcademicEnrollmentImpl:
     ) -> StudentRef:
         """Create or update the student's group and row; a new group clears subgroup."""
         async with self.uow_factory() as uow:
-            group = await self._upsert_group(
+            group, first_linked = await self._upsert_group(
                 uow, group_emis_id, group_name, current_semester, curriculum_id
             )
             student = await uow.students.get(user_id)
@@ -237,6 +241,7 @@ class AcademicEnrollmentImpl:
             synced_at=student.synced_at,
             needs_timetable=needs_timetable,
             needs_curriculum=needs_curriculum,
+            group_first_linked=first_linked,
         )
 
     async def _lacks_timetable(self, uow: ScheduleUnitOfWork, group_id: UUID) -> bool:
@@ -253,9 +258,11 @@ class AcademicEnrollmentImpl:
         group_name: str,
         semester: int | None,
         curriculum_id: int | None,
-    ) -> Group:
+    ) -> tuple[Group, bool]:
+        """Return the group and whether it got its EMIS id for the first time."""
         name, slug = clean_group_name(group_name)
         group = await uow.groups.get_by_emis_id(emis_id)
+        first_linked = group is None
         if group is None:
             group = await self._adopt_or_create(uow, emis_id, name, slug)
         elif group.slug != slug or group.status != "active":
@@ -264,14 +271,28 @@ class AcademicEnrollmentImpl:
         group.current_semester = semester
         group.emis_curriculum_id = curriculum_id
         await uow.groups.save(group)
-        return group
+        return group, first_linked
 
     async def _adopt_or_create(
         self, uow: ScheduleUnitOfWork, emis_id: int, name: str, slug: str
     ) -> Group:
-        """Link a group made in advance (same name) or create a new one."""
-        waiting = await uow.groups.find_active_by_slug(slug)
-        if waiting is not None and waiting.emis_group_id is None:
+        """Link a group made in advance (same name) or create a new one.
+
+        Names match by ``group_match_key``, so "2 TN-2" waits for "2ТН2". A group that
+        already has another EMIS id is never taken.
+        """
+        key = group_match_key(name)
+        waiting = next(
+            (
+                group
+                for group in await uow.groups.list_all("active")
+                if group.emis_group_id is None and group_match_key(group.name) == key
+            ),
+            None,
+        )
+        if waiting is not None:
+            await self._free_slug(uow, slug, keep=waiting.id)
+            waiting.name, waiting.slug = name, slug
             waiting.emis_group_id = emis_id
             return waiting
         await self._free_slug(uow, slug, keep=None)

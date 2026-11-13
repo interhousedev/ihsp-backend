@@ -209,8 +209,26 @@ class CompleteRegistration:
                 )
             )
             uow.after_commit(partial(self._kick_student_sync, user_id))
+            if student.group_first_linked:
+                uow.after_commit(
+                    partial(self._kick_group_repull, student.group_id, user_id)
+                )
             await uow.commit()
         return login
+
+    async def _kick_group_repull(self, group_id: UUID, user_id: UUID) -> None:
+        """Re-pull a group that this registration linked to EMIS for the first time.
+
+        Best effort like the student sync; the registration is already committed.
+        """
+        try:
+            await self._kicker.kick(
+                "academic.repull_group",
+                group_id=str(group_id),
+                user_id=str(user_id),
+            )
+        except Exception:
+            log.warning("group_repull_kick_failed", group_id=str(group_id))
 
     async def _kick_student_sync(self, user_id: UUID) -> None:
         """Start the initial sync (timetable, subgroup, marks) now, best effort.

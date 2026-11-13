@@ -85,11 +85,17 @@ class SyncGroupCurriculum:
         self.identity = identity
         self.clock = clock
 
-    async def ensure(self, group_id: UUID) -> CurriculumSyncResult | None:
-        """Sync the group only if it has no stored curriculum; None when it has one."""
-        async with self.uow_factory() as uow:
-            if await uow.curricula.exists(group_id):
-                return None
+    async def ensure(
+        self, group_id: UUID, *, force: bool = False
+    ) -> CurriculumSyncResult | None:
+        """Sync the group only if it has no stored curriculum; None when it has one.
+
+        ``force`` reads EMIS and replaces the stored curriculum even when one exists.
+        """
+        if not force:
+            async with self.uow_factory() as uow:
+                if await uow.curricula.exists(group_id):
+                    return None
         try:
             return await self.execute(group_id)
         except CurriculumNoEmisStudentError:

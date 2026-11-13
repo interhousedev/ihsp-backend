@@ -128,11 +128,13 @@ class SyncGroupTimetable:
         user_id: UUID,
         refresh_bells: bool = True,
         full_term: bool = False,
+        force_backfill: bool = False,
     ) -> TimetableResult:
         """Sync the group through the student's EMIS link.
 
         On the first sync of a group (``full_term``, or no lesson before this week)
-        the materials of the term's earlier weeks are imported too.
+        the materials of the term's earlier weeks are imported too. ``force_backfill``
+        also generates the earlier weeks' lessons when the group already has some.
         """
         day = today(self.clock)
         async with self.uow_factory() as uow:
@@ -155,7 +157,7 @@ class SyncGroupTimetable:
         if isinstance(done, TimetableResult):
             return done
         entries, scope, subgroup = done
-        backfilled = await self._backfill(term, group_id, first)
+        backfilled = await self._backfill(term, group_id, first, force=force_backfill)
         generated = await self._generate(term, day, last)
         lessons = await self._lessons(
             term, group_id, classes, scope, (first, last), teachers
@@ -165,7 +167,7 @@ class SyncGroupTimetable:
             if lessons.urls
             else 0
         )
-        if self.import_topics and (full_term or backfilled):
+        if self.import_topics and (full_term or force_backfill or backfilled):
             earlier = await self._materials_between(
                 term, group_id, user_id, (term.starts_on, first - ONE_DAY)
             )
@@ -302,20 +304,26 @@ class SyncGroupTimetable:
             term, max(day, term.starts_on), min(last, term.ends_on)
         )
 
-    async def _backfill(self, term: Term, group_id: UUID, first: dt.date) -> int:
+    async def _backfill(
+        self, term: Term, group_id: UUID, first: dt.date, *, force: bool = False
+    ) -> int:
         """Lessons for the term's weeks before this sync, if the group has none there.
 
         Only a group with no lesson at all before ``first`` is filled, so real EMIS
-        data and earlier runs are never duplicated or overwritten.
+        data and earlier runs are never duplicated or overwritten; ``force`` fills the
+        missing generated lessons anyway (generation skips the ones that exist).
         """
         end = min(first - ONE_DAY, term.ends_on)
         if term.starts_on > end:
             return 0
         keys = audience_keys.student_keys(group_id, None)
-        async with self.uow_factory() as uow:
-            found = await uow.lessons.in_audience(term.id, term.starts_on, end, keys)
-        if found:
-            return 0
+        if not force:
+            async with self.uow_factory() as uow:
+                found = await uow.lessons.in_audience(
+                    term.id, term.starts_on, end, keys
+                )
+            if found:
+                return 0
         return await self._generate_within(term, term.starts_on, end, keys)
 
     async def _generate_within(

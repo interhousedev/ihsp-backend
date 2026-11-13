@@ -33,3 +33,12 @@ def clean_group_name(raw: str) -> tuple[str, str]:
     if not name or not slug:
         raise GroupNameInvalidError()
     return name, slug
+
+
+def group_match_key(raw: str) -> str:
+    """Return the key two spellings of one group name share, or "" for no letters.
+
+    It is the slug without hyphens, so case, spaces, dashes and Cyrillic look-alikes
+    ("2 ТН-2", "2tn2", "2-TN-2") all give "2tn2".
+    """
+    return slugify(normalize_group_name(raw.strip())).replace("-", "")

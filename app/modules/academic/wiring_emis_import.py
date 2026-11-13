@@ -23,6 +23,7 @@ from app.modules.academic.application.schedule.ports.lesson_urls import (
 from app.modules.academic.application.schedule.ports.room_page_cache import (
     RoomPageCache,
 )
+from app.modules.academic.application.schedule.repull_group import RepullGroup
 from app.modules.academic.application.schedule.request_student_sync import (
     AdminRequestStudentSync,
     RequestStudentSync,
@@ -76,6 +77,7 @@ class EmisImportServices:
     sync_group_curriculum: SyncGroupCurriculum
     sync_state: SyncStateStore
     sync_student_all: SyncStudentAll
+    repull_group: RepullGroup
     request_student_sync: RequestStudentSync
     get_student_sync: GetStudentSync
     admin_request_student_sync: AdminRequestStudentSync
@@ -139,6 +141,15 @@ def assemble_emis_import(
             jobs=jobs, kicker=kicker, clock=clock
         ),
         admin_get_student_sync=AdminGetStudentSync(jobs=jobs),
+        repull_group=RepullGroup(
+            uow_factory=uow_factory,
+            curriculum=sync_group_curriculum,
+            timetable=sync_group_timetable,
+            identity=identity,
+            jobs=jobs,
+            kicker=kicker,
+            clock=clock,
+        ),
         sync_jobs=jobs,
     )
 
