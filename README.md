@@ -175,7 +175,7 @@ The `knowledge` module holds school facts (rules, schedules, staff, procedures, 
 | `locales/` | Translations (uz, ru, en) |
 | `.github/` | CI workflows, Dependabot, issue and pull request templates, CODEOWNERS |
 | `.claude/skills/` | Project skills for coding agents (security review, testing, migrations, API contract, bot, OpenUI, copy, AI Studio) |
-| `docs/assets/` | README banner and screenshots |
+| `docs/`, `mkdocs.yml` | MkDocs site (personal tokens, entrance devices) published to GitHub Pages; `docs/assets/` holds the README banner and screenshots |
 
 ## Prerequisites
 
@@ -246,6 +246,15 @@ scripts/test.sh             # pytest with coverage
 ```
 
 `tests/deploy` parses the Dockerfiles, nginx templates and compose files and runs `docker compose config` and `nginx -t`, so it needs Docker.
+
+## Documentation site
+
+The guides in `docs/` are built with MkDocs Material and published to <https://interhousedev.github.io/ihsp-backend/> on every push to `main` that touches them. Preview locally:
+
+```bash
+uv run --group docs mkdocs serve
+uv run --group docs mkdocs build --strict    # what CI runs; writes site/
+```
 
 ## API contract with iht-web
 

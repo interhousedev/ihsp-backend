@@ -4,8 +4,16 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- `GET /v1/me/today` is faster: the student, the next study day, the homework and the lesson items are resolved once per request, and all teachers come from one identity lookup (response unchanged).
+
 ### Added
 
+- Login cues kill switch `IHSP_FEATURES__LOGIN_CUES` (off by default: admin and public cue routes answer 404, the admin page leaves the app map), `POST /v1/admin/login-cues/bulk-delete`, and the public `GET /v1/public/client-config` (feature flags and `IHSP_DOCS__*` links).
+- A group added without an EMIS id is adopted by a normalized name match (case, spaces, hyphens, Cyrillic look-alikes), and the first EMIS link of a group kicks the new task `academic.repull_group`: it forces the curriculum and a full timetable backfill and queues a sync for every other member with a working EMIS link. Later registrations do nothing extra.
+- Step-up and other one-time codes: a failed Telegram send is retried once, falls back to the verified recovery email, and when nothing delivers the code and cooldown are dropped and the request answers 503 `id/otp-delivery-failed` instead of a silent 202.
+- Documentation site (MkDocs Material, published to GitHub Pages by `.github/workflows/docs.yml`) with guides for personal tokens and entrance devices; the `docs` dependency group holds `mkdocs-material`.
 - Planner: each target of `GET /v1/me/marks/subjects/{id}/planner` has `paths`, up to five minimal ways to reach it (`extra_lesson_fives`, lowest `midterm` and `final`).
 - Student card: `GET /v1/me/student-card`, `POST /v1/me/student-card/tokens` (a two-minute token, only its SHA-256 is kept in Redis) and the public `GET /v1/public/student-cards/{token}` with `/photo` (404 `student_card_not_found`); `iht-web` needs `bun run sync:openapi`.
 - Honours: `GET /v1/me/honours` (red diploma, gold and silver medal rules with the blocking marks), admin rules under `honours` of `PUT /v1/admin/settings`, `GET /v1/me/emis/rating-book` (the EMIS rating book link); the EMIS profile gains the institution name, school certificate serial and number, direction and speciality; `iht-web` needs `bun run sync:openapi`.

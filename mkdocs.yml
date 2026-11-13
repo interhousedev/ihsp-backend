@@ -1,0 +1,15 @@
+site_name: IHSP backend
+site_description: Personal tokens and entrance devices of the platform API.
+site_url: https://interhousedev.github.io/ihsp-backend/
+repo_url: https://github.com/interhousedev/ihsp-backend
+repo_name: interhousedev/ihsp-backend
+edit_uri: edit/main/docs/
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - content.code.copy
+nav:
+  - Home: index.md
+  - Personal tokens: personal-tokens.md
+  - Entrance devices: entrance-devices.md
