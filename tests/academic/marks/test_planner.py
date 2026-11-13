@@ -246,6 +246,49 @@ def test_midterm_and_final_remaining_can_be_out_of_reach() -> None:
     assert _target(result, 4).status == "needed"
 
 
+def test_paths_are_empty_for_a_secured_target() -> None:
+    assert _target(plan([5, 5], [5, 5], [5]), 5).paths == ()
+    assert _target(plan([5, 4, 5, 4], [], []), 3).paths == ()
+
+
+def test_paths_are_empty_when_even_thirty_fives_fall_short() -> None:
+    result = plan([2] * 200, [], [])
+
+    assert _target(result, 5).status == "not_reachable"
+    assert _target(result, 5).paths == ()
+
+
+def test_paths_with_only_a_final_left_need_no_extra_fives() -> None:
+    """Lesson 5.00, midterms 4.50: a 5 needs a final of 4 and nothing more."""
+    five = _target(plan([5, 5], [5, 4], []), 5)
+
+    assert five.paths == (planner.PlanPath(0, None, 4),)
+
+
+def test_paths_trade_extra_lesson_fives_for_lower_controls() -> None:
+    five = _target(plan([2, 2], [], []), 5)
+
+    assert 1 <= len(five.paths) <= 5
+    extras = [p.extra_lesson_fives for p in five.paths]
+    assert extras == sorted(extras)
+    assert extras[-1] > 0
+    assert all(p.midterm is not None and p.final is not None for p in five.paths)
+    for first, second in zip(five.paths, five.paths[1:]):
+        assert second.extra_lesson_fives > first.extra_lesson_fives or (
+            (second.midterm or 0) < (first.midterm or 0)
+            or (second.final or 0) < (first.final or 0)
+        )
+
+
+def test_paths_without_controls_left_count_lesson_fives_only() -> None:
+    four = _target(plan([3, 3], [3, 3], [3]), 4)
+
+    assert four.status == "not_reachable"
+    assert four.paths
+    assert all(p.midterm is None and p.final is None for p in four.paths)
+    assert len(four.paths) == 1
+
+
 def test_a_mark_is_needed_on_the_final_when_the_midterms_are_done() -> None:
     """Lesson 5.00, midterms 4.50: a 5 needs a final of 4, a 4 is already safe."""
     result = plan([5, 5], [5, 4], [])

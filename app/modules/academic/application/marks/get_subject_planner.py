@@ -90,6 +90,14 @@ def _target(target: planner.TargetPlan) -> dict[str, Any]:
         "pairs": [
             {"midterm": p.midterm, "min_final": p.min_final} for p in target.pairs
         ],
+        "paths": [
+            {
+                "extra_lesson_fives": p.extra_lesson_fives,
+                "midterm": p.midterm,
+                "final": p.final,
+            }
+            for p in target.paths
+        ],
     }
 
 

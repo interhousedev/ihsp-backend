@@ -11,7 +11,7 @@ type ("a 4 on each remaining midterm"), which keeps the answer readable.
 """
 
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Literal
 
@@ -109,6 +109,20 @@ class TargetPlan:
     min_value: int | None = None
     min_both: int | None = None
     pairs: tuple[FinalForMidterm, ...] = ()
+    paths: tuple["PlanPath", ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class PlanPath:
+    """One Pareto-minimal way to reach a target.
+
+    ``extra_lesson_fives`` further lesson marks of 5, and the lowest mark on each
+    remaining midterm / final (None when no control of that kind remains).
+    """
+
+    extra_lesson_fives: int
+    midterm: int | None
+    final: int | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -225,7 +239,49 @@ def _both_pending(grade: int, limit: Decimal, marks: _Marks) -> TargetPlan:
     return TargetPlan(grade, limit, "needed", min_both=min_both, pairs=pairs)
 
 
-def _target(grade: int, marks: _Marks, pending: tuple[Control, ...]) -> TargetPlan:
+MAX_EXTRA_FIVES = 30
+MAX_PATHS = 5
+
+
+def _paths(grade_limit: Decimal, marks: _Marks) -> tuple[PlanPath, ...]:
+    """Return the Pareto-minimal (extra fives, midterm, final) ways to the limit."""
+    midterms: tuple[int | None, ...] = (
+        tuple(_MARKS) if marks.remaining.midterm else (None,)
+    )
+    finals: tuple[int | None, ...] = tuple(_MARKS) if marks.remaining.final else (None,)
+    found: list[PlanPath] = []
+    for extra in range(MAX_EXTRA_FIVES + 1):
+        padded = _Marks(
+            [*marks.lesson, *([MAX_MARK] * extra)],
+            marks.midterm,
+            marks.final,
+            marks.remaining,
+        )
+        for midterm in midterms:
+            for final in finals:
+                if not _reaches(padded.mark(midterm, final), grade_limit):
+                    continue
+                found.append(PlanPath(extra, midterm, final))
+    return tuple(_pareto(found)[:MAX_PATHS])
+
+
+def _pareto(candidates: list[PlanPath]) -> list[PlanPath]:
+    def dominated(path: PlanPath) -> bool:
+        return any(
+            other != path
+            and other.extra_lesson_fives <= path.extra_lesson_fives
+            and (other.midterm or 0) <= (path.midterm or 0)
+            and (other.final or 0) <= (path.final or 0)
+            for other in candidates
+        )
+
+    kept = [path for path in candidates if not dominated(path)]
+    return sorted(
+        kept, key=lambda p: (p.extra_lesson_fives, p.midterm or 0, p.final or 0)
+    )
+
+
+def _status(grade: int, marks: _Marks, pending: tuple[Control, ...]) -> TargetPlan:
     limit = threshold(grade)
     if not marks.lesson:
         return TargetPlan(grade, limit, "unknown")
@@ -235,6 +291,13 @@ def _target(grade: int, marks: _Marks, pending: tuple[Control, ...]) -> TargetPl
     if len(pending) == 1:
         return _one_pending(grade, limit, marks, pending[0])
     return _both_pending(grade, limit, marks)
+
+
+def _target(grade: int, marks: _Marks, pending: tuple[Control, ...]) -> TargetPlan:
+    target = _status(grade, marks, pending)
+    if target.status in ("secured", "unknown"):
+        return target
+    return replace(target, paths=_paths(target.threshold, marks))
 
 
 def _predict(marks: _Marks, lesson_average: Decimal | None) -> Prediction:

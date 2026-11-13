@@ -41,6 +41,14 @@ class PlannerPair(BaseModel):
     min_final: int | None
 
 
+class PlannerPath(BaseModel):
+    """A Pareto-minimal way to reach the target."""
+
+    extra_lesson_fives: int
+    midterm: int | None
+    final: int | None
+
+
 class PlannerTarget(BaseModel):
     """What it takes to end the semester with one grade."""
 
@@ -51,6 +59,7 @@ class PlannerTarget(BaseModel):
     min_value: int | None
     min_both: int | None
     pairs: list[PlannerPair]
+    paths: list[PlannerPath]
 
 
 class PlannerRemaining(BaseModel):
