@@ -10,12 +10,14 @@ from app.modules.identity.domain.scopes import (
     SCOPE_CATALOG,
     SERVERS,
     Server,
+    app_scopes_for_roles,
     scope_names,
     server_from_audience,
     server_from_resource,
 )
 from app.modules.identity.domain.user import User
 from app.modules.identity.ports.hydra_gateway import ConsentRequest, HydraClient
+from app.shared.actor import Role
 
 
 def mcp_server(request: ConsentRequest, mcp_base: str) -> Server:
@@ -83,10 +85,19 @@ def is_dynamic(client: HydraClient) -> bool:
     return bool(client.metadata.get("dynamic", True))
 
 
-def requested_scopes(request: ConsentRequest, server: Server) -> list[str]:
-    """Scopes of the server the client asked for; all of them if it asked for none."""
+def requested_scopes(
+    request: ConsentRequest, server: Server, roles: frozenset[Role] | None = None
+) -> list[str]:
+    """Scopes of the server the client asked for; all of them if it asked for none.
+
+    On the app server only the namespaced scopes of the sub-servers the roles allow
+    are offered.
+    """
     asked = set(request.requested_scope)
     ordered = [info.scope for info in SCOPE_CATALOG[server]]
+    if server == "app" and roles is not None:
+        allowed = app_scopes_for_roles(frozenset(ordered), roles)
+        ordered = [scope for scope in ordered if scope in allowed]
     chosen = [scope for scope in ordered if scope in asked]
     return chosen or ordered
 

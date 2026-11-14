@@ -9,6 +9,7 @@ AUDIENCE_MCP_STUDENT = "mcp-student"
 AUDIENCE_MCP_LMS = "mcp-lms"
 AUDIENCE_MCP_ADMIN = "mcp-admin"
 AUDIENCE_MCP_TEACHER = "mcp-teacher"
+AUDIENCE_MCP_APP = "mcp-app"
 
 
 class AccessTokenVerifier(Protocol):
@@ -23,7 +24,10 @@ class ConnectorTokenVerifier(Protocol):
     """Verifies MCP connector tokens."""
 
     async def verify_connector(
-        self, token: str, *, server: Literal["student", "lms", "admin", "teacher"]
+        self,
+        token: str,
+        *,
+        server: Literal["student", "lms", "admin", "teacher", "app"],
     ) -> Actor:
         """Return the actor with connector_id and scopes set."""
         ...

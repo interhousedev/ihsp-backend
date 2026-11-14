@@ -1,14 +1,14 @@
-# mcp.<domain>: the three MCP servers (/student, /lms, /admin) and the OAuth
+# mcp.<domain>: the MCP servers (/student, /lms, /admin, /teacher, /app) and the OAuth
 # protected-resource metadata. The api process serves them at the root of this host by
 # Host routing (app/interfaces/http/routing.py install_mcp_host, from URLS__MCP), so the
 # path goes through unchanged. Streamable HTTP needs buffering off and long timeouts, so
 # the number of open connections per client address is capped (zone: default.conf.template).
-location ~ ^/(student|lms|admin)(/|$) {
+location ~ ^/(student|lms|admin|teacher|app)(/|$) {
     include /etc/nginx/ihsp/proxy.inc;
     include /etc/nginx/ihsp/headers-api.inc;
     # The MCP apps are mounted with a trailing slash; Starlette would answer a bare
     # /student with a 307, which not every MCP client follows for a POST.
-    rewrite ^/(student|lms|admin)$ /$1/ break;
+    rewrite ^/(student|lms|admin|teacher|app)$ /$1/ break;
     limit_conn ihsp_mcp 20;
     proxy_buffering off;
     proxy_request_buffering off;

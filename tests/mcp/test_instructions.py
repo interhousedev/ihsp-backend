@@ -18,6 +18,7 @@ KEYS = (
     "mcp-instructions-lms",
     "mcp-instructions-admin",
     "mcp-instructions-teacher",
+    "mcp-instructions-app",
 )
 
 
@@ -66,7 +67,7 @@ def test_student_text_tells_the_client_that_results_are_data(language: str) -> N
     assert "insufficient_scope" in text
 
 
-@pytest.mark.parametrize("server", ["student", "lms", "admin", "teacher"])
+@pytest.mark.parametrize("server", ["student", "lms", "admin", "teacher", "app"])
 async def test_client_receives_the_brand_filled_in(
     world: World, server: ServerName
 ) -> None:

@@ -5,6 +5,7 @@ from app.interfaces.mcp.server import _BUILDERS
 from tests.mcp.conftest import World
 
 import pytest
+from mcp.server.fastmcp import FastMCP
 
 CREATE_TOOLS = {
     "student": {"create_flashcard_set", "create_test", "create_notebook"},
@@ -16,7 +17,8 @@ CREATE_TOOLS = {
 async def test_every_tool_describes_itself(world: World, server: str) -> None:
     """Each tool has a text, all four hints and a valid object schema."""
     deps: McpDeps = world.deps()
-    tools = await _BUILDERS[server](deps).list_tools()
+    # The unfiltered list: the app server's own `list_tools` needs a caller.
+    tools = await FastMCP.list_tools(_BUILDERS[server](deps))
 
     assert tools
     assert len({tool.name for tool in tools}) == len(tools)

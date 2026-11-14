@@ -7,15 +7,26 @@ from typing import Final, Literal, cast
 from app.shared.actor import Role
 from app.shared.contracts.auth import (
     AUDIENCE_MCP_ADMIN,
+    AUDIENCE_MCP_APP,
     AUDIENCE_MCP_LMS,
     AUDIENCE_MCP_STUDENT,
     AUDIENCE_MCP_TEACHER,
 )
 from app.shared.mcp_scopes import SCOPE_NAMES_BY_SERVER
 
-ServerName = Literal["student", "lms", "admin", "teacher"]
+ServerName = Literal["student", "lms", "admin", "teacher", "app"]
+SourceServerName = Literal["student", "lms", "teacher"]
 
-SERVERS: Final[tuple[ServerName, ...]] = ("student", "lms", "admin", "teacher")
+SERVERS: Final[tuple[ServerName, ...]] = (
+    "student",
+    "lms",
+    "admin",
+    "teacher",
+    "app",
+)
+
+# The universal server "app" serves the tools of these servers under prefixed names.
+APP_SOURCES: Final[tuple[SourceServerName, ...]] = ("student", "teacher", "lms")
 
 # Every server is mounted under this prefix of the API app; in production nginx maps
 # the host mcp.ihsu.uz to it.
@@ -53,18 +64,26 @@ AUDIENCE_BY_SERVER: Final[Mapping[ServerName, str]] = {
     "lms": AUDIENCE_MCP_LMS,
     "admin": AUDIENCE_MCP_ADMIN,
     "teacher": AUDIENCE_MCP_TEACHER,
+    "app": AUDIENCE_MCP_APP,
 }
 
 # Same table as identity's ALLOWED_SERVER_ROLES; checked again on every call so that a
 # role removed after the token was issued stops working at once (MCP-5). For the LMS
 # server the real check (edit permission on the course) is done by the LMS use cases.
-ALLOWED_ROLES_BY_SERVER: Final[Mapping[ServerName, frozenset[Role]]] = {
+_SOURCE_ROLES: Final[Mapping[SourceServerName, frozenset[Role]]] = {
     "student": frozenset({Role.STUDENT}),
     "lms": frozenset(
         {Role.TEACHER, Role.STUDENT, Role.LMS_ADMIN, Role.LMS_CREATOR, Role.ADMIN}
     ),
-    "admin": frozenset({Role.ADMIN}),
     "teacher": frozenset({Role.TEACHER, Role.ADMIN}),
+}
+# "app": the union of its sources; each tool is re-checked against its own source.
+ALLOWED_ROLES_BY_SERVER: Final[Mapping[ServerName, frozenset[Role]]] = {
+    "student": _SOURCE_ROLES["student"],
+    "lms": _SOURCE_ROLES["lms"],
+    "teacher": _SOURCE_ROLES["teacher"],
+    "admin": frozenset({Role.ADMIN}),
+    "app": frozenset().union(*_SOURCE_ROLES.values()),
 }
 
 # The Administration server is read-only: only these names reach AdminToolBackend.

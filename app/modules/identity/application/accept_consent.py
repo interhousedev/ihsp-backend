@@ -79,11 +79,15 @@ class AcceptConsent:
         ctx: RequestContext,
     ) -> str:
         server = mcp_server(request, self.mcp_base)
-        scopes = grantable(server, requested_scopes(request, server), grant_scopes)
         user_id = parse_uuid(request.subject)
         async with self.uow_factory() as uow:
             found = await uow.users.get(user_id) if user_id else None
             user = self._require_user(found, server)
+            scopes = grantable(
+                server,
+                requested_scopes(request, server, frozenset(user.roles)),
+                grant_scopes,
+            )
             client = request.client
             if server == "admin":
                 if is_dynamic(client) and not is_verified(client):

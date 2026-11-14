@@ -38,14 +38,11 @@ class ToolKit:
         WRITE_LIMIT. `log` says what the call log may store: without it, the name only.
         `idempotent` defaults to `read_only`; set False for a read with a side effect.
         """
-        register = self.mcp.tool(
-            annotations=ToolAnnotations(
-                readOnlyHint=read_only,
-                destructiveHint=destructive,
-                idempotentHint=read_only if idempotent is None else idempotent,
-                openWorldHint=False,
-            ),
-            meta=meta,
+        annotations = ToolAnnotations(
+            readOnlyHint=read_only,
+            destructiveHint=destructive,
+            idempotentHint=read_only if idempotent is None else idempotent,
+            openWorldHint=False,
         )
         if limit is None and not read_only and self.guard.server == "student":
             limit = WRITE_LIMIT
@@ -58,7 +55,8 @@ class ToolKit:
                 read_only=read_only,
                 destructive=destructive,
             )(fn)
-            register(guarded)
+            name = self.guard.name_prefix + getattr(fn, "__name__", "tool")
+            self.mcp.tool(name=name, annotations=annotations, meta=meta)(guarded)
             return guarded
 
         return decorate

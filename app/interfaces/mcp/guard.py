@@ -5,7 +5,7 @@ import functools
 import time
 from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any, TypeVar, cast
 
 from app.interfaces.mcp.auth import IhspAccessToken
@@ -16,6 +16,7 @@ from app.interfaces.mcp.call_log import (
     summarize_result,
 )
 from app.interfaces.mcp.constants import (
+    ALLOWED_ROLES_BY_SERVER,
     CALLS_PER_MINUTE,
     SCOPES_BY_SERVER,
     USER_CALLS_PER_MINUTE,
@@ -94,10 +95,21 @@ class _Trace:
 class ToolGuard:
     """Runs the checks of MCP-5, MCP-7 and UF-MCP-03 around every tool of a server."""
 
-    def __init__(self, deps: McpDeps, server: ServerName) -> None:
-        """Bind the guard to the dependencies and one server."""
+    def __init__(
+        self, deps: McpDeps, server: ServerName, *, mounted_on: ServerName | None = None
+    ) -> None:
+        """Bind the guard to the dependencies and the server whose tools it guards.
+
+        `mounted_on="app"` makes `server` a source of the universal server: the tool
+        names and scopes it sees are prefixed (`teacher_`, `teacher:`), the call log
+        says "app", and every call re-checks the roles against the source server.
+        """
         self.deps = deps
         self.server = server
+        self.public: ServerName = mounted_on or server
+        self.composite = mounted_on == "app"
+        self.scope_prefix = f"{server}:" if self.composite else ""
+        self.name_prefix = f"{server}_" if self.composite else ""
         self.registered: dict[str, ToolRule] = {}
         self._log_writes: set[asyncio.Task[None]] = set()
 
@@ -114,7 +126,7 @@ class ToolGuard:
         rule = ToolRule(scope, read_only, destructive, limit, log)
 
         def decorate(fn: ToolFn) -> ToolFn:
-            tool = getattr(fn, "__name__", "tool")
+            tool = self.name_prefix + getattr(fn, "__name__", "tool")
             check_log_spec(tool, fn, log)
             self.registered[tool] = rule
 
@@ -131,11 +143,28 @@ class ToolGuard:
     async def has_scope(self, actor: Actor, scope: str) -> bool:
         """True when the actor holds `scope`, directly or through the OAuth overlay.
 
-        For a second scope inside a tool (`flashcards:delete`, `files:read.all`).
+        For a second scope inside a tool (`flashcards:delete`, `files:read.all`); the
+        actor is the one the tool got from `current_actor()`, scopes un-prefixed.
         """
         if scope in effective_scopes(actor.scopes):
             return True
         return scope in await self._overlay(actor)
+
+    def _view(self, actor: Actor) -> Actor:
+        """The actor as the source server's tools see it (scopes un-prefixed).
+
+        The universal server's tokens carry `teacher:marks:write`; the tools and the
+        use cases behind them check `marks:write`. Course markers pass through.
+        """
+        if not self.composite:
+            return actor
+        prefix = self.scope_prefix
+        scopes = frozenset(
+            scope.removeprefix(prefix) if scope.startswith(prefix) else scope
+            for scope in actor.scopes
+            if scope.startswith((prefix, "course:"))
+        )
+        return replace(actor, scopes=scopes)
 
     async def charge(self, actor: Actor, limit: ToolLimit) -> None:
         """Count one call of a cost class; for a tool that charges only some calls."""
@@ -160,7 +189,8 @@ class ToolGuard:
         trace = _Trace()
         started = time.monotonic()
         try:
-            actor = _token_actor()
+            token_actor = _token_actor()
+            actor = self._view(token_actor)
             await self._enforce(actor, tool, rule)
             if self.server == "admin":
                 await self._audit(
@@ -209,13 +239,20 @@ class ToolGuard:
     async def _enforce(self, actor: Actor, tool: str, rule: ToolRule) -> None:
         try:
             await self._limit(actor)
+            if (
+                self.composite
+                and not actor.roles & ALLOWED_ROLES_BY_SERVER[self.server]
+            ):
+                raise McpScopeError(params={"scope": self.scope_prefix + rule.scope})
             await self._ai_access(actor)
             if not await self.has_scope(actor, rule.scope):
-                raise McpScopeError(params={"scope": rule.scope})
+                raise McpScopeError(params={"scope": self.scope_prefix + rule.scope})
             if rule.limit is not None:  # after the scope: a refusal spends no class
                 await self.charge(actor, rule.limit)
         except (RateLimitedError, ForbiddenError) as error:
-            await self._audit_denied(actor, tool, error.code, scope=rule.scope)
+            await self._audit_denied(
+                actor, tool, error.code, scope=self.scope_prefix + rule.scope
+            )
             raise
 
     async def _limit(self, actor: Actor) -> None:
@@ -255,6 +292,12 @@ class ToolGuard:
         except Exception:  # noqa: BLE001 - fail closed: the token's own scopes remain
             log.exception("mcp.scope_overlay_failed", server=self.server)
             return frozenset()
+        if self.composite:
+            extra = frozenset(
+                scope.removeprefix(self.scope_prefix)
+                for scope in extra
+                if scope.startswith(self.scope_prefix)
+            )
         return extra & frozenset(SCOPES_BY_SERVER[self.server])
 
     async def _audit_denied(
@@ -267,7 +310,7 @@ class ToolGuard:
     ) -> None:
         connector = str(actor.connector_id) if actor.connector_id else None
         metadata = {
-            "server": self.server,
+            "server": self.public,
             "tool": tool,
             "connector_id": connector,
             **extra,
@@ -296,9 +339,9 @@ class ToolGuard:
                 user_id=actor.user_id,
                 connector_id=actor.connector_id,
                 client_id=actor.client_id,
-                server=self.server,
+                server=self.public,
                 tool=tool,
-                scope=rule.scope,
+                scope=self.scope_prefix + rule.scope,
                 read_only=rule.read_only,
                 outcome=trace.outcome,
                 error_code=trace.error_code,

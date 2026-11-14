@@ -19,7 +19,12 @@ from app.shared.lms_scopes import (
     MODULES_WRITE,
 )
 
-Server = Literal["student", "lms", "admin", "teacher"]
+Server = Literal["student", "lms", "admin", "teacher", "app"]
+SourceServer = Literal["student", "lms", "teacher"]
+
+# The universal server "app" serves these servers' tools, each name and scope prefixed
+# by its source server (`teacher_get_journal`, `teacher:journal:read`).
+APP_SOURCES: Final[tuple[SourceServer, ...]] = ("student", "teacher", "lms")
 
 BASELINE: Final = "baseline"
 RELEASE_2026_11: Final = "2026-11-mcp-1"
@@ -265,7 +270,9 @@ SCOPE_CATALOG: Final[dict[str, tuple[ScopeInfo, ...]]] = {
 }
 
 # Tools under a write scope that only read (the status of the action of that scope).
-READ_ONLY_TOOLS_IN_WRITE_SCOPES: Final = frozenset({"get_sync_status"})
+READ_ONLY_TOOLS_IN_WRITE_SCOPES: Final = frozenset(
+    {"get_sync_status", "student_get_sync_status"}
+)
 
 RELEASES: Final[tuple[ScopeRelease, ...]] = (
     ScopeRelease(
@@ -288,6 +295,18 @@ RELEASES: Final[tuple[ScopeRelease, ...]] = (
         ),
         summary_key="mcp-release-2026-11-mcp-1",
     ),
+)
+
+SCOPE_CATALOG["app"] = tuple(
+    ScopeInfo(
+        f"{source}:{info.scope}",
+        tools=tuple(f"{source}_{tool}" for tool in info.tools),
+        write=info.write,
+        since=info.since,
+        widens=tuple(f"{source}_{tool}" for tool in info.widens),
+    )
+    for source in APP_SOURCES
+    for info in SCOPE_CATALOG[source]
 )
 
 OFFERABLE_SERVERS: Final[frozenset[Server]] = frozenset({"student", "lms"})

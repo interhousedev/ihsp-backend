@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from app.shared.actor import Role
+from app.shared.contracts.auth import AUDIENCE_MCP_APP
 from app.shared.lms_scopes import (
     COURSES_DELETE,
     COURSES_READ,
@@ -11,12 +12,12 @@ from app.shared.lms_scopes import (
     LEGACY_ALIASES,
     MODULES_WRITE,
 )
-from app.shared.mcp_scopes import SCOPE_CATALOG, ScopeInfo
+from app.shared.mcp_scopes import APP_SOURCES, SCOPE_CATALOG, ScopeInfo
 
 __all__ = ["SCOPE_CATALOG", "ScopeInfo"]
 
-Server = Literal["student", "lms", "admin", "teacher"]
-SERVERS: tuple[Server, ...] = ("student", "lms", "admin", "teacher")
+Server = Literal["student", "lms", "admin", "teacher", "app"]
+SERVERS: tuple[Server, ...] = ("student", "lms", "admin", "teacher", "app")
 
 # Roles that may connect to a server. For "lms" the real check (edit permission
 # on some course) happens at call time (MCP-5).
@@ -28,12 +29,17 @@ ALLOWED_SERVER_ROLES: dict[str, frozenset[Role]] = {
     "admin": frozenset({Role.ADMIN}),
     "teacher": frozenset({Role.TEACHER, Role.ADMIN}),
 }
+# "app" serves the tools of its sources: any of their roles may connect.
+ALLOWED_SERVER_ROLES["app"] = frozenset().union(
+    *(ALLOWED_SERVER_ROLES[source] for source in APP_SOURCES)
+)
 
 AUDIENCE_BY_SERVER: dict[str, str] = {
     "student": "mcp-student",
     "lms": "mcp-lms",
     "admin": "mcp-admin",
     "teacher": "mcp-teacher",
+    "app": AUDIENCE_MCP_APP,
 }
 
 
@@ -77,12 +83,43 @@ PRESETS: dict[str, tuple[Preset, ...]] = {
         Preset("lesson-planner", ("lesson-plans:write", "materials:generate")),
     ),
 }
+# The presets of "app" are those of its sources, their scopes namespaced.
+PRESETS["app"] = tuple(
+    Preset(
+        f"{source}-{preset.key}",
+        tuple(f"{source}:{scope}" for scope in preset.scopes),
+    )
+    for source in APP_SOURCES
+    for preset in PRESETS[source]
+)
 
 
 def scope_names(server: str) -> frozenset[str]:
     """All scopes of a server (the LMS also accepts its pre-split names)."""
     names = frozenset(info.scope for info in SCOPE_CATALOG.get(server, ()))
-    return names | frozenset(LEGACY_ALIASES) if server == "lms" else names
+    if server == "lms":
+        return names | frozenset(LEGACY_ALIASES)
+    if server == "app":
+        return names | frozenset(f"lms:{alias}" for alias in LEGACY_ALIASES)
+    return names
+
+
+def source_of_scope(scope: str) -> str | None:
+    """The source server of a namespaced app scope (`teacher:marks:write`)."""
+    source, _, rest = scope.partition(":")
+    return source if rest and source in APP_SOURCES else None
+
+
+def app_scopes_for_roles(
+    scopes: frozenset[str], roles: frozenset[Role] | set[Role]
+) -> frozenset[str]:
+    """The namespaced app scopes whose source server one of the roles may use."""
+    return frozenset(
+        scope
+        for scope in scopes
+        if (source := source_of_scope(scope)) is not None
+        and role_may_use_server(roles, source)
+    )
 
 
 def role_may_use_server(roles: frozenset[Role] | set[Role], server: str) -> bool:

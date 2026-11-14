@@ -207,11 +207,11 @@ async def test_cannot_revoke_someone_elses_connector(auth_world: World) -> None:
         )
 
 
-def test_scope_catalog_lists_four_servers_with_presets(auth_world: World) -> None:
+def test_scope_catalog_lists_every_server_with_presets(auth_world: World) -> None:
     """MCP-8: scopes with their tools and the task presets."""
     catalog = {c.server: c for c in auth_world.auth.get_mcp_scopes.execute()}
 
-    assert set(catalog) == {"student", "lms", "admin", "teacher"}
+    assert set(catalog) == {"student", "lms", "admin", "teacher", "app"}
     student = {s.scope: s.tools for s in catalog["student"].scopes}
     assert student["marks:read"] == ("get_marks", "get_results", "get_gpa")
     assert {p.key for p in catalog["student"].presets} == {

@@ -293,3 +293,41 @@ async def test_denying_rejects_the_consent_and_creates_nothing(
 
     assert redirect == "https://hydra/denied?challenge=cc-1"
     assert auth_world.store.connectors == {}
+
+
+async def test_app_consent_offers_only_namespaced_scopes_of_the_roles(
+    auth_world: World,
+) -> None:
+    """A student is not offered `teacher:*`; a teacher is not offered `student:*`."""
+    student = await auth_world.add_user(roles={Role.STUDENT})
+    teacher = await auth_world.add_user(roles={Role.TEACHER})
+
+    await mcp_consent(auth_world, student.id, "app", scopes=("openid",))
+    for_student = await auth_world.auth.get_consent_info.execute("cc-1")
+    await mcp_consent(auth_world, teacher.id, "app", scopes=("openid",))
+    for_teacher = await auth_world.auth.get_consent_info.execute("cc-1")
+
+    assert for_student.server == "app"
+    assert "student:marks:read" in for_student.requested_scopes
+    assert not [s for s in for_student.requested_scopes if s.startswith("teacher:")]
+    assert "teacher:marks:write" in for_teacher.requested_scopes
+    assert not [s for s in for_teacher.requested_scopes if s.startswith("student:")]
+
+
+async def test_app_consent_refuses_a_scope_the_roles_do_not_allow(
+    auth_world: World,
+) -> None:
+    """Even a scope the client asked for is refused when the roles do not allow it."""
+    user = await auth_world.add_user(roles={Role.STUDENT})
+    challenge = await mcp_consent(
+        auth_world, user.id, "app", scopes=("openid", "teacher:marks:write")
+    )
+
+    with pytest.raises(ConnectorInvalidError):
+        await auth_world.auth.accept_consent.execute(
+            challenge,
+            accept=True,
+            grant_scopes=["teacher:marks:write"],
+            otp_code=None,
+            ctx=CTX,
+        )

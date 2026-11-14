@@ -124,6 +124,45 @@ webfinger:
       - lesson-plans:read
       - lesson-plans:write
       - materials:generate
+      - student:schedule:read
+      - student:homework:read
+      - student:marks:read
+      - student:attendance:read
+      - student:materials:read
+      - student:files:read
+      - student:flashcards:read
+      - student:flashcards:write
+      - student:sync:run
+      - student:teachers:read
+      - student:knowledge:read
+      - student:flashcards:delete
+      - student:tests:read
+      - student:tests:write
+      - student:notebooks:read
+      - student:notebooks:write
+      - student:library:read
+      - student:files:read.all
+      - student:learning:read
+      - student:files:write
+      - student:homework:submit
+      - teacher:schedule:read
+      - teacher:groups:read
+      - teacher:journal:read
+      - teacher:homework:read
+      - teacher:homework:write
+      - teacher:marks:read
+      - teacher:marks:write
+      - teacher:assessments:read
+      - teacher:assessments:write
+      - teacher:workoffs:read
+      - teacher:materials:generate
+      - teacher:lesson-plans:read
+      - teacher:lesson-plans:write
+      - teacher:files:write
+      - lms:lms.courses.read
+      - lms:lms.courses.write
+      - lms:lms.courses.delete
+      - lms:lms.modules.write
 
 sqa:
   opt_out: true

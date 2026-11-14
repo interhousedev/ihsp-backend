@@ -21,7 +21,7 @@ def _settings(base: Settings, *, mcp: str, env: str = "test") -> Settings:
     return base.model_copy(update={"urls": urls, "env": env})
 
 
-@pytest.mark.parametrize("server", ["student", "lms", "admin", "teacher"])
+@pytest.mark.parametrize("server", ["student", "lms", "admin", "teacher", "app"])
 async def test_protected_resource_metadata_is_served_at_the_host_root(
     world: World, server: ServerName
 ) -> None:
@@ -106,7 +106,7 @@ async def test_slashless_endpoint_redirects_to_the_endpoint(world: World) -> Non
     assert response.headers["location"].endswith("/mcp/student/")
 
 
-async def test_build_mcp_apps_returns_the_three_servers_with_lifespans(
+async def test_build_mcp_apps_returns_the_five_servers_with_lifespans(
     world: World,
 ) -> None:
     """Produces: ("/mcp/student", app, lifespan_cm), lms, admin."""
@@ -145,6 +145,7 @@ async def test_build_mcp_apps_returns_the_three_servers_with_lifespans(
         "/mcp/lms",
         "/mcp/admin",
         "/mcp/teacher",
+        "/mcp/app",
     ]
     for _, app, lifespan in apps:
         assert callable(app)

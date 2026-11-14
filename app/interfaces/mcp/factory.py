@@ -12,10 +12,15 @@ from mcp.server.fastmcp import FastMCP
 from pydantic import AnyHttpUrl
 
 
-def make_toolkit(
-    deps: McpDeps, server: ServerName, *, title: str, instructions_key: str
-) -> ToolKit:
-    """Create the FastMCP server for `server` and the kit its tools register on.
+def make_mcp(
+    deps: McpDeps,
+    server: ServerName,
+    *,
+    title: str,
+    instructions_key: str,
+    cls: type[FastMCP] = FastMCP,
+) -> FastMCP:
+    """Create the authenticated FastMCP server for `server` (no tools yet).
 
     The server is stateless with JSON responses and serves its endpoint at `/` of
     its mount. Token audience is checked by `IhspTokenVerifier` (Hydra does not
@@ -28,7 +33,7 @@ def make_toolkit(
         access=deps.access_verifier,
         connector=deps.connector_verifier,
     )
-    mcp = FastMCP(
+    return cls(
         title,
         instructions=deps.t(instructions_key),
         stateless_http=True,
@@ -43,4 +48,11 @@ def make_toolkit(
             validate_token_resource=False,
         ),
     )
+
+
+def make_toolkit(
+    deps: McpDeps, server: ServerName, *, title: str, instructions_key: str
+) -> ToolKit:
+    """Create the FastMCP server for `server` and the kit its tools register on."""
+    mcp = make_mcp(deps, server, title=title, instructions_key=instructions_key)
     return ToolKit(mcp=mcp, deps=deps, guard=ToolGuard(deps, server))

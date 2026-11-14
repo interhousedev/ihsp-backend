@@ -55,6 +55,7 @@ def _live_tools() -> list[tuple[ServerName, str]]:
     return [
         (server, name)
         for server in SERVERS
+        if server != "app"
         for name in _rules(server, cast(McpDeps, deps))
     ]
 

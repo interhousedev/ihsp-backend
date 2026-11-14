@@ -1,4 +1,4 @@
-"""Entry points of the MCP interface: the four servers and their root routes.
+"""Entry points of the MCP interface: the five servers and their root routes.
 
 I1 mounts every `(path, app)` pair on the API app, enters every lifespan context in
 the app's lifespan (the SDK session managers must run there; a mounted sub-app's own
@@ -18,6 +18,7 @@ from app.interfaces.mcp.lms.server import build_lms_server
 from app.interfaces.mcp.ports import ConnectorCoursesPort, McpAuditPort
 from app.interfaces.mcp.student.server import build_student_server
 from app.interfaces.mcp.teacher.server import build_teacher_server
+from app.interfaces.mcp.universal.server import build_app_server
 from app.settings import Settings
 from app.shared.brand import current_brand
 from app.shared.contracts.ai import AdminToolBackend
@@ -38,6 +39,7 @@ _BUILDERS: dict[str, Callable[[McpDeps], FastMCP]] = {
     "lms": build_lms_server,
     "admin": build_admin_server,
     "teacher": build_teacher_server,
+    "app": build_app_server,
 }
 
 
@@ -48,7 +50,7 @@ def build_mcp_apps(
     admin_tools: AdminToolBackend | None = None,
     connector_courses: ConnectorCoursesPort | None = None,
 ) -> list[McpApp]:
-    """Build the four servers: `("/mcp/student", app, lifespan_cm)` and so on.
+    """Build the five servers: `("/mcp/student", app, lifespan_cm)` and so on.
 
     Call once per process: each lifespan context manager can be entered only once.
     """

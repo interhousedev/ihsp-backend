@@ -171,6 +171,7 @@ class World:
             "lms": (Role.TEACHER,),
             "admin": (Role.ADMIN,),
             "teacher": (Role.TEACHER,),
+            "app": (Role.STUDENT,),
         }[server]
         actor = Actor(
             user_id=user_id or new_id(),

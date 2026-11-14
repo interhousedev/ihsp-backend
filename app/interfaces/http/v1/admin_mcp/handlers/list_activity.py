@@ -21,7 +21,7 @@ async def list_activity(
     ctx: CtxDep,
     user_id: UUID | None = None,
     connector_id: UUID | None = None,
-    server: Literal["student", "lms", "admin", "teacher"] | None = None,
+    server: Literal["student", "lms", "admin", "teacher", "app"] | None = None,
     tool: Annotated[str | None, Query(max_length=100)] = None,
     outcome: McpOutcome | None = None,
     from_: Annotated[datetime | None, Query(alias="from")] = None,

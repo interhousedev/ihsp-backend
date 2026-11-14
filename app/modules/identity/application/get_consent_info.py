@@ -20,6 +20,7 @@ from app.modules.identity.domain.errors import (
 from app.modules.identity.domain.scopes import Server, role_may_use_server
 from app.modules.identity.ports.hydra_gateway import ConsentRequest, HydraGateway
 from app.modules.identity.ports.unit_of_work import UowFactory
+from app.shared.actor import Role
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,19 +62,21 @@ class GetConsentInfo:
                 requires_otp=False,
                 redirect_to=redirect,
             )
-        server = await self._check_mcp(request)
+        server, roles = await self._check_mcp(request)
         return ConsentInfo(
             client_id=client.client_id,
             client_name=client.client_name,
             verified=is_verified(client),
             redirect_domain=redirect_domain(request),
             server=server,
-            requested_scopes=requested_scopes(request, server),
+            requested_scopes=requested_scopes(request, server, roles),
             requires_otp=server == "admin",
             redirect_to=None,
         )
 
-    async def _check_mcp(self, request: ConsentRequest) -> Server:
+    async def _check_mcp(
+        self, request: ConsentRequest
+    ) -> tuple[Server, frozenset[Role]]:
         """Server of the request; refuse roles and clients that may not use it."""
         server = mcp_server(request, self.mcp_base)
         user_id = parse_uuid(request.subject)
@@ -86,4 +89,4 @@ class GetConsentInfo:
         client = request.client
         if server == "admin" and is_dynamic(client) and not is_verified(client):
             raise AdminServerForbiddenError(params={"client_id": client.client_id})
-        return server
+        return server, frozenset(user.roles)

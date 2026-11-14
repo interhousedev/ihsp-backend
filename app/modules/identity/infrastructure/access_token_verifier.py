@@ -12,6 +12,7 @@ from app.shared.base_error import UnauthorizedError
 from app.shared.clock import Clock
 from app.shared.contracts.auth import (
     AUDIENCE_MCP_ADMIN,
+    AUDIENCE_MCP_APP,
     AUDIENCE_MCP_LMS,
     AUDIENCE_MCP_STUDENT,
     AUDIENCE_MCP_TEACHER,
@@ -22,7 +23,13 @@ from joserfc.errors import InvalidKeyIdError, JoseError
 
 ALGORITHMS = ["RS256", "ES256"]
 MCP_AUDIENCES = frozenset(
-    {AUDIENCE_MCP_STUDENT, AUDIENCE_MCP_LMS, AUDIENCE_MCP_ADMIN, AUDIENCE_MCP_TEACHER}
+    {
+        AUDIENCE_MCP_STUDENT,
+        AUDIENCE_MCP_LMS,
+        AUDIENCE_MCP_ADMIN,
+        AUDIENCE_MCP_TEACHER,
+        AUDIENCE_MCP_APP,
+    }
 )
 EpochLoader = Callable[[UUID], Awaitable[int | None]]
 
