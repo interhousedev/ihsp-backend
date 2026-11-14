@@ -6,6 +6,7 @@ the same bytes every time, so a second seed run stores nothing new.
 
 import io
 import struct
+import zipfile
 import zlib
 from collections.abc import Callable, Sequence
 
@@ -61,7 +62,21 @@ def sheet_docx(title: str, paragraphs: Sequence[str]) -> bytes:
         document.add_paragraph(paragraph, style="List Number")
     buffer = io.BytesIO()
     document.save(buffer)
-    return buffer.getvalue()
+    return _fixed_zip_times(buffer.getvalue())
+
+
+def _fixed_zip_times(data: bytes) -> bytes:
+    """The same archive with every member dated 1980: python-docx stamps the clock."""
+    out = io.BytesIO()
+    with (
+        zipfile.ZipFile(io.BytesIO(data)) as source,
+        zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as target,
+    ):
+        for info in source.infolist():
+            fixed = zipfile.ZipInfo(info.filename, date_time=(1980, 1, 1, 0, 0, 0))
+            fixed.compress_type = zipfile.ZIP_DEFLATED
+            target.writestr(fixed, source.read(info))
+    return out.getvalue()
 
 
 def notes_txt(lines: Sequence[str]) -> bytes:
