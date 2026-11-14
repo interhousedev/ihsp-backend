@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-11-14
+
 ### Added
 
 - Universal MCP server `app` (`/app`, audience `mcp-app`) for students, teachers and LMS users: the student, teacher and LMS tools in one connector, tool names prefixed by their source server (`student_`, `teacher_`, `lms_`) and scopes namespaced (`teacher:marks:write`). The tool list, consent screen and every call honour the roles of the source server. `GET /v1/id/mcp-scopes`, connectors and the `server` filter of the admin MCP activity accept `app`.
