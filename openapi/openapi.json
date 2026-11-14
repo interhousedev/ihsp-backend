@@ -823,7 +823,8 @@
               "student",
               "lms",
               "admin",
-              "teacher"
+              "teacher",
+              "app"
             ],
             "title": "Server",
             "type": "string"
@@ -7238,7 +7239,8 @@
               "student",
               "lms",
               "admin",
-              "teacher"
+              "teacher",
+              "app"
             ],
             "title": "Server",
             "type": "string"
@@ -7355,7 +7357,8 @@
                   "student",
                   "lms",
                   "admin",
-                  "teacher"
+                  "teacher",
+                  "app"
                 ],
                 "type": "string"
               },
@@ -8521,7 +8524,8 @@
               "student",
               "lms",
               "admin",
-              "teacher"
+              "teacher",
+              "app"
             ],
             "title": "Server",
             "type": "string"
@@ -8695,7 +8699,8 @@
               "student",
               "lms",
               "admin",
-              "teacher"
+              "teacher",
+              "app"
             ],
             "title": "Server",
             "type": "string"
@@ -22474,7 +22479,8 @@
               "student",
               "lms",
               "admin",
-              "teacher"
+              "teacher",
+              "app"
             ],
             "title": "Server",
             "type": "string"
@@ -22576,7 +22582,8 @@
                   "student",
                   "lms",
                   "admin",
-                  "teacher"
+                  "teacher",
+                  "app"
                 ],
                 "type": "string"
               },
@@ -22665,7 +22672,8 @@
               "student",
               "lms",
               "admin",
-              "teacher"
+              "teacher",
+              "app"
             ],
             "title": "Server",
             "type": "string"
@@ -32125,7 +32133,8 @@
               "student",
               "lms",
               "admin",
-              "teacher"
+              "teacher",
+              "app"
             ],
             "title": "Server",
             "type": "string"
@@ -32768,7 +32777,8 @@
               "student",
               "lms",
               "admin",
-              "teacher"
+              "teacher",
+              "app"
             ],
             "title": "Server",
             "type": "string"
@@ -53358,7 +53368,8 @@
                     "student",
                     "lms",
                     "admin",
-                    "teacher"
+                    "teacher",
+                    "app"
                   ],
                   "type": "string"
                 },
@@ -62407,7 +62418,8 @@
                 "student",
                 "lms",
                 "admin",
-                "teacher"
+                "teacher",
+                "app"
               ],
               "title": "Server",
               "type": "string"
@@ -62470,7 +62482,8 @@
                 "student",
                 "lms",
                 "admin",
-                "teacher"
+                "teacher",
+                "app"
               ],
               "title": "Server",
               "type": "string"
