@@ -556,7 +556,7 @@ async def test_mcp_scope_catalog_is_public(api: Api) -> None:
 
     assert response.status_code == 200
     servers = {s["server"]: s for s in response.json()["servers"]}
-    assert set(servers) == {"student", "lms", "admin", "teacher"}
+    assert set(servers) == {"student", "lms", "admin", "teacher", "app"}
     assert servers["teacher"]["roles"] == ["admin", "teacher"]
     assert servers["student"]["roles"] == ["student"]
     assert {"scope": "homework:read", "tools": ["get_homework"]} in servers["student"][
