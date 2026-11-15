@@ -20,6 +20,7 @@ from tests.fakes.identity.senders import (
 from tests.fakes.identity.uow import FakeIdentityUnitOfWork, IdentityStore
 from tests.fakes.identity.vault import InMemoryCredentialStore
 from tests.fakes.identity.webauthn import FakeWebAuthn
+from tests.fakes.privacy.gateway import FakeErasureGateway
 from tests.fakes.tasks import FakeTaskKicker
 from tests.identity.support import World
 
@@ -64,6 +65,7 @@ def build_world(
         uow_factory=lambda: FakeIdentityUnitOfWork(store, clock),
         cipher=InMemoryCredentialStore(),
         webauthn=webauthn,
+        erasure=FakeErasureGateway(),
     )
     return World(
         auth=auth,

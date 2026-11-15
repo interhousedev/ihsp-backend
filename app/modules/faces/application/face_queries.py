@@ -27,6 +27,19 @@ class GetMyFace:
         return FaceView(True, profile.locked, profile.updated_at, url)
 
 
+class HasFace:
+    """Whether a user has any face photo on file (staff's or their own)."""
+
+    def __init__(self, *, uow_factory: UowFactory) -> None:
+        """Store the dependency."""
+        self._uow_factory = uow_factory
+
+    async def execute(self, user_id: UUID) -> bool:
+        """Return True when a profile exists."""
+        async with self._uow_factory() as uow:
+            return await uow.profiles.get(user_id) is not None
+
+
 class UploadMyFace:
     """The caller uploads their own face."""
 

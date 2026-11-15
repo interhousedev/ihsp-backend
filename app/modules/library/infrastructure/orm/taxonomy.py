@@ -194,6 +194,8 @@ class ReadingList(IdMixin, TimestampMixin, Base):
     status: Mapped[str] = mapped_column(
         str_enum(ListStatus, "status"), server_default="draft"
     )
+    pinned: Mapped[bool] = mapped_column(server_default=text("false"))
+    sort_order: Mapped[int] = mapped_column(Integer, server_default=text("0"))
 
 
 class ReadingListItem(TimestampMixin, Base):

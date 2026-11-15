@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- Legal documents module: administrators edit versioned privacy, terms, biometric and AI documents (uz, ru, en) and publish them; `GET /v1/legal/documents[/{kind}]`, `GET /v1/me/legal/pending`, `POST /v1/me/legal/accept`, `/v1/admin/legal/*`. Registration (`POST /v1/id/register/complete`) takes `accepted_legal` and answers `legal/consent-required` when a published document is not accepted.
+- Privacy module: a ZIP export of the user's data (`POST`/`GET /v1/me/privacy/exports`, `GET .../{id}/download`, one per 24 hours, link valid 7 days) and administrator-reviewed account erasure (`GET`/`DELETE /v1/me/privacy/erasure`, `/v1/admin/privacy/erasure-requests[/{id}/approve|reject]`). A personal-data spec per module drives export and erasure; the `privacy.erase_owner` job runs after the retention window.
+
+### Changed
+
+- `DELETE /v1/id/me` answers 202 with `{request_id, status}`: it files an erasure request for administrator review instead of scheduling deletion at once. Signing in during the window restores the account and closes the request.
+
 ## [1.5.1] - 2026-11-14
 
 ### Added

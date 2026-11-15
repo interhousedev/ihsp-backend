@@ -336,10 +336,10 @@ async def test_update_emis_password_is_for_students_only(api: Api) -> None:
     assert response.json()["type"] == "common/forbidden"
 
 
-async def test_delete_account_returns_202_with_the_closing_date(
+async def test_delete_account_returns_202_with_the_erasure_request(
     api: Api, world: World
 ) -> None:
-    """ID-29: 202 ``{closes_on}``."""
+    """ID-29: 202 ``{request_id, status}``; an administrator decides."""
     _, registered = await world.register()
     api.login_as(registered.user_id)
 
@@ -348,7 +348,10 @@ async def test_delete_account_returns_202_with_the_closing_date(
     )
 
     assert response.status_code == 202
-    assert response.json() == {"closes_on": "2026-11-05"}
+    body = response.json()
+    assert body["status"] == "pending_review"
+    assert UUID(body["request_id"])
+    assert world.erasure.requests[0][0] == registered.user_id
 
 
 async def test_delete_account_with_a_wrong_password_is_a_403(

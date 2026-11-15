@@ -1,6 +1,5 @@
 """ID-9, ID-29, UF-ID-16: a student deletes their account."""
 
-from datetime import date
 from uuid import UUID
 
 from app.modules.identity.application.register_errors import (
@@ -10,6 +9,7 @@ from app.modules.identity.application.register_errors import (
 )
 from app.shared.actor import Actor, Role
 from app.shared.contracts.identity import UserStatus
+from app.shared.contracts.privacy import ErasureTicket
 from tests.identity.emis.world import NEW_PASSWORD, World
 
 import pytest
@@ -21,7 +21,7 @@ def student(user_id: UUID) -> Actor:
 
 async def delete(
     world: World, user_id: UUID, *, password: str = NEW_PASSWORD, otp: str | None = None
-) -> date:
+) -> ErasureTicket:
     return await world.delete_account.execute(
         student(user_id), password=password, otp_code=otp, ip="10.0.0.1", user_agent="x"
     )
@@ -34,45 +34,31 @@ async def registered(world: World) -> UUID:
     return result.user_id
 
 
-async def test_deletion_is_scheduled_and_sessions_are_revoked(world: World) -> None:
-    """ID-29: pending for 30 days, logged out everywhere, nothing removed yet."""
+async def test_the_request_goes_to_privacy_and_nothing_is_removed(
+    world: World,
+) -> None:
+    """ID-29: the account stays active until an administrator approves."""
     user_id = await registered(world)
     ref = world.secret_ref_of(user_id)
 
-    closes_on = await delete(world, user_id)
+    ticket = await delete(world, user_id)
 
-    assert closes_on == date(2026, 11, 5)
+    assert ticket.status == "pending_review"
+    assert world.erasure.requests == [(user_id, "10.0.0.1", "x")]
     account = world.repo.accounts[user_id]
-    assert account.status is UserStatus.PENDING_DELETION
-    assert world.repo.deletion_requested[user_id] == world.clock.now()
-    assert world.revoker.revoked == [user_id]
-    assert world.revoker.kept_telegram == [True]
+    assert account.status is UserStatus.ACTIVE
+    assert world.revoker.revoked == []
     assert world.enrollment.left == []
     assert world.kicker.calls == []
     assert world.store.destroyed == []
     assert account.emis_vault_ref == ref
-    assert world.ledger.audits[-1].type == "account.deletion_requested"
-
-
-async def test_the_owner_is_told_by_email_and_telegram(world: World) -> None:
-    """ID-29: the date and how to restore go to the recovery email and Telegram."""
-    user_id = await registered(world)
-
-    await delete(world, user_id)
-
-    to, template, params, _ = world.emails.sent[-1]
-    assert (to, template) == ("aleksey@example.com", "notice")
-    assert params["text_key"] == "id-mail-deletion-scheduled"
-    assert params["text_params"] == {"closes_on": "2026-11-05"}
-    assert world.telegram_notices == [(user_id, date(2026, 11, 5))]
 
 
 async def test_the_purge_waits_for_the_window(world: World) -> None:
     """Nothing is closed before 30 days; then the clean-up tasks start."""
     user_id = await registered(world)
-    await delete(world, user_id)
-    world.revoker.revoked.clear()
-    world.revoker.kept_telegram.clear()
+    world.repo.accounts[user_id].status = UserStatus.PENDING_DELETION
+    world.repo.deletion_requested[user_id] = world.clock.now()
 
     world.clock.advance(days=29, hours=23)
     assert await world.finalize_account_deletions.execute() == 0
@@ -90,6 +76,7 @@ async def test_the_purge_waits_for_the_window(world: World) -> None:
         "links.revoke_owner",
         "notebooks.delete_owner",
         "library.delete_owner",
+        "privacy.erase_owner",
     ]
     assert world.ledger.audits[-1].type == "account.deleted"
     assert await world.finalize_account_deletions.execute() == 0
@@ -98,7 +85,8 @@ async def test_the_purge_waits_for_the_window(world: World) -> None:
 async def test_a_restored_account_is_not_purged(world: World) -> None:
     """A restore at login (status back to active) survives the job."""
     user_id = await registered(world)
-    await delete(world, user_id)
+    world.repo.accounts[user_id].status = UserStatus.PENDING_DELETION
+    world.repo.deletion_requested[user_id] = world.clock.now()
     world.repo.accounts[user_id].status = UserStatus.ACTIVE
 
     world.clock.advance(days=31)
@@ -132,7 +120,7 @@ async def test_a_student_with_otp_must_send_the_step_up_code(world: World) -> No
     world.otp.codes[("step-up", str(user_id))] = ("654321", 3)
     await delete(world, user_id, otp="654321")
 
-    assert world.repo.accounts[user_id].status is UserStatus.PENDING_DELETION
+    assert world.erasure.requests[-1][0] == user_id
 
 
 @pytest.mark.parametrize(
@@ -163,13 +151,3 @@ async def test_a_blocked_account_cannot_delete_itself(world: World) -> None:
 
     with pytest.raises(DeleteForbiddenError):
         await delete(world, user_id)
-
-
-async def test_a_mail_failure_does_not_undo_the_deletion(world: World) -> None:
-    """ID-29: the notice is best effort."""
-    user_id = await registered(world)
-    world.emails.fail = True
-
-    await delete(world, user_id)
-
-    assert world.repo.accounts[user_id].status is UserStatus.PENDING_DELETION

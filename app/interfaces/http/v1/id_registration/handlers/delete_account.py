@@ -20,12 +20,12 @@ async def delete_account(
     container: Annotated[Container, Depends(get_container)],
     ip: Annotated[str | None, Depends(get_client_ip)],
 ) -> DeleteAccountResponse:
-    """Delete the account; personal data goes after 30 days (ID-29)."""
-    closes_on = await container.identity.emis.delete_account.execute(
+    """Ask for the deletion; an administrator reviews it, then 30 days run (ID-29)."""
+    ticket = await container.identity.emis.delete_account.execute(
         actor,
         password=body.password.get_secret_value(),
         otp_code=body.otp_code,
         ip=ip,
         user_agent=request.headers.get("user-agent"),
     )
-    return DeleteAccountResponse(closes_on=closes_on)
+    return DeleteAccountResponse(request_id=ticket.request_id, status=ticket.status)

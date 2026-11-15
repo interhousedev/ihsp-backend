@@ -1,7 +1,6 @@
 """The EMIS use cases wired to fakes, plus helpers that walk through whole flows."""
 
-from dataclasses import dataclass, field
-from datetime import date
+from dataclasses import dataclass
 from uuid import UUID
 
 from app.modules.identity.application.change_emis_password import ChangeEmisPassword
@@ -37,6 +36,7 @@ from app.modules.identity.infrastructure.emis.pending_store import RedisPendingS
 from app.shared.rate_limit import RateLimiter
 from tests.fakes.clock import FixedClock
 from tests.fakes.identity.vault import InMemoryCredentialStore
+from tests.fakes.privacy.gateway import FakeErasureGateway
 from tests.fakes.tasks import FakeTaskKicker
 from tests.identity.emis.fakes import (
     ControlledEmis,
@@ -68,6 +68,7 @@ class World:
     enrollment: FakeEnrollment
     acceptor: FakeLoginAcceptor
     revoker: FakeAccountRevoker
+    erasure: FakeErasureGateway
     emails: FakeEmailSender
     otp: FakeOtpStore
     redis: FakeRedis
@@ -87,7 +88,6 @@ class World:
     gateway: EmisGatewayImpl
     pending_registrations: RedisPendingStore[PendingRegistration]
     pending_reclaims: RedisPendingStore[PendingReclaim]
-    telegram_notices: list[tuple[UUID, date]] = field(default_factory=list)
 
     async def register(
         self,
@@ -139,6 +139,7 @@ def build_world(
     enrollment = FakeEnrollment()
     acceptor = FakeLoginAcceptor()
     revoker = FakeAccountRevoker()
+    erasure = FakeErasureGateway()
     emails = FakeEmailSender()
     otp = FakeOtpStore()
     hasher = PlainHasher()
@@ -160,11 +161,6 @@ def build_world(
         uow_factory=uow_factory, otp=otp, email_sender=emails, rate_limiter=limiter
     )
     destroy = DestroyEmisSecret(store=store, uow_factory=uow_factory)
-    telegram_notices: list[tuple[UUID, date]] = []
-
-    async def telegram_notice(user_id: UUID, deletes_on: date) -> None:
-        telegram_notices.append((user_id, deletes_on))
-
     return World(
         emis=emis,
         store=store,
@@ -173,6 +169,7 @@ def build_world(
         enrollment=enrollment,
         acceptor=acceptor,
         revoker=revoker,
+        erasure=erasure,
         emails=emails,
         otp=otp,
         redis=redis,
@@ -235,10 +232,7 @@ def build_world(
             uow_factory=uow_factory,
             hasher=hasher,
             otp=otp,
-            revoker=revoker,
-            email_sender=emails,
-            clock=clock,
-            telegram_notice=telegram_notice,
+            erasure=erasure,
         ),
         finalize_account_deletions=FinalizeAccountDeletions(
             uow_factory=uow_factory,
@@ -248,7 +242,6 @@ def build_world(
             clock=clock,
             retention_days=30,
         ),
-        telegram_notices=telegram_notices,
         destroy_emis_secret=destroy,
         gateway=EmisGatewayImpl(emis=emis, store=store, uow_factory=uow_factory),
         pending_registrations=pending_registrations,

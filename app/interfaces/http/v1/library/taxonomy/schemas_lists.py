@@ -57,6 +57,8 @@ class ReadingListCardResponse(BaseModel):
     essential_count: int
     essential_done: int
     updated_at: datetime
+    pinned: bool
+    sort_order: int
 
     @classmethod
     def from_view(cls, view: ReadingListCardView) -> Self:
@@ -80,6 +82,8 @@ class ReadingListCardResponse(BaseModel):
             essential_count=view.essential_count,
             essential_done=view.essential_done,
             updated_at=view.updated_at,
+            pinned=view.pinned,
+            sort_order=view.sort_order,
         )
 
 
@@ -185,6 +189,22 @@ class UpdateReadingListBody(BaseModel):
             term_half=sent(self, "term_half", self.term_half),
             status=self.status if self.status is not None else UNSET,
         )
+
+
+class PinReadingListBody(BaseModel):
+    """`PUT /library/reading-lists/{id}/pin`: `{pinned}`."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    pinned: bool
+
+
+class ReorderReadingListsBody(BaseModel):
+    """`PUT /library/reading-lists/order`: the lists in their new sequence."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    ids: list[UUID] = Field(max_length=1000)
 
 
 class ReadingListItemBody(BaseModel):

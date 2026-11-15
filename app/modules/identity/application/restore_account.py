@@ -21,6 +21,7 @@ from app.modules.identity.ports.hydra_gateway import HydraGateway
 from app.modules.identity.ports.ticket_store import TicketStore
 from app.modules.identity.ports.unit_of_work import UowFactory
 from app.shared.clock import Clock
+from app.shared.contracts.privacy import ErasureGateway
 from app.shared.ids import random_token
 
 TICKET_TTL_SECONDS = 600
@@ -77,6 +78,7 @@ class RestoreAccountAtLogin:
     hydra: HydraGateway
     tickets: TicketStore
     starter: LoginSessionStarter
+    erasure: ErasureGateway
 
     async def execute(
         self, challenge: str, ticket: str, *, ctx: RequestContext
@@ -103,6 +105,7 @@ class RestoreAccountAtLogin:
                 ctx=ctx,
                 remember=bool(pending.get("remember")),
             )
+        await self.erasure.restored(user.id)
         return LoginResult(redirect_to=redirect)
 
 

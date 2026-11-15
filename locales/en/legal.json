@@ -1,0 +1,8 @@
+{
+  "legal-not-found": "This document has not been published yet.",
+  "legal-invalid": "The value of the field \"{field}\" is not valid.",
+  "legal-incomplete": "The draft cannot be published: fill in {fields}.",
+  "legal-no-draft": "There is no draft of this document to publish.",
+  "legal-stale-version": "The document was updated. Read the new version of \"{kind}\" (version {current}) and accept it.",
+  "legal-consent-required": "To create an account, accept the current documents: {kinds}."
+}

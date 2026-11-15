@@ -1,0 +1,8 @@
+{
+  "legal-not-found": "Bu hujjat hali eʼlon qilinmagan.",
+  "legal-invalid": "«{field}» maydonining qiymati yaroqsiz.",
+  "legal-incomplete": "Qoralamani eʼlon qilib boʻlmaydi: {fields} maydonlarini toʻldiring.",
+  "legal-no-draft": "Eʼlon qilish uchun bu hujjatning qoralamasi yoʻq.",
+  "legal-stale-version": "Hujjat yangilandi. «{kind}» hujjatining yangi versiyasini ({current}-versiya) oʻqib chiqing va qabul qiling.",
+  "legal-consent-required": "Akkaunt yaratish uchun amaldagi hujjatlarni qabul qiling: {kinds}."
+}

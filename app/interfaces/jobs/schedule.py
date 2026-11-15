@@ -90,6 +90,7 @@ CRON_JOBS: tuple[CronJob, ...] = (
     CronJob("library.rights_review", "40 4 * * *"),
     CronJob("library.remind_queue", "30 7 * * *"),
     CronJob("faces.purge_old", "35 4 * * *"),
+    CronJob("privacy.cleanup_exports", "25 * * * *"),
 )
 
 

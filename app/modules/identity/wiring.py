@@ -20,7 +20,9 @@ from app.modules.identity.wiring_emis import EmisServices, build_emis
 from app.shared.contracts.academic import AcademicEnrollment
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.identity import IdentityCommands, IdentityDirectory
+from app.shared.contracts.legal import LegalHooks
 from app.shared.contracts.notify import TelegramSender
+from app.shared.contracts.privacy import ErasureGateway
 from app.shared.wiring import ModuleDeps
 
 
@@ -34,6 +36,7 @@ class IdentityModule:
     token_verifier: HydraAccessTokenVerifier
     connector_verifier: DbConnectorTokenVerifier
     personal_token_verifier: DbPersonalTokenVerifier
+    erasure: ErasureGateway
     emis_services: EmisServices | None = None
 
     @property
@@ -48,7 +51,9 @@ class IdentityModule:
         deps: ModuleDeps,
         *,
         academic_enrollment: AcademicEnrollment,
+        erasure: ErasureGateway,
         credentials: CredentialStore | None = None,
+        legal: LegalHooks | None = None,
     ) -> EmisServices:
         """Build the EMIS part once the academic enrollment exists.
 
@@ -63,7 +68,8 @@ class IdentityModule:
             academic_enrollment=academic_enrollment,
             commands=self.commands,
             credentials=credentials,
-            deletion_telegram_notice=self.auth.deletion_telegram_notice,
+            legal=legal,
+            erasure=erasure,
         )
         return self.emis_services
 
@@ -72,6 +78,7 @@ def build(
     deps: ModuleDeps,
     *,
     files: FilesApi,
+    erasure: ErasureGateway,
     hydra: HydraGateway | None = None,
     telegram_sender: TelegramSender | None = None,
     email_sender: EmailSender | None = None,
@@ -87,6 +94,7 @@ def build(
     auth = build_auth(
         deps,
         files=files,
+        erasure=erasure,
         hydra=hydra or build_hydra_admin(deps.settings),
         telegram_sender=telegram_sender,
         email_sender=email_sender,
@@ -98,7 +106,10 @@ def build(
         token_verifier=auth.token_verifier,
         connector_verifier=auth.connector_verifier,
         personal_token_verifier=auth.personal_token_verifier,
+        erasure=erasure,
     )
     if academic_enrollment is not None:
-        module.attach_emis(deps, academic_enrollment=academic_enrollment)
+        module.attach_emis(
+            deps, academic_enrollment=academic_enrollment, erasure=erasure
+        )
     return module

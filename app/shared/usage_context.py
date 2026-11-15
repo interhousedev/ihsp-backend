@@ -80,3 +80,16 @@ def reset_ai_scope(token: Token[str | None]) -> None:
 def current_ai_scope() -> str | None:
     """The scope bound by the caller, or None when the task decides."""
     return _scope.get()
+
+
+_session: ContextVar[str | None] = ContextVar("ai_session", default=None)
+
+
+def bind_ai_session(session_id: object) -> None:
+    """Group the model calls of this context under one chat or notebook (a trace session)."""
+    _session.set(str(session_id))
+
+
+def current_ai_session() -> str | None:
+    """The chat or notebook the calls made now belong to, if any."""
+    return _session.get()

@@ -6,7 +6,6 @@ from dataclasses import dataclass, field
 from app.modules.identity.application.change_emis_password import ChangeEmisPassword
 from app.modules.identity.application.delete_account import (
     DeleteAccount,
-    TelegramNotice,
 )
 from app.modules.identity.application.destroy_emis_secret import DestroyEmisSecret
 from app.modules.identity.application.emis_gateway import EmisGatewayImpl
@@ -51,6 +50,8 @@ from app.modules.identity.infrastructure.repositories.login_cue_repository impor
 from app.modules.identity.infrastructure.vault.client import VaultCredentialStore
 from app.shared.contracts.academic import AcademicEnrollment
 from app.shared.contracts.identity import IdentityCommands
+from app.shared.contracts.legal import LegalHooks
+from app.shared.contracts.privacy import ErasureGateway
 from app.shared.wiring import ModuleDeps
 
 
@@ -89,9 +90,10 @@ def build_emis(
     academic_enrollment: AcademicEnrollment,
     commands: IdentityCommands | None = None,
     emis_client: EmisApi | None = None,
-    deletion_telegram_notice: TelegramNotice | None = None,
+    erasure: ErasureGateway,
     credentials: CredentialStore | None = None,
     password_hasher: PasswordHasher | None = None,
+    legal: LegalHooks | None = None,
 ) -> EmisServices:
     """Wire the use cases; ``commands`` is accepted for § 3.12 but not needed.
 
@@ -118,6 +120,7 @@ def build_emis(
             deps.outbox_writer,
             deps.audit_writer,
             deps.outbox_committed_hook,
+            legal.writer if legal is not None else None,
         )
 
     pending_registrations = RedisPendingStore(
@@ -177,6 +180,7 @@ def build_emis(
             login_acceptor=login_acceptor,
             kicker=deps.kicker,
             clock=deps.clock,
+            consent=legal.consent if legal is not None else None,
         ),
         reclaim_start=StartReclaim(
             verify=verify, pending=pending_reclaims, uow_factory=uow_factory
@@ -214,11 +218,7 @@ def build_emis(
             uow_factory=uow_factory,
             hasher=hasher,
             otp=otp_store,
-            revoker=account_revoker,
-            email_sender=email_sender,
-            clock=deps.clock,
-            telegram_notice=deletion_telegram_notice,
-            retention_days=deps.settings.identity.account_deletion_days,
+            erasure=erasure,
         ),
         finalize_account_deletions=FinalizeAccountDeletions(
             uow_factory=uow_factory,

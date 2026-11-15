@@ -30,6 +30,7 @@ from app.shared.contracts.emis import (
     EmisSubjectRatings,
 )
 from app.shared.contracts.identity import UserStatus
+from app.shared.contracts.legal import ConsentDraft
 from app.shared.db.uow import AfterCommit
 from app.shared.ids import new_id
 from app.shared.notifications import AuditDraft, NotificationDraft
@@ -370,6 +371,7 @@ class Ledger:
 
     audits: list[AuditDraft] = field(default_factory=list)
     notifications: list[NotificationDraft] = field(default_factory=list)
+    consents: list[ConsentDraft] = field(default_factory=list)
     commits: int = 0
 
 
@@ -530,6 +532,7 @@ class FakeEmisUnitOfWork:
         self._hooks: list[AfterCommit] = []
         self._audits: list[AuditDraft] = []
         self._notifications: list[NotificationDraft] = []
+        self.consents: list[ConsentDraft] = []
         self.committed = False
 
     @property
@@ -564,12 +567,17 @@ class FakeEmisUnitOfWork:
         """Queue a hook."""
         self._hooks.append(hook)
 
+    def consent(self, *drafts: ConsentDraft) -> None:
+        """Queue legal acceptances."""
+        self.consents.extend(drafts)
+
     async def commit(self) -> None:
         """Keep the changes, publish audits, run hooks."""
         self.committed = True
         self._ledger.commits += 1
         self._ledger.audits.extend(self._audits)
         self._ledger.notifications.extend(self._notifications)
+        self._ledger.consents.extend(self.consents)
         for hook in self._hooks:
             await hook()
 

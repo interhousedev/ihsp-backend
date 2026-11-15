@@ -263,7 +263,7 @@ async def test_registration_and_deletion_through_the_sql_unit_of_work(
             emis_login="student01", emis_password="password", ip="10.0.0.2", locale="ru"
         )
 
-    closes_on = await world.delete_account.execute(
+    ticket = await world.delete_account.execute(
         Actor(user_id=registered.user_id, roles=frozenset({Role.STUDENT})),
         password=NEW_PASSWORD,
         otp_code=None,
@@ -272,6 +272,6 @@ async def test_registration_and_deletion_through_the_sql_unit_of_work(
     )
     await db_session.refresh(row)
 
-    assert row.status == "pending_deletion"
-    assert row.deletion_requested_at == clock.now()
-    assert closes_on.isoformat() == "2026-11-05"
+    assert ticket.status == "pending_review"
+    assert world.erasure.requests[0][0] == registered.user_id
+    assert row.status == "active"

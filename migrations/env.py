@@ -39,7 +39,10 @@ SCHEMAS = {
     "knowledge",
     "posts",
     "feedback",
+    "legal",
     "faces",
+    "onboarding",
+    "privacy",
 }
 # `alembic -x schema=academic revision --autogenerate ...` limits the diff to a schema.
 SCHEMA_FILTER: str | None = context.get_x_argument(as_dictionary=True).get("schema")

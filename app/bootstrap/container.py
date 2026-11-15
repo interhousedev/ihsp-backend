@@ -36,13 +36,16 @@ if TYPE_CHECKING:
     from app.modules.identity.application.student_card import StudentCardService
     from app.modules.identity.wiring import IdentityModule
     from app.modules.knowledge.wiring import KnowledgeServices
+    from app.modules.legal.wiring import LegalServices
     from app.modules.library.wiring import LibraryServices
     from app.modules.links.wiring import LinksServices
     from app.modules.lms.wiring import LmsModule
     from app.modules.mail.wiring import MailServices
     from app.modules.notebooks.wiring import NotebooksServices
     from app.modules.notify.wiring import NotifyServices
+    from app.modules.onboarding.wiring import OnboardingServices
     from app.modules.posts.wiring import PostsServices
+    from app.modules.privacy.wiring import PrivacyServices
     from app.shared.contracts.lms import LmsAiTools
     from app.shared.contracts.mcp_academic import McpAcademicTools
     from app.shared.contracts.mcp_calls import McpCallLog
@@ -87,7 +90,10 @@ class Container:
     certificates: "CertificatesServices" = NOT_BUILT
     knowledge: "KnowledgeServices" = NOT_BUILT
     feedback: "FeedbackServices" = NOT_BUILT
+    legal: "LegalServices" = NOT_BUILT
     faces: "FacesServices" = NOT_BUILT
+    onboarding: "OnboardingServices" = NOT_BUILT
+    privacy: "PrivacyServices" = NOT_BUILT
     posts: "PostsServices" = NOT_BUILT
     admin_tools: AdminToolBackend = NOT_BUILT
     llm: LlmGateway = NOT_BUILT

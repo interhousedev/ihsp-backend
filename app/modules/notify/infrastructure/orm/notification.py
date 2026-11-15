@@ -87,6 +87,7 @@ class Notification(IdMixin, TimestampMixin, Base):
             "excuse_requested",
             "excuse_decided",
             "excuse_message",
+            "privacy_update",
             name="type",
             native_enum=False,
             create_constraint=True,

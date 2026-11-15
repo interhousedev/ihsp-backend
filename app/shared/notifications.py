@@ -51,6 +51,7 @@ class NotificationType(StrEnum):
     EXCUSE_REQUESTED = "excuse_requested"
     EXCUSE_DECIDED = "excuse_decided"
     EXCUSE_MESSAGE = "excuse_message"
+    PRIVACY_UPDATE = "privacy_update"
 
 
 @dataclass(frozen=True, slots=True)

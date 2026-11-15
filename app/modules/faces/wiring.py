@@ -15,6 +15,7 @@ from app.modules.faces.application.face_queries import (
     DeleteMyFace,
     GetMyFace,
     GetUserFacePhoto,
+    HasFace,
     UploadMyFace,
 )
 from app.modules.faces.application.identify_face import (
@@ -42,6 +43,7 @@ class FacesServices:
     """Use cases of the faces module."""
 
     get_my_face: GetMyFace
+    has_face: HasFace
     upload_my_face: UploadMyFace
     delete_my_face: DeleteMyFace
     admin_get_face: GetUserFacePhoto
@@ -89,6 +91,7 @@ def build(
     auth = AuthenticateDevice(uow_factory=uow_factory, clock=deps.clock)
     return FacesServices(
         get_my_face=reader,
+        has_face=HasFace(uow_factory=uow_factory),
         upload_my_face=UploadMyFace(enroller=enroller, reader=reader),
         delete_my_face=DeleteMyFace(enroller=enroller),
         admin_get_face=GetUserFacePhoto(uow_factory=uow_factory, files=files),

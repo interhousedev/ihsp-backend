@@ -11,6 +11,7 @@ from app.interfaces.http.v1.id_registration.schemas import (
     TelegramLinkStatusResponse,
 )
 from app.modules.identity.application.request_context import RequestContext
+from app.shared.contracts.legal import LegalItem
 
 from fastapi import Depends, Request
 
@@ -30,6 +31,7 @@ async def register_complete(
         login_challenge=body.login_challenge,
         ip=ip,
         user_agent=request.headers.get("user-agent"),
+        accepted_legal=[LegalItem(i.kind, i.version) for i in body.accepted_legal],
     )
     onboarding = container.identity.auth.telegram_onboarding
     init_data = body.telegram_init_data

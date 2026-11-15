@@ -1,6 +1,7 @@
 """SQL repository of reading lists (taxonomy area)."""
 
 from collections.abc import Collection, Sequence
+from typing import Any
 from uuid import UUID
 
 from app.modules.library.domain.enums import (
@@ -42,6 +43,16 @@ def names_group(group_id: UUID) -> ColumnElement[bool]:
     )
 
 
+def _shown_order() -> tuple[ColumnElement[Any], ...]:
+    """Pinned lists first, then the librarians' order, then the latest change."""
+    return (
+        ListRow.pinned.desc(),
+        ListRow.sort_order,
+        ListRow.updated_at.desc(),
+        ListRow.id,
+    )
+
+
 # - - - Row <-> entity - - -
 
 
@@ -60,6 +71,8 @@ def _list_from(row: ListRow) -> ReadingList:
         year_of_study=row.year_of_study,
         academic_year=row.academic_year,
         term_half=row.term_half,
+        pinned=row.pinned,
+        sort_order=row.sort_order,
     )
 
 
@@ -74,6 +87,8 @@ def _apply_list(row: ListRow, reading_list: ReadingList) -> None:
     row.academic_year = reading_list.academic_year
     row.term_half = reading_list.term_half
     row.status = reading_list.status.value
+    row.pinned = reading_list.pinned
+    row.sort_order = reading_list.sort_order
     row.updated_at = reading_list.updated_at
 
 
@@ -146,6 +161,11 @@ class SqlReadingListRepository:
         """Insert a list (entries are separate)."""
         row = ListRow(id=reading_list.id, created_at=reading_list.created_at)
         _apply_list(row, reading_list)
+        row.sort_order = (
+            await self.session.scalar(select(func.coalesce(func.max(ListRow.sort_order), 0)))
+            or 0
+        ) + 1
+        reading_list.sort_order = row.sort_order
         self.session.add(row)
         await self.session.flush()
 
@@ -177,8 +197,8 @@ class SqlReadingListRepository:
         group_id: UUID | None = None,
         status: ListStatus | None = None,
     ) -> list[ReadingList]:
-        """Lists matching every given filter, newest change first."""
-        query = select(ListRow).order_by(ListRow.updated_at.desc(), ListRow.id)
+        """Lists matching every given filter: pinned first, then the manual order."""
+        query = select(ListRow).order_by(*_shown_order())
         if subject_id is not None:
             query = query.where(ListRow.subject_id == subject_id)
         if owner_id is not None:
@@ -189,6 +209,22 @@ class SqlReadingListRepository:
             query = query.where(ListRow.status == status.value)
         rows = await self.session.execute(query)
         return [_list_from(row) for row in rows.scalars()]
+
+    async def order(self) -> list[UUID]:
+        """Every list id in the librarians' manual order (pins ignored)."""
+        rows = await self.session.execute(
+            select(ListRow.id).order_by(
+                ListRow.sort_order, ListRow.updated_at.desc(), ListRow.id
+            )
+        )
+        return list(rows.scalars())
+
+    async def store_order(self, ids: Sequence[UUID]) -> None:
+        """Number the lists 1, 2, ... in the order given."""
+        for number, list_id in enumerate(ids, start=1):
+            await self.session.execute(
+                update(ListRow).where(ListRow.id == list_id).values(sort_order=number)
+            )
 
     # - - - Entries - - -
 
@@ -267,8 +303,8 @@ class SqlReadingListRepository:
                 ListRow.status == ListStatus.PUBLISHED.value,
                 or_(*audience),
             )
-            .group_by(ListRow.id, ListRow.title)
-            .order_by(ListRow.title, ListRow.id)
+            .group_by(ListRow.id, ListRow.title, ListRow.pinned, ListRow.sort_order)
+            .order_by(ListRow.pinned.desc(), ListRow.sort_order, ListRow.title, ListRow.id)
         )
         rows = await self.session.execute(query)
         return [

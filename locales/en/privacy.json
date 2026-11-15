@@ -1,0 +1,9 @@
+{
+  "privacy-erasure-already-requested": "You already have an account deletion request in progress.",
+  "privacy-erasure-request-not-found": "The deletion request was not found.",
+  "privacy-erasure-not-pending": "This request is no longer waiting for review.",
+  "privacy-export-rate-limited": "You can request a data export once every 24 hours. Try again in {retry_after} seconds.",
+  "privacy-export-not-found": "The export was not found or is not ready.",
+  "privacy-mail-erasure-rejected": "Your account deletion request was rejected. {reason}",
+  "privacy-mail-export-ready": "Your data export is ready. Download it from your profile before {expires}."
+}

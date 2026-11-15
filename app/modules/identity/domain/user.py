@@ -114,6 +114,13 @@ class User:
         """True while a requested deletion may still be cancelled at login."""
         return self.status == UserStatus.PENDING_DELETION
 
+    def request_deletion(self, now: datetime) -> None:
+        """Start the deletion window of an active account."""
+        if self.status != UserStatus.ACTIVE:
+            raise InvalidStatusError(params={"status": self.status.value})
+        self.status = UserStatus.PENDING_DELETION
+        self.deletion_requested_at = now
+
     def restore(self) -> None:
         """Cancel a requested deletion."""
         if self.status != UserStatus.PENDING_DELETION:

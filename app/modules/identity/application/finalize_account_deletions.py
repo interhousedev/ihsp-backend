@@ -28,6 +28,7 @@ CLEANUP_TASKS = (
     "links.revoke_owner",
     "notebooks.delete_owner",
     "library.delete_owner",
+    "privacy.erase_owner",
 )
 
 

@@ -41,6 +41,11 @@ from app.bootstrap.adapters.mcp_ports import (
 )
 from app.bootstrap.adapters.mcp_teacher import build_teacher_tools
 from app.bootstrap.adapters.notebook_terms import NotebookTermsAdapter
+from app.bootstrap.adapters.onboarding import (
+    OnboardingCertificatesAdapter,
+    OnboardingFacesAdapter,
+)
+from app.bootstrap.adapters.personal_data import build_sources
 from app.bootstrap.adapters.school_knowledge import (
     KnowledgeGapAdapter,
     KnowledgeLookupAdapter,
@@ -93,6 +98,7 @@ from app.modules.identity.ports.email_sender import EmailSender
 from app.modules.identity.ports.hydra_gateway import HydraGateway
 from app.modules.identity.wiring import build as build_identity
 from app.modules.knowledge.wiring import build as build_knowledge
+from app.modules.legal.wiring import build as build_legal
 from app.modules.library.wiring import build as build_library
 from app.modules.links.wiring import build as build_links
 from app.modules.lms.wiring import build as build_lms
@@ -106,7 +112,9 @@ from app.modules.notebooks.wiring_studio import LmsApplyPorts
 from app.modules.notify.infrastructure.outbox_writer import write_notifications
 from app.modules.notify.ports.push_sender import PushSender
 from app.modules.notify.wiring import build as build_notify
+from app.modules.onboarding.wiring import build as build_onboarding
 from app.modules.posts.wiring import build as build_posts
+from app.modules.privacy.wiring import build as build_privacy
 from app.modules.vectors.wiring import build as build_vectors
 from app.settings import Settings
 from app.shared.actor import Role
@@ -116,6 +124,7 @@ from app.shared.contracts.embeddings import EmbeddingIndex
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.notebooks import NotebooksQueries
 from app.shared.contracts.notify import TelegramSender
+from app.shared.contracts.privacy import ErasureGateway
 from app.shared.features import Feature, is_enabled
 from app.shared.limits import EffectiveLimits
 from app.shared.rate_limit import RateLimiter
@@ -230,6 +239,7 @@ class _Assembler:
         )
         # Identity stores profile photos in files, which needs the academic terms.
         self.files_proxy: LazyProxy[FilesApi] = LazyProxy("files (identity photos)")
+        self.erasure_proxy: LazyProxy[ErasureGateway] = LazyProxy("privacy (identity)")
         self.llm: LlmGateway | None = overrides.llm
         # Every model call is counted in the usage ledger (the decorators in ai).
         self.raw_llm: LlmGateway | None = overrides.llm
@@ -249,6 +259,7 @@ class _Assembler:
     def build(self) -> None:
         """Run every step the process needs."""
         self.build_telegram()
+        self.container.legal = build_legal(self.deps)
         self.build_identity_and_schedule()
         if self.plan.files:
             self.build_files()
@@ -291,6 +302,7 @@ class _Assembler:
         identity = build_identity(
             self.deps,
             files=self.files_proxy.view,
+            erasure=self.erasure_proxy.view,
             hydra=hydra,
             telegram_sender=c.telegram,
             email_sender=self.overrides.email_sender,
@@ -308,6 +320,8 @@ class _Assembler:
                 self.deps,
                 academic_enrollment=schedule.enrollment,
                 credentials=self.overrides.credentials,
+                legal=c.legal.hooks,
+                erasure=self.erasure_proxy.view,
             )
             self.add_closer(emis.close)
 
@@ -335,6 +349,20 @@ class _Assembler:
         c.files = files
         self.files_proxy.bind(files.public)
         self.add_closer(files.close)
+        self.build_privacy()
+
+    def build_privacy(self) -> None:
+        """Data export and account erasure; identity reaches it through a proxy."""
+        c = self.container
+        export_sources, erase_sources = build_sources(self.deps.sessionmaker)
+        c.privacy = build_privacy(
+            self.deps,
+            accounts=c.identity.auth.account_control,
+            storage=c.files.storage,
+            export_sources=export_sources,
+            erase_sources=erase_sources,
+        )
+        self.erasure_proxy.bind(c.privacy.erasure)
 
     def make_sniffer(self) -> ContentSniffer:
         """libmagic, or in development a signature look-up when it is missing."""
@@ -491,6 +519,7 @@ class _Assembler:
         )
         self.build_feedback()
         self.build_faces()
+        self.build_onboarding()
 
     def build_faces(self) -> None:
         """Entrance face recognition; excuses are read from academic lazily."""
@@ -503,6 +532,15 @@ class _Assembler:
             ),
             excuses=LazyExcuseStatus(lambda: c.academic.excuse_status),
             sniffer=self.make_sniffer(),
+        )
+
+    def build_onboarding(self) -> None:
+        """The post-registration wizard reads faces and imports certificates."""
+        c = self.container
+        c.onboarding = build_onboarding(
+            self.deps,
+            faces=OnboardingFacesAdapter(c.faces.has_face),
+            importer=OnboardingCertificatesAdapter(c.certificates.import_emis),
         )
 
     def build_feedback(self) -> None:

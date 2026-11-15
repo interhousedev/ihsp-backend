@@ -189,5 +189,9 @@
   "notify-excuse-period-range": "с {start} по {end}",
   "notify-excuse-message-title": "Новое сообщение по освобождению",
   "notify-excuse-message-body": "{author}: {preview}",
-  "notify-excuse-message-files": "Файлов: {count}"
+  "notify-excuse-message-files": "Файлов: {count}",
+  "notify-privacy-title": "Конфиденциальность",
+  "notify-privacy-export-ready-body": "Выгрузка ваших данных готова. Скачайте её до {expires}.",
+  "notify-privacy-erasure-approved-body": "Запрос на удаление аккаунта одобрен. Аккаунт будет удалён {closes_on}. Чтобы отменить, войдите до этой даты.",
+  "notify-privacy-erasure-rejected-body": "Запрос на удаление аккаунта отклонён. {reason}"
 }

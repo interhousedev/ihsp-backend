@@ -36,7 +36,10 @@ SCHEMAS = {
     "knowledge",
     "posts",
     "feedback",
+    "legal",
     "faces",
+    "onboarding",
+    "privacy",
 }
 AI_TABLES = {"ai.chats", "ai.chat_messages", "ai.usage_events"}
 FLASHCARD_TABLES = {"ai.flashcard_sets", "ai.flashcards", "ai.flashcard_reviews"}

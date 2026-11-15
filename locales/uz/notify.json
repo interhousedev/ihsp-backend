@@ -189,5 +189,9 @@
   "notify-excuse-period-range": "{start} dan {end} gacha",
   "notify-excuse-message-title": "Ozod etish boʻyicha yangi xabar",
   "notify-excuse-message-body": "{author}: {preview}",
-  "notify-excuse-message-files": "Fayllar: {count}"
+  "notify-excuse-message-files": "Fayllar: {count}",
+  "notify-privacy-title": "Maxfiylik",
+  "notify-privacy-export-ready-body": "Maʼlumotlaringiz arxivi tayyor. Uni {expires} gacha yuklab oling.",
+  "notify-privacy-erasure-approved-body": "Hisobni oʼchirish soʼrovi tasdiqlandi. Hisob {closes_on} kuni oʼchiriladi. Bekor qilish uchun shu sanagacha tizimga kiring.",
+  "notify-privacy-erasure-rejected-body": "Hisobni oʼchirish soʼrovi rad etildi. {reason}"
 }

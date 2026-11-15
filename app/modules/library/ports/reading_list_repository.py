@@ -46,11 +46,19 @@ class ReadingListRepository(Protocol):
         group_id: UUID | None = None,
         status: ListStatus | None = None,
     ) -> list[ReadingList]:
-        """Lists matching every given filter, newest change first.
+        """Lists matching every given filter, pinned first, then the manual order.
 
         `group_id` keeps the lists that name the group. Who may see which list is
         decided by `reading_list_policy.can_view_list`, not here.
         """
+        ...
+
+    async def order(self) -> list[UUID]:
+        """Every list id in the librarians' manual order (pins ignored)."""
+        ...
+
+    async def store_order(self, ids: Sequence[UUID]) -> None:
+        """Number the lists 1, 2, ... in the order given."""
         ...
 
     async def entries(

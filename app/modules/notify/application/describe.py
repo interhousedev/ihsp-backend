@@ -651,6 +651,19 @@ def _sync_alert(p: dict[str, Any], v: _View) -> Description:
     )
 
 
+def _privacy_update(p: dict[str, Any], v: _View) -> Description:
+    kind = str(p.get("kind", "export_ready"))
+    body = v.t(
+        f"notify-privacy-{kind.replace('_', '-')}-body",
+        expires=fmt_date(p.get("expires_at")),
+        closes_on=fmt_date(p.get("closes_on")),
+        reason=p.get("reason") or "",
+    )
+    return Description(
+        v.t("notify-privacy-title"), body, f"{v.urls.sp}/profile/account/"
+    )
+
+
 _BUILDERS: dict[NotificationType, _Builder] = {
     NotificationType.MARKS: _marks,
     NotificationType.RESULT_DROP: _result_drop,
@@ -693,6 +706,7 @@ _BUILDERS: dict[NotificationType, _Builder] = {
     NotificationType.EXCUSE_REQUESTED: _excuse_requested,
     NotificationType.EXCUSE_DECIDED: _excuse_decided,
     NotificationType.EXCUSE_MESSAGE: _excuse_message,
+    NotificationType.PRIVACY_UPDATE: _privacy_update,
 }
 
 

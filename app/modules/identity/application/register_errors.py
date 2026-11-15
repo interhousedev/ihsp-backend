@@ -73,6 +73,13 @@ class OtpCodeInvalidError(ValidationFailedError):
     message_key = "id-code-invalid"
 
 
+class ConsentRequiredError(ValidationFailedError):
+    """Registration lacks the current version of every published legal document."""
+
+    code = "legal/consent-required"
+    message_key = "legal-consent-required"
+
+
 class ImportMatchUnconfirmedError(ConflictError):
     """The student must confirm that the imported record is theirs."""
 

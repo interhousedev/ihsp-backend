@@ -47,6 +47,8 @@ class ReadingList:
     year_of_study: int | None = None
     academic_year: str | None = None
     term_half: int | None = None
+    pinned: bool = False
+    sort_order: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -122,6 +124,19 @@ def validate_term(
         raise ListInvalidError(params={"field": "academic_year"})
     if term_half is not None and term_half not in (1, 2):
         raise ListInvalidError(params={"field": "term_half"})
+
+
+def reordered(current: Sequence[UUID], wanted: Sequence[UUID]) -> list[UUID]:
+    """`current` with the `wanted` ids rearranged inside the slots they occupy.
+
+    Ids not in `current` or repeated in `wanted` are a mistake of the caller.
+    """
+    known = set(current)
+    if len(set(wanted)) != len(wanted) or not known.issuperset(wanted):
+        raise ListInvalidError(params={"field": "ids"})
+    chosen = iter(wanted)
+    moving = set(wanted)
+    return [next(chosen) if lid in moving else lid for lid in current]
 
 
 # - - - Entries - - -

@@ -117,6 +117,8 @@ class ReadingListBuilder:
                     essential_count=essential,
                     essential_done=done,
                     updated_at=lst.updated_at,
+                    pinned=lst.pinned,
+                    sort_order=lst.sort_order,
                 )
             )
         return views

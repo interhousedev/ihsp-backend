@@ -38,8 +38,10 @@ def used_keys() -> set[str]:
 
 
 def load(language: str) -> dict[str, str]:
-    path = Path(LOCALES_DIR) / language / "id_registration.json"
-    data: dict[str, str] = json.loads(path.read_text(encoding="utf-8"))
+    """All files of a language, merged the way ``I18nCore`` loads them."""
+    data: dict[str, str] = {}
+    for path in sorted((Path(LOCALES_DIR) / language).glob("*.json")):
+        data |= json.loads(path.read_text(encoding="utf-8"))
     return data
 
 

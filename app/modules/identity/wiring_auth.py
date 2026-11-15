@@ -7,6 +7,7 @@ from uuid import UUID
 from app.modules.identity.application.accept_consent import AcceptConsent
 from app.modules.identity.application.accept_login_for_user import LoginAcceptorImpl
 from app.modules.identity.application.accept_logout import AcceptLogout
+from app.modules.identity.application.account_control import AccountControlImpl
 from app.modules.identity.application.account_revoker_impl import AccountRevokerImpl
 from app.modules.identity.application.activate_account import ActivateAccount
 from app.modules.identity.application.activation_info import ActivationInfo
@@ -185,6 +186,7 @@ from app.modules.identity.ports.webauthn import WebAuthn
 from app.modules.identity.wiring_factors import FactorServices, build_factors
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.notify import TelegramSender
+from app.shared.contracts.privacy import ErasureGateway
 from app.shared.features import Feature, is_enabled
 from app.shared.redis_util import RedisKeyLock
 from app.shared.wiring import ModuleDeps
@@ -201,6 +203,7 @@ class AuthServices:
     connector_verifier: DbConnectorTokenVerifier
     login_acceptor: LoginAcceptorImpl
     account_revoker: AccountRevokerImpl
+    account_control: AccountControlImpl
     email_sender: EmailSender
     otp_store: RedisOtpStore
     otp_sender: OtpSender
@@ -321,6 +324,7 @@ def build_auth(
     *,
     hydra: HydraGateway,
     files: FilesApi,
+    erasure: ErasureGateway,
     telegram_sender: TelegramSender | None = None,
     email_sender: EmailSender | None = None,
     hasher: PasswordHasher | None = None,
@@ -367,6 +371,24 @@ def build_auth(
     otp = OtpService(otp_store=otp_store, otp_sender=otp_sender, email=email)
     cipher = cipher or VaultCredentialStore(settings.vault)
     totp = TotpVerifier(cipher=cipher, clock=clock)
+    revoker = AccessRevoker(
+        revocations=revocations, epochs=epochs, hydra=hydra, clock=clock
+    )
+    account_revoker = AccountRevokerImpl(uow_factory=uow_factory, revoker=revoker)
+    deletion_notice = DeletionTelegramNotice(
+        uow_factory=uow_factory,
+        telegram=telegram_sender,
+        i18n=deps.i18n,
+        id_app_url=settings.urls.id,
+    )
+    account_control = AccountControlImpl(
+        uow_factory=uow_factory,
+        revoker=account_revoker,
+        telegram_notice=deletion_notice,
+        email=email,
+        clock=clock,
+        retention_days=settings.identity.account_deletion_days,
+    )
     restore_offer = RestoreOffer(
         tickets=tickets,
         clock=clock,
@@ -378,9 +400,6 @@ def build_auth(
         issuer=settings.jwt_bearer.issuer,
         token_url=f"{settings.hydra.issuer.rstrip('/')}/oauth2/token",
         clock=clock,
-    )
-    revoker = AccessRevoker(
-        revocations=revocations, epochs=epochs, hydra=hydra, clock=clock
     )
     remember_days = settings.identity.remember_days
     starter = LoginSessionStarter(
@@ -481,7 +500,8 @@ def build_auth(
             uow_factory=uow_factory, clock=clock
         ),
         login_acceptor=login_acceptor,
-        account_revoker=AccountRevokerImpl(uow_factory=uow_factory, revoker=revoker),
+        account_revoker=account_revoker,
+        account_control=account_control,
         email_sender=email,
         otp_store=otp_store,
         otp_sender=otp_sender,
@@ -512,7 +532,11 @@ def build_auth(
             restore_offer=restore_offer,
         ),
         restore_account_at_login=RestoreAccountAtLogin(
-            uow_factory=uow_factory, hydra=hydra, tickets=tickets, starter=starter
+            uow_factory=uow_factory,
+            hydra=hydra,
+            tickets=tickets,
+            starter=starter,
+            erasure=erasure,
         ),
         decline_account_restore=DeclineAccountRestore(hydra=hydra, tickets=tickets),
         get_consent_info=GetConsentInfo(
@@ -775,12 +799,7 @@ def build_auth(
         list_oauth_clients=ListOAuthClients(uow_factory=uow_factory, hydra=hydra),
         verify_oauth_client=VerifyOAuthClient(uow_factory=uow_factory, hydra=hydra),
         purge_deleted_users=PurgeDeletedUsers(uow_factory=uow_factory, clock=clock),
-        deletion_telegram_notice=DeletionTelegramNotice(
-            uow_factory=uow_factory,
-            telegram=telegram_sender,
-            i18n=deps.i18n,
-            id_app_url=settings.urls.id,
-        ),
+        deletion_telegram_notice=deletion_notice,
         factors=build_factors(
             uow_factory=uow_factory,
             hydra=hydra,

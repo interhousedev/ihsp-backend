@@ -81,6 +81,9 @@ from app.modules.notify.application.renderers.mcp_scope_offer import (
 from app.modules.notify.application.renderers.notebook_artifact_ready import (
     NotebookArtifactReadyRenderer,
 )
+from app.modules.notify.application.renderers.privacy_update import (
+    PrivacyUpdateRenderer,
+)
 from app.modules.notify.application.renderers.registry import RendererRegistry
 from app.modules.notify.application.renderers.result_below import ResultBelowRenderer
 from app.modules.notify.application.renderers.result_drop import ResultDropRenderer
@@ -136,6 +139,9 @@ def register_builtin_renderers(
     )
     registry.register(
         NotificationType.EXCUSE_MESSAGE, ExcuseMessageRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.PRIVACY_UPDATE, PrivacyUpdateRenderer(i18n, urls)
     )
     registry.register(
         NotificationType.ACCOUNT_CLOSING, AccountClosingRenderer(i18n, urls)

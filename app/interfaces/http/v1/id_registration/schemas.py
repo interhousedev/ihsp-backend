@@ -1,6 +1,5 @@
 """Request and response models of registration, reclaim, EMIS password and deletion."""
 
-from datetime import date
 from typing import Literal
 from uuid import UUID
 
@@ -101,6 +100,13 @@ class SendRegistrationEmailBody(BaseModel):
     email: EmailStr = Field(max_length=320)
 
 
+class AcceptedLegalItem(BaseModel):
+    """One legal document version the student accepted."""
+
+    kind: str = Field(pattern="^(privacy|terms|biometric|ai)$")
+    version: int = Field(ge=1)
+
+
 class CompleteRegistrationBody(BaseModel):
     """The password, the emailed code and the optional import confirmation."""
 
@@ -112,6 +118,8 @@ class CompleteRegistrationBody(BaseModel):
     login_challenge: str | None = Field(default=None, max_length=8192)
     telegram_init_data: SecretStr | None = Field(default=None, max_length=8192)
     """Inside the mini app: links this Telegram account at once."""
+    accepted_legal: list[AcceptedLegalItem] = Field(default_factory=list, max_length=8)
+    """Current version of every published legal document, when any is published."""
 
 
 class TelegramLinkStatusBody(BaseModel):
@@ -213,6 +221,7 @@ class DeleteAccountBody(BaseModel):
 
 
 class DeleteAccountResponse(BaseModel):
-    """When the personal data is removed."""
+    """The erasure request waiting for an administrator's review."""
 
-    closes_on: date
+    request_id: UUID
+    status: str

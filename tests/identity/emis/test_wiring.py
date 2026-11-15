@@ -12,6 +12,7 @@ from app.shared.rate_limit import RateLimiter
 from app.shared.wiring import ModuleDeps
 from tests.fakes.clock import FixedClock
 from tests.fakes.identity.vault import InMemoryCredentialStore
+from tests.fakes.privacy.gateway import FakeErasureGateway
 from tests.fakes.tasks import FakeTaskKicker
 from tests.identity.emis.fakes import (
     FakeAccountRevoker,
@@ -66,6 +67,7 @@ def build(deps: ModuleDeps, emis_client: FakeEmisClient | None = None) -> EmisSe
         academic_enrollment=FakeEnrollment(),
         credentials=InMemoryCredentialStore(),
         emis_client=emis_client,
+        erasure=FakeErasureGateway(),
     )
 
 

@@ -1,0 +1,9 @@
+{
+  "privacy-erasure-already-requested": "Hisobni oʼchirish soʼrovi allaqachon koʼrib chiqilmoqda.",
+  "privacy-erasure-request-not-found": "Oʼchirish soʼrovi topilmadi.",
+  "privacy-erasure-not-pending": "Bu soʼrov endi koʼrib chiqilishini kutmayapti.",
+  "privacy-export-rate-limited": "Maʼlumotlar arxivini 24 soatda bir marta soʼrash mumkin. {retry_after} soniyadan keyin urinib koʼring.",
+  "privacy-export-not-found": "Arxiv topilmadi yoki hali tayyor emas.",
+  "privacy-mail-erasure-rejected": "Hisobni oʼchirish soʼrovi rad etildi. {reason}",
+  "privacy-mail-export-ready": "Maʼlumotlaringiz arxivi tayyor. Uni profilingizdan {expires} gacha yuklab oling."
+}

@@ -1,0 +1,9 @@
+{
+  "privacy-erasure-already-requested": "Запрос на удаление аккаунта уже обрабатывается.",
+  "privacy-erasure-request-not-found": "Запрос на удаление не найден.",
+  "privacy-erasure-not-pending": "Этот запрос уже не ожидает рассмотрения.",
+  "privacy-export-rate-limited": "Выгрузку данных можно запрашивать раз в 24 часа. Повторите через {retry_after} с.",
+  "privacy-export-not-found": "Выгрузка не найдена или ещё не готова.",
+  "privacy-mail-erasure-rejected": "Запрос на удаление аккаунта отклонён. {reason}",
+  "privacy-mail-export-ready": "Выгрузка ваших данных готова. Скачайте её в профиле до {expires}."
+}

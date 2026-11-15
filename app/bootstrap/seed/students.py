@@ -86,6 +86,7 @@ async def register_students(
         academic_enrollment=container.academic.schedule.enrollment,
         emis_client=FakeEmisClient(container.clock),
         credentials=credentials,
+        erasure=container.identity.erasure,
     )
     try:
         found = [await _register(container, services, sender, n) for n in EMIS_LOGINS]

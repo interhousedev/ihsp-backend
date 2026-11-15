@@ -22,6 +22,7 @@ from app.shared.contracts.emis import (
     EmisSubject,
     EmisSubjectRatings,
 )
+from app.shared.contracts.legal import ConsentDraft
 from app.shared.db.uow import AfterCommit
 from app.shared.notifications import AuditDraft, NotificationDraft
 
@@ -227,6 +228,10 @@ class EmisUnitOfWork(Protocol):
 
     def after_commit(self, hook: AfterCommit) -> None:
         """Run a coroutine after a successful commit."""
+        ...
+
+    def consent(self, *drafts: ConsentDraft) -> None:
+        """Queue legal acceptances to be written with the commit."""
         ...
 
     async def commit(self) -> None:

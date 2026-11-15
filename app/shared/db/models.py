@@ -23,7 +23,10 @@ MODULES = (
     "knowledge",
     "posts",
     "feedback",
+    "legal",
     "faces",
+    "onboarding",
+    "privacy",
 )
 
 

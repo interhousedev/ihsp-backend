@@ -19,6 +19,7 @@ from tests.fakes.files.services import build_files_fakes
 from tests.fakes.identity.hydra import FakeHydra
 from tests.fakes.identity.senders import FakeEmailSender, FakeOtpSender
 from tests.fakes.outbox import InMemoryOutbox
+from tests.fakes.privacy.gateway import FakeErasureGateway
 from tests.fakes.tasks import FakeTaskKicker
 from tests.identity.integration.test_repositories import user_row
 from tests.identity.support import PASSWORD
@@ -75,6 +76,7 @@ def sql_auth(
         email_sender=email,
         otp_sender=otp,
         hasher=Argon2PasswordHasher(PasswordHasher.from_parameters(profiles.CHEAPEST)),
+        erasure=FakeErasureGateway(),
     )
     return Rig(auth, hydra, otp, email, clock)
 

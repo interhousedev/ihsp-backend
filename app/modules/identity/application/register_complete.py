@@ -1,10 +1,12 @@
 """Finish a student registration: account, Vault secret, student record, login."""
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
 from uuid import UUID
 
 from app.modules.identity.application.register_errors import (
+    ConsentRequiredError,
     EmailInUseError,
     EmailNotSetError,
     EmisAlreadyLinkedError,
@@ -32,6 +34,7 @@ from app.modules.identity.domain.password_policy import check_password
 from app.shared.clock import Clock
 from app.shared.contracts.academic import AcademicEnrollment
 from app.shared.contracts.identity import UserStatus
+from app.shared.contracts.legal import ConsentDraft, LegalConsent, LegalItem
 from app.shared.ids import new_id
 from app.shared.notifications import AuditDraft
 from app.shared.tasks import TaskKicker
@@ -66,6 +69,7 @@ class CompleteRegistration:
         login_acceptor: LoginAcceptorPort,
         kicker: TaskKicker,
         clock: Clock,
+        consent: LegalConsent | None = None,
     ) -> None:
         """Store the collaborators."""
         self._pending = pending
@@ -77,6 +81,7 @@ class CompleteRegistration:
         self._login_acceptor = login_acceptor
         self._kicker = kicker
         self._clock = clock
+        self._consent = consent
 
     async def execute(
         self,
@@ -88,15 +93,19 @@ class CompleteRegistration:
         login_challenge: str | None,
         ip: str | None,
         user_agent: str | None,
+        accepted_legal: Sequence[LegalItem] = (),
     ) -> RegisteredStudent:
         """Validate, verify the code, write everything, then accept the login."""
         pending = await self._pending.get(registration_token)
         if pending is None:
             raise RegistrationExpiredError()
         self._check_ready(pending, password, confirm_import_match)
+        accepted = await self._check_consent(accepted_legal)
         await self._verifier.check(registration_token, email_code)
         user_id = pending.import_user_id or new_id()
-        login = await self._register(pending, user_id, password, ip, user_agent)
+        login = await self._register(
+            pending, user_id, password, ip, user_agent, accepted
+        )
         await self._pending.delete(registration_token)
         if login_challenge is None:
             ticket = await self._issue_ticket(user_id)
@@ -118,6 +127,21 @@ class CompleteRegistration:
         if pending.import_needs_confirmation and not confirmed:
             raise ImportMatchUnconfirmedError()
 
+    async def _check_consent(
+        self, accepted_legal: Sequence[LegalItem]
+    ) -> tuple[LegalItem, ...]:
+        """Require the current version of every published document, if any."""
+        if self._consent is None:
+            return ()
+        current = await self._consent.current_versions()
+        if not current:
+            return ()
+        given = {(item.kind, item.version) for item in accepted_legal}
+        missing = sorted(k for k, v in current.items() if (k, v) not in given)
+        if missing:
+            raise ConsentRequiredError(params={"kinds": ", ".join(missing)})
+        return tuple(LegalItem(kind, version) for kind, version in current.items())
+
     # - - - Writing - - -
 
     async def _register(
@@ -127,6 +151,7 @@ class CompleteRegistration:
         password: str,
         ip: str | None,
         user_agent: str | None,
+        accepted: tuple[LegalItem, ...],
     ) -> str:
         """Write the Vault secret, then the account; undo the secret on failure."""
         ref = new_id()
@@ -141,7 +166,7 @@ class CompleteRegistration:
             )
         try:
             return await self._create_account(
-                pending, user_id, ref, password_hash, ip, user_agent
+                pending, user_id, ref, password_hash, ip, user_agent, accepted
             )
         except Exception:
             await self._discard_secret(ref)
@@ -161,6 +186,7 @@ class CompleteRegistration:
         password_hash: str,
         ip: str | None,
         user_agent: str | None,
+        accepted: tuple[LegalItem, ...],
     ) -> str:
         profile = pending.profile
         async with self._uow_factory() as uow:
@@ -208,6 +234,16 @@ class CompleteRegistration:
                     },
                 )
             )
+            if accepted:
+                uow.consent(
+                    ConsentDraft(
+                        user_id=user_id,
+                        items=accepted,
+                        accepted_at=self._clock.now(),
+                        ip=ip,
+                        user_agent=user_agent,
+                    )
+                )
             uow.after_commit(partial(self._kick_student_sync, user_id))
             if student.group_first_linked:
                 uow.after_commit(

@@ -124,6 +124,8 @@ class ReadingListCardView:
     essential_count: int
     essential_done: int
     updated_at: datetime
+    pinned: bool
+    sort_order: int
 
 
 @dataclass(frozen=True, slots=True)

@@ -96,6 +96,10 @@ PAYLOADS: dict[NotificationType, dict[str, Any]] = {
     NotificationType.ACCOUNT_CLOSING: {"closes_on": "2026-11-01"},
     NotificationType.MAIL_SUSPENDED: {"reason": "spam"},
     NotificationType.SYNC_ALERT: {"run_id": "r", "failed": 3, "total": 120},
+    NotificationType.PRIVACY_UPDATE: {
+        "kind": "export_ready",
+        "expires_at": "2026-11-23T09:00:00+00:00",
+    },
     NotificationType.STUDENT_SYNC_FAILED: {"attempts": 6, "student_id": "s"},
     NotificationType.KNOWLEDGE_GAP: {
         "query": "dress code",

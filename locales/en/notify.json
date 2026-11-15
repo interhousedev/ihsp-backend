@@ -189,5 +189,9 @@
   "notify-excuse-period-range": "{start} to {end}",
   "notify-excuse-message-title": "New message about an excuse",
   "notify-excuse-message-body": "{author}: {preview}",
-  "notify-excuse-message-files": "{count} file(s) attached"
+  "notify-excuse-message-files": "{count} file(s) attached",
+  "notify-privacy-title": "Privacy",
+  "notify-privacy-export-ready-body": "Your data export is ready. Download it before {expires}.",
+  "notify-privacy-erasure-approved-body": "Your account deletion request was approved. The account will be deleted on {closes_on}. Sign in before then to cancel.",
+  "notify-privacy-erasure-rejected-body": "Your account deletion request was rejected. {reason}"
 }
