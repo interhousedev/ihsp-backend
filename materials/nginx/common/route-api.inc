@@ -62,6 +62,14 @@ location = /v1/lms/courses/import {
     proxy_pass $up_api;
 }
 
+# The reader's page markup: a few hundred KB of JSON at most; the api checks the limits too.
+location ~ ^/v1/me/library/markup/[^/]+$ {
+    include /etc/nginx/ihsp/proxy.inc;
+    include /etc/nginx/ihsp/headers-api.inc;
+    client_max_body_size 2m;
+    proxy_pass $up_api;
+}
+
 location / {
     include /etc/nginx/ihsp/proxy.inc;
     include /etc/nginx/ihsp/headers-api.inc;

@@ -24,6 +24,13 @@ class InvalidAnnotationError(ValidationFailedError):
     message_key = "library-invalid-annotation"
 
 
+class InvalidMarkupError(ValidationFailedError):
+    """A markup shape or page is wrong (`params.field`)."""
+
+    code = "library/invalid-markup"
+    message_key = "library-invalid-markup"
+
+
 class SyncTooLargeError(ValidationFailedError):
     """More changes in one annotation sync than the server accepts."""
 

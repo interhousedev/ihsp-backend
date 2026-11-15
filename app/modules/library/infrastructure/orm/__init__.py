@@ -29,6 +29,7 @@ from app.modules.library.infrastructure.orm.reader import (
     Annotation,
     BookPlan,
     LessonItemRef,
+    ReaderMarkup,
     ReadingProgress,
     ShelfEntry,
 )
@@ -68,6 +69,7 @@ __all__ = [
     "MaterialDetails",
     "ReadingList",
     "ReadingListItem",
+    "ReaderMarkup",
     "ReadingProgress",
     "Sanction",
     "ShelfEntry",

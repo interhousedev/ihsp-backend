@@ -4,11 +4,13 @@ from app.interfaces.http.v1.library.reader.handlers import (
     create_annotation,
     delete_annotation,
     export_annotations,
+    get_markup,
     get_me_library,
     list_annotations,
     list_shelf,
     put_shelf_entry,
     remove_shelf_entry,
+    save_markup,
     save_progress,
     sync_annotations,
     update_annotation,
@@ -35,6 +37,8 @@ router.add_api_route(
     methods=["PUT"],
     status_code=status.HTTP_204_NO_CONTENT,
 )
+router.add_api_route("/markup/{item_id}", get_markup.get_markup, methods=["GET"])
+router.add_api_route("/markup/{item_id}", save_markup.save_markup, methods=["PUT"])
 # Fixed paths before `/{annotation_id}`.
 router.add_api_route(
     "/annotations/export", export_annotations.export_annotations, methods=["GET"]

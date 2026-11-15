@@ -11,6 +11,7 @@ from app.modules.library.infrastructure.orm.moderation import (
 from app.modules.library.infrastructure.orm.reader import (
     Annotation,
     LessonItemRef,
+    ReaderMarkup,
     ReadingProgress,
     ShelfEntry,
 )
@@ -36,6 +37,9 @@ SPECS: tuple[PersonalTable, ...] = (
     ),
     PersonalTable(
         ShelfEntry, E, owner="user_id", note="erased by library.delete_owner"
+    ),
+    PersonalTable(
+        ReaderMarkup, E, owner="user_id", note="erased by library.delete_owner"
     ),
     PersonalTable(BookSuggestion, E, owner="user_id"),
     PersonalTable(Sanction, E, owner="user_id"),

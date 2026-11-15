@@ -121,7 +121,7 @@ def test_the_library_route_sends_public_pages_to_the_api_and_the_rest_to_web() -
     route = (MATERIALS_DIR / "nginx" / "common" / "route-library.inc").read_text()
     for location in (
         "location ^~ /b/ {",
-        "location = /sitemap.xml {",
+        "location ~ ^/sitemap(-pages|-books)?\\.xml$ {",
         "location = /robots.txt {",
         "location ^~ /opds/ {",
     ):
@@ -258,7 +258,13 @@ def test_upload_routes_allow_the_h5p_and_cartridge_caps_only_there() -> None:
     for body in (h5p, imscc):
         assert "proxy.inc" in body and "headers-api.inc" in body
         assert "proxy_pass $up_api;" in body
-    assert api.count("client_max_body_size") == 2
+    markup = api.split("location ~ ^/v1/me/library/markup/[^/]+$ {", 1)[1].split(
+        "}", 1
+    )[0]
+    assert (
+        "client_max_body_size 2m;" in markup
+    )  # the reader's page markup is small JSON
+    assert api.count("client_max_body_size") == 3
     for mode in ("local", "prod"):
         template = MATERIALS_DIR / "nginx" / mode / "default.conf.template"
         assert "client_max_body_size 25m;" in template.read_text()

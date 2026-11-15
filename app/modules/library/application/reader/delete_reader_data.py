@@ -16,6 +16,7 @@ class DeleteReaderData:
         """Returns how many rows were deleted (running it again deletes none)."""
         async with self.uow_factory() as uow:
             deleted = await uow.annotations.delete_all(user_id)
+            deleted += await uow.markup.delete_all(user_id)
             deleted += await uow.progress.delete_all(user_id)
             deleted += await uow.shelf.delete_all(user_id)
             await uow.commit()

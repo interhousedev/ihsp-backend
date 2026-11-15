@@ -13,6 +13,9 @@ from app.modules.library.infrastructure.repositories.item_repository import (
 from app.modules.library.infrastructure.repositories.label_repository import (
     SqlLabelRepository,
 )
+from app.modules.library.infrastructure.repositories.markup_repository import (
+    SqlMarkupRepository,
+)
 from app.modules.library.infrastructure.repositories.moderation_repository import (
     SqlModerationRepository,
 )
@@ -54,6 +57,7 @@ class LibrarySqlUnitOfWork(SqlUnitOfWork):
     shelf: SqlShelfRepository
     progress: SqlProgressRepository
     annotations: SqlAnnotationRepository
+    markup: SqlMarkupRepository
     plans: SqlPlanRepository
     external: SqlExternalRepository
 
@@ -71,5 +75,6 @@ class LibrarySqlUnitOfWork(SqlUnitOfWork):
         self.shelf = SqlShelfRepository(session)
         self.progress = SqlProgressRepository(session)
         self.annotations = SqlAnnotationRepository(session)
+        self.markup = SqlMarkupRepository(session)
         self.plans = SqlPlanRepository(session)
         self.external = SqlExternalRepository(session)

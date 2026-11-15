@@ -8,6 +8,7 @@ from app.modules.library.ports.annotation_repository import AnnotationRepository
 from app.modules.library.ports.external_repository import ExternalRepository
 from app.modules.library.ports.item_repository import EventRepository, ItemRepository
 from app.modules.library.ports.label_repository import LabelRepository
+from app.modules.library.ports.markup_repository import MarkupRepository
 from app.modules.library.ports.moderation_repository import ModerationRepository
 from app.modules.library.ports.page_repository import PageRepository
 from app.modules.library.ports.plan_repository import PlanRepository
@@ -76,6 +77,11 @@ class LibraryUnitOfWork(Protocol):
     @property
     def annotations(self) -> AnnotationRepository:
         """Annotations."""
+        ...
+
+    @property
+    def markup(self) -> MarkupRepository:
+        """Page markup."""
         ...
 
     @property

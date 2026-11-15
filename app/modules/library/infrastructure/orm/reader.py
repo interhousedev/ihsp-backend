@@ -132,3 +132,17 @@ class LessonItemRef(IdMixin, TimestampMixin, Base):
     page_from: Mapped[int | None] = mapped_column(Integer)
     page_to: Mapped[int | None] = mapped_column(Integer)
     set_by: Mapped[UUID] = mapped_column(Uuid)
+
+
+class ReaderMarkup(TimestampMixin, Base):
+    """The pen, highlighter and shape markup of a user on an item (pages as JSON)."""
+
+    __tablename__ = "reader_markup"
+    __table_args__ = {"schema": "library"}
+
+    user_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    item_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    file_id: Mapped[UUID] = mapped_column(Uuid)
+    pages: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, server_default=text("'{}'::jsonb")
+    )

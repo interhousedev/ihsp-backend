@@ -8,6 +8,7 @@ from app.modules.library.application.reader.delete_annotation import DeleteAnnot
 from app.modules.library.application.reader.delete_reader_data import DeleteReaderData
 from app.modules.library.application.reader.export_annotations import ExportAnnotations
 from app.modules.library.application.reader.get_book_plan import GetBookPlan
+from app.modules.library.application.reader.get_markup import GetMarkup
 from app.modules.library.application.reader.get_me_library import GetMeLibrary
 from app.modules.library.application.reader.lesson_access import NoLessons
 from app.modules.library.application.reader.lesson_item_refs import (
@@ -21,6 +22,7 @@ from app.modules.library.application.reader.public_queries import LibraryQueries
 from app.modules.library.application.reader.put_book_plan import PutBookPlan
 from app.modules.library.application.reader.put_shelf_entry import PutShelfEntry
 from app.modules.library.application.reader.remove_shelf_entry import RemoveShelfEntry
+from app.modules.library.application.reader.save_markup import SaveMarkup
 from app.modules.library.application.reader.save_progress import SaveProgress
 from app.modules.library.application.reader.sync_annotations import SyncAnnotations
 from app.modules.library.application.reader.update_annotation import UpdateAnnotation
@@ -43,6 +45,8 @@ class ReaderServices:
     update_annotation: UpdateAnnotation
     delete_annotation: DeleteAnnotation
     export_annotations: ExportAnnotations
+    get_markup: GetMarkup
+    save_markup: SaveMarkup
     delete_owner: DeleteReaderData
     put_book_plan: PutBookPlan
     get_book_plan: GetBookPlan
@@ -80,6 +84,8 @@ def build_reader(
             uow_factory=core.uow_factory, clock=core.clock
         ),
         export_annotations=ExportAnnotations(uow_factory=core.uow_factory),
+        get_markup=GetMarkup(uow_factory=core.uow_factory),
+        save_markup=SaveMarkup(uow_factory=core.uow_factory, clock=core.clock),
         delete_owner=DeleteReaderData(uow_factory=core.uow_factory),
         put_book_plan=PutBookPlan(
             uow_factory=core.uow_factory, clock=core.clock, academic=core.academic
