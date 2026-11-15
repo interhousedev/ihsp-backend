@@ -25,3 +25,5 @@ fc99d59b353d89c35f6416ff5981bb34ec313dc1:app/modules/lms/domain/authoring/errors
 # docs: curl examples with truncated placeholder tokens (ihsp_pat_..., ihsp_dev_...)
 849c8572de2d3616ee9fadb5488d7e63bebd6fad:docs/entrance-devices.md:curl-auth-header:61
 849c8572de2d3616ee9fadb5488d7e63bebd6fad:docs/personal-tokens.md:curl-auth-header:60
+33031a33f4c3f171a6fc8006c33bf88871c3b23d:docs/personal-tokens.md:curl-auth-header:40
+33031a33f4c3f171a6fc8006c33bf88871c3b23d:docs/personal-tokens.md:curl-auth-header:41
