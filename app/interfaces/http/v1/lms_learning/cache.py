@@ -1,8 +1,10 @@
-"""Cache-Control values of the learning endpoints (spec → Course versioning, 5)."""
+"""Cache-Control value of the learning endpoints.
+
+Every learner read depends on the caller (audience rules, enrolment, progress).
+Browsers do not key their cache on Authorization, so a reused response could
+show one account the page of another, or the rules before an edit.
+"""
 
 from typing import Final
 
-# Immutable live content: browsers may reuse it for a minute, never shared caches.
-PRIVATE_CACHE: Final = "private, max-age=60"
-# State that changes with every action of the student.
 PRIVATE_NO_STORE: Final = "private, no-store"

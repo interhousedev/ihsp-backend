@@ -4,7 +4,7 @@ from typing import Annotated
 
 from app.bootstrap.container import Container
 from app.interfaces.http.dependencies import get_actor, get_container
-from app.interfaces.http.v1.lms_learning.cache import PRIVATE_CACHE
+from app.interfaces.http.v1.lms_learning.cache import PRIVATE_NO_STORE
 from app.modules.lms.application.learning.views import LearningCourseCardView
 from app.shared.actor import Actor
 
@@ -18,7 +18,7 @@ async def list_courses(
     query: Annotated[str | None, Query(max_length=100)] = None,
 ) -> list[LearningCourseCardView]:
     """List published public courses, optionally filtered by title."""
-    response.headers["Cache-Control"] = PRIVATE_CACHE
+    response.headers["Cache-Control"] = PRIVATE_NO_STORE
     cards: list[LearningCourseCardView] = (
         await container.lms.learning.list_catalog.execute(query=query, actor=actor)
     )

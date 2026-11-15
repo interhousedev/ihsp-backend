@@ -4,7 +4,7 @@ from typing import Annotated
 
 from app.bootstrap.container import Container
 from app.interfaces.http.dependencies import get_actor, get_container
-from app.interfaces.http.v1.lms_learning.cache import PRIVATE_CACHE
+from app.interfaces.http.v1.lms_learning.cache import PRIVATE_NO_STORE
 from app.modules.lms.application.learning.views import LearningCoursePageView
 from app.shared.actor import Actor
 
@@ -18,7 +18,7 @@ async def get_course(
     container: Annotated[Container, Depends(get_container)],
 ) -> LearningCoursePageView:
     """Show the course: description, staff, outline and the caller's progress."""
-    response.headers["Cache-Control"] = PRIVATE_CACHE
+    response.headers["Cache-Control"] = PRIVATE_NO_STORE
     page: LearningCoursePageView = await container.lms.learning.get_course_page.execute(
         actor, slug
     )

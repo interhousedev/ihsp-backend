@@ -4,7 +4,7 @@ from typing import Annotated
 
 from app.bootstrap.container import Container
 from app.interfaces.http.dependencies import get_actor, get_container
-from app.interfaces.http.v1.lms_learning.cache import PRIVATE_CACHE
+from app.interfaces.http.v1.lms_learning.cache import PRIVATE_NO_STORE
 from app.modules.lms.application.learning.views import LearningLandingView
 from app.shared.actor import Actor
 
@@ -19,7 +19,7 @@ async def get_course_landing(
     preview: Annotated[bool, Query()] = False,
 ) -> LearningLandingView:
     """Describe the course; `?preview=1` shows drafts to people who can edit."""
-    response.headers["Cache-Control"] = PRIVATE_CACHE
+    response.headers["Cache-Control"] = PRIVATE_NO_STORE
     view: LearningLandingView = await container.lms.learning.get_course_landing.execute(
         actor, slug, preview=preview
     )

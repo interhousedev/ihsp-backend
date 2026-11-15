@@ -1,5 +1,9 @@
 """LMS-1 to LMS-20: the learning endpoints of the API contract over HTTP."""
 
+from app.modules.lms.domain.access_rules import AccessRule, Audience, WhenDenied
+from app.modules.lms.infrastructure.access_rule_repository import (
+    SqlAccessRuleRepository,
+)
 from app.modules.lms.wiring_learning import LearningServices
 from app.shared.actor import Actor
 from tests.lms.learning.builders import (
@@ -52,7 +56,7 @@ async def test_the_catalog_and_my_courses_follow_the_contract(
     mine = await client.get("/v1/lms/my-courses")
 
     assert catalog.status_code == 200
-    assert catalog.headers["cache-control"] == "private, max-age=60"
+    assert catalog.headers["cache-control"] == "private, no-store"
     assert catalog.json() == [
         {
             "id": str(course.id),
@@ -126,7 +130,7 @@ async def test_enrolling_returns_the_course_page(
         "locked": False,
         "access": "public",
     }
-    assert page.headers["cache-control"] == "private, max-age=60"
+    assert page.headers["cache-control"] == "private, no-store"
 
 
 async def test_an_unknown_invite_code_is_a_problem_document(
@@ -189,7 +193,7 @@ async def test_a_step_is_read_and_marked_viewed(
     test_step = await client.get(f"/v1/lms/courses/{course.id}/steps/{quiz_step}")
 
     assert step.status_code == 200
-    assert step.headers["cache-control"] == "private, max-age=60"
+    assert step.headers["cache-control"] == "private, no-store"
     assert step.json() == {
         "step_id": str(text),
         "revision_id": str(course.step("text").revision_id),
@@ -416,3 +420,44 @@ async def test_requests_without_a_token_are_unauthorized(
 
     assert response.status_code == 401
     assert response.json()["type"] == "auth/unauthorized"
+
+
+async def test_a_chosen_lesson_opens_for_its_student_and_is_never_cached(
+    client: AsyncClient,
+    caller: dict[str, Actor],
+    student: Actor,
+    other_student: Actor,
+    learning: LearningServices,
+    maker: async_sessionmaker[AsyncSession],
+) -> None:
+    """Viewer-dependent reads are `no-store`: browsers do not key on Authorization.
+
+    A cached page of another account, or of the rules before an edit, would
+    otherwise show the chosen student a lock on a lesson that is open for him.
+    """
+    course = await course_with_everything(maker)
+    quiz_step = course.step("quiz").step_id
+    rule = AccessRule(Audience.CHOSEN, WhenDenied.LOCKED, user_ids=(student.user_id,))
+    async with maker() as session:
+        await SqlAccessRuleRepository(session).save(
+            course.id, quiz_step, rule, course.created_by
+        )
+        await session.commit()
+    locked: list[bool] = []
+    for actor in (student, other_student):
+        await learning.enroll_in_course.execute(actor, course.id)
+        caller["actor"] = actor
+        page = await client.get(f"/v1/lms/courses/{course.slug}")
+        outline = page.json()["outline"]
+        steps = {s["step_id"]: s for sec in outline for s in sec["steps"]}
+        locked.append(steps[str(quiz_step)]["locked"])
+        catalog = await client.get("/v1/lms/courses")
+        landing = await client.get(f"/v1/lms/courses/{course.slug}/landing")
+        for response in (page, catalog, landing):
+            assert response.headers["cache-control"] == "private, no-store"
+    caller["actor"] = student
+    step = await client.get(f"/v1/lms/courses/{course.id}/steps/{quiz_step}")
+
+    assert locked == [False, True]
+    assert step.status_code == 200
+    assert step.headers["cache-control"] == "private, no-store"
