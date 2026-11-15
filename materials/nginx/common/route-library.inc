@@ -2,7 +2,7 @@
 # header goes through unchanged), except the public server-rendered pages. The api process serves
 # those like the room pages, from the same host:
 #   /b/<slug>      a book or a material (HTML with Open Graph and JSON-LD)
-#   /sitemap.xml   /robots.txt   /opds/   (catalogue feeds for crawlers and reader apps)
+#   /sitemap.xml (index), /sitemap-pages.xml, /sitemap-books.xml   /robots.txt   /opds/   (catalogue feeds for crawlers and reader apps)
 # Student projects (/p/) are not part of this release and stay with the static app.
 location ^~ /b/ {
     include /etc/nginx/ihsp/proxy.inc;
@@ -10,7 +10,7 @@ location ^~ /b/ {
     proxy_pass $up_api;
 }
 
-location = /sitemap.xml {
+location ~ ^/sitemap(-pages|-books)?\.xml$ {
     include /etc/nginx/ihsp/proxy.inc;
     include /etc/nginx/ihsp/headers-html.inc;
     proxy_pass $up_api;

@@ -12,3 +12,15 @@ router.add_api_route(
 router.add_api_route(
     "/sitemap.xml", sitemap.sitemap, methods=["GET"], include_in_schema=False
 )
+router.add_api_route(
+    "/sitemap-pages.xml",
+    sitemap.sitemap_pages,
+    methods=["GET"],
+    include_in_schema=False,
+)
+router.add_api_route(
+    "/sitemap-books.xml",
+    sitemap.sitemap_books,
+    methods=["GET"],
+    include_in_schema=False,
+)

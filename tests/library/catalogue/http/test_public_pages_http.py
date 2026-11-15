@@ -3,6 +3,7 @@
 import json
 import re
 from collections.abc import Awaitable, Callable
+from xml.etree import ElementTree  # nosec B405
 
 from app.interfaces.http.public.library import ROUTERS
 from app.interfaces.http.public.library.robots import (
@@ -174,8 +175,16 @@ async def test_sitemap_lists_public_pages_only(
     await put(library.core.uow_factory, store_item, make_book(title="Yopiq"))
     client = await api(None)
 
-    response = await client.get("/sitemap.xml")
+    index = await client.get("/sitemap.xml")
+    pages = await client.get("/sitemap-pages.xml")
+    response = await client.get("/sitemap-books.xml")
 
+    for document in (index, pages, response):
+        ElementTree.fromstring(document.text)  # well-formed XML
+    assert "<sitemapindex" in index.text
+    assert "<loc>https://lib.ihsu.uz/sitemap-books.xml</loc>" in index.text
+    assert "<loc>https://lib.ihsu.uz/browse/</loc>" in pages.text
+    assert "/my/" not in pages.text and "/manage/" not in pages.text
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("application/xml")
     assert response.text.count("<url>") == 1

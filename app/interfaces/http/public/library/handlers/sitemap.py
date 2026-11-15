@@ -1,4 +1,4 @@
-"""GET /sitemap.xml: the public published books and materials."""
+"""Sitemaps of the library host: an index, the static pages and the public books."""
 
 from typing import Annotated
 
@@ -27,11 +27,58 @@ def sitemap_xml(entries: list[SitemapEntry]) -> str:
     )
 
 
-async def sitemap(container: Annotated[Container, Depends(get_container)]) -> Response:
-    """List the URLs search engines may index."""
-    entries = await container.library.catalogue.list_sitemap.execute()
+# Pages of the static app that anyone may open without signing in (`access="public"`).
+PUBLIC_APP_PATHS = ("/", "/browse/")
+PARTS = ("sitemap-pages.xml", "sitemap-books.xml")
+
+
+def sitemap_index_xml(base: str) -> str:
+    """The sitemap index that points at the parts."""
+    parts = "".join(
+        f"<sitemap><loc>{escape(f'{base}/{n}')}</loc></sitemap>" for n in PARTS
+    )
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        f'<sitemapindex xmlns="{NAMESPACE}">{parts}</sitemapindex>'
+    )
+
+
+def pages_xml(base: str) -> str:
+    """The static public pages, without a date (they change with releases)."""
+    urls = "".join(
+        f"<url><loc>{escape(base + path)}</loc></url>" for path in PUBLIC_APP_PATHS
+    )
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        f'<urlset xmlns="{NAMESPACE}">{urls}</urlset>'
+    )
+
+
+def _xml(body: str) -> Response:
     return Response(
-        sitemap_xml(entries),
+        body,
         media_type="application/xml",
         headers={"Cache-Control": "public, max-age=3600"},
     )
+
+
+async def sitemap(container: Annotated[Container, Depends(get_container)]) -> Response:
+    """The sitemap index (submit this one)."""
+    base = container.settings.library.public_base_url.rstrip("/")
+    return _xml(sitemap_index_xml(base))
+
+
+async def sitemap_pages(
+    container: Annotated[Container, Depends(get_container)],
+) -> Response:
+    """The static public pages."""
+    base = container.settings.library.public_base_url.rstrip("/")
+    return _xml(pages_xml(base))
+
+
+async def sitemap_books(
+    container: Annotated[Container, Depends(get_container)],
+) -> Response:
+    """The public published books and materials."""
+    entries = await container.library.catalogue.list_sitemap.execute()
+    return _xml(sitemap_xml(entries))

@@ -12,7 +12,7 @@ DISALLOWED = ("/manage/", "/my/", "/upload/", "/read/", "/lists/", "/v1/")
 def library_robots_txt(settings: LibrarySettings) -> str:
     """Public pages and the sitemap may be crawled; the app's own pages not."""
     base = settings.public_base_url.rstrip("/")
-    lines = ["User-agent: *", "Allow: /b/", "Allow: /sitemap.xml"]
+    lines = ["User-agent: *", "Allow: /b/", "Allow: /sitemap.xml", "Allow: /sitemap-"]
     lines += [f"Disallow: {path}" for path in DISALLOWED]
     lines.append(f"Sitemap: {base}/sitemap.xml")
     return "\n".join(lines) + "\n"
