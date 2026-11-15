@@ -52,7 +52,13 @@ class BotRegistryMiddleware(BaseMiddleware):
         data["bot_registry"] = self.registry
         bot: Bot | None = data.get("bot")
         from_user: TelegramUser | None = data.get("event_from_user")
-        if bot is not None and from_user is not None and not from_user.is_bot:
+        foreign_chat = getattr(event, "event_type", None) == "guest_message"
+        if (
+            bot is not None
+            and from_user is not None
+            and not from_user.is_bot
+            and not foreign_chat
+        ):
             try:
                 await self._touch(bot.id, from_user.id, data.get("user"))
             except Exception:  # noqa: BLE001 - bookkeeping only

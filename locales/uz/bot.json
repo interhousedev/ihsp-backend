@@ -141,6 +141,7 @@
   "bot-guest-btn-main-menu": "Asosiy menyu",
   "bot-guest-btn-student": "Men {org_alias} o‘quvchisiman",
   "bot-guest-busy": "Hozir yordamchi band. Keyinroq urinib ko‘ring.",
+  "bot-guest-chat-help": "Menga {org_name} haqida savol bilan murojaat qiling: qabul, dasturlar, toʼlov yoki aloqa.",
   "bot-guest-choice": "{org_name}ga xush kelibsiz! Siz kimsiz?",
   "bot-guest-error": "Kechirasiz, hozir javob bera olmadim. Keyinroq urinib ko‘ring.",
   "bot-guest-limit": "Siz ko‘p savol berdingiz. Keyinroq urinib ko‘ring.",

@@ -59,6 +59,8 @@ def build(
             per_minute=settings.telegram.guest_messages_per_minute,
             per_day=settings.telegram.guest_daily_messages,
             global_per_day=settings.telegram.guest_global_daily_messages,
+            chat_per_minute=settings.telegram.guest_chat_messages_per_minute,
+            chat_global_per_day=settings.telegram.guest_chat_global_daily_messages,
         )
 
     return PostsServices(

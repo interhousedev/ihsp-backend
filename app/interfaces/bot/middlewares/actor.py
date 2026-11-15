@@ -46,5 +46,6 @@ class ActorMiddleware(BaseMiddleware):
             if user is not None and user.status == UserStatus.ACTIVE:
                 data["user"] = user
                 data["actor"] = Actor(user_id=user.id, roles=user.roles)
-                await refresh_account(directory, user, from_user)
+                if getattr(event, "event_type", None) != "guest_message":
+                    await refresh_account(directory, user, from_user)
         return await handler(event, data)

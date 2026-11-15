@@ -295,6 +295,12 @@ class TelegramSettings(BaseModel):
     guest_global_daily_messages: int = 2000
     """Cost ceiling: guest assistant questions of all guests together per day."""
 
+    guest_chat_global_daily_messages: int = 1000
+    """Cost ceiling: guest-chat answers (@mentions in any chat) of everyone per day."""
+
+    guest_chat_messages_per_minute: int = 10
+    """Rate limit: guest-chat answers per chat per minute."""
+
 
 class BotSettings(BaseModel):
     """Bot output features."""

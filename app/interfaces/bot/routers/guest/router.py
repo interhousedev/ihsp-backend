@@ -8,7 +8,7 @@ from typing import Any
 
 from app.interfaces.bot.filters.is_linked import IsLinked
 from app.interfaces.bot.middlewares.bot_registry import BotAllows
-from app.interfaces.bot.routers.guest import handlers
+from app.interfaces.bot.routers.guest import guest_chat, handlers
 from app.interfaces.bot.routers.guest.callbacks import PostCb, StartModeCb
 from app.modules.admin.domain.telegram_bot import BotFeature
 from app.modules.posts.domain.bot_mode import BotMode
@@ -55,6 +55,11 @@ def build_router() -> Router:
         ~F.text.startswith("/"),
         unlinked,
         IsGuest(),
+        BotAllows(BotFeature.OPEN_AI_AGENT),
+    )
+    router.guest_message.register(
+        guest_chat.answer_guest_chat,
+        F.guest_query_id,
         BotAllows(BotFeature.OPEN_AI_AGENT),
     )
     return router

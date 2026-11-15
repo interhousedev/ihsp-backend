@@ -141,6 +141,7 @@
   "bot-guest-btn-main-menu": "Main menu",
   "bot-guest-btn-student": "I'm an {org_alias} student",
   "bot-guest-busy": "The assistant is busy right now. Please try again later.",
+  "bot-guest-chat-help": "Mention me with a question about {org_name}: admission, programmes, fees or contacts.",
   "bot-guest-choice": "Welcome to {org_name}! Who are you?",
   "bot-guest-error": "Sorry, I could not answer right now. Please try again later.",
   "bot-guest-limit": "You have asked many questions. Please try again later.",

@@ -52,6 +52,16 @@ A server set up before the bot registry has no `telegram-bots` AppRole, and the 
 
 In a private chat with topics enabled each AI chat is one forum topic. Generated UI blocks are appended as Markdown at the end of the answer message, after the text. HTML widgets replace that only with `IHSP_BOT__WIDGETS_ENABLED=true`; it is off by default.
 
+## Guest Mode
+
+With Bot API 10.0 guest mode a bot answers when someone mentions it (`@bot question`) or replies to it in any chat, even one it is not a member of. The bot answers through `answerGuestQuery` with the public guest assistant: the public knowledge base only, never a user's personal data, even when the caller has a linked account.
+
+- Turn on **Guest Mode** for the bot in @BotFather (Bot Settings). The platform answers only for bots with the `open_ai_agent` feature on.
+- A mention that replies to a message sends the quoted text as third-party context: it is cleaned of instruction-like text, never followed as instructions, and links from it are dropped. Links in the answer are kept only when they came from the knowledge base or point to the platform's own hosts.
+- Bots, channels and anonymous admins get no answer. During maintenance the bot answers with the maintenance notice.
+- Limits: the guest per-minute and per-day limits per Telegram user, plus `IHSP_TELEGRAM__GUEST_CHAT_MESSAGES_PER_MINUTE` per chat (10) and `IHSP_TELEGRAM__GUEST_CHAT_GLOBAL_DAILY_MESSAGES` for all guest-mode answers (1000 a day). The private guest chat keeps its own daily ceiling. After one "limit reached" notice the bot stays silent for a minute.
+- Guest-mode updates do not count the caller as a bot member and do not clear the "blocked the bot" mark.
+
 ## Notifications
 
 Notifications reach Telegram through the bots that have `notifications` on. When you ask a question in the web assistant and leave the page before the answer is ready, the user gets a `CHAT_ANSWER_READY` notification in Telegram with the start of the question. Legal consent is checked in the bot too: a user who has not accepted the current documents gets a reply with a link to accept.
