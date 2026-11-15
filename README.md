@@ -238,7 +238,7 @@ By default every external service runs in a fake, deterministic mode that needs 
 | Langfuse (optional tracing) | on when both keys are set | `IHSP_LANGFUSE__PUBLIC_KEY`, `IHSP_LANGFUSE__SECRET_KEY`; `IHSP_LANGFUSE__HOST` (default `https://cloud.langfuse.com`), `IHSP_LANGFUSE__CAPTURE_CONTENT` (default `false`) |
 | Exa | `IHSP_EXA__MODE` | `IHSP_EXA__API_KEY` |
 | Parallel (primary web search, Exa is the fallback) | `IHSP_PARALLEL__MODE` | `IHSP_PARALLEL__API_KEY` (optional: without it the free MCP endpoint `IHSP_PARALLEL__MCP_URL` answers; `IHSP_PARALLEL__KEYLESS=false` leaves Exa alone) |
-| Telegram | `IHSP_TELEGRAM__MODE` | `IHSP_TELEGRAM__BOT_TOKEN`, `IHSP_TELEGRAM__BOT_USERNAME` (the default bot; more bots are added on the admin Bots page, their tokens live in Vault under `IHSP_BOT_VAULT__*`) |
+| Telegram | `IHSP_TELEGRAM__MODE` | `IHSP_TELEGRAM__BOT_TOKEN`, `IHSP_TELEGRAM__BOT_USERNAME` (the default bot; more bots are added on the admin Bots page, their tokens live in Vault under `IHSP_BOT_VAULT__*`; the token may be left empty after `python -m app import-default-bot` has stored it in Vault) |
 | Faces | `IHSP_FACES__MODE` (`opencv`) | the YuNet and SFace models in `IHSP_FACES__MODEL_DIR` (`scripts/download_face_models.sh`; the image bakes them into `/opt/face-models`) |
 
 Secrets live only in git-ignored files: `.env.local` (copy `materials/.env.local.sample`, used by `local_up.sh`), `materials/dev-keys/secrets.env` (used by `scripts/dev.sh`), `.env.prod` and `secrets/`. Never commit or print a key.
@@ -301,6 +301,8 @@ Updates and rollback: `scripts/cloud_deploy.sh deploy@<server> --tag 1.1.0`. It 
 Local one-command deploy: `cp deploy.local.env.sample deploy.local.env` (git-ignored; set `IHSP_DEPLOY_HOST`, `IHSP_REMOTE_DIR`), then `scripts/deploy.sh --tag <version>`. Before replacing anything it records the running tag and takes a `pg_dump -Fc` of `ihsp` and `hydra` into `backups/pre-<tag>-<ts>.dump.age` (age-encrypted to `BACKUP_AGE_RECIPIENT`; the deploy stops before migrating if `age` or the recipient is missing, unless `IHSP_DEPLOY_PLAIN_DUMP=1`), then migrates and starts the new images. A stability gate (`IHSP_DEPLOY_STABLE_SECS`, default 60) watches restart counts and running state of every service and `/health`; on failure it restores the previous tag and recreates the services. The database is never restored automatically: restore the pre-deploy dump with `scripts/restore.sh backups/pre-<tag>-<ts>.dump.age` (needs the age identity, `BACKUP_AGE_IDENTITY`) if a migration must be undone. A first deploy has no previous tag to fall back to.
 
 When Vault is sealed, TOTP sign-in answers `id/vault-sealed`; administrators sign in with the one-time e-mail code and the admin app shows an unseal banner.
+
+`scripts/prod_init.sh vault` can be re-run: it revokes the previous AppRole secret ids (identity, telegram-bots, backup) and issues new ones in `.env.prod` (recreate api, bot, worker and identity afterwards), and works with a 15 minute Vault token that it revokes at the end; the root token only mints it.
 
 Vault is a single node and starts sealed after every reboot. Until it is unsealed, registration and EMIS sync pause. Unseal with `ssh -t deploy@<server> 'cd /opt/ihsp && scripts/prod_init.sh unseal'`.
 

@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.6.1] - 2026-11-15
+
+### Changed
+
+- `IHSP_TELEGRAM__BOT_TOKEN` is optional in production when `IHSP_BOT_VAULT__*` is set: login, mini-app sign-in, the bot and notifications then use the Vault token of the default bot. `python -m app import-default-bot` stores the env token in Vault once (idempotent, never prints it); the identity service now gets the `IHSP_BOT_VAULT__*` AppRole.
+
+### Security
+
+- `prod_init.sh vault` revokes every earlier AppRole secret id (identity, telegram-bots, backup) before issuing new ones, does its work with a 15 minute Vault token instead of the root token and revokes it at the end, and reminds the operator to move `secrets/vault-init.txt` off the server.
+
 ## [1.6.0] - 2026-11-15
 
 ### Added
