@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.6.2] - 2026-11-15
+
+### Fixed
+
+- Production treats an unset or empty `IHSP_TELEGRAM__BOT_TOKEN` as "use the default bot's Vault token" in every process; in 1.6.1 removing the line stopped all services (the empty value fell back to the dev token) and migrate, mail and scheduler needed the bot AppRole.
+- `prod_init.sh vault` also revokes its short-lived Vault token when the run fails.
+
 ## [1.6.1] - 2026-11-15
 
 ### Changed
