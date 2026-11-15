@@ -3,14 +3,16 @@
 import hashlib
 import hmac
 from dataclasses import dataclass
+from uuid import UUID
 
 from app.modules.lms.application.h5p_links import H5PLinks
+from app.modules.lms.application.learning.audience import StudentGroupLookup
 from app.modules.lms.application.public_course_ops import LmsCourseOpsImpl
 from app.modules.lms.ports.h5p_store import H5PObjectStore
 from app.modules.lms.wiring_authoring import AuthoringServices, build_authoring
 from app.modules.lms.wiring_cartridge import CartridgeServices, build_cartridge
 from app.modules.lms.wiring_learning import LearningServices, build_learning
-from app.shared.contracts.academic import GroupDirectory
+from app.shared.contracts.academic import GroupDirectory, ScheduleQueries
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.wiring import ModuleDeps
@@ -39,11 +41,13 @@ def build(
     files: FilesApi,
     h5p_store: H5PObjectStore | None = None,
     groups: GroupDirectory | None = None,
+    students: ScheduleQueries | None = None,
 ) -> LmsModule:
     """Build authoring first; learning freezes step previews through authoring.
 
     ``h5p_store`` is the object storage of the files module (S3); without it H5P
-    packages are kept in process memory (tests).
+    packages are kept in process memory (tests). ``students`` resolves the group
+    of a student for the audience rules; without it group rules match nobody.
     """
     links = H5PLinks(h5p_signing_key(deps), deps.clock, h5p_store)
     authoring = build_authoring(
@@ -55,6 +59,7 @@ def build(
         preview_revisions=authoring.ensure_preview_revision,
         files=files,
         h5p_links=links,
+        student_group=_student_group(students) if students is not None else None,
     )
     cartridge = build_cartridge(deps, identity=identity, files=files)
     course_ops = LmsCourseOpsImpl(
@@ -73,6 +78,7 @@ def build(
         list_course_students=learning.list_course_students,
         get_attempt=learning.get_attempt,
         override_score=learning.override_score,
+        set_access_rule=authoring.set_access_rule,
     )
     return LmsModule(
         authoring=authoring,
@@ -80,3 +86,15 @@ def build(
         cartridge=cartridge,
         course_ops=course_ops,
     )
+
+
+def _student_group(students: ScheduleQueries) -> StudentGroupLookup:
+    """Return a lookup of the group of an active student."""
+
+    async def lookup(user_id: UUID) -> UUID | None:
+        student = await students.get_student(user_id)
+        if student is None or student.status != "active":
+            return None
+        return student.group_id
+
+    return lookup

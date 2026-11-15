@@ -2,6 +2,7 @@
 
 import datetime as dt
 from collections.abc import Sequence
+from dataclasses import dataclass
 from uuid import UUID
 
 from app.modules.academic.application.schedule.common import (
@@ -31,6 +32,14 @@ import structlog
 logger = structlog.get_logger(__name__)
 
 DEFAULT_DAYS = 14
+
+
+@dataclass
+class _Skips:
+    """What one run left undone: entries without a bell, unresolved conflicts."""
+
+    missing_bells: int = 0
+    conflicts: int = 0
 
 
 class GenerateLessons:
@@ -67,9 +76,11 @@ class GenerateLessons:
         async with self.uow_factory() as uow:
             terms = await uow.terms.overlapping(start, end, exclude_id=None)
         total = 0
+        skips = _Skips()
         for term in terms:
             if term_id is None or term.id == term_id:
-                total += await self._generate_term(term.id, start, end, audience)
+                total += await self._generate_term(term.id, start, end, audience, skips)
+        self._warn_skipped(skips)
         return total
 
     async def _generate_term(
@@ -77,7 +88,8 @@ class GenerateLessons:
         term_id: UUID,
         start: dt.date,
         end: dt.date,
-        audience: Sequence[str] | None = None,
+        audience: Sequence[str] | None,
+        skips: "_Skips",
     ) -> int:
         now = self.clock.now()
         async with self.uow_factory() as uow:
@@ -93,7 +105,8 @@ class GenerateLessons:
             plan = plan_generation(
                 term, entries, existing, start=start, end=end, now=now
             )
-            changed = await self._apply(uow, plan)
+            changed = await self._apply(uow, plan, skips)
+            skips.missing_bells += len(plan.missing_bells)
             self._log_missing_bells(term, plan)
             kick_recompute_due_dates(uow, self.kicker, changed)
             await invalidate_room_pages(
@@ -105,12 +118,15 @@ class GenerateLessons:
         return len(changed)
 
     @staticmethod
-    async def _apply(uow: ScheduleUnitOfWork, plan: GenerationPlan) -> list[UUID]:
+    async def _apply(
+        uow: ScheduleUnitOfWork, plan: GenerationPlan, skips: "_Skips"
+    ) -> list[UUID]:
         changed: list[UUID] = []
         for lesson in plan.inserts:
             if await uow.lessons.try_add(lesson):
                 changed.append(lesson.id)
             else:
+                skips.conflicts += 1
                 logger.info("lesson_insert_conflict", lesson_id=str(lesson.id))
         for lesson in plan.updates:
             if await uow.lessons.try_save(lesson):
@@ -118,6 +134,7 @@ class GenerateLessons:
             else:
                 # A borrowed bell can overlap another lesson of the room; the lesson
                 # keeps its old time and the next run meets the same conflict.
+                skips.conflicts += 1
                 logger.info("lesson_update_conflict", lesson_id=str(lesson.id))
         for lesson in plan.cancels:
             await uow.lessons.save(lesson)
@@ -134,4 +151,14 @@ class GenerateLessons:
                 "entries_without_bell",
                 term_id=str(term.id),
                 entries=len(plan.missing_bells),
+            )
+
+    @staticmethod
+    def _warn_skipped(skips: "_Skips") -> None:
+        """One warning per run, with the counts, instead of one per lesson."""
+        if skips.missing_bells or skips.conflicts:
+            logger.warning(
+                "lessons_generation_skipped",
+                entries_without_bell=skips.missing_bells,
+                unresolved_conflicts=skips.conflicts,
             )

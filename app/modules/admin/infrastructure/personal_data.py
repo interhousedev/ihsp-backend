@@ -3,6 +3,7 @@
 from app.modules.admin.infrastructure.orm.ai_access import AiAccessRow
 from app.modules.admin.infrastructure.orm.broadcast import Broadcast
 from app.modules.admin.infrastructure.orm.limit_extension import LimitExtensionRow
+from app.modules.admin.infrastructure.orm.telegram_bot import TelegramBotMemberRow
 from app.shared.personal_data import (
     ParentLink,
     PersonalTable,
@@ -21,6 +22,7 @@ SPECS: tuple[PersonalTable, ...] = (
     PersonalTable(
         Broadcast, R, owner="author_id", note="staff announcement authorship"
     ),
+    PersonalTable(TelegramBotMemberRow, E, owner="user_id"),
 )
 
 

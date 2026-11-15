@@ -102,6 +102,7 @@ class LessonReconciler:
         self._superseded: set[UUID] = set()
         self._no_bell: dict[tuple[int, int | None], int] = {}
         self._borrowed: dict[tuple[int, int | None], int] = {}
+        self._conflicts = 0
 
     async def run(
         self,
@@ -154,6 +155,15 @@ class LessonReconciler:
                     classes=sum(gaps.values()),
                     period_weekday=sorted(gaps, key=lambda gap: (gap[0], gap[1] or 0)),
                 )
+        no_bell = sum(self._no_bell.values())
+        if no_bell or self._conflicts:
+            log.warning(
+                "emis_lessons_skipped",
+                group_id=str(self._group_id),
+                term_id=str(self._term.id),
+                classes_without_bell=no_bell,
+                unresolved_conflicts=self._conflicts,
+            )
 
     # - - - Finding or making the lesson of a class - - -
 
@@ -256,7 +266,8 @@ class LessonReconciler:
             lesson.changes.pop("status", None)  # any EMIS cancellation is over
         lesson.is_overridden = True
         if not await self._uow.lessons.try_save(lesson):
-            log.warning("emis_lesson_move_skipped", lesson_id=str(lesson.id))
+            self._conflicts += 1
+            log.info("emis_lesson_move_skipped", lesson_id=str(lesson.id))
             self._tally.skipped += 1
             return None
         self._tally.moved += 1
@@ -291,7 +302,8 @@ class LessonReconciler:
             emis_class_id=item.class_id,
         )
         if not await self._uow.lessons.try_add(lesson):
-            log.warning("emis_lesson_skipped", class_id=item.class_id)
+            self._conflicts += 1
+            log.info("emis_lesson_skipped", class_id=item.class_id)
             self._tally.skipped += 1
             return None
         self._tally.created += 1
@@ -375,7 +387,8 @@ class LessonReconciler:
                 if before[2] != after[2]:
                     self._note(lesson)
             else:
-                log.warning("emis_lesson_not_saved", lesson_id=str(lesson.id))
+                self._conflicts += 1
+                log.info("emis_lesson_not_saved", lesson_id=str(lesson.id))
         if self._import_topics:
             self._collect_urls(lesson, item)
 
@@ -457,7 +470,8 @@ class LessonReconciler:
             superseded = lesson.id in self._superseded
             if lesson.emis_class_id in self._seen and not superseded:
                 # EMIS lists the class, it only could not move: never a cancellation.
-                log.warning("emis_listed_lesson_kept", lesson_id=str(lesson.id))
+                self._conflicts += 1
+                log.info("emis_listed_lesson_kept", lesson_id=str(lesson.id))
                 continue
             lesson.status = "cancelled"
             lesson.is_overridden = True

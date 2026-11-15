@@ -90,6 +90,13 @@ class NotEnrolledError(ForbiddenError):
     message_key = "lms-learn-not-enrolled"
 
 
+class ContentLockedError(ForbiddenError):
+    """The course or lesson is shown with a lock: the actor is not in its audience."""
+
+    code = "lms/content-locked"
+    message_key = "lms-learn-content-locked"
+
+
 class CoursePermissionError(ForbiddenError):
     """The actor lacks a course staff permission."""
 

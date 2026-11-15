@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from uuid import UUID
 
+from app.modules.lms.application.learning.audience import CourseAccess
 from app.modules.lms.application.learning.revision_loading import load_rendered_many
 from app.modules.lms.domain.learning.block_results import stored_result
 from app.modules.lms.domain.learning.entities import LiveVersion
@@ -46,13 +47,16 @@ async def load_course_points(
     cache: RenderCache,
     version: LiveVersion,
     user_id: UUID | None,
+    access: CourseAccess,
 ) -> CoursePoints:
-    """Return the points of every step of the version.
+    """Return the points of the steps of the version the viewer can see.
 
     With ``user_id`` the student's best score per test block counts as earned,
-    capped at the block's points; without it nothing is earned.
+    capped at the block's points; without it nothing is earned. Hidden steps
+    are left out so the total does not reveal them.
     """
-    steps = version.manifest.steps()
+    visible = set(access.visible(version.manifest.step_ids()))
+    steps = [s for s in version.manifest.steps() if s.step_id in visible]
     renders = await load_rendered_many(uow, cache, [s.revision_id for s in steps])
     best = (
         await uow.attempts.best_scores(user_id, [s.step_id for s in steps])

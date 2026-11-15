@@ -22,7 +22,10 @@ class SubmitAttempt:
     """Grade the saved answers against the revision the attempt was taken on."""
 
     def __init__(
-        self, uow_factory: UowFactory, clock: Clock, finisher: AttemptFinisher
+        self,
+        uow_factory: UowFactory,
+        clock: Clock,
+        finisher: AttemptFinisher,
     ) -> None:
         """Store collaborators."""
         self.uow_factory = uow_factory
@@ -35,7 +38,8 @@ class SubmitAttempt:
         """Return the result; submitting twice returns the same result.
 
         Correct answers and explanations are included only as the test's
-        `show_answers` setting allows.
+        `show_answers` setting allows. Access rules gate only the start of an
+        attempt, so an attempt begun before a rule change can still be submitted.
         """
         now = self.clock.now()
         async with self.uow_factory() as uow:

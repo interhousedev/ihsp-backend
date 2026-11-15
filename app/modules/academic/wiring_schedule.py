@@ -73,6 +73,9 @@ from app.modules.academic.application.schedule.regenerate_room_pin import (
     RegenerateRoomPin,
 )
 from app.modules.academic.application.schedule.rename_room import RenameRoom
+from app.modules.academic.application.schedule.set_student_group import (
+    SetStudentGroup,
+)
 from app.modules.academic.application.schedule.student_profile import (
     GetStudentProfile,
 )
@@ -146,6 +149,7 @@ class ScheduleServices:
     import_preview: ImportPreview
     import_confirm: ImportConfirm
     get_student_profile: GetStudentProfile
+    set_student_group: SetStudentGroup
     get_student_timetable: GetStudentTimetable
     get_my_teachers: GetMyTeachers
     get_my_teacher: GetMyTeacher
@@ -220,6 +224,7 @@ def assemble_schedule(
         import_preview=ImportPreview(uow_factory, identity, import_store),
         import_confirm=ImportConfirm(uow_factory, identity_commands, import_store),
         get_student_profile=GetStudentProfile(uow_factory, identity, mail_domain),
+        set_student_group=SetStudentGroup(uow_factory),
         get_student_timetable=GetStudentTimetable(reader, identity, clock),
         get_my_teachers=GetMyTeachers(reader, identity, clock),
         get_my_teacher=GetMyTeacher(reader, identity, clock),

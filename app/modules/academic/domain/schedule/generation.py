@@ -175,6 +175,10 @@ def _plan_update(
 ) -> None:
     if lesson.is_overridden or not lesson.starts_after(now):
         return
+    if lesson.status == "cancelled" and lesson.emis_class_id is not None:
+        # EMIS owns a linked lesson: its cancellation stands, and bringing it back
+        # collides with the EMIS lesson that took the room (every run, forever).
+        return
     changed = _apply_planned(lesson, planned)
     if lesson.status == "cancelled":
         lesson.status = "scheduled"

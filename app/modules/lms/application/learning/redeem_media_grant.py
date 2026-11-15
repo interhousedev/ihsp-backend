@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import Final
 from uuid import UUID
 
+from app.modules.lms.application.learning.audience import AudienceGate
 from app.modules.lms.application.learning.issue_media_grant import MEDIA_BLOCK_TYPES
 from app.modules.lms.application.learning.revision_loading import load_rendered
 from app.modules.lms.application.learning.step_context import (
@@ -17,6 +18,7 @@ from app.modules.lms.application.learning.step_context import (
     staff_access,
 )
 from app.modules.lms.application.learning.types import UowFactory
+from app.modules.lms.domain.access_rules import AccessState
 from app.modules.lms.domain.learning.errors import (
     MediaNotAvailableError,
     StepNotFoundError,
@@ -75,6 +77,7 @@ class RedeemMediaGrant:
         identity: IdentityDirectory,
         files: FilesApi | None,
         rate_limiter: RateLimiter,
+        gate: AudienceGate,
     ) -> None:
         """Store collaborators."""
         self.uow_factory = uow_factory
@@ -83,6 +86,7 @@ class RedeemMediaGrant:
         self.identity = identity
         self.files = files
         self.rate_limiter = rate_limiter
+        self.gate = gate
         self._connector_active: ConnectorCheck | None = None
 
     def bind_connector_check(self, check: ConnectorCheck) -> None:
@@ -171,11 +175,20 @@ class RedeemMediaGrant:
             enrolled = await uow.enrollments.get(grant.course_id, viewer.user_id)
             staff = await staff_access(uow, viewer, grant.course_id)
             if enrolled is not None or staff.is_staff:
+                if not await self._step_open(uow, viewer, grant):
+                    return _Decision("denied", "viewer_not_in_audience")
                 return _Decision("enrolled", "member", title)
             return _Decision("denied", "signed_in_not_enrolled")
         if now >= grant.expires_at:
             return _Decision("denied", "expired")
         return _Decision("anon", "within_window", title)
+
+    async def _step_open(
+        self, uow: LearningUnitOfWork, actor: Actor, grant: MediaGrant
+    ) -> bool:
+        """True when the step's audience rules admit the actor."""
+        access = await self.gate.course(uow, actor, grant.course_id)
+        return access.step(grant.step_id) is AccessState.OPEN
 
     async def _dead_reason(
         self, uow: LearningUnitOfWork, grant: MediaGrant
@@ -189,6 +202,8 @@ class RedeemMediaGrant:
             return "issuer_inactive"
         if await uow.enrollments.get(grant.course_id, grant.issued_to) is None:
             return "issuer_not_enrolled"
+        if not await self._step_open(uow, Actor(issuer.id, issuer.roles), grant):
+            return "issuer_not_in_audience"
         if grant.connector_id is not None:
             if self._connector_active is None:
                 # Fail closed: a process that cannot check must not open the link.

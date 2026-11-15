@@ -3,9 +3,11 @@
 from typing import Any
 from uuid import UUID
 
+from app.modules.lms.application.learning.audience import AudienceGate
 from app.modules.lms.application.learning.revision_loading import load_revision
 from app.modules.lms.application.learning.step_context import load_live_step
 from app.modules.lms.application.learning.types import UowFactory
+from app.modules.lms.domain.access_rules import AccessState
 from app.modules.lms.domain.learning.errors import (
     NotEnrolledError,
     StepNotFoundError,
@@ -32,9 +34,10 @@ class LmsSourceReaderImpl:
     answers or explanations (LMS-17).
     """
 
-    def __init__(self, uow_factory: UowFactory) -> None:
-        """Store the unit of work factory."""
+    def __init__(self, uow_factory: UowFactory, gate: AudienceGate) -> None:
+        """Store the unit of work factory and the audience gate."""
         self.uow_factory = uow_factory
+        self.gate = gate
 
     async def my_courses(self, user_id: UUID) -> list[dict[str, Any]]:
         """Return the enrolled courses that have a live version, with their steps.
@@ -50,11 +53,14 @@ class LmsSourceReaderImpl:
             versions = await uow.versions.get_many(
                 [c.live_version_id for c in courses if c.live_version_id is not None]
             )
+            actor = await self.gate.actor_for(user_id)
+            accesses = {c.id: await self.gate.course(uow, actor, c.id) for c in courses}
         items: list[dict[str, Any]] = []
         for course in sorted(courses, key=lambda c: c.title.casefold()):
             live_id = course.live_version_id
             version = versions.get(live_id) if live_id else None
-            if version is None:
+            access = accesses[course.id]
+            if version is None or access.state is not AccessState.OPEN:
                 continue
             items.append(
                 {
@@ -64,6 +70,7 @@ class LmsSourceReaderImpl:
                         {"id": step.step_id, "title": step.title, "section": s.title}
                         for s in version.manifest.sections
                         for step in s.steps
+                        if access.step(step.step_id) is AccessState.OPEN
                     ],
                 }
             )
@@ -84,6 +91,9 @@ class LmsSourceReaderImpl:
                 raise StepNotFoundError(params={"step_id": str(step_id)})
             if await uow.enrollments.get(course_id, user_id) is None:
                 raise NotEnrolledError(params={"course_id": str(course_id)})
+            await self.gate.require_step(
+                uow, await self.gate.actor_for(user_id), course_id, step_id
+            )
             revision = await load_revision(uow, context.live_step.revision_id)
         text, starts = export_text(revision.content)
         return LmsStepText(
@@ -112,6 +122,9 @@ class LmsSourceReaderImpl:
                 raise StepNotFoundError(params={"step_id": str(step_id)})
             if await uow.enrollments.get(course_id, user_id) is None:
                 raise NotEnrolledError(params={"course_id": str(course_id)})
+            await self.gate.require_step(
+                uow, await self.gate.actor_for(user_id), course_id, step_id
+            )
             revision = await load_revision(uow, context.live_step.revision_id)
         block = next(
             (
@@ -146,7 +159,17 @@ class LmsSourceReaderImpl:
             version = await uow.versions.get(live_id) if live_id else None
             if course is None or version is None:
                 return None
-            steps = [step for s in version.manifest.sections for step in s.steps]
+            access = await self.gate.course(
+                uow, await self.gate.actor_for(user_id), course_id
+            )
+            if access.state is not AccessState.OPEN:
+                return None
+            steps = [
+                step
+                for s in version.manifest.sections
+                for step in s.steps
+                if access.step(step.step_id) is AccessState.OPEN
+            ]
             revisions = await uow.revisions.get_many([s.revision_id for s in steps])
         videos: list[LmsMaterialVideo] = []
         files: list[UUID] = []

@@ -2,6 +2,10 @@
 
 from dataclasses import dataclass
 
+from app.modules.lms.application.authoring.access_rules import (
+    GetAccessRules,
+    SetAccessRule,
+)
 from app.modules.lms.application.authoring.add_course_staff import AddCourseStaff
 from app.modules.lms.application.authoring.append_block import AppendBlock
 from app.modules.lms.application.authoring.append_question import AppendQuestion
@@ -142,6 +146,8 @@ class AuthoringServices:
     start_link_check: StartLinkCheck
     get_link_report: GetLinkReport
     validate_links: ValidateLinks
+    get_access_rules: GetAccessRules
+    set_access_rule: SetAccessRule
 
 
 def build_authoring(
@@ -274,4 +280,6 @@ def assemble_authoring(
         validate_links=ValidateLinks(
             uow_factory, link_checker or HttpLinkChecker(), clock
         ),
+        get_access_rules=GetAccessRules(uow_factory, identity),
+        set_access_rule=SetAccessRule(uow_factory, identity, groups),
     )

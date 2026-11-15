@@ -7,12 +7,13 @@ from uuid import UUID
 from app.modules.ai.application.assistant_profile import effective_tier, profile_for
 from app.modules.ai.application.budget import BudgetService
 from app.modules.ai.application.continue_turn import ContinueTurn
+from app.modules.ai.application.late_bindings import LateBindings
 from app.modules.ai.application.locale import LocaleResolver
 from app.modules.ai.application.owned_chat import ChatGuard
 from app.modules.ai.application.pending_calls import supersede_pending
 from app.modules.ai.application.turn_events import TurnEvent, TurnEvents, run_streamed
 from app.modules.ai.application.turn_result import TurnResults
-from app.modules.ai.application.views import TurnResultView
+from app.modules.ai.application.views import TurnResultView, TurnStatus
 from app.modules.ai.domain.chat import (
     Attachment,
     Chat,
@@ -71,9 +72,11 @@ class SendMessage:
         clock: Clock,
         settings: Settings,
         i18n: I18nCore,
+        bindings: LateBindings,
     ) -> None:
         """Store the collaborators."""
         self.i18n = i18n
+        self.bindings = bindings
         self.uow_factory = uow_factory
         self.guard = guard
         self.files = files
@@ -172,7 +175,25 @@ class SendMessage:
                 surface=surface,
             )
 
-        return run_streamed(events, turn)
+        async def left_alone(result: TurnResultView) -> None:
+            await self._tell_answer_ready(actor, text, result)
+
+        return run_streamed(events, turn, left_alone if surface == "web" else None)
+
+    async def _tell_answer_ready(
+        self, actor: Actor, prompt: str, result: TurnResultView
+    ) -> None:
+        """The client left before the answer: tell the user it is ready (web only)."""
+        notifier = self.bindings.answer_notifier
+        answers = [m for m in result.new_messages if m.role == "assistant"]
+        if notifier is None or not answers or result.status is not TurnStatus.DONE:
+            return
+        await notifier.notify_chat_answer_ready(
+            user_id=actor.user_id,
+            chat_id=result.chat.id,
+            seq=answers[-1].seq,
+            prompt=prompt,
+        )
 
     async def _require_budget(self, chat: Chat, text: str, locale: str) -> None:
         """Refuse a message the user cannot afford, before anything is stored."""

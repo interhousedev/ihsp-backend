@@ -3,6 +3,7 @@
 from datetime import datetime
 from uuid import UUID
 
+from app.modules.lms.application.learning.audience import AudienceGate
 from app.modules.lms.application.learning.progress_service import (
     refresh_user_progress,
 )
@@ -22,9 +23,10 @@ from app.modules.lms.ports.learning.unit_of_work import LearningUnitOfWork
 class StepCompletion:
     """Keeps StepState completion and the enrollment progress in step with attempts."""
 
-    def __init__(self, cache: RenderCache) -> None:
-        """Store the render cache used to find the tests of the live revision."""
+    def __init__(self, cache: RenderCache, gate: AudienceGate) -> None:
+        """Store the render cache and the gate that decides which steps count."""
         self.cache = cache
+        self.gate = gate
 
     async def after_graded(
         self, uow: LearningUnitOfWork, attempt: Attempt, now: datetime
@@ -37,7 +39,9 @@ class StepCompletion:
         passed = await self._passed(uow, attempt.user_id, attempt.step_id)
         if all_tests_passed(test_ids, passed):
             await uow.states.set_completed(attempt.user_id, attempt.step_id, now=now)
-            await refresh_user_progress(uow, attempt.user_id, context.course, now)
+            await refresh_user_progress(
+                uow, self.gate, attempt.user_id, context.course, now
+            )
 
     async def after_override(
         self,
@@ -61,7 +65,9 @@ class StepCompletion:
             await uow.states.set_completed(attempt.user_id, attempt.step_id, now=now)
         elif was_passed and not attempt.passed and test_ids:
             await uow.states.clear_completed(attempt.user_id, attempt.step_id)
-        await refresh_user_progress(uow, attempt.user_id, context.course, now)
+        await refresh_user_progress(
+            uow, self.gate, attempt.user_id, context.course, now
+        )
 
     async def after_block_result(
         self, uow: LearningUnitOfWork, user_id: UUID, step_id: UUID, now: datetime
@@ -75,7 +81,7 @@ class StepCompletion:
         passed = await self._passed(uow, user_id, step_id)
         if all_tests_passed(rendered.gradable_block_ids, passed):
             await uow.states.set_completed(user_id, step_id, now=now)
-            await refresh_user_progress(uow, user_id, context.course, now)
+            await refresh_user_progress(uow, self.gate, user_id, context.course, now)
 
     @staticmethod
     async def _passed(

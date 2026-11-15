@@ -1,4 +1,4 @@
-"""Tool: show one OpenUI block as its own message (Telegram only)."""
+"""Tool: show one OpenUI block at the end of the answer message (Telegram only)."""
 
 from typing import Any
 
@@ -29,12 +29,12 @@ def block_source(raw: str) -> str:
 
 
 class ShowUiBlock(ReadTool[ShowUiBlockArgs]):
-    """Checks a block; the bot sends it as a separate message."""
+    """Checks a block; the bot appends it to the end of the answer message."""
 
     name = SHOW_UI_BLOCK
     description = (
-        "Show a table, chart, diagram, timetable or link list as a visual block in "
-        "its own message. `block` is OpenUI Lang (root = ...), no code fence. "
+        "Show a table, chart, diagram, timetable or link list as a visual block at "
+        "the end of the answer. `block` is OpenUI Lang (root = ...), no code fence. "
         "Fetch the data first; fix the block if the result lists errors."
     )
     args_model = ShowUiBlockArgs

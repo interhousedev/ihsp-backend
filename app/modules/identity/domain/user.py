@@ -176,4 +176,7 @@ class User:
             locale=self.locale,
             emis_status=self.emis_status,
             photo_file_id=self.photo_file_id,
+            hide_photo_from_classmates=bool(
+                self.preferences.get("hide_photo_from_classmates", False)
+            ),
         )

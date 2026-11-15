@@ -140,6 +140,13 @@ class SubgroupAssignmentInvalidError(ValidationFailedError):
     message_key = "academic-subgroup-assignment-invalid"
 
 
+class TargetGroupInvalidError(ValidationFailedError):
+    """The target group is the deleted group itself or does not exist."""
+
+    code = "academic/target-group-invalid"
+    message_key = "academic-target-group-invalid"
+
+
 class StudentNotFoundError(NotFoundError):
     """The student does not exist."""
 

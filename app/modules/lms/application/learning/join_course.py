@@ -45,6 +45,7 @@ class JoinCourse:
                 or not course.is_open_for_students
             ):
                 raise InviteNotValidError()
+            await self.builder.gate.require_course(uow, actor, course.id)
             enrollment = await uow.enrollments.add(
                 course_id=course.id, user_id=actor.user_id, via="invite"
             )

@@ -108,6 +108,7 @@ class PublishCourse:
         await uow.revisions.mark_published(fresh, now)
         removed = [p.step_id for p in context.pending.of(StepChange.REMOVED)]
         await uow.steps.clear_live(removed)
+        await uow.access.delete_targets(course.id, removed)
         version = CourseVersion(
             id=new_id(),
             course_id=course.id,

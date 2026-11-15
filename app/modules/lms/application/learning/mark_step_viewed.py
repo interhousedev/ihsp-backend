@@ -2,6 +2,7 @@
 
 from uuid import UUID
 
+from app.modules.lms.application.learning.audience import AudienceGate
 from app.modules.lms.application.learning.progress_service import (
     refresh_user_progress,
 )
@@ -20,12 +21,17 @@ class MarkStepViewed:
     """Store the view and complete steps that have no tests."""
 
     def __init__(
-        self, uow_factory: UowFactory, clock: Clock, cache: RenderCache
+        self,
+        uow_factory: UowFactory,
+        clock: Clock,
+        cache: RenderCache,
+        gate: AudienceGate,
     ) -> None:
         """Store collaborators."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.cache = cache
+        self.gate = gate
 
     async def execute(self, actor: Actor, step_id: UUID) -> LearningStepProgressView:
         """Mark the step viewed; a step without tests is completed by opening it."""
@@ -35,6 +41,7 @@ class MarkStepViewed:
             enrollment = await uow.enrollments.get(context.course.id, actor.user_id)
             if enrollment is None:
                 raise NotEnrolledError(params={"course_id": str(context.course.id)})
+            await self.gate.require_step(uow, actor, context.course.id, step_id)
             rendered = await load_rendered(
                 uow, self.cache, context.live_step.revision_id
             )
@@ -43,7 +50,9 @@ class MarkStepViewed:
                 actor.user_id, step_id, now=now, complete=complete
             )
             if complete:
-                await refresh_user_progress(uow, actor.user_id, context.course, now)
+                await refresh_user_progress(
+                    uow, self.gate, actor.user_id, context.course, now
+                )
             await uow.commit()
         return LearningStepProgressView(
             step_id=step_id,

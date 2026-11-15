@@ -1,5 +1,8 @@
 """Unit of work of the learning side."""
 
+from app.modules.lms.infrastructure.access_rule_repository import (
+    SqlAccessRuleRepository,
+)
 from app.modules.lms.infrastructure.learning.repositories.attempt_repository import (
     SqlAttemptRepository,
 )
@@ -42,6 +45,7 @@ class SqlLearningUnitOfWork(SqlUnitOfWork):
     states: SqlStepStateRepository
     attempts: SqlAttemptRepository
     media_grants: SqlMediaGrantRepository
+    access: SqlAccessRuleRepository
 
     def _init_repos(self) -> None:
         """Create the repositories bound to the session."""
@@ -54,3 +58,4 @@ class SqlLearningUnitOfWork(SqlUnitOfWork):
         self.states = SqlStepStateRepository(self.session)
         self.attempts = SqlAttemptRepository(self.session)
         self.media_grants = SqlMediaGrantRepository(self.session)
+        self.access = SqlAccessRuleRepository(self.session)

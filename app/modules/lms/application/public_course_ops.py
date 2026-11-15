@@ -4,6 +4,7 @@ from collections.abc import Callable, Sequence
 from typing import Any
 from uuid import UUID
 
+from app.modules.lms.application.authoring.access_rules import SetAccessRule
 from app.modules.lms.application.authoring.add_course_staff import AddCourseStaff
 from app.modules.lms.application.authoring.append_block import parse_content
 from app.modules.lms.application.authoring.apply_course_plan import ApplyCoursePlan
@@ -30,6 +31,7 @@ from app.modules.lms.application.learning.list_course_students import (
     ListCourseStudents,
 )
 from app.modules.lms.application.learning.override_score import OverrideScore
+from app.modules.lms.domain.access_rules import AccessRule, Audience, WhenDenied
 from app.modules.lms.domain.authoring.content_edit import (
     strip_empty_ids,
     with_block_moved,
@@ -78,6 +80,7 @@ class LmsCourseOpsImpl:
         list_course_students: ListCourseStudents,
         get_attempt: GetAttempt,
         override_score: OverrideScore,
+        set_access_rule: SetAccessRule,
     ) -> None:
         """Store the use cases that back each operation."""
         self._outline = apply_outline_ops
@@ -95,6 +98,7 @@ class LmsCourseOpsImpl:
         self._students = list_course_students
         self._get_attempt = get_attempt
         self._override = override_score
+        self._set_access = set_access_rule
 
     async def move_section(
         self, actor: Actor, course_id: UUID, section_id: str, position: int
@@ -262,6 +266,27 @@ class LmsCourseOpsImpl:
         """List the staff."""
         items = await self._list_staff.execute(actor, course_id)
         return [item.model_dump(mode="json") for item in items]
+
+    async def set_access(
+        self,
+        actor: Actor,
+        course_id: UUID,
+        *,
+        step_id: UUID | None,
+        audience: str,
+        when_denied: str,
+        group_ids: Sequence[UUID],
+        user_ids: Sequence[UUID],
+    ) -> dict[str, Any]:
+        """Set the audience of the course or of one of its lessons."""
+        rule = AccessRule(
+            Audience(audience),
+            WhenDenied(when_denied),
+            tuple(group_ids),
+            tuple(user_ids),
+        )
+        view = await self._set_access.execute(actor, course_id, rule, step_id=step_id)
+        return view.model_dump(mode="json")
 
     async def add_staff(
         self,

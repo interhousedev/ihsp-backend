@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
+from app.modules.lms.application.learning.audience import AudienceGate
 from app.modules.lms.application.learning.revision_loading import (
     find_flashcards_block,
     load_revision,
@@ -64,12 +65,13 @@ def study_view(
 
 
 async def require_enrolled(
-    uow: LearningUnitOfWork, actor: Actor, step_id: UUID
+    uow: LearningUnitOfWork, actor: Actor, step_id: UUID, gate: AudienceGate
 ) -> StepContext:
-    """Return the live step context; flash cards are for enrolled students only."""
+    """Return the live step context of an enrolled student the step is open to."""
     context = await load_live_step(uow, step_id)
     if await uow.enrollments.get(context.course.id, actor.user_id) is None:
         raise NotEnrolledError(params={"course_id": str(context.course.id)})
+    await gate.require_step(uow, actor, context.course.id, step_id)
     return context
 
 
@@ -77,19 +79,24 @@ class NextCard:
     """Pick the next card by the Anki-like order and the daily limits."""
 
     def __init__(
-        self, uow_factory: UowFactory, clock: Clock, counters: DailyCounters
+        self,
+        uow_factory: UowFactory,
+        clock: Clock,
+        counters: DailyCounters,
+        gate: AudienceGate,
     ) -> None:
         """Store collaborators."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.counters = counters
+        self.gate = gate
 
     async def execute(
         self, actor: Actor, step_id: UUID, block_id: str
     ) -> LearningCardStudyView:
         """Return the next card of the block, or none when nothing is due."""
         async with self.uow_factory() as uow:
-            context = await require_enrolled(uow, actor, step_id)
+            context = await require_enrolled(uow, actor, step_id, self.gate)
             revision = await load_revision(uow, context.live_step.revision_id)
             block = find_flashcards_block(revision.content, block_id)
             state = await uow.states.get(actor.user_id, step_id)

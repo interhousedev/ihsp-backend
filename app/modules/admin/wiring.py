@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from app.modules.admin.application.audience_count import AudienceCount
+from app.modules.admin.application.bot_admin import BotAdmin
 from app.modules.admin.application.broadcast_view import BroadcastPresenter
 from app.modules.admin.application.cancel_broadcast import CancelBroadcast
 from app.modules.admin.application.create_broadcast import CreateBroadcast
@@ -22,6 +23,11 @@ from app.modules.admin.application.start_scheduled_broadcasts import (
     StartScheduledBroadcasts,
 )
 from app.modules.admin.application.update_broadcast import UpdateBroadcast
+from app.modules.admin.infrastructure.bot_registry import (
+    AiogramBotProbe,
+    FakeBotProbe,
+)
+from app.modules.admin.infrastructure.bot_token_vault import VaultBotTokenStore
 from app.modules.admin.infrastructure.migration_store import FileMigrationStore
 from app.modules.admin.infrastructure.repositories.platform_settings_store import (
     SqlPlatformSettingsStore,
@@ -52,6 +58,7 @@ class AdminServices:
     platform_settings: PlatformSettingsService
     limit_admin: LimitAdmin
     migration: MigrationService
+    bot_admin: BotAdmin
 
 
 def build(
@@ -120,5 +127,17 @@ def build(
             uow_factory=uow_factory,
             step_up=step_up,
             clock=deps.clock,
+        ),
+        bot_admin=BotAdmin(
+            uow_factory=uow_factory,
+            vault=VaultBotTokenStore(deps.settings.bot_vault),
+            probe=(
+                FakeBotProbe()
+                if deps.settings.telegram.mode == "fake"
+                else AiogramBotProbe()
+            ),
+            resolver=resolver,
+            clock=deps.clock,
+            step_up=step_up,
         ),
     )

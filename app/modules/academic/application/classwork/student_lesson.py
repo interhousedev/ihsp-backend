@@ -86,6 +86,9 @@ class StudentLesson:
             ),
             # Always present: text is "" without homework, the note still works.
             "homework": built[0],
+            "homework_files": student_resource_items(
+                [ref for ref in shown if ref.role == "homework"]
+            ),
             "my_mark": [mark_item(mark, locale) for mark in marks],
             "my_attendance": attendance_state(
                 lesson,

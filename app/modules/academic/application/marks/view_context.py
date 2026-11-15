@@ -14,7 +14,7 @@ from app.modules.academic.domain.marks.read_models import (
     MarkRow,
     SubjectInfo,
 )
-from app.shared.contracts.identity import IdentityDirectory, UserRef
+from app.shared.contracts.identity import IdentityDirectory, UserRef, peer_photo_ids
 from app.shared.lesson_kind import topic_source_of
 
 
@@ -57,7 +57,7 @@ class ViewContext:
         Args:
             user_id: The person.
             photo: Add `photo_url` (None without a photo); needs a context built
-                with `with_photos`.
+                with `photos_for`.
         """
         user = None if user_id is None else self.users.get(user_id)
         if user is None:
@@ -134,11 +134,12 @@ async def build_context(
     subject_ids: Collection[UUID] = (),
     user_ids: Collection[UUID] = (),
     lessons: Iterable[LessonRow] = (),
-    with_photos: bool = False,
+    photos_for: UUID | None = None,
 ) -> ViewContext:
     """Load the subjects, people and group names a response needs.
 
-    With `with_photos` the photo URLs of all the people come in one batch call.
+    With `photos_for` (the viewer) the photo URLs of the people that viewer may
+    see come in one batch call; see `peer_photo_ids`.
     """
     rows = list(lessons)
     people = {uid for uid in user_ids if uid is not None}
@@ -151,8 +152,8 @@ async def build_context(
         users=users,
         group_names=await reader.group_names(lesson_group_ids(rows)) if rows else {},
         photos=(
-            await identity.photo_urls(sorted(users, key=str))
-            if with_photos and users
+            await identity.photo_urls(peer_photo_ids(photos_for, users))
+            if photos_for is not None and users
             else {}
         ),
     )

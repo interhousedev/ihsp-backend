@@ -1,5 +1,8 @@
 """Unit of work of course authoring."""
 
+from app.modules.lms.infrastructure.access_rule_repository import (
+    SqlAccessRuleRepository,
+)
 from app.modules.lms.infrastructure.authoring.attempt_reader import SqlAttemptReader
 from app.modules.lms.infrastructure.authoring.course_repository import (
     SqlCourseRepository,
@@ -20,6 +23,7 @@ class SqlAuthoringUnitOfWork(SqlUnitOfWork):
 
     courses: SqlCourseRepository
     staff: SqlStaffRepository
+    access: SqlAccessRuleRepository
     steps: SqlStepRepository
     revisions: SqlRevisionRepository
     versions: SqlVersionRepository
@@ -29,6 +33,7 @@ class SqlAuthoringUnitOfWork(SqlUnitOfWork):
         """Create repositories bound to the open session."""
         self.courses = SqlCourseRepository(self.session)
         self.staff = SqlStaffRepository(self.session)
+        self.access = SqlAccessRuleRepository(self.session)
         self.steps = SqlStepRepository(self.session)
         self.revisions = SqlRevisionRepository(self.session)
         self.versions = SqlVersionRepository(self.session)

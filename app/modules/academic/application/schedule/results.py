@@ -174,8 +174,8 @@ class StudentProfileData:
     first_name: str
     last_name: str
     mailbox: str | None
-    group_id: UUID
-    group_name: str
+    group_id: UUID | None
+    group_name: str | None
     subgroup: int | None
     curator: PersonData | None
     head_student: PersonData | None

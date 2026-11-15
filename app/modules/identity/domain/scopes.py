@@ -113,12 +113,20 @@ def source_of_scope(scope: str) -> str | None:
 def app_scopes_for_roles(
     scopes: frozenset[str], roles: frozenset[Role] | set[Role]
 ) -> frozenset[str]:
-    """The namespaced app scopes whose source server one of the roles may use."""
+    """The namespaced app scopes whose source server one of the roles may use.
+
+    A student gets the LMS source read-only: its write scopes are never offered.
+    """
+    student_only = Role.STUDENT in roles and not set(roles) & (
+        ALLOWED_SERVER_ROLES["lms"] - {Role.STUDENT}
+    )
+    lms_writes = {f"lms:{info.scope}" for info in SCOPE_CATALOG["lms"] if info.write}
     return frozenset(
         scope
         for scope in scopes
         if (source := source_of_scope(scope)) is not None
         and role_may_use_server(roles, source)
+        and not (student_only and scope in lms_writes)
     )
 
 

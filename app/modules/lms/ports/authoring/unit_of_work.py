@@ -3,6 +3,7 @@
 from types import TracebackType
 from typing import Protocol, Self
 
+from app.modules.lms.ports.access_rule_repository import AccessRuleRepository
 from app.modules.lms.ports.authoring.attempt_reader import AttemptReader
 from app.modules.lms.ports.authoring.course_repository import CourseRepository
 from app.modules.lms.ports.authoring.revision_repository import RevisionRepository
@@ -22,6 +23,11 @@ class AuthoringUnitOfWork(Protocol):
     @property
     def staff(self) -> StaffRepository:
         """Course staff."""
+        ...
+
+    @property
+    def access(self) -> AccessRuleRepository:
+        """Audience rules of courses and steps."""
         ...
 
     @property

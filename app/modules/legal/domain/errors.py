@@ -2,6 +2,7 @@
 
 from app.shared.base_error import (
     ConflictError,
+    ForbiddenError,
     NotFoundError,
     ValidationFailedError,
 )
@@ -40,3 +41,10 @@ class LegalNotFoundError(NotFoundError):
 
     code = "legal/not-found"
     message_key = "legal-not-found"
+
+
+class LegalAcceptanceRequiredError(ForbiddenError):
+    """The user has not accepted the current documents. Params: kinds."""
+
+    code = "legal/acceptance-required"
+    message_key = "legal-acceptance-required"

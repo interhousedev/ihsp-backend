@@ -23,7 +23,7 @@ from app.modules.academic.application.schedule.sync_student_all import SyncStude
 from app.modules.academic.domain.marks.sync import SyncCounters
 from app.shared.actor import SYSTEM_USER_ID, Actor, Role
 from app.shared.clock import Clock
-from app.shared.contracts.emis import EmisPaused
+from app.shared.contracts.emis import EmisPaused, EmisUnavailable
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.notifications import AuditDraft, NotificationDraft, NotificationType
 from app.shared.tasks import TaskKicker
@@ -157,18 +157,24 @@ class RunStudentSync:
             error=error,
             next_attempt_at=now + dt.timedelta(seconds=delay),
         )
-        log.warning(
+        # An EMIS outage is expected noise: the backoff retries it, admins get told.
+        outage = isinstance(exc, EmisUnavailable) or str(exc).endswith(
+            "emis_unavailable"
+        )
+        (log.info if outage else log.warning)(
             "student_sync_failed",
             user_id=str(job.user_id),
             attempt=job.attempts,
             error=error[:200],
         )
         if job.attempts >= MAX_ATTEMPTS:
-            await self._alert_gave_up(job, error)
+            await self._alert_gave_up(job, error, outage=outage)
 
-    async def _alert_gave_up(self, job: StudentSyncJob, error: str) -> None:
+    async def _alert_gave_up(
+        self, job: StudentSyncJob, error: str, *, outage: bool
+    ) -> None:
         """Tell every administrator, and leave an audit event."""
-        log.error(
+        (log.warning if outage else log.error)(
             "student_sync_gave_up", user_id=str(job.user_id), attempts=job.attempts
         )
         admins = await self._identity.user_ids_with_roles([Role.ADMIN])

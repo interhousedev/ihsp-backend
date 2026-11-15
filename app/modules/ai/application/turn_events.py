@@ -7,7 +7,7 @@ note before tool calls, not the answer), then `done` (the result) or `error`.
 """
 
 import asyncio
-from collections.abc import AsyncIterator, Callable, Coroutine
+from collections.abc import AsyncIterator, Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
@@ -50,37 +50,85 @@ class TurnEvents:
         self.emit("step", item.model_dump(mode="json"))
 
 
+AbandonedHook = Callable[[TurnResultView], Awaitable[None]]
+_background: set[asyncio.Task[None]] = set()
+
+
 async def run_streamed(
-    events: TurnEvents, turn: Callable[[], Coroutine[Any, Any, TurnResultView]]
+    events: TurnEvents,
+    turn: Callable[[], Coroutine[Any, Any, TurnResultView]],
+    on_abandoned: AbandonedHook | None = None,
 ) -> AsyncIterator[TurnEvent]:
     """Run `turn` and yield its events, then `done` or `error`.
 
     An error before the first event (a refusal: limit, unknown chat) is raised, so
     the endpoint can answer with a plain problem response instead of a stream. The
-    turn is not cancelled when the client leaves: the answer is still stored.
+    turn is not cancelled when the client leaves: the answer is still stored, and
+    `on_abandoned` gets its result once, when the client left before `done` was
+    delivered (a failed turn is not reported).
     """
     task = asyncio.create_task(turn())
     started = False
+    delivered = False
+    try:
+        async for event in _drain(events, task):
+            started = True
+            yield event
+        error = task.exception()
+        if error is None:
+            yield TurnEvent("done", {}, result=task.result())
+            delivered = True
+            return
+        if not started:
+            raise error
+        delivered = True  # nothing to announce: the turn failed
+        yield TurnEvent("error", _error_data(error))
+    finally:
+        if not delivered and on_abandoned is not None:
+            _announce_when_done(task, on_abandoned)
+
+
+async def _drain(
+    events: TurnEvents, task: "asyncio.Task[TurnResultView]"
+) -> AsyncIterator[TurnEvent]:
+    """Yield queued events until `task` ends, then the ones left in the queue."""
     while True:
         getter = asyncio.create_task(events.queue.get())
-        await asyncio.wait({getter, task}, return_when=asyncio.FIRST_COMPLETED)
+        try:
+            await asyncio.wait({getter, task}, return_when=asyncio.FIRST_COMPLETED)
+        except BaseException:
+            getter.cancel()
+            raise
         if getter.done():
-            started = True
             yield getter.result()
             continue
         getter.cancel()
         while not events.queue.empty():
-            started = True
             yield events.queue.get_nowait()
-        break
-    error = task.exception()
-    if error is None:
-        result = task.result()
-        yield TurnEvent("done", {}, result=result)
         return
-    if not started:
-        raise error
-    yield TurnEvent("error", _error_data(error))
+
+
+def _announce_when_done(
+    task: "asyncio.Task[TurnResultView]", hook: AbandonedHook
+) -> None:
+    """Call `hook` with the result of `task` once it ends well."""
+
+    def finished(done: "asyncio.Task[TurnResultView]") -> None:
+        if done.cancelled() or done.exception() is not None:
+            return
+        notice = asyncio.ensure_future(_guarded(hook, done.result()))
+        _background.add(notice)
+        notice.add_done_callback(_background.discard)
+
+    task.add_done_callback(finished)
+
+
+async def _guarded(hook: AbandonedHook, result: TurnResultView) -> None:
+    """Run the hook; its failure is logged, never raised into the loop."""
+    try:
+        await hook(result)
+    except Exception as exc:
+        log.warning("ai.turn_abandoned_hook_failed", error_type=type(exc).__name__)
 
 
 def _error_data(error: BaseException) -> dict[str, Any]:

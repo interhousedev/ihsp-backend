@@ -32,6 +32,24 @@ class LearningCourseCardView(BaseModel):
     summary: str = ""
     accent_color: str | None = None
     cover_file_id: UUID | None = None
+    # Audience rules: `locked` items are listed but cannot be opened; `access`
+    # is "public", "signed_in", "students" or "chosen".
+    locked: bool = False
+    access: Literal["public", "signed_in", "students", "chosen"] = "public"
+
+
+class LearningContactView(BaseModel):
+    """Whom to ask for access to a locked item with a chosen audience."""
+
+    name: str
+    telegram: str | None = None
+
+
+class LearningGuestStaffItemView(BaseModel):
+    """A staff member as guests see them: the display name and order only."""
+
+    name: str
+    position: int
 
 
 class LearningCourseStaffItemView(BaseModel):
@@ -55,6 +73,8 @@ class LearningOutlineStepView(BaseModel):
     # earned (None when not enrolled).
     points_total: float = 0.0
     points_earned: float | None = None
+    locked: bool = False
+    access: Literal["public", "signed_in", "students", "chosen"] = "public"
 
 
 class LearningOutlineSectionView(BaseModel):
@@ -65,10 +85,9 @@ class LearningOutlineSectionView(BaseModel):
     steps: list[LearningOutlineStepView]
 
 
-class LearningCoursePageView(LearningCourseCardView):
-    """`CoursePage`: the course card with staff, outline and my state."""
+class LearningCoursePageBaseView(LearningCourseCardView):
+    """The fields of the course page shared by learners and guests."""
 
-    staff: list[LearningCourseStaffItemView]
     outline: list[LearningOutlineSectionView]
     enrolled: bool
     can_edit: bool
@@ -78,6 +97,20 @@ class LearningCoursePageView(LearningCourseCardView):
     steps_completed: int | None = None
     points_total: float = 0.0
     points_earned: float | None = None
+    # Set when the course or a lesson is locked for a chosen audience.
+    contact: LearningContactView | None = None
+
+
+class LearningCoursePageView(LearningCoursePageBaseView):
+    """`CoursePage`: the course card with staff, outline and my state."""
+
+    staff: list[LearningCourseStaffItemView]
+
+
+class LearningGuestCoursePageView(LearningCoursePageBaseView):
+    """The course page for guests: no ids or permissions of the staff."""
+
+    staff: list[LearningGuestStaffItemView]
 
 
 class LearningMyCoursesView(BaseModel):

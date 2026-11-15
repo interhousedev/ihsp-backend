@@ -4,6 +4,7 @@ from collections import defaultdict
 from uuid import UUID
 
 from app.modules.lms.application.learning.attempt_presenter import number
+from app.modules.lms.application.learning.audience import AudienceGate
 from app.modules.lms.application.learning.progress_service import ensure_progress
 from app.modules.lms.application.learning.step_context import (
     load_course,
@@ -26,12 +27,17 @@ class ListCourseStudents:
     """Show reviewers who is enrolled and how they are doing."""
 
     def __init__(
-        self, uow_factory: UowFactory, clock: Clock, identity: IdentityDirectory
+        self,
+        uow_factory: UowFactory,
+        clock: Clock,
+        identity: IdentityDirectory,
+        gate: AudienceGate,
     ) -> None:
         """Store collaborators."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.identity = identity
+        self.gate = gate
 
     async def execute(
         self, actor: Actor, course_id: UUID
@@ -46,9 +52,10 @@ class ListCourseStudents:
                 if course.live_version_id
                 else None
             )
+            now = self.clock.now()
             for enrollment in enrollments:
                 if version is not None:
-                    await ensure_progress(uow, enrollment, version, self.clock.now())
+                    await ensure_progress(uow, self.gate, enrollment, version, now)
             attempts: dict[UUID, list[Attempt]] = defaultdict(list)
             for attempt in await uow.attempts.list_submitted_for_course(course_id):
                 attempts[attempt.user_id].append(attempt)

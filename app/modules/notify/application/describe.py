@@ -318,6 +318,15 @@ def _notebook_artifact_ready(p: dict[str, Any], v: _View) -> Description:
     return Description(v.t("notify-notebook-artifact-ready-title"), body, link)
 
 
+def _chat_answer_ready(p: dict[str, Any], v: _View) -> Description:
+    """The question and a link to the chat; the answer itself is not sent."""
+    return Description(
+        v.t("notify-chat-answer-ready-title"),
+        v.t("notify-chat-answer-ready-body", prompt=p.get("prompt", "")),
+        f"{v.urls.sp}/assistant/chat/?id={p.get('chat_id', '')}",
+    )
+
+
 def _assessment_label(p: dict[str, Any], v: _View) -> str:
     """The control week's name ("Midterm 1") or, without one, the kind's."""
     for prefix, name in (("control", p.get("control")), ("kind", p.get("kind"))):
@@ -707,6 +716,7 @@ _BUILDERS: dict[NotificationType, _Builder] = {
     NotificationType.EXCUSE_DECIDED: _excuse_decided,
     NotificationType.EXCUSE_MESSAGE: _excuse_message,
     NotificationType.PRIVACY_UPDATE: _privacy_update,
+    NotificationType.CHAT_ANSWER_READY: _chat_answer_ready,
 }
 
 

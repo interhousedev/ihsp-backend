@@ -7,6 +7,9 @@ from app.modules.admin.infrastructure.repositories.delivery_reader import (
     SqlDeliveryReader,
 )
 from app.modules.admin.infrastructure.repositories.limit_store import SqlLimitStore
+from app.modules.admin.infrastructure.repositories.telegram_bots import (
+    SqlBotRepository,
+)
 from app.shared.db.uow import SqlUnitOfWork
 
 
@@ -16,9 +19,11 @@ class SqlAdminUnitOfWork(SqlUnitOfWork):
     broadcasts: SqlBroadcastRepository
     deliveries: SqlDeliveryReader
     limit_store: SqlLimitStore
+    bots: SqlBotRepository
 
     def _init_repos(self) -> None:
         """Create the repositories bound to this transaction's session."""
         self.broadcasts = SqlBroadcastRepository(self.session)
         self.deliveries = SqlDeliveryReader(self.session)
         self.limit_store = SqlLimitStore(self.session)
+        self.bots = SqlBotRepository(self.session)

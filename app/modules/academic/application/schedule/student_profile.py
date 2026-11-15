@@ -2,10 +2,7 @@
 
 from app.modules.academic.application.schedule.common import UowFactory, person_map
 from app.modules.academic.application.schedule.results import StudentProfileData
-from app.modules.academic.domain.schedule.errors import (
-    GroupNotFoundError,
-    StudentNotFoundError,
-)
+from app.modules.academic.domain.schedule.errors import StudentNotFoundError
 from app.shared.actor import Actor
 from app.shared.base_error import NotFoundError
 from app.shared.contracts.identity import IdentityDirectory
@@ -39,10 +36,10 @@ class GetStudentProfile:
                 if student.group_id is not None
                 else None
             )
-        if group is None:
-            raise GroupNotFoundError()
-        people = await person_map(
-            self.identity, [group.curator_id, group.head_student_id]
+        people = (
+            await person_map(self.identity, [group.curator_id, group.head_student_id])
+            if group is not None
+            else {}
         )
         return StudentProfileData(
             user_id=user.id,
@@ -50,14 +47,18 @@ class GetStudentProfile:
             first_name=user.first_name,
             last_name=user.last_name,
             mailbox=f"{user.login}@{self.mail_domain}" if user.login else None,
-            group_id=group.id,
-            group_name=group.name,
+            group_id=group.id if group else None,
+            group_name=group.name if group else None,
             subgroup=student.subgroup,
-            curator=people.get(group.curator_id) if group.curator_id else None,
-            head_student=(
-                people.get(group.head_student_id) if group.head_student_id else None
+            curator=(
+                people.get(group.curator_id) if group and group.curator_id else None
             ),
-            current_semester=group.current_semester,
+            head_student=(
+                people.get(group.head_student_id)
+                if group and group.head_student_id
+                else None
+            ),
+            current_semester=group.current_semester if group else None,
             emis_status=user.emis_status,
             synced_at=student.synced_at,
         )

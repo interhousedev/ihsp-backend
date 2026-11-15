@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
+from app.modules.lms.application.learning.audience import AudienceGate
 from app.modules.lms.application.learning.revision_loading import load_rendered
 from app.modules.lms.application.learning.step_context import load_live_step
 from app.modules.lms.application.learning.types import UowFactory
@@ -36,12 +37,17 @@ class IssueMediaGrant:
     """Rotate the one grant of (actor, step, block); not enrolled is not found."""
 
     def __init__(
-        self, uow_factory: UowFactory, clock: Clock, cache: RenderCache
+        self,
+        uow_factory: UowFactory,
+        clock: Clock,
+        cache: RenderCache,
+        gate: AudienceGate,
     ) -> None:
         """Store collaborators."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.cache = cache
+        self.gate = gate
 
     async def execute(
         self, actor: Actor, course_id: UUID, step_id: UUID, block_id: str
@@ -57,6 +63,7 @@ class IssueMediaGrant:
                 or enrolled is None
             ):
                 raise CourseNotFoundError(params={"course_id": str(course_id)})
+            await self.gate.require_step(uow, actor, course_id, step_id)
             rendered = await load_rendered(
                 uow, self.cache, context.live_step.revision_id
             )

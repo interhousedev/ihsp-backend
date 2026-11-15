@@ -6,7 +6,12 @@ from uuid import UUID
 from app.modules.academic.application.marks.ports.unit_of_work import MarksUowFactory
 from app.modules.academic.domain.marks.errors import StudentNotFoundError
 from app.shared.actor import Actor
-from app.shared.contracts.identity import IdentityDirectory, UserRef, UserStatus
+from app.shared.contracts.identity import (
+    IdentityDirectory,
+    UserRef,
+    UserStatus,
+    peer_photo_ids,
+)
 
 PHOTO_URL_TTL_SECONDS = 600
 
@@ -27,9 +32,11 @@ class GetMyGroup:
 
     The homeroom teacher is the group's curator, with the public contacts that are
     shown to students. The head student is shown with name and photo, like the other
-    members. Members are the active students of the group, sorted by name. Unassigned
+    members. Members are the active students of the group, sorted by name; blocked
+    accounts are left out, and a blocked head student is null. Unassigned
     roles are null; a head student who has left the group is null too. Photo links
-    live ten minutes and are not given for blocked or inactive accounts.
+    live ten minutes and are not given for blocked or inactive accounts, nor for
+    students who chose to hide their photo from classmates (except to themselves).
     """
 
     def __init__(
@@ -55,18 +62,21 @@ class GetMyGroup:
         if curator_id is not None:
             wanted.add(curator_id)
         users = await self._identity.get_users(sorted(wanted, key=str))
+        member_ids = [
+            uid
+            for uid in member_ids
+            if uid in users and users[uid].status is not UserStatus.BLOCKED
+        ]
+        if head_id not in member_ids:
+            head_id = None
 
-        # Photos only for accounts that can sign in; links live ten minutes.
-        visible = sorted(
-            (uid for uid, u in users.items() if u.status is UserStatus.ACTIVE),
-            key=str,
-        )
+        visible = peer_photo_ids(actor.user_id, users)
         photos = await self._identity.photo_urls(
             visible, ttl_seconds=PHOTO_URL_TTL_SECONDS
         )
 
         members = sorted(
-            (users[uid] for uid in member_ids if uid in users),
+            (users[uid] for uid in member_ids),
             key=lambda u: (u.last_name.casefold(), u.first_name.casefold()),
         )
         homeroom: dict[str, Any] | None = None
@@ -83,7 +93,7 @@ class GetMyGroup:
             "is_head_student": head_id == actor.user_id,
             "homeroom_teacher": homeroom,
             "head_student": (
-                _person(users[head_id], photos) if head_id in users else None
+                _person(users[head_id], photos) if head_id is not None else None
             ),
             "members": [
                 {

@@ -20,6 +20,7 @@ from app.shared.notifications import NotificationDraft, NotificationType
 DEFAULT_LOCALE = "ru"
 KNOWLEDGE_GAP_QUERY_LIMIT = 300
 KNOWLEDGE_GAP_DEDUPE = dt.timedelta(hours=24)
+CHAT_PROMPT_MAX_CHARS = 120
 
 
 def normalize_query(query: str) -> str:
@@ -118,3 +119,25 @@ class NotifyApiImpl:
             )
             await uow.commit()
         return len(admins)
+
+    async def notify_chat_answer_ready(
+        self, *, user_id: UUID, chat_id: UUID, seq: int, prompt: str
+    ) -> None:
+        """Queue the "your answer is ready" notice, once per answer."""
+        text = " ".join(prompt.split())
+        if not text:
+            return
+        async with self.uow_factory() as uow:
+            uow.notify(
+                NotificationDraft(
+                    user_id=user_id,
+                    type=NotificationType.CHAT_ANSWER_READY,
+                    payload={
+                        "chat_id": str(chat_id),
+                        "seq": seq,
+                        "prompt": text[:CHAT_PROMPT_MAX_CHARS],
+                    },
+                    dedupe_key=f"chat_answer_ready:{chat_id}:{seq}",
+                )
+            )
+            await uow.commit()

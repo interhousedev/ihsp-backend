@@ -30,11 +30,30 @@ def landing_visible(
     )
 
 
+def publicly_viewable(course: LearningCourse) -> bool:
+    """Return True if a guest (nobody signed in) may read the course.
+
+    Only published, active, public courses whose audience is not a group; drafts,
+    unpublished, archived and invite-only courses never qualify.
+    """
+    return (
+        course.is_open_for_students
+        and course.publish_state == "published"
+        and course.visibility == "public"
+        and course.audience_scope != "group"
+    )
+
+
 def can_enrol(course: LearningCourse, *, enrolled: bool, now: datetime) -> bool:
     """Return True if the viewer may press "Enrol" now."""
     if enrolled or not course.is_open_for_students or course.visibility != "public":
         return False
     if course.audience_scope == "group" or not course.enrolment_open:
         return False
+    return within_enrolment_window(course, now)
+
+
+def within_enrolment_window(course: LearningCourse, now: datetime) -> bool:
+    """Return True unless the course has an enrolment window and `now` is outside."""
     starts, ends = course.enrolment_starts_at, course.enrolment_ends_at
     return (starts is None or now >= starts) and (ends is None or now < ends)

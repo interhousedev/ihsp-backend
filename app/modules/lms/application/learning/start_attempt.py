@@ -5,6 +5,7 @@ from uuid import UUID
 
 from app.modules.lms.application.learning.attempt_finisher import AttemptFinisher
 from app.modules.lms.application.learning.attempt_presenter import attempt_view
+from app.modules.lms.application.learning.audience import AudienceGate
 from app.modules.lms.application.learning.revision_loading import (
     find_test_block,
     load_revision,
@@ -46,12 +47,14 @@ class StartAttempt:
         clock: Clock,
         finisher: AttemptFinisher,
         previews: PreviewRevisions,
+        gate: AudienceGate,
     ) -> None:
         """Store collaborators."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.finisher = finisher
         self.previews = previews
+        self.gate = gate
 
     async def execute(
         self, actor: Actor, step_id: UUID, block_id: str, *, preview: bool
@@ -126,6 +129,7 @@ class StartAttempt:
         context = await load_live_step(uow, step_id)
         if await uow.enrollments.get(context.course.id, actor.user_id) is None:
             raise NotEnrolledError(params={"course_id": str(context.course.id)})
+        await self.gate.require_step(uow, actor, context.course.id, step_id)
         return await load_revision(uow, context.live_step.revision_id)
 
     async def _open_attempt(

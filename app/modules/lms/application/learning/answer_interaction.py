@@ -2,6 +2,7 @@
 
 from uuid import UUID
 
+from app.modules.lms.application.learning.audience import AudienceGate
 from app.modules.lms.application.learning.next_card import require_enrolled
 from app.modules.lms.application.learning.revision_loading import load_revision
 from app.modules.lms.application.learning.step_completion import StepCompletion
@@ -29,12 +30,17 @@ class AnswerInteraction:
     """Grade the answer against the live revision and keep it in the step state."""
 
     def __init__(
-        self, uow_factory: UowFactory, clock: Clock, completion: StepCompletion
+        self,
+        uow_factory: UowFactory,
+        clock: Clock,
+        completion: StepCompletion,
+        gate: AudienceGate,
     ) -> None:
         """Store collaborators."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.completion = completion
+        self.gate = gate
 
     async def execute(
         self,
@@ -51,7 +57,7 @@ class AnswerInteraction:
         """
         now = self.clock.now()
         async with self.uow_factory() as uow:
-            context = await require_enrolled(uow, actor, step_id)
+            context = await require_enrolled(uow, actor, step_id, self.gate)
             revision = await load_revision(uow, context.live_step.revision_id)
             block = next(
                 (

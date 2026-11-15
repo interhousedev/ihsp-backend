@@ -8,13 +8,14 @@ from app.modules.identity.application.otp_service import (
     channels_with_email_fallback,
 )
 from app.modules.identity.application.request_context import RequestContext
+from app.modules.identity.domain.errors import OtpInvalidError, StepUpInvalidError
 from app.modules.identity.ports.unit_of_work import UowFactory
 from app.shared.actor import Actor
 
 
 @dataclass(frozen=True, slots=True)
 class StepUp:
-    """Used before Administration connectors and before deleting an account."""
+    """Used before Administration connectors, deleting an account and exporting data."""
 
     uow_factory: UowFactory
     otp: OtpService
@@ -34,5 +35,8 @@ class StepUp:
             )
 
     async def verify(self, actor: Actor, code: str) -> None:
-        """Check the code sent by :meth:`execute`; raises ``OtpInvalidError``."""
-        await self.otp.check("step-up", str(actor.user_id), code)
+        """Check the code sent by :meth:`execute`; raises ``StepUpInvalidError``."""
+        try:
+            await self.otp.check("step-up", str(actor.user_id), code)
+        except OtpInvalidError as exc:
+            raise StepUpInvalidError(params=exc.params) from exc

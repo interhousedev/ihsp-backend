@@ -25,7 +25,10 @@ class SaveAnswers:
     """Store answers before the attempt is submitted and before its deadline."""
 
     def __init__(
-        self, uow_factory: UowFactory, clock: Clock, finisher: AttemptFinisher
+        self,
+        uow_factory: UowFactory,
+        clock: Clock,
+        finisher: AttemptFinisher,
     ) -> None:
         """Store collaborators."""
         self.uow_factory = uow_factory
@@ -41,7 +44,8 @@ class SaveAnswers:
         """Merge the answers into the attempt (per question) and return it.
 
         After the deadline the attempt is submitted with what was saved earlier,
-        and the late answers are refused.
+        and the late answers are refused. Access rules gate only the start of an
+        attempt: a learner keeps the attempt they already began.
         """
         now = self.clock.now()
         async with self.uow_factory() as uow:

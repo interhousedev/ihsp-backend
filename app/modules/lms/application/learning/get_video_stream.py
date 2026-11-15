@@ -2,6 +2,7 @@
 
 from uuid import UUID
 
+from app.modules.lms.application.learning.audience import AudienceGate
 from app.modules.lms.application.learning.revision_loading import load_rendered
 from app.modules.lms.application.learning.step_context import (
     load_live_step,
@@ -29,12 +30,17 @@ class GetVideoStream:
     """
 
     def __init__(
-        self, uow_factory: UowFactory, cache: RenderCache, files: FilesApi | None
+        self,
+        uow_factory: UowFactory,
+        cache: RenderCache,
+        files: FilesApi | None,
+        gate: AudienceGate,
     ) -> None:
         """Store collaborators."""
         self.uow_factory = uow_factory
         self.cache = cache
         self.files = files
+        self.gate = gate
 
     async def execute(
         self, actor: Actor, course_id: UUID, step_id: UUID, block_id: str
@@ -50,6 +56,7 @@ class GetVideoStream:
                 and not (await staff_access(uow, actor, course_id)).is_staff
             ):
                 raise NotEnrolledError(params={"course_id": str(course_id)})
+            await self.gate.require_step(uow, actor, course_id, step_id)
             rendered = await load_rendered(
                 uow, self.cache, context.live_step.revision_id
             )

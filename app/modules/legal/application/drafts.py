@@ -1,5 +1,6 @@
 """Administrators edit a draft and publish it."""
 
+from collections.abc import Callable
 from uuid import UUID
 
 from app.modules.legal.domain.errors import (
@@ -74,10 +75,17 @@ class SaveDraft:
 class PublishDraft:
     """Make the draft the current version; every user has to accept it."""
 
-    def __init__(self, *, uow_factory: UowFactory, clock: Clock) -> None:
-        """Store the dependencies."""
+    def __init__(
+        self,
+        *,
+        uow_factory: UowFactory,
+        clock: Clock,
+        on_published: Callable[[], None] | None = None,
+    ) -> None:
+        """Store the dependencies; ``on_published`` drops cached consent passes."""
         self._uow_factory = uow_factory
         self._clock = clock
+        self._on_published = on_published
 
     async def execute(self, kind: str, *, actor_id: UUID) -> LegalDocument:
         """Publish the draft and return it.
@@ -108,4 +116,6 @@ class PublishDraft:
                 )
             )
             await uow.commit()
+        if self._on_published is not None:
+            self._on_published()
         return draft

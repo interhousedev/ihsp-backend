@@ -19,6 +19,7 @@ from app.shared.contracts.lms import (
     LmsWorkspaceCommands,
 )
 from app.shared.contracts.notebooks import NotebooksCommands, NotebooksQueries
+from app.shared.contracts.notify import ChatAnswerNotifier
 from app.shared.contracts.web_search import PlatformSearch, WebSearchApi
 
 
@@ -36,6 +37,7 @@ class LateBindings:
     web: WebSearchApi | None = None  # the assistant's search_web tool
     knowledge: KnowledgeLookup | None = None  # search_knowledge_base
     knowledge_gaps: KnowledgeGapReporter | None = None
+    answer_notifier: ChatAnswerNotifier | None = None  # a left web chat
     # The course author assistant (lms_author); all four are needed for it.
     lms_workspace: LmsWorkspace | None = None
     lms_workspace_commands: LmsWorkspaceCommands | None = None

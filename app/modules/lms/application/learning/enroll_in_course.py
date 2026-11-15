@@ -34,6 +34,7 @@ class EnrollInCourse:
                 or course.visibility != "public"
             ):
                 raise CourseNotFoundError(params={"course_id": str(course_id)})
+            await self.builder.gate.require_course(uow, actor, course.id)
             enrollment = await uow.enrollments.add(
                 course_id=course.id, user_id=actor.user_id, via="self"
             )

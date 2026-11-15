@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from typing import Final
 from uuid import UUID
 
+from app.modules.lms.application.learning.audience import AudienceGate
 from app.modules.lms.application.learning.course_page import course_card
 from app.modules.lms.application.learning.progress_service import ensure_progress
 from app.modules.lms.application.learning.types import UowFactory
@@ -11,6 +12,7 @@ from app.modules.lms.application.learning.views import (
     LearningCourseCardView,
     LearningMyCoursesView,
 )
+from app.modules.lms.domain.access_rules import AccessState
 from app.modules.lms.domain.learning.entities import LearningCourse, LiveVersion
 from app.modules.lms.ports.learning.unit_of_work import LearningUnitOfWork
 from app.shared.actor import Actor, Role
@@ -22,10 +24,13 @@ MANAGED_LIMIT: Final = 500
 class ListMyCourses:
     """List the courses a user studies and the courses they manage."""
 
-    def __init__(self, uow_factory: UowFactory, clock: Clock) -> None:
+    def __init__(
+        self, uow_factory: UowFactory, clock: Clock, gate: AudienceGate
+    ) -> None:
         """Store collaborators."""
         self.uow_factory = uow_factory
         self.clock = clock
+        self.gate = gate
 
     async def execute(self, actor: Actor) -> LearningMyCoursesView:
         """Return enrolled courses (with fresh progress) and managed courses."""
@@ -45,6 +50,7 @@ class ListMyCourses:
             for c in await uow.courses.get_many([e.course_id for e in enrollments])
         }
         versions = await _versions_of(uow, courses.values())
+        access = await self.gate.courses(uow, actor, list(courses))
         cards: list[LearningCourseCardView] = []
         for enrollment in enrollments:
             course = courses.get(enrollment.course_id)
@@ -55,9 +61,17 @@ class ListMyCourses:
             )
             if course is None or version is None:
                 continue
-            await ensure_progress(uow, enrollment, version, self.clock.now())
+            if access[course.id].state is AccessState.HIDDEN:
+                continue
+            now = self.clock.now()
+            await ensure_progress(uow, self.gate, enrollment, version, now)
             cards.append(
-                course_card(course, version, progress_pct=enrollment.progress_pct)
+                course_card(
+                    course,
+                    version,
+                    progress_pct=enrollment.progress_pct,
+                    access=access[course.id],
+                )
             )
         return sorted(cards, key=lambda card: card.title.casefold())
 
@@ -71,6 +85,7 @@ class ListMyCourses:
             ids = await uow.staff.course_ids_of(actor.user_id)
             courses = await uow.courses.get_many(ids)
         versions = await _versions_of(uow, courses)
+        access = await self.gate.courses(uow, actor, [c.id for c in courses])
         return [
             course_card(
                 course,
@@ -80,6 +95,7 @@ class ListMyCourses:
                     else None
                 ),
                 progress_pct=None,
+                access=access[course.id],
             )
             for course in courses
         ]

@@ -1,5 +1,6 @@
 """Use case: the landing page of a course (UF-LMS-01)."""
 
+from app.modules.lms.application.learning.audience import AudienceGate, CourseAccess
 from app.modules.lms.application.learning.step_context import staff_access
 from app.modules.lms.application.learning.types import UowFactory
 from app.modules.lms.application.learning.views import (
@@ -10,9 +11,19 @@ from app.modules.lms.application.learning.views import (
     LearningLandingView,
     LearningPersonRefView,
 )
+from app.modules.lms.domain.access_rules import AccessState
 from app.modules.lms.domain.learning.access import EDIT
+from app.modules.lms.domain.learning.entities import (
+    LearningCourse,
+    LiveVersion,
+    StaffMember,
+)
 from app.modules.lms.domain.learning.errors import CourseNotFoundError
-from app.modules.lms.domain.learning.landing import can_enrol, landing_visible
+from app.modules.lms.domain.learning.landing import (
+    can_enrol,
+    landing_visible,
+    publicly_viewable,
+)
 from app.shared.actor import Actor
 from app.shared.clock import Clock
 from app.shared.contracts.identity import IdentityDirectory
@@ -26,12 +37,17 @@ class GetCourseLanding:
     """Describe a course to someone deciding whether to take it."""
 
     def __init__(
-        self, uow_factory: UowFactory, identity: IdentityDirectory, clock: Clock
+        self,
+        uow_factory: UowFactory,
+        identity: IdentityDirectory,
+        clock: Clock,
+        gate: AudienceGate,
     ) -> None:
         """Store collaborators."""
         self.uow_factory = uow_factory
         self.identity = identity
         self.clock = clock
+        self.gate = gate
 
     async def execute(
         self, actor: Actor, slug: str, *, preview: bool = False
@@ -41,15 +57,37 @@ class GetCourseLanding:
             course = await uow.courses.get_by_slug(slug)
             if course is None:
                 raise CourseNotFoundError(params={"slug": slug})
-            access = await staff_access(uow, actor, course.id)
+            staff = await staff_access(uow, actor, course.id)
             enrollment = await uow.enrollments.get(course.id, actor.user_id)
-            previewing = preview and access.can(EDIT)
+            previewing = preview and staff.can(EDIT)
             if not landing_visible(
                 course,
                 enrolled=enrollment is not None,
-                is_staff=access.is_staff,
+                is_staff=staff.is_staff,
                 previewing=previewing,
             ):
+                raise CourseNotFoundError(params={"slug": slug})
+            access = await self.gate.require_visible(uow, actor, course.id)
+            version = (
+                await uow.versions.get(course.live_version_id)
+                if course.live_version_id
+                else None
+            )
+            members = await uow.staff.list_on_page(course.id)
+        return await self._describe(
+            course,
+            version,
+            members,
+            access,
+            enrolled=enrollment is not None,
+            previewing=previewing,
+        )
+
+    async def execute_public(self, slug: str) -> LearningLandingView:
+        """Return the landing of a publicly visible course for a guest; else 404."""
+        async with self.uow_factory() as uow:
+            course = await uow.courses.get_by_slug(slug)
+            if course is None or not publicly_viewable(course):
                 raise CourseNotFoundError(params={"slug": slug})
             version = (
                 await uow.versions.get(course.live_version_id)
@@ -57,8 +95,23 @@ class GetCourseLanding:
                 else None
             )
             members = await uow.staff.list_on_page(course.id)
+            access = await self.gate.require_visible(uow, None, course.id)
+        return await self._describe(
+            course, version, members, access, enrolled=False, previewing=False
+        )
+
+    async def _describe(
+        self,
+        course: LearningCourse,
+        version: LiveVersion | None,
+        members: list[StaffMember],
+        access: CourseAccess,
+        *,
+        enrolled: bool,
+        previewing: bool,
+    ) -> LearningLandingView:
+        """Build the landing view."""
         users = await self.identity.get_users([m.user_id for m in members])
-        enrolled = enrollment is not None
         return LearningLandingView(
             id=course.id,
             slug=course.slug,
@@ -95,7 +148,9 @@ class GetCourseLanding:
                 LearningLandingSectionView(
                     title=section.title,
                     steps=[
-                        LearningLandingStepView(title=s.title) for s in section.steps
+                        LearningLandingStepView(title=s.title)
+                        for s in section.steps
+                        if access.step(s.step_id) is not AccessState.HIDDEN
                     ],
                 )
                 for section in (version.manifest.sections if version else [])
@@ -104,7 +159,8 @@ class GetCourseLanding:
                 open=course.enrolment_open,
                 starts_at=course.enrolment_starts_at,
                 ends_at=course.enrolment_ends_at,
-                can_enrol=can_enrol(course, enrolled=enrolled, now=self.clock.now()),
+                can_enrol=access.state is AccessState.OPEN
+                and can_enrol(course, enrolled=enrolled, now=self.clock.now()),
                 enrolled=enrolled,
             ),
         )

@@ -88,6 +88,7 @@ class Notification(IdMixin, TimestampMixin, Base):
             "excuse_decided",
             "excuse_message",
             "privacy_update",
+            "chat_answer_ready",
             name="type",
             native_enum=False,
             create_constraint=True,

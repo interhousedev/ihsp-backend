@@ -8,12 +8,14 @@ file id can pass through, whatever a render holds.
 from typing import Any
 from uuid import UUID
 
+from app.modules.lms.application.learning.audience import AudienceGate
 from app.modules.lms.application.learning.revision_loading import (
     load_rendered,
     load_rendered_many,
 )
 from app.modules.lms.application.learning.step_context import load_live_step
 from app.modules.lms.application.learning.types import UowFactory
+from app.modules.lms.domain.access_rules import AccessState
 from app.modules.lms.domain.learning.entities import Attempt
 from app.modules.lms.domain.learning.errors import CourseNotFoundError
 from app.modules.lms.domain.learning.live import RenderCache
@@ -64,16 +66,20 @@ def _block(block: dict[str, Any], attempts: list[Attempt]) -> dict[str, Any]:
 class LearnerCourseReader:
     """Courses a student is enrolled in; anything else is not found."""
 
-    def __init__(self, uow_factory: UowFactory, cache: RenderCache) -> None:
+    def __init__(
+        self, uow_factory: UowFactory, cache: RenderCache, gate: AudienceGate
+    ) -> None:
         """Store collaborators."""
         self.uow_factory = uow_factory
         self.cache = cache
+        self.gate = gate
 
     async def my_courses(self, actor: Actor) -> list[dict[str, Any]]:
         """Return the open courses the actor is enrolled in, by title."""
         async with self.uow_factory() as uow:
             enrollments = await uow.enrollments.list_for_user(actor.user_id)
             courses = await uow.courses.get_many([e.course_id for e in enrollments])
+            states = await self.gate.courses(uow, actor, [c.id for c in courses])
         progress = {e.course_id: e.progress_pct for e in enrollments}
         rows = [
             {
@@ -82,9 +88,11 @@ class LearnerCourseReader:
                 "title": course.title,
                 "summary": course.summary,
                 "progress_pct": progress.get(course.id),
+                "locked": states[course.id].state is AccessState.LOCKED,
             }
             for course in courses
             if course.is_open_for_students
+            and states[course.id].state is not AccessState.HIDDEN
         ]
         return sorted(rows, key=lambda row: str(row["title"]).casefold())
 
@@ -92,6 +100,7 @@ class LearnerCourseReader:
         """Return the outline of the live version with the actor's completed steps."""
         async with self.uow_factory() as uow:
             await self._require_enrolled(uow, actor, course_id)
+            access = await self.gate.require_course(uow, actor, course_id)
             course = await uow.courses.get(course_id)
             version = (
                 await uow.versions.get(course.live_version_id)
@@ -117,8 +126,10 @@ class LearnerCourseReader:
                             "step_id": step.step_id,
                             "title": step.title,
                             "completed": step.step_id in done,
+                            "locked": access.step(step.step_id) is AccessState.LOCKED,
                         }
                         for step in section.steps
+                        if access.step(step.step_id) is not AccessState.HIDDEN
                     ],
                 }
                 for section in version.manifest.sections
@@ -134,6 +145,7 @@ class LearnerCourseReader:
             context = await load_live_step(uow, step_id)
             if context.course.id != course_id:
                 raise CourseNotFoundError(params={"course_id": str(course_id)})
+            await self.gate.require_step(uow, actor, course_id, step_id)
             rendered = await load_rendered(
                 uow, self.cache, context.live_step.revision_id
             )
@@ -169,10 +181,17 @@ class LearnerCourseReader:
                 )
                 if version is None:
                     continue
+                access = await self.gate.course(uow, actor, course.id)
+                if access.state is not AccessState.OPEN:
+                    continue
                 renders = await load_rendered_many(
                     uow,
                     self.cache,
-                    [step.revision_id for step in version.manifest.steps()],
+                    [
+                        step.revision_id
+                        for step in version.manifest.steps()
+                        if access.step(step.step_id) is AccessState.OPEN
+                    ],
                 )
                 found.extend(
                     (course.id, UUID(block["file_id"]))

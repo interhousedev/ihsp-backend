@@ -385,6 +385,7 @@ def build(
             clock=deps.clock,
             settings=settings,
             i18n=deps.i18n,
+            bindings=bindings,
         ),
         regenerate_answer=RegenerateAnswer(
             uow_factory=uow_factory,

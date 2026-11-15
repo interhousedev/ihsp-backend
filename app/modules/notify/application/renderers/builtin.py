@@ -7,6 +7,9 @@ from app.modules.notify.application.renderers.assessment_reminder import (
     AssessmentReminderRenderer,
 )
 from app.modules.notify.application.renderers.broadcast import BroadcastRenderer
+from app.modules.notify.application.renderers.chat_answer_ready import (
+    ChatAnswerReadyRenderer,
+)
 from app.modules.notify.application.renderers.curator_absences import (
     CuratorAbsencesRenderer,
 )
@@ -139,6 +142,9 @@ def register_builtin_renderers(
     )
     registry.register(
         NotificationType.EXCUSE_MESSAGE, ExcuseMessageRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.CHAT_ANSWER_READY, ChatAnswerReadyRenderer(i18n, urls)
     )
     registry.register(
         NotificationType.PRIVACY_UPDATE, PrivacyUpdateRenderer(i18n, urls)

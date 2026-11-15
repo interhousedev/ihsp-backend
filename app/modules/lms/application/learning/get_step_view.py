@@ -12,6 +12,7 @@ from app.modules.lms.application.learning.attempt_presenter import (
     attempt_result,
     number,
 )
+from app.modules.lms.application.learning.audience import AudienceGate
 from app.modules.lms.application.learning.revision_loading import (
     find_test_block,
     load_rendered,
@@ -62,6 +63,7 @@ class GetStepView:
         cache: RenderCache,
         finisher: AttemptFinisher,
         counters: DailyCounters,
+        gate: AudienceGate,
     ) -> None:
         """Store collaborators."""
         self.uow_factory = uow_factory
@@ -69,6 +71,7 @@ class GetStepView:
         self.cache = cache
         self.finisher = finisher
         self.counters = counters
+        self.gate = gate
 
     async def execute(
         self, actor: Actor, course_id: UUID, step_id: UUID
@@ -79,6 +82,7 @@ class GetStepView:
             context = await load_live_step(uow, step_id)
             if context.course.id != course_id:
                 raise CourseNotFoundError(params={"course_id": str(course_id)})
+            await self.gate.require_step(uow, actor, course_id, step_id)
             await self._check_access(uow, actor, context)
             await self.finisher.finish_expired(
                 uow, actor.user_id, step_id, preview=False, now=now
@@ -141,7 +145,7 @@ class GetStepView:
             elif block["type"] == "flashcards":
                 views.append(await self._cards(actor, block, rendered, cards))
             elif block["type"] in ("h5p", "interactive_video"):
-                views.append(_scored(block, stored_result(cards, block["id"])))
+                views.append(scored_block(block, stored_result(cards, block["id"])))
             elif block["type"] == "video":
                 views.append(LearningVideoBlockView(**block, passed=state is not None))
             else:
@@ -211,7 +215,7 @@ class GetStepView:
         )
 
 
-def _scored(
+def scored_block(
     block: dict[str, Any], stored: Mapping[str, Any] | None
 ) -> LearningH5PBlockView | LearningInteractiveVideoBlockView:
     """Fill an H5P or interactive video block with my stored result."""

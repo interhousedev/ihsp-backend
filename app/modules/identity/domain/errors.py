@@ -50,6 +50,17 @@ class OtpInvalidError(UnauthorizedError):
     message_key = "id-otp-invalid"
 
 
+class StepUpInvalidError(ForbiddenError):
+    """The step-up code for a sensitive action is wrong, expired or used up.
+
+    403, not 401: the session is fine, only the code is not; a 401 would end it.
+    """
+
+    code = "identity/step-up-invalid"
+    status = 403
+    message_key = "id-step-up-invalid"
+
+
 class ChallengeUsedError(GoneError):
     """Hydra already handled this login, consent or logout challenge."""
 

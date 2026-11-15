@@ -7,6 +7,10 @@ from app.modules.lms.application.learning.answer_interaction import (
     AnswerInteraction,
 )
 from app.modules.lms.application.learning.attempt_finisher import AttemptFinisher
+from app.modules.lms.application.learning.audience import (
+    AudienceGate,
+    StudentGroupLookup,
+)
 from app.modules.lms.application.learning.course_page import CoursePageBuilder
 from app.modules.lms.application.learning.enroll_in_course import EnrollInCourse
 from app.modules.lms.application.learning.get_attempt import GetAttempt
@@ -28,6 +32,7 @@ from app.modules.lms.application.learning.list_my_courses import ListMyCourses
 from app.modules.lms.application.learning.mark_step_viewed import MarkStepViewed
 from app.modules.lms.application.learning.next_card import NextCard
 from app.modules.lms.application.learning.override_score import OverrideScore
+from app.modules.lms.application.learning.public_courses import PublicCourses
 from app.modules.lms.application.learning.read_step_for_mcp import LearnerCourseReader
 from app.modules.lms.application.learning.record_h5p_result import RecordH5PResult
 from app.modules.lms.application.learning.redeem_media_grant import RedeemMediaGrant
@@ -79,6 +84,7 @@ class LearningServices:
     redeem_media_grant: RedeemMediaGrant
     revoke_media_grants: RevokeMediaGrants
     learner_course_reader: LearnerCourseReader
+    public_courses: PublicCourses
 
 
 def build_learning(
@@ -88,6 +94,7 @@ def build_learning(
     preview_revisions: PreviewRevisions,
     files: FilesApi | None = None,
     h5p_links: H5PLinks | None = None,
+    student_group: StudentGroupLookup | None = None,
 ) -> LearningServices:
     """Build the learning use cases.
 
@@ -107,38 +114,42 @@ def build_learning(
     clock = deps.clock
     cache = RenderCache()
     counters = RedisDailyCounters(deps.redis)
-    completion = StepCompletion(cache)
+    gate = AudienceGate(identity, student_group)
+    completion = StepCompletion(cache, gate)
     finisher = AttemptFinisher(completion)
-    pages = CoursePageBuilder(identity, clock, cache)
+    pages = CoursePageBuilder(identity, clock, cache, gate)
     links = h5p_links or H5PLinks(b"lms-h5p-test-key", clock, None)
     return LearningServices(
-        list_catalog=ListCatalog(uow_factory),
-        list_my_courses=ListMyCourses(uow_factory, clock),
+        list_catalog=ListCatalog(uow_factory, gate),
+        list_my_courses=ListMyCourses(uow_factory, clock, gate),
         get_course_page=GetCoursePage(uow_factory, pages),
         enroll_in_course=EnrollInCourse(uow_factory, pages, deps.kicker),
         join_course=JoinCourse(uow_factory, pages, deps.rate_limiter, deps.kicker),
-        get_step_view=GetStepView(uow_factory, clock, cache, finisher, counters),
-        get_video_stream=GetVideoStream(uow_factory, cache, files),
-        get_h5p_launch=GetH5PLaunch(uow_factory, cache, links),
-        record_h5p_result=RecordH5PResult(uow_factory, clock, completion),
-        answer_interaction=AnswerInteraction(uow_factory, clock, completion),
+        get_step_view=GetStepView(uow_factory, clock, cache, finisher, counters, gate),
+        get_video_stream=GetVideoStream(uow_factory, cache, files, gate),
+        get_h5p_launch=GetH5PLaunch(uow_factory, cache, links, gate),
+        record_h5p_result=RecordH5PResult(uow_factory, clock, completion, gate),
+        answer_interaction=AnswerInteraction(uow_factory, clock, completion, gate),
         h5p_links=links,
-        mark_step_viewed=MarkStepViewed(uow_factory, clock, cache),
-        start_attempt=StartAttempt(uow_factory, clock, finisher, preview_revisions),
+        mark_step_viewed=MarkStepViewed(uow_factory, clock, cache, gate),
+        start_attempt=StartAttempt(
+            uow_factory, clock, finisher, preview_revisions, gate
+        ),
         save_answers=SaveAnswers(uow_factory, clock, finisher),
         submit_attempt=SubmitAttempt(uow_factory, clock, finisher),
-        next_card=NextCard(uow_factory, clock, counters),
-        review_card=ReviewCard(uow_factory, clock, counters),
-        list_course_students=ListCourseStudents(uow_factory, clock, identity),
+        next_card=NextCard(uow_factory, clock, counters, gate),
+        review_card=ReviewCard(uow_factory, clock, counters, gate),
+        list_course_students=ListCourseStudents(uow_factory, clock, identity, gate),
         get_attempt=GetAttempt(uow_factory, clock, identity, finisher),
         override_score=OverrideScore(uow_factory, clock, identity, completion),
-        source_reader=LmsSourceReaderImpl(uow_factory),
+        source_reader=LmsSourceReaderImpl(uow_factory, gate),
         list_broadcast_audience=ListBroadcastAudience(uow_factory),
-        get_course_landing=GetCourseLanding(uow_factory, identity, clock),
-        issue_media_grant=IssueMediaGrant(uow_factory, clock, cache),
+        get_course_landing=GetCourseLanding(uow_factory, identity, clock, gate),
+        issue_media_grant=IssueMediaGrant(uow_factory, clock, cache, gate),
         redeem_media_grant=RedeemMediaGrant(
-            uow_factory, clock, cache, identity, files, deps.rate_limiter
+            uow_factory, clock, cache, identity, files, deps.rate_limiter, gate
         ),
         revoke_media_grants=RevokeMediaGrants(uow_factory, clock),
-        learner_course_reader=LearnerCourseReader(uow_factory, cache),
+        learner_course_reader=LearnerCourseReader(uow_factory, cache, gate),
+        public_courses=PublicCourses(uow_factory, pages, cache, clock),
     )

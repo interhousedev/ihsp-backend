@@ -3,9 +3,11 @@
 from typing import Final
 from uuid import UUID
 
+from app.modules.lms.application.learning.audience import AudienceGate
 from app.modules.lms.application.learning.course_page import course_card
 from app.modules.lms.application.learning.types import UowFactory
 from app.modules.lms.application.learning.views import LearningCourseCardView
+from app.modules.lms.domain.access_rules import AccessState
 from app.shared.actor import Actor
 
 CATALOG_LIMIT: Final = 200
@@ -14,9 +16,10 @@ CATALOG_LIMIT: Final = 200
 class ListCatalog:
     """List the courses anyone can enroll in."""
 
-    def __init__(self, uow_factory: UowFactory) -> None:
+    def __init__(self, uow_factory: UowFactory, gate: AudienceGate) -> None:
         """Store collaborators."""
         self.uow_factory = uow_factory
+        self.gate = gate
 
     async def execute(
         self, *, query: str | None = None, actor: Actor | None = None
@@ -31,6 +34,10 @@ class ListCatalog:
             courses = await uow.courses.search_published(
                 (query or "").strip() or None, limit=CATALOG_LIMIT
             )
+            access = await self.gate.courses(uow, actor, [c.id for c in courses])
+            courses = [
+                c for c in courses if access[c.id].state is not AccessState.HIDDEN
+            ]
             versions = await uow.versions.get_many(
                 [c.live_version_id for c in courses if c.live_version_id is not None]
             )
@@ -49,6 +56,7 @@ class ListCatalog:
                     else None
                 ),
                 progress_pct=progress.get(course.id),
+                access=access[course.id],
             )
             for course in courses
         ]

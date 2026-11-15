@@ -243,7 +243,7 @@ class OpenRouterGateway:
             and REASONING_MANDATORY in text
         ):
             self._always_reason.add(model)
-            log.warning("ai.openrouter_reasoning_kept", model=model)
+            log.info("ai.openrouter_reasoning_kept", model=model)
             return True
         return False
 

@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from typing import Any
 from uuid import UUID
 
+from app.modules.lms.application.learning.audience import AudienceGate
 from app.modules.lms.application.learning.next_card import require_enrolled
 from app.modules.lms.application.learning.revision_loading import load_revision
 from app.modules.lms.application.learning.step_completion import StepCompletion
@@ -29,12 +30,17 @@ class RecordH5PResult:
     """
 
     def __init__(
-        self, uow_factory: UowFactory, clock: Clock, completion: StepCompletion
+        self,
+        uow_factory: UowFactory,
+        clock: Clock,
+        completion: StepCompletion,
+        gate: AudienceGate,
     ) -> None:
         """Store collaborators."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.completion = completion
+        self.gate = gate
 
     async def execute(
         self,
@@ -46,7 +52,7 @@ class RecordH5PResult:
         """Map the statement and store it when it is a result of the content."""
         now = self.clock.now()
         async with self.uow_factory() as uow:
-            context = await require_enrolled(uow, actor, step_id)
+            context = await require_enrolled(uow, actor, step_id, self.gate)
             revision = await load_revision(uow, context.live_step.revision_id)
             block = next(
                 (

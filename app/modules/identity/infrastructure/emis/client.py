@@ -2,11 +2,12 @@
 
 import asyncio
 import datetime as dt
+import ipaddress
 import re
 import time
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from typing import Any, TypeVar
-from urllib.parse import SplitResult, unquote, urlsplit
+from urllib.parse import SplitResult, unquote, urljoin, urlsplit
 
 from app.modules.identity.application.register_models import (
     EmisAuthError,
@@ -83,6 +84,10 @@ _RETRY_BUDGET_SECONDS = 30.0  # all attempts of one call together
 _TIMETABLE_BUDGET_SECONDS = 50.0  # the whole weekly loop (gateway cuts at 60 s)
 _DOWNLOAD_TIMEOUT = httpx.Timeout(60.0, connect=_CONNECT_SECONDS)
 _DOWNLOAD_ATTEMPTS = 3
+_DOWNLOAD_TOTAL_SECONDS = 120.0  # queueing, redirects and the whole body
+_MAX_REDIRECTS = 5
+_REDIRECTS = frozenset({301, 302, 303, 307, 308})
+DEFAULT_DOWNLOAD_HOSTS = ("emis.edu.uz", "cdn-emis.edu.uz")
 _DOWNLOAD_BACKOFF_SECONDS = 0.5
 _TRANSIENT_MARKERS = ("http_502", "http_503", "http_504", "transport")
 DEFAULT_PAUSE_SECONDS = 60.0  # a 429 without Retry-After
@@ -191,6 +196,21 @@ def _retry_after(response: httpx.Response) -> float | None:
     return min(max(float(raw), 1.0), MAX_PAUSE_SECONDS)
 
 
+def _response_facts(
+    exc: EmisRequestError | EmisAuthError, response: httpx.Response | None
+) -> dict[str, Any]:
+    """The reason and the response parts a failed attempt is logged with."""
+    reason = exc.reason if isinstance(exc, EmisRequestError) else "auth_failed"
+    if response is None:
+        return {"reason": reason, "status": None, "body": b"", "content_type": None}
+    return {
+        "reason": reason,
+        "status": response.status_code,
+        "body": response.content,
+        "content_type": response.headers.get("content-type"),
+    }
+
+
 class EmisClient:
     """Talks to EMIS; every call takes the access token, nothing is cached."""
 
@@ -205,10 +225,12 @@ class EmisClient:
         file_max_qps: int,
         concurrency: int = 20,
         request_delay_ms: int = 0,
+        download_hosts: Sequence[str] = DEFAULT_DOWNLOAD_HOSTS,
         sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     ) -> None:
         """Store the HTTP client, the shared limits and the shared pause."""
         self._http = http
+        self._download_hosts = tuple(h.lower().strip(".") for h in download_hosts)
         self._profile_path = profile_path.lstrip("/")
         self._limiter = limiter
         self._pause = pause
@@ -235,6 +257,7 @@ class EmisClient:
             file_max_qps=settings.file_max_qps,
             concurrency=settings.concurrency,
             request_delay_ms=settings.request_delay_ms,
+            download_hosts=settings.download_hosts,
         )
 
     async def aclose(self) -> None:
@@ -292,6 +315,22 @@ class EmisClient:
         if expect_json:
             _require_json(response, token)
 
+    async def _attempt_within(
+        self,
+        remaining: float,
+        method: str,
+        path: str,
+        token: str | None,
+        body: dict[str, str] | None,
+        timeout: httpx.Timeout,
+    ) -> httpx.Response:
+        """One attempt, cut off when the retry budget runs out."""
+        try:
+            async with asyncio.timeout(remaining):
+                return await self._attempt(method, path, token, body, timeout)
+        except TimeoutError as exc:
+            raise EmisRequestError("transport TimeoutError", reason="timeout") from exc
+
     async def _send(
         self,
         method: str,
@@ -322,29 +361,21 @@ class EmisClient:
             began = time.monotonic()
             response: httpx.Response | None = None
             try:
-                response = await self._attempt(method, path, token, body, timeout)
+                response = await self._attempt_within(
+                    remaining, method, path, token, body, timeout
+                )
                 await self._judge(response, token, expect_json)
                 return response
             except (EmisRequestError, EmisAuthError) as exc:
-                reason = (
-                    exc.reason if isinstance(exc, EmisRequestError) else "auth_failed"
-                )
                 _log_failure(
                     exc,
                     method=method,
                     path=url_path(path),
-                    status=response.status_code if response is not None else None,
                     elapsed=time.monotonic() - began,
-                    body=response.content if response is not None else b"",
-                    content_type=(
-                        response.headers.get("content-type")
-                        if response is not None
-                        else None
-                    ),
                     attempt=attempt,
                     attempts=retries + 1,
-                    reason=reason,
                     error_id=error_id,
+                    **_response_facts(exc, response),
                 )
                 wait = _RETRY_BACKOFF_SECONDS * 2 ** (attempt - 1)
                 spent = time.monotonic() - started
@@ -476,14 +507,10 @@ class EmisClient:
         The EMIS token goes only to the EMIS host itself, never to another server
         (files often sit on a CDN that needs no session).
         """
-        parts = _material_url(url)
-        own_host = parts.hostname == self._http.base_url.host
-        headers = {"Authorization": token} if own_host else {}
+        parts = self._material_url(url)
         for attempt in range(1, _DOWNLOAD_ATTEMPTS + 1):
             try:
-                return await self._download_once(
-                    url, headers, own_host, max_bytes, parts
-                )
+                return await self._download_once(url, token, max_bytes, parts)
             except EmisPausedError:
                 raise  # EMIS asked for a rest: no retry now, the sync stops
             except EmisFileGoneError as exc:
@@ -499,45 +526,79 @@ class EmisClient:
         raise AssertionError("unreachable")  # the loop returns or raises
 
     async def _download_once(
-        self,
-        url: str,
-        headers: dict[str, str],
-        own_host: bool,
-        max_bytes: int,
-        parts: SplitResult,
+        self, url: str, token: str, max_bytes: int, parts: SplitResult
     ) -> EmisFile:
+        """One download attempt under a total time budget (queueing included)."""
+        try:
+            async with asyncio.timeout(_DOWNLOAD_TOTAL_SECONDS):
+                return await self._fetch(url, token, max_bytes, parts)
+        except TimeoutError as exc:
+            raise EmisRequestError("transport TimeoutError", reason="timeout") from exc
+
+    async def _fetch(
+        self, url: str, token: str, max_bytes: int, parts: SplitResult
+    ) -> EmisFile:
+        """Follow redirects by hand, checking every hop against the allow-list."""
+        current = url
         async with self._semaphore:
             await self._gate("file", self._file_max_qps)
-            try:
-                async with self._http.stream(
-                    "GET",
-                    url,
-                    headers=headers,
-                    timeout=_DOWNLOAD_TIMEOUT,
-                    follow_redirects=True,
-                ) as response:
-                    if response.status_code == 401 and own_host:
-                        raise EmisAuthError()
-                    if response.status_code != 200:
-                        await self._pause_if_asked(response)
-                        if response.status_code in (404, 410):
-                            raise EmisFileGoneError(response.status_code)
-                        raise _status_error(response.status_code)
-                    data = await _read_limited(response, max_bytes)
-            except httpx.HTTPError as exc:
-                raise _transport_error(exc) from exc
-        return EmisFile(
-            name=_file_name(response, parts.path),
-            content_type=response.headers.get("content-type"),
-            data=data,
-        )
+            for _hop in range(_MAX_REDIRECTS + 1):
+                parts = self._material_url(current)
+                own_host = parts.hostname == self._http.base_url.host
+                headers = {"Authorization": token} if own_host else {}
+                try:
+                    async with self._http.stream(
+                        "GET",
+                        current,
+                        headers=headers,
+                        timeout=_DOWNLOAD_TIMEOUT,
+                        follow_redirects=False,
+                    ) as response:
+                        location = response.headers.get("location")
+                        if response.status_code in _REDIRECTS and location:
+                            current = urljoin(current, location)
+                            continue
+                        if response.status_code == 401 and own_host:
+                            raise EmisAuthError()
+                        if response.status_code != 200:
+                            await self._pause_if_asked(response)
+                            if response.status_code in (404, 410):
+                                raise EmisFileGoneError(response.status_code)
+                            raise _status_error(response.status_code)
+                        data = await _read_limited(response, max_bytes)
+                        return EmisFile(
+                            name=_file_name(response, parts.path),
+                            content_type=response.headers.get("content-type"),
+                            data=data,
+                        )
+                except httpx.HTTPError as exc:
+                    raise _transport_error(exc) from exc
+        raise EmisRequestError("too many redirects", reason="bad_material_url")
+
+    def _material_url(self, url: str) -> SplitResult:
+        """Parse a material URL; only approved EMIS hosts, never an IP address."""
+        parts = urlsplit(url)
+        host = (parts.hostname or "").rstrip(".").lower()
+        if parts.scheme not in {"http", "https"} or not host:
+            raise EmisRequestError(
+                "material URL is not http(s)", reason="bad_material_url"
+            )
+        if _is_ip(host) or not (
+            host == self._http.base_url.host
+            or any(host == a or host.endswith(f".{a}") for a in self._download_hosts)
+        ):
+            raise EmisRequestError(
+                "material host not allowed", reason="bad_material_url"
+            )
+        return parts
 
 
-def _material_url(url: str) -> SplitResult:
-    parts = urlsplit(url)
-    if parts.scheme not in {"http", "https"} or not parts.hostname:
-        raise EmisRequestError("material URL is not http(s)", reason="bad_material_url")
-    return parts
+def _is_ip(host: str) -> bool:
+    try:
+        ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    return True
 
 
 def _download_failure(
@@ -545,7 +606,7 @@ def _download_failure(
 ) -> Exception | None:
     """Log a failed download; return the error to raise, or None to retry."""
     transient = _is_transient(exc)
-    log.warning(
+    log.info(  # per attempt; the caller logs the outcome once
         "emis_download_failed",
         host=host,
         attempt=attempt,

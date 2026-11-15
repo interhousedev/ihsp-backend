@@ -113,7 +113,7 @@ class GetSubjectDetail:
                 subject_ids=[subject_id],
                 user_ids={r.author_id for rs in resources.values() for r in rs},
                 lessons=lessons,
-                with_photos=True,
+                photos_for=actor.user_id,
             )
         if not known or subject_id not in view.subjects:
             raise SubjectNotFoundError(params={"subject_id": str(subject_id)})

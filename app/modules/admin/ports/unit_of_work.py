@@ -6,6 +6,7 @@ from typing import Protocol, Self
 from app.modules.admin.ports.broadcast_repository import BroadcastRepository
 from app.modules.admin.ports.delivery_reader import DeliveryReader
 from app.modules.admin.ports.limit_store import LimitStore
+from app.modules.admin.ports.telegram_bots import BotRepository
 from app.shared.notifications import AuditDraft, NotificationDraft
 
 
@@ -25,6 +26,11 @@ class AdminUnitOfWork(Protocol):
     @property
     def limit_store(self) -> LimitStore:
         """Runtime limit overrides and extensions, bound to this transaction."""
+        ...
+
+    @property
+    def bots(self) -> BotRepository:
+        """Registered Telegram bots, bound to this transaction."""
         ...
 
     async def __aenter__(self) -> Self:

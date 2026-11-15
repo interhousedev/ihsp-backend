@@ -2,6 +2,7 @@
 
 from uuid import UUID
 
+from app.modules.lms.application.learning.audience import AudienceGate
 from app.modules.lms.application.learning.next_card import (
     require_enrolled,
     study_view,
@@ -30,12 +31,17 @@ class ReviewCard:
     """Apply a rating to one card and return the next card of its block."""
 
     def __init__(
-        self, uow_factory: UowFactory, clock: Clock, counters: DailyCounters
+        self,
+        uow_factory: UowFactory,
+        clock: Clock,
+        counters: DailyCounters,
+        gate: AudienceGate,
     ) -> None:
         """Store collaborators."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.counters = counters
+        self.gate = gate
 
     async def execute(
         self, actor: Actor, step_id: UUID, card_id: str, rating: Rating
@@ -48,7 +54,7 @@ class ReviewCard:
         now = self.clock.now()
         day = local_today(self.clock)
         async with self.uow_factory() as uow:
-            context = await require_enrolled(uow, actor, step_id)
+            context = await require_enrolled(uow, actor, step_id, self.gate)
             revision = await load_revision(uow, context.live_step.revision_id)
             block = find_card_block(revision.content, card_id)
             if block is None:

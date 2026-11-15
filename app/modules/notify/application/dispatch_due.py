@@ -33,7 +33,13 @@ from app.shared.contracts.identity import (
     UserRef,
     UserStatus,
 )
-from app.shared.contracts.notify import RenderContext, RenderedMessage, TelegramSender
+from app.shared.contracts.notify import (
+    BotRoute,
+    BotSenders,
+    RenderContext,
+    RenderedMessage,
+    TelegramSender,
+)
 from app.shared.notifications import NotificationType
 
 import structlog
@@ -299,22 +305,40 @@ class DispatchDue:
             return _TelegramRun(errors=[f"render-failed:{type(exc).__name__}"])
         if message is None:
             return _TelegramRun(counts=False, skip_reason="nothing-to-send")
-        return await self._deliver(notification, message, recipients)
+        route = await self._route(notification)
+        if route is None:
+            return _TelegramRun(counts=False, skip_reason="bot-off")
+        return await self._deliver(notification, message, recipients, route)
+
+    async def _route(self, notification: Notification) -> BotRoute | None:
+        """The bot this notification goes out through.
+
+        The default without a registry, or when the payload names no bot.
+        """
+        if not isinstance(self.sender, BotSenders):
+            return BotRoute(sender=self.sender, is_default=True)
+        bot_id = notification.payload.get("bot_id")
+        return await self.sender.route(
+            str(bot_id) if bot_id else None,
+            personal=notification.type != NotificationType.BROADCAST,
+        )
 
     async def _deliver(
         self,
         notification: Notification,
         message: RenderedMessage,
         recipients: Sequence[TelegramAccountRef],
+        route: BotRoute,
     ) -> _TelegramRun:
         run = _TelegramRun()
         for account in recipients:
             chat_id = account.telegram_user_id
             try:
-                note = await self._send_message(chat_id, message)
+                note = await self._send_message(route.sender, chat_id, message)
             except TelegramBlocked:
                 notification.record(chat_id, DeliveryState.BLOCKED)
-                await self.identity.set_telegram_blocked(chat_id, True)
+                if route.is_default:  # another bot being blocked says nothing
+                    await self.identity.set_telegram_blocked(chat_id, True)
             except TelegramRetryAfter as exc:
                 run.retry_after = exc.seconds
                 return run
@@ -327,14 +351,16 @@ class DispatchDue:
                     run.errors.append(note)
         return run
 
-    async def _send_message(self, chat_id: int, message: RenderedMessage) -> str | None:
+    async def _send_message(
+        self, sender: TelegramSender, chat_id: int, message: RenderedMessage
+    ) -> str | None:
         """Send the text and the documents; a failed document is only noted."""
         await self.limiter.acquire()
-        await self.sender.send_message(chat_id, message.text_html, message.buttons)
+        await sender.send_message(chat_id, message.text_html, message.buttons)
         for filename, data in message.documents:
             await self.limiter.acquire()
             try:
-                await self.sender.send_document(chat_id, filename, data)
+                await sender.send_document(chat_id, filename, data)
             except TelegramSendFailed as exc:
                 log.warning("notification_document_failed", chat_id=chat_id)
                 return f"{chat_id}:document {filename}:{exc}"
