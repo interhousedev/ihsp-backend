@@ -50,6 +50,18 @@ class NotebooksQueries(Protocol):
         """Return the output quota counters (``{"artifacts": {"used", "limit"}}``)."""
         ...
 
+    async def chat_page(
+        self, user_id: UUID, notebook_id: UUID, *, after_seq: int, limit: int
+    ) -> dict[str, Any] | None:
+        """Return one page of the owner's chat thread; None if not the user's."""
+        ...
+
+    async def notes_page(
+        self, user_id: UUID, notebook_id: UUID, *, offset: int, limit: int
+    ) -> dict[str, Any] | None:
+        """Return one page of the owner's notes; None if not the user's."""
+        ...
+
     async def course_workspace(
         self, user_id: UUID, course_id: UUID
     ) -> dict[str, Any] | None:

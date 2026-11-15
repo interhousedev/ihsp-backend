@@ -70,6 +70,12 @@ class AiQueries(Protocol):
         """Return the chat owner's id."""
         ...
 
+    async def chat_history(
+        self, owner_id: UUID, chat_id: UUID, *, after_seq: int, limit: int
+    ) -> dict[str, Any] | None:
+        """Return one page of an owner's student chat by seq; None if not theirs."""
+        ...
+
     async def message_for_share(self, chat_id: UUID, seq: int) -> dict[str, Any] | None:
         """Return {"owner_id", "text"} of one assistant answer of a shareable chat.
 
