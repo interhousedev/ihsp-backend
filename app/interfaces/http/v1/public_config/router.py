@@ -7,7 +7,7 @@ from app.bootstrap.container import Container
 from app.interfaces.http.dependencies import get_container
 from app.shared.features import Feature, is_enabled
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Request, Response
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/v1/public", tags=["public"])
@@ -26,11 +26,18 @@ class ClientDocs(BaseModel):
     entrance_devices_url: str | None
 
 
+class ClientBranding(BaseModel):
+    """Branding set by Administration."""
+
+    lyceum_logo_url: str | None
+
+
 class ClientConfigResponse(BaseModel):
     """Public client configuration."""
 
     features: ClientFeatures
     docs: ClientDocs
+    branding: ClientBranding
 
 
 @router.get("/client-config", response_model=ClientConfigResponse)
@@ -39,6 +46,8 @@ async def get_client_config(
 ) -> ClientConfigResponse:
     """Return the public feature flags and documentation links."""
     docs = container.settings.docs
+    admin = container.admin
+    logo = await admin.lyceum_logo.current() if admin is not None else None
     return ClientConfigResponse(
         features=ClientFeatures(
             login_cues=is_enabled(container.settings, Feature.LOGIN_CUES)
@@ -47,7 +56,32 @@ async def get_client_config(
             personal_tokens_url=docs.personal_tokens_url,
             entrance_devices_url=docs.entrance_devices_url,
         ),
+        branding=ClientBranding(lyceum_logo_url=logo.url if logo else None),
     )
+
+
+@router.get(
+    "/lyceum-logo",
+    response_class=Response,
+    responses={200: {"content": {"image/*": {}}}},
+)
+async def get_lyceum_logo(
+    container: Annotated[Container, Depends(get_container)],
+    request: Request,
+    v: str | None = None,
+) -> Response:
+    """Stream the uploaded lyceum logo; immutable cache when asked with ``?v=``."""
+    logo, data = await container.admin.lyceum_logo.read()
+    etag = f'"{logo.sha256}"'
+    headers = {
+        "ETag": etag,
+        "Cache-Control": (
+            "public, max-age=86400, immutable" if v else "public, max-age=300"
+        ),
+    }
+    if request.headers.get("if-none-match") == etag:
+        return Response(status_code=304, headers=headers)
+    return Response(content=data, media_type=logo.content_type, headers=headers)
 
 
 class MaintenanceResponse(BaseModel):

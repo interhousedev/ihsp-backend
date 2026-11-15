@@ -5,7 +5,7 @@ from uuid import UUID
 
 from app.modules.admin.infrastructure.orm.platform_setting import PlatformSetting
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.sql import func
@@ -46,5 +46,13 @@ class SqlPlatformSettingsStore:
                         "updated_at": func.now(),
                     },
                 )
+            )
+            await session.commit()
+
+    async def delete(self, keys: list[str]) -> None:
+        """Delete the given keys and commit."""
+        async with self.sessionmaker() as session:
+            await session.execute(
+                delete(PlatformSetting).where(PlatformSetting.key.in_(keys))
             )
             await session.commit()

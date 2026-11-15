@@ -2,6 +2,7 @@
 
 from typing import Annotated, Literal
 
+from app.modules.admin.domain.lyceum_logo import LyceumLogo
 from app.modules.admin.domain.platform_settings import (
     SCHOOL_NAME_MAX_LENGTH,
     SUPPORT_CONTACT_MAX_LENGTH,
@@ -70,14 +71,22 @@ class PlatformSettingsResponse(PlatformSettingsBody):
     features: dict[str, bool] = Field(
         description="Feature flags of the deployment (IHSP_FEATURES__*); read-only."
     )
+    lyceum_logo_url: str | None = Field(
+        default=None,
+        description="API-relative link of the uploaded lyceum logo; null when none.",
+    )
 
     @classmethod
     def of(
-        cls, current: PlatformSettings, features: FeaturesSettings
+        cls,
+        current: PlatformSettings,
+        features: FeaturesSettings,
+        logo: LyceumLogo | None = None,
     ) -> "PlatformSettingsResponse":
         """Combine the stored settings with the environment's feature flags."""
         return cls(
             **current.as_stored(),
+            lyceum_logo_url=logo.url if logo is not None else None,
             features={
                 name: bool(getattr(features, name))
                 for name in type(features).model_fields

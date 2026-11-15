@@ -15,6 +15,7 @@ from app.shared.rate_limit import RateLimiter
 from app.shared.wiring import ModuleDeps
 from tests.factories.notify import make_user
 from tests.fakes.clock import FixedClock
+from tests.fakes.files.storage import InMemoryStorage
 from tests.fakes.notify.files import FakeFilesApi
 from tests.fakes.notify.identity import FakeIdentityDirectory
 from tests.fakes.notify.links import FakeLinksApi
@@ -41,6 +42,7 @@ class Stack:
     schedule: FakeScheduleQueries
     sender: FakeTelegramSender
     actor: Actor
+    storage: InMemoryStorage
 
 
 @pytest.fixture
@@ -68,10 +70,15 @@ def stack(
     identity = FakeIdentityDirectory()
     schedule = FakeScheduleQueries()
     sender = FakeTelegramSender()
+    storage = InMemoryStorage()
     admin_user = identity.add_user(make_user(Role.ADMIN, first_name="Gulnora"), 900)
     return Stack(
         admin=build_admin(
-            deps, identity=identity, schedule=schedule, step_up=_no_step_up
+            deps,
+            identity=identity,
+            schedule=schedule,
+            step_up=_no_step_up,
+            storage=storage,
         ),
         notify=build_notify(
             deps,
@@ -86,4 +93,5 @@ def stack(
         schedule=schedule,
         sender=sender,
         actor=Actor(user_id=admin_user.id, roles=frozenset({Role.ADMIN})),
+        storage=storage,
     )

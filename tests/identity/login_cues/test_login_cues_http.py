@@ -207,6 +207,7 @@ async def test_client_config_is_public(
             "personal_tokens_url": settings.docs.personal_tokens_url,
             "entrance_devices_url": settings.docs.entrance_devices_url,
         },
+        "branding": {"lyceum_logo_url": None},
     }
     monkeypatch.setattr(settings.features, "login_cues", False)
     off = await client.get("/v1/public/client-config")

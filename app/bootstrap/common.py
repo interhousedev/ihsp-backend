@@ -527,6 +527,7 @@ class _Assembler:
             identity=c.identity.directory,
             schedule=schedule,
             step_up=c.identity.auth.step_up.verify,
+            storage=c.files.storage,
         )
         self.build_feedback()
         self.build_faces()

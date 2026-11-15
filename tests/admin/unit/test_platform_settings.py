@@ -31,6 +31,10 @@ class MemoryStore:
         self.rows.update(values)
         self.updated_by = updated_by
 
+    async def delete(self, keys: list[str]) -> None:
+        for key in keys:
+            self.rows.pop(key, None)
+
 
 ADMIN = Actor(user_id=new_id(), roles=frozenset({Role.ADMIN}))
 TEACHER = Actor(user_id=new_id(), roles=frozenset({Role.TEACHER}))

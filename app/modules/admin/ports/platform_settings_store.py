@@ -14,3 +14,7 @@ class PlatformSettingsStore(Protocol):
     async def write(self, values: dict[str, Any], *, updated_by: UUID) -> None:
         """Insert or update the given keys in one transaction."""
         ...
+
+    async def delete(self, keys: list[str]) -> None:
+        """Remove the given keys (missing keys are fine)."""
+        ...

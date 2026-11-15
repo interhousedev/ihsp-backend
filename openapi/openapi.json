@@ -4545,6 +4545,20 @@
         "title": "Body_import_preview_v1_admin_students_import_post",
         "type": "object"
       },
+      "Body_put_lyceum_logo_v1_admin_settings_lyceum_logo_put": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_put_lyceum_logo_v1_admin_settings_lyceum_logo_put",
+        "type": "object"
+      },
       "Body_put_my_face_v1_me_face_put": {
         "properties": {
           "file": {
@@ -7327,9 +7341,33 @@
         "title": "ClientBody",
         "type": "object"
       },
+      "ClientBranding": {
+        "description": "Branding set by Administration.",
+        "properties": {
+          "lyceum_logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lyceum Logo Url"
+          }
+        },
+        "required": [
+          "lyceum_logo_url"
+        ],
+        "title": "ClientBranding",
+        "type": "object"
+      },
       "ClientConfigResponse": {
         "description": "Public client configuration.",
         "properties": {
+          "branding": {
+            "$ref": "#/components/schemas/ClientBranding"
+          },
           "docs": {
             "$ref": "#/components/schemas/ClientDocs"
           },
@@ -7339,7 +7377,8 @@
         },
         "required": [
           "features",
-          "docs"
+          "docs",
+          "branding"
         ],
         "title": "ClientConfigResponse",
         "type": "object"
@@ -29192,6 +29231,18 @@
           },
           "honours": {
             "$ref": "#/components/schemas/HonoursBody"
+          },
+          "lyceum_logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "API-relative link of the uploaded lyceum logo; null when none.",
+            "title": "Lyceum Logo Url"
           },
           "school_name": {
             "maxLength": 120,
@@ -57495,6 +57546,68 @@
         ]
       }
     },
+    "/v1/admin/settings/lyceum-logo": {
+      "delete": {
+        "description": "Remove the lyceum logo.",
+        "operationId": "delete_lyceum_logo_v1_admin_settings_lyceum_logo_delete",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformSettingsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Delete Lyceum Logo",
+        "tags": [
+          "admin-settings"
+        ]
+      },
+      "put": {
+        "description": "Upload the lyceum logo (PNG, JPEG or WebP, at most 1 MiB).",
+        "operationId": "put_lyceum_logo_v1_admin_settings_lyceum_logo_put",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_put_lyceum_logo_v1_admin_settings_lyceum_logo_put"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformSettingsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Lyceum Logo",
+        "tags": [
+          "admin-settings"
+        ]
+      }
+    },
     "/v1/admin/students": {
       "get": {
         "description": "Search and filter students; names and photo links come from identity.",
@@ -84314,6 +84427,52 @@
           }
         },
         "summary": "Get Client Config",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/v1/public/lyceum-logo": {
+      "get": {
+        "description": "Stream the uploaded lyceum logo; immutable cache when asked with ``?v=``.",
+        "operationId": "get_lyceum_logo_v1_public_lyceum_logo_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "v",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "V"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/*": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Lyceum Logo",
         "tags": [
           "public"
         ]

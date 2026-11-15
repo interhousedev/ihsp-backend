@@ -20,6 +20,7 @@ from app.shared.rate_limit import RateLimiter
 from app.shared.wiring import ModuleDeps
 from tests.factories.notify import make_user
 from tests.fakes.clock import FixedClock
+from tests.fakes.files.storage import InMemoryStorage
 from tests.fakes.notify.identity import FakeIdentityDirectory
 from tests.fakes.notify.schedule import FakeScheduleQueries
 from tests.fakes.tasks import FakeTaskKicker
@@ -88,6 +89,7 @@ def world(
         identity=identity,
         schedule=FakeScheduleQueries(),
         step_up=_no_step_up,
+        storage=InMemoryStorage(),
     )
     return World(
         admin=services.limit_admin,
