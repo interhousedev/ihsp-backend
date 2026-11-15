@@ -168,6 +168,95 @@
         "title": "AccessOptionResponse",
         "type": "object"
       },
+      "AccessRuleBody": {
+        "description": "The audience; the lists count only for `chosen`.",
+        "properties": {
+          "audience": {
+            "$ref": "#/components/schemas/Audience"
+          },
+          "group_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 500,
+            "title": "Group Ids",
+            "type": "array"
+          },
+          "user_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 500,
+            "title": "User Ids",
+            "type": "array"
+          },
+          "when_denied": {
+            "$ref": "#/components/schemas/WhenDenied",
+            "default": "hidden"
+          }
+        },
+        "required": [
+          "audience"
+        ],
+        "title": "AccessRuleBody",
+        "type": "object"
+      },
+      "AccessRuleView": {
+        "description": "`AccessRule`: the audience of a course or a lesson.",
+        "properties": {
+          "audience": {
+            "$ref": "#/components/schemas/Audience"
+          },
+          "group_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Group Ids",
+            "type": "array"
+          },
+          "users": {
+            "items": {
+              "$ref": "#/components/schemas/AccessUserView"
+            },
+            "title": "Users",
+            "type": "array"
+          },
+          "when_denied": {
+            "$ref": "#/components/schemas/WhenDenied"
+          }
+        },
+        "required": [
+          "audience",
+          "when_denied",
+          "group_ids",
+          "users"
+        ],
+        "title": "AccessRuleView",
+        "type": "object"
+      },
+      "AccessUserView": {
+        "description": "A chosen person, with a name for the editor.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "AccessUserView",
+        "type": "object"
+      },
       "ActivateBody": {
         "description": "POST /v1/id/activation/{token}.\n\nThe email and its code are optional for a password reset link of an account\nwhose email is already verified.",
         "properties": {
@@ -2011,6 +2100,71 @@
         "title": "AnnotationsSyncResponse",
         "type": "object"
       },
+      "AnnouncementBody": {
+        "description": "Send a draft broadcast through the selected bots, in this order.",
+        "properties": {
+          "bot_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Bot Ids",
+            "type": "array"
+          },
+          "broadcast_id": {
+            "format": "uuid",
+            "title": "Broadcast Id",
+            "type": "string"
+          },
+          "otp_code": {
+            "description": "Step-up code from POST /v1/id/me/step-up.",
+            "maxLength": 12,
+            "minLength": 4,
+            "title": "Otp Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "broadcast_id",
+          "bot_ids",
+          "otp_code"
+        ],
+        "title": "AnnouncementBody",
+        "type": "object"
+      },
+      "AnnouncementOut": {
+        "description": "Recipients in total and per bot.",
+        "properties": {
+          "broadcast_id": {
+            "format": "uuid",
+            "title": "Broadcast Id",
+            "type": "string"
+          },
+          "per_bot": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "format": "uuid"
+            },
+            "title": "Per Bot",
+            "type": "object"
+          },
+          "recipients": {
+            "title": "Recipients",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "broadcast_id",
+          "recipients",
+          "per_bot"
+        ],
+        "title": "AnnouncementOut",
+        "type": "object"
+      },
       "AnswerConfig": {
         "description": "Accepted answers of a text or number question.",
         "properties": {
@@ -3703,6 +3857,17 @@
         "title": "AttendanceSheetResponse",
         "type": "object"
       },
+      "Audience": {
+        "description": "Who may open the item.",
+        "enum": [
+          "public",
+          "signed_in",
+          "students",
+          "chosen"
+        ],
+        "title": "Audience",
+        "type": "string"
+      },
       "AudienceBody-Output": {
         "description": "Who receives a broadcast: everyone, or the union of roles, groups, semesters.",
         "properties": {
@@ -5188,6 +5353,202 @@
           "topic_id"
         ],
         "title": "BookTopicInput",
+        "type": "object"
+      },
+      "BotCreateBody": {
+        "description": "Register a bot; the token is checked with Telegram's getMe.",
+        "properties": {
+          "name": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "otp_code": {
+            "description": "Step-up code from POST /v1/id/me/step-up.",
+            "maxLength": 12,
+            "minLength": 4,
+            "title": "Otp Code",
+            "type": "string"
+          },
+          "token": {
+            "description": "The BotFather token; never returned.",
+            "maxLength": 200,
+            "minLength": 20,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "token",
+          "otp_code"
+        ],
+        "title": "BotCreateBody",
+        "type": "object"
+      },
+      "BotOut": {
+        "description": "One bot; the token appears only as a mask of its last characters.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "features": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "description": "ai_agent, open_ai_agent, commands, notifications, announcements, mini_app.",
+            "title": "Features",
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_default": {
+            "title": "Is Default",
+            "type": "boolean"
+          },
+          "members": {
+            "description": "Linked users who wrote to this bot.",
+            "title": "Members",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "token_mask": {
+            "title": "Token Mask",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "username",
+          "enabled",
+          "is_default",
+          "features",
+          "token_mask",
+          "members",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "BotOut",
+        "type": "object"
+      },
+      "BotPatchBody": {
+        "description": "Change some fields; omitted fields stay. Needs a fresh step-up code.",
+        "properties": {
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "features": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "boolean"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Features"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "otp_code": {
+            "description": "Step-up code from POST /v1/id/me/step-up.",
+            "maxLength": 12,
+            "minLength": 4,
+            "title": "Otp Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "otp_code"
+        ],
+        "title": "BotPatchBody",
+        "type": "object"
+      },
+      "BotTokenBody": {
+        "description": "A new token for the same bot.",
+        "properties": {
+          "otp_code": {
+            "description": "Step-up code from POST /v1/id/me/step-up.",
+            "maxLength": 12,
+            "minLength": 4,
+            "title": "Otp Code",
+            "type": "string"
+          },
+          "token": {
+            "description": "The BotFather token; never returned.",
+            "maxLength": 200,
+            "minLength": 20,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "otp_code"
+        ],
+        "title": "BotTokenBody",
+        "type": "object"
+      },
+      "BotsResponse": {
+        "description": "Every registered bot, the default first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BotOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "BotsResponse",
         "type": "object"
       },
       "BreakerState": {
@@ -8037,6 +8398,27 @@
           "new"
         ],
         "title": "CountsResponse",
+        "type": "object"
+      },
+      "CourseAccessRulesView": {
+        "description": "`CourseAccessRules`: the course rule and every restricted lesson.",
+        "properties": {
+          "course": {
+            "$ref": "#/components/schemas/AccessRuleView"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/StepAccessRuleView"
+            },
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "course",
+          "steps"
+        ],
+        "title": "CourseAccessRulesView",
         "type": "object"
       },
       "CourseBroadcastBody": {
@@ -13565,6 +13947,22 @@
         "title": "ExportDownloadOut",
         "type": "object"
       },
+      "ExportIn": {
+        "description": "The step-up code sent by ``POST /v1/id/me/step-up``.",
+        "properties": {
+          "otp_code": {
+            "maxLength": 12,
+            "minLength": 4,
+            "title": "Otp Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "otp_code"
+        ],
+        "title": "ExportIn",
+        "type": "object"
+      },
       "ExportListOut": {
         "description": "The caller's recent exports, newest first.",
         "properties": {
@@ -18991,6 +19389,31 @@
         "title": "LearningCardView",
         "type": "object"
       },
+      "LearningContactView": {
+        "description": "Whom to ask for access to a locked item with a chosen audience.",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "telegram": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Telegram"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "LearningContactView",
+        "type": "object"
+      },
       "LearningCourseCardView": {
         "description": "`CourseCard`: a course in the catalog and in My courses.",
         "properties": {
@@ -19004,6 +19427,17 @@
               }
             ],
             "title": "Accent Color"
+          },
+          "access": {
+            "default": "public",
+            "enum": [
+              "public",
+              "signed_in",
+              "students",
+              "chosen"
+            ],
+            "title": "Access",
+            "type": "string"
           },
           "cover_file_id": {
             "anyOf": [
@@ -19036,6 +19470,11 @@
             "format": "uuid",
             "title": "Id",
             "type": "string"
+          },
+          "locked": {
+            "default": false,
+            "title": "Locked",
+            "type": "boolean"
           },
           "progress_pct": {
             "anyOf": [
@@ -19114,6 +19553,17 @@
             ],
             "title": "Accent Color"
           },
+          "access": {
+            "default": "public",
+            "enum": [
+              "public",
+              "signed_in",
+              "students",
+              "chosen"
+            ],
+            "title": "Access",
+            "type": "string"
+          },
           "can_edit": {
             "title": "Can Edit",
             "type": "boolean"
@@ -19125,6 +19575,16 @@
             },
             "title": "Changed Since Last Visit",
             "type": "array"
+          },
+          "contact": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LearningContactView"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "cover_file_id": {
             "anyOf": [
@@ -19161,6 +19621,11 @@
             "format": "uuid",
             "title": "Id",
             "type": "string"
+          },
+          "locked": {
+            "default": false,
+            "title": "Locked",
+            "type": "boolean"
           },
           "outline": {
             "items": {
@@ -19262,11 +19727,11 @@
           "progress_pct",
           "visibility",
           "updated_at",
-          "staff",
           "outline",
           "enrolled",
           "can_edit",
-          "changed_since_last_visit"
+          "changed_since_last_visit",
+          "staff"
         ],
         "title": "LearningCoursePageView",
         "type": "object"
@@ -19379,6 +19844,222 @@
           "due"
         ],
         "title": "LearningFlashcardsBlockView",
+        "type": "object"
+      },
+      "LearningGuestCoursePageView": {
+        "description": "The course page for guests: no ids or permissions of the staff.",
+        "properties": {
+          "accent_color": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accent Color"
+          },
+          "access": {
+            "default": "public",
+            "enum": [
+              "public",
+              "signed_in",
+              "students",
+              "chosen"
+            ],
+            "title": "Access",
+            "type": "string"
+          },
+          "can_edit": {
+            "title": "Can Edit",
+            "type": "boolean"
+          },
+          "changed_since_last_visit": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Changed Since Last Visit",
+            "type": "array"
+          },
+          "contact": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LearningContactView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cover_file_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover File Id"
+          },
+          "cover_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Url"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "enrolled": {
+            "title": "Enrolled",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "locked": {
+            "default": false,
+            "title": "Locked",
+            "type": "boolean"
+          },
+          "outline": {
+            "items": {
+              "$ref": "#/components/schemas/LearningOutlineSectionView"
+            },
+            "title": "Outline",
+            "type": "array"
+          },
+          "points_earned": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Points Earned"
+          },
+          "points_total": {
+            "default": 0.0,
+            "title": "Points Total",
+            "type": "number"
+          },
+          "progress_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress Pct"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "staff": {
+            "items": {
+              "$ref": "#/components/schemas/LearningGuestStaffItemView"
+            },
+            "title": "Staff",
+            "type": "array"
+          },
+          "steps_completed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Steps Completed"
+          },
+          "steps_count": {
+            "title": "Steps Count",
+            "type": "integer"
+          },
+          "summary": {
+            "default": "",
+            "title": "Summary",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "visibility": {
+            "enum": [
+              "public",
+              "invite"
+            ],
+            "title": "Visibility",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "description",
+          "cover_url",
+          "steps_count",
+          "progress_pct",
+          "visibility",
+          "updated_at",
+          "outline",
+          "enrolled",
+          "can_edit",
+          "changed_since_last_visit",
+          "staff"
+        ],
+        "title": "LearningGuestCoursePageView",
+        "type": "object"
+      },
+      "LearningGuestStaffItemView": {
+        "description": "A staff member as guests see them: the display name and order only.",
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "position"
+        ],
+        "title": "LearningGuestStaffItemView",
         "type": "object"
       },
       "LearningH5PBlockView": {
@@ -20054,6 +20735,17 @@
       "LearningOutlineStepView": {
         "description": "One step in an outline section.",
         "properties": {
+          "access": {
+            "default": "public",
+            "enum": [
+              "public",
+              "signed_in",
+              "students",
+              "chosen"
+            ],
+            "title": "Access",
+            "type": "string"
+          },
           "badge": {
             "anyOf": [
               {
@@ -20079,6 +20771,11 @@
               }
             ],
             "title": "Completed"
+          },
+          "locked": {
+            "default": false,
+            "title": "Locked",
+            "type": "boolean"
           },
           "points_earned": {
             "anyOf": [
@@ -28917,6 +29614,17 @@
             ],
             "title": "Bottom Nav"
           },
+          "hide_photo_from_classmates": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hide Photo From Classmates"
+          },
           "lessons_links_lead_min": {
             "anyOf": [
               {
@@ -37130,6 +37838,25 @@
         "title": "StatusReasonCode",
         "type": "string"
       },
+      "StepAccessRuleView": {
+        "description": "The rule of one lesson that is not public.",
+        "properties": {
+          "rule": {
+            "$ref": "#/components/schemas/AccessRuleView"
+          },
+          "step_id": {
+            "format": "uuid",
+            "title": "Step Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "step_id",
+          "rule"
+        ],
+        "title": "StepAccessRuleView",
+        "type": "object"
+      },
       "StepContent-Input": {
         "description": "Title and blocks of a step (``CourseStep.draft``, ``StepRevision.content``).",
         "properties": {
@@ -37623,7 +38350,14 @@
             "type": "string"
           },
           "group": {
-            "$ref": "#/components/schemas/app__interfaces__http__v1__composition__shared_schemas__GroupRefResponse"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/app__interfaces__http__v1__composition__shared_schemas__GroupRefResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "head_student": {
             "anyOf": [
@@ -37891,6 +38625,28 @@
           "refresh_in"
         ],
         "title": "StudentCardTokenResponse",
+        "type": "object"
+      },
+      "StudentGroupBody": {
+        "description": "The new group of a student; null leaves the student without a group.",
+        "properties": {
+          "group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Id"
+          }
+        },
+        "required": [
+          "group_id"
+        ],
+        "title": "StudentGroupBody",
         "type": "object"
       },
       "StudentItemResponse": {
@@ -38225,6 +38981,14 @@
               }
             ]
           },
+          "homework_files": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ResourceItemResponse"
+            },
+            "title": "Homework Files",
+            "type": "array"
+          },
           "lesson": {
             "$ref": "#/components/schemas/app__interfaces__http__v1__me_classwork__schemas__LessonItemResponse"
           },
@@ -38338,7 +39102,14 @@
             "type": "string"
           },
           "group": {
-            "$ref": "#/components/schemas/app__interfaces__http__v1__me_schedule__schemas__GroupRefResponse"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/app__interfaces__http__v1__me_schedule__schemas__GroupRefResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "head_student": {
             "anyOf": [
@@ -45198,6 +45969,11 @@
             "$ref": "#/components/schemas/TeacherContacts",
             "default": {}
           },
+          "hide_photo_from_classmates": {
+            "default": false,
+            "title": "Hide Photo From Classmates",
+            "type": "boolean"
+          },
           "lessons_links_lead_min": {
             "default": 5,
             "title": "Lessons Links Lead Min",
@@ -45938,6 +46714,15 @@
         ],
         "title": "WebSearchSuggestion",
         "type": "object"
+      },
+      "WhenDenied": {
+        "description": "What the people outside the audience see.",
+        "enum": [
+          "hidden",
+          "locked"
+        ],
+        "title": "WhenDenied",
+        "type": "string"
       },
       "Widget": {
         "description": "One tile of the dashboard grid.",
@@ -51861,6 +52646,218 @@
         ]
       }
     },
+    "/v1/admin/bots": {
+      "get": {
+        "description": "Every registered bot with its feature switches and member count.",
+        "operationId": "list_bots_v1_admin_bots_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Bots",
+        "tags": [
+          "admin-bots"
+        ]
+      },
+      "post": {
+        "description": "Register a bot; it starts with every feature off (bot process restart).\n\nNeeds a fresh step-up code (403 ``identity/step-up-invalid``).",
+        "operationId": "add_bot_v1_admin_bots_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BotCreateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Bot",
+        "tags": [
+          "admin-bots"
+        ]
+      }
+    },
+    "/v1/admin/bots/announcements": {
+      "post": {
+        "description": "Send a draft broadcast through the selected bots; needs step-up.",
+        "operationId": "announce_v1_admin_bots_announcements_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnnouncementBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnnouncementOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Announce",
+        "tags": [
+          "admin-bots"
+        ]
+      }
+    },
+    "/v1/admin/bots/{bot_id}": {
+      "patch": {
+        "description": "Rename, switch on or off, or change feature switches; needs step-up.",
+        "operationId": "update_bot_v1_admin_bots__bot_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Bot Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BotPatchBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Bot",
+        "tags": [
+          "admin-bots"
+        ]
+      }
+    },
+    "/v1/admin/bots/{bot_id}/rotate-token": {
+      "post": {
+        "description": "Replace the token of the same Telegram bot; needs step-up.",
+        "operationId": "rotate_token_v1_admin_bots__bot_id__rotate_token_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Bot Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BotTokenBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rotate Token",
+        "tags": [
+          "admin-bots"
+        ]
+      }
+    },
     "/v1/admin/broadcasts": {
       "get": {
         "description": "List broadcasts, newest first.",
@@ -53147,7 +54144,7 @@
     },
     "/v1/admin/groups/{group_id}": {
       "delete": {
-        "description": "Delete a group; its students stay as users without a group.",
+        "description": "Delete a group; its students move to the target group or lose their group.",
         "operationId": "delete_group_v1_admin_groups__group_id__delete",
         "parameters": [
           {
@@ -53158,6 +54155,23 @@
               "format": "uuid",
               "title": "Group Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "move_students_to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Move Students To"
             }
           }
         ],
@@ -56780,6 +57794,53 @@
         "summary": "Get Student 360",
         "tags": [
           "composition"
+        ]
+      }
+    },
+    "/v1/admin/students/{user_id}/group": {
+      "put": {
+        "description": "Set or change the student's group; null detaches the student.",
+        "operationId": "set_student_group_v1_admin_students__user_id__group_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StudentGroupBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Student Group",
+        "tags": [
+          "admin-schedule"
         ]
       }
     },
@@ -69260,6 +70321,102 @@
         ]
       }
     },
+    "/v1/lms/courses/{course_id}/access": {
+      "get": {
+        "description": "Return the course rule and the rules of restricted lessons (course staff).",
+        "operationId": "get_access_v1_lms_courses__course_id__access_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseAccessRulesView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Access",
+        "tags": [
+          "lms-authoring"
+        ]
+      },
+      "put": {
+        "description": "Set the course audience; the owner or an LMS admin only.",
+        "operationId": "set_course_access_v1_lms_courses__course_id__access_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccessRuleBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseAccessRulesView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Course Access",
+        "tags": [
+          "lms-authoring"
+        ]
+      }
+    },
     "/v1/lms/courses/{course_id}/compare": {
       "get": {
         "description": "Return which steps differ between version numbers `a` and `b`.",
@@ -70619,6 +71776,70 @@
         ]
       }
     },
+    "/v1/lms/courses/{course_id}/steps/{step_id}/access": {
+      "put": {
+        "description": "Set a lesson audience; it applies only inside an accessible course.",
+        "operationId": "set_step_access_v1_lms_courses__course_id__steps__step_id__access_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "step_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Step Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccessRuleBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourseAccessRulesView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Step Access",
+        "tags": [
+          "lms-authoring"
+        ]
+      }
+    },
     "/v1/lms/courses/{course_id}/steps/{step_id}/blocks/{block_id}/h5p": {
       "get": {
         "description": "Return the signed base URL of the block's package (enrolled or staff).",
@@ -71248,6 +72469,201 @@
         "summary": "List My Courses",
         "tags": [
           "lms"
+        ]
+      }
+    },
+    "/v1/lms/public/courses": {
+      "get": {
+        "description": "List the courses a guest may read, optionally filtered by title.",
+        "operationId": "list_public_courses_v1_lms_public_courses_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LearningCourseCardView"
+                  },
+                  "title": "Response List Public Courses V1 Lms Public Courses Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Public Courses",
+        "tags": [
+          "lms-public"
+        ]
+      }
+    },
+    "/v1/lms/public/courses/{course_id}/steps/{step_id}": {
+      "get": {
+        "description": "Return a lesson of a public course without answers or personal state.",
+        "operationId": "get_public_step_v1_lms_public_courses__course_id__steps__step_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "course_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Course Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "step_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Step Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearningStepView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Public Step",
+        "tags": [
+          "lms-public"
+        ]
+      }
+    },
+    "/v1/lms/public/courses/{slug}": {
+      "get": {
+        "description": "Show a public course: description, staff names and outline, no progress.",
+        "operationId": "get_public_course_v1_lms_public_courses__slug__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearningGuestCoursePageView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Public Course",
+        "tags": [
+          "lms-public"
+        ]
+      }
+    },
+    "/v1/lms/public/courses/{slug}/landing": {
+      "get": {
+        "description": "Describe a public course (what it teaches, authors, syllabus).",
+        "operationId": "get_public_course_landing_v1_lms_public_courses__slug__landing_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LearningLandingView"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Public Course Landing",
+        "tags": [
+          "lms-public"
         ]
       }
     },
@@ -77311,8 +78727,18 @@
         ]
       },
       "post": {
-        "description": "Queue an export of the caller's data (one per 24 hours).",
+        "description": "Queue an export of the caller's data (one per 24 hours); needs step-up.",
         "operationId": "request_export_v1_me_privacy_exports_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportIn"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "202": {
             "content": {
@@ -77323,6 +78749,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "summary": "Request Export",
