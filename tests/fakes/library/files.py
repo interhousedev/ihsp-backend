@@ -14,6 +14,7 @@ from app.shared.contracts.files import (
     FileScope,
     FullText,
     OutlineEntry,
+    PageLayout,
     TextPage,
 )
 from app.shared.ids import new_id
@@ -38,6 +39,7 @@ class FakeFilesApi:
         self.files: dict[UUID, StoredFile] = {}
         self.urls: list[tuple[UUID, int | None]] = []
         self.transferred: list[tuple[UUID, UUID]] = []
+        self.layouts: dict[UUID, dict[int, PageLayout]] = {}
 
     def add_file(
         self,
@@ -66,6 +68,10 @@ class FakeFilesApi:
         )
         self.files[file_id] = StoredFile(ref, data, list(pages), sha256)
         return file_id
+
+    async def read_page_layouts(self, file_id: UUID) -> dict[int, PageLayout]:
+        """The word boxes set up for the file (none by default)."""
+        return self.layouts.get(file_id, {})
 
     def _stored(self, file_id: UUID) -> StoredFile:
         stored = self.files.get(file_id)

@@ -2,6 +2,11 @@
 
 from dataclasses import dataclass
 
+from app.modules.library.application.catalogue.backfill_covers import BackfillCovers
+from app.modules.library.application.catalogue.backfill_item_pages import (
+    BackfillItemPages,
+    ReindexItemPages,
+)
 from app.modules.library.application.catalogue.books.attach_book_file import (
     AttachBookFile,
 )
@@ -26,6 +31,7 @@ from app.modules.library.application.catalogue.public_pages import (
     GetPublicItemPage,
     ListSitemap,
 )
+from app.modules.library.application.catalogue.search_item_text import SearchItemText
 from app.modules.library.application.catalogue.search_labels import (
     SearchAuthors,
     SearchTags,
@@ -54,6 +60,10 @@ class CatalogueServices:
     takedown_book: TakedownBook
     import_books: ImportBooks
     process_item_file: ProcessItemFile
+    backfill_covers: BackfillCovers
+    backfill_item_pages: BackfillItemPages
+    reindex_item_pages: ReindexItemPages
+    search_item_text: SearchItemText
     get_public_item_page: GetPublicItemPage
     list_sitemap: ListSitemap
 
@@ -122,6 +132,19 @@ def build_catalogue(core: LibraryCore) -> CatalogueServices:
         ),
         process_item_file=ProcessItemFile(
             uow_factory=uow_factory, files=core.files, clock=core.clock
+        ),
+        backfill_covers=BackfillCovers(
+            uow_factory=uow_factory,
+            files=core.files,
+            clock=core.clock,
+            kicker=core.kicker,
+        ),
+        backfill_item_pages=BackfillItemPages(
+            uow_factory=uow_factory, kicker=core.kicker
+        ),
+        reindex_item_pages=ReindexItemPages(uow_factory=uow_factory, files=core.files),
+        search_item_text=SearchItemText(
+            uow_factory=uow_factory, settings=core.settings
         ),
         get_public_item_page=GetPublicItemPage(
             uow_factory=uow_factory,

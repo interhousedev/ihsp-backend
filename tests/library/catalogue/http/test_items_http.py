@@ -388,3 +388,26 @@ async def test_subjects_endpoint_with_and_without_all(
         str(astronomy): 0,
     }
     assert UUID(everything[0]["id"])
+
+
+async def test_text_search_endpoint(
+    api: Api, library: LibraryServices, store_item: StoreItem, student: Actor
+) -> None:
+    """`GET /items/{id}/text/search`: hits with page, snippet, boxes; 422 if short."""
+    book = await put(
+        library.core.uow_factory,
+        store_item,
+        make_book(),
+        pages=["one fish", "two fish blue"],
+    )
+    client = await api(student)
+
+    ok = await client.get(f"/v1/library/items/{book.id}/text/search?q=blue")
+    short = await client.get(f"/v1/library/items/{book.id}/text/search?q=b")
+
+    body = ok.json()
+    assert body["truncated"] is False
+    [hit] = body["hits"]
+    assert hit["page"] == 2 and hit["snippet"]["match"] == "blue"
+    assert hit["boxes"] == [] and hit["source"] == "text_layer"
+    assert short.status_code == 422

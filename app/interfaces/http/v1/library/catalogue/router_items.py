@@ -6,6 +6,7 @@ from app.interfaces.http.v1.library.catalogue.handlers import (
     get_item_text,
     list_items,
     list_subjects,
+    search_item_text,
     search_labels,
 )
 
@@ -22,5 +23,10 @@ router.add_api_route(
 )
 router.add_api_route(
     "/items/{item_id}/text", get_item_text.get_item_text, methods=["GET"]
+)
+router.add_api_route(
+    "/items/{item_id}/text/search",
+    search_item_text.search_item_text,
+    methods=["GET"],
 )
 router.add_api_route("/items/{id_or_slug}", get_item.get_item, methods=["GET"])

@@ -18,6 +18,9 @@ from app.modules.library.application.catalogue.books.list_books import BookRowVi
 from app.modules.library.application.catalogue.get_file_url import FileUrlView
 from app.modules.library.application.catalogue.get_item_text import TextPageView
 from app.modules.library.application.catalogue.list_subjects import SubjectCountView
+from app.modules.library.application.catalogue.search_item_text import (
+    TextSearchView,
+)
 from app.modules.library.domain.catalogue_books import BookData
 from app.modules.library.domain.catalogue_search import ItemSort, ItemSource
 from app.modules.library.domain.entities import SubjectLink, TopicLink
@@ -86,6 +89,63 @@ class TextPageSchema(BaseModel):
 
     page: int
     text: str
+
+
+class TextBoxSchema(BaseModel):
+    """A rectangle on a page, as fractions of it (origin at the top left)."""
+
+    x: float
+    y: float
+    w: float
+    h: float
+
+
+class TextSnippetSchema(BaseModel):
+    """The text around a hit."""
+
+    pre: str
+    match: str
+    post: str
+
+
+class TextHitSchema(BaseModel):
+    """One occurrence of the query on a page."""
+
+    page: int
+    snippet: TextSnippetSchema
+    start: int
+    end: int
+    boxes: list[TextBoxSchema]
+    source: Literal["text_layer", "ocr"]
+
+
+class ItemTextSearchSchema(BaseModel):
+    """`ItemTextSearch`: hits in page order."""
+
+    query: str
+    hits: list[TextHitSchema]
+    truncated: bool
+
+    @classmethod
+    def from_view(cls, view: TextSearchView) -> Self:
+        """Build from the use case's result."""
+        return cls(
+            query=view.query,
+            truncated=view.truncated,
+            hits=[
+                TextHitSchema(
+                    page=h.page,
+                    snippet=TextSnippetSchema(
+                        pre=h.snippet.pre, match=h.snippet.match, post=h.snippet.post
+                    ),
+                    start=h.start,
+                    end=h.end,
+                    boxes=[TextBoxSchema(x=b.x, y=b.y, w=b.w, h=b.h) for b in h.boxes],
+                    source="ocr" if h.source == "ocr" else "text_layer",
+                )
+                for h in view.hits
+            ],
+        )
 
 
 class ItemTextSchema(BaseModel):

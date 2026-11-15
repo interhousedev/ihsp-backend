@@ -33,6 +33,18 @@ class TextPageView:
     text: str
 
 
+def readable_file(item: Item, actor: Actor | None, cards: bool) -> ItemFile:
+    """The primary file when the actor may read its ready text, else the error."""
+    if item.kind is ItemKind.EXTERNAL:
+        raise NotSupportedError(support_details="external items have no text")
+    if not can_read_content(item, actor, anonymous_cards=cards):
+        raise ItemNotFoundError(support_details="content is not readable")
+    stored = item.primary_file
+    if stored is None or stored.text_status is not TextStatus.READY:
+        raise TextUnavailableError(support_details="text is not ready")
+    return stored
+
+
 class GetItemText:
     """The text pages of the primary file, for the reader's search and notebooks."""
 
@@ -66,23 +78,13 @@ class GetItemText:
         cards = anonymous_cards(self.settings)
         async with self.uow_factory() as uow:
             item = await load_visible(uow, str(item_id), actor, cards=cards)
-            stored = self._readable_file(item, actor, cards)
+            stored = readable_file(item, actor, cards)
             indexed = await uow.pages.pages(item.id, stored.file_id, first, last)
             if indexed:
                 return [TextPageView(p.page, p.text) for p in indexed]
             if await uow.pages.count(item.id, stored.file_id):
                 return []
         return await self._from_files(stored.file_id, first, last)
-
-    def _readable_file(self, item: Item, actor: Actor | None, cards: bool) -> ItemFile:
-        if item.kind is ItemKind.EXTERNAL:
-            raise NotSupportedError(support_details="external items have no text")
-        if not can_read_content(item, actor, anonymous_cards=cards):
-            raise ItemNotFoundError(support_details="content is not readable")
-        stored = item.primary_file
-        if stored is None or stored.text_status is not TextStatus.READY:
-            raise TextUnavailableError(support_details="text is not ready")
-        return stored
 
     async def _from_files(
         self, file_id: UUID, first: int, last: int

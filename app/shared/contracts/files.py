@@ -70,6 +70,36 @@ class FullText:
 
 
 @dataclass(frozen=True, slots=True)
+class TextBox:
+    """A word or line of a page: where it is in the page text and on the page.
+
+    ``start`` and ``end`` are character offsets into the page's text (as split by
+    ``page_starts`` and stripped). ``x``, ``y``, ``w``, ``h`` are fractions of the page
+    (0 to 1, origin at the top left).
+    """
+
+    start: int
+    end: int
+    x: float
+    y: float
+    w: float
+    h: float
+
+
+@dataclass(frozen=True, slots=True)
+class PageLayout:
+    """The boxes of one page and where the text came from.
+
+    ``source`` is ``text_layer`` (the PDF's own text) or ``ocr`` (recognised from a
+    scan). Pages without a layout are simply absent.
+    """
+
+    page: int
+    source: str
+    boxes: tuple[TextBox, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class OutlineEntry:
     """One entry of a file's table of contents (PDF outline or EPUB navigation).
 
@@ -119,6 +149,14 @@ class FilesApi(Protocol):
 
         ``page_starts`` is empty for files without pages (or processed before page
         offsets were stored). Raises when the file has no text or is deleted.
+        """
+        ...
+
+    async def read_page_layouts(self, file_id: UUID) -> dict[int, PageLayout]:
+        """Return word boxes per 1-based page.
+
+        Taken from the OCR result kept with the file, else from the PDF text layer;
+        ``{}`` when the format has none.
         """
         ...
 

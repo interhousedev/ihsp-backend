@@ -2,6 +2,8 @@
 
 from app.interfaces.http.v1.library.catalogue.handlers import (
     attach_book_file,
+    backfill_covers,
+    backfill_item_pages,
     book_actions,
     create_book,
     get_book,
@@ -39,3 +41,15 @@ router.add_api_route(
     "/books/{book_id}/takedown", book_actions.takedown_book, methods=["POST"]
 )
 router.add_api_route("/import", import_books.import_books, methods=["POST"])
+router.add_api_route(
+    "/covers/backfill",
+    backfill_covers.backfill_covers,
+    methods=["POST"],
+    status_code=status.HTTP_202_ACCEPTED,
+)
+router.add_api_route(
+    "/pages/backfill",
+    backfill_item_pages.backfill_item_pages,
+    methods=["POST"],
+    status_code=status.HTTP_202_ACCEPTED,
+)

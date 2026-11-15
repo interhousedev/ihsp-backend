@@ -1,15 +1,42 @@
 """SQL repository of text pages (`library.item_pages`)."""
 
 from collections.abc import Sequence
+from typing import Any
 from uuid import UUID
 
+from app.modules.library.domain.page_search import fold_text
 from app.modules.library.infrastructure.orm import ItemPage as PageRow
 from app.modules.library.ports.page_repository import IndexedPage
+from app.shared.contracts.files import TextBox
 
 from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 INSERT_BATCH = 200
+_COLUMNS = (
+    PageRow.page,
+    PageRow.text,
+    PageRow.text_norm,
+    PageRow.source,
+    PageRow.boxes,
+)
+
+
+def _row(box: TextBox) -> tuple[int, int, float, float, float, float]:
+    return (box.start, box.end, box.x, box.y, box.w, box.h)
+
+
+def _page(row: Any) -> IndexedPage:
+    page, text, norm, source, boxes = row
+    return IndexedPage(
+        page,
+        text,
+        norm,
+        source,
+        tuple(
+            TextBox(int(b[0]), int(b[1]), b[2], b[3], b[4], b[5]) for b in boxes or ()
+        ),
+    )
 
 
 class SqlPageRepository:
@@ -32,6 +59,9 @@ class SqlPageRepository:
                     page=page.page,
                     text=page.text,
                     text_norm=page.text_norm,
+                    text_fold=fold_text(page.text_norm),
+                    source=page.source,
+                    boxes=[list(_row(box)) for box in page.boxes] or None,
                 )
                 for page in pages[start : start + INSERT_BATCH]
             )
@@ -42,7 +72,7 @@ class SqlPageRepository:
     ) -> list[IndexedPage]:
         """Pages `page_from` to `page_to` inclusive, in order (missing ones skipped)."""
         rows = await self.session.execute(
-            select(PageRow.page, PageRow.text, PageRow.text_norm)
+            select(*_COLUMNS)
             .where(
                 PageRow.item_id == item_id,
                 PageRow.file_id == file_id,
@@ -50,7 +80,7 @@ class SqlPageRepository:
             )
             .order_by(PageRow.page)
         )
-        return [IndexedPage(page, text, norm) for page, text, norm in rows.all()]
+        return [_page(row) for row in rows.all()]
 
     async def count(self, item_id: UUID, file_id: UUID) -> int:
         """How many pages of the file are indexed."""
@@ -68,3 +98,37 @@ class SqlPageRepository:
                 PageRow.item_id == item_id, PageRow.file_id == file_id
             )
         )
+
+    async def search(
+        self, item_id: UUID, file_id: UUID, needle: str, limit: int
+    ) -> list[IndexedPage]:
+        """Pages whose folded text contains `needle`, in order, at most `limit`."""
+        rows = await self.session.execute(
+            select(*_COLUMNS)
+            .where(
+                PageRow.item_id == item_id,
+                PageRow.file_id == file_id,
+                func.coalesce(PageRow.text_fold, PageRow.text_norm).contains(
+                    needle, autoescape=True
+                ),
+            )
+            .order_by(PageRow.page)
+            .limit(limit)
+        )
+        return [_page(row) for row in rows.all()]
+
+    async def stale_files(
+        self, after: UUID | None, limit: int
+    ) -> list[tuple[UUID, UUID]]:
+        """`(item_id, file_id)` of files with pages not yet folded, by file id."""
+        query = (
+            select(PageRow.item_id, PageRow.file_id)
+            .where(PageRow.text_fold.is_(None))
+            .group_by(PageRow.item_id, PageRow.file_id)
+            .order_by(PageRow.file_id)
+            .limit(limit)
+        )
+        if after is not None:
+            query = query.where(PageRow.file_id > after)
+        rows = await self.session.execute(query)
+        return [(item_id, file_id) for item_id, file_id in rows.all()]

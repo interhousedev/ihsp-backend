@@ -249,6 +249,12 @@ class ItemPage(TimestampMixin, Base):
     __tablename__ = "item_pages"
     __table_args__ = (
         Index("ix_item_pages_search_vector", "search_vector", postgresql_using="gin"),
+        Index(
+            "ix_item_pages_text_fold_trgm",
+            "text_fold",
+            postgresql_using="gin",
+            postgresql_ops={"text_fold": "gin_trgm_ops"},
+        ),
         {"schema": "library"},
     )
 
@@ -259,6 +265,11 @@ class ItemPage(TimestampMixin, Base):
     page: Mapped[int] = mapped_column(Integer, primary_key=True)
     text: Mapped[str] = mapped_column(Text)
     text_norm: Mapped[str] = mapped_column(Text)
+    text_fold: Mapped[str | None] = mapped_column(Text, default=None)
+    source: Mapped[str] = mapped_column(
+        String(16), default="text_layer", server_default="text_layer"
+    )
+    boxes: Mapped[list[list[float]] | None] = mapped_column(JSONB, default=None)
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR, Computed(PAGE_VECTOR, persisted=True), deferred=True
     )

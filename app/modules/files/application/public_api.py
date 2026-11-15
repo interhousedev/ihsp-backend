@@ -1,5 +1,6 @@
 """FilesApi: what other modules may do with files (contract in shared/contracts)."""
 
+import asyncio
 import base64
 from collections.abc import Sequence
 from typing import Any
@@ -18,8 +19,14 @@ from app.modules.files.application.store_bytes import StoreBytes
 from app.modules.files.application.transfer_ownership import TransferOwnership
 from app.modules.files.domain.errors import StoredFileNotFoundError
 from app.modules.files.domain.outline import pages_from_metadata
+from app.modules.files.domain.page_layouts import (
+    BOXES_KEY,
+    is_ocr,
+    layouts_from_metadata,
+)
 from app.modules.files.domain.policy import checksum_hex, may_read
 from app.modules.files.domain.status import FileStatus
+from app.modules.files.infrastructure.extraction.pdf_layout import extract_pdf_layouts
 from app.modules.files.ports.unit_of_work import UowFactory
 from app.shared.actor import Actor
 from app.shared.contracts.files import (
@@ -28,6 +35,7 @@ from app.shared.contracts.files import (
     FileScope,
     FullText,
     OutlineEntry,
+    PageLayout,
     TextPage,
 )
 
@@ -103,6 +111,23 @@ class FilesApiImpl:
     async def read_text_with_pages(self, file_id: UUID) -> FullText:
         """Return the whole text sidecar and the offset where each PDF page starts."""
         return await self._read_full_text.execute(file_id)
+
+    async def read_page_layouts(self, file_id: UUID) -> dict[int, PageLayout]:
+        """Return word boxes per page: the OCR result of the file, else the PDF's."""
+        async with self._uow_factory() as uow:
+            file = await uow.files.get(file_id)
+        if file is None:
+            raise StoredFileNotFoundError()
+        if is_ocr(file.metadata):
+            return layouts_from_metadata(file.metadata.get(BOXES_KEY))
+        if file.content_type != "application/pdf":
+            return {}
+        full = await self._read_full_text.execute(file_id)
+        if not full.page_starts:
+            return {}
+        pages = _stripped_pages(full.text, full.page_starts)
+        data = await self._read_bytes.execute(file_id)
+        return await asyncio.to_thread(extract_pdf_layouts, data, pages)
 
     async def read_outline(self, file_id: UUID) -> list[OutlineEntry]:
         """Return the contents found while processing; [] when there are none."""
@@ -200,3 +225,9 @@ class FilesApiImpl:
         if file is None or file.status == FileStatus.DELETED:
             return False
         return may_read(file, actor)
+
+
+def _stripped_pages(text: str, starts: Sequence[int]) -> list[str]:
+    """The page texts cut at ``starts`` and stripped, as the library splits them."""
+    bounds = [*starts, len(text)]
+    return [text[bounds[i] : bounds[i + 1]].strip() for i in range(len(starts))]

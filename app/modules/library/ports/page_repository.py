@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from typing import Protocol
 from uuid import UUID
 
+from app.shared.contracts.files import TextBox
+
 
 @dataclass(frozen=True, slots=True)
 class IndexedPage:
@@ -17,6 +19,8 @@ class IndexedPage:
     page: int
     text: str
     text_norm: str
+    source: str = "text_layer"
+    boxes: tuple[TextBox, ...] = ()
 
 
 class PageRepository(Protocol):
@@ -40,4 +44,16 @@ class PageRepository(Protocol):
 
     async def delete(self, item_id: UUID, file_id: UUID) -> None:
         """Forget the pages of the file."""
+        ...
+
+    async def search(
+        self, item_id: UUID, file_id: UUID, needle: str, limit: int
+    ) -> list[IndexedPage]:
+        """Pages whose folded text contains `needle`, in order, at most `limit`."""
+        ...
+
+    async def stale_files(
+        self, after: UUID | None, limit: int
+    ) -> list[tuple[UUID, UUID]]:
+        """`(item_id, file_id)` of files with pages not yet folded, by file id."""
         ...
