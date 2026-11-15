@@ -32,6 +32,7 @@ from app.modules.faces.infrastructure.engines.opencv import OpenCvFaceEngine
 from app.modules.faces.infrastructure.uow import SqlFacesUnitOfWork
 from app.modules.faces.ports.directory import StudentDirectory
 from app.modules.faces.ports.engine import FaceEngine, ImageSniffer
+from app.modules.faces.ports.profile_photo import ProfilePhotos
 from app.modules.faces.ports.unit_of_work import UowFactory
 from app.shared.contracts.excuses import ExcuseStatusReader
 from app.shared.contracts.files import FilesApi
@@ -72,6 +73,7 @@ def build(
     directory: StudentDirectory,
     excuses: ExcuseStatusReader,
     sniffer: ImageSniffer,
+    profile_photos: ProfilePhotos,
     overrides: FacesOverrides | None = None,
 ) -> FacesServices:
     """Wire the module."""
@@ -84,6 +86,7 @@ def build(
         engine=engine,
         sniffer=sniffer,
         files=files,
+        profile_photos=profile_photos,
         clock=deps.clock,
     )
     reader = GetMyFace(uow_factory=uow_factory, files=files)

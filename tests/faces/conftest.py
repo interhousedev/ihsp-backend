@@ -18,6 +18,7 @@ from tests.fakes.faces.uow import (
     FakeFaceFiles,
     FakeFacesStore,
     FakeFacesUow,
+    FakeProfilePhotos,
     FakeSniffer,
 )
 from tests.fakes.tasks import FakeTaskKicker
@@ -46,6 +47,7 @@ class FacesHarness:
     clock: FixedClock
     admin: Actor
     curator: Actor
+    profile_photos: FakeProfilePhotos
 
 
 @pytest.fixture
@@ -74,17 +76,19 @@ def fh(
     directory = FakeDirectory()
     excuses = FakeExcuses()
     files = FakeFaceFiles()
+    profile_photos = FakeProfilePhotos()
     services = build(
         deps,
         files=files,  # type: ignore[arg-type]
         directory=directory,
         excuses=excuses,
         sniffer=FakeSniffer(),
+        profile_photos=profile_photos,
         overrides=FacesOverrides(
             uow_factory=lambda: FakeFacesUow(store), engine=FakeFaceEngine()
         ),
     )
     return FacesHarness(
         services, store, directory, excuses, files, clock,
-        make_actor(Role.ADMIN), make_actor(Role.TEACHER),
+        make_actor(Role.ADMIN), make_actor(Role.TEACHER), profile_photos,
     )  # fmt: skip

@@ -21,7 +21,11 @@ from app.bootstrap.adapters.composition.shared_platform_search import (
     SharedPlatformSearch,
 )
 from app.bootstrap.adapters.emis_source import make_emis_source
-from app.bootstrap.adapters.faces import FacesDirectoryAdapter, LazyExcuseStatus
+from app.bootstrap.adapters.faces import (
+    FacesDirectoryAdapter,
+    FacesProfilePhotoAdapter,
+    LazyExcuseStatus,
+)
 from app.bootstrap.adapters.feedback import FeedbackMailAdapter, FeedbackPeopleAdapter
 from app.bootstrap.adapters.guest_knowledge import GuestKnowledgeAdapter
 from app.bootstrap.adapters.lazy_proxy import LazyProxy
@@ -548,6 +552,7 @@ class _Assembler:
             ),
             excuses=LazyExcuseStatus(lambda: c.academic.excuse_status),
             sniffer=self.make_sniffer(),
+            profile_photos=FacesProfilePhotoAdapter(c.identity.auth.set_user_photo),
         )
 
     def build_onboarding(self) -> None:

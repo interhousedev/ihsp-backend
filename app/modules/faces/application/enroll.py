@@ -10,13 +10,21 @@ from app.modules.faces.domain.errors import (
 from app.modules.faces.domain.image import SNIFF_BYTES, check_image
 from app.modules.faces.domain.models import FaceProfile
 from app.modules.faces.ports.engine import FaceEngine, ImageSniffer
+from app.modules.faces.ports.profile_photo import ProfilePhotos
 from app.modules.faces.ports.unit_of_work import UowFactory
 from app.shared.clock import Clock
 from app.shared.contracts.files import FilePurpose, FilesApi, FileScope
 
+import structlog
+
+log = structlog.get_logger(__name__)
+
 
 class FaceEnroller:
-    """Stores a face for a user; students may not replace one that staff set."""
+    """Stores a face for a user; students may not replace one that staff set.
+
+    The new face also becomes the user's profile photo, so the avatars show it.
+    """
 
     def __init__(
         self,
@@ -25,6 +33,7 @@ class FaceEnroller:
         engine: FaceEngine,
         sniffer: ImageSniffer,
         files: FilesApi,
+        profile_photos: ProfilePhotos,
         clock: Clock,
     ) -> None:
         """Store the dependencies."""
@@ -32,6 +41,7 @@ class FaceEnroller:
         self._engine = engine
         self._sniffer = sniffer
         self._files = files
+        self._profile_photos = profile_photos
         self._clock = clock
 
     async def enroll(
@@ -74,7 +84,17 @@ class FaceEnroller:
             raise
         if current is not None:
             await self._files.delete_file(current.photo_file_id)
+        await self._set_profile_photo(user_id, data)
         return profile
+
+    async def _set_profile_photo(self, user_id: UUID, data: bytes) -> None:
+        """Copy the face to the profile photo; the face is saved even if this fails."""
+        try:
+            await self._profile_photos.set_photo(user_id, data)
+        except Exception:  # the face is committed; never fail the upload for this
+            log.warning(
+                "face_profile_photo_failed", user_id=str(user_id), exc_info=True
+            )
 
     async def remove(self, user_id: UUID, *, by_staff: bool) -> None:
         """Delete the face; a student cannot delete one that staff set."""

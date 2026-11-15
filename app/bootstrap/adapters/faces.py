@@ -1,10 +1,11 @@
-"""Adapters of the faces module: students (academic, identity), sniffing, excuses."""
+"""Adapters of the faces module: students (academic, identity), photos, excuses."""
 
 from collections.abc import Callable, Sequence
 from datetime import datetime
 from uuid import UUID
 
 from app.modules.faces.ports.directory import StudentInfo
+from app.modules.identity.application.set_user_photo import SetUserPhoto
 from app.shared.contracts.academic import ScheduleQueries
 from app.shared.contracts.excuses import ExcuseStatus, ExcuseStatusReader
 from app.shared.contracts.identity import IdentityDirectory
@@ -41,6 +42,18 @@ class FacesDirectoryAdapter:
         return {
             uid: f"{u.last_name} {u.first_name}".strip() for uid, u in users.items()
         }
+
+
+class FacesProfilePhotoAdapter:
+    """A new face becomes the profile photo through identity's use case."""
+
+    def __init__(self, set_user_photo: SetUserPhoto) -> None:
+        """Store the use case."""
+        self.set_user_photo = set_user_photo
+
+    async def set_photo(self, user_id: UUID, data: bytes) -> None:
+        """Replace the user's profile photo with the image."""
+        await self.set_user_photo.execute(user_id, data)
 
 
 class LazyExcuseStatus:

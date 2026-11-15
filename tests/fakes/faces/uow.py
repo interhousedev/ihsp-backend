@@ -229,3 +229,18 @@ class FakeSniffer:
         if head.startswith(b"\xff\xd8\xff"):
             return "image/jpeg"
         return "application/octet-stream"
+
+
+class FakeProfilePhotos:
+    """Records the profile photos set from faces; can be told to fail."""
+
+    def __init__(self) -> None:
+        """Start empty."""
+        self.photos: dict[UUID, bytes] = {}
+        self.fail = False
+
+    async def set_photo(self, user_id: UUID, data: bytes) -> None:
+        """Remember the image or fail like an unusable photo would."""
+        if self.fail:
+            raise RuntimeError("photo rejected")
+        self.photos[user_id] = data

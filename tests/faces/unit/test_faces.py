@@ -47,6 +47,22 @@ async def test_student_uploads_and_replaces_own_face(fh: FacesHarness) -> None:
     assert len(fh.files.files) == 1  # the old photo was deleted
 
 
+async def test_new_face_becomes_the_profile_photo(fh: FacesHarness) -> None:
+    me = student_actor(fh)
+    await fh.services.upload_my_face.execute(me.user_id, photo("a"))
+    assert fh.profile_photos.photos[me.user_id] == photo("a")
+    await fh.services.staff_upload.execute(fh.admin, me.user_id, photo("b"))
+    assert fh.profile_photos.photos[me.user_id] == photo("b")
+
+
+async def test_face_is_saved_when_the_profile_photo_fails(fh: FacesHarness) -> None:
+    me = student_actor(fh)
+    fh.profile_photos.fail = True
+    view = await fh.services.upload_my_face.execute(me.user_id, photo("a"))
+    assert view.has_face
+    assert me.user_id not in fh.profile_photos.photos
+
+
 async def test_staff_upload_locks_student_out(fh: FacesHarness) -> None:
     me = student_actor(fh)
     fh.directory.curators.add(
