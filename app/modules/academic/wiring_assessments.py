@@ -14,6 +14,9 @@ from app.modules.academic.application.assessments.generate_tentative import (
 from app.modules.academic.application.assessments.list_my_assessments import (
     ListMyAssessments,
 )
+from app.modules.academic.application.assessments.list_my_control_periods import (
+    ListMyControlPeriods,
+)
 from app.modules.academic.application.assessments.list_staff_assessments import (
     ListStaffAssessments,
 )
@@ -41,6 +44,7 @@ class AssessmentServices:
     """Use cases of assessments (midterm and final controls)."""
 
     list_mine: ListMyAssessments
+    list_control_periods: ListMyControlPeriods
     propose: ProposeAssessment
     list_staff: ListStaffAssessments
     create: CreateAssessment
@@ -72,9 +76,13 @@ def build_assessments(
         )
 
     clock = deps.clock
+    list_mine = ListMyAssessments(
+        uow_factory=uow_factory, identity=identity, clock=clock
+    )
     return AssessmentServices(
-        list_mine=ListMyAssessments(
-            uow_factory=uow_factory, identity=identity, clock=clock
+        list_mine=list_mine,
+        list_control_periods=ListMyControlPeriods(
+            uow_factory=uow_factory, list_mine=list_mine, clock=clock
         ),
         propose=ProposeAssessment(
             uow_factory=uow_factory, identity=identity, clock=clock

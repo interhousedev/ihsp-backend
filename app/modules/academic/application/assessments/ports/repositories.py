@@ -111,6 +111,12 @@ class AssessmentReader(Protocol):
         """Return the curriculum subjects of every active group that has any."""
         ...
 
+    async def exam_marks(
+        self, student_id: UUID, since: dt.date, until: dt.date
+    ) -> dict[tuple[UUID, str], list[tuple[dt.date, int]]]:
+        """Return the student's ПК/ИК marks dated in the window, per (subject, type)."""
+        ...
+
     async def active_group_ids(self) -> list[UUID]:
         """Return the ids of the active groups (those whose controls are suggested)."""
         ...

@@ -13,6 +13,7 @@ from app.modules.academic.domain.marks.read_models import SubjectInfo
 from app.modules.academic.domain.schedule.term import control_periods_from_json
 from app.modules.academic.infrastructure.orm.group import Group
 from app.modules.academic.infrastructure.orm.lesson import Lesson
+from app.modules.academic.infrastructure.orm.mark import Mark
 from app.modules.academic.infrastructure.orm.student import Student
 from app.modules.academic.infrastructure.orm.subject import Subject
 from app.modules.academic.infrastructure.orm.term import Term
@@ -137,6 +138,22 @@ class SqlAssessmentReader:
         return {
             r.id: tuple(r.subject_ids) for r in (await self.session.execute(stmt)).all()
         }
+
+    async def exam_marks(
+        self, student_id: UUID, since: dt.date, until: dt.date
+    ) -> dict[tuple[UUID, str], list[tuple[dt.date, int]]]:
+        """Return the student's ПК/ИК marks dated in the window, per (subject, type)."""
+        stmt = sa.select(Mark.subject_id, Mark.type, Mark.date, Mark.value).where(
+            Mark.student_id == student_id,
+            Mark.type.in_(("midterm", "final")),
+            Mark.removed_at.is_(None),
+            Mark.date >= since,
+            Mark.date <= until,
+        )
+        found: dict[tuple[UUID, str], list[tuple[dt.date, int]]] = {}
+        for r in (await self.session.execute(stmt)).all():
+            found.setdefault((r.subject_id, r.type), []).append((r.date, r.value))
+        return found
 
     async def active_group_ids(self) -> list[UUID]:
         """Return the ids of the active groups (those whose controls are suggested)."""

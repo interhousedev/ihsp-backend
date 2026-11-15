@@ -71,6 +71,38 @@ class AssessmentListResponse(BaseModel):
     items: list[AssessmentItem]
 
 
+class ControlExamResponse(BaseModel):
+    """One subject's exam in a control week; ``date`` is null until a teacher sets it.
+
+    ``state`` is ``taken`` when the exam has a mark or its date has passed; a taken
+    exam with a null ``mark`` has no mark yet.
+    """
+
+    subject: AssessmentSubject
+    date: dt.date | None
+    starts_at: dt.datetime | None
+    room: str | None
+    status: AssessmentStatus
+    state: Literal["upcoming", "taken"]
+    mark: int | None
+
+
+class ControlPeriodItem(BaseModel):
+    """A control week (ПК 1, ПК 2 or ИК) with the student's exams in it."""
+
+    control: ControlName
+    kind: AssessmentKind
+    start: dt.date
+    end: dt.date
+    exams: list[ControlExamResponse]
+
+
+class ControlPeriodListResponse(BaseModel):
+    """Control weeks overlapping the window, oldest first."""
+
+    items: list[ControlPeriodItem]
+
+
 class StaffAssessmentItem(AssessmentItem):
     """A control as staff see it: with its audience and author."""
 
