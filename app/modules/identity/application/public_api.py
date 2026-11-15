@@ -56,13 +56,18 @@ class IdentityDirectoryImpl:
             user = await uow.users.get(user_id)
         return UserPreferences.model_validate(user.preferences if user else {})
 
-    async def photo_urls(self, user_ids: Sequence[UUID]) -> dict[UUID, str]:
-        """Return short-lived photo URLs; users without a photo are left out."""
+    async def photo_urls(
+        self, user_ids: Sequence[UUID], ttl_seconds: int | None = None
+    ) -> dict[UUID, str]:
+        """Return short-lived photo URLs; users without a photo are left out.
+
+        `ttl_seconds` overrides the default lifetime of the links.
+        """
         if not user_ids:
             return {}
         async with self.uow_factory() as uow:
             users = await uow.users.get_many(user_ids)
-        return await self.photos.of_users(users.values())
+        return await self.photos.of_users(users.values(), ttl_seconds)
 
     async def user_by_telegram(self, telegram_user_id: int) -> UserRef | None:
         """Return the user a Telegram account is linked to."""

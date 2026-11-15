@@ -22,23 +22,29 @@ class PhotoUrls:
     files: FilesApi
     ttl_seconds: int = PHOTO_URL_TTL_SECONDS
 
-    async def url(self, file_id: UUID | None) -> str | None:
+    async def url(
+        self, file_id: UUID | None, ttl_seconds: int | None = None
+    ) -> str | None:
         """The link to one photo; None when there is none or the file is gone."""
         if file_id is None:
             return None
         try:
             return await self.files.download_url(
-                file_id, inline=True, ttl_seconds=self.ttl_seconds
+                file_id,
+                inline=True,
+                ttl_seconds=self.ttl_seconds if ttl_seconds is None else ttl_seconds,
             )
         except BaseError:
             log.warning("user_photo_unavailable", file_id=str(file_id))
             return None
 
-    async def of_users(self, users: Iterable[User]) -> dict[UUID, str]:
+    async def of_users(
+        self, users: Iterable[User], ttl_seconds: int | None = None
+    ) -> dict[UUID, str]:
         """Links by user id; users without a photo or with a lost file are left out."""
         urls: dict[UUID, str] = {}
         for user in users:
-            url = await self.url(user.photo_file_id)
+            url = await self.url(user.photo_file_id, ttl_seconds)
             if url is not None:
                 urls[user.id] = url
         return urls

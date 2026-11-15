@@ -185,8 +185,13 @@ class IdentityDirectory(Protocol):
         """Return the user's preferences with defaults filled in."""
         ...
 
-    async def photo_urls(self, user_ids: Sequence[UUID]) -> dict[UUID, str]:
-        """Return short-lived photo URLs; users without a photo are left out."""
+    async def photo_urls(
+        self, user_ids: Sequence[UUID], ttl_seconds: int | None = None
+    ) -> dict[UUID, str]:
+        """Return short-lived photo URLs; users without a photo are left out.
+
+        `ttl_seconds` overrides the default lifetime of the links.
+        """
         ...
 
     async def user_by_telegram(self, telegram_user_id: int) -> UserRef | None:

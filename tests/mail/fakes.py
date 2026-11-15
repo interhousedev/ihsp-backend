@@ -84,7 +84,9 @@ class FakeIdentity:
         """Return the preferences (defaults for unknown users)."""
         return self.preferences.get(user_id, UserPreferences())
 
-    async def photo_urls(self, user_ids: Sequence[UUID]) -> dict[UUID, str]:
+    async def photo_urls(
+        self, user_ids: Sequence[UUID], ttl_seconds: int | None = None
+    ) -> dict[UUID, str]:
         """No user has a photo in this fake."""
         return {}
 

@@ -41,6 +41,7 @@ class FakeIdentity:
         self.prefs: dict[UUID, UserPreferences] = {}
         self.photos: dict[UUID, str] = {}
         self.photo_calls: list[list[UUID]] = []
+        self.photo_ttls: list[int | None] = []
 
     def add(self, user: UserRef, prefs: UserPreferences | None = None) -> UserRef:
         """Register a user (and optionally their preferences)."""
@@ -61,9 +62,12 @@ class FakeIdentity:
         """Return stored or default preferences."""
         return self.prefs.get(user_id, UserPreferences())
 
-    async def photo_urls(self, user_ids: Sequence[UUID]) -> dict[UUID, str]:
+    async def photo_urls(
+        self, user_ids: Sequence[UUID], ttl_seconds: int | None = None
+    ) -> dict[UUID, str]:
         """Return the photo URLs of the users that have one (records each call)."""
         self.photo_calls.append(list(user_ids))
+        self.photo_ttls.append(ttl_seconds)
         return {uid: self.photos[uid] for uid in user_ids if uid in self.photos}
 
     async def user_ids_with_roles(self, roles: Sequence[Role]) -> list[UUID]:

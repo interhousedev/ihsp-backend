@@ -1,7 +1,8 @@
 """GET /v1/me/group: the caller's group for every student, with its homeroom teacher.
 
 Members see the homeroom teacher (curator) with the teacher's public contacts,
-the head student by name, and the active members. Unassigned roles are null.
+the head student with name and photo, and the active members. Unassigned roles are
+null. Photos are short links, withheld for blocked or inactive accounts.
 """
 
 from types import SimpleNamespace
@@ -13,7 +14,7 @@ from app.interfaces.http.v1.me_marks import ROUTERS as MARKS_ROUTERS
 from app.modules.academic.domain.marks.errors import StudentNotFoundError
 from app.modules.academic.wiring_marks import MarksServices
 from app.shared.actor import Actor, Role
-from app.shared.contracts.identity import TeacherContacts, UserPreferences
+from app.shared.contracts.identity import TeacherContacts, UserPreferences, UserStatus
 from tests.academic.marks.conftest import Env
 from tests.academic.marks.fakes.identity import make_user
 from tests.academic.marks.test_group_progress import CURATOR, _set_roles
@@ -34,7 +35,7 @@ async def test_member_sees_homeroom_teacher_head_student_and_members(
     env: Env,
     sessionmaker_in_tx: async_sessionmaker[AsyncSession],
 ) -> None:
-    """Teacher with public contacts, head by name, members sorted, head flagged."""
+    """Teacher with public contacts, head with photo, members sorted, head flagged."""
     w = env.world
     newcomer = await add_student(sessionmaker_in_tx, w)
     env.identity.add(make_user(w.user_id, first_name="Aliya", last_name="Karimova"))
@@ -53,8 +54,11 @@ async def test_member_sees_homeroom_teacher_head_student_and_members(
         ),
     )
     await _set_roles(sessionmaker_in_tx, w.group_id, CURATOR, w.user_id)
+    env.identity.photos[w.user_id] = "https://files.test/aliya.jpg"
+    env.identity.photos[CURATOR] = "https://files.test/dilnoza.jpg"
 
     data = await services.get_my_group.execute(_student(newcomer))
+    assert env.identity.photo_ttls == [600]
 
     assert data["id"] == w.group_id
     assert data["name"] == "2TN2"
@@ -64,6 +68,7 @@ async def test_member_sees_homeroom_teacher_head_student_and_members(
         "id": CURATOR,
         "first_name": "Dilnoza",
         "last_name": "Rakhimova",
+        "photo_url": "https://files.test/dilnoza.jpg",
         "contacts": {
             "telegram": "dilnoza_r",
             "email": None,
@@ -77,14 +82,41 @@ async def test_member_sees_homeroom_teacher_head_student_and_members(
         "id": w.user_id,
         "first_name": "Aliya",
         "last_name": "Karimova",
+        "photo_url": "https://files.test/aliya.jpg",
     }
+    assert [m["photo_url"] for m in data["members"]] == [
+        "https://files.test/aliya.jpg",
+        None,
+    ]
     assert [m["id"] for m in data["members"]] == [w.user_id, newcomer]
     assert [m["is_head_student"] for m in data["members"]] == [True, False]
     assert [m["is_me"] for m in data["members"]] == [False, True]
     assert all(
-        set(m) == {"id", "first_name", "last_name", "is_head_student", "is_me"}
+        set(m)
+        == {"id", "first_name", "last_name", "photo_url", "is_head_student", "is_me"}
         for m in data["members"]
     )
+
+
+async def test_photos_are_withheld_for_blocked_and_inactive_accounts(
+    services: MarksServices,
+    env: Env,
+    sessionmaker_in_tx: async_sessionmaker[AsyncSession],
+) -> None:
+    """A blocked member gets no photo_url and is not asked for a link."""
+    w = env.world
+    other = await add_student(sessionmaker_in_tx, w)
+    env.identity.add(make_user(w.user_id))
+    env.identity.add(make_user(other, status=UserStatus.BLOCKED))
+    env.identity.photos[w.user_id] = "https://files.test/a.jpg"
+    env.identity.photos[other] = "https://files.test/b.jpg"
+
+    data = await services.get_my_group.execute(_student(w.user_id))
+
+    by_id = {m["id"]: m["photo_url"] for m in data["members"]}
+    assert by_id[w.user_id] == "https://files.test/a.jpg"
+    assert by_id[other] is None
+    assert other not in env.identity.photo_calls[-1]
 
 
 async def test_head_student_flag_is_set_for_the_head(

@@ -62,7 +62,9 @@ class FakeIdentity:
         """Return stored or default preferences."""
         return self.prefs.get(user_id, UserPreferences())
 
-    async def photo_urls(self, user_ids: Sequence[UUID]) -> dict[UUID, str]:
+    async def photo_urls(
+        self, user_ids: Sequence[UUID], ttl_seconds: int | None = None
+    ) -> dict[UUID, str]:
         """Return the photo URLs of the users that have one (records each call)."""
         self.photo_calls.append(list(user_ids))
         return {uid: self.photos[uid] for uid in user_ids if uid in self.photos}

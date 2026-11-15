@@ -6,22 +6,30 @@ from uuid import UUID
 from app.modules.academic.application.marks.ports.unit_of_work import MarksUowFactory
 from app.modules.academic.domain.marks.errors import StudentNotFoundError
 from app.shared.actor import Actor
-from app.shared.contracts.identity import IdentityDirectory, UserRef
+from app.shared.contracts.identity import IdentityDirectory, UserRef, UserStatus
+
+PHOTO_URL_TTL_SECONDS = 600
 
 
-def _person(user: UserRef | None) -> dict[str, Any] | None:
+def _person(user: UserRef | None, photos: dict[UUID, str]) -> dict[str, Any] | None:
     if user is None:
         return None
-    return {"id": user.id, "first_name": user.first_name, "last_name": user.last_name}
+    return {
+        "id": user.id,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "photo_url": photos.get(user.id),
+    }
 
 
 class GetMyGroup:
     """Return the caller's group (any student of it may read this).
 
     The homeroom teacher is the group's curator, with the public contacts that are
-    shown to students. The head student is shown by name only. Members are the
-    active students of the group, sorted by name. Unassigned roles are null; a head
-    student who has left the group is null too.
+    shown to students. The head student is shown with name and photo, like the other
+    members. Members are the active students of the group, sorted by name. Unassigned
+    roles are null; a head student who has left the group is null too. Photo links
+    live ten minutes and are not given for blocked or inactive accounts.
     """
 
     def __init__(
@@ -48,6 +56,15 @@ class GetMyGroup:
             wanted.add(curator_id)
         users = await self._identity.get_users(sorted(wanted, key=str))
 
+        # Photos only for accounts that can sign in; links live ten minutes.
+        visible = sorted(
+            (uid for uid, u in users.items() if u.status is UserStatus.ACTIVE),
+            key=str,
+        )
+        photos = await self._identity.photo_urls(
+            visible, ttl_seconds=PHOTO_URL_TTL_SECONDS
+        )
+
         members = sorted(
             (users[uid] for uid in member_ids if uid in users),
             key=lambda u: (u.last_name.casefold(), u.first_name.casefold()),
@@ -55,7 +72,7 @@ class GetMyGroup:
         homeroom: dict[str, Any] | None = None
         if curator_id is not None and curator_id in users:
             prefs = await self._identity.get_preferences(curator_id)
-            homeroom = _person(users[curator_id])
+            homeroom = _person(users[curator_id], photos)
             if homeroom is not None:
                 homeroom["contacts"] = prefs.contacts.model_dump(mode="json")
 
@@ -65,12 +82,15 @@ class GetMyGroup:
             "size": len(member_ids),
             "is_head_student": head_id == actor.user_id,
             "homeroom_teacher": homeroom,
-            "head_student": _person(users[head_id]) if head_id in users else None,
+            "head_student": (
+                _person(users[head_id], photos) if head_id in users else None
+            ),
             "members": [
                 {
                     "id": user.id,
                     "first_name": user.first_name,
                     "last_name": user.last_name,
+                    "photo_url": photos.get(user.id),
                     "is_head_student": user.id == head_id,
                     "is_me": user.id == actor.user_id,
                 }

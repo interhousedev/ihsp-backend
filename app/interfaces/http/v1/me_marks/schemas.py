@@ -275,6 +275,7 @@ class GroupPersonRef(BaseModel):
     id: UUID
     first_name: str
     last_name: str
+    photo_url: str | None
 
 
 class GroupTeacherRef(GroupPersonRef):
