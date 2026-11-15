@@ -546,6 +546,28 @@ class SqlItemRepository:
         )
         return list((await self.session.execute(stmt)).scalars())
 
+    async def ids_without_cover(self, *, after: UUID | None, limit: int) -> list[UUID]:
+        """Ids (ascending, after `after`) of books with a primary file but no cover."""
+        stmt = (
+            select(ItemRow.id)
+            .where(
+                ItemRow.kind == ItemKind.BOOK.value,
+                ItemRow.cover_file_id.is_(None),
+                ItemRow.cover_url.is_(None),
+                select(orm.ItemFile.item_id)
+                .where(
+                    orm.ItemFile.item_id == ItemRow.id,
+                    orm.ItemFile.is_primary.is_(True),
+                )
+                .exists(),
+            )
+            .order_by(ItemRow.id)
+            .limit(limit)
+        )
+        if after is not None:
+            stmt = stmt.where(ItemRow.id > after)
+        return list((await self.session.execute(stmt)).scalars())
+
     async def sitemap_entries(self, *, limit: int) -> list[tuple[str, datetime]]:
         """Slug and last change of the public published books and materials."""
         rows = await self.session.execute(

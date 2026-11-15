@@ -72,3 +72,45 @@ def test_broken_or_unsupported_files_have_no_cover() -> None:
     assert extract_cover(b"%PDF-1.4", FileFormat.PDF) is None
     assert extract_cover(b"nope", FileFormat.EPUB) is None
     assert extract_cover(b"text", FileFormat.TXT) is None
+
+
+def _png(size: tuple[int, int]) -> bytes:
+    from PIL import Image
+
+    out = io.BytesIO()
+    Image.new("RGB", size, "red").save(out, format="PNG")
+    return out.getvalue()
+
+
+def _office(name: str) -> bytes:
+    out = io.BytesIO()
+    with zipfile.ZipFile(out, "w") as archive:
+        archive.writestr(name, _png((50, 80)))
+    return out.getvalue()
+
+
+def test_image_is_resized_to_a_jpeg() -> None:
+    """A big image shrinks; the long side is capped."""
+    from PIL import Image
+
+    found = extract_cover(_png((3000, 1500)), FileFormat.TXT)
+
+    assert found is not None
+    image, name = found
+    assert name == "cover.jpg"
+    assert image[:2] == b"\xff\xd8"
+    assert Image.open(io.BytesIO(image)).size == (1200, 600)
+
+
+def test_office_thumbnail_is_used() -> None:
+    """DOCX and PPTX give their embedded thumbnail."""
+    for fmt in (FileFormat.DOCX, FileFormat.PPTX):
+        found = extract_cover(_office("docProps/thumbnail.png"), fmt)
+        assert found is not None
+        assert found[0][:2] == b"\xff\xd8"
+
+
+def test_other_formats_without_image_have_no_cover() -> None:
+    """Plain text and thumbnail-less Office files keep the placeholder."""
+    assert extract_cover(b"just text", FileFormat.MD) is None
+    assert extract_cover(_office("word/x.xml"), FileFormat.DOCX) is None

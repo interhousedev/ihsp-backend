@@ -4,16 +4,15 @@ Extracts the text of a file page by page, indexes it for full-text hits, records
 outline, page count and hashes, and looks for duplicates, personal data and exam-paper
 markers. Findings are shown to librarians; no status changes, so a teacher's
 published material stays published. A primary file of a book without a cover also
-gives it one (PDF first page, EPUB cover image); the user can replace it later.
+gives it one (see `cover_service`); the user can replace it later.
 """
 
-import asyncio
 from collections.abc import Awaitable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from uuid import UUID
 
-from app.modules.library.application.catalogue.cover_extract import extract_cover
+from app.modules.library.application.catalogue.cover_service import make_cover
 from app.modules.library.domain.catalogue_text import (
     content_hash,
     split_pages,
@@ -31,10 +30,9 @@ from app.modules.library.ports.unit_of_work import LibraryUnitOfWork, UowFactory
 from app.shared.base_error import BaseError
 from app.shared.clock import Clock
 from app.shared.contracts.files import (
-    FilePurpose,
     FilesApi,
-    FileScope,
     OutlineEntry,
+    PageLayout,
 )
 from app.shared.text import search_normalize
 
@@ -54,6 +52,7 @@ class Extracted:
     outline: list[OutlineEntry] = field(default_factory=list)
     page_count: int | None = None
     sha256: str | None = None
+    layouts: dict[int, PageLayout] = field(default_factory=dict)
 
     @property
     def text(self) -> str:
@@ -101,36 +100,9 @@ class ProcessItemFile:
                 log.info("library_scan_skipped", item_id=str(item_id))
                 return
             await self._apply(uow, item, stored, extracted)
-            await self._make_cover(item, stored)
+            await make_cover(self.files, item, stored)
             await uow.items.save(item)
             await uow.commit()
-
-    async def _make_cover(self, item: Item, stored: ItemFile) -> None:
-        """Give a book without a cover one from its primary file; never fails."""
-        if (
-            not stored.is_primary
-            or item.kind is not ItemKind.BOOK
-            or item.cover_file_id
-            or item.cover_url
-            or item.owner_id is None
-        ):
-            return
-        try:
-            data = await self.files.read_bytes(stored.file_id)
-            found = await asyncio.to_thread(extract_cover, data, stored.format)
-            if found is None:
-                return
-            image, name = found
-            ref = await self.files.store_bytes(
-                owner_id=item.owner_id,
-                scope=FileScope.LIBRARY,
-                purpose=FilePurpose.LIBRARY_COVER,
-                name=name,
-                data=image,
-            )
-            item.cover_file_id = ref.id
-        except BaseError as error:
-            log.warning("library_cover_failed", code=error.code)
 
     async def _extract(self, file_id: UUID) -> Extracted:
         result = Extracted()
@@ -141,6 +113,7 @@ class ProcessItemFile:
             result.failed = error.code != NO_TEXT_CODE
             if result.failed:
                 log.warning("library_extraction_failed", code=error.code)
+        result.layouts = await self._guarded(self.files.read_page_layouts(file_id), {})
         result.outline = await self._guarded(self.files.read_outline(file_id), [])
         result.page_count = await self._guarded(self.files.page_count(file_id), None)
         result.sha256 = await self._guarded(self.files.sha256(file_id), None)
@@ -168,7 +141,9 @@ class ProcessItemFile:
         stored.text_status = status
         stored.sha256 = extracted.sha256 or stored.sha256
         indexed = (
-            _index(extracted.pages, language) if status is TextStatus.READY else []
+            index_pages(extracted.pages, extracted.layouts, language)
+            if status is TextStatus.READY
+            else []
         )
         await uow.pages.replace(item.id, stored.file_id, indexed)
         await uow.items.save_file(stored)
@@ -239,12 +214,21 @@ def _status(extracted: Extracted, characters: int, pages: int) -> TextStatus:
     return text_status_for(characters, pages)
 
 
-def _index(pages: Sequence[str], language: str) -> list[IndexedPage]:
-    return [
-        IndexedPage(number, text, search_normalize(text, language))
-        for number, text in enumerate(pages, start=1)
-        if text.strip()
-    ]
+def index_pages(
+    pages: Sequence[str], layouts: dict[int, PageLayout], language: str
+) -> list[IndexedPage]:
+    """The pages to store: search form, where the text came from, word boxes."""
+    indexed: list[IndexedPage] = []
+    for number, text in enumerate(pages, start=1):
+        if not text.strip():
+            continue
+        layout = layouts.get(number)
+        boxes = tuple(b for b in layout.boxes if b.end <= len(text)) if layout else ()
+        source = layout.source if layout else "text_layer"
+        indexed.append(
+            IndexedPage(number, text, search_normalize(text, language), source, boxes)
+        )
+    return indexed
 
 
 def _toc(outline: Sequence[OutlineEntry]) -> list[dict[str, object]]:

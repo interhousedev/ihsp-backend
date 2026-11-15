@@ -1,8 +1,9 @@
 """Cover images cut out of an uploaded book file (blocking: run in a thread).
 
 PDF: the first page rendered as JPEG. EPUB: the cover image named in the OPF, else
-the first image in the archive. Any failure gives None; a missing cover is not an
-error.
+the first image in the archive. DOCX and PPTX: the thumbnail Office embeds, when there
+is one. Anything else that Pillow can open as an image: a JPEG resize. Any failure
+gives None; a missing cover is not an error.
 """
 
 import io
@@ -13,10 +14,18 @@ from app.modules.library.domain.enums import FileFormat
 
 import pypdfium2
 from defusedxml import ElementTree
+from PIL import Image
 
 IMAGE_SUFFIXES = (".jpg", ".jpeg", ".png", ".gif", ".webp")
 RENDER_SCALE = 1.5
 MAX_COVER_BYTES = 5 * 1024 * 1024
+MAX_COVER_SIDE = 1200
+MAX_IMAGE_PIXELS = 50_000_000
+THUMBNAILS = (
+    "docProps/thumbnail.jpeg",
+    "docProps/thumbnail.jpg",
+    "docProps/thumbnail.png",
+)
 
 
 def extract_cover(data: bytes, fmt: FileFormat) -> tuple[bytes, str] | None:
@@ -26,8 +35,29 @@ def extract_cover(data: bytes, fmt: FileFormat) -> tuple[bytes, str] | None:
             return _pdf_cover(data)
         if fmt is FileFormat.EPUB:
             return _epub_cover(data)
+        if fmt in (FileFormat.DOCX, FileFormat.PPTX):
+            return _office_cover(data)
+        return resize_image(data)
     except Exception:  # noqa: BLE001  # any broken file simply has no cover
         return None
+
+
+def resize_image(data: bytes) -> tuple[bytes, str] | None:
+    """An image shrunk to at most `MAX_COVER_SIDE` pixels as JPEG, else None."""
+    Image.MAX_IMAGE_PIXELS = MAX_IMAGE_PIXELS
+    with Image.open(io.BytesIO(data)) as image:
+        image.thumbnail((MAX_COVER_SIDE, MAX_COVER_SIDE))
+        rgb = image.convert("RGB")
+    out = io.BytesIO()
+    rgb.save(out, format="JPEG", quality=85)
+    return out.getvalue(), "cover.jpg"
+
+
+def _office_cover(data: bytes) -> tuple[bytes, str] | None:
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        for name in THUMBNAILS:
+            if name in archive.namelist():
+                return resize_image(archive.read(name))
     return None
 
 

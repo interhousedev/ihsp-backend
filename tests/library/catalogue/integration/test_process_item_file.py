@@ -350,3 +350,56 @@ async def test_book_without_cover_gets_one_from_its_pdf(
     cover = files_api.files[scanned.cover_file_id]
     assert cover.data[:2] == b"\xff\xd8"
     assert cover.ref.purpose.value == "library_cover"
+
+
+def _pdf_bytes() -> bytes:
+    import io
+
+    import pypdfium2
+
+    document = pypdfium2.PdfDocument.new()
+    document.new_page(100, 150)
+    out = io.BytesIO()
+    document.save(out)
+    return out.getvalue()
+
+
+async def test_manual_cover_is_never_overwritten(
+    library: LibraryServices,
+    store_item: StoreItem,
+    files_api: FakeScanFilesApi,
+) -> None:
+    """A book with a cover keeps it through the scan and the backfill."""
+    owner = new_id()
+    file_id = files_api.add_file(owner_id=owner, pages=[LOREM], data=_pdf_bytes())
+    manual = new_id()
+    book = _book(file_id, cover_file_id=manual, cover_url=None, owner_id=owner)
+    await put(library.core.uow_factory, store_item, book)
+
+    scanned = await _run(library, book)
+    await library.catalogue.backfill_covers.execute()
+
+    assert scanned.cover_file_id == manual
+    async with library.core.uow_factory() as uow:
+        kept = await uow.items.get(book.id)
+    assert kept is not None and kept.cover_file_id == manual
+
+
+async def test_backfill_gives_covers_to_existing_books(
+    library: LibraryServices,
+    store_item: StoreItem,
+    files_api: FakeScanFilesApi,
+) -> None:
+    """The job covers books that have a primary file and no cover."""
+    owner = new_id()
+    file_id = files_api.add_file(owner_id=owner, pages=[LOREM], data=_pdf_bytes())
+    book = _book(file_id, cover_file_id=None, cover_url=None, owner_id=owner)
+    await put(library.core.uow_factory, store_item, book)
+
+    made = await library.catalogue.backfill_covers.execute()
+
+    assert made >= 1
+    async with library.core.uow_factory() as uow:
+        loaded = await uow.items.get(book.id)
+    assert loaded is not None and loaded.cover_file_id is not None
+    assert await library.catalogue.backfill_covers.execute() == 0
