@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+
+- The default dashboard keeps only what the shell does not already show: next lesson, upcoming controls, homework, new marks, flash cards due, alerts and announcements. Saved layouts are unchanged.
+
+### Fixed
+
+- `/v1/public/client-config` answers CORS preflights from every app origin (it was share-only, so app boots failed with a CORS error).
+- A face photo now becomes the user's profile photo, so avatars show it. A student's own upload keeps an admin-set photo, and removing the face removes its copy.
+
 ## [1.6.2] - 2026-11-15
 
 ### Fixed
