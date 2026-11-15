@@ -1,8 +1,9 @@
 """Per-route-group CORS as a path-prefix ASGI middleware.
 
 Rules: the cookie endpoints (`/v1/oauth/token|refresh|logout`) allow the first-party
-app origins with credentials and require the `X-IHSP-Client` header; the maintenance
-status (`/v1/public/maintenance`) allows the app and share origins; the rest of the
+app origins with credentials and require the `X-IHSP-Client` header; the app-shell
+public reads (`/v1/public/maintenance`, `/v1/public/client-config`) allow the app and
+share origins; the rest of the
 public share data (`/v1/public/*`) allows only the share host; every other `/v1/*`
 route allows the first-party app origins without credentials. The share host shows
 user-written content and is never a credentialed origin.
@@ -24,8 +25,9 @@ if TYPE_CHECKING:
 CLIENT_HEADER = "x-ihsp-client"
 
 COOKIE_PREFIXES = ("/v1/oauth/token", "/v1/oauth/refresh", "/v1/oauth/logout")
-# Read by every app shell (the maintenance banner), so app and share origins both pass.
-MAINTENANCE_PREFIXES = ("/v1/public/maintenance",)
+# Read by every app shell (maintenance banner, client config), so app and share
+# origins both pass.
+MAINTENANCE_PREFIXES = ("/v1/public/maintenance", "/v1/public/client-config")
 PUBLIC_PREFIXES = ("/v1/public/",)
 APP_PREFIXES = ("/v1/",)
 

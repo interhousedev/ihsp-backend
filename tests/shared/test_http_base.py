@@ -331,6 +331,27 @@ async def test_maintenance_status_allows_app_and_share_origins(
         assert "access-control-allow-credentials" not in response.headers
 
 
+async def test_client_config_preflight_allows_the_app_origin(
+    http_client: HttpClientFactory,
+) -> None:
+    """Every app reads /v1/public/client-config at boot; its preflight must pass."""
+    router = APIRouter()
+
+    @router.get("/v1/public/client-config")
+    async def client_config() -> dict[str, bool]:
+        return {}
+
+    client = await http_client([router])
+
+    for origin in (APP_ORIGIN, SHARE_ORIGIN):
+        response = await client.options(
+            "/v1/public/client-config",
+            headers={"Origin": origin, "Access-Control-Request-Method": "GET"},
+        )
+        assert response.status_code == 200
+        assert response.headers["access-control-allow-origin"] == origin
+
+
 async def test_routes_outside_v1_get_no_cors_headers(
     http_client: HttpClientFactory,
 ) -> None:
