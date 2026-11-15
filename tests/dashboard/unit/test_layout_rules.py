@@ -128,14 +128,22 @@ def test_today_sections_are_widget_kinds_with_sizes() -> None:
         widget("today_lessons", "1x1")
 
 
-def test_default_layout_has_the_today_widgets_without_overlap() -> None:
-    """The default layout holds the new kinds once each and no two tiles overlap."""
+def test_default_layout_has_only_the_essential_widgets_without_overlap() -> None:
+    """The default layout skips what the shell shows; no two tiles overlap."""
     from app.modules.dashboard.domain.layout import default_widgets
     from app.modules.dashboard.domain.widget import size_span
 
     widgets = default_widgets(uuid4())
     kinds = [w.kind for w in widgets]
-    assert TODAY_KINDS <= set(kinds)
+    assert set(kinds) == {
+        "next_lesson",
+        "upcoming_controls",
+        "homework",
+        "new_marks",
+        "flashcards_due",
+        "alerts",
+        "announcements",
+    }
     assert len(kinds) == len(set(kinds))
     cells: set[tuple[int, int]] = set()
     for w in widgets:

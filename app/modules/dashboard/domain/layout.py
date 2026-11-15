@@ -48,20 +48,19 @@ def keep_one_tile_per_kind(widgets: list[Widget]) -> list[Widget]:
 
 
 def default_widgets(user_id: UUID) -> list[Widget]:
-    """The layout of a user who never edited the dashboard."""
+    """The layout of a user who never edited the dashboard.
+
+    Only information the shell does not already show: the bottom nav reaches the
+    calendar and grades, and the AI bubble replaces the assistant prompts.
+    """
     rows: list[tuple[str, str, int, int]] = [
         ("next_lesson", "2x1", 0, 0),
         ("upcoming_controls", "2x1", 2, 0),
-        ("today_lessons", "2x2", 0, 1),
-        ("homework", "2x1", 2, 1),
-        ("semester_summary", "1x1", 2, 2),
-        ("new_marks", "1x1", 3, 2),
-        ("announcements", "2x1", 0, 3),
-        ("alerts", "2x1", 2, 3),
-        ("get_started", "2x1", 0, 4),
-        ("flashcards_due", "1x1", 2, 4),
-        ("attendance", "1x1", 3, 4),
-        ("notebook_prompt", "2x1", 0, 5),
+        ("homework", "2x1", 0, 1),
+        ("new_marks", "1x1", 2, 1),
+        ("flashcards_due", "1x1", 3, 1),
+        ("alerts", "2x1", 0, 2),
+        ("announcements", "2x1", 2, 2),
     ]
     return [
         Widget.model_validate(
