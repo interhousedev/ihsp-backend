@@ -9,7 +9,10 @@ from app.interfaces.bot.assistant.service import BotAssistant, Events
 from app.interfaces.bot.assistant.stream import AnswerStream
 from app.interfaces.bot.utilities.html import escape
 from app.interfaces.bot.widgets.deliver import WidgetPlan, plan_widgets, send_widgets
+from app.modules.ai.application.tools.show_ui_block import SHOW_UI_BLOCK
 from app.shared.i18n.core import I18nContext
+from app.shared.openui.blocks import fenced
+from app.shared.openui.degrade import block_markdown
 from app.shared.openui.visual import has_valid_blocks
 
 import structlog
@@ -130,20 +133,28 @@ async def _approval_rows(
 
 
 async def _send_documents(
-    bot: Bot, chat: int, assistant: BotAssistant, calls: list[Any]
+    bot: Bot,
+    chat: int,
+    assistant: BotAssistant,
+    calls: list[Any],
+    thread: int | None,
 ) -> None:
     for call in calls:
         document = getattr(call, "document", None)
         if document is None or call.status != "done":
             continue
         data = await assistant.files.read_bytes(document.file_id)
-        await bot.send_document(chat, BufferedInputFile(data, filename=document.name))
+        await bot.send_document(
+            chat,
+            BufferedInputFile(data, filename=document.name),
+            message_thread_id=thread,
+        )
 
 
-async def _send_images(bot: Bot, chat: int, markdown: str) -> None:
+async def _send_images(bot: Bot, chat: int, markdown: str, thread: int | None) -> None:
     for url in list(dict.fromkeys(IMAGE.findall(markdown)))[:MAX_IMAGES]:
         try:
-            await bot.send_photo(chat, url)
+            await bot.send_photo(chat, url, message_thread_id=thread)
         except TelegramAPIError:
             log.info("bot.ai.image_failed", url=url)
 
@@ -173,6 +184,32 @@ async def _consume(
     return text, result, failure
 
 
+def _ui_blocks(calls: list[Any]) -> list[str]:
+    """The sources of the blocks the model showed with the `show_ui_block` tool."""
+    return [
+        str(call.ui_block)
+        for call in calls
+        if call.tool == SHOW_UI_BLOCK
+        and str(call.status) == "done"
+        and getattr(call, "ui_block", None)
+    ]
+
+
+async def _send_ui_blocks(
+    bot: Bot, stream: AnswerStream, assistant: BotAssistant, sources: list[str]
+) -> None:
+    """Each block is its own message: a widget when on, otherwise its Markdown."""
+    for source in sources:
+        plan = None
+        if assistant.widgets and stream.chat_id > 0:
+            plan = plan_widgets(fenced(source), viz_token=None, visualize_label="")
+        if plan is not None:
+            await send_widgets(bot, stream.chat_id, plan, stream.thread_id)
+            continue
+        for chunk in render_final(block_markdown(source)):
+            await stream.send_html(chunk.html)
+
+
 def _made_calls(result: Any) -> list[Any]:
     return [
         call
@@ -196,7 +233,11 @@ async def deliver(
     text, result, failure = await _consume(stream, events)
     if result is None:
         await stream.abort()
-        await bot.send_message(stream.chat_id, _error_text(failure or {}, i18n))
+        await bot.send_message(
+            stream.chat_id,
+            _error_text(failure or {}, i18n),
+            message_thread_id=stream.thread_id,
+        )
         return
     answer = _answer(result)
     body = answer.text if answer is not None else text
@@ -206,16 +247,20 @@ async def deliver(
     text_body = plan.text if plan is not None else body
     chunks = render_final(text_body) if text_body.strip() else []
     chunks.extend(Chunk(_card(call)) for call in pending)
-    if not chunks and plan is None:
+    blocks = _ui_blocks(_made_calls(result))
+    if not chunks and plan is None and not blocks:
         chunks = [Chunk(escape(i18n("bot-ai-empty")))]
     rows = await _visual_rows(assistant, user_id, chat_id, answer, body, i18n)
     rows += await _approval_rows(assistant, user_id, chat_id, pending, i18n)
     if plan is not None and not chunks and rows:
         chunks = [Chunk(escape(i18n("bot-ai-visualization")))]
-    elif plan is not None and not chunks:
+    elif not chunks and (plan is not None or blocks):
         await stream.abort()
     await stream.finish(chunks, rows)
     if plan is not None:
-        await send_widgets(bot, stream.chat_id, plan)
-    await _send_documents(bot, stream.chat_id, assistant, _made_calls(result))
-    await _send_images(bot, stream.chat_id, body)
+        await send_widgets(bot, stream.chat_id, plan, stream.thread_id)
+    await _send_ui_blocks(bot, stream, assistant, blocks)
+    await _send_documents(
+        bot, stream.chat_id, assistant, _made_calls(result), stream.thread_id
+    )
+    await _send_images(bot, stream.chat_id, body, stream.thread_id)

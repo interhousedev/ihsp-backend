@@ -65,7 +65,11 @@ class BotAssistant:
         return chat_id
 
     async def ask(
-        self, actor: Actor, text: str, file_ids: list[UUID]
+        self,
+        actor: Actor,
+        text: str,
+        file_ids: list[UUID],
+        chat_id: UUID | None = None,
     ) -> tuple[UUID, Events]:
         """Start the turn; a deleted chat or a changed role starts a new chat."""
         # The model calls of this update are counted and access-checked for the user.
@@ -80,7 +84,7 @@ class BotAssistant:
                 surface=SURFACE_TELEGRAM,
             )
 
-        chat_id = await self.chat_for(actor)
+        chat_id = chat_id or await self.chat_for(actor)
         try:
             return chat_id, await _primed(start(chat_id))
         except (ChatNotFoundError, WrongAssistantError):

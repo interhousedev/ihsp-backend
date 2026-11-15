@@ -7,6 +7,7 @@ from typing import Protocol, Self
 from app.modules.ai.ports.chat_repository import ChatRepository
 from app.modules.ai.ports.message_repository import MessageRepository
 from app.modules.ai.ports.project_repository import ProjectRepository
+from app.modules.ai.ports.telegram_topic_repository import TelegramTopicRepository
 from app.modules.ai.ports.web_pages import WebPageStore
 from app.shared.notifications import AuditDraft
 
@@ -27,6 +28,11 @@ class AiUnitOfWork(Protocol):
     @property
     def projects(self) -> ProjectRepository:
         """Projects and their files of the open transaction."""
+        ...
+
+    @property
+    def telegram_topics(self) -> TelegramTopicRepository:
+        """Links between chats and Telegram topics."""
         ...
 
     @property

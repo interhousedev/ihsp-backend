@@ -81,8 +81,8 @@ materials). You have no access to LMS course content.""")
 # The surface of a turn: the web chat is the default, the Telegram bot adds these.
 SURFACE_TELEGRAM: Final = "telegram"
 TELEGRAM_RULES: Final = (
-    "The answer is shown as a Telegram message. Use bold, bullet lists, links and "
-    "short tables (pipe syntax; they show as aligned text). No images and no HTML."
+    "The answer is shown as a Telegram message. Use bold, bullet lists and links. "
+    "No Markdown tables, no images and no HTML."
 )
 
 _ADMIN_ROLE = with_brand("""\

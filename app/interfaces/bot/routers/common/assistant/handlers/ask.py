@@ -11,6 +11,12 @@ from app.interfaces.bot.assistant.service import (
     has_assistant_role,
 )
 from app.interfaces.bot.assistant.stream import AnswerStream
+from app.interfaces.bot.assistant.topics import (
+    bind,
+    place_turn,
+    sync_title,
+    thread_of,
+)
 from app.modules.ai.domain.errors import WrongAssistantError
 from app.shared.actor import Actor
 from app.shared.i18n.core import I18nContext
@@ -27,11 +33,13 @@ def new_stream(bot: Bot, message: Message) -> AnswerStream:
         message.chat.id,
         message.message_id,
         drafts=message.chat.type == ChatType.PRIVATE,
+        thread_id=thread_of(message),
     )
 
 
 async def answer_turn(
     bot: Bot,
+    message: Message,
     stream: AnswerStream,
     assistant: BotAssistant,
     actor: Actor,
@@ -40,10 +48,16 @@ async def answer_turn(
     file_ids: list[UUID],
 ) -> None:
     """Send the text (typed or transcribed) to the assistant and show the answer."""
+    placement = await place_turn(bot, assistant, actor, message, text, i18n)
+    stream.thread_id = placement.thread_id
     try:
-        chat_id, events = await assistant.ask(actor, text, file_ids)
+        chat_id, events = await assistant.ask(actor, text, file_ids, placement.chat_id)
     except WrongAssistantError:  # the role changed while the chat was open
-        await bot.send_message(stream.chat_id, i18n("bot-ai-no-assistant"))
+        await bot.send_message(
+            stream.chat_id,
+            i18n("bot-ai-no-assistant"),
+            message_thread_id=stream.thread_id,
+        )
         return
     await deliver(
         bot,
@@ -54,6 +68,8 @@ async def answer_turn(
         chat_id=chat_id,
         i18n=i18n,
     )
+    await bind(assistant, actor, message, placement, chat_id)
+    await sync_title(bot, assistant, actor, message, chat_id)
 
 
 async def ask(
@@ -70,4 +86,4 @@ async def ask(
     await stream.typing()
     text = (message.text or message.caption or "").strip()
     file_ids = await upload_media(bot, message, actor, assistant.files)
-    await answer_turn(bot, stream, assistant, actor, i18n, text, file_ids)
+    await answer_turn(bot, message, stream, assistant, actor, i18n, text, file_ids)

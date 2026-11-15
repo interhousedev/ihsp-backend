@@ -23,7 +23,7 @@ from aiogram.methods import (
     SendDocument,
     SendMessage,
 )
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, User
 
 
 class Harness:
@@ -45,16 +45,24 @@ class Harness:
         user_id: int = STUDENT_TG,
         language: str | None = None,
         entities: list[dict[str, Any]] | None = None,
+        thread_id: int | None = None,
     ) -> None:
         """The user sends a text message (``entities`` carry its formatting)."""
         update = message_update(
-            self.bot, text, user_id=user_id, language=language, entities=entities
+            self.bot,
+            text,
+            user_id=user_id,
+            language=language,
+            entities=entities,
+            thread_id=thread_id,
         )
         await self.dp.feed_update(self.bot, update, container=self.world.container)
 
-    async def press(self, data: str, *, user_id: int = STUDENT_TG) -> None:
+    async def press(
+        self, data: str, *, user_id: int = STUDENT_TG, thread_id: int | None = None
+    ) -> None:
         """The user presses a button with this callback data."""
-        update = callback_update(self.bot, data, user_id=user_id)
+        update = callback_update(self.bot, data, user_id=user_id, thread_id=thread_id)
         await self.dp.feed_update(self.bot, update, container=self.world.container)
 
     async def send_document(
@@ -105,6 +113,12 @@ class Harness:
     def toasts(self) -> list[AnswerCallbackQuery]:
         """Callback query answers."""
         return self.session.calls(AnswerCallbackQuery)
+
+    def enable_topics(self) -> None:
+        """The bot has private-chat topics switched on (BotFather)."""
+        self.bot._me = User(
+            id=BOT_ID, is_bot=True, first_name="Bot", has_topics_enabled=True
+        )
 
     def last(self) -> SendMessage | EditMessageText:
         """The last message the bot sent or edited."""

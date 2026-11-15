@@ -38,3 +38,7 @@ The repair is an ordinary model call through the recording gateway: it is counte
 ## Tests
 
 For each component: a valid block, each invalid prop, an unsafe URL, the repair path with a fake model (fixed, still broken), and the Markdown rendering.
+
+## Telegram
+
+The Telegram surface gets the `show_ui_block` tool and `telegram_openui_prompt()`; the bot sends each block as its own message. The web keeps fenced blocks and never sees Telegram rules.

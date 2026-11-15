@@ -31,6 +31,7 @@ from app.modules.ai.application.system_prompts import (
     SystemPrompts,
     project_instructions_from,
 )
+from app.modules.ai.application.telegram_topics import TelegramTopics
 from app.modules.ai.application.tool_runner import ToolRunner
 from app.modules.ai.application.tools.add_flashcards import AddFlashcards
 from app.modules.ai.application.tools.add_notebook_sources import AddNotebookSources
@@ -74,6 +75,7 @@ from app.modules.ai.application.tools.search_project_files import (
     SearchProjectFiles,
 )
 from app.modules.ai.application.tools.search_web import SearchWeb
+from app.modules.ai.application.tools.show_ui_block import ShowUiBlock
 from app.modules.ai.application.transcribe_audio import AudioSniffer, TranscribeAudio
 from app.modules.ai.application.turn_result import TurnResults
 from app.modules.ai.application.usage_report import UsageReport
@@ -147,6 +149,7 @@ class AiServices:
     purge_web_pages: PurgeWebPages
     transcribe_audio: TranscribeAudio
     projects: ProjectService
+    telegram_topics: TelegramTopics
 
 
 @dataclass(frozen=True, slots=True)
@@ -288,6 +291,7 @@ def build(
             *make_office_tools(files, bindings),
             history,
         ],
+        telegram=[ShowUiBlock()] if settings.ai.openui_enabled else [],
     )
     locale = LocaleResolver(identity)
     views = ChatViews(deps.i18n)
@@ -425,6 +429,7 @@ def build(
         purge_admin_chats=PurgeAdminChats(uow_factory=uow_factory, clock=deps.clock),
         purge_web_pages=PurgeWebPages(pages),
         projects=ProjectService(uow_factory=uow_factory, files=files, clock=deps.clock),
+        telegram_topics=TelegramTopics(uow_factory),
         transcribe_audio=TranscribeAudio(
             llm=llm,
             budget=budget,

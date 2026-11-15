@@ -75,6 +75,7 @@ def test_commands_follow_the_menu(world: World) -> None:
         "workoffs",
         "settings",
         "new",
+        "delete",
         "feedback",
         "help",
     ]

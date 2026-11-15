@@ -3,6 +3,7 @@
 from app.modules.ai.infrastructure.orm.chat import Chat
 from app.modules.ai.infrastructure.orm.chat_message import ChatMessage
 from app.modules.ai.infrastructure.orm.project import Project, ProjectFile
+from app.modules.ai.infrastructure.orm.telegram_topic import TelegramTopicRow
 from app.modules.ai.infrastructure.orm.usage_event import UsageEventRow
 from app.shared.personal_data import (
     ParentLink,
@@ -18,6 +19,7 @@ _ = ParentLink
 
 SPECS: tuple[PersonalTable, ...] = (
     PersonalTable(ChatMessage, E, parent=ParentLink(Chat, "chat_id", "owner_id")),
+    PersonalTable(TelegramTopicRow, E, owner="user_id"),
     PersonalTable(Chat, E, owner="owner_id"),
     PersonalTable(ProjectFile, E, parent=ParentLink(Project, "project_id", "owner_id")),
     PersonalTable(Project, E, owner="owner_id"),

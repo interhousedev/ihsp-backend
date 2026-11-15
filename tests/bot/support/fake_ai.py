@@ -5,12 +5,15 @@ from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, cast
 from uuid import UUID
 
+from app.modules.ai.application.telegram_topics import TelegramTopics
 from app.modules.ai.application.turn_events import TurnEvent
+from app.modules.ai.domain.chat import title_from_text
 from app.shared.actor import Actor
 from app.shared.ids import new_id
+from tests.fakes.ai.uow import FakeAiStore, fake_uow_factory
 
 Script = list[TurnEvent] | Exception
 
@@ -31,6 +34,8 @@ def call_view(
     status: str = "pending_approval",
     title: str = "Create a quiz",
     document: Any = None,
+    tool: str = "create_artifact",
+    ui_block: str | None = None,
 ) -> SimpleNamespace:
     """A tool call as the chat views show it."""
     preview = SimpleNamespace(
@@ -40,7 +45,7 @@ def call_view(
     )
     return SimpleNamespace(
         id=call_id,
-        tool="create_artifact",
+        tool=tool,
         access="write",
         status=status,
         note="",
@@ -48,6 +53,7 @@ def call_view(
         reject_reason=None,
         expires_at=None,
         document=document,
+        ui_block=ui_block,
     )
 
 
@@ -85,9 +91,16 @@ class FakeAi:
     transcripts: deque[str | Exception] = field(default_factory=deque)
     prechecks: list[Actor] = field(default_factory=list)
     precheck_refusal: Exception | None = None
+    titles: dict[UUID, str] = field(default_factory=dict)
+    deleted: list[UUID] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         """Expose the use cases under the AiServices attribute names."""
+        self.telegram_topics = TelegramTopics(
+            cast(Any, fake_uow_factory(FakeAiStore()))
+        )
+        self.get_chat = SimpleNamespace(execute=self._get)
+        self.delete_chat = SimpleNamespace(execute=self._delete)
         self.create_chat = SimpleNamespace(execute=self._create)
         self.send_message = SimpleNamespace(stream=self._send)
         self.approve_tool_call = SimpleNamespace(stream=self._approve)
@@ -118,6 +131,12 @@ class FakeAi:
             raise item
         return item
 
+    async def _get(self, *, actor: Actor, chat_id: UUID) -> SimpleNamespace:
+        return SimpleNamespace(chat=SimpleNamespace(title=self.titles.get(chat_id)))
+
+    async def _delete(self, *, actor: Actor, chat_id: UUID) -> None:
+        self.deleted.append(chat_id)
+
     def play(self, *scripts: Script) -> None:
         """Queue the events of the next turns."""
         self.scripts.extend(scripts)
@@ -140,6 +159,8 @@ class FakeAi:
         file_ids: list[UUID],
         surface: str = "web",
     ) -> AsyncIterator[TurnEvent]:
+        if text and chat_id not in self.titles:
+            self.titles[chat_id] = title_from_text(text)
         self.sent.append(
             {"chat_id": chat_id, "text": text, "file_ids": file_ids, "surface": surface}
         )

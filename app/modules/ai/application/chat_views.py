@@ -76,7 +76,16 @@ class ChatViews:
             reject_reason=call.reject_reason,
             expires_at=call.expires_at,
             document=self._document(call),
+            ui_block=self._ui_block(call),
         )
+
+    @staticmethod
+    def _ui_block(call: ToolCall) -> str | None:
+        """The checked block of a finished ``show_ui_block`` call."""
+        if call.tool != "show_ui_block" or call.status is not ToolStatus.DONE:
+            return None
+        block = (call.result or {}).get("block")
+        return block if isinstance(block, str) and block else None
 
     @staticmethod
     def _document(call: ToolCall) -> DocumentCardView | None:

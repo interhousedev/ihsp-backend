@@ -3,6 +3,7 @@
 from app.modules.ai.infrastructure.orm.chat import Chat
 from app.modules.ai.infrastructure.orm.chat_message import ChatMessage
 from app.modules.ai.infrastructure.orm.project import Project, ProjectFile
+from app.modules.ai.infrastructure.orm.telegram_topic import TelegramTopicRow
 from app.modules.ai.infrastructure.orm.usage_event import UsageEventRow
 from app.modules.ai.infrastructure.orm.web_page import WebPageRow, WebQueryRow
 
@@ -11,6 +12,7 @@ __all__ = [
     "ChatMessage",
     "Project",
     "ProjectFile",
+    "TelegramTopicRow",
     "UsageEventRow",
     "WebPageRow",
     "WebQueryRow",

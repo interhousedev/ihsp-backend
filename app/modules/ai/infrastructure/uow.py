@@ -9,6 +9,9 @@ from app.modules.ai.infrastructure.repositories.message_repository import (
 from app.modules.ai.infrastructure.repositories.project_repository import (
     SqlProjectRepository,
 )
+from app.modules.ai.infrastructure.repositories.telegram_topic_repository import (
+    SqlTelegramTopicRepository,
+)
 from app.modules.ai.infrastructure.repositories.web_page_repository import (
     SqlWebPageRepository,
 )
@@ -22,6 +25,7 @@ class SqlAiUnitOfWork(SqlUnitOfWork):
     messages: SqlMessageRepository
     web_pages: SqlWebPageRepository
     projects: SqlProjectRepository
+    telegram_topics: SqlTelegramTopicRepository
 
     def _init_repos(self) -> None:
         """Create the repositories on the open session."""
@@ -29,3 +33,4 @@ class SqlAiUnitOfWork(SqlUnitOfWork):
         self.messages = SqlMessageRepository(self.session)
         self.web_pages = SqlWebPageRepository(self.session)
         self.projects = SqlProjectRepository(self.session)
+        self.telegram_topics = SqlTelegramTopicRepository(self.session)

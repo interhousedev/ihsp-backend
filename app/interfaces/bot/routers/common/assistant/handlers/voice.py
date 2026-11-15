@@ -46,4 +46,4 @@ async def ask_voice(
         return
     shown = escape(shorten_transcript(transcript))
     await message.answer(i18n("bot-ai-voice-heard", text=shown))
-    await answer_turn(bot, stream, assistant, actor, i18n, transcript, [])
+    await answer_turn(bot, message, stream, assistant, actor, i18n, transcript, [])

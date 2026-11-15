@@ -5,6 +5,7 @@ from typing import Any, Final
 
 from app.modules.ai.application.tools.base import Tool
 from app.modules.ai.domain.assistant import Assistant
+from app.modules.ai.domain.prompts import SURFACE_TELEGRAM
 
 PROJECT_TOOL: Final = "search_project_files"
 # Still callable (an earlier answer may have used them) but not offered to the model:
@@ -28,8 +29,13 @@ class ToolRegistry:
         student: Sequence[Tool],
         admin: Sequence[Tool],
         author: Sequence[Tool] = (),
+        telegram: Sequence[Tool] = (),
     ) -> None:
-        """Index the tools of the three assistants."""
+        """Index the tools of the three assistants.
+
+        `telegram` tools are offered to every assistant, on the bot's surface only.
+        """
+        self._telegram = {tool.name: tool for tool in telegram}
         self._tools: dict[Assistant, dict[str, Tool]] = {
             Assistant.STUDENT: {tool.name: tool for tool in student},
             Assistant.ADMIN: {tool.name: tool for tool in admin},
@@ -38,10 +44,14 @@ class ToolRegistry:
 
     def get(self, assistant: Assistant, name: str) -> Tool | None:
         """Return the tool or None for an unknown name."""
-        return self._tools[assistant].get(name)
+        return self._tools[assistant].get(name) or self._telegram.get(name)
 
     def llm_tools(
-        self, assistant: Assistant, *, in_project: bool = True
+        self,
+        assistant: Assistant,
+        *,
+        in_project: bool = True,
+        surface: str = "web",
     ) -> list[dict[str, Any]]:
         """Return the tool list of a model request (OpenAI function format).
 
@@ -52,8 +62,7 @@ class ToolRegistry:
         if not in_project:
             hidden |= {PROJECT_TOOL}
         compact = assistant is not Assistant.LMS_AUTHOR
-        return [
-            tool.spec().to_llm(compact=compact)
-            for tool in self._tools[assistant].values()
-            if tool.name not in hidden
-        ]
+        tools = [t for t in self._tools[assistant].values() if t.name not in hidden]
+        if surface == SURFACE_TELEGRAM:
+            tools += list(self._telegram.values())
+        return [tool.spec().to_llm(compact=compact) for tool in tools]

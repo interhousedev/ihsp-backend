@@ -30,6 +30,7 @@ from app.modules.ai.domain.history import (
     select_window,
     to_llm_messages,
 )
+from app.modules.ai.domain.prompts import SURFACE_TELEGRAM
 from app.modules.ai.domain.tool_call import ToolCall, ToolStatus
 from app.modules.ai.ports.unit_of_work import AiUnitOfWork
 from app.settings import Settings
@@ -52,6 +53,7 @@ from app.shared.i18n.core import I18nCore
 from app.shared.ids import new_id
 from app.shared.limits import LimitsProvider, StaticLimits
 from app.shared.openui.finalize import OpenUiFinalizer, UsageCounter
+from app.shared.usage_context import bind_ai_session
 from app.shared.web_citations import rewrite_markers
 
 MAX_OUTPUT_TOKENS = 4096
@@ -144,6 +146,7 @@ class ContinueTurn:
         texts of the tool rounds become its `progress` notes and the last text is
         the answer. A turn continued after an approval adds to the waiting message.
         """
+        bind_ai_session(chat_id)  # the trace session of every model call of the turn
         limits = await self.limits.current()
         history = limits.ai_chat_history_limit
         chat, tail = await self._load(chat_id)
@@ -202,7 +205,7 @@ class ContinueTurn:
         )
         window = select_window(tail, run.after_seq)
         messages = to_llm_messages(window, run.summary)
-        tools = self._tools(chat)
+        tools = self._tools(chat, run.surface)
         if await self._over_budget(chat, system, messages, tools):
             return TurnStatus.LIMIT_REACHED
         task = profile_for(chat.assistant, self.settings, chat.tier).llm
@@ -235,7 +238,7 @@ class ContinueTurn:
         if raw_calls and text.strip():  # a progress note between tool rounds
             record_step(StepKind.THINK, text)
         if not raw_calls:  # the answer: repair or drop broken OpenUI blocks
-            text = await self.openui.finalize(text, count=self._repair_counter(chat))
+            text = await self._finalized(run, chat, text)
             text = normalize_answer(strip_worked_sums(text, asked))
         calls = await self.runner.propose(
             chat.assistant, run.ctx, raw_calls, taken, run.seen
@@ -248,6 +251,12 @@ class ContinueTurn:
         run.progress.changed.append(message)
         run.progress.chat = stored
         return _final_status(calls)
+
+    async def _finalized(self, run: _Run, chat: Chat, text: str) -> str:
+        """Repair OpenUI blocks of a web answer; the bot's blocks come by the tool."""
+        if run.surface == SURFACE_TELEGRAM:
+            return text
+        return await self.openui.finalize(text, count=self._repair_counter(chat))
 
     async def _refuse_rule_attack(self, run: _Run, asked: str) -> TurnStatus:
         """End the turn with the fixed refusal, in the language of the message."""
@@ -276,10 +285,10 @@ class ContinueTurn:
         text = str(response.get("text") or "")
         return response, strip_narration(text, **options)
 
-    def _tools(self, chat: Chat) -> list[dict[str, Any]]:
+    def _tools(self, chat: Chat, surface: str = "web") -> list[dict[str, Any]]:
         """The tools offered in this chat; the list stays the same within it."""
         return self.registry.llm_tools(
-            chat.assistant, in_project=chat.project_id is not None
+            chat.assistant, in_project=chat.project_id is not None, surface=surface
         )
 
     async def _streamed(

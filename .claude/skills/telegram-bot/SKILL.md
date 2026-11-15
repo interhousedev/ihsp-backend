@@ -44,3 +44,10 @@ description: Use when changing the aiogram bot in app/interfaces/bot - rendering
 ## Tests
 
 `tests/bot` with a fake bot: assert the exact HTML, the callback sizes and the router a message lands in.
+
+## AI chat topics and UI blocks
+
+- In a private chat with `has_topics_enabled` (BotFather) each AI chat is one forum topic, mapped 1:1 in `ai.telegram_topics` (`app/interfaces/bot/assistant/topics.py`). Web-created chats get a topic lazily; a topic message goes to its mapped chat, so history is shared with the web. Without topics, or when `createForumTopic` fails, the single-thread behaviour applies.
+- The topic title follows the chat title (synced at the next bot turn, so a web rename arrives then). The icon comes from `getForumTopicIconStickers`, picked by the chat's topic.
+- `/delete` in a topic asks with inline Yes/Cancel (single-use token); Yes deletes the AI chat and the topic, Cancel keeps both.
+- Pass `thread_id` to every send in a topic. UI blocks are sent as separate messages from the `show_ui_block` tool (Telegram surface only), never inside the text answer.

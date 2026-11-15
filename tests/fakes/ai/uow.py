@@ -10,6 +10,7 @@ from uuid import UUID
 from app.modules.ai.domain.assistant import Assistant
 from app.modules.ai.domain.chat import Chat, ChatMessage
 from app.modules.ai.domain.project import Project
+from app.modules.ai.domain.telegram_topic import TelegramTopic
 from app.shared.notifications import AuditDraft
 from tests.fakes.ai.web_pages import InMemoryWebPageStore
 
@@ -26,6 +27,7 @@ class FakeAiStore:
         self.web_pages = InMemoryWebPageStore()
         self.projects: dict[UUID, Project] = {}
         self.project_files: dict[UUID, list[UUID]] = {}
+        self.topics: dict[UUID, TelegramTopic] = {}
 
     def chat_messages(self, chat_id: UUID) -> list[ChatMessage]:
         """Return copies of a chat's messages (for assertions)."""
@@ -159,6 +161,45 @@ class FakeProjectRepository:
         return list(self.store.project_files.get(project_id, []))
 
 
+class FakeTelegramTopicRepository:
+    """Topic links of a FakeAiStore."""
+
+    def __init__(self, store: FakeAiStore) -> None:
+        """Bind to the store."""
+        self.store = store
+
+    async def add(self, topic: TelegramTopic) -> None:
+        """Store the link (one per chat, one per thread)."""
+        await self.delete_by_chat(topic.chat_id)
+        for other in list(self.store.topics.values()):
+            if (other.telegram_chat_id, other.message_thread_id) == (
+                topic.telegram_chat_id,
+                topic.message_thread_id,
+            ):
+                del self.store.topics[other.chat_id]
+        self.store.topics[topic.chat_id] = copy.deepcopy(topic)
+
+    async def by_chat(self, chat_id: UUID) -> TelegramTopic | None:
+        """The topic of a chat."""
+        return copy.deepcopy(self.store.topics.get(chat_id))
+
+    async def by_thread(
+        self, telegram_chat_id: int, message_thread_id: int
+    ) -> TelegramTopic | None:
+        """The link of a topic."""
+        for topic in self.store.topics.values():
+            if (topic.telegram_chat_id, topic.message_thread_id) == (
+                telegram_chat_id,
+                message_thread_id,
+            ):
+                return copy.deepcopy(topic)
+        return None
+
+    async def delete_by_chat(self, chat_id: UUID) -> None:
+        """Forget the link of a chat."""
+        self.store.topics.pop(chat_id, None)
+
+
 class FakeMessageRepository:
     """Messages of a FakeAiStore."""
 
@@ -232,6 +273,7 @@ class FakeAiUnitOfWork:
         self.chats = FakeChatRepository(store)
         self.messages = FakeMessageRepository(store)
         self.projects = FakeProjectRepository(store)
+        self.telegram_topics = FakeTelegramTopicRepository(store)
         self.web_pages = store.web_pages
         self._audit: list[AuditDraft] = []
 

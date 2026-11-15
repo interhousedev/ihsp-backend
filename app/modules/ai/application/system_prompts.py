@@ -24,7 +24,7 @@ from app.shared.ai.answer_language import answer_language, language_line
 from app.shared.ai.prompt_cache import with_volatile_tail
 from app.shared.clock import Clock, local_today
 from app.shared.limits import LimitsProvider
-from app.shared.openui.prompt import openui_prompt
+from app.shared.openui.prompt import openui_prompt, telegram_openui_prompt
 
 ProjectInstructions = Callable[[UUID], Awaitable[str]]
 
@@ -95,7 +95,9 @@ class SystemPrompts:
             prompt = f"{prompt}\n\n{block}"
         if surface == SURFACE_TELEGRAM:
             prompt = f"{prompt}\n\n{TELEGRAM_RULES}"
-        if self.openui:
+            if self.openui:  # blocks come by the show_ui_block tool, never in text
+                prompt += telegram_openui_prompt()
+        elif self.openui:
             prompt += openui_prompt()
         language = answer_language(last_user_text, locale)
         tail = [ANSWER_NOW] if answer_now else []

@@ -12,6 +12,11 @@ from app.interfaces.bot.assistant.service import bot_assistant
 from app.interfaces.bot.filters.is_linked import IsLinked
 from app.interfaces.bot.routers.common.assistant.handlers.ask import ask
 from app.interfaces.bot.routers.common.assistant.handlers.decide import decide
+from app.interfaces.bot.routers.common.assistant.handlers.delete_chat import (
+    AiDeleteCb,
+    confirm_delete,
+    delete_chat,
+)
 from app.interfaces.bot.routers.common.assistant.handlers.new_chat import new_chat
 from app.interfaces.bot.routers.common.assistant.handlers.visualize import (
     visualize,
@@ -37,10 +42,12 @@ def build_router() -> Router:
     router.message.filter(IsLinked(), HasAssistant())
     router.callback_query.filter(IsLinked(), HasAssistant())
     router.message.register(new_chat, Command("new"))
+    router.message.register(delete_chat, Command("delete"))
     idle = StateFilter(None)
     router.message.register(ask, idle, F.text, ~F.text.startswith("/"))
     router.message.register(ask, idle, F.caption, F.photo | F.document)
     router.message.register(ask_voice, idle, F.voice | F.audio | F.video | F.video_note)
     router.callback_query.register(decide, AiCallCb.filter())
+    router.callback_query.register(confirm_delete, AiDeleteCb.filter())
     router.callback_query.register(visualize, AiVizCb.filter())
     return router

@@ -41,7 +41,12 @@ async def decide(
             pass  # too old or unchanged: the buttons are spent anyway
     chat = callback.from_user.id if origin is None else origin.chat.id
     draft_id = (origin.message_id if origin is not None else 0) + 1
-    stream = AnswerStream(bot, chat, draft_id)
+    thread = (
+        origin.message_thread_id
+        if isinstance(origin, Message) and origin.is_topic_message
+        else None
+    )
+    stream = AnswerStream(bot, chat, draft_id, thread_id=thread)
     await stream.typing()
     chat_id, call_id = found
     events = await assistant.decide(actor, chat_id, call_id, approve=callback_data.ok)

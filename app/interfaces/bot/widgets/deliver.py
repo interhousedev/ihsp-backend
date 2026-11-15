@@ -49,13 +49,16 @@ def plan_widgets(
     return WidgetPlan("".join(texts).strip(), blocks)
 
 
-async def send_widgets(bot: Bot, chat_id: int, plan: WidgetPlan) -> None:
+async def send_widgets(
+    bot: Bot, chat_id: int, plan: WidgetPlan, thread_id: int | None = None
+) -> None:
     """Send each widget; on an API error that block goes out as Markdown text."""
     for source, widget in plan.blocks:
         try:
             await bot(
                 SendWidget(
                     chat_id=chat_id,
+                    message_thread_id=thread_id,
                     html=widget.html,
                     caption=widget.caption or None,
                     allow_queries=True,
@@ -64,4 +67,9 @@ async def send_widgets(bot: Bot, chat_id: int, plan: WidgetPlan) -> None:
         except TelegramAPIError as error:
             log.info("bot.widget.fallback", error=type(error).__name__)
             for chunk in render_final(block_markdown(source)):
-                await bot.send_message(chat_id, chunk.html, parse_mode="HTML")
+                await bot.send_message(
+                    chat_id,
+                    chunk.html,
+                    parse_mode="HTML",
+                    message_thread_id=thread_id,
+                )

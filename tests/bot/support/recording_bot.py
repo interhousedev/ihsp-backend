@@ -12,7 +12,7 @@ from typing import Any
 from aiogram import Bot
 from aiogram.client.session.base import BaseSession
 from aiogram.methods import TelegramMethod
-from aiogram.types import Chat, File, Message, Update
+from aiogram.types import Chat, File, ForumTopic, Message, Update, User
 
 BOT_ID = 42
 NOW = dt.datetime(2026, 10, 6, 9, 0, tzinfo=dt.UTC)
@@ -52,11 +52,22 @@ class RecordingSession(BaseSession):
             return result
         return self._default(method)
 
-    @staticmethod
-    def _default(method: TelegramMethod[Any]) -> Any:
+    def _default(self, method: TelegramMethod[Any]) -> Any:
         name = type(method).__name__
         if name == "GetFile":
             return File(file_id="f", file_unique_id="u", file_path="docs/file.bin")
+        if name == "GetMe":
+            return User(
+                id=BOT_ID, is_bot=True, first_name="Bot", has_topics_enabled=False
+            )
+        if name == "CreateForumTopic":
+            return ForumTopic(
+                message_thread_id=500 + len(self.calls(type(method))),
+                name=getattr(method, "name", ""),
+                icon_color=0,
+            )
+        if name == "GetForumTopicIconStickers":
+            return []
         returning = str(method.__returning__)
         if "Message" in returning and "MessageId" not in returning:
             chat_id = getattr(method, "chat_id", 1)
@@ -124,11 +135,14 @@ def message_update(
     update_id: int = 1,
     language: str | None = None,
     entities: list[dict[str, Any]] | None = None,
+    thread_id: int | None = None,
 ) -> Update:
     """A text message; commands get the bot_command entity."""
     message = _message(user_id, update_id, text=text)
     if language:
         message["from"] = _sender(user_id, language=language)
+    if thread_id is not None:
+        message.update(message_thread_id=thread_id, is_topic_message=True)
     if entities:
         message["entities"] = entities
     if text.startswith("/"):
@@ -144,10 +158,13 @@ def callback_update(
     user_id: int = 1001,
     update_id: int = 2,
     message_id: int = 10,
+    thread_id: int | None = None,
 ) -> Update:
     """A button press on a message the bot sent earlier."""
     bot_message = _message(user_id, message_id, text="previous")
     bot_message["from"] = {"id": BOT_ID, "is_bot": True, "first_name": "Bot"}
+    if thread_id is not None:
+        bot_message.update(message_thread_id=thread_id, is_topic_message=True)
     query = {
         "id": f"cb{update_id}",
         "chat_instance": "ci",

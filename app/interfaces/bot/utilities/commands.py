@@ -25,6 +25,7 @@ COMMAND_KEYS = {
     "workoffs": "bot-command-workoffs",
     "settings": "bot-command-settings",
     "new": "bot-command-new",
+    "delete": "bot-command-delete",
     "feedback": "bot-command-feedback",
     "help": "bot-command-help",
 }

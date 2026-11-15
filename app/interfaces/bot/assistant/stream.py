@@ -44,11 +44,13 @@ class AnswerStream:
         draft_id: int,
         *,
         drafts: bool = True,
+        thread_id: int | None = None,
         now: Callable[[], float] = time.monotonic,
     ) -> None:
         """`draft_id` must be non-zero; `drafts` False forces editing."""
         self.bot = bot
         self.chat_id = chat_id
+        self.thread_id = thread_id  # the topic of a private chat, if any
         self.draft_id = draft_id or 1
         self.drafts = drafts and hasattr(bot, "send_message_draft")
         self.now = now
@@ -63,7 +65,9 @@ class AnswerStream:
             return
         self.typing_at = self.now()
         try:
-            await self.bot.send_chat_action(self.chat_id, ChatAction.TYPING)
+            await self.bot.send_chat_action(
+                self.chat_id, ChatAction.TYPING, message_thread_id=self.thread_id
+            )
         except TelegramAPIError:
             log.info("bot.ai.typing_failed")
 
@@ -82,7 +86,10 @@ class AnswerStream:
         if self.drafts:
             try:
                 await self.bot.send_message_draft(
-                    chat_id=self.chat_id, draft_id=self.draft_id, text=html
+                    chat_id=self.chat_id,
+                    draft_id=self.draft_id,
+                    text=html,
+                    message_thread_id=self.thread_id,
                 )
                 self.shown = html
                 return
@@ -106,7 +113,12 @@ class AnswerStream:
 
     async def _write(self, html: str, markup: InlineKeyboardMarkup | None) -> None:
         if self.message_id is None:
-            sent = await self.bot.send_message(self.chat_id, html, reply_markup=markup)
+            sent = await self.bot.send_message(
+                self.chat_id,
+                html,
+                reply_markup=markup,
+                message_thread_id=self.thread_id,
+            )
             self.message_id = sent.message_id
             return
         try:
@@ -120,17 +132,26 @@ class AnswerStream:
             if not is_not_modified(error):
                 raise
 
-    async def _new_message(
-        self, html: str, markup: InlineKeyboardMarkup | None
+    async def send_html(
+        self, html: str, markup: InlineKeyboardMarkup | None = None
     ) -> None:
+        """Send one more message (plain text if the markup is refused)."""
         try:
-            await self.bot.send_message(self.chat_id, html, reply_markup=markup)
+            await self.bot.send_message(
+                self.chat_id,
+                html,
+                reply_markup=markup,
+                message_thread_id=self.thread_id,
+            )
         except TelegramAPIError as error:
             if not is_markup_error(error):
                 raise
             log.info("bot.ai.markup_fallback")
             await self.bot.send_message(
-                self.chat_id, plain_fallback(html), reply_markup=markup
+                self.chat_id,
+                plain_fallback(html),
+                reply_markup=markup,
+                message_thread_id=self.thread_id,
             )
 
     async def finish(
@@ -145,7 +166,7 @@ class AnswerStream:
             if index == 0 and self.message_id is not None:
                 await self._put(chunk.html, markup)
             else:
-                await self._new_message(chunk.html, markup)
+                await self.send_html(chunk.html, markup)
 
     async def abort(self) -> None:
         """Remove the half-written message of the fallback mode."""

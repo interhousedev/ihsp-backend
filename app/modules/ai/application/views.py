@@ -74,6 +74,7 @@ class ToolCallView:
     reject_reason: str | None
     expires_at: datetime | None
     document: DocumentCardView | None = None
+    ui_block: str | None = None  # a finished show_ui_block call: the block code
 
 
 @dataclass(frozen=True, slots=True)
