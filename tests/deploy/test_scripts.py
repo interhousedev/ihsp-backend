@@ -113,6 +113,56 @@ def test_prod_init_can_read_every_credential_vault_setup_prints(
     }
 
 
+def _load_vault_setup():
+    spec = importlib.util.spec_from_file_location(
+        "vault_setup", MATERIALS_DIR / "vault" / "setup.py"
+    )
+    assert spec is not None and spec.loader is not None
+    setup = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(setup)
+    return setup
+
+
+def test_credentials_destroy_old_secret_ids_before_generating_a_new_one() -> None:
+    setup = _load_vault_setup()
+    client = MagicMock()
+    approle = client.auth.approle
+    approle.read_role_id.return_value = {"data": {"role_id": "r"}}
+    approle.list_secret_id_accessors.return_value = {"data": {"keys": ["a1", "a2"]}}
+    approle.generate_secret_id.return_value = {"data": {"secret_id": "new"}}
+
+    assert setup.credentials(client) == ("r", "new")
+
+    names = [call[0] for call in approle.method_calls]
+    assert names.index("destroy_secret_id_accessor") < names.index("generate_secret_id")
+    destroyed = [
+        c.kwargs["secret_id_accessor"]
+        for c in approle.destroy_secret_id_accessor.call_args_list
+    ]
+    assert destroyed == ["a1", "a2"]
+
+
+def test_credentials_tolerate_a_role_without_secret_ids() -> None:
+    setup = _load_vault_setup()
+    client = MagicMock()
+    approle = client.auth.approle
+    approle.read_role_id.return_value = {"data": {"role_id": "r"}}
+    approle.list_secret_id_accessors.side_effect = setup.InvalidPath()
+    approle.generate_secret_id.return_value = {"data": {"secret_id": "new"}}
+
+    assert setup.credentials(client) == ("r", "new")
+    approle.destroy_secret_id_accessor.assert_not_called()
+
+
+def test_prod_init_vault_uses_a_short_lived_token_and_revokes_old_secrets() -> None:
+    script = (SCRIPTS_DIR / "prod_init.sh").read_text(encoding="utf-8")
+    assert "vault token create -policy=root -ttl=15m" in script
+    assert "vault token revoke -self" in script
+    assert script.index("secret-id-accessor/destroy") < script.index(
+        "-field=secret_id auth/approle/role/backup/secret-id"
+    )
+
+
 def test_predeploy_dump_is_encrypted_and_restorable() -> None:
     deploy = (SCRIPTS_DIR / "cloud_deploy.sh").read_text(encoding="utf-8")
     assert "pre-${tag}-${stamp}.dump.age" in deploy

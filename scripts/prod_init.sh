@@ -206,9 +206,15 @@ EOF
     fi
     cmd_unseal
 
-    local token
-    token=$(vault_root_token)
-    [ -n "$token" ] || die "no Vault root token"
+    local root_token token
+    root_token=$(vault_root_token)
+    [ -n "$root_token" ] || die "no Vault root token"
+    # The root token only mints a 15 minute token; that one does the work and is revoked.
+    token=$(VAULT_TOKEN=$root_token dc exec -T -e VAULT_TOKEN vault \
+        vault token create -policy=root -ttl=15m -orphan=false -field=token)
+    [ -n "$token" ] || die "could not create a short-lived Vault token"
+    trap 'VAULT_TOKEN=$token dc exec -T -e VAULT_TOKEN vault vault token revoke -self > /dev/null 2>&1 || true; trap - RETURN' RETURN
+    unset root_token
 
     say "enabling Transit, KV v2, AppRole; writing the identity policy and role"
     local out role_id secret_id
@@ -235,12 +241,28 @@ EOF
         vault policy write backup - > /dev/null
         vault write auth/approle/role/backup token_policies=backup token_ttl=10m \
             token_max_ttl=30m secret_id_ttl=0 > /dev/null
+        for accessor in $(vault list -format=json auth/approle/role/backup/secret-id 2> /dev/null \
+            | tr -d "[]\" \n" | tr "," " "); do
+            vault write auth/approle/role/backup/secret-id-accessor/destroy \
+                secret_id_accessor="$accessor" > /dev/null
+        done
         echo "role=$(vault read -field=role_id auth/approle/role/backup/role-id)"
         echo "secret=$(vault write -f -field=secret_id auth/approle/role/backup/secret-id)"
     ' < materials/vault/policies/backup.hcl)
     set_env VAULT_BACKUP_ROLE_ID "$(printf '%s\n' "$backup_ids" | sed -n 's/^role=//p')"
     set_env VAULT_BACKUP_SECRET_ID "$(printf '%s\n' "$backup_ids" | sed -n 's/^secret=//p')"
     say "stored the backup AppRole credentials in $ENV_FILE"
+    cat << EOF
+
+  Earlier AppRole secret ids (identity, telegram-bots, backup) are revoked. Running
+  services keep their Vault token until it expires (1 h, at most 24 h) and then log in
+  with the new secret id from $ENV_FILE: recreate api, bot, worker and identity now.
+  The 15 minute Vault token used by this run is revoked.
+  Move $ROOT/$VAULT_KEYS to a password manager and delete it from the server. Revoke the
+  root token with 'vault token revoke <root>' once you know how to recover with
+  'vault operator generate-root' and the unseal keys.
+
+EOF
 }
 
 # ------------------------------------------------------------------------- certs

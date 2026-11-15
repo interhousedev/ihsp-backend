@@ -66,9 +66,26 @@ def bootstrap(client: hvac.Client) -> None:
     )
 
 
+def revoke_secret_ids(client: hvac.Client, role: str) -> None:
+    """Destroy every existing secret id of an AppRole (they never expire)."""
+    try:
+        listed = client.auth.approle.list_secret_id_accessors(role_name=role)
+    except InvalidPath:
+        return
+    for accessor in listed["data"]["keys"]:
+        client.auth.approle.destroy_secret_id_accessor(
+            role_name=role, secret_id_accessor=accessor
+        )
+
+
 def credentials(client: hvac.Client, role: str = ROLE) -> tuple[str, str]:
-    """Return (role_id, a new secret_id) of an AppRole (identity by default)."""
+    """Return (role_id, a new secret_id) of an AppRole (identity by default).
+
+    Every earlier secret id of the role is revoked first; running services keep their
+    Vault token until it expires and then log in with the new secret id.
+    """
     role_id = client.auth.approle.read_role_id(role_name=role)["data"]["role_id"]
+    revoke_secret_ids(client, role)
     secret_id = client.auth.approle.generate_secret_id(role_name=role)["data"][
         "secret_id"
     ]
