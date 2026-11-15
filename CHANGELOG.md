@@ -6,11 +6,17 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 
+- Server-to-server migration: Admin > Server migration (`GET /v1/admin/migration`, `POST /v1/admin/migration/start|rollback`, admin, step-up, audited) queues a request for the root host runner `scripts/migrate_runner.sh` (systemd path unit `materials/systemd/ihsp-migration.*`); the target is prepared with `scripts/migrate_target.sh`. Maintenance mode answers writes with `503` `common/maintenance` and `GET /v1/public/maintenance` feeds the banner of every web app. New setting `IHSP_MIGRATION__DIR`.
+- Telegram AI chat: one forum topic per AI chat in private chats (table `ai.telegram_topics`, rename sync, icon pick, `/delete` with confirmation); UI blocks are sent as separate messages through the `show_ui_block` tool, with per-channel prompts.
+
+- Langfuse tracing of model calls (`IHSP_LANGFUSE__PUBLIC_KEY`, `__SECRET_KEY`, `__HOST`, `__CAPTURE_CONTENT`): task, model, tokens, latency, hashed user id and chat/notebook session; content only when `CAPTURE_CONTENT=true`; off without keys, never blocks a request, flushed on shutdown.
 - Legal documents module: administrators edit versioned privacy, terms, biometric and AI documents (uz, ru, en) and publish them; `GET /v1/legal/documents[/{kind}]`, `GET /v1/me/legal/pending`, `POST /v1/me/legal/accept`, `/v1/admin/legal/*`. Registration (`POST /v1/id/register/complete`) takes `accepted_legal` and answers `legal/consent-required` when a published document is not accepted.
 - Privacy module: a ZIP export of the user's data (`POST`/`GET /v1/me/privacy/exports`, `GET .../{id}/download`, one per 24 hours, link valid 7 days) and administrator-reviewed account erasure (`GET`/`DELETE /v1/me/privacy/erasure`, `/v1/admin/privacy/erasure-requests[/{id}/approve|reject]`). A personal-data spec per module drives export and erasure; the `privacy.erase_owner` job runs after the retention window.
+- Reading lists: librarians pin lists (`PUT /v1/library/reading-lists/{id}/pin`) and set their sequence (`PUT /v1/library/reading-lists/order`); everyone sees pinned lists first, then the manual order. New cards carry `pinned` and `sort_order`; migration `library_0004`.
 
 ### Changed
 
+- The calendar hides other subgroup lessons by default: the `timetable:hide-other-subgroup` flag in `preferences.onboarding_dismissed` is replaced by `timetable:show-other-subgroup` (migration `identity_0015` drops the old flag).
 - `DELETE /v1/id/me` answers 202 with `{request_id, status}`: it files an erasure request for administrator review instead of scheduling deletion at once. Signing in during the window restores the account and closes the request.
 
 ## [1.5.1] - 2026-11-14

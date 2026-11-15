@@ -73,6 +73,17 @@ Production domain: `ihsu.uz` (the compose files build every host name from `DOMA
 
 Other hosts: room pages `ihsu.uz/r/{room}`, inbound mail `mail.ihsu.uz`, the Telegram bot `@ihspbot`.
 
+### Search indexing (Google Search Console)
+
+Submit these sitemaps, one property per host:
+
+| Host | Sitemap | Produced by |
+|---|---|---|
+| `ihsu.uz` | `https://ihsu.uz/sitemap.xml` | `apps/landing` static export (`robots.txt` too) |
+| `lib.ihsu.uz` | `https://lib.ihsu.uz/sitemap.xml` (index of `sitemap-pages.xml` and `sitemap-books.xml`) | iht-backend, `api` process; only public published books and materials |
+
+`lms.ihsu.uz` has no public page (every course page needs a sign-in), so its `robots.txt` disallows everything and it has no sitemap. The signed-in pages of the library are `noindex`.
+
 ## Architecture
 
 A modular monolith in Python 3.13: FastAPI, aiogram 3, SQLAlchemy 2 (async, asyncpg), Alembic, taskiq on Redis. One Docker image runs several processes (`python -m app <process>`):
@@ -88,7 +99,7 @@ A modular monolith in Python 3.13: FastAPI, aiogram 3, SQLAlchemy 2 (async, asyn
 | `migrate` | `alembic upgrade heads` and the Hydra migration, then exits |
 | `all` | development only: every HTTP router on port 8000 |
 
-Infrastructure: PostgreSQL 16 with pgvector (one schema per module), Redis 7, S3-compatible storage (RustFS locally, a provider bucket in production), HashiCorp Vault for EMIS credentials, Ory Hydra for OAuth and OpenID Connect, OpenRouter for language models, Exa for web search, an external SMTP relay for outgoing mail.
+Infrastructure: PostgreSQL 16 with pgvector (one schema per module), Redis 7, S3-compatible storage (RustFS locally, a provider bucket in production), HashiCorp Vault for EMIS credentials, Ory Hydra for OAuth and OpenID Connect, OpenRouter for language models, Exa for web search, optionally Langfuse for tracing model calls, an external SMTP relay for outgoing mail.
 
 Every module owns a PostgreSQL schema and never reads another module's tables. Inside a module the layers are `domain`, `ports`, `application`, `infrastructure` and `wiring.py`; the process entry points are in `app/interfaces/` (http, bot, mcp, smtp, jobs). The rules are in [CODESTYLE.md](CODESTYLE.md).
 
@@ -224,6 +235,7 @@ By default every external service runs in a fake, deterministic mode that needs 
 |---|---|---|
 | EMIS | `IHSP_EMIS__MODE` | EMIS access of registered students |
 | OpenRouter | `IHSP_OPENROUTER__MODE` | `IHSP_OPENROUTER__API_KEY` |
+| Langfuse (optional tracing) | on when both keys are set | `IHSP_LANGFUSE__PUBLIC_KEY`, `IHSP_LANGFUSE__SECRET_KEY`; `IHSP_LANGFUSE__HOST` (default `https://cloud.langfuse.com`), `IHSP_LANGFUSE__CAPTURE_CONTENT` (default `false`) |
 | Exa | `IHSP_EXA__MODE` | `IHSP_EXA__API_KEY` |
 | Parallel (primary web search, Exa is the fallback) | `IHSP_PARALLEL__MODE` | `IHSP_PARALLEL__API_KEY` (optional: without it the free MCP endpoint `IHSP_PARALLEL__MCP_URL` answers; `IHSP_PARALLEL__KEYLESS=false` leaves Exa alone) |
 | Telegram | `IHSP_TELEGRAM__MODE` | `IHSP_TELEGRAM__BOT_TOKEN`, `IHSP_TELEGRAM__BOT_USERNAME` |
@@ -297,6 +309,17 @@ Backups: `scripts/backup.sh` dumps both databases, a Redis snapshot and a Vault 
 Error tracking: self-hosted Bugsink (`bugsink/bugsink`, Sentry-compatible) at `logs.<domain>` receives errors, stack traces and WARNING+ log records from every backend process and, when `NEXT_PUBLIC_BUGSINK_DSN` is set, from the browser apps. Events live in a `bugsink` PostgreSQL database: `BUGSINK_DB_MODE=main` (default) creates it in the main PostgreSQL, `dedicated` runs a separate container. `scripts/backup_bugsink.sh` uploads a nightly encrypted dump to the `sp-logs` bucket (`BUGSINK_BACKUP_S3_*`). After the first start, create a project in the Bugsink UI and set `IHSP_BUGSINK__DSN`; set `IHSP_BUGSINK__API_URL` and `IHSP_BUGSINK__API_TOKEN` so the admin app's Logs page (`GET /v1/admin/logs/issues`) lists recent issues with links to Bugsink. An empty DSN or token turns each part off.
 
 
+### Server migration
+
+Administrators move the platform to a new server from Admin > Server migration; the source stays untouched and read-only.
+
+1. On the new server install a fresh ihsp (`scripts/cloud_deploy.sh <new-host> --init`, same image tag), then run `scripts/migrate_target.sh prepare --host <new-host>` as root. It creates the restricted user `ihsp-migrate` (write-only `rrsync` into `/opt/ihsp/incoming`, no shell) and prints a single-use pairing token.
+2. Once on the old server, as root: `scripts/migrate_runner.sh install`. It creates `data/migration` (mounted into the api as `/migration`, `IHSP_MIGRATION__DIR`) and enables the systemd path unit `ihsp-migration.path`.
+3. In the admin app enter the target host and the token, confirm with the step-up code and start. Every web app shows a maintenance banner and all writes answer `503` (`common/maintenance`); logins and the migration page stay open.
+4. The host runner (root, started by the path unit) stops worker, scheduler, bot and mail, then copies PostgreSQL (`pg_dump` of `ihsp` and `hydra`), the Redis snapshot (pending taskiq tasks), the object store, `.env.prod`, `secrets/`, `materials/`, a Vault Raft snapshot and `backups/`, and sends them over SSH to the target. Progress shows on the admin page. The api never gets root or the Docker socket: it only writes a 0600 request file. Nothing on the source is deleted.
+5. On the target run `scripts/migrate_target.sh finish <id>` (verifies checksums, revokes the key, restores everything), unseal Vault with the old server's keys, restore `vault.snap`, start the stack and switch the DNS. The source stays read-only with a link to the target.
+6. Rollback: press "Leave maintenance" on the admin page (workers restart, writes resume); `migrate_target.sh abort` on the target revokes the key and drops the data.
+
 AI spending is capped by soft limits (`IHSP_LIMITS__*`) that administrators change at runtime on the Limits & usage page; every model call is recorded in the usage ledger. Set a hard spending cap at OpenRouter and at Exa as well.
 
 Verify an image signature with `cosign verify ghcr.io/<owner>/ihsp-backend@<digest> --certificate-identity-regexp 'github.com/<owner>/' --certificate-oidc-issuer https://token.actions.githubusercontent.com`.
@@ -330,3 +353,7 @@ IHSP is free software under the [GNU Affero General Public License v3.0 only](LI
 ## Third-party licenses
 
 `licenses/python.json` lists the production Python dependencies with their licenses and project links. Write it with `uv sync --frozen && uv run python scripts/export_licenses.py`. The web repository reads the file to regenerate the license list that its Settings page shows (`bun run generate-licenses` in `iht-web`). Run the script after any dependency change and commit the file.
+
+## Privacy: third-party processors of AI data
+
+Model calls go to OpenRouter (and Anthropic as a fallback), web searches to Exa and Parallel. With `IHSP_LANGFUSE__PUBLIC_KEY` and `IHSP_LANGFUSE__SECRET_KEY` set, every model call is also traced in Langfuse (`IHSP_LANGFUSE__HOST`, Langfuse Cloud by default, or a self-hosted instance for data that must stay in-country). A trace holds the AI task name, the model, token counts, latency, the error class, the role, a salted one-way hash of the user id (no id, email or name) and the chat or notebook id as the session. Prompts and answers, which carry personal data, are sent only when `IHSP_LANGFUSE__CAPTURE_CONTENT=true`; the default is `false`. Tracing never blocks or fails a request, and each process flushes on shutdown. Without keys no client exists and nothing leaves the system. List Langfuse among the processors in the privacy document when it is enabled.

@@ -42,10 +42,12 @@ In scope:
 - AI features: prompt injection that leads to data disclosure or to a data-changing tool call without approval, bypass of AI access revocation or limits, unsafe OpenUI output.
 - SSRF, upload validation, rate limit bypass, account enumeration, secret leakage, supply-chain issues in the build.
 
+Langfuse (optional) is a third-party processor of AI metadata: task, model, tokens, latency, a hashed user id and the chat id. Prompts and answers are sent only with `IHSP_LANGFUSE__CAPTURE_CONTENT=true` (default `false`). A tracing error never affects a request.
+
 Out of scope:
 
 - The production instance at `ihsu.uz` beyond what is needed to show an issue with the code. No load or denial-of-service testing, no automated scanning, no social engineering, no physical attacks.
-- Third-party services (EMIS, OpenRouter, Exa, Telegram) themselves; report those to their owners.
+- Third-party services (EMIS, OpenRouter, Exa, Langfuse, Telegram) themselves; report those to their owners.
 - Model output quality or a jailbreak that has no security impact.
 - Findings that need a compromised server, a leaked administrator session or development-only settings (`materials/dev.env`, fake modes).
 - Missing hardening headers or best practices without a demonstrated impact.
@@ -82,5 +84,7 @@ If in doubt, ask first at the contacts above.
 ## Security design
 
 The [Security section of the README](README.md#security) summarises the controls: Hydra with PKCE, Vault for EMIS credentials, rate limits, AI access controls and the usage ledger, OpenUI validation, SSRF guards, upload allowlists, SBOM, Trivy and cosign.
+
+Server migration crosses a host boundary on purpose: the api container only writes a 0600 request file into a bind-mounted directory, and a root runner on the host (`scripts/migrate_runner.sh`, started by a systemd path unit) does the copying, so the api never holds root or the Docker socket. The pairing token (a temporary SSH key plus the target's host key) lives only in that request file, never in state, audit or logs; the target accepts it only for write-only `rrsync` into one directory and revokes it when the migration finishes or aborts. Start and rollback are admin-only, need a step-up code and are audited.
 
 Untrusted text from tools, search results and notebook sources passes through a pattern filter (`app/shared/ai/injection.py`) before it reaches a model. This filter reduces prompt injection but does not prevent it, so tool approval and access checks remain the real boundary.

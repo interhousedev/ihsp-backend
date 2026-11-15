@@ -37,6 +37,119 @@
         "title": "AbsentLessonResponse",
         "type": "object"
       },
+      "AcceptIn": {
+        "description": "Body of POST /v1/me/legal/accept; versions must be the current ones.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AcceptItemIn"
+            },
+            "maxItems": 8,
+            "minItems": 1,
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "AcceptIn",
+        "type": "object"
+      },
+      "AcceptItemIn": {
+        "description": "One accepted version.",
+        "properties": {
+          "kind": {
+            "enum": [
+              "privacy",
+              "terms",
+              "biometric",
+              "ai"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "version"
+        ],
+        "title": "AcceptItemIn",
+        "type": "object"
+      },
+      "AcceptanceCountOut": {
+        "description": "Users that accepted the current version of a kind.",
+        "properties": {
+          "accepted_count": {
+            "title": "Accepted Count",
+            "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "privacy",
+              "terms",
+              "biometric",
+              "ai"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "version",
+          "accepted_count"
+        ],
+        "title": "AcceptanceCountOut",
+        "type": "object"
+      },
+      "AcceptanceCountsOut": {
+        "description": "One count per published kind.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AcceptanceCountOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "AcceptanceCountsOut",
+        "type": "object"
+      },
+      "AcceptedLegalItem": {
+        "description": "One legal document version the student accepted.",
+        "properties": {
+          "kind": {
+            "pattern": "^(privacy|terms|biometric|ai)$",
+            "title": "Kind",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "version"
+        ],
+        "title": "AcceptedLegalItem",
+        "type": "object"
+      },
       "AccessOptionResponse": {
         "description": "An access filter option.",
         "properties": {
@@ -443,6 +556,258 @@
           "scheduled_broadcasts"
         ],
         "title": "AdminDashboardResponse",
+        "type": "object"
+      },
+      "AdminDocumentListOut": {
+        "description": "Every version of every kind, by kind then newest first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AdminDocumentOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "AdminDocumentListOut",
+        "type": "object"
+      },
+      "AdminDocumentOut": {
+        "description": "A version of a document with the texts of every language.",
+        "properties": {
+          "announcement": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Announcement"
+          },
+          "body_markdown": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Body Markdown",
+            "type": "object"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "privacy",
+              "terms",
+              "biometric",
+              "ai"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "published_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published By"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Title",
+            "type": "object"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "version",
+          "status",
+          "title",
+          "body_markdown",
+          "announcement",
+          "created_at",
+          "updated_at",
+          "published_at",
+          "published_by"
+        ],
+        "title": "AdminDocumentOut",
+        "type": "object"
+      },
+      "AdminErasureListOut": {
+        "description": "A page of the admin queue.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AdminErasureOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "AdminErasureListOut",
+        "type": "object"
+      },
+      "AdminErasureOut": {
+        "description": "A request in the admin queue, with the requester.",
+        "properties": {
+          "closes_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closes On"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "login": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Login"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "reject_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reject Reason"
+          },
+          "requested_at": {
+            "format": "date-time",
+            "title": "Requested At",
+            "type": "string"
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Roles",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "pending_review",
+              "approved",
+              "rejected",
+              "completed",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "requested_at",
+          "decided_at",
+          "reject_reason",
+          "closes_on",
+          "user_id",
+          "name",
+          "login",
+          "roles"
+        ],
+        "title": "AdminErasureOut",
         "type": "object"
       },
       "AdminFeedbackDetail": {
@@ -6958,6 +7323,14 @@
       "CompleteRegistrationBody": {
         "description": "The password, the emailed code and the optional import confirmation.",
         "properties": {
+          "accepted_legal": {
+            "items": {
+              "$ref": "#/components/schemas/AcceptedLegalItem"
+            },
+            "maxItems": 8,
+            "title": "Accepted Legal",
+            "type": "array"
+          },
           "confirm_import_match": {
             "default": false,
             "title": "Confirm Import Match",
@@ -7401,6 +7774,88 @@
         "title": "ConsentOtpBody",
         "type": "object"
       },
+      "ControlExamResponse": {
+        "description": "One subject's exam in a control week; ``date`` is null until a teacher sets it.\n\n``state`` is ``taken`` when the exam has a mark or its date has passed; a taken\nexam with a null ``mark`` has no mark yet.",
+        "properties": {
+          "date": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "mark": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mark"
+          },
+          "room": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Room"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "state": {
+            "enum": [
+              "upcoming",
+              "taken"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "planned",
+              "tentative",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/AssessmentSubject"
+          }
+        },
+        "required": [
+          "subject",
+          "date",
+          "starts_at",
+          "room",
+          "status",
+          "state",
+          "mark"
+        ],
+        "title": "ControlExamResponse",
+        "type": "object"
+      },
       "ControlPeriod": {
         "description": "The dates of a control week: both ends are control days.",
         "properties": {
@@ -7420,6 +7875,72 @@
           "end"
         ],
         "title": "ControlPeriod",
+        "type": "object"
+      },
+      "ControlPeriodItem": {
+        "description": "A control week (ПК 1, ПК 2 or ИК) with the student's exams in it.",
+        "properties": {
+          "control": {
+            "enum": [
+              "midterm_1",
+              "midterm_2",
+              "final"
+            ],
+            "title": "Control",
+            "type": "string"
+          },
+          "end": {
+            "format": "date",
+            "title": "End",
+            "type": "string"
+          },
+          "exams": {
+            "items": {
+              "$ref": "#/components/schemas/ControlExamResponse"
+            },
+            "title": "Exams",
+            "type": "array"
+          },
+          "kind": {
+            "enum": [
+              "midterm",
+              "final",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "start": {
+            "format": "date",
+            "title": "Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "control",
+          "kind",
+          "start",
+          "end",
+          "exams"
+        ],
+        "title": "ControlPeriodItem",
+        "type": "object"
+      },
+      "ControlPeriodListResponse": {
+        "description": "Control weeks overlapping the window, oldest first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ControlPeriodItem"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ControlPeriodListResponse",
         "type": "object"
       },
       "ControlPeriodResponse": {
@@ -10379,16 +10900,21 @@
         "type": "object"
       },
       "DeleteAccountResponse": {
-        "description": "When the personal data is removed.",
+        "description": "The erasure request waiting for an administrator's review.",
         "properties": {
-          "closes_on": {
-            "format": "date",
-            "title": "Closes On",
+          "request_id": {
+            "format": "uuid",
+            "title": "Request Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
             "type": "string"
           }
         },
         "required": [
-          "closes_on"
+          "request_id",
+          "status"
         ],
         "title": "DeleteAccountResponse",
         "type": "object"
@@ -10852,6 +11378,41 @@
           "expires_at"
         ],
         "title": "DownloadUrlResponse",
+        "type": "object"
+      },
+      "DraftIn": {
+        "description": "Body of PUT /v1/admin/legal/drafts/{kind}; keys are uz, ru and en.",
+        "properties": {
+          "announcement": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Announcement"
+          },
+          "body_markdown": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Body Markdown",
+            "type": "object"
+          },
+          "title": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Title",
+            "type": "object"
+          }
+        },
+        "title": "DraftIn",
         "type": "object"
       },
       "EmailChangeBody": {
@@ -12110,6 +12671,77 @@
         "title": "EmisYearResponse",
         "type": "object"
       },
+      "ErasureRequestOut": {
+        "description": "An account erasure request.",
+        "properties": {
+          "closes_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closes On"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "reject_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reject Reason"
+          },
+          "requested_at": {
+            "format": "date-time",
+            "title": "Requested At",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending_review",
+              "approved",
+              "rejected",
+              "completed",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "requested_at",
+          "decided_at",
+          "reject_reason",
+          "closes_on"
+        ],
+        "title": "ErasureRequestOut",
+        "type": "object"
+      },
       "ExcludedRefResponse": {
         "description": "A material left out of an auto notebook.",
         "properties": {
@@ -12912,6 +13544,112 @@
           }
         },
         "title": "ExportBody",
+        "type": "object"
+      },
+      "ExportDownloadOut": {
+        "description": "A presigned URL valid for 60 seconds.",
+        "properties": {
+          "expires_in": {
+            "default": 60,
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "ExportDownloadOut",
+        "type": "object"
+      },
+      "ExportListOut": {
+        "description": "The caller's recent exports, newest first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ExportOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ExportListOut",
+        "type": "object"
+      },
+      "ExportOut": {
+        "description": "A data export.",
+        "properties": {
+          "byte_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Byte Size"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "running",
+              "ready",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "created_at",
+          "finished_at",
+          "expires_at",
+          "byte_size"
+        ],
+        "title": "ExportOut",
         "type": "object"
       },
       "ExtensionBody": {
@@ -14876,12 +15614,24 @@
           "last_name": {
             "title": "Last Name",
             "type": "string"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
           }
         },
         "required": [
           "id",
           "first_name",
           "last_name",
+          "photo_url",
           "is_head_student",
           "is_me"
         ],
@@ -14975,12 +15725,24 @@
           "last_name": {
             "title": "Last Name",
             "type": "string"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
           }
         },
         "required": [
           "id",
           "first_name",
-          "last_name"
+          "last_name",
+          "photo_url"
         ],
         "title": "GroupPersonRef",
         "type": "object"
@@ -15408,12 +16170,24 @@
           "last_name": {
             "title": "Last Name",
             "type": "string"
+          },
+          "photo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Photo Url"
           }
         },
         "required": [
           "id",
           "first_name",
           "last_name",
+          "photo_url",
           "contacts"
         ],
         "title": "GroupTeacherRef",
@@ -16794,6 +17568,33 @@
           "pages"
         ],
         "title": "ItemTextSchema",
+        "type": "object"
+      },
+      "ItemTextSearchSchema": {
+        "description": "`ItemTextSearch`: hits in page order.",
+        "properties": {
+          "hits": {
+            "items": {
+              "$ref": "#/components/schemas/TextHitSchema"
+            },
+            "title": "Hits",
+            "type": "array"
+          },
+          "query": {
+            "title": "Query",
+            "type": "string"
+          },
+          "truncated": {
+            "title": "Truncated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "query",
+          "hits",
+          "truncated"
+        ],
+        "title": "ItemTextSearchSchema",
         "type": "object"
       },
       "ItemType": {
@@ -19796,6 +20597,88 @@
         "title": "LearningVideoBlockView",
         "type": "object"
       },
+      "LegalDocumentListOut": {
+        "description": "Current documents, one per published kind.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LegalDocumentOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "LegalDocumentListOut",
+        "type": "object"
+      },
+      "LegalDocumentOut": {
+        "description": "The current published version of a kind, in one language.",
+        "properties": {
+          "announcement": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Announcement"
+          },
+          "body_markdown": {
+            "title": "Body Markdown",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "privacy",
+              "terms",
+              "biometric",
+              "ai"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "locale": {
+            "title": "Locale",
+            "type": "string"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "version",
+          "locale",
+          "title",
+          "body_markdown",
+          "announcement",
+          "published_at"
+        ],
+        "title": "LegalDocumentOut",
+        "type": "object"
+      },
       "LessonDraftCreate": {
         "description": "The blocks of one lesson (course workspaces only).",
         "properties": {
@@ -21777,6 +22660,50 @@
         "title": "LyceumNameOut",
         "type": "object"
       },
+      "MaintenanceResponse": {
+        "description": "Whether the platform is read-only because it is being moved to a new server.",
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "moved": {
+            "title": "Moved",
+            "type": "boolean"
+          },
+          "since": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Since"
+          },
+          "target_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Url"
+          }
+        },
+        "required": [
+          "active",
+          "since",
+          "moved",
+          "target_url"
+        ],
+        "title": "MaintenanceResponse",
+        "type": "object"
+      },
       "ManageCollectionResponse": {
         "description": "`ManageCollection`: all languages and the stored item ids.",
         "properties": {
@@ -22139,6 +23066,140 @@
           "distribution"
         ],
         "title": "MarksInsights",
+        "type": "object"
+      },
+      "MarkupBody": {
+        "additionalProperties": false,
+        "description": "`PUT /me/library/markup/{item_id}`: the whole markup; shapes by page number.",
+        "properties": {
+          "file_id": {
+            "format": "uuid",
+            "title": "File Id",
+            "type": "string"
+          },
+          "pages": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/MarkupShapeSchema"
+              },
+              "type": "array"
+            },
+            "maxProperties": 5000,
+            "title": "Pages",
+            "type": "object"
+          }
+        },
+        "required": [
+          "file_id"
+        ],
+        "title": "MarkupBody",
+        "type": "object"
+      },
+      "MarkupResponse": {
+        "description": "`Markup`: the caller's own markup of the item (empty when there is none).",
+        "properties": {
+          "file_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Id"
+          },
+          "item_id": {
+            "format": "uuid",
+            "title": "Item Id",
+            "type": "string"
+          },
+          "pages": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/MarkupShapeSchema"
+              },
+              "type": "array"
+            },
+            "title": "Pages",
+            "type": "object"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "item_id",
+          "file_id",
+          "pages",
+          "updated_at"
+        ],
+        "title": "MarkupResponse",
+        "type": "object"
+      },
+      "MarkupShapeSchema": {
+        "additionalProperties": false,
+        "description": "A stroke or figure: points are fractions of the page, `width` of its width.",
+        "properties": {
+          "color": {
+            "maxLength": 7,
+            "title": "Color",
+            "type": "string"
+          },
+          "id": {
+            "maxLength": 64,
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "points": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "maxItems": 2000,
+            "minItems": 1,
+            "title": "Points",
+            "type": "array"
+          },
+          "tool": {
+            "enum": [
+              "pen",
+              "pencil",
+              "highlighter",
+              "rect",
+              "ellipse",
+              "line",
+              "arrow"
+            ],
+            "title": "Tool",
+            "type": "string"
+          },
+          "width": {
+            "title": "Width",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "tool",
+          "color",
+          "width",
+          "points"
+        ],
+        "title": "MarkupShapeSchema",
         "type": "object"
       },
       "MaterialBlockSchema": {
@@ -23003,6 +24064,153 @@
         "title": "MessageRole",
         "type": "string"
       },
+      "MigrationStatusResponse": {
+        "description": "The migration in progress; `phase` is ``idle`` when there is none.",
+        "properties": {
+          "configured": {
+            "title": "Configured",
+            "type": "boolean"
+          },
+          "dry_run": {
+            "title": "Dry Run",
+            "type": "boolean"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "migration_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Migration Id"
+          },
+          "phase": {
+            "title": "Phase",
+            "type": "string"
+          },
+          "requested_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requested At"
+          },
+          "stale": {
+            "title": "Stale",
+            "type": "boolean"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/MigrationStep"
+            },
+            "title": "Steps",
+            "type": "array"
+          },
+          "target_host": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Host"
+          },
+          "target_port": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Port"
+          },
+          "target_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Url"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "configured",
+          "phase",
+          "migration_id",
+          "target_host",
+          "target_port",
+          "target_url",
+          "requested_at",
+          "updated_at",
+          "error",
+          "dry_run",
+          "stale",
+          "steps"
+        ],
+        "title": "MigrationStatusResponse",
+        "type": "object"
+      },
+      "MigrationStep": {
+        "description": "One step of the copy with its progress.",
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "pending",
+              "running",
+              "done"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "state"
+        ],
+        "title": "MigrationStep",
+        "type": "object"
+      },
       "MindMapCreate": {
         "description": "A mind map.",
         "properties": {
@@ -23355,6 +24563,26 @@
           "follows_weekday"
         ],
         "title": "MovedDay",
+        "type": "object"
+      },
+      "MyErasureOut": {
+        "description": "The caller's open request, if any.",
+        "properties": {
+          "request": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErasureRequestOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "request"
+        ],
+        "title": "MyErasureOut",
         "type": "object"
       },
       "MyGroupResponse": {
@@ -24993,6 +26221,62 @@
         "title": "OfflineLimits",
         "type": "object"
       },
+      "OnboardingOut": {
+        "description": "The steps the caller still has to see; empty for non-students.",
+        "properties": {
+          "required": {
+            "description": "True while a required step is not done.",
+            "title": "Required",
+            "type": "boolean"
+          },
+          "steps": {
+            "items": {
+              "$ref": "#/components/schemas/OnboardingStepOut"
+            },
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "required",
+          "steps"
+        ],
+        "title": "OnboardingOut",
+        "type": "object"
+      },
+      "OnboardingStepOut": {
+        "description": "One step of the wizard.",
+        "properties": {
+          "done": {
+            "title": "Done",
+            "type": "boolean"
+          },
+          "key": {
+            "enum": [
+              "selfie",
+              "certificates"
+            ],
+            "title": "Key",
+            "type": "string"
+          },
+          "required": {
+            "title": "Required",
+            "type": "boolean"
+          },
+          "skippable": {
+            "title": "Skippable",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "key",
+          "required",
+          "done",
+          "skippable"
+        ],
+        "title": "OnboardingStepOut",
+        "type": "object"
+      },
       "OpenCourseWorkspaceBody": {
         "description": "POST /v1/notebooks/course-workspaces.",
         "properties": {
@@ -26187,6 +27471,100 @@
         "title": "PendingChangesResponse",
         "type": "object"
       },
+      "PendingItemOut": {
+        "description": "A document to accept; ``previously_accepted_version`` is null for a first.",
+        "properties": {
+          "announcement": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Announcement"
+          },
+          "body_markdown": {
+            "title": "Body Markdown",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "privacy",
+              "terms",
+              "biometric",
+              "ai"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "locale": {
+            "title": "Locale",
+            "type": "string"
+          },
+          "previously_accepted_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Previously Accepted Version"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "version",
+          "locale",
+          "title",
+          "body_markdown",
+          "announcement",
+          "published_at",
+          "previously_accepted_version"
+        ],
+        "title": "PendingItemOut",
+        "type": "object"
+      },
+      "PendingOut": {
+        "description": "What the user has to accept; empty when nothing is pending.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PendingItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "PendingOut",
+        "type": "object"
+      },
       "PendingStepView": {
         "description": "One pending step change.",
         "properties": {
@@ -26361,6 +27739,21 @@
           "category"
         ],
         "title": "PinExternalBody",
+        "type": "object"
+      },
+      "PinReadingListBody": {
+        "additionalProperties": false,
+        "description": "`PUT /library/reading-lists/{id}/pin`: `{pinned}`.",
+        "properties": {
+          "pinned": {
+            "title": "Pinned",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "pinned"
+        ],
+        "title": "PinReadingListBody",
         "type": "object"
       },
       "PlanConfirmResponse": {
@@ -29484,8 +30877,16 @@
           "owner": {
             "$ref": "#/components/schemas/PersonResponse"
           },
+          "pinned": {
+            "title": "Pinned",
+            "type": "boolean"
+          },
           "scope": {
             "$ref": "#/components/schemas/ListScope"
+          },
+          "sort_order": {
+            "title": "Sort Order",
+            "type": "integer"
           },
           "status": {
             "$ref": "#/components/schemas/ListStatus"
@@ -29550,7 +30951,9 @@
           "entry_count",
           "essential_count",
           "essential_done",
-          "updated_at"
+          "updated_at",
+          "pinned",
+          "sort_order"
         ],
         "title": "ReadingListCardResponse",
         "type": "object"
@@ -29619,8 +31022,16 @@
           "owner": {
             "$ref": "#/components/schemas/PersonResponse"
           },
+          "pinned": {
+            "title": "Pinned",
+            "type": "boolean"
+          },
           "scope": {
             "$ref": "#/components/schemas/ListScope"
+          },
+          "sort_order": {
+            "title": "Sort Order",
+            "type": "integer"
           },
           "status": {
             "$ref": "#/components/schemas/ListStatus"
@@ -29686,6 +31097,8 @@
           "essential_count",
           "essential_done",
           "updated_at",
+          "pinned",
+          "sort_order",
           "group_ids",
           "entries",
           "can_edit"
@@ -30178,6 +31591,23 @@
         "title": "RedirectToResponse",
         "type": "object"
       },
+      "RefreshEmisOut": {
+        "description": "The caller's certificates after the EMIS import.",
+        "properties": {
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/CertificateEntryResponse"
+            },
+            "title": "Entries",
+            "type": "array"
+          }
+        },
+        "required": [
+          "entries"
+        ],
+        "title": "RefreshEmisOut",
+        "type": "object"
+      },
       "RegisterBody": {
         "description": "The fields that are read; any other client metadata is ignored.",
         "properties": {
@@ -30387,6 +31817,25 @@
         "title": "RegistrationStartResponse",
         "type": "object"
       },
+      "RejectIn": {
+        "description": "The reason is shown to the user.",
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "title": "RejectIn",
+        "type": "object"
+      },
       "RejectToolCallBody": {
         "description": "POST /v1/ai/chats/{id}/tool-calls/{call_id}/reject.",
         "properties": {
@@ -30567,6 +32016,26 @@
           "ids"
         ],
         "title": "ReorderBody",
+        "type": "object"
+      },
+      "ReorderReadingListsBody": {
+        "additionalProperties": false,
+        "description": "`PUT /library/reading-lists/order`: the lists in their new sequence.",
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 1000,
+            "title": "Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "title": "ReorderReadingListsBody",
         "type": "object"
       },
       "ReplaceCardsBody": {
@@ -31536,6 +33005,23 @@
           }
         },
         "title": "RolesBody",
+        "type": "object"
+      },
+      "RollbackBody": {
+        "additionalProperties": false,
+        "description": "Step-up code for leaving maintenance mode.",
+        "properties": {
+          "otp_code": {
+            "maxLength": 12,
+            "minLength": 4,
+            "title": "Otp Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "otp_code"
+        ],
+        "title": "RollbackBody",
         "type": "object"
       },
       "RoomMergeBody": {
@@ -35510,6 +36996,56 @@
           "status"
         ],
         "title": "StartLabelsResponse",
+        "type": "object"
+      },
+      "StartMigrationBody": {
+        "additionalProperties": false,
+        "description": "The target server and its one-time pairing token.",
+        "properties": {
+          "otp_code": {
+            "maxLength": 12,
+            "minLength": 4,
+            "title": "Otp Code",
+            "type": "string"
+          },
+          "pairing_token": {
+            "format": "password",
+            "title": "Pairing Token",
+            "type": "string",
+            "writeOnly": true
+          },
+          "target_host": {
+            "maxLength": 253,
+            "minLength": 1,
+            "title": "Target Host",
+            "type": "string"
+          },
+          "target_port": {
+            "default": 22,
+            "maximum": 65535.0,
+            "minimum": 1.0,
+            "title": "Target Port",
+            "type": "integer"
+          },
+          "target_url": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Url"
+          }
+        },
+        "required": [
+          "target_host",
+          "pairing_token",
+          "otp_code"
+        ],
+        "title": "StartMigrationBody",
         "type": "object"
       },
       "StartReclaimBody": {
@@ -40737,6 +42273,80 @@
         "title": "TextBlockInput",
         "type": "object"
       },
+      "TextBoxSchema": {
+        "description": "A rectangle on a page, as fractions of it (origin at the top left).",
+        "properties": {
+          "h": {
+            "title": "H",
+            "type": "number"
+          },
+          "w": {
+            "title": "W",
+            "type": "number"
+          },
+          "x": {
+            "title": "X",
+            "type": "number"
+          },
+          "y": {
+            "title": "Y",
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "w",
+          "h"
+        ],
+        "title": "TextBoxSchema",
+        "type": "object"
+      },
+      "TextHitSchema": {
+        "description": "One occurrence of the query on a page.",
+        "properties": {
+          "boxes": {
+            "items": {
+              "$ref": "#/components/schemas/TextBoxSchema"
+            },
+            "title": "Boxes",
+            "type": "array"
+          },
+          "end": {
+            "title": "End",
+            "type": "integer"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "snippet": {
+            "$ref": "#/components/schemas/TextSnippetSchema"
+          },
+          "source": {
+            "enum": [
+              "text_layer",
+              "ocr"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "start": {
+            "title": "Start",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "page",
+          "snippet",
+          "start",
+          "end",
+          "boxes",
+          "source"
+        ],
+        "title": "TextHitSchema",
+        "type": "object"
+      },
       "TextInput": {
         "description": "Pasted text.",
         "properties": {
@@ -40782,6 +42392,30 @@
           "text"
         ],
         "title": "TextPageSchema",
+        "type": "object"
+      },
+      "TextSnippetSchema": {
+        "description": "The text around a hit.",
+        "properties": {
+          "match": {
+            "title": "Match",
+            "type": "string"
+          },
+          "post": {
+            "title": "Post",
+            "type": "string"
+          },
+          "pre": {
+            "title": "Pre",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pre",
+          "match",
+          "post"
+        ],
+        "title": "TextSnippetSchema",
         "type": "object"
       },
       "TextStatus": {
@@ -51512,6 +53146,41 @@
       }
     },
     "/v1/admin/groups/{group_id}": {
+      "delete": {
+        "description": "Delete a group; its students stay as users without a group.",
+        "operationId": "delete_group_v1_admin_groups__group_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Group Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Group",
+        "tags": [
+          "admin-schedule"
+        ]
+      },
       "get": {
         "description": "Return a group with its students.",
         "operationId": "get_group_v1_admin_groups__group_id__get",
@@ -52145,6 +53814,158 @@
         "summary": "Update Entry",
         "tags": [
           "admin-knowledge"
+        ]
+      }
+    },
+    "/v1/admin/legal/acceptances": {
+      "get": {
+        "description": "Acceptances of the current version of each published kind.",
+        "operationId": "acceptance_counts_v1_admin_legal_acceptances_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptanceCountsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Acceptance Counts",
+        "tags": [
+          "admin-legal"
+        ]
+      }
+    },
+    "/v1/admin/legal/documents": {
+      "get": {
+        "description": "Every version of every kind.",
+        "operationId": "list_all_v1_admin_legal_documents_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDocumentListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List All",
+        "tags": [
+          "admin-legal"
+        ]
+      }
+    },
+    "/v1/admin/legal/drafts/{kind}": {
+      "put": {
+        "description": "Create or replace the draft of the kind.",
+        "operationId": "save_draft_v1_admin_legal_drafts__kind__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "privacy",
+                "terms",
+                "biometric",
+                "ai"
+              ],
+              "title": "Kind",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DraftIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDocumentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save Draft",
+        "tags": [
+          "admin-legal"
+        ]
+      }
+    },
+    "/v1/admin/legal/drafts/{kind}/publish": {
+      "post": {
+        "description": "Publish the draft: every user has to accept it.",
+        "operationId": "publish_v1_admin_legal_drafts__kind__publish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "privacy",
+                "terms",
+                "biometric",
+                "ai"
+              ],
+              "title": "Kind",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminDocumentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Publish",
+        "tags": [
+          "admin-legal"
         ]
       }
     },
@@ -53569,6 +55390,112 @@
         ]
       }
     },
+    "/v1/admin/migration": {
+      "get": {
+        "description": "Return the migration phase and the progress of its steps.",
+        "operationId": "get_migration_v1_admin_migration_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MigrationStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Migration",
+        "tags": [
+          "admin-migration"
+        ]
+      }
+    },
+    "/v1/admin/migration/rollback": {
+      "post": {
+        "description": "Leave maintenance mode; the source data was never touched.",
+        "operationId": "rollback_migration_v1_admin_migration_rollback_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RollbackBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MigrationStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rollback Migration",
+        "tags": [
+          "admin-migration"
+        ]
+      }
+    },
+    "/v1/admin/migration/start": {
+      "post": {
+        "description": "Queue the migration; the platform turns read-only at once.",
+        "operationId": "start_migration_v1_admin_migration_start_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartMigrationBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MigrationStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start Migration",
+        "tags": [
+          "admin-migration"
+        ]
+      }
+    },
     "/v1/admin/moderation/queue": {
       "get": {
         "description": "List reported links, most reported first (UF-ADM-10).",
@@ -54057,6 +55984,184 @@
         "summary": "Move Post",
         "tags": [
           "admin-posts"
+        ]
+      }
+    },
+    "/v1/admin/privacy/erasure-requests": {
+      "get": {
+        "description": "Requests newest first, with the requester's name, login and roles.",
+        "operationId": "list_requests_v1_admin_privacy_erasure_requests_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pending_review",
+                    "approved",
+                    "rejected",
+                    "completed",
+                    "cancelled"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminErasureListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Requests",
+        "tags": [
+          "admin-privacy"
+        ]
+      }
+    },
+    "/v1/admin/privacy/erasure-requests/{request_id}/approve": {
+      "post": {
+        "description": "Approve: the account is closed and the 30-day window starts.",
+        "operationId": "approve_v1_admin_privacy_erasure_requests__request_id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErasureRequestOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve",
+        "tags": [
+          "admin-privacy"
+        ]
+      }
+    },
+    "/v1/admin/privacy/erasure-requests/{request_id}/reject": {
+      "post": {
+        "description": "Reject: the account stays; the user is told why.",
+        "operationId": "reject_v1_admin_privacy_erasure_requests__request_id__reject_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErasureRequestOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reject",
+        "tags": [
+          "admin-privacy"
         ]
       }
     },
@@ -61684,7 +63789,7 @@
     },
     "/v1/id/me": {
       "delete": {
-        "description": "Delete the account; personal data goes after 30 days (ID-29).",
+        "description": "Ask for the deletion; an administrator reviews it, then 30 days run (ID-29).",
         "operationId": "delete_account_v1_id_me_delete",
         "requestBody": {
           "content": {
@@ -64009,6 +66114,127 @@
         ]
       }
     },
+    "/v1/legal/documents": {
+      "get": {
+        "description": "The current published version of every kind that has one.",
+        "operationId": "list_documents_v1_legal_documents_get",
+        "parameters": [
+          {
+            "description": "uz, ru or en; default Accept-Language",
+            "in": "query",
+            "name": "locale",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(uz|ru|en)$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "uz, ru or en; default Accept-Language",
+              "title": "Locale"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegalDocumentListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Documents",
+        "tags": [
+          "legal"
+        ]
+      }
+    },
+    "/v1/legal/documents/{kind}": {
+      "get": {
+        "description": "The current published version of one kind (404 when none).",
+        "operationId": "get_document_v1_legal_documents__kind__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "privacy",
+                "terms",
+                "biometric",
+                "ai"
+              ],
+              "title": "Kind",
+              "type": "string"
+            }
+          },
+          {
+            "description": "uz, ru or en; default Accept-Language",
+            "in": "query",
+            "name": "locale",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(uz|ru|en)$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "uz, ru or en; default Accept-Language",
+              "title": "Locale"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegalDocumentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Document",
+        "tags": [
+          "legal"
+        ]
+      }
+    },
     "/v1/lessons/{lesson_id}/resources": {
       "get": {
         "description": "List a lesson's materials and attachments (ACA-9).",
@@ -65374,6 +67600,73 @@
         ]
       }
     },
+    "/v1/library/items/{item_id}/text/search": {
+      "get": {
+        "description": "Occurrences of `q` in the item's text: page, snippet and where on the page.",
+        "operationId": "search_item_text_v1_library_items__item_id__text_search_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 2,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ItemTextSearchSchema"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Item Text",
+        "tags": [
+          "library"
+        ]
+      }
+    },
     "/v1/library/materials": {
       "post": {
         "description": "Start a draft material of the caller.",
@@ -65937,6 +68230,41 @@
         ]
       }
     },
+    "/v1/library/reading-lists/order": {
+      "put": {
+        "description": "Set the sequence of lists (librarians and Administration; others get 403).",
+        "operationId": "reorder_reading_lists_v1_library_reading_lists_order_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderReadingListsBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reorder Reading Lists",
+        "tags": [
+          "library"
+        ]
+      }
+    },
     "/v1/library/reading-lists/{list_id}": {
       "delete": {
         "description": "Delete a list with its entries (its owner, or a librarian).",
@@ -66165,6 +68493,76 @@
           }
         },
         "summary": "Replace List Entries",
+        "tags": [
+          "library"
+        ]
+      }
+    },
+    "/v1/library/reading-lists/{list_id}/pin": {
+      "put": {
+        "description": "Pin or unpin a list (librarians and Administration; others get 403).",
+        "operationId": "pin_reading_list_v1_library_reading_lists__list_id__pin_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "list_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "List Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PinReadingListBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadingListDetailResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pin Reading List",
         "tags": [
           "library"
         ]
@@ -70274,6 +72672,26 @@
         ]
       }
     },
+    "/v1/manage/library/covers/backfill": {
+      "post": {
+        "description": "Start cutting covers for books without one; manual covers stay.",
+        "operationId": "backfill_covers_v1_manage_library_covers_backfill_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Backfill Covers",
+        "tags": [
+          "library-manage"
+        ]
+      }
+    },
     "/v1/manage/library/import": {
       "post": {
         "description": "Create draft books from the CSV; rows with errors are listed.",
@@ -70423,6 +72841,26 @@
           }
         },
         "summary": "Review Item",
+        "tags": [
+          "library-manage"
+        ]
+      }
+    },
+    "/v1/manage/library/pages/backfill": {
+      "post": {
+        "description": "Start rebuilding the stored page text (folded text, word boxes) of old items.",
+        "operationId": "backfill_item_pages_v1_manage_library_pages_backfill_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Backfill Item Pages",
         "tags": [
           "library-manage"
         ]
@@ -71140,6 +73578,74 @@
         "summary": "Update Topic",
         "tags": [
           "library"
+        ]
+      }
+    },
+    "/v1/me/academic/control-periods": {
+      "get": {
+        "description": "Return the control weeks with the exams left and the marks taken.",
+        "operationId": "list_control_periods_v1_me_academic_control_periods_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlPeriodListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Control Periods",
+        "tags": [
+          "assessments"
         ]
       }
     },
@@ -73346,6 +75852,122 @@
         ]
       }
     },
+    "/v1/me/legal/accept": {
+      "post": {
+        "description": "Accept current versions; stale ones answer 409. Returns what is left.",
+        "operationId": "accept_v1_me_legal_accept_post",
+        "parameters": [
+          {
+            "description": "uz, ru or en; default Accept-Language",
+            "in": "query",
+            "name": "locale",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(uz|ru|en)$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "uz, ru or en; default Accept-Language",
+              "title": "Locale"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Accept",
+        "tags": [
+          "legal"
+        ]
+      }
+    },
+    "/v1/me/legal/pending": {
+      "get": {
+        "description": "Current documents the user has not accepted yet.",
+        "operationId": "get_pending_v1_me_legal_pending_get",
+        "parameters": [
+          {
+            "description": "uz, ru or en; default Accept-Language",
+            "in": "query",
+            "name": "locale",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^(uz|ru|en)$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "uz, ru or en; default Accept-Language",
+              "title": "Locale"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Pending",
+        "tags": [
+          "legal"
+        ]
+      }
+    },
     "/v1/me/lesson-results": {
       "get": {
         "description": "Return attendance and the mark of each lesson that has already started.",
@@ -73894,6 +76516,102 @@
         ]
       }
     },
+    "/v1/me/library/markup/{item_id}": {
+      "get": {
+        "description": "The caller's own markup of the item.",
+        "operationId": "get_markup_v1_me_library_markup__item_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkupResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Markup",
+        "tags": [
+          "library"
+        ]
+      },
+      "put": {
+        "description": "Replace the caller's markup of the item; no shapes at all removes it.",
+        "operationId": "save_markup_v1_me_library_markup__item_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkupBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkupResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save Markup",
+        "tags": [
+          "library"
+        ]
+      }
+    },
     "/v1/me/library/progress/{item_id}": {
       "put": {
         "description": "Save the reading position (last write wins by `client_ts`).",
@@ -74360,6 +77078,72 @@
         ]
       }
     },
+    "/v1/me/onboarding": {
+      "get": {
+        "description": "The steps the caller still has to see (none unless they are a student).",
+        "operationId": "get_onboarding_v1_me_onboarding_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Onboarding",
+        "tags": [
+          "onboarding"
+        ]
+      }
+    },
+    "/v1/me/onboarding/certificates/done": {
+      "post": {
+        "description": "Mark the certificates step done or skipped; it is not shown again.",
+        "operationId": "certificates_done_v1_me_onboarding_certificates_done_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnboardingOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Certificates Done",
+        "tags": [
+          "onboarding"
+        ]
+      }
+    },
+    "/v1/me/onboarding/certificates/refresh-emis": {
+      "post": {
+        "description": "Import the caller's EMIS certificates again and return all their entries.",
+        "operationId": "refresh_emis_v1_me_onboarding_certificates_refresh_emis_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshEmisOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Refresh Emis",
+        "tags": [
+          "onboarding"
+        ]
+      }
+    },
     "/v1/me/outbound-mail": {
       "get": {
         "description": "The emails the caller sent from the platform, newest first.",
@@ -74460,6 +77244,134 @@
         "summary": "Send Outbound Mail",
         "tags": [
           "mail"
+        ]
+      }
+    },
+    "/v1/me/privacy/erasure": {
+      "delete": {
+        "description": "Withdraw a request that is still waiting for review.",
+        "operationId": "cancel_erasure_v1_me_privacy_erasure_delete",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErasureRequestOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Cancel Erasure",
+        "tags": [
+          "privacy"
+        ]
+      },
+      "get": {
+        "description": "The caller's open erasure request.",
+        "operationId": "get_erasure_v1_me_privacy_erasure_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyErasureOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Erasure",
+        "tags": [
+          "privacy"
+        ]
+      }
+    },
+    "/v1/me/privacy/exports": {
+      "get": {
+        "description": "The caller's recent exports.",
+        "operationId": "list_exports_v1_me_privacy_exports_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Exports",
+        "tags": [
+          "privacy"
+        ]
+      },
+      "post": {
+        "description": "Queue an export of the caller's data (one per 24 hours).",
+        "operationId": "request_export_v1_me_privacy_exports_post",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Request Export",
+        "tags": [
+          "privacy"
+        ]
+      }
+    },
+    "/v1/me/privacy/exports/{export_id}/download": {
+      "get": {
+        "description": "A 60-second link to the archive; 404 unless it is the caller's own, ready.",
+        "operationId": "download_export_v1_me_privacy_exports__export_id__download_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "export_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Export Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportDownloadOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download Export",
+        "tags": [
+          "privacy"
         ]
       }
     },
@@ -79966,6 +82878,28 @@
           }
         },
         "summary": "Get Client Config",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/v1/public/maintenance": {
+      "get": {
+        "description": "Return the maintenance state the web apps show as a banner (never cached).",
+        "operationId": "get_maintenance_v1_public_maintenance_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MaintenanceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Maintenance",
         "tags": [
           "public"
         ]
