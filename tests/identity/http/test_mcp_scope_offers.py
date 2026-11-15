@@ -31,7 +31,9 @@ async def test_list_then_accept(api: Api) -> None:
 
     listed = await api.client.get(OFFERS)
     assert listed.status_code == 200
-    [offer] = listed.json()
+    offers = listed.json()
+    assert offers
+    offer = offers[0]
     assert offer["server"] == "student"
     assert offer["connector_names"] == ["Claude"]
     assert "token" not in offer and "token_hash" not in offer
@@ -41,7 +43,8 @@ async def test_list_then_accept(api: Api) -> None:
     )
     assert answer.status_code == 200
     assert answer.json() == {"result": "granted", "connector_names": ["Claude"]}
-    assert (await api.client.get(OFFERS)).json() == []
+    left = (await api.client.get(OFFERS)).json()
+    assert [o["id"] for o in left] == [o["id"] for o in offers[1:]]
 
 
 async def test_decline_and_foreign_offer(api: Api) -> None:
@@ -49,7 +52,7 @@ async def test_decline_and_foreign_offer(api: Api) -> None:
     owner = await _offered(api, "web.owner")
     stranger = await api.world.add_user(login="web.stranger")
     api.login_as(owner)
-    [offer] = (await api.client.get(OFFERS)).json()
+    offer = (await api.client.get(OFFERS)).json()[0]
     url = f"{OFFERS}/{offer['id']}/decision"
 
     api.login_as(stranger)
@@ -57,6 +60,6 @@ async def test_decline_and_foreign_offer(api: Api) -> None:
     assert foreign.json()["result"] == "not_available"
 
     api.login_as(owner)
-    assert (await api.client.get(OFFERS)).json() != []
+    assert offer["id"] in [o["id"] for o in (await api.client.get(OFFERS)).json()]
     declined = await api.client.post(url, json={"grant": False})
     assert declined.json() == {"result": "declined", "connector_names": []}

@@ -17,7 +17,7 @@ from app.modules.notebooks.application.notebook_titles import NotebookTitles
 from app.modules.notebooks.application.quota import QuotaService
 from app.modules.notebooks.application.slide_images import load_image_bytes
 from app.modules.notebooks.domain.entities import Notebook, Passage, Source
-from app.modules.notebooks.domain.enums import ArtifactKind, ArtifactStatus
+from app.modules.notebooks.domain.enums import ArtifactKind, ArtifactStatus, SourceKind
 from app.modules.notebooks.domain.errors import (
     NotebookNotFoundError,
     SourceNotReadyError,
@@ -53,6 +53,14 @@ async def _readable(
         return await load_notebook(uow, user_id, notebook_id, write=False)
     except NotebookNotFoundError:
         return None
+
+
+async def _owned(
+    uow: NotebooksUnitOfWork, user_id: UUID, notebook_id: UUID
+) -> Notebook | None:
+    """The live notebook only if the user owns it (no course or shared access)."""
+    notebook = await _readable(uow, user_id, notebook_id)
+    return notebook if notebook and notebook.owner_id == user_id else None
 
 
 async def _source_text(uow: NotebooksUnitOfWork, source: Source) -> str:
@@ -139,6 +147,70 @@ class NotebooksQueriesImpl:
                 }
                 for s in sources
             ],
+        }
+
+    async def chat_page(
+        self, user_id: UUID, notebook_id: UUID, *, after_seq: int, limit: int
+    ) -> dict[str, Any] | None:
+        """One page of the owner's own chat thread, oldest first (MCP).
+
+        ``next_after_seq`` is the cursor of the next page, None at the end. None
+        when the notebook is not the user's own, or does not exist.
+        """
+        async with self.uow_factory() as uow:
+            notebook = await _owned(uow, user_id, notebook_id)
+            if notebook is None:
+                return None
+            rows = await uow.messages.list_page(
+                notebook_id, user_id, after_seq, limit + 1
+            )
+        await self.titles.apply(user_id, [notebook])
+        page = rows[:limit]
+        return {
+            "id": str(notebook.id),
+            "title": notebook.title,
+            "messages": [
+                {
+                    "seq": m.seq,
+                    "role": m.role.value,
+                    "text": m.content.text,
+                    "created_at": m.created_at,
+                }
+                for m in page
+            ],
+            "next_after_seq": page[-1].seq if len(rows) > limit else None,
+        }
+
+    async def notes_page(
+        self, user_id: UUID, notebook_id: UUID, *, offset: int, limit: int
+    ) -> dict[str, Any] | None:
+        """One page of the owner's notes of a notebook (note sources, in order).
+
+        ``next_offset`` is the offset of the next page, None at the end. None when
+        the notebook is not the user's own, or does not exist.
+        """
+        async with self.uow_factory() as uow:
+            notebook = await _owned(uow, user_id, notebook_id)
+            if notebook is None:
+                return None
+            sources = await uow.sources.list_for_notebook(notebook_id)
+        await self.titles.apply(user_id, [notebook])
+        notes = [s for s in sources if s.kind is SourceKind.NOTE]
+        page = notes[offset : offset + limit]
+        return {
+            "id": str(notebook.id),
+            "title": notebook.title,
+            "notes": [
+                {
+                    "id": str(s.id),
+                    "title": s.title,
+                    "text": s.body_md or "",
+                    "created_at": s.created_at,
+                    "updated_at": s.updated_at,
+                }
+                for s in page
+            ],
+            "next_offset": offset + limit if offset + limit < len(notes) else None,
         }
 
     async def search(

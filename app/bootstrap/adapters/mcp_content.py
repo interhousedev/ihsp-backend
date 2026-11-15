@@ -23,7 +23,6 @@ if TYPE_CHECKING:
 
 TEXT_PAGE_CHARS: Final = 8000
 SEARCHED_NOTEBOOKS: Final = 5
-NOTEBOOK_LIST: Final = 50
 
 
 def page_of_text(text: str, page: int) -> dict[str, Any]:
@@ -121,12 +120,6 @@ class McpContentAdapter:
             query, limit=limit, audience=cast(Audience, audience)
         )
         return [asdict(hit) for hit in hits]
-
-    async def list_notebooks(self, actor: Actor) -> list[dict[str, Any]]:
-        """The actor's listed notebooks."""
-        return await self.container.notebooks.public.list_notebooks(
-            actor.user_id, NOTEBOOK_LIST
-        )
 
     async def get_notebook(self, actor: Actor, notebook_id: UUID) -> dict[str, Any]:
         """One readable notebook with its sources and outputs."""

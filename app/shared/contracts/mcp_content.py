@@ -64,10 +64,6 @@ class McpContentTools(Protocol):
         """Knowledge hits for an audience derived from the server, not the client."""
         ...
 
-    async def list_notebooks(self, actor: Actor) -> list[dict[str, Any]]:
-        """Notebooks readable by the actor, without hidden flash card notebooks."""
-        ...
-
     async def get_notebook(self, actor: Actor, notebook_id: UUID) -> dict[str, Any]:
         """One readable notebook with its sources and outputs."""
         ...

@@ -33,6 +33,7 @@ from app.shared.contracts.mcp_academic import McpAcademicTools
 from app.shared.contracts.mcp_calls import McpCallLog
 from app.shared.contracts.mcp_content import McpContentTools
 from app.shared.contracts.mcp_files_courses import McpFilesCoursesTools
+from app.shared.contracts.mcp_history import McpHistoryTools
 from app.shared.contracts.mcp_teacher import McpTeacherTools
 from app.shared.contracts.teacher_ai import TeacherAiTools
 from app.shared.i18n.core import I18nCore
@@ -72,6 +73,7 @@ class McpDeps:
     scope_overlay: McpScopeOverlayPort | None
     academic_tools: McpAcademicTools
     content_tools: McpContentTools
+    history_tools: McpHistoryTools
     files_courses_tools: McpFilesCoursesTools
     teacher_tools: McpTeacherTools
     # The model-backed teacher tools; None leaves them off the teacher server.
@@ -141,6 +143,7 @@ def deps_from_container(
         scope_overlay=getattr(container, "mcp_scope_overlay", None),
         academic_tools=_backend(container, "mcp_academic_tools"),
         content_tools=_backend(container, "mcp_content_tools"),
+        history_tools=_backend(container, "mcp_history_tools"),
         files_courses_tools=_backend(container, "mcp_files_courses_tools"),
         teacher_tools=_backend(container, "mcp_teacher_tools"),
         teacher_ai=getattr(container, "teacher_ai_tools", None),

@@ -108,6 +108,24 @@ class SqlMessageRepository:
         rows = (await self.session.execute(stmt)).scalars().all()
         return [_to_entity(row) for row in reversed(rows)]
 
+    async def list_page(
+        self, notebook_id: UUID, user_id: UUID, after_seq: int, limit: int
+    ) -> list[NotebookMessage]:
+        """Up to `limit` messages with a `seq` above `after_seq`, ascending."""
+        stmt = (
+            select(MessageRow)
+            .where(
+                MessageRow.notebook_id == notebook_id,
+                MessageRow.user_id == user_id,
+                MessageRow.seq > after_seq,
+            )
+            .order_by(MessageRow.seq)
+            .limit(limit)
+            .execution_options(populate_existing=True)
+        )
+        rows = (await self.session.execute(stmt)).scalars().all()
+        return [_to_entity(row) for row in rows]
+
     async def delete_all(self, notebook_id: UUID, user_id: UUID) -> int:
         """Delete the whole thread; return how many messages went."""
         result = await self.session.execute(

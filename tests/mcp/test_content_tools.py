@@ -243,7 +243,7 @@ async def test_notebook_tools_use_the_actor_and_label_third_party_text(
 ) -> None:
     """A4, D9: results link to the notebook; source text is cleaned and labelled."""
     token, actor = world.connector_token("student", *ALL)
-    notebook_id = new_id()
+    notebook_id = world.history_tools.add_notebook(actor.user_id, "NB")
     world.content_tools.notebooks[notebook_id] = actor.user_id
     nid = str(notebook_id)
 

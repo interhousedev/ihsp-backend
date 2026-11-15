@@ -93,13 +93,6 @@ class FakeContentTools:
         self._record("search_knowledge", query=query, audience=audience, limit=limit)
         return self.knowledge.get(audience, [])[:limit]
 
-    async def list_notebooks(self, actor: Actor) -> list[dict[str, Any]]:
-        return [
-            {"id": notebook_id, "title": "NB"}
-            for notebook_id, owner in self.notebooks.items()
-            if owner == actor.user_id
-        ]
-
     async def get_notebook(self, actor: Actor, notebook_id: UUID) -> dict[str, Any]:
         self._own_notebook(actor, notebook_id)
         return {"id": notebook_id, "title": "NB", "sources": [], "outputs": []}

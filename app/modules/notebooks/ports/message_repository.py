@@ -35,6 +35,12 @@ class MessageRepository(Protocol):
         """The last `limit` messages, ascending."""
         ...
 
+    async def list_page(
+        self, notebook_id: UUID, user_id: UUID, after_seq: int, limit: int
+    ) -> list[NotebookMessage]:
+        """Up to `limit` messages with a `seq` above `after_seq`, ascending."""
+        ...
+
     async def delete_all(self, notebook_id: UUID, user_id: UUID) -> int:
         """Delete the whole thread; return how many messages went."""
         ...

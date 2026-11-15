@@ -28,6 +28,7 @@ APP_SOURCES: Final[tuple[SourceServer, ...]] = ("student", "teacher", "lms")
 
 BASELINE: Final = "baseline"
 RELEASE_2026_11: Final = "2026-11-mcp-1"
+RELEASE_2026_12: Final = "2026-12-mcp-1"
 
 
 @dataclass(frozen=True, slots=True)
@@ -108,9 +109,12 @@ SCOPE_CATALOG: Final[dict[str, tuple[ScopeInfo, ...]]] = {
                 "search_notebooks",
                 "read_notebook_source",
                 "list_notebook_outputs",
+                "get_notebook_chat",
+                "get_notebook_notes",
             ),
             since=RELEASE_2026_11,
         ),
+        ScopeInfo("chats:read", ("list_chats", "get_chat"), since=RELEASE_2026_12),
         ScopeInfo(
             "notebooks:write",
             ("create_notebook", "add_notebook_sources", "generate_notebook_output"),
@@ -294,6 +298,12 @@ RELEASES: Final[tuple[ScopeRelease, ...]] = (
             "homework:submit",
         ),
         summary_key="mcp-release-2026-11-mcp-1",
+    ),
+    ScopeRelease(
+        id=RELEASE_2026_12,
+        server="student",
+        scopes=("chats:read",),
+        summary_key="mcp-release-2026-12-mcp-1",
     ),
 )
 

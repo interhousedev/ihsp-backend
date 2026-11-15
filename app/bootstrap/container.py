@@ -51,6 +51,7 @@ if TYPE_CHECKING:
     from app.shared.contracts.mcp_calls import McpCallLog
     from app.shared.contracts.mcp_content import McpContentTools
     from app.shared.contracts.mcp_files_courses import McpFilesCoursesTools
+    from app.shared.contracts.mcp_history import McpHistoryTools
     from app.shared.contracts.mcp_teacher import McpTeacherTools
     from app.shared.contracts.teacher_ai import TeacherAiTools
 
@@ -105,6 +106,7 @@ class Container:
     mcp_teacher_tools: "McpTeacherTools" = NOT_BUILT
     teacher_ai_tools: "TeacherAiTools | None" = None
     mcp_content_tools: "McpContentTools" = NOT_BUILT
+    mcp_history_tools: "McpHistoryTools" = NOT_BUILT
     mcp_files_courses_tools: "McpFilesCoursesTools" = NOT_BUILT
     lms_ai_tools: "LmsAiTools | None" = None
     closers: list[Callable[[], Awaitable[None]]] = field(default_factory=list)

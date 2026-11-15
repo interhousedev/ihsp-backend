@@ -100,6 +100,7 @@ webfinger:
       - tests:read
       - tests:write
       - notebooks:read
+      - chats:read
       - notebooks:write
       - library:read
       - files:read.all
@@ -139,6 +140,7 @@ webfinger:
       - student:tests:read
       - student:tests:write
       - student:notebooks:read
+      - student:chats:read
       - student:notebooks:write
       - student:library:read
       - student:files:read.all

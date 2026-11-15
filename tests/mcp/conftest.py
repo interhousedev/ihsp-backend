@@ -26,6 +26,7 @@ from app.shared.contracts.lms import LmsCourseOps, LmsDraftCommands, LmsQueries
 from app.shared.contracts.mcp_academic import McpAcademicTools
 from app.shared.contracts.mcp_content import McpContentTools
 from app.shared.contracts.mcp_files_courses import McpFilesCoursesTools
+from app.shared.contracts.mcp_history import McpHistoryTools
 from app.shared.contracts.mcp_teacher import McpTeacherTools
 from app.shared.i18n.core import I18nCore
 from app.shared.ids import new_id
@@ -53,6 +54,7 @@ from tests.mcp.fakes import (
 from tests.mcp.fakes_academic import FakeAcademicTools
 from tests.mcp.fakes_content import FakeContentTools
 from tests.mcp.fakes_files_courses import FakeFilesCoursesTools
+from tests.mcp.fakes_history import FakeHistoryTools
 from tests.mcp.fakes_teacher import FakeTeacherTools
 
 import httpx
@@ -123,6 +125,7 @@ class World:
     overlay: FakeScopeOverlay = field(default_factory=FakeScopeOverlay)
     academic_tools: FakeAcademicTools = field(default_factory=FakeAcademicTools)
     content_tools: FakeContentTools = field(default_factory=FakeContentTools)
+    history_tools: FakeHistoryTools = field(default_factory=FakeHistoryTools)
     files_courses_tools: FakeFilesCoursesTools = field(
         default_factory=FakeFilesCoursesTools
     )
@@ -154,6 +157,7 @@ class World:
             scope_overlay=self.overlay,
             academic_tools=cast(McpAcademicTools, self.academic_tools),
             content_tools=cast(McpContentTools, self.content_tools),
+            history_tools=cast(McpHistoryTools, self.history_tools),
             files_courses_tools=cast(McpFilesCoursesTools, self.files_courses_tools),
             teacher_tools=cast(McpTeacherTools, self.teacher_tools),
         )

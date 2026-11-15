@@ -16,7 +16,18 @@ from app.shared.mcp_scopes import RELEASE_2026_11, RELEASES, ScopeRelease
 from app.shared.notifications import NotificationType
 from tests.identity.support import World
 
+import pytest
+
 ALREADY = {"schedule:read", "marks:read"}
+
+
+@pytest.fixture(autouse=True)
+def _first_release_only(monkeypatch: pytest.MonkeyPatch) -> None:
+    """These cases describe one release; later ones are offered the same way."""
+    monkeypatch.setattr(
+        "app.modules.identity.application.offer_mcp_scopes.RELEASES",
+        RELEASES[:1],
+    )
 
 
 def _connector(user: User, *, server: str = "student", **fields: Any) -> McpConnector:

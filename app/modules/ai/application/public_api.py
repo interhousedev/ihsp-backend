@@ -103,6 +103,41 @@ class AiQueriesImpl:
             ],
         }
 
+    async def chat_history(
+        self, owner_id: UUID, chat_id: UUID, *, after_seq: int, limit: int
+    ) -> dict[str, Any] | None:
+        """Return one page of an owner's student chat (MCP `get_chat`), by seq.
+
+        Seq has no gaps, so a page is exactly `limit` messages after `after_seq`;
+        ``next_after_seq`` is the cursor for the next page, None at the end. None for
+        Administration and author chats, deleted chats and chats of another owner.
+        """
+        async with self.uow_factory() as uow:
+            chat = await uow.chats.get(chat_id)
+            if chat is None or not _readable_by(chat, owner_id):
+                return None
+            messages = await uow.messages.list_range(
+                chat_id, after_seq=after_seq, up_to_seq=after_seq + limit
+            )
+            last_seq = await uow.messages.last_seq(chat_id)
+        reached = messages[-1].seq if messages else after_seq
+        return {
+            "id": chat.id,
+            "title": chat.title,
+            "last_message_at": chat.last_message_at,
+            "last_seq": last_seq,
+            "messages": [
+                {
+                    "seq": m.seq,
+                    "role": m.role.value,
+                    "text": m.text,
+                    "created_at": m.created_at,
+                }
+                for m in messages
+            ],
+            "next_after_seq": reached if reached < last_seq else None,
+        }
+
     async def chats_using_files(
         self, file_ids: Sequence[UUID]
     ) -> dict[UUID, list[tuple[UUID, str]]]:
