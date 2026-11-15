@@ -24,6 +24,12 @@ SCHEMAS = (
     "vectors",
     "certificates",
     "knowledge",
+    "posts",
+    "feedback",
+    "legal",
+    "faces",
+    "onboarding",
+    "privacy",
 )
 
 

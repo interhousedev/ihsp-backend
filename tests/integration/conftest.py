@@ -31,6 +31,12 @@ SCHEMAS = (
     "notebooks",
     "library",
     "dashboard",
+    "legal",
+    "privacy",
+    "onboarding",
+    "posts",
+    "feedback",
+    "faces",
 )
 
 ContainerFactory = Callable[..., Coroutine[Any, Any, Container]]
