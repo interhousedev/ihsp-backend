@@ -24,11 +24,20 @@ For prompt changes, run the real-model evals when the user asks (see the `testin
 
 Move the entries from `[Unreleased]` in `CHANGELOG.md` to `## [X.Y.Z] - YYYY-MM-DD`, adding anything missing from `git log <last tag>..HEAD`. Write for readers, not commit by commit. List known issues. Commit it with the release, before the tag.
 
+Also bring the GitHub Pages docs (`docs/*.md`, `mkdocs.yml` nav) up to date with what the release changed (new routes, scopes, settings, features), then check the site:
+
+```bash
+uv sync --only-group docs --frozen
+uv run mkdocs build --strict      # what the Docs workflow runs; must pass before the tag
+```
+
+The Docs workflow publishes the site on the push to `main` that touches `docs/**`, `mkdocs.yml`, `pyproject.toml` or `uv.lock`; confirm that run too.
+
 When `pyproject.toml` or `uv.lock` changed, also commit `licenses/python.json`. When a route or schema changed, also commit `openapi/openapi.json`.
 
 ## 3. Push and wait for CI
 
-Commit in layers, signed, then push `main`. Wait until Test, Security, Lint, CodeQL and Build image pass on that commit (`gh run list -c <sha>`).
+Commit in layers, signed, then push `main`. Wait until Test, Security, Lint, CodeQL, Docs and Build image pass on that commit (`gh run list -c <sha>`).
 
 ## 4. Tag
 

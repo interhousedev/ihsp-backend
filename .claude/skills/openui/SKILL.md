@@ -41,4 +41,4 @@ For each component: a valid block, each invalid prop, an unsafe URL, the repair 
 
 ## Telegram
 
-The Telegram surface gets the `show_ui_block` tool and `telegram_openui_prompt()`; the bot sends each block as its own message. The web keeps fenced blocks and never sees Telegram rules.
+The Telegram surface gets the `show_ui_block` tool and `telegram_openui_prompt()`; the bot appends every valid block (tool calls and fenced ones) as Markdown to the end of the answer message (`degrade_blocks_last`), after the text. Widgets (`sendWidget`) replace that only with `IHSP_BOT__WIDGETS_ENABLED=true` (off by default). The web keeps fenced blocks and never sees Telegram rules.

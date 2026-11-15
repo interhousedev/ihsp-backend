@@ -1,5 +1,5 @@
 site_name: IHSP backend
-site_description: Personal tokens and entrance devices of the platform API.
+site_description: Personal tokens, Telegram bots and entrance devices of the platform API.
 site_url: https://interhousedev.github.io/ihsp-backend/
 repo_url: https://github.com/interhousedev/ihsp-backend
 repo_name: interhousedev/ihsp-backend
@@ -12,5 +12,8 @@ theme:
 nav:
   - Home: index.md
   - Personal tokens: personal-tokens.md
+  - Telegram bots: telegram-bots.md
+  - LMS access rules: lms-access.md
+  - MCP servers: mcp.md
   - Entrance devices: entrance-devices.md
   - ChatGPT app review: chatgpt-review.md

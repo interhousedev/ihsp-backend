@@ -4,20 +4,33 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-11-15
+
 ### Added
 
+- Legal consent is enforced on the server: until a signed-in user has accepted the current published documents, every authenticated HTTP route answers `403` `legal/acceptance-required`, MCP tools are refused and the Telegram bot replies with a link to accept. Open without consent: `/v1/legal/*`, `/v1/me/legal/*`, `GET /v1/id/me`, `/v1/id/me/sessions*`, `/v1/me/privacy/*`. The web apps show the consent gate on that error.
 - Server-to-server migration: Admin > Server migration (`GET /v1/admin/migration`, `POST /v1/admin/migration/start|rollback`, admin, step-up, audited) queues a request for the root host runner `scripts/migrate_runner.sh` (systemd path unit `materials/systemd/ihsp-migration.*`); the target is prepared with `scripts/migrate_target.sh`. Maintenance mode answers writes with `503` `common/maintenance` and `GET /v1/public/maintenance` feeds the banner of every web app. New setting `IHSP_MIGRATION__DIR`.
-- Telegram AI chat: one forum topic per AI chat in private chats (table `ai.telegram_topics`, rename sync, icon pick, `/delete` with confirmation); UI blocks are sent as separate messages through the `show_ui_block` tool, with per-channel prompts.
+- Telegram AI chat: one forum topic per AI chat in private chats (table `ai.telegram_topics`, rename sync, icon pick, `/delete` with confirmation); UI blocks come through the `show_ui_block` tool and are shown at the end of the answer message, after the text, with per-channel prompts.
 
 - Langfuse tracing of model calls (`IHSP_LANGFUSE__PUBLIC_KEY`, `__SECRET_KEY`, `__HOST`, `__CAPTURE_CONTENT`): task, model, tokens, latency, hashed user id and chat/notebook session; content only when `CAPTURE_CONTENT=true`; off without keys, never blocks a request, flushed on shutdown.
 - Legal documents module: administrators edit versioned privacy, terms, biometric and AI documents (uz, ru, en) and publish them; `GET /v1/legal/documents[/{kind}]`, `GET /v1/me/legal/pending`, `POST /v1/me/legal/accept`, `/v1/admin/legal/*`. Registration (`POST /v1/id/register/complete`) takes `accepted_legal` and answers `legal/consent-required` when a published document is not accepted.
 - Privacy module: a ZIP export of the user's data (`POST`/`GET /v1/me/privacy/exports`, `GET .../{id}/download`, one per 24 hours, link valid 7 days) and administrator-reviewed account erasure (`GET`/`DELETE /v1/me/privacy/erasure`, `/v1/admin/privacy/erasure-requests[/{id}/approve|reject]`). A personal-data spec per module drives export and erasure; the `privacy.erase_owner` job runs after the retention window.
 - Reading lists: librarians pin lists (`PUT /v1/library/reading-lists/{id}/pin`) and set their sequence (`PUT /v1/library/reading-lists/order`); everyone sees pinned lists first, then the manual order. New cards carry `pinned` and `sort_order`; migration `library_0004`.
+- Several Telegram bots: a registry (`admin.telegram_bots`, migration `admin_0005`) with per-bot features (`ai_agent`, `open_ai_agent`, `commands`, `notifications`, `announcements`, `mini_app`); tokens live only in Vault (`IHSP_BOT_VAULT__*`, AppRole `telegram-bots`, one path per bot) and the API shows the last four characters. The env token is imported as the default bot, which keeps today's behaviour. Admin routes `GET`/`POST /v1/admin/bots`, `PATCH /v1/admin/bots/{bot_id}`, `POST /v1/admin/bots/{bot_id}/rotate-token`, `POST /v1/admin/bots/announcements` (audited; every write needs a step-up `otp_code`, a wrong code answers 403 `identity/step-up-invalid`; 503 `admin/bot-telegram-unavailable` when Telegram is unreachable). Each extra bot has its own webhook path `/telegram/b/{hmac}` and secret header. Feature switches apply within 30 seconds; adding, enabling or rotating a bot needs a bot process restart. Existing servers need the `telegram-bots` AppRole first: see "Upgrading an existing server" in `docs/telegram-bots.md`. `iht-web` needs `bun run sync:openapi`.
+- LMS access rules per course and per lesson: audience `public`, `signed_in`, `students` or `chosen` (groups and users), and `hidden` or `locked` when denied (`GET`/`PUT /v1/lms/courses/{id}/access`, `PUT /v1/lms/courses/{id}/steps/{step_id}/access`, MCP tool `set_access` under `lms.courses.write`; migration `lms_0005_access_rules`). A locked lesson answers 403 `lms/content-locked` and cards and outlines carry `locked`/`access`; the course page gives the lead as a contact (no Telegram handle for guests). Progress and points count only lessons the viewer can see; an attempt started before a lock can still be saved and submitted. Guest routes under `/v1/lms/public` are limited to 120 requests per minute per address.
+- MCP tools `get_my_group` (scope `group:read`), `get_rating_book` (new scope `rating_book:read`) for students and `list_notifications` (scope `notifications:read`) for students and teachers; scope release `2026-12-mcp-2`. Hydra needs the new scopes on its allow list.
 
 ### Changed
 
 - The calendar hides other subgroup lessons by default: the `timetable:hide-other-subgroup` flag in `preferences.onboarding_dismissed` is replaced by `timetable:show-other-subgroup` (migration `identity_0015` drops the old flag).
 - `DELETE /v1/id/me` answers 202 with `{request_id, status}`: it files an erasure request for administrator review instead of scheduling deletion at once. Signing in during the window restores the account and closes the request.
+
+### Fixed
+
+- Lesson generation no longer revives a cancelled lesson linked to EMIS; reviving it collided with the EMIS lesson on `ex_lessons_room_no_overlap` on every run.
+- The production bot process gets the SMTP relay settings, so "Telegram linked" mail is sent instead of failing on `localhost:1025`.
+- EMIS outages and missing files log at info or warning instead of error; a missing file is not downloaded again on every sync.
+- `materials/.env.prod.sample` documents `IHSP_BOT_VAULT__ROLE_ID` and `IHSP_BOT_VAULT__SECRET_ID`.
 
 ## [1.5.1] - 2026-11-14
 

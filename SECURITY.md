@@ -71,6 +71,11 @@ Students and teachers can share a manual notebook or a personal file with a sign
 - **A device token is a bearer secret.** An administrator creates an entrance device and sees its `ihsp_dev_` token once; only its SHA-256 is stored, with a short prefix for recognition. Anyone holding the token can ask who is on a photo, so it lives only in the device. Revoking applies to the next request, and each device is rate limited per minute.
 - **Calls and passages are short lived.** What a device sent and who it recognised is kept for 7 days and then purged by `faces.purge_old`; photos sent to `/v1/device/identify` are not stored.
 
+## Telegram bots and consent
+
+- **Bot tokens live only in Vault.** Extra bots are added by administrators (audited); their tokens are stored under the `telegram-bots` AppRole, which cannot open the EMIS secrets, and the API shows only the last four characters. The default bot's token comes from the environment and cannot be rotated through the API.
+- **Legal consent is enforced on the server.** Until the user accepts the current published documents, authenticated HTTP routes answer `403` `legal/acceptance-required`, MCP tools are refused and the bot replies with a link to accept. A personal token is subject to the same rule.
+
 ## Safe harbour
 
 We will not pursue or support legal action against you for research that:
