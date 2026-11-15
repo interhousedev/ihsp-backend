@@ -396,12 +396,12 @@ def _problem_type(response: httpx.Response) -> str | None:
 
 
 def _error_for(response: httpx.Response) -> EmisAuthFailed | EmisUnavailable:
-    """401 with ``emis/auth-failed`` is the student's problem, all else is ours.
+    """``emis/auth-failed`` is the student's problem, all else is ours.
 
     ``emis/credentials-missing`` is a student without a stored login: not an outage.
     """
     problem_type = _problem_type(response)
-    if response.status_code == 401 and problem_type == _AUTH_FAILED_TYPE:
+    if problem_type == _AUTH_FAILED_TYPE:
         return EmisAuthFailed(support_details="EMIS rejected the credentials")
     if problem_type == _CREDENTIALS_MISSING_TYPE:
         return EmisCredentialsMissing(support_details="no stored EMIS login")

@@ -257,10 +257,14 @@ class EmisCertificate:
 
 
 class EmisAuthFailed(BaseError):
-    """EMIS rejected the stored credentials."""
+    """EMIS rejected the stored credentials.
+
+    Not a 401: that status means our own bearer token is invalid, and the web client
+    answers it with a token refresh and a sign-in redirect.
+    """
 
     code = "emis/auth-failed"
-    status = 401
+    status = 409
     message_key = "emis-auth-failed"
 
 

@@ -208,7 +208,7 @@ async def test_the_curriculum_lists_subjects_exams_and_semester_hours(
 async def test_the_curriculum_needs_the_service_token_and_a_valid_link(
     world: World, api: tuple[AsyncClient, UUID, dict[str, str]]
 ) -> None:
-    """ID-7, SYNC-8: as private as the other routes; reauth is a 401 problem."""
+    """ID-7, SYNC-8: as private as the other routes; reauth is a 409 problem."""
     client, user_id, headers = api
 
     anonymous = await client.get(f"/internal/emis/{user_id}/curriculum")
@@ -216,7 +216,7 @@ async def test_the_curriculum_needs_the_service_token_and_a_valid_link(
     blocked = await client.get(f"/internal/emis/{user_id}/curriculum", headers=headers)
 
     assert anonymous.status_code == 401
-    assert blocked.status_code == 401
+    assert blocked.status_code == 409
     assert blocked.json()["type"] == "emis/auth-failed"
 
 
@@ -370,7 +370,7 @@ async def test_missing_query_parameters_are_a_validation_error(
     assert response.json()["type"] == "common/request-validation"
 
 
-async def test_a_link_that_needs_reauth_is_a_401_emis_problem(
+async def test_a_link_that_needs_reauth_is_a_409_emis_problem(
     world: World, api: tuple[AsyncClient, UUID, dict[str, str]]
 ) -> None:
     """SYNC-8: HttpEmisSource turns this back into EmisAuthFailed."""
@@ -379,7 +379,7 @@ async def test_a_link_that_needs_reauth_is_a_401_emis_problem(
 
     response = await client.get(f"/internal/emis/{user_id}/profile", headers=headers)
 
-    assert response.status_code == 401
+    assert response.status_code == 409
     assert response.json()["type"] == "emis/auth-failed"
 
 

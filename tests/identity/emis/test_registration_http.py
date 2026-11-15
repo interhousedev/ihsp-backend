@@ -163,7 +163,7 @@ async def test_register_complete_returns_login_and_redirect(
 @pytest.mark.parametrize(
     ("body", "status", "error_type"),
     [
-        ({"emis_login": "student01", "emis_password": "bad"}, 401, "emis/auth-failed"),
+        ({"emis_login": "student01", "emis_password": "bad"}, 409, "emis/auth-failed"),
         ({"emis_login": "down", "emis_password": "password"}, 503, "emis/unavailable"),
         ({"emis_login": "", "emis_password": "x"}, 422, "common/request-validation"),
     ],

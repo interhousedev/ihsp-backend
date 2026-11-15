@@ -209,12 +209,12 @@ async def test_ratings_send_subject_and_semester_and_parse_marks(
     assert ratings.payload_hash == "ab" * 32
 
 
-async def test_a_401_with_the_emis_problem_type_is_auth_failed(
+async def test_an_emis_auth_failed_problem_is_auth_failed(
     source: HttpEmisSource, gateway: respx.MockRouter
 ) -> None:
     """SYNC-8: the student must update the EMIS password."""
     gateway.get(f"/{USER}/profile").respond(
-        401, json={"type": "emis/auth-failed", "status": 401}
+        409, json={"type": "emis/auth-failed", "status": 409}
     )
 
     with pytest.raises(EmisAuthFailed):
