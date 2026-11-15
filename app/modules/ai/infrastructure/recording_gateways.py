@@ -13,13 +13,18 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.modules.ai.domain.usage import UNKNOWN_TASK, UsageEvent, counts_of, feature_of
+from app.modules.ai.infrastructure.langfuse_tracer import LangfuseTracer, OpenSpan
 from app.modules.ai.ports.usage import UsageSink
 from app.shared.ai_tasks import AiTask
 from app.shared.clock import Clock
 from app.shared.contracts.ai import LlmGateway, LlmTuning
 from app.shared.contracts.embeddings import EmbeddingBatch, EmbeddingGateway, EmbedKind
 from app.shared.contracts.web_search import SearchCall, SearchReply, WebSearchGateway
-from app.shared.usage_context import UsageActor, current_usage_actor
+from app.shared.usage_context import (
+    UsageActor,
+    current_ai_session,
+    current_usage_actor,
+)
 
 import structlog
 
@@ -29,18 +34,32 @@ log = structlog.get_logger(__name__)
 class UsageRecorder:
     """Turns the end of a call into a ledger event (the actor is read at the start)."""
 
-    def __init__(self, sink: UsageSink, clock: Clock) -> None:
-        """Keep the sink and the clock."""
+    def __init__(
+        self, sink: UsageSink, clock: Clock, tracer: LangfuseTracer | None = None
+    ) -> None:
+        """Keep the sink, the clock and the optional Langfuse tracer."""
         self._sink = sink
         self._clock = clock
+        self._tracer = tracer
 
-    def begin(self, *, model: str, task: str | None) -> "PendingCall":
-        """Remember who and what a call is, before it runs."""
+    def begin(
+        self, *, model: str, task: str | None, content: Any | None = None
+    ) -> "PendingCall":
+        """Remember who and what a call is, before it runs (and open its span)."""
+        actor = current_usage_actor()
+        name = task or UNKNOWN_TASK
+        span = None
+        if self._tracer is not None:
+            span = self._tracer.begin(
+                task=name,
+                model=model,
+                user_id=actor.user_id,
+                role=actor.role,
+                session_id=current_ai_session(),
+                content=content,
+            )
         return PendingCall(
-            recorder=self,
-            actor=current_usage_actor(),
-            model=model,
-            task=task or UNKNOWN_TASK,
+            recorder=self, actor=actor, model=model, task=name, span=span
         )
 
     async def note_free(self, *, task: str, model: str) -> None:
@@ -85,11 +104,23 @@ class PendingCall:
     actor: UsageActor
     model: str
     task: str
+    span: OpenSpan | None = None
 
     async def finish(
-        self, usage: Mapping[str, Any] | None = None, *, error: str | None = None
+        self,
+        usage: Mapping[str, Any] | None = None,
+        *,
+        error: str | None = None,
+        output: Any | None = None,
     ) -> None:
         """Record the call: its usage on success, its error class on failure."""
+        if self.span is not None:
+            self.span.end(
+                model=_model_of(usage, self.model),
+                usage=usage,
+                error=error,
+                output=output,
+            )
         await self.recorder._write(self, usage, error=error)
 
 
@@ -123,7 +154,11 @@ class RecordingLlmGateway:
         tuning: LlmTuning | None = None,
     ) -> dict[str, Any]:
         """Run `complete` and record it."""
-        pending = self._recorder.begin(model=model, task=_task_of(tuning))
+        pending = self._recorder.begin(
+            model=model,
+            task=_task_of(tuning),
+            content={"system": system, "messages": messages},
+        )
         try:
             result = await self._inner.complete(
                 model=model,
@@ -137,7 +172,7 @@ class RecordingLlmGateway:
         except BaseException as exc:
             await pending.finish(error=_error_name(exc))
             raise
-        await pending.finish(result.get("usage"))
+        await pending.finish(result.get("usage"), output=result)
         return result
 
     async def complete_json(
@@ -154,7 +189,11 @@ class RecordingLlmGateway:
         tuning: LlmTuning | None = None,
     ) -> dict[str, Any]:
         """Run `complete_json` and record it."""
-        pending = self._recorder.begin(model=model, task=_task_of(tuning))
+        pending = self._recorder.begin(
+            model=model,
+            task=_task_of(tuning),
+            content={"system": system, "messages": messages},
+        )
         try:
             result = await self._inner.complete_json(
                 model=model,
@@ -170,7 +209,7 @@ class RecordingLlmGateway:
         except BaseException as exc:
             await pending.finish(error=_error_name(exc))
             raise
-        await pending.finish(result.get("usage"))
+        await pending.finish(result.get("usage"), output=result)
         return result
 
     def stream(
@@ -186,7 +225,11 @@ class RecordingLlmGateway:
         tools: list[dict[str, Any]] | None = None,
     ) -> AsyncIterator[dict[str, Any]]:
         """Stream through the gateway; the call is recorded when the stream ends."""
-        pending = self._recorder.begin(model=model, task=_task_of(tuning))
+        pending = self._recorder.begin(
+            model=model,
+            task=_task_of(tuning),
+            content={"system": system, "messages": messages},
+        )
         items = self._inner.stream(
             model=model,
             system=system,
