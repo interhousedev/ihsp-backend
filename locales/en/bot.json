@@ -281,5 +281,7 @@
   "bot-workoffs-student-title": "Work-off tasks",
   "bot-workoffs-teacher-empty": "No open work-offs.",
   "bot-workoffs-teacher-hint": "Tap a work-off to mark it as done.",
-  "bot-workoffs-teacher-title": "Open work-offs: {count}"
+  "bot-workoffs-teacher-title": "Open work-offs: {count}",
+  "bot-legal-acceptance-required": "Please accept the current legal documents in the app to keep using the bot.",
+  "bot-legal-accept-button": "Accept"
 }

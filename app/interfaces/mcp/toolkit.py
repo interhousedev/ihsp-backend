@@ -37,6 +37,8 @@ class ToolKit:
         `limit` is the cost class, counted per user. Student write tools default to
         WRITE_LIMIT. `log` says what the call log may store: without it, the name only.
         `idempotent` defaults to `read_only`; set False for a read with a side effect.
+        A tool that is not read-only, or not idempotent, is a write: the guard
+        refuses it during maintenance mode.
         """
         annotations = ToolAnnotations(
             readOnlyHint=read_only,
@@ -50,6 +52,7 @@ class ToolKit:
         def decorate(fn: ToolFn) -> ToolFn:
             guarded = self.guard.requires_scope(
                 scope,
+                writes=not read_only or idempotent is False,
                 limit=limit,
                 log=log,
                 read_only=read_only,

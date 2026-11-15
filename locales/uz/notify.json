@@ -193,5 +193,8 @@
   "notify-privacy-title": "Maxfiylik",
   "notify-privacy-export-ready-body": "Maʼlumotlaringiz arxivi tayyor. Uni {expires} gacha yuklab oling.",
   "notify-privacy-erasure-approved-body": "Hisobni oʼchirish soʼrovi tasdiqlandi. Hisob {closes_on} kuni oʼchiriladi. Bekor qilish uchun shu sanagacha tizimga kiring.",
-  "notify-privacy-erasure-rejected-body": "Hisobni oʼchirish soʼrovi rad etildi. {reason}"
+  "notify-privacy-erasure-rejected-body": "Hisobni oʼchirish soʼrovi rad etildi. {reason}",
+  "notify-chat-answer-ready-title": "Javob tayyor",
+  "notify-chat-answer-ready-body": "Javob: {prompt}",
+  "notify-btn-open-chat": "Chatni ochish"
 }

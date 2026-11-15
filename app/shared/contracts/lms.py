@@ -492,6 +492,20 @@ class LmsCourseOps(Protocol):
         """List the staff of the course."""
         ...
 
+    async def set_access(
+        self,
+        actor: Actor,
+        course_id: UUID,
+        *,
+        step_id: UUID | None,
+        audience: str,
+        when_denied: str,
+        group_ids: Sequence[UUID],
+        user_ids: Sequence[UUID],
+    ) -> dict[str, Any]:
+        """Set who may open the course or one lesson (owner or LMS admin)."""
+        ...
+
     async def add_staff(
         self,
         actor: Actor,

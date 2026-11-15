@@ -18,6 +18,7 @@
   "academic-head-student-invalid": "Староста должен быть активным студентом этой группы.",
   "academic-not-group-curator": "Это может сделать только куратор группы или администрация.",
   "academic-subgroup-assignment-invalid": "Каждый студент должен быть активным студентом этой группы, а подгруппа — 1 или 2.",
+  "academic-target-group-invalid": "Выберите существующую группу, отличную от удаляемой.",
   "academic-student-not-found": "Студент не найден.",
   "academic-subject-not-found": "Предмет не найден.",
   "academic-subject-emis-id-taken": "Другой предмет уже связан с этим предметом EMIS.",

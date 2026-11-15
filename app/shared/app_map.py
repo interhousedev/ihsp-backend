@@ -560,6 +560,14 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "post postlar bot посты бота bot-posts channel kanal",
     ),
     _d(
+        "admin-bots",
+        "admin",
+        "/bots/",
+        _AD,
+        ("Botlar", "Боты", "Bots"),
+        "bot botlar боты telegram token",
+    ),
+    _d(
         "admin-moderation",
         "admin",
         "/moderation/",

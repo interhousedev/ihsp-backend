@@ -57,10 +57,10 @@ _TELEGRAM = """
 ## Visual blocks
 Answer in text by default. A requested table, comparison, chart, diagram, statistics,
 timetable or list of links is a visual block: call the tool `show_ui_block` with the
-block code (fetch the data first). The bot sends each block as its own message, so
-never put a block, a code fence or a table in the answer text; add one short sentence
-about it. At most {max_blocks} calls per answer. If the tool lists errors, fix the
-block and call it again. Never say you cannot draw.
+block code (fetch the data first). The bot shows the blocks at the end of the answer
+message, after your text, so never put a block or a code fence of one in the answer
+text; add one short sentence about it. At most {max_blocks} calls per answer. If the
+tool lists errors, fix the block and call it again. Never say you cannot draw.
 
 Syntax of `block`: one `name = Expression` per line, entry
 `root = {root}([...])`. Arguments are POSITIONAL in the listed order (`?` optional, null

@@ -4,13 +4,17 @@ from collections.abc import Iterable
 from typing import Any
 
 from app.interfaces.bot.middlewares.actor import ActorMiddleware
+from app.interfaces.bot.middlewares.bot_registry import BotRegistryMiddleware
+from app.interfaces.bot.middlewares.consent import ConsentMiddleware
 from app.interfaces.bot.middlewares.error_handler import ErrorMiddleware
 from app.interfaces.bot.middlewares.i18n import SUPPORTED_LOCALES, I18nMiddleware
+from app.interfaces.bot.middlewares.maintenance import MaintenanceMiddleware
 from app.interfaces.bot.middlewares.reset_state import ResetStateMiddleware
 from app.interfaces.bot.middlewares.services import ServicesMiddleware
 from app.interfaces.bot.routers import build_routers
 from app.interfaces.bot.utilities.commands import COMMAND_KEYS, command_names_for
 from app.interfaces.bot.widgets.queries import WidgetQueryMiddleware
+from app.modules.admin.infrastructure.bot_registry import BotRegistryCache
 from app.settings import Settings
 from app.shared.actor import Role
 from app.shared.i18n.core import I18nCore
@@ -28,9 +32,14 @@ FSM_KEY_PREFIX = "ihsp:fsm"
 
 
 def build_bot(settings: Settings) -> Bot:
-    """Create the Bot: HTML messages, no link previews."""
+    """Create the env Bot: HTML messages, no link previews."""
+    return bot_with_token(settings.telegram.bot_token.get_secret_value())
+
+
+def bot_with_token(token: str) -> Bot:
+    """Create a Bot for one token: HTML messages, no link previews."""
     return Bot(
-        token=settings.telegram.bot_token.get_secret_value(),
+        token=token,
         default=DefaultBotProperties(
             parse_mode=ParseMode.HTML, link_preview_is_disabled=True
         ),
@@ -49,11 +58,17 @@ def build_storage(settings: Settings) -> BaseStorage:
     )
 
 
-def build_dispatcher(container: Any, storage: BaseStorage) -> Dispatcher:
+def build_dispatcher(
+    container: Any,
+    storage: BaseStorage,
+    registry: BotRegistryCache | None = None,
+) -> Dispatcher:
     """Create the dispatcher with middlewares and routers.
 
-    Middleware order (outermost first): errors, services, actor, i18n. Errors come
-    first so that a failing lookup still produces a user message.
+    Middleware order (outermost first): errors, services, actor, i18n, consent,
+    maintenance. Errors come first so that a failing lookup still produces a user
+    message. With a ``registry`` (several bots) the bot registry middleware follows
+    actor; without it every feature is on, as with the single bot.
     """
     settings: Settings = container.settings
     dispatcher = Dispatcher(storage=storage, container=container)
@@ -62,7 +77,16 @@ def build_dispatcher(container: Any, storage: BaseStorage) -> Dispatcher:
     if settings.bot.widgets_enabled:
         dispatcher.update.outer_middleware(WidgetQueryMiddleware())
     dispatcher.update.outer_middleware(ActorMiddleware())
+    if registry is not None:
+        dispatcher.update.outer_middleware(
+            BotRegistryMiddleware(registry, container.sessionmaker, container.clock.now)
+        )
     dispatcher.update.outer_middleware(I18nMiddleware())
+    dispatcher.message.outer_middleware(ConsentMiddleware())
+    dispatcher.callback_query.outer_middleware(ConsentMiddleware())
+    dispatcher.inline_query.outer_middleware(ConsentMiddleware())
+    dispatcher.message.outer_middleware(MaintenanceMiddleware())
+    dispatcher.callback_query.outer_middleware(MaintenanceMiddleware())
     dispatcher.message.outer_middleware(ResetStateMiddleware())
     dispatcher.callback_query.outer_middleware(ResetStateMiddleware())
     dispatcher.include_routers(*build_routers())

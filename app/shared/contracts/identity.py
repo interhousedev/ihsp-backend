@@ -115,6 +115,7 @@ class UserPreferences(BaseModel):
     lessons_links_lead_min: int = 5
     lessons_prompt_enabled: bool = True
     mail_forward_to_telegram: bool = True
+    hide_photo_from_classmates: bool = False  # my-group hides the photo from peers
     notify_push: bool = True  # Web Push is a second channel next to Telegram
     today_cards: list[str] = [
         "now",
@@ -157,6 +158,22 @@ class UserRef:
     locale: str
     emis_status: Literal["active", "needs_reauth"] | None
     photo_file_id: UUID | None = None
+    hide_photo_from_classmates: bool = False
+
+
+def peer_photo_ids(viewer_id: UUID, users: dict[UUID, UserRef]) -> list[UUID]:
+    """Return whose photo links the viewer may get, sorted by id.
+
+    Blocked or inactive accounts never show a photo; a user who chose to hide their
+    photo from classmates shows it only to themselves. Every student-facing list of
+    other people must pick photo ids through this helper.
+    """
+    return [
+        uid
+        for uid in sorted(users, key=str)
+        if users[uid].status is UserStatus.ACTIVE
+        and (uid == viewer_id or not users[uid].hide_photo_from_classmates)
+    ]
 
 
 @dataclass(frozen=True, slots=True)

@@ -6,14 +6,18 @@ from app.interfaces.http.v1.privacy.deps import ContainerDep, UserActor
 from app.interfaces.http.v1.privacy.schemas import (
     ErasureRequestOut,
     ExportDownloadOut,
+    ExportIn,
     ExportListOut,
     ExportOut,
     MyErasureOut,
 )
 
 
-async def request_export(container: ContainerDep, actor: UserActor) -> ExportOut:
-    """Queue an export of the caller's data (one per 24 hours)."""
+async def request_export(
+    body: ExportIn, container: ContainerDep, actor: UserActor
+) -> ExportOut:
+    """Queue an export of the caller's data (one per 24 hours); needs step-up."""
+    await container.identity.auth.step_up.verify(actor, body.otp_code)
     job = await container.privacy.request_export.execute(actor.user_id)
     return ExportOut.of(job)
 

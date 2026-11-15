@@ -6,6 +6,7 @@
   "lms-learn-attempt-not-found": "Urinish topilmadi.",
   "lms-learn-invite-not-valid": "Taklif yaroqsiz.",
   "lms-learn-not-enrolled": "Bu qadamni ochish uchun kursga yoziling.",
+  "lms-learn-content-locked": "Bu material faqat oʻz auditoriyasi uchun ochiq. Kirish uchun kurs rahbaridan soʻrang.",
   "lms-learn-permission-denied": "Sizda kursda \"{permission}\" huquqi yo'q.",
   "lms-learn-no-attempts-left": "Bu test uchun urinishlar qolmadi.",
   "lms-learn-attempt-cooldown": "Keyingi urinish {available_at} da mumkin bo'ladi.",

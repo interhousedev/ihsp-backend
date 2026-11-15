@@ -22,5 +22,9 @@
   "mcp-scope-notebooks-write": "creating notebooks, adding sources and generating outputs",
   "mcp-scope-library-read": "reading the library",
   "mcp-scope-files-read-all": "all your study files",
-  "mcp-scope-learning-read": "the content of your enrolled courses"
+  "mcp-scope-learning-read": "the content of your enrolled courses",
+  "mcp-scope-chats-read": "reading your AI chats",
+  "mcp-scope-group-read": "your group",
+  "mcp-scope-rating_book-read": "your EMIS rating book",
+  "mcp-scope-notifications-read": "reading your notifications"
 }

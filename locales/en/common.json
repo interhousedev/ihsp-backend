@@ -19,5 +19,16 @@
   "error-maintenance": "The platform is read-only while it is being moved to a new server. Try again later.",
   "admin-migration-not-configured": "Server migration is not set up on this server.",
   "admin-migration-not-allowed": "This action is not possible in the current migration phase.",
-  "admin-migration-invalid-input": "The target server or the pairing token is not valid."
+  "admin-migration-invalid-input": "The target server or the pairing token is not valid.",
+  "admin-bot-not-found": "Bot not found.",
+  "admin-bot-exists": "This bot is already added.",
+  "admin-bot-token-invalid": "Telegram did not accept this token.",
+  "admin-bot-token-mismatch": "The new token belongs to another bot.",
+  "admin-bot-default-locked": "The main bot cannot be turned off.",
+  "admin-bot-default-token-env": "The main bot's token is set in the server environment. Change it there and restart the server.",
+  "admin-bot-feature-unknown": "Unknown bot feature: {feature}.",
+  "admin-bot-name-invalid": "The name must be 1 to {max} characters long.",
+  "admin-bot-announcements-off": "Announcements are turned off for one of the selected bots.",
+  "admin-bot-vault-unavailable": "The secret store is unavailable. Try again later.",
+  "admin-bot-telegram-unavailable": "Telegram could not be reached to check the token. Try again later."
 }

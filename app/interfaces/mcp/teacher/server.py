@@ -1,6 +1,6 @@
 """The Teachers MCP server: the teacher's own lessons, groups and controls."""
 
-from app.interfaces.mcp import upload_file
+from app.interfaces.mcp import list_notifications, upload_file
 from app.interfaces.mcp.deps import McpDeps
 from app.interfaces.mcp.factory import make_toolkit
 from app.interfaces.mcp.teacher import ai_tools
@@ -30,6 +30,7 @@ TOOL_MODULES = (
     assessments_write,
     workoffs,
     upload_file,
+    list_notifications,
 )
 
 

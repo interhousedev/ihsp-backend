@@ -19,5 +19,16 @@
   "error-maintenance": "Платформа доступна только для чтения: идёт перенос на новый сервер. Повторите позже.",
   "admin-migration-not-configured": "Перенос на другой сервер на этом сервере не настроен.",
   "admin-migration-not-allowed": "Это действие невозможно на текущем этапе переноса.",
-  "admin-migration-invalid-input": "Адрес целевого сервера или токен сопряжения указаны неверно."
+  "admin-migration-invalid-input": "Адрес целевого сервера или токен сопряжения указаны неверно.",
+  "admin-bot-not-found": "Бот не найден.",
+  "admin-bot-exists": "Этот бот уже добавлен.",
+  "admin-bot-token-invalid": "Telegram не принял этот токен.",
+  "admin-bot-token-mismatch": "Новый токен принадлежит другому боту.",
+  "admin-bot-default-locked": "Основного бота нельзя отключить.",
+  "admin-bot-default-token-env": "Токен основного бота задаётся в окружении сервера. Измените его там и перезапустите сервер.",
+  "admin-bot-feature-unknown": "Неизвестная функция бота: {feature}.",
+  "admin-bot-name-invalid": "Название должно быть от 1 до {max} символов.",
+  "admin-bot-announcements-off": "У одного из выбранных ботов отключены объявления.",
+  "admin-bot-vault-unavailable": "Хранилище секретов недоступно. Попробуйте позже.",
+  "admin-bot-telegram-unavailable": "Не удалось связаться с Telegram для проверки токена. Попробуйте позже."
 }

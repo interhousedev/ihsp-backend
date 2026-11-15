@@ -29,6 +29,7 @@ APP_SOURCES: Final[tuple[SourceServer, ...]] = ("student", "teacher", "lms")
 BASELINE: Final = "baseline"
 RELEASE_2026_11: Final = "2026-11-mcp-1"
 RELEASE_2026_12: Final = "2026-12-mcp-1"
+RELEASE_2026_12_2: Final = "2026-12-mcp-2"
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,6 +116,11 @@ SCOPE_CATALOG: Final[dict[str, tuple[ScopeInfo, ...]]] = {
             since=RELEASE_2026_11,
         ),
         ScopeInfo("chats:read", ("list_chats", "get_chat"), since=RELEASE_2026_12),
+        ScopeInfo("group:read", ("get_my_group",), since=RELEASE_2026_12_2),
+        ScopeInfo("rating_book:read", ("get_rating_book",), since=RELEASE_2026_12_2),
+        ScopeInfo(
+            "notifications:read", ("list_notifications",), since=RELEASE_2026_12_2
+        ),
         ScopeInfo(
             "notebooks:write",
             ("create_notebook", "add_notebook_sources", "generate_notebook_output"),
@@ -184,6 +190,7 @@ SCOPE_CATALOG: Final[dict[str, tuple[ScopeInfo, ...]]] = {
                 "update_settings",
                 "add_staff",
                 "remove_staff",
+                "set_access",
                 "override_score",
             ),
             write=True,
@@ -270,6 +277,7 @@ SCOPE_CATALOG: Final[dict[str, tuple[ScopeInfo, ...]]] = {
             write=True,
         ),
         ScopeInfo("files:write", ("upload_file",), write=True),
+        ScopeInfo("notifications:read", ("list_notifications",)),
     ),
 }
 
@@ -304,6 +312,12 @@ RELEASES: Final[tuple[ScopeRelease, ...]] = (
         server="student",
         scopes=("chats:read",),
         summary_key="mcp-release-2026-12-mcp-1",
+    ),
+    ScopeRelease(
+        id=RELEASE_2026_12_2,
+        server="student",
+        scopes=("group:read", "rating_book:read", "notifications:read"),
+        summary_key="mcp-release-2026-12-mcp-2",
     ),
 )
 

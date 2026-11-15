@@ -6,6 +6,7 @@
   "lms-learn-attempt-not-found": "Attempt not found.",
   "lms-learn-invite-not-valid": "Invite not valid.",
   "lms-learn-not-enrolled": "Enroll in the course to open this step.",
+  "lms-learn-content-locked": "This content is open only to its audience. Ask the course lead for access.",
   "lms-learn-permission-denied": "You do not have the course permission \"{permission}\".",
   "lms-learn-no-attempts-left": "No attempts left for this test.",
   "lms-learn-attempt-cooldown": "The next attempt is available at {available_at}.",

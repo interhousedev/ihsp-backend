@@ -21,6 +21,7 @@ from app.modules.posts.wiring import PostsServices
 from app.shared.base_error import BaseError
 from app.shared.contracts.identity import UserRef
 from app.shared.i18n.core import I18nContext
+from app.shared.openui.degrade import degrade_blocks_last
 from app.shared.openui.visual import has_valid_blocks
 
 import structlog
@@ -200,7 +201,8 @@ async def _deliver(
     """Send the answer text, its Mini App button and its widgets."""
     assert message.from_user is not None
     plan = _widget_plan(message, container, text) if has_valid_blocks(text) else None
-    chunks = render_telegram(plan.text if plan else text) if text.strip() else []
+    body = plan.text if plan else degrade_blocks_last(text)
+    chunks = render_telegram(body) if text.strip() else []
     markup = await _visual_markup(container, message.from_user.id, text, i18n)
     if not chunks and plan is not None:
         await _edit(bot, reply, i18n("bot-ai-visualization"), markup)

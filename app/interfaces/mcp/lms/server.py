@@ -40,6 +40,7 @@ from app.interfaces.mcp.lms.tools import (
     publish,
     remove_staff,
     restore_version,
+    set_access,
     update_block,
     update_course,
     update_module,
@@ -95,6 +96,7 @@ TOOL_MODULES = (
     update_block,
     update_question,
     update_settings,
+    set_access,
 )
 
 

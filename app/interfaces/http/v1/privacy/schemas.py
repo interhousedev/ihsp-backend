@@ -16,6 +16,12 @@ ExportStatusValue = Literal["queued", "running", "ready", "failed"]
 MAX_REASON = 1000
 
 
+class ExportIn(BaseModel):
+    """The step-up code sent by ``POST /v1/id/me/step-up``."""
+
+    otp_code: str = Field(min_length=4, max_length=12)
+
+
 class ExportOut(BaseModel):
     """A data export."""
 

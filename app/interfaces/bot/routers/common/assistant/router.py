@@ -10,6 +10,7 @@ from typing import Any
 from app.interfaces.bot.assistant.deliver import AiCallCb, AiVizCb
 from app.interfaces.bot.assistant.service import bot_assistant
 from app.interfaces.bot.filters.is_linked import IsLinked
+from app.interfaces.bot.middlewares.bot_registry import BotAllows
 from app.interfaces.bot.routers.common.assistant.handlers.ask import ask
 from app.interfaces.bot.routers.common.assistant.handlers.decide import decide
 from app.interfaces.bot.routers.common.assistant.handlers.delete_chat import (
@@ -22,6 +23,7 @@ from app.interfaces.bot.routers.common.assistant.handlers.visualize import (
     visualize,
 )
 from app.interfaces.bot.routers.common.assistant.handlers.voice import ask_voice
+from app.modules.admin.domain.telegram_bot import BotFeature
 
 from aiogram import F, Router
 from aiogram.filters import Command, Filter, StateFilter
@@ -39,8 +41,10 @@ class HasAssistant(Filter):
 def build_router() -> Router:
     """Build the assistant router."""
     router = Router(name="common.assistant")
-    router.message.filter(IsLinked(), HasAssistant())
-    router.callback_query.filter(IsLinked(), HasAssistant())
+    router.message.filter(IsLinked(), HasAssistant(), BotAllows(BotFeature.AI_AGENT))
+    router.callback_query.filter(
+        IsLinked(), HasAssistant(), BotAllows(BotFeature.AI_AGENT)
+    )
     router.message.register(new_chat, Command("new"))
     router.message.register(delete_chat, Command("delete"))
     idle = StateFilter(None)

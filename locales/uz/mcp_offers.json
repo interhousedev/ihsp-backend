@@ -22,5 +22,9 @@
   "mcp-scope-notebooks-write": "daftarlar yaratish, manbalar qoʻshish va materiallar yaratish",
   "mcp-scope-library-read": "kutubxonani oʻqish",
   "mcp-scope-files-read-all": "barcha oʻquv fayllaringiz",
-  "mcp-scope-learning-read": "siz yozilgan kurslar mazmuni"
+  "mcp-scope-learning-read": "siz yozilgan kurslar mazmuni",
+  "mcp-scope-chats-read": "AI bilan suhbatlaringizni oʻqish",
+  "mcp-scope-group-read": "guruhingiz",
+  "mcp-scope-rating_book-read": "EMISdagi reyting daftarchangiz",
+  "mcp-scope-notifications-read": "bildirishnomalaringizni oʻqish"
 }

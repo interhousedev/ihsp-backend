@@ -6,6 +6,7 @@
   "id-account-locked": "Too many failed attempts. Try again in {retry_after} s.",
   "id-role-missing": "You do not have access to this platform.",
   "id-otp-invalid": "The code is wrong or expired. Attempts left: {attempts_left}.",
+  "id-step-up-invalid": "The confirmation code is wrong or expired. Request a new code and try again.",
   "id-challenge-used": "This sign-in request was already handled. Continue where you left off.",
   "id-challenge-invalid": "This sign-in request is not valid. Start again from the app.",
   "id-telegram-linked-elsewhere": "This Telegram account is already linked to another account. Log out there first.",

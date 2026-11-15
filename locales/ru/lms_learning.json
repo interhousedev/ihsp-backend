@@ -6,6 +6,7 @@
   "lms-learn-attempt-not-found": "Попытка не найдена.",
   "lms-learn-invite-not-valid": "Приглашение недействительно.",
   "lms-learn-not-enrolled": "Запишитесь на курс, чтобы открыть этот шаг.",
+  "lms-learn-content-locked": "Этот материал открыт только для своей аудитории. Попросите доступ у руководителя курса.",
   "lms-learn-permission-denied": "У вас нет права «{permission}» в этом курсе.",
   "lms-learn-no-attempts-left": "Попыток для этого теста не осталось.",
   "lms-learn-attempt-cooldown": "Следующая попытка будет доступна в {available_at}.",

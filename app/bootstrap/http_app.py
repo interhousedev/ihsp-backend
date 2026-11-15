@@ -74,7 +74,10 @@ def build_http_app(container: Container, *, process: str) -> FastAPI:
     if process in HOSTS_WITH_MCP:
         from app.interfaces.mcp.server import protected_resource_routes
 
-        metadata = protected_resource_routes(container.settings)
+        async def published_kinds() -> set[str]:
+            return {d.kind for d in await container.legal.list_current.execute()}
+
+        metadata = protected_resource_routes(container.settings, published_kinds)
         app.router.routes.extend(metadata)
         install_short_link_host(app, container)
         install_mcp_host(app, container, mounts, metadata)

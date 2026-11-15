@@ -10,7 +10,8 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 _WRITES = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 # Sign-in and the migration page itself must work, or the admin could not roll back.
-_EXEMPT_PREFIXES = ("/v1/id/", "/oauth/", "/v1/admin/migration")
+# MCP reads are POSTs too; its guard refuses the writing tools itself.
+_EXEMPT_PREFIXES = ("/v1/id/", "/oauth/", "/v1/admin/migration", "/mcp/")
 _EXEMPT_PATHS = frozenset({"/health", "/ready"})
 RETRY_AFTER_SECONDS = "60"
 

@@ -6,6 +6,7 @@
   "id-account-locked": "Juda ko'p muvaffaqiyatsiz urinish. {retry_after} soniyadan keyin qayta urinib ko'ring.",
   "id-role-missing": "Sizda bu platformaga kirish huquqi yo'q.",
   "id-otp-invalid": "Kod noto'g'ri yoki eskirgan. Qolgan urinishlar: {attempts_left}.",
+  "id-step-up-invalid": "Tasdiqlash kodi noto'g'ri yoki eskirgan. Yangi kod so'rang va qayta urinib ko'ring.",
   "id-challenge-used": "Bu kirish so'rovi allaqachon bajarilgan. Qolgan joyingizdan davom eting.",
   "id-challenge-invalid": "Bu kirish so'rovi yaroqsiz. Ilovadan qaytadan boshlang.",
   "id-telegram-linked-elsewhere": "Bu Telegram akkaunti boshqa hisobga ulangan. Avval u yerdan chiqing.",

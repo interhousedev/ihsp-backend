@@ -16,6 +16,7 @@ from app.interfaces.bot.assistant.visual import (
     VisualStaleError,
     visual_url,
 )
+from app.interfaces.bot.middlewares.consent import consent_pending
 from app.interfaces.bot.middlewares.i18n import resolve_locale
 from app.interfaces.bot.widgets.methods import AnswerWidgetQuery
 from app.shared.actor import Actor
@@ -65,6 +66,13 @@ async def _answer(bot: Bot, query_id: str, data: str | None = None) -> None:
         log.info("bot.widget.answer_failed", error=type(error).__name__)
 
 
+def _sender_of(sender: Any) -> TelegramUser | None:
+    try:
+        return TelegramUser.model_validate(sender)
+    except ValueError:
+        return None
+
+
 async def handle_query(query: dict[str, Any], data: dict[str, Any]) -> None:
     """Answer one query; a valid `viz:` token also sends the share link."""
     bot: Bot = data["bot"]
@@ -75,9 +83,8 @@ async def handle_query(query: dict[str, Any], data: dict[str, Any]) -> None:
     if token is None or assistant is None or not isinstance(sender, dict):
         await _answer(bot, query_id, "stale")
         return
-    try:
-        from_user = TelegramUser.model_validate(sender)
-    except ValueError:
+    from_user = _sender_of(sender)
+    if from_user is None:
         await _answer(bot, query_id, "stale")
         return
     services = data["services"]
@@ -91,6 +98,9 @@ async def handle_query(query: dict[str, Any], data: dict[str, Any]) -> None:
         return
     i18n = services.i18n.get_context(resolve_locale(user, from_user))
     actor = Actor(user_id=user.id, roles=user.roles)
+    if await consent_pending({"actor": actor, "container": data["container"]}):
+        await _answer(bot, query_id, "failed")
+        return
     try:
         url = await visual_url(assistant, data["container"], actor, token)
     except VisualStaleError:

@@ -42,3 +42,9 @@ class McpHistoryTools(Protocol):
     ) -> dict[str, Any]:
         """One page of the notes of the owner's notebook."""
         ...
+
+    async def list_notifications(
+        self, actor: Actor, *, filter: str, cursor: str | None, limit: int
+    ) -> dict[str, Any]:
+        """`{"notifications": [...], "unread_count", "next_cursor"}`, newest first."""
+        ...

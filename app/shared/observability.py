@@ -86,7 +86,7 @@ _NOISE_LOGGERS = {
     "asyncio": ("TLSSetupException",),
     "pypdf": ("fontTools is required",),
 }
-_NOISE_EXCEPTIONS = {"TLSSetupException"}
+_NOISE_EXCEPTIONS = {"TLSSetupException"}  # only from the inbound SMTP logger
 
 
 def is_noise(event: "Event") -> bool:
@@ -109,9 +109,15 @@ def is_noise(event: "Event") -> bool:
             return True
     exception = event.get("exception")
     values = exception.get("values") if isinstance(exception, dict) else None
-    return any(
-        isinstance(value, dict) and value.get("type") in _NOISE_EXCEPTIONS
-        for value in values or []
+    if not values or not _is_smtp_logger(logger):
+        return False
+    own = values[-1]  # the chain runs cause first; the last is the event's own
+    return isinstance(own, dict) and own.get("type") in _NOISE_EXCEPTIONS
+
+
+def _is_smtp_logger(logger: str) -> bool:
+    return (
+        logger == "mail.log" or logger == "aiosmtpd" or logger.startswith("aiosmtpd.")
     )
 
 

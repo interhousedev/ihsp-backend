@@ -99,7 +99,7 @@ class StudentProfileResponse(BaseModel):
     first_name: str
     last_name: str
     mailbox: str | None
-    group: GroupRefResponse
+    group: GroupRefResponse | None
     subgroup: Literal[1, 2] | None
     curator: PersonRefResponse | None
     head_student: PersonRefResponse | None

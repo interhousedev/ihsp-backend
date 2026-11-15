@@ -30,7 +30,7 @@ from app.interfaces.mcp.errors import (
     McpUnauthenticatedError,
 )
 from app.interfaces.mcp.jsonable import to_jsonable, to_jsonable_dict
-from app.shared.actor import Actor
+from app.shared.actor import Actor, Role
 from app.shared.ai_access import AiScope
 from app.shared.base_error import (
     BaseError,
@@ -44,6 +44,7 @@ from app.shared.contracts.ai import AiAccessRevokedError
 from app.shared.contracts.mcp_calls import McpCallOutcome, McpCallRecord
 from app.shared.ids import new_id
 from app.shared.lms_scopes import effective_scopes
+from app.shared.maintenance import MaintenanceError
 from app.shared.notifications import AuditDraft
 from app.shared.usage_context import bind_usage_actor, reset_usage_actor
 
@@ -80,6 +81,8 @@ class ToolRule:
     destructive: bool = False
     limit: ToolLimit | None = None
     log: LogSpec | None = None
+    writes: bool = False
+    """Mutates state or spends a model call: refused during maintenance."""
 
 
 @dataclass(slots=True)
@@ -121,9 +124,20 @@ class ToolGuard:
         log: LogSpec | None = None,
         read_only: bool = True,
         destructive: bool = False,
+        writes: bool | None = None,
     ) -> Callable[[ToolFn], ToolFn]:
-        """Decorate a tool so it runs only for tokens granted `scope`."""
-        rule = ToolRule(scope, read_only, destructive, limit, log)
+        """Decorate a tool so it runs only for tokens granted `scope`.
+
+        `writes` defaults to `not read_only`; a read with a side effect sets it True.
+        """
+        rule = ToolRule(
+            scope,
+            read_only,
+            destructive,
+            limit,
+            log,
+            not read_only if writes is None else writes,
+        )
 
         def decorate(fn: ToolFn) -> ToolFn:
             tool = self.name_prefix + getattr(fn, "__name__", "tool")
@@ -238,11 +252,12 @@ class ToolGuard:
 
     async def _enforce(self, actor: Actor, tool: str, rule: ToolRule) -> None:
         try:
+            if rule.writes:
+                self._refuse_in_maintenance()
             await self._limit(actor)
-            if (
-                self.composite
-                and not actor.roles & ALLOWED_ROLES_BY_SERVER[self.server]
-            ):
+            if self.deps.consent is not None:
+                await self.deps.consent.execute(actor.user_id)
+            if self._role_refused(actor, rule):
                 raise McpScopeError(params={"scope": self.scope_prefix + rule.scope})
             await self._ai_access(actor)
             if not await self.has_scope(actor, rule.scope):
@@ -254,6 +269,25 @@ class ToolGuard:
                 actor, tool, error.code, scope=self.scope_prefix + rule.scope
             )
             raise
+
+    def _role_refused(self, actor: Actor, rule: ToolRule) -> bool:
+        if self.composite and not actor.roles & ALLOWED_ROLES_BY_SERVER[self.server]:
+            return True
+        return self._student_only_write(actor, rule)
+
+    def _student_only_write(self, actor: Actor, rule: ToolRule) -> bool:
+        """A student on the LMS tools may read, never author (even with the scope)."""
+        return (
+            self.server == "lms"
+            and not rule.read_only
+            and Role.STUDENT in actor.roles
+            and not actor.roles & (ALLOWED_ROLES_BY_SERVER["lms"] - {Role.STUDENT})
+        )
+
+    def _refuse_in_maintenance(self) -> None:
+        gate = self.deps.maintenance
+        if gate is not None and gate.info().active:
+            raise MaintenanceError()
 
     async def _limit(self, actor: Actor) -> None:
         subject = actor.connector_id or actor.user_id

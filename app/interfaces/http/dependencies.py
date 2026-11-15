@@ -44,6 +44,29 @@ def _personal_token_scope(request: Request) -> PersonalTokenScope | None:
     return PersonalTokenScope.ME_WRITE
 
 
+_CONSENT_FREE_PREFIXES = (
+    "/v1/legal/",  # the published documents
+    "/v1/me/legal/",  # what is pending, and accepting it
+    "/v1/me/privacy/",  # export and erasure stay possible without consent
+    "/v1/id/me/step-up",  # OTP the privacy export requires
+    "/v1/id/me/sessions",  # signing out: list and revoke own sessions
+)
+
+
+def _consent_free(request: Request) -> bool:
+    """Routes a user may call before accepting the current legal documents.
+
+    Token refresh and logout (``/v1/oauth/refresh``, ``/v1/oauth/logout``) read the
+    refresh cookie, not the Bearer actor, so they never reach this gate.
+    """
+    path, method = request.url.path, request.method
+    if path == "/v1/id/me" and method == "GET":  # own profile
+        return True
+    if path == "/v1/me/push-subscriptions" and method == "DELETE":  # stop pushes
+        return True
+    return path.startswith(_CONSENT_FREE_PREFIXES)
+
+
 async def _verify(container: Container, request: Request, token: str) -> Actor:
     if container.identity is None:
         raise UnauthorizedError(support_details="identity module is not wired")
@@ -58,6 +81,8 @@ async def _verify(container: Container, request: Request, token: str) -> Actor:
         )
     # The model calls this request makes are counted for this actor (usage ledger).
     bind_usage_actor(actor)
+    if not _consent_free(request):
+        await container.legal.require_consent.execute(actor.user_id)
     return actor
 
 

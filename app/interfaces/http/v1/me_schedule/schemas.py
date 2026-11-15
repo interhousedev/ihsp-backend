@@ -29,7 +29,7 @@ class StudentProfileResponse(BaseModel):
     first_name: str
     last_name: str
     mailbox: str | None
-    group: GroupRefResponse
+    group: GroupRefResponse | None
     subgroup: Literal[1, 2] | None
     curator: PersonRefResponse | None
     head_student: PersonRefResponse | None
@@ -47,7 +47,11 @@ class StudentProfileResponse(BaseModel):
                 "first_name": data.first_name,
                 "last_name": data.last_name,
                 "mailbox": data.mailbox,
-                "group": {"id": data.group_id, "name": data.group_name},
+                "group": (
+                    {"id": data.group_id, "name": data.group_name}
+                    if data.group_id is not None
+                    else None
+                ),
                 "subgroup": data.subgroup,
                 "curator": data.curator,
                 "head_student": data.head_student,

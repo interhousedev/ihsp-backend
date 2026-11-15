@@ -110,3 +110,9 @@ class ImportConfirmResponse(ApiModel):
     created: int
     updated: int
     skipped: int
+
+
+class StudentGroupBody(BaseModel):
+    """The new group of a student; null leaves the student without a group."""
+
+    group_id: UUID | None

@@ -39,7 +39,8 @@ class StudentViewsAdapter:
     async def profile(self, user_id: UUID) -> JsonObject:
         """Return `StudentProfile` (the group nested as `{id, name}`)."""
         data = json_object(await self._profile.execute(student_actor(user_id)))
-        group = {"id": data.pop("group_id"), "name": data.pop("group_name")}
+        group_id, group_name = data.pop("group_id"), data.pop("group_name")
+        group = None if group_id is None else {"id": group_id, "name": group_name}
         return {**data, "group": group}
 
     async def timetable(

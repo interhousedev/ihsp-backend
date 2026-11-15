@@ -2,9 +2,11 @@
 
 A valid block becomes headings, `label: value` lines, small text bar charts and
 Markdown links; an invalid or unfinished block is left out (the text stays).
+`degrade_blocks_last` puts the blocks after the text: the order of a bot message.
 """
 
-from collections.abc import Callable
+import re
+from collections.abc import Callable, Sequence
 
 from app.shared.openui.blocks import split_blocks
 from app.shared.openui.catalog import load_catalog
@@ -13,6 +15,7 @@ from app.shared.openui.validate import validate_block
 
 BAR_WIDTH = 10
 Value = str | float | bool | None | list["Value"] | dict[str, "Value"] | Call
+_CODE_FENCE = re.compile(r"^[ \t]{0,3}```", re.M)
 
 
 def degrade_to_markdown(text: str) -> str:
@@ -24,6 +27,27 @@ def degrade_to_markdown(text: str) -> str:
         elif part.kind == "block" and not validate_block(part.text):
             out.append(block_markdown(part.text) + "\n")
     return "".join(out)
+
+
+def degrade_blocks_last(text: str, extra: Sequence[str] = ()) -> str:
+    """The answer's text first, then every valid block as Markdown, at the end.
+
+    `extra` are block sources that came outside the text (the `show_ui_block`
+    tool); they follow the blocks written in the text. Invalid ones are left out.
+    """
+    texts: list[str] = []
+    sources: list[str] = []
+    for part in split_blocks(text):
+        if part.kind == "text":
+            texts.append(part.text)
+        elif part.kind == "block":
+            sources.append(part.text)
+    sources.extend(extra)
+    body = "".join(texts).strip()
+    if len(_CODE_FENCE.findall(body)) % 2:  # an open code fence would eat the blocks
+        body += "\n```"
+    tail = [block_markdown(s) for s in sources if not validate_block(s)]
+    return "\n\n".join(piece for piece in (body, *tail) if piece)
 
 
 def block_markdown(source: str) -> str:

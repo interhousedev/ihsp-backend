@@ -54,7 +54,7 @@ from app.bootstrap.adapters.school_knowledge import (
     KnowledgeLookupAdapter,
 )
 from app.bootstrap.adapters.signature_sniffer import SignatureSniffer
-from app.bootstrap.adapters.telegram import make_telegram_sender
+from app.bootstrap.adapters.telegram import make_multi_bot_sender
 from app.bootstrap.adapters.term_resolver import TermResolverAdapter
 from app.bootstrap.adapters.usage_resolver import UsageResolverAdapter
 from app.bootstrap.container import Container, build_infrastructure
@@ -292,11 +292,11 @@ class _Assembler:
         if self.overrides.telegram is not None:
             self.container.telegram = self.overrides.telegram
             return
-        sender, closer = make_telegram_sender(
-            self.container.settings, self.container.redis
+        sender, closers = make_multi_bot_sender(
+            self.container.settings, self.container.redis, self.container.sessionmaker
         )
         self.container.telegram = sender
-        if closer is not None:
+        for closer in closers:
             self.add_closer(closer)
 
     def build_identity_and_schedule(self) -> None:
@@ -613,6 +613,7 @@ class _Assembler:
         self.knowledge_gaps = KnowledgeGapAdapter(c.notify.public)
         ai.bindings.knowledge = self.knowledge_lookup
         ai.bindings.knowledge_gaps = self.knowledge_gaps
+        ai.bindings.answer_notifier = c.notify.public
         c.posts = build_posts(
             self.deps,
             llm=c.llm,
@@ -631,6 +632,7 @@ class _Assembler:
             files=c.files.public,
             h5p_store=c.files.storage,
             groups=c.academic.schedule.queries,
+            students=c.academic.schedule.queries,
         )
         # Here, not with the MCP ports: every process serving media links needs it.
         c.lms.learning.redeem_media_grant.bind_connector_check(

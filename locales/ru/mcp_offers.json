@@ -22,5 +22,9 @@
   "mcp-scope-notebooks-write": "создание блокнотов, добавление источников и генерация материалов",
   "mcp-scope-library-read": "чтение библиотеки",
   "mcp-scope-files-read-all": "все ваши учебные файлы",
-  "mcp-scope-learning-read": "материалы курсов, на которые вы записаны"
+  "mcp-scope-learning-read": "материалы курсов, на которые вы записаны",
+  "mcp-scope-chats-read": "чтение ваших чатов с ИИ",
+  "mcp-scope-group-read": "ваша группа",
+  "mcp-scope-rating_book-read": "ваша рейтинговая книжка из EMIS",
+  "mcp-scope-notifications-read": "чтение ваших уведомлений"
 }

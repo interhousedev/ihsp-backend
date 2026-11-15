@@ -12,7 +12,7 @@ from app.interfaces.bot.widgets.deliver import WidgetPlan, plan_widgets, send_wi
 from app.modules.ai.application.tools.show_ui_block import SHOW_UI_BLOCK
 from app.shared.i18n.core import I18nContext
 from app.shared.openui.blocks import fenced
-from app.shared.openui.degrade import block_markdown
+from app.shared.openui.degrade import degrade_blocks_last
 from app.shared.openui.visual import has_valid_blocks
 
 import structlog
@@ -195,19 +195,21 @@ def _ui_blocks(calls: list[Any]) -> list[str]:
     ]
 
 
-async def _send_ui_blocks(
-    bot: Bot, stream: AnswerStream, assistant: BotAssistant, sources: list[str]
-) -> None:
-    """Each block is its own message: a widget when on, otherwise its Markdown."""
+def _tool_widgets(
+    assistant: BotAssistant, stream: AnswerStream, sources: list[str]
+) -> tuple[list[WidgetPlan], list[str]]:
+    """Tool blocks as widgets (flag on, private chat) and those left for the text."""
+    plans: list[WidgetPlan] = []
+    rest: list[str] = []
     for source in sources:
         plan = None
         if assistant.widgets and stream.chat_id > 0:
             plan = plan_widgets(fenced(source), viz_token=None, visualize_label="")
-        if plan is not None:
-            await send_widgets(bot, stream.chat_id, plan, stream.thread_id)
-            continue
-        for chunk in render_final(block_markdown(source)):
-            await stream.send_html(chunk.html)
+        if plan is None:
+            rest.append(source)
+        else:
+            plans.append(plan)
+    return plans, rest
 
 
 def _made_calls(result: Any) -> list[Any]:
@@ -229,7 +231,11 @@ async def deliver(
     chat_id: UUID,
     i18n: I18nContext,
 ) -> None:
-    """Stream the answer text only; finish with buttons, documents and images."""
+    """Stream the answer text; finish with the UI blocks at its end, then files.
+
+    The blocks (from the `show_ui_block` tool or written in the text) close the
+    answer message as Markdown; with widgets on they are widget messages instead.
+    """
     text, result, failure = await _consume(stream, events)
     if result is None:
         await stream.abort()
@@ -244,22 +250,22 @@ async def deliver(
     calls = list(answer.tool_calls) if answer is not None else []
     pending = [call for call in calls if str(call.status) == PENDING]
     plan = await _widget_plan(assistant, stream, user_id, chat_id, answer, body, i18n)
-    text_body = plan.text if plan is not None else body
+    widgets, blocks = _tool_widgets(assistant, stream, _ui_blocks(_made_calls(result)))
+    text_body = degrade_blocks_last(plan.text if plan is not None else body, blocks)
     chunks = render_final(text_body) if text_body.strip() else []
     chunks.extend(Chunk(_card(call)) for call in pending)
-    blocks = _ui_blocks(_made_calls(result))
-    if not chunks and plan is None and not blocks:
+    if not chunks and plan is None and not widgets:
         chunks = [Chunk(escape(i18n("bot-ai-empty")))]
     rows = await _visual_rows(assistant, user_id, chat_id, answer, body, i18n)
     rows += await _approval_rows(assistant, user_id, chat_id, pending, i18n)
     if plan is not None and not chunks and rows:
         chunks = [Chunk(escape(i18n("bot-ai-visualization")))]
-    elif not chunks and (plan is not None or blocks):
+    elif not chunks and (plan is not None or widgets):
         await stream.abort()
     await stream.finish(chunks, rows)
-    if plan is not None:
-        await send_widgets(bot, stream.chat_id, plan, stream.thread_id)
-    await _send_ui_blocks(bot, stream, assistant, blocks)
+    for widget_plan in [plan, *widgets]:
+        if widget_plan is not None:
+            await send_widgets(bot, stream.chat_id, widget_plan, stream.thread_id)
     await _send_documents(
         bot, stream.chat_id, assistant, _made_calls(result), stream.thread_id
     )

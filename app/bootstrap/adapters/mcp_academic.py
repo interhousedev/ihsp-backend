@@ -13,6 +13,7 @@ from app.modules.academic.application.schedule.request_student_refresh import (
 )
 from app.modules.academic.application.schedule.student_sync_jobs import StudentSyncJob
 from app.modules.academic.domain.classwork.errors import LessonNotFoundError
+from app.modules.academic.domain.marks.errors import StudentNotFoundError
 from app.modules.academic.domain.schedule.errors import TeacherNotFoundError
 from app.modules.academic.infrastructure.schedule.lesson_fetch_store import (
     RedisLessonFetchStore,
@@ -168,6 +169,29 @@ class McpAcademicToolsAdapter:
                 for row in results["subjects"]
             ],
         }
+
+    async def my_group(self, actor: Actor) -> dict[str, Any]:
+        """The group card without photo links (they never leave for an AI client)."""
+        try:
+            group = await self._c.academic.marks.get_my_group.execute(actor)
+        except StudentNotFoundError as error:
+            raise McpNotFoundError() from error
+
+        def person(row: dict[str, Any] | None) -> dict[str, Any] | None:
+            if row is None:
+                return None
+            return {key: value for key, value in row.items() if key != "photo_url"}
+
+        return {
+            **group,
+            "homeroom_teacher": person(group["homeroom_teacher"]),
+            "head_student": person(group["head_student"]),
+            "members": [person(row) for row in group["members"]],
+        }
+
+    async def rating_book(self, actor: Actor) -> str:
+        """The EMIS rating book link; EMIS errors reach the caller as they are."""
+        return await self._c.academic.marks.get_rating_book.execute(actor)
 
     async def lesson_detail(self, actor: Actor, lesson_id: UUID) -> dict[str, Any]:
         """Lesson, homework, materials by kind, own mark and attendance."""

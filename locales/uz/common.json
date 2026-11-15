@@ -19,5 +19,16 @@
   "error-maintenance": "Platforma yangi serverga koʼchirilmoqda va faqat oʼqish uchun ochiq. Keyinroq urinib koʼring.",
   "admin-migration-not-configured": "Bu serverda boshqa serverga koʼchirish sozlanmagan.",
   "admin-migration-not-allowed": "Koʼchirishning hozirgi bosqichida bu amalni bajarib boʼlmaydi.",
-  "admin-migration-invalid-input": "Maqsadli server manzili yoki juftlash tokeni notoʼgʼri."
+  "admin-migration-invalid-input": "Maqsadli server manzili yoki juftlash tokeni notoʼgʼri.",
+  "admin-bot-not-found": "Bot topilmadi.",
+  "admin-bot-exists": "Bu bot allaqachon qoʼshilgan.",
+  "admin-bot-token-invalid": "Telegram bu tokenni qabul qilmadi.",
+  "admin-bot-token-mismatch": "Yangi token boshqa botga tegishli.",
+  "admin-bot-default-locked": "Asosiy botni oʼchirib boʼlmaydi.",
+  "admin-bot-default-token-env": "Asosiy bot tokeni server muhitida belgilanadi. Uni oʼsha yerda oʼzgartiring va serverni qayta ishga tushiring.",
+  "admin-bot-feature-unknown": "Botning nomaʼlum funksiyasi: {feature}.",
+  "admin-bot-name-invalid": "Nom 1 dan {max} tagacha belgidan iborat boʼlishi kerak.",
+  "admin-bot-announcements-off": "Tanlangan botlardan birida eʼlonlar oʼchirilgan.",
+  "admin-bot-vault-unavailable": "Maxfiy maʼlumotlar ombori ishlamayapti. Keyinroq urinib koʼring.",
+  "admin-bot-telegram-unavailable": "Tokenni tekshirish uchun Telegram bilan bogʼlanib boʼlmadi. Keyinroq urinib koʼring."
 }

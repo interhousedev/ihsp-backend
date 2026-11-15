@@ -50,6 +50,14 @@ class McpAcademicTools(Protocol):
         """GPA as the platform calculates it, per-subject semester marks."""
         ...
 
+    async def my_group(self, actor: Actor) -> dict[str, Any]:
+        """The student's group: homeroom teacher, head student, members; no photos."""
+        ...
+
+    async def rating_book(self, actor: Actor) -> str:
+        """The link to the student's own EMIS rating book PDF."""
+        ...
+
     async def lesson_detail(self, actor: Actor, lesson_id: UUID) -> dict[str, Any]:
         """Lesson, homework, materials by kind, own mark and attendance."""
         ...

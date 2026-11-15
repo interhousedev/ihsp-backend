@@ -6,6 +6,7 @@ from uuid import UUID
 
 from app.interfaces.mcp.errors import McpNotFoundError
 from app.modules.ai.domain.assistant import Assistant
+from app.modules.notify.domain.notification_filter import NotificationFilter
 from app.shared.actor import Actor
 from app.shared.contracts.mcp_history import McpHistoryTools
 
@@ -87,6 +88,31 @@ class McpHistoryAdapter:
         if found is None:
             raise McpNotFoundError()
         return found
+
+    async def list_notifications(
+        self, actor: Actor, *, filter: str, cursor: str | None, limit: int
+    ) -> dict[str, Any]:
+        """The actor's notifications, newest first, and the unread count."""
+        notify = self.container.notify
+        page = await notify.list_notifications.execute(
+            actor, NotificationFilter(filter), cursor=cursor, limit=limit
+        )
+        return {
+            "notifications": [
+                {
+                    "id": str(item.id),
+                    "type": item.type,
+                    "title": item.title,
+                    "body": item.body,
+                    "link": item.link,
+                    "created_at": item.created_at,
+                    "read": item.read_at is not None,
+                }
+                for item in page.items
+            ],
+            "unread_count": await notify.count_unread.execute(actor),
+            "next_cursor": page.next_cursor,
+        }
 
 
 def build_history_tools(container: "Container") -> McpHistoryTools:

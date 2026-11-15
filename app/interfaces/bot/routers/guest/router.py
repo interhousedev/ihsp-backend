@@ -7,8 +7,10 @@ text for guests. Everyone: the post tree buttons (audience by linked or not).
 from typing import Any
 
 from app.interfaces.bot.filters.is_linked import IsLinked
+from app.interfaces.bot.middlewares.bot_registry import BotAllows
 from app.interfaces.bot.routers.guest import handlers
 from app.interfaces.bot.routers.guest.callbacks import PostCb, StartModeCb
+from app.modules.admin.domain.telegram_bot import BotFeature
 from app.modules.posts.domain.bot_mode import BotMode
 
 from aiogram import F, Router
@@ -45,6 +47,7 @@ def build_router() -> Router:
         F.voice | F.audio | F.video | F.video_note,
         unlinked,
         IsGuest(),
+        BotAllows(BotFeature.OPEN_AI_AGENT),
     )
     router.message.register(
         handlers.ask_assistant,
@@ -52,5 +55,6 @@ def build_router() -> Router:
         ~F.text.startswith("/"),
         unlinked,
         IsGuest(),
+        BotAllows(BotFeature.OPEN_AI_AGENT),
     )
     return router

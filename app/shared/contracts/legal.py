@@ -36,6 +36,14 @@ class LegalConsent(Protocol):
         ...
 
 
+class ConsentGate(Protocol):
+    """Refuses users who have not accepted the current documents."""
+
+    async def execute(self, user_id: UUID) -> None:
+        """Raise a ForbiddenError (legal/acceptance-required) while any is pending."""
+        ...
+
+
 ConsentWriter = Callable[[AsyncSession, list[ConsentDraft]], Awaitable[None]]
 """Inserts the drafts on the caller's session (the caller commits)."""
 

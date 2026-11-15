@@ -67,16 +67,22 @@ def _docstring_after(body: list[ast.stmt], index: int) -> str | None:
 
 
 def field_docs(model: type[BaseModel]) -> dict[str, str]:
-    """Descriptions of the fields of a settings class, read from its source."""
+    """Descriptions of the fields of a settings class, read from its source.
+
+    A field inherited from a settings base class keeps the base's description.
+    """
+    docs: dict[str, str] = {}
+    for base in reversed(model.__mro__[1:]):
+        if issubclass(base, BaseModel) and base is not BaseModel:
+            docs.update({k: v for k, v in field_docs(base).items() if v})
     try:
         source = textwrap.dedent(inspect.getsource(model))
     except (OSError, TypeError):  # pragma: no cover - no source available
-        return {}
+        return docs
     cls = ast.parse(source).body[0]
     if not isinstance(cls, ast.ClassDef):  # pragma: no cover
-        return {}
+        return docs
     lines, trailing = source.splitlines(), _comment_rows(source)
-    docs: dict[str, str] = {}
     for index, node in enumerate(cls.body):
         if not (isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name)):
             continue
@@ -85,7 +91,7 @@ def field_docs(model: type[BaseModel]) -> dict[str, str]:
         text = _docstring_after(cls.body, index) or " ".join(
             part for part in (_leading_comment(lines, node.lineno), *side) if part
         )
-        docs[node.target.id] = text
+        docs[node.target.id] = text or docs.get(node.target.id, "")
     return docs
 
 

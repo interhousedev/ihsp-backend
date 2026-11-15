@@ -168,6 +168,17 @@ class VaultSettings(BaseModel):
         return None if value == "" else value
 
 
+class BotVaultSettings(VaultSettings):
+    """Vault access for the Telegram bot tokens (a separate AppRole, `telegram-bots`).
+
+    The api (Administration), bot and worker (notifications) processes read the
+    tokens; they never get the identity AppRole that opens the EMIS secrets.
+    """
+
+    kv_prefix: str = "telegram-bots"
+    """Path prefix inside the KV mount; one secret per bot id."""
+
+
 class HydraSettings(BaseModel):
     """Ory Hydra endpoints."""
 
@@ -319,6 +330,10 @@ class EmisSettings(BaseModel):
 
     file_max_qps: int = Field(default=1, ge=1, le=100)
     """Material downloads a second from EMIS and its CDN, across all processes."""
+
+    download_hosts: list[str] = ["emis.edu.uz", "cdn-emis.edu.uz"]
+    """Hosts (and their subdomains) material downloads may fetch from, redirects
+    included; the EMIS API host is always allowed. IP addresses are refused."""
 
     download_concurrency: int = 6
     """Parallel material downloads of one student's import (EMIS politeness)."""
@@ -1337,6 +1352,7 @@ class Settings(BaseSettings):
     redis: RedisSettings = Field(default_factory=RedisSettings)
     s3: S3Settings = Field(default_factory=S3Settings)
     vault: VaultSettings = Field(default_factory=VaultSettings)
+    bot_vault: BotVaultSettings = Field(default_factory=BotVaultSettings)
     hydra: HydraSettings = Field(default_factory=HydraSettings)
     jwt_bearer: JwtBearerSettings = Field(default_factory=JwtBearerSettings)
     tokens: TokensSettings = Field(default_factory=TokensSettings)
@@ -1393,6 +1409,13 @@ class Settings(BaseSettings):
             and self.vault.token.get_secret_value() == DEV_VAULT_TOKEN
         ):
             self.vault.token = None  # the dev token is never used in production
+        if self.bot_vault.role_id and self.bot_vault.secret_id:
+            self.bot_vault.token = None
+        elif (
+            self.bot_vault.token is not None
+            and self.bot_vault.token.get_secret_value() == DEV_VAULT_TOKEN
+        ):
+            self.bot_vault.token = None
         problems = _production_problems(self)
         if problems:
             raise ValueError("production settings missing: " + ", ".join(problems))

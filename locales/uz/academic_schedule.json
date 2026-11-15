@@ -18,6 +18,7 @@
   "academic-head-student-invalid": "Guruh sardori shu guruhning faol talabasi bo‘lishi kerak.",
   "academic-not-group-curator": "Buni faqat guruh kuratori yoki ma’muriyat qila oladi.",
   "academic-subgroup-assignment-invalid": "Har bir talaba shu guruhning faol talabasi bo‘lishi, kichik guruh esa 1 yoki 2 bo‘lishi kerak.",
+  "academic-target-group-invalid": "Mavjud guruhni tanlang, o‘chirilayotgan guruhdan boshqasini.",
   "academic-student-not-found": "Talaba topilmadi.",
   "academic-subject-not-found": "Fan topilmadi.",
   "academic-subject-emis-id-taken": "Boshqa fan bu EMIS fani bilan allaqachon bog‘langan.",

@@ -4,5 +4,6 @@
   "legal-incomplete": "The draft cannot be published: fill in {fields}.",
   "legal-no-draft": "There is no draft of this document to publish.",
   "legal-stale-version": "The document was updated. Read the new version of \"{kind}\" (version {current}) and accept it.",
-  "legal-consent-required": "To create an account, accept the current documents: {kinds}."
+  "legal-consent-required": "To create an account, accept the current documents: {kinds}.",
+  "legal-acceptance-required": "Accept the current legal documents to continue: {kinds}."
 }

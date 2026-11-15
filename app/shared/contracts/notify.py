@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any, Protocol, runtime_checkable
 from uuid import UUID
 
 from app.shared.contracts.identity import UserRef
@@ -45,6 +45,20 @@ class KnowledgeGapNotifier(Protocol):
         ...
 
 
+class ChatAnswerNotifier(Protocol):
+    """Tells a user that the assistant answered while they were away."""
+
+    async def notify_chat_answer_ready(
+        self, *, user_id: UUID, chat_id: UUID, seq: int, prompt: str
+    ) -> None:
+        """Queue one notice per answer (`seq` of the answer in the chat).
+
+        The notice names the question and links to the chat; it never carries the
+        answer. Telegram delivery follows the user's link and preferences.
+        """
+        ...
+
+
 class TelegramSender(Protocol):
     """Sends Telegram messages (aiogram Bot in production, a fake in tests).
 
@@ -73,6 +87,27 @@ class TelegramSender(Protocol):
 
     async def delete_message(self, chat_id: int, message_id: int) -> None:
         """Delete a message."""
+        ...
+
+
+@dataclass(frozen=True, slots=True)
+class BotRoute:
+    """The sender of one registered bot."""
+
+    sender: TelegramSender
+    is_default: bool
+
+
+@runtime_checkable
+class BotSenders(Protocol):
+    """A TelegramSender (the default bot) that also knows the other bots."""
+
+    async def route(self, bot_id: str | None, *, personal: bool) -> BotRoute | None:
+        """The bot to send through; None when that bot may not send it.
+
+        `bot_id` None means the default bot. `personal` is a personal
+        notification (switch `notifications`), otherwise an announcement.
+        """
         ...
 
 

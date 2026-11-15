@@ -52,6 +52,7 @@ class NotificationType(StrEnum):
     EXCUSE_DECIDED = "excuse_decided"
     EXCUSE_MESSAGE = "excuse_message"
     PRIVACY_UPDATE = "privacy_update"
+    CHAT_ANSWER_READY = "chat_answer_ready"
 
 
 @dataclass(frozen=True, slots=True)

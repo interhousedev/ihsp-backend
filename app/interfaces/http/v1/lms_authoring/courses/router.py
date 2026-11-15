@@ -1,5 +1,10 @@
 """Routes that create courses and change their settings."""
 
+from app.interfaces.http.v1.lms_authoring.courses.handlers.access import (
+    get_access,
+    set_course_access,
+    set_step_access,
+)
 from app.interfaces.http.v1.lms_authoring.courses.handlers.create_course import (
     create_course,
 )
@@ -39,4 +44,9 @@ router.add_api_route(
 )
 router.add_api_route(
     "/courses/{course_id}/link-check", get_link_report, methods=["GET"]
+)
+router.add_api_route("/courses/{course_id}/access", get_access, methods=["GET"])
+router.add_api_route("/courses/{course_id}/access", set_course_access, methods=["PUT"])
+router.add_api_route(
+    "/courses/{course_id}/steps/{step_id}/access", set_step_access, methods=["PUT"]
 )

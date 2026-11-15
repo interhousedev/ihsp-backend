@@ -9,6 +9,9 @@ from app.interfaces.http.v1.admin_schedule.students.handlers.import_preview impo
 from app.interfaces.http.v1.admin_schedule.students.handlers.list_students import (
     list_students,
 )
+from app.interfaces.http.v1.admin_schedule.students.handlers.set_student_group import (
+    set_student_group,
+)
 from app.interfaces.http.v1.admin_schedule.students.schemas import (
     ImportConfirmResponse,
     ImportPreviewResponse,
@@ -29,4 +32,7 @@ router.add_api_route(
     import_confirm,
     methods=["POST"],
     response_model=ImportConfirmResponse,
+)
+router.add_api_route(
+    "/{user_id}/group", set_student_group, methods=["PUT"], status_code=204
 )

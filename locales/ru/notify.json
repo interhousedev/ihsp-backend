@@ -193,5 +193,8 @@
   "notify-privacy-title": "Конфиденциальность",
   "notify-privacy-export-ready-body": "Выгрузка ваших данных готова. Скачайте её до {expires}.",
   "notify-privacy-erasure-approved-body": "Запрос на удаление аккаунта одобрен. Аккаунт будет удалён {closes_on}. Чтобы отменить, войдите до этой даты.",
-  "notify-privacy-erasure-rejected-body": "Запрос на удаление аккаунта отклонён. {reason}"
+  "notify-privacy-erasure-rejected-body": "Запрос на удаление аккаунта отклонён. {reason}",
+  "notify-chat-answer-ready-title": "Ответ готов",
+  "notify-chat-answer-ready-body": "Ответ на: {prompt}",
+  "notify-btn-open-chat": "Открыть чат"
 }
