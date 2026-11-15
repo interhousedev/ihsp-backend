@@ -85,8 +85,9 @@ class SqlLessonRepository:
                 self.session.add(lesson_new_row(lesson))
                 await self.session.flush()
         except IntegrityError as error:
-            logger.warning(
-                "lesson_not_added", lesson_id=str(lesson.id), error=str(error.orig)
+            reason = str(error.orig)
+            (logger.info if "ex_lessons_" in reason else logger.warning)(
+                "lesson_not_added", lesson_id=str(lesson.id), error=reason
             )
             return False
         return True
@@ -112,8 +113,11 @@ class SqlLessonRepository:
                 lesson_apply(row, lesson)
                 await self.session.flush()
         except IntegrityError as error:
-            logger.warning(
-                "lesson_not_saved", lesson_id=str(lesson.id), error=str(error.orig)
+            reason = str(error.orig)
+            # A room or teacher overlap is a data conflict the caller reports itself.
+            known = "ex_lessons_" in reason
+            (logger.info if known else logger.warning)(
+                "lesson_not_saved", lesson_id=str(lesson.id), error=reason
             )
             await self.session.refresh(row)
             return False

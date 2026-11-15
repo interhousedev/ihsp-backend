@@ -1,6 +1,7 @@
 {
   "emis-auth-failed": "EMIS login yoki paroli noto'g'ri.",
   "emis-unavailable": "EMIS javob bermayapti. Keyinroq urinib ko'ring.",
+  "emis-file-not-found": "Bu fayl EMIS'da endi mavjud emas.",
   "emis-paused": "EMIS bir oz kutishni so'radi. Bir necha daqiqadan so'ng qayta urinib ko'ring.",
   "emis-credentials-missing": "Bu hisob uchun ishlaydigan EMIS kirish ma'lumoti saqlanmagan. EMIS ni ulash uchun qayta kiring.",
   "id-wrong-institution": "Faqat {org_name} o'quvchilari ro'yxatdan o'ta oladi.",

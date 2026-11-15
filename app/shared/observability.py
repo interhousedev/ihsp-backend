@@ -79,6 +79,47 @@ def scrub_event(event: "Event", _hint: dict[str, Any]) -> "Event":
     return event
 
 
+_NOISE_LOGGERS = {
+    # Internet scanners probing port 25: aiosmtpd logs them as warnings/errors.
+    "mail.log": ("unrecognised:", "too many bogus commands"),
+    # A scan that never completes the TLS handshake.
+    "asyncio": ("TLSSetupException",),
+    "pypdf": ("fontTools is required",),
+}
+_NOISE_EXCEPTIONS = {"TLSSetupException"}
+
+
+def is_noise(event: "Event") -> bool:
+    """True for scanner chatter and library warnings that need no human."""
+    logger = str(event.get("logger") or "")
+    entry = event.get("logentry")
+    text = " ".join(
+        str(part)
+        for part in (
+            event.get("message"),
+            entry.get("message") if isinstance(entry, dict) else None,
+            entry.get("formatted") if isinstance(entry, dict) else None,
+        )
+        if part
+    )
+    for name, needles in _NOISE_LOGGERS.items():
+        if (logger == name or logger.startswith(f"{name}.")) and any(
+            needle in text for needle in needles
+        ):
+            return True
+    exception = event.get("exception")
+    values = exception.get("values") if isinstance(exception, dict) else None
+    return any(
+        isinstance(value, dict) and value.get("type") in _NOISE_EXCEPTIONS
+        for value in values or []
+    )
+
+
+def before_send(event: "Event", hint: dict[str, Any]) -> "Event | None":
+    """Drop noise, scrub the rest."""
+    return None if is_noise(event) else scrub_event(event, hint)
+
+
 def init_observability(settings: Settings, process: str) -> bool:
     """Start the Sentry client against Bugsink for this process. Returns True if on."""
     global _initialized
@@ -97,7 +138,7 @@ def init_observability(settings: Settings, process: str) -> bool:
         send_default_pii=False,
         max_request_body_size="never",  # request bodies can hold passwords
         traces_sample_rate=settings.bugsink.traces_sample_rate,
-        before_send=scrub_event,
+        before_send=before_send,
         integrations=[
             LoggingIntegration(
                 level=None,  # breadcrumbs: INFO and up

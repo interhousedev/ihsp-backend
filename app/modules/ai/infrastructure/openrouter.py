@@ -34,6 +34,7 @@ _FENCE = re.compile(r"```(?:json|JSON)?[ \t]*\n?(.*?)```", re.DOTALL)
 RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
 DEFAULT_RETRY_SECONDS = 2.0
 MAX_RETRY_SECONDS = 10.0
+OVERLOAD_ATTEMPTS = 4  # a busy model (429) is waited out longer than other errors
 TEMPERATURE = 0.2
 CONNECT_TIMEOUT_SECONDS = 10.0
 MICRO = 1_000_000
@@ -289,7 +290,7 @@ class OpenRouterGateway:
     ) -> dict[str, Any]:
         url = f"{self._base_url}{path}"
         payload = self._prepared(payload)
-        for attempt in (1, 2):
+        for attempt in range(1, OVERLOAD_ATTEMPTS + 1):
             try:
                 response = await self._client.post(
                     url,
@@ -302,8 +303,11 @@ class OpenRouterGateway:
                     await self._sleep(DEFAULT_RETRY_SECONDS)
                     continue
                 raise AiProviderError(support_details=f"transport: {exc!r}") from exc
-            if response.status_code in RETRY_STATUSES and attempt == 1:
-                await self._sleep(_retry_after(response))
+            status = response.status_code
+            if status in RETRY_STATUSES and (
+                attempt == 1 or (status == 429 and attempt < OVERLOAD_ATTEMPTS)
+            ):
+                await self._sleep(_retry_after(response) * attempt)
                 continue
             if attempt == 1 and self._learn_refusal(
                 payload, response.status_code, _error_of(response)

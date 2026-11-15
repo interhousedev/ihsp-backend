@@ -192,7 +192,9 @@ class SqlScheduleReader:
 
     async def _keys(self, session: AsyncSession, user_id: UUID) -> list[str] | None:
         row = await session.get(StudentRow, user_id)
-        return audience_keys.student_keys(row.group_id, row.subgroup) if row else None
+        if row is None or row.group_id is None:
+            return None
+        return audience_keys.student_keys(row.group_id, row.subgroup)
 
     # - - - Lessons - - -
 
@@ -282,7 +284,9 @@ class SqlScheduleReader:
         """Return (group id, subgroup) of the student, None for an unknown one."""
         async with self.sessionmaker() as session:
             row = await session.get(StudentRow, user_id)
-        return (row.group_id, row.subgroup) if row else None
+        if row is None or row.group_id is None:
+            return None
+        return (row.group_id, row.subgroup)
 
     async def projected_for_group(
         self, group_id: UUID, start: dt.date, end: dt.date, locale: str
@@ -323,6 +327,8 @@ class SqlScheduleReader:
             student = await session.get(StudentRow, user_id)
             if student is None or student.status != "active":
                 return False
+            if student.group_id is None:
+                return False
             keys = audience_keys.student_keys(student.group_id, student.subgroup)
             stmt = select(
                 or_(
@@ -348,6 +354,8 @@ class SqlScheduleReader:
         async with self.sessionmaker() as session:
             student = await session.get(StudentRow, user_id)
             if student is None or student.status != "active":
+                return False
+            if student.group_id is None:
                 return False
             keys = audience_keys.student_keys(student.group_id, student.subgroup)
             stmt = select(

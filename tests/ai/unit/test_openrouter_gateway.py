@@ -182,6 +182,40 @@ async def test_rate_limit_is_retried_once_after_the_wait(
 
 
 @respx.mock
+async def test_busy_model_429_is_retried_with_a_growing_wait(
+    gateway: OpenRouterGateway, sleeps: Sleeps
+) -> None:
+    """engine_overloaded (429) is waited out up to four attempts."""
+    busy = httpx.Response(429, json=fixture("error_429"), headers={"Retry-After": "1"})
+    route = respx.post(URL).mock(
+        side_effect=[
+            busy,
+            busy,
+            busy,
+            httpx.Response(200, json=fixture("completion_text")),
+        ]
+    )
+
+    result = await ask(gateway)
+
+    assert route.call_count == 4 and sleeps.seconds == [1.0, 2.0, 3.0]
+    assert result["text"].startswith("You have")
+
+
+@respx.mock
+async def test_busy_model_429_gives_up_after_four_attempts(
+    gateway: OpenRouterGateway, sleeps: Sleeps
+) -> None:
+    """A model that stays busy ends as a provider error, not an endless loop."""
+    route = respx.post(URL).respond(429, json=fixture("error_429"))
+
+    with pytest.raises(AiProviderError):
+        await ask(gateway)
+
+    assert route.call_count == 4 and len(sleeps.seconds) == 3
+
+
+@respx.mock
 async def test_server_error_twice_raises_a_provider_error(
     gateway: OpenRouterGateway, sleeps: Sleeps
 ) -> None:

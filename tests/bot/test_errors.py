@@ -123,3 +123,20 @@ async def test_editing_to_identical_content_is_not_an_error(harness: Harness) ->
 
     assert harness.sent == []
     assert harness.toasts
+
+
+async def test_expected_error_is_logged_at_info_and_the_user_is_told(
+    harness: Harness,
+) -> None:
+    """A limit (4xx) is no error-tracker event: info log, user answer."""
+    from structlog.testing import capture_logs
+
+    harness.world.schedule.error = QuietError()
+
+    with capture_logs() as logs:
+        await harness.send("/today")
+
+    events = {(log["event"], log["log_level"]) for log in logs}
+    assert ("bot.expected_error", "info") in events
+    assert not any(level == "error" for _, level in events)
+    assert texts_to(harness, STUDENT_TG)

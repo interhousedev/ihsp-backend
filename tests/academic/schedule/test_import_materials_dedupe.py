@@ -141,3 +141,31 @@ async def test_purge_keeps_a_shared_file_until_the_last_reference() -> None:
     assert files.deleted == [] and shared in files.rows
     await uc.purge([LESSON_B])
     assert files.deleted == [shared]
+
+
+class GoneEmis:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    async def download(self, user_id: UUID, url: str, *, max_bytes: int) -> EmisFile:
+        from app.shared.contracts.emis import EmisFileNotFound
+
+        self.calls += 1
+        raise EmisFileNotFound()
+
+
+async def test_a_gone_material_becomes_a_link_and_is_not_downloaded_again() -> None:
+    uc, _, links = importer({})
+    gone = GoneEmis()
+    uc.emis = gone  # type: ignore[assignment]
+    urls: list[Any] = []
+
+    async def import_urls(items: Any) -> int:
+        urls.extend(items)
+        links.resources += [(i.lesson_id, i.url, uuid4()) for i in items]
+        return len(items)
+
+    links.import_lesson_urls = import_urls  # type: ignore[method-assign]
+    first = await uc.import_materials(uuid4(), [item(LESSON_A, "https://e/x.pdf")])
+    second = await uc.import_materials(uuid4(), [item(LESSON_A, "https://e/x.pdf")])
+    assert (first, second, gone.calls, len(urls)) == (1, 0, 1, 1)

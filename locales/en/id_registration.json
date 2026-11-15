@@ -1,6 +1,7 @@
 {
   "emis-auth-failed": "Wrong EMIS login or password.",
   "emis-unavailable": "EMIS is not responding. Please try again later.",
+  "emis-file-not-found": "This file is no longer available in EMIS.",
   "emis-paused": "EMIS asked us to wait a little. Please try again in a few minutes.",
   "emis-credentials-missing": "No working EMIS login is stored for this account. Sign in again to link EMIS.",
   "id-wrong-institution": "Only students of {org_name} can register.",

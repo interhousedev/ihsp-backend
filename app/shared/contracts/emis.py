@@ -299,6 +299,14 @@ class EmisFileRetryLater(EmisUnavailable):
     message_key = "emis-unavailable"
 
 
+class EmisFileNotFound(BaseError):
+    """The material URL is gone on the EMIS side (404 or 410): retrying is useless."""
+
+    code = "emis/file-not-found"
+    status = 404
+    message_key = "emis-file-not-found"
+
+
 class EmisCredentialsMissing(EmisUnavailable):
     """The student's EMIS login is not stored: this student cannot be used.
 

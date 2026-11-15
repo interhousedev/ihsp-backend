@@ -19,7 +19,7 @@ from app.modules.academic.application.schedule.ports.lesson_urls import (
     EmisMaterial,
     MaterialKind,
 )
-from app.shared.contracts.emis import EmisFile, EmisSource
+from app.shared.contracts.emis import EmisFile, EmisFileNotFound, EmisSource
 from app.shared.contracts.files import FilePurpose, FileRef, FilesApi, FileScope
 from app.shared.contracts.links import (
     EMIS_AUTHOR_ID,
@@ -209,6 +209,9 @@ class ImportLessonMaterials:
     async def _download(self, user_id: UUID, item: EmisMaterial) -> EmisFile | None:
         try:
             return await self.emis.download(user_id, item.url, max_bytes=self.max_bytes)
+        except EmisFileNotFound:  # gone for good: the link fallback is attached once
+            log.info("emis_material_gone", lesson_id=str(item.lesson_id))
+            return None
         except Exception as exc:  # EMIS down, refused, too large or a timeout
             log.warning(
                 "emis_material_download_failed",

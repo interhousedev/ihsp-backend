@@ -23,6 +23,9 @@ from app.shared.i18n.core import I18nCore
 import structlog
 from redis.asyncio import Redis
 
+# notify's TelegramBlocked (identity must not import that module's domain).
+BLOCKED_ERROR = "TelegramBlocked"
+
 log = structlog.get_logger(__name__)
 
 CLEANUP_KEY = "tg:otp-msgs"
@@ -125,11 +128,17 @@ class ChannelOtpSender:
             try:
                 message_id = await telegram.send_message(chat_id, text, buttons)
                 break
-            except Exception:  # noqa: BLE001 - one dead chat must not block others
+            except Exception as exc:  # noqa: BLE001 - one dead chat must not block
+                if type(exc).__name__ == BLOCKED_ERROR:
+                    # Blocked bot or deleted chat: expected and permanent, no retry.
+                    log.info("otp_telegram_blocked", chat_id=chat_id, reason=str(exc))
+                    break
                 log.warning(
                     "otp_telegram_failed",
                     chat_id=chat_id,
                     attempt=attempt,
+                    error_type=type(exc).__name__,
+                    error=str(exc),
                     exc_info=True,
                 )
                 if attempt == 1:  # a dropped connection is usually transient

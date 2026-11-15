@@ -14,7 +14,7 @@ from app.modules.academic.domain.marks.errors import SyncAlreadyRunningError
 from app.modules.academic.domain.marks.sync import SyncCounters, SyncMode
 from app.shared.actor import Role
 from app.shared.clock import Clock
-from app.shared.contracts.emis import EmisPaused
+from app.shared.contracts.emis import EmisPaused, EmisUnavailable
 from app.shared.contracts.identity import IdentityDirectory, UserStatus
 from app.shared.key_lock import KeyLock
 from app.shared.notifications import NotificationDraft, NotificationType
@@ -32,6 +32,20 @@ FAILURE_ALERT_RATIO = 0.2
 _LOOKUP_CHUNK = 500
 LOCK_KEY = "academic:sync_all"
 LOCK_TTL_SECONDS = 2 * 60 * 60  # a crashed worker frees the run within two hours
+
+
+def _log_failure(event: str, user_id: UUID, exc: Exception) -> None:
+    """Log a failed EMIS call: an unreachable EMIS is expected, the rest is a bug.
+
+    The reason goes into the event itself: the traceback does not reach the error
+    tracker through structlog, so ``exc_info`` alone left nothing to triage.
+    """
+    code = getattr(exc, "code", None)
+    reason = f"{code}: {exc}" if code else f"{type(exc).__name__}: {exc}"
+    if isinstance(exc, EmisUnavailable):
+        log.info(event, user_id=str(user_id), error=reason[:300])
+    else:
+        log.warning(event, user_id=str(user_id), error=reason[:300], exc_info=True)
 
 
 class _Halt:
@@ -157,8 +171,8 @@ class SyncAll:
                 return
             try:
                 await self._bell_sync.execute(user_id)
-            except Exception:
-                log.warning("bell_sync_failed", user_id=str(user_id), exc_info=True)
+            except Exception as exc:
+                _log_failure("bell_sync_failed", user_id, exc)
             else:
                 return
 
@@ -191,8 +205,8 @@ class SyncAll:
             outcome = await self._timetable_sync.execute(
                 group_id=group_id, user_id=user_id, refresh_bells=False
             )
-        except Exception:
-            log.warning("timetable_sync_failed", user_id=str(user_id), exc_info=True)
+        except Exception as exc:
+            _log_failure("timetable_sync_failed", user_id, exc)
             return False
         return outcome.status != "emis_unavailable"
 
@@ -263,8 +277,8 @@ class SyncAll:
             halt.paused = True
             tally["skipped"] += 1
             return
-        except Exception:
-            log.warning("student_sync_failed", user_id=str(user_id), exc_info=True)
+        except Exception as exc:
+            _log_failure("student_sync_failed", user_id, exc)
             tally["failed"] += 1
             return
         tally["reauth" if outcome.status == "reauth" else "ok"] += 1

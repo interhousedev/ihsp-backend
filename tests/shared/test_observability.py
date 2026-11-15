@@ -46,3 +46,22 @@ def test_scrub_event_masks_body_breadcrumbs_and_log_text() -> None:
     assert out["logentry"]["params"] == [SCRUBBED]
     assert "abc123" not in out["logentry"]["message"]
     assert out["message"] == f"bearer {SCRUBBED} rejected"
+
+
+def test_scanner_and_pdf_noise_is_dropped_but_real_errors_stay() -> None:
+    """aiosmtpd scanner chatter, TLS setup failures and pypdf font warnings."""
+    from app.shared.observability import before_send
+
+    noise: list[Any] = [
+        {
+            "logger": "mail.log",
+            "logentry": {"message": "('1.2.3.4', 5) unrecognised: X"},
+        },
+        {"logger": "mail.log", "message": "('1.2.3.4', 5) too many bogus commands"},
+        {"exception": {"values": [{"type": "TLSSetupException"}]}},
+        {"logger": "pypdf._cmap", "message": "fontTools is required to parse"},
+    ]
+    for event in noise:
+        assert before_send(event, {}) is None
+    real: Any = {"logger": "mail.log", "message": "Server exception: boom"}
+    assert before_send(real, {}) is not None

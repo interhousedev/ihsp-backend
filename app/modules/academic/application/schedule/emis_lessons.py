@@ -100,6 +100,8 @@ class LessonReconciler:
         self._seen: set[int] = set()
         self._matched: set[UUID] = set()
         self._superseded: set[UUID] = set()
+        self._no_bell: dict[tuple[int, int | None], int] = {}
+        self._borrowed: dict[tuple[int, int | None], int] = {}
 
     async def run(
         self,
@@ -135,7 +137,23 @@ class LessonReconciler:
                 self._matched.add(lesson.id)
                 await self._enrich(lesson, item, keys)
         await self._cancel_missing(lessons, keys)
+        self._log_bell_gaps()
         return self._tally
+
+    def _log_bell_gaps(self) -> None:
+        """Say once per run which periods have no bell, not once per class."""
+        for event, gaps in (
+            ("emis_classes_without_bell", self._no_bell),
+            ("emis_classes_bell_borrowed", self._borrowed),
+        ):
+            if gaps:
+                log.info(
+                    event,
+                    group_id=str(self._group_id),
+                    term_id=str(self._term.id),
+                    classes=sum(gaps.values()),
+                    period_weekday=sorted(gaps, key=lambda gap: (gap[0], gap[1] or 0)),
+                )
 
     # - - - Finding or making the lesson of a class - - -
 
@@ -204,16 +222,13 @@ class LessonReconciler:
         period = item.pair_number + 1
         bell = bell_or_nearest(self._term, period, weekday) if weekday else None
         if bell is None:
-            log.warning("emis_class_without_bell", class_id=item.class_id)
+            gap = (period, weekday)
+            self._no_bell[gap] = self._no_bell.get(gap, 0) + 1
             self._tally.skipped += 1
             return None
         if weekday and bell_for(self._term, period, weekday) is None:
-            log.warning(
-                "emis_class_bell_borrowed",
-                class_id=item.class_id,
-                period=period,
-                weekday=weekday,
-            )
+            gap = (period, weekday)
+            self._borrowed[gap] = self._borrowed.get(gap, 0) + 1
         starts_at, ends_at = lesson_times(item.date, bell[0], bell[1])
         return item.pair_number + 1, starts_at, ends_at
 

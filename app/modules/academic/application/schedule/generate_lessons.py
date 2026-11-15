@@ -111,12 +111,14 @@ class GenerateLessons:
             if await uow.lessons.try_add(lesson):
                 changed.append(lesson.id)
             else:
-                logger.warning("lesson_insert_conflict", lesson_id=str(lesson.id))
+                logger.info("lesson_insert_conflict", lesson_id=str(lesson.id))
         for lesson in plan.updates:
             if await uow.lessons.try_save(lesson):
                 changed.append(lesson.id)
             else:
-                logger.warning("lesson_update_conflict", lesson_id=str(lesson.id))
+                # A borrowed bell can overlap another lesson of the room; the lesson
+                # keeps its old time and the next run meets the same conflict.
+                logger.info("lesson_update_conflict", lesson_id=str(lesson.id))
         for lesson in plan.cancels:
             await uow.lessons.save(lesson)
             changed.append(lesson.id)
@@ -127,7 +129,9 @@ class GenerateLessons:
 
     @staticmethod
     def _log_missing_bells(term: Term, plan: GenerationPlan) -> None:
-        for entry_id in plan.missing_bells:
-            logger.warning(
-                "entry_without_bell", term_id=str(term.id), entry_id=str(entry_id)
+        if plan.missing_bells:
+            logger.info(
+                "entries_without_bell",
+                term_id=str(term.id),
+                entries=len(plan.missing_bells),
             )

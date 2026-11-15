@@ -54,12 +54,20 @@ class ErrorMiddleware(BaseMiddleware):
         self, error: Exception, event: TelegramObject, data: dict[str, Any]
     ) -> None:
         error_id = str(uuid4())
-        log.error(
-            "bot.error",
-            error_id=error_id,
-            error_type=type(error).__name__,
-            exc_info=error,
-        )
+        if _is_unexpected(error):
+            log.error(
+                "bot.error",
+                error_id=error_id,
+                error_type=type(error).__name__,
+                exc_info=error,
+            )
+        else:  # a limit, a validation: the user is told, nobody is paged
+            log.info(
+                "bot.expected_error",
+                error_id=error_id,
+                error_type=type(error).__name__,
+                code=getattr(error, "code", None),
+            )
         bot: Bot | None = data.get("bot")
         if bot is None:
             return
