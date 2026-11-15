@@ -107,20 +107,10 @@ if [ "$with_redis" -eq 1 ]; then
     [ -f "$src/redis.rdb" ] || { echo "$src/redis.rdb is missing" >&2; exit 1; }
     say "restoring Redis"
     dc stop redis
-    # With appendonly yes Redis ignores dump.rdb at start. Load it in a throwaway server with
-    # AOF off, switch AOF on (Redis rewrites it from memory), then start the real one.
-    dc run --rm --no-deps -T -v "$src:/restore:ro" --entrypoint sh redis -c '
-        set -e
-        rm -rf /data/appendonlydir /data/dump.rdb
-        cp /restore/redis.rdb /data/dump.rdb
-        redis-server --appendonly no --daemonize yes --requirepass "$REDIS_PASSWORD" > /dev/null
-        for i in $(seq 1 30); do redis-cli ping > /dev/null 2>&1 && break; sleep 1; done
-        redis-cli CONFIG SET appendonly yes > /dev/null
-        for i in $(seq 1 60); do
-            redis-cli INFO persistence | grep -q "aof_rewrite_in_progress:0" && break
-            sleep 1
-        done
-        redis-cli SHUTDOWN NOSAVE || true'
+    # The loader turns the RDB into the AOF the server reads and fails on any step it
+    # cannot confirm (shared with migrate_target.sh).
+    dc run --rm --no-deps -T -v "$src:/restore:ro" --entrypoint sh redis \
+        -c "$(cat "$ROOT/scripts/redis_load_rdb.sh")"
     dc up -d --wait redis
 fi
 

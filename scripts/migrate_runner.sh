@@ -194,9 +194,19 @@ step_stop_services() {
     (cd "$ROOT" && dc stop "${RESTART[@]}")
 }
 
+env_value() { sed -n "s/^$1=//p" "$ROOT/.env.prod" | tail -n 1; }
+
 step_dump_postgres() {
     (cd "$ROOT" && dc exec -T postgres pg_dump -U ihsp -Fc ihsp > "$OUT/ihsp.dump")
     (cd "$ROOT" && dc exec -T postgres pg_dump -U ihsp -Fc hydra > "$OUT/hydra.dump")
+    # Bugsink (error tracking): a database in the main postgres, or its own bugsink-db.
+    if [ "$(env_value BUGSINK_DB_MODE)" = dedicated ]; then
+        (cd "$ROOT" && dc --profile bugsink-dedicated exec -T bugsink-db \
+            pg_dump -U bugsink -Fc bugsink > "$OUT/bugsink.dump")
+    elif [ "$(cd "$ROOT" && dc exec -T postgres psql -U ihsp -d postgres -tAc \
+        "SELECT 1 FROM pg_database WHERE datname = 'bugsink'" | tr -d '\r')" = 1 ]; then
+        (cd "$ROOT" && dc exec -T postgres pg_dump -U ihsp -Fc bugsink > "$OUT/bugsink.dump")
+    fi
 }
 
 step_snapshot_redis() {
@@ -214,8 +224,22 @@ step_snapshot_redis() {
 }
 
 step_copy_objects() {
-    local cid
+    # Only the bundled RustFS (IHSP_S3__ENDPOINT_URL=http://s3:9000) keeps objects on this
+    # host; a provider bucket stays where it is and the copied .env.prod points at it.
+    local url cid
+    url=$(env_value IHSP_S3__ENDPOINT_URL | tr -d "\"'")
     cid=$(cd "$ROOT" && dc ps -q s3)
+    case "$url" in
+        http://s3 | https://s3 | http://s3[:/]* | https://s3[:/]*) ;;
+        *)
+            if [ -n "$cid" ]; then
+                ERR_MSG="an s3 container runs but IHSP_S3__ENDPOINT_URL is not the bundled one"
+                return 1
+            fi
+            say "external object store: nothing to copy"
+            return 0
+            ;;
+    esac
     [ -n "$cid" ] || { ERR_MSG="the s3 service is not running"; return 1; }
     docker cp "$cid:/data/." - > "$OUT/s3_data.tar"
 }
