@@ -1416,6 +1416,10 @@ class Settings(BaseSettings):
             and self.bot_vault.token.get_secret_value() == DEV_VAULT_TOKEN
         ):
             self.bot_vault.token = None
+        if self.telegram.bot_token.get_secret_value() == DEV_BOT_TOKEN:
+            # An unset or empty env token arrives as the dev default; in production
+            # that means "use the default bot's token from Vault".
+            self.telegram.bot_token = SecretStr("")
         problems = _production_problems(self)
         if problems:
             raise ValueError("production settings missing: " + ", ".join(problems))
@@ -1500,14 +1504,8 @@ def _production_problems(settings: Settings) -> list[str]:
         "DATABASE__URL": settings.database.url == DEV_DATABASE_URL
         or ":ihsp@" in settings.database.url,
         "REDIS__URL": "@" not in settings.redis.url,
-        # Empty is fine once the default bot's token lives in Vault (the bot,
-        # api, worker and identity read it with the bot_vault AppRole).
-        "TELEGRAM__BOT_TOKEN": settings.telegram.bot_token.get_secret_value()
-        == DEV_BOT_TOKEN
-        or (
-            not settings.telegram.bot_token.get_secret_value()
-            and not (settings.bot_vault.role_id and settings.bot_vault.secret_id)
-        ),
+        # The dev bot token is blanked above: the bot and identity then use the default
+        # bot's Vault token and refuse to work without one.
         "TELEGRAM__MODE=webhook": settings.telegram.mode == "fake",
         "EMIS__MODE=real": settings.emis.mode != "real",
         "OPENROUTER__MODE=real": settings.openrouter.mode != "real",

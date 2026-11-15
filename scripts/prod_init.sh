@@ -213,7 +213,8 @@ EOF
     token=$(VAULT_TOKEN=$root_token dc exec -T -e VAULT_TOKEN vault \
         vault token create -policy=root -ttl=15m -orphan=false -field=token)
     [ -n "$token" ] || die "could not create a short-lived Vault token"
-    trap 'VAULT_TOKEN=$token dc exec -T -e VAULT_TOKEN vault vault token revoke -self > /dev/null 2>&1 || true; trap - RETURN' RETURN
+    # RETURN covers the normal end, EXIT covers die and set -e failures.
+    trap 'VAULT_TOKEN=$token dc exec -T -e VAULT_TOKEN vault vault token revoke -self > /dev/null 2>&1 || true; trap - RETURN EXIT' RETURN EXIT
     unset root_token
 
     say "enabling Transit, KV v2, AppRole; writing the identity policy and role"

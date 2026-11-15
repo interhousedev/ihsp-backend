@@ -313,7 +313,6 @@ def test_production_refuses_samesite_none_for_the_refresh_cookie() -> None:
         ({"exa": {"mode": "fake"}}, "EXA__MODE=real"),
         ({"emis": {"mode": "fake"}}, "EMIS__MODE=real"),
         ({"telegram": {"mode": "fake", "bot_token": "1:x"}}, "TELEGRAM__MODE"),
-        ({"telegram": {"mode": "webhook"}}, "TELEGRAM__BOT_TOKEN"),
         ({"tokens": {"refresh_cookie_secure": True}}, "TOKENS__SERVICE_TOKEN"),
         ({"tokens": {"service_token": "x" * 40}}, "REFRESH_COOKIE_SECURE"),
         ({"s3": {"secret_key": "minio12345", "access_key": "k"}}, "S3__SECRET_KEY"),
@@ -331,15 +330,9 @@ def test_production_refuses_fake_modes_and_development_defaults(
         Settings(**prod_base(**override))
 
 
-def test_production_without_a_bot_token_needs_the_bot_vault_approle() -> None:
-    """No env token: the default bot's token must be readable from Vault."""
-    telegram = {**prod_base()["telegram"], "bot_token": ""}
-    with pytest.raises(ValueError, match="TELEGRAM__BOT_TOKEN"):
-        Settings(**prod_base(telegram=telegram))
-
-    settings = Settings(
-        **prod_base(telegram=telegram, bot_vault={"role_id": "r", "secret_id": "s"})
-    )
+def test_production_without_a_bot_token_uses_the_vault_default_bot() -> None:
+    """An unset or empty env token (dev default) is blank in prod, for every process."""
+    settings = Settings(**prod_base(telegram={"mode": "webhook"}))
 
     assert settings.telegram.bot_token.get_secret_value() == ""
 
