@@ -170,14 +170,17 @@ async def test_items_without_a_serial_or_a_type_are_skipped(
     assert (result.created, result.skipped) == (0, 2)
 
 
-async def test_an_emis_login_problem_is_not_a_401_for_the_student(
+async def test_an_emis_login_problem_stays_a_reauth_problem(
     h: CertificatesHarness,
 ) -> None:
-    """EMIS refusing the stored login is reported as 'EMIS unavailable' (503)."""
+    """EMIS refusing the stored login is 409 emis/auth-failed, not an outage."""
     h.emis.error = EmisAuthFailed()
 
-    with pytest.raises(EmisUnavailable):
+    with pytest.raises(EmisAuthFailed) as caught:
         await h.services.import_emis.execute(h.ann.id)
+
+    assert not isinstance(caught.value, EmisUnavailable)
+    assert caught.value.status == 409
 
 
 def test_the_json_shapes_are_what_the_import_expects() -> None:

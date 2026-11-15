@@ -57,7 +57,7 @@ class ControlledEmis:
 
     def _check(self, token: str) -> None:
         if self.down:
-            raise EmisRequestError("EMIS is down")
+            raise EmisRequestError("EMIS is down", status=503, reason="upstream_5xx")
         if token in self.revoked:
             raise EmisAuthError()
 
@@ -65,7 +65,7 @@ class ControlledEmis:
         """Log in; honours ``down`` and ``passwords``."""
         self.calls.append("login")
         if self.down:
-            raise EmisRequestError("EMIS is down")
+            raise EmisRequestError("EMIS is down", status=503, reason="upstream_5xx")
         if password != self.passwords.get(login.lower(), FAKE_PASSWORD):
             raise EmisAuthError()
         token = await self._inner.login(login, FAKE_PASSWORD)
@@ -76,7 +76,7 @@ class ControlledEmis:
         """Record the change; a password of ``weak`` is refused like EMIS does."""
         self.calls.append("change_password")
         if self.down:
-            raise EmisRequestError("EMIS is down")
+            raise EmisRequestError("EMIS is down", status=503, reason="upstream_5xx")
         if new_password == "weak":
             raise EmisPasswordRejectedError()
         login = token.rsplit(":", 1)[-1]

@@ -1,6 +1,8 @@
 """The ID module's gateway to EMIS: stored token, one re-login (ID-7)."""
 
+import asyncio
 import datetime as dt
+import weakref
 from collections.abc import Awaitable, Callable
 from typing import Protocol, TypeVar
 from uuid import UUID
@@ -77,6 +79,9 @@ class EmisGatewayImpl:
         self._store = store
         self._uow_factory = uow_factory
         self._fake_tokens = fake_tokens
+        self._relogin_locks: weakref.WeakValueDictionary[UUID, asyncio.Lock] = (
+            weakref.WeakValueDictionary()
+        )
 
     async def profile(self, user_id: UUID) -> EmisProfile:
         """Return the student's EMIS profile."""
@@ -146,13 +151,36 @@ class EmisGatewayImpl:
                 return await fetch(secret.access_token)
             except EmisAuthError:
                 pass
-        token = await self._relogin(user_id, ref, secret)
+        token = await self._refreshed_token(user_id, ref, secret)
         with emis_errors():
             try:
                 return await fetch(token)
             except EmisAuthError as exc:
                 # A token we just got was refused: EMIS misbehaves, not the password.
-                raise EmisUnavailable(support_details="fresh token rejected") from exc
+                params: dict[str, str | int] = {"reason": "auth_failed"}
+                if exc.status is not None:
+                    params["upstream_status"] = exc.status
+                raise EmisUnavailable(
+                    params=params,
+                    support_details=f"fresh token rejected (status={exc.status})",
+                ) from exc
+
+    async def _refreshed_token(
+        self, user_id: UUID, ref: UUID, stale: EmisSecret
+    ) -> str:
+        """Log in again, once for all concurrent callers of this user.
+
+        Whoever gets the lock second finds the new token in Vault and uses it.
+        """
+        lock = self._relogin_locks.get(user_id)
+        if lock is None:
+            lock = self._relogin_locks[user_id] = asyncio.Lock()
+        async with lock:
+            with emis_errors():
+                current = await self._store.read(ref)
+            if current.access_token != stale.access_token:
+                return current.access_token
+            return await self._relogin(user_id, ref, current)
 
     async def _call_fake(
         self,
@@ -193,7 +221,9 @@ class EmisGatewayImpl:
                 raise
             except EmisRequestError as exc:
                 # Not cached: the next call logs in again. Reason is logged upstream.
-                raise EmisRequestError(f"login:{exc}") from exc
+                raise EmisRequestError(
+                    f"login:{exc}", status=exc.status, reason=exc.reason
+                ) from exc
         try:
             await self._store.update_token(ref, token)
         except CredentialStoreError:

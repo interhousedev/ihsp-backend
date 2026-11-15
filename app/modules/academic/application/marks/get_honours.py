@@ -12,12 +12,7 @@ from app.modules.academic.domain.marks import honours
 from app.modules.academic.domain.marks.errors import StudentNotFoundError
 from app.modules.academic.domain.marks.grading import rounded_mark
 from app.shared.actor import Actor
-from app.shared.contracts.emis import (
-    EmisAuthFailed,
-    EmisCredentialsMissing,
-    EmisSource,
-    EmisUnavailable,
-)
+from app.shared.contracts.emis import EmisCredentialsMissing, EmisSource
 from app.shared.contracts.honours import HonoursRules
 from app.shared.contracts.identity import IdentityDirectory
 
@@ -78,10 +73,9 @@ class GetHonours:
         return honours.evaluate(rules, rows, serial), serial
 
     async def _serial(self, actor: Actor) -> str | None:
+        """Read the serial; ``EmisAuthFailed`` (409) is left for the caller."""
         try:
             profile = await self._emis.profile(actor.user_id)
         except EmisCredentialsMissing:
             return None
-        except EmisAuthFailed as exc:  # a 401 here would log the student out
-            raise EmisUnavailable(support_details="EMIS login needs a refresh") from exc
         return profile.school_certificate_serial

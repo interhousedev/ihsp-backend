@@ -523,7 +523,7 @@ async def test_invalid_json_raises_request_error(
     client: EmisClient, emis_http: respx.MockRouter
 ) -> None:
     """ID-7: a body that is not JSON is an unexpected response."""
-    emis_http.get(PROFILE).respond(200, text="<html>maintenance</html>")
+    emis_http.get(PROFILE).respond(200, text="maintenance")
 
     with pytest.raises(EmisRequestError):
         await client.profile("t")
@@ -591,3 +591,26 @@ async def test_ratings_read_absence_flags_and_totals_when_present(
     assert [m.value for m in ratings.marks] == [5]
     assert ratings.absent_dates == (date(2026, 9, 11),)
     assert ratings.absence_total == 3
+
+
+async def test_download_404_is_gone_for_good_without_retry(
+    client: EmisClient, emis_http: respx.MockRouter
+) -> None:
+    from app.modules.identity.application.register_models import EmisFileGoneError
+
+    route = emis_http.get("https://cdn-emis.edu.uz/x.pdf").respond(404)
+    with pytest.raises(EmisFileGoneError) as raised:
+        await client.download("tok", "https://cdn-emis.edu.uz/x.pdf", 1000)
+    assert (raised.value.status, route.call_count) == (404, 1)
+
+
+def test_emis_proxy_setting_reaches_the_http_client() -> None:
+    """``EMIS__PROXY`` routes EMIS and CDN traffic; the connect timeout is 10 s."""
+    from app.settings import EmisSettings
+
+    settings = EmisSettings(proxy="http://proxy.example:3128")
+    client = EmisClient.from_settings(settings, redis=None)  # type: ignore[arg-type]
+    assert client._http.timeout.connect == 10.0
+    mounts = client._http._mounts  # type: ignore[attr-defined]
+    pools = [type(m._pool).__name__ for m in mounts.values() if m is not None]
+    assert "AsyncHTTPProxy" in pools

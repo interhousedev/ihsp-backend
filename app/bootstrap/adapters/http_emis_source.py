@@ -5,6 +5,7 @@ import datetime as dt
 import random
 from collections.abc import Awaitable, Callable
 from datetime import date, time
+from time import monotonic
 from typing import Any
 from urllib.parse import unquote
 from uuid import UUID
@@ -21,6 +22,7 @@ from app.shared.contracts.emis import (
     EmisCurriculumSubject,
     EmisDirection,
     EmisFile,
+    EmisFileNotFound,
     EmisFileRetryLater,
     EmisMark,
     EmisMarkType,
@@ -36,6 +38,8 @@ from app.shared.contracts.emis import (
     EmisUnavailable,
     EmisYear,
 )
+from app.shared.ids import new_id
+from app.shared.upstream_log import body_fields, url_path
 
 import httpx
 import structlog
@@ -188,13 +192,25 @@ class HttpEmisSource:
                 timeout=_DOWNLOAD_TIMEOUT,
             )
         except httpx.HTTPError as exc:
+            reason = "timeout" if isinstance(exc, httpx.TimeoutException) else "network"
+            log.warning(
+                "emis_gateway_failed",
+                method="GET",
+                path=f"/{user_id}/file",
+                status=None,
+                error=type(exc).__name__,
+                reason=reason,
+            )
             raise EmisUnavailable(
-                support_details=f"gateway unreachable: {type(exc).__name__}"
+                params={"reason": reason},
+                support_details=f"gateway unreachable: {type(exc).__name__}",
             ) from exc
         if response.status_code != 200:
             raise _error_for(response)
         if len(response.content) > max_bytes:
-            raise EmisUnavailable(support_details="file too large")
+            raise EmisUnavailable(
+                params={"reason": "file_too_large"}, support_details="file too large"
+            )
         return EmisFile(
             name=unquote(response.headers.get(FILE_NAME_HEADER, "")) or "file",
             content_type=response.headers.get("content-type"),
@@ -202,40 +218,132 @@ class HttpEmisSource:
         )
 
     async def _get(self, path: str, params: dict[str, int | str] | None = None) -> Any:
-        response = await self._get_once(path, params)
-        if response is None or _is_edge_failure(response):
-            log.warning(
-                "emis_gateway_retry",
-                path=path,
-                status=None if response is None else response.status_code,
-            )
-            jitter = random.random() * RETRY_JITTER_SECONDS
-            await self._sleep(RETRY_DELAY_SECONDS + jitter)
-            retried = await self._get_once(path, params)
-            if retried is None:
-                raise EmisUnavailable(support_details="gateway unreachable twice")
-            response = retried
-        if response.status_code == 200:
-            return response.json()
-        raise _error_for(response)
+        """GET the gateway; one jittered retry for a transport blip or edge 5xx."""
+        error_id = str(new_id())
+        failure = await self._once(path, params, 1, error_id)
+        if not isinstance(failure, EmisUnavailable):
+            return failure
+        jitter = random.random() * RETRY_JITTER_SECONDS
+        await self._sleep(RETRY_DELAY_SECONDS + jitter)
+        second = await self._once(path, params, 2, error_id)
+        if isinstance(second, EmisUnavailable):
+            raise second
+        return second
 
-    async def _get_once(
-        self, path: str, params: dict[str, int | str] | None
-    ) -> httpx.Response | None:
-        """One request; None stands for a transport failure worth one retry."""
+    async def _once(
+        self,
+        path: str,
+        params: dict[str, int | str] | None,
+        attempt: int,
+        error_id: str,
+    ) -> Any:
+        """One attempt: the JSON body, or the retryable failure (fatal ones raise)."""
+        began = monotonic()
         try:
-            return await self._http.get(
+            response = await self._http.get(
                 f"{self._base}/{path}", params=params, headers=self._headers
             )
-        except _TRANSIENT as exc:
-            log.warning(
-                "emis_gateway_transport_error", path=path, error=type(exc).__name__
-            )
-            return None
         except httpx.HTTPError as exc:
+            return self._transport_failure(path, exc, began, attempt, error_id)
+        if response.status_code == 200:
+            return self._json_body(response, path, began, attempt, error_id)
+        error = _error_for(response, error_id)
+        if isinstance(error, EmisUnavailable):
+            reason = str(error.params.get("reason", "gateway_error"))
+            self._log_failure(
+                path,
+                response.status_code,
+                began,
+                response.content,
+                error,
+                attempt,
+                reason,
+                error_id,
+                response.headers.get("content-type"),
+            )
+        if not _is_edge_failure(response):
+            raise error
+        assert isinstance(error, EmisUnavailable)  # a typeless 5xx
+        return error
+
+    def _transport_failure(
+        self,
+        path: str,
+        exc: httpx.HTTPError,
+        began: float,
+        attempt: int,
+        error_id: str,
+    ) -> EmisUnavailable:
+        """Log an unreachable gateway; raise unless the error is transient."""
+        transient = isinstance(exc, _TRANSIENT)
+        reason = "timeout" if isinstance(exc, httpx.TimeoutException) else "network"
+        self._log_failure(path, None, began, b"", exc, attempt, reason, error_id)
+        label = "unreachable twice" if attempt == 2 and transient else "unreachable"
+        failure = EmisUnavailable(
+            params={"reason": reason},
+            support_details=(
+                f"gateway {label}: {type(exc).__name__} [error_id={error_id}]"
+            ),
+        )
+        if not transient:
+            raise failure from exc
+        return failure
+
+    def _json_body(
+        self,
+        response: httpx.Response,
+        path: str,
+        began: float,
+        attempt: int,
+        error_id: str,
+    ) -> Any:
+        """The parsed body of a 200, or a fatal ``bad_response``."""
+        try:
+            return response.json()
+        except ValueError as exc:
+            self._log_failure(
+                path,
+                200,
+                began,
+                response.content,
+                exc,
+                attempt,
+                "bad_response",
+                error_id,
+                response.headers.get("content-type"),
+            )
             raise EmisUnavailable(
-                support_details=f"gateway unreachable: {type(exc).__name__}"
+                params={"reason": "bad_response"},
+                support_details=f"gateway sent no JSON [{error_id}]",
             ) from exc
+
+    @staticmethod
+    def _log_failure(
+        path: str,
+        status: int | None,
+        began: float,
+        body: bytes,
+        exc: Exception,
+        attempt: int,
+        reason: str,
+        error_id: str,
+        content_type: str | None = None,
+    ) -> None:
+        """One structured line per failed gateway attempt (body redacted, 2 KB)."""
+        broken = reason in {"bad_response", "gateway_auth", "gateway_error"}
+        emit = log.error if broken else log.warning
+        emit(
+            "emis_gateway_failed",
+            method="GET",
+            path=url_path(path),
+            status=status,
+            elapsed_ms=int((monotonic() - began) * 1000),
+            **body_fields(body, content_type),
+            error=type(exc).__name__,
+            reason=reason,
+            attempt=attempt,
+            error_id=error_id,
+        )
 
 
 def _optional_date(value: str | None) -> date | None:
@@ -395,10 +503,13 @@ def _problem_type(response: httpx.Response) -> str | None:
     return problem.get("type") if isinstance(problem, dict) else None
 
 
-def _error_for(response: httpx.Response) -> EmisAuthFailed | EmisUnavailable:
+def _error_for(
+    response: httpx.Response, error_id: str = ""
+) -> EmisAuthFailed | EmisFileNotFound | EmisUnavailable:
     """``emis/auth-failed`` is the student's problem, all else is ours.
 
     ``emis/credentials-missing`` is a student without a stored login: not an outage.
+    An ``emis/unavailable`` problem keeps the gateway's ``reason`` and status.
     """
     problem_type = _problem_type(response)
     if problem_type == _AUTH_FAILED_TYPE:
@@ -407,11 +518,40 @@ def _error_for(response: httpx.Response) -> EmisAuthFailed | EmisUnavailable:
         return EmisCredentialsMissing(support_details="no stored EMIS login")
     if problem_type == EmisPaused.code:
         return EmisPaused(retry_after=0, support_details="EMIS is paused")
+    if problem_type == EmisFileNotFound.code:
+        return EmisFileNotFound(support_details="EMIS file is gone")
     if problem_type == EmisFileRetryLater.code:
         return EmisFileRetryLater(support_details="EMIS file failed upstream")
+    params = _gateway_params(response, problem_type)
     return EmisUnavailable(
-        support_details=f"gateway answered {response.status_code} {problem_type}"
+        params=params,
+        support_details=(
+            f"gateway answered {response.status_code} {problem_type} "
+            f"[reason={params['reason']} error_id={error_id}]"
+        ),
     )
+
+
+def _gateway_params(
+    response: httpx.Response, problem_type: str | None
+) -> dict[str, str | int]:
+    """Reason and upstream status for a failed gateway answer."""
+    status = response.status_code
+    if problem_type == EmisUnavailable.code:
+        try:
+            sent = response.json().get("params")
+        except (ValueError, AttributeError):
+            sent = None
+        if isinstance(sent, dict) and isinstance(sent.get("reason"), str):
+            kept: dict[str, str | int] = {"reason": sent["reason"]}
+            if isinstance(sent.get("upstream_status"), int):
+                kept["upstream_status"] = sent["upstream_status"]
+            return kept
+    if status in {401, 403}:
+        return {"reason": "gateway_auth", "gateway_status": status}
+    if status >= 500 and problem_type is None:
+        return {"reason": "upstream_5xx", "gateway_status": status}
+    return {"reason": "gateway_error", "gateway_status": status}
 
 
 def _dates(values: list[str] | None) -> tuple[date, ...] | None:

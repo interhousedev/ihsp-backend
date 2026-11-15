@@ -1,7 +1,7 @@
 """The student's EMIS rating book (a PDF on the EMIS CDN)."""
 
 from app.shared.actor import Actor
-from app.shared.contracts.emis import EmisAuthFailed, EmisSource, EmisUnavailable
+from app.shared.contracts.emis import EmisSource
 
 
 class GetRatingBook:
@@ -12,8 +12,9 @@ class GetRatingBook:
         self._emis = emis
 
     async def execute(self, actor: Actor) -> str:
-        """Return the URL of the rating book PDF."""
-        try:
-            return await self._emis.rating_book(actor.user_id)
-        except EmisAuthFailed as exc:  # a 401 here would log the student out
-            raise EmisUnavailable(support_details="EMIS login needs a refresh") from exc
+        """Return the URL of the rating book PDF.
+
+        ``EmisAuthFailed`` (409 ``emis/auth-failed``, the student must re-enter the
+        EMIS password) and ``EmisUnavailable`` (an outage) reach the caller as they are.
+        """
+        return await self._emis.rating_book(actor.user_id)

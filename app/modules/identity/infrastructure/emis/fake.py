@@ -306,7 +306,9 @@ class FakeEmisClient:
         """Accept ``studentNN`` with the password ``password``."""
         name = login.strip().lower()
         if name == "down":
-            raise EmisRequestError("fake EMIS is down")
+            raise EmisRequestError(
+                "fake EMIS is down", status=503, reason="upstream_5xx"
+            )
         if name not in _BY_LOGIN or password != self._passwords.get(
             name, FAKE_PASSWORD
         ):

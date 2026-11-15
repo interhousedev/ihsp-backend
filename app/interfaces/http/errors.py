@@ -2,6 +2,7 @@
 
 import json
 import logging
+import math
 from typing import Any
 
 from app.shared.base_error import BaseError
@@ -16,6 +17,7 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 PROBLEM_JSON = "application/problem+json"
 MAX_PARAM_TEXT = 200
+EMIS_RETRY_AFTER = 30
 _SCALARS = (str, int, float, bool, type(None))
 # Structured conflict payloads the web reads (`getConflictTheirs`,
 # `getConflictList`, the attendance sheet): built server-side from view models
@@ -86,6 +88,34 @@ def problem_body(request: Request, exc: BaseError) -> dict[str, Any]:
     }
 
 
+def _log_domain_error(request: Request, exc: BaseError, error_id: object) -> None:
+    """Upstream EMIS trouble is a warning, other 5xx an error, the rest info.
+
+    A failure relayed from the identity-process gateway was already logged there
+    (``emis_request_failed``, ``domain_error``): here it is info, one event per failure.
+    """
+    relayed = (exc.support_details or "").startswith("gateway answered")
+    if exc.code.startswith("emis/") and exc.status >= 500:
+        emit = log.info if relayed else log.warning
+    elif exc.status >= 500:
+        emit = log.error
+    else:
+        emit = log.info
+    emit(
+        "domain_error",
+        error_id=error_id,
+        code=exc.code,
+        support_details=exc.support_details,
+        path=request.url.path,
+    )
+
+
+def _retry_after(exc: BaseError) -> str:
+    """Seconds EMIS asked for (paused), else a default."""
+    retry = getattr(exc, "retry_after", None)
+    return str(max(1, math.ceil(retry)) if retry else EMIS_RETRY_AFTER)
+
+
 def install_error_handlers(app: FastAPI) -> None:
     """Register handlers for domain errors, HTTP errors, validation and crashes."""
 
@@ -94,23 +124,12 @@ def install_error_handlers(app: FastAPI) -> None:
         """Map a BaseError to its status and stable type."""
         body = problem_body(request, exc)
         if exc.status >= 500:
-            error_id = str(new_id())
-            body["error_id"] = error_id
-            log.error(
-                "domain_error",
-                error_id=error_id,
-                code=exc.code,
-                support_details=exc.support_details,
-                path=request.url.path,
-            )
-        else:
-            log.info(
-                "domain_error",
-                code=exc.code,
-                support_details=exc.support_details,
-                path=request.url.path,
-            )
-        return problem_response(exc.status, body)
+            body["error_id"] = str(new_id())
+        _log_domain_error(request, exc, body.get("error_id"))
+        response = problem_response(exc.status, body)
+        if exc.code.startswith("emis/") and exc.status >= 500:
+            response.headers["Retry-After"] = _retry_after(exc)
+        return response
 
     @app.exception_handler(StarletteHTTPException)
     async def handle_http_exception(

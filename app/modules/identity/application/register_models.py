@@ -15,11 +15,41 @@ from pydantic import BaseModel
 
 
 class EmisAuthError(Exception):
-    """EMIS rejected the credentials or the access token (HTTP 401)."""
+    """EMIS rejected the credentials, the token or sent a login page (401/403)."""
+
+    def __init__(self, status: int | None = 401) -> None:
+        """Keep the upstream status (None when a 200 login page was the answer)."""
+        super().__init__("auth")
+        self.status = status
 
 
 class EmisRequestError(Exception):
-    """EMIS did not answer, or answered with something unexpected."""
+    """EMIS did not answer, or answered with something unexpected.
+
+    ``reason`` is the short code the UI and ops see: ``timeout``, ``network``,
+    ``upstream_5xx``, ``upstream_4xx``, ``rate_limit``, ``auth_failed`` or
+    ``bad_response`` (the answer broke the contract: our bug, not an outage).
+    """
+
+    TRANSIENT_REASONS = frozenset({"timeout", "network", "upstream_5xx"})
+
+    def __init__(
+        self,
+        message: str = "",
+        *,
+        status: int | None = None,
+        reason: str = "bad_response",
+    ) -> None:
+        """Store the upstream status and the reason code."""
+        super().__init__(message)
+        self.status = status
+        self.reason = reason
+        self.error_id = ""
+
+    @property
+    def transient(self) -> bool:
+        """True when asking again may help."""
+        return self.reason in self.TRANSIENT_REASONS
 
 
 class EmisPasswordRejectedError(Exception):
@@ -31,8 +61,16 @@ class EmisPausedError(EmisRequestError):
 
     def __init__(self, retry_after: float) -> None:
         """Store the seconds EMIS asked for."""
-        super().__init__("paused")
+        super().__init__("paused", reason="rate_limit")
         self.retry_after = retry_after
+
+
+class EmisFileGoneError(EmisRequestError):
+    """A material URL answered 404 or 410: it is gone for good, never retried."""
+
+    def __init__(self, status: int) -> None:
+        """Keep the upstream status (404 or 410)."""
+        super().__init__(f"http_{status}", status=status, reason="file_gone")
 
 
 class EmisFileRetryError(EmisRequestError):

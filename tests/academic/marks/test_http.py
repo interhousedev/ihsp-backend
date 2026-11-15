@@ -275,6 +275,51 @@ async def test_rating_book_link(
     assert (await teacher.get("/v1/me/emis/rating-book")).status_code == 403
 
 
+async def test_rating_book_reauth_is_409_not_503(
+    http_client: Any, services: MarksServices, env: Env, make_actor: Any
+) -> None:
+    """Rejected stored EMIS credentials: 409 emis/auth-failed; an outage: 503."""
+    from app.shared.contracts.emis import EmisAuthFailed, EmisUnavailable
+
+    client = await _client(
+        http_client,
+        services,
+        make_actor(Role.STUDENT, user_id=env.world.user_id),
+        MARKS_ROUTERS,
+    )
+    env.emis.error = EmisAuthFailed()
+    response = await client.get("/v1/me/emis/rating-book")
+    assert response.status_code == 409
+    assert response.json()["type"] == "emis/auth-failed"
+    env.emis.error = EmisUnavailable()
+    assert (await client.get("/v1/me/emis/rating-book")).status_code == 503
+
+
+async def test_honours_reauth_is_409_not_503(
+    http_client: Any, services: MarksServices, env: Env, make_actor: Any
+) -> None:
+    """Honours: rejected EMIS credentials give 409 emis/auth-failed."""
+    from app.shared.contracts.emis import EmisAuthFailed
+    from app.shared.contracts.honours import HonoursRules
+
+    env.emis.error = EmisAuthFailed()
+
+    async def current() -> Any:
+        return SimpleNamespace(honours=HonoursRules())
+
+    client = await http_client(
+        MARKS_ROUTERS,
+        {get_actor: lambda: make_actor(Role.STUDENT, user_id=env.world.user_id)},
+        academic=SimpleNamespace(marks=services),
+        admin=SimpleNamespace(platform_settings=SimpleNamespace(current=current)),
+    )
+
+    response = await client.get("/v1/me/honours")
+
+    assert response.status_code == 409
+    assert response.json()["type"] == "emis/auth-failed"
+
+
 async def test_honours(
     http_client: Any, services: MarksServices, env: Env, make_actor: Any
 ) -> None:

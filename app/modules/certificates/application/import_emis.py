@@ -15,12 +15,7 @@ from app.modules.certificates.ports.fetcher import CertificateFetcher
 from app.modules.certificates.ports.unit_of_work import UowFactory
 from app.shared.base_error import BaseError
 from app.shared.clock import Clock
-from app.shared.contracts.emis import (
-    EmisAuthFailed,
-    EmisCertificate,
-    EmisSource,
-    EmisUnavailable,
-)
+from app.shared.contracts.emis import EmisCertificate, EmisSource
 from app.shared.contracts.files import FilePurpose, FilesApi, FileScope
 from app.shared.ids import new_id
 
@@ -61,10 +56,7 @@ class ImportEmis:
 
     async def execute(self, student_id: UUID) -> ImportResult:
         """Read the EMIS profile and bring the student's entries up to date."""
-        try:
-            found = await self._emis.certificates(student_id)
-        except EmisAuthFailed as exc:  # a 401 here would log the student out
-            raise EmisUnavailable(support_details="EMIS login needs a refresh") from exc
+        found = await self._emis.certificates(student_id)
         created = updated = stored = skipped = 0
         for item in found:
             outcome = await self._upsert(student_id, item)

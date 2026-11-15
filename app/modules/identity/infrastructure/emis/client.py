@@ -3,11 +3,14 @@
 import asyncio
 import datetime as dt
 import re
+import time
+from collections.abc import Awaitable, Callable
 from typing import Any, TypeVar
 from urllib.parse import SplitResult, unquote, urlsplit
 
 from app.modules.identity.application.register_models import (
     EmisAuthError,
+    EmisFileGoneError,
     EmisFileRetryError,
     EmisPasswordRejectedError,
     EmisPausedError,
@@ -56,6 +59,8 @@ from app.shared.contracts.emis import (
     EmisSubjectRatings,
 )
 from app.shared.emis_pause import EmisPause
+from app.shared.ids import new_id
+from app.shared.upstream_log import body_fields, looks_like_html, url_path
 
 import httpx
 import structlog
@@ -70,8 +75,13 @@ EMIS_DATE = "%d.%m.%Y"
 LOGIN_PATH = "student-profiles/login/"
 CHANGE_PASSWORD_PATH = "student-profiles/change-password/"
 _PASSWORD_REJECTED_REASONS = ("http_400", "http_422")
-_TIMEOUT = httpx.Timeout(20.0, connect=5.0)
-_DOWNLOAD_TIMEOUT = httpx.Timeout(60.0, connect=5.0)
+_CONNECT_SECONDS = 10.0  # EMIS from abroad needs >5 s to accept a TCP+TLS handshake
+_TIMEOUT = httpx.Timeout(20.0, connect=_CONNECT_SECONDS)
+_GET_RETRIES = 2  # idempotent GETs only: a connect error, a timeout, a 5xx
+_RETRY_BACKOFF_SECONDS = 0.5  # doubled on every retry
+_RETRY_BUDGET_SECONDS = 30.0  # all attempts of one call together
+_TIMETABLE_BUDGET_SECONDS = 50.0  # the whole weekly loop (gateway cuts at 60 s)
+_DOWNLOAD_TIMEOUT = httpx.Timeout(60.0, connect=_CONNECT_SECONDS)
 _DOWNLOAD_ATTEMPTS = 3
 _DOWNLOAD_BACKOFF_SECONDS = 0.5
 _TRANSIENT_MARKERS = ("http_502", "http_503", "http_504", "transport")
@@ -93,6 +103,79 @@ def parse_result(model: type[M], result: dict[str, Any]) -> M:
 def _status_reason(status: int) -> str:
     """Upstream reason: rate_limit for 429, else http_<status>."""
     return "rate_limit" if status == 429 else f"http_{status}"
+
+
+def _status_error(status: int) -> EmisRequestError:
+    """The error of a non-2xx answer, with the status and a reason code."""
+    if status == 429:
+        reason = "rate_limit"
+    else:
+        reason = "upstream_5xx" if status >= 500 else "upstream_4xx"
+    return EmisRequestError(_status_reason(status), status=status, reason=reason)
+
+
+def _transport_error(exc: httpx.HTTPError) -> EmisRequestError:
+    """A timeout or a connection failure: nothing arrived."""
+    reason = "timeout" if isinstance(exc, httpx.TimeoutException) else "network"
+    return EmisRequestError(f"transport {type(exc).__name__}", reason=reason)
+
+
+def _refusal(response: httpx.Response, token: str | None) -> Exception:
+    """The error of a redirect or an error status (a login redirect is auth)."""
+    status = response.status_code
+    where = response.headers.get("location", "").lower()
+    if 300 <= status < 400 and token and ("login" in where or "auth" in where):
+        return EmisAuthError(status)
+    return _status_error(status)
+
+
+def _require_json(response: httpx.Response, token: str | None) -> None:
+    """A login page or a non-JSON body where JSON was expected is an error."""
+    if token and looks_like_html(
+        response.headers.get("content-type"), response.content
+    ):
+        raise EmisAuthError(None)  # a login page where JSON was expected
+    try:
+        response.json()
+    except ValueError as exc:
+        raise EmisRequestError(
+            "response is not JSON", status=response.status_code, reason="bad_response"
+        ) from exc
+
+
+def _log_failure(
+    exc: Exception,
+    *,
+    method: str,
+    path: str,
+    status: int | None,
+    elapsed: float,
+    body: bytes,
+    content_type: str | None,
+    attempt: int,
+    attempts: int,
+    reason: str,
+    error_id: str,
+) -> None:
+    """One structured line per failed upstream attempt (secrets redacted).
+
+    A broken contract (``bad_response``) is our bug: error level. The rest is
+    EMIS or the network misbehaving: warning.
+    """
+    emit = log.error if reason == "bad_response" else log.warning
+    emit(
+        "emis_request_failed",
+        method=method,
+        path=path,
+        status=status,
+        elapsed_ms=int(elapsed * 1000),
+        **body_fields(body, content_type),
+        error=type(exc).__name__,
+        reason=reason,
+        attempt=attempt,
+        attempts=attempts,
+        error_id=error_id,
+    )
 
 
 def _is_transient(exc: EmisRequestError) -> bool:
@@ -122,6 +205,7 @@ class EmisClient:
         file_max_qps: int,
         concurrency: int = 20,
         request_delay_ms: int = 0,
+        sleep: Callable[[float], Awaitable[None]] = asyncio.sleep,
     ) -> None:
         """Store the HTTP client, the shared limits and the shared pause."""
         self._http = http
@@ -132,11 +216,16 @@ class EmisClient:
         self._file_max_qps = file_max_qps
         self._semaphore = asyncio.Semaphore(concurrency)
         self._delay = request_delay_ms / 1000
+        self._sleep = sleep
 
     @classmethod
     def from_settings(cls, settings: EmisSettings, redis: Redis) -> "EmisClient":
         """Build the client for ``EMIS__BASE_URL``; the limits are shared via Redis."""
-        http = httpx.AsyncClient(base_url=settings.base_url, timeout=_TIMEOUT)
+        http = httpx.AsyncClient(
+            base_url=settings.base_url,
+            timeout=_TIMEOUT,
+            proxy=settings.proxy or None,
+        )
         return cls(
             http,
             profile_path=settings.profile_path,
@@ -169,6 +258,40 @@ class EmisClient:
         log.warning("emis_paused", status=response.status_code, seconds=seconds)
         raise EmisPausedError(seconds)
 
+    async def _attempt(
+        self,
+        method: str,
+        path: str,
+        token: str | None,
+        body: dict[str, str] | None,
+        timeout: httpx.Timeout,
+    ) -> httpx.Response:
+        """One HTTP round trip under the semaphore and the shared limits."""
+        headers = {"Authorization": token} if token else {}
+        async with self._semaphore:
+            if self._delay:
+                await asyncio.sleep(self._delay)
+            await self._gate("api", self._max_qps)
+            try:
+                return await self._http.request(
+                    method, path, headers=headers, json=body, timeout=timeout
+                )
+            except httpx.HTTPError as exc:
+                raise _transport_error(exc) from exc
+
+    async def _judge(
+        self, response: httpx.Response, token: str | None, expect_json: bool
+    ) -> None:
+        """Raise for any answer that is not a usable success."""
+        status = response.status_code
+        if status == 401 or (status == 403 and token):
+            raise EmisAuthError(status)
+        if status >= 300:
+            await self._pause_if_asked(response)
+            raise _refusal(response, token)
+        if expect_json:
+            _require_json(response, token)
+
     async def _send(
         self,
         method: str,
@@ -176,25 +299,67 @@ class EmisClient:
         *,
         token: str | None = None,
         body: dict[str, str] | None = None,
+        expect_json: bool = True,
+        deadline: float | None = None,
     ) -> httpx.Response:
-        """Send one request; any 401 is ``EmisAuthError``, other non-200 is an error."""
-        headers = {"Authorization": token} if token else {}
-        async with self._semaphore:
-            if self._delay:
-                await asyncio.sleep(self._delay)
-            await self._gate("api", self._max_qps)
+        """Send a request; GETs are retried with backoff inside a time budget.
+
+        A 401, a 403 or a login page for a token is ``EmisAuthError``; any 2xx is
+        success. Every failed attempt is logged with the status, the elapsed
+        time and the redacted start of the body.
+        """
+        started = time.monotonic()
+        budget = _RETRY_BUDGET_SECONDS
+        if deadline is not None:
+            budget = min(budget, deadline - started)
+        retries = _GET_RETRIES if method == "GET" else 0
+        error_id = str(new_id())
+        for attempt in range(1, retries + 2):
+            remaining = budget - (time.monotonic() - started)
+            timeout = httpx.Timeout(
+                max(1.0, min(20.0, remaining)), connect=_CONNECT_SECONDS
+            )
+            began = time.monotonic()
+            response: httpx.Response | None = None
             try:
-                response = await self._http.request(
-                    method, path, headers=headers, json=body
+                response = await self._attempt(method, path, token, body, timeout)
+                await self._judge(response, token, expect_json)
+                return response
+            except (EmisRequestError, EmisAuthError) as exc:
+                reason = (
+                    exc.reason if isinstance(exc, EmisRequestError) else "auth_failed"
                 )
-            except httpx.HTTPError as exc:
-                raise EmisRequestError(f"transport {type(exc).__name__}") from exc
-        if response.status_code == 401:
-            raise EmisAuthError()
-        if response.status_code != 200:
-            await self._pause_if_asked(response)
-            raise EmisRequestError(_status_reason(response.status_code))
-        return response
+                _log_failure(
+                    exc,
+                    method=method,
+                    path=url_path(path),
+                    status=response.status_code if response is not None else None,
+                    elapsed=time.monotonic() - began,
+                    body=response.content if response is not None else b"",
+                    content_type=(
+                        response.headers.get("content-type")
+                        if response is not None
+                        else None
+                    ),
+                    attempt=attempt,
+                    attempts=retries + 1,
+                    reason=reason,
+                    error_id=error_id,
+                )
+                wait = _RETRY_BACKOFF_SECONDS * 2 ** (attempt - 1)
+                spent = time.monotonic() - started
+                retry = (
+                    isinstance(exc, EmisRequestError)
+                    and exc.transient
+                    and attempt <= retries
+                    and spent + wait < budget
+                )
+                if not retry:
+                    if isinstance(exc, EmisRequestError):
+                        exc.error_id = error_id
+                    raise
+                await self._sleep(wait)
+        raise AssertionError("unreachable")  # the loop returns or raises
 
     async def _request(
         self,
@@ -208,9 +373,11 @@ class EmisClient:
         response = await self._send(method, path, token=token, body=body)
         return _result_of(response)
 
-    async def get_json(self, path: str, token: str) -> Any:
+    async def get_json(
+        self, path: str, token: str, *, deadline: float | None = None
+    ) -> Any:
         """GET a path and return the whole JSON body, not only ``result``."""
-        response = await self._send("GET", path, token=token)
+        response = await self._send("GET", path, token=token, deadline=deadline)
         try:
             return response.json()
         except ValueError as exc:
@@ -227,7 +394,9 @@ class EmisClient:
         """Change the password of the token's student; the reply body is unused."""
         body = {"new_password": new_password, "retry_password": new_password}
         try:
-            await self._send("POST", CHANGE_PASSWORD_PATH, token=token, body=body)
+            await self._send(
+                "POST", CHANGE_PASSWORD_PATH, token=token, body=body, expect_json=False
+            )
         except EmisRequestError as exc:
             if str(exc) in _PASSWORD_REJECTED_REASONS:
                 raise EmisPasswordRejectedError() from exc
@@ -287,12 +456,15 @@ class EmisClient:
         list with one item per day. EMIS is asked for one week at a time.
         """
         classes: list[EmisClass] = []
+        deadline = time.monotonic() + _TIMETABLE_BUDGET_SECONDS
         for first, last in _weeks(begin, end):
             path = (
                 f"{CLASS_SCHEDULES_PATH}?begin_date={first.strftime(EMIS_DATE)}"
                 f"&end_date={last.strftime(EMIS_DATE)}"
             )
-            body = await self.get_json(path, token)
+            if time.monotonic() >= deadline:
+                raise EmisRequestError("timetable deadline passed", reason="timeout")
+            body = await self.get_json(path, token, deadline=deadline)
             if not isinstance(body, dict) or not isinstance(body.get("results"), list):
                 raise EmisRequestError("class schedules response has no results list")
             classes.extend(to_classes(parse_result(ClassSchedulesV1DTO, body)))
@@ -304,9 +476,7 @@ class EmisClient:
         The EMIS token goes only to the EMIS host itself, never to another server
         (files often sit on a CDN that needs no session).
         """
-        parts = urlsplit(url)
-        if parts.scheme not in {"http", "https"} or not parts.hostname:
-            raise EmisRequestError("material URL is not http(s)")
+        parts = _material_url(url)
         own_host = parts.hostname == self._http.base_url.host
         headers = {"Authorization": token} if own_host else {}
         for attempt in range(1, _DOWNLOAD_ATTEMPTS + 1):
@@ -316,20 +486,15 @@ class EmisClient:
                 )
             except EmisPausedError:
                 raise  # EMIS asked for a rest: no retry now, the sync stops
+            except EmisFileGoneError as exc:
+                log.info("emis_file_gone", host=parts.hostname, status=exc.status)
+                raise  # permanent: the caller keeps a link instead
             except EmisRequestError as exc:
-                transient = _is_transient(exc)
-                log.warning(
-                    "emis_download_failed",
-                    host=parts.hostname,
-                    attempt=attempt,
-                    reason=str(exc),
-                    transient=transient,
-                )
-                if not transient:
+                final = _download_failure(exc, parts.hostname, attempt)
+                if final is exc:
                     raise
-                if attempt == _DOWNLOAD_ATTEMPTS:
-                    # a 5xx or a transport failure: the file stays pending for next sync
-                    raise EmisFileRetryError(str(exc)) from exc
+                if final is not None:
+                    raise final from exc
                 await asyncio.sleep(_DOWNLOAD_BACKOFF_SECONDS * attempt)
         raise AssertionError("unreachable")  # the loop returns or raises
 
@@ -355,10 +520,12 @@ class EmisClient:
                         raise EmisAuthError()
                     if response.status_code != 200:
                         await self._pause_if_asked(response)
-                        raise EmisRequestError(_status_reason(response.status_code))
+                        if response.status_code in (404, 410):
+                            raise EmisFileGoneError(response.status_code)
+                        raise _status_error(response.status_code)
                     data = await _read_limited(response, max_bytes)
             except httpx.HTTPError as exc:
-                raise EmisRequestError(f"transport {type(exc).__name__}") from exc
+                raise _transport_error(exc) from exc
         return EmisFile(
             name=_file_name(response, parts.path),
             content_type=response.headers.get("content-type"),
@@ -366,16 +533,43 @@ class EmisClient:
         )
 
 
+def _material_url(url: str) -> SplitResult:
+    parts = urlsplit(url)
+    if parts.scheme not in {"http", "https"} or not parts.hostname:
+        raise EmisRequestError("material URL is not http(s)", reason="bad_material_url")
+    return parts
+
+
+def _download_failure(
+    exc: EmisRequestError, host: str | None, attempt: int
+) -> Exception | None:
+    """Log a failed download; return the error to raise, or None to retry."""
+    transient = _is_transient(exc)
+    log.warning(
+        "emis_download_failed",
+        host=host,
+        attempt=attempt,
+        reason=str(exc),
+        transient=transient,
+    )
+    if not transient:
+        return exc
+    if attempt == _DOWNLOAD_ATTEMPTS:
+        # a 5xx or a transport failure: the file stays pending for next sync
+        return EmisFileRetryError(str(exc), status=exc.status, reason=exc.reason)
+    return None
+
+
 async def _read_limited(response: httpx.Response, max_bytes: int) -> bytes:
     declared = response.headers.get("content-length", "")
     if declared.isdigit() and int(declared) > max_bytes:
-        raise EmisRequestError("file too large")
+        raise EmisRequestError("file too large", reason="file_too_large")
     chunks: list[bytes] = []
     size = 0
     async for chunk in response.aiter_bytes():
         size += len(chunk)
         if size > max_bytes:
-            raise EmisRequestError("file too large")
+            raise EmisRequestError("file too large", reason="file_too_large")
         chunks.append(chunk)
     return b"".join(chunks)
 

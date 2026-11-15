@@ -7,6 +7,7 @@ from app.modules.identity.application.register_models import (
     CredentialNotFoundError,
     CredentialStoreError,
     EmisAuthError,
+    EmisFileGoneError,
     EmisFileRetryError,
     EmisPausedError,
     EmisRequestError,
@@ -21,6 +22,7 @@ from app.shared.base_error import (
 from app.shared.contracts.emis import (
     EmisAuthFailed,
     EmisCredentialsMissing,
+    EmisFileNotFound,
     EmisFileRetryLater,
     EmisPaused,
     EmisUnavailable,
@@ -150,6 +152,41 @@ class DeleteForbiddenError(ForbiddenError):
     message_key = "id-delete-forbidden"
 
 
+def _unavailable_from(exc: EmisRequestError) -> EmisUnavailable:
+    """Log the upstream reason and build the 503 carrying it.
+
+    The client already logged every failed attempt (``emis_request_failed``) and the
+    HTTP edge logs the ``domain_error``; this line only links them, so info level.
+    """
+    log.info(
+        "emis_upstream_failed",
+        source="emis",
+        reason=exc.reason,
+        detail=str(exc),
+        status=exc.status,
+        exc_class=type(exc).__name__,
+        error_id=exc.error_id,
+    )
+    params: dict[str, str | int] = {"reason": exc.reason}
+    if exc.status is not None:
+        params["upstream_status"] = exc.status
+    return EmisUnavailable(
+        params=params,
+        support_details=(
+            f"EMIS: {exc} [reason={exc.reason} upstream_status={exc.status} "
+            f"error_id={exc.error_id}]"
+        ),
+    )
+
+
+def _file_error(exc: EmisFileGoneError | EmisFileRetryError) -> Exception:
+    if isinstance(exc, EmisFileGoneError):
+        return EmisFileNotFound(
+            support_details=f"EMIS file is gone (HTTP {exc.status})"
+        )
+    return EmisFileRetryLater(support_details=f"EMIS file: {exc}")
+
+
 @contextmanager
 def emis_errors() -> Iterator[None]:
     """Map EMIS and Vault port errors to the contract errors (401 / 503).
@@ -165,13 +202,15 @@ def emis_errors() -> Iterator[None]:
         raise EmisPaused(
             retry_after=exc.retry_after, support_details="EMIS asked for a pause"
         ) from exc
-    except EmisFileRetryError as exc:
-        raise EmisFileRetryLater(support_details=f"EMIS file: {exc}") from exc
+    except (EmisFileGoneError, EmisFileRetryError) as exc:
+        raise _file_error(exc) from exc
     except EmisRequestError as exc:
-        log.warning("emis_upstream_failed", source="emis", reason=str(exc))
-        raise EmisUnavailable(support_details=f"EMIS: {exc}") from exc
+        raise _unavailable_from(exc) from exc
     except CredentialNotFoundError as exc:
         raise EmisCredentialsMissing(support_details="Vault secret is missing") from exc
     except CredentialStoreError as exc:
         log.warning("emis_upstream_failed", source="vault", reason=str(exc))
-        raise EmisUnavailable(support_details=f"Vault: {exc}") from exc
+        raise EmisUnavailable(
+            params={"reason": "vault_unavailable"},
+            support_details=f"Vault: {exc}",
+        ) from exc
