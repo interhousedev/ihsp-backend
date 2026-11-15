@@ -17,7 +17,7 @@ DEFAULT_LIMITS = FilesLimits(
     student_quota_bytes=int(1.5 * GIB),
     staff_quota_bytes=10 * GIB,
     file_max_bytes=100 * 1024 * 1024,
-    ai_text_max_bytes=100 * 1024,
+    ai_text_max_bytes=8_000_000,
 )
 
 

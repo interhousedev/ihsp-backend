@@ -153,16 +153,36 @@ async def test_read_file_returns_a_page_of_the_own_file(h: AiHarness) -> None:
     assert (data["text"], data["page"], data["pages"]) == ("second page", 2, 2)
 
 
-async def test_read_file_refuses_text_that_is_too_large(h: AiHarness) -> None:
-    """AI-7: files over LIMITS__AI_TEXT_MAX_BYTES are not read."""
-    big = h.files.add(make_file(h.student.user_id, text_bytes=200_000))
+async def test_read_file_pages_through_text_above_the_old_100_kib_limit(
+    h: AiHarness,
+) -> None:
+    """AI-7: 200 KB of text (once refused) is read page by page with a note."""
+    pages = [f"chapter {i}" for i in range(1, 26)]
+    big = h.files.add(make_file(h.student.user_id, text_bytes=200_000), *pages)
+    chat = await h.new_chat()
+    h.llm.push(
+        tool_reply(("read_file", {"file_id": str(big.id), "page": 20})),
+        text_reply("answered"),
+    )
+
+    result = await h.say(chat.id, "read")
+
+    data = json.loads(h.llm.requests[1]["messages"][-1]["content"])["untrusted_data"]
+    assert (data["text"], data["page"], data["pages"]) == ("chapter 20", 20, 25)
+    assert "search_files" in data["note"]
+    assert result.new_messages[-1].text == "answered"
+
+
+async def test_read_file_refuses_an_absurdly_large_text(h: AiHarness) -> None:
+    """AI-7: files over LIMITS__AI_TEXT_MAX_BYTES (8 MB) name the limit."""
+    big = h.files.add(make_file(h.student.user_id, text_bytes=9_000_000))
     chat = await h.new_chat()
     h.llm.push(tool_reply(("read_file", {"file_id": str(big.id)})), text_reply("ok"))
 
     await h.say(chat.id, "read")
 
     error = json.loads(h.llm.requests[1]["messages"][-1]["content"])["error"]
-    assert "too large" in error
+    assert "8000000 bytes" in error and "split" in error
 
 
 async def test_attached_files_are_named_for_the_model(h: AiHarness) -> None:

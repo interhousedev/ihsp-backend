@@ -11,6 +11,8 @@ from app.shared.limits import LimitsProvider
 
 from pydantic import Field
 
+LARGE_FILE_PAGES = 12  # about 100 KB of text
+
 
 class ReadFileArgs(ToolArgs):
     """A file and a page number."""
@@ -44,15 +46,23 @@ class ReadFile(ReadTool[ReadFileArgs]):
         if ref.text_bytes > max_text_bytes:
             raise ToolFailedError(
                 support_details=(
-                    f"the text of this file is too large for the assistant "
-                    f"({ref.text_bytes} bytes, the limit is {max_text_bytes})"
+                    f"the text of this file is {ref.text_bytes} bytes, over the "
+                    f"limit of {max_text_bytes} bytes; tell the user to split the "
+                    f"file or upload only the needed chapters"
                 )
             )
         page = await self.files.read_text_page(args.file_id, args.page)
-        return {
+        result: dict[str, Any] = {
             "file_id": str(ref.id),
             "name": ref.name,
             "page": page.page,
             "pages": page.pages,
             "text": page.text,
         }
+        if page.pages > LARGE_FILE_PAGES:
+            result["note"] = (
+                f"Large file of {page.pages} pages: do not read it all. Use "
+                "search_files for the relevant part and open only those pages, "
+                "or make a notebook from the file."
+            )
+        return result

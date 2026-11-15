@@ -1,9 +1,12 @@
 """FILE-7, UF-WEB-18 step 3: text extraction, sidecar, index and readiness."""
 
+from dataclasses import replace
+
+from app.modules.files.application.file_views import FileViewBuilder
 from app.modules.files.domain.status import FileStatus
 from app.shared.actor import Actor
 from app.shared.contracts.files import FilePurpose
-from tests.fakes.files.services import FilesFakes
+from tests.fakes.files.services import DEFAULT_LIMITS, FilesFakes
 from tests.files.helpers import (
     DOCX_TYPE,
     PDF_TYPE,
@@ -67,10 +70,10 @@ async def test_plain_text_is_decoded_with_replacement(
     assert text.endswith("� end")
 
 
-async def test_text_over_100_kb_is_stored_but_marked_too_large_for_the_assistant(
+async def test_text_over_100_kb_is_ready_and_over_the_ai_limit_is_not(
     fakes: FilesFakes, student: Actor
 ) -> None:
-    """FILE-7: text_bytes keeps the size; assistant_ready is False above 100 KB."""
+    """FILE-7: 150 KB is ready for the assistant; above the AI limit it is not."""
     data = ("word " * 30000).encode()
     file_id = await upload_ready(
         fakes, student, name="big.txt", data=data, content_type="text/plain"
@@ -79,7 +82,10 @@ async def test_text_over_100_kb_is_stored_but_marked_too_large_for_the_assistant
     view = await fakes.services.get_file.execute(student, file_id)
 
     assert view.file.text_bytes is not None and view.file.text_bytes > 100 * 1024
-    assert view.assistant_ready is False
+    assert view.assistant_ready is True
+    huge = replace(view.file, text_bytes=9_000_000)
+    builder = FileViewBuilder(fakes.terms, fakes.usage, DEFAULT_LIMITS)
+    assert builder.assistant_ready(huge) is False
 
 
 async def test_small_text_is_ready_for_the_assistant(
