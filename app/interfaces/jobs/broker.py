@@ -123,11 +123,30 @@ def _is_unknown_task(exc: BaseException) -> bool:
     )
 
 
+# Tasks that are also sent once whenever the scheduler (re)starts, i.e. after each
+# deploy: they are idempotent, so a restart without news sends nothing again.
+STARTUP_TASKS: tuple[str, ...] = ("identity.offer_mcp_scopes",)
+
+
+class StartupScheduler(TaskiqScheduler):
+    """TaskiqScheduler that also sends `STARTUP_TASKS` once when it starts."""
+
+    async def startup(self) -> None:
+        """Start the broker, then enqueue the startup tasks (a failure is logged)."""
+        await super().startup()
+        kicker = TaskiqKicker(self.broker)
+        for task_name in STARTUP_TASKS:
+            try:
+                await kicker.kick(task_name)
+            except TaskKickFailedError:
+                log.exception("scheduler_startup_task_failed", task_name=task_name)
+
+
 _settings = load_settings()
 broker: AsyncBroker = build_broker(
     _settings.redis.url, in_memory=_settings.env == "test"
 )
-scheduler = TaskiqScheduler(
+scheduler = StartupScheduler(
     broker=broker,
     sources=[CronScheduleSource(settings=_settings), LabelScheduleSource(broker)],
 )
