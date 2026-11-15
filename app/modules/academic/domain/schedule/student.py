@@ -16,7 +16,7 @@ class Student:
     """The academic profile of a user; names live in the identity module."""
 
     user_id: UUID
-    group_id: UUID
+    group_id: UUID | None
     subgroup: int | None = None
     subgroup_set_by: UUID | None = None
     subgroup_set_at: dt.datetime | None = None

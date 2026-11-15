@@ -68,7 +68,7 @@ async def build_group_items(
     wanted = {group.id for group in groups}
     by_group: dict[UUID, list[Student]] = defaultdict(list)
     for student in await uow.students.list_filtered(status="active"):
-        if student.group_id in wanted:
+        if student.group_id is not None and student.group_id in wanted:
             by_group[student.group_id].append(student)
     everyone = [student for rows in by_group.values() for student in rows]
     users = await _users(identity, groups, everyone)

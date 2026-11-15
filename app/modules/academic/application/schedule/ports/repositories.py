@@ -81,6 +81,10 @@ class GroupRepository(Protocol):
         """Write the changes of a group."""
         ...
 
+    async def delete(self, group_id: UUID) -> None:
+        """Delete the group: detach its students and drop its timetable audience."""
+        ...
+
     async def list_all(self, status: str | None = None) -> list[Group]:
         """Return groups ordered by name, optionally of one status."""
         ...

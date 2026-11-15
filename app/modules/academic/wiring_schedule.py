@@ -28,6 +28,7 @@ from app.modules.academic.application.schedule.create_subject import CreateSubje
 from app.modules.academic.application.schedule.create_term import CreateTerm
 from app.modules.academic.application.schedule.current_term import CurrentTerm
 from app.modules.academic.application.schedule.delete_entry import DeleteEntry
+from app.modules.academic.application.schedule.delete_group import DeleteGroup
 from app.modules.academic.application.schedule.ensure_room import EnsureRoom
 from app.modules.academic.application.schedule.export_group_photos import (
     ExportGroupPhotos,
@@ -113,6 +114,7 @@ class ScheduleServices:
     current_term: CurrentTerm
     create_group: CreateGroup
     update_group: UpdateGroup
+    delete_group: DeleteGroup
     assign_subgroups: AssignSubgroups
     export_group_photos: ExportGroupPhotos
     get_group_detail: GetGroupDetail
@@ -180,6 +182,7 @@ def assemble_schedule(
         current_term=CurrentTerm(uow_factory, clock),
         create_group=CreateGroup(uow_factory, identity),
         update_group=UpdateGroup(uow_factory, identity),
+        delete_group=DeleteGroup(uow_factory),
         assign_subgroups=AssignSubgroups(uow_factory, identity, clock),
         get_group_detail=GetGroupDetail(uow_factory, identity),
         get_group_curriculum=GetGroupCurriculum(uow_factory, clock),

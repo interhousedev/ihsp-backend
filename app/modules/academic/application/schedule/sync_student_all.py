@@ -76,7 +76,7 @@ class SyncStudentAll:
     async def _run(self, user_id: UUID, *, with_marks: bool) -> str:
         async with self._uow_factory() as uow:
             student = await uow.students.get(user_id)
-        if student is None or student.status != "active":
+        if student is None or student.status != "active" or student.group_id is None:
             return "no_student"
         await self._ensure_curriculum(student.group_id)
         result = await self._timetable.execute(

@@ -41,7 +41,7 @@ class GetMyCurriculum:
         """Return the curriculum, or None for a user without a group or curriculum."""
         async with self.uow_factory() as uow:
             student = await uow.students.get(actor.user_id)
-            if student is None:
+            if student is None or student.group_id is None:
                 return None
             group = await uow.groups.get(student.group_id)
             if group is None:

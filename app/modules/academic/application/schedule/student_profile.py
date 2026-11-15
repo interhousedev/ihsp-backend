@@ -34,7 +34,11 @@ class GetStudentProfile:
             student = await uow.students.get(actor.user_id)
             if student is None:
                 raise StudentNotFoundError()
-            group = await uow.groups.get(student.group_id)
+            group = (
+                await uow.groups.get(student.group_id)
+                if student.group_id is not None
+                else None
+            )
         if group is None:
             raise GroupNotFoundError()
         people = await person_map(

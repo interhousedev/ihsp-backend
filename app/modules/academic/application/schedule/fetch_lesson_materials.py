@@ -102,7 +102,7 @@ class FetchLessonMaterials:
     async def _fetch(self, lesson_id: UUID, user_id: UUID) -> FetchReason | None:
         day = today(self._clock)
         lesson, student, term = await self._load(lesson_id, user_id, day)
-        if lesson is None or student is None:
+        if lesson is None or student is None or student.group_id is None:
             return None
         if term is None or not term.starts_on <= lesson.date <= term.ends_on:
             return "old_term"

@@ -10,6 +10,9 @@ from app.interfaces.http.v1.admin_schedule.groups.handlers.assign_subgroups impo
 from app.interfaces.http.v1.admin_schedule.groups.handlers.create_group import (
     create_group,
 )
+from app.interfaces.http.v1.admin_schedule.groups.handlers.delete_group import (
+    delete_group,
+)
 from app.interfaces.http.v1.admin_schedule.groups.handlers.export_group_photos import (
     export_group_photos,
 )
@@ -41,6 +44,7 @@ router.add_api_route(
 router.add_api_route(
     "", create_group, methods=["POST"], response_model=GroupItemResponse
 )
+router.add_api_route("/{group_id}", delete_group, methods=["DELETE"], status_code=204)
 router.add_api_route(
     "/{group_id}", get_group, methods=["GET"], response_model=GroupDetailResponse
 )

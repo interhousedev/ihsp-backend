@@ -37,7 +37,9 @@ class Student(TimestampMixin, Base):
     )
 
     user_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
-    group_id: Mapped[UUID] = mapped_column(Uuid, ForeignKey("academic.groups.id"))
+    group_id: Mapped[UUID | None] = mapped_column(
+        Uuid, ForeignKey("academic.groups.id", ondelete="SET NULL")
+    )
     subgroup: Mapped[int | None] = mapped_column(SmallInteger)
     subgroup_set_by: Mapped[UUID | None] = mapped_column(Uuid)
     subgroup_set_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

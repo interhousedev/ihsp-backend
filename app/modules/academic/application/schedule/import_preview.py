@@ -84,7 +84,9 @@ class ImportPreview:
     async def _known_students(self) -> list[KnownStudent]:
         async with self.uow_factory() as uow:
             students = await uow.students.list_filtered(status="active")
-            groups = await uow.groups.get_many({s.group_id for s in students})
+            groups = await uow.groups.get_many(
+                {s.group_id for s in students if s.group_id is not None}
+            )
         users = (
             await self.identity.get_users([s.user_id for s in students])
             if students
@@ -99,5 +101,7 @@ class ImportPreview:
                 middle_name=users[student.user_id].middle_name,
             )
             for student in students
-            if student.user_id in users and student.group_id in groups
+            if student.user_id in users
+            and student.group_id is not None
+            and student.group_id in groups
         ]

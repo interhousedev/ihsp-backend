@@ -125,6 +125,26 @@ class FakeGroupRepository:
         self._check_slug(group)
         self.store.groups[group.id] = _copy(group)
 
+    async def delete(self, group_id: UUID) -> None:
+        """Detach the students, drop the group from entries, delete the group."""
+        for student in self.store.students.values():
+            if student.group_id == group_id:
+                student.group_id = None
+                student.subgroup = None
+                student.subgroup_set_by = None
+                student.subgroup_set_at = None
+        for entry in list(self.store.entries.values()):
+            kept = [k for k in entry.audience if audience_keys.parse(k)[0] != group_id]
+            if len(kept) == len(entry.audience):
+                continue
+            if kept:
+                entry.audience = kept
+            else:
+                await FakeTimetableEntryRepository(self.store).delete(entry.id)
+        self.store.curricula.pop(group_id, None)
+        self.store.curriculum_subjects.pop(group_id, None)
+        self.store.groups.pop(group_id, None)
+
     def _check_slug(self, group: Group) -> None:
         if group.status != "active":
             return

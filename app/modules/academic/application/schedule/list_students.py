@@ -41,14 +41,20 @@ class ListStudents:
             students = await uow.students.list_filtered(
                 group_id=group_id, subgroup=subgroup, status=status
             )
-            groups = await uow.groups.get_many({s.group_id for s in students})
+            groups = await uow.groups.get_many(
+                {s.group_id for s in students if s.group_id is not None}
+            )
         users = (
             await self.identity.get_users([s.user_id for s in students])
             if students
             else {}
         )
         rows = [
-            _row(student, users[student.user_id], groups.get(student.group_id))
+            _row(
+                student,
+                users[student.user_id],
+                groups.get(student.group_id) if student.group_id else None,
+            )
             for student in students
             if student.user_id in users
         ]
