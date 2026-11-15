@@ -67,7 +67,7 @@ jobs:
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Log in to GHCR
-        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -97,7 +97,11 @@ jobs:
           cache-from: type=gha,scope=backend
           cache-to: type=gha,mode=max,scope=backend
 
-      - name: Scan the candidate -> SARIF (all CRITICAL and HIGH, for code scanning)
+      # Code scanning gets what can be acted on: CRITICAL and HIGH with a published fix. Unfixed Debian
+      # findings (for example the ffmpeg 7.1.5 CVEs, which the audio extraction in the bot never reaches)
+      # have no action until Debian ships a package, and the apt-get upgrade in the Dockerfile picks the fix up
+      # on the next build. The trivy-action keeps every severity in SARIF unless limit-severities-for-sarif is set.
+      - name: Scan the candidate -> SARIF (fixable CRITICAL and HIGH, for code scanning)
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ${{ steps.candidate.outputs.tags }}
@@ -105,6 +109,8 @@ jobs:
           output: trivy.sarif
           vuln-type: os,library
           severity: CRITICAL,HIGH
+          limit-severities-for-sarif: true
+          ignore-unfixed: true
           version: v0.76.1
           exit-code: "0"
 

@@ -5,6 +5,7 @@ import os
 import re
 import subprocess
 from pathlib import Path
+from types import ModuleType
 from unittest.mock import MagicMock
 
 from tests.deploy.helpers import MATERIALS_DIR, SCRIPTS_DIR
@@ -113,7 +114,7 @@ def test_prod_init_can_read_every_credential_vault_setup_prints(
     }
 
 
-def _load_vault_setup():
+def _load_vault_setup() -> ModuleType:
     spec = importlib.util.spec_from_file_location(
         "vault_setup", MATERIALS_DIR / "vault" / "setup.py"
     )

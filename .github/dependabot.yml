@@ -56,6 +56,11 @@ updates:
         update-types: ["patch"]
       base-images-minor:
         update-types: ["minor"]
+    # The venv, uv.lock and CI target Python 3.13; a new Python minor is a deliberate migration (dependency
+    # wheels, mypy/ty target, the test matrix), not a routine bump. Patch releases of 3.13 still arrive.
+    ignore:
+      - dependency-name: "python"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
 
   - package-ecosystem: docker-compose
     directory: "/materials"
@@ -74,3 +79,8 @@ updates:
         update-types: ["patch"]
       compose-images-minor:
         update-types: ["minor"]
+    # The venv, uv.lock and CI target Python 3.13; a new Python minor is a deliberate migration (dependency
+    # wheels, mypy/ty target, the test matrix), not a routine bump. Patch releases of 3.13 still arrive.
+    ignore:
+      - dependency-name: "python"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
