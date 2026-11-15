@@ -74,7 +74,7 @@ services:
     restart: "no"
 
   vault:
-    image: hashicorp/vault:2.1.2
+    image: hashicorp/vault:1.21.4
     cap_add:
       - IPC_LOCK
     environment:

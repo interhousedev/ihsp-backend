@@ -91,6 +91,9 @@ webfinger:
       - tests:write
       - notebooks:read
       - chats:read
+      - group:read
+      - rating_book:read
+      - notifications:read
       - notebooks:write
       - library:read
       - files:read.all
@@ -131,6 +134,9 @@ webfinger:
       - student:tests:write
       - student:notebooks:read
       - student:chats:read
+      - student:group:read
+      - student:rating_book:read
+      - student:notifications:read
       - student:notebooks:write
       - student:library:read
       - student:files:read.all
@@ -151,6 +157,7 @@ webfinger:
       - teacher:lesson-plans:read
       - teacher:lesson-plans:write
       - teacher:files:write
+      - teacher:notifications:read
       - lms:lms.courses.read
       - lms:lms.courses.write
       - lms:lms.courses.delete

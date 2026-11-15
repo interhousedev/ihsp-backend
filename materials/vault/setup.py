@@ -2,13 +2,15 @@
 
 Enables the Transit and AppRole engines (and KV v2 at ``secret/`` when it is missing),
 creates the Transit key ``emis-passwords``, writes the ``identity`` policy and the
-``identity`` AppRole. Needs the ``hvac`` package.
+``identity`` AppRole, and the ``telegram-bots`` policy and AppRole (bot tokens). Needs the ``hvac`` package.
 
 Environment: VAULT_ADDR (default http://localhost:8200), VAULT_TOKEN (a root or
 equivalent token; dev: dev-root), VAULT_CACERT (optional CA file).
 
-``--print-credentials`` prints the AppRole ids as IHSP_VAULT__ROLE_ID / SECRET_ID lines
-(they are secrets: do not run it in CI logs).
+``--print-credentials`` prints the role and secret ids of both AppRoles as ``KEY=value``
+lines (IHSP_VAULT__ROLE_ID, IHSP_VAULT__SECRET_ID, IHSP_BOT_VAULT__ROLE_ID,
+IHSP_BOT_VAULT__SECRET_ID). They are secrets: ``scripts/prod_init.sh`` captures the
+output into the env file; never run it where stdout goes to a terminal or a CI log.
 """
 
 import argparse
@@ -22,6 +24,8 @@ from hvac.exceptions import InvalidPath
 ROLE = "identity"
 TRANSIT_KEY = "emis-passwords"
 POLICY_FILE = Path(__file__).parent / "policies" / "identity.hcl"
+BOT_ROLE = "telegram-bots"
+BOT_POLICY_FILE = Path(__file__).parent / "policies" / "telegram-bots.hcl"
 KV_MAX_VERSIONS = 2  # keep old EMIS secrets from piling up in history
 
 
@@ -51,12 +55,21 @@ def bootstrap(client: hvac.Client) -> None:
     client.auth.approle.create_or_update_approle(
         role_name=ROLE, token_policies=[ROLE], token_ttl="1h", token_max_ttl="24h"
     )
+    client.sys.create_or_update_policy(
+        name=BOT_ROLE, policy=BOT_POLICY_FILE.read_text(encoding="utf-8")
+    )
+    client.auth.approle.create_or_update_approle(
+        role_name=BOT_ROLE,
+        token_policies=[BOT_ROLE],
+        token_ttl="1h",
+        token_max_ttl="24h",
+    )
 
 
-def credentials(client: hvac.Client) -> tuple[str, str]:
-    """Return (role_id, a new secret_id) of the identity AppRole."""
-    role_id = client.auth.approle.read_role_id(role_name=ROLE)["data"]["role_id"]
-    secret_id = client.auth.approle.generate_secret_id(role_name=ROLE)["data"][
+def credentials(client: hvac.Client, role: str = ROLE) -> tuple[str, str]:
+    """Return (role_id, a new secret_id) of an AppRole (identity by default)."""
+    role_id = client.auth.approle.read_role_id(role_name=role)["data"]["role_id"]
+    secret_id = client.auth.approle.generate_secret_id(role_name=role)["data"][
         "secret_id"
     ]
     return role_id, secret_id
@@ -76,14 +89,13 @@ def main() -> int:
     sys.stdout.write("vault bootstrap done\n")
     if args.print_credentials:
         role_id, secret_id = credentials(client)
-        # secret_id is never printed; it goes to a 0600 file in secrets/
-        path = Path("secrets/identity_secret_id")
-        path.parent.mkdir(parents=True, exist_ok=True)
-        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-        with os.fdopen(fd, "w") as fh:
-            fh.write(f"{secret_id}\n")
-        sys.stdout.write(f"IHSP_VAULT__ROLE_ID={role_id}\n")
-        sys.stdout.write(f"IHSP_VAULT__SECRET_ID is in {path} (mode 0600)\n")
+        bot_role_id, bot_secret_id = credentials(client, BOT_ROLE)
+        sys.stdout.write(
+            f"IHSP_VAULT__ROLE_ID={role_id}\n"
+            f"IHSP_VAULT__SECRET_ID={secret_id}\n"
+            f"IHSP_BOT_VAULT__ROLE_ID={bot_role_id}\n"
+            f"IHSP_BOT_VAULT__SECRET_ID={bot_secret_id}\n"
+        )
     return 0
 
 

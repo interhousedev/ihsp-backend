@@ -220,6 +220,13 @@ EOF
     set_env IHSP_VAULT__ROLE_ID "$role_id"
     set_env IHSP_VAULT__SECRET_ID "$secret_id"
     say "stored the identity AppRole credentials in $ENV_FILE"
+    local bot_role_id bot_secret_id
+    bot_role_id=$(printf '%s\n' "$out" | sed -n 's/^IHSP_BOT_VAULT__ROLE_ID=//p')
+    bot_secret_id=$(printf '%s\n' "$out" | sed -n 's/^IHSP_BOT_VAULT__SECRET_ID=//p')
+    [ -n "$bot_role_id" ] && [ -n "$bot_secret_id" ] || die "vault-setup did not print the telegram-bots AppRole credentials"
+    set_env IHSP_BOT_VAULT__ROLE_ID "$bot_role_id"
+    set_env IHSP_BOT_VAULT__SECRET_ID "$bot_secret_id"
+    say "stored the telegram-bots AppRole credentials in $ENV_FILE"
 
     say "creating the backup AppRole (may only read Raft snapshots)"
     local backup_ids
