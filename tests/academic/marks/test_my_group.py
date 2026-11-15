@@ -98,25 +98,58 @@ async def test_member_sees_homeroom_teacher_head_student_and_members(
     )
 
 
-async def test_photos_are_withheld_for_blocked_and_inactive_accounts(
+async def test_blocked_members_are_left_out_and_inactive_ones_get_no_photo(
     services: MarksServices,
     env: Env,
     sessionmaker_in_tx: async_sessionmaker[AsyncSession],
 ) -> None:
-    """A blocked member gets no photo_url and is not asked for a link."""
+    """A blocked member is not listed (nor as head); an inactive one has no photo."""
     w = env.world
-    other = await add_student(sessionmaker_in_tx, w)
+    blocked = await add_student(sessionmaker_in_tx, w)
+    inactive = await add_student(sessionmaker_in_tx, w)
     env.identity.add(make_user(w.user_id))
-    env.identity.add(make_user(other, status=UserStatus.BLOCKED))
+    env.identity.add(make_user(blocked, status=UserStatus.BLOCKED))
+    env.identity.add(make_user(inactive, status=UserStatus.DEACTIVATED))
+    await _set_roles(sessionmaker_in_tx, w.group_id, None, blocked)
     env.identity.photos[w.user_id] = "https://files.test/a.jpg"
-    env.identity.photos[other] = "https://files.test/b.jpg"
+    env.identity.photos[blocked] = "https://files.test/b.jpg"
+    env.identity.photos[inactive] = "https://files.test/c.jpg"
 
     data = await services.get_my_group.execute(_student(w.user_id))
 
     by_id = {m["id"]: m["photo_url"] for m in data["members"]}
-    assert by_id[w.user_id] == "https://files.test/a.jpg"
-    assert by_id[other] is None
-    assert other not in env.identity.photo_calls[-1]
+    assert by_id == {w.user_id: "https://files.test/a.jpg", inactive: None}
+    assert data["size"] == 2
+    assert data["head_student"] is None
+    assert inactive not in env.identity.photo_calls[-1]
+
+
+async def test_opted_out_student_photo_is_hidden_from_classmates_only(
+    services: MarksServices,
+    env: Env,
+    sessionmaker_in_tx: async_sessionmaker[AsyncSession],
+) -> None:
+    """Classmates get no photo for an opted-out student; the student sees their own."""
+    w = env.world
+    other = await add_student(sessionmaker_in_tx, w)
+    env.identity.add(
+        make_user(w.user_id), UserPreferences(hide_photo_from_classmates=True)
+    )
+    env.identity.add(make_user(other))
+    await _set_roles(sessionmaker_in_tx, w.group_id, None, w.user_id)
+    env.identity.photos[w.user_id] = "https://files.test/a.jpg"
+    env.identity.photos[other] = "https://files.test/b.jpg"
+
+    seen_by_classmate = await services.get_my_group.execute(_student(other))
+    seen_by_self = await services.get_my_group.execute(_student(w.user_id))
+
+    peer = {m["id"]: m["photo_url"] for m in seen_by_classmate["members"]}
+    assert peer[w.user_id] is None
+    assert peer[other] == "https://files.test/b.jpg"
+    assert seen_by_classmate["head_student"]["photo_url"] is None
+    mine = {m["id"]: m["photo_url"] for m in seen_by_self["members"]}
+    assert mine[w.user_id] == "https://files.test/a.jpg"
+    assert seen_by_self["head_student"]["photo_url"] == "https://files.test/a.jpg"
 
 
 async def test_head_student_flag_is_set_for_the_head(

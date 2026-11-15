@@ -1,11 +1,15 @@
 """LMS-7, LMS-9, LMS-13, LMS-14, UF-LMS-10: pending changes and publishing."""
 
+from app.modules.lms.domain.access_rules import AccessRule, Audience
 from app.modules.lms.domain.authoring.errors import (
     CoursePermissionError,
     DraftChangedError,
     NothingToPublishError,
 )
 from app.modules.lms.domain.authoring.outline import MoveStep, RemoveStep
+from app.modules.lms.infrastructure.access_rule_repository import (
+    SqlAccessRuleRepository,
+)
 from app.modules.lms.wiring_authoring import AuthoringServices
 from tests.lms.authoring.conftest import CourseFixture
 from tests.lms.authoring.helpers import (
@@ -286,3 +290,32 @@ async def test_unpublished_removed_steps_do_not_show_as_ghosts_but_published_one
         ("Step A", None),
         ("Step B", "removed"),
     ]
+
+
+async def test_publishing_a_removed_step_deletes_its_access_rule(
+    services: AuthoringServices,
+    course: CourseFixture,
+    sessionmaker_in_tx: async_sessionmaker[AsyncSession],
+) -> None:
+    """A lesson rule does not outlive its step once the removal is published."""
+    owner = course.team.owner
+    seeded = await seed_published(services, owner, course.id)
+    gone, kept = seeded.step_b.step_id, seeded.step_a.step_id
+    rule = AccessRule(Audience.SIGNED_IN)
+    async with sessionmaker_in_tx() as session:
+        rules = SqlAccessRuleRepository(session)
+        await rules.save(course.id, gone, rule, owner.user_id)
+        await rules.save(course.id, kept, rule, owner.user_id)
+        await session.commit()
+    await services.apply_outline_ops.execute(
+        owner,
+        course.id,
+        [RemoveStep(op="remove_step", step_id=gone)],
+        lock_version=None,
+    )
+
+    await publish(services, owner, course.id)
+
+    async with sessionmaker_in_tx() as session:
+        stored = await SqlAccessRuleRepository(session).for_course(course.id)
+    assert set(stored) == {kept}

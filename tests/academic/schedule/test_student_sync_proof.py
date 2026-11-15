@@ -18,6 +18,8 @@ from tests.academic.schedule.env import Env
 from tests.factories import make_actor as build_actor
 from tests.fakes.academic.schedule.identity import make_user
 
+import structlog.testing
+
 
 class FakeBackfill:
     """Stands in for the marks step: three marks per successful run."""
@@ -132,10 +134,19 @@ async def test_a_failing_student_gives_up_after_max_attempts_and_alerts(
     await env.services.enrollment.enqueue_student_sync(b.id)
     runner = _runner(env, FakeBackfill())
 
-    for _ in range(MAX_ATTEMPTS):
-        env.clock.advance(hours=2)
-        await runner.execute(b.id)
+    with structlog.testing.capture_logs() as logs:
+        for _ in range(MAX_ATTEMPTS):
+            env.clock.advance(hours=2)
+            await runner.execute(b.id)
 
+    # An EMIS outage is not a bug: no error event, one warning when it gives up.
+    levels = {
+        (e["event"], e["log_level"]) for e in logs if "student_sync" in e["event"]
+    }
+    assert levels == {
+        ("student_sync_failed", "info"),
+        ("student_sync_gave_up", "warning"),
+    }
     job = await env.emis_import.sync_jobs.get(b.id)
     assert job is not None
     assert (job.status, job.attempts) == ("failed", MAX_ATTEMPTS)

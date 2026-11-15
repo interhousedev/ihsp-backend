@@ -25,6 +25,8 @@ from tests.academic.schedule.builders import make_term
 from tests.academic.schedule.emis_builders import PHYSICS, day, klass, weekly
 from tests.academic.schedule.env import Env
 
+from structlog.testing import capture_logs
+
 FRIDAY_START = dt.time(9, 50)
 FRIDAY_END = dt.time(10, 30)
 
@@ -271,3 +273,20 @@ async def test_a_moved_lesson_follows_a_later_change_of_the_friday_bell(
     assert (
         after.starts_at == lesson_times(day(1, 5), dt.time(10, 0), dt.time(10, 35))[0]
     )
+
+
+async def test_classes_without_a_bell_give_one_warning_with_the_count(
+    env: Env,
+) -> None:
+    """Each skip is an info line; the run ends with a single warning."""
+    ids = await synced(env, different_friday())
+    env.emis.classes = weekly(5, 1) + [klass(2, 5, 8, class_id=777, subject=PHYSICS)]
+
+    with capture_logs() as logs:
+        await run(env, ids)
+
+    warnings = [e for e in logs if e["log_level"] == "warning"]
+    assert [e["event"] for e in warnings] == ["emis_lessons_skipped"]
+    assert warnings[0]["classes_without_bell"] == 1
+    assert warnings[0]["unresolved_conflicts"] == 0
+    assert any(e["event"] == "emis_classes_without_bell" for e in logs)

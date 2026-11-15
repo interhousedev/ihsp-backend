@@ -9,7 +9,12 @@ from app.interfaces.bot.bot import (
     set_commands,
 )
 from app.interfaces.bot.routers import build_routers
-from app.interfaces.bot.webhook import build_webhook_app, webhook_path
+from app.interfaces.bot.webhook import (
+    bot_secret_token,
+    bot_webhook_path,
+    build_webhook_app,
+    webhook_path,
+)
 from app.settings import Settings
 from app.shared.actor import Role
 from tests.bot.support.fakes import World
@@ -139,6 +144,49 @@ async def test_webhook_checks_the_secret_and_feeds_the_dispatcher(
 
     assert wrong.status == 401
     assert right.status == 200
+
+
+async def test_a_secondary_bots_secret_cannot_post_to_the_default_bot(
+    world: World,
+) -> None:
+    """Each extra bot has its own derived path and header, unlike the default."""
+    settings = Settings(
+        env="test",
+        telegram={
+            "mode": "webhook",
+            "webhook_url": "https://bot.example.test/",
+            "webhook_secret": SecretStr("s3cret"),
+        },
+    )
+    world.container.settings = settings
+    bot, other = make_bot(), make_bot()
+    dispatcher = build_dispatcher(world.container, MemoryStorage())
+    app = build_webhook_app(
+        bot, dispatcher, world.container, settings, [("bot-2", other)]
+    )
+    update = message_update(bot, "/start", user_id=7777).model_dump_json(
+        exclude_none=True
+    )
+    header = bot_secret_token("s3cret", "bot-2")
+    path = bot_webhook_path("s3cret", "bot-2")
+    assert header != path.rsplit("/", 1)[-1]
+    assert "s3cret" not in path and header != "s3cret"
+
+    async def post(to: str, token: str) -> int:
+        response = await client.post(
+            to,
+            data=update,
+            headers={
+                "Content-Type": "application/json",
+                "X-Telegram-Bot-Api-Secret-Token": token,
+            },
+        )
+        return response.status
+
+    async with TestClient(TestServer(app)) as client:
+        assert await post(webhook_path("s3cret"), header) == 401
+        assert await post(path, "s3cret") == 401
+        assert await post(path, header) == 200
 
 
 def test_webhook_mode_needs_a_url_and_a_secret(world: World) -> None:

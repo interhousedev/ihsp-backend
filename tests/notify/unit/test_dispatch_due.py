@@ -17,7 +17,7 @@ from app.modules.notify.domain.telegram_errors import (
 )
 from app.shared.actor import Role
 from app.shared.contracts.identity import UserRef, UserStatus
-from app.shared.contracts.notify import RenderContext, RenderedMessage
+from app.shared.contracts.notify import BotRoute, RenderContext, RenderedMessage
 from app.shared.notifications import NotificationType
 from tests.factories.notify import NOW, make_notification, make_user
 from tests.fakes.clock import FixedClock
@@ -409,3 +409,44 @@ async def test_roles_do_not_matter_for_dispatch(h: Harness) -> None:
     await h.run()
 
     assert h.row(n).status == NotificationStatus.SENT
+
+
+class Routed:
+    """A BotSenders over two fake senders: "other" may be switched off."""
+
+    def __init__(self, default: FakeTelegramSender, other: FakeTelegramSender) -> None:
+        self.default, self.other = default, other
+        self.other_on = True
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self.default, name)
+
+    async def route(self, bot_id: str | None, *, personal: bool) -> BotRoute | None:
+        if bot_id is None or personal:
+            return BotRoute(sender=self.default, is_default=True)
+        return BotRoute(sender=self.other, is_default=False) if self.other_on else None
+
+
+async def test_a_broadcast_naming_a_bot_goes_through_it_and_blocks_stay_local(
+    clock: FixedClock,
+) -> None:
+    """Multi-bot: the payload bot_id picks the sender; its blocks flag nothing."""
+    h = Harness(clock)
+    other = FakeTelegramSender()
+    routed = Routed(h.sender, other)
+    h.dispatch.sender = routed  # type: ignore[assignment]
+    h.registry.register(NotificationType.BROADCAST, _hello)
+    user = h.user(11)
+    n = h.notification(user, NotificationType.BROADCAST, payload={"bot_id": "b"})
+    other.fail_next(11, TelegramBlocked("blocked"))
+
+    await h.run()
+
+    assert h.sender.messages() == []
+    assert h.identity.blocked_calls == []
+    assert h.row(n).deliveries == {11: DeliveryState.BLOCKED}
+
+    routed.other_on = False
+    off = h.notification(user, NotificationType.BROADCAST, payload={"bot_id": "b"})
+    await h.run()
+    assert h.row(off).status == NotificationStatus.SKIPPED

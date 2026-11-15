@@ -190,3 +190,19 @@ async def test_the_student_view_needs_a_login(
     response = await client.get(f"/v1/admin/students/{new_id()}")
 
     assert response.status_code == 401
+
+
+async def test_endpoint_returns_a_null_group_for_a_detached_student(
+    world: World, client_for: ClientFor
+) -> None:
+    """A student without a group (after a group delete) still opens: group null."""
+    admin = world.add_user(Role.ADMIN)
+    student = world.add_student()
+    fill_pages(world, student, admin.id)
+    world.students.profile_data = {**student_profile(student), "group": None}
+    client = await client_for(actor_of(admin))
+
+    response = await client.get(f"/v1/admin/students/{student.id}")
+
+    assert response.status_code == 200
+    assert response.json()["profile"]["group"] is None

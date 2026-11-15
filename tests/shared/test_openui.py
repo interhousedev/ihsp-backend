@@ -6,7 +6,7 @@ from app.shared.ai_access import AI_TASK_SCOPE
 from app.shared.ai_tasks import TASK_SPECS, AiTask
 from app.shared.openui.blocks import split_blocks
 from app.shared.openui.catalog import load_catalog
-from app.shared.openui.degrade import degrade_to_markdown
+from app.shared.openui.degrade import degrade_blocks_last, degrade_to_markdown
 from app.shared.openui.finalize import OpenUiFinalizer
 from app.shared.openui.prompt import openui_prompt
 from app.shared.openui.validate import validate_block
@@ -152,6 +152,30 @@ def test_degrade_hides_unfinished_and_invalid_blocks() -> None:
     """AI-OPENUI: a half-streamed or broken block is not shown as code."""
     assert "BarChart" not in degrade_to_markdown("Hi\n```openui\nroot = Stack([")
     assert "BarChart" not in degrade_to_markdown(f"Hi\n{fenced(BROKEN)}")
+
+
+def test_degrade_blocks_last_puts_every_block_after_the_text() -> None:
+    """AI-OPENUI: Telegram shows the blocks at the end of the answer message."""
+    table = 'root = Stack([t])\nt = Table(["Term", "Fee"], [["1", 5]])\n'
+    text = degrade_blocks_last(f"Before\n{fenced(VALID)}\nAfter", [table])
+    assert "```" not in text
+    assert text.index("Before") < text.index("After") < text.index("Mon")
+    assert text.index("Mon") < text.index("Fee")
+
+
+def test_degrade_blocks_last_drops_bad_blocks_and_keeps_plain_text() -> None:
+    """AI-OPENUI: broken blocks vanish; text without blocks is unchanged."""
+    assert degrade_blocks_last("Just **text**.") == "Just **text**."
+    text = degrade_blocks_last(f"Hi\n{fenced(BROKEN)}", [BROKEN])
+    assert "BarChart" not in text and "Hi" in text
+
+
+def test_degrade_blocks_last_closes_an_open_code_fence_first() -> None:
+    """AI-OPENUI: an unclosed code fence in the text does not swallow the block."""
+    table = 'root = Stack([t])\nt = Table(["Term", "Fee"], [["1", 5]])\n'
+    text = degrade_blocks_last("Code:\n```python\nprint(1)", [table])
+    assert text.count("```") == 2
+    assert text.rindex("```") < text.index("Fee")
 
 
 def test_prompt_lists_the_catalog() -> None:

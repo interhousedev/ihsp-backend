@@ -78,3 +78,55 @@ async def test_deleting_an_unknown_group_answers_404(env: Env, api: Api) -> None
 
     assert response.status_code == 404
     assert response.json()["type"] == "academic/group-not-found"
+
+
+async def test_deleting_a_group_can_move_its_students(env: Env, api: Api) -> None:
+    """With a target, students land in it (subgroup reset) in the same call."""
+    group = await env.group("2TN2")
+    target = await env.group("2TN3")
+    pupil = await env.student(group, subgroup=1)
+
+    response = await api.client.delete(
+        f"/v1/admin/groups/{group.id}", params={"move_students_to": str(target.id)}
+    )
+
+    assert response.status_code == 204
+    async with env.uow_factory() as uow:
+        student = await uow.students.get(pupil.id)
+    assert student is not None
+    assert student.group_id == target.id
+    assert student.subgroup is None
+    audit = next(a for a in env.audits if a.type == "group.deleted")
+    assert audit.metadata["moved_to_group_id"] == str(target.id)
+
+
+async def test_move_target_equal_to_the_deleted_group_is_rejected(
+    env: Env, api: Api
+) -> None:
+    """A group cannot receive its own students."""
+    group = await env.group("2TN2")
+    pupil = await env.student(group)
+
+    response = await api.client.delete(
+        f"/v1/admin/groups/{group.id}", params={"move_students_to": str(group.id)}
+    )
+
+    assert response.status_code == 422
+    assert response.json()["type"] == "academic/target-group-invalid"
+    assert (await api.client.get(f"/v1/admin/groups/{group.id}")).status_code == 200
+    async with env.uow_factory() as uow:
+        student = await uow.students.get(pupil.id)
+    assert student is not None and student.group_id == group.id
+
+
+async def test_move_target_unknown_is_rejected(env: Env, api: Api) -> None:
+    """A nonexistent target leaves everything in place."""
+    group = await env.group("2TN2")
+
+    response = await api.client.delete(
+        f"/v1/admin/groups/{group.id}", params={"move_students_to": str(uuid.uuid4())}
+    )
+
+    assert response.status_code == 422
+    assert response.json()["type"] == "academic/target-group-invalid"
+    assert (await api.client.get(f"/v1/admin/groups/{group.id}")).status_code == 200

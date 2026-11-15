@@ -1,5 +1,6 @@
 """HTTP base: health, error mapping, CORS, dependencies."""
 
+from types import SimpleNamespace
 from typing import Annotated, Any
 from uuid import UUID
 
@@ -131,6 +132,14 @@ class FakeIdentity:
         if token != "good" or self.actor is None:
             raise UnauthorizedError()
         return self.actor
+
+
+async def _consented(_user_id: object) -> None:
+    """Every user has accepted the current documents."""
+    return None
+
+
+CONSENTED = SimpleNamespace(require_consent=SimpleNamespace(execute=_consented))
 
 
 async def test_health_answers_ok(http_client: HttpClientFactory) -> None:
@@ -353,7 +362,7 @@ async def test_get_actor_rejects_a_missing_or_malformed_header(
 ) -> None:
     """Only `Authorization: Bearer <token>` is accepted."""
     identity = FakeIdentity(make_actor(Role.STUDENT))
-    client = await http_client([build_router()], identity=identity)
+    client = await http_client([build_router()], identity=identity, legal=CONSENTED)
 
     response = await client.get(
         "/v1/me", headers={"Authorization": header} if header else {}
@@ -369,7 +378,7 @@ async def test_get_actor_verifies_the_token_for_the_api_audience(
     """The bearer token is checked against audience ihsp-api."""
     actor = make_actor(Role.STUDENT)
     identity = FakeIdentity(actor)
-    client = await http_client([build_router()], identity=identity)
+    client = await http_client([build_router()], identity=identity, legal=CONSENTED)
 
     ok = await client.get("/v1/me", headers={"Authorization": "Bearer good"})
     bad = await client.get("/v1/me", headers={"Authorization": "Bearer evil"})
@@ -398,12 +407,12 @@ async def test_require_roles_allows_the_role_and_forbids_others(
     student = FakeIdentity(make_actor(Role.STUDENT))
     auth = {"Authorization": "Bearer good"}
 
-    allowed = await (await http_client([build_router()], identity=admin)).get(
-        "/v1/admin-only", headers=auth
-    )
-    denied = await (await http_client([build_router()], identity=student)).get(
-        "/v1/admin-only", headers=auth
-    )
+    allowed = await (
+        await http_client([build_router()], identity=admin, legal=CONSENTED)
+    ).get("/v1/admin-only", headers=auth)
+    denied = await (
+        await http_client([build_router()], identity=student, legal=CONSENTED)
+    ).get("/v1/admin-only", headers=auth)
 
     assert allowed.status_code == 200
     assert denied.status_code == 403

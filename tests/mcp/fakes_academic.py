@@ -26,6 +26,16 @@ class FakeAcademicTools:
         self.details: dict[tuple[UUID, UUID], dict[str, Any]] = {}
         self.names: dict[UUID, str] = {}
         self.calls: list[tuple[Any, ...]] = []
+        self.groups: dict[UUID, dict[str, Any]] = {}
+        self.rating_book_url = "https://emis.example/rating-book.pdf"
+
+    async def my_group(self, actor: Actor) -> dict[str, Any]:
+        self.calls.append(("my_group", actor.user_id))
+        return self.groups[actor.user_id]
+
+    async def rating_book(self, actor: Actor) -> str:
+        self.calls.append(("rating_book", actor.user_id))
+        return self.rating_book_url
 
     async def request_refresh(self, actor: Actor) -> dict[str, Any]:
         self.calls.append(("request_refresh", actor.user_id))

@@ -100,6 +100,11 @@ PAYLOADS: dict[NotificationType, dict[str, Any]] = {
         "kind": "export_ready",
         "expires_at": "2026-11-23T09:00:00+00:00",
     },
+    NotificationType.CHAT_ANSWER_READY: {
+        "chat_id": "c",
+        "seq": 2,
+        "prompt": "Why is the sky blue?",
+    },
     NotificationType.STUDENT_SYNC_FAILED: {"attempts": 6, "student_id": "s"},
     NotificationType.KNOWLEDGE_GAP: {
         "query": "dress code",

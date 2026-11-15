@@ -130,6 +130,7 @@ class World:
         default_factory=FakeFilesCoursesTools
     )
     teacher_tools: FakeTeacherTools = field(default_factory=FakeTeacherTools)
+    maintenance: Any = None
 
     def deps(self, *, with_course_port: bool = False) -> McpDeps:
         """Collect the fakes into the dependencies of the servers."""
@@ -160,6 +161,7 @@ class World:
             history_tools=cast(McpHistoryTools, self.history_tools),
             files_courses_tools=cast(McpFilesCoursesTools, self.files_courses_tools),
             teacher_tools=cast(McpTeacherTools, self.teacher_tools),
+            maintenance=self.maintenance,
         )
 
     def connector_token(

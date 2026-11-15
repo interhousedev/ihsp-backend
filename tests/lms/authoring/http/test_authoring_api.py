@@ -470,3 +470,43 @@ async def test_saving_with_empty_ids_gets_server_ids(
     ids = [b["id"] for b in saved.json()["content"]["blocks"]]
     assert saved.status_code == 200
     assert all(len(i) == 8 for i in ids) and len(set(ids)) == 2
+
+
+async def test_course_and_lesson_access_over_http(
+    api: Api, course: CourseFixture
+) -> None:
+    """The owner sets rules; a teacher gets 403; bad input is 422; staff read."""
+    owner = await api.as_(course.team.owner).put(
+        f"/v1/lms/courses/{course.id}/access",
+        json={"audience": "students", "when_denied": "locked"},
+    )
+    assert owner.status_code == 200
+    assert owner.json()["course"] == {
+        "audience": "students",
+        "when_denied": "locked",
+        "group_ids": [],
+        "users": [],
+    }
+
+    teacher = await api.as_(course.team.teacher).put(
+        f"/v1/lms/courses/{course.id}/access", json={"audience": "public"}
+    )
+    assert teacher.status_code == 403
+    assert teacher.headers["content-type"].startswith(PROBLEM)
+
+    empty = await api.as_(course.team.owner).put(
+        f"/v1/lms/courses/{course.id}/access", json={"audience": "chosen"}
+    )
+    assert empty.status_code == 422
+
+    foreign = await api.as_(course.team.owner).put(
+        f"/v1/lms/courses/{course.id}/steps/{course.id}/access",
+        json={"audience": "signed_in"},
+    )
+    assert foreign.status_code == 404
+
+    shown = await api.as_(course.team.teacher).get(
+        f"/v1/lms/courses/{course.id}/access"
+    )
+    assert shown.status_code == 200
+    assert shown.json()["course"]["audience"] == "students"

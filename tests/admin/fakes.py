@@ -1,13 +1,16 @@
 """In-memory broadcast repository, delivery reader and unit of work."""
 
+import asyncio
 import copy
+from collections.abc import Collection
 from datetime import datetime
 from types import TracebackType
 from typing import Self
 from uuid import UUID
 
 from app.modules.admin.domain.broadcast import Broadcast, BroadcastStatus
-from app.modules.admin.domain.errors import BroadcastNotFoundError
+from app.modules.admin.domain.errors import BotNotFoundError, BroadcastNotFoundError
+from app.modules.admin.domain.telegram_bot import TelegramBot
 from app.modules.admin.ports.delivery_reader import DeliveryCounts
 from app.shared.notifications import AuditDraft, NotificationDraft
 
@@ -71,6 +74,66 @@ class InMemoryBroadcastRepository:
         ]
 
 
+class InMemoryBotRepository:
+    """Implements BotRepository; ``links`` maps bot id to linked user ids."""
+
+    def __init__(self) -> None:
+        """Start empty."""
+        self.rows: dict[UUID, TelegramBot] = {}
+        self.links: dict[UUID, set[UUID]] = {}
+        self._locks: dict[UUID, asyncio.Lock] = {}
+        self._held: dict[asyncio.Task[object], set[UUID]] = {}
+
+    async def list_all(self) -> list[TelegramBot]:
+        """Default first, then by creation."""
+        rows = sorted(
+            self.rows.values(), key=lambda b: (not b.is_default, b.created_at)
+        )
+        return [copy.deepcopy(b) for b in rows]
+
+    async def get(self, bot_id: UUID, *, for_update: bool = False) -> TelegramBot:
+        """A copy or BotNotFoundError; ``for_update`` locks the row like FOR UPDATE.
+
+        The lock is held by the current task until its unit of work exits.
+        """
+        if bot_id not in self.rows:
+            raise BotNotFoundError(support_details=str(bot_id))
+        task = asyncio.current_task()
+        if for_update and task is not None:
+            held = self._held.setdefault(task, set())
+            if bot_id not in held:
+                await self._locks.setdefault(bot_id, asyncio.Lock()).acquire()
+                held.add(bot_id)
+        return copy.deepcopy(self.rows[bot_id])
+
+    def release_locks(self) -> None:
+        """Release the row locks of the current task (end of its transaction)."""
+        task = asyncio.current_task()
+        for bot_id in self._held.pop(task, set()) if task else set():
+            self._locks[bot_id].release()
+
+    async def by_telegram_id(self, telegram_id: int) -> TelegramBot | None:
+        """Find by Telegram id."""
+        found = [b for b in self.rows.values() if b.telegram_id == telegram_id]
+        return copy.deepcopy(found[0]) if found else None
+
+    async def add(self, bot: TelegramBot, *, actor_id: UUID | None) -> None:
+        """Store a copy."""
+        self.rows[bot.id] = copy.deepcopy(bot)
+
+    async def save(self, bot: TelegramBot, *, actor_id: UUID | None) -> None:
+        """Replace the stored copy."""
+        self.rows[bot.id] = copy.deepcopy(bot)
+
+    async def members(self, bot_id: UUID, user_ids: Collection[UUID]) -> set[UUID]:
+        """The given users linked to the bot."""
+        return self.links.get(bot_id, set()) & set(user_ids)
+
+    async def member_counts(self) -> dict[UUID, int]:
+        """Linked users per bot."""
+        return {bot_id: len(users) for bot_id, users in self.links.items()}
+
+
 class FakeDeliveryReader:
     """Delivery counts that a test sets by hand."""
 
@@ -105,6 +168,7 @@ class AdminWorld:
         """Start empty."""
         self.broadcasts = InMemoryBroadcastRepository()
         self.deliveries = FakeDeliveryReader()
+        self.bots = InMemoryBotRepository()
         self.outbox: list[NotificationDraft] = []
         self.audits: list[AuditDraft] = []
         self.batches: list[int] = []
@@ -130,6 +194,11 @@ class FakeAdminUnitOfWork:
         return self._world.broadcasts
 
     @property
+    def bots(self) -> InMemoryBotRepository:
+        """The shared bot registry."""
+        return self._world.bots
+
+    @property
     def deliveries(self) -> FakeDeliveryReader:
         """The shared reader."""
         return self._world.deliveries
@@ -144,7 +213,8 @@ class FakeAdminUnitOfWork:
         exc: BaseException | None,
         tb: TracebackType | None,
     ) -> None:
-        """Close (nothing to do)."""
+        """Close: row locks end with the transaction."""
+        self._world.bots.release_locks()
 
     def notify(self, *drafts: NotificationDraft) -> None:
         """Queue drafts."""

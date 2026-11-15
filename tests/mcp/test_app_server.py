@@ -99,3 +99,40 @@ async def test_a_granted_namespaced_scope_runs_and_is_logged_as_app(
     [row] = world.call_log.records
     assert row.server == "app"
     assert row.tool == "student_get_schedule"
+
+
+async def test_a_student_sees_the_lms_read_tools(world: World) -> None:
+    """The LMS source is open to students: its read tools are listed."""
+    names = await _names(world, (Role.STUDENT,))
+
+    assert {"lms_list_courses", "lms_get_course"} <= names
+
+
+async def test_a_student_cannot_author_through_the_lms_tools(world: World) -> None:
+    """Writes of the LMS source need an authoring role, whatever the scope."""
+    token, _ = world.connector_token(
+        "app", "lms:lms.courses.write", roles=(Role.STUDENT,)
+    )
+
+    async with world.session("app", token) as session:
+        result = await call(session, "lms_create_course", title="x")
+
+    assert result.isError
+    assert "insufficient_scope" in text_of(result)
+    assert world.lms_commands.calls == []
+    assert world.lms_ops.calls == []
+
+
+async def test_a_students_lms_reads_go_through_the_permission_checks(
+    world: World,
+) -> None:
+    """lms_list_courses asks for the caller's own `edit` permission, nothing wider."""
+    token, actor = world.connector_token(
+        "app", "lms:lms.courses.read", roles=(Role.STUDENT,)
+    )
+
+    async with world.session("app", token) as session:
+        result = await call(session, "lms_list_courses")
+
+    assert not result.isError, text_of(result)
+    assert world.lms_queries.calls[-1][1][0] == actor.user_id

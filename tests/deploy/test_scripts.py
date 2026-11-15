@@ -1,8 +1,11 @@
 """Shell scripts and helper files of the deployment: syntax, modes, safety."""
 
+import importlib.util
 import os
+import re
 import subprocess
 from pathlib import Path
+from unittest.mock import MagicMock
 
 from tests.deploy.helpers import MATERIALS_DIR, SCRIPTS_DIR
 
@@ -66,3 +69,45 @@ def test_no_script_runs_docker_against_the_dev_project() -> None:
         text = (SCRIPTS_DIR / name).read_text(encoding="utf-8")
         assert "ihsp-dev" not in text, name
         assert "docker-compose.dev.yaml" not in text, name
+
+
+def test_prod_init_can_read_every_credential_vault_setup_prints(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """prod_init.sh greps `KEY=value` lines out of `setup.py --print-credentials`."""
+    script = (SCRIPTS_DIR / "prod_init.sh").read_text(encoding="utf-8")
+    wanted = re.findall(r"\"\$out\" \| sed -n 's/\^([A-Z_]+)=//p'", script)
+    assert set(wanted) == {
+        "IHSP_VAULT__ROLE_ID",
+        "IHSP_VAULT__SECRET_ID",
+        "IHSP_BOT_VAULT__ROLE_ID",
+        "IHSP_BOT_VAULT__SECRET_ID",
+    }
+    spec = importlib.util.spec_from_file_location(
+        "vault_setup", MATERIALS_DIR / "vault" / "setup.py"
+    )
+    assert spec is not None and spec.loader is not None
+    setup = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(setup)
+    client = MagicMock()
+    approle = client.auth.approle
+    approle.read_role_id.side_effect = lambda role_name: {
+        "data": {"role_id": f"role-of-{role_name}"}
+    }
+    approle.generate_secret_id.side_effect = lambda role_name: {
+        "data": {"secret_id": f"secret-of-{role_name}"}
+    }
+    monkeypatch.setattr(setup.hvac, "Client", lambda **_: client)
+    monkeypatch.setenv("VAULT_TOKEN", "test-token")
+    monkeypatch.setattr("sys.argv", ["setup.py", "--print-credentials"])
+
+    assert setup.main() == 0
+
+    lines = capsys.readouterr().out.splitlines()
+    printed = dict(line.split("=", 1) for line in lines if "=" in line)
+    assert {key: printed.get(key) for key in wanted} == {
+        "IHSP_VAULT__ROLE_ID": "role-of-identity",
+        "IHSP_VAULT__SECRET_ID": "secret-of-identity",
+        "IHSP_BOT_VAULT__ROLE_ID": "role-of-telegram-bots",
+        "IHSP_BOT_VAULT__SECRET_ID": "secret-of-telegram-bots",
+    }

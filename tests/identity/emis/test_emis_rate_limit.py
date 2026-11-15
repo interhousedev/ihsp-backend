@@ -18,7 +18,7 @@ from fakeredis.aioredis import FakeRedis
 
 BASE = "https://emis.test/api/v1/"
 PROFILE = "student-profiles/profile/"
-CDN_FILE = "https://cdn.test/topic.pdf"
+CDN_FILE = "https://cdn-emis.edu.uz/topic.pdf"
 
 
 class FakeTime:

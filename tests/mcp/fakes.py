@@ -701,6 +701,20 @@ class FakeLmsOps:
         self._log("list_staff", actor, course_id)
         return [{"user_id": str(new_id()), "login": "t1"}]
 
+    async def set_access(
+        self,
+        actor: Actor,
+        course_id: UUID,
+        *,
+        step_id: UUID | None,
+        audience: str,
+        when_denied: str,
+        group_ids: Sequence[UUID],
+        user_ids: Sequence[UUID],
+    ) -> dict[str, Any]:
+        args = (course_id, step_id, audience, when_denied, group_ids, user_ids)
+        return self._log("set_access", actor, *args)
+
     async def add_staff(
         self,
         actor: Actor,

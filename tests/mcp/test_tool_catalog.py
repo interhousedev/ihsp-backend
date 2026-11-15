@@ -142,6 +142,10 @@ LMS_TOOLS: dict[str, tuple[str, dict[str, Any]]] = {
         {"course_id": COURSE, "login": "t1", "role": "teacher"},
     ),
     "remove_staff": ("lms.courses.write", {"course_id": COURSE, "user_id": ID}),
+    "set_access": (
+        "lms.courses.write",
+        {"course_id": COURSE, "audience": "signed_in"},
+    ),
     "override_score": (
         "lms.courses.write",
         {"attempt_id": ID, "score": 5, "comment": "ok"},
@@ -263,6 +267,7 @@ async def test_lms_server_writes_drafts_and_course_operations(world: World) -> N
         "update_settings",
         "add_staff",
         "remove_staff",
+        "set_access",
         "override_score",
         "generate_course_draft",
         "generate_lesson",
@@ -367,6 +372,7 @@ TEACHER_SCOPES = {
     "marks:read": {"list_temporary_marks", "get_student_record"},
     "marks:write": {"set_temporary_mark", "delete_temporary_mark"},
     "files:write": {"upload_file"},
+    "notifications:read": {"list_notifications"},
     "assessments:read": {"list_assessments"},
     "assessments:write": {"create_assessment", "update_assessment"},
     "workoffs:read": {"get_unfinished_work_report"},

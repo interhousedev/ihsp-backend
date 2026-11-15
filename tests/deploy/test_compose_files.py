@@ -134,6 +134,15 @@ def test_prod_publishes_only_http_https_and_smtp(prod_model: dict[str, Any]) -> 
     assert ports == {("nginx", 80), ("nginx", 443), ("mail", 25)}
 
 
+def test_prod_processes_that_send_mail_get_the_smtp_relay(
+    prod_model: dict[str, Any],
+) -> None:
+    """The bot links Telegram accounts and emails a notice; no localhost fallback."""
+    for name in ("identity", "worker", "bot"):
+        env = prod_model["services"][name]["environment"]
+        assert env.get("IHSP_SMTP_OUT__HOST"), name
+
+
 def test_prod_publishes_no_admin_vault_or_data_store_port(
     prod_model: dict[str, Any],
 ) -> None:

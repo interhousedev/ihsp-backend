@@ -41,6 +41,21 @@ async def test_the_profile_has_group_curator_head_and_mailbox(env: Env) -> None:
     assert profile.current_semester == 3 and profile.emis_status == "active"
 
 
+async def test_a_detached_student_has_a_profile_without_a_group(env: Env) -> None:
+    """A student left without a group (group deleted) still has a profile."""
+    group = await env.group("2TN2")
+    me = await env.student(group, last_name="Karimova", first_name="Aliya")
+    await env.services.set_student_group.execute(make_actor(Role.ADMIN), me.id, None)
+
+    profile = await env.services.get_student_profile.execute(
+        make_actor(Role.STUDENT, user_id=me.id)
+    )
+
+    assert profile.user_id == me.id
+    assert profile.group_id is None and profile.group_name is None
+    assert profile.curator is None and profile.current_semester is None
+
+
 async def test_a_user_who_is_not_a_student_has_no_profile(env: Env) -> None:
     """WEB-16: teachers have no student profile."""
     teacher = env.teacher()

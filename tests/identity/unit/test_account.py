@@ -7,6 +7,7 @@ from app.modules.identity.domain.errors import (
     OtpChannelMissingError,
     OtpInvalidError,
     PasswordPolicyError,
+    StepUpInvalidError,
 )
 from app.modules.identity.domain.session import LoginSession
 from app.modules.identity.domain.user import User
@@ -434,3 +435,20 @@ async def test_step_up_sends_a_code_keyed_by_the_user(auth_world: World) -> None
     assert channels == ["email"]
     code = auth_world.otp.last("step-up").code
     assert await auth_world.auth.otp_store.verify("step-up", str(user.id), code)
+
+
+async def test_a_wrong_step_up_code_is_a_403_not_a_lost_session(
+    auth_world: World,
+) -> None:
+    """B5: a wrong code must not answer 401, which the web treats as a sign-out."""
+    user = await auth_world.add_user()
+    await auth_world.auth.step_up.execute(actor_of(user), CTX)
+    good = auth_world.otp.last("step-up").code
+
+    with pytest.raises(StepUpInvalidError) as caught:
+        await auth_world.auth.step_up.verify(
+            actor_of(user), "000000" if good != "000000" else "111111"
+        )
+
+    assert caught.value.status == 403
+    assert caught.value.code == "identity/step-up-invalid"

@@ -11,6 +11,8 @@ from tests.academic.schedule.builders import entry_input
 from tests.academic.schedule.env import TODAY, Env
 from tests.factories import make_actor
 
+from structlog.testing import capture_logs
+
 ADMIN = make_actor(Role.ADMIN)
 
 
@@ -119,6 +121,40 @@ async def test_entries_without_a_bell_are_skipped_without_failing(env: Env) -> N
     await generate(env)
 
     assert [x.period for x in await env.lessons()] == [1, 1]
+
+
+async def test_a_run_with_skipped_entries_warns_once_with_the_counts(env: Env) -> None:
+    """Per-entry logs stay at info; the run emits one aggregated warning."""
+    term = await env.term()
+    subject = await env.subject()
+    group = await env.group()
+    audience = [str(group.id)]
+    await env.entry(term, weekday=3, period=9, subject=subject, audience=audience)
+    await env.entry(term, weekday=1, period=8, subject=subject, audience=audience)
+
+    with capture_logs() as logs:
+        await generate(env)
+
+    warnings = [e for e in logs if e["log_level"] == "warning"]
+    assert [e["event"] for e in warnings] == ["lessons_generation_skipped"]
+    assert warnings[0]["entries_without_bell"] == 2
+    assert warnings[0]["unresolved_conflicts"] == 0
+    assert all(e["log_level"] == "info" for e in logs if "entries" in e)
+
+
+async def test_a_clean_run_does_not_warn(env: Env) -> None:
+    """No skipped entry, no warning."""
+    term = await env.term()
+    subject = await env.subject()
+    group = await env.group()
+    await env.entry(
+        term, weekday=3, period=1, subject=subject, audience=[str(group.id)]
+    )
+
+    with capture_logs() as logs:
+        await generate(env)
+
+    assert [e for e in logs if e["log_level"] == "warning"] == []
 
 
 async def test_generation_can_be_limited_to_one_term_and_a_start_date(env: Env) -> None:

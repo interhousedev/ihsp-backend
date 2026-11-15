@@ -8,7 +8,7 @@ from app.shared.lms_scopes import LEGACY_ALIASES
 import pytest
 
 # Frozen: add a new id here with a new release, never change or remove one.
-RELEASE_IDS = ("2026-11-mcp-1", "2026-12-mcp-1")
+RELEASE_IDS = ("2026-11-mcp-1", "2026-12-mcp-1", "2026-12-mcp-2")
 
 
 def test_interface_and_identity_read_the_same_tables() -> None:
@@ -90,6 +90,9 @@ def test_every_planned_tool_is_named() -> None:
         "list_notebooks": "notebooks:read",
         "list_chats": "chats:read",
         "get_chat": "chats:read",
+        "get_my_group": "group:read",
+        "get_rating_book": "rating_book:read",
+        "list_notifications": "notifications:read",
         "get_notebook_chat": "notebooks:read",
         "get_notebook_notes": "notebooks:read",
         "generate_notebook_output": "notebooks:write",

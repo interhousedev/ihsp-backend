@@ -170,3 +170,46 @@ async def test_a_session_works_end_to_end_over_the_mounted_app(world: World) -> 
         result = await call(session, "get_schedule", date_from="2026-10-06")
 
     assert data_of(result)["date_to"] == "2026-10-12"
+
+
+async def test_metadata_carries_the_legal_urls_of_published_documents(
+    world: World,
+) -> None:
+    """Terms and privacy URLs come from settings plus the published kinds."""
+
+    async def published() -> set[str]:
+        return {"terms", "privacy", "ai"}
+
+    app = FastAPI()
+    app.router.routes.extend(protected_resource_routes(world.settings, published))
+    id_url = world.settings.urls.id.rstrip("/")
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://x"
+    ) as client:
+        response = await client.get("/.well-known/oauth-protected-resource/mcp/app")
+        body = response.json()
+
+    assert body["resource_tos_uri"] == f"{id_url}/legal/terms/"
+    assert body["resource_policy_uri"] == f"{id_url}/legal/privacy/"
+
+
+async def test_metadata_omits_the_legal_url_of_an_unpublished_kind(
+    world: World,
+) -> None:
+    """A kind without a published version is not advertised."""
+
+    async def published() -> set[str]:
+        return {"privacy"}
+
+    app = FastAPI()
+    app.router.routes.extend(protected_resource_routes(world.settings, published))
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://x"
+    ) as client:
+        response = await client.get("/.well-known/oauth-protected-resource/mcp/app")
+        body = response.json()
+
+    assert "resource_tos_uri" not in body
+    assert body["resource_policy_uri"].endswith("/legal/privacy/")

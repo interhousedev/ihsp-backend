@@ -67,6 +67,8 @@ async def test_the_catalog_and_my_courses_follow_the_contract(
             "summary": "",
             "accent_color": None,
             "cover_file_id": None,
+            "locked": False,
+            "access": "public",
         }
     ]
     assert catalog.json()[0]["updated_at"].endswith("Z")
@@ -121,6 +123,8 @@ async def test_enrolling_returns_the_course_page(
         "badge": None,
         "points_earned": 0.0,
         "points_total": 0.0,
+        "locked": False,
+        "access": "public",
     }
     assert page.headers["cache-control"] == "private, max-age=60"
 

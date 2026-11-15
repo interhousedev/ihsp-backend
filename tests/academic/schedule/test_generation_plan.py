@@ -290,6 +290,18 @@ def test_a_cancelled_generated_lesson_comes_back_when_the_entry_produces_it_agai
     assert result.updates == [lesson] and lesson.status == "scheduled"
 
 
+def test_a_cancelled_emis_linked_lesson_is_not_revived() -> None:
+    """EMIS cancelled it; reviving it would overlap the EMIS lesson in the room."""
+    entry = monday_entry(room_id=new_id())
+    lesson = existing_lesson(entry, dt.date(2026, 10, 12), has_content=True)
+    lesson.status = "cancelled"
+    lesson.emis_class_id = 3188483
+
+    result = plan(entry, [lesson])
+
+    assert result.updates == [] and lesson.status == "cancelled"
+
+
 def test_changed_ids_list_every_touched_lesson() -> None:
     """UF-SYS-05: homework due dates are recomputed for all of them."""
     entry = monday_entry(week_parity="odd", room_id=new_id())

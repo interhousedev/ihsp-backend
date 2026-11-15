@@ -1,6 +1,7 @@
 """Fake identity directory and commands for the marks tests."""
 
 from collections.abc import Sequence
+from dataclasses import replace
 from typing import Any
 from uuid import UUID
 
@@ -44,10 +45,13 @@ class FakeIdentity:
         self.photo_ttls: list[int | None] = []
 
     def add(self, user: UserRef, prefs: UserPreferences | None = None) -> UserRef:
-        """Register a user (and optionally their preferences)."""
-        self.users[user.id] = user
+        """Register a user (and optionally their preferences, mirrored on the ref)."""
         if prefs is not None:
             self.prefs[user.id] = prefs
+            user = replace(
+                user, hide_photo_from_classmates=prefs.hide_photo_from_classmates
+            )
+        self.users[user.id] = user
         return user
 
     async def get_user(self, user_id: UUID) -> UserRef | None:

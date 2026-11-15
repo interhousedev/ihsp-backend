@@ -14,6 +14,7 @@ class FakeHistoryTools:
     def __init__(self) -> None:
         self.chats: dict[UUID, tuple[UUID, str, list[str]]] = {}
         self.notebooks: dict[UUID, tuple[UUID, str, list[str], list[str]]] = {}
+        self.notifications: list[tuple[UUID, dict[str, Any]]] = []
 
     def add_chat(self, owner: UUID, title: str, texts: list[str]) -> UUID:
         """A chat of `owner` with these messages (alternating user and assistant)."""
@@ -85,6 +86,18 @@ class FakeHistoryTools:
             ],
             "next_offset": offset + limit if offset + limit < len(notes) else None,
         }
+
+    async def list_notifications(
+        self, actor: Actor, *, filter: str, cursor: str | None, limit: int
+    ) -> dict[str, Any]:
+        mine = [row for owner, row in self.notifications if owner == actor.user_id]
+        kept = [
+            row
+            for row in mine
+            if filter == "all" or (row["type"] == "broadcast") == (filter != "activity")
+        ]
+        page = _slice(kept, "notifications", cursor, limit)
+        return {**page, "unread_count": sum(not row["read"] for row in mine)}
 
 
 def _slice(

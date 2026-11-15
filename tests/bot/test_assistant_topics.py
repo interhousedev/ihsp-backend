@@ -1,4 +1,4 @@
-"""Private-chat topics: one topic per AI chat, UI blocks as separate messages."""
+"""Private-chat topics: one topic per AI chat, UI blocks at the end of the answer."""
 
 from tests.bot.support.fake_ai import FakeAi, call_view, delta, done
 from tests.bot.support.harness import Harness
@@ -46,19 +46,15 @@ def _fresh_icons(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(topics, "_stickers", None)
 
 
-async def test_ui_block_is_its_own_message_not_part_of_the_answer(
-    harness: Harness, ai: FakeAi
-) -> None:
+async def test_ui_block_closes_the_answer_message(harness: Harness, ai: FakeAi) -> None:
     call = call_view(status="done", tool="show_ui_block", ui_block=BLOCK)
     ai.play([delta("Here are your marks."), done("Here are your marks.", calls=[call])])
 
     await harness.send("show marks")
 
     texts = [m.text or "" for m in harness.session.calls(SendMessage)]
-    assert len(texts) == 2
-    assert "Here are your marks." in texts[0]
-    assert "Mon" not in texts[0]
-    assert "Mon" in texts[1]
+    assert len(texts) == 1
+    assert texts[0].index("Here are your marks.") < texts[0].index("Mon")
 
 
 async def test_one_topic_per_chat_with_a_persisted_mapping(

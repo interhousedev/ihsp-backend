@@ -1,9 +1,11 @@
 """HTTP: the user's export and erasure routes and the administrators' queue."""
 
+from types import SimpleNamespace
 from typing import Any
 
 from app.interfaces.http.dependencies import get_actor
 from app.interfaces.http.v1.privacy import ROUTERS
+from app.modules.identity.domain.errors import StepUpInvalidError
 from app.shared.actor import Actor
 from tests.privacy.conftest import PrivacyHarness
 
@@ -20,12 +22,28 @@ class Api:
         self.actor = actor
 
 
+class FakeStepUp:
+    """Accepts one code, like the OTP check behind ``StepUp.verify``."""
+
+    async def verify(self, actor: Actor, code: str) -> None:
+        """Raise the real invalid-code error unless the code is the right one."""
+        if code != GOOD_CODE:
+            raise StepUpInvalidError()
+
+
+GOOD_CODE = "123456"
+STEP_UP = {"otp_code": GOOD_CODE}
+
+
 @pytest.fixture
 async def api(privacy: PrivacyHarness, http_client: Any) -> Api:
     """The privacy routers on the fake module, as a student."""
     holder: dict[str, Api] = {}
     client = await http_client(
-        ROUTERS, {get_actor: lambda: holder["api"].actor}, privacy=privacy.services
+        ROUTERS,
+        {get_actor: lambda: holder["api"].actor},
+        privacy=privacy.services,
+        identity=SimpleNamespace(auth=SimpleNamespace(step_up=FakeStepUp())),
     )
     holder["api"] = Api(client, privacy.student)
     return holder["api"]
@@ -33,10 +51,10 @@ async def api(privacy: PrivacyHarness, http_client: Any) -> Api:
 
 async def test_export_flow_and_idor(api: Api, privacy: PrivacyHarness) -> None:
     """202, 429 on the second request, download for the owner, 404 for others."""
-    first = await api.client.post("/v1/me/privacy/exports")
+    first = await api.client.post("/v1/me/privacy/exports", json=STEP_UP)
     assert first.status_code == 202
     export_id = first.json()["id"]
-    again = await api.client.post("/v1/me/privacy/exports")
+    again = await api.client.post("/v1/me/privacy/exports", json=STEP_UP)
     assert again.status_code == 429
     assert again.json()["type"] == "privacy/export-rate-limited"
 
@@ -49,6 +67,16 @@ async def test_export_flow_and_idor(api: Api, privacy: PrivacyHarness) -> None:
     stolen = await api.client.get(f"/v1/me/privacy/exports/{export_id}/download")
     assert stolen.status_code == 404
     assert stolen.json()["type"] == "privacy/export-not-found"
+
+
+async def test_export_requires_step_up(api: Api) -> None:
+    """No code: 422; wrong code: 403 identity/step-up-invalid, not 401 (a sign-out)."""
+    missing = await api.client.post("/v1/me/privacy/exports")
+    assert missing.status_code == 422
+    wrong = await api.client.post("/v1/me/privacy/exports", json={"otp_code": "000000"})
+    assert wrong.status_code == 403
+    assert wrong.json()["type"] == "identity/step-up-invalid"
+    assert (await api.client.get("/v1/me/privacy/exports")).json()["items"] == []
 
 
 async def test_admin_queue(api: Api, privacy: PrivacyHarness) -> None:

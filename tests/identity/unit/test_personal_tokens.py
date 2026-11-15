@@ -54,10 +54,15 @@ def request_of(method: str, path: str) -> Request:
 
 async def verify(world: World, method: str, path: str, token: str) -> Actor:
     """Run the same check as get_actor."""
+
+    async def consented(_user_id: object) -> None:
+        return None
+
     container: Any = SimpleNamespace(
         identity=SimpleNamespace(
             personal_token_verifier=world.auth.personal_token_verifier
-        )
+        ),
+        legal=SimpleNamespace(require_consent=SimpleNamespace(execute=consented)),
     )
     return await _verify(container, request_of(method, path), token)
 
