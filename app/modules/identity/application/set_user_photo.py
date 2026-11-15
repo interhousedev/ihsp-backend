@@ -18,12 +18,16 @@ class SetUserPhoto:
     files: FilesApi
     urls: PhotoUrls
 
-    async def execute(self, user_id: UUID, data: bytes) -> str | None:
+    async def execute(
+        self, user_id: UUID, data: bytes, *, stem: str = "photo"
+    ) -> str | None:
         """Validate and store the photo, replace the old one; return its link.
 
-        The old file is deleted after the new one is committed, so a failure never
-        leaves the user without a photo. Raises UserNotFoundError for an unknown user
-        and a Photo*Error for an unusable image.
+        The file is named `<stem>.<ext>`; the faces module copies a new face with the
+        stem `face` and later recognises its own copy by that name. The old file is
+        deleted after the new one is committed, so a failure never leaves the user
+        without a photo. Raises UserNotFoundError for an unknown user and a
+        Photo*Error for an unusable image.
         """
         photo = check_photo(data)
         async with self.uow_factory() as uow:
@@ -32,7 +36,7 @@ class SetUserPhoto:
                 owner_id=user_id,
                 scope=FileScope.STAFF,
                 purpose=FilePurpose.USER_PHOTO,
-                name=f"photo.{photo.extension}",
+                name=f"{stem}.{photo.extension}",
                 data=data,
                 expires_days=None,
             )

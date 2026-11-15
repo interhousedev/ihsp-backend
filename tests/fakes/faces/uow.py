@@ -3,7 +3,7 @@
 from collections.abc import Sequence
 from datetime import date, datetime
 from types import TracebackType
-from typing import Self
+from typing import Literal, Self
 from uuid import UUID
 
 from app.modules.faces.domain.models import Device, DeviceCall, FaceProfile, Passage
@@ -232,15 +232,28 @@ class FakeSniffer:
 
 
 class FakeProfilePhotos:
-    """Records the profile photos set from faces; can be told to fail."""
+    """Profile photos with their source ("face" copy or "other"); can fail."""
 
     def __init__(self) -> None:
         """Start empty."""
         self.photos: dict[UUID, bytes] = {}
+        self.sources: dict[UUID, Literal["face", "other"]] = {}
         self.fail = False
 
+    async def source(self, user_id: UUID) -> Literal["none", "face", "other"]:
+        """Return where the current photo came from."""
+        return self.sources.get(user_id, "none")
+
     async def set_photo(self, user_id: UUID, data: bytes) -> None:
-        """Remember the image or fail like an unusable photo would."""
+        """Remember the face copy or fail like an unusable photo would."""
         if self.fail:
             raise RuntimeError("photo rejected")
         self.photos[user_id] = data
+        self.sources[user_id] = "face"
+
+    async def remove_photo(self, user_id: UUID) -> None:
+        """Forget the photo or fail."""
+        if self.fail:
+            raise RuntimeError("files unavailable")
+        self.photos.pop(user_id, None)
+        self.sources.pop(user_id, None)

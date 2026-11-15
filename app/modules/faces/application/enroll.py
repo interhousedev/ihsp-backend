@@ -84,12 +84,20 @@ class FaceEnroller:
             raise
         if current is not None:
             await self._files.delete_file(current.photo_file_id)
-        await self._set_profile_photo(user_id, data)
+        await self._set_profile_photo(user_id, data, by_staff=by_staff)
         return profile
 
-    async def _set_profile_photo(self, user_id: UUID, data: bytes) -> None:
-        """Copy the face to the profile photo; the face is saved even if this fails."""
+    async def _set_profile_photo(
+        self, user_id: UUID, data: bytes, *, by_staff: bool
+    ) -> None:
+        """Copy the face to the profile photo; the face is saved even if this fails.
+
+        The student's own upload never replaces a photo set some other way (by an
+        administrator or the user); a staff upload always does.
+        """
         try:
+            if not by_staff and await self._profile_photos.source(user_id) == "other":
+                return
             await self._profile_photos.set_photo(user_id, data)
         except Exception:  # the face is committed; never fail the upload for this
             log.warning(
@@ -107,3 +115,14 @@ class FaceEnroller:
             await uow.profiles.delete(user_id)
             await uow.commit()
         await self._files.delete_file(current.photo_file_id)
+        await self._remove_profile_photo(user_id)
+
+    async def _remove_profile_photo(self, user_id: UUID) -> None:
+        """Remove the profile photo when it is the face copy; failures are logged."""
+        try:
+            if await self._profile_photos.source(user_id) == "face":
+                await self._profile_photos.remove_photo(user_id)
+        except Exception:  # the face is already gone; never fail the removal
+            log.warning(
+                "face_profile_photo_remove_failed", user_id=str(user_id), exc_info=True
+            )

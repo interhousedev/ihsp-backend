@@ -552,7 +552,12 @@ class _Assembler:
             ),
             excuses=LazyExcuseStatus(lambda: c.academic.excuse_status),
             sniffer=self.make_sniffer(),
-            profile_photos=FacesProfilePhotoAdapter(c.identity.auth.set_user_photo),
+            profile_photos=FacesProfilePhotoAdapter(
+                c.identity.directory,
+                c.files.public,
+                c.identity.auth.set_user_photo,
+                c.identity.auth.remove_user_photo,
+            ),
         )
 
     def build_onboarding(self) -> None:
