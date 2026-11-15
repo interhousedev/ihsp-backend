@@ -15,5 +15,9 @@
   "admin-platform-settings-invalid": "Platforma sozlamasining qiymati notoʻgʻri.",
   "admin-limit-invalid": "Limit qiymati notoʻgʻri.",
   "admin-limit-extension-invalid": "Limit kengaytmasi notoʻgʻri.",
-  "admin-limit-user-not-found": "O‘quvchi topilmadi."
+  "admin-limit-user-not-found": "O‘quvchi topilmadi.",
+  "error-maintenance": "Platforma yangi serverga koʼchirilmoqda va faqat oʼqish uchun ochiq. Keyinroq urinib koʼring.",
+  "admin-migration-not-configured": "Bu serverda boshqa serverga koʼchirish sozlanmagan.",
+  "admin-migration-not-allowed": "Koʼchirishning hozirgi bosqichida bu amalni bajarib boʼlmaydi.",
+  "admin-migration-invalid-input": "Maqsadli server manzili yoki juftlash tokeni notoʼgʼri."
 }

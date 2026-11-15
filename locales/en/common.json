@@ -15,5 +15,9 @@
   "admin-platform-settings-invalid": "Invalid platform setting value.",
   "admin-limit-invalid": "Invalid limit value.",
   "admin-limit-extension-invalid": "Invalid limit extension.",
-  "admin-limit-user-not-found": "Student not found."
+  "admin-limit-user-not-found": "Student not found.",
+  "error-maintenance": "The platform is read-only while it is being moved to a new server. Try again later.",
+  "admin-migration-not-configured": "Server migration is not set up on this server.",
+  "admin-migration-not-allowed": "This action is not possible in the current migration phase.",
+  "admin-migration-invalid-input": "The target server or the pairing token is not valid."
 }

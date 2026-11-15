@@ -15,5 +15,9 @@
   "admin-platform-settings-invalid": "Недопустимое значение настройки платформы.",
   "admin-limit-invalid": "Недопустимое значение лимита.",
   "admin-limit-extension-invalid": "Недопустимое увеличение лимита.",
-  "admin-limit-user-not-found": "Ученик не найден."
+  "admin-limit-user-not-found": "Ученик не найден.",
+  "error-maintenance": "Платформа доступна только для чтения: идёт перенос на новый сервер. Повторите позже.",
+  "admin-migration-not-configured": "Перенос на другой сервер на этом сервере не настроен.",
+  "admin-migration-not-allowed": "Это действие невозможно на текущем этапе переноса.",
+  "admin-migration-invalid-input": "Адрес целевого сервера или токен сопряжения указаны неверно."
 }

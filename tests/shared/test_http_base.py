@@ -302,6 +302,26 @@ async def test_public_routes_allow_only_the_share_origin(
     assert "access-control-allow-origin" not in app.headers
 
 
+async def test_maintenance_status_allows_app_and_share_origins(
+    http_client: HttpClientFactory,
+) -> None:
+    """Every app shell polls /v1/public/maintenance for the banner."""
+    router = APIRouter()
+
+    @router.get("/v1/public/maintenance")
+    async def maintenance() -> dict[str, bool]:
+        return {"active": False}
+
+    client = await http_client([router])
+
+    for origin in (APP_ORIGIN, SHARE_ORIGIN):
+        response = await client.get(
+            "/v1/public/maintenance", headers={"Origin": origin}
+        )
+        assert response.headers["access-control-allow-origin"] == origin
+        assert "access-control-allow-credentials" not in response.headers
+
+
 async def test_routes_outside_v1_get_no_cors_headers(
     http_client: HttpClientFactory,
 ) -> None:

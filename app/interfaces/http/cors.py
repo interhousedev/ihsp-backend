@@ -1,10 +1,11 @@
 """Per-route-group CORS as a path-prefix ASGI middleware.
 
 Rules: the cookie endpoints (`/v1/oauth/token|refresh|logout`) allow the first-party
-app origins with credentials and require the `X-IHSP-Client` header; the public share
-data (`/v1/public/*`) allows only the share host; every other `/v1/*` route allows the
-first-party app origins without credentials. The share host shows user-written content
-and is never a credentialed origin.
+app origins with credentials and require the `X-IHSP-Client` header; the maintenance
+status (`/v1/public/maintenance`) allows the app and share origins; the rest of the
+public share data (`/v1/public/*`) allows only the share host; every other `/v1/*`
+route allows the first-party app origins without credentials. The share host shows
+user-written content and is never a credentialed origin.
 """
 
 from collections.abc import Sequence
@@ -23,6 +24,8 @@ if TYPE_CHECKING:
 CLIENT_HEADER = "x-ihsp-client"
 
 COOKIE_PREFIXES = ("/v1/oauth/token", "/v1/oauth/refresh", "/v1/oauth/logout")
+# Read by every app shell (the maintenance banner), so app and share origins both pass.
+MAINTENANCE_PREFIXES = ("/v1/public/maintenance",)
 PUBLIC_PREFIXES = ("/v1/public/",)
 APP_PREFIXES = ("/v1/",)
 
@@ -64,6 +67,17 @@ class PrefixCorsMiddleware:
                     allow_credentials=True,
                     allow_methods=["POST", "OPTIONS"],
                     allow_headers=_COOKIE_HEADERS,
+                    expose_headers=_EXPOSE,
+                ),
+            ),
+            (
+                MAINTENANCE_PREFIXES,
+                CORSMiddleware(
+                    app,
+                    allow_origins=[*app_origins, *share_origins],
+                    allow_credentials=False,
+                    allow_methods=["GET", "OPTIONS"],
+                    allow_headers=["*"],
                     expose_headers=_EXPOSE,
                 ),
             ),
