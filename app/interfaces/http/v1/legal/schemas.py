@@ -37,7 +37,7 @@ class LegalDocumentOut(BaseModel):
     def of(cls, document: LegalDocument, locale: str) -> "LegalDocumentOut":
         """Pick the texts of the locale."""
         return cls(
-            kind=document.kind,  # type: ignore[arg-type]
+            kind=document.kind,
             version=document.version,
             locale=locale,
             title=document.title[locale],
@@ -112,9 +112,9 @@ class AdminDocumentOut(BaseModel):
         """Map the domain document."""
         return cls(
             id=document.id,
-            kind=document.kind,  # type: ignore[arg-type]
+            kind=document.kind,
             version=document.version,
-            status=document.status.value,  # type: ignore[arg-type]
+            status=document.status.value,
             title=document.title,
             body_markdown=document.body_markdown,
             announcement=document.announcement,
@@ -150,7 +150,7 @@ class AcceptanceCountOut(BaseModel):
     def of(cls, count: AcceptanceCount) -> "AcceptanceCountOut":
         """Map the application view."""
         return cls(
-            kind=count.kind,  # type: ignore[arg-type]
+            kind=count.kind,
             version=count.version,
             accepted_count=count.accepted_count,
         )

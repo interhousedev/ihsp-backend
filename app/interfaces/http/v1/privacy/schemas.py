@@ -31,7 +31,7 @@ class ExportOut(BaseModel):
         """Map the domain object."""
         return cls(
             id=job.id,
-            status=job.status.value,  # type: ignore[arg-type]
+            status=job.status.value,
             created_at=job.created_at,
             finished_at=job.finished_at,
             expires_at=job.expires_at,
@@ -67,7 +67,7 @@ class ErasureRequestOut(BaseModel):
         """Map the domain object."""
         return cls(
             id=request.id,
-            status=request.status.value,  # type: ignore[arg-type]
+            status=request.status.value,
             requested_at=request.requested_at,
             decided_at=request.decided_at,
             reject_reason=request.reject_reason,

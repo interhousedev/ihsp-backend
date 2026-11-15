@@ -43,7 +43,7 @@ def names_group(group_id: UUID) -> ColumnElement[bool]:
     )
 
 
-def _shown_order() -> tuple[ColumnElement[Any], ...]:
+def _shown_order() -> tuple[Any, ...]:
     """Pinned lists first, then the librarians' order, then the latest change."""
     return (
         ListRow.pinned.desc(),
@@ -162,7 +162,9 @@ class SqlReadingListRepository:
         row = ListRow(id=reading_list.id, created_at=reading_list.created_at)
         _apply_list(row, reading_list)
         row.sort_order = (
-            await self.session.scalar(select(func.coalesce(func.max(ListRow.sort_order), 0)))
+            await self.session.scalar(
+                select(func.coalesce(func.max(ListRow.sort_order), 0))
+            )
             or 0
         ) + 1
         reading_list.sort_order = row.sort_order
@@ -211,7 +213,7 @@ class SqlReadingListRepository:
         return [_list_from(row) for row in rows.scalars()]
 
     async def order(self) -> list[UUID]:
-        """Every list id in the librarians' manual order (pins ignored)."""
+        """Every list id in the librarians' manual order, ignoring pins."""
         rows = await self.session.execute(
             select(ListRow.id).order_by(
                 ListRow.sort_order, ListRow.updated_at.desc(), ListRow.id
@@ -304,7 +306,9 @@ class SqlReadingListRepository:
                 or_(*audience),
             )
             .group_by(ListRow.id, ListRow.title, ListRow.pinned, ListRow.sort_order)
-            .order_by(ListRow.pinned.desc(), ListRow.sort_order, ListRow.title, ListRow.id)
+            .order_by(
+                ListRow.pinned.desc(), ListRow.sort_order, ListRow.title, ListRow.id
+            )
         )
         rows = await self.session.execute(query)
         return [

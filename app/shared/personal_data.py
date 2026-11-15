@@ -85,7 +85,7 @@ class PersonalTable:
     @property
     def name(self) -> str:
         """``schema.table``."""
-        table = self.model.__table__  # type: ignore[attr-defined]
+        table: Any = self.model.__table__
         return f"{table.schema}.{table.name}"
 
     def matches(self, user_id: UUID) -> Any:

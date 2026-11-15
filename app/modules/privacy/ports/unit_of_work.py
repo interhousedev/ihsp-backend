@@ -11,8 +11,15 @@ from app.shared.notifications import AuditDraft, NotificationDraft
 class PrivacyUnitOfWork(Protocol):
     """Opens a transaction on entry; commit() commits it, the notices and the audit."""
 
-    erasure: ErasureRepository
-    exports: ExportRepository
+    @property
+    def erasure(self) -> ErasureRepository:
+        """Erasure requests."""
+        ...
+
+    @property
+    def exports(self) -> ExportRepository:
+        """Data exports."""
+        ...
 
     def notify(self, *drafts: NotificationDraft) -> None:
         """Queue notifications to insert at commit."""

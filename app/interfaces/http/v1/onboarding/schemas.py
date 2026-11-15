@@ -30,7 +30,7 @@ class OnboardingOut(BaseModel):
             required=state.required,
             steps=[
                 OnboardingStepOut(
-                    key=s.key.value,  # type: ignore[arg-type]
+                    key=s.key.value,
                     required=s.required,
                     done=s.done,
                     skippable=s.skippable,

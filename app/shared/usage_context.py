@@ -86,7 +86,7 @@ _session: ContextVar[str | None] = ContextVar("ai_session", default=None)
 
 
 def bind_ai_session(session_id: object) -> None:
-    """Group the model calls of this context under one chat or notebook (a trace session)."""
+    """Group the calls of this context under one chat or notebook (a trace session)."""
     _session.set(str(session_id))
 
 

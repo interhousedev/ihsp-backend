@@ -54,7 +54,7 @@ class ReadingListRepository(Protocol):
         ...
 
     async def order(self) -> list[UUID]:
-        """Every list id in the librarians' manual order (pins ignored)."""
+        """Every list id in the librarians' manual order, ignoring pins."""
         ...
 
     async def store_order(self, ids: Sequence[UUID]) -> None:

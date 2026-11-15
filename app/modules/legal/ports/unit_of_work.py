@@ -11,7 +11,10 @@ from app.shared.notifications import AuditDraft
 class LegalUnitOfWork(Protocol):
     """Opens a transaction on entry; commit() commits it and the audit."""
 
-    legal: LegalRepository
+    @property
+    def legal(self) -> LegalRepository:
+        """Legal documents and acceptances."""
+        ...
 
     def audit(self, *drafts: AuditDraft) -> None:
         """Queue audit events to insert at commit."""
