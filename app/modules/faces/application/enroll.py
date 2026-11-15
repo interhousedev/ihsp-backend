@@ -38,7 +38,8 @@ class FaceEnroller:
         self, user_id: UUID, *, uploaded_by: UUID, data: bytes, by_staff: bool
     ) -> FaceProfile:
         """Check the image, find the one face and save it; staff lock the result."""
-        check_image(data, await self._sniffer.sniff(data[:SNIFF_BYTES]))
+        sniffed = await self._sniffer.sniff(data[:SNIFF_BYTES])
+        check_image(data, sniffed)
         async with self._uow_factory() as uow:
             current = await uow.profiles.get(user_id)
         if current is not None and current.locked and not by_staff:
@@ -50,7 +51,7 @@ class FaceEnroller:
             owner_id=user_id,
             scope=FileScope.SYSTEM,
             purpose=FilePurpose.USER_PHOTO,
-            name="face",
+            name="face.png" if sniffed == "image/png" else "face.jpg",
             data=data,
         )
         profile = FaceProfile(

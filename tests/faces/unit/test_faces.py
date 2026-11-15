@@ -20,6 +20,7 @@ from app.modules.faces.domain.models import (
     Direction,
     Passage,
 )
+from app.modules.files.domain.policy import detected_matches, rule_for_name
 from app.shared.actor import Actor, Role
 from app.shared.ids import new_id
 from app.shared.notifications import NotificationType
@@ -84,6 +85,22 @@ async def test_upload_sniff_and_size_limits(fh: FacesHarness) -> None:
     with pytest.raises(NoFaceError):
         await up.execute(me.user_id, photo("NOFACE"))
     await up.execute(me.user_id, b"\xff\xd8\xff" + b"jpeg")  # jpeg is fine
+
+
+@pytest.mark.parametrize(
+    "data", [b"\xff\xd8\xff\xe0" + b"jpeg", photo("p")], ids=["jpeg", "png"]
+)
+async def test_stored_photo_name_passes_the_files_type_policy(
+    fh: FacesHarness, data: bytes
+) -> None:
+    """The stored name needs an extension of the files allowlist (was `face`)."""
+    me = student_actor(fh)
+    await fh.services.upload_my_face.execute(me.user_id, data)
+    (ref,) = fh.files.files.values()
+    rule = rule_for_name(ref.name)
+    assert rule is not None
+    sniffed = "image/png" if data.startswith(PNG) else "image/jpeg"
+    assert detected_matches(rule, sniffed, data)
 
 
 # --- devices -------------------------------------------------------------------

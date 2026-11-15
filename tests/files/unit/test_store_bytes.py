@@ -41,6 +41,21 @@ async def test_a_pdf_from_the_bot_is_stored_and_queued_for_processing(
     assert fakes.kicker.calls == [("files.process", {"file_id": str(ref.id)})]
 
 
+async def test_a_face_photo_named_like_enrolment_names_it_is_stored(
+    fakes: FilesFakes,
+) -> None:
+    """Faces enrol with `face.png`; an extension-less name was a 415."""
+    ref = await fakes.services.public.store_bytes(
+        owner_id=uuid4(),
+        scope=FileScope.SYSTEM,
+        purpose=FilePurpose.USER_PHOTO,
+        name="face.png",
+        data=PNG_BYTES,
+    )
+
+    assert fakes.db.row(ref.id).content_type == "image/png"
+
+
 async def test_a_wrong_type_from_the_bot_is_refused_outright(
     fakes: FilesFakes,
 ) -> None:
