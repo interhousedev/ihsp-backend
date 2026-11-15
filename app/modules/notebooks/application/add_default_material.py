@@ -6,6 +6,7 @@ from app.modules.notebooks.application.material_target import (
     DefaultMaterialDraft,
     check_target,
 )
+from app.modules.notebooks.application.readers.library_reader import LibraryReader
 from app.modules.notebooks.domain.default_materials import (
     DEFAULT_MATERIAL_TITLE_MAX_CHARS,
     MAX_DEFAULT_MATERIALS,
@@ -37,11 +38,13 @@ class AddDefaultMaterial:
         uow_factory: UowFactory,
         clock: Clock,
         files: FilesApi | None,
+        library: LibraryReader | None = None,
     ) -> None:
-        """Store the collaborators (`files` None: file materials are refused)."""
+        """Store the collaborators (`files`/`library` None: those kinds are refused)."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.files = files
+        self.library = library
 
     async def execute(
         self, actor: Actor, edu_subject_id: int, draft: DefaultMaterialDraft
@@ -83,4 +86,4 @@ class AddDefaultMaterial:
         self, actor: Actor, draft: DefaultMaterialDraft
     ) -> tuple[str | None, UUID | None, UUID | None]:
         """The (url, file id, library item id) of the kind, each checked."""
-        return await check_target(self.files, actor, draft)
+        return await check_target(self.files, self.library, actor, draft)

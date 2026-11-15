@@ -127,7 +127,10 @@ def build_auto(
         ),
         list_default_materials=ListDefaultMaterials(uow_factory=core.uow_factory),
         add_default_material=AddDefaultMaterial(
-            uow_factory=core.uow_factory, clock=deps.clock, files=files
+            uow_factory=core.uow_factory,
+            clock=deps.clock,
+            files=files,
+            library=readers.library_reader,
         ),
         remove_default_material=RemoveDefaultMaterial(uow_factory=core.uow_factory),
         reconcile_subject_materials=ReconcileSubjectMaterials(
@@ -140,5 +143,6 @@ def build_auto(
                 schedule=schedule, terms=terms, clock=deps.clock
             ),
             files=files,
+            library=readers.library_reader,
         ),
     )

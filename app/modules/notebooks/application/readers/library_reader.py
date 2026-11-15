@@ -222,6 +222,14 @@ class LibraryReader:
             origin["author"] = ref.author_label
         return origin
 
+    async def is_visible(self, actor: Actor, item_id: UUID) -> bool:
+        """True when the item exists and the actor may open it (a hold hides it)."""
+        try:
+            await self.library.describe(item_id, actor)
+        except LibrarySourceUnavailableError:
+            return False
+        return True
+
     async def _described(self, actor: Actor, item_id: UUID) -> LibraryItemRef:
         """The item, or the add error for why the student may not use it."""
         try:

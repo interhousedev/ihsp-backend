@@ -82,6 +82,52 @@ async def test_a_file_must_be_the_admins_own_upload(
     assert accepted.json()["file_id"] == str(own.id)
 
 
+async def test_a_library_book_is_added_by_its_item_id(
+    api: AsyncClient, current: dict[str, Actor], admin: Actor, world: World
+) -> None:
+    """The admin picks a catalogue book: the material keeps the item id."""
+    current["actor"] = admin
+    book = world.library.add_book("Physics 10")
+
+    response = await api.post(
+        f"{BASE}/101",
+        json={
+            "kind": "library_item",
+            "title": "Physics 10",
+            "library_item_id": str(book.id),
+        },
+    )
+
+    assert response.status_code == 201, response.text
+    body = response.json()
+    assert body["kind"] == "library_item"
+    assert body["library_item_id"] == str(book.id)
+    assert body["file_id"] is None and body["url"] is None
+
+
+async def test_an_unknown_or_held_library_item_is_refused_with_its_field(
+    api: AsyncClient, current: dict[str, Actor], admin: Actor, world: World
+) -> None:
+    """A missing or held item is a 422 naming `library_item_id`."""
+    current["actor"] = admin
+    held = world.library.add_book("Held")
+    world.library.hold(held)
+
+    for item_id in (new_id(), held.id):
+        response = await api.post(
+            f"{BASE}/101",
+            json={
+                "kind": "library_item",
+                "title": "X",
+                "library_item_id": str(item_id),
+            },
+        )
+        assert response.status_code == 422, response.text
+        assert problem_type(response) == "notebooks/default-material-invalid"
+        assert response.json()["params"]["field"] == "library_item_id"
+    assert (await api.get(f"{BASE}/101")).json() == []
+
+
 async def test_a_body_with_another_target_than_its_kind_is_unprocessable(
     api: AsyncClient, current: dict[str, Actor], admin: Actor
 ) -> None:

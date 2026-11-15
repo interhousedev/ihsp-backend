@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from uuid import UUID
 
+from app.modules.notebooks.application.readers.library_reader import LibraryReader
 from app.modules.notebooks.application.readers.url_reader import normalise_url
 from app.modules.notebooks.domain.default_materials import DefaultMaterialKind
 from app.modules.notebooks.domain.errors import DefaultMaterialInvalidError
@@ -23,9 +24,15 @@ class DefaultMaterialDraft:
 
 
 async def check_target(
-    files: FilesApi | None, actor: Actor, draft: DefaultMaterialDraft
+    files: FilesApi | None,
+    library: LibraryReader | None,
+    actor: Actor,
+    draft: DefaultMaterialDraft,
 ) -> tuple[str | None, UUID | None, UUID | None]:
     """The (url, file id, library item id) of the kind, each checked.
+
+    A library item must exist and be visible to the actor (an unknown, held or
+    external record is refused).
 
     Raises:
         DefaultMaterialInvalidError: The file, link or item cannot be used.
@@ -34,9 +41,12 @@ async def check_target(
         return None, await _own_file(files, actor, draft.file_id), None
     if draft.kind is DefaultMaterialKind.LINK:
         return _link(draft.url), None, None
-    if draft.library_item_id is None:
+    item_id = draft.library_item_id
+    if item_id is None or library is None:
         raise DefaultMaterialInvalidError(params={"field": "library_item_id"})
-    return None, None, draft.library_item_id
+    if not await library.is_visible(actor, item_id):
+        raise DefaultMaterialInvalidError(params={"field": "library_item_id"})
+    return None, None, item_id
 
 
 async def _own_file(files: FilesApi | None, actor: Actor, file_id: UUID | None) -> UUID:

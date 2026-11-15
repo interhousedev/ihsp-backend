@@ -7,6 +7,7 @@ from app.modules.notebooks.application.material_target import (
     DefaultMaterialDraft,
     check_target,
 )
+from app.modules.notebooks.application.readers.library_reader import LibraryReader
 from app.modules.notebooks.application.teaching_directory import (
     TeachingDirectory,
     TeachingSubject,
@@ -55,12 +56,14 @@ class StaffSubjectMaterials:
         clock: Clock,
         teaching: TeachingDirectory,
         files: FilesApi | None,
+        library: LibraryReader | None = None,
     ) -> None:
-        """Store the collaborators (`files` None: file materials are refused)."""
+        """Store the collaborators (`files`/`library` None: those kinds are refused)."""
         self.uow_factory = uow_factory
         self.clock = clock
         self.teaching = teaching
         self.files = files
+        self.library = library
 
     async def subjects(self, actor: Actor) -> list[TeachingSubject]:
         """The subjects the teacher teaches this term, with their groups."""
@@ -114,7 +117,9 @@ class StaffSubjectMaterials:
         title = draft.title.strip()[:DEFAULT_MATERIAL_TITLE_MAX_CHARS]
         if not title:
             raise DefaultMaterialInvalidError(params={"field": "title"})
-        url, file_id, item_id = await check_target(self.files, actor, draft)
+        url, file_id, item_id = await check_target(
+            self.files, self.library, actor, draft
+        )
         scope = (
             MaterialScope.TEACHER_SUBJECT if group_id is None else MaterialScope.GROUP
         )
