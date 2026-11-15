@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.6.3] - 2026-11-16
+
 ### Added
 
 - Telegram Guest Mode: the bot answers @mentions and replies in any chat through `answerGuestQuery`, with the public guest assistant only (needs `open_ai_agent` and Guest Mode in @BotFather). Quoted messages are treated as untrusted data, unknown links are dropped, and there are per-chat and global daily limits (`IHSP_TELEGRAM__GUEST_CHAT_*`).
