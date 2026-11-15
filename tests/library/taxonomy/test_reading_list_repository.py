@@ -64,7 +64,7 @@ async def test_list_round_trip_and_update(uow_factory: UowFactory) -> None:
 async def test_find_filters_and_orders_by_latest_change(
     uow_factory: UowFactory,
 ) -> None:
-    """LIB-4: subject, owner, group and status filters; newest change first."""
+    """LIB-4: subject, owner, group, status filters; new lists go last."""
     group = new_id()
     old = make_reading_list(OWNER, title="Old", subject_id=SUBJECT)
     newer = make_reading_list(
@@ -87,8 +87,8 @@ async def test_find_filters_and_orders_by_latest_change(
         drafts = await uow.lists.find(status=ListStatus.DRAFT)
         of_group = await uow.lists.find(group_id=group)
 
-    assert [x.title for x in in_subject] == ["Newer", "Old", "Draft"]
-    assert [x.title for x in mine] == ["Newer", "Old"]
+    assert [x.title for x in in_subject] == ["Old", "Newer", "Draft"]
+    assert [x.title for x in mine] == ["Old", "Newer"]
     assert [x.title for x in drafts] == ["Draft"]
     assert [x.title for x in of_group] == ["Groups"]
 
@@ -226,8 +226,8 @@ async def test_hub_summaries_show_published_lists_the_group_may_see(
         for_group = await uow.lists.summaries_for_subject(SUBJECT, group_id=group)
         for_nobody = await uow.lists.summaries_for_subject(SUBJECT, group_id=None)
 
-    assert [s.title for s in for_group] == ["Own group", "School", "Subject"]
-    assert [s.title for s in for_nobody] == ["School", "Subject"]
+    assert [s.title for s in for_group] == ["Subject", "School", "Own group"]
+    assert [s.title for s in for_nobody] == ["Subject", "School"]
     subject = next(s for s in for_group if s.title == "Subject")
     assert (subject.entries, subject.essential_entries) == (3, 2)
     empty = next(s for s in for_group if s.title == "School")

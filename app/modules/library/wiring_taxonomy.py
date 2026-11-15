@@ -42,8 +42,14 @@ from app.modules.library.application.taxonomy.manage_subjects import (
     ListManageSubjects,
     UpdateSubject,
 )
+from app.modules.library.application.taxonomy.pin_reading_list import (
+    PinReadingList,
+)
 from app.modules.library.application.taxonomy.reading_list_builder import (
     ReadingListBuilder,
+)
+from app.modules.library.application.taxonomy.reorder_reading_lists import (
+    ReorderReadingLists,
 )
 from app.modules.library.application.taxonomy.replace_list_entries import (
     ReplaceListEntries,
@@ -86,6 +92,8 @@ class TaxonomyServices:
     update_reading_list: UpdateReadingList
     delete_reading_list: DeleteReadingList
     replace_list_entries: ReplaceListEntries
+    pin_reading_list: PinReadingList
+    reorder_reading_lists: ReorderReadingLists
     get_stats: GetLibraryStats
     rollup_stats: RollupStats
 
@@ -163,6 +171,10 @@ def build_taxonomy(core: LibraryCore) -> TaxonomyServices:
             builder=lists,
         ),
         delete_reading_list=DeleteReadingList(uow_factory=core.uow_factory),
+        pin_reading_list=PinReadingList(
+            uow_factory=core.uow_factory, identity=core.identity, builder=lists
+        ),
+        reorder_reading_lists=ReorderReadingLists(uow_factory=core.uow_factory),
         replace_list_entries=ReplaceListEntries(
             uow_factory=core.uow_factory,
             clock=core.clock,

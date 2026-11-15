@@ -7,6 +7,8 @@ from app.interfaces.http.v1.library.taxonomy.handlers import (
     get_reading_list,
     list_my_groups,
     list_reading_lists,
+    pin_reading_list,
+    reorder_reading_lists,
     replace_list_entries,
     update_reading_list,
 )
@@ -23,6 +25,17 @@ router.add_api_route(
     create_reading_list.create_reading_list,
     methods=["POST"],
     status_code=status.HTTP_201_CREATED,
+)
+router.add_api_route(
+    "/v1/library/reading-lists/order",
+    reorder_reading_lists.reorder_reading_lists,
+    methods=["PUT"],
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+router.add_api_route(
+    "/v1/library/reading-lists/{list_id}/pin",
+    pin_reading_list.pin_reading_list,
+    methods=["PUT"],
 )
 router.add_api_route(
     "/v1/library/reading-lists/{list_id}",

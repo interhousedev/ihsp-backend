@@ -21,3 +21,5 @@ class TaxonomyAuditType(StrEnum):
     COLLECTION_DELETE = "library.collection_delete"
     LIST_UPDATE = "library.list_update"
     LIST_DELETE = "library.list_delete"
+    LIST_PIN = "library.list_pin"
+    LIST_REORDER = "library.list_reorder"
