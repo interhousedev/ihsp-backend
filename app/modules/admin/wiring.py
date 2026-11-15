@@ -146,5 +146,6 @@ def build(
             resolver=resolver,
             clock=deps.clock,
             step_up=step_up,
+            env_token_set=bool(deps.settings.telegram.bot_token.get_secret_value()),
         ),
     )

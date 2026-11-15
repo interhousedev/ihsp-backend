@@ -46,6 +46,7 @@ A server set up before the bot registry has no `telegram-bots` AppRole, and the 
 1. Unseal Vault, then run the Vault setup again with a root or admin token, as `scripts/prod_init.sh` does: `VAULT_TOKEN=… docker compose --profile tools run --rm -T -e VAULT_TOKEN vault-setup python /init/setup.py --print-credentials`. It is idempotent and creates the `telegram-bots` policy and AppRole beside the identity ones.
 2. Copy `IHSP_BOT_VAULT__ROLE_ID` and `IHSP_BOT_VAULT__SECRET_ID` from its output into `.env.prod`; the other `IHSP_BOT_VAULT__*` settings keep their defaults (see `materials/.env.sample`). Never paste them into chat or logs.
 3. Deploy, so migration `admin_0005` runs, and restart `api`, `bot` and `worker`. The token in `IHSP_TELEGRAM__BOT_TOKEN` is imported as the default bot on first use.
+4. Optional: run `docker compose run --rm api python -m app import-default-bot` (idempotent, never prints the token; exit 0 means the token is in Vault), then delete `IHSP_TELEGRAM__BOT_TOKEN` from `.env.prod` and restart `api`, `bot`, `worker` and `identity`. Without the env token every process uses the default bot's Vault token, and the token of the default bot can be rotated on the Bots page. Keep `IHSP_TELEGRAM__BOT_USERNAME` unless the bot is `@ihspbot`.
 
 ## AI answers in Telegram
 

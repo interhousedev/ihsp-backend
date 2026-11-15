@@ -96,7 +96,9 @@ class TelegramOnboarding:
     ) -> bool:
         """Link the mini app account; False sends the user to the deep link."""
         try:
-            telegram_user = self.verifier.verify(raw_init_data, max_age=self.max_age)
+            telegram_user = await self.verifier.verify(
+                raw_init_data, max_age=self.max_age
+            )
             await self._link(user_id, telegram_user, ctx)
         except (UnauthorizedError, TelegramLinkedElsewhereError):
             return False

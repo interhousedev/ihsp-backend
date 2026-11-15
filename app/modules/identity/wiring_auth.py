@@ -1,5 +1,6 @@
 """Composition of the identity auth services (task B1)."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from uuid import UUID
@@ -329,6 +330,7 @@ def build_auth(
     email_sender: EmailSender | None = None,
     hasher: PasswordHasher | None = None,
     init_data_verifier: InitDataVerifier | None = None,
+    default_bot_token: Callable[[], Awaitable[str | None]] | None = None,
     otp_sender: OtpSender | None = None,
     uow_factory: UowFactory | None = None,
     cipher: SecretCipher | None = None,
@@ -340,7 +342,9 @@ def build_auth(
     ``telegram_sender`` (B8's aiogram sender) is wired by I1; without it codes go
     to email only. The other optional arguments replace infrastructure in tests.
     ``files`` holds the profile photos; it may be a late-bound proxy (the files
-    module needs the academic terms, which need identity).
+    module needs the academic terms, which need identity). ``default_bot_token``
+    returns the default bot's token for the Mini App check; without it the
+    ``TELEGRAM__BOT_TOKEN`` setting is used.
     """
     settings, clock, redis = deps.settings, deps.clock, deps.redis
     seal = vault_seal or HttpVaultSeal(settings.vault)
@@ -349,8 +353,13 @@ def build_auth(
         settings=settings.smtp_out, i18n=deps.i18n, app_name=settings.public_app_name
     )
     hasher = hasher or Argon2PasswordHasher()
+    env_token = settings.telegram.bot_token.get_secret_value() or None
+
+    async def env_bot_token() -> str | None:
+        return env_token
+
     verifier = init_data_verifier or HmacInitDataVerifier(
-        bot_token=settings.telegram.bot_token.get_secret_value(), clock=clock
+        token=default_bot_token or env_bot_token, clock=clock
     )
     otp_store = RedisOtpStore(redis)
     tickets = RedisTicketStore(redis)

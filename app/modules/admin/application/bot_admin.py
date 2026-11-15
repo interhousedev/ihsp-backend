@@ -95,8 +95,13 @@ class BotAdmin:
         resolver: ResolveAudience,
         clock: Clock,
         step_up: Callable[[Actor, str], Awaitable[None]],
+        env_token_set: bool = True,
     ) -> None:
         """Store the collaborators; `step_up` raises when the code is wrong.
+
+        ``env_token_set``: ``TELEGRAM__BOT_TOKEN`` is set, so it owns the default
+        bot's token; without it the default bot's token lives in Vault only and
+        Administration may rotate it like any other.
 
         Every write (add, update, rotate, announce) verifies a fresh step-up code
         here, after the input is validated, so no edge can skip it.
@@ -107,6 +112,7 @@ class BotAdmin:
         self.resolver = resolver
         self.clock = clock
         self.step_up = step_up
+        self.env_token_set = env_token_set
 
     async def list_bots(self, actor: Actor) -> list[BotView]:
         """Every bot with its linked member count."""
@@ -221,7 +227,7 @@ class BotAdmin:
         """
         actor.require(Role.ADMIN)
         current = await self.get(bot_id)
-        if current.is_default:
+        if current.is_default and self.env_token_set:
             raise BotDefaultTokenEnvError(support_details=f"bot {bot_id}")
         token = token.strip()
         token_bot_id(token)
@@ -230,7 +236,7 @@ class BotAdmin:
         current.rotate(identity, token_hint(token))  # BotTokenMismatchError
         async with self.uow_factory() as uow:
             bot = await uow.bots.get(bot_id, for_update=True)
-            if bot.is_default:
+            if bot.is_default and self.env_token_set:
                 raise BotDefaultTokenEnvError(support_details=f"bot {bot_id}")
             bot.rotate(identity, token_hint(token))
             previous = await self.vault.get(bot_id)
@@ -438,7 +444,8 @@ class BotAdmin:
         """The token to run the bot with; the env token wins for the default bot.
 
         The notification sender and the Mini App check use the env token too, so
-        every process agrees whatever Vault holds.
+        every process agrees whatever Vault holds. Without an env token the
+        default bot runs on its Vault token like the others.
         """
         if bot.is_default and env_token:
             return env_token
@@ -446,6 +453,41 @@ class BotAdmin:
             return await self.vault.get(bot.id)
         except BotVaultUnavailableError:
             return None
+
+    async def default_bot(self) -> TelegramBot | None:
+        """The registered default bot, if any."""
+        async with self.uow_factory() as uow:
+            bots = await uow.bots.list_all()
+        return next((bot for bot in bots if bot.is_default), None)
+
+    async def default_token(self, env_token: str | None) -> str | None:
+        """The default bot's token: the env token when set, else its Vault token.
+
+        None when there is neither (no default bot, or Vault cannot be read).
+        """
+        if env_token:
+            return env_token
+        bot = await self.default_bot()
+        return None if bot is None else await self.token_of(bot, None)
+
+    async def import_env_bot(self, token: str, username: str) -> TelegramBot | None:
+        """Operator command: make the env bot the default bot stored in Vault.
+
+        Idempotent: registers the bot on the first run and brings Vault in line
+        with the env token afterwards. Returns the default bot once Vault holds
+        exactly this token, None when that could not be confirmed (a malformed
+        token, Vault unreachable, or the Telegram id belongs to another bot).
+        """
+        token = token.strip()
+        await self.import_default_bot(token, username)
+        bot = await self.default_bot()
+        if bot is None:
+            return None
+        try:
+            stored = await self.vault.get(bot.id)
+        except BotVaultUnavailableError:
+            return None
+        return bot if stored == token else None
 
     async def enabled_bots(self) -> list[TelegramBot]:
         """The bots the bot process runs."""

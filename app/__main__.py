@@ -18,6 +18,7 @@ PROCESSES = (
     "scheduler",
     "migrate",
     "create-user",
+    "import-default-bot",
     "seed-demo",
     "seed-review",
     "backfill-subject-notebooks",

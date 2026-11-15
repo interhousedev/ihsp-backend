@@ -18,5 +18,5 @@ class RequestTelegramOtp:
 
     async def execute(self, init_data: str, login: str, ctx: RequestContext) -> None:
         """Verify initData, then send a code exactly like the web OTP request."""
-        self.verifier.verify(init_data, max_age=self.max_age)
+        await self.verifier.verify(init_data, max_age=self.max_age)
         await self.request_login_otp.execute(login, ctx)

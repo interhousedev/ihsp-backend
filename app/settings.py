@@ -1500,8 +1500,14 @@ def _production_problems(settings: Settings) -> list[str]:
         "DATABASE__URL": settings.database.url == DEV_DATABASE_URL
         or ":ihsp@" in settings.database.url,
         "REDIS__URL": "@" not in settings.redis.url,
+        # Empty is fine once the default bot's token lives in Vault (the bot,
+        # api, worker and identity read it with the bot_vault AppRole).
         "TELEGRAM__BOT_TOKEN": settings.telegram.bot_token.get_secret_value()
-        == DEV_BOT_TOKEN,
+        == DEV_BOT_TOKEN
+        or (
+            not settings.telegram.bot_token.get_secret_value()
+            and not (settings.bot_vault.role_id and settings.bot_vault.secret_id)
+        ),
         "TELEGRAM__MODE=webhook": settings.telegram.mode == "fake",
         "EMIS__MODE=real": settings.emis.mode != "real",
         "OPENROUTER__MODE=real": settings.openrouter.mode != "real",

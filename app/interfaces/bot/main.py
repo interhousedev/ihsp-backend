@@ -50,6 +50,8 @@ async def load_bots(container: Any, settings: Settings) -> list[RunningBot]:
 
     The default bot comes first. On the first start the env token is imported as
     the default bot; it always runs with the env token, which Vault then follows.
+    Without ``TELEGRAM__BOT_TOKEN`` the default bot runs on its Vault token and
+    the process refuses to start when it cannot (no default bot, Vault down).
     """
     env_token = settings.telegram.bot_token.get_secret_value() or None
     admin = container.admin.bot_admin
@@ -67,6 +69,11 @@ async def load_bots(container: Any, settings: Settings) -> list[RunningBot]:
             continue
         running.append(RunningBot(bot_with_token(token), entry))
     if not running or running[0].entry is None or not running[0].entry.is_default:
+        if env_token is None:
+            raise RuntimeError(
+                "no default bot: set TELEGRAM__BOT_TOKEN or run"
+                " `python -m app import-default-bot` first"
+            )
         running.insert(0, RunningBot(build_bot(settings), None))
     return running
 
@@ -111,11 +118,14 @@ async def run_bot(container: Any) -> None:
         finally:
             await bot.session.close()
         return
+    running = await load_bots(container, settings)
+    default = running[0].entry
     registry = BotRegistryCache(
-        container.sessionmaker, default_telegram_id=_env_bot_id(settings)
+        container.sessionmaker,
+        default_telegram_id=_env_bot_id(settings)
+        or (default.telegram_id if default is not None else None),
     )
     dispatcher = build_dispatcher(container, build_storage(settings), registry)
-    running = await load_bots(container, settings)
     try:
         for item in running:
             await configure(item, container)

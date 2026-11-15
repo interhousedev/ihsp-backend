@@ -46,7 +46,7 @@ class ExchangeTelegramInitData:
         """Return an access token for the linked account (never a refresh token)."""
         if client_id not in MINIAPP_CLIENTS:
             raise UnknownClientError(params={"client_id": client_id})
-        telegram_user = self.verifier.verify(init_data, max_age=INIT_DATA_MAX_AGE)
+        telegram_user = await self.verifier.verify(init_data, max_age=INIT_DATA_MAX_AGE)
         await self.rate_limiter.hit(
             f"tg-exchange:{telegram_user.id}",
             limit=EXCHANGES_PER_HOUR,

@@ -53,7 +53,7 @@ class TelegramLogin:
         ctx: RequestContext,
     ) -> TelegramLoginResult:
         """Verify initData and credentials, then link the Telegram account."""
-        telegram_user = self.verifier.verify(init_data, max_age=self.max_age)
+        telegram_user = await self.verifier.verify(init_data, max_age=self.max_age)
         async with self.uow_factory() as uow:
             if password is not None:
                 user = await self.authenticator.authenticate(uow, login, password, ctx)

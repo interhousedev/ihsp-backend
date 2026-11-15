@@ -74,7 +74,8 @@ x-backend-env: &backend-env
   IHSP_TOKENS__REFRESH_COOKIE_SECURE: "true"
   IHSP_TOKENS__REFRESH_COOKIE_SAMESITE: lax # the apps and the API share *.${DOMAIN}; `none` is refused
   IHSP_TOKENS__SERVICE_TOKEN: ${IHSP_TOKENS__SERVICE_TOKEN:?}
-  IHSP_TELEGRAM__BOT_TOKEN: ${IHSP_TELEGRAM__BOT_TOKEN:?}
+  # Optional once `python -m app import-default-bot` stored it in Vault (README).
+  IHSP_TELEGRAM__BOT_TOKEN: ${IHSP_TELEGRAM__BOT_TOKEN:-}
   IHSP_TELEGRAM__BOT_USERNAME: ${IHSP_TELEGRAM__BOT_USERNAME:-ihspbot}
   IHSP_TELEGRAM__MODE: ${IHSP_TELEGRAM__MODE:-webhook}
   IHSP_TELEGRAM__ADMIN_CHAT_ID: # optional, from .env.prod when set
@@ -184,7 +185,8 @@ x-vault-env: &vault-env
   IHSP_VAULT__SECRET_ID:
   IHSP_JWT_BEARER__PRIVATE_KEY_PATH: /run/secrets/jwt_bearer
 
-# Telegram bot tokens (admin "Bots" page): api stores them, bot and worker read them.
+# Telegram bot tokens (admin "Bots" page): api stores them, bot and worker read them;
+# identity reads the default bot's token for the Mini App sign-in.
 x-bot-vault-env: &bot-vault-env
   IHSP_BOT_VAULT__URL: http://vault:8200
   IHSP_BOT_VAULT__ROLE_ID: ${IHSP_BOT_VAULT__ROLE_ID:-} # written to .env.prod by scripts/prod_init.sh vault
@@ -394,7 +396,7 @@ services:
     command: ["python", "-m", "app", "identity"]
     mem_limit: 1g
     environment:
-      <<: [*backend-env, *smtp-out-env, *vault-env]
+      <<: [*backend-env, *smtp-out-env, *vault-env, *bot-vault-env]
       IHSP_HYDRA__MINIAPP_CLIENT_SECRET: ${IHSP_HYDRA__MINIAPP_CLIENT_SECRET:?}
     secrets:
       - source: jwt_bearer

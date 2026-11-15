@@ -8,6 +8,8 @@ from uuid import UUID
 from app.modules.admin.domain.telegram_bot import BotFeature
 from app.modules.admin.infrastructure.bot_registry import BotRegistryCache
 from app.modules.admin.infrastructure.bot_token_vault import VaultBotTokenStore
+from app.modules.admin.infrastructure.default_bot_token import DefaultBotToken
+from app.modules.notify.domain.telegram_errors import TelegramSendFailed
 from app.modules.notify.infrastructure.fake_sender import FakeTelegramSender
 from app.modules.notify.infrastructure.telegram_sender import (
     AiogramTelegramSender,
@@ -30,12 +32,14 @@ class MultiBotSender:
 
     Implements TelegramSender (always the default bot, as before the registry) and
     BotSenders. Senders of other bots are built lazily from their Vault tokens and
-    rebuilt when the bot row changes (``updated_at``, bumped by a rotation).
+    rebuilt when the bot row changes (``updated_at``, bumped by a rotation). With
+    no env token (``default`` is None) the default bot's sender is built the same
+    way from the registry's default bot.
     """
 
     def __init__(
         self,
-        default: TelegramSender,
+        default: TelegramSender | None,
         *,
         registry: BotRegistryCache,
         vault: VaultBotTokenStore,
@@ -49,6 +53,21 @@ class MultiBotSender:
         self._senders: dict[UUID, tuple[str, TelegramSender]] = {}
         self._lock = asyncio.Lock()
 
+    async def _default_sender(self) -> TelegramSender | None:
+        if self._default is not None:
+            return self._default
+        bots = await self._registry.all()
+        bot = next((bot for bot in bots if bot.is_default), None)
+        if bot is None:
+            return None
+        return await self._sender_of(bot.id, bot.updated_at.isoformat())
+
+    async def _require_default(self) -> TelegramSender:
+        sender = await self._default_sender()
+        if sender is None:
+            raise TelegramSendFailed("no default bot token")
+        return sender
+
     async def send_message(
         self,
         chat_id: int,
@@ -56,7 +75,9 @@ class MultiBotSender:
         buttons: list[list[dict[str, Any]]] | None = None,
     ) -> int:
         """Through the default bot."""
-        return await self._default.send_message(chat_id, text_html, buttons)
+        return await (await self._require_default()).send_message(
+            chat_id, text_html, buttons
+        )
 
     async def send_document(
         self,
@@ -66,11 +87,12 @@ class MultiBotSender:
         caption_html: str | None = None,
     ) -> int:
         """Through the default bot."""
-        return await self._default.send_document(chat_id, filename, data, caption_html)
+        sender = await self._require_default()
+        return await sender.send_document(chat_id, filename, data, caption_html)
 
     async def delete_message(self, chat_id: int, message_id: int) -> None:
         """Through the default bot."""
-        await self._default.delete_message(chat_id, message_id)
+        await (await self._require_default()).delete_message(chat_id, message_id)
 
     async def route(self, bot_id: str | None, *, personal: bool) -> BotRoute | None:
         """The sender of a bot whose switch allows this kind of message."""
@@ -80,7 +102,8 @@ class MultiBotSender:
             default = next((bot for bot in bots if bot.is_default), None)
             if default is not None and not default.has(feature):
                 return None
-            return BotRoute(sender=self._default, is_default=True)
+            sender = await self._default_sender()
+            return None if sender is None else BotRoute(sender=sender, is_default=True)
         try:
             bot = await self._registry.get(UUID(bot_id))
         except ValueError:
@@ -88,7 +111,8 @@ class MultiBotSender:
         if bot is None or not bot.has(feature):
             return None
         if bot.is_default:
-            return BotRoute(sender=self._default, is_default=True)
+            sender = await self._default_sender()
+            return None if sender is None else BotRoute(sender=sender, is_default=True)
         sender = await self._sender_of(bot.id, bot.updated_at.isoformat())
         return None if sender is None else BotRoute(sender=sender, is_default=False)
 
@@ -111,7 +135,7 @@ class MultiBotSender:
             return sender
 
     async def close(self) -> None:
-        """Close the other bots' sessions (the default one has its own closer)."""
+        """Close the Vault-built sessions (an env default one has its own closer)."""
         for _, sender in self._senders.values():
             await _close(sender)
         self._senders.clear()
@@ -152,17 +176,31 @@ def make_multi_bot_sender(
     return multi, closers
 
 
+def make_default_bot_token(
+    settings: Settings, sessionmaker: async_sessionmaker[AsyncSession]
+) -> DefaultBotToken:
+    """The default bot's token: the env token, else the registry's default bot."""
+    return DefaultBotToken(
+        settings.telegram.bot_token.get_secret_value(),
+        registry=BotRegistryCache(sessionmaker),
+        vault=VaultBotTokenStore(settings.bot_vault),
+    )
+
+
 def make_telegram_sender(
     settings: Settings, redis: Redis
-) -> tuple[TelegramSender, Closer | None]:
+) -> tuple[TelegramSender | None, Closer | None]:
     """Return the sender and, for the real one, the coroutine that closes its bot.
 
     `fake` never touches the network: messages go to the Redis list
-    `fake-telegram:outbox`. `polling` and `webhook` send through the Bot API.
+    `fake-telegram:outbox`. `polling` and `webhook` send through the Bot API; with
+    no `TELEGRAM__BOT_TOKEN` there is no env sender (None) and the registry's
+    default bot is used through its Vault token.
     """
     if settings.telegram.mode == "fake":
         return FakeTelegramSender(redis), None
-    sender = AiogramTelegramSender(
-        create_bot(settings.telegram.bot_token.get_secret_value())
-    )
+    token = settings.telegram.bot_token.get_secret_value()
+    if not token:
+        return None, None
+    sender = AiogramTelegramSender(create_bot(token))
     return sender, sender.close

@@ -331,6 +331,19 @@ def test_production_refuses_fake_modes_and_development_defaults(
         Settings(**prod_base(**override))
 
 
+def test_production_without_a_bot_token_needs_the_bot_vault_approle() -> None:
+    """No env token: the default bot's token must be readable from Vault."""
+    telegram = {**prod_base()["telegram"], "bot_token": ""}
+    with pytest.raises(ValueError, match="TELEGRAM__BOT_TOKEN"):
+        Settings(**prod_base(telegram=telegram))
+
+    settings = Settings(
+        **prod_base(telegram=telegram, bot_vault={"role_id": "r", "secret_id": "s"})
+    )
+
+    assert settings.telegram.bot_token.get_secret_value() == ""
+
+
 @pytest.mark.parametrize("process", ["api", "worker"])
 def test_production_api_and_worker_need_the_openrouter_and_exa_keys(
     process: str,

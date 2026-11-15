@@ -1,5 +1,6 @@
 """Assembly of the identity module: auth services plus the EMIS part (task I1)."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from app.modules.identity.application.register_ports import CredentialStore
@@ -83,6 +84,7 @@ def build(
     telegram_sender: TelegramSender | None = None,
     email_sender: EmailSender | None = None,
     academic_enrollment: AcademicEnrollment | None = None,
+    default_bot_token: Callable[[], Awaitable[str | None]] | None = None,
 ) -> IdentityModule:
     """Build the identity module; EMIS services need the academic enrollment.
 
@@ -98,6 +100,7 @@ def build(
         hydra=hydra or build_hydra_admin(deps.settings),
         telegram_sender=telegram_sender,
         email_sender=email_sender,
+        default_bot_token=default_bot_token,
     )
     module = IdentityModule(
         auth=auth,

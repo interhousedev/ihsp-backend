@@ -19,6 +19,6 @@ class InitDataUser:
 class InitDataVerifier(Protocol):
     """Checks the HMAC signature and freshness of initData."""
 
-    def verify(self, raw: str, *, max_age: timedelta) -> InitDataUser:
+    async def verify(self, raw: str, *, max_age: timedelta) -> InitDataUser:
         """Return the user; raise UnauthorizedError for bad or old data."""
         ...

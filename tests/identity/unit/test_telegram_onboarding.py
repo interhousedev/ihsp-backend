@@ -67,7 +67,7 @@ class Linker:
 
 
 class Verifier:
-    def verify(self, raw: str, *, max_age: timedelta) -> InitDataUser:
+    async def verify(self, raw: str, *, max_age: timedelta) -> InitDataUser:
         if raw != "signed":
             raise UnauthorizedError()
         return TG

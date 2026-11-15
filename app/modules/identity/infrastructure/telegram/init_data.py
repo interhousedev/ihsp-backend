@@ -3,6 +3,7 @@
 import hashlib
 import hmac
 import json
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 from typing import Any
 from urllib.parse import parse_qsl
@@ -77,15 +78,24 @@ def verify_init_data(
 
 
 class HmacInitDataVerifier:
-    """InitDataVerifier that checks the bot-token HMAC against the injected clock."""
+    """InitDataVerifier that checks the bot-token HMAC against the injected clock.
 
-    def __init__(self, *, bot_token: str, clock: Clock) -> None:
-        """Keep the bot token and the clock."""
-        self._bot_token = bot_token
+    ``token`` returns the default bot's token: ``TELEGRAM__BOT_TOKEN`` or, without
+    it, the registry's default bot from Vault; None rejects every initData.
+    """
+
+    def __init__(
+        self, *, token: Callable[[], Awaitable[str | None]], clock: Clock
+    ) -> None:
+        """Keep the token source and the clock."""
+        self._token = token
         self._clock = clock
 
-    def verify(self, raw: str, *, max_age: timedelta) -> InitDataUser:
+    async def verify(self, raw: str, *, max_age: timedelta) -> InitDataUser:
         """Verify one initData string."""
+        bot_token = await self._token()
+        if not bot_token:
+            raise _bad("no default bot token")
         return verify_init_data(
-            raw, bot_token=self._bot_token, max_age=max_age, now=self._clock.now()
+            raw, bot_token=bot_token, max_age=max_age, now=self._clock.now()
         )

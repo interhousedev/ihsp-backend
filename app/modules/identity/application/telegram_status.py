@@ -25,7 +25,7 @@ class TelegramStatus:
 
     async def execute(self, init_data: str) -> TelegramStatusResult:
         """Verify initData and look the account up."""
-        telegram_user = self.verifier.verify(init_data, max_age=self.max_age)
+        telegram_user = await self.verifier.verify(init_data, max_age=self.max_age)
         async with self.uow_factory() as uow:
             link = await uow.telegram_links.get(telegram_user.id)
             user = await uow.users.get(link.user_id) if link else None

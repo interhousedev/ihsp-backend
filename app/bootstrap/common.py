@@ -54,7 +54,10 @@ from app.bootstrap.adapters.school_knowledge import (
     KnowledgeLookupAdapter,
 )
 from app.bootstrap.adapters.signature_sniffer import SignatureSniffer
-from app.bootstrap.adapters.telegram import make_multi_bot_sender
+from app.bootstrap.adapters.telegram import (
+    make_default_bot_token,
+    make_multi_bot_sender,
+)
 from app.bootstrap.adapters.term_resolver import TermResolverAdapter
 from app.bootstrap.adapters.usage_resolver import UsageResolverAdapter
 from app.bootstrap.container import Container, build_infrastructure
@@ -314,6 +317,7 @@ class _Assembler:
             hydra=hydra,
             telegram_sender=c.telegram,
             email_sender=self.overrides.email_sender,
+            default_bot_token=make_default_bot_token(c.settings, c.sessionmaker).get,
         )
         c.identity = identity
         schedule = build_schedule(
