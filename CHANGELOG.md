@@ -4,14 +4,22 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- Telegram Guest Mode: the bot answers @mentions and replies in any chat through `answerGuestQuery`, with the public guest assistant only (needs `open_ai_agent` and Guest Mode in @BotFather). Quoted messages are treated as untrusted data, unknown links are dropped, and there are per-chat and global daily limits (`IHSP_TELEGRAM__GUEST_CHAT_*`).
+
 ### Changed
 
 - The default dashboard keeps only what the shell does not already show: next lesson, upcoming controls, homework, new marks, flash cards due, alerts and announcements. Saved layouts are unchanged.
+- Dependencies: aiobotocore 3.10, anthropic 2.3, fastapi 0.162, pydantic-settings 2.16, sentry-sdk 2.73, tzdata 2026.6, uuid-utils 1.2 and the dev tools; compose images mailpit 1.33, nginx 1.31, certbot 5.9; docker/login-action 4.7. taskiq stays below 0.13 (taskiq-redis 1.2.4 needs redis 8). Dependabot no longer proposes Python minor versions (the image and lock target 3.13).
+- Code scanning receives only fixable CRITICAL and HIGH image findings; unfixed Debian findings (ffmpeg 7.1.5 and others) no longer open alerts.
 
 ### Fixed
 
 - `/v1/public/client-config` answers CORS preflights from every app origin (it was share-only, so app boots failed with a CORS error).
 - A face photo now becomes the user's profile photo, so avatars show it. A student's own upload keeps an admin-set photo, and removing the face removes its copy.
+- Server-to-server migration restores everything: all three databases with their owners and passwords, Redis from its RDB (it was ignored under AOF), external and merged S3 buckets, and Vault with the old unseal keys. Runs hold a lock, `finish` refuses a second run, and `abort` knows whether the restore had started. Verified twice between two hosts with row, key and object counts identical.
+- The Lint workflow passes again (a missing return annotation in the deploy tests).
 
 ## [1.6.2] - 2026-11-15
 
