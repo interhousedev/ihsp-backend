@@ -1,0 +1,13 @@
+[Unit]
+Description=IHSP server migration runner (host side, root)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/ihsp/scripts/migrate_runner.sh run
+TimeoutStartSec=0
+# The runner reads the data of the stack and writes its staged copy here, nowhere else.
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectHome=true

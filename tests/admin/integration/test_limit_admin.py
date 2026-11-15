@@ -39,6 +39,10 @@ class World:
     audits: list[Any]
 
 
+async def _no_step_up(actor: Actor, code: str) -> None:
+    """Step-up is not under test here."""
+
+
 @pytest.fixture
 def world(
     settings: Settings,
@@ -79,7 +83,12 @@ def world(
         outbox_committed_hook=None,
         limits=provider,
     )
-    services = build_admin(deps, identity=identity, schedule=FakeScheduleQueries())
+    services = build_admin(
+        deps,
+        identity=identity,
+        schedule=FakeScheduleQueries(),
+        step_up=_no_step_up,
+    )
     return World(
         admin=services.limit_admin,
         provider=provider,

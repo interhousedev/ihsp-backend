@@ -592,6 +592,14 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "sozlamalar настройки settings",
     ),
     _d(
+        "admin-migration",
+        "admin",
+        "/migration/",
+        _AD,
+        ("Serverni koʻchirish", "Перенос на другой сервер", "Server migration"),
+        "migration migratsiya перенос миграция сервер server move koʻchirish",
+    ),
+    _d(
         "admin-excuses",
         "admin",
         "/excuses/",

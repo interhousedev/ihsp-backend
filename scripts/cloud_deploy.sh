@@ -51,7 +51,8 @@ rsync -az --delete \
     materials/ "$host:$dir/materials/"
 rsync -az \
     --include 'prod_init.sh' --include 'backup.sh' --include 'restore.sh' \
-    --include 'hydra_bootstrap.py' --exclude '*' \
+    --include 'hydra_bootstrap.py' --include 'migrate_runner.sh' \
+    --include 'migrate_target.sh' --exclude '*' \
     scripts/ "$host:$dir/scripts/"
 
 if [ -d secrets ]; then

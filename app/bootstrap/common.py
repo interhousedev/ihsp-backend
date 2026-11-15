@@ -5,8 +5,10 @@ the credentials it needs; modules talk to each other through the contracts in
 `app/shared/contracts`, never by importing another module's internals.
 """
 
+import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from functools import partial
 from typing import Any, Literal, cast
 from uuid import UUID
 
@@ -32,6 +34,7 @@ from app.bootstrap.adapters.mcp_files import (
     build_files_courses_tools,
     connector_active_check,
 )
+from app.bootstrap.adapters.mcp_history import build_history_tools
 from app.bootstrap.adapters.mcp_lms_ai import LmsAi
 from app.bootstrap.adapters.mcp_offers import build_scope_overlay
 from app.bootstrap.adapters.mcp_ports import (
@@ -73,6 +76,7 @@ from app.modules.ai.infrastructure.gateway_factory import (
     make_llm_gateway,
     make_web_search_gateway,
 )
+from app.modules.ai.infrastructure.langfuse_tracer import make_langfuse_tracer
 from app.modules.ai.infrastructure.recording_gateways import (
     RecordingEmbeddings,
     RecordingLlmGateway,
@@ -247,8 +251,12 @@ class _Assembler:
         self.embedding_index: EmbeddingIndex | None = None
         self.knowledge_lookup: KnowledgeLookupAdapter | None = None
         self.knowledge_gaps: KnowledgeGapAdapter | None = None
+        tracer = make_langfuse_tracer(container.settings.langfuse)
+        if tracer is not None:
+            # Flush on shutdown; the SDK blocks while it sends, so off the loop.
+            container.closers.append(partial(asyncio.to_thread, tracer.close))
         self.recorder = UsageRecorder(
-            SqlUsageStore(container.sessionmaker), container.clock
+            SqlUsageStore(container.sessionmaker), container.clock, tracer
         )
         self.deps = make_deps(container)
 
@@ -515,7 +523,10 @@ class _Assembler:
             self.add_closer(closer)
         self.register_bot_renderers()
         c.admin = build_admin(
-            self.deps, identity=c.identity.directory, schedule=schedule
+            self.deps,
+            identity=c.identity.directory,
+            schedule=schedule,
+            step_up=c.identity.auth.step_up.verify,
         )
         self.build_feedback()
         self.build_faces()
@@ -711,6 +722,7 @@ class _Assembler:
         c.mcp_academic_tools = build_academic_tools(c)
         c.mcp_teacher_tools = build_teacher_tools(c)
         c.mcp_content_tools = build_content_tools(c)
+        c.mcp_history_tools = build_history_tools(c)
         c.teacher_ai_tools = c.notebooks.teacher_ai
         # The bot is a full process without LMS and serves no MCP tools.
         if self.plan.lms:

@@ -8,6 +8,7 @@ from typing import cast
 from app.bootstrap.container import Container
 from app.interfaces.http.cors import apply_cors
 from app.interfaces.http.errors import CatchAllMiddleware, install_error_handlers
+from app.interfaces.http.maintenance import MaintenanceMiddleware
 
 from fastapi import APIRouter, FastAPI
 from fastapi.responses import JSONResponse
@@ -90,5 +91,9 @@ def create_app(
 
     # Added first = innermost: a crash becomes problem+json before CORS runs.
     app.add_middleware(CatchAllMiddleware)
+    if getattr(container, "admin", None) is not None:
+        app.add_middleware(
+            MaintenanceMiddleware, gate=lambda: container.admin.migration
+        )
     apply_cors(app, settings)
     return app

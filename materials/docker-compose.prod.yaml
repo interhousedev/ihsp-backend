@@ -401,6 +401,12 @@ services:
     mem_limit: 2g
     environment:
       <<: [*backend-env, *openrouter-env, *exa-env]
+      # Server migration: the api only drops a 0600 request file here; the root host
+      # runner (scripts/migrate_runner.sh, systemd path unit) does the copying.
+      IHSP_MIGRATION__DIR: /migration
+    volumes:
+      - ./healthcheck:/healthcheck:ro
+      - ../data/migration:/migration
     healthcheck:
       <<: *healthcheck
       test: ["CMD", "python", "/healthcheck/check.py", "http", "http://127.0.0.1:8000/health"]

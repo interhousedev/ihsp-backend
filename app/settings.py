@@ -326,6 +326,10 @@ class EmisSettings(BaseModel):
     group_concurrency: int = 3
     """Groups whose materials an admin re-sync pulls at the same time."""
 
+    proxy: str = ""
+    """Egress proxy URL for EMIS and its CDN (`http://host:port`, `socks5://...`);
+    empty goes direct. For when EMIS blocks the server address."""
+
     gateway_url: str = "http://localhost:8000/internal/emis"
     """Where other processes reach the identity-process EMIS gateway."""
 
@@ -1077,6 +1081,15 @@ class McpSettings(BaseModel):
     host must also resolve to public addresses only."""
 
 
+class MigrationSettings(BaseModel):
+    """Server-to-server migration: the directory shared with the host runner."""
+
+    dir: str = ""
+    """Directory (prod: ``/migration``, a bind mount of ``data/migration``) where the
+    API queues requests for ``scripts/migrate_runner.sh`` and reads its reports. Empty:
+    the feature is off."""
+
+
 class HttpSettings(BaseModel):
     """HTTP edge: which proxy may pass on the real client address."""
 
@@ -1142,8 +1155,9 @@ class LimitsSettings(BaseModel):
     file_max_bytes: int = 104857600
     """Largest single upload (default 100 MiB)."""
 
-    ai_text_max_bytes: int = 102400
-    """Largest file text the assistant's read_file tool opens (default 100 KiB)."""
+    ai_text_max_bytes: int = 8_000_000
+    """Largest file text the assistant reads page by page (default 8 MB, the 1000
+    pages of 8 KB that read_file can address); bigger texts are refused."""
 
     ai_session_hours: int = 5
     """Length of an assistant budget window; a new one starts at the next message."""
@@ -1346,6 +1360,7 @@ class Settings(BaseSettings):
     mail: MailSettings = Field(default_factory=MailSettings)
     smtp_in: SmtpInSettings = Field(default_factory=SmtpInSettings)
     http: HttpSettings = Field(default_factory=HttpSettings)
+    migration: MigrationSettings = Field(default_factory=MigrationSettings)
     urls: UrlsSettings = Field(default_factory=UrlsSettings)
     mcp: McpSettings = Field(default_factory=McpSettings)
     bugsink: BugsinkSettings = Field(default_factory=BugsinkSettings)

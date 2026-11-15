@@ -27,6 +27,10 @@ from fakeredis.aioredis import FakeRedis
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 
+async def _no_step_up(actor: Actor, code: str) -> None:
+    """Step-up is not under test here."""
+
+
 @dataclass
 class Stack:
     """Notify and admin services on the test database with fake neighbours."""
@@ -66,7 +70,9 @@ def stack(
     sender = FakeTelegramSender()
     admin_user = identity.add_user(make_user(Role.ADMIN, first_name="Gulnora"), 900)
     return Stack(
-        admin=build_admin(deps, identity=identity, schedule=schedule),
+        admin=build_admin(
+            deps, identity=identity, schedule=schedule, step_up=_no_step_up
+        ),
         notify=build_notify(
             deps,
             identity=identity,

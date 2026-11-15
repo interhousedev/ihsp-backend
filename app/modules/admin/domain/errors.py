@@ -57,3 +57,24 @@ class BroadcastTimeInvalidError(ValidationFailedError):
 
     code = "admin/broadcast-time-invalid"
     message_key = "notify-broadcast-time-invalid"
+
+
+class MigrationNotConfiguredError(ConflictError):
+    """The host runner's shared directory is not set up on this deployment."""
+
+    code = "admin/migration-not-configured"
+    message_key = "admin-migration-not-configured"
+
+
+class MigrationNotAllowedError(ConflictError):
+    """The migration is in a phase that does not allow this action."""
+
+    code = "admin/migration-not-allowed"
+    message_key = "admin-migration-not-allowed"
+
+
+class MigrationInvalidInputError(ValidationFailedError):
+    """The target host, port, URL or pairing token is malformed."""
+
+    code = "admin/migration-invalid-input"
+    message_key = "admin-migration-invalid-input"

@@ -1,6 +1,8 @@
 """Builds the admin services: broadcasts (task B8)."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from pathlib import Path
 
 from app.modules.admin.application.audience_count import AudienceCount
 from app.modules.admin.application.broadcast_view import BroadcastPresenter
@@ -11,6 +13,7 @@ from app.modules.admin.application.finish_broadcasts import FinishBroadcasts
 from app.modules.admin.application.get_broadcast import GetBroadcast
 from app.modules.admin.application.limit_admin import LimitAdmin
 from app.modules.admin.application.list_broadcasts import ListBroadcasts
+from app.modules.admin.application.migration_service import MigrationService
 from app.modules.admin.application.platform_settings import PlatformSettingsService
 from app.modules.admin.application.preview_broadcast import PreviewBroadcast
 from app.modules.admin.application.resolve_audience import ResolveAudience
@@ -19,10 +22,12 @@ from app.modules.admin.application.start_scheduled_broadcasts import (
     StartScheduledBroadcasts,
 )
 from app.modules.admin.application.update_broadcast import UpdateBroadcast
+from app.modules.admin.infrastructure.migration_store import FileMigrationStore
 from app.modules.admin.infrastructure.repositories.platform_settings_store import (
     SqlPlatformSettingsStore,
 )
 from app.modules.admin.infrastructure.uow import SqlAdminUnitOfWork
+from app.shared.actor import Actor
 from app.shared.clock import local_today
 from app.shared.contracts.academic import ScheduleQueries
 from app.shared.contracts.identity import IdentityDirectory
@@ -46,10 +51,15 @@ class AdminServices:
     resolve_audience: ResolveAudience
     platform_settings: PlatformSettingsService
     limit_admin: LimitAdmin
+    migration: MigrationService
 
 
 def build(
-    deps: ModuleDeps, *, identity: IdentityDirectory, schedule: ScheduleQueries
+    deps: ModuleDeps,
+    *,
+    identity: IdentityDirectory,
+    schedule: ScheduleQueries,
+    step_up: Callable[[Actor, str], Awaitable[None]],
 ) -> AdminServices:
     """Wire the admin module."""
 
@@ -100,5 +110,15 @@ def build(
             limits=deps.effective_limits,
             base=deps.settings.limits,
             today=lambda: local_today(deps.clock),
+        ),
+        migration=MigrationService(
+            store=FileMigrationStore(
+                Path(deps.settings.migration.dir)
+                if deps.settings.migration.dir
+                else None
+            ),
+            uow_factory=uow_factory,
+            step_up=step_up,
+            clock=deps.clock,
         ),
     )

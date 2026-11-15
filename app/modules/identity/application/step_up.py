@@ -32,3 +32,7 @@ class StepUp:
                 ctx=ctx,
                 channels=channels_with_email_fallback(user, links),
             )
+
+    async def verify(self, actor: Actor, code: str) -> None:
+        """Check the code sent by :meth:`execute`; raises ``OtpInvalidError``."""
+        await self.otp.check("step-up", str(actor.user_id), code)

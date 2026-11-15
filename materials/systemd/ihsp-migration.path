@@ -1,0 +1,11 @@
+[Unit]
+Description=IHSP server migration: a queued request or command from the admin page
+
+[Path]
+# The api (no root, no Docker socket) only writes these files; the unit below does the work.
+PathExists=/opt/ihsp/data/migration/request.json
+PathExists=/opt/ihsp/data/migration/command.json
+Unit=ihsp-migration.service
+
+[Install]
+WantedBy=multi-user.target
