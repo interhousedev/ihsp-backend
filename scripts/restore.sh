@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Restore a backup made by scripts/backup.sh. DESTRUCTIVE: replaces the current data.
 #
-# Usage: scripts/restore.sh <backup-dir | backup.tar.age> [--with-redis] [--with-vault] [--yes]
-#   An encrypted set (backups/<stamp>.tar.age) is decrypted into a private temporary
+# Usage: scripts/restore.sh <backup-dir | backup.tar.age | pre-<tag>-<ts>.dump.age> [--with-redis] [--with-vault] [--yes]
+#   An encrypted set (backups/<stamp>.tar.age, or the pre-deploy dump backups/pre-<tag>-<ts>.dump.age of
+#   scripts/cloud_deploy.sh, same layout: ihsp.dump + hydra.dump) is decrypted into a private temporary
 #   directory with the age identity file named by BACKUP_AGE_IDENTITY (environment or
 #   .env.prod; it is not kept on the server, bring it along).
 #   --with-redis   also replace Redis (queues, rate limits; usually not needed)
@@ -30,13 +31,13 @@ while [ $# -gt 0 ]; do
         --with-redis) with_redis=1; shift ;;
         --with-vault) with_vault=1; shift ;;
         --yes) assume_yes=1; shift ;;
-        -h | --help) sed -n '2,18p' "$0"; exit 0 ;;
+        -h | --help) sed -n '2,20p' "$0"; exit 0 ;;
         -*) echo "unknown argument: $1" >&2; exit 2 ;;
         *) src=$1; shift ;;
     esac
 done
 
-[ -n "$src" ] || { echo "usage: scripts/restore.sh <backup-dir | backup.tar.age> [--with-redis] [--with-vault] [--yes]" >&2; exit 2; }
+[ -n "$src" ] || { echo "usage: scripts/restore.sh <backup-dir | backup.tar.age | pre-<tag>-<ts>.dump.age> [--with-redis] [--with-vault] [--yes]" >&2; exit 2; }
 [ -f "$ENV_FILE" ] || { echo "$ENV_FILE not found in $ROOT" >&2; exit 1; }
 
 dc() { docker compose --env-file "$ENV_FILE" -f "$COMPOSE_FILE" "$@"; }
@@ -48,7 +49,7 @@ cleanup() { [ -n "$workdir" ] && rm -rf "$workdir"; }
 trap cleanup EXIT
 
 case "$src" in
-    *.tar.age)
+    *.tar.age | *.dump.age)
         [ -f "$src" ] || { echo "$src is not a file" >&2; exit 1; }
         identity=${BACKUP_AGE_IDENTITY:-$(get_env BACKUP_AGE_IDENTITY)}
         [ -n "$identity" ] || { echo "BACKUP_AGE_IDENTITY=<age identity file> is needed to decrypt $src" >&2; exit 1; }
@@ -57,6 +58,13 @@ case "$src" in
         workdir=$(mktemp -d "${TMPDIR:-/tmp}/ihsp-restore.XXXXXX")
         chmod 700 "$workdir"
         age -d -i "$identity" "$src" | tar -C "$workdir" -xf -
+        src=$workdir
+        ;;
+    *.dump.tar)
+        [ -f "$src" ] || { echo "$src is not a file" >&2; exit 1; }
+        workdir=$(mktemp -d "${TMPDIR:-/tmp}/ihsp-restore.XXXXXX")
+        chmod 700 "$workdir"
+        tar -C "$workdir" -xf "$src"
         src=$workdir
         ;;
     *)

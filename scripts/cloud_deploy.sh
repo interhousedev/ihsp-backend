@@ -3,7 +3,7 @@
 #
 # Usage: scripts/cloud_deploy.sh <ssh-host> [--init] [--push-env] [--no-pull] [--tag TAG]
 # (scripts/deploy.sh wraps this with deploy.local.env, a plan and a confirmation.)
-# A deploy takes a pre-migration pg_dump (backups/pre-<tag>-<ts>.sql.gz), runs the
+# A deploy takes a pre-migration pg_dump (backups/pre-<tag>-<ts>.dump.age, age-encrypted), runs the
 # migrations, starts the services and watches them for IHSP_DEPLOY_STABLE_SECS (60); if they
 # restart or /health fails, the previous TAG is redeployed (the database is not restored).
 #   <ssh-host>   anything `ssh` accepts: deploy@203.0.113.7, a Host from ~/.ssh/config
@@ -129,7 +129,11 @@ on_error() {
             echo "ROLLBACK FAILED: fix by hand (TAG=$prev_tag is set in .env.prod)." >&2
         fi
         echo "Migrations are forward-only and stay applied; the previous schema is NOT restored." >&2
-        [ -z "$predump" ] || echo "Pre-deploy database dump for a manual restore: $PWD/$predump" >&2
+        if [ -n "$predump" ]; then
+            echo "Pre-deploy database dump: $PWD/$predump" >&2
+            echo "To restore it (needs the age identity, kept off the server):" >&2
+            echo "  BACKUP_AGE_IDENTITY=<identity file> scripts/restore.sh $predump" >&2
+        fi
     else
         echo "Nothing was replaced; TAG restored to $prev_tag." >&2
     fi
@@ -179,9 +183,32 @@ fi
 phase=pre
 stamp=$(date -u +%Y%m%dT%H%M%SZ)
 mkdir -p backups && chmod 700 backups
-predump="backups/pre-${tag}-${stamp}.sql.gz"
+# Encrypted with age to BACKUP_AGE_RECIPIENT of .env.prod (as scripts/backup.sh): a tar of
+# ihsp.dump and hydra.dump (pg_dump -Fc). Without age or a recipient the deploy stops here,
+# before any migration, unless IHSP_DEPLOY_PLAIN_DUMP=1 asks for an unencrypted .dump.tar.
+recipient=$(sed -n 's/^BACKUP_AGE_RECIPIENT=//p' .env.prod | tail -n 1)
+if [ "${IHSP_DEPLOY_PLAIN_DUMP:-0}" = "1" ]; then
+    predump="backups/pre-${tag}-${stamp}.dump.tar"
+    echo "WARNING: IHSP_DEPLOY_PLAIN_DUMP=1, the pre-migration dump is NOT encrypted" >&2
+else
+    [ -n "$recipient" ] || { echo "BACKUP_AGE_RECIPIENT is not set in .env.prod (age-keygen; or IHSP_DEPLOY_PLAIN_DUMP=1)" >&2; exit 1; }
+    command -v age > /dev/null || { echo "age is not installed (apt install age; or IHSP_DEPLOY_PLAIN_DUMP=1)" >&2; exit 1; }
+    predump="backups/pre-${tag}-${stamp}.dump.age"
+fi
 echo "==> pre-migration dump: $predump"
-dc exec -T postgres pg_dump -U ihsp -d ihsp | gzip > "$predump"
+predump_tmp=$(mktemp -d "backups/.pre-${stamp}.XXXXXX")
+trap 'rm -rf "$predump_tmp"' EXIT
+dc exec -T postgres pg_dump -U ihsp -Fc ihsp > "$predump_tmp/ihsp.dump"
+dc exec -T postgres pg_dump -U ihsp -Fc hydra > "$predump_tmp/hydra.dump"
+[ -s "$predump_tmp/ihsp.dump" ] && [ -s "$predump_tmp/hydra.dump" ] \
+    || { echo "pre-migration dump is empty" >&2; exit 1; }
+umask 077
+if [ "${IHSP_DEPLOY_PLAIN_DUMP:-0}" = "1" ]; then
+    tar -C "$predump_tmp" -cf "$predump" ihsp.dump hydra.dump
+else
+    tar -C "$predump_tmp" -cf - ihsp.dump hydra.dump | age -r "$recipient" > "$predump"
+fi
+rm -rf "$predump_tmp"
 [ -s "$predump" ] || { echo "pre-migration dump is empty" >&2; exit 1; }
 chmod 600 "$predump"
 

@@ -111,3 +111,15 @@ def test_prod_init_can_read_every_credential_vault_setup_prints(
         "IHSP_BOT_VAULT__ROLE_ID": "role-of-telegram-bots",
         "IHSP_BOT_VAULT__SECRET_ID": "secret-of-telegram-bots",
     }
+
+
+def test_predeploy_dump_is_encrypted_and_restorable() -> None:
+    deploy = (SCRIPTS_DIR / "cloud_deploy.sh").read_text(encoding="utf-8")
+    assert "pre-${tag}-${stamp}.dump.age" in deploy
+    assert "pg_dump -U ihsp -Fc ihsp" in deploy and "-Fc hydra" in deploy
+    assert "age -r" in deploy and "BACKUP_AGE_RECIPIENT" in deploy
+    assert "IHSP_DEPLOY_PLAIN_DUMP" in deploy
+    assert deploy.index("age -r") < deploy.index("hydra-migrate")
+    assert "scripts/restore.sh $predump" in deploy
+    restore = (SCRIPTS_DIR / "restore.sh").read_text(encoding="utf-8")
+    assert "*.dump.age" in restore
