@@ -217,3 +217,18 @@ def test_the_miniapp_secret_reaches_identity_and_the_bootstrap_job(
 def test_vault_policy_files_exist() -> None:
     for name in ("identity.hcl", "backup.hcl"):
         assert (MATERIALS_DIR / "vault" / "policies" / name).is_file()
+
+
+def test_every_prod_sample_variable_is_passed_by_the_prod_compose(
+    prod_model: dict[str, Any],
+) -> None:
+    """Compose passes only listed variables: a documented one must be listed."""
+    sample = _env_names(PROD_ENV_SAMPLE.read_text(encoding="utf-8"))
+    passed = {
+        k
+        for service in prod_model["services"].values()
+        for k in service.get("environment", {})
+    }
+    missing = {n for n in sample if n not in passed and not n.startswith("IHSP_WEB_")}
+    # Read only by the host or the web image, not by a container's environment.
+    assert missing == set()
