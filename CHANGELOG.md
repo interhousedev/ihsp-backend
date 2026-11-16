@@ -9,10 +9,13 @@ All notable changes to this project are documented here. The format follows [Kee
 - Admission: `GET /v1/admission/consent/purposes` (localized titles and texts), `student_name` in the caseload rows and `stages` in the config.
 - Admission notifications for staff comments, affordability sign-off requests and grants, and ready item reviews; app map entries for the chooser, documents, help, activities and setup pages.
 - The `admission` Hydra client, the `admission.ihsu.uz` host in compose and nginx, and the `X-IHSP-App` CORS header.
+- Admission workflow: journey path, preferences questionnaire, Discover matches with swipe decisions and undo, per-university chances (hidden unless `ESTIMATES_STUDENT_VISIBLE`), university logo and cover, documents checklist priorities, mentoring switches, and voice input behind the AI consent.
+- Demo catalog: Wikimedia logos and covers, institution type and setting facts, and checklist priorities for the demo student.
 
 ### Changed
 
 - Admission: a binding round without an affordability sign-off answers `admission/affordability_gate`; proofs with several sources answer `admission/proof_source`; help notifications carry `request_id`.
+- The AI consent purpose is version 2 (it now mentions audio); students re-consent once.
 
 ### Security
 
