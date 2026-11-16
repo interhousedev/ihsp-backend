@@ -4,7 +4,9 @@ from collections.abc import Iterable
 
 from app.shared.actor import Role
 
-FIRST_PARTY_CLIENTS = frozenset({"id", "sp", "staff", "admin", "lms", "app", "library"})
+FIRST_PARTY_CLIENTS = frozenset(
+    {"id", "sp", "staff", "admin", "lms", "app", "library", "admission"}
+)
 WEB_CLIENTS = FIRST_PARTY_CLIENTS
 MINIAPP_CLIENT = "miniapp"
 ADMIN_CLIENT = "admin"

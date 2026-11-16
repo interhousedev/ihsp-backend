@@ -58,3 +58,7 @@ class LegalRepository(Protocol):
     async def count_acceptances(self, current: dict[DocKey, int]) -> dict[DocKey, int]:
         """Distinct users that accepted the given version, by (kind, scope)."""
         ...
+
+    async def delete_acceptances(self, user_id: UUID, app_scope: str) -> int:
+        """Delete the user's acceptances of one scope; return how many."""
+        ...

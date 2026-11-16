@@ -111,8 +111,13 @@ class HelpRepository(Protocol):
         """Return whether the user accepts help requests."""
         ...
 
-    async def activities_for_helper(self, student_id: UUID) -> list[HelperActivity]:
-        """Return the reduced activity list (current metrics only)."""
+    async def activities_for_helper(
+        self, student_id: UUID, *, item_id: UUID | None = None
+    ) -> list[HelperActivity]:
+        """Return the reduced activity list (current metrics only).
+
+        With `item_id`, only that activity.
+        """
         ...
 
 

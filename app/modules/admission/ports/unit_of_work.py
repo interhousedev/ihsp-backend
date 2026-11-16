@@ -4,6 +4,7 @@ from collections.abc import Callable
 from types import TracebackType
 from typing import Protocol, Self
 
+from app.modules.admission.ports.career import CareerRepository
 from app.modules.admission.ports.catalog_proposals import CatalogProposalRepository
 from app.modules.admission.ports.chooser import CatalogRepository, ListRepository
 from app.modules.admission.ports.documents import (
@@ -12,9 +13,15 @@ from app.modules.admission.ports.documents import (
     DocumentRepository,
     TranscriptRepository,
 )
+from app.modules.admission.ports.essays import EssayRepository
 from app.modules.admission.ports.goal_plan import GoalRepository
 from app.modules.admission.ports.help_proofs import HelpProofsRepository
 from app.modules.admission.ports.items import ItemRepository
+from app.modules.admission.ports.matching import (
+    DecisionRepository,
+    PreferenceRepository,
+)
+from app.modules.admission.ports.opportunities import OpportunityRepository
 from app.modules.admission.ports.profile import ProfileRepository, ReviewRepository
 from app.modules.admission.ports.repositories import (
     AccessRepository,
@@ -26,6 +33,8 @@ from app.modules.admission.ports.staff import (
     PrivacyRepository,
     StaffRepository,
 )
+from app.modules.admission.ports.tasks import TaskRepository
+from app.modules.admission.ports.test_scores import ScoreRepository
 from app.shared.notifications import NotificationDraft
 
 
@@ -45,6 +54,11 @@ class AdmissionUnitOfWork(Protocol):
     @property
     def catalog_proposals(self) -> CatalogProposalRepository:
         """Staff proposals to change the catalog."""
+        ...
+
+    @property
+    def opportunities(self) -> OpportunityRepository:
+        """Opportunities catalog, submissions and student plans."""
         ...
 
     @property
@@ -80,6 +94,36 @@ class AdmissionUnitOfWork(Protocol):
     @property
     def goals(self) -> GoalRepository:
         """Goal-plan milestones."""
+        ...
+
+    @property
+    def career(self) -> CareerRepository:
+        """Career inventory, majors taxonomy and career plans."""
+        ...
+
+    @property
+    def essays(self) -> EssayRepository:
+        """Essays, versions and the ideas board."""
+        ...
+
+    @property
+    def tasks(self) -> TaskRepository:
+        """Student tasks with steps and links."""
+        ...
+
+    @property
+    def test_scores(self) -> ScoreRepository:
+        """Test catalog and students' test entries."""
+        ...
+
+    @property
+    def preferences(self) -> PreferenceRepository:
+        """Stored preference answers."""
+        ...
+
+    @property
+    def decisions(self) -> DecisionRepository:
+        """Stored university decisions."""
         ...
 
     @property

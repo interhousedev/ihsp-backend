@@ -11,6 +11,10 @@ AI: Final = "admission_ai"
 SHARING: Final = "admission_sharing"
 FINANCE: Final = "admission_finance"
 PURPOSES: Final = (STAFF_VIEW, AI, SHARING, FINANCE)
+PURPOSE_VERSIONS: Final[dict[str, int]] = {**dict.fromkeys(PURPOSES, 1), AI: 2}
+"""Current version of each purpose text; bump it when the locale text changes.
+
+A grant of an older version no longer counts, so the subject is asked again."""
 
 
 class PurposeConsents(Protocol):
@@ -37,11 +41,22 @@ class PurposeGrant:
     method: str
     given_at: dt.datetime
     withdrawn_at: dt.datetime | None = None
+    version: int = 1
+
+    @property
+    def current(self) -> bool:
+        """Return whether the grant is of the purpose's current version."""
+        return self.version == PURPOSE_VERSIONS.get(self.purpose, 1)
 
     @property
     def active(self) -> bool:
-        """Return whether the consent is in force."""
-        return self.withdrawn_at is None
+        """Return whether the consent is in force (not withdrawn, current version)."""
+        return self.withdrawn_at is None and self.current
+
+    @property
+    def reconsent_required(self) -> bool:
+        """Return whether a grant of an older text version waits for a new answer."""
+        return self.withdrawn_at is None and not self.current
 
 
 class PurposeConsentStore(PurposeConsents, Protocol):
@@ -59,6 +74,10 @@ class PurposeConsentStore(PurposeConsents, Protocol):
 
     async def withdraw(self, user_id: UUID, purpose: str, *, now: dt.datetime) -> bool:
         """Withdraw a consent; return whether one was in force."""
+        ...
+
+    async def forget(self, user_id: UUID) -> None:
+        """Delete every stored answer of the user (erasure, not withdrawal)."""
         ...
 
 
@@ -88,16 +107,21 @@ class MemoryPurposeConsents:
         current = self._rows.get((user_id, purpose))
         if current is not None and current.active:
             return current
-        row = PurposeGrant(purpose, method, now)
+        row = PurposeGrant(purpose, method, now, None, PURPOSE_VERSIONS[purpose])
         self._rows[(user_id, purpose)] = row
         return row
 
     async def withdraw(self, user_id: UUID, purpose: str, *, now: dt.datetime) -> bool:
         """Mark the consent withdrawn."""
         current = self._rows.get((user_id, purpose))
-        if current is None or not current.active:
+        if current is None or current.withdrawn_at is not None:
             return False
         self._rows[(user_id, purpose)] = PurposeGrant(
-            purpose, current.method, current.given_at, now
+            purpose, current.method, current.given_at, now, current.version
         )
         return True
+
+    async def forget(self, user_id: UUID) -> None:
+        """Delete every stored answer of the user."""
+        for key in [k for k in self._rows if k[0] == user_id]:
+            del self._rows[key]

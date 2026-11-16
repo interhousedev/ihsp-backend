@@ -30,8 +30,16 @@ class StaffRepository(Protocol):
         """Return a sub-role or None."""
         ...
 
+    async def roles(self) -> list[StaffRole]:
+        """Return the live (not archived) sub-roles."""
+        ...
+
     async def assignment(self, assignment_id: UUID) -> Assignment | None:
         """Return an assignment, revoked ones included, or None."""
+        ...
+
+    async def live_assignments(self, kind: str, scope_kind: str) -> list[Assignment]:
+        """Return unrevoked root assignments of a role kind and scope kind."""
         ...
 
     async def add_assignment(self, assignment: Assignment) -> Assignment:
@@ -102,6 +110,10 @@ class PrivacyRepository(Protocol):
 
     async def erase(self, student_id: UUID) -> dict[str, int]:
         """Delete the student's rows (not the audit log); return counts per table."""
+        ...
+
+    async def stored_file_ids(self, student_id: UUID) -> list[UUID]:
+        """Return the ids of every stored file the student's rows point to."""
         ...
 
     async def audit(self, student_id: UUID, limit: int) -> list[AuditRecord]:

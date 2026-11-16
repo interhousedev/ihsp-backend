@@ -77,6 +77,22 @@ class PromptRatingStats:
     average: float
 
 
+@dataclass(frozen=True, slots=True)
+class PromptCallTrace:
+    """One ledger row of a model call: metadata only, never any text."""
+
+    occurred_at: datetime
+    task: str
+    model: str
+    version: int
+    input_tokens: int
+    output_tokens: int
+    cost_micro: int | None
+    latency_ms: int | None
+    success: bool
+    error: str | None
+
+
 class PromptAnalyticsReader(Protocol):
     """Aggregates the usage ledger and the message ratings by prompt version."""
 
@@ -90,4 +106,10 @@ class PromptAnalyticsReader(Protocol):
         self, task: str | None, start: datetime, end: datetime
     ) -> list[PromptRatingStats]:
         """Rated assistant messages in [start, end) grouped by task and version."""
+        ...
+
+    async def trace(
+        self, task: str, version: int | None, limit: int
+    ) -> list[PromptCallTrace]:
+        """The latest calls of a task (of one prompt version when given)."""
         ...

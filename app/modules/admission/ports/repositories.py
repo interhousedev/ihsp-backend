@@ -53,6 +53,10 @@ class AccessRepository(Protocol):
         """Return the mentoring switches of the users that have a profile."""
         ...
 
+    async def set_opt_in(self, user_id: UUID, field: str, value: bool) -> None:
+        """Set `mentee_opt_in` or `mentor_opt_in`, creating the profile row."""
+        ...
+
     def audit(self, event: AuditEvent) -> None:
         """Queue an audit event in the open transaction."""
         ...
@@ -89,4 +93,8 @@ class RuntimeSettingsRepository(Protocol):
 
     async def load(self) -> dict[str, Any]:
         """Return every stored key and value."""
+        ...
+
+    async def save(self, key: str, value: Any, user_id: UUID) -> None:
+        """Insert or replace one value, remembering who changed it."""
         ...

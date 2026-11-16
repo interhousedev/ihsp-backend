@@ -1,11 +1,13 @@
 """Storage port for notifications."""
 
+from collections.abc import Collection
 from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
 from app.modules.notify.domain.notification import Notification
 from app.modules.notify.domain.notification_filter import NotificationFilter
+from app.shared.notifications import NotificationType
 
 
 class NotificationRepository(Protocol):
@@ -59,4 +61,10 @@ class NotificationRepository(Protocol):
 
     async def purge_created_before(self, cutoff: datetime) -> int:
         """Delete notifications created before the cutoff; return how many."""
+        ...
+
+    async def delete_for_user_types(
+        self, user_id: UUID, types: Collection[NotificationType]
+    ) -> int:
+        """Delete the user's notifications of the given types; return how many."""
         ...

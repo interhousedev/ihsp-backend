@@ -22,11 +22,16 @@ from functools import lru_cache
 from string import Formatter
 from uuid import UUID
 
+import structlog
+
 ALL_LOCALES = ""  # an override that applies whatever the locale
 LOCALES: tuple[str, ...] = ("uz", "ru", "en")
 BUILT_IN_VERSION = 0
 MAX_PROMPT_CHARS = 50_000
 HASH_CHARS = 16
+_FORMAT_ERRORS = (KeyError, IndexError, ValueError, AttributeError, TypeError)
+
+log = structlog.get_logger(__name__)
 
 
 def prompt_hash(text: str) -> str:
@@ -48,6 +53,9 @@ def fields_of(template: str) -> frozenset[str]:
 class PromptSlot:
     """A built-in piece of a task's prompt that administrators may replace.
 
+    `guard`: safety text an override always carries; appended after it when the
+    override lacks it, so it cannot be edited away.
+
     `template` True: `builtin` has `{placeholders}` the builder fills; an override
     may use the same placeholders and no others. False: `builtin` is literal text.
     """
@@ -57,6 +65,7 @@ class PromptSlot:
     summary: str
     builtin: str
     template: bool = False
+    guard: str = ""
 
     @property
     def key(self) -> tuple[str, str]:
@@ -181,7 +190,7 @@ def resolve(
     """The active version of a slot, else its built-in text (or `default`)."""
     found = active.get(task, name, locale)
     if found is not None:
-        return ResolvedPrompt(found.text, found.version, found.hash)
+        return ResolvedPrompt(_with_guard(slot, found.text), found.version, found.hash)
     text = default if default is not None else (slot.builtin if slot else "")
     return ResolvedPrompt(text, BUILT_IN_VERSION, prompt_hash(text))
 
@@ -214,20 +223,29 @@ def apply_overrides(
     return system, PromptRef(task, top, prompt_hash(joined))
 
 
+def _with_guard(slot: PromptSlot | None, text: str) -> str:
+    """The text, with the slot's non-editable guard appended when it lacks it."""
+    if slot is None or not slot.guard or slot.guard in text:
+        return text
+    return f"{text}\n{slot.guard}"
+
+
 def _replace(system: str, slot: PromptSlot, text: str) -> str | None:
     pattern = slot.pattern
     if pattern is None:
         if slot.builtin not in system:
             return None
-        return system.replace(slot.builtin, text, 1)
+        return system.replace(slot.builtin, _with_guard(slot, text), 1)
     match = pattern.search(system)
     if match is None:
         return None
     values = {name: match.group(_group(name)) for name in slot.fields}
     try:
         filled = text.format(**values)
-    except (KeyError, IndexError, ValueError):
+    except _FORMAT_ERRORS:
+        log.warning("prompt_override_format_failed", task=slot.task, slot=slot.name)
         return None
+    filled = _with_guard(slot, filled)
     return system[: match.start()] + filled + system[match.end() :]
 
 
@@ -241,6 +259,10 @@ def check_override(slot: PromptSlot, text: str) -> str | None:
         extra = fields_of(text) - slot.fields
         if extra:
             return "unknown_placeholder"
+        try:
+            text.format(**dict.fromkeys(slot.fields, "x"))
+        except _FORMAT_ERRORS:
+            return "bad_format"
     return None
 
 
