@@ -19,20 +19,21 @@ down_revision: str | Sequence[str] | None = "identity_0013"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
-# op.f(): the name is final, the naming convention must not prefix it again.
-_NAME = op.f("ck_mcp_connectors_server")
+# op.f() marks the name final (the naming convention must not prefix it again); it needs a
+# migration context, so it is applied inside the functions, not at import (`alembic heads`).
+_NAME = "ck_mcp_connectors_server"
 _OLD = "server IN ('student', 'lms', 'admin')"
 _NEW = "server IN ('student', 'lms', 'admin', 'teacher', 'app')"
 
 
 def upgrade() -> None:
     """Recreate the CHECK with every server."""
-    op.drop_constraint(_NAME, "mcp_connectors", schema="id", type_="check")
-    op.create_check_constraint(_NAME, "mcp_connectors", _NEW, schema="id")
+    op.drop_constraint(op.f(_NAME), "mcp_connectors", schema="id", type_="check")
+    op.create_check_constraint(op.f(_NAME), "mcp_connectors", _NEW, schema="id")
 
 
 def downgrade() -> None:
     """Back to the three servers; connectors of the others are removed first."""
     op.execute("DELETE FROM id.mcp_connectors WHERE server IN ('teacher', 'app')")
-    op.drop_constraint(_NAME, "mcp_connectors", schema="id", type_="check")
-    op.create_check_constraint(_NAME, "mcp_connectors", _OLD, schema="id")
+    op.drop_constraint(op.f(_NAME), "mcp_connectors", schema="id", type_="check")
+    op.create_check_constraint(op.f(_NAME), "mcp_connectors", _OLD, schema="id")
