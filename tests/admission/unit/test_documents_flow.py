@@ -7,6 +7,7 @@ from app.modules.admission.domain.documents import DocumentVersionRecord
 from app.modules.admission.domain.errors import (
     AdmissionForbiddenError,
     AdmissionNotFoundError,
+    InvalidProofUrlError,
     ScanPendingError,
 )
 from app.modules.admission.domain.workflow import ListEntry
@@ -73,11 +74,13 @@ async def test_student_upload_notifies_staff_and_review_reject_notifies_student(
     None
 ):
     k = DocKit()
+    await _staff(k)
     ctx = await k.w.ctx(k.student, Role.STUDENT)
     doc_id = (await k.docs.upload(ctx, "other", "x.pdf", b"a")).doc.id
     [n] = k.d.notifications
     assert n.type == NotificationType.ADMISSION_DOCUMENT_UPLOADED
     assert n.user_id == k.staff
+    assert n.payload["student_name"] == "Valiev Ali"
     k.d.notifications.clear()
     staff = await _staff(k)
     view = await k.docs.review(staff, doc_id, accept=False, reason_code="blurry")
@@ -118,3 +121,110 @@ def test_version_record_is_frozen() -> None:
     v = DocumentVersionRecord(new_id(), 1, new_id(), "unscanned", new_id())
     with pytest.raises(dataclasses.FrozenInstanceError):
         v.version = 2  # type: ignore[misc]
+
+
+async def test_upload_notifies_only_staff_in_scope() -> None:
+    k = DocKit()
+    ctx = await k.w.ctx(k.student, Role.STUDENT)
+    await k.docs.upload(ctx, "other", "x.pdf", b"a")
+    assert k.d.notifications == []
+
+
+async def test_owner_cannot_replace_or_attach_institution_confidential_doc() -> None:
+    k = DocKit()
+    ctx = await k.w.ctx(k.student, Role.STUDENT)
+    doc_id = (await k.docs.upload(ctx, "other", "x.pdf", b"a")).doc.id
+    doc = k.d.docs[doc_id]
+    doc.uploaded_by = k.staff
+    doc.owner_kind = "institution"
+    doc.visibility = "confidential"
+    entry = _entry(k)
+    with pytest.raises(AdmissionNotFoundError):
+        await k.docs.new_version(ctx, doc_id, "evil.pdf", b"b")
+    with pytest.raises(AdmissionNotFoundError):
+        await k.docs.attach(ctx, doc_id, entry.id)
+    with pytest.raises(AdmissionNotFoundError):
+        await k.docs.detach(ctx, doc_id, entry.id)
+
+
+async def test_owner_cannot_add_version_to_institution_document() -> None:
+    k = DocKit()
+    ctx = await k.w.ctx(k.student, Role.STUDENT)
+    doc_id = (await k.docs.upload(ctx, "other", "x.pdf", b"a")).doc.id
+    k.d.docs[doc_id].uploaded_by = k.staff
+    k.d.docs[doc_id].visibility = "standard"
+    with pytest.raises(AdmissionNotFoundError):
+        await k.docs.new_version(ctx, doc_id, "evil.pdf", b"b")
+
+
+async def test_owner_patches_only_student_checklist_items() -> None:
+    from app.modules.admission.domain.documents import ChecklistItem
+
+    k = DocKit()
+    ctx = await k.w.ctx(k.student, Role.STUDENT)
+    mine = ChecklistItem(new_id(), k.student, "shared.passport", "passport")
+    theirs = ChecklistItem(
+        new_id(), k.student, "shared.transcript", "transcript", owner="officer"
+    )
+    k.d.items[mine.id] = mine
+    k.d.items[theirs.id] = theirs
+    done, _ = await k.docs.patch_checklist(ctx, mine.id, status="done")
+    assert done.status == "done"
+    with pytest.raises(AdmissionForbiddenError):
+        await k.docs.patch_checklist(ctx, theirs.id, status="done")
+
+
+async def test_checklist_names_the_university_of_per_entry_items() -> None:
+    from app.modules.admission.domain.documents import ChecklistItem
+
+    k = DocKit()
+    ctx = await k.w.ctx(k.student, Role.STUDENT)
+    entry = _entry(k)
+    k.d.institution_names[entry.institution_id] = "Columbia"
+    shared = ChecklistItem(new_id(), k.student, "shared.passport", "passport")
+    per_uni = ChecklistItem(
+        new_id(), k.student, "entry.essay", "essay", list_entry_id=entry.id
+    )
+    k.d.items[shared.id] = shared
+    k.d.items[per_uni.id] = per_uni
+    names = {i.id: name for i, name in await k.docs.checklist(ctx)}
+    assert names == {shared.id: None, per_uni.id: "Columbia"}
+
+
+async def test_student_sets_importance_but_not_the_staff_link() -> None:
+    from app.modules.admission.domain.documents import ChecklistItem
+
+    k = DocKit()
+    ctx = await k.w.ctx(k.student, Role.STUDENT)
+    item = ChecklistItem(
+        new_id(), k.student, "shared.transcript", "transcript", owner="officer"
+    )
+    k.d.items[item.id] = item
+    got, _ = await k.docs.patch_checklist(
+        ctx, item.id, important=True, urgent_override=True
+    )
+    assert got.important and got.urgent_override is True
+    got, _ = await k.docs.patch_checklist(ctx, item.id, urgent_override=None)
+    assert got.important and got.urgent_override is None
+    with pytest.raises(AdmissionForbiddenError):
+        await k.docs.patch_checklist(ctx, item.id, source_url="https://x.uz")
+
+
+async def test_staff_sets_and_clears_the_external_link() -> None:
+    from app.modules.admission.domain.documents import ChecklistItem
+
+    k = DocKit()
+    staff = await _staff(k)
+    item = ChecklistItem(new_id(), k.student, "shared.passport", "passport")
+    k.d.items[item.id] = item
+    got, _ = await k.docs.patch_checklist(staff, item.id, source_url="https://x.uz/p")
+    assert got.source_url == "https://x.uz/p"
+    got, _ = await k.docs.patch_checklist(staff, item.id, source_url="")
+    assert got.source_url is None
+    with pytest.raises(AdmissionForbiddenError):
+        await k.docs.patch_checklist(staff, item.id, important=True)
+    with pytest.raises(AdmissionForbiddenError):
+        await k.docs.patch_checklist(staff, item.id, urgent_override=True)
+    with pytest.raises(InvalidProofUrlError):
+        await k.docs.patch_checklist(staff, item.id, source_url="http://x.uz")
+    assert got.source_url is None

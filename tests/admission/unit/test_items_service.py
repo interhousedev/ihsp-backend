@@ -20,13 +20,15 @@ from app.modules.admission.application.review import ItemReviewService
 from app.modules.admission.domain.errors import (
     AdmissionConflictError,
     AdmissionNotFoundError,
+    ConsentRequiredError,
+    ItemIncompleteError,
     ItemLimitError,
     ProjectedDateRequiredError,
     QuotaExceededError,
 )
-from app.modules.admission.domain.items import MAX_HONORS, Item
+from app.modules.admission.domain.items import MAX_DRAFTS, MAX_HONORS, Item
 from app.modules.admission.infrastructure.ai.prompt_source import BuiltinPrompts
-from app.modules.admission.ports.consent import STAFF_VIEW
+from app.modules.admission.ports.consent import AI, STAFF_VIEW
 from app.modules.admission.ports.items import (
     InterviewRound,
     Metric,
@@ -251,10 +253,11 @@ class World:
             [student_ref(STUDENT, GROUP), student_ref(OTHER, GROUP)]
         )
         uow = lambda: ItemsUow(self.store, self.data)  # noqa: E731
+        self.consents = FakeConsents({STUDENT: frozenset({STAFF_VIEW, AI})})
         self.policy = AccessPolicy(
             uow,
             membership,
-            FakeConsents({STUDENT: frozenset({STAFF_VIEW})}),
+            self.consents,
             FixedClock(NOW),
             {10, 11},
         )
@@ -267,13 +270,14 @@ class World:
             uow,
             self.policy,
             self.ai,
+            self.consents,
             FixedClock(NOW),
             BuiltinPrompts(),
             per_day=_per_day(per_day),
             per_item=2,
         )
         self.interviews = ItemInterviewService(
-            uow, self.policy, self.ai, BuiltinPrompts()
+            uow, self.policy, self.ai, self.consents, BuiltinPrompts()
         )
 
     async def ctx(self, user_id: UUID = STUDENT) -> AdmissionContext:
@@ -286,15 +290,83 @@ class World:
         return (await self.items.create(await self.ctx(), draft)).item
 
 
+def _ready_honor(**kw: Any) -> Item:
+    return Item(
+        new_id(),
+        STUDENT,
+        "honor",
+        "Winner",
+        "Olympiad",
+        "",
+        category="national",
+        grades=(11,),
+        status="ready",
+        **kw,
+    )
+
+
+def _bare() -> Item:
+    return Item(new_id(), STUDENT, "honor", "Idea", "", "")
+
+
 async def test_create_caps_and_positions() -> None:
     w = World()
-    first = await w.item("honor")
+    ctx = await w.ctx()
+    first = (await w.items.create(ctx, _ready_honor())).item
     for _ in range(MAX_HONORS - 1):
-        await w.item("honor")
+        await w.items.create(ctx, _ready_honor())
     with pytest.raises(ItemLimitError):
-        await w.item("honor")
+        await w.items.create(ctx, _ready_honor())
     assert first.position == 0
     assert max(i.position for i in w.data.items.values()) == MAX_HONORS - 1
+
+
+async def test_draft_needs_only_title_and_ignores_ready_cap() -> None:
+    w = World()
+    ctx = await w.ctx()
+    for _ in range(MAX_HONORS):
+        await w.items.create(ctx, _ready_honor())
+    view = await w.items.create(ctx, _bare())
+    assert view.item.status == "draft"
+
+
+async def test_drafts_are_capped() -> None:
+    w = World()
+    ctx = await w.ctx()
+    for _ in range(MAX_DRAFTS):
+        await w.items.create(ctx, _bare())
+    with pytest.raises(ItemLimitError):
+        await w.items.create(ctx, _bare())
+
+
+async def test_ready_requires_complete_fields() -> None:
+    w = World()
+    ctx = await w.ctx()
+    ready = replace(_bare(), status="ready")
+    with pytest.raises(ItemIncompleteError) as err:
+        await w.items.create(ctx, ready)
+    assert set(err.value.params["fields"]) == {"category", "grades"}
+    draft = (await w.items.create(ctx, _bare())).item
+    with pytest.raises(ItemIncompleteError):
+        await w.items.update(ctx, draft.id, {"status": "ready"}, draft.lock_version)
+    done = await w.items.update(
+        ctx,
+        draft.id,
+        {"status": "ready", "category": "school", "grades": (10,)},
+        draft.lock_version,
+    )
+    assert done.status == "ready"
+
+
+async def test_draft_to_ready_respects_cap() -> None:
+    w = World()
+    ctx = await w.ctx()
+    for _ in range(MAX_HONORS):
+        await w.items.create(ctx, _ready_honor())
+    draft = (await w.items.create(ctx, _bare())).item
+    changes = {"status": "ready", "category": "school", "grades": (10,)}
+    with pytest.raises(ItemLimitError):
+        await w.items.update(ctx, draft.id, changes, draft.lock_version)
 
 
 async def test_projected_metric_needs_target_date() -> None:
@@ -409,3 +481,22 @@ async def test_interview_ends_after_three_rounds_with_proposal() -> None:
     assert len(state.rounds) == MAX_ROUNDS
     again = await w.interviews.step(ctx, item.id, {}, "en")
     assert again.ready and len(w.ai.calls) == MAX_ROUNDS + 1
+
+
+@pytest.mark.parametrize("granted", [None, frozenset({STAFF_VIEW})])
+async def test_review_and_interview_need_ai_consent(
+    granted: frozenset[str] | None,
+) -> None:
+    w = World(_review(), _interview())
+    item = await w.item()
+    ctx = await w.ctx()
+    # None: never given; a set without AI: given once, then withdrawn.
+    if granted is None:
+        w.consents.grants.pop(STUDENT)
+    else:
+        w.consents.grants[STUDENT] = granted
+    with pytest.raises(ConsentRequiredError):
+        await w.reviews.review(ctx, item.id, "en")
+    with pytest.raises(ConsentRequiredError):
+        await w.interviews.step(ctx, item.id, {}, "en")
+    assert w.ai.calls == []

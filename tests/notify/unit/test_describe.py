@@ -631,3 +631,27 @@ def test_mcp_offer_names_write_scopes_and_hides_the_token(
     assert "Claude" in described.body
     assert "secret-token" not in f"{described.title}{described.body}{described.link}"
     assert described.link is not None and described.link.endswith("/connectors/")
+
+
+@pytest.mark.parametrize("locale", ["en", "ru", "uz"])
+@pytest.mark.parametrize(
+    "event", ["claimed", "guest_opened", "accepted", "declined", "delivered"]
+)
+def test_help_events_have_their_own_copy(
+    i18n: I18nCore, event: str, locale: str
+) -> None:
+    """Each help event reads differently from the plain response."""
+    kind = NotificationType.ADMISSION_HELP_RESPONDED
+
+    def render(payload: dict[str, str]) -> tuple[str, str]:
+        d = describe(kind, payload, locale, i18n=i18n, urls=URLS)
+        assert "notify-" not in d.title + d.body
+        return d.title, d.body
+
+    assert render({"help_request_id": "r", "event": event}) != render(
+        {"request_id": "r", "event": "responded"}
+    )
+    link = describe(
+        kind, {"help_request_id": "r9", "event": event}, locale, i18n=i18n, urls=URLS
+    ).link
+    assert link is not None and link.endswith("/help/request/?id=r9")

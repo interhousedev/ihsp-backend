@@ -317,3 +317,54 @@ async def test_a_stream_with_tools_passes_them_and_records_the_usage() -> None:
 
     assert seen == [tools]
     assert sink.events[0].output_tokens == 30
+
+
+async def test_a_structured_answer_that_breaks_the_schema_is_an_error_event() -> None:
+    sink = Sink()
+    gateway = RecordingLlmGateway(Inner(), recorder_for(sink))
+    schema = {
+        "type": "object",
+        "properties": {"grade": {"type": "string"}},
+        "required": ["grade"],
+        "additionalProperties": False,
+    }
+
+    result = await gateway.complete_json(
+        model="m",
+        system="s",
+        messages=[],
+        schema_name="n",
+        schema=schema,
+        max_tokens=5,
+        tuning=LlmTuning(task=AiTask.SOURCE_GUIDE.value),
+    )
+
+    assert result["data"] == {}
+    (event,) = sink.events
+    assert event.success is False
+    assert event.error == "SchemaInvalid"
+    assert event.input_tokens == 120
+
+
+def test_schema_violation_reads_types_required_extras_and_branches() -> None:
+    from app.modules.ai.domain.structured_check import schema_violation
+
+    schema = {
+        "type": "object",
+        "properties": {
+            "a": {"type": ["string", "null"]},
+            "b": {"type": "array", "items": {"type": "integer"}},
+        },
+        "required": ["a", "b"],
+        "additionalProperties": False,
+    }
+    assert schema_violation(schema, {"a": None, "b": [1, 2]}) is None
+    assert schema_violation(schema, {"a": "x"}) == "$.b: missing"
+    assert (
+        schema_violation(schema, {"a": 1, "b": []})
+        == "$.a: expected ['string', 'null']"
+    )
+    assert (
+        schema_violation(schema, {"a": "x", "b": [True]}) == "$.b[0]: expected integer"
+    )
+    assert schema_violation(schema, {"a": "x", "b": [], "c": 1}) == "$.c: unexpected"

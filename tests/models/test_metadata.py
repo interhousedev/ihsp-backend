@@ -4,7 +4,7 @@ from app.shared.db import models  # noqa: F401  (imports every module's ORM pack
 from app.shared.db.base import Base
 
 EXPECTED_TABLES = {
-    # admission (54)
+    # admission (73)
     "admission.admission_stats",
     "admission.affordability_checks",
     "admission.aid_policies",
@@ -59,6 +59,27 @@ EXPECTED_TABLES = {
     "admission.staff_roles",
     "admission.staff_saved_views",
     "admission.transcript_requests",
+    "admission.admission_student_chunks",
+    "admission.app_reviews",
+    "admission.assistant_messages",
+    "admission.assistant_threads",
+    "admission.calendar_feeds",
+    "admission.calendar_reminders",
+    "admission.career_majors",
+    "admission.career_plans",
+    "admission.career_questions",
+    "admission.essay_ideas",
+    "admission.exam_dates",
+    "admission.opportunities",
+    "admission.opportunity_ai_plans",
+    "admission.opportunity_plan_entries",
+    "admission.opportunity_submissions",
+    "admission.opportunity_taxonomy",
+    "admission.student_preferences",
+    "admission.tasks",
+    "admission.test_catalog",
+    "admission.test_scores",
+    "admission.university_decisions",
     # id (8)
     "id.users",
     "id.sessions",
@@ -224,10 +245,10 @@ EXPECTED_TABLES = {
 
 
 def test_metadata_contains_every_table_of_the_models_readme() -> None:
-    """spec -> Models plus the later modules (196 tables)."""
+    """spec -> Models plus the later modules (217 tables)."""
     actual = {table.fullname for table in Base.metadata.tables.values()}
 
-    assert len(EXPECTED_TABLES) == 196
+    assert len(EXPECTED_TABLES) == 217
     assert actual == EXPECTED_TABLES
 
 

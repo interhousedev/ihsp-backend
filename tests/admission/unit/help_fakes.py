@@ -32,6 +32,7 @@ class HelpState:
         self.sessions: dict[str, tuple[UUID, datetime]] = {}
         self.directory: dict[UUID, str] = {}
         self.activities: list[HelperActivity] = []
+        self.activity_item_ids: list[UUID | None] = []
         self.notifications: list[Any] = []
 
 
@@ -151,7 +152,10 @@ class FakeHelpProofs:
     async def helper_opted_in(self, user_id: UUID) -> bool:
         return user_id in self.h.directory
 
-    async def activities_for_helper(self, student_id: UUID) -> list[HelperActivity]:
+    async def activities_for_helper(
+        self, student_id: UUID, *, item_id: UUID | None = None
+    ) -> list[HelperActivity]:
+        self.h.activity_item_ids.append(item_id)
         return list(self.h.activities)
 
     async def add_link(

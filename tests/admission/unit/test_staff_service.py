@@ -331,3 +331,69 @@ async def test_comment_staff_role_without_scope_is_404() -> None:
     ctx = await w.ctx(STAFF, Role.COUNSELOR)
     with pytest.raises(AdmissionNotFoundError):
         await svc.add(ctx, STUDENT, "profile", new_id(), "x")
+
+
+async def test_revoke_by_parent_holder_requires_active_parent() -> None:
+    import dataclasses
+
+    w = World()
+    _grantor(w)
+    role = _child_role(w)
+    created = await _delegate(w, role)
+    ctx = await w.ctx(STAFF, Role.COUNSELOR)
+    parent = created.parent_assignment_id
+    expired = tuple(
+        dataclasses.replace(a, revoked_at=NOW) if a.id == parent else a
+        for a in ctx.assignments
+    )
+    holder = dataclasses.replace(
+        await w.ctx(OTHER, Role.COUNSELOR), assignments=expired
+    )
+    with pytest.raises(AdmissionNotFoundError):
+        await _service(w).revoke(holder, created.id)
+
+
+class _Search:
+    def __init__(self, users: list[UserRef]) -> None:
+        self.users = users
+        self.roles: tuple[Role, ...] = ()
+
+    async def search_users(
+        self, query: str, *, roles: tuple[Role, ...] = (), limit: int = 20
+    ) -> list[UserRef]:
+        self.roles = tuple(roles)
+        return self.users
+
+
+def _ref(role: Role, status: UserStatus = UserStatus.ACTIVE) -> UserRef:
+    return UserRef(
+        new_id(), "x", "Ali", "Staff", None, frozenset({role}), status, "en", None
+    )
+
+
+async def test_assignable_users_are_active_staff_scoped_to_assigners() -> None:
+    w = World()
+    w.store.assignments[STAFF] = (_assign("counselor_full", "all", None),)
+    ctx = await w.ctx(STAFF, Role.COUNSELOR)
+    active, blocked = _ref(Role.MENTOR), _ref(Role.MENTOR, UserStatus.BLOCKED)
+    svc = _service(w)
+    search = _Search([active, blocked])
+    svc._identity = search  # type: ignore[assignment]
+    found = await svc.assignable_users(ctx, STUDENT, "ali")
+    assert [u.id for u in found] == [active.id]
+    assert Role.STUDENT not in search.roles
+    assert Role.MENTOR in search.roles
+
+
+async def test_assignable_users_denied_out_of_scope() -> None:
+    w = World()
+    ctx = await w.ctx(OTHER, Role.COUNSELOR)
+    with pytest.raises(AdmissionNotFoundError):
+        await _service(w).assignable_users(ctx, STUDENT, "")
+
+
+async def test_admin_enters_with_an_empty_caseload() -> None:
+    w = World()
+    ctx = await w.ctx(new_id(), Role.ADMIN)
+    assert ctx.admission.may_enter and ctx.admission.is_staff
+    assert await _service(w).caseload(ctx, CaseloadFilters()) == []

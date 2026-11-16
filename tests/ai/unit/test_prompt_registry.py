@@ -29,7 +29,11 @@ from app.modules.ai.infrastructure.recording_gateways import (
     RecordingLlmGateway,
     UsageRecorder,
 )
-from app.modules.ai.ports.prompts import PromptCallStats, PromptRatingStats
+from app.modules.ai.ports.prompts import (
+    PromptCallStats,
+    PromptCallTrace,
+    PromptRatingStats,
+)
 from app.shared.actor import Actor, Role
 from app.shared.contracts.ai import LlmTuning
 from app.shared.notifications import AuditDraft
@@ -328,6 +332,19 @@ class Reader:
             PromptRatingStats(TASK, 2, 4, 0.5),
             PromptRatingStats(TASK, 1, 2, -1.0),
         ]
+
+    async def trace(
+        self, task: str, version: int | None, limit: int
+    ) -> list[PromptCallTrace]:
+        row = PromptCallTrace(
+            NOW, task, "m", 2, 10, 5, 1500, 700, False, "SchemaInvalid"
+        )
+        return [row][:limit]
+
+
+async def test_trace_returns_the_ledger_rows_of_the_reader() -> None:
+    [row] = await PromptAnalytics(Reader()).trace(ADMIN, TASK, 2, 5)
+    assert (row.version, row.success, row.error) == (2, False, "SchemaInvalid")
 
 
 async def test_analytics_joins_calls_and_ratings_per_version() -> None:

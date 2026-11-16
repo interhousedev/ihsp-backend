@@ -37,11 +37,12 @@ from tests.admission.unit.fakes import (
     FakeUow,
     student_ref,
 )
+from tests.admission.unit.fakes_documents import FakeIdentity
 from tests.fakes.clock import FixedClock
 
 import pytest
 
-STUDENT, STAFF, GROUP = new_id(), new_id(), new_id()
+STUDENT, STAFF, GROUP, LONER = new_id(), new_id(), new_id(), new_id()
 
 
 def _counselor() -> Assignment:
@@ -72,10 +73,12 @@ class World:
         factory = lambda: FakeUow(self.store)  # noqa: E731
         membership = FakeMembership([student_ref(STUDENT, GROUP)])
         clock = FixedClock(NOW)
+        self.consents = FakeConsents({STUDENT: frozenset({STAFF_VIEW})})
+        self.identity = FakeIdentity({}, {Role.COUNSELOR: [STAFF, LONER]})
         access = AccessPolicy(
             factory,
             membership,
-            FakeConsents({STUDENT: frozenset({STAFF_VIEW})}),
+            self.consents,
             clock,
             {10, 11},
         )
@@ -86,6 +89,7 @@ class World:
             RuntimeSettingsService(factory, ttl=0),
             AdmissionSettings(),
             clock,
+            self.identity,  # type: ignore[arg-type]
         )
         self.catalog = CatalogService(factory)
         self.store.assignments[STAFF] = (_counselor(),)
@@ -204,3 +208,39 @@ async def test_label_override_wins_and_is_audited() -> None:
     view = await w.lists.estimate(ctx, item.entry.id)
     assert view.label == "reach" and view.label_overridden
     assert any(e.action == "list.label_override" for e in w.store.audit)
+
+
+async def test_sign_off_notifies_student_with_granted_event() -> None:
+    from app.shared.notifications import NotificationType
+
+    w = World()
+    item = await w.lists.add(await w.student(), w.inst())
+    await w.lists.sign_off(await w.staff(), item.entry.id, note=None)
+    [n] = w.store.notifications
+    assert n.user_id == STUDENT
+    assert n.type == NotificationType.ADMISSION_AFFORDABILITY_SIGNOFF
+    assert n.payload["event"] == "granted" and n.payload["path"] == "/list/"
+
+
+async def test_sign_off_request_reaches_only_permitted_counselors() -> None:
+    from app.shared.notifications import NotificationType
+
+    w = World()
+    item = await w.lists.add(await w.student(), w.inst())
+    await w.lists.request_sign_off(await w.student(), item.entry.id)
+    sent = [
+        n.user_id
+        for n in w.store.notifications
+        if n.type == NotificationType.ADMISSION_AFFORDABILITY_SIGNOFF
+    ]
+    # The unassigned counselor never hears about this student.
+    assert sent == [STAFF]
+
+
+async def test_sign_off_request_skips_staff_after_consent_withdrawn() -> None:
+    w = World()
+    item = await w.lists.add(await w.student(), w.inst())
+    w.consents.grants[STUDENT] = frozenset()
+    w.store.notifications.clear()
+    await w.lists.request_sign_off(await w.student(), item.entry.id)
+    assert w.store.notifications == []

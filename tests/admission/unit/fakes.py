@@ -67,6 +67,7 @@ class FakeStore:
         self.comments: dict[UUID, Comment] = {}
         self.export_tables: dict[str, list[dict[str, Any]]] = {}
         self.erased: list[UUID] = []
+        self.stored_file_ids: list[UUID] = []
         self.sharing_revoked: list[UUID] = []
         self.audit_records: list[AuditRecord] = []
 
@@ -86,6 +87,10 @@ class _Access:
 
     async def opt_ins(self, user_ids: Sequence[UUID]) -> dict[UUID, OptIns]:
         return {u: self.s.opt_ins[u] for u in user_ids if u in self.s.opt_ins}
+
+    async def set_opt_in(self, user_id: UUID, field: str, value: bool) -> None:
+        cur = self.s.opt_ins.get(user_id, OptIns())
+        self.s.opt_ins[user_id] = replace(cur, **{field: value})
 
     def audit(self, event: AuditEvent) -> None:
         self.pending.append(event)
@@ -220,6 +225,9 @@ class _Runtime:
         self.s.runtime_loads += 1
         return dict(self.s.runtime)
 
+    async def save(self, key: str, value: Any, user_id: Any) -> None:
+        self.s.runtime[key] = value
+
 
 class _Catalog:
     def __init__(self, s: FakeStore) -> None:
@@ -302,8 +310,21 @@ class _Staff:
     async def role(self, role_id: UUID) -> StaffRole | None:
         return self.s.roles.get(role_id)
 
+    async def roles(self) -> list[StaffRole]:
+        return [r for r in self.s.roles.values() if r.archived_at is None]
+
     async def assignment(self, assignment_id: UUID) -> Assignment | None:
         return self.s.assignment_rows.get(assignment_id)
+
+    async def live_assignments(self, kind: str, scope_kind: str) -> list[Assignment]:
+        return [
+            a
+            for a in self.s.assignment_rows.values()
+            if a.role.kind == kind
+            and a.scope_kind == scope_kind
+            and a.revoked_at is None
+            and a.parent_assignment_id is None
+        ]
 
     async def add_assignment(self, assignment: Assignment) -> Assignment:
         self.s.assignment_rows[assignment.id] = assignment
@@ -396,6 +417,9 @@ class _Privacy:
     async def erase(self, student_id: UUID) -> dict[str, int]:
         self.s.erased.append(student_id)
         return {t: len(r) for t, r in self.s.export_tables.items()}
+
+    async def stored_file_ids(self, student_id: UUID) -> list[UUID]:
+        return list(self.s.stored_file_ids)
 
     async def audit(self, student_id: UUID, limit: int) -> list[AuditRecord]:
         return self.s.audit_records[:limit]

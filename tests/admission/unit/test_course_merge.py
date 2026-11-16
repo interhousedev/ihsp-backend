@@ -58,9 +58,9 @@ async def test_owner_flow() -> None:
     store = FakeStore()
     service, resolver = _service(store)
     ctx = await resolver.execute(Actor(STUDENT, frozenset({Role.STUDENT})))
-    [maths] = await service.list(ctx, STUDENT)
-    assert maths.id is not None
-    assert len(await service.list(ctx, STUDENT)) == 1  # not stored twice
+    maths, python = await service.list(ctx, STUDENT)
+    assert maths.id is not None and python.id is not None  # LMS is stored too
+    assert len(await service.list(ctx, STUDENT)) == 2  # not stored twice
     off = await service.set_included(ctx, maths.id, False)
     assert not off.included
     lms = await service.add_from_lms(ctx, LMS_ID)
@@ -79,7 +79,7 @@ async def test_stranger_cannot_edit_or_toggle() -> None:
     store = FakeStore()
     service, resolver = _service(store)
     owner = await resolver.execute(Actor(STUDENT, frozenset({Role.STUDENT})))
-    [maths] = await service.list(owner, STUDENT)
+    maths, _ = await service.list(owner, STUDENT)
     assert maths.id is not None
     other = await resolver.execute(Actor(new_id(), frozenset({Role.STUDENT})))
     with pytest.raises(AdmissionForbiddenError):

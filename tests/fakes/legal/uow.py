@@ -127,6 +127,17 @@ class FakeLegalRepository:
             for (kind, scope), version in current.items()
         }
 
+    async def delete_acceptances(self, user_id: UUID, app_scope: str) -> int:
+        """Remove the user's acceptances of the scope."""
+        keep = [
+            a
+            for a in self.store.acceptances
+            if not (a.user_id == user_id and a.app_scope == app_scope)
+        ]
+        removed = len(self.store.acceptances) - len(keep)
+        self.store.acceptances[:] = keep
+        return removed
+
 
 class FakeLegalUnitOfWork:
     """Writes at once; audits are kept until commit."""

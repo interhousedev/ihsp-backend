@@ -20,10 +20,12 @@ from app.modules.admission.domain.documents import (
     Transcript,
 )
 from app.modules.admission.domain.errors import AdmissionConflictError
+from app.settings import LimitsSettings
 from app.shared.actor import Role
 from app.shared.contracts.files import FilePurpose, FileRef, FileScope, SignedDownload
 from app.shared.contracts.identity import UserRef
 from app.shared.ids import new_id
+from app.shared.limits import StaticLimits
 from tests.admission.unit.fakes import NOW, FakeStore, FakeUow
 
 
@@ -446,6 +448,7 @@ class DocKit:
             clock,
             self.files,
             self.identity,
+            StaticLimits(LimitsSettings()),
         )
         self.deadlines = DeadlineService(uow, self.w.policy, clock)
         self.transcripts = TranscriptService(

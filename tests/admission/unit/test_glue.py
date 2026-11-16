@@ -82,3 +82,25 @@ async def test_config_workflow_options_equal_the_domain() -> None:
     assert w.milestone_kinds == docs.MILESTONE_KINDS
     assert w.affordability_statuses == get_args(wf.AffordabilityStatus)
     assert w.affordability_ack_statuses == ("gap", "unknown")
+
+
+async def test_config_offers_countries_and_deduped_fields() -> None:
+    store = FakeStore()
+    runtime = RuntimeSettingsService(lambda: FakeUow(store), ttl=0)
+    cfg = await GetConfig(
+        AdmissionSettings(),
+        runtime,
+        StaticLimits(LimitsSettings()),
+        lambda: ("Biology", "Law"),
+    ).execute()
+    assert {"UZ", "GB", "US"} <= set(cfg.options["countries"])
+    assert len(set(cfg.options["countries"])) == len(cfg.options["countries"])
+    assert cfg.options["fields"] == ("Biology", "Law")
+
+
+def test_seed_study_fields_have_no_case_duplicates() -> None:
+    from app.modules.admission.infrastructure.catalog_data import study_fields
+
+    names = study_fields()
+    assert names
+    assert len({n.casefold() for n in names}) == len(names)

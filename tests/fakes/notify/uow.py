@@ -1,7 +1,7 @@
 """In-memory notification repository and unit of work."""
 
 import copy
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from datetime import datetime
 from types import TracebackType
 from typing import Self
@@ -238,6 +238,19 @@ class InMemoryNotificationRepository:
         for nid in old:
             del self.rows[nid]
         return len(old)
+
+    async def delete_for_user_types(
+        self, user_id: UUID, types: Collection[NotificationType]
+    ) -> int:
+        """Delete the user's rows of the given types."""
+        gone = [
+            nid
+            for nid, n in self.rows.items()
+            if n.user_id == user_id and n.type in set(types)
+        ]
+        for nid in gone:
+            del self.rows[nid]
+        return len(gone)
 
 
 class InMemoryCourseBroadcasts:

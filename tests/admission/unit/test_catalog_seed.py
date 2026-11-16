@@ -40,7 +40,8 @@ def test_every_value_has_source_and_year() -> None:
             if i[k]:
                 assert i[k]["currency"] in _CURRENCIES, slug
         assert all(d["source_url"] for d in i["deadlines"]), slug
-        assert i["city_type"] is None, slug
+        assert i["city_type"] in {"urban", "suburban", "rural"}, slug
+        assert i["institution_type"] in {"public", "private"}, slug
 
 
 def test_unsourced_school_is_unverified() -> None:
