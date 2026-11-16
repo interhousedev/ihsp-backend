@@ -23,6 +23,7 @@ serve:
         - https://admin.ihsu.uz
         - https://lms.ihsu.uz
         - https://lib.ihsu.uz
+        - https://admission.ihsu.uz
   cookies:
     same_site_mode: Lax # plain top-level redirects; `None` would need more than we use
 

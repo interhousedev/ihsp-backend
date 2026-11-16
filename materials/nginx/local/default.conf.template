@@ -95,6 +95,14 @@ server {
 
 server {
     listen 80;
+    server_name ${HOST_ADMISSION};
+    access_log /var/log/nginx/access.log ihsp;
+    include /etc/nginx/ihsp/upstreams.inc;
+    include /etc/nginx/ihsp/route-static.inc;
+}
+
+server {
+    listen 80;
     server_name ${HOST_S};
     access_log /var/log/nginx/access.log ihsp;
     include /etc/nginx/ihsp/upstreams.inc;

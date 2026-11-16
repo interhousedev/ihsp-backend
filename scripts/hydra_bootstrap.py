@@ -6,7 +6,8 @@ Usage (settings come from the environment, as in every process):
 
 Creates or updates
 
-* the seven public PKCE clients `id`, `sp`, `staff`, `admin`, `lms`, `app`, `library`
+* the eight public PKCE clients `id`, `sp`, `staff`, `admin`, `lms`, `app`, `library`,
+  `admission`
   (consent skipped: the identity process accepts it on the server and answers Hydra's
   consent URL with a redirect, see `GET /v1/oauth/flow/consent`). `app`, the installable
   PWA, keeps people signed in longer: its refresh tokens live 90 days (2160h) instead
@@ -46,7 +47,7 @@ import httpx
 JWT_BEARER_GRANT = "urn:ietf:params:oauth:grant-type:jwt-bearer"
 AUDIENCE = "ihsp-api"
 SCOPE = "openid offline_access"
-WEB_APPS = ("id", "sp", "staff", "admin", "lms", "app", "library")
+WEB_APPS = ("id", "sp", "staff", "admin", "lms", "app", "library", "admission")
 # Shown on the login form ("to continue to ..."), so they read like product names.
 CLIENT_NAMES = {
     "id": "IHT ID",
@@ -56,6 +57,7 @@ CLIENT_NAMES = {
     "lms": "lms.iht",
     "app": "IHT App",
     "library": "lib.iht",
+    "admission": "IHT Admission",
 }
 MINIAPP = "miniapp"
 DEV_MINIAPP_SECRET = "dev-miniapp-secret"  # default of identity's own setting
@@ -109,6 +111,7 @@ def web_app_bases(settings: Settings) -> dict[str, str]:
         "lms": urls.lms,
         "app": urls.app,
         "library": urls.library,
+        "admission": urls.admission,
     }
 
 

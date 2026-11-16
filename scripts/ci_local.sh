@@ -3,8 +3,9 @@
 #
 #   scripts/ci_local.sh [STAGE...] [--fast]
 #
-# Stages (default: lint test openapi security):
+# Stages (default: lint migrations test openapi security):
 #   lint       black, isort, flake8, mypy, ty (scripts/style_check.sh)
+#   migrations migration gate (scripts/check_migrations.sh); skipped when postgres is unreachable
 #   unit       the unit tests only (tests/*/unit), no services
 #   test       the whole pytest suite against the dev compose services (starts them, stops them after)
 #   openapi    openapi/openapi.json matches the exported document
@@ -30,11 +31,11 @@ for a in "$@"; do
   case "$a" in
     -h|--help) usage; exit 0 ;;
     --fast) STAGES+=(lint unit openapi) ;;
-    lint|unit|test|openapi|security) STAGES+=("$a") ;;
+    lint|migrations|unit|test|openapi|security) STAGES+=("$a") ;;
     *) echo "unknown stage or option '$a' (see --help)" >&2; exit 2 ;;
   esac
 done
-[[ ${#STAGES[@]} -gt 0 ]] || STAGES=(lint test openapi security)
+[[ ${#STAGES[@]} -gt 0 ]] || STAGES=(lint migrations test openapi security)
 
 RESULTS=() FAILED=0
 # check <name> <cmd...>: run one check, log it, record PASS/FAIL.
@@ -58,6 +59,14 @@ jwt_key() {
   openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out materials/dev-keys/jwt-bearer.pem
 }
 stage_lint() { uv sync --frozen && scripts/style_check.sh; }
+stage_migrations() {
+  uv sync --frozen || return 1
+  if ! (exec 3<>/dev/tcp/127.0.0.1/5433) 2>/dev/null; then
+    echo "SKIPPED: postgres is unreachable on 127.0.0.1:5433 (docker compose -f materials/docker-compose.dev.yaml up -d --wait postgres)"
+    return 0
+  fi
+  scripts/check_migrations.sh
+}
 stage_unit() { uv sync --frozen && jwt_key && uv run pytest -q -p no:cacheprovider tests/*/unit; }
 stage_test() {
   uv sync --frozen && jwt_key || return 1

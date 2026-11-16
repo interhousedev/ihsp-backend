@@ -167,6 +167,7 @@ x-backend-env: &backend-env
   IHSP_URLS__ADMIN: https://admin.${DOMAIN}
   IHSP_URLS__LMS: https://lms.${DOMAIN}
   IHSP_URLS__LIBRARY: https://lib.${DOMAIN}
+  IHSP_URLS__ADMISSION: https://admission.${DOMAIN}
   IHSP_URLS__SHARE: https://s.${DOMAIN}
   IHSP_URLS__SHORT_LINKS: https://s.${DOMAIN}
   IHSP_URLS__ROOMS: https://${DOMAIN}/r
@@ -214,7 +215,7 @@ x-exa-env: &exa-env
   IHSP_PARALLEL__API_KEY: ${IHSP_PARALLEL__API_KEY:-}
 
 # The same S3 settings feed the bucket bootstrap job.
-x-cors-origins: &cors-origins https://id.${DOMAIN},https://my.${DOMAIN},https://app.${DOMAIN},https://staff.${DOMAIN},https://admin.${DOMAIN},https://lms.${DOMAIN},https://lib.${DOMAIN}
+x-cors-origins: &cors-origins https://id.${DOMAIN},https://my.${DOMAIN},https://app.${DOMAIN},https://staff.${DOMAIN},https://admin.${DOMAIN},https://lms.${DOMAIN},https://lib.${DOMAIN},https://admission.${DOMAIN}
 
 services:
   # ---------------------------------------------------------------- data stores
@@ -547,6 +548,7 @@ services:
       APP_HOST_ADMIN: admin.${DOMAIN}
       APP_HOST_LMS: lms.${DOMAIN}
       APP_HOST_LIBRARY: lib.${DOMAIN}
+      APP_HOST_ADMISSION: admission.${DOMAIN}
       PWA_APPS: "${PWA_APPS:-lms library staff admin}"
       APP_HOST_SHARE: s.${DOMAIN}
       API_HOST: api.${DOMAIN}
@@ -570,6 +572,7 @@ services:
       IHSP_WEB_ADMIN_URL: https://admin.${DOMAIN}
       IHSP_WEB_LMS_URL: https://lms.${DOMAIN}
       IHSP_WEB_LIBRARY_URL: https://lib.${DOMAIN}
+      IHSP_WEB_ADMISSION_URL: https://admission.${DOMAIN}
       IHSP_WEB_SHARE_URL: https://s.${DOMAIN}/ai
       IHSP_WEB_SHORT_LINKS_URL: https://s.${DOMAIN}
       IHSP_WEB_ROOMS_URL: https://${DOMAIN}
@@ -618,6 +621,7 @@ services:
       HOST_ADMIN: admin.${DOMAIN}
       HOST_LMS: lms.${DOMAIN}
       HOST_LIBRARY: lib.${DOMAIN}
+      HOST_ADMISSION: admission.${DOMAIN}
       HOST_S: s.${DOMAIN}
       HOST_API: api.${DOMAIN}
       HOST_MCP: mcp.${DOMAIN}

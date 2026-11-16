@@ -100,6 +100,7 @@ x-backend-env: &backend-env
   IHSP_URLS__STAFF: http://staff.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
   IHSP_URLS__ADMIN: http://admin.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
   IHSP_URLS__LMS: http://lms.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+  IHSP_URLS__ADMISSION: http://admission.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
   IHSP_URLS__LIBRARY: http://library.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
   IHSP_URLS__SHARE: http://s.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
   IHSP_URLS__SHORT_LINKS: http://s.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
@@ -111,7 +112,7 @@ x-backend-env: &backend-env
   IHSP_APP__LATEST: ${IHSP_APP__LATEST:-1.0.0}
   IHSP_APP__MIN_SUPPORTED: ${IHSP_APP__MIN_SUPPORTED:-1.0.0}
 
-x-cors-origins: &cors-origins http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://my.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://app.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://staff.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://admin.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://lms.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://library.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+x-cors-origins: &cors-origins http://id.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://my.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://app.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://staff.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://admin.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://lms.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://library.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-},http://admission.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
 
 services:
   # ---------------------------------------------------------------- data stores
@@ -401,6 +402,7 @@ services:
       APP_HOST_ADMIN: admin.${LOCAL_DOMAIN:-localhost}
       APP_HOST_LMS: lms.${LOCAL_DOMAIN:-localhost}
       APP_HOST_LIBRARY: library.${LOCAL_DOMAIN:-localhost}
+      APP_HOST_ADMISSION: admission.${LOCAL_DOMAIN:-localhost}
       PWA_APPS: "${PWA_APPS:-lms library staff admin}"
       APP_HOST_SHARE: s.${LOCAL_DOMAIN:-localhost}
       API_HOST: api.${LOCAL_DOMAIN:-localhost}
@@ -424,6 +426,7 @@ services:
       IHSP_WEB_ADMIN_URL: http://admin.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
       IHSP_WEB_LMS_URL: http://lms.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
       IHSP_WEB_LIBRARY_URL: http://library.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
+      IHSP_WEB_ADMISSION_URL: http://admission.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
       IHSP_WEB_SHARE_URL: http://s.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}/ai
       IHSP_WEB_SHORT_LINKS_URL: http://s.${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
       IHSP_WEB_ROOMS_URL: http://${LOCAL_DOMAIN:-localhost}${LOCAL_PORT_SUFFIX:-}
@@ -455,6 +458,7 @@ services:
       HOST_ADMIN: admin.${LOCAL_DOMAIN:-localhost}
       HOST_LMS: lms.${LOCAL_DOMAIN:-localhost}
       HOST_LIBRARY: library.${LOCAL_DOMAIN:-localhost}
+      HOST_ADMISSION: admission.${LOCAL_DOMAIN:-localhost}
       HOST_S: s.${LOCAL_DOMAIN:-localhost}
       HOST_API: api.${LOCAL_DOMAIN:-localhost}
       HOST_MCP: mcp.${LOCAL_DOMAIN:-localhost}
