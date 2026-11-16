@@ -21,10 +21,17 @@ from app.modules.admission.domain.errors import (
     AdmissionForbiddenError,
     AdmissionNotFoundError,
     CharLimitError,
+    ItemIncompleteError,
     ItemLimitError,
     ProjectedDateRequiredError,
 )
-from app.modules.admission.domain.items import MAX_ACTIVITIES, MAX_HONORS, Item
+from app.modules.admission.domain.items import (
+    MAX_ACTIVITIES,
+    MAX_DRAFTS,
+    MAX_HONORS,
+    Item,
+    ItemStatus,
+)
 from app.modules.admission.domain.permissions import Permission
 from app.modules.admission.ports.items import Horizon, Metric, StoredReview
 from app.modules.admission.ports.unit_of_work import UowFactory
@@ -42,6 +49,9 @@ EDITABLE: Final = frozenset(
         "grades",
         "hours_per_week",
         "weeks_per_year",
+        "status",
+        "timing",
+        "intend_in_college",
     }
 )
 
@@ -124,6 +134,29 @@ def _metric(item_id: UUID, draft: MetricDraft) -> Metric:
     )
 
 
+def _check_ready(item: Item) -> None:
+    missing = item.missing_for_ready()
+    if missing:
+        raise ItemIncompleteError(params={"fields": missing})
+
+
+def _check_slot(item: Item, others: Sequence[Item]) -> None:
+    """Check an item entering its status among the other items of its kind.
+
+    A ready item must be complete and counts against 10 activities / 5 honors;
+    drafts may be incomplete and count only against the draft cap of 30.
+    """
+    status: ItemStatus = item.status
+    if status == "ready":
+        _check_ready(item)
+        limit = MAX_HONORS if item.kind == "honor" else MAX_ACTIVITIES
+    else:
+        limit = MAX_DRAFTS
+    if sum(1 for i in others if i.status == status) >= limit:
+        params = {"kind": item.kind, "status": status, "limit": limit}
+        raise ItemLimitError(params=params)
+
+
 class ItemService:
     """CRUD of a student's items; only the owner edits, staff read in scope."""
 
@@ -179,9 +212,8 @@ class ItemService:
     async def create(
         self, ctx: AdmissionContext, item: Item, metrics: Sequence[MetricDraft] = ()
     ) -> ItemView:
-        """Add an item at the end of its kind; caps: 10 activities, 5 honors."""
+        """Add an item at the end of its kind; see `_check_slot` for the caps."""
         await self._owner(ctx)
-        limit = MAX_HONORS if item.kind == "honor" else MAX_ACTIVITIES
         draft = replace(item, id=new_id(), student_id=ctx.user_id, lock_version=0)
         draft.validate()
         if len(metrics) > MAX_METRICS:
@@ -189,8 +221,7 @@ class ItemService:
         async with self._uow() as uow:
             all_items = await uow.items.list_for(ctx.user_id)
             same = [i for i in all_items if i.kind == item.kind]
-            if len(same) >= limit:
-                raise ItemLimitError(params={"kind": item.kind, "limit": limit})
+            _check_slot(draft, same)
             draft.position = max((i.position for i in same), default=-1) + 1
             stored = await uow.items.add(draft)
             rows = [_metric(stored.id, m) for m in metrics]
@@ -216,6 +247,15 @@ class ItemService:
                 raise AdmissionConflictError()
             updated = replace(item, **dict(changes))
             updated.validate()
+            if updated.status != item.status:
+                others = [
+                    i
+                    for i in await uow.items.list_for(item.student_id)
+                    if i.kind == item.kind and i.id != item.id
+                ]
+                _check_slot(updated, others)
+            elif updated.status == "ready":
+                _check_ready(updated)
             stored = await uow.items.update(updated)
             await uow.commit()
         return stored

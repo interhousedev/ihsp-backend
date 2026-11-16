@@ -33,14 +33,17 @@ class CourseService:
             raise AdmissionForbiddenError(params={"permission": "courses:edit"})
 
     async def list(self, ctx: AdmissionContext, student_id: UUID) -> list[Course]:
-        """Return the merged list; the owner's view stores new academic subjects.
+        """Return the merged list; the owner's view stores new live courses.
 
-        Storing gives every academic subject an id, so the owner can exclude it.
+        Storing gives every academic subject and LMS enrolment an id, so the owner
+        can exclude it. Staff see the stored LMS snapshots only.
         """
         resolution = await self._access.require(
             ctx, student_id, Permission.PROFILE_READ, object_type="courses"
         )
         live = await self._sources.academic_courses(student_id)
+        if resolution.owner:
+            live = live + await self._sources.lms_courses(ctx.actor)
         async with self._uow() as uow:
             stored = await uow.courses.list_for(student_id)
             known = {c.key for c in stored}

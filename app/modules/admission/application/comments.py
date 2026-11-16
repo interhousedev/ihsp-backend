@@ -29,6 +29,8 @@ def comment_path(target_kind: str, target_id: UUID) -> str:
         return f"/items/view/?id={target_id}"
     if target_kind == "help_request":
         return f"/help/request/?id={target_id}"
+    if target_kind == "essay":
+        return f"/essays/edit/?id={target_id}"
     return "/"
 
 

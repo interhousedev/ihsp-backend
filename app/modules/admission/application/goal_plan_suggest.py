@@ -9,6 +9,7 @@ from app.modules.admission.application.access import AccessPolicy
 from app.modules.admission.application.actor import AdmissionContext
 from app.modules.admission.application.items import items_summary
 from app.modules.admission.application.review_checks import nfc
+from app.modules.admission.application.student_context import student_block
 from app.modules.admission.application.words import delimit, plain
 from app.modules.admission.domain.errors import (
     AdmissionForbiddenError,
@@ -19,6 +20,7 @@ from app.modules.admission.domain.goal_plan import TITLE_MAX
 from app.modules.admission.infrastructure.ai.prompts import goal_plan as prompt
 from app.modules.admission.ports.ai import PromptSource, QuotaOf, StructuredAi
 from app.modules.admission.ports.consent import AI, PurposeConsents
+from app.modules.admission.ports.student_search import StudentDataSearch
 from app.modules.admission.ports.unit_of_work import UowFactory
 from app.shared.ai_tasks import AiTask
 from app.shared.brand import with_brand
@@ -56,6 +58,7 @@ class GoalPlanSuggester:
         limiter: RateLimiter,
         weekly_limit: QuotaOf,
         prompts: PromptSource,
+        search: StudentDataSearch | None = None,
     ) -> None:
         """Keep the collaborators and the reader of the soft weekly limit."""
         self._uow = uow_factory
@@ -66,6 +69,7 @@ class GoalPlanSuggester:
         self._limiter = limiter
         self._limit = weekly_limit
         self._prompts = prompts
+        self._search = search
 
     async def suggest(self, ctx: AdmissionContext, locale: str) -> list[Suggestion]:
         """Return up to six proposals that fit the room left in the plan."""
@@ -93,6 +97,12 @@ class GoalPlanSuggester:
         lines = [f"Words: {', '.join(words.words)}", f"Language: {locale}"]
         lines += [f"[item:{i['id']}] {i}" for i in summary]
         lines += [f"[planned] {m.title}" for m in planned]
+        lines += await student_block(
+            self._search,
+            ctx.user_id,
+            list(words.words[:3]),
+            ("item", "task", "test_score", "course", "grade", "profile"),
+        )
         data, _ = await self._ai.json(
             task=AiTask.ADMIT_GOAL_PLAN,
             system=with_brand(

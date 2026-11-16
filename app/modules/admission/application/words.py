@@ -39,11 +39,20 @@ def plain(text: str) -> str:
 
 
 def answer_texts(answers: dict[str, Any]) -> dict[str, str]:
-    """Return the answers safe to show a model: normal sensitivity, as text."""
+    """Return the answers a model may see: mentor-visible, normal, as text.
+
+    Mentors read the words and the alignment map, so their input is limited
+    to the answers every mentor may already read.
+    """
     out: dict[str, str] = {}
     for qid, value in sorted(answers.items()):
         q = BY_ID.get(qid)
-        if q is None or q.sensitivity != "normal" or q.kind in {"locked", "repeat"}:
+        if (
+            q is None
+            or q.visible_to != "mentor"
+            or q.sensitivity != "normal"
+            or q.kind in {"locked", "repeat"}
+        ):
             continue
         text = ", ".join(map(str, value)) if isinstance(value, list) else str(value)
         if text.strip():
@@ -53,7 +62,7 @@ def answer_texts(answers: dict[str, Any]) -> dict[str, str]:
 
 def delimit(lines: list[str]) -> str:
     """Wrap untrusted student text so a model reads it as data."""
-    body = "\n".join(line.replace("</student_text>", "") for line in lines)
+    body = "\n".join(line.replace("<", "&lt;").replace(">", "&gt;") for line in lines)
     return f"<student_text>\n{body}\n</student_text>"
 
 

@@ -8,6 +8,10 @@ from uuid import UUID
 
 from app.modules.admission.application.access import AccessPolicy
 from app.modules.admission.application.actor import AdmissionContext
+from app.modules.admission.application.staff import display_name
+from app.modules.admission.application.staff_notice import permitted_staff
+from app.modules.admission.domain.access import Resolution
+from app.modules.admission.domain.checklist import UNSET, Unset, clean_source_url
 from app.modules.admission.domain.documents import (
     REJECT_NOTE_LIMIT,
     SIGNED_URL_MAX_SECONDS,
@@ -18,6 +22,7 @@ from app.modules.admission.domain.documents import (
     DocumentVersionRecord,
 )
 from app.modules.admission.domain.errors import (
+    AdmissionForbiddenError,
     AdmissionNotFoundError,
     CharLimitError,
     ScanPendingError,
@@ -36,10 +41,27 @@ from app.shared.contracts.files import (
 )
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.ids import new_id
+from app.shared.limits import LimitsProvider
 from app.shared.notifications import NotificationDraft, NotificationType
 
 _BLOCKED_SCANS = frozenset({"infected", "failed", "pending_scan"})
 _STAFF_NOTICE_ROLES = [Role.COUNSELOR]
+
+
+def _check_patch_rights(
+    res: Resolution,
+    item: ChecklistItem,
+    *,
+    edits_status: bool,
+    edits_link: bool,
+    edits_priority: bool,
+) -> None:
+    if edits_status and res.owner and item.owner != "student":
+        raise AdmissionForbiddenError(params={"permission": "checklist:edit"})
+    if edits_link and res.owner:
+        raise AdmissionForbiddenError(params={"permission": "checklist:link"})
+    if edits_priority and not res.owner:
+        raise AdmissionForbiddenError(params={"permission": "checklist:priority"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,6 +84,7 @@ class DocumentService:
         clock: Clock,
         files: FilesApi | None,
         identity: IdentityDirectory | None,
+        limits: LimitsProvider,
     ) -> None:
         """Keep the collaborators."""
         self._uow = uow_factory
@@ -69,6 +92,11 @@ class DocumentService:
         self._clock = clock
         self._files = files
         self._identity = identity
+        self._limits = limits
+
+    async def upload_limit(self, user_id: UUID) -> int:
+        """The largest upload accepted now, in bytes (admin-editable)."""
+        return int((await self._limits.for_user(user_id)).admit_upload_max_bytes)
 
     # -- helpers ---------------------------------------------------------
 
@@ -125,10 +153,35 @@ class DocumentService:
             )
         return out
 
-    async def _staff_ids(self) -> list[UUID]:
-        if self._identity is None:
-            return []
-        return await self._identity.user_ids_with_roles(_STAFF_NOTICE_ROLES)
+    async def _require_write(
+        self, ctx: AdmissionContext, doc: DocumentRecord, *, own_only: bool = False
+    ) -> Resolution:
+        """Check write access; an owner touches only files they put there.
+
+        Confidential documents and institution-uploaded ones are hidden from the
+        owner (404); new versions are further limited to the owner's own uploads.
+        """
+        if doc.student_id != ctx.user_id:
+            return await self._access.require(
+                ctx,
+                doc.student_id,
+                Permission.DOCUMENTS_ATTACH,
+                object_type="document",
+                object_id=doc.id,
+            )
+        res = await self._access.require(
+            ctx,
+            doc.student_id,
+            Permission.DOCUMENTS_READ,
+            object_type="document",
+            object_id=doc.id,
+        )
+        foreign = doc.uploaded_by != ctx.user_id
+        if doc.visibility == "confidential" and foreign:
+            raise AdmissionNotFoundError()
+        if own_only and (foreign or doc.visibility == "confidential"):
+            raise AdmissionNotFoundError()
+        return res
 
     async def _store(
         self,
@@ -212,6 +265,23 @@ class DocumentService:
             await uow.commit()
             return (await self._view(ctx, uow, [doc]))[0]
 
+    async def _scoped_staff(self, student_id: UUID) -> list[UUID]:
+        """Return the counselors who may review this student's documents."""
+        return await permitted_staff(
+            self._identity,
+            self._uow,
+            self._access,
+            _STAFF_NOTICE_ROLES,
+            student_id,
+            Permission.DOCUMENTS_REVIEW,
+        )
+
+    async def _student_name(self, student_id: UUID) -> str:
+        if self._identity is None:
+            return ""
+        ref = (await self._identity.get_users([student_id])).get(student_id)
+        return display_name(ref) if ref else ""
+
     async def _notify_uploaded(
         self,
         uow: AdmissionUnitOfWork,
@@ -220,12 +290,13 @@ class DocumentService:
     ) -> None:
         if not by_student:
             return
-        for user_id in await self._staff_ids():
+        name = await self._student_name(doc.student_id)
+        for user_id in await self._scoped_staff(doc.student_id):
             uow.notify(
                 NotificationDraft(
                     user_id=user_id,
                     type=NotificationType.ADMISSION_DOCUMENT_UPLOADED,
-                    payload={"student_name": "", "student_id": str(doc.student_id)},
+                    payload={"student_name": name, "student_id": str(doc.student_id)},
                     dedupe_key=(
                         f"document:{doc.id}:uploaded:{doc.current_version}:{user_id}"
                     ),
@@ -238,17 +309,7 @@ class DocumentService:
         """Add a version; attachments of older versions need re-confirmation."""
         async with self._uow() as uow:
             doc = await self._load(uow, doc_id)
-            res = await self._access.require(
-                ctx,
-                doc.student_id,
-                (
-                    Permission.DOCUMENTS_READ
-                    if doc.student_id == ctx.user_id
-                    else Permission.DOCUMENTS_ATTACH
-                ),
-                object_type="document",
-                object_id=doc.id,
-            )
+            res = await self._require_write(ctx, doc, own_only=True)
             version = await self._store(doc, doc.student_id, name, data, ctx.user_id)
             lock = doc.lock_version
             doc.current_version = version.version
@@ -320,17 +381,7 @@ class DocumentService:
         """Attach the current version to a list entry of the same student."""
         async with self._uow() as uow:
             doc = await self._load(uow, doc_id)
-            await self._access.require(
-                ctx,
-                doc.student_id,
-                (
-                    Permission.DOCUMENTS_READ
-                    if doc.student_id == ctx.user_id
-                    else Permission.DOCUMENTS_ATTACH
-                ),
-                object_type="document",
-                object_id=doc.id,
-            )
+            await self._require_write(ctx, doc)
             entry = await uow.shortlist.entry(list_entry_id)
             if entry is None or entry.student_id != doc.student_id:
                 raise AdmissionNotFoundError()
@@ -374,17 +425,7 @@ class DocumentService:
         """Remove the attachment of a document from a list entry."""
         async with self._uow() as uow:
             doc = await self._load(uow, doc_id)
-            await self._access.require(
-                ctx,
-                doc.student_id,
-                (
-                    Permission.DOCUMENTS_READ
-                    if doc.student_id == ctx.user_id
-                    else Permission.DOCUMENTS_ATTACH
-                ),
-                object_type="document",
-                object_id=doc.id,
-            )
+            await self._require_write(ctx, doc)
             row = await uow.documents.attachment(doc.id, list_entry_id)
             if row is None:
                 raise AdmissionNotFoundError()
@@ -449,12 +490,35 @@ class DocumentService:
 
     async def checklist(
         self, ctx: AdmissionContext, student_id: UUID | None = None
-    ) -> list[ChecklistItem]:
-        """Return the checklist of the student."""
+    ) -> list[tuple[ChecklistItem, str | None]]:
+        """Return the student checklist; per-university items name the institution."""
         target = student_id or ctx.user_id
         await self._access.require(ctx, target, Permission.DOCUMENTS_READ)
         async with self._uow() as uow:
-            return await uow.checklist.for_student(target)
+            items = await uow.checklist.for_student(target)
+            entries = await uow.shortlist.entries(target)
+            by_entry = {e.id: e.institution_id for e in entries}
+            names = await uow.deadlines.institution_names(set(by_entry.values()))
+        return [
+            (
+                i,
+                (
+                    names.get(by_entry[i.list_entry_id])
+                    if i.list_entry_id in by_entry
+                    else None
+                ),
+            )
+            for i in items
+        ]
+
+    @staticmethod
+    async def _attach_document(
+        uow: AdmissionUnitOfWork, item: ChecklistItem, document_id: UUID
+    ) -> None:
+        doc = await uow.documents.get(document_id)
+        if doc is None or doc.student_id != item.student_id:
+            raise AdmissionNotFoundError()
+        item.document_id = document_id
 
     async def patch_checklist(
         self,
@@ -463,13 +527,20 @@ class DocumentService:
         *,
         status: ChecklistStatus | None = None,
         document_id: UUID | None = None,
-    ) -> ChecklistItem:
-        """Change an item's status or link it to a document of the same student."""
+        important: bool | None = None,
+        urgent_override: bool | None | Unset = UNSET,
+        source_url: str | None | Unset = UNSET,
+    ) -> tuple[ChecklistItem, str | None]:
+        """Change an item; the university name is set for per-university items.
+
+        Status and document follow the owner rule; importance and the urgency
+        override are the student's own priority; the external link is staff-set.
+        """
         async with self._uow() as uow:
             item = await uow.checklist.get(item_id)
             if item is None:
                 raise AdmissionNotFoundError()
-            await self._access.require(
+            res = await self._access.require(
                 ctx,
                 item.student_id,
                 (
@@ -480,14 +551,32 @@ class DocumentService:
                 object_type="checklist",
                 object_id=item.id,
             )
+            _check_patch_rights(
+                res,
+                item,
+                edits_status=status is not None or document_id is not None,
+                edits_link=not isinstance(source_url, Unset),
+                edits_priority=important is not None
+                or not isinstance(urgent_override, Unset),
+            )
+            if not isinstance(source_url, Unset):
+                item.source_url = clean_source_url(source_url)
             if document_id is not None:
-                doc = await uow.documents.get(document_id)
-                if doc is None or doc.student_id != item.student_id:
-                    raise AdmissionNotFoundError()
-                item.document_id = document_id
+                await self._attach_document(uow, item, document_id)
             lock = item.lock_version
             if status is not None:
                 item.status = status
+            if important is not None:
+                item.important = important
+            if not isinstance(urgent_override, Unset):
+                item.urgent_override = urgent_override
             saved = await uow.checklist.save(item, expected_lock=lock)
+            entry = (
+                await uow.shortlist.entries(saved.student_id)
+                if saved.list_entry_id
+                else []
+            )
+            inst_ids = {e.institution_id for e in entry if e.id == saved.list_entry_id}
+            names = await uow.deadlines.institution_names(inst_ids) if inst_ids else {}
             await uow.commit()
-            return saved
+            return saved, next(iter(names.values()), None)

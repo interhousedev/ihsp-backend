@@ -11,6 +11,7 @@ from app.modules.admission.domain.entitlement import (
     admission_staff_roles,
     grade_from_group_name,
 )
+from app.modules.admission.domain.permissions import KIND_ROLE
 from app.modules.admission.ports.unit_of_work import UowFactory
 from app.shared.actor import Actor, Role
 from app.shared.clock import Clock
@@ -70,6 +71,20 @@ class AdmissionContext:
             assignments=self.assignments,
             helper_of=self.helper_of,
         )
+
+
+def can_edit_settings(ctx: AdmissionContext, now: dt.datetime) -> bool:
+    """Admission settings: an administrator or a live counselor, not blocked."""
+    if ctx.admission.blocked:
+        return False
+    if Role.ADMIN in ctx.actor.roles:
+        return True
+    return any(
+        a.role.kind == "counselor"
+        and a.active_at(now)
+        and KIND_ROLE["counselor"] in ctx.actor.roles
+        for a in ctx.assignments
+    )
 
 
 class ResolveAdmissionActor:

@@ -11,6 +11,7 @@ from app.modules.admission.application.review import (
     caps_of,
     fix_rewrite,
     owned_item,
+    require_ai_consent,
 )
 from app.modules.admission.application.review_checks import (
     delimit,
@@ -28,6 +29,7 @@ from app.modules.admission.application.review_schema import (
 )
 from app.modules.admission.domain.errors import InvalidAnswerError, WordsNotSetError
 from app.modules.admission.ports.ai import PromptSource, StructuredAi
+from app.modules.admission.ports.consent import PurposeConsents
 from app.modules.admission.ports.items import InterviewRound, ProfileWordsRef
 from app.modules.admission.ports.unit_of_work import UowFactory
 from app.shared.ai_tasks import AiTask
@@ -98,12 +100,14 @@ class ItemInterviewService:
         uow_factory: UowFactory,
         access: AccessPolicy,
         ai: StructuredAi,
+        consents: PurposeConsents,
         prompts: PromptSource,
     ) -> None:
         """Keep the collaborators."""
         self._uow = uow_factory
         self._access = access
         self._ai = ai
+        self._consents = consents
         self._prompts = prompts
 
     async def get(self, ctx: AdmissionContext, item_id: UUID) -> InterviewState:
@@ -124,6 +128,7 @@ class ItemInterviewService:
         """Store answers to the last round and ask the next one (idempotent)."""
         async with self._uow() as uow:
             item = await owned_item(self._access, uow, ctx, item_id)
+            await require_ai_consent(self._consents, item.student_id)
             if restart:
                 await uow.items.clear_interviews(item_id)
             rounds = await uow.items.interviews(item_id)

@@ -47,11 +47,13 @@ from app.modules.admission.application.review_schema import (
 from app.modules.admission.domain.errors import (
     AdmissionForbiddenError,
     AdmissionNotFoundError,
+    ConsentRequiredError,
     QuotaExceededError,
     WordsNotSetError,
 )
 from app.modules.admission.domain.items import Item
 from app.modules.admission.ports.ai import PromptSource, QuotaOf, StructuredAi
+from app.modules.admission.ports.consent import AI, PurposeConsents
 from app.modules.admission.ports.items import (
     FeedbackKind,
     Metric,
@@ -186,6 +188,13 @@ def day_start(now: datetime) -> datetime:
     return datetime.combine(local.date(), time.min, TASHKENT)
 
 
+async def require_ai_consent(consents: PurposeConsents, student_id: UUID) -> None:
+    """Refuse a model call on student content without the `admission_ai` consent."""
+    granted = (await consents.granted([student_id])).get(student_id, frozenset())
+    if AI not in granted:
+        raise ConsentRequiredError(params={"purpose": AI})
+
+
 class ItemReviewService:
     """Review an item, cache by input, and take the student's feedback."""
 
@@ -194,6 +203,7 @@ class ItemReviewService:
         uow_factory: UowFactory,
         access: AccessPolicy,
         ai: StructuredAi,
+        consents: PurposeConsents,
         clock: Clock,
         prompts: PromptSource,
         *,
@@ -204,6 +214,7 @@ class ItemReviewService:
         self._uow = uow_factory
         self._access = access
         self._ai = ai
+        self._consents = consents
         self._clock = clock
         self._prompts = prompts
         self._per_day = per_day
@@ -215,6 +226,7 @@ class ItemReviewService:
         """Return the cached review of this input, or ask the model for a new one."""
         async with self._uow() as uow:
             item = await owned_item(self._access, uow, ctx, item_id)
+            await require_ai_consent(self._consents, item.student_id)
             metrics = (await uow.items.metrics_for([item.id])).get(item.id, [])
             words = await uow.items.words(item.student_id)
             if words is None or not words.words:

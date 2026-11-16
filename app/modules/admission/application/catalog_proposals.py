@@ -8,16 +8,19 @@ from uuid import UUID
 from app.modules.admission.application.actor import AdmissionContext
 from app.modules.admission.domain.catalog_proposals import (
     FIELDS,
+    MEDIA_FIELDS,
     CatalogProposal,
     ProposalKind,
 )
 from app.modules.admission.domain.errors import (
     AdmissionForbiddenError,
     AdmissionNotFoundError,
+    InvalidMediaUrlError,
     InvalidProofUrlError,
     InvalidTransitionError,
 )
 from app.modules.admission.domain.permissions import KIND_ROLE, Permission
+from app.modules.admission.domain.urls import is_https_url
 from app.modules.admission.ports.repositories import AuditEvent
 from app.modules.admission.ports.unit_of_work import UowFactory
 from app.shared.actor import Role
@@ -76,6 +79,9 @@ class CatalogProposalService:
         }
         if not payload:
             raise ValidationFailedError(params={"field": "fields"})
+        for key in MEDIA_FIELDS:
+            if key in payload and not is_https_url(payload[key]):
+                raise InvalidMediaUrlError(params={"field": key})
         proposal = CatalogProposal(
             id=new_id(),
             kind=kind,

@@ -271,6 +271,11 @@ class GuestService:
             request = await uow.help_proofs.get_request(record.link.help_request_id)
             if request is None or request.status in _FINISHED:
                 raise AdmissionNotFoundError()
+            if (
+                request.helper_user_id is not None
+                and request.helper_user_id != ctx.user_id
+            ):
+                raise AdmissionNotFoundError()
             if request.status == "open":
                 request.move("assigned")
             request.helper_user_id = ctx.user_id
@@ -284,7 +289,7 @@ class GuestService:
                 uow,
                 request.student_id,
                 f"guest:{record.link.id}:claimed",
-                {"help_request_id": str(request.id), "event": "claimed"},
+                {"request_id": str(request.id), "event": "claimed"},
             )
             await uow.commit()
         return request
@@ -337,7 +342,7 @@ class GuestService:
                     uow,
                     record.link.student_id,
                     f"guest:{record.link.id}:opened",
-                    {"help_request_id": str(request.id), "event": "guest_opened"},
+                    {"request_id": str(request.id), "event": "guest_opened"},
                 )
             await uow.commit()
         return GuestSession(session.token, expires)
@@ -367,7 +372,9 @@ class GuestService:
         async with self._uow() as uow:
             record, request = await self._session(uow, session_token)
             activities = (
-                await uow.help_proofs.activities_for_helper(record.link.student_id)
+                await uow.help_proofs.activities_for_helper(
+                    record.link.student_id, item_id=request.item_id
+                )
                 if "activities:read" in record.link.scope
                 else []
             )
@@ -426,7 +433,7 @@ class GuestService:
                 uow,
                 record.link.student_id,
                 f"help:{request.id}:response:{response.id}",
-                {"help_request_id": str(request.id), "event": "responded"},
+                {"request_id": str(request.id), "event": "responded"},
             )
             await uow.commit()
         return response

@@ -1,14 +1,17 @@
 """Purpose consents, export and erasure of my data, and who looked at it."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from typing import Any, Final
+from uuid import UUID
 
 from app.modules.admission.application.actor import AdmissionContext
 from app.modules.admission.domain.errors import AdmissionNotFoundError
 from app.modules.admission.domain.staff import AuditRecord
+from app.modules.admission.ports.assistant import AssistantRepository
 from app.modules.admission.ports.consent import (
     AI,
+    PURPOSE_VERSIONS,
     PURPOSES,
     SHARING,
     STAFF_VIEW,
@@ -16,6 +19,7 @@ from app.modules.admission.ports.consent import (
     PurposeGrant,
 )
 from app.modules.admission.ports.repositories import AuditEvent
+from app.modules.admission.ports.student_search import StudentDataSearch
 from app.modules.admission.ports.unit_of_work import UowFactory
 from app.shared.clock import Clock
 
@@ -30,6 +34,8 @@ class ConsentState:
 
     grants: list[PurposeGrant]
     non_ai_mode: bool
+    pending: list[str]
+    """Purposes granted under an older text version; the subject must answer again."""
 
 
 LOCALES: Final = ("uz", "ru", "en")
@@ -45,6 +51,7 @@ def describe_purposes(translate: Callable[[str, str], str]) -> list[dict[str, An
         out.append(
             {
                 "id": purpose,
+                "version": PURPOSE_VERSIONS[purpose],
                 "title": {x: translate(x, f"{stem}-title") for x in LOCALES},
                 "text": {x: translate(x, f"{stem}-text") for x in LOCALES},
             }
@@ -52,22 +59,46 @@ def describe_purposes(translate: Callable[[str, str], str]) -> list[dict[str, An
     return out
 
 
+Eraser = Callable[[UUID], Awaitable[None]]
+"""Deletes one kind of the user's admission data outside the admission tables."""
+
+
 class PrivacyService:
     """Everything the student controls about their admission data."""
 
     def __init__(
-        self, uow_factory: UowFactory, consents: PurposeConsentStore, clock: Clock
+        self,
+        uow_factory: UowFactory,
+        consents: PurposeConsentStore,
+        clock: Clock,
+        student_search: StudentDataSearch | None = None,
+        assistant: AssistantRepository | None = None,
+        *,
+        erasers: Sequence[Eraser] = (),
+        file_remover: Eraser | None = None,
+        final_erasers: Sequence[Eraser] = (),
     ) -> None:
-        """Keep the collaborators."""
+        """Keep the collaborators.
+
+        `erasers` run before the rows are deleted, `final_erasers` after the
+        consent records; both must be idempotent. `file_remover` deletes one stored
+        file by id.
+        """
+        self._student_search = student_search
+        self._assistant = assistant
         self._uow = uow_factory
         self._consents = consents
         self._clock = clock
+        self._erasers = tuple(erasers)
+        self._file_remover = file_remover
+        self._final_erasers = tuple(final_erasers)
 
     async def consent(self, ctx: AdmissionContext) -> ConsentState:
         """Return the caller's purpose consents."""
         grants = await self._consents.grants_of(ctx.user_id)
         active = {g.purpose for g in grants if g.active}
-        return ConsentState(grants, AI not in active)
+        pending = [g.purpose for g in grants if g.reconsent_required]
+        return ConsentState(grants, AI not in active, pending)
 
     async def grant(self, ctx: AdmissionContext, purposes: list[str]) -> ConsentState:
         """Grant the purposes (known ones only)."""
@@ -119,8 +150,24 @@ class PrivacyService:
         }
 
     async def erase(self, ctx: AdmissionContext) -> dict[str, int]:
-        """Delete my admission data and withdraw every purpose consent."""
-        now = self._clock.now()
+        """Delete everything admission holds about me; the iht.id account stays.
+
+        Idempotent outside effects (files, notifications, search index) run before
+        the rows go, so a failed attempt can be repeated; consent records go last,
+        which keeps the retry allowed through the consent gate.
+        """
+        # Without the AI purpose an assistant turn is refused, so none can append a
+        # thread after `assistant.erase`; the other purposes stay for a retry.
+        await self._consents.withdraw(ctx.user_id, AI, now=self._clock.now())
+        async with self._uow() as uow:
+            file_ids = await uow.privacy.stored_file_ids(ctx.user_id)
+        if self._file_remover is not None:
+            for file_id in file_ids:
+                await self._file_remover(file_id)
+        for eraser in self._erasers:
+            await eraser(ctx.user_id)
+        if self._student_search is not None:
+            await self._student_search.forget(ctx.user_id)
         async with self._uow() as uow:
             counts = await uow.privacy.erase(ctx.user_id)
             uow.access.audit(
@@ -132,8 +179,13 @@ class PrivacyService:
                 )
             )
             await uow.commit()
-        for purpose in PURPOSES:
-            await self._consents.withdraw(ctx.user_id, purpose, now=now)
+        if self._assistant is not None:
+            threads, messages = await self._assistant.erase(ctx.user_id)
+            counts["assistant_threads"] = threads
+            counts["assistant_messages"] = messages
+        await self._consents.forget(ctx.user_id)
+        for eraser in self._final_erasers:
+            await eraser(ctx.user_id)
         return counts
 
     async def audit(self, ctx: AdmissionContext) -> list[AuditRecord]:

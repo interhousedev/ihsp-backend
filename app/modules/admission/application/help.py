@@ -8,6 +8,7 @@ from uuid import UUID
 
 from app.modules.admission.application.access import AccessPolicy
 from app.modules.admission.application.actor import AdmissionContext
+from app.modules.admission.application.staff import display_name
 from app.modules.admission.domain.errors import (
     AdmissionForbiddenError,
     AdmissionNotFoundError,
@@ -32,6 +33,8 @@ from app.modules.admission.domain.workflow import (
 )
 from app.modules.admission.ports.unit_of_work import AdmissionUnitOfWork, UowFactory
 from app.shared.clock import Clock
+from app.shared.contracts.files import FilePurpose, FilesApi
+from app.shared.contracts.identity import IdentityDirectory
 from app.shared.ids import new_id
 from app.shared.notifications import NotificationDraft, NotificationType
 from app.shared.rate_limit import RateLimiter
@@ -44,6 +47,7 @@ _OPEN_FOR_RESPONSE: frozenset[HelpStatus] = frozenset({"accepted", "delivered"})
 _LIVE_FOR_HELPER: frozenset[HelpStatus] = frozenset(
     {"assigned", "accepted", "delivered"}
 )
+_RESPONSE_PURPOSES = frozenset({FilePurpose.ADMISSION_DOCUMENT, FilePurpose.AI_UPLOAD})
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,12 +83,16 @@ class HelpService:
         access: AccessPolicy,
         clock: Clock,
         limiter: RateLimiter,
+        files: FilesApi | None = None,
+        identity: IdentityDirectory | None = None,
     ) -> None:
         """Keep the collaborators."""
         self._uow = uow_factory
         self._access = access
         self._clock = clock
         self._limiter = limiter
+        self._files = files
+        self._identity = identity
 
     async def _owner(self, ctx: AdmissionContext) -> None:
         resolution = await self._access.require(
@@ -112,6 +120,16 @@ class HelpService:
         ):
             raise AdmissionNotFoundError()
         return request
+
+    async def _check_file(self, ctx: AdmissionContext, file_id: UUID) -> None:
+        """A response file must be the helper's own upload with a known purpose."""
+        ref = await self._files.get(file_id) if self._files else None
+        if (
+            ref is None
+            or ref.owner_id != ctx.user_id
+            or ref.purpose not in _RESPONSE_PURPOSES
+        ):
+            raise AdmissionNotFoundError()
 
     async def create(
         self,
@@ -158,11 +176,17 @@ class HelpService:
         request.move("assigned")
         request.helper_user_id = helper_id
         await uow.help_proofs.save_request(request)
+        name = ""
+        if self._identity is not None:
+            ref = (await self._identity.get_users([request.student_id])).get(
+                request.student_id
+            )
+            name = display_name(ref) if ref else ""
         uow.notify(
             NotificationDraft(
                 user_id=helper_id,
                 type=NotificationType.ADMISSION_HELP_REQUESTED,
-                payload={"request_id": str(request.id)},
+                payload={"request_id": str(request.id), "student_name": name},
                 dedupe_key=f"help:{request.id}:assigned:{helper_id}",
             )
         )
@@ -245,6 +269,8 @@ class HelpService:
                 raise InvalidTransitionError(
                     params={"status": request.status, "target": "respond"}
                 )
+            if file_id is not None:
+                await self._check_file(ctx, file_id)
             response = await uow.help_proofs.add_response(
                 request.id,
                 author_user_id=ctx.user_id,
@@ -282,6 +308,7 @@ class HelpService:
                 raise AdmissionNotFoundError()
             responses = await uow.help_proofs.list_responses(request_id)
             if request.student_id == ctx.user_id:
+                await self._owner(ctx)
                 return HelpDetail(request, responses)
             if (
                 request.helper_user_id != ctx.user_id

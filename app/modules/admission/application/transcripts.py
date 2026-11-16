@@ -9,7 +9,9 @@ from uuid import UUID
 
 from app.modules.admission.application.access import AccessPolicy
 from app.modules.admission.application.actor import AdmissionContext
+from app.modules.admission.application.documents import DocumentView
 from app.modules.admission.application.runtime_settings import RuntimeSettingsService
+from app.modules.admission.application.staff_notice import permitted_staff
 from app.modules.admission.domain.documents import (
     DESTINATION_NOTE_LIMIT,
     PICKUP_LIMIT,
@@ -95,10 +97,12 @@ class TranscriptService:
             return {}
         return await self._identity.get_users(wanted)
 
-    async def _ids_with(self, roles: tuple[Role, ...]) -> list[UUID]:
-        if self._identity is None:
-            return []
-        return await self._identity.user_ids_with_roles(list(roles))
+    async def _notice_to(
+        self, roles: tuple[Role, ...], student_id: UUID, permission: Permission
+    ) -> list[UUID]:
+        return await permitted_staff(
+            self._identity, self._uow, self._access, roles, student_id, permission
+        )
 
     async def _view(self, items: list[Transcript]) -> list[TranscriptView]:
         users = await self._users(t.student_id for t in items)
@@ -147,7 +151,9 @@ class TranscriptService:
         res = await self._access.require(ctx, ctx.user_id, Permission.DOCUMENTS_READ)
         if not res.owner:
             raise AdmissionForbiddenError(params={"permission": "transcripts:request"})
-        officers = await self._ids_with((Role.TRANSCRIPT_OFFICER,))
+        officers = await self._notice_to(
+            (Role.TRANSCRIPT_OFFICER,), ctx.user_id, Permission.TRANSCRIPTS_FULFIL
+        )
         async with self._uow() as uow:
             existing = await uow.transcripts.open_of(ctx.user_id)
             if existing is not None:
@@ -189,7 +195,9 @@ class TranscriptService:
     async def _unrouted(
         self, uow: AdmissionUnitOfWork, request: Transcript, name: str
     ) -> None:
-        for user_id in await self._ids_with(_OVERSEE_ROLES):
+        for user_id in await self._notice_to(
+            _OVERSEE_ROLES, request.student_id, Permission.TRANSCRIPTS_OVERSEE
+        ):
             uow.notify(
                 NotificationDraft(
                     user_id=user_id,
@@ -231,22 +239,48 @@ class TranscriptService:
 
     # -- officer ---------------------------------------------------------
 
-    async def officer_queue(self, ctx: AdmissionContext) -> list[TranscriptView]:
-        """Open requests with name, class and destination note only."""
+    async def officer_queue(
+        self, ctx: AdmissionContext, status: str = "requested"
+    ) -> list[TranscriptView]:
+        """Requests of one status (open by default) with name, class and note only."""
         scope = await self._access.students_in_scope(ctx)
         async with self._uow() as uow:
-            items = await uow.transcripts.listing(scope, "requested")
-        allowed = []
-        for item in items:
-            await self._access.require(
-                ctx,
-                item.student_id,
-                Permission.TRANSCRIPTS_FULFIL,
-                object_type="transcript",
-                object_id=item.id,
-            )
-            allowed.append(item)
+            items = await uow.transcripts.listing(scope, status)
+        allowed = await self._permitted(
+            ctx, items, Permission.TRANSCRIPTS_FULFIL, "officer_queue"
+        )
         return await self._view(allowed)
+
+    async def _permitted(
+        self,
+        ctx: AdmissionContext,
+        items: list[Transcript],
+        permission: Permission,
+        listing: str,
+    ) -> list[Transcript]:
+        """Keep the rows the caller may act on; one audit entry for the list."""
+        allowed: list[Transcript] = []
+        for item in items:
+            res = await self._access.resolve(ctx, item.student_id)
+            if res.in_scope and permission in res.permissions:
+                allowed.append(item)
+        if allowed and not all(i.student_id == ctx.user_id for i in allowed):
+            async with self._uow() as uow:
+                uow.access.audit(
+                    AuditEvent(
+                        action="transcript.listed",
+                        actor_id=ctx.user_id,
+                        student_id=None,
+                        object_type="transcript",
+                        meta={
+                            "list": listing,
+                            "permission": permission.value,
+                            "count": len(allowed),
+                        },
+                    )
+                )
+                await uow.commit()
+        return allowed
 
     async def pickup_for(self, ctx: AdmissionContext) -> dict[str, str] | None:
         """The pickup text of the officer, else the admin default."""
@@ -397,16 +431,9 @@ class TranscriptService:
         scope = await self._access.students_in_scope(ctx)
         async with self._uow() as uow:
             items = await uow.transcripts.listing(scope, status)
-        out = []
-        for item in items:
-            await self._access.require(
-                ctx,
-                item.student_id,
-                Permission.TRANSCRIPTS_OVERSEE,
-                object_type="transcript",
-                object_id=item.id,
-            )
-            out.append(item)
+        out = await self._permitted(
+            ctx, items, Permission.TRANSCRIPTS_OVERSEE, "overview"
+        )
         return await self._view(out)
 
     async def remind(self, ctx: AdmissionContext, request_id: UUID) -> Transcript:
@@ -438,7 +465,11 @@ class TranscriptService:
                 "request_id_b64": uuid_to_b64(saved.id),
             }
             stamp = int(now.timestamp())
-            for officer in await self._ids_with((Role.TRANSCRIPT_OFFICER,)):
+            for officer in await self._notice_to(
+                (Role.TRANSCRIPT_OFFICER,),
+                saved.student_id,
+                Permission.TRANSCRIPTS_FULFIL,
+            ):
                 uow.notify(
                     NotificationDraft(
                         user_id=officer,
@@ -457,7 +488,7 @@ class TranscriptService:
         *,
         name: str,
         data: bytes,
-    ) -> DocumentRecord:
+    ) -> DocumentView:
         """Attach the scanned transcript (a confidential document) to the request."""
         if self._files is None:
             raise AdmissionNotFoundError()
@@ -508,16 +539,28 @@ class TranscriptService:
                 request.document_id = doc.id
                 await uow.transcripts.save(request, expected_lock=request.lock_version)
             users = await self._users([request.student_id])
-            uow.notify(
-                NotificationDraft(
-                    user_id=request.student_id,
-                    type=NotificationType.TRANSCRIPT_SCAN_UPLOADED,
-                    payload={
-                        "student_name": full_name(users.get(request.student_id)),
-                        "student_id": str(request.student_id),
-                    },
-                    dedupe_key=f"transcript:{doc.id}:scan:{doc.current_version}",
-                )
+            overseers = await permitted_staff(
+                self._identity,
+                self._uow,
+                self._access,
+                _OVERSEE_ROLES,
+                request.student_id,
+                Permission.TRANSCRIPTS_OVERSEE,
             )
+            for staff_id in overseers:
+                uow.notify(
+                    NotificationDraft(
+                        user_id=staff_id,
+                        type=NotificationType.TRANSCRIPT_SCAN_UPLOADED,
+                        payload={
+                            "student_name": full_name(users.get(request.student_id)),
+                            "student_id": str(request.student_id),
+                        },
+                        dedupe_key=(
+                            f"transcript:{doc.id}:scan:{doc.current_version}:{staff_id}"
+                        ),
+                    )
+                )
+            versions = await uow.documents.versions(doc.id)
             await uow.commit()
-        return doc
+        return DocumentView(doc, versions, [], False)

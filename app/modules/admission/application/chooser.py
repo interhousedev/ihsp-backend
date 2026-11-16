@@ -10,6 +10,7 @@ from app.modules.admission.application.actor import AdmissionContext
 from app.modules.admission.application.checklist import ensure_entry, ensure_shared
 from app.modules.admission.application.estimates import EstimateView, view_estimate
 from app.modules.admission.application.runtime_settings import RuntimeSettingsService
+from app.modules.admission.application.staff_notice import permitted_staff
 from app.modules.admission.domain.chooser import (
     AffordabilityCheck,
     CatalogFilters,
@@ -460,7 +461,15 @@ class ListService:
         ref = users.get(student_id)
         name = f"{ref.last_name} {ref.first_name}".strip() if ref else ""
         stamp = check.requested_sign_off_at
-        for user_id in await self._identity.user_ids_with_roles([Role.COUNSELOR]):
+        recipients = await permitted_staff(
+            self._identity,
+            self._uow,
+            self._access,
+            [Role.COUNSELOR],
+            student_id,
+            Permission.AFFORDABILITY_SIGN_OFF,
+        )
+        for user_id in recipients:
             uow.notify(
                 NotificationDraft(
                     user_id=user_id,

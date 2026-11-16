@@ -1,33 +1,49 @@
 """`GET /v1/admission/config` and `GET /v1/admission/me`."""
 
 import datetime as dt
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, get_args
 
 from app.modules.admission.application.actor import AdmissionContext
 from app.modules.admission.application.runtime_settings import RuntimeSettingsService
+from app.modules.admission.application.tasks import HORIZONS
 from app.modules.admission.domain import questions as q
 from app.modules.admission.domain.access import IneligibleReason
 from app.modules.admission.domain.chooser import (
     BINDING_ROUNDS,
     UNRESOLVED_AFFORDABILITY,
 )
+from app.modules.admission.domain.countries import COUNTRIES
 from app.modules.admission.domain.documents import (
     MILESTONE_KINDS,
     REJECT_REASON_CODES,
     REMINDER_CHANNELS,
     REMINDER_OFFSETS,
+    UPLOAD_MIME,
     DeadlineStatus,
 )
 from app.modules.admission.domain.entitlement import ActorKind
 from app.modules.admission.domain.goal_plan import GoalStatus
-from app.modules.admission.domain.items import MAX_ACTIVITIES, MAX_HONORS
+from app.modules.admission.domain.items import (
+    ACTIVITY_TYPES,
+    GRADES,
+    MAX_ACTIVITIES,
+    MAX_DRAFTS,
+    MAX_HONORS,
+    RECOGNITION_LEVELS,
+    TIMINGS,
+)
 from app.modules.admission.domain.permissions import BUILTIN_ROLES, BuiltinRole
 from app.modules.admission.domain.profile import Stage
 from app.modules.admission.domain.runtime_settings import (
     ESTIMATES_STUDENT_VISIBLE,
     WELLBEING_QUESTIONS,
 )
+from app.modules.admission.domain.tasks import LINK_KINDS as TASK_LINK_KINDS
+from app.modules.admission.domain.tasks import PRIORITIES as TASK_PRIORITIES
+from app.modules.admission.domain.tasks import SOURCES as TASK_SOURCES
+from app.modules.admission.domain.tasks import STATUSES as TASK_STATUSES
 from app.modules.admission.domain.workflow import (
     CONFIDENTIAL_KINDS,
     AffordabilityStatus,
@@ -60,6 +76,7 @@ OPTION_LISTS: dict[str, tuple[str, ...]] = {
     "sat_act": q.SAT_ACT,
     "other_tests": q.OTHER_TESTS,
     "subjects": q.SUBJECTS,
+    "upload_mime": UPLOAD_MIME,
 }
 """Option ids of the setup wizard; the web holds their texts."""
 
@@ -80,6 +97,11 @@ class WorkflowOptions:
     milestone_statuses: tuple[str, ...]
     affordability_statuses: tuple[str, ...]
     affordability_ack_statuses: tuple[str, ...]
+    task_statuses: tuple[str, ...]
+    task_priorities: tuple[str, ...]
+    task_sources: tuple[str, ...]
+    task_link_kinds: tuple[str, ...]
+    task_horizons: tuple[str, ...]
 
 
 WORKFLOW_OPTIONS = WorkflowOptions(
@@ -95,6 +117,11 @@ WORKFLOW_OPTIONS = WorkflowOptions(
     milestone_statuses=get_args(GoalStatus),
     affordability_statuses=get_args(AffordabilityStatus),
     affordability_ack_statuses=UNRESOLVED_AFFORDABILITY,
+    task_statuses=TASK_STATUSES,
+    task_priorities=TASK_PRIORITIES,
+    task_sources=TASK_SOURCES,
+    task_link_kinds=TASK_LINK_KINDS,
+    task_horizons=HORIZONS,
 )
 
 
@@ -124,8 +151,10 @@ class GetConfig:
         settings: AdmissionSettings,
         runtime: RuntimeSettingsService,
         limits: LimitsProvider,
+        study_fields: Callable[[], tuple[str, ...]] = lambda: (),
     ) -> None:
         """Keep the environment settings, the runtime snapshot and the limits."""
+        self._study_fields = study_fields
         self._settings = settings
         self._limits = limits
         self._runtime = runtime
@@ -142,7 +171,15 @@ class GetConfig:
         return AdmissionConfig(
             question_set=q.QUESTION_SET_VERSION,
             questions=questions,
-            options=OPTION_LISTS,
+            options={
+                **OPTION_LISTS,
+                "countries": COUNTRIES,
+                "fields": self._study_fields(),
+                "activity_types": ACTIVITY_TYPES,
+                "recognition_levels": RECOGNITION_LEVELS,
+                "activity_timing": TIMINGS,
+                "item_grades": tuple(str(g) for g in GRADES),
+            },
             stages=get_args(Stage),
             limits={
                 name.removeprefix("admit_"): value
@@ -158,7 +195,11 @@ class GetConfig:
             wellbeing_questions_enabled=wellbeing,
             sub_roles=BUILTIN_ROLES,
             pickup_location=rs.pickup_location(),
-            item_caps={"activities": MAX_ACTIVITIES, "honors": MAX_HONORS},
+            item_caps={
+                "activities": MAX_ACTIVITIES,
+                "honors": MAX_HONORS,
+                "drafts": MAX_DRAFTS,
+            },
             workflow=WORKFLOW_OPTIONS,
         )
 
