@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- Admission: `GET /v1/admission/consent/purposes` (localized titles and texts), `student_name` in the caseload rows and `stages` in the config.
+- Admission notifications for staff comments, affordability sign-off requests and grants, and ready item reviews; app map entries for the chooser, documents, help, activities and setup pages.
+- The `admission` Hydra client, the `admission.ihsu.uz` host in compose and nginx, and the `X-IHSP-App` CORS header.
+
+### Changed
+
+- Admission: a binding round without an affordability sign-off answers `admission/affordability_gate`; proofs with several sources answer `admission/proof_source`; help notifications carry `request_id`.
+
 ### Security
 
 - The edge nginx runs 1.31.9, which fixes the ten vulnerabilities disclosed on 2026-11-18, among them the HTTP/2 remote code execution CVE-2026-123007 ("nginx2root"). The web image keeps `nginx-unprivileged` 1.31.7 until upstream publishes 1.31.9; it listens only on the internal network behind the edge nginx.
