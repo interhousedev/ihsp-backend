@@ -4,16 +4,18 @@ import datetime as dt
 from collections.abc import Sequence
 from uuid import UUID
 
-from app.modules.admission.ports.consent import PurposeGrant
+from app.modules.admission.ports.consent import PURPOSE_VERSIONS, PurposeGrant
 from app.modules.legal.infrastructure.orm.tables import PurposeConsentRow
 from app.shared.ids import new_id
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 
 def _grant(row: PurposeConsentRow) -> PurposeGrant:
-    return PurposeGrant(row.purpose, row.method, row.given_at, row.withdrawn_at)
+    return PurposeGrant(
+        row.purpose, row.method, row.given_at, row.withdrawn_at, row.version
+    )
 
 
 class SqlPurposeConsents:
@@ -29,13 +31,19 @@ class SqlPurposeConsents:
             return {}
         async with self._sm() as s:
             rows = await s.execute(
-                select(PurposeConsentRow.user_id, PurposeConsentRow.purpose).where(
+                select(
+                    PurposeConsentRow.user_id,
+                    PurposeConsentRow.purpose,
+                    PurposeConsentRow.version,
+                ).where(
                     PurposeConsentRow.user_id.in_(list(user_ids)),
                     PurposeConsentRow.withdrawn_at.is_(None),
                 )
             )
         out: dict[UUID, set[str]] = {}
-        for user_id, purpose in rows.tuples():
+        for user_id, purpose, version in rows.tuples():
+            if version != PURPOSE_VERSIONS.get(purpose, 1):
+                continue
             out.setdefault(user_id, set()).add(purpose)
         return {u: frozenset(p) for u, p in out.items()}
 
@@ -51,6 +59,7 @@ class SqlPurposeConsents:
         self, user_id: UUID, purpose: str, *, now: dt.datetime, method: str = "app"
     ) -> PurposeGrant:
         """Record the consent; a purpose already in force is returned unchanged."""
+        version = PURPOSE_VERSIONS[purpose]
         async with self._sm() as s, s.begin():
             row = await s.scalar(
                 select(PurposeConsentRow)
@@ -67,10 +76,12 @@ class SqlPurposeConsents:
                     purpose=purpose,
                     method=method,
                     given_at=now,
+                    version=version,
                 )
                 s.add(row)
-            elif row.withdrawn_at is not None:
+            elif row.withdrawn_at is not None or row.version != version:
                 row.method, row.given_at, row.withdrawn_at = method, now, None
+                row.version = version
             return _grant(row)
 
     async def withdraw(self, user_id: UUID, purpose: str, *, now: dt.datetime) -> bool:
@@ -89,3 +100,10 @@ class SqlPurposeConsents:
                 return False
             row.withdrawn_at = now
             return True
+
+    async def forget(self, user_id: UUID) -> None:
+        """Delete every stored answer of the user."""
+        async with self._sm() as s, s.begin():
+            await s.execute(
+                delete(PurposeConsentRow).where(PurposeConsentRow.user_id == user_id)
+            )

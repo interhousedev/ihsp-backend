@@ -118,3 +118,4 @@ class PurposeConsentRow(IdMixin, TimestampMixin, Base):
     method: Mapped[str] = mapped_column(String(10), server_default="app")
     given_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     withdrawn_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    version: Mapped[int] = mapped_column(Integer, server_default="1")

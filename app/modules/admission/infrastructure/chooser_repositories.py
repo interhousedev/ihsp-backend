@@ -160,6 +160,8 @@ class SqlCatalogRepository:
                     aid_basis=policy.intl_need_based if policy else None,
                     merit_available=policy.merit_available if policy else None,
                     scholarship_count=int(counts.get(r.id, 0)),
+                    logo_url=r.logo_url,
+                    cover_url=r.cover_url,
                 )
             )
         return out

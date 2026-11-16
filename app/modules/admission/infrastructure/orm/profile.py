@@ -114,6 +114,7 @@ class ItemRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
     __tablename__ = "items"
     __table_args__ = (
         check_in("kind", ("activity", "honor")),
+        check_in("status", ("draft", "ready")),
         max_len("position", 50),
         max_len("org", 100),
         CheckConstraint(
@@ -140,6 +141,9 @@ class ItemRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
     role: Mapped[str | None] = mapped_column(String(100))
     outcome: Mapped[str | None] = mapped_column(Text)
     sort_order: Mapped[int] = mapped_column(Integer, server_default=text("0"))
+    status: Mapped[str] = mapped_column(String(8), server_default="draft")
+    timing: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
+    intend_in_college: Mapped[bool | None] = mapped_column(Boolean)
 
 
 class ItemMetricRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
@@ -324,7 +328,11 @@ class EssayRow(IdMixin, UpdatedMixin, CreatedMixin, LockMixin, Base):
     """An essay; `list_entry_id` null is the personal statement."""
 
     __tablename__ = "essays"
-    __table_args__ = (check_in("status", ("draft", "final")), S)
+    __table_args__ = (
+        check_in("status", ("draft", "final")),
+        check_in("kind", ("personal_statement", "supplemental", "other")),
+        S,
+    )
 
     student_id: Mapped[UUID] = mapped_column(Uuid, index=True)
     list_entry_id: Mapped[UUID | None] = mapped_column(
@@ -335,6 +343,16 @@ class EssayRow(IdMixin, UpdatedMixin, CreatedMixin, LockMixin, Base):
     current_version: Mapped[int] = mapped_column(Integer, server_default=text("0"))
     body: Mapped[str] = mapped_column(Text, server_default="")
     status: Mapped[str] = mapped_column(String(8), server_default="draft")
+    kind: Mapped[str] = mapped_column(String(20), server_default="personal_statement")
+    title: Mapped[str] = mapped_column(String(120), server_default="")
+    notes: Mapped[str] = mapped_column(Text, server_default="")
+    plan: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB, server_default=text("'[]'")
+    )
+    links: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB, server_default=text("'[]'")
+    )
+    last_snapshot_at: Mapped[datetime | None]
 
 
 class EssayVersionRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
@@ -344,6 +362,7 @@ class EssayVersionRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
     __table_args__ = (
         UniqueConstraint("essay_id", "version", name="uq_essay_versions_version"),
         max_len("name", 60),
+        check_in("source", ("interval", "explicit", "restore")),
         S,
     )
 
@@ -354,6 +373,29 @@ class EssayVersionRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
     name: Mapped[str | None] = mapped_column(String(60))
     body: Mapped[str] = mapped_column(Text)
     created_by: Mapped[UUID] = mapped_column(Uuid)
+    source: Mapped[str] = mapped_column(String(10), server_default="explicit")
+    shared: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    word_count: Mapped[int] = mapped_column(Integer, server_default=text("0"))
+
+
+class EssayIdeaRow(IdMixin, UpdatedMixin, CreatedMixin, LockMixin, Base):
+    """A brainstorm card of the ideas board."""
+
+    __tablename__ = "essay_ideas"
+    __table_args__ = (
+        check_in("status", ("explore", "keep", "drop")),
+        max_len("body", 1000),
+        S,
+    )
+
+    student_id: Mapped[UUID] = mapped_column(Uuid, index=True)
+    essay_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("admission.essays.id", ondelete="CASCADE"), index=True
+    )
+    body: Mapped[str] = mapped_column(Text)
+    tags: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
+    status: Mapped[str] = mapped_column(String(8), server_default="explore")
+    sort_order: Mapped[int] = mapped_column(Integer, server_default=text("0"))
 
 
 class CommentRow(IdMixin, CreatedMixin, UpdatedMixin, Base):

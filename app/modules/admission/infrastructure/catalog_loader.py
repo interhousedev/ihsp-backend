@@ -110,6 +110,8 @@ class _Loader:
                 city=d["city"],
                 kind="university",
                 status="published" if verified else "provisional",
+                logo_url=d.get("logo_url"),
+                cover_url=d.get("cover_url"),
             )
         )
         base = {"url": d["source_url"], "year": d["year"], "verified": verified}
@@ -131,6 +133,9 @@ class _Loader:
             )
 
         await self.fact(inst, "city_type", d.get("city_type"), note=None, **base)
+        await self.fact(
+            inst, "institution_type", d.get("institution_type"), note=None, **base
+        )
         await self.fact(inst, "fields", d.get("fields") or None, note=None, **base)
         rate = d.get("acceptance_rate")
         if rate and (rate.get("min") is not None or rate.get("max") is not None):

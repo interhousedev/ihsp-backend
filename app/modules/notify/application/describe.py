@@ -753,11 +753,34 @@ def _document_rejected(p: dict[str, Any], v: _View) -> Description:
 
 
 def _admission_deadline_reminder(p: dict[str, Any], v: _View) -> Description:
+    if p.get("source"):
+        return _admission_calendar_reminder(p, v)
     return Description(
         v.t("notify-deadline-reminder-title"),
         v.t(
             "notify-deadline-reminder-body",
             institution=p.get("institution", ""),
+            days=p.get("days", ""),
+            due=fmt_date(p.get("due_utc")),
+        ),
+        _adm(v, "/deadlines/"),
+    )
+
+
+def _admission_calendar_reminder(p: dict[str, Any], v: _View) -> Description:
+    """A calendar entry reminder; the title is localised when it has a key."""
+    title = str(p.get("title", ""))
+    key = p.get("title_key")
+    if isinstance(key, str) and key:
+        text = v.t(key)
+        if text != key:
+            subject = p.get("subject")
+            title = f"{text} · {subject}" if subject else text
+    return Description(
+        v.t("notify-calendar-reminder-title"),
+        v.t(
+            "notify-calendar-reminder-body",
+            title=title,
             days=p.get("days", ""),
             due=fmt_date(p.get("due_utc")),
         ),
@@ -785,11 +808,19 @@ def _admission_help_requested(p: dict[str, Any], v: _View) -> Description:
     )
 
 
+_HELP_EVENTS = frozenset(
+    {"claimed", "guest_opened", "accepted", "declined", "delivered"}
+)
+
+
 def _admission_help_responded(p: dict[str, Any], v: _View) -> Description:
+    event = str(p.get("event") or "")
+    suffix = event.replace("_", "-") if event in _HELP_EVENTS else "responded"
+    request_id = p.get("request_id") or p.get("help_request_id") or ""
     return Description(
-        v.t("notify-admission-help-responded-title"),
-        v.t("notify-admission-help-responded-body"),
-        _adm(v, f"/help/request/?id={p.get('request_id', '')}"),
+        v.t(f"notify-admission-help-{suffix}-title"),
+        v.t(f"notify-admission-help-{suffix}-body"),
+        _adm(v, f"/help/request/?id={request_id}"),
     )
 
 

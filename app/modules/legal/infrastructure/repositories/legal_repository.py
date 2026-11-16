@@ -14,7 +14,7 @@ from app.modules.legal.infrastructure.orm.tables import (
     LegalDocumentRow,
 )
 
-from sqlalchemy import func, select, text, update
+from sqlalchemy import delete, func, select, text, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -195,3 +195,13 @@ class SqlLegalRepository:
                 or 0
             )
         return counts
+
+    async def delete_acceptances(self, user_id: UUID, app_scope: str) -> int:
+        """Delete the user's acceptances of one scope; return how many."""
+        result = await self.session.execute(
+            delete(AcceptanceRow).where(
+                AcceptanceRow.user_id == user_id,
+                AcceptanceRow.app_scope == app_scope,
+            )
+        )
+        return int(getattr(result, "rowcount", 0) or 0)

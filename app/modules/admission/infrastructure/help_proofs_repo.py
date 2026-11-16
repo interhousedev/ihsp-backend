@@ -327,15 +327,14 @@ class SqlHelpProofsRepository:
             )
         )
 
-    async def activities_for_helper(self, student_id: UUID) -> list[HelperActivity]:
+    async def activities_for_helper(
+        self, student_id: UUID, *, item_id: UUID | None = None
+    ) -> list[HelperActivity]:
         """Return the reduced activity list (current metrics only)."""
-        items = list(
-            await self.session.scalars(
-                select(ItemRow)
-                .where(ItemRow.student_id == student_id)
-                .order_by(ItemRow.sort_order)
-            )
-        )
+        stmt = select(ItemRow).where(ItemRow.student_id == student_id)
+        if item_id is not None:
+            stmt = stmt.where(ItemRow.id == item_id)
+        items = list(await self.session.scalars(stmt.order_by(ItemRow.sort_order)))
         if not items:
             return []
         metrics = await self.session.scalars(

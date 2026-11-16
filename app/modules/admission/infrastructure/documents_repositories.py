@@ -96,6 +96,8 @@ def _item(row: ChecklistItemRow) -> ChecklistItem:
         due_utc=row.due_utc,
         document_id=row.document_id,
         source_url=row.source_url,
+        important=row.important,
+        urgent_override=row.urgent_override,
         rule_version=row.rule_version,
         lock_version=row.lock_version,
     )
@@ -358,6 +360,9 @@ class SqlChecklistRepository:
         row.status = item.status
         row.due_utc = item.due_utc
         row.document_id = item.document_id
+        row.source_url = item.source_url
+        row.important = item.important
+        row.urgent_override = item.urgent_override
         row.lock_version = expected_lock + 1
         await self._s.flush()
         return _item(row)

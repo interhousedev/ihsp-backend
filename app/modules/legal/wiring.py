@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from app.modules.legal.application.accept import AcceptDocuments
 from app.modules.legal.application.drafts import PublishDraft, SaveDraft
+from app.modules.legal.application.forget import ForgetScope
 from app.modules.legal.application.queries import (
     CountAcceptances,
     GetCurrentDocument,
@@ -46,6 +47,7 @@ class LegalServices:
     publish: PublishDraft
     count_acceptances: CountAcceptances
     overview: ListOverview
+    forget_scope: ForgetScope
     hooks: LegalHooks
 
 
@@ -77,6 +79,9 @@ def build(deps: ModuleDeps, overrides: LegalOverrides | None = None) -> LegalSer
         ),
         count_acceptances=CountAcceptances(uow_factory=uow_factory),
         overview=ListOverview(uow_factory=uow_factory),
+        forget_scope=ForgetScope(
+            uow_factory=uow_factory, require_consent=require_consent
+        ),
         hooks=LegalHooks(
             consent=CurrentVersions(list_current), writer=write_acceptances
         ),

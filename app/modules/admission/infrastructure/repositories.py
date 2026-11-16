@@ -16,6 +16,7 @@ from app.modules.admission.domain.access import (
 from app.modules.admission.domain.courses import Course, CourseSource
 from app.modules.admission.domain.errors import AdmissionNotFoundError
 from app.modules.admission.domain.permissions import Permission
+from app.modules.admission.domain.questions import QUESTION_SET_VERSION
 from app.modules.admission.infrastructure.orm.access import (
     AuditEventRow,
     EntitlementRow,
@@ -29,6 +30,7 @@ from app.modules.admission.ports.repositories import AuditEvent, OptIns
 from app.shared.ids import new_id
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 LIVE_HELP_STATUSES = ("assigned", "accepted", "delivered")
@@ -139,6 +141,21 @@ class SqlAccessRepository:
         )
         return {sid: OptIns(mentee, mentor) for sid, mentee, mentor in rows.tuples()}
 
+    async def set_opt_in(self, user_id: UUID, field: str, value: bool) -> None:
+        """Upsert one mentoring switch of the user's profile row."""
+        if field not in ("mentee_opt_in", "mentor_opt_in"):
+            raise ValueError(field)
+        stmt = pg_insert(ProfileRow).values(
+            student_id=user_id,
+            question_set_version=QUESTION_SET_VERSION,
+            **{field: value},
+        )
+        await self._s.execute(
+            stmt.on_conflict_do_update(
+                index_elements=["student_id"], set_={field: value}
+            )
+        )
+
     def audit(self, event: AuditEvent) -> None:
         """Add the audit row to the session."""
         self._s.add(
@@ -232,3 +249,15 @@ class SqlRuntimeSettingsRepository:
             select(RuntimeSettingRow.key, RuntimeSettingRow.value)
         )
         return dict(rows.tuples().all())
+
+    async def save(self, key: str, value: Any, user_id: UUID) -> None:
+        """Upsert one value."""
+        stmt = pg_insert(RuntimeSettingRow).values(
+            key=key, value=value, updated_by=user_id
+        )
+        await self._s.execute(
+            stmt.on_conflict_do_update(
+                index_elements=["key"],
+                set_={"value": stmt.excluded.value, "updated_by": user_id},
+            )
+        )

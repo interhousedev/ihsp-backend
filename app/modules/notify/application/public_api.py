@@ -2,7 +2,7 @@
 
 import datetime as dt
 import hashlib
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from dataclasses import asdict
 from typing import Any
 from uuid import UUID
@@ -51,6 +51,15 @@ class NotifyApiImpl:
         """Return the number of unread notifications."""
         async with self.uow_factory() as uow:
             return await uow.notifications.unread_count(user_id, now=self.clock.now())
+
+    async def delete_for_user(
+        self, user_id: UUID, types: Collection[NotificationType]
+    ) -> int:
+        """Delete the user's notifications of the given types for good."""
+        async with self.uow_factory() as uow:
+            removed = await uow.notifications.delete_for_user_types(user_id, types)
+            await uow.commit()
+        return removed
 
     async def latest_announcements(
         self, user_id: UUID, limit: int = 3

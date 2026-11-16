@@ -32,7 +32,14 @@ from app.shared.contracts.files import FilePurpose, FileScope
 from app.shared.ids import new_id
 
 UPLOAD_PURPOSES = (
-    frozenset({FilePurpose.AI_UPLOAD, FilePurpose.LINK, FilePurpose.FEEDBACK})
+    frozenset(
+        {
+            FilePurpose.AI_UPLOAD,
+            FilePurpose.LINK,
+            FilePurpose.FEEDBACK,
+            FilePurpose.ADMISSION_DOCUMENT,
+        }
+    )
     | LIBRARY_PURPOSES
     | VIDEO_PURPOSES
 )

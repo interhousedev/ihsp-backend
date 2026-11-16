@@ -1,5 +1,6 @@
 """SQL repository of notifications (Core statements on notify.notifications)."""
 
+from collections.abc import Collection
 from datetime import datetime
 from typing import Any, cast
 from uuid import UUID
@@ -216,5 +217,18 @@ class SqlNotificationRepository:
     async def purge_created_before(self, cutoff: datetime) -> int:
         """Delete rows created before the cutoff."""
         stmt = sa.delete(self.table).where(self.table.c.created_at < cutoff)
+        result = cast(CursorResult[Any], await self.session.execute(stmt))
+        return int(result.rowcount)
+
+    async def delete_for_user_types(
+        self, user_id: UUID, types: Collection[NotificationType]
+    ) -> int:
+        """Delete the user's rows of the given types."""
+        if not types:
+            return 0
+        c = self.table.c
+        stmt = sa.delete(self.table).where(
+            c.user_id == user_id, c.type.in_([str(t) for t in types])
+        )
         result = cast(CursorResult[Any], await self.session.execute(stmt))
         return int(result.rowcount)

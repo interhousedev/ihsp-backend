@@ -12,6 +12,8 @@ import json
 from pathlib import Path
 from typing import Any, Literal
 
+from app.modules.admission.infrastructure.catalog_data.profiles import PROFILES
+
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 _DIR = Path(__file__).parent
@@ -135,12 +137,26 @@ def _read_all() -> list[Seed]:
 
 
 def load_seed() -> list[dict[str, Any]]:
-    """All institutions from every ``*.json`` file, validated, as plain dicts."""
+    """All institutions from every ``*.json`` file, validated, as plain dicts.
+
+    ``PROFILES`` adds the city type, institution type and demo media by slug.
+    """
     return [
-        i.model_dump(mode="json") for seed in _read_all() for i in seed.institutions
+        {**i.model_dump(mode="json"), **PROFILES.get(i.slug, {})}
+        for seed in _read_all()
+        for i in seed.institutions
     ]
 
 
 def load_programs() -> list[dict[str, Any]]:
     """All national programmes from every ``*.json`` file, validated."""
     return [p.model_dump(mode="json") for seed in _read_all() for p in seed.programs]
+
+
+def study_fields() -> tuple[str, ...]:
+    """Fields of study of the seed catalog, one spelling per name (case-insensitive)."""
+    seen: dict[str, str] = {}
+    for institution in load_seed():
+        for name in institution["fields"]:
+            seen.setdefault(name.strip().casefold(), name.strip())
+    return tuple(sorted(seen.values(), key=str.casefold))

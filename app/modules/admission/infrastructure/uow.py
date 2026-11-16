@@ -2,6 +2,9 @@
 
 from typing import Any
 
+from app.modules.admission.infrastructure.career_repository import (
+    SqlCareerRepository,
+)
 from app.modules.admission.infrastructure.catalog_proposals_repository import (
     SqlCatalogProposalRepository,
 )
@@ -15,6 +18,9 @@ from app.modules.admission.infrastructure.documents_repositories import (
     SqlDocumentRepository,
     SqlTranscriptRepository,
 )
+from app.modules.admission.infrastructure.essays_repository import (
+    SqlEssayRepository,
+)
 from app.modules.admission.infrastructure.goal_plan_repository import (
     SqlGoalRepository,
 )
@@ -22,6 +28,13 @@ from app.modules.admission.infrastructure.help_proofs_repo import (
     SqlHelpProofsRepository,
 )
 from app.modules.admission.infrastructure.items_repository import SqlItemRepository
+from app.modules.admission.infrastructure.matching_repository import (
+    SqlDecisionRepository,
+    SqlPreferenceRepository,
+)
+from app.modules.admission.infrastructure.opportunities_repository import (
+    SqlOpportunityRepository,
+)
 from app.modules.admission.infrastructure.profile_repositories import (
     SqlProfileRepository,
     SqlReviewRepository,
@@ -35,6 +48,10 @@ from app.modules.admission.infrastructure.staff_repositories import (
     SqlCommentRepository,
     SqlPrivacyRepository,
     SqlStaffRepository,
+)
+from app.modules.admission.infrastructure.tasks_repository import SqlTaskRepository
+from app.modules.admission.infrastructure.test_scores_repository import (
+    SqlScoreRepository,
 )
 from app.shared.db.uow import SqlUnitOfWork
 from app.shared.notifications import NotificationOutbox
@@ -61,6 +78,13 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
     transcripts: SqlTranscriptRepository
     items: SqlItemRepository
     goals: SqlGoalRepository
+    career: SqlCareerRepository
+    essays: SqlEssayRepository
+    opportunities: SqlOpportunityRepository
+    tasks: SqlTaskRepository
+    test_scores: SqlScoreRepository
+    preferences: SqlPreferenceRepository
+    decisions: SqlDecisionRepository
 
     def __init__(
         self,
@@ -92,6 +116,13 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
         self.transcripts = SqlTranscriptRepository(self.session)
         self.items = SqlItemRepository(self.session)
         self.goals = SqlGoalRepository(self.session)
+        self.career = SqlCareerRepository(self.session)
+        self.essays = SqlEssayRepository(self.session)
+        self.opportunities = SqlOpportunityRepository(self.session)
+        self.tasks = SqlTaskRepository(self.session)
+        self.test_scores = SqlScoreRepository(self.session)
+        self.preferences = SqlPreferenceRepository(self.session)
+        self.decisions = SqlDecisionRepository(self.session)
 
     async def cancel_notification(self, dedupe_key: str) -> bool:
         """Cancel a still-pending notification; False when it was claimed."""

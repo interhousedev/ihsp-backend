@@ -5,6 +5,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
+from app.modules.admission.domain.documents import MILESTONE_KINDS
 from app.modules.admission.infrastructure.orm._common import (
     CreatedMixin,
     LockMixin,
@@ -195,11 +196,7 @@ class MilestoneRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
 
     __tablename__ = "milestones"
     __table_args__ = (
-        check_in(
-            "kind",
-            ("application", "aid", "test_send", "rec", "docs", "decision")
-            + ("deposit", "fee"),
-        ),
+        check_in("kind", MILESTONE_KINDS),
         S,
     )
 
@@ -246,6 +243,8 @@ class ChecklistItemRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
         ForeignKey("admission.documents.id", ondelete="SET NULL")
     )
     source_url: Mapped[str | None] = mapped_column(String(2000))
+    important: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    urgent_override: Mapped[bool | None] = mapped_column(Boolean)
     rule_version: Mapped[int] = mapped_column(Integer, server_default=text("1"))
 
 

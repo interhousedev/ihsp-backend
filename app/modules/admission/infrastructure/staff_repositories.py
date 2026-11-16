@@ -2,7 +2,7 @@
 
 import datetime as dt
 from collections.abc import Sequence
-from typing import Any, cast
+from typing import Any, Final, cast
 from uuid import UUID
 
 from app.modules.admission.domain.access import (
@@ -24,9 +24,30 @@ from app.modules.admission.infrastructure.orm.access import (
     StaffRoleRow,
     StaffSavedViewRow,
 )
-from app.modules.admission.infrastructure.orm.applications import ChecklistItemRow
-from app.modules.admission.infrastructure.orm.help import GuestLinkRow, HelpRequestRow
-from app.modules.admission.infrastructure.orm.profile import CommentRow, ProfileRow
+from app.modules.admission.infrastructure.orm.applications import (
+    ChecklistItemRow,
+    DocumentRow,
+    DocumentVersionRow,
+)
+from app.modules.admission.infrastructure.orm.calendar import (
+    CalendarFeedRow,
+    CalendarReminderRow,
+)
+from app.modules.admission.infrastructure.orm.catalog import CatalogProposalRow
+from app.modules.admission.infrastructure.orm.help import (
+    GuestLinkRow,
+    HelpRequestRow,
+    HelpResponseRow,
+)
+from app.modules.admission.infrastructure.orm.opportunities import (
+    OpportunitySubmissionRow,
+)
+from app.modules.admission.infrastructure.orm.profile import (
+    CommentRow,
+    ItemRow,
+    ProfileRow,
+    ProofRow,
+)
 from app.modules.admission.infrastructure.repositories import _role
 from app.shared.db.base import Base
 from app.shared.ids import new_id
@@ -100,6 +121,15 @@ class SqlStaffRepository:
         row = await self._s.get(StaffRoleRow, role_id)
         return _role(row) if row else None
 
+    async def roles(self) -> list[StaffRole]:
+        """Return the live (not archived) sub-roles, builtin first."""
+        rows = await self._s.scalars(
+            select(StaffRoleRow)
+            .where(StaffRoleRow.archived_at.is_(None))
+            .order_by(StaffRoleRow.kind, StaffRoleRow.name)
+        )
+        return [_role(r) for r in rows]
+
     async def assignment(self, assignment_id: UUID) -> Assignment | None:
         """Return an assignment or None."""
         row = await self._s.get(StaffAssignmentRow, assignment_id)
@@ -107,6 +137,28 @@ class SqlStaffRepository:
             return None
         role = await self.role(row.staff_role_id)
         return _assignment(row, role) if role else None
+
+    async def live_assignments(self, kind: str, scope_kind: str) -> list[Assignment]:
+        """Return unrevoked root assignments of a role kind and scope kind."""
+        rows = (
+            await self._s.scalars(
+                select(StaffAssignmentRow)
+                .join(StaffRoleRow, StaffRoleRow.id == StaffAssignmentRow.staff_role_id)
+                .where(
+                    StaffRoleRow.kind == kind,
+                    StaffAssignmentRow.scope_kind == scope_kind,
+                    StaffAssignmentRow.revoked_at.is_(None),
+                    StaffAssignmentRow.parent_assignment_id.is_(None),
+                )
+                .order_by(StaffAssignmentRow.starts_at)
+            )
+        ).all()
+        out: list[Assignment] = []
+        for row in rows:
+            role = await self.role(row.staff_role_id)
+            if role is not None:
+                out.append(_assignment(row, role))
+        return out
 
     async def add_assignment(self, assignment: Assignment) -> Assignment:
         """Store a new assignment; a live duplicate is returned unchanged."""
@@ -329,6 +381,15 @@ def _student_tables() -> list[Any]:
     ]
 
 
+_USER_KEYED: Final[tuple[tuple[Any, str, bool], ...]] = (
+    (CalendarFeedRow.__table__, "user_id", False),
+    (CalendarReminderRow.__table__, "user_id", False),
+    (CatalogProposalRow.__table__, "proposed_by", True),
+    (OpportunitySubmissionRow.__table__, "submitted_by", True),
+)
+"""Tables keyed by user rather than student; proposals only while unapplied."""
+
+
 class SqlPrivacyRepository:
     """Export, erasure and audit view, generic over the student tables."""
 
@@ -363,7 +424,37 @@ class SqlPrivacyRepository:
             n = cast(Any, res).rowcount or 0
             if n:
                 counts[table.name] = n
+        for table, col, pending_only in _USER_KEYED:
+            cond = [table.c[col] == student_id]
+            if pending_only:
+                cond.append(table.c.applied_id.is_(None))
+            res = await self._s.execute(delete(table).where(*cond))
+            n = cast(Any, res).rowcount or 0
+            if n:
+                counts[table.name] = n
         return counts
+
+    async def stored_file_ids(self, student_id: UUID) -> list[UUID]:
+        """Return the file ids of document versions, proofs and help responses."""
+        docs = select(DocumentVersionRow.file_id).where(
+            DocumentVersionRow.document_id.in_(
+                select(DocumentRow.id).where(DocumentRow.student_id == student_id)
+            )
+        )
+        proofs = select(ProofRow.file_id).where(
+            ProofRow.file_id.is_not(None),
+            ProofRow.item_id.in_(
+                select(ItemRow.id).where(ItemRow.student_id == student_id)
+            ),
+        )
+        replies = select(HelpResponseRow.file_id).where(
+            HelpResponseRow.file_id.is_not(None),
+            HelpResponseRow.help_request_id.in_(
+                select(HelpRequestRow.id).where(HelpRequestRow.student_id == student_id)
+            ),
+        )
+        rows = await self._s.scalars(docs.union(proofs, replies))
+        return list(rows)
 
     async def audit(self, student_id: UUID, limit: int) -> list[AuditRecord]:
         """Return who accessed the student's data, newest first."""

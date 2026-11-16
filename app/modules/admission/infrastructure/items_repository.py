@@ -9,7 +9,7 @@ from app.modules.admission.domain.errors import (
     AdmissionConflictError,
     AdmissionNotFoundError,
 )
-from app.modules.admission.domain.items import Item, ItemKind
+from app.modules.admission.domain.items import Item, ItemKind, ItemStatus
 from app.modules.admission.infrastructure.orm.profile import (
     ItemInterviewRow,
     ItemMetricRow,
@@ -50,6 +50,9 @@ def _item(row: ItemRow) -> Item:
         position=row.sort_order,
         created_at=row.created_at,
         lock_version=row.lock_version,
+        status=cast(ItemStatus, row.status),
+        timing=tuple(row.timing or ()),
+        intend_in_college=row.intend_in_college,
     )
 
 
@@ -135,6 +138,9 @@ class SqlItemRepository:
             hours_week=item.hours_per_week,
             weeks_year=item.weeks_per_year,
             sort_order=item.position,
+            status=item.status,
+            timing=list(item.timing),
+            intend_in_college=item.intend_in_college,
             lock_version=0,
         )
         self._s.add(row)
@@ -156,6 +162,9 @@ class SqlItemRepository:
         row.grade_levels = list(item.grades)
         row.hours_week = item.hours_per_week
         row.weeks_year = item.weeks_per_year
+        row.status = item.status
+        row.timing = list(item.timing)
+        row.intend_in_college = item.intend_in_college
         row.lock_version = item.lock_version + 1
         await self._s.flush()
         await self._s.refresh(row)

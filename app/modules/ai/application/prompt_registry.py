@@ -33,6 +33,7 @@ from app.modules.ai.domain.prompt_registry import (
 from app.modules.ai.ports.prompts import (
     PromptAnalyticsReader,
     PromptCallStats,
+    PromptCallTrace,
     PromptRatingStats,
     PromptVersionLoader,
     PromptVersionRepository,
@@ -408,6 +409,12 @@ class PromptAnalytics:
             for r in ratings.values()
         ]
         return sorted(rows, key=lambda s: (s.task, s.version))
+
+    async def trace(
+        self, actor: Actor, task: str, version: int | None, limit: int
+    ) -> list[PromptCallTrace]:
+        """The latest calls of a task: time, model, tokens, cost, latency, outcome."""
+        return await self.reader.trace(task, version, limit)
 
 
 def _stats(

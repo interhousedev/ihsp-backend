@@ -73,6 +73,11 @@ class InstitutionRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
             name="setting",
         ),
         check_in("status", ("published", "provisional", "archived")),
+        CheckConstraint(
+            "(logo_url IS NULL OR logo_url LIKE 'https://%')"
+            " AND (cover_url IS NULL OR cover_url LIKE 'https://%')",
+            name="media_https",
+        ),
         Index(
             "ix_institutions_name_trgm",
             "name",
@@ -97,6 +102,8 @@ class InstitutionRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
         ARRAY(Text), server_default=text("'{}'")
     )
     status: Mapped[str] = mapped_column(String(12), server_default="provisional")
+    logo_url: Mapped[str | None] = mapped_column(String(2000))
+    cover_url: Mapped[str | None] = mapped_column(String(2000))
 
 
 class CampusRow(IdMixin, CreatedMixin, UpdatedMixin, Base):

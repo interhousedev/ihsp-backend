@@ -142,6 +142,11 @@ class RequireConsent:
         """Drop every cached pass (a new version was published)."""
         self._passed.clear()
 
+    def forget(self, user_id: UUID) -> None:
+        """Drop one user's cached passes (their acceptances were deleted)."""
+        for key in [k for k in self._passed if k[0] == user_id]:
+            del self._passed[key]
+
     async def execute(self, user_id: UUID, app: str = GLOBAL_APP) -> None:
         """Raise LegalAcceptanceRequiredError while any document is pending.
 

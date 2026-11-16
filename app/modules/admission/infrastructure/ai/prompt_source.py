@@ -4,10 +4,18 @@ from typing import Protocol
 
 from app.modules.admission.infrastructure.ai.prompts import (
     alignment_map,
+    app_review,
+    assistant,
+    career,
+    essays,
     goal_plan,
     items,
+    list_suggest,
+    opportunity_intake,
+    opportunity_plan,
     profile_words,
     research,
+    tasks_suggest,
 )
 from app.shared.ai_tasks import AiTask
 
@@ -21,6 +29,23 @@ BUILTIN_PROMPTS: dict[tuple[str, str], str] = {
     (AiTask.ADMIT_ALIGNMENT_REFRESH.value, "system"): alignment_map.SYSTEM,
     (AiTask.ADMIT_UNIVERSITY_RESEARCH.value, "system"): research.SYSTEM,
     (AiTask.ADMIT_GOAL_PLAN.value, "system"): goal_plan.SYSTEM,
+    (AiTask.ADMIT_OPPORTUNITY_INTAKE.value, "system"): opportunity_intake.SYSTEM,
+    (AiTask.ADMIT_OPPORTUNITY_PLAN.value, "system"): opportunity_plan.SYSTEM,
+    **{
+        (AiTask.ADMIT_ESSAY_COACH.value, name): text
+        for name, text in essays.PROMPTS.items()
+    },
+    **{
+        (task.value, "system"): app_review.SECTION_SYSTEMS[key]
+        for key, task in app_review.SECTION_TASKS.items()
+    },
+    (AiTask.ADMIT_APP_REVIEW_LEAD.value, "system"): app_review.LEAD_SYSTEM,
+    (AiTask.ADMIT_CAREER_PROFESSIONS.value, "system"): career.PROFESSIONS,
+    (AiTask.ADMIT_CAREER_MAJORS.value, "system"): career.MAJORS,
+    (AiTask.ADMIT_CAREER_SPIKE.value, "system"): career.SPIKE,
+    (AiTask.ADMIT_LIST_SUGGEST.value, "system"): list_suggest.SYSTEM,
+    (AiTask.ADMIT_TASKS_SUGGEST.value, "system"): tasks_suggest.SYSTEM,
+    (AiTask.ADMIT_ASSISTANT.value, "system"): assistant.SYSTEM,
 }
 
 

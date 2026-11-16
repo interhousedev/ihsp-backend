@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from app.modules.ai.domain.prompt_registry import PromptRef, note_prompt
+from app.modules.ai.domain.structured_check import schema_violation
 from app.modules.ai.domain.usage import UNKNOWN_TASK, UsageEvent, counts_of, feature_of
 from app.modules.ai.infrastructure.langfuse_tracer import (
     PRIVATE_ERROR_CODE,
@@ -168,6 +169,9 @@ def _model_of(usage: Mapping[str, Any] | None, requested: str) -> str:
     return ran if isinstance(ran, str) and ran else requested
 
 
+SCHEMA_INVALID_ERROR = "SchemaInvalid"
+
+
 def _error_name(exc: BaseException) -> str:
     return type(exc).__name__[:64]
 
@@ -272,7 +276,12 @@ class RecordingLlmGateway:
         except BaseException as exc:
             await pending.finish(error=_error_name(exc))
             raise
-        await pending.finish(result.get("usage"), output=result)
+        if schema_violation(schema, result.get("data")) is not None:
+            await pending.finish(
+                result.get("usage"), error=SCHEMA_INVALID_ERROR, output=result
+            )
+        else:
+            await pending.finish(result.get("usage"), output=result)
         return result
 
     def stream(

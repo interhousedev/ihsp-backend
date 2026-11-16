@@ -7,7 +7,11 @@ from app.modules.ai.domain.prompt_registry import BUILT_IN_VERSION, PromptVersio
 from app.modules.ai.infrastructure.orm.chat_message import ChatMessage
 from app.modules.ai.infrastructure.orm.prompt_version import PromptVersionRow
 from app.modules.ai.infrastructure.orm.usage_event import UsageEventRow
-from app.modules.ai.ports.prompts import PromptCallStats, PromptRatingStats
+from app.modules.ai.ports.prompts import (
+    PromptCallStats,
+    PromptCallTrace,
+    PromptRatingStats,
+)
 from app.shared.db.uow import SqlUnitOfWork
 
 from sqlalchemy import Integer, cast, func, select, update
@@ -177,6 +181,35 @@ class SqlPromptAnalyticsReader:
                 input_tokens=int(row[6]),
                 output_tokens=int(row[7]),
                 cost_micro=int(row[8]),
+            )
+            for row in rows
+        ]
+
+    async def trace(
+        self, task: str, version: int | None, limit: int
+    ) -> list[PromptCallTrace]:
+        """The latest ledger rows of a task, newest first."""
+        event = UsageEventRow
+        query = select(event).where(event.task == task)
+        if version is not None:
+            query = query.where(
+                func.coalesce(event.prompt_version, BUILT_IN_VERSION) == version
+            )
+        query = query.order_by(event.occurred_at.desc()).limit(limit)
+        async with self.sessionmaker() as session:
+            rows = (await session.execute(query)).scalars().all()
+        return [
+            PromptCallTrace(
+                occurred_at=row.occurred_at,
+                task=row.task,
+                model=row.model,
+                version=row.prompt_version or BUILT_IN_VERSION,
+                input_tokens=row.input_tokens,
+                output_tokens=row.output_tokens,
+                cost_micro=row.cost_micro,
+                latency_ms=row.latency_ms,
+                success=row.success,
+                error=row.error,
             )
             for row in rows
         ]
