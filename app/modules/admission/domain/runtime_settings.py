@@ -6,8 +6,16 @@ from typing import Any, Final
 PICKUP_LOCATION: Final = "pickup_location"
 ESTIMATES_STUDENT_VISIBLE: Final = "estimates_student_visible"
 WELLBEING_QUESTIONS: Final = "wellbeing_questions_enabled"
+CALENDAR_ALARM_OFFSETS: Final = "calendar_alarm_offsets_days"
+READINESS_WEIGHTS: Final = "readiness_weights"
 KNOWN_KEYS: Final = frozenset(
-    {PICKUP_LOCATION, ESTIMATES_STUDENT_VISIBLE, WELLBEING_QUESTIONS}
+    {
+        PICKUP_LOCATION,
+        ESTIMATES_STUDENT_VISIBLE,
+        WELLBEING_QUESTIONS,
+        CALENDAR_ALARM_OFFSETS,
+        READINESS_WEIGHTS,
+    }
 )
 
 

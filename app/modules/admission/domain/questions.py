@@ -173,7 +173,13 @@ QUESTIONS: Final[tuple[Question, ...]] = (
     _q(26, "where", "multi", options=LANGUAGES),
     _q(27, "where", "single", options=CITY_TYPES, origin="kollegio_quiz"),
     _q(28, "where", "single", required=False, options=SIZES, origin="kollegio_quiz"),
-    _q(29, "where", "single", required=False, options=CLIMATES + DISTANCES),
+    _q(
+        29,
+        "where",
+        "single",
+        required=False,
+        options=tuple(dict.fromkeys(CLIMATES + DISTANCES)),
+    ),
     _q(30, "where", "switch", prefill_source="default_on"),
     _q(31, "where", "single", required=False, options=WORK_VISA),
     _q(

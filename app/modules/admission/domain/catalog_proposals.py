@@ -19,6 +19,8 @@ INSTITUTION_FIELDS: Final = frozenset(
         "size_band",
         "setting",
         "languages",
+        "logo_url",
+        "cover_url",
     }
 )
 SCHOLARSHIP_FIELDS: Final = frozenset(
@@ -37,6 +39,8 @@ SCHOLARSHIP_FIELDS: Final = frozenset(
     }
 )
 FIELDS: Final = {"institution": INSTITUTION_FIELDS, "scholarship": SCHOLARSHIP_FIELDS}
+MEDIA_FIELDS: Final = ("logo_url", "cover_url")
+"""Institution fields that hold an https image address."""
 REQUIRED_ON_CREATE: Final = {
     "institution": frozenset({"name", "country"}),
     "scholarship": frozenset({"name", "provider", "basis"}),

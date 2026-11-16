@@ -9,7 +9,8 @@ from app.modules.admission.domain.permissions import KIND_ROLE
 from app.shared.actor import Role
 
 ActorKind = Literal["applicant", "staff", "helper_only", "none"]
-STAFF_ROLES: Final = frozenset(KIND_ROLE.values())
+# Administrators enter the staff area too (settings, student list, saved views).
+STAFF_ROLES: Final = frozenset({*KIND_ROLE.values(), Role.ADMIN})
 ELIGIBLE_GRADES: Final = frozenset({10, 11})
 
 

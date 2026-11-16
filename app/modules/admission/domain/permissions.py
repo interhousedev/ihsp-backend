@@ -33,6 +33,7 @@ class Permission(StrEnum):
     LABELS_OVERRIDE = "labels:override"
     ESTIMATES_VIEW_UNCALIBRATED = "estimates:view_uncalibrated"
     CATALOG_CURATE = "catalog:curate"
+    OPPORTUNITIES_MODERATE = "opportunities:moderate"
     HELP_RESPOND = "help:respond"
 
 

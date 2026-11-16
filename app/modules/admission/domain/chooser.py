@@ -39,6 +39,8 @@ class CatalogInstitution:
     aid_basis: str | None = None
     merit_available: bool | None = None
     scholarship_count: int = 0
+    logo_url: str | None = None
+    cover_url: str | None = None
 
     @property
     def verified(self) -> bool:

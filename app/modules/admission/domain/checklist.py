@@ -6,6 +6,7 @@ produce one row per student; entry templates one row per list entry and are
 filtered by the entry's round.
 """
 
+import datetime as dt
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from uuid import UUID
@@ -16,6 +17,8 @@ from app.modules.admission.domain.documents import (
     ChecklistStatus,
     Deadline,
 )
+from app.modules.admission.domain.errors import InvalidProofUrlError
+from app.modules.admission.domain.urls import is_https_url
 from app.shared.ids import new_id
 
 RULE_VERSION = 1
@@ -121,3 +124,61 @@ def entry_items(
             )
         )
     return out
+
+
+URGENT_WITHIN = dt.timedelta(days=7)
+
+# Where each template is done in the app; None = no page (the upload form
+# on /documents/ itself, or a step outside the app).
+DEEP_LINKS: dict[str, str] = {
+    "shared.transcript": "/documents/#transcripts",
+    "shared.translation": "/documents/",
+    "entry.application_form": "/plan/",
+    "entry.essay": "/essays/",
+    "entry.recommendation": "/documents/",
+    "entry.test_report": "/tests/",
+}
+
+
+def deep_link(template_key: str) -> str | None:
+    """The in-app page where the item is done."""
+    return DEEP_LINKS.get(template_key)
+
+
+def is_urgent(
+    item: ChecklistItem, now: dt.datetime, *, within: dt.timedelta = URGENT_WITHIN
+) -> bool:
+    """Urgent by the override, else by a deadline within `within` (or overdue).
+
+    Finished items (done / n_a) are never urgent.
+    """
+    if item.status in ("done", "n_a"):
+        return False
+    if item.urgent_override is not None:
+        return item.urgent_override
+    return item.due_utc is not None and item.due_utc - now <= within
+
+
+def quadrant(item: ChecklistItem, now: dt.datetime) -> str:
+    """Eisenhower quadrant: do / schedule / delegate / drop."""
+    urgent = is_urgent(item, now)
+    if item.important:
+        return "do" if urgent else "schedule"
+    return "delegate" if urgent else "drop"
+
+
+class Unset:
+    """Marks a patch field that was not sent (distinct from an explicit null)."""
+
+
+UNSET = Unset()
+
+
+def clean_source_url(url: str | None) -> str | None:
+    """A staff-set external link: http(s) only, trimmed; empty clears it."""
+    value = (url or "").strip()
+    if not value:
+        return None
+    if not is_https_url(value):
+        raise InvalidProofUrlError()
+    return value

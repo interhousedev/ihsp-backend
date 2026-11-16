@@ -32,6 +32,20 @@ MILESTONE_KINDS: Final = (
     "application", "aid", "test_send", "rec", "docs", "decision", "deposit", "fee",
 )  # fmt: skip
 LIVE_ENTRY_STATUSES: Final = frozenset({"considering", "applying"})
+UPLOAD_MIME: Final = ("application/pdf", "image/jpeg", "image/png")
+"""The only types a document upload may have (by content, not by name)."""
+
+
+def sniff_upload(head: bytes) -> str | None:
+    """The allowed type the first bytes show, or None."""
+    if head.startswith(b"%PDF-"):
+        return "application/pdf"
+    if head.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    if head.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "image/png"
+    return None
+
 
 AttachmentStatus = Literal["attached", "superseded", "detached"]
 ChecklistStatus = Literal["todo", "in_progress", "done", "n_a", "confirm_with_uni"]
@@ -97,6 +111,8 @@ class ChecklistItem:
     due_utc: dt.datetime | None = None
     document_id: UUID | None = None
     source_url: str | None = None
+    important: bool = False
+    urgent_override: bool | None = None
     rule_version: int = 1
     lock_version: int = 0
 
