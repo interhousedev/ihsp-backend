@@ -7,6 +7,7 @@ from app.interfaces.http.v1.legal.schemas import (
     AdminDocumentOut,
     LegalDocumentListOut,
     LegalDocumentOut,
+    OverviewOut,
     PendingOut,
 )
 
@@ -38,6 +39,9 @@ admin_router.add_api_route(
     admin.list_all,
     methods=["GET"],
     response_model=AdminDocumentListOut,
+)
+admin_router.add_api_route(
+    "/overview", admin.overview, methods=["GET"], response_model=OverviewOut
 )
 admin_router.add_api_route(
     "/drafts/{kind}",

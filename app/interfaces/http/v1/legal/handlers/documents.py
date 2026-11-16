@@ -1,6 +1,6 @@
 """Public routes: GET /v1/legal/documents[/{kind}]."""
 
-from app.interfaces.http.v1.legal.deps import ContainerDep, Locale
+from app.interfaces.http.v1.legal.deps import AppScopeQuery, ContainerDep, Locale
 from app.interfaces.http.v1.legal.schemas import (
     LegalDocumentListOut,
     LegalDocumentOut,
@@ -9,17 +9,21 @@ from app.interfaces.http.v1.legal.schemas import (
 
 
 async def list_documents(
-    container: ContainerDep, locale: Locale
+    container: ContainerDep, locale: Locale, app_scope: AppScopeQuery = "global"
 ) -> LegalDocumentListOut:
-    """The current published version of every kind that has one."""
-    documents = await container.legal.list_current.execute()
+    """The current published version of every kind of the scope (default global)."""
+    documents = await container.legal.list_current.execute(app_scope)
     return LegalDocumentListOut(
         items=[LegalDocumentOut.of(d, locale) for d in documents]
     )
 
 
 async def get_document(
-    kind: LegalKindValue, container: ContainerDep, locale: Locale
+    kind: LegalKindValue,
+    container: ContainerDep,
+    locale: Locale,
+    app_scope: AppScopeQuery = "global",
 ) -> LegalDocumentOut:
-    """The current published version of one kind (404 when none)."""
-    return LegalDocumentOut.of(await container.legal.get_current.execute(kind), locale)
+    """The current published version of one kind in the scope (404 when none)."""
+    document = await container.legal.get_current.execute(kind, app_scope)
+    return LegalDocumentOut.of(document, locale)

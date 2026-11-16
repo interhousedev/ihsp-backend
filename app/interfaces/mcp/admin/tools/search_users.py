@@ -30,6 +30,9 @@ def register(kit: ToolKit) -> None:
                     "lms_admin",
                     "lms_creator",
                     "librarian",
+                    "counselor",
+                    "mentor",
+                    "transcript_officer",
                 ]
             ]
             | None,

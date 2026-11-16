@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 MODULES = (
     "academic",
     "admin",
+    "admission",
     "ai",
     "certificates",
     "dashboard",

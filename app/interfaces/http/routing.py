@@ -83,6 +83,7 @@ API_PACKAGES: tuple[str, ...] = (
     f"{V1}.admin_knowledge",
     f"{V1}.admin_feedback",
     f"{V1}.feedback",
+    f"{V1}.admission",
     f"{V1}.legal",
     f"{V1}.faces",
     f"{V1}.onboarding",

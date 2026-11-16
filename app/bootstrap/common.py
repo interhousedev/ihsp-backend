@@ -13,6 +13,11 @@ from typing import Any, Literal, cast
 from uuid import UUID
 
 from app.bootstrap.adapters.admin_tools import AdminToolBackendAdapter
+from app.bootstrap.adapters.admission import (
+    AdmissionCourseSourcesAdapter,
+    AdmissionMembershipAdapter,
+)
+from app.bootstrap.adapters.admission_staff import AdmissionStaffDirectoryAdapter
 from app.bootstrap.adapters.certificate_students import CertificateStudentsAdapter
 from app.bootstrap.adapters.composition.library_platform_search import (
     LibraryPlatformSearch,
@@ -53,6 +58,7 @@ from app.bootstrap.adapters.onboarding import (
     OnboardingFacesAdapter,
 )
 from app.bootstrap.adapters.personal_data import build_sources
+from app.bootstrap.adapters.prompt_slots import prompt_slots
 from app.bootstrap.adapters.school_knowledge import (
     KnowledgeGapAdapter,
     KnowledgeLookupAdapter,
@@ -77,6 +83,9 @@ from app.modules.academic.wiring import (
 )
 from app.modules.admin.infrastructure.limit_snapshot import load_limit_snapshot
 from app.modules.admin.wiring import build as build_admin
+from app.modules.admission.infrastructure.ai.prompt_source import RegistryPrompts
+from app.modules.admission.infrastructure.ai_gateway import GatewayStructuredAi
+from app.modules.admission.wiring import build as build_admission
 from app.modules.ai.infrastructure.access_guard import AccessGuardedLlmGateway
 from app.modules.ai.infrastructure.gateway_factory import (
     make_embedding_gateway,
@@ -92,6 +101,7 @@ from app.modules.ai.infrastructure.recording_gateways import (
 )
 from app.modules.ai.infrastructure.usage_store import SqlUsageStore
 from app.modules.ai.wiring import build as build_ai
+from app.modules.ai.wiring import build_prompts
 from app.modules.certificates.wiring import build as build_certificates
 from app.modules.dashboard.wiring import build as build_dashboard
 from app.modules.faces.wiring import build as build_faces
@@ -109,18 +119,23 @@ from app.modules.identity.ports.email_sender import EmailSender
 from app.modules.identity.ports.hydra_gateway import HydraGateway
 from app.modules.identity.wiring import build as build_identity
 from app.modules.knowledge.wiring import build as build_knowledge
+from app.modules.legal.infrastructure.purpose_consents import SqlPurposeConsents
 from app.modules.legal.wiring import build as build_legal
 from app.modules.library.wiring import build as build_library
 from app.modules.links.wiring import build as build_links
 from app.modules.lms.wiring import build as build_lms
 from app.modules.notebooks.application.export.render import DocumentExporter
+from app.modules.notebooks.application.llm import NotebookLlm
 from app.modules.notebooks.infrastructure.web_fetcher import HttpWebFetcher
 from app.modules.notebooks.infrastructure.youtube_transcript import (
     YouTubeTranscriptProvider,
 )
 from app.modules.notebooks.wiring import build as build_notebooks
 from app.modules.notebooks.wiring_studio import LmsApplyPorts
-from app.modules.notify.infrastructure.outbox_writer import write_notifications
+from app.modules.notify.infrastructure.outbox_writer import (
+    SqlNotificationOutbox,
+    write_notifications,
+)
 from app.modules.notify.ports.push_sender import PushSender
 from app.modules.notify.wiring import build as build_notify
 from app.modules.onboarding.wiring import build as build_onboarding
@@ -226,6 +241,7 @@ def make_deps(container: Container) -> ModuleDeps:
         audit_writer=write_audit_events,
         outbox_committed_hook=kick_dispatch,
         limits=limits,
+        notification_outbox=SqlNotificationOutbox(),
     )
 
 
@@ -266,6 +282,7 @@ class _Assembler:
             SqlUsageStore(container.sessionmaker), container.clock, tracer
         )
         self.deps = make_deps(container)
+        self.prompts = build_prompts(self.deps, prompt_slots())
 
     def add_closer(self, closer: Callable[[], Awaitable[None]]) -> None:
         """Register something to close with the container."""
@@ -288,6 +305,7 @@ class _Assembler:
         if self.plan.lms:
             self.build_lms()
         if self.plan.full:
+            self.build_admission()
             self.build_library()
             self.build_notebooks()
             self.build_mcp_ports()
@@ -569,6 +587,23 @@ class _Assembler:
             importer=OnboardingCertificatesAdapter(c.certificates.import_emis),
         )
 
+    def build_admission(self) -> None:
+        """Admission platform; LMS courses only where LMS is built."""
+        c = self.container
+        lms = c.lms.learning.list_my_courses if self.plan.lms else None
+        c.admission = build_admission(
+            self.deps,
+            membership=AdmissionMembershipAdapter(c.academic.schedule.queries),
+            course_sources=AdmissionCourseSourcesAdapter(c.academic.marks.queries, lms),
+            purpose_consents=SqlPurposeConsents(self.deps.sessionmaker),
+            staff_directory=AdmissionStaffDirectoryAdapter(c.identity.directory),
+            ai=GatewayStructuredAi(NotebookLlm(c.llm, c.settings)) if c.llm else None,
+            llm=NotebookLlm(c.llm, c.settings) if c.llm else None,
+            files=c.files.public,
+            identity=c.identity.directory,
+            prompts=RegistryPrompts(self.prompts.registry),
+        )
+
     def build_feedback(self) -> None:
         """Platform feedback; responses go out through notify and mail."""
         c = self.container
@@ -600,7 +635,9 @@ class _Assembler:
         )
         # Revoked users are refused before the call; the ledger counts the refusal.
         guarded = AccessGuardedLlmGateway(self.raw_llm, self.deps.effective_limits)
-        self.llm = RecordingLlmGateway(guarded, self.recorder)
+        self.llm = RecordingLlmGateway(
+            guarded, self.recorder, prompts=self.prompts.registry
+        )
         c.llm = self.llm
         ai = build_ai(
             self.deps,
@@ -623,6 +660,7 @@ class _Assembler:
             embeddings=lambda: self.embedding_index,
             free_usage=self.recorder,
         )
+        ai.prompts = self.prompts
         ai.bindings.share_lookup = c.links.public
         self.knowledge_lookup = KnowledgeLookupAdapter(c.knowledge.public)
         self.knowledge_gaps = KnowledgeGapAdapter(c.notify.public)

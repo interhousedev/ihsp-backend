@@ -11,7 +11,13 @@ from app.modules.admin.domain.limits import (
     NOTE_MAX_LENGTH,
     ExtensionTerms,
 )
+from app.modules.ai.application.prompt_registry import (
+    PromptVersionStats,
+    SlotDetail,
+    SlotStatus,
+)
 from app.modules.ai.application.usage_report import TopUser, UsageReportView
+from app.modules.ai.domain.prompt_registry import MAX_PROMPT_CHARS, PromptVersion
 from app.modules.ai.domain.usage import Totals
 from app.shared.ai_access import AiAccess
 from app.shared.contracts.identity import UserRef
@@ -302,3 +308,162 @@ def _name(user: UserRef | None, user_id: UUID) -> str:
     if user is None:
         return str(user_id)
     return f"{user.first_name} {user.last_name}".strip() or str(user_id)
+
+
+class PromptVersionOut(BaseModel):
+    """One stored text of a prompt slot; `locale` "" means every locale."""
+
+    id: UUID
+    version: int
+    locale: str
+    text: str
+    hash: str
+    active: bool
+    created_at: datetime
+    created_by: UUID | None
+    note: str
+
+    @classmethod
+    def of(cls, version: PromptVersion) -> "PromptVersionOut":
+        """From the domain version."""
+        return cls(
+            id=version.id,
+            version=version.version,
+            locale=version.locale,
+            text=version.text,
+            hash=version.hash,
+            active=version.active,
+            created_at=version.created_at,
+            created_by=version.created_by,
+            note=version.note,
+        )
+
+
+class PromptActiveOut(BaseModel):
+    """The active override of a locale."""
+
+    locale: str
+    version: int
+    hash: str
+
+
+class PromptSlotOut(BaseModel):
+    """An editable piece of a task's prompt, overridden or built-in."""
+
+    task: str
+    name: str
+    summary: str
+    template: bool
+    placeholders: list[str]
+    overridden: bool
+    active: list[PromptActiveOut]
+
+    @classmethod
+    def of(cls, status: SlotStatus) -> "PromptSlotOut":
+        """From the slot and its active versions."""
+        slot = status.slot
+        return cls(
+            task=slot.task,
+            name=slot.name,
+            summary=slot.summary,
+            template=slot.template,
+            placeholders=sorted(slot.fields),
+            overridden=bool(status.active),
+            active=[
+                PromptActiveOut(locale=v.locale, version=v.version, hash=v.hash)
+                for v in status.active
+            ],
+        )
+
+
+class PromptSlotsResponse(BaseModel):
+    """Every editable prompt slot."""
+
+    items: list[PromptSlotOut]
+
+
+class PromptDetailOut(BaseModel):
+    """A slot: the text in force for the locale, the built-in text and the history."""
+
+    task: str
+    name: str
+    summary: str
+    template: bool
+    placeholders: list[str]
+    locale: str
+    text: str
+    version: int = Field(description="The version in force; 0 is the built-in text.")
+    hash: str
+    builtin: str
+    versions: list[PromptVersionOut]
+
+    @classmethod
+    def of(cls, detail: SlotDetail, locale: str) -> "PromptDetailOut":
+        """From the slot detail."""
+        slot = detail.slot
+        return cls(
+            task=slot.task,
+            name=slot.name,
+            summary=slot.summary,
+            template=slot.template,
+            placeholders=sorted(slot.fields),
+            locale=locale,
+            text=detail.current.text,
+            version=detail.current.version,
+            hash=detail.current.hash,
+            builtin=slot.builtin,
+            versions=[PromptVersionOut.of(v) for v in detail.versions],
+        )
+
+
+class PromptBody(BaseModel):
+    """A new version of a slot's text; `locale` "" applies to every locale."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    text: str = Field(min_length=1, max_length=MAX_PROMPT_CHARS)
+    locale: Literal["", "uz", "ru", "en"] = ""
+    note: str = Field(default="", max_length=500)
+
+
+class PromptStatsOut(BaseModel):
+    """How one prompt version of a task did in the period (0 = built-in)."""
+
+    task: str
+    version: int
+    calls: int
+    error_rate: float
+    p50_ms: float | None
+    p95_ms: float | None
+    input_tokens: int
+    output_tokens: int
+    cost_usd: float
+    ratings: int
+    rating_average: float | None = Field(
+        description="Mean of the ratings: thumbs up 1, down -1."
+    )
+
+    @classmethod
+    def of(cls, row: PromptVersionStats) -> "PromptStatsOut":
+        """From the analytics row."""
+        return cls(
+            task=row.task,
+            version=row.version,
+            calls=row.calls,
+            error_rate=row.error_rate,
+            p50_ms=row.p50_ms,
+            p95_ms=row.p95_ms,
+            input_tokens=row.input_tokens,
+            output_tokens=row.output_tokens,
+            cost_usd=_usd(row.cost_micro),
+            ratings=row.ratings,
+            rating_average=row.rating_average,
+        )
+
+
+class PromptAnalyticsResponse(BaseModel):
+    """The figures per task and prompt version for [from, to] (Tashkent dates)."""
+
+    from_day: date = Field(serialization_alias="from")
+    to_day: date = Field(serialization_alias="to")
+    items: list[PromptStatsOut]

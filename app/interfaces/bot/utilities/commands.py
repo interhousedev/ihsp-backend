@@ -23,6 +23,7 @@ COMMAND_KEYS = {
     "lesson": "bot-command-lesson",
     "mail": "bot-command-mail",
     "workoffs": "bot-command-workoffs",
+    "transcripts": "bot-command-transcripts",
     "settings": "bot-command-settings",
     "new": "bot-command-new",
     "delete": "bot-command-delete",
@@ -34,6 +35,7 @@ COMMAND_KEYS = {
 # Commands that only one role uses; every other command is shown to everyone.
 STUDENT_ONLY = frozenset({"marks", "homework", "mail"})
 TEACHER_ONLY = frozenset({"lesson"})
+OFFICER_ONLY = frozenset({"transcripts"})
 
 
 def command_names_for(roles: Iterable[Role]) -> list[str]:
@@ -44,6 +46,8 @@ def command_names_for(roles: Iterable[Role]) -> list[str]:
         hidden |= STUDENT_ONLY
     if Role.TEACHER not in held:
         hidden |= TEACHER_ONLY
+    if Role.TRANSCRIPT_OFFICER not in held:
+        hidden |= OFFICER_ONLY
     return [name for name in COMMAND_KEYS if name not in hidden]
 
 

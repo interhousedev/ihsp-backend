@@ -12,6 +12,7 @@ from app.modules.identity.application.get_user_detail import UserDetail
 from app.modules.identity.application.list_sessions import SessionView
 from app.modules.identity.domain.user import User
 from app.shared.actor import Role
+from app.shared.contracts.identity import AccountKind
 
 from pydantic import BaseModel
 
@@ -28,6 +29,8 @@ class AdminUserResponse(BaseModel):
     status: str
     emis_status: str | None
     recovery_email: str | None
+    phone: str | None = None
+    account_kind: AccountKind = AccountKind.SCHOOL
     mail_suspended: bool
     password_change_required: bool = False
     photo_url: str | None = None
@@ -47,6 +50,8 @@ class AdminUserResponse(BaseModel):
             status=user.status.value,
             emis_status=user.emis_status,
             recovery_email=user.recovery_email,
+            phone=user.phone,
+            account_kind=user.account_kind,
             mail_suspended=user.mail_suspended_at is not None,
             password_change_required=user.password_change_required,
             photo_url=photo_url,

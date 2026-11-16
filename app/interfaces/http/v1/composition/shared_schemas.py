@@ -10,7 +10,15 @@ from app.shared.lesson_kind import LessonKind, TopicSource
 from pydantic import BaseModel, ConfigDict, Field
 
 RoleName = Literal[
-    "student", "teacher", "admin", "lms_admin", "lms_creator", "librarian"
+    "student",
+    "teacher",
+    "admin",
+    "lms_admin",
+    "lms_creator",
+    "librarian",
+    "counselor",
+    "mentor",
+    "transcript_officer",
 ]
 
 

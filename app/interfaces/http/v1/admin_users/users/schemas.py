@@ -1,6 +1,8 @@
 """Request bodies of the Administration user routes."""
 
+from app.interfaces.http.v1.admin_users.schemas import AdminUserResponse
 from app.shared.actor import Role
+from app.shared.contracts.identity import AccountKind
 
 from pydantic import BaseModel, EmailStr, Field
 
@@ -16,6 +18,25 @@ class RolesBody(BaseModel):
 
     grant: list[Role] = []
     revoke: list[Role] = []
+
+
+class UserCreateBody(BaseModel):
+    """POST /v1/admin/users: a staff-like account without EMIS (no student/teacher)."""
+
+    last_name: str = Field(min_length=1, max_length=255)
+    first_name: str = Field(min_length=1, max_length=255)
+    middle_name: str | None = Field(default=None, max_length=255)
+    account_kind: AccountKind
+    roles: list[Role] = Field(min_length=1)
+    email: EmailStr | None = None
+    phone: str | None = Field(default=None, max_length=32)
+
+
+class InvitedUserResponse(BaseModel):
+    """The created account and its one-time Telegram invitation."""
+
+    user: AdminUserResponse
+    invite_url: str = Field(description="`https://t.me/<bot>?start=inv_<code>`")
 
 
 class ActivationUrlResponse(BaseModel):

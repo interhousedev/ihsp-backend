@@ -37,6 +37,7 @@ _EXPOSE = ["X-Request-ID", "Retry-After", "Content-Disposition", "Date"]
 _COOKIE_HEADERS = [
     "Content-Type",
     "X-IHSP-Client",
+    "X-IHSP-App",
     "X-Request-ID",
     "Accept-Language",
 ]

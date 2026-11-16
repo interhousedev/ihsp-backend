@@ -1,6 +1,6 @@
 """Administrator routes under /v1/admin/legal."""
 
-from app.interfaces.http.v1.legal.deps import AdminActor, ContainerDep
+from app.interfaces.http.v1.legal.deps import AdminActor, AppScopeQuery, ContainerDep
 from app.interfaces.http.v1.legal.schemas import (
     AcceptanceCountOut,
     AcceptanceCountsOut,
@@ -8,6 +8,7 @@ from app.interfaces.http.v1.legal.schemas import (
     AdminDocumentOut,
     DraftIn,
     LegalKindValue,
+    OverviewOut,
 )
 
 
@@ -17,24 +18,39 @@ async def list_all(container: ContainerDep, actor: AdminActor) -> AdminDocumentL
     return AdminDocumentListOut(items=[AdminDocumentOut.of(d) for d in documents])
 
 
+async def overview(container: ContainerDep, actor: AdminActor) -> OverviewOut:
+    """Documents grouped by app scope with versions and acceptance counts."""
+    return OverviewOut.of(await container.legal.overview.execute())
+
+
 async def save_draft(
-    kind: LegalKindValue, body: DraftIn, container: ContainerDep, actor: AdminActor
+    kind: LegalKindValue,
+    body: DraftIn,
+    container: ContainerDep,
+    actor: AdminActor,
+    app_scope: AppScopeQuery = "global",
 ) -> AdminDocumentOut:
-    """Create or replace the draft of the kind."""
+    """Create or replace the draft of the kind in the scope."""
     draft = await container.legal.save_draft.execute(
         kind,
         title=body.title,
         body_markdown=body.body_markdown,
         announcement=body.announcement,
+        app_scope=app_scope,
     )
     return AdminDocumentOut.of(draft)
 
 
 async def publish(
-    kind: LegalKindValue, container: ContainerDep, actor: AdminActor
+    kind: LegalKindValue,
+    container: ContainerDep,
+    actor: AdminActor,
+    app_scope: AppScopeQuery = "global",
 ) -> AdminDocumentOut:
-    """Publish the draft: every user has to accept it."""
-    published = await container.legal.publish.execute(kind, actor_id=actor.user_id)
+    """Publish the draft: every user of the scope has to accept it."""
+    published = await container.legal.publish.execute(
+        kind, actor_id=actor.user_id, app_scope=app_scope
+    )
     return AdminDocumentOut.of(published)
 
 

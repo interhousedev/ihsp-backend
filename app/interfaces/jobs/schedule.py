@@ -60,6 +60,7 @@ CRON_JOBS: tuple[CronJob, ...] = (
     CronJob("admin.start_scheduled_broadcasts", EVERY_MINUTE),
     CronJob("admin.finish_broadcasts", EVERY_5_MINUTES),
     CronJob("notify.purge_old", "30 3 * * *"),
+    CronJob("admission.deadline_reminders", "5 * * * *"),
     CronJob("files.cleanup_expired", "0 3 * * *"),
     CronJob("files.warn_expiring", "0 10 * * *"),
     CronJob("files.purge_pending", "15 * * * *"),

@@ -36,9 +36,11 @@ from app.interfaces.http.v1.admin_users.users.handlers.post_set_password import 
 from app.interfaces.http.v1.admin_users.users.handlers.post_unblock import (
     post_unblock,
 )
+from app.interfaces.http.v1.admin_users.users.handlers.post_user import post_user
 from app.interfaces.http.v1.admin_users.users.handlers.put_photo import put_photo
 from app.interfaces.http.v1.admin_users.users.schemas import (
     ActivationUrlResponse,
+    InvitedUserResponse,
     UserPhotoResponse,
 )
 from app.shared.pagination import Page
@@ -49,6 +51,13 @@ router = APIRouter(prefix="/v1/admin/users", tags=["admin-users"])
 
 router.add_api_route(
     "", get_users, methods=["GET"], response_model=Page[AdminUserResponse]
+)
+router.add_api_route(
+    "",
+    post_user,
+    methods=["POST"],
+    status_code=201,
+    response_model=InvitedUserResponse,
 )
 router.add_api_route(
     "/{id}", get_user, methods=["GET"], response_model=AdminUserDetailResponse

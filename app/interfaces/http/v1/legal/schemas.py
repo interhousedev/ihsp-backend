@@ -4,12 +4,36 @@ from datetime import datetime
 from typing import Annotated, Literal
 from uuid import UUID
 
-from app.modules.legal.application.queries import AcceptanceCount, PendingItem
+from app.modules.legal.application.queries import (
+    AcceptanceCount,
+    PendingItem,
+    ScopeOverview,
+)
 from app.modules.legal.domain.models import LegalDocument
 
 from pydantic import AfterValidator, BaseModel, Field
 
-LegalKindValue = Literal["privacy", "terms", "biometric", "ai"]
+LegalKindValue = Literal[
+    "privacy",
+    "terms",
+    "biometric",
+    "ai",
+    "admission_privacy",
+    "admission_terms",
+    "admission_disclaimer",
+]
+AppScopeValue = Literal[
+    "global",
+    "id",
+    "sp",
+    "staff",
+    "admin",
+    "lms",
+    "library",
+    "share",
+    "landing",
+    "admission",
+]
 MAX_TEXT = 200_000
 
 
@@ -26,6 +50,7 @@ class LegalDocumentOut(BaseModel):
     """The current published version of a kind, in one language."""
 
     kind: LegalKindValue
+    app_scope: AppScopeValue
     version: int
     locale: str
     title: str
@@ -38,6 +63,7 @@ class LegalDocumentOut(BaseModel):
         """Pick the texts of the locale."""
         return cls(
             kind=document.kind,
+            app_scope=document.app_scope,
             version=document.version,
             locale=locale,
             title=document.title[locale],
@@ -84,12 +110,18 @@ class AcceptItemIn(BaseModel):
 
     kind: LegalKindValue
     version: int = Field(ge=1)
+    app_scope: AppScopeValue = "global"
 
 
 class AcceptIn(BaseModel):
-    """Body of POST /v1/me/legal/accept; versions must be the current ones."""
+    """Body of POST /v1/me/legal/accept; versions must be the current ones.
+
+    ``guardian_attested``: a parent or guardian confirms the acceptance of app
+    documents; the server decides from the account whether it is required.
+    """
 
     items: list[AcceptItemIn] = Field(min_length=1, max_length=8)
+    guardian_attested: bool = False
 
 
 class AdminDocumentOut(BaseModel):
@@ -97,6 +129,7 @@ class AdminDocumentOut(BaseModel):
 
     id: UUID
     kind: LegalKindValue
+    app_scope: AppScopeValue
     version: int
     status: Literal["draft", "published"]
     title: dict[str, str]
@@ -113,6 +146,7 @@ class AdminDocumentOut(BaseModel):
         return cls(
             id=document.id,
             kind=document.kind,
+            app_scope=document.app_scope,
             version=document.version,
             status=document.status.value,
             title=document.title,
@@ -143,6 +177,7 @@ class AcceptanceCountOut(BaseModel):
     """Users that accepted the current version of a kind."""
 
     kind: LegalKindValue
+    app_scope: AppScopeValue
     version: int
     accepted_count: int
 
@@ -151,6 +186,7 @@ class AcceptanceCountOut(BaseModel):
         """Map the application view."""
         return cls(
             kind=count.kind,
+            app_scope=count.app_scope,
             version=count.version,
             accepted_count=count.accepted_count,
         )
@@ -160,3 +196,50 @@ class AcceptanceCountsOut(BaseModel):
     """One count per published kind."""
 
     items: list[AcceptanceCountOut]
+
+
+class KindOverviewOut(BaseModel):
+    """One document series: current version, draft and every version."""
+
+    kind: LegalKindValue
+    app_scope: AppScopeValue
+    current_version: int | None
+    accepted_count: int
+    draft: AdminDocumentOut | None
+    versions: list[AdminDocumentOut]
+
+
+class ScopeOverviewOut(BaseModel):
+    """The document series of one app scope."""
+
+    app_scope: AppScopeValue
+    kinds: list[KindOverviewOut]
+
+
+class OverviewOut(BaseModel):
+    """Documents grouped by app scope, global first."""
+
+    groups: list[ScopeOverviewOut]
+
+    @classmethod
+    def of(cls, groups: list[ScopeOverview]) -> "OverviewOut":
+        """Map the application view."""
+        return cls(
+            groups=[
+                ScopeOverviewOut(
+                    app_scope=g.app_scope,
+                    kinds=[
+                        KindOverviewOut(
+                            kind=k.kind,
+                            app_scope=k.app_scope,
+                            current_version=k.current_version,
+                            accepted_count=k.accepted_count,
+                            draft=AdminDocumentOut.of(k.draft) if k.draft else None,
+                            versions=[AdminDocumentOut.of(v) for v in k.versions],
+                        )
+                        for k in g.kinds
+                    ],
+                )
+                for g in groups
+            ]
+        )

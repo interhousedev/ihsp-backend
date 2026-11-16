@@ -25,7 +25,7 @@ def _section(i18n: I18nContext, title: str, buttons: list[Button]) -> Rows:
 
 
 def study_section(i18n: I18nContext, roles: set[Role], urls: BotUrls) -> Rows:
-    """Study for students, Work for teachers: today, lessons, marks, absences."""
+    """Study for students, Work for teachers; other roles get no section."""
     page = urls.page
     if Role.STUDENT in roles:
         buttons = [
@@ -38,6 +38,8 @@ def study_section(i18n: I18nContext, roles: set[Role], urls: BotUrls) -> Rows:
             web_app_button(i18n("bot-btn-excuses"), page(roles, "excuses/")),
         ]
         return _section(i18n, "bot-menu-section-study", buttons)
+    if Role.TEACHER not in roles:
+        return []
     buttons = [
         _screen(i18n, "bot-btn-today", "today"),
         _screen(i18n, "bot-btn-current-lesson", "lesson"),

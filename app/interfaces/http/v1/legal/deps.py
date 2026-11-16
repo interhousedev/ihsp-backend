@@ -5,7 +5,9 @@ from typing import Annotated
 from app.bootstrap.container import Container
 from app.interfaces.http.dependencies import get_actor, get_container, require_roles
 from app.interfaces.http.v1.id_registration.locale import request_locale
+from app.interfaces.http.v1.legal.schemas import AppScopeValue
 from app.shared.actor import Actor, Role
+from app.shared.contracts.legal import APP_HEADER, normalize_app
 
 from fastapi import Depends, Query, Request
 
@@ -28,3 +30,16 @@ def get_locale(
 
 
 Locale = Annotated[str, Depends(get_locale)]
+
+
+def get_app(request: Request) -> str:
+    """The calling app from ``X-IHSP-App``; unknown or missing means ``global``."""
+    return normalize_app(request.headers.get(APP_HEADER))
+
+
+App = Annotated[str, Depends(get_app)]
+
+AppScopeQuery = Annotated[
+    AppScopeValue,
+    Query(description="Document scope: global or the name of an app"),
+]

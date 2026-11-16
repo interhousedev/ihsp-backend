@@ -1,9 +1,10 @@
-"""``/start link_<code>``: the deep link of the registration's Telegram step."""
+"""``/start link_<code>`` (registration) and ``/start inv_<code>`` (invitation)."""
 
 from typing import Any
 
 from app.modules.identity.application.telegram_onboarding import (
     DEEP_LINK_PREFIX,
+    INVITE_PREFIX,
     LinkOutcome,
 )
 from app.modules.identity.ports.init_data_verifier import InitDataUser
@@ -18,6 +19,7 @@ _KEYS = {
     LinkOutcome.EXPIRED: "bot-onboarding-expired",
     LinkOutcome.LINKED_ELSEWHERE: "bot-onboarding-linked-elsewhere",
 }
+_INVITE_LINKED = "bot-invite-linked"
 
 
 async def redeem_link(
@@ -27,17 +29,25 @@ async def redeem_link(
     sender = message.from_user
     if sender is None or command.args is None:
         return
-    outcome = await container.identity.auth.telegram_onboarding.redeem(
-        command.args.removeprefix(DEEP_LINK_PREFIX),
-        InitDataUser(
-            id=sender.id,
-            first_name=sender.first_name,
-            last_name=sender.last_name,
-            username=sender.username,
-            language_code=sender.language_code,
-        ),
+    onboarding = container.identity.auth.telegram_onboarding
+    telegram_user = InitDataUser(
+        id=sender.id,
+        first_name=sender.first_name,
+        last_name=sender.last_name,
+        username=sender.username,
+        language_code=sender.language_code,
     )
-    await message.answer(i18n(_KEYS[outcome]))
+    if command.args.startswith(INVITE_PREFIX):
+        outcome = await onboarding.redeem_invite(
+            command.args.removeprefix(INVITE_PREFIX), telegram_user
+        )
+        key = _INVITE_LINKED if outcome is LinkOutcome.LINKED else _KEYS[outcome]
+    else:
+        outcome = await onboarding.redeem(
+            command.args.removeprefix(DEEP_LINK_PREFIX), telegram_user
+        )
+        key = _KEYS[outcome]
+    await message.answer(i18n(key))
 
 
 def build_router() -> Router:
@@ -45,6 +55,10 @@ def build_router() -> Router:
     router = Router(name="onboarding-link")
     router.message.register(
         redeem_link,
-        CommandStart(deep_link=True, magic=F.args.startswith(DEEP_LINK_PREFIX)),
+        CommandStart(
+            deep_link=True,
+            magic=F.args.startswith(DEEP_LINK_PREFIX)
+            | F.args.startswith(INVITE_PREFIX),
+        ),
     )
     return router

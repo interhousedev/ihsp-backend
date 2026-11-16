@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     )
     from app.modules.academic.wiring import AcademicModule
     from app.modules.admin.wiring import AdminServices
+    from app.modules.admission.wiring import AdmissionServices
     from app.modules.ai.wiring import AiServices
     from app.modules.certificates.wiring import CertificatesServices
     from app.modules.dashboard.wiring import DashboardServices
@@ -88,6 +89,7 @@ class Container:
     lms: "LmsModule" = NOT_BUILT
     notebooks: "NotebooksServices" = NOT_BUILT
     library: "LibraryServices" = NOT_BUILT
+    admission: "AdmissionServices" = NOT_BUILT
     certificates: "CertificatesServices" = NOT_BUILT
     knowledge: "KnowledgeServices" = NOT_BUILT
     feedback: "FeedbackServices" = NOT_BUILT
