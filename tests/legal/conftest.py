@@ -30,12 +30,18 @@ class LegalHarness:
     student: Actor
     admin: Actor
 
-    async def publish(self, kind: str = "privacy") -> int:
+    async def publish(self, kind: str = "privacy", app_scope: str = "global") -> int:
         """Save a complete draft of ``kind``, publish it, return its version."""
         await self.services.save_draft.execute(
-            kind, title=FULL, body_markdown=FULL, announcement=None
+            kind,
+            title=FULL,
+            body_markdown=FULL,
+            announcement=None,
+            app_scope=app_scope,
         )
-        doc = await self.services.publish.execute(kind, actor_id=self.admin.user_id)
+        doc = await self.services.publish.execute(
+            kind, actor_id=self.admin.user_id, app_scope=app_scope
+        )
         return doc.version
 
 

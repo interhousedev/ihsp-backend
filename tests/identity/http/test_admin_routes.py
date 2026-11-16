@@ -20,6 +20,8 @@ ADMIN_USER_FIELDS = {
     "photo_url",
     "created_at",
     "last_login_at",
+    "account_kind",
+    "phone",
 }
 
 

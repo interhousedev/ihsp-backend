@@ -27,7 +27,7 @@ from app.modules.identity.ports.mcp_call_log import (
 )
 from app.shared.actor import Role
 from app.shared.clock import Clock
-from app.shared.contracts.identity import UserStatus
+from app.shared.contracts.identity import AccountKind, UserStatus
 from app.shared.contracts.mcp_calls import McpCallRecord
 from app.shared.ids import new_id
 from app.shared.notifications import AuditDraft, NotificationDraft
@@ -189,18 +189,29 @@ class FakeUserRepository:
         query: str | None,
         roles: Sequence[Role],
         status: UserStatus | None,
+        account_kind: AccountKind | None = None,
         cursor: str | None,
         limit: int,
     ) -> Page[User]:
         """Newest (highest id) first."""
         users = sorted(self._s.users.values(), key=lambda u: u.id, reverse=True)
-        if query:
-            q = query.lower()
+        for word in (query or "").lower().split():
             users = [
                 u
                 for u in users
-                if q in " ".join([u.login or "", u.first_name, u.last_name]).lower()
+                if word
+                in " ".join(
+                    [
+                        u.login or "",
+                        u.first_name,
+                        u.last_name,
+                        u.middle_name or "",
+                        u.recovery_email or "",
+                    ]
+                ).lower()
             ]
+        if account_kind:
+            users = [u for u in users if u.account_kind == account_kind]
         if roles:
             users = [u for u in users if u.roles & set(roles)]
         if status:

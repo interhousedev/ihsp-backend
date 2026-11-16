@@ -40,6 +40,7 @@ SCHEMAS = {
     "faces",
     "onboarding",
     "privacy",
+    "admission",
 }
 AI_TABLES = {"ai.chats", "ai.chat_messages", "ai.usage_events"}
 FLASHCARD_TABLES = {"ai.flashcard_sets", "ai.flashcards", "ai.flashcard_reviews"}
@@ -252,7 +253,7 @@ async def test_notify_0002_allows_the_notebook_notification_type_and_reverts(
     await _alembic(url, "upgrade", "notify@head")
     await _insert_notification(url, "notebook_artifact_ready")
     await _insert_notification(url, "marks")
-    assert await _scalar(url, width) == len("library_item_changes_requested")
+    assert await _scalar(url, width) == len("admission_affordability_signoff")
     with pytest.raises(DBAPIError):
         await _insert_notification(url, "no_such_type")
 

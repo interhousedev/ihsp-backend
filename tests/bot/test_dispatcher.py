@@ -78,6 +78,7 @@ def test_commands_follow_the_menu(world: World) -> None:
         "lesson",
         "mail",
         "workoffs",
+        "transcripts",
         "settings",
         "new",
         "delete",

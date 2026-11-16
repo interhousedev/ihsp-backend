@@ -59,7 +59,8 @@ async def test_admin_edits_publishes_and_lists(api: Api, legal: LegalHarness) ->
     assert body["status"] == "draft" and body["version"] == 1
     assert set(body) == {
         "id", "kind", "version", "status", "title", "body_markdown",
-        "announcement", "created_at", "updated_at", "published_at", "published_by",
+        "announcement", "app_scope", "created_at", "updated_at", "published_at",
+        "published_by",
     }  # fmt: skip
 
     await api.client.put(
@@ -80,7 +81,9 @@ async def test_admin_edits_publishes_and_lists(api: Api, legal: LegalHarness) ->
         ("terms", "draft"),
     }
     counts = (await api.client.get("/v1/admin/legal/acceptances")).json()
-    assert counts["items"] == [{"kind": "privacy", "version": 1, "accepted_count": 0}]
+    assert counts["items"] == [
+        {"kind": "privacy", "app_scope": "global", "version": 1, "accepted_count": 0}
+    ]
 
 
 async def test_public_documents(api: Api, legal: LegalHarness) -> None:
@@ -104,7 +107,7 @@ async def test_public_documents(api: Api, legal: LegalHarness) -> None:
     assert doc["announcement"] is None
     assert set(doc) == {
         "kind", "version", "locale", "title", "body_markdown", "announcement",
-        "published_at",
+        "app_scope", "published_at",
     }  # fmt: skip
     en = (await api.client.get("/v1/legal/documents", params={"locale": "en"})).json()
     assert [d["announcement"] for d in en["items"]] == ["Changed"]

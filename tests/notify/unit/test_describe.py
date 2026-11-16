@@ -105,6 +105,43 @@ PAYLOADS: dict[NotificationType, dict[str, Any]] = {
         "seq": 2,
         "prompt": "Why is the sky blue?",
     },
+    NotificationType.TRANSCRIPT_REQUESTED: {
+        "student_name": "Ann",
+        "class_name": "11A",
+        "destination_note": "MIT",
+        "request_id_b64": "abc",
+    },
+    NotificationType.TRANSCRIPT_REMINDER: {"student_name": "Ann", "class_name": "11A"},
+    NotificationType.TRANSCRIPT_READY: {"pickup_location": "Room 12"},
+    NotificationType.TRANSCRIPT_SCAN_UPLOADED: {
+        "student_name": "Ann",
+        "student_id": "s",
+    },
+    NotificationType.TRANSCRIPT_UNROUTED: {"student_name": "Ann"},
+    NotificationType.ADMISSION_DOCUMENT_UPLOADED: {"student_name": "Ann"},
+    NotificationType.DOCUMENT_ATTACHED: {"count": 1},
+    NotificationType.DOCUMENT_REJECTED: {},
+    NotificationType.ADMISSION_DEADLINE_REMINDER: {
+        "institution": "MIT",
+        "days": 7,
+        "due_utc": "2026-12-01T00:00:00+00:00",
+    },
+    NotificationType.DEADLINE_CHANGED: {
+        "institution": "MIT",
+        "due_utc": "2026-12-01T00:00:00+00:00",
+    },
+    NotificationType.ADMISSION_HELP_REQUESTED: {
+        "student_name": "Ann",
+        "request_id": "r",
+    },
+    NotificationType.ADMISSION_HELP_RESPONDED: {"request_id": "r"},
+    NotificationType.ADMISSION_COMMENT_ADDED: {"author_name": "Bob", "path": "/"},
+    NotificationType.ADMISSION_REVIEW_READY: {"title": "Essay", "path": "/"},
+    NotificationType.ADMISSION_AFFORDABILITY_SIGNOFF: {
+        "student_name": "Ann",
+        "event": "requested",
+        "path": "/",
+    },
     NotificationType.STUDENT_SYNC_FAILED: {"attempts": 6, "student_id": "s"},
     NotificationType.KNOWLEDGE_GAP: {
         "query": "dress code",

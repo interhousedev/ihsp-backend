@@ -12,6 +12,7 @@ class InMemoryOutbox:
         """Start empty."""
         self.notifications: list[NotificationDraft] = []
         self.audits: list[AuditDraft] = []
+        self.claimed: set[str] = set()  # dedupe keys a dispatcher already took
 
     async def write_notifications(
         self, session: AsyncSession, drafts: list[NotificationDraft]
@@ -24,3 +25,12 @@ class InMemoryOutbox:
     ) -> None:
         """Collect audit drafts."""
         self.audits.extend(drafts)
+
+    async def cancel_pending(self, session: AsyncSession, dedupe_key: str) -> bool:
+        """Drop an unclaimed draft; False when it is claimed or unknown."""
+        if dedupe_key in self.claimed:
+            return False
+        kept = [d for d in self.notifications if d.dedupe_key != dedupe_key]
+        found = len(kept) != len(self.notifications)
+        self.notifications = kept
+        return found

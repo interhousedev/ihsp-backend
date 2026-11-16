@@ -86,6 +86,7 @@ def service(linker: Linker, monkeypatch: pytest.MonkeyPatch) -> TelegramOnboardi
     monkeypatch.setattr(module, "require_user", require_user)
     return TelegramOnboarding(
         store=Store(),
+        invites=Store(),
         uow_factory=Uow,  # type: ignore[arg-type]
         linker=linker,  # type: ignore[arg-type]
         verifier=Verifier(),

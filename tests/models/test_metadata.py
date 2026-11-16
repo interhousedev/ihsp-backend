@@ -4,6 +4,61 @@ from app.shared.db import models  # noqa: F401  (imports every module's ORM pack
 from app.shared.db.base import Base
 
 EXPECTED_TABLES = {
+    # admission (54)
+    "admission.admission_stats",
+    "admission.affordability_checks",
+    "admission.aid_policies",
+    "admission.audit_events",
+    "admission.campuses",
+    "admission.catalog_proposals",
+    "admission.checklist_items",
+    "admission.comments",
+    "admission.costs_of_attendance",
+    "admission.courses",
+    "admission.deadlines",
+    "admission.deck_decisions",
+    "admission.document_attachments",
+    "admission.document_versions",
+    "admission.documents",
+    "admission.eligibility_rules",
+    "admission.entitlements",
+    "admission.essay_versions",
+    "admission.essays",
+    "admission.facts",
+    "admission.goal_milestones",
+    "admission.guest_links",
+    "admission.guest_sessions",
+    "admission.help_requests",
+    "admission.help_responses",
+    "admission.institutions",
+    "admission.item_interviews",
+    "admission.item_metrics",
+    "admission.items",
+    "admission.list_entries",
+    "admission.milestones",
+    "admission.officer_settings",
+    "admission.places",
+    "admission.preferences",
+    "admission.profile_words",
+    "admission.profile_words_history",
+    "admission.profiles",
+    "admission.programs",
+    "admission.proof_claims",
+    "admission.proofs",
+    "admission.reminder_prefs",
+    "admission.reminders",
+    "admission.requirements",
+    "admission.review_feedback",
+    "admission.reviews",
+    "admission.routes",
+    "admission.runtime_settings",
+    "admission.safety_facts",
+    "admission.scholarships",
+    "admission.sources",
+    "admission.staff_assignments",
+    "admission.staff_roles",
+    "admission.staff_saved_views",
+    "admission.transcript_requests",
     # id (8)
     "id.users",
     "id.sessions",
@@ -59,6 +114,7 @@ EXPECTED_TABLES = {
     "ai.projects",
     "ai.project_files",
     "ai.telegram_topics",
+    "ai.prompt_versions",
     # notify (2), admin (1), mail (1)
     "notify.notifications",
     "notify.push_subscriptions",
@@ -150,9 +206,10 @@ EXPECTED_TABLES = {
     # feedback (2)
     "feedback.items",
     "feedback.responses",
-    # legal (2)
+    # legal (3)
     "legal.documents",
     "legal.acceptances",
+    "legal.purpose_consents",
     # faces (4)
     "faces.face_profiles",
     "faces.devices",
@@ -167,10 +224,10 @@ EXPECTED_TABLES = {
 
 
 def test_metadata_contains_every_table_of_the_models_readme() -> None:
-    """spec -> Models plus the later modules (135 tables)."""
+    """spec -> Models plus the later modules (196 tables)."""
     actual = {table.fullname for table in Base.metadata.tables.values()}
 
-    assert len(EXPECTED_TABLES) == 140
+    assert len(EXPECTED_TABLES) == 196
     assert actual == EXPECTED_TABLES
 
 

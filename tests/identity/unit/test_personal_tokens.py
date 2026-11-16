@@ -55,7 +55,7 @@ def request_of(method: str, path: str) -> Request:
 async def verify(world: World, method: str, path: str, token: str) -> Actor:
     """Run the same check as get_actor."""
 
-    async def consented(_user_id: object) -> None:
+    async def consented(_user_id: object, _app: str = "global") -> None:
         return None
 
     container: Any = SimpleNamespace(

@@ -22,6 +22,7 @@ ORIGIN_URLS = {
         "sp",
         "staff",
         "admin",
+        "admission",
         "lms",
         "share",
         "app",
@@ -122,6 +123,7 @@ def test_cors_origins_come_from_urls() -> None:
         "http://localhost:3005",
         "http://localhost:3007",
         "http://localhost:3008",
+        "http://localhost:3009",
     ]
     assert settings.cors_share_origins() == ["http://localhost:3006"]
 

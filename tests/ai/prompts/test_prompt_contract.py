@@ -36,7 +36,7 @@ class Budget(NamedTuple):
 
 BUDGETS: Final = {
     "student": Budget(5068, 9990, 399),
-    "admin": Budget(4599, 10100, 104),
+    "admin": Budget(4599, 10175, 104),
     "author": Budget(9371, 32320, 568),
     "notebook": Budget(4985, 2, 0),
     "guest": Budget(3500, 336, 120),

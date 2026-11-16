@@ -85,6 +85,16 @@ def test_the_catalog_lists_the_places_that_call_a_model() -> None:
         "teacher_work_check",
         "teacher_ai_check",
         "teacher_lesson_plan",
+        "admit_profile_words",
+        "admit_item_interview",
+        "admit_item_review",
+        "admit_item_rewrite_fix",
+        "admit_essay_review",
+        "admit_alignment_map",
+        "admit_alignment_refresh",
+        "admit_proof_extract",
+        "admit_university_research",
+        "admit_goal_plan",
     } == names
 
 

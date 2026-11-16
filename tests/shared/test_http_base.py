@@ -134,7 +134,7 @@ class FakeIdentity:
         return self.actor
 
 
-async def _consented(_user_id: object) -> None:
+async def _consented(_user_id: object, _app: str = "global") -> None:
     """Every user has accepted the current documents."""
     return None
 

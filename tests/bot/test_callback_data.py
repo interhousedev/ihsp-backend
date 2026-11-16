@@ -49,6 +49,7 @@ LARGEST: list[CallbackData] = [
     JournalCb(lesson=LESSON, action="open"),
     JournalStudentCb(lesson=LESSON, pos=LARGE),
     JournalMarkCb(lesson=LESSON, pos=LARGE, value=5),
+    callbacks.TrCb(a="d", i=LESSON),
 ]
 
 

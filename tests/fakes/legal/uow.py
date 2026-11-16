@@ -1,12 +1,17 @@
 """In-memory unit of work of the legal module."""
 
 import copy
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Collection, Sequence
 from types import TracebackType
 from typing import Self
 from uuid import UUID
 
-from app.modules.legal.domain.models import Acceptance, DocumentStatus, LegalDocument
+from app.modules.legal.domain.models import (
+    Acceptance,
+    DocKey,
+    DocumentStatus,
+    LegalDocument,
+)
 from app.shared.notifications import AuditDraft
 
 
@@ -28,38 +33,54 @@ class FakeLegalRepository:
         """Bind to the store."""
         self.store = store
 
-    async def lock_kind(self, kind: str) -> None:
+    async def lock_kind(self, kind: str, app_scope: str) -> None:
         """Nothing to serialize in memory."""
 
     async def list_documents(self) -> list[LegalDocument]:
-        """Every version, by kind then newest first."""
-        docs = sorted(self.store.documents, key=lambda d: (d.kind, -d.version))
+        """Every version, by scope, kind then newest first."""
+        docs = sorted(
+            self.store.documents, key=lambda d: (d.app_scope, d.kind, -d.version)
+        )
         return [copy.deepcopy(d) for d in docs]
 
-    async def list_current(self) -> list[LegalDocument]:
-        """The newest published version of each kind."""
-        newest: dict[str, LegalDocument] = {}
+    async def list_current(
+        self, app_scopes: Collection[str] | None = None
+    ) -> list[LegalDocument]:
+        """The newest published version of each (kind, scope)."""
+        newest: dict[DocKey, LegalDocument] = {}
         for doc in self.store.documents:
+            key = (doc.kind, doc.app_scope)
+            if app_scopes is not None and doc.app_scope not in app_scopes:
+                continue
             if doc.status is DocumentStatus.PUBLISHED and (
-                doc.kind not in newest or doc.version > newest[doc.kind].version
+                key not in newest or doc.version > newest[key].version
             ):
-                newest[doc.kind] = doc
+                newest[key] = doc
         return [copy.deepcopy(d) for d in newest.values()]
 
-    async def get_current(self, kind: str) -> LegalDocument | None:
-        """The newest published version of the kind."""
-        return next((d for d in await self.list_current() if d.kind == kind), None)
+    async def get_current(self, kind: str, app_scope: str) -> LegalDocument | None:
+        """The newest published version of the kind in the scope."""
+        found = await self.list_current([app_scope])
+        return next((d for d in found if d.kind == kind), None)
 
-    async def get_draft(self, kind: str) -> LegalDocument | None:
-        """The draft of the kind."""
+    async def get_draft(self, kind: str, app_scope: str) -> LegalDocument | None:
+        """The draft of the kind in the scope."""
         for doc in self.store.documents:
-            if doc.kind == kind and doc.status is DocumentStatus.DRAFT:
+            if (
+                doc.kind == kind
+                and doc.app_scope == app_scope
+                and doc.status is DocumentStatus.DRAFT
+            ):
                 return copy.deepcopy(doc)
         return None
 
-    async def next_version(self, kind: str) -> int:
+    async def next_version(self, kind: str, app_scope: str) -> int:
         """One after the newest version."""
-        versions = [d.version for d in self.store.documents if d.kind == kind]
+        versions = [
+            d.version
+            for d in self.store.documents
+            if d.kind == kind and d.app_scope == app_scope
+        ]
         return max(versions, default=0) + 1
 
     async def add(self, document: LegalDocument) -> None:
@@ -73,34 +94,37 @@ class FakeLegalRepository:
             if doc.id == document.id:
                 docs[i] = copy.deepcopy(document)
 
-    async def accepted_versions(self, user_id: UUID) -> dict[str, set[int]]:
-        """Versions the user accepted, by kind."""
-        found: dict[str, set[int]] = {}
+    async def accepted_versions(self, user_id: UUID) -> dict[DocKey, set[int]]:
+        """Versions the user accepted, by (kind, scope)."""
+        found: dict[DocKey, set[int]] = {}
         for a in self.store.acceptances:
             if a.user_id == user_id:
-                found.setdefault(a.kind, set()).add(a.version)
+                found.setdefault((a.kind, a.app_scope), set()).add(a.version)
         return found
 
     async def add_acceptances(self, acceptances: Sequence[Acceptance]) -> None:
         """Insert acceptances, skipping ones already given."""
         for a in acceptances:
             if not any(
-                x.user_id == a.user_id and x.kind == a.kind and x.version == a.version
+                x.user_id == a.user_id
+                and x.kind == a.kind
+                and x.app_scope == a.app_scope
+                and x.version == a.version
                 for x in self.store.acceptances
             ):
                 self.store.acceptances.append(a)
 
-    async def count_acceptances(self, current: dict[str, int]) -> dict[str, int]:
+    async def count_acceptances(self, current: dict[DocKey, int]) -> dict[DocKey, int]:
         """Distinct users per current version."""
         return {
-            kind: len(
+            (kind, scope): len(
                 {
                     a.user_id
                     for a in self.store.acceptances
-                    if a.kind == kind and a.version == version
+                    if a.kind == kind and a.app_scope == scope and a.version == version
                 }
             )
-            for kind, version in current.items()
+            for (kind, scope), version in current.items()
         }
 
 
