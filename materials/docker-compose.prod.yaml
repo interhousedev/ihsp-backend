@@ -675,7 +675,7 @@ services:
   # scripts/backup_bugsink.sh copies that database to the sp-logs bucket.
   # Version pinned: upgrade by changing the tag after reading the Bugsink release notes.
   bugsink:
-    image: bugsink/bugsink:2.6.2
+    image: bugsink/bugsink:2.6.3
     restart: unless-stopped
     logging: *logging
     mem_limit: 1g
@@ -730,7 +730,7 @@ services:
   # The queue is /tmp/snappea.sqlite3 (hard-coded by the image); the shared bugsink_queue
   # volume lets both containers see it, and the web container migrates it at start.
   bugsink_worker:
-    image: bugsink/bugsink:2.6.2
+    image: bugsink/bugsink:2.6.3
     command: ["bugsink-runsnappea"]
     restart: unless-stopped
     logging: *logging
