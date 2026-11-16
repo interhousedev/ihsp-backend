@@ -1,6 +1,6 @@
 ---
 name: migrations
-description: Use when adding or changing database tables, columns, constraints, indexes or a whole module schema - Alembic with one branch per module under migrations/versions/<module>, version_locations in alembic.ini, SCHEMAS in migrations/env.py, upgrade heads, and the rule never to edit an applied revision.
+description: Use for DB table, column, constraint, index, enum, data or module schema changes and the migration gate; not for ad hoc queries
 ---
 
 # Migrations
@@ -29,6 +29,10 @@ Review the generated file: schema names, server defaults, enum changes, index na
 2. Add the folder to `version_locations` in `alembic.ini` (colon-separated list).
 3. Add the schema to `SCHEMAS` in `migrations/env.py`, or autogenerate ignores it.
 4. Import the module's ORM in the metadata the env loads.
+
+## Migration gate (mandatory)
+
+Any change touching the database (new table, column, constraint, index, enum value, check constraint, data migration) must pass `scripts/check_migrations.sh` before the work is reported done. It needs the dev compose postgres and does, on a throw-away database `ihsp_migcheck_<pid>`: `alembic heads` loads (no `op.*` call at module level; `op.f()` only inside `upgrade`/`downgrade`); `upgrade heads` from empty equals the ORM metadata (empty autogenerate diff); the **upgrade-on-existing-database rehearsal**: upgrade to every head minus the revisions new on this branch, then `upgrade heads` again. It is the `migrations` stage of `scripts/ci_local.sh`. A data migration also needs a test in `tests/models/test_migrations.py` with rows in place before the upgrade.
 
 ## Checks
 

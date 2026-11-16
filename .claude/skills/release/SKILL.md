@@ -1,6 +1,6 @@
 ---
 name: release
-description: Use when running CI locally, building or pushing the backend image, updating CHANGELOG.md, or releasing and tagging a new version of iht-backend.
+description: Use for CI runs, backend image builds/pushes, CHANGELOG.md updates, and tagging iht-backend releases
 ---
 
 # Release

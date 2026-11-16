@@ -1,6 +1,6 @@
 ---
 name: ai-studio-quality
-description: Use when changing notebook Studio generation (quizzes, flash cards, slides, other artifacts), AI task prompts or structured-output schemas in app/modules/notebooks - the plan-then-generate pipeline, item self-containment and stimulus rules, blueprint quotas, verify and refill, budget estimates, the real-model eval harness, and the 16 nullable/union parameter limit with NOT_NULL.
+description: Use for notebook Studio artifact generation, AI prompts or output schemas in app/modules/notebooks; not for unrelated modules.
 ---
 
 # AI Studio quality

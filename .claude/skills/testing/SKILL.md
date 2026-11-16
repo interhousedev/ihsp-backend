@@ -1,6 +1,6 @@
 ---
 name: testing
-description: Use when writing or running tests in iht-backend - test-first bug fixes, choosing the layer (domain unit, application with fakes, HTTP, bot, models/migrations), the in-memory fakes in tests/fakes, requirement-ID docstrings, the alembic heads and models tests, the openapi export check, and targeted versus full runs against the Postgres dev compose services.
+description: Use for writing or running iht-backend tests, choosing the layer, fakes, Postgres, openapi, alembic, and the migration gate
 ---
 
 # Testing
@@ -31,11 +31,13 @@ The docstring of every test starts with the IDs it covers: `"""ACA-11: a tempora
 
 - `tests/models/test_migrations.py` checks that `alembic upgrade heads` builds exactly the ORM models, that downgrade to base and upgrade again works, and that branches apply in any order. A new table or column without its migration fails here.
 - Always `heads`, never `head`.
+- Any change touching the DB (new table, column, constraint, index, enum value, check constraint, data migration) must pass `scripts/check_migrations.sh`, including its upgrade-on-existing-database rehearsal, before the work is reported done (`scripts/ci_local.sh migrations`). See the `migrations` skill.
 
 ## Commands
 
 ```bash
 uv run pytest tests/<module>/unit -q                                         # fast, no services
+scripts/check_migrations.sh                                                  # migration gate, needs postgres
 docker compose -f materials/docker-compose.dev.yaml up -d --wait postgres redis s3 s3-init vault vault-init
 IHSP_ENV_FILE=materials/dev.env uv run pytest tests/<module> -q -p no:cacheprovider
 IHSP_ENV_FILE=materials/dev.env uv run pytest -q -p no:cacheprovider         # full suite before a commit

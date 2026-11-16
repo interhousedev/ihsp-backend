@@ -1,6 +1,6 @@
 ---
 name: security-review
-description: Use when reviewing or writing code that touches a trust boundary in IHSP - AI chat tools and prompt injection, tool approval, the guest bot, AI access revocation, object ownership (IDOR), rate limits and account enumeration, outbound fetches (SSRF), uploads, secrets and settings - or before merging any change to identity, ai, notebooks, links, files, bot or materials/.
+description: Use for trust-boundary code: prompt injection, tool approval, guest bot, IDOR, SSRF, uploads, secrets, identity/ai/bot merges.
 ---
 
 # Security review

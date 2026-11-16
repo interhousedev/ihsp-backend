@@ -1,6 +1,6 @@
 ---
 name: copy-and-i18n
-description: Use when adding or changing any user-facing text in iht-backend - bot messages, notifications, mail, error messages, AI system prompts that set the answer language - covering uz/ru/en parity in locales/, the school terms ПК and ИК, and the Uzbek modifier letter apostrophe ʼ.
+description: Use for any user-facing text in iht-backend across uz/ru/en locales, ПК/ИК terms, ʼ apostrophe
 ---
 
 # Copy and i18n

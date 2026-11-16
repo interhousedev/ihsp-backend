@@ -1,6 +1,6 @@
 ---
 name: bugsink-triage
-description: Use for triaging Bugsink (IHSP-BACKEND-*) error issues of the backend: fetch, trace in prod logs, reproduce, fix, resolve.
+description: Use for Bugsink IHSP-BACKEND errors: fetch, trace prod logs, reproduce, fix, resolve.
 ---
 
 # Bugsink triage

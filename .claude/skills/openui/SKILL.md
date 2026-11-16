@@ -1,6 +1,6 @@
 ---
 name: openui
-description: Use when changing generative UI blocks in AI answers (app/shared/openui) - the component catalogue shared with iht-web, the prompt lines that teach the model the catalogue, validation, the one-shot repair task, dropping unsafe blocks, and degrading to Markdown for the bot and plain clients.
+description: Use for generative UI block changes in app/shared/openui: catalogue, prompt lines, validation, repair, Markdown fallback.
 ---
 
 # OpenUI

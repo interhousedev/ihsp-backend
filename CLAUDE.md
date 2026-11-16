@@ -23,6 +23,7 @@ uv sync --frozen
 scripts/style_check.sh                                     # black, isort, flake8, mypy, ty
 IHSP_ENV_FILE=materials/dev.env uv run pytest -q -p no:cacheprovider        # needs the dev compose services
 uv run pytest tests/<module>/unit -q                       # unit tests, no services
+scripts/check_migrations.sh                                # migration gate: heads, empty upgrade vs models, upgrade on an existing DB (needs postgres)
 docker compose -f materials/docker-compose.dev.yaml up -d --wait postgres redis s3 s3-init vault vault-init mailpit
 IHSP_ENV_FILE=materials/dev.env uv run python scripts/export_openapi.py     # after any route or schema change
 ```
@@ -43,6 +44,7 @@ Changing a route or a schema means: export `openapi/openapi.json`, commit it wit
 - **App map.** When adding a feature page, add it to `app/shared/app_map.py` (the assistant `find_feature`, the MCP tool and `GET /v1/app-map` read it).
 - **Copy.** All user-facing text exists in uz, ru and en. The terms are "Промежуточный контроль (ПК)" and "Итоговый контроль (ИК)"; never "Рубежный контроль".
 - **Structured-output JSON schemas** may have at most 16 union or nullable parameters (Anthropic answers HTTP 400 otherwise). Use `NOT_NULL` from `app/modules/notebooks/domain/artifacts/strict.py`; `to_strict_schema()` makes every property required and adds `additionalProperties: false`; avoid recursive schemas.
+- **Migration gate.** Any change touching the database (new table, column, constraint, index, enum value, check constraint, data migration) must pass `scripts/check_migrations.sh`, including its upgrade-on-existing-database rehearsal, before it is reported done; it is the `migrations` stage of `scripts/ci_local.sh`.
 - **Edge cases of Python tooling.** Use `uuid_utils.compat.uuid7`, not `uuid_utils.uuid7`. Always `alembic upgrade heads`. Never edit an applied migration.
 
 ## AI models and limits

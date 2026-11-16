@@ -1,6 +1,6 @@
 ---
 name: telegram-bot
-description: Use when changing the aiogram bot in app/interfaces/bot - rendering rich text and model answers as Telegram HTML, inline buttons and callback data, approval and action tokens, streaming answers with drafts, router order, FSM states and the AI catch-all, or guest handling.
+description: Use for aiogram handlers, Telegram HTML rendering, inline buttons, callbacks, FSM states, streaming drafts, router order
 ---
 
 # Telegram bot

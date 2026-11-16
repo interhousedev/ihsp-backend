@@ -1,6 +1,6 @@
 ---
 name: api-contract
-description: Use when adding, removing or changing an HTTP route, a request or response schema, an error code or a query parameter in app/interfaces/http - exporting openapi/openapi.json, the CI staleness check, and the iht-web sync and breaking-change rules.
+description: Use for HTTP route, schema, error code, or query param changes in app/interfaces/http; not for internal logic.
 ---
 
 # API contract
