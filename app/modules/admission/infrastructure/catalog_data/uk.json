@@ -1,0 +1,149 @@
+{
+ "institutions": [
+  {
+   "slug": "oxford",
+   "name": "University of Oxford",
+   "country": "GB",
+   "city": "Oxford",
+   "fields": [
+    "Humanities",
+    "Social sciences",
+    "Mathematical, physical and life sciences",
+    "Medical sciences"
+   ],
+   "source_url": "https://www.ox.ac.uk/admissions/undergraduate",
+   "year": 2026,
+   "deadlines": [
+    {
+     "plan": "OTHER",
+     "date": "2026-10-15",
+     "cycle": "2026-27",
+     "source_url": "https://www.imperial.ac.uk/study/apply/undergraduate/process/deadlines/",
+     "note": "UCAS deadline for Oxford/Cambridge, read on Imperial's page; ox.ac.uk returned HTTP 403 so Oxford's own page was not read"
+    }
+   ],
+   "scholarships": [],
+   "verified": false
+  },
+  {
+   "slug": "imperial",
+   "name": "Imperial College London",
+   "country": "GB",
+   "city": "London",
+   "fields": [
+    "Engineering",
+    "Natural sciences",
+    "Medicine",
+    "Business",
+    "Computing",
+    "Mathematics"
+   ],
+   "source_url": "https://www.imperial.ac.uk/study/apply/undergraduate",
+   "year": 2026,
+   "deadlines": [
+    {
+     "plan": "OTHER",
+     "date": "2026-10-15",
+     "cycle": "2026-27",
+     "source_url": "https://www.imperial.ac.uk/study/apply/undergraduate/process/deadlines/",
+     "note": "UCAS deadline for medicine (2027 entry)"
+    },
+    {
+     "plan": "OTHER",
+     "date": "2027-01-13",
+     "cycle": "2026-27",
+     "source_url": "https://www.imperial.ac.uk/study/apply/undergraduate/process/deadlines/",
+     "note": "UCAS equal-consideration deadline for all other courses; ESAT/TMUA windows 12-16 Oct 2026 and 4-8 Jan 2027"
+    }
+   ],
+   "scholarships": [],
+   "verified": true
+  },
+  {
+   "slug": "cambridge",
+   "name": "University of Cambridge",
+   "country": "GB",
+   "city": "Cambridge",
+   "fields": [
+    "Archaeology",
+    "Architecture",
+    "Chemical Engineering and Biotechnology",
+    "Classics",
+    "Computer Science",
+    "Economics",
+    "Engineering",
+    "English",
+    "Geography",
+    "History",
+    "Law",
+    "Mathematics",
+    "Medicine",
+    "Natural Sciences",
+    "Philosophy",
+    "Veterinary Medicine"
+   ],
+   "source_url": "https://www.undergraduate.study.cam.ac.uk/",
+   "year": 2026,
+   "test_policy": {
+    "value": "not_applicable",
+    "source_url": "https://www.undergraduate.study.cam.ac.uk/apply/how/cambridge-application",
+    "year": 2026,
+    "note": "SAT/AP required only if they are the entry qualifications; course-specific admissions assessments not verified here."
+   },
+   "intl_tuition_usd": {
+    "value": 29052,
+    "currency": "GBP",
+    "source_url": "https://www.undergraduate.study.cam.ac.uk/files/publications/undergraduate_tuition_fees_2026-27.pdf",
+    "year": 2026,
+    "note": "GBP per year 2026-27, humanities/social science. Maths 32,406; Architecture/Design/Geography/Music 38,010; CompSci/Engineering/Natural Sciences/Management 44,214; Medicine/Vet 70,554. College fee extra: GBP 11,500-14,950. Fixed for the course. 2027 entry: 30,798/34,356/40,296/46,872/70,554 (international-fees-and-costs page)."
+   },
+   "aid": {
+    "basis": {
+     "value": "none",
+     "source_url": "https://www.undergraduate.study.cam.ac.uk/international-students/international-fees-and-costs",
+     "year": 2026,
+     "note": "Basis inferred: no need-based aid for internationals found on the pages read; not an explicit statement."
+    }
+   },
+   "deadlines": [
+    {
+     "plan": "OTHER",
+     "date": "2026-10-22",
+     "cycle": "2026-27",
+     "source_url": "https://www.undergraduate.study.cam.ac.uk/apply/how/cambridge-application",
+     "note": "My Cambridge Application deadline 6pm UK; UCAS deadline is 15 Oct 2026. Mature January round 20 Jan 2027. GBP 60 fee for applicants outside UK/Ireland."
+    }
+   ],
+   "scholarships": [],
+   "verified": true
+  },
+  {
+   "slug": "ucl",
+   "name": "University College London",
+   "country": "GB",
+   "city": "London",
+   "fields": [
+    "Engineering",
+    "Medical sciences",
+    "Law",
+    "Social and historical sciences",
+    "Arts and humanities",
+    "Built environment",
+    "Mathematical and physical sciences"
+   ],
+   "source_url": "https://www.ucl.ac.uk/prospective-students/undergraduate/",
+   "year": 2026,
+   "deadlines": [
+    {
+     "plan": "OTHER",
+     "date": "2027-01-13",
+     "cycle": "2026-27",
+     "source_url": "https://ucl.ac.uk/prospective-students/undergraduate/how-apply/guidance-international-applicants",
+     "note": "UCAS deadline for most courses; UCL fee and scholarship pages could not be fetched"
+    }
+   ],
+   "scholarships": [],
+   "verified": true
+  }
+ ]
+}

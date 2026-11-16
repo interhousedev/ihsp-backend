@@ -1,0 +1,781 @@
+{
+ "institutions": [
+  {
+   "slug": "tum",
+   "name": "Technical University of Munich",
+   "country": "DE",
+   "city": "Munich",
+   "fields": [
+    "Engineering",
+    "Natural sciences",
+    "Computer science and mathematics",
+    "Medicine",
+    "Management",
+    "Life sciences",
+    "Architecture"
+   ],
+   "source_url": "https://www.tum.de/en/studies/application/application-info-portal",
+   "year": 2026,
+   "intl_tuition_usd": {
+    "value": 4000,
+    "currency": "EUR",
+    "source_url": "https://www.tum.de/en/studies/fees/tuition",
+    "year": 2026,
+    "note": "EUR per year (Bachelor non-EU EUR 2,000 or 3,000 per semester since WS 2024/25; EUR 2,300/3,400 from WS 2027/28). Plus semester fee EUR 97 per semester."
+   },
+   "aid": {
+    "merit_for_internationals": {
+     "value": true,
+     "source_url": "https://www.tum.de/en/studies/fees/tuition",
+     "year": 2026,
+     "note": "TUM scholarship for international students EUR 500-1,800 per semester, one-time, performance and financial circumstances."
+    }
+   },
+   "deadlines": [
+    {
+     "plan": "OTHER",
+     "date": null,
+     "cycle": "2026-27",
+     "source_url": "https://www.tum.de/en/studies/application/application-info-portal",
+     "note": "Exact Bachelor deadline not read (page text stripped); WS 2026/27 enrollment open until 13 Nov 2026."
+    }
+   ],
+   "scholarships": [
+    {
+     "name": "TUM scholarship for international students",
+     "amount": "EUR 500-1,800 per semester (one-time)",
+     "deadline": null,
+     "url": "https://www.tum.de/en/studies/fees/tuition",
+     "year": 2026
+    }
+   ],
+   "verified": true
+  },
+  {
+   "slug": "heidelberg",
+   "name": "Heidelberg University",
+   "country": "DE",
+   "city": "Heidelberg",
+   "fields": [
+    "Medicine",
+    "Natural sciences",
+    "Humanities",
+    "Law",
+    "Economics",
+    "Theology",
+    "Social sciences"
+   ],
+   "source_url": "https://www.uni-heidelberg.de/en/study/application-enrolment",
+   "year": 2026,
+   "intl_tuition_usd": {
+    "value": 3000,
+    "currency": "EUR",
+    "source_url": "https://www.uni-heidelberg.de/en/study/management-of-studies/semester-fees/tuition-fees-for-international-students",
+    "year": 2026,
+    "note": "EUR per year: EUR 1,500 per semester for non-EU/EEA with foreign entrance qualification (Bachelor/Staatsexamen). Up to 5% exempted. Plus semester fee EUR 189.80 per semester."
+   },
+   "deadlines": [
+    {
+     "plan": "RD",
+     "date": "2026-07-15",
+     "cycle": "2026-27",
+     "source_url": "https://www.uni-heidelberg.de/en/study/management-of-studies/key-dates-deadlines/application-deadlines-for-the-1st-semester-of-undergraduate-degree-programmes",
+     "note": "Non-EU applicants with foreign qualification: 1 Jun-15 Jul, winter semester only; year not stated on page, date assumed for 2026."
+    }
+   ],
+   "scholarships": [],
+   "verified": true
+  },
+  {
+   "slug": "bocconi",
+   "name": "Bocconi University",
+   "country": "IT",
+   "city": "Milan",
+   "fields": [
+    "economics",
+    "management",
+    "finance",
+    "law",
+    "politics"
+   ],
+   "source_url": "https://www.unibocconi.it/en/applying-bocconi/bachelor-and-law-programs",
+   "year": 2026,
+   "test_policy": {
+    "value": "required",
+    "source_url": "https://www.unibocconi.it/en/applying-bocconi/bachelor-and-law-programs",
+    "year": 2026,
+    "note": "Admission based on test (SAT/L-SAT, ACT or Bocconi online test) plus GPA of the last two-three years; about 3,000 first-year places. Intake Sept 2027."
+   },
+   "intl_tuition_usd": {
+    "value": 17700,
+    "currency": "EUR",
+    "source_url": "https://www.unibocconi.it/en/applying-bocconi/bachelor-and-law-programs",
+    "year": 2026,
+    "note": "EUR 17,700/year for first-year Bachelor/Law in a.y. 2027-28 (modulable by family economic condition with 100%-20% exemption). Value is in EUR, not USD; convert."
+   },
+   "aid": {
+    "basis": {
+     "value": "need_aware",
+     "source_url": "https://www.unibocconi.it/en/current-students/funding/funding-bachelor-science-and-law-programs/100-full-tuition-waivers",
+     "year": 2024,
+     "note": "Bocconi4Access to Education: need-based waivers (up to 100%) for international first-year students; page dated A.Y. 2024-25. Admission itself is merit-based."
+    }
+   },
+   "deadlines": [],
+   "scholarships": [
+    {
+     "name": "Bocconi4Access to Education Scholarship",
+     "amount": "Up to 100% tuition waiver (need-based)",
+     "deadline": null,
+     "url": "https://www.unibocconi.it/en/current-students/funding/funding-bachelor-science-and-law-programs/100-full-tuition-waivers",
+     "year": 2024
+    },
+    {
+     "name": "Boost your Future Scholarship",
+     "amount": null,
+     "deadline": null,
+     "url": "https://www.unibocconi.it/en/applying-bocconi/bachelor-and-law-programs",
+     "year": 2026
+    }
+   ],
+   "verified": true
+  },
+  {
+   "slug": "polimi",
+   "name": "Politecnico di Milano",
+   "country": "IT",
+   "city": "Milan",
+   "fields": [
+    "engineering",
+    "architecture",
+    "design"
+   ],
+   "source_url": "https://www.polimi.it/en/prospective-students/how-much-does-it-cost/laurea-laurea-magistrale-and-single-cycle-programmes",
+   "year": 2026,
+   "test_policy": {
+    "value": "required",
+    "source_url": "https://www.polimi.it/en/prospective-students/how-to-apply/admission-to-laurea-programmes/engineering/tolc-i",
+    "year": 2026,
+    "note": "Admission test required: TOL, TOLC-I, CEnT-S or SAT; min score 30/100 to enrol."
+   },
+   "deadlines": [
+    {
+     "plan": "RD",
+     "date": "2027-06-03",
+     "cycle": "2027-28",
+     "source_url": "https://www.polimi.it/en/prospective-students/how-to-apply/admission-to-laurea-programmes/engineering/tolc-i",
+     "note": "TOLC-I score recording deadline for 2027/28 Engineering BSc (3 Jun 2027, 11:59 am); 2026-27 cycle already closed."
+    }
+   ],
+   "scholarships": [],
+   "verified": true
+  },
+  {
+   "slug": "bologna",
+   "name": "University of Bologna",
+   "country": "IT",
+   "city": "Bologna",
+   "fields": [],
+   "source_url": "https://www.unibo.it/en/study/enrolment-fees-and-other-procedures/degree-programmes/tuition-fees-and-exemptions/reduced-fixed-fee-for-citizens-of-particularly-poor-and-developing-countries-or-non-eu-non-oecd-countries",
+   "year": 2026,
+   "deadlines": [],
+   "scholarships": [
+    {
+     "name": "ER.GO scholarship (full tuition exemption)",
+     "amount": "Full exemption except EUR 157.04",
+     "deadline": null,
+     "url": "https://www.unibo.it/en/study/enrolment-fees-and-other-procedures/degree-programmes/tuition-fees-and-exemptions/reduced-fixed-fee-for-citizens-of-particularly-poor-and-developing-countries-or-non-eu-non-oecd-countries",
+     "year": 2026
+    }
+   ],
+   "verified": true
+  },
+  {
+   "slug": "corvinus",
+   "name": "Corvinus University of Budapest",
+   "country": "HU",
+   "city": "Budapest",
+   "fields": [
+    "economics",
+    "business",
+    "international relations",
+    "data science",
+    "communication"
+   ],
+   "source_url": "https://www.uni-corvinus.hu/post/landing-page/bachelors/bsc-in-international-business/?lang=en",
+   "year": 2026,
+   "intl_tuition_usd": {
+    "value": 7000,
+    "currency": "EUR",
+    "source_url": "https://www.uni-corvinus.hu/post/landing-page/bachelors/bsc-in-international-business/?lang=en",
+    "year": 2026,
+    "note": "Non-EEA: EUR 3,500/semester (EUR 7,000/year) for International Business BSc, start Sept 2027; EEA 990,000 HUF/semester. In EUR."
+   },
+   "deadlines": [],
+   "scholarships": [],
+   "verified": true
+  },
+  {
+   "slug": "semmelweis",
+   "name": "Semmelweis University",
+   "country": "HU",
+   "city": "Budapest",
+   "fields": [
+    "medicine",
+    "dentistry",
+    "pharmacy",
+    "health sciences"
+   ],
+   "source_url": "https://semmelweis.hu/admission/programs/medicine/",
+   "year": 2026,
+   "test_policy": {
+    "value": "required",
+    "source_url": "https://semmelweis.hu/admission/programs/medicine/",
+    "year": 2026,
+    "note": "Entrance exam (Biology, Chemistry, English) plus interview for General Medicine; no language certificate required."
+   },
+   "aid": {
+    "basis": {
+     "value": "merit_only",
+     "source_url": "https://semmelweis.hu/admission/scholarships/",
+     "year": 2026,
+     "note": "Stipendium Hungaricum (state agreements) and Pannonia In Excellence (merit); no need-based programme seen."
+    }
+   },
+   "deadlines": [
+    {
+     "plan": "RD",
+     "date": "2027-05-31",
+     "cycle": "2027-28",
+     "source_url": "https://semmelweis.hu/admission/programs/medicine/",
+     "note": "Medicine application opens 1 Dec 2026; Sept 2027 start. 2026-27 cycle closed."
+    }
+   ],
+   "scholarships": [
+    {
+     "name": "Stipendium Hungaricum",
+     "amount": "Tuition-free plus monthly stipend, insurance, housing allowance",
+     "deadline": null,
+     "url": "https://stipendiumhungaricum.hu/",
+     "year": 2026
+    },
+    {
+     "name": "Pannonia In Excellence",
+     "amount": null,
+     "deadline": null,
+     "url": "https://semmelweis.hu/admission/scholarships/",
+     "year": 2026
+    }
+   ],
+   "verified": true
+  },
+  {
+   "slug": "elte",
+   "name": "Eötvös Loránd University (ELTE)",
+   "country": "HU",
+   "city": "Budapest",
+   "fields": [
+    "humanities",
+    "social sciences",
+    "natural sciences",
+    "informatics",
+    "law",
+    "education"
+   ],
+   "source_url": "https://www.elte.hu/en/international-relations-ba",
+   "year": 2026,
+   "test_policy": {
+    "value": "required",
+    "source_url": "https://www.elte.hu/en/international-relations-ba",
+    "year": 2026,
+    "note": "International Relations BA: oral online entrance exam; English B2 (IELTS 5.5)."
+   },
+   "deadlines": [
+    {
+     "plan": "OTHER",
+     "date": "2026-11-15",
+     "cycle": "2027-28",
+     "source_url": "https://www.elte.hu/en/international-relations-ba",
+     "note": "Early Bird 1 (1 Oct-15 Nov 2026), fee EUR 100."
+    },
+    {
+     "plan": "OTHER",
+     "date": "2027-01-15",
+     "cycle": "2027-28",
+     "source_url": "https://www.elte.hu/en/international-relations-ba",
+     "note": "Early Bird 2 (20 Nov 2026-15 Jan 2027)."
+    },
+    {
+     "plan": "RD",
+     "date": "2027-04-30",
+     "cycle": "2027-28",
+     "source_url": "https://www.elte.hu/en/international-relations-ba",
+     "note": "Regular (20 Jan-30 Apr 2027), fee EUR 150."
+    },
+    {
+     "plan": "OTHER",
+     "date": "2027-05-31",
+     "cycle": "2027-28",
+     "source_url": "https://www.elte.hu/en/international-relations-ba",
+     "note": "Last Call, final deadline, fee EUR 200."
+    }
+   ],
+   "scholarships": [],
+   "verified": true
+  },
+  {
+   "slug": "kaist",
+   "name": "KAIST",
+   "country": "KR",
+   "city": "Daejeon",
+   "fields": [
+    "engineering",
+    "computer science",
+    "natural sciences",
+    "life sciences",
+    "business and technology"
+   ],
+   "source_url": "https://admission.kaist.ac.kr/intl-undergraduate/",
+   "year": 2026,
+   "intl_tuition_usd": {
+    "value": 6866000,
+    "currency": "KRW",
+    "source_url": "https://admission.kaist.ac.kr/intl-undergraduate/support/coa",
+    "year": 2026,
+    "note": "KRW 6,866,000/yr tuition (KRW 3,433,000 x 2); fully covered by KAIST Scholarship for 4 years once admitted. USD not converted."
+   },
+   "intl_coa_usd": {
+    "value": 14885680,
+    "currency": "KRW",
+    "source_url": "https://admission.kaist.ac.kr/intl-undergraduate/support/coa",
+    "year": 2026,
+    "note": "Essential costs KRW 14,885,680/yr (tuition 6,866,000, NHI 916,680, books 300,000, housing 1,328,000, food 5,475,000) + optional KRW 453,000; after scholarship (tuition, KRW 350,000/month stipend, NHI) net about KRW 3,359,000/yr. USD not converted."
+   },
+   "aid": {
+    "basis": {
+     "value": "merit_only",
+     "source_url": "https://admission.kaist.ac.kr/intl-undergraduate/support/coa",
+     "year": 2026,
+     "note": "KAIST Scholarship covers entire tuition for 4 years once admitted, plus KRW 350,000/month stipend and NHI premiums"
+    },
+    "merit_for_internationals": {
+     "value": true,
+     "source_url": "https://admission.kaist.ac.kr/intl-undergraduate/support/coa",
+     "year": 2026,
+     "note": null
+    }
+   },
+   "deadlines": [
+    {
+     "plan": "EA",
+     "date": "2026-10-22",
+     "cycle": "2026-27",
+     "source_url": "https://admission.kaist.ac.kr/intl-undergraduate/application/ApplicationGuide/ApplicationTimeline",
+     "note": "Early admission (Spring or Fall track), 6:00 PM KST; announcement 2027-01-07"
+    },
+    {
+     "plan": "RD",
+     "date": "2027-01-14",
+     "cycle": "2026-27",
+     "source_url": "https://admission.kaist.ac.kr/intl-undergraduate/application/ApplicationGuide/ApplicationTimeline",
+     "note": "Regular (Fall track only), opens 2026-11-10, 6:00 PM KST; recommendation letter 2027-01-21; announcement 2027-03-25"
+    }
+   ],
+   "scholarships": [
+    {
+     "name": "KAIST Scholarship (full tuition, KRW 350,000/month stipend, NHI)",
+     "amount": "KRW 6,866,000 tuition/yr + KRW 4,200,000 stipend/yr + KRW 916,680 NHI",
+     "deadline": null,
+     "url": "https://admission.kaist.ac.kr/intl-undergraduate/support/scholarships/kaist",
+     "year": 2026
+    }
+   ],
+   "verified": true
+  },
+  {
+   "slug": "snu",
+   "name": "Seoul National University",
+   "country": "KR",
+   "city": "Seoul",
+   "fields": [
+    "humanities",
+    "social sciences",
+    "natural sciences",
+    "engineering",
+    "business",
+    "agriculture and life sciences",
+    "medicine",
+    "nursing",
+    "pharmacy",
+    "veterinary medicine",
+    "education",
+    "music",
+    "fine arts",
+    "human ecology",
+    "advanced convergence (AI/data/semiconductor)"
+   ],
+   "source_url": "https://en.snu.ac.kr/admission",
+   "year": 2026,
+   "test_policy": {
+    "value": "flexible",
+    "source_url": "https://en.snu.ac.kr/webdata/uploads/eng/file/2026/06/Admissions_for_Undergraduate_Spring_2027.pdf",
+    "year": 2026,
+    "note": "Global Talent track: language proof by TOEFL iBT 80 / IELTS 6.0 / TEPS 269 or TOPIK 3, or English-medium schooling proof; SAT/ACT/AP/IB/A-Level optional"
+   },
+   "deadlines": [
+    {
+     "plan": "OTHER",
+     "date": "2026-07-09",
+     "cycle": "2026-27",
+     "source_url": "https://en.snu.ac.kr/webdata/uploads/eng/file/2026/06/Admissions_for_Undergraduate_Spring_2027.pdf",
+     "note": "Global Talent Special Admission for Spring 2027 entry; online 2026-07-06 to 07-09 17:00 KST; application fee KRW 70,000; results 2026-11-20 after 17:00. Fall 2027 schedule not published"
+    }
+   ],
+   "scholarships": [
+    {
+     "name": "Global Korea Scholarship (GKS) - NIIED",
+     "amount": "Full tuition 8 semesters, KRW 1,200,000/month, airfare, 1 year Korean language",
+     "deadline": null,
+     "url": "https://en.snu.ac.kr/admission/undergraduate/scholarships/before_admission",
+     "year": 2018
+    }
+   ],
+   "verified": true
+  },
+  {
+   "slug": "yonsei",
+   "name": "Yonsei University",
+   "country": "KR",
+   "city": "Seoul",
+   "fields": [
+    "humanities",
+    "social sciences",
+    "business",
+    "economics",
+    "natural sciences",
+    "engineering",
+    "medicine",
+    "dentistry",
+    "nursing",
+    "pharmacy",
+    "international studies (Underwood International College)"
+   ],
+   "source_url": "https://admission.yonsei.ac.kr/seoul/admission/html/international/guide.asp",
+   "year": 2026,
+   "deadlines": [
+    {
+     "plan": "OTHER",
+     "date": "2026-09-17",
+     "cycle": "2026-27",
+     "source_url": "https://k-admission.com/universities/yonsei/",
+     "note": "Spring 2027 international track online application closed 2026-09-17 17:00 KST, documents by 09-30; results 2026-12-04; secondary source (k-admission.com), official Yonsei page not read; UIC separate (to 2026-09-17, interviews Dec 11-12)"
+    }
+   ],
+   "scholarships": [],
+   "verified": false
+  },
+  {
+   "slug": "utokyo",
+   "name": "University of Tokyo",
+   "country": "JP",
+   "city": "Tokyo",
+   "fields": [
+    "humanities and social sciences",
+    "natural sciences",
+    "engineering",
+    "medicine",
+    "agriculture",
+    "law",
+    "economics",
+    "education",
+    "arts and sciences"
+   ],
+   "source_url": "https://www.u-tokyo.ac.jp/en/",
+   "year": 2026,
+   "deadlines": [],
+   "scholarships": [],
+   "verified": false
+  },
+  {
+   "slug": "waseda",
+   "name": "Waseda University",
+   "country": "JP",
+   "city": "Tokyo",
+   "fields": [
+    "political science",
+    "economics",
+    "social sciences",
+    "international liberal studies",
+    "culture, media and society",
+    "fundamental science and engineering",
+    "creative science and engineering"
+   ],
+   "source_url": "https://www.waseda.jp/inst/admission/en/undergraduate/english/",
+   "year": 2026,
+   "test_policy": {
+    "value": "flexible",
+    "source_url": "https://www.waseda.jp/inst/admission/en/undergraduate/english/",
+    "year": 2026,
+    "note": "English-based degree programs accept SAT, ACT, IB, A-Level, GAOKAO etc.; Japanese not required"
+   },
+   "aid": {
+    "basis": {
+     "value": "merit_only",
+     "source_url": "https://www.waseda.jp/inst/admission/en/undergraduate/english/",
+     "year": 2026,
+     "note": "Merit-based pre-enrollment scholarships awarded automatically; all partial; about 1 in 4 intl students receive one; no JASSO/MEXT for undergraduates"
+    },
+    "merit_for_internationals": {
+     "value": true,
+     "source_url": "https://www.waseda.jp/inst/admission/en/undergraduate/english/",
+     "year": 2026,
+     "note": null
+    }
+   },
+   "deadlines": [
+    {
+     "plan": "OTHER",
+     "date": "2027-01-28",
+     "cycle": "2026-27",
+     "source_url": "https://www.waseda.jp/inst/admission/en/undergraduate/english/",
+     "note": "English-based programs, Sept 2027 entry; window 2027-01-07 to 01-28 17:00 JST"
+    }
+   ],
+   "scholarships": [
+    {
+     "name": "Waseda merit-based pre-enrollment scholarship (partial)",
+     "amount": null,
+     "deadline": null,
+     "url": "https://www.waseda.jp/inst/admission/en/undergraduate/english/",
+     "year": 2026
+    }
+   ],
+   "verified": true
+  },
+  {
+   "slug": "bilkent",
+   "name": "Bilkent University",
+   "country": "TR",
+   "city": "Ankara",
+   "fields": [
+    "Engineering",
+    "Science",
+    "Business",
+    "Humanities and Letters",
+    "Law",
+    "Architecture and Design",
+    "Music and Performing Arts"
+   ],
+   "source_url": "https://w3.bilkent.edu.tr/en/international-and-other-students-tuition-fees/",
+   "year": 2026,
+   "intl_tuition_usd": {
+    "value": 18400,
+    "currency": "USD",
+    "source_url": "https://w3.bilkent.edu.tr/en/international-and-other-students-tuition-fees/",
+    "year": 2026,
+    "note": "2026 entrants, incl. 10% VAT; earlier cohorts pay 16,300–17,600"
+   },
+   "aid": {
+    "merit_for_internationals": {
+     "value": true,
+     "source_url": "https://w3.bilkent.edu.tr/international/scholarships-for-international-students/",
+     "year": 2026,
+     "note": "Stated on Bilkent scholarships page; percentage tiers not read"
+    }
+   },
+   "deadlines": [],
+   "scholarships": [
+    {
+     "name": "Türkiye Bursları (full: tuition, housing, stipend 6,500 TL/mo undergrad, flight, insurance)",
+     "amount": "Full",
+     "deadline": "2026-02-20",
+     "url": "https://turkiyeburslari.gov.tr/announcements/turkiye-scholarships-2026-applications-121",
+     "year": 2026
+    }
+   ],
+   "verified": true
+  },
+  {
+   "slug": "koc",
+   "name": "Koç University",
+   "country": "TR",
+   "city": "Istanbul",
+   "fields": [
+    "Medicine",
+    "Law",
+    "Nursing",
+    "Social Sciences and Humanities",
+    "Administrative Sciences and Economics",
+    "Engineering",
+    "Sciences"
+   ],
+   "source_url": "https://international.ku.edu.tr/undergraduate-programs/tuition-and-scholarships/",
+   "year": 2025,
+   "intl_tuition_usd": {
+    "value": 38000,
+    "currency": "USD",
+    "source_url": "https://international.ku.edu.tr/undergraduate-programs/tuition-and-scholarships/",
+    "year": 2025,
+    "note": "2025/26 TL 1,700,000 (Medicine $59,000); 2026-27 table not confirmed"
+   },
+   "aid": {
+    "basis": {
+     "value": "merit_only",
+     "source_url": "https://international.ku.edu.tr/undergraduate-programs/tuition-and-scholarships/",
+     "year": 2025,
+     "note": "All new intl undergraduates auto-considered for full/partial tuition-only merit scholarships; no fixed score cutoffs"
+    },
+    "merit_for_internationals": {
+     "value": true,
+     "source_url": "https://international.ku.edu.tr/undergraduate-programs/tuition-and-scholarships/",
+     "year": 2025,
+     "note": null
+    }
+   },
+   "deadlines": [],
+   "scholarships": [
+    {
+     "name": "Koç merit scholarship (full or partial tuition)",
+     "amount": "Partial to full tuition",
+     "deadline": null,
+     "url": "https://international.ku.edu.tr/undergraduate-programs/tuition-and-scholarships/",
+     "year": 2025
+    },
+    {
+     "name": "Türkiye Bursları (full: tuition, housing, stipend 6,500 TL/mo undergrad, flight, insurance)",
+     "amount": "Full",
+     "deadline": "2026-02-20",
+     "url": "https://turkiyeburslari.gov.tr/announcements/turkiye-scholarships-2026-applications-121",
+     "year": 2026
+    }
+   ],
+   "verified": true
+  },
+  {
+   "slug": "metu",
+   "name": "Middle East Technical University",
+   "country": "TR",
+   "city": "Ankara",
+   "fields": [
+    "Engineering",
+    "Architecture",
+    "Arts and Sciences",
+    "Economics and Administrative Sciences",
+    "Education"
+   ],
+   "source_url": "https://iso.metu.edu.tr/en/system/files/2026-2027_tuition_fees_14092026.pdf",
+   "year": 2026,
+   "intl_tuition_usd": {
+    "value": 2400,
+    "currency": "USD",
+    "source_url": "https://iso.metu.edu.tr/en/system/files/2026-2027_tuition_fees_14092026.pdf",
+    "year": 2026,
+    "note": "Intl quota, per semester USD 1,200 (Eng/Arch/sciences) or 800 (social/EAS/Education); 2400 = Eng, annual"
+   },
+   "deadlines": [],
+   "scholarships": [
+    {
+     "name": "Türkiye Bursları (full: tuition, housing, stipend 6,500 TL/mo undergrad, flight, insurance)",
+     "amount": "Full",
+     "deadline": "2026-02-20",
+     "url": "https://turkiyeburslari.gov.tr/announcements/turkiye-scholarships-2026-applications-121",
+     "year": 2026
+    }
+   ],
+   "verified": true
+  },
+  {
+   "slug": "monash-malaysia",
+   "name": "Monash University Malaysia",
+   "country": "MY",
+   "city": "Subang Jaya",
+   "fields": [
+    "Computer Science",
+    "Engineering",
+    "Business",
+    "Medicine and Health Sciences",
+    "Science",
+    "Arts and Social Sciences"
+   ],
+   "source_url": "https://www.monash.edu.my/study/undergraduate/fees",
+   "year": 2026,
+   "deadlines": [],
+   "scholarships": [],
+   "verified": false
+  },
+  {
+   "slug": "taylors",
+   "name": "Taylor's University",
+   "country": "MY",
+   "city": "Subang Jaya",
+   "fields": [
+    "Business",
+    "Computing",
+    "Engineering",
+    "Design",
+    "Hospitality",
+    "Medicine and Health"
+   ],
+   "source_url": "https://university.taylors.edu.my/en/study/scholarships-and-financial-aid.html",
+   "year": 2026,
+   "deadlines": [],
+   "scholarships": [],
+   "verified": false
+  },
+  {
+   "slug": "nyuad",
+   "name": "NYU Abu Dhabi",
+   "country": "AE",
+   "city": "Abu Dhabi",
+   "fields": [
+    "Arts and Humanities",
+    "Sciences",
+    "Engineering",
+    "Social Sciences"
+   ],
+   "source_url": "https://nyuad.nyu.edu/en/admissions/undergraduate/financial-support.html",
+   "year": 2026,
+   "test_policy": {
+    "value": "optional",
+    "source_url": "https://nyuad.nyu.edu/en/admissions/undergraduate/apply.html",
+    "year": 2026,
+    "note": "Test-optional through 2027-28 cycle"
+   },
+   "aid": {
+    "basis": {
+     "value": "need_blind_full",
+     "source_url": "https://nyuad.nyu.edu/en/admissions/undergraduate/financial-support.html",
+     "year": 2026,
+     "note": "Aid by demonstrated need via CSS Profile; page no longer uses 'need-blind' wording, admissions says policy unchanged (Gazelle 2021, secondary)"
+    }
+   },
+   "deadlines": [
+    {
+     "plan": "ED",
+     "date": "2026-11-10",
+     "cycle": "2026-27",
+     "source_url": "https://nyuad.nyu.edu/en/admissions/undergraduate/financial-support.html",
+     "note": "CSS Profile deadline ED I (Nov 10); ED II Jan 10; RD Feb 1; year inferred from page, admission deadlines not read"
+    }
+   ],
+   "scholarships": [],
+   "verified": true
+  },
+  {
+   "slug": "khalifa",
+   "name": "Khalifa University",
+   "country": "AE",
+   "city": "Abu Dhabi",
+   "fields": [
+    "Engineering",
+    "Sciences",
+    "Computing"
+   ],
+   "source_url": "https://www.ku.ac.ae/tuition-fees",
+   "year": 2026,
+   "deadlines": [],
+   "scholarships": [],
+   "verified": false
+  }
+ ]
+}

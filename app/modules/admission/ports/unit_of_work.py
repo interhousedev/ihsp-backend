@@ -1,0 +1,151 @@
+"""Port: one transaction over the admission tables, with outbox and audit."""
+
+from collections.abc import Callable
+from types import TracebackType
+from typing import Protocol, Self
+
+from app.modules.admission.ports.catalog_proposals import CatalogProposalRepository
+from app.modules.admission.ports.chooser import CatalogRepository, ListRepository
+from app.modules.admission.ports.documents import (
+    ChecklistRepository,
+    DeadlineRepository,
+    DocumentRepository,
+    TranscriptRepository,
+)
+from app.modules.admission.ports.goal_plan import GoalRepository
+from app.modules.admission.ports.help_proofs import HelpProofsRepository
+from app.modules.admission.ports.items import ItemRepository
+from app.modules.admission.ports.profile import ProfileRepository, ReviewRepository
+from app.modules.admission.ports.repositories import (
+    AccessRepository,
+    CourseRepository,
+    RuntimeSettingsRepository,
+)
+from app.modules.admission.ports.staff import (
+    CommentRepository,
+    PrivacyRepository,
+    StaffRepository,
+)
+from app.shared.notifications import NotificationDraft
+
+
+class AdmissionUnitOfWork(Protocol):
+    """Opens a transaction on entry; commit() commits it and the outbox."""
+
+    @property
+    def access(self) -> AccessRepository:
+        """Entitlements, assignments, help grants and the audit log."""
+        ...
+
+    @property
+    def catalog(self) -> CatalogRepository:
+        """Institutions, facts and scholarships."""
+        ...
+
+    @property
+    def catalog_proposals(self) -> CatalogProposalRepository:
+        """Staff proposals to change the catalog."""
+        ...
+
+    @property
+    def shortlist(self) -> ListRepository:
+        """A student's university list and affordability checks."""
+        ...
+
+    @property
+    def courses(self) -> CourseRepository:
+        """Stored course rows."""
+        ...
+
+    @property
+    def runtime_settings(self) -> RuntimeSettingsRepository:
+        """Admin-edited settings."""
+        ...
+
+    @property
+    def profiles(self) -> ProfileRepository:
+        """Profiles and the three words."""
+        ...
+
+    @property
+    def reviews(self) -> ReviewRepository:
+        """Cached AI reviews."""
+        ...
+
+    @property
+    def items(self) -> ItemRepository:
+        """Activities, honors, metrics, interviews and item reviews."""
+        ...
+
+    @property
+    def goals(self) -> GoalRepository:
+        """Goal-plan milestones."""
+        ...
+
+    @property
+    def help_proofs(self) -> HelpProofsRepository:
+        """Proofs, help requests and guest links."""
+        ...
+
+    @property
+    def documents(self) -> DocumentRepository:
+        """Documents, versions and attachments."""
+        ...
+
+    @property
+    def checklist(self) -> ChecklistRepository:
+        """A student's checklist."""
+        ...
+
+    @property
+    def deadlines(self) -> DeadlineRepository:
+        """Deadlines, milestones and reminders."""
+        ...
+
+    @property
+    def transcripts(self) -> TranscriptRepository:
+        """Transcript requests and officer settings."""
+        ...
+
+    async def cancel_notification(self, dedupe_key: str) -> bool:
+        """Cancel a still-pending notification; False when it was claimed."""
+        ...
+
+    @property
+    def staff(self) -> StaffRepository:
+        """Assignments, saved views and the caseload."""
+        ...
+
+    @property
+    def comments(self) -> CommentRepository:
+        """Comments on a student's objects."""
+        ...
+
+    @property
+    def privacy(self) -> PrivacyRepository:
+        """Export, erasure and the audit view."""
+        ...
+
+    def notify(self, *drafts: NotificationDraft) -> None:
+        """Queue notifications to insert at commit."""
+        ...
+
+    async def __aenter__(self) -> Self:
+        """Open the transaction."""
+        ...
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        """Roll back unless committed."""
+        ...
+
+    async def commit(self) -> None:
+        """Commit the transaction."""
+        ...
+
+
+UowFactory = Callable[[], AdmissionUnitOfWork]

@@ -1,0 +1,296 @@
+"""Staff caseload, delegated assignments and saved views."""
+
+import datetime as dt
+from dataclasses import dataclass, replace
+from typing import Any
+from uuid import UUID
+
+from app.modules.admission.application.access import AccessPolicy
+from app.modules.admission.application.actor import AdmissionContext
+from app.modules.admission.domain.access import Assignment
+from app.modules.admission.domain.errors import (
+    AdmissionForbiddenError,
+    AdmissionNotFoundError,
+    SavedViewLimitError,
+)
+from app.modules.admission.domain.permissions import KIND_ROLE, Permission
+from app.modules.admission.domain.staff import (
+    MAX_SAVED_VIEWS,
+    MAX_VIEW_NAME,
+    VIEW_FILTER_KEYS,
+    CaseloadRow,
+    SavedView,
+    deny,
+    pick_parent,
+)
+from app.modules.admission.ports.staff import StaffDirectory
+from app.modules.admission.ports.unit_of_work import UowFactory
+from app.shared.base_error import ValidationFailedError
+from app.shared.clock import Clock
+from app.shared.contracts.academic import AcademicMembership
+from app.shared.contracts.identity import IdentityDirectory, UserRef
+from app.shared.ids import new_id
+
+
+@dataclass(frozen=True, slots=True)
+class CaseloadFilters:
+    """Filters of the caseload list."""
+
+    stage: str | None = None
+    risk: bool = False
+    deadline_before: dt.datetime | None = None
+    group_id: UUID | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class CaseloadItem:
+    """A caseload row with the student's class."""
+
+    row: CaseloadRow
+    group_id: UUID | None
+    limited: bool
+    student_name: str | None = None
+
+
+def _clean_view(name: str, filters: dict[str, Any]) -> tuple[str, dict[str, Any]]:
+    name = name.strip()
+    if not name or len(name) > MAX_VIEW_NAME:
+        raise ValidationFailedError(params={"field": "name"})
+    unknown = set(filters) - VIEW_FILTER_KEYS
+    if unknown:
+        raise ValidationFailedError(params={"field": sorted(unknown)[0]})
+    return name, dict(filters)
+
+
+def display_name(user: UserRef) -> str:
+    """Return "Last First" of a user."""
+    return f"{user.last_name} {user.first_name}".strip()
+
+
+def _passes(filters: CaseloadFilters, row: CaseloadRow, student: Any) -> bool:
+    """Whether a caseload row survives the filters."""
+    if filters.group_id and (not student or student.group_id != filters.group_id):
+        return False
+    if filters.stage and row.stage != filters.stage:
+        return False
+    if filters.risk and row.overdue == 0:
+        return False
+    due = filters.deadline_before
+    return not (due and (row.next_due is None or row.next_due > due))
+
+
+class StaffService:
+    """The staff member's list of students, delegation and saved views."""
+
+    def __init__(
+        self,
+        uow_factory: UowFactory,
+        access: AccessPolicy,
+        membership: AcademicMembership,
+        directory: StaffDirectory | None,
+        clock: Clock,
+        identity: IdentityDirectory | None = None,
+    ) -> None:
+        """Keep the collaborators."""
+        self._uow = uow_factory
+        self._access = access
+        self._membership = membership
+        self._directory = directory
+        self._clock = clock
+        self._identity = identity
+
+    async def caseload(
+        self, ctx: AdmissionContext, filters: CaseloadFilters
+    ) -> list[CaseloadItem]:
+        """List the students the caller reaches, filtered, soonest deadline first."""
+        scope = self._access.scope(ctx)
+        if scope.empty:
+            raise AdmissionForbiddenError(params={"permission": "caseload"})
+        ids = await self._access.students_in_scope(ctx)
+        now = self._clock.now()
+        async with self._uow() as uow:
+            rows = await uow.staff.caseload(ids, now)
+        names = await self._names([r.student_id for r in rows])
+        items: list[CaseloadItem] = []
+        for row in rows:
+            if row.student_id == ctx.user_id:
+                continue
+            resolution = await self._access.resolve(ctx, row.student_id)
+            if not resolution.in_scope:
+                continue
+            student = await self._membership.student(row.student_id)
+            if not _passes(filters, row, student):
+                continue
+            if resolution.limited:
+                row = replace(row, stage=None, open_help=0)
+            if student:
+                row = replace(row, group_name=student.group_name)
+            group_id = student.group_id if student else None
+            ref = names.get(row.student_id)
+            items.append(
+                CaseloadItem(
+                    row,
+                    group_id,
+                    resolution.limited,
+                    display_name(ref) if ref else None,
+                )
+            )
+        return items
+
+    async def _names(self, ids: list[UUID]) -> dict[UUID, UserRef]:
+        if self._identity is None or not ids:
+            return {}
+        return await self._identity.get_users(ids)
+
+    async def assign(
+        self,
+        ctx: AdmissionContext,
+        *,
+        user_id: UUID,
+        staff_role_id: UUID,
+        scope_kind: str,
+        scope_ref: UUID | None,
+        expires_at: dt.datetime | None,
+    ) -> Assignment:
+        """Delegate a sub-role (§4.5); raises DelegationDeniedError with a reason."""
+        now = self._clock.now()
+        if scope_kind not in ("student", "cohort"):
+            raise deny("scope")
+        student_id = scope_ref if scope_kind == "student" else None
+        groups: frozenset[UUID] = frozenset()
+        if student_id is not None:
+            await self._access.require(
+                ctx,
+                student_id,
+                Permission.STUDENTS_ASSIGN,
+                object_type="assignment",
+            )
+            groups = (await self._membership.group_ids_for([student_id])).get(
+                student_id, frozenset()
+            )
+        if expires_at is not None and expires_at <= now:
+            raise deny("expiry")
+        target = await self._directory.staff_user(user_id) if self._directory else None
+        async with self._uow() as uow:
+            role = await uow.staff.role(staff_role_id)
+            if role is None or role.archived_at is not None:
+                raise AdmissionNotFoundError()
+            grantors = [
+                a
+                for a in ctx.assignments
+                if Permission.STUDENTS_ASSIGN in a.role.effective_permissions
+                and KIND_ROLE.get(a.role.kind) in ctx.actor.roles
+            ]
+            parent = pick_parent(
+                ctx.user_id,
+                grantors,
+                target,
+                role,
+                scope_kind,
+                scope_ref,
+                expires_at,
+                groups,
+                student_id,
+                now,
+            )
+            if role.kind == "mentor":
+                if student_id is None:
+                    raise deny("scope")
+                opt = await uow.access.opt_ins([user_id, student_id])
+                mine, theirs = opt.get(user_id), opt.get(student_id)
+                agreed = mine and mine.mentor_opt_in and theirs and theirs.mentee_opt_in
+                if not agreed:
+                    raise deny("opt_in")
+            created = await uow.staff.add_assignment(
+                Assignment(
+                    id=new_id(),
+                    user_id=user_id,
+                    role=role,
+                    scope_kind=scope_kind,  # type: ignore[arg-type]
+                    scope_ref=scope_ref,
+                    starts_at=now,
+                    expires_at=expires_at,
+                    granted_by=ctx.user_id,
+                    granted_via="delegation",
+                    parent_assignment_id=parent.id,
+                )
+            )
+            await uow.commit()
+        return created
+
+    async def revoke(self, ctx: AdmissionContext, assignment_id: UUID) -> None:
+        """Revoke an assignment the caller delegated (or its parent holder's)."""
+        now = self._clock.now()
+        async with self._uow() as uow:
+            row = await uow.staff.assignment(assignment_id)
+            mine = {a.id for a in ctx.assignments}
+            if (
+                row is None
+                or row.revoked_at is not None
+                or (
+                    row.granted_by != ctx.user_id
+                    and row.parent_assignment_id not in mine
+                )
+            ):
+                raise AdmissionNotFoundError()
+            await uow.staff.revoke_assignment(assignment_id, now, "revoked")
+            await uow.commit()
+
+    async def views(self, ctx: AdmissionContext) -> list[SavedView]:
+        """Return the caller's saved views."""
+        async with self._uow() as uow:
+            return await uow.staff.saved_views(ctx.user_id)
+
+    async def add_view(
+        self,
+        ctx: AdmissionContext,
+        name: str,
+        filters: dict[str, Any],
+        sort: str | None,
+        is_default: bool,
+    ) -> SavedView:
+        """Save a view; at most MAX_SAVED_VIEWS per user."""
+        name, filters = _clean_view(name, filters)
+        async with self._uow() as uow:
+            if len(await uow.staff.saved_views(ctx.user_id)) >= MAX_SAVED_VIEWS:
+                raise SavedViewLimitError()
+            view = await uow.staff.add_saved_view(
+                SavedView(new_id(), ctx.user_id, name, filters, sort, is_default)
+            )
+            await uow.commit()
+        return view
+
+    async def update_view(
+        self,
+        ctx: AdmissionContext,
+        view_id: UUID,
+        *,
+        name: str,
+        filters: dict[str, Any],
+        sort: str | None,
+        is_default: bool,
+        lock_version: int,
+    ) -> SavedView:
+        """Replace a view of the caller; a stale lock_version is a conflict."""
+        name, filters = _clean_view(name, filters)
+        async with self._uow() as uow:
+            mine = {v.id for v in await uow.staff.saved_views(ctx.user_id)}
+            if view_id not in mine:
+                raise AdmissionNotFoundError()
+            view = await uow.staff.update_saved_view(
+                SavedView(
+                    view_id, ctx.user_id, name, filters, sort, is_default, lock_version
+                )
+            )
+            await uow.commit()
+        return view
+
+    async def delete_view(self, ctx: AdmissionContext, view_id: UUID) -> None:
+        """Delete a view of the caller."""
+        async with self._uow() as uow:
+            if not await uow.staff.delete_saved_view(view_id, ctx.user_id):
+                raise AdmissionNotFoundError()
+            await uow.commit()
+
+
+__all__ = ["CaseloadFilters", "CaseloadItem", "StaffService"]

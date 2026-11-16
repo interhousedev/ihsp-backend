@@ -1,0 +1,766 @@
+{
+ "institutions": [
+  {
+   "slug": "harvard",
+   "name": "Harvard University",
+   "country": "US",
+   "city": "Cambridge, MA",
+   "fields": [
+    "Computer Science",
+    "Economics",
+    "Biomedical Engineering",
+    "Physics",
+    "Government",
+    "History",
+    "Neuroscience",
+    "Mathematics",
+    "Chemistry",
+    "Psychology",
+    "Statistics",
+    "English",
+    "Environmental Science"
+   ],
+   "source_url": "https://college.harvard.edu/admissions",
+   "year": 2026,
+   "acceptance_rate": {
+    "min": 3.7,
+    "max": 3.7,
+    "source_url": "https://college.harvard.edu/admissions/admissions-statistics",
+    "year": 2026,
+    "note": "Class of 2030: 2,037 admitted of 55,104 applicants"
+   },
+   "test_policy": {
+    "value": "required",
+    "source_url": "https://college.harvard.edu/admissions/apply/application-requirements",
+    "year": 2026,
+    "note": null
+   },
+   "intl_tuition_usd": {
+    "value": 62226,
+    "currency": "USD",
+    "source_url": "https://college.harvard.edu/financial-aid/how-aid-works/cost-attendance",
+    "year": 2026,
+    "note": "2026-27"
+   },
+   "intl_coa_usd": {
+    "value": 95134,
+    "currency": "USD",
+    "source_url": "https://college.harvard.edu/financial-aid/how-aid-works/cost-attendance",
+    "year": 2026,
+    "note": "2026-27 total range $95,134-$100,134"
+   },
+   "aid": {
+    "basis": {
+     "value": "need_blind_full",
+     "source_url": "https://college.harvard.edu/admissions/apply/international-applicants",
+     "year": 2026,
+     "note": "Need-blind; internationals receive the same aid as domestic students"
+    }
+   },
+   "deadlines": [
+    {
+     "plan": "REA",
+     "date": "2026-11-01",
+     "cycle": "2026-27",
+     "source_url": "https://college.harvard.edu/admissions/apply",
+     "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+    },
+    {
+     "plan": "RD",
+     "date": "2027-01-01",
+     "cycle": "2026-27",
+     "source_url": "https://college.harvard.edu/admissions/apply",
+     "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+    }
+   ],
+   "scholarships": [],
+   "verified": true
+  },
+  {
+   "slug": "mit",
+   "name": "Massachusetts Institute of Technology",
+   "country": "US",
+   "city": "Cambridge, MA",
+   "fields": [
+    "Engineering",
+    "Computer Science & AI",
+    "Mathematics",
+    "Physics",
+    "Chemistry",
+    "Biology",
+    "Brain & Cognitive Sciences",
+    "Economics & Management",
+    "Architecture & Planning",
+    "Earth, Atmospheric & Planetary Sciences",
+    "Humanities & Social Sciences",
+    "Music & Theater Arts"
+   ],
+   "source_url": "https://mitadmissions.org",
+   "year": 2026,
+   "acceptance_rate": {
+    "min": 4.6,
+    "max": 4.6,
+    "source_url": "https://facts.mit.edu/undergraduate-admissions/",
+    "year": 2025,
+    "note": "1,334 admitted of 29,281 applicants, Class of 2029"
+   },
+   "test_policy": {
+    "value": "required",
+    "source_url": "https://mitadmissions.org/apply/firstyear/tests-scores/",
+    "year": 2026,
+    "note": null
+   },
+   "intl_tuition_usd": {
+    "value": 66720,
+    "currency": "USD",
+    "source_url": "https://sfs.mit.edu/undergraduate-students/the-cost-of-attendance/coa",
+    "year": 2026,
+    "note": "2026-27"
+   },
+   "intl_coa_usd": {
+    "value": 92760,
+    "currency": "USD",
+    "source_url": "https://sfs.mit.edu/undergraduate-students/the-cost-of-attendance/coa",
+    "year": 2026,
+    "note": "2026-27, excludes travel"
+   },
+   "aid": {
+    "basis": {
+     "value": "need_blind_full",
+     "source_url": "https://sfs.mit.edu/financial-aid-mit",
+     "year": 2026,
+     "note": "Need-blind and full-need for internationals"
+    }
+   },
+   "deadlines": [
+    {
+     "plan": "EA",
+     "date": "2026-11-01",
+     "cycle": "2026-27",
+     "source_url": "https://mitadmissions.org/apply/firstyear/deadlines-requirements/",
+     "note": "Early Action, non-restrictive"
+    },
+    {
+     "plan": "RD",
+     "date": "2027-01-04",
+     "cycle": "2026-27",
+     "source_url": "https://mitadmissions.org/apply/firstyear/deadlines-requirements/",
+     "note": "Regular Action"
+    }
+   ],
+   "scholarships": [],
+   "verified": true
+  },
+  {
+   "slug": "stanford",
+   "name": "Stanford University",
+   "country": "US",
+   "city": "Stanford, CA",
+   "fields": [],
+   "source_url": "https://admission.stanford.edu",
+   "year": 2026,
+   "acceptance_rate": {
+    "min": 3.8,
+    "max": 3.8,
+    "source_url": "https://drive.google.com/file/d/1GIPKgVj1d86dkmLkHI_mZVCk_iY6kiCp/view?usp=sharing",
+    "year": 2025,
+    "note": "Common Data Set 2025-26: 2,302 admitted of 60,646 (fall 2025 entering)"
+   },
+   "test_policy": {
+    "value": "required",
+    "source_url": "https://drive.google.com/file/d/1GIPKgVj1d86dkmLkHI_mZVCk_iY6kiCp/view?usp=sharing",
+    "year": 2025,
+    "note": "SAT/ACT reinstated for Fall 2026 entry (Common Data Set 2025-26)"
+   },
+   "intl_tuition_usd": {
+    "value": 67731,
+    "currency": "USD",
+    "source_url": "https://news.stanford.edu/stories/2026/02/undergraduate-tuition-rates-2026-2027",
+    "year": 2026,
+    "note": "2026-27 tuition; room and board $22,944; official total cost of attendance page not reachable"
+   },
+   "aid": {
+    "basis": {
+     "value": "need_aware",
+     "source_url": "https://www.stanford.edu/admissions-aid",
+     "year": 2026,
+     "note": "Need-blind for all but some international applicants"
+    }
+   },
+   "deadlines": [
+    {
+     "plan": "REA",
+     "date": "2025-11-01",
+     "cycle": "2025-26",
+     "source_url": "https://drive.google.com/file/d/1GIPKgVj1d86dkmLkHI_mZVCk_iY6kiCp/view?usp=sharing",
+     "note": "Restrictive early action; Common Data Set 2025-26, 2026-27 date not confirmed"
+    }
+   ],
+   "scholarships": [],
+   "verified": true
+  },
+  {
+   "slug": "yale",
+   "name": "Yale University",
+   "country": "US",
+   "city": "New Haven, CT",
+   "fields": [
+    "Computer Science",
+    "Economics",
+    "Biomedical Engineering",
+    "Physics",
+    "Political Science",
+    "History",
+    "Neuroscience",
+    "Mathematics",
+    "Chemistry",
+    "Psychology",
+    "Statistics",
+    "English",
+    "Environmental Studies"
+   ],
+   "source_url": "https://admissions.yale.edu",
+   "year": 2026,
+   "acceptance_rate": {
+    "min": 4.2,
+    "max": 4.2,
+    "source_url": "https://news.yale.edu/2026/03/26/yale-admits-2328-applicants-class-2030",
+    "year": 2026,
+    "note": "2,328 admitted of 54,919 applicants, Class of 2030"
+   },
+   "test_policy": {
+    "value": "required",
+    "source_url": "https://admissions.yale.edu/standardized-testing",
+    "year": 2026,
+    "note": null
+   },
+   "intl_tuition_usd": {
+    "value": 72500,
+    "currency": "USD",
+    "source_url": "https://catalog.yale.edu/undergraduate-regulations/regulations/financial-services/",
+    "year": 2026,
+    "note": "2026-27; resident inclusive fee of $94,100 (tuition, housing, meals) is not a full cost of attendance"
+   },
+   "aid": {
+    "basis": {
+     "value": "need_blind_full",
+     "source_url": "https://admissions.yale.edu/international",
+     "year": 2026,
+     "note": "Need-blind for all applicants, meets 100% of demonstrated need"
+    }
+   },
+   "deadlines": [
+    {
+     "plan": "SCEA",
+     "date": "2026-11-01",
+     "cycle": "2026-27",
+     "source_url": "https://admissions.yale.edu/timelines",
+     "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+    },
+    {
+     "plan": "RD",
+     "date": "2027-01-02",
+     "cycle": "2026-27",
+     "source_url": "https://admissions.yale.edu/timelines",
+     "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+    }
+   ],
+   "scholarships": [],
+   "verified": true
+  },
+  {
+   "slug": "princeton",
+   "name": "Princeton University",
+   "country": "US",
+   "city": "Princeton, NJ",
+   "fields": [],
+   "source_url": "https://admission.princeton.edu",
+   "year": 2026,
+   "intl_tuition_usd": {
+    "value": 68140,
+    "currency": "USD",
+    "source_url": "https://finaid.princeton.edu/how-aid-works/student-budget",
+    "year": 2026,
+    "note": "2026-27"
+   },
+   "intl_coa_usd": {
+    "value": 94624,
+    "currency": "USD",
+    "source_url": "https://finaid.princeton.edu/how-aid-works/student-budget",
+    "year": 2026,
+    "note": "2026-27 lowest of listed totals 94,624 / 96,034 / 96,390; admissions fees page https://admission.princeton.edu/cost-aid/fees-payment-options lists tuition $71,200 and total $98,698 for an ambiguously labelled year, conflicting with the student-budget figures"
+   },
+   "aid": {
+    "basis": {
+     "value": "need_blind_full",
+     "source_url": "https://admission.princeton.edu/apply/international-students",
+     "year": 2026,
+     "note": "Need-blind, full demonstrated need met for internationals"
+    },
+    "merit_for_internationals": {
+     "value": false,
+     "source_url": "https://admission.princeton.edu/apply/international-students",
+     "year": 2026,
+     "note": "No merit scholarships"
+    }
+   },
+   "deadlines": [
+    {
+     "plan": "SCEA",
+     "date": "2026-11-01",
+     "cycle": "2026-27",
+     "source_url": "https://admission.princeton.edu/apply",
+     "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+    },
+    {
+     "plan": "RD",
+     "date": "2027-01-01",
+     "cycle": "2026-27",
+     "source_url": "https://admission.princeton.edu/apply",
+     "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+    }
+   ],
+   "scholarships": [],
+   "verified": true
+  },
+  {
+   "slug": "columbia",
+   "name": "Columbia University",
+   "country": "US",
+   "city": "New York, NY",
+   "fields": [],
+   "source_url": "https://undergrad.admissions.columbia.edu",
+   "year": 2026,
+   "acceptance_rate": {
+    "min": 4.2,
+    "max": 4.2,
+    "source_url": "https://undergrad.admissions.columbia.edu/columbia-announces-class-2030-admissions-decisions",
+    "year": 2026,
+    "note": "2,581 admitted of 61,031 applicants, Class of 2030"
+   },
+   "test_policy": {
+    "value": "optional",
+    "source_url": "https://undergrad.admissions.columbia.edu/apply/process/testing",
+    "year": 2026,
+    "note": "Optional for 2026-27 cycle; scores required from the 2027-28 cycle"
+   },
+   "intl_tuition_usd": {
+    "value": 72800,
+    "currency": "USD",
+    "source_url": "https://undergrad.admissions.columbia.edu/affordability/cost",
+    "year": 2026,
+    "note": "2026-27"
+   },
+   "intl_coa_usd": {
+    "value": 99774,
+    "currency": "USD",
+    "source_url": "https://undergrad.admissions.columbia.edu/affordability/cost",
+    "year": 2026,
+    "note": "2026-27 total budget incl. fees 4,160, housing 12,522, food 7,128, books 1,320, personal 1,844"
+   },
+   "aid": {
+    "basis": {
+     "value": "need_aware",
+     "source_url": "https://undergrad.admissions.columbia.edu/apply/international",
+     "year": 2026,
+     "note": "Need-blind applies to US citizens/undocumented; internationals seeking aid can fall outside it"
+    }
+   },
+   "deadlines": [
+    {
+     "plan": "ED",
+     "date": "2026-11-01",
+     "cycle": "2026-27",
+     "source_url": "https://undergrad.admissions.columbia.edu/apply",
+     "note": null
+    },
+    {
+     "plan": "RD",
+     "date": "2027-01-01",
+     "cycle": "2026-27",
+     "source_url": "https://undergrad.admissions.columbia.edu/apply",
+     "note": null
+    }
+   ],
+   "scholarships": [],
+   "verified": true
+  },
+  {
+   "slug": "upenn",
+   "name": "University of Pennsylvania",
+   "country": "US",
+   "city": "Philadelphia, PA",
+   "fields": [],
+   "source_url": "https://admissions.upenn.edu",
+   "year": 2026,
+   "intl_tuition_usd": {
+    "value": 65670,
+    "currency": "USD",
+    "source_url": "https://srfs.upenn.edu/costs-budgeting/undergraduate-cost-attendance",
+    "year": 2026,
+    "note": "2026-27; fees $8,308"
+   },
+   "intl_coa_usd": {
+    "value": 99082,
+    "currency": "USD",
+    "source_url": "https://srfs.upenn.edu/costs-budgeting/undergraduate-cost-attendance",
+    "year": 2026,
+    "note": "2026-27 on-campus total budget"
+   },
+   "aid": {
+    "basis": {
+     "value": "need_aware",
+     "source_url": "https://srfs.upenn.edu/financial-aid/international",
+     "year": 2026,
+     "note": "Need-aware admissions for international applicants"
+    }
+   },
+   "deadlines": [
+    {
+     "plan": "ED",
+     "date": "2026-11-01",
+     "cycle": "2026-27",
+     "source_url": "https://admissions.upenn.edu/how-to-apply/apply-for-admissions",
+     "note": null
+    },
+    {
+     "plan": "RD",
+     "date": "2027-01-05",
+     "cycle": "2026-27",
+     "source_url": "https://admissions.upenn.edu/how-to-apply/apply-for-admissions",
+     "note": null
+    }
+   ],
+   "scholarships": [],
+   "verified": true
+  },
+  {
+   "slug": "cornell",
+   "name": "Cornell University",
+   "country": "US",
+   "city": "Ithaca, NY",
+   "fields": [],
+   "source_url": "https://admissions.cornell.edu",
+   "year": 2026,
+   "acceptance_rate": {
+    "min": 8.4,
+    "max": 8.4,
+    "source_url": "https://irp.cornell.edu/wp-content/uploads/2026/09/Cornell-Common-Data-Set-2025-26.pdf",
+    "year": 2025,
+    "note": "6,077 admitted of 72,523 applicants (CDS 2025-26)"
+   },
+   "test_policy": {
+    "value": "required",
+    "source_url": "https://admissions.cornell.edu/how-to-apply/first-year-applicants",
+    "year": 2026,
+    "note": "SAT or ACT required"
+   },
+   "intl_tuition_usd": {
+    "value": 73946,
+    "currency": "USD",
+    "source_url": "https://irp.cornell.edu/wp-content/uploads/2026/09/Cornell-Common-Data-Set-2025-26.pdf",
+    "year": 2025,
+    "note": "2025-26 CDS tuition; rate differs by college"
+   },
+   "intl_coa_usd": {
+    "value": 99734,
+    "currency": "USD",
+    "source_url": "https://finaid.cornell.edu/cost-to-attend",
+    "year": 2025,
+    "note": "2025-26 table on cost page (tuition $73,946); other table lists $75,604 with different tuition"
+   },
+   "deadlines": [
+    {
+     "plan": "ED",
+     "date": "2026-11-01",
+     "cycle": "2026-27",
+     "source_url": "https://finaid.cornell.edu/first-year-and-transfer-students-international",
+     "note": null
+    },
+    {
+     "plan": "RD",
+     "date": "2027-01-02",
+     "cycle": "2026-27",
+     "source_url": "https://finaid.cornell.edu/first-year-and-transfer-students-international",
+     "note": null
+    }
+   ],
+   "scholarships": [],
+   "verified": true
+  },
+  {
+   "slug": "duke",
+   "name": "Duke University",
+   "country": "US",
+   "city": "Durham, NC",
+   "fields": [],
+   "source_url": "https://admissions.duke.edu",
+   "year": 2026,
+   "acceptance_rate": {
+    "min": 5.2,
+    "max": 5.2,
+    "source_url": "https://ir.provost.duke.edu/sites/default/files/CDS_PDF_2025-2026-20260622-website-published-version.pdf",
+    "year": 2025,
+    "note": "2,910 admitted of 55,541 applicants (CDS 2025-26, fall 2025 entering)"
+   },
+   "test_policy": {
+    "value": "optional",
+    "source_url": "https://admissions.duke.edu/apply/",
+    "year": 2026,
+    "note": "Test-Optional Policy 2026-2027"
+   },
+   "intl_tuition_usd": {
+    "value": 73740,
+    "currency": "USD",
+    "source_url": "https://ir.provost.duke.edu/sites/default/files/CDS_PDF_2025-2026-20260622-website-published-version.pdf",
+    "year": 2025,
+    "note": "2025-26 CDS; required fees $2,635, food and housing $20,222; total COA not read"
+   },
+   "deadlines": [
+    {
+     "plan": "ED",
+     "date": "2026-11-02",
+     "cycle": "2026-27",
+     "source_url": "https://admissions.duke.edu/apply/",
+     "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+    },
+    {
+     "plan": "RD",
+     "date": "2027-01-04",
+     "cycle": "2026-27",
+     "source_url": "https://admissions.duke.edu/apply/",
+     "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+    }
+   ],
+   "scholarships": [],
+   "verified": true
+  },
+  {
+   "slug": "jhu",
+   "name": "Johns Hopkins University",
+   "country": "US",
+   "city": "Baltimore, MD",
+   "fields": [],
+   "source_url": "https://apply.jhu.edu",
+   "year": 2026,
+   "test_policy": {
+    "value": "required",
+    "source_url": "https://apply.jhu.edu/apply/",
+    "year": 2026,
+    "note": null
+   },
+   "intl_tuition_usd": {
+    "value": 68670,
+    "currency": "USD",
+    "source_url": "https://sfs.jhu.edu/cost-tuition/",
+    "year": 2026,
+    "note": "2026-27"
+   },
+   "intl_coa_usd": {
+    "value": 94858,
+    "currency": "USD",
+    "source_url": "https://sfs.jhu.edu/cost-tuition/",
+    "year": 2026,
+    "note": "2026-27 on-campus first-year total"
+   },
+   "aid": {
+    "basis": {
+     "value": "need_aware",
+     "source_url": "https://apply.jhu.edu/international-applicants",
+     "year": 2026,
+     "note": "Need-aware for international applicants applying for aid; meets 100% of demonstrated need"
+    }
+   },
+   "deadlines": [],
+   "scholarships": [],
+   "verified": true
+  },
+  {
+   "slug": "nyu",
+   "name": "New York University",
+   "country": "US",
+   "city": "New York",
+   "fields": [
+    "Arts and Science",
+    "Business (Stern)",
+    "Engineering (Tandon)",
+    "Arts (Tisch)",
+    "Education and Human Development (Steinhardt)",
+    "Interdisciplinary (Gallatin)",
+    "Nursing (Meyers)",
+    "Social Work (Silver)",
+    "Professional Studies (SPS)"
+   ],
+   "source_url": "https://bulletins.nyu.edu/undergraduate/social-work/cost-attendance/tuition-fees/tuition-fees.pdf",
+   "year": 2026,
+   "intl_tuition_usd": {
+    "value": 68576,
+    "currency": "USD",
+    "source_url": "https://bulletins.nyu.edu/undergraduate/social-work/cost-attendance/tuition-fees/tuition-fees.pdf",
+    "year": 2026,
+    "note": "2026-27 New York campus tuition and fees (Stern $70,464; Tisch $75,326); not officially approved until July 2026. Same for all students."
+   },
+   "intl_coa_usd": {
+    "value": 100998,
+    "currency": "USD",
+    "source_url": "https://bulletins.nyu.edu/undergraduate/social-work/cost-attendance/tuition-fees/tuition-fees.pdf",
+    "year": 2026,
+    "note": "2026-27 estimated COA: tuition/fees 68,576 + food/housing 26,438 + books 1,492 + transport 2,438 + personal 2,054; Stern 102,886; Tisch 107,748; health insurance excluded."
+   },
+   "deadlines": [],
+   "scholarships": [],
+   "verified": false
+  },
+  {
+   "slug": "cmu",
+   "name": "Carnegie Mellon University",
+   "country": "US",
+   "city": "Pittsburgh",
+   "fields": [
+    "Arts",
+    "Business",
+    "Computer Science",
+    "Engineering",
+    "Humanities and Social Sciences",
+    "Information Systems",
+    "Science and Math",
+    "Arts + Academics (BXA)"
+   ],
+   "source_url": "https://www.cmu.edu/admission/",
+   "year": 2026,
+   "test_policy": {
+    "value": "flexible",
+    "source_url": "https://www.cmu.edu/admission/admission/standardized-testing",
+    "year": 2026,
+    "note": "Varies by college: Computer Science requires SAT/ACT; Engineering, Dietrich, Heinz, MCS, Tepper are test-flexible (scores required, any accepted test); College of Fine Arts test-optional."
+   },
+   "intl_tuition_usd": {
+    "value": 69702,
+    "currency": "USD",
+    "source_url": "https://www.cmu.edu/sfs/tuition/undergraduate/index.html",
+    "year": 2026,
+    "note": "2026-27 tuition, first-years entering Fall 2026; same for all students."
+   },
+   "intl_coa_usd": {
+    "value": 93614,
+    "currency": "USD",
+    "source_url": "https://www.cmu.edu/sfs/tuition/undergraduate/index.html",
+    "year": 2026,
+    "note": "2026-27 resident total COA (commuter $78,620). Internationals must plan to pay full COA."
+   },
+   "aid": {
+    "basis": {
+     "value": "none",
+     "source_url": "https://www.cmu.edu/admission/admission/international-applicants",
+     "year": 2026,
+     "note": "'Carnegie Mellon doesn't offer financial aid to international students.'"
+    },
+    "merit_for_internationals": {
+     "value": false,
+     "source_url": "https://www.cmu.edu/ira/CDS/pdf/cds_2024-25/cds-2024-h-student-financial-aid-21feb2025.pdf",
+     "year": 2025,
+     "note": "CDS 2024-25 H6: institutional scholarship/grant aid not available to nonresident internationals."
+    }
+   },
+   "deadlines": [
+    {
+     "plan": "ED",
+     "date": "2026-11-02",
+     "cycle": "2026-27",
+     "source_url": "https://www.cmu.edu/admission/admission/application-plans-deadlines",
+     "note": "Page prints no year; treated as 2026-27. Notified Dec 15. ED unavailable for Drama, BXA Design, Music."
+    },
+    {
+     "plan": "RD",
+     "date": "2027-01-04",
+     "cycle": "2026-27",
+     "source_url": "https://www.cmu.edu/admission/admission/application-plans-deadlines",
+     "note": "Page prints no year; notified by Apr 1. Drama and Music RD deadline Dec 1."
+    }
+   ],
+   "scholarships": [],
+   "verified": true
+  },
+  {
+   "slug": "gatech",
+   "name": "Georgia Institute of Technology",
+   "country": "US",
+   "city": "Atlanta",
+   "fields": [
+    "Engineering",
+    "Computing",
+    "Sciences",
+    "Business (Scheller)",
+    "Design",
+    "Liberal Arts"
+   ],
+   "source_url": "https://admission.gatech.edu/",
+   "year": 2026,
+   "test_policy": {
+    "value": "required",
+    "source_url": "https://admission.gatech.edu/first-year/standardized-tests",
+    "year": 2026,
+    "note": "At least one SAT and/or ACT required."
+   },
+   "intl_tuition_usd": {
+    "value": 35610,
+    "currency": "USD",
+    "source_url": "https://finaid.gatech.edu/costs/undergraduate-costs",
+    "year": 2026,
+    "note": "2026-27 first-year Out of Country tuition; mandatory fees $1,716."
+   },
+   "intl_coa_usd": {
+    "value": 56520,
+    "currency": "USD",
+    "source_url": "https://finaid.gatech.edu/costs/undergraduate-costs",
+    "year": 2026,
+    "note": "2026-27 first-year Out of Country on-campus COA (off-campus $60,286)."
+   },
+   "deadlines": [
+    {
+     "plan": "EA",
+     "date": "2026-11-02",
+     "cycle": "2026-27",
+     "source_url": "https://admission.gatech.edu/first-year/deadlines",
+     "note": "EA2 for non-Georgia incl. international; documents due Nov 16. EA required for merit scholarship consideration."
+    },
+    {
+     "plan": "RD",
+     "date": "2027-01-06",
+     "cycle": "2026-27",
+     "source_url": "https://admission.gatech.edu/first-year/deadlines",
+     "note": "Documents due Jan 22."
+    }
+   ],
+   "scholarships": [
+    {
+     "name": "Stamps President's Scholars",
+     "amount": "see program page",
+     "deadline": "2026-11-02",
+     "url": "https://scholars.em.gatech.edu/",
+     "year": 2026
+    },
+    {
+     "name": "Scheller Dean's Scholarship",
+     "amount": "see program page",
+     "deadline": "2026-11-02",
+     "url": "https://www.scheller.gatech.edu/degree-programs/undergraduate/scholarships-awards/scholarship-for-incoming-freshmen/index.html",
+     "year": 2026
+    }
+   ],
+   "verified": true
+  },
+  {
+   "slug": "umich",
+   "name": "University of Michigan",
+   "country": "US",
+   "city": "Ann Arbor",
+   "fields": [],
+   "source_url": "https://admissions.umich.edu/",
+   "year": 2026,
+   "deadlines": [],
+   "scholarships": [],
+   "verified": false
+  }
+ ]
+}

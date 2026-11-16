@@ -1,0 +1,93 @@
+{
+ "institutions": [],
+ "programs": [
+  {
+   "name": "Stipendium Hungaricum",
+   "country": "HU",
+   "level": "all",
+   "coverage": "Tuition-free, stipend HUF 43,700/mo, housing HUF 40,000/mo or dorm",
+   "deadline": null,
+   "url": "https://stipendiumhungaricum.hu/about/",
+   "year": 2026,
+   "note": "2026/27 call closed; deadlines per Checklist_2026.pdf (not read)",
+   "verified": true
+  },
+  {
+   "name": "Türkiye Bursları",
+   "country": "TR",
+   "level": "bachelor/master/PhD",
+   "coverage": "Tuition, housing, insurance, language course, flight, stipend 6,500 TL (UG)",
+   "deadline": "2026-02-20",
+   "url": "https://turkiyeburslari.gov.tr/announcements/turkiye-scholarships-2026-applications-121",
+   "year": 2026,
+   "note": "Window 10 Jan–20 Feb 2026",
+   "verified": true
+  },
+  {
+   "name": "Global Korea Scholarship (GKS)",
+   "country": "KR",
+   "level": "bachelor",
+   "coverage": "Full tuition, Korean-language fees, airfare, settlement",
+   "deadline": "2025-10-31",
+   "url": "https://www.korea.net/NewsFocus/Society/view?articleId=278471",
+   "year": 2025,
+   "note": "2026 intake: embassy track 15–30 Sep, univ track 15 Sep–31 Oct 2025; age ≤25; 2027 dates not found",
+   "verified": true
+  },
+  {
+   "name": "MEXT",
+   "country": "JP",
+   "level": "bachelor",
+   "coverage": "Stipend ¥117,000–145,000/mo (search snippet)",
+   "deadline": null,
+   "url": "https://www.studyinjapan.go.jp/en/planning/scholarships/",
+   "year": 2026,
+   "note": "Official page thin; Uzbekistan UG deadline 25 May 2026 from search snippet only",
+   "verified": false
+  },
+  {
+   "name": "DAAD",
+   "country": "DE",
+   "level": "master/PhD",
+   "coverage": "€992/mo master, €1,400 PhD (snippet)",
+   "deadline": null,
+   "url": "https://www.daad.de/en/study-and-research-in-germany/scholarships/study-scholarships-for-foreigners/",
+   "year": 2026,
+   "note": "Not verified; no bachelor funding",
+   "verified": false
+  },
+  {
+   "name": "Chevening",
+   "country": "GB",
+   "level": "master",
+   "coverage": "Tuition, travel, stipend, allowances",
+   "deadline": null,
+   "url": "https://www.chevening.org/faqs/what-does-a-chevening-scholarship-cover/",
+   "year": 2026,
+   "note": "Key dates not found",
+   "verified": true
+  },
+  {
+   "name": "Cambridge Trust",
+   "country": "GB",
+   "level": "graduate",
+   "coverage": null,
+   "deadline": null,
+   "url": "https://www.cambridgetrust.org/",
+   "year": 2026,
+   "note": "No specifics read",
+   "verified": false
+  },
+  {
+   "name": "Reach Oxford",
+   "country": "GB",
+   "level": "bachelor",
+   "coverage": null,
+   "deadline": null,
+   "url": "https://www.ox.ac.uk/admissions/undergraduate/fees-and-funding/oxford-undergraduate-scholarships/reach-oxford-scholarship",
+   "year": 2026,
+   "note": "Pages unreachable; unverified",
+   "verified": false
+  }
+ ]
+}
