@@ -3,6 +3,7 @@
 from app.modules.legal.infrastructure.orm.tables import (
     AcceptanceRow,
     LegalDocumentRow,
+    PurposeConsentRow,
 )
 
-__all__ = ["AcceptanceRow", "LegalDocumentRow"]
+__all__ = ["AcceptanceRow", "LegalDocumentRow", "PurposeConsentRow"]

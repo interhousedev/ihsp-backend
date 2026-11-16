@@ -388,6 +388,24 @@ class ClassworkCommands(Protocol):
         ...
 
 
+class AcademicMembership(Protocol):
+    """Group membership of students (provider: academic; consumer: admission)."""
+
+    async def student(self, user_id: UUID) -> StudentRef | None:
+        """Return the student's group, or None when the user is not a student."""
+        ...
+
+    async def group_ids_for(
+        self, user_ids: Sequence[UUID]
+    ) -> dict[UUID, frozenset[UUID]]:
+        """Return the groups of each user that is a student (others are absent)."""
+        ...
+
+    async def students_in_groups(self, group_ids: Sequence[UUID]) -> list[UUID]:
+        """Return the active students of the groups."""
+        ...
+
+
 class AcademicEnrollment(Protocol):
     """Enrollment actions (provider: B3; consumers: B2 and B5)."""
 

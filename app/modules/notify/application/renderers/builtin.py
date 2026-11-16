@@ -3,6 +3,27 @@
 from app.modules.notify.application.renderers.account_closing import (
     AccountClosingRenderer,
 )
+from app.modules.notify.application.renderers.admission_affordability_signoff import (
+    AdmissionAffordabilitySignoffRenderer,
+)
+from app.modules.notify.application.renderers.admission_comment_added import (
+    AdmissionCommentAddedRenderer,
+)
+from app.modules.notify.application.renderers.admission_deadline_reminder import (
+    AdmissionDeadlineReminderRenderer,
+)
+from app.modules.notify.application.renderers.admission_document_uploaded import (
+    AdmissionDocumentUploadedRenderer,
+)
+from app.modules.notify.application.renderers.admission_help_requested import (
+    AdmissionHelpRequestedRenderer,
+)
+from app.modules.notify.application.renderers.admission_help_responded import (
+    AdmissionHelpRespondedRenderer,
+)
+from app.modules.notify.application.renderers.admission_review_ready import (
+    AdmissionReviewReadyRenderer,
+)
 from app.modules.notify.application.renderers.assessment_reminder import (
     AssessmentReminderRenderer,
 )
@@ -15,6 +36,15 @@ from app.modules.notify.application.renderers.curator_absences import (
 )
 from app.modules.notify.application.renderers.curator_exam_mark import (
     CuratorExamMarkRenderer,
+)
+from app.modules.notify.application.renderers.deadline_changed import (
+    DeadlineChangedRenderer,
+)
+from app.modules.notify.application.renderers.document_attached import (
+    DocumentAttachedRenderer,
+)
+from app.modules.notify.application.renderers.document_rejected import (
+    DocumentRejectedRenderer,
 )
 from app.modules.notify.application.renderers.emis_reauth import EmisReauthRenderer
 from app.modules.notify.application.renderers.excuse_decided import (
@@ -97,6 +127,21 @@ from app.modules.notify.application.renderers.sync_alert import SyncAlertRendere
 from app.modules.notify.application.renderers.teacher_temporary_marks import (
     TeacherTemporaryMarksRenderer,
 )
+from app.modules.notify.application.renderers.transcript_ready import (
+    TranscriptReadyRenderer,
+)
+from app.modules.notify.application.renderers.transcript_reminder import (
+    TranscriptReminderRenderer,
+)
+from app.modules.notify.application.renderers.transcript_requested import (
+    TranscriptRequestedRenderer,
+)
+from app.modules.notify.application.renderers.transcript_scan_uploaded import (
+    TranscriptScanUploadedRenderer,
+)
+from app.modules.notify.application.renderers.transcript_unrouted import (
+    TranscriptUnroutedRenderer,
+)
 from app.settings import UrlsSettings
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.links import LinksApi
@@ -145,6 +190,59 @@ def register_builtin_renderers(
     )
     registry.register(
         NotificationType.CHAT_ANSWER_READY, ChatAnswerReadyRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.TRANSCRIPT_REQUESTED, TranscriptRequestedRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.TRANSCRIPT_REMINDER, TranscriptReminderRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.TRANSCRIPT_READY, TranscriptReadyRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.TRANSCRIPT_SCAN_UPLOADED,
+        TranscriptScanUploadedRenderer(i18n, urls),
+    )
+    registry.register(
+        NotificationType.TRANSCRIPT_UNROUTED, TranscriptUnroutedRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.ADMISSION_DOCUMENT_UPLOADED,
+        AdmissionDocumentUploadedRenderer(i18n, urls),
+    )
+    registry.register(
+        NotificationType.DOCUMENT_ATTACHED, DocumentAttachedRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.DOCUMENT_REJECTED, DocumentRejectedRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.ADMISSION_DEADLINE_REMINDER,
+        AdmissionDeadlineReminderRenderer(i18n, urls),
+    )
+    registry.register(
+        NotificationType.DEADLINE_CHANGED, DeadlineChangedRenderer(i18n, urls)
+    )
+    registry.register(
+        NotificationType.ADMISSION_HELP_REQUESTED,
+        AdmissionHelpRequestedRenderer(i18n, urls),
+    )
+    registry.register(
+        NotificationType.ADMISSION_HELP_RESPONDED,
+        AdmissionHelpRespondedRenderer(i18n, urls),
+    )
+    registry.register(
+        NotificationType.ADMISSION_COMMENT_ADDED,
+        AdmissionCommentAddedRenderer(i18n, urls),
+    )
+    registry.register(
+        NotificationType.ADMISSION_REVIEW_READY,
+        AdmissionReviewReadyRenderer(i18n, urls),
+    )
+    registry.register(
+        NotificationType.ADMISSION_AFFORDABILITY_SIGNOFF,
+        AdmissionAffordabilitySignoffRenderer(i18n, urls),
     )
     registry.register(
         NotificationType.PRIVACY_UPDATE, PrivacyUpdateRenderer(i18n, urls)

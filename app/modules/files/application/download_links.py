@@ -3,7 +3,12 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from app.modules.files.domain.errors import FileDeletedError, FileNotReadyError
+from app.modules.files.domain.errors import (
+    ConfidentialFileError,
+    FileDeletedError,
+    FileNotReadyError,
+    FileQuarantinedError,
+)
 from app.modules.files.domain.policy import (
     MAX_PRESIGN_GET_SECONDS,
     PRESIGN_GET_SECONDS,
@@ -39,16 +44,26 @@ class DownloadLinks:
         self._clock = clock
 
     async def url_for(
-        self, file: StoredFile, *, inline: bool | None, ttl_seconds: int | None = None
+        self,
+        file: StoredFile,
+        *,
+        inline: bool | None,
+        ttl_seconds: int | None = None,
+        allow_confidential: bool = False,
     ) -> DownloadUrl:
         """Return a download URL; ``inline`` None means as inline as allowed.
 
-        ``ttl_seconds`` replaces the usual 60 seconds (1 to 3600 seconds).
+        ``ttl_seconds`` replaces the usual 60 seconds (1 to 3600 seconds). Confidential
+        files are refused unless the owning module asks for a signed link.
         """
+        if file.confidential and not allow_confidential:
+            raise ConfidentialFileError()
         if file.status == FileStatus.DELETED:
             raise FileDeletedError()
         if file.status not in _DOWNLOADABLE:
             raise FileNotReadyError(params={"status": file.status.value})
+        if file.scan_blocks_download:
+            raise FileQuarantinedError(params={"scan_status": file.scan_status.value})
         wanted = True if inline is None else inline
         ttl = PRESIGN_GET_SECONDS if ttl_seconds is None else _clamp(ttl_seconds)
         url = await self._storage.presign_get(

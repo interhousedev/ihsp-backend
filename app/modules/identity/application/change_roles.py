@@ -25,7 +25,15 @@ from app.shared.base_error import ValidationFailedError
 from app.shared.notifications import AuditDraft
 
 MANAGED_ROLES = frozenset(
-    {Role.ADMIN, Role.LMS_ADMIN, Role.LMS_CREATOR, Role.LIBRARIAN}
+    {
+        Role.ADMIN,
+        Role.LMS_ADMIN,
+        Role.LMS_CREATOR,
+        Role.LIBRARIAN,
+        Role.COUNSELOR,
+        Role.MENTOR,
+        Role.TRANSCRIPT_OFFICER,
+    }
 )
 # Who may become a course creator.
 COURSE_CREATOR_BASES = frozenset({Role.TEACHER, Role.ADMIN})
@@ -80,7 +88,7 @@ class ChangeRoles:
     ) -> None:
         if not set(grant) | set(revoke) <= MANAGED_ROLES:
             raise ValidationFailedError(
-                params={"roles": ["admin", "lms_admin", "lms_creator", "librarian"]}
+                params={"roles": sorted(role.value for role in MANAGED_ROLES)}
             )
         if set(grant) & set(revoke):
             raise ValidationFailedError(params={"reason": "grant and revoke overlap"})

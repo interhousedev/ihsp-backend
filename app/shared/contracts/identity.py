@@ -32,6 +32,15 @@ SP_BOTTOM_NAV_IDS: tuple[str, ...] = (
 )
 
 
+class AccountKind(StrEnum):
+    """What kind of person an account is."""
+
+    SCHOOL = "school"
+    ALUMNI = "alumni"
+    EXTERNAL = "external"
+    STAFF = "staff"
+
+
 class UserStatus(StrEnum):
     """Lifecycle of a user account."""
 

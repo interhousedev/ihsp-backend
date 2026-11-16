@@ -3,8 +3,10 @@
 from uuid import UUID
 
 from app.modules.files.domain.errors import (
+    ConfidentialFileError,
     FileDeletedError,
     FileNotReadyError,
+    FileQuarantinedError,
     StoredFileNotFoundError,
 )
 from app.modules.files.domain.status import FileStatus
@@ -23,13 +25,20 @@ class ReadFileBytes:
         self._storage = storage
 
     async def execute(self, file_id: UUID) -> bytes:
-        """Return the bytes; the caller has already checked access."""
+        """Return the bytes; the caller has already checked access.
+
+        Confidential and quarantined files are refused.
+        """
         async with self._uow_factory() as uow:
             file = await uow.files.get(file_id)
         if file is None:
             raise StoredFileNotFoundError()
         if file.status == FileStatus.DELETED:
             raise FileDeletedError()
+        if file.confidential:
+            raise ConfidentialFileError()
+        if file.scan_blocks_download:
+            raise FileQuarantinedError(params={"scan_status": file.scan_status.value})
         if file.status not in _READABLE:
             raise FileNotReadyError(params={"status": file.status.value})
         return await self._storage.get(file.key)

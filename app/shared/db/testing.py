@@ -30,6 +30,7 @@ SCHEMAS = (
     "faces",
     "onboarding",
     "privacy",
+    "admission",
 )
 
 

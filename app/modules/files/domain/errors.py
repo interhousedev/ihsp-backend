@@ -3,6 +3,7 @@
 from app.shared.base_error import (
     BaseError,
     ConflictError,
+    ForbiddenError,
     GoneError,
     NotFoundError,
     ValidationFailedError,
@@ -88,6 +89,20 @@ class FileNotReadyError(ConflictError):
 
     code = "files/not-ready"
     message_key = "files-not-ready"
+
+
+class ConfidentialFileError(ForbiddenError):
+    """A confidential file is served only through its owning module's signed link."""
+
+    code = "files/confidential"
+    message_key = "files-confidential"
+
+
+class FileQuarantinedError(ConflictError):
+    """The file is waiting for an antivirus scan, or failed it."""
+
+    code = "files/quarantined"
+    message_key = "files-quarantined"
 
 
 class NoTextError(NotFoundError):

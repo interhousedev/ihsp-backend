@@ -4,7 +4,9 @@ The usage recorder opens a span when a call starts and ends it when the call end
 Tracing is best effort: no method raises, and the SDK exports in a background thread,
 so a Langfuse outage never delays or fails a request. Without keys no client exists.
 Prompts and answers are sent only with `LANGFUSE__CAPTURE_CONTENT`; the user is an
-opaque salted hash, never an id, email or name.
+opaque salted hash, never an id, email or name. A task with `private_content` never
+sends input, output or error text, whatever the switch says: its error becomes a
+fixed code and the metadata is the task and the role only.
 """
 
 import hashlib
@@ -17,6 +19,9 @@ from app.settings import LangfuseSettings
 import structlog
 
 log = structlog.get_logger(__name__)
+
+PRIVATE_ERROR_CODE = "private_task_error"
+"""What the span and the usage event say instead of an error text of a private task."""
 
 
 class TraceSpan(Protocol):
@@ -44,7 +49,7 @@ class TraceBackend(Protocol):
         user_id: str | None,
         session_id: str | None,
         input: Any | None,
-        metadata: dict[str, str],
+        metadata: dict[str, Any],
     ) -> TraceSpan:
         """Open a generation span."""
 
@@ -82,6 +87,9 @@ class LangfuseTracer:
         role: str,
         session_id: str | None,
         content: Any | None = None,
+        private: bool = False,
+        prompt_version: int | None = None,
+        prompt_hash: str | None = None,
     ) -> "OpenSpan | None":
         """Open a span; None when the backend failed (the call goes on untraced)."""
         try:
@@ -90,10 +98,15 @@ class LangfuseTracer:
                 model=model,
                 user_id=self.opaque_user(user_id),
                 session_id=session_id,
-                input=content if self._capture else None,
-                metadata={"task": task, "role": role},
+                input=content if self._capture and not private else None,
+                metadata={
+                    "task": task,
+                    "role": role,
+                    "prompt_version": prompt_version,
+                    "prompt_hash": prompt_hash,
+                },
             )
-            return OpenSpan(span, self._capture)
+            return OpenSpan(span, self._capture and not private, private=private)
         except Exception:
             log.warning("langfuse_start_failed", task=task, exc_info=True)
             return None
@@ -116,10 +129,13 @@ class LangfuseTracer:
 class OpenSpan:
     """A span in progress."""
 
-    def __init__(self, span: TraceSpan, capture_content: bool) -> None:
-        """Keep the span and the content switch."""
+    def __init__(
+        self, span: TraceSpan, capture_content: bool, *, private: bool = False
+    ) -> None:
+        """Keep the span, the content switch and whether the task is private."""
         self._span = span
         self._capture = capture_content
+        self._private = private
 
     def end(
         self,
@@ -134,8 +150,8 @@ class OpenSpan:
             self._span.end(
                 model=model,
                 usage=_usage_details(usage),
-                error=error,
-                output=output if self._capture else None,
+                error=PRIVATE_ERROR_CODE if self._private and error else error,
+                output=output if self._capture and not self._private else None,
             )
         except Exception:
             log.warning("langfuse_end_failed", exc_info=True)
@@ -171,7 +187,7 @@ class SdkBackend:
         user_id: str | None,
         session_id: str | None,
         input: Any | None,
-        metadata: dict[str, str],
+        metadata: dict[str, Any],
     ) -> TraceSpan:
         """Open a generation span carrying the user and the session."""
         from langfuse import propagate_attributes

@@ -8,7 +8,7 @@ from uuid import UUID
 from app.modules.identity.domain.user import ActivationPurpose, User
 from app.modules.identity.infrastructure.orm import User as UserRow
 from app.shared.actor import Role
-from app.shared.contracts.identity import UserStatus
+from app.shared.contracts.identity import AccountKind, UserStatus
 from app.shared.pagination import Page, decode_cursor, encode_cursor
 
 from sqlalchemy import ARRAY, Text, and_, func, literal, or_, select, update
@@ -56,6 +56,8 @@ def _to_entity(row: UserRow) -> User:
         photo_file_id=row.photo_file_id,
         name_locked=row.name_locked,
         login_locked=row.login_locked,
+        account_kind=AccountKind(row.account_kind),
+        phone=row.phone,
         created_at=row.created_at,
     )
 
@@ -93,6 +95,8 @@ def _apply(row: UserRow, user: User) -> None:
     row.photo_file_id = user.photo_file_id
     row.name_locked = user.name_locked
     row.login_locked = user.login_locked
+    row.account_kind = user.account_kind.value
+    row.phone = user.phone
 
 
 def _has_any_role(roles: Sequence[Role]) -> ColumnElement[bool]:
@@ -110,6 +114,7 @@ def _text_filter(query: str) -> ColumnElement[bool]:
     pattern = _like(query.strip())
     return or_(
         UserRow.login.ilike(pattern, escape="\\"),
+        UserRow.middle_name.ilike(pattern, escape="\\"),
         UserRow.first_name.ilike(pattern, escape="\\"),
         UserRow.last_name.ilike(pattern, escape="\\"),
         UserRow.recovery_email.ilike(pattern, escape="\\"),
@@ -228,17 +233,20 @@ class SqlUserRepository:
         query: str | None,
         roles: Sequence[Role],
         status: UserStatus | None,
+        account_kind: AccountKind | None = None,
         cursor: str | None,
         limit: int,
     ) -> Page[User]:
         """Administration list: newest first, cursor on the id."""
         stmt = select(UserRow).order_by(UserRow.id.desc()).limit(limit + 1)
-        if query and query.strip():
-            stmt = stmt.where(_text_filter(query))
+        for word in (query or "").split():
+            stmt = stmt.where(_text_filter(word))
         if roles:
             stmt = stmt.where(_has_any_role(roles))
         if status is not None:
             stmt = stmt.where(UserRow.status == status.value)
+        if account_kind is not None:
+            stmt = stmt.where(UserRow.account_kind == account_kind.value)
         decoded = decode_cursor(cursor)
         if decoded:
             stmt = stmt.where(UserRow.id < UUID(decoded["id"]))

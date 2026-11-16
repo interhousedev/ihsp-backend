@@ -5,13 +5,13 @@ from dataclasses import dataclass
 from app.modules.identity.domain.user import User
 from app.modules.identity.ports.unit_of_work import UowFactory
 from app.shared.actor import Role
-from app.shared.contracts.identity import UserStatus
+from app.shared.contracts.identity import AccountKind, UserStatus
 from app.shared.pagination import Page
 
 
 @dataclass(frozen=True, slots=True)
 class ListUsers:
-    """Search users by text, role and status with cursor pagination."""
+    """Search users by text, role, kind and status with cursor pagination."""
 
     uow_factory: UowFactory
 
@@ -21,6 +21,7 @@ class ListUsers:
         query: str | None,
         role: Role | None,
         status: UserStatus | None,
+        account_kind: AccountKind | None = None,
         cursor: str | None,
         limit: int,
     ) -> Page[User]:
@@ -30,6 +31,7 @@ class ListUsers:
                 query=query,
                 roles=[role] if role else [],
                 status=status,
+                account_kind=account_kind,
                 cursor=cursor,
                 limit=limit,
             )

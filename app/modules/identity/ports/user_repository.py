@@ -7,7 +7,7 @@ from uuid import UUID
 
 from app.modules.identity.domain.user import User
 from app.shared.actor import Role
-from app.shared.contracts.identity import UserStatus
+from app.shared.contracts.identity import AccountKind, UserStatus
 from app.shared.pagination import Page
 
 
@@ -74,10 +74,11 @@ class UserRepository(Protocol):
         query: str | None,
         roles: Sequence[Role],
         status: UserStatus | None,
+        account_kind: AccountKind | None = None,
         cursor: str | None,
         limit: int,
     ) -> Page[User]:
-        """Administration list: filter by text, role and status, newest first."""
+        """Administration list: filter by words, role, status and kind, newest first."""
         ...
 
     async def search_active(

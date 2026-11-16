@@ -22,6 +22,7 @@ async def write_acceptances(session: AsyncSession, drafts: list[ConsentDraft]) -
                 accepted_at=draft.accepted_at,
                 ip=draft.ip,
                 user_agent=draft.user_agent,
+                app_scope=item.app_scope,
             )
             for draft in drafts
             for item in draft.items

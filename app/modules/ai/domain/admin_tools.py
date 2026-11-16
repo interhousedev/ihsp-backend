@@ -19,7 +19,15 @@ Weekday = Annotated[int, Field(ge=1, le=7)]  # A weekend needs blocks in the ter
 Period = Annotated[int, Field(ge=1, le=12)]
 Short = Annotated[str, Field(min_length=1, max_length=200)]
 RoleName = Literal[
-    "student", "teacher", "admin", "lms_admin", "lms_creator", "librarian"
+    "student",
+    "teacher",
+    "admin",
+    "lms_admin",
+    "lms_creator",
+    "librarian",
+    "counselor",
+    "mentor",
+    "transcript_officer",
 ]
 Parity = Literal["every", "odd", "even"]
 

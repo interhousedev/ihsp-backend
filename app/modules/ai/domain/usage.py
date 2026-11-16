@@ -37,6 +37,7 @@ FEATURES: tuple[str, ...] = (
     "web_search",
     "embedding",
     "academic",
+    "admission",
     "other",
 )
 
@@ -82,6 +83,16 @@ _FEATURE_OF: dict[str, str] = {
     "teacher_work_check": "assistant",
     "teacher_ai_check": "assistant",
     "teacher_lesson_plan": "assistant",
+    "admit_profile_words": "admission",
+    "admit_item_interview": "admission",
+    "admit_item_review": "admission",
+    "admit_item_rewrite_fix": "admission",
+    "admit_essay_review": "admission",
+    "admit_alignment_map": "admission",
+    "admit_alignment_refresh": "admission",
+    "admit_proof_extract": "admission",
+    "admit_university_research": "admission",
+    "admit_goal_plan": "admission",
 }
 
 
@@ -107,6 +118,9 @@ class UsageEvent:
     cost_micro: int | None
     success: bool
     error: str | None = None
+    prompt_version: int | None = None
+    prompt_hash: str | None = None
+    latency_ms: int | None = None
 
 
 @dataclass(frozen=True, slots=True)

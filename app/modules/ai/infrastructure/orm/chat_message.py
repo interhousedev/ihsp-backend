@@ -13,6 +13,7 @@ from sqlalchemy import (
     Index,
     Integer,
     SmallInteger,
+    String,
     Text,
     UniqueConstraint,
     Uuid,
@@ -61,3 +62,6 @@ class ChatMessage(IdMixin, TimestampMixin, Base):
     # The user's thumbs on an assistant message: 1 up, -1 down; the comment needs one.
     feedback: Mapped[int | None] = mapped_column(SmallInteger)
     feedback_comment: Mapped[str | None] = mapped_column(Text)
+    # The task and editable-prompt version that wrote an assistant message (ratings).
+    prompt_task: Mapped[str | None] = mapped_column(String(64))
+    prompt_version: Mapped[int | None] = mapped_column(Integer)

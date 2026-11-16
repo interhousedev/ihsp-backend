@@ -69,6 +69,8 @@ def group_of(name: str) -> str:
         return "lms"
     if name.startswith("nb_"):
         return "notebooks"
+    if name.startswith("admit_"):
+        return "admission"
     if name.startswith("web_search_"):
         return "web_search"
     if "smart" in name:

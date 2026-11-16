@@ -62,6 +62,7 @@ class SqlNotificationRepository:
         c = self.table.c
         return [
             c.user_id == user_id,
+            c.status != NotificationStatus.CANCELLED.value,
             c.scheduled_at <= now,
             c.payload["preview"].as_string().is_distinct_from("true"),
         ]

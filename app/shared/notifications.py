@@ -3,8 +3,10 @@
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
-from typing import Any
+from typing import Any, Protocol
 from uuid import UUID
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class NotificationType(StrEnum):
@@ -53,6 +55,21 @@ class NotificationType(StrEnum):
     EXCUSE_MESSAGE = "excuse_message"
     PRIVACY_UPDATE = "privacy_update"
     CHAT_ANSWER_READY = "chat_answer_ready"
+    TRANSCRIPT_REQUESTED = "transcript_requested"
+    TRANSCRIPT_REMINDER = "transcript_reminder"
+    TRANSCRIPT_READY = "transcript_ready"
+    TRANSCRIPT_SCAN_UPLOADED = "transcript_scan_uploaded"
+    TRANSCRIPT_UNROUTED = "transcript_unrouted"
+    ADMISSION_DOCUMENT_UPLOADED = "admission_document_uploaded"
+    DOCUMENT_ATTACHED = "document_attached"
+    DOCUMENT_REJECTED = "document_rejected"
+    ADMISSION_DEADLINE_REMINDER = "admission_deadline_reminder"
+    DEADLINE_CHANGED = "deadline_changed"
+    ADMISSION_HELP_REQUESTED = "admission_help_requested"
+    ADMISSION_HELP_RESPONDED = "admission_help_responded"
+    ADMISSION_COMMENT_ADDED = "admission_comment_added"
+    ADMISSION_REVIEW_READY = "admission_review_ready"
+    ADMISSION_AFFORDABILITY_SIGNOFF = "admission_affordability_signoff"
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,3 +94,23 @@ class AuditDraft:
     ip: str | None = None
     user_agent: str | None = None
     metadata: dict[str, Any] | None = None
+
+
+class NotificationOutbox(Protocol):
+    """Writes notification drafts and withdraws one that has not been claimed yet."""
+
+    async def write_notifications(
+        self, session: AsyncSession, drafts: list[NotificationDraft]
+    ) -> None:
+        """Insert drafts as pending; a repeated `dedupe_key` is ignored."""
+        ...
+
+    async def cancel_pending(self, session: AsyncSession, dedupe_key: str) -> bool:
+        """Cancel the notification with this key if it is still pending.
+
+        Returns True only when the row was cancelled (it will never be sent). False
+        means it was already claimed or sent, or does not exist; the caller must then
+        not undo whatever the notification announced. Call it in the transaction of
+        the state change, before that change.
+        """
+        ...

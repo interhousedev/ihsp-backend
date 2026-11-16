@@ -5,6 +5,7 @@ from functools import cache
 from pathlib import Path
 from typing import Literal
 
+from app.settings_admission import AdmissionSettings
 from app.settings_ai import AiSettings, fold_deprecated
 from app.settings_features import FeaturesSettings
 from app.settings_web_search import WebSearchSettings
@@ -1074,6 +1075,9 @@ class UrlsSettings(BaseModel):
     library: str = "http://localhost:3008"
     """Origin of the library app (prod https://lib.ihsu.uz)."""
 
+    admission: str = "http://localhost:3009"
+    """Origin of the admission app (prod https://admission.ihsu.uz)."""
+
     short_links: str = "http://localhost:8000/s"  # prod https://s.ihsu.uz
     """Base of short links (production: its own host)."""
 
@@ -1273,6 +1277,24 @@ class LimitsSettings(BaseModel):
     """Images described and audio transcribed by the media model (AI task
     MEDIA_DESCRIBE) per student and day. -1 means no cap."""
 
+    admit_item_review_per_day: int = Field(default=60, ge=-1)
+    """Admission app: item reviews a student may ask a day; -1 is no cap."""
+
+    admit_essay_review_per_week: int = Field(default=10, ge=-1)
+    """Admission app: Essay reviews per week. -1 means no cap."""
+
+    admit_alignment_map_per_week: int = Field(default=5, ge=-1)
+    """Admission app: Alignment maps per week. -1 means no cap."""
+
+    admit_research_per_day: int = Field(default=3, ge=-1)
+    """Admission app: Institution research runs per day. -1 means no cap."""
+
+    admit_proof_check_per_day: int = Field(default=10, ge=-1)
+    """Admission app: Proof checks per day. -1 means no cap."""
+
+    admit_goal_plan_per_week: int = Field(default=5, ge=-1)
+    """Admission app: Goal plans per week. -1 means no cap."""
+
     web_search_per_day_student: int = Field(default=10, ge=-1)
     """Web searches a student may start per day (Tashkent date): a chat message with the
     web toggle on counts one, a Discover `fast` search one, a `deep` one
@@ -1392,6 +1414,7 @@ class Settings(BaseSettings):
     features: FeaturesSettings = Field(default_factory=FeaturesSettings)
     docs: DocsSettings = Field(default_factory=DocsSettings)
     web_search: WebSearchSettings = Field(default_factory=WebSearchSettings)
+    admission: AdmissionSettings = Field(default_factory=AdmissionSettings)
 
     @model_validator(mode="after")
     def _fold_deprecated_variables(self) -> "Settings":
@@ -1481,10 +1504,17 @@ class Settings(BaseSettings):
         return missing
 
     def cors_app_origins(self) -> list[str]:
-        """Origins of the id, sp, staff, admin, lms, app and library apps."""
+        """Origins of the id, sp, staff, admin, lms, app, library and admission apps."""
         urls = self.urls
         return _origins(
-            urls.id, urls.sp, urls.staff, urls.admin, urls.lms, urls.app, urls.library
+            urls.id,
+            urls.sp,
+            urls.staff,
+            urls.admin,
+            urls.lms,
+            urls.app,
+            urls.library,
+            urls.admission,
         )
 
     def cors_share_origins(self) -> list[str]:

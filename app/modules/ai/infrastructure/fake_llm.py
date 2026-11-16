@@ -9,8 +9,9 @@ from app.modules.ai.domain.prompts import SUMMARY_SYSTEM_PROMPT
 from app.modules.ai.infrastructure.fake_author import author_answer, is_author_chat
 from app.modules.ai.infrastructure.fake_course import build_course_document
 from app.modules.ai.infrastructure.fake_exercise import build_exercise_document
+from app.modules.ai.infrastructure.fake_schema import document_for
 from app.modules.ai.infrastructure.fake_sources import chat_answer, is_notebook_chat
-from app.modules.ai.infrastructure.fake_structured import build_document
+from app.modules.ai.infrastructure.fake_structured import BUILDERS, build_document
 from app.modules.ai.infrastructure.fake_subjects import (
     SUBJECT_NAMES_SCHEMA,
     subject_names_document,
@@ -104,6 +105,9 @@ class FakeLlmGateway:
                 schema_name, messages, system
             ) or build_exercise_document(schema_name, messages)
             built = built or build_teacher_document(schema_name, messages)
+            if built is None and schema_name not in BUILDERS:
+                # Schemas of other modules (admission): a valid document by shape.
+                built = document_for(schema)
             data = built or build_document(schema_name, messages)
         text = json.dumps(data)
         usage = _usage(system, messages, text)

@@ -13,7 +13,7 @@ from app.modules.identity.domain.login_name import base_login, next_free
 from app.modules.identity.domain.user import ActivationPurpose, User
 from app.modules.identity.ports.unit_of_work import IdentityUnitOfWorkPort, UowFactory
 from app.shared.actor import Role
-from app.shared.contracts.identity import UserStatus
+from app.shared.contracts.identity import AccountKind, UserStatus
 from app.shared.ids import new_id
 
 
@@ -59,6 +59,7 @@ class CreateStaffAccount:
                 roles=set(roles),
                 recovery_email=address,
                 status=UserStatus.PENDING_ACTIVATION,
+                account_kind=AccountKind.STAFF,
             )
             url = self.links.issue(user, ActivationPurpose.ACTIVATE)
             await uow.users.add(user)

@@ -30,6 +30,7 @@ from app.modules.ai.domain.history import (
     select_window,
     to_llm_messages,
 )
+from app.modules.ai.domain.prompt_registry import last_prompt
 from app.modules.ai.domain.prompts import SURFACE_TELEGRAM
 from app.modules.ai.domain.tool_call import ToolCall, ToolStatus
 from app.modules.ai.ports.unit_of_work import AiUnitOfWork
@@ -403,6 +404,7 @@ class ContinueTurn:
                     run.chat_id, run.message_seq
                 )
             if message is None:
+                prompt = last_prompt()
                 message = ChatMessage(
                     id=new_id(),
                     chat_id=run.chat_id,
@@ -413,6 +415,8 @@ class ContinueTurn:
                     tool_calls=calls,
                     tokens_in=tokens[0],
                     tokens_out=tokens[1],
+                    prompt_task=prompt.task if prompt else None,
+                    prompt_version=prompt.version if prompt else None,
                 )
                 await uow.messages.add(message)
                 run.message_seq = message.seq

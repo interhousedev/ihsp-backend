@@ -343,3 +343,17 @@ class StudentCardNotFoundError(NotFoundError):
 
     code = "student_card_not_found"
     message_key = "id-student-card-not-found"
+
+
+class InvitedRoleForbiddenError(ValidationFailedError):
+    """Students and teachers are not created through the invitation route."""
+
+    code = "id/invited-role-forbidden"
+    message_key = "id-invited-role-forbidden"
+
+
+class InvitedRolesRequiredError(ValidationFailedError):
+    """An invited account needs at least one role."""
+
+    code = "id/invited-roles-required"
+    message_key = "id-invited-roles-required"

@@ -13,7 +13,7 @@ from app.settings import UrlsSettings
 from app.settings_features import FeaturesSettings
 from app.shared.actor import Role
 
-AppName = Literal["sp", "staff", "admin", "lms", "library", "id", "bot"]
+AppName = Literal["sp", "staff", "admin", "lms", "library", "id", "bot", "admission"]
 LOCALES: Final = ("uz", "ru", "en")
 DEFAULT_LOCALE: Final = "en"
 
@@ -62,6 +62,7 @@ _TE = {Role.TEACHER}
 _AD = {Role.ADMIN}
 _LIBM = {Role.LIBRARIAN, Role.ADMIN}
 _LMSA = {Role.LMS_ADMIN, Role.LMS_CREATOR}
+_ADM = {Role.COUNSELOR, Role.MENTOR, Role.ADMIN}
 _ALL: set[Role] = set()
 
 APP_MAP: Final[tuple[Destination, ...]] = (
@@ -908,6 +909,79 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         _ALL,
         ("Fikr bildirish", "Обратная связь", "Feedback"),
         "fikr taklif обратная связь отзыв feedback bug telegram bot",
+    ),
+    # - - - Admission (admission) - - -
+    _d(
+        "admission-home",
+        "admission",
+        "/",
+        _ST,
+        (
+            "Universitetga kirish",
+            "Поступление в университет",
+            "University admission",
+        ),
+        "kirish universitet поступление университет admission university apply",
+    ),
+    _d(
+        "admission-courses",
+        "admission",
+        "/courses/",
+        _ST,
+        ("Kurslarim", "Мои курсы", "My courses"),
+        "kurslar kurs курсы курс courses course portfolio портфолио",
+    ),
+    _d(
+        "admission-students",
+        "admission",
+        "/students/",
+        _ADM,
+        ("Abituriyentlar", "Абитуриенты", "Applicants"),
+        "abituriyent talaba абитуриенты ученики applicants students counselor "
+        "mentor ментор консультант",
+    ),
+    _d(
+        "admission-chooser",
+        "admission",
+        "/chooser/",
+        _ST,
+        ("Universitet tanlash", "Выбор университетов", "University chooser"),
+        "universitet tanlash список университетов выбор вуз stipendiya стипендия "
+        "university list chooser scholarships shortlist",
+    ),
+    _d(
+        "admission-documents",
+        "admission",
+        "/documents/",
+        _ST,
+        ("Hujjatlar", "Документы", "Documents"),
+        "hujjat transkript документы транскрипт справка documents transcript "
+        "admission",
+    ),
+    _d(
+        "admission-help",
+        "admission",
+        "/help/",
+        _ST,
+        ("Yordam so\u02bcrash", "Помощь с поступлением", "Admission help"),
+        "yordam akkaunt помощь аккаунт гость help guest account proofs",
+    ),
+    _d(
+        "admission-items",
+        "admission",
+        "/activities/",
+        _ST,
+        ("Faoliyat va yutuqlar", "Активности и награды", "Activities and honors"),
+        "faoliyat yutuq mukofot активности награды достижения activities honors "
+        "extracurricular review",
+    ),
+    _d(
+        "admission-profile",
+        "admission",
+        "/setup/",
+        _ST,
+        ("Abituriyent profili", "Профиль абитуриента", "Applicant profile"),
+        "profil sozlash профиль настройка абитуриент profile setup applicant",
     ),
 )
 

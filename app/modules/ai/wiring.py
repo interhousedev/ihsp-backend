@@ -1,6 +1,6 @@
 """Builds the AI module: use cases, tools and the public `AiQueries`."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
 from app.modules.ai.application.approve_tool_call import ApproveToolCall
@@ -18,6 +18,11 @@ from app.modules.ai.application.list_chats import ListChats
 from app.modules.ai.application.locale import LocaleResolver
 from app.modules.ai.application.owned_chat import ChatGuard
 from app.modules.ai.application.project_service import ProjectService
+from app.modules.ai.application.prompt_registry import (
+    PromptAdmin,
+    PromptAnalytics,
+    PromptRegistry,
+)
 from app.modules.ai.application.public_api import AiQueriesImpl
 from app.modules.ai.application.purge_admin_chats import PurgeAdminChats
 from app.modules.ai.application.purge_usage_events import PurgeUsageEvents
@@ -82,6 +87,7 @@ from app.modules.ai.application.usage_report import UsageReport
 from app.modules.ai.application.web_pages import WebPageIndex
 from app.modules.ai.application.web_search import WebSearchService
 from app.modules.ai.domain.admin_tools import ADMIN_TOOLS
+from app.modules.ai.domain.prompt_registry import PromptSlot
 from app.modules.ai.domain.tool_call import ToolAccess
 from app.modules.ai.infrastructure.author_gate import LateAuthorGate
 from app.modules.ai.infrastructure.exa_search import ExaWebSearch
@@ -91,6 +97,11 @@ from app.modules.ai.infrastructure.notebook_platform_search import (
     LateLibrarySearch,
     LateSharedSearch,
     NotebookPlatformSearch,
+)
+from app.modules.ai.infrastructure.prompt_store import (
+    SqlPromptAnalyticsReader,
+    SqlPromptUnitOfWork,
+    SqlPromptVersionLoader,
 )
 from app.modules.ai.infrastructure.redis_budget_store import (
     COURSE_PREFIX,
@@ -150,6 +161,36 @@ class AiServices:
     transcribe_audio: TranscribeAudio
     projects: ProjectService
     telegram_topics: TelegramTopics
+    # Editable prompts; set by the composition root (it builds them before the LLM).
+    prompts: "PromptServices | None" = None
+
+
+@dataclass(frozen=True, slots=True)
+class PromptServices:
+    """The editable prompts: the registry, its administration and its figures."""
+
+    registry: PromptRegistry
+    admin: PromptAdmin
+    analytics: PromptAnalytics
+
+
+def build_prompts(deps: ModuleDeps, slots: Sequence[PromptSlot]) -> PromptServices:
+    """The registry over the stored versions, and its admin and analytics."""
+    registry = PromptRegistry(slots, SqlPromptVersionLoader(deps.sessionmaker))
+
+    def make_uow() -> SqlPromptUnitOfWork:
+        return SqlPromptUnitOfWork(
+            deps.sessionmaker,
+            deps.outbox_writer,
+            deps.audit_writer,
+            deps.outbox_committed_hook,
+        )
+
+    return PromptServices(
+        registry=registry,
+        admin=PromptAdmin(registry, make_uow, deps.clock),
+        analytics=PromptAnalytics(SqlPromptAnalyticsReader(deps.sessionmaker)),
+    )
 
 
 @dataclass(frozen=True, slots=True)

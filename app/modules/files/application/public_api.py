@@ -17,7 +17,10 @@ from app.modules.files.application.remove_file import RemoveFile
 from app.modules.files.application.search_text import SearchText
 from app.modules.files.application.store_bytes import StoreBytes
 from app.modules.files.application.transfer_ownership import TransferOwnership
-from app.modules.files.domain.errors import StoredFileNotFoundError
+from app.modules.files.domain.errors import (
+    ConfidentialFileError,
+    StoredFileNotFoundError,
+)
 from app.modules.files.domain.outline import pages_from_metadata
 from app.modules.files.domain.page_layouts import (
     BOXES_KEY,
@@ -25,10 +28,11 @@ from app.modules.files.domain.page_layouts import (
     layouts_from_metadata,
 )
 from app.modules.files.domain.policy import checksum_hex, may_read
-from app.modules.files.domain.status import FileStatus
+from app.modules.files.domain.status import FileStatus, ScanStatus
 from app.modules.files.infrastructure.extraction.pdf_layout import extract_pdf_layouts
 from app.modules.files.ports.unit_of_work import UowFactory
 from app.shared.actor import Actor
+from app.shared.clock import Clock
 from app.shared.contracts.files import (
     FilePurpose,
     FileRef,
@@ -36,8 +40,11 @@ from app.shared.contracts.files import (
     FullText,
     OutlineEntry,
     PageLayout,
+    SignedDownload,
     TextPage,
 )
+
+SIGNED_DOWNLOAD_SECONDS = 300
 
 
 class FilesApiImpl:
@@ -58,9 +65,11 @@ class FilesApiImpl:
         remove_file_uc: RemoveFile,
         list_owned_uc: ListOwnedFiles,
         transfer_uc: TransferOwnership,
+        clock: Clock,
     ) -> None:
         """Store the dependencies."""
         self._uow_factory = uow_factory
+        self._clock = clock
         self._links = links
         self._read_bytes = read_bytes_uc
         self._read_text_page = read_text_page_uc
@@ -100,16 +109,50 @@ class FilesApiImpl:
         links = await self._links.url_for(file, inline=inline, ttl_seconds=ttl_seconds)
         return links.url
 
+    async def issue_signed_download(
+        self, file_id: UUID, *, ttl_seconds: int = SIGNED_DOWNLOAD_SECONDS
+    ) -> SignedDownload:
+        """Sign a link of a confidential file, valid at most 5 minutes."""
+        async with self._uow_factory() as uow:
+            file = await uow.files.get(file_id)
+        if file is None:
+            raise StoredFileNotFoundError()
+        ttl = max(1, min(ttl_seconds, SIGNED_DOWNLOAD_SECONDS))
+        link = await self._links.url_for(
+            file, inline=False, ttl_seconds=ttl, allow_confidential=True
+        )
+        return SignedDownload(url=link.url, expires_at=link.expires_at)
+
+    async def set_scan_status(self, file_id: UUID, scan_status: str) -> None:
+        """Record the antivirus result of a file."""
+        status = ScanStatus(scan_status)
+        async with self._uow_factory() as uow:
+            file = await uow.files.get(file_id)
+            if file is None:
+                raise StoredFileNotFoundError()
+            file.set_scan_status(status, self._clock.now())
+            await uow.files.save(file)
+            await uow.commit()
+
+    async def _refuse_confidential(self, file_id: UUID) -> None:
+        """Keep text, outline and layout of a confidential file off the generic API."""
+        async with self._uow_factory() as uow:
+            file = await uow.files.get(file_id)
+        if file is not None and file.confidential:
+            raise ConfidentialFileError()
+
     async def read_bytes(self, file_id: UUID) -> bytes:
-        """Return the content of a file."""
+        """Return the content of a file (confidential files are refused)."""
         return await self._read_bytes.execute(file_id)
 
     async def read_text_page(self, file_id: UUID, page: int) -> TextPage:
         """Return one 8 KB page (1-based) of the extracted text."""
+        await self._refuse_confidential(file_id)
         return await self._read_text_page.execute(file_id, page)
 
     async def read_text_with_pages(self, file_id: UUID) -> FullText:
         """Return the whole text sidecar and the offset where each PDF page starts."""
+        await self._refuse_confidential(file_id)
         return await self._read_full_text.execute(file_id)
 
     async def read_page_layouts(self, file_id: UUID) -> dict[int, PageLayout]:
@@ -118,6 +161,8 @@ class FilesApiImpl:
             file = await uow.files.get(file_id)
         if file is None:
             raise StoredFileNotFoundError()
+        if file.confidential:
+            raise ConfidentialFileError()
         if is_ocr(file.metadata):
             return layouts_from_metadata(file.metadata.get(BOXES_KEY))
         if file.content_type != "application/pdf":
@@ -131,6 +176,7 @@ class FilesApiImpl:
 
     async def read_outline(self, file_id: UUID) -> list[OutlineEntry]:
         """Return the contents found while processing; [] when there are none."""
+        await self._refuse_confidential(file_id)
         return await self._read_outline.execute(file_id)
 
     async def page_count(self, file_id: UUID) -> int | None:
@@ -166,6 +212,8 @@ class FilesApiImpl:
         self, file_ids: Sequence[UUID], query: str, limit: int = 10
     ) -> list[dict[str, Any]]:
         """Search only these files; the caller has already decided they are allowed."""
+        for file_id in file_ids:
+            await self._refuse_confidential(file_id)
         return await self._search_text.execute_in(file_ids, query, limit)
 
     async def store_bytes(
@@ -177,8 +225,9 @@ class FilesApiImpl:
         name: str,
         data: bytes,
         expires_days: int | None = None,
+        confidential: bool = False,
     ) -> FileRef:
-        """Store server-side bytes as a new file."""
+        """Store server-side bytes as a new file (confidential: institution-owned)."""
         file = await self._store_bytes.execute(
             owner_id=owner_id,
             scope=scope,
@@ -186,6 +235,7 @@ class FilesApiImpl:
             name=name,
             data=data,
             expires_days=expires_days,
+            confidential=confidential,
         )
         return file.to_ref()
 

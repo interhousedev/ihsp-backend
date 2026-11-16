@@ -265,6 +265,7 @@ def assemble(
             remove_file_uc=remove_file,
             list_owned_uc=list_owned,
             transfer_uc=TransferOwnership(uow_factory=uow_factory, clock=clock),
+            clock=clock,
         ),
         limits=limits,
         closers=closers,

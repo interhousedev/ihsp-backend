@@ -101,6 +101,9 @@ class ChatMessage:
     tokens_out: int | None = None
     feedback: Feedback | None = None
     feedback_comment: str | None = None
+    # The task and editable-prompt version that wrote an assistant message.
+    prompt_task: str | None = None
+    prompt_version: int | None = None
 
     @property
     def text(self) -> str:

@@ -12,6 +12,7 @@ class NotificationStatus(StrEnum):
     PARTIAL = "partial"
     FAILED = "failed"
     SKIPPED = "skipped"
+    CANCELLED = "cancelled"  # withdrawn by its producer before any delivery began
 
 
 class DeliveryState(StrEnum):

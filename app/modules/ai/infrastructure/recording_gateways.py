@@ -8,14 +8,21 @@ decorators never raise on their own account: a recording error is logged and the
 keeps its result.
 """
 
+import time
 from collections.abc import AsyncIterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
+from app.modules.ai.domain.prompt_registry import PromptRef, note_prompt
 from app.modules.ai.domain.usage import UNKNOWN_TASK, UsageEvent, counts_of, feature_of
-from app.modules.ai.infrastructure.langfuse_tracer import LangfuseTracer, OpenSpan
+from app.modules.ai.infrastructure.langfuse_tracer import (
+    PRIVATE_ERROR_CODE,
+    LangfuseTracer,
+    OpenSpan,
+)
+from app.modules.ai.ports.prompts import PromptRewriter
 from app.modules.ai.ports.usage import UsageSink
-from app.shared.ai_tasks import AiTask
+from app.shared.ai_tasks import TASK_SPECS, AiTask
 from app.shared.clock import Clock
 from app.shared.contracts.ai import LlmGateway, LlmTuning
 from app.shared.contracts.embeddings import EmbeddingBatch, EmbeddingGateway, EmbedKind
@@ -31,6 +38,15 @@ import structlog
 log = structlog.get_logger(__name__)
 
 
+def is_private_task(task: str | None) -> bool:
+    """True when the task named so is declared `private_content` in its spec."""
+    try:
+        spec = TASK_SPECS.get(AiTask(task)) if task else None
+    except ValueError:
+        return False
+    return bool(getattr(spec, "private_content", False))
+
+
 class UsageRecorder:
     """Turns the end of a call into a ledger event (the actor is read at the start)."""
 
@@ -43,11 +59,17 @@ class UsageRecorder:
         self._tracer = tracer
 
     def begin(
-        self, *, model: str, task: str | None, content: Any | None = None
+        self,
+        *,
+        model: str,
+        task: str | None,
+        content: Any | None = None,
+        prompt: PromptRef | None = None,
     ) -> "PendingCall":
         """Remember who and what a call is, before it runs (and open its span)."""
         actor = current_usage_actor()
         name = task or UNKNOWN_TASK
+        private = is_private_task(task)
         span = None
         if self._tracer is not None:
             span = self._tracer.begin(
@@ -56,10 +78,20 @@ class UsageRecorder:
                 user_id=actor.user_id,
                 role=actor.role,
                 session_id=current_ai_session(),
-                content=content,
+                content=None if private else content,
+                private=private,
+                prompt_version=prompt.version if prompt else None,
+                prompt_hash=prompt.hash if prompt else None,
             )
         return PendingCall(
-            recorder=self, actor=actor, model=model, task=name, span=span
+            recorder=self,
+            actor=actor,
+            model=model,
+            task=name,
+            span=span,
+            private=private,
+            prompt=prompt,
+            started=time.monotonic(),
         )
 
     async def note_free(self, *, task: str, model: str) -> None:
@@ -89,7 +121,10 @@ class UsageRecorder:
                     reasoning_tokens=counts.reasoning_tokens,
                     cost_micro=counts.cost_micro,
                     success=error is None,
-                    error=error,
+                    error=PRIVATE_ERROR_CODE if pending.private and error else error,
+                    prompt_version=pending.prompt.version if pending.prompt else None,
+                    prompt_hash=pending.prompt.hash if pending.prompt else None,
+                    latency_ms=round((time.monotonic() - pending.started) * 1000),
                 )
             )
         except Exception:
@@ -105,6 +140,9 @@ class PendingCall:
     model: str
     task: str
     span: OpenSpan | None = None
+    private: bool = False
+    prompt: PromptRef | None = None
+    started: float = 0.0
 
     async def finish(
         self,
@@ -119,7 +157,7 @@ class PendingCall:
                 model=_model_of(usage, self.model),
                 usage=usage,
                 error=error,
-                output=output,
+                output=None if self.private else output,
             )
         await self.recorder._write(self, usage, error=error)
 
@@ -137,10 +175,31 @@ def _error_name(exc: BaseException) -> str:
 class RecordingLlmGateway:
     """Implements `LlmGateway` around the real one and records each call."""
 
-    def __init__(self, inner: LlmGateway, recorder: UsageRecorder) -> None:
-        """Keep the gateway to call and the recorder."""
+    def __init__(
+        self,
+        inner: LlmGateway,
+        recorder: UsageRecorder,
+        prompts: PromptRewriter | None = None,
+    ) -> None:
+        """Keep the gateway to call, the recorder and the prompt rewriter."""
         self._inner = inner
         self._recorder = recorder
+        self._prompts = prompts
+
+    async def _prompt(
+        self, tuning: LlmTuning | None, system: str
+    ) -> tuple[str, PromptRef | None]:
+        """The system prompt with the task's active prompt versions, and its ref."""
+        task = _task_of(tuning)
+        if self._prompts is None or task is None:
+            return system, None
+        try:
+            system, ref = await self._prompts.rewrite(task, system)
+        except Exception:
+            log.exception("prompt_rewrite_failed", task=task)
+            return system, None
+        note_prompt(ref)
+        return system, ref
 
     async def complete(
         self,
@@ -154,10 +213,12 @@ class RecordingLlmGateway:
         tuning: LlmTuning | None = None,
     ) -> dict[str, Any]:
         """Run `complete` and record it."""
+        system, ref = await self._prompt(tuning, system)
         pending = self._recorder.begin(
             model=model,
             task=_task_of(tuning),
             content={"system": system, "messages": messages},
+            prompt=ref,
         )
         try:
             result = await self._inner.complete(
@@ -189,10 +250,12 @@ class RecordingLlmGateway:
         tuning: LlmTuning | None = None,
     ) -> dict[str, Any]:
         """Run `complete_json` and record it."""
+        system, ref = await self._prompt(tuning, system)
         pending = self._recorder.begin(
             model=model,
             task=_task_of(tuning),
             content={"system": system, "messages": messages},
+            prompt=ref,
         )
         try:
             result = await self._inner.complete_json(
@@ -225,10 +288,35 @@ class RecordingLlmGateway:
         tools: list[dict[str, Any]] | None = None,
     ) -> AsyncIterator[dict[str, Any]]:
         """Stream through the gateway; the call is recorded when the stream ends."""
+        return self._stream(
+            model=model,
+            system=system,
+            messages=messages,
+            max_tokens=max_tokens,
+            provider=provider,
+            timeout_seconds=timeout_seconds,
+            tuning=tuning,
+            tools=tools,
+        )
+
+    async def _stream(
+        self,
+        *,
+        model: str,
+        system: str,
+        messages: list[dict[str, Any]],
+        max_tokens: int,
+        provider: dict[str, Any] | None,
+        timeout_seconds: float | None,
+        tuning: LlmTuning | None,
+        tools: list[dict[str, Any]] | None,
+    ) -> AsyncIterator[dict[str, Any]]:
+        system, ref = await self._prompt(tuning, system)
         pending = self._recorder.begin(
             model=model,
             task=_task_of(tuning),
             content={"system": system, "messages": messages},
+            prompt=ref,
         )
         items = self._inner.stream(
             model=model,
@@ -240,7 +328,8 @@ class RecordingLlmGateway:
             tuning=tuning,
             tools=tools,
         )
-        return _recorded_stream(pending, items)
+        async for item in _recorded_stream(pending, items):
+            yield item
 
 
 async def _recorded_stream(

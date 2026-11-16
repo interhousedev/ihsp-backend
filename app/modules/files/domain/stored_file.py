@@ -5,7 +5,13 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from app.modules.files.domain.status import FileStatus, RejectReason
+from app.modules.files.domain.status import (
+    BLOCKED_SCANS,
+    FileStatus,
+    OwnerKind,
+    RejectReason,
+    ScanStatus,
+)
 from app.shared.contracts.files import FilePurpose, FileRef, FileScope
 
 TEXT_SUFFIX = ".txt"
@@ -33,6 +39,9 @@ class StoredFile:
     term_id: UUID | None = None
     expires_at: datetime | None = None
     deleted_at: datetime | None = None
+    scan_status: ScanStatus = ScanStatus.UNSCANNED
+    confidential: bool = False
+    owner_kind: OwnerKind = OwnerKind.USER
 
     @property
     def text_key(self) -> str:
@@ -59,7 +68,19 @@ class StoredFile:
             byte_size=self.byte_size,
             status=self.status.value,
             text_bytes=self.text_bytes,
+            confidential=self.confidential,
+            scan_status=self.scan_status.value,
         )
+
+    @property
+    def scan_blocks_download(self) -> bool:
+        """Pending, infected and failed files are never served."""
+        return self.scan_status in BLOCKED_SCANS
+
+    def set_scan_status(self, scan_status: ScanStatus, now: datetime) -> None:
+        """Record the result of an antivirus scan."""
+        self.scan_status = scan_status
+        self.updated_at = now
 
     def mark_processing(self, content_type: str, now: datetime) -> None:
         """Accept the uploaded object and queue it for processing."""

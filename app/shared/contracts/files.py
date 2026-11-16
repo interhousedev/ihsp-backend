@@ -2,6 +2,7 @@
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 from typing import Any, Protocol
 from uuid import UUID
@@ -33,6 +34,7 @@ class FilePurpose(StrEnum):
     USER_PHOTO = "user_photo"
     CERTIFICATE = "certificate"
     FEEDBACK = "feedback"
+    ADMISSION_DOCUMENT = "admission_document"
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,6 +50,16 @@ class FileRef:
     byte_size: int
     status: str
     text_bytes: int | None
+    confidential: bool = False
+    scan_status: str = "unscanned"
+
+
+@dataclass(frozen=True, slots=True)
+class SignedDownload:
+    """A short-lived signed link to a confidential file."""
+
+    url: str
+    expires_at: datetime
 
 
 @dataclass(frozen=True, slots=True)
@@ -133,7 +145,25 @@ class FilesApi(Protocol):
         inline: bool | None = None,
         ttl_seconds: int | None = None,
     ) -> str:
-        """Return a presigned download URL, valid 60 s unless ``ttl_seconds`` is set."""
+        """Return a presigned download URL, valid 60 s unless ``ttl_seconds`` is set.
+
+        Raises for confidential files (use ``issue_signed_download``) and for files
+        whose antivirus scan is pending, infected or failed.
+        """
+        ...
+
+    async def issue_signed_download(
+        self, file_id: UUID, *, ttl_seconds: int = 300
+    ) -> SignedDownload:
+        """Sign a download link of a confidential file (at most 5 minutes).
+
+        Only the owning module calls this, after its own access check; the generic
+        ``download_url`` and ``read_bytes`` refuse confidential files.
+        """
+        ...
+
+    async def set_scan_status(self, file_id: UUID, scan_status: str) -> None:
+        """Record an antivirus result: unscanned, pending, clean, infected, failed."""
         ...
 
     async def read_bytes(self, file_id: UUID) -> bytes:
@@ -206,6 +236,7 @@ class FilesApi(Protocol):
         name: str,
         data: bytes,
         expires_days: int | None = None,
+        confidential: bool = False,
     ) -> FileRef:
         """Store bytes as a new file."""
         ...

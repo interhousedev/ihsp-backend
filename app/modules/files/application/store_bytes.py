@@ -19,7 +19,7 @@ from app.modules.files.domain.policy import (
     normalize_name,
     rule_for_name,
 )
-from app.modules.files.domain.status import FileStatus
+from app.modules.files.domain.status import FileStatus, OwnerKind
 from app.modules.files.domain.stored_file import StoredFile
 from app.modules.files.ports.content_sniffer import ContentSniffer
 from app.modules.files.ports.storage import ObjectStorage
@@ -70,11 +70,14 @@ class StoreBytes:
         name: str,
         data: bytes,
         expires_days: int | None = None,
+        confidential: bool = False,
     ) -> StoredFile:
         """Write the object and its row; text extraction runs in the background.
 
         Library files never expire and have no quota here: the library module checks
-        who may upload what, and ``expires_days`` is ignored for them.
+        who may upload what, and ``expires_days`` is ignored for them. A confidential
+        file belongs to an institution (``owner_id`` is the owning module's service
+        principal) and is served only through a signed link.
         """
         check_scope_purpose(scope, purpose)
         clean = normalize_name(name)
@@ -98,6 +101,8 @@ class StoreBytes:
             updated_at=now,
             term_id=term_id,
             expires_at=_expires_at(scope, now, expires_days),
+            confidential=confidential,
+            owner_kind=OwnerKind.INSTITUTION if confidential else OwnerKind.USER,
         )
         await self._write(file, data)
         return file

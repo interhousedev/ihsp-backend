@@ -42,6 +42,9 @@ class SqlUsageStore:
                         cost_micro=event.cost_micro,
                         success=event.success,
                         error=event.error,
+                        prompt_version=event.prompt_version,
+                        prompt_hash=event.prompt_hash,
+                        latency_ms=event.latency_ms,
                     )
                 )
                 await session.commit()

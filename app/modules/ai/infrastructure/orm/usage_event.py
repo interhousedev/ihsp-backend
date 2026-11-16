@@ -48,3 +48,7 @@ class UsageEventRow(IdMixin, TimestampMixin, Base):
     cost_micro: Mapped[int | None] = mapped_column(BigInteger)
     success: Mapped[bool] = mapped_column(Boolean, server_default=text("true"))
     error: Mapped[str | None] = mapped_column(String(64))
+    # The editable-prompt version the call used (0 built-in) and its fingerprint.
+    prompt_version: Mapped[int | None] = mapped_column(Integer)
+    prompt_hash: Mapped[str | None] = mapped_column(String(16))
+    latency_ms: Mapped[int | None] = mapped_column(Integer)

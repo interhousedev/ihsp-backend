@@ -8,6 +8,7 @@ from app.shared.db.base import Base, IdMixin, TimestampMixin
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     DateTime,
     Enum,
     Index,
@@ -77,3 +78,27 @@ class File(IdMixin, TimestampMixin, Base):
     term_id: Mapped[UUID | None] = mapped_column(Uuid)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    scan_status: Mapped[str] = mapped_column(
+        Enum(
+            "unscanned",
+            "pending",
+            "clean",
+            "infected",
+            "failed",
+            name="scan_status",
+            native_enum=False,
+            create_constraint=True,
+        ),
+        server_default="unscanned",
+    )
+    confidential: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    owner_kind: Mapped[str] = mapped_column(
+        Enum(
+            "user",
+            "institution",
+            name="owner_kind",
+            native_enum=False,
+            create_constraint=True,
+        ),
+        server_default="user",
+    )

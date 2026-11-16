@@ -1,9 +1,12 @@
 """Legal documents: kinds, versions, drafts and publication rules."""
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
 from uuid import UUID
+
+from app.shared.contracts.legal import GLOBAL_APP
 
 
 class LegalKind(StrEnum):
@@ -13,6 +16,9 @@ class LegalKind(StrEnum):
     TERMS = "terms"
     BIOMETRIC = "biometric"
     AI = "ai"
+    ADMISSION_PRIVACY = "admission_privacy"
+    ADMISSION_TERMS = "admission_terms"
+    ADMISSION_DISCLAIMER = "admission_disclaimer"
 
 
 class DocumentStatus(StrEnum):
@@ -22,8 +28,38 @@ class DocumentStatus(StrEnum):
     PUBLISHED = "published"
 
 
+DocKey = tuple[str, str]
+"""A document series: (kind, app_scope)."""
+
 LOCALES = ("uz", "ru", "en")
 KINDS = tuple(k.value for k in LegalKind)
+ADMISSION_SCOPE = "admission"
+STAFF_ROLES = frozenset(
+    {
+        "teacher",
+        "admin",
+        "lms_admin",
+        "lms_creator",
+        "librarian",
+        "counselor",
+        "mentor",
+        "transcript_officer",
+    }
+)
+
+
+def kind_fits_scope(kind: str, app_scope: str) -> bool:
+    """Admission kinds belong to the admission app and to nothing else."""
+    return app_scope == ADMISSION_SCOPE or not kind.startswith("admission_")
+
+
+def guardian_attestation_required(roles: Iterable[str]) -> bool:
+    """Whether accepting an app document needs a guardian's attestation.
+
+    The identity module keeps no birth date, and a flag from the client is not
+    trusted, so every account that is not staff is treated as a possible minor.
+    """
+    return not (set(roles) & STAFF_ROLES)
 
 
 @dataclass(slots=True)
@@ -41,6 +77,7 @@ class LegalDocument:
     updated_at: datetime
     published_at: datetime | None = None
     published_by: UUID | None = None
+    app_scope: str = GLOBAL_APP
 
     def missing_fields(self) -> list[str]:
         """Fields that block publication (a title and a body in every locale)."""
@@ -70,3 +107,5 @@ class Acceptance:
     accepted_at: datetime
     ip: str | None
     user_agent: str | None
+    app_scope: str = GLOBAL_APP
+    guardian_attested: bool = False

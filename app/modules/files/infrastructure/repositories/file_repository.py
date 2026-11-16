@@ -6,7 +6,7 @@ from typing import Any
 from uuid import UUID
 
 from app.modules.files.domain.list_filters import escape_like
-from app.modules.files.domain.status import FileStatus
+from app.modules.files.domain.status import FileStatus, OwnerKind, ScanStatus
 from app.modules.files.domain.stored_file import StoredFile
 from app.modules.files.infrastructure.orm.file import File
 from app.shared.contracts.files import FilePurpose, FileScope
@@ -65,6 +65,9 @@ def _to_entity(row: File) -> StoredFile:
         term_id=row.term_id,
         expires_at=row.expires_at,
         deleted_at=row.deleted_at,
+        scan_status=ScanStatus(row.scan_status),
+        confidential=row.confidential,
+        owner_kind=OwnerKind(row.owner_kind),
     )
 
 
@@ -83,6 +86,9 @@ def _apply(row: File, file: StoredFile) -> None:
     row.term_id = file.term_id
     row.expires_at = file.expires_at
     row.deleted_at = file.deleted_at
+    row.scan_status = file.scan_status.value
+    row.confidential = file.confidential
+    row.owner_kind = file.owner_kind.value
     row.created_at = file.created_at
     row.updated_at = file.updated_at
 

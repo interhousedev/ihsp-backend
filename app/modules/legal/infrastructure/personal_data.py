@@ -1,6 +1,9 @@
 """Personal-data specification of the legal module (export and erasure)."""
 
-from app.modules.legal.infrastructure.orm.tables import AcceptanceRow
+from app.modules.legal.infrastructure.orm.tables import (
+    AcceptanceRow,
+    PurposeConsentRow,
+)
 from app.shared.personal_data import PersonalTable, SqlPersonalData, Treatment
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -14,6 +17,12 @@ SPECS: tuple[PersonalTable, ...] = (
         owner="user_id",
         scrub=("ip", "user_agent"),
         note="proof of consent is kept; the address and device are cleared",
+    ),
+    PersonalTable(
+        PurposeConsentRow,
+        R,
+        owner="user_id",
+        note="proof of the admission consent and its withdrawal is kept",
     ),
 )
 

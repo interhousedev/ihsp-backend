@@ -9,6 +9,7 @@ import re
 from typing import TYPE_CHECKING, Any
 
 from app.settings import Settings
+from app.shared.logging import redact_text
 
 if TYPE_CHECKING:
     from sentry_sdk._types import Event
@@ -27,7 +28,7 @@ _initialized = False
 
 def _scrub_text(text: str) -> str:
     """Mask e-mail addresses and secret values that appear inside free text."""
-    text = _EMAIL.sub(SCRUBBED, text)
+    text = _EMAIL.sub(SCRUBBED, redact_text(text))
     return _SECRET_TEXT.sub(lambda match: match.group(1) + SCRUBBED, text)
 
 

@@ -673,6 +673,153 @@ def _privacy_update(p: dict[str, Any], v: _View) -> Description:
     )
 
 
+def _adm(v: _View, path: str, *, staff: bool = False) -> str:
+    """Link to a page of the admission app (staff pages live under /staff/)."""
+    return f"{v.urls.admission}{'/staff' if staff else ''}{path}"
+
+
+def _transcript_line(p: dict[str, Any], v: _View) -> str:
+    name = p.get("student_name", "")
+    klass = p.get("class_name") or ""
+    head = f"{name}, {klass}" if klass else str(name)
+    note = p.get("destination_note") or ""
+    return f"{head} · {note}" if note else head
+
+
+def _transcript_requested(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-transcript-requested-title"), _transcript_line(p, v), None
+    )
+
+
+def _transcript_reminder(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-transcript-reminder-title"), _transcript_line(p, v), None
+    )
+
+
+def _transcript_ready(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-transcript-ready-title"),
+        v.t("notify-transcript-ready-body", pickup=p.get("pickup_location", "")),
+        _adm(v, "/documents/"),
+    )
+
+
+def _transcript_scan_uploaded(p: dict[str, Any], v: _View) -> Description:
+    link = _adm(
+        v, f"/students/view/?id={p.get('student_id', '')}&tab=documents", staff=True
+    )
+    return Description(
+        v.t("notify-transcript-scan-title"),
+        v.t("notify-transcript-scan-body", student=p.get("student_name", "")),
+        link,
+    )
+
+
+def _transcript_unrouted(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-transcript-unrouted-title"),
+        v.t("notify-transcript-unrouted-body", student=p.get("student_name", "")),
+        _adm(v, "/transcripts/", staff=True),
+    )
+
+
+def _admission_document_uploaded(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-admission-document-uploaded-title"),
+        v.t(
+            "notify-admission-document-uploaded-body",
+            student=p.get("student_name", ""),
+        ),
+        _adm(v, "/documents/", staff=True),
+    )
+
+
+def _document_attached(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-document-attached-title"),
+        v.t("notify-document-attached-body", count=p.get("count", 1)),
+        _adm(v, "/documents/"),
+    )
+
+
+def _document_rejected(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-document-rejected-title"),
+        v.t("notify-document-rejected-body"),
+        _adm(v, "/documents/"),
+    )
+
+
+def _admission_deadline_reminder(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-deadline-reminder-title"),
+        v.t(
+            "notify-deadline-reminder-body",
+            institution=p.get("institution", ""),
+            days=p.get("days", ""),
+            due=fmt_date(p.get("due_utc")),
+        ),
+        _adm(v, "/deadlines/"),
+    )
+
+
+def _deadline_changed(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-deadline-changed-title"),
+        v.t(
+            "notify-deadline-changed-body",
+            institution=p.get("institution", ""),
+            due=fmt_date(p.get("due_utc")),
+        ),
+        _adm(v, "/deadlines/", staff=v.staff),
+    )
+
+
+def _admission_help_requested(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-admission-help-requested-title"),
+        v.t("notify-admission-help-requested-body", student=p.get("student_name", "")),
+        _adm(v, f"/help/request/?id={p.get('request_id', '')}"),
+    )
+
+
+def _admission_help_responded(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-admission-help-responded-title"),
+        v.t("notify-admission-help-responded-body"),
+        _adm(v, f"/help/request/?id={p.get('request_id', '')}"),
+    )
+
+
+def _admission_comment_added(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-admission-comment-title"),
+        v.t("notify-admission-comment-body", author=p.get("author_name", "")),
+        _adm(v, str(p.get("path") or "/"), staff=v.staff),
+    )
+
+
+def _admission_review_ready(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-admission-review-ready-title"),
+        v.t("notify-admission-review-ready-body", title=p.get("title", "")),
+        _adm(v, str(p.get("path") or "/")),
+    )
+
+
+def _admission_affordability_signoff(p: dict[str, Any], v: _View) -> Description:
+    return Description(
+        v.t("notify-admission-affordability-signoff-title"),
+        v.t(
+            "notify-admission-affordability-signoff-body-" + str(p.get("event", "")),
+            student_name=p.get("student_name", ""),
+        ),
+        _adm(v, str(p.get("path") or "/"), staff=v.staff),
+    )
+
+
 _BUILDERS: dict[NotificationType, _Builder] = {
     NotificationType.MARKS: _marks,
     NotificationType.RESULT_DROP: _result_drop,
@@ -717,6 +864,21 @@ _BUILDERS: dict[NotificationType, _Builder] = {
     NotificationType.EXCUSE_MESSAGE: _excuse_message,
     NotificationType.PRIVACY_UPDATE: _privacy_update,
     NotificationType.CHAT_ANSWER_READY: _chat_answer_ready,
+    NotificationType.TRANSCRIPT_REQUESTED: _transcript_requested,
+    NotificationType.TRANSCRIPT_REMINDER: _transcript_reminder,
+    NotificationType.TRANSCRIPT_READY: _transcript_ready,
+    NotificationType.TRANSCRIPT_SCAN_UPLOADED: _transcript_scan_uploaded,
+    NotificationType.TRANSCRIPT_UNROUTED: _transcript_unrouted,
+    NotificationType.ADMISSION_DOCUMENT_UPLOADED: _admission_document_uploaded,
+    NotificationType.DOCUMENT_ATTACHED: _document_attached,
+    NotificationType.DOCUMENT_REJECTED: _document_rejected,
+    NotificationType.ADMISSION_DEADLINE_REMINDER: _admission_deadline_reminder,
+    NotificationType.DEADLINE_CHANGED: _deadline_changed,
+    NotificationType.ADMISSION_HELP_REQUESTED: _admission_help_requested,
+    NotificationType.ADMISSION_HELP_RESPONDED: _admission_help_responded,
+    NotificationType.ADMISSION_COMMENT_ADDED: _admission_comment_added,
+    NotificationType.ADMISSION_REVIEW_READY: _admission_review_ready,
+    NotificationType.ADMISSION_AFFORDABILITY_SIGNOFF: _admission_affordability_signoff,
 }
 
 

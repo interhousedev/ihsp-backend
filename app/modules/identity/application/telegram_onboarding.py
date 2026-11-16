@@ -25,7 +25,9 @@ from app.shared.base_error import UnauthorizedError
 from pydantic import BaseModel
 
 DEEP_LINK_PREFIX = "link_"
+INVITE_PREFIX = "inv_"
 LINK_CODE_TTL = timedelta(minutes=30)
+INVITE_TTL = timedelta(days=7)
 _BOT_CONTEXT = RequestContext(user_agent="telegram-bot")
 
 
@@ -65,6 +67,7 @@ class TelegramOnboarding:
     """Issue link codes, redeem them in the bot, link from mini app initData."""
 
     store: OnboardingLinkStore
+    invites: OnboardingLinkStore
     uow_factory: UowFactory
     linker: LinkTelegramAccount
     verifier: InitDataVerifier
@@ -74,6 +77,16 @@ class TelegramOnboarding:
         """Return a new one-time code for this account."""
         return await self.store.create(OnboardingLink(user_id=user_id))
 
+    async def issue_invite(self, user_id: UUID) -> str:
+        """Return a one-time code for the ``inv_<code>`` link of an invited account."""
+        return await self.invites.create(OnboardingLink(user_id=user_id))
+
+    async def redeem_invite(
+        self, code: str, telegram_user: InitDataUser
+    ) -> LinkOutcome:
+        """Link the Telegram account that opened an invitation; it works once."""
+        return await self._redeem(self.invites, code, telegram_user)
+
     async def is_linked(self, code: str) -> bool:
         """Return True once the code was redeemed; unknown codes are simply False."""
         state = await self.store.get(code)
@@ -81,14 +94,19 @@ class TelegramOnboarding:
 
     async def redeem(self, code: str, telegram_user: InitDataUser) -> LinkOutcome:
         """Link the Telegram account that opened the deep link; the code works once."""
-        state = await self.store.get(code)
+        return await self._redeem(self.store, code, telegram_user)
+
+    async def _redeem(
+        self, store: OnboardingLinkStore, code: str, telegram_user: InitDataUser
+    ) -> LinkOutcome:
+        state = await store.get(code)
         if state is None or state.linked:
             return LinkOutcome.EXPIRED
         try:
             await self._link(state.user_id, telegram_user, _BOT_CONTEXT)
         except TelegramLinkedElsewhereError:
             return LinkOutcome.LINKED_ELSEWHERE
-        await self.store.save(code, state.model_copy(update={"linked": True}))
+        await store.save(code, state.model_copy(update={"linked": True}))
         return LinkOutcome.LINKED
 
     async def link_from_init_data(

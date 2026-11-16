@@ -68,3 +68,38 @@ async def write_notifications(
             .on_conflict_do_nothing(index_elements=[table.c.dedupe_key])
         )
         await session.execute(stmt)
+
+
+async def cancel_pending(session: AsyncSession, dedupe_key: str) -> bool:
+    """Cancel a notification that no dispatcher has claimed; True if it was.
+
+    One conditional UPDATE: `claim_due` leases rows with `FOR UPDATE SKIP LOCKED` and
+    moves them to `sending`, so a row that is claimed first no longer matches
+    `status='pending'` when this statement re-reads it, and a row cancelled first is
+    never claimed. Exactly one of the two wins; a cancelled row is never sent.
+    """
+    table = notifications_table()
+    result = await session.execute(
+        sa.update(table)
+        .where(
+            table.c.dedupe_key == dedupe_key,
+            table.c.status == NotificationStatus.PENDING.value,
+        )
+        .values(status=NotificationStatus.CANCELLED.value, next_attempt_at=None)
+        .returning(table.c.id)
+    )
+    return result.first() is not None
+
+
+class SqlNotificationOutbox:
+    """Implements `NotificationOutbox` over the notifications table."""
+
+    async def write_notifications(
+        self, session: AsyncSession, drafts: list[NotificationDraft]
+    ) -> None:
+        """Insert drafts as `pending`."""
+        await write_notifications(session, drafts)
+
+    async def cancel_pending(self, session: AsyncSession, dedupe_key: str) -> bool:
+        """Cancel a still-pending notification; False when it was already claimed."""
+        return await cancel_pending(session, dedupe_key)

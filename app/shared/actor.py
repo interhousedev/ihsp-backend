@@ -17,6 +17,9 @@ class Role(StrEnum):
     LMS_ADMIN = "lms_admin"
     LMS_CREATOR = "lms_creator"
     LIBRARIAN = "librarian"
+    COUNSELOR = "counselor"
+    MENTOR = "mentor"
+    TRANSCRIPT_OFFICER = "transcript_officer"
 
 
 @dataclass(frozen=True, slots=True)

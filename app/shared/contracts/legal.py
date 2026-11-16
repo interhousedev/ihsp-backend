@@ -8,13 +8,40 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+GLOBAL_APP = "global"
+"""The scope of documents that apply to every app."""
+
+APP_SCOPES = (
+    GLOBAL_APP,
+    "id",
+    "sp",
+    "staff",
+    "admin",
+    "lms",
+    "library",
+    "share",
+    "landing",
+    "admission",
+)
+"""Scopes a document may have: global or the name of one app."""
+
+APP_HEADER = "X-IHSP-App"
+"""Request header with the app that makes the call."""
+
+
+def normalize_app(value: str | None) -> str:
+    """The app scope of a request: a known app name, else ``global``."""
+    name = (value or "").strip().lower()
+    return name if name in APP_SCOPES else GLOBAL_APP
+
 
 @dataclass(frozen=True, slots=True)
 class LegalItem:
-    """One accepted document: its kind and version number."""
+    """One accepted document: its kind, version number and app scope."""
 
     kind: str
     version: int
+    app_scope: str = GLOBAL_APP
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,8 +66,11 @@ class LegalConsent(Protocol):
 class ConsentGate(Protocol):
     """Refuses users who have not accepted the current documents."""
 
-    async def execute(self, user_id: UUID) -> None:
-        """Raise a ForbiddenError (legal/acceptance-required) while any is pending."""
+    async def execute(self, user_id: UUID, app: str = GLOBAL_APP) -> None:
+        """Raise a ForbiddenError (legal/acceptance-required) while any is pending.
+
+        Pending means the current global documents plus those of ``app``.
+        """
         ...
 
 

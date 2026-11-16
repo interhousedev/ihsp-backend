@@ -34,6 +34,7 @@ from app.modules.identity.application.confirm_password_reset import (
 from app.modules.identity.application.connector_status import ConnectorStatus
 from app.modules.identity.application.course_creators import ManageCourseCreators
 from app.modules.identity.application.create_connector import CreateConnector
+from app.modules.identity.application.create_invited_user import CreateInvitedUser
 from app.modules.identity.application.create_staff_account import CreateStaffAccount
 from app.modules.identity.application.create_teacher import CreateTeacher
 from app.modules.identity.application.deactivate_teacher import DeactivateTeacher
@@ -125,6 +126,7 @@ from app.modules.identity.application.suspend_mail import SuspendMail
 from app.modules.identity.application.sync_gemini_redirect import SyncGeminiRedirect
 from app.modules.identity.application.telegram_login import TelegramLogin
 from app.modules.identity.application.telegram_onboarding import (
+    INVITE_TTL,
     LINK_CODE_TTL,
     OnboardingLink,
     TelegramOnboarding,
@@ -289,6 +291,7 @@ class AuthServices:
     # - - - Staff accounts - - -
     create_staff_account: CreateStaffAccount
     create_teacher: CreateTeacher
+    create_invited_user: CreateInvitedUser
     activation_info: ActivationInfo
     activation_send_email_code: ActivationSendEmailCode
     activate_account: ActivateAccount
@@ -429,6 +432,18 @@ def build_auth(
     change_roles = ChangeRoles(uow_factory=uow_factory, revoker=revoker)
     update_prefs = UpdatePreferences(uow_factory=uow_factory)
     creator = CreateStaffAccount(uow_factory=uow_factory, links=links)
+    onboarding = TelegramOnboarding(
+        store=RedisPendingStore(
+            redis, prefix="tg-onboarding", model=OnboardingLink, ttl=LINK_CODE_TTL
+        ),
+        invites=RedisPendingStore(
+            redis, prefix="tg-invite", model=OnboardingLink, ttl=INVITE_TTL
+        ),
+        uow_factory=uow_factory,
+        linker=LinkTelegramAccount(email=email, clock=clock),
+        verifier=verifier,
+        max_age=init_max_age,
+    )
     photo_urls = PhotoUrls(files=files)
 
     async def load_epoch(user_id: UUID) -> int | None:
@@ -619,18 +634,7 @@ def build_auth(
             totp=totp,
             rate_limiter=limiter,
         ),
-        telegram_onboarding=TelegramOnboarding(
-            store=RedisPendingStore(
-                redis,
-                prefix="tg-onboarding",
-                model=OnboardingLink,
-                ttl=LINK_CODE_TTL,
-            ),
-            uow_factory=uow_factory,
-            linker=LinkTelegramAccount(email=email, clock=clock),
-            verifier=verifier,
-            max_age=init_max_age,
-        ),
+        telegram_onboarding=onboarding,
         get_me=GetMe(
             uow_factory=uow_factory,
             mail_domain=settings.smtp_out.mail_domain,
@@ -749,6 +753,11 @@ def build_auth(
         ),
         create_staff_account=creator,
         create_teacher=CreateTeacher(creator=creator),
+        create_invited_user=CreateInvitedUser(
+            uow_factory=uow_factory,
+            onboarding=onboarding,
+            bot_username=settings.telegram.bot_username,
+        ),
         activation_info=ActivationInfo(uow_factory=uow_factory, clock=clock),
         activation_send_email_code=ActivationSendEmailCode(
             uow_factory=uow_factory,

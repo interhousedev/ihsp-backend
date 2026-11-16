@@ -8,7 +8,7 @@ from uuid import UUID
 
 from app.modules.identity.domain.errors import InvalidStatusError
 from app.shared.actor import Role
-from app.shared.contracts.identity import UserRef, UserStatus
+from app.shared.contracts.identity import AccountKind, UserRef, UserStatus
 
 
 class ActivationPurpose(StrEnum):
@@ -54,6 +54,8 @@ class User:
     # Set when an administrator edits the field: EMIS sync then leaves it alone.
     name_locked: bool = False
     login_locked: bool = False
+    account_kind: AccountKind = AccountKind.SCHOOL
+    phone: str | None = None
     created_at: datetime | None = None
 
     @property

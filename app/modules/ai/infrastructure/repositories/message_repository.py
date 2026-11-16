@@ -34,6 +34,8 @@ def _to_entity(row: MessageRow) -> ChatMessage:
         tokens_out=row.tokens_out,
         feedback=_FEEDBACK_OF.get(row.feedback) if row.feedback is not None else None,
         feedback_comment=row.feedback_comment,
+        prompt_task=row.prompt_task,
+        prompt_version=row.prompt_version,
     )
 
 
@@ -63,6 +65,8 @@ class SqlMessageRepository:
                 tool_calls=_calls_json(message),
                 tokens_in=message.tokens_in,
                 tokens_out=message.tokens_out,
+                prompt_task=message.prompt_task,
+                prompt_version=message.prompt_version,
                 created_at=message.created_at,
             )
         )

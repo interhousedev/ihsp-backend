@@ -91,6 +91,16 @@ class AiTask(StrEnum):
     TEACHER_WORK_CHECK = "teacher_work_check"
     TEACHER_AI_CHECK = "teacher_ai_check"
     TEACHER_LESSON_PLAN = "teacher_lesson_plan"
+    ADMIT_PROFILE_WORDS = "admit_profile_words"
+    ADMIT_ITEM_INTERVIEW = "admit_item_interview"
+    ADMIT_ITEM_REVIEW = "admit_item_review"
+    ADMIT_ITEM_REWRITE_FIX = "admit_item_rewrite_fix"
+    ADMIT_ESSAY_REVIEW = "admit_essay_review"
+    ADMIT_ALIGNMENT_MAP = "admit_alignment_map"
+    ADMIT_ALIGNMENT_REFRESH = "admit_alignment_refresh"
+    ADMIT_PROOF_EXTRACT = "admit_proof_extract"
+    ADMIT_UNIVERSITY_RESEARCH = "admit_university_research"
+    ADMIT_GOAL_PLAN = "admit_goal_plan"
 
 
 @dataclass(frozen=True, slots=True)
@@ -100,7 +110,9 @@ class TaskSpec:
     A value set here beats `AI__DEFAULT__*` and loses to `AI__TASKS__<TASK>__*`.
     """
 
-    group: Literal["assistant", "notebooks", "lms", "search", "retrieval", "academic"]
+    group: Literal[
+        "assistant", "notebooks", "lms", "search", "retrieval", "academic", "admission"
+    ]
     summary: str
     model: str | None = None  # None: the default model
     budget_weight: int | None = None  # None: the default weight
@@ -111,6 +123,9 @@ class TaskSpec:
     batch_size: int | None = None
     query_prefix: str | None = None
     document_prefix: str | None = None
+    # True: the prompt holds a student's private writing (admission profile, essays):
+    # the gateway never logs it and routes only to providers that do not keep data.
+    private_content: bool = False
 
 
 _PRIVATE: Final = "deny"  # students' own documents never go to providers that train
@@ -118,6 +133,22 @@ _PRIVATE: Final = "deny"  # students' own documents never go to providers that t
 # default (Claude 5.5, GPT-5.x) would spend it on thinking, so reasoning is off
 # unless a task sets `AI__TASKS__<TASK>__REASONING_EFFORT`.
 _NO_REASONING: Final = "none"
+
+
+def _admission(
+    summary: str, *, model: str, budget_weight: int, reasoning_effort: ReasoningEffort
+) -> TaskSpec:
+    """An admission task: private writing, never kept by the provider."""
+    return TaskSpec(
+        "admission",
+        summary,
+        model=model,
+        budget_weight=budget_weight,
+        data_collection=_PRIVATE,
+        reasoning_effort=reasoning_effort,
+        private_content=True,
+    )
+
 
 TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
     AiTask.STUDENT_CHAT: TaskSpec(
@@ -400,7 +431,71 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
         data_collection=_PRIVATE,
         reasoning_effort=_NO_REASONING,
     ),
+    AiTask.ADMIT_PROFILE_WORDS: _admission(
+        "Admission: suggests the applicant's three profile words.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_ITEM_INTERVIEW: _admission(
+        "Admission: interview questions that draw out an activity's facts.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_ITEM_REVIEW: _admission(
+        "Admission: rubric review of one activity or honor description.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_ITEM_REWRITE_FIX: _admission(
+        "Admission: shortens a description to the character limit.",
+        model=TRANSLATE_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_ESSAY_REVIEW: _admission(
+        "Admission: essay feedback (never rewrites the essay).",
+        model=SMART_MODEL,
+        budget_weight=SMART_BUDGET_WEIGHT,
+        reasoning_effort=SMART_REASONING,
+    ),
+    AiTask.ADMIT_ALIGNMENT_MAP: _admission(
+        "Admission: maps profile words to activities, essays and the list.",
+        model=SMART_MODEL,
+        budget_weight=SMART_BUDGET_WEIGHT,
+        reasoning_effort=SMART_REASONING,
+    ),
+    AiTask.ADMIT_ALIGNMENT_REFRESH: _admission(
+        "Admission: cheap refresh of the alignment map after an edit.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_PROOF_EXTRACT: _admission(
+        "Admission: extracts claims from a proof page or file.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_UNIVERSITY_RESEARCH: _admission(
+        "Admission: staff research of a university with web search.",
+        model=SMART_MODEL,
+        budget_weight=SMART_BUDGET_WEIGHT,
+        reasoning_effort=SMART_REASONING,
+    ),
+    AiTask.ADMIT_GOAL_PLAN: _admission(
+        "Admission: milestone plan towards an applicant's goal.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
 }
+
+ADMISSION_TASKS: Final = frozenset(
+    task for task, spec in TASK_SPECS.items() if spec.group == "admission"
+)
 
 NOTEBOOK_TASKS: Final = frozenset(
     task for task, spec in TASK_SPECS.items() if spec.group == "notebooks"

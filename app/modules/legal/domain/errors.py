@@ -48,3 +48,10 @@ class LegalAcceptanceRequiredError(ForbiddenError):
 
     code = "legal/acceptance-required"
     message_key = "legal-acceptance-required"
+
+
+class LegalGuardianAttestationRequiredError(ValidationFailedError):
+    """An app document needs the attestation of a parent or guardian."""
+
+    code = "legal/guardian-attestation-required"
+    message_key = "legal-guardian-attestation-required"

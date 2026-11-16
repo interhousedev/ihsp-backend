@@ -103,3 +103,10 @@ class NotMeCb(CallbackData, prefix="nm"):
 
 class CancelCb(CallbackData, prefix="x"):
     """Cancel the current multi-step input."""
+
+
+class TrCb(CallbackData, prefix="tr"):
+    """Transcript action of the registrar: `a` is d (done), u (undo) or l (list)."""
+
+    a: str
+    i: str = ""

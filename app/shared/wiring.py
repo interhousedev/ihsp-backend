@@ -7,6 +7,7 @@ from app.shared.clock import Clock
 from app.shared.db.uow import AfterCommit, AuditWriter, OutboxWriter
 from app.shared.i18n.core import I18nCore
 from app.shared.limits import LimitsProvider, StaticLimits
+from app.shared.notifications import NotificationOutbox
 from app.shared.rate_limit import RateLimiter
 from app.shared.tasks import TaskKicker
 
@@ -30,6 +31,8 @@ class ModuleDeps:
     outbox_committed_hook: AfterCommit | None  # I1: kicks notify.dispatch_due
     # The limits in force (overrides, extensions, staff); None: the environment's only.
     limits: LimitsProvider | None = None
+    # Writes and withdraws pending notifications (undo windows); None in bare tests.
+    notification_outbox: NotificationOutbox | None = None
 
     @property
     def effective_limits(self) -> LimitsProvider:

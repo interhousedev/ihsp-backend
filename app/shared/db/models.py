@@ -27,6 +27,7 @@ MODULES = (
     "faces",
     "onboarding",
     "privacy",
+    "admission",
 )
 
 

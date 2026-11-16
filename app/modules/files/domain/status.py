@@ -13,6 +13,29 @@ class FileStatus(StrEnum):
     DELETED = "deleted"
 
 
+class ScanStatus(StrEnum):
+    """Antivirus state of the content; no scanner runs yet, so files are unscanned.
+
+    Pending, infected and failed files are never downloadable.
+    """
+
+    UNSCANNED = "unscanned"
+    PENDING = "pending"
+    CLEAN = "clean"
+    INFECTED = "infected"
+    FAILED = "failed"
+
+
+BLOCKED_SCANS = frozenset({ScanStatus.PENDING, ScanStatus.INFECTED, ScanStatus.FAILED})
+
+
+class OwnerKind(StrEnum):
+    """Who the owner id stands for; confidential files belong to an institution."""
+
+    USER = "user"
+    INSTITUTION = "institution"
+
+
 class RejectReason(StrEnum):
     """Why an upload was rejected after the bytes arrived.
 

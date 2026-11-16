@@ -123,3 +123,8 @@ class User(IdMixin, TimestampMixin, Base):
     login_locked: Mapped[bool] = mapped_column(
         Boolean, server_default=text("false"), nullable=False
     )
+    phone: Mapped[str | None] = mapped_column(String(32))
+    # school | alumni | external | staff (validated by AccountKind).
+    account_kind: Mapped[str] = mapped_column(
+        String(16), server_default=text("'school'"), nullable=False
+    )

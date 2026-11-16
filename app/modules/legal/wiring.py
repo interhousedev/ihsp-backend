@@ -9,6 +9,7 @@ from app.modules.legal.application.queries import (
     GetCurrentDocument,
     ListAllDocuments,
     ListCurrentDocuments,
+    ListOverview,
     ListPending,
     RequireConsent,
 )
@@ -27,7 +28,7 @@ class CurrentVersions:
         self._list_current = list_current
 
     async def current_versions(self) -> dict[str, int]:
-        """The current published version of every kind that has one."""
+        """The current published version of every global kind that has one."""
         return {d.kind: d.version for d in await self._list_current.execute()}
 
 
@@ -44,6 +45,7 @@ class LegalServices:
     save_draft: SaveDraft
     publish: PublishDraft
     count_acceptances: CountAcceptances
+    overview: ListOverview
     hooks: LegalHooks
 
 
@@ -74,6 +76,7 @@ def build(deps: ModuleDeps, overrides: LegalOverrides | None = None) -> LegalSer
             on_published=require_consent.forget_all,
         ),
         count_acceptances=CountAcceptances(uow_factory=uow_factory),
+        overview=ListOverview(uow_factory=uow_factory),
         hooks=LegalHooks(
             consent=CurrentVersions(list_current), writer=write_acceptances
         ),
