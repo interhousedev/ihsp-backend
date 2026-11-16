@@ -55,7 +55,7 @@ services:
       retries: 30
 
   s3-init:
-    image: python:3.13.16-slim
+    image: python:3.13.18-slim
     command:
       - sh
       - -c
@@ -90,7 +90,7 @@ services:
 
   # Dev mode keeps nothing on disk: the bootstrap runs on every `up`.
   vault-init:
-    image: python:3.13.16-slim
+    image: python:3.13.18-slim
     command:
       - sh
       - -c
