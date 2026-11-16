@@ -5,5 +5,6 @@
   "legal-no-draft": "Eʼlon qilish uchun bu hujjatning qoralamasi yoʻq.",
   "legal-stale-version": "Hujjat yangilandi. «{kind}» hujjatining yangi versiyasini ({current}-versiya) oʻqib chiqing va qabul qiling.",
   "legal-consent-required": "Akkaunt yaratish uchun amaldagi hujjatlarni qabul qiling: {kinds}.",
-  "legal-acceptance-required": "Davom etish uchun amaldagi hujjatlarni qabul qiling: {kinds}."
+  "legal-acceptance-required": "Davom etish uchun amaldagi hujjatlarni qabul qiling: {kinds}.",
+  "legal-guardian-attestation-required": "Bu hujjatlarni qabul qilishni ota-ona yoki qonuniy vakil tasdiqlashi kerak."
 }

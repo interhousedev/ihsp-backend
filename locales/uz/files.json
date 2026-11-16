@@ -10,6 +10,8 @@
   "files-not-found": "Fayl topilmadi.",
   "files-deleted": "Bu fayl o'chirilgan.",
   "files-not-ready": "Fayl hali tayyor emas.",
+  "files-confidential": "Maxfiy fayl: uni o'z sahifasidan oching.",
+  "files-quarantined": "Fayl xavfsizlik tekshiruvini kutmoqda.",
   "files-no-text": "Bu faylda o'qiladigan matn yo'q.",
   "files-page-not-found": "Faylning bunday sahifasi yo'q.",
   "files-image-count": "1 tadan {max} tagacha rasm tanlang.",

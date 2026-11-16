@@ -14,6 +14,8 @@
   "id-admin-target-reset-forbidden": "Ma'muriyat hisoblari uchun bu yerdan tiklash havolasi olish mumkin emas.",
   "id-admin-server-forbidden": "Ma'muriyat serveriga faqat tasdiqlangan mijozlar ulanishi mumkin.",
   "id-password-policy": "Parol talablarga javob bermaydi.",
+  "id-invited-role-forbidden": "Oʻquvchi va oʻqituvchilarni bu yerda yaratib boʻlmaydi.",
+  "id-invited-roles-required": "Kamida bitta rolni tanlang.",
   "id-email-taken": "Bu pochta boshqa hisobga tegishli.",
   "id-email-locked": "Faollashtirilgan hisobning pochtasini bu yerda o'zgartirib bo'lmaydi.",
   "id-otp-no-channel": "Kod yuboradigan kanal yo'q. Telegramni ulang yoki pochtani tasdiqlang.",

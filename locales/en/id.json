@@ -14,6 +14,8 @@
   "id-admin-target-reset-forbidden": "Administration accounts cannot get a reset link from here; use the reset action.",
   "id-admin-server-forbidden": "Only verified clients can connect to the Administration server.",
   "id-password-policy": "The password does not meet the requirements.",
+  "id-invited-role-forbidden": "Students and teachers cannot be created here.",
+  "id-invited-roles-required": "Choose at least one role.",
   "id-email-taken": "This email already belongs to another account.",
   "id-email-locked": "The email of an activated account cannot be changed here.",
   "id-otp-no-channel": "There is no channel to send a code to. Link Telegram or confirm your email.",

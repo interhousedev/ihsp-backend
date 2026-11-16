@@ -10,6 +10,8 @@
   "files-not-found": "File not found.",
   "files-deleted": "This file was deleted.",
   "files-not-ready": "The file is not ready yet.",
+  "files-confidential": "Confidential file: open it from its own page.",
+  "files-quarantined": "The file is waiting for a security check.",
   "files-no-text": "This file has no readable text.",
   "files-page-not-found": "This page of the file does not exist.",
   "files-image-count": "Choose from 1 to {max} images.",
