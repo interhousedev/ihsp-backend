@@ -47,6 +47,9 @@ def register_filters(router: Router) -> None:
 
 
 async def _ctx(container: Any, actor: Actor) -> Any:
+    legal = getattr(container, "legal", None)
+    if legal is not None:
+        await legal.require_consent.execute(actor.user_id, "admission")
     return await container.admission.actor.execute(actor)
 
 
@@ -244,6 +247,9 @@ async def on_undo(
             callback,
             RenderedMessage(text_html=i18n("bot-transcripts-undo-late"), buttons=[]),
         )
+        return
+    except (AdmissionConflictError, InvalidTransitionError):
+        await callback.answer(i18n("bot-transcripts-already"), show_alert=True)
         return
     except (ValueError, AdmissionNotFoundError, AdmissionForbiddenError):
         await callback.answer(i18n("bot-transcripts-gone"), show_alert=True)

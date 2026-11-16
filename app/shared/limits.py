@@ -63,6 +63,14 @@ UNLIMITABLE: frozenset[str] = frozenset(
         "admit_research_per_day",
         "admit_proof_check_per_day",
         "admit_goal_plan_per_week",
+        "admit_opportunity_plan_per_week",
+        "admit_essay_coach_per_day",
+        "admit_app_review_per_week",
+        "admit_career_ai_per_week",
+        "admit_list_suggest_per_week",
+        "admit_tasks_suggest_per_week",
+        "admit_assistant_per_day",
+        "admit_voice_per_day",
     }
 )
 """Editable quotas (token budgets and per-day or per-week counts) that may be -1.

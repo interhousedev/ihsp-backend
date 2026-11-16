@@ -467,3 +467,24 @@ class PromptAnalyticsResponse(BaseModel):
     from_day: date = Field(serialization_alias="from")
     to_day: date = Field(serialization_alias="to")
     items: list[PromptStatsOut]
+
+
+class PromptCallOut(BaseModel):
+    """One model call of a task; the ledger holds no prompt or answer text."""
+
+    occurred_at: datetime
+    task: str
+    model: str
+    version: int = Field(description="The prompt version used; 0 is the built-in text.")
+    input_tokens: int
+    output_tokens: int
+    cost_usd: float | None
+    latency_ms: int | None
+    success: bool
+    error: str | None
+
+
+class PromptCallsResponse(BaseModel):
+    """The latest calls of a task, newest first."""
+
+    items: list[PromptCallOut]

@@ -13,7 +13,7 @@ from app.shared.actor import Actor, Role
 from app.shared.base_error import UnauthorizedError
 from app.shared.client_ip import IPNetwork, client_address
 from app.shared.contracts.auth import AUDIENCE_API
-from app.shared.contracts.legal import APP_HEADER, normalize_app
+from app.shared.contracts.legal import APP_HEADER, scopes_for_request
 from app.shared.usage_context import bind_usage_actor
 
 from fastapi import Depends, Request
@@ -83,8 +83,9 @@ async def _verify(container: Container, request: Request, token: str) -> Actor:
     # The model calls this request makes are counted for this actor (usage ledger).
     bind_usage_actor(actor)
     if not _consent_free(request):
-        app = normalize_app(request.headers.get(APP_HEADER))
-        await container.legal.require_consent.execute(actor.user_id, app)
+        header = request.headers.get(APP_HEADER)
+        for app in scopes_for_request(header, request.url.path):
+            await container.legal.require_consent.execute(actor.user_id, app)
     return actor
 
 

@@ -51,6 +51,8 @@ class InstitutionOut(BaseModel):
     aid_basis: str | None
     merit_available: bool | None
     scholarship_count: int
+    logo_url: str | None
+    cover_url: str | None
 
     @classmethod
     def of(cls, i: CatalogInstitution) -> "InstitutionOut":
@@ -77,6 +79,8 @@ class InstitutionOut(BaseModel):
             aid_basis=i.aid_basis,
             merit_available=i.merit_available,
             scholarship_count=i.scholarship_count,
+            logo_url=i.logo_url,
+            cover_url=i.cover_url,
         )
 
 

@@ -7,6 +7,7 @@ extend-ignore = E203, W503, D100, D104, ANN101, ANN102, ANN401, B042
 # B042: kwargs-only BaseError.__init__ is the plan's design (errors are never pickled).
 per-file-ignores =
     tests/*:D,ANN201
+    app/modules/admission/infrastructure/catalog_data/profiles.py:E501
 exclude =
     .venv,
     __pycache__,

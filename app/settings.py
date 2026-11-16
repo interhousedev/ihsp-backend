@@ -1295,6 +1295,48 @@ class LimitsSettings(BaseModel):
     admit_goal_plan_per_week: int = Field(default=5, ge=-1)
     """Admission app: Goal plans per week. -1 means no cap."""
 
+    admit_opportunity_plan_per_week: int = Field(default=3, ge=-1)
+    """Admission app: AI opportunity plans per week. -1 means no cap."""
+
+    admit_essay_coach_per_day: int = Field(default=30, ge=-1)
+    """Admission app: essay coach requests per day. -1 means no cap."""
+
+    admit_career_ai_per_week: int = Field(default=10, ge=-1)
+    """Admission app: career suggestions (professions, majors, spike) per week. -1
+    means no cap."""
+
+    admit_list_suggest_per_week: int = Field(default=5, ge=-1)
+    """Admission app: AI suggestions for the university list per week. -1 means no
+    cap."""
+
+    admit_tasks_suggest_per_week: int = Field(default=5, ge=-1)
+    """Admission app: AI task suggestions per week. -1 means no cap."""
+
+    admit_assistant_per_day: int = Field(default=40, ge=-1)
+    """Admission app: assistant messages per day. -1 means no cap."""
+
+    admit_voice_per_day: int = Field(default=40, ge=-1)
+    """Admission app: voice transcriptions and read-aloud requests per day. -1 means
+    no cap."""
+
+    admit_voice_max_bytes: int = Field(default=3_145_728, ge=16_384, le=20_971_520)
+    """Admission app: the largest voice recording accepted (bytes, never stored)."""
+
+    admit_upload_max_bytes: int = Field(
+        default=26_214_400, ge=1_048_576, le=104_857_600
+    )
+    """Admission app: the largest document upload accepted (bytes; PDF, JPEG or PNG,
+    stored without a virus scan)."""
+
+    admit_voice_max_seconds: int = Field(default=120, ge=5, le=600)
+    """Admission app: the longest voice recording accepted (seconds)."""
+
+    admit_speech_max_chars: int = Field(default=600, ge=20, le=4000)
+    """Admission app: the longest text read aloud in one request (characters)."""
+
+    admit_app_review_per_week: int = Field(default=3, ge=-1)
+    """Admission app: Full application reviews per week. -1 means no cap."""
+
     web_search_per_day_student: int = Field(default=10, ge=-1)
     """Web searches a student may start per day (Tashkent date): a chat message with the
     web toggle on counts one, a Discover `fast` search one, a `deep` one

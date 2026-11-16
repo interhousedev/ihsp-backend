@@ -16,6 +16,40 @@ class GuestLinkSettings(BaseModel):
     """Live guest links one student may hold."""
 
 
+class ReadinessSettings(BaseModel):
+    """Defaults of the college readiness score (admins override the weights)."""
+
+    weights: dict[str, float] = Field(
+        default_factory=lambda: {
+            "major": 10.0,
+            "plans": 5.0,
+            "countries": 5.0,
+            "list": 15.0,
+            "essays": 20.0,
+            "activities": 15.0,
+            "tests": 10.0,
+            "documents": 10.0,
+            "tasks": 10.0,
+        }
+    )
+    """Weight of each component; only the ratios matter."""
+
+    activities_target: int = 5
+    """Ready activities and honors that count as complete."""
+
+    essays_target: int = 3
+    """Essays that count as complete."""
+
+    tests_target: int = 2
+    """Tests with a received score that count as complete."""
+
+    plans_target: int = 3
+    """Goal-plan milestones that count as complete."""
+
+    list_target: int = 6
+    """Universities on the list that count as complete."""
+
+
 class AdmissionSettings(BaseModel):
     """Admission platform (admission.ihsu.uz)."""
 
@@ -35,3 +69,5 @@ class AdmissionSettings(BaseModel):
     """How long a process caches the admin-edited runtime settings."""
 
     guest_links: GuestLinkSettings = Field(default_factory=GuestLinkSettings)
+
+    readiness: ReadinessSettings = Field(default_factory=ReadinessSettings)

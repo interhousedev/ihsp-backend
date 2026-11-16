@@ -910,6 +910,15 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         ("Fikr bildirish", "Обратная связь", "Feedback"),
         "fikr taklif обратная связь отзыв feedback bug telegram bot",
     ),
+    _d(
+        "bot-event",
+        "bot",
+        "/event",
+        _ADM | {Role.STUDENT},
+        ("Tadbir qo‘shish", "Добавить мероприятие", "Add an event"),
+        "tadbir olimpiada imtihon мероприятие событие олимпиада экзамен event "
+        "olympiad exam intake telegram bot",
+    ),
     # - - - Admission (admission) - - -
     _d(
         "admission-home",
@@ -932,6 +941,15 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "kurslar kurs курсы курс courses course portfolio портфолио",
     ),
     _d(
+        "admission-review",
+        "admission",
+        "/review/",
+        _ST,
+        ("Arizani AI tahlili", "AI-разбор заявки", "AI application review"),
+        "tahlil ariza baho разбор заявки оценка проверка review application "
+        "feedback strengths risks",
+    ),
+    _d(
         "admission-students",
         "admission",
         "/students/",
@@ -950,6 +968,40 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "university list chooser scholarships shortlist",
     ),
     _d(
+        "admission-colleges-algorithm",
+        "admission",
+        "/colleges/algorithm/",
+        _ST,
+        (
+            "Kollej tanlash anketasi",
+            "Анкета подбора колледжей",
+            "College matching questionnaire",
+        ),
+        "anketa savollar moslik анкета вопросы подбор предпочтения "
+        "questionnaire preferences matching algorithm",
+    ),
+    _d(
+        "admission-colleges-discover",
+        "admission",
+        "/colleges/discover/",
+        _ST,
+        (
+            "Universitetlarni kashf etish",
+            "Подбор университетов свайпом",
+            "Discover universities",
+        ),
+        "kashf etish свайп подбор совпадение discover swipe matches "
+        "universities interested",
+    ),
+    _d(
+        "admission-journey",
+        "admission",
+        "/journey/",
+        _ST,
+        ("Qabul yo\u02bclim", "Путь поступления", "Admission journey"),
+        "yo'l bosqich путь этапы поступление journey path steps roadmap",
+    ),
+    _d(
         "admission-documents",
         "admission",
         "/documents/",
@@ -957,6 +1009,15 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         ("Hujjatlar", "Документы", "Documents"),
         "hujjat transkript документы транскрипт справка documents transcript "
         "admission",
+    ),
+    _d(
+        "admission-deadlines",
+        "admission",
+        "/deadlines/",
+        _ST,
+        ("Muddatlar taqvimi", "Календарь сроков", "Deadline calendar"),
+        "muddat taqvim kalendar сроки календарь дедлайны экспорт ics deadlines "
+        "calendar export reminders",
     ),
     _d(
         "admission-help",
@@ -976,12 +1037,67 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "extracurricular review",
     ),
     _d(
+        "admission-essays",
+        "admission",
+        "/essays/",
+        _ST,
+        ("Esselar", "Эссе", "Essays"),
+        "esse insho reja g'oya эссе сочинение черновик идеи essays personal "
+        "statement draft ideas outline",
+    ),
+    _d(
         "admission-profile",
         "admission",
         "/setup/",
         _ST,
         ("Abituriyent profili", "Профиль абитуриента", "Applicant profile"),
         "profil sozlash профиль настройка абитуриент profile setup applicant",
+    ),
+    _d(
+        "admission-opportunities",
+        "admission",
+        "/opportunities/",
+        _ST,
+        ("Imkoniyatlar", "Возможности", "Opportunities"),
+        "imkoniyat imtihon sertifikat olimpiada возможности экзамены сертификаты "
+        "олимпиады курсы opportunities exams certifications courses events programs "
+        "summer pre-college research",
+    ),
+    _d(
+        "admission-opportunities-plan",
+        "admission",
+        "/opportunities/plan/",
+        _ST,
+        ("Imkoniyatlar rejasi", "План возможностей", "Opportunities plan"),
+        "reja muddat 9-12 sinf план дедлайны 9-12 класс plan deadlines grades "
+        "ai planner",
+    ),
+    _d(
+        "admission-career",
+        "admission",
+        "/career/",
+        _ST,
+        ("Kasb va yo\u02bcnalish", "Профессия и направление", "Career and majors"),
+        "kasb yo'nalish major minor spike профессия специальность направление "
+        "career profession majors minors spike voice",
+    ),
+    _d(
+        "admission-tasks",
+        "admission",
+        "/tasks/",
+        _ST,
+        ("Vazifalar", "Задачи", "Tasks"),
+        "vazifa topshiriq muddat задачи дедлайн план tasks deadline todo board "
+        "kanban timeline steps",
+    ),
+    _d(
+        "admission-tests",
+        "admission",
+        "/tests/",
+        _ST,
+        ("Testlar va sertifikatlar", "Тесты и сертификаты", "Tests and certificates"),
+        "sat act ielts toefl duolingo ap ib a-level cambridge olympiad score "
+        "тест сертификат балл экзамен олимпиада test sertifikat natija imtihon",
     ),
 )
 

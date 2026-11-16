@@ -1,16 +1,28 @@
 """Admission app routes (`/v1/admission/*`, guest links under `/v1/public/...`)."""
 
 from app.interfaces.http.v1.admission import (
+    routes_app_review,
+    routes_assistant,
+    routes_calendar,
+    routes_career,
     routes_catalog_staff,
+    routes_chances,
     routes_chooser,
     routes_documents,
+    routes_essays,
     routes_goal_plan,
     routes_guest,
     routes_help,
     routes_items,
+    routes_list_plan,
+    routes_matching,
+    routes_opportunities,
     routes_profile,
     routes_proofs,
+    routes_readiness,
     routes_staff,
+    routes_tasks,
+    routes_test_scores,
 )
 from app.interfaces.http.v1.admission.router import router
 
@@ -20,6 +32,7 @@ ROUTERS: list[APIRouter] = [
     router,
     routes_profile.router,
     routes_chooser.router,
+    routes_chances.router,
     routes_proofs.router,
     routes_help.router,
     routes_guest.router,
@@ -27,5 +40,16 @@ ROUTERS: list[APIRouter] = [
     routes_documents.router,
     routes_items.router,
     routes_goal_plan.router,
+    routes_essays.router,
     routes_catalog_staff.router,
+    routes_app_review.router,
+    routes_opportunities.router,
+    routes_list_plan.router,
+    routes_matching.router,
+    routes_calendar.router,
+    routes_career.router,
+    routes_tasks.router,
+    routes_readiness.router,
+    routes_test_scores.router,
+    routes_assistant.router,
 ]

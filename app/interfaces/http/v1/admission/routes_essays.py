@@ -1,0 +1,624 @@
+"""Essay workspace routes (`/v1/admission/essays*`, `/v1/admission/essay-ideas*`)."""
+
+import datetime as dt
+from typing import Annotated, Any, Literal
+from uuid import UUID
+
+from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep
+from app.interfaces.http.v1.admission.routes_items import _locale
+from app.modules.admission.application.essays import SharedEssay
+from app.modules.admission.domain.essays import (
+    BODY_MAX,
+    HEADING_MAX,
+    IDEA_MAX,
+    MAX_LINKS,
+    MAX_SECTIONS,
+    MAX_TAGS,
+    NOTES_MAX,
+    PROMPT_MAX,
+    SECTION_NOTE_MAX,
+    TAG_MAX,
+    TITLE_MAX,
+    VERSION_NAME_MAX,
+    WORD_LIMIT_MAX,
+    Essay,
+    EssayIdea,
+    EssayVersion,
+)
+
+from fastapi import APIRouter, Header, Response, status
+from pydantic import BaseModel, Field
+
+router = APIRouter(prefix="/v1/admission", tags=["admission"])
+
+Lang = Annotated[str | None, Header(alias="Accept-Language")]
+EssayKindT = Literal["personal_statement", "supplemental", "other"]
+IdeaStatusT = Literal["explore", "keep", "drop"]
+
+
+class PlanSectionIO(BaseModel):
+    """One outline section of the plan."""
+
+    heading: str = Field(min_length=1, max_length=HEADING_MAX)
+    note: str = Field(default="", max_length=SECTION_NOTE_MAX)
+
+
+class EssayLinkIO(BaseModel):
+    """A link to an item id or a profile question id."""
+
+    kind: Literal["item", "profile_answer"]
+    ref: str = Field(min_length=1, max_length=64)
+
+
+class EssayIn(BaseModel):
+    """A new essay; supplemental essays need `list_entry_id`."""
+
+    kind: EssayKindT = "personal_statement"
+    title: str = Field(default="", max_length=TITLE_MAX)
+    prompt_text: str = Field(default="", max_length=PROMPT_MAX)
+    word_limit: int | None = Field(default=None, ge=1, le=WORD_LIMIT_MAX)
+    list_entry_id: UUID | None = None
+
+
+class EssayPatchIn(BaseModel):
+    """Autosave: changed fields and the `lock_version` the client read."""
+
+    lock_version: int = Field(ge=0)
+    kind: EssayKindT | None = None
+    title: str | None = Field(default=None, max_length=TITLE_MAX)
+    prompt_text: str | None = Field(default=None, max_length=PROMPT_MAX)
+    word_limit: int | None = Field(default=None, ge=1, le=WORD_LIMIT_MAX)
+    list_entry_id: UUID | None = None
+    body: str | None = Field(default=None, max_length=BODY_MAX)
+    notes: str | None = Field(default=None, max_length=NOTES_MAX)
+    plan: list[PlanSectionIO] | None = Field(default=None, max_length=MAX_SECTIONS)
+    links: list[EssayLinkIO] | None = Field(default=None, max_length=MAX_LINKS)
+    status: Literal["draft", "final"] | None = None
+
+
+class EssayOut(BaseModel):
+    """The owner's essay with its live draft."""
+
+    id: UUID
+    kind: str
+    title: str
+    prompt_text: str
+    word_limit: int | None
+    list_entry_id: UUID | None
+    body: str
+    word_count: int
+    notes: str
+    plan: list[PlanSectionIO]
+    links: list[EssayLinkIO]
+    status: str
+    current_version: int
+    lock_version: int
+    updated_at: dt.datetime | None
+
+    @classmethod
+    def of(cls, e: Essay) -> "EssayOut":
+        """Map the essay."""
+        return cls(
+            id=e.id,
+            kind=e.kind,
+            title=e.title,
+            prompt_text=e.prompt_text,
+            word_limit=e.word_limit,
+            list_entry_id=e.list_entry_id,
+            body=e.body,
+            word_count=e.word_count,
+            notes=e.notes,
+            plan=[PlanSectionIO(heading=s.heading, note=s.note) for s in e.plan],
+            links=[EssayLinkIO(kind=lk.kind, ref=lk.ref) for lk in e.links],
+            status=e.status,
+            current_version=e.current_version,
+            lock_version=e.lock_version,
+            updated_at=e.updated_at,
+        )
+
+
+class EssaySummaryOut(BaseModel):
+    """A row of the essays list."""
+
+    id: UUID
+    kind: str
+    title: str
+    word_limit: int | None
+    list_entry_id: UUID | None
+    word_count: int
+    status: str
+    updated_at: dt.datetime | None
+
+    @classmethod
+    def of(cls, e: Essay) -> "EssaySummaryOut":
+        """Map the essay without its texts."""
+        return cls(
+            id=e.id,
+            kind=e.kind,
+            title=e.title,
+            word_limit=e.word_limit,
+            list_entry_id=e.list_entry_id,
+            word_count=e.word_count,
+            status=e.status,
+            updated_at=e.updated_at,
+        )
+
+
+class EssayListOut(BaseModel):
+    """The owner's essays."""
+
+    items: list[EssaySummaryOut]
+
+
+class SnapshotIn(BaseModel):
+    """Save a version now; `name` is optional."""
+
+    lock_version: int = Field(ge=0)
+    name: str | None = Field(default=None, max_length=VERSION_NAME_MAX)
+
+
+class RestoreIn(BaseModel):
+    """The `lock_version` of the essay the client read."""
+
+    lock_version: int = Field(ge=0)
+
+
+class ShareIn(BaseModel):
+    """Whether staff in scope may read this version."""
+
+    shared: bool
+
+
+class EssayVersionOut(BaseModel):
+    """One snapshot of the draft."""
+
+    version: int
+    body: str
+    word_count: int
+    source: str
+    name: str | None
+    shared: bool
+    created_at: dt.datetime | None
+
+    @classmethod
+    def of(cls, v: EssayVersion) -> "EssayVersionOut":
+        """Map the version."""
+        return cls(
+            version=v.version,
+            body=v.body,
+            word_count=v.word_count,
+            source=v.source,
+            name=v.name,
+            shared=v.shared,
+            created_at=v.created_at,
+        )
+
+
+class EssayVersionListOut(BaseModel):
+    """Versions, newest first."""
+
+    items: list[EssayVersionOut]
+
+
+class SharedEssayOut(BaseModel):
+    """An essay as staff see it: the brief and the shared versions only."""
+
+    id: UUID
+    student_id: UUID
+    kind: str
+    title: str
+    prompt_text: str
+    word_limit: int | None
+    list_entry_id: UUID | None
+    versions: list[EssayVersionOut]
+
+    @classmethod
+    def of(cls, s: SharedEssay) -> "SharedEssayOut":
+        """Map the shared view."""
+        e = s.essay
+        return cls(
+            id=e.id,
+            student_id=e.student_id,
+            kind=e.kind,
+            title=e.title,
+            prompt_text=e.prompt_text,
+            word_limit=e.word_limit,
+            list_entry_id=e.list_entry_id,
+            versions=[EssayVersionOut.of(v) for v in s.versions],
+        )
+
+
+class SharedEssayListOut(BaseModel):
+    """A student's essays with shared versions."""
+
+    items: list[SharedEssayOut]
+
+
+class IdeaIn(BaseModel):
+    """A new idea card."""
+
+    body: str = Field(min_length=1, max_length=IDEA_MAX)
+    essay_id: UUID | None = None
+    tags: list[Annotated[str, Field(min_length=1, max_length=TAG_MAX)]] = Field(
+        default_factory=list, max_length=MAX_TAGS
+    )
+    status: IdeaStatusT = "explore"
+    sort_order: int = Field(default=0, ge=0, le=1000)
+
+
+class IdeaPatchIn(BaseModel):
+    """Changed fields of an idea; `essay_id: null` unlinks it."""
+
+    lock_version: int = Field(ge=0)
+    body: str | None = Field(default=None, min_length=1, max_length=IDEA_MAX)
+    essay_id: UUID | None = None
+    tags: list[Annotated[str, Field(min_length=1, max_length=TAG_MAX)]] | None = Field(
+        default=None, max_length=MAX_TAGS
+    )
+    status: IdeaStatusT | None = None
+    sort_order: int | None = Field(default=None, ge=0, le=1000)
+
+
+class IdeaOut(BaseModel):
+    """An idea card."""
+
+    id: UUID
+    body: str
+    essay_id: UUID | None
+    tags: list[str]
+    status: str
+    sort_order: int
+    lock_version: int
+    updated_at: dt.datetime | None
+
+    @classmethod
+    def of(cls, i: EssayIdea) -> "IdeaOut":
+        """Map the idea."""
+        return cls(
+            id=i.id,
+            body=i.body,
+            essay_id=i.essay_id,
+            tags=list(i.tags),
+            status=i.status,
+            sort_order=i.sort_order,
+            lock_version=i.lock_version,
+            updated_at=i.updated_at,
+        )
+
+
+class IdeaListOut(BaseModel):
+    """The ideas board."""
+
+    items: list[IdeaOut]
+
+
+class CoachQuestionsOut(BaseModel):
+    """Questions to think about; the coach never writes the essay."""
+
+    questions: list[str]
+
+
+class CoachExpansionOut(BaseModel):
+    """How the idea could fit and angles to explore."""
+
+    fit: str
+    angles: list[str]
+
+
+class CoachSectionOut(BaseModel):
+    """A proposed outline section; add it to the plan yourself."""
+
+    heading: str
+    note: str
+    share_percent: int
+
+
+class CoachOutlineOut(BaseModel):
+    """Proposed outline sections."""
+
+    sections: list[CoachSectionOut]
+
+
+class CoachFeedbackOut(BaseModel):
+    """Comments on the draft against its prompt and word limit."""
+
+    summary: str
+    strengths: list[str]
+    suggestions: list[str]
+    word_count: int
+    word_limit: int | None
+
+
+async def list_essays(container: ContainerDep, ctx: AdmissionCtx) -> EssayListOut:
+    """My essays."""
+    rows = await container.admission.essays.mine(ctx)
+    return EssayListOut(items=[EssaySummaryOut.of(e) for e in rows])
+
+
+async def create_essay(
+    body: EssayIn, container: ContainerDep, ctx: AdmissionCtx
+) -> EssayOut:
+    """Start an essay (at most 40)."""
+    return EssayOut.of(await container.admission.essays.create(ctx, body.model_dump()))
+
+
+async def get_essay(
+    essay_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+) -> EssayOut:
+    """One of my essays with its draft, notes and plan."""
+    return EssayOut.of(await container.admission.essays.get(ctx, essay_id))
+
+
+async def patch_essay(
+    essay_id: UUID, body: EssayPatchIn, container: ContainerDep, ctx: AdmissionCtx
+) -> EssayOut:
+    """Autosave; 409 when another tab saved first. May snapshot a version."""
+    changes = body.model_dump(exclude_unset=True, exclude={"lock_version"})
+    for key in ("kind", "title", "prompt_text", "body", "notes", "plan", "links"):
+        if key in changes and changes[key] is None:
+            del changes[key]
+    if changes.get("status") is None:
+        changes.pop("status", None)
+    stored = await container.admission.essays.save(
+        ctx, essay_id, body.lock_version, changes
+    )
+    return EssayOut.of(stored)
+
+
+async def delete_essay(
+    essay_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+) -> Response:
+    """Delete my essay and its versions."""
+    await container.admission.essays.delete(ctx, essay_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+async def list_versions(
+    essay_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+) -> EssayVersionListOut:
+    """All versions of my essay, newest first."""
+    rows = await container.admission.essays.versions(ctx, essay_id)
+    return EssayVersionListOut(items=[EssayVersionOut.of(v) for v in rows])
+
+
+async def snapshot_essay(
+    essay_id: UUID, body: SnapshotIn, container: ContainerDep, ctx: AdmissionCtx
+) -> EssayVersionOut:
+    """Save the current draft as a version."""
+    out = await container.admission.essays.snapshot(
+        ctx, essay_id, body.lock_version, body.name
+    )
+    return EssayVersionOut.of(out)
+
+
+async def restore_version(
+    essay_id: UUID,
+    version: int,
+    body: RestoreIn,
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+) -> EssayOut:
+    """Restore an old version; the current draft is kept as a version first."""
+    out = await container.admission.essays.restore(
+        ctx, essay_id, version, body.lock_version
+    )
+    return EssayOut.of(out)
+
+
+async def share_version(
+    essay_id: UUID,
+    version: int,
+    body: ShareIn,
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+) -> EssayVersionOut:
+    """Share or unshare a version with my mentors and counselors."""
+    out = await container.admission.essays.share(ctx, essay_id, version, body.shared)
+    return EssayVersionOut.of(out)
+
+
+async def get_shared_essay(
+    essay_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+) -> SharedEssayOut:
+    """An essay's shared versions (staff in scope)."""
+    return SharedEssayOut.of(
+        await container.admission.essays.shared_view(ctx, essay_id)
+    )
+
+
+async def list_student_essays(
+    student_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+) -> SharedEssayListOut:
+    """A student's essays with shared versions (staff in scope)."""
+    rows = await container.admission.essays.list_shared(ctx, student_id)
+    return SharedEssayListOut(items=[SharedEssayOut.of(s) for s in rows])
+
+
+async def list_ideas(container: ContainerDep, ctx: AdmissionCtx) -> IdeaListOut:
+    """My ideas board."""
+    rows = await container.admission.essays.ideas(ctx)
+    return IdeaListOut(items=[IdeaOut.of(i) for i in rows])
+
+
+async def create_idea(
+    body: IdeaIn, container: ContainerDep, ctx: AdmissionCtx
+) -> IdeaOut:
+    """Pin an idea (at most 100)."""
+    return IdeaOut.of(await container.admission.essays.add_idea(ctx, body.model_dump()))
+
+
+async def patch_idea(
+    idea_id: UUID, body: IdeaPatchIn, container: ContainerDep, ctx: AdmissionCtx
+) -> IdeaOut:
+    """Change an idea."""
+    changes = body.model_dump(exclude_unset=True, exclude={"lock_version"})
+    for key in ("body", "tags", "status", "sort_order"):
+        if key in changes and changes[key] is None:
+            del changes[key]
+    out = await container.admission.essays.update_idea(
+        ctx, idea_id, body.lock_version, changes
+    )
+    return IdeaOut.of(out)
+
+
+async def delete_idea(
+    idea_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+) -> Response:
+    """Delete an idea."""
+    await container.admission.essays.delete_idea(ctx, idea_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+async def coach_brainstorm(
+    essay_id: UUID, container: ContainerDep, ctx: AdmissionCtx, lang: Lang = None
+) -> CoachQuestionsOut:
+    """Questions that help me find my story (AI consent and a daily limit apply)."""
+    out = await container.admission.essay_coach.brainstorm(ctx, essay_id, _locale(lang))
+    return CoachQuestionsOut(questions=out)
+
+
+async def coach_outline(
+    essay_id: UUID, container: ContainerDep, ctx: AdmissionCtx, lang: Lang = None
+) -> CoachOutlineOut:
+    """A proposed outline (AI consent and a daily limit apply)."""
+    out = await container.admission.essay_coach.outline(ctx, essay_id, _locale(lang))
+    return CoachOutlineOut(
+        sections=[
+            CoachSectionOut(
+                heading=s.heading, note=s.note, share_percent=s.share_percent
+            )
+            for s in out
+        ]
+    )
+
+
+async def coach_feedback(
+    essay_id: UUID, container: ContainerDep, ctx: AdmissionCtx, lang: Lang = None
+) -> CoachFeedbackOut:
+    """Feedback on my draft (AI consent and a daily limit apply)."""
+    f = await container.admission.essay_coach.feedback(ctx, essay_id, _locale(lang))
+    return CoachFeedbackOut(
+        summary=f.summary,
+        strengths=f.strengths,
+        suggestions=f.suggestions,
+        word_count=f.word_count,
+        word_limit=f.word_limit,
+    )
+
+
+async def coach_expand(
+    idea_id: UUID, container: ContainerDep, ctx: AdmissionCtx, lang: Lang = None
+) -> CoachExpansionOut:
+    """Angles on one idea (AI consent and a daily limit apply)."""
+    out = await container.admission.essay_coach.expand(ctx, idea_id, _locale(lang))
+    return CoachExpansionOut(fit=out.fit, angles=out.angles)
+
+
+def _route(path: str, endpoint: Any, method: str, op: str, **kw: Any) -> None:
+    router.add_api_route(
+        path, endpoint, methods=[method], operation_id=f"admission_{op}", **kw
+    )
+
+
+_CREATED = {"status_code": status.HTTP_201_CREATED}
+_GONE = {"status_code": status.HTTP_204_NO_CONTENT}
+
+_route("/essays", list_essays, "GET", "list_essays", response_model=EssayListOut)
+_route(
+    "/essays", create_essay, "POST", "create_essay", response_model=EssayOut, **_CREATED
+)
+_route("/essays/{essay_id}", get_essay, "GET", "get_essay", response_model=EssayOut)
+_route(
+    "/essays/{essay_id}", patch_essay, "PATCH", "patch_essay", response_model=EssayOut
+)
+_route("/essays/{essay_id}", delete_essay, "DELETE", "delete_essay", **_GONE)
+_route(
+    "/essays/{essay_id}/versions",
+    list_versions,
+    "GET",
+    "list_essay_versions",
+    response_model=EssayVersionListOut,
+)
+_route(
+    "/essays/{essay_id}/versions",
+    snapshot_essay,
+    "POST",
+    "snapshot_essay",
+    response_model=EssayVersionOut,
+    **_CREATED,
+)
+_route(
+    "/essays/{essay_id}/versions/{version}/restore",
+    restore_version,
+    "POST",
+    "restore_essay_version",
+    response_model=EssayOut,
+)
+_route(
+    "/essays/{essay_id}/versions/{version}/share",
+    share_version,
+    "PUT",
+    "share_essay_version",
+    response_model=EssayVersionOut,
+)
+_route(
+    "/essays/{essay_id}/shared",
+    get_shared_essay,
+    "GET",
+    "get_shared_essay",
+    response_model=SharedEssayOut,
+)
+_route(
+    "/students/{student_id}/essays",
+    list_student_essays,
+    "GET",
+    "list_student_essays",
+    response_model=SharedEssayListOut,
+)
+_route(
+    "/essays/{essay_id}/coach/brainstorm",
+    coach_brainstorm,
+    "POST",
+    "coach_essay_brainstorm",
+    response_model=CoachQuestionsOut,
+)
+_route(
+    "/essays/{essay_id}/coach/outline",
+    coach_outline,
+    "POST",
+    "coach_essay_outline",
+    response_model=CoachOutlineOut,
+)
+_route(
+    "/essays/{essay_id}/coach/feedback",
+    coach_feedback,
+    "POST",
+    "coach_essay_feedback",
+    response_model=CoachFeedbackOut,
+)
+_route(
+    "/essay-ideas", list_ideas, "GET", "list_essay_ideas", response_model=IdeaListOut
+)
+_route(
+    "/essay-ideas",
+    create_idea,
+    "POST",
+    "create_essay_idea",
+    response_model=IdeaOut,
+    **_CREATED,
+)
+_route(
+    "/essay-ideas/{idea_id}",
+    patch_idea,
+    "PATCH",
+    "patch_essay_idea",
+    response_model=IdeaOut,
+)
+_route("/essay-ideas/{idea_id}", delete_idea, "DELETE", "delete_essay_idea", **_GONE)
+_route(
+    "/essay-ideas/{idea_id}/expand",
+    coach_expand,
+    "POST",
+    "coach_essay_idea_expand",
+    response_model=CoachExpansionOut,
+)

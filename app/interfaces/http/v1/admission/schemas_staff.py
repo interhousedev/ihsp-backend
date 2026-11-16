@@ -4,13 +4,15 @@ from datetime import datetime
 from typing import Any, Literal
 from uuid import UUID
 
+from app.modules.admission.application.mentoring import MentoringState
 from app.modules.admission.application.privacy import ConsentState
-from app.modules.admission.application.staff import CaseloadItem
-from app.modules.admission.domain.access import Assignment
+from app.modules.admission.application.staff import CaseloadItem, display_name
+from app.modules.admission.domain.access import Assignment, StaffRole
 from app.modules.admission.domain.staff import AuditRecord, Comment, SavedView
 from app.modules.admission.ports.consent import PurposeGrant
+from app.shared.contracts.identity import UserRef
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CaseloadItemOut(BaseModel):
@@ -57,6 +59,87 @@ class AssignmentIn(BaseModel):
     scope_kind: Literal["student", "cohort"]
     scope_ref: UUID
     expires_at: datetime | None = None
+
+
+class AssignableUserOut(BaseModel):
+    """A staff member who can receive a delegated sub-role."""
+
+    user_id: UUID
+    name: str
+    login: str | None
+    kinds: list[str]
+
+    @classmethod
+    def of(cls, u: UserRef) -> "AssignableUserOut":
+        """Build from the identity view; kinds are the held staff role names."""
+        return cls(
+            user_id=u.id,
+            name=display_name(u),
+            login=u.login,
+            kinds=sorted(r.value for r in u.roles),
+        )
+
+
+class AssignableUserListOut(BaseModel):
+    """Search result of assignable staff."""
+
+    items: list[AssignableUserOut]
+
+
+class CoveringOfficerIn(BaseModel):
+    """Make a transcript officer cover every student (admin only)."""
+
+    user_id: UUID
+    expires_at: datetime | None = None
+
+
+class CoveringOfficerOut(BaseModel):
+    """A transcript officer who covers every student."""
+
+    assignment_id: UUID
+    user_id: UUID
+    name: str
+    login: str | None
+    starts_at: datetime
+    expires_at: datetime | None
+
+    @classmethod
+    def of(cls, a: Assignment, user: UserRef | None) -> "CoveringOfficerOut":
+        """Build from the assignment and the identity view of the officer."""
+        return cls(
+            assignment_id=a.id,
+            user_id=a.user_id,
+            name=display_name(user) if user else str(a.user_id),
+            login=user.login if user else None,
+            starts_at=a.starts_at,
+            expires_at=a.expires_at,
+        )
+
+
+class CoveringOfficerListOut(BaseModel):
+    """Officers who cover every student."""
+
+    items: list[CoveringOfficerOut]
+
+
+class AssignableRoleOut(BaseModel):
+    """A sub-role offered by the picker; labels are localized client-side."""
+
+    id: UUID
+    kind: str
+    name: str
+    name_i18n: dict[str, str]
+
+    @classmethod
+    def of(cls, r: StaffRole) -> "AssignableRoleOut":
+        """Build from the domain role."""
+        return cls(id=r.id, kind=r.kind, name=r.name, name_i18n=dict(r.name_i18n))
+
+
+class AssignableRoleListOut(BaseModel):
+    """Sub-roles the caller may assign."""
+
+    items: list[AssignableRoleOut]
 
 
 class AssignmentOut(BaseModel):
@@ -194,6 +277,8 @@ class PurposeGrantOut(BaseModel):
     given_at: datetime
     withdrawn_at: datetime | None
     active: bool
+    version: int
+    reconsent_required: bool
 
     @classmethod
     def of(cls, g: PurposeGrant) -> "PurposeGrantOut":
@@ -204,6 +289,8 @@ class PurposeGrantOut(BaseModel):
             given_at=g.given_at,
             withdrawn_at=g.withdrawn_at,
             active=g.active,
+            version=g.version,
+            reconsent_required=g.reconsent_required,
         )
 
 
@@ -212,6 +299,7 @@ class ConsentOut(BaseModel):
 
     grants: list[PurposeGrantOut]
     non_ai_mode: bool
+    pending: list[str]
 
     @classmethod
     def of(cls, s: ConsentState) -> "ConsentOut":
@@ -219,6 +307,7 @@ class ConsentOut(BaseModel):
         return cls(
             grants=[PurposeGrantOut.of(g) for g in s.grants],
             non_ai_mode=s.non_ai_mode,
+            pending=s.pending,
         )
 
 
@@ -228,6 +317,7 @@ class PurposeOut(BaseModel):
     id: str
     title: dict[str, str]
     text: dict[str, str]
+    version: int
 
 
 class PurposeListOut(BaseModel):
@@ -277,3 +367,28 @@ class ErasedOut(BaseModel):
     """Rows deleted per table."""
 
     deleted: dict[str, int]
+
+
+class MentoringOut(BaseModel):
+    """The caller's own mentoring switches; mentors need both sides on."""
+
+    mentee_opt_in: bool
+    mentor_opt_in: bool
+    mentor_assignments: int
+
+    @classmethod
+    def of(cls, s: MentoringState) -> "MentoringOut":
+        """Map the state."""
+        return cls(
+            mentee_opt_in=s.mentee_opt_in,
+            mentor_opt_in=s.mentor_opt_in,
+            mentor_assignments=s.mentor_assignments,
+        )
+
+
+class MentoringSwitchIn(BaseModel):
+    """Turn one switch on or off."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool

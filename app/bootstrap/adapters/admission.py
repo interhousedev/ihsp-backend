@@ -5,8 +5,9 @@ from typing import Any
 from uuid import UUID
 
 from app.modules.admission.domain.courses import Course
-from app.shared.actor import Actor
+from app.shared.actor import SYSTEM_ACTOR, Actor
 from app.shared.contracts.academic import ScheduleQueries, StudentRef
+from app.shared.contracts.web_search import SearchCall, SearchReply, WebSearchApi
 
 
 class AdmissionMembershipAdapter:
@@ -75,3 +76,36 @@ class AdmissionCourseSourcesAdapter:
             )
             for card in view.enrolled
         ]
+
+
+class AdmissionLmsCourseLookupAdapter:
+    """Titles of LMS courses linked from opportunities."""
+
+    def __init__(self, workspace: Any) -> None:
+        """Keep the LMS authoring workspace."""
+        self._workspace = workspace
+
+    async def course_title(self, course_id: UUID) -> str | None:
+        """Return the course title, or None when the course does not exist."""
+        brief = await self._workspace.course_brief(course_id)
+        return None if brief is None else str(brief.title)[:200]
+
+
+class AdmissionWebSearchAdapter:
+    """WebSearchGateway of the intake over the shared web search (system actor)."""
+
+    def __init__(self, search: WebSearchApi) -> None:
+        """Keep the shared web search."""
+        self._search = search
+
+    async def search(self, call: SearchCall) -> SearchReply:
+        """Run one fast search and return its hits."""
+        outcome = await self._search.search(
+            SYSTEM_ACTOR, query=call.query, locale=call.language, kind="fast"
+        )
+        return SearchReply(
+            hits=outcome.hits[: call.max_results],
+            usage={},
+            cost_micro=outcome.cost_micro,
+            notice=outcome.notice,
+        )

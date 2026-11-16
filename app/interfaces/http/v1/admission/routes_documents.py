@@ -1,18 +1,19 @@
 """Documents, checklist, transcripts, officer and deadline routes."""
 
 import datetime as dt
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import (
     AdmissionCtx,
-    AnyContext,
     ContainerDep,
 )
 from app.modules.admission.application.deadlines import DeadlineInput, DeadlineItem
 from app.modules.admission.application.documents import DocumentView
 from app.modules.admission.application.transcripts import TranscriptView
+from app.modules.admission.domain.checklist import UNSET, deep_link, is_urgent, quadrant
 from app.modules.admission.domain.documents import (
+    UPLOAD_MIME,
     AttachmentRecord,
     ChecklistItem,
     ChecklistStatus,
@@ -20,11 +21,13 @@ from app.modules.admission.domain.documents import (
     OfficerSettings,
     ReminderPrefs,
     Transcript,
+    sniff_upload,
 )
 from app.modules.admission.domain.workflow import DocumentKind
+from app.modules.files.domain.errors import FileTooLargeError, TypeNotAllowedError
 
 from fastapi import APIRouter, File, Form, Query, UploadFile
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 router = APIRouter(prefix="/v1/admission", tags=["admission"])
 
@@ -140,11 +143,28 @@ class ChecklistOut(BaseModel):
     due_utc: dt.datetime | None
     document_id: UUID | None
     source_url: str | None
+    important: bool
+    urgent_override: bool | None
+    institution_name: str | None = None
+    app_path: str | None = None
+    urgent: bool = False
+    quadrant: Literal["do", "schedule", "delegate", "drop"] = "drop"
 
     @classmethod
-    def of(cls, c: ChecklistItem) -> "ChecklistOut":
-        """Map the item."""
-        return cls(**{k: getattr(c, k) for k in cls.model_fields})
+    def of(
+        cls, c: ChecklistItem, institution_name: str | None = None
+    ) -> "ChecklistOut":
+        """Map the item; `institution_name` is set for per-university items."""
+        derived = {"institution_name", "app_path", "urgent", "quadrant"}
+        data = {k: getattr(c, k) for k in cls.model_fields if k not in derived}
+        now = dt.datetime.now(dt.UTC)
+        return cls(
+            **data,
+            institution_name=institution_name,
+            app_path=deep_link(c.template_key),
+            urgent=is_urgent(c, now),
+            quadrant=quadrant(c, now),
+        )
 
 
 class ChecklistPatchIn(BaseModel):
@@ -154,6 +174,9 @@ class ChecklistPatchIn(BaseModel):
 
     status: ChecklistStatus | None = None
     document_id: UUID | None = None
+    important: bool | None = None
+    urgent_override: bool | None = None
+    source_url: str | None = Field(default=None, max_length=2000)
 
 
 class TranscriptOut(BaseModel):
@@ -359,9 +382,15 @@ class PrefsIn(PrefsOut):
     model_config = ConfigDict(extra="forbid")
 
 
-async def _read(container: ContainerDep, file: UploadFile) -> bytes:
-    limit = container.settings.library.material_student_max_bytes
-    return await file.read(limit + 1)
+async def _read(container: ContainerDep, ctx: AdmissionCtx, file: UploadFile) -> bytes:
+    """Read an upload: at most the admin-set size, and only PDF, JPEG or PNG."""
+    limit = await container.admission.documents.upload_limit(ctx.user_id)
+    data = await file.read(limit + 1)
+    if len(data) > limit:
+        raise FileTooLargeError(params={"max_mb": round(limit / (1024 * 1024), 1)})
+    if sniff_upload(data[:8]) is None:
+        raise TypeNotAllowedError(params={"types": ", ".join(UPLOAD_MIME)})
+    return data
 
 
 # -- documents --------------------------------------------------------------
@@ -383,7 +412,7 @@ async def upload_document(
     student_id: Annotated[UUID | None, Form()] = None,
 ) -> DocumentOut:
     """Upload a document as its first version."""
-    data = await _read(container, file)
+    data = await _read(container, ctx, file)
     svc = container.admission.documents
     doc = await svc.upload(
         ctx, kind, file.filename or "document", data, student_id=student_id
@@ -399,7 +428,7 @@ async def upload_version(
     file: Annotated[UploadFile, File()],
 ) -> DocumentOut:
     """Upload a new version; old attachments need re-confirmation."""
-    data = await _read(container, file)
+    data = await _read(container, ctx, file)
     svc = container.admission.documents
     doc = await svc.new_version(ctx, doc_id, file.filename or "document", data)
     views = await svc.listing(ctx, doc.doc.student_id)
@@ -457,20 +486,27 @@ async def get_checklist(
 ) -> list[ChecklistOut]:
     """The document checklist."""
     items = await container.admission.documents.checklist(ctx, student_id)
-    return [ChecklistOut.of(i) for i in items]
+    return [ChecklistOut.of(i, name) for i, name in items]
 
 
 async def patch_checklist(
     item_id: UUID, body: ChecklistPatchIn, container: ContainerDep, ctx: AdmissionCtx
 ) -> ChecklistOut:
     """Change a checklist item."""
-    item = await container.admission.documents.patch_checklist(
+    item, name = await container.admission.documents.patch_checklist(
         ctx,
         item_id,
         status=body.status,
         document_id=body.document_id,
+        important=body.important,
+        urgent_override=(
+            body.urgent_override
+            if "urgent_override" in body.model_fields_set
+            else UNSET
+        ),
+        source_url=body.source_url if "source_url" in body.model_fields_set else UNSET,
     )
-    return ChecklistOut.of(item)
+    return ChecklistOut.of(item, name)
 
 
 # -- transcripts ------------------------------------------------------------
@@ -510,19 +546,20 @@ async def upload_transcript_scan(
     file: Annotated[UploadFile, File()],
 ) -> DocumentOut:
     """Attach the scanned transcript."""
-    data = await _read(container, file)
-    doc = await container.admission.transcripts.upload_scan(
+    data = await _read(container, ctx, file)
+    view = await container.admission.transcripts.upload_scan(
         ctx, request_id, name=file.filename or "transcript", data=data
     )
-    views = await container.admission.documents.listing(ctx, doc.student_id)
-    return DocumentOut.of(next(v for v in views if v.doc.id == doc.id))
+    return DocumentOut.of(view)
 
 
 async def officer_transcripts(
-    container: ContainerDep, ctx: AdmissionCtx
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+    status: Literal["requested", "ready", "cancelled"] = Query("requested"),
 ) -> list[TranscriptOut]:
-    """The officer queue (name, class and note only)."""
-    items = await container.admission.transcripts.officer_queue(ctx)
+    """Officer queue by status (name, class, note only); open by default."""
+    items = await container.admission.transcripts.officer_queue(ctx, status)
     return [TranscriptOut.of_view(v, officer=True) for v in items]
 
 
@@ -547,7 +584,7 @@ async def officer_undo(
 
 
 async def get_officer_settings(
-    container: ContainerDep, ctx: AnyContext
+    container: ContainerDep, ctx: AdmissionCtx
 ) -> OfficerSettingsOut:
     """The pickup location (of the officer or, from the admin page, an admin)."""
     return OfficerSettingsOut.of(
@@ -556,7 +593,7 @@ async def get_officer_settings(
 
 
 async def put_officer_settings(
-    body: OfficerSettingsIn, container: ContainerDep, ctx: AnyContext
+    body: OfficerSettingsIn, container: ContainerDep, ctx: AdmissionCtx
 ) -> OfficerSettingsOut:
     """Set the pickup location per locale."""
     return OfficerSettingsOut.of(

@@ -4,8 +4,12 @@ from datetime import datetime
 from typing import Annotated
 from uuid import UUID
 
-from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep
+from app.interfaces.http.v1.admission.deps import AdmissionCtx, AnyContext, ContainerDep
 from app.interfaces.http.v1.admission.schemas_staff import (
+    AssignableRoleListOut,
+    AssignableRoleOut,
+    AssignableUserListOut,
+    AssignableUserOut,
     AssignmentIn,
     AssignmentOut,
     AuditOut,
@@ -17,8 +21,13 @@ from app.interfaces.http.v1.admission.schemas_staff import (
     CommentOut,
     ConsentIn,
     ConsentOut,
+    CoveringOfficerIn,
+    CoveringOfficerListOut,
+    CoveringOfficerOut,
     DataExportOut,
     ErasedOut,
+    MentoringOut,
+    MentoringSwitchIn,
     PurposeListOut,
     PurposeOut,
     SavedViewIn,
@@ -49,6 +58,27 @@ async def list_caseload(
     return CaseloadOut(items=[CaseloadItemOut.of(i) for i in items])
 
 
+async def list_assignable_roles(
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+    student_id: Annotated[UUID, Query()],
+) -> AssignableRoleListOut:
+    """Sub-roles the caller may delegate over a student."""
+    roles = await container.admission.staff.assignable_roles(ctx, student_id)
+    return AssignableRoleListOut(items=[AssignableRoleOut.of(r) for r in roles])
+
+
+async def search_assignable_users(
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+    student_id: Annotated[UUID, Query()],
+    q: Annotated[str, Query(max_length=80)] = "",
+) -> AssignableUserListOut:
+    """Active counselors, mentors and officers matching a name."""
+    users = await container.admission.staff.assignable_users(ctx, student_id, q)
+    return AssignableUserListOut(items=[AssignableUserOut.of(u) for u in users])
+
+
 async def create_assignment(
     body: AssignmentIn, container: ContainerDep, ctx: AdmissionCtx
 ) -> AssignmentOut:
@@ -69,6 +99,44 @@ async def revoke_assignment(
 ) -> Response:
     """Revoke a delegated assignment and its children."""
     await container.admission.staff.revoke(ctx, assignment_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+async def list_covering_officers(
+    container: ContainerDep, ctx: AnyContext
+) -> CoveringOfficerListOut:
+    """Officers who cover every student's transcript requests (admin only)."""
+    rows = await container.admission.staff.covering_officers(ctx)
+    return CoveringOfficerListOut(items=[CoveringOfficerOut.of(a, u) for a, u in rows])
+
+
+async def search_officer_candidates(
+    container: ContainerDep,
+    ctx: AnyContext,
+    q: Annotated[str, Query(max_length=80)] = "",
+) -> AssignableUserListOut:
+    """Active transcript officers matching a name (admin only)."""
+    users = await container.admission.staff.officer_candidates(ctx, q)
+    return AssignableUserListOut(items=[AssignableUserOut.of(u) for u in users])
+
+
+async def cover_all_students(
+    body: CoveringOfficerIn, container: ContainerDep, ctx: AnyContext
+) -> CoveringOfficerOut:
+    """Let an officer cover every student's transcript requests (admin only)."""
+    created = await container.admission.staff.cover_all(
+        ctx, body.user_id, body.expires_at
+    )
+    names = await container.admission.staff.covering_officers(ctx)
+    user = next((u for a, u in names if a.id == created.id), None)
+    return CoveringOfficerOut.of(created, user)
+
+
+async def uncover_all_students(
+    assignment_id: UUID, container: ContainerDep, ctx: AnyContext
+) -> Response:
+    """Take the all-students coverage away from an officer (admin only)."""
+    await container.admission.staff.uncover_all(ctx, assignment_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -204,6 +272,27 @@ async def my_audit(container: ContainerDep, ctx: AdmissionCtx) -> AuditOut:
     return AuditOut(items=[AuditRecordOut.of(a) for a in rows])
 
 
+async def get_mentoring(container: ContainerDep, ctx: AdmissionCtx) -> MentoringOut:
+    """The caller's own mentoring switches."""
+    return MentoringOut.of(await container.admission.mentoring.get(ctx))
+
+
+async def set_mentee(
+    body: MentoringSwitchIn, container: ContainerDep, ctx: AdmissionCtx
+) -> MentoringOut:
+    """An applicant shares (or stops sharing) their profile with mentors."""
+    state = await container.admission.mentoring.set_mentee(ctx, body.enabled)
+    return MentoringOut.of(state)
+
+
+async def set_mentor(
+    body: MentoringSwitchIn, container: ContainerDep, ctx: AdmissionCtx
+) -> MentoringOut:
+    """A mentor accepts (or stops accepting) mentorship."""
+    state = await container.admission.mentoring.set_mentor(ctx, body.enabled)
+    return MentoringOut.of(state)
+
+
 _R = router.add_api_route
 _R(
     "/staff/students",
@@ -211,6 +300,20 @@ _R(
     methods=["GET"],
     response_model=CaseloadOut,
     operation_id="admission_list_caseload",
+)
+_R(
+    "/staff/assignable-roles",
+    list_assignable_roles,
+    methods=["GET"],
+    response_model=AssignableRoleListOut,
+    operation_id="admission_list_assignable_roles",
+)
+_R(
+    "/staff/assignable-users",
+    search_assignable_users,
+    methods=["GET"],
+    response_model=AssignableUserListOut,
+    operation_id="admission_search_assignable_users",
 )
 _R(
     "/staff/assignments",
@@ -226,6 +329,35 @@ _R(
     methods=["DELETE"],
     status_code=status.HTTP_204_NO_CONTENT,
     operation_id="admission_revoke_assignment",
+)
+_R(
+    "/staff/all-students-officers",
+    list_covering_officers,
+    methods=["GET"],
+    response_model=CoveringOfficerListOut,
+    operation_id="admission_list_covering_officers",
+)
+_R(
+    "/staff/all-students-officers/candidates",
+    search_officer_candidates,
+    methods=["GET"],
+    response_model=AssignableUserListOut,
+    operation_id="admission_search_officer_candidates",
+)
+_R(
+    "/staff/all-students-officers",
+    cover_all_students,
+    methods=["POST"],
+    status_code=status.HTTP_201_CREATED,
+    response_model=CoveringOfficerOut,
+    operation_id="admission_cover_all_students",
+)
+_R(
+    "/staff/all-students-officers/{assignment_id}",
+    uncover_all_students,
+    methods=["DELETE"],
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="admission_uncover_all_students",
 )
 _R(
     "/staff/saved-views",
@@ -333,4 +465,25 @@ _R(
     methods=["GET"],
     response_model=AuditOut,
     operation_id="admission_my_audit",
+)
+_R(
+    "/mentoring",
+    get_mentoring,
+    methods=["GET"],
+    response_model=MentoringOut,
+    operation_id="admission_get_mentoring",
+)
+_R(
+    "/mentoring/mentee",
+    set_mentee,
+    methods=["PUT"],
+    response_model=MentoringOut,
+    operation_id="admission_set_mentee_opt_in",
+)
+_R(
+    "/mentoring/mentor",
+    set_mentor,
+    methods=["PUT"],
+    response_model=MentoringOut,
+    operation_id="admission_set_mentor_opt_in",
 )

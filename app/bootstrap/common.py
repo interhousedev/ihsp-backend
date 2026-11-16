@@ -15,7 +15,9 @@ from uuid import UUID
 from app.bootstrap.adapters.admin_tools import AdminToolBackendAdapter
 from app.bootstrap.adapters.admission import (
     AdmissionCourseSourcesAdapter,
+    AdmissionLmsCourseLookupAdapter,
     AdmissionMembershipAdapter,
+    AdmissionWebSearchAdapter,
 )
 from app.bootstrap.adapters.admission_staff import AdmissionStaffDirectoryAdapter
 from app.bootstrap.adapters.certificate_students import CertificateStudentsAdapter
@@ -83,8 +85,18 @@ from app.modules.academic.wiring import (
 )
 from app.modules.admin.infrastructure.limit_snapshot import load_limit_snapshot
 from app.modules.admin.wiring import build as build_admin
+from app.modules.admission.application.student_search import StudentSearchService
 from app.modules.admission.infrastructure.ai.prompt_source import RegistryPrompts
 from app.modules.admission.infrastructure.ai_gateway import GatewayStructuredAi
+from app.modules.admission.infrastructure.assistant_adapters import (
+    GatewayAssistantModel,
+)
+from app.modules.admission.infrastructure.student_chunks_repository import (
+    SqlChunkCollector,
+    SqlChunkStore,
+)
+from app.modules.admission.infrastructure.voice_openrouter import make_voice
+from app.modules.admission.ports.erasure import ADMISSION_NOTIFICATION_TYPES
 from app.modules.admission.wiring import build as build_admission
 from app.modules.ai.infrastructure.access_guard import AccessGuardedLlmGateway
 from app.modules.ai.infrastructure.gateway_factory import (
@@ -591,18 +603,50 @@ class _Assembler:
         """Admission platform; LMS courses only where LMS is built."""
         c = self.container
         lms = c.lms.learning.list_my_courses if self.plan.lms else None
+        course_sources = AdmissionCourseSourcesAdapter(c.academic.marks.queries, lms)
         c.admission = build_admission(
             self.deps,
             membership=AdmissionMembershipAdapter(c.academic.schedule.queries),
-            course_sources=AdmissionCourseSourcesAdapter(c.academic.marks.queries, lms),
+            course_sources=course_sources,
             purpose_consents=SqlPurposeConsents(self.deps.sessionmaker),
             staff_directory=AdmissionStaffDirectoryAdapter(c.identity.directory),
             ai=GatewayStructuredAi(NotebookLlm(c.llm, c.settings)) if c.llm else None,
             llm=NotebookLlm(c.llm, c.settings) if c.llm else None,
+            assistant_model=(
+                GatewayAssistantModel(NotebookLlm(c.llm, c.settings)) if c.llm else None
+            ),
             files=c.files.public,
             identity=c.identity.directory,
             prompts=RegistryPrompts(self.prompts.registry),
+            web_search=(
+                AdmissionWebSearchAdapter(c.ai.web_search) if c.ai is not None else None
+            ),
+            profile_of=c.settings.ai_profile,
+            lms_courses=(
+                AdmissionLmsCourseLookupAdapter(c.lms.authoring.workspace)
+                if self.plan.lms
+                else None
+            ),
+            voice=make_voice(c.settings, self.deps.effective_limits, self.recorder),
+            student_search=StudentSearchService(
+                SqlChunkStore(self.deps.sessionmaker),
+                SqlChunkCollector(self.deps.sessionmaker, course_sources),
+                lambda: self.embedding_index,
+                self.deps.clock,
+            ),
+            erasers=[self._erase_notifications],
+            final_erasers=[self._forget_admission_acceptances],
         )
+
+    async def _erase_notifications(self, user_id: UUID) -> None:
+        """Delete the admission notifications of the user for good."""
+        await self.container.notify.public.delete_for_user(
+            user_id, ADMISSION_NOTIFICATION_TYPES
+        )
+
+    async def _forget_admission_acceptances(self, user_id: UUID) -> None:
+        """Delete the user's admission document acceptances (re-consent needed)."""
+        await self.container.legal.forget_scope.execute(user_id, "admission")
 
     def build_feedback(self) -> None:
         """Platform feedback; responses go out through notify and mail."""

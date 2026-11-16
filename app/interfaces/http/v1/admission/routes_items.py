@@ -19,6 +19,8 @@ from pydantic import BaseModel, ConfigDict, Field
 router = APIRouter(prefix="/v1/admission", tags=["admission"])
 
 LocaleHeader = Annotated[str | None, Header(alias="Accept-Language")]
+Grade = Literal[9, 10, 11, 12, 13]
+Timing = Literal["school_year", "school_break", "all_year"]
 
 
 def _locale(header: str | None) -> str:
@@ -115,6 +117,9 @@ class ItemOut(BaseModel):
     hours_per_week: int | None
     weeks_per_year: int | None
     position: int
+    status: str
+    timing: list[str]
+    intend_in_college: bool | None
     lock_version: int
     metrics: list[MetricOut]
     review: ReviewOut | None
@@ -136,6 +141,9 @@ class ItemOut(BaseModel):
             hours_per_week=i.hours_per_week,
             weeks_per_year=i.weeks_per_year,
             position=i.position,
+            status=i.status,
+            timing=list(i.timing),
+            intend_in_college=i.intend_in_college,
             lock_version=i.lock_version,
             metrics=[MetricOut.of(m) for m in v.metrics],
             review=ReviewOut.of(v.review) if v.review else None,
@@ -160,9 +168,12 @@ class ItemCreateIn(BaseModel):
     organization: str = ""
     description: str = ""
     category: str | None = Field(default=None, max_length=40)
-    grades: list[int] = Field(default_factory=list, max_length=4)
+    grades: list[Grade] = Field(default_factory=list, max_length=5)
     hours_per_week: int | None = Field(default=None, ge=0, le=168)
     weeks_per_year: int | None = Field(default=None, ge=0, le=52)
+    status: Literal["draft", "ready"] = "draft"
+    timing: list[Timing] = Field(default_factory=list, max_length=3)
+    intend_in_college: bool | None = None
     metrics: list[MetricIn] = Field(default_factory=list)
 
 
@@ -176,9 +187,12 @@ class ItemPatchIn(BaseModel):
     organization: str | None = None
     description: str | None = None
     category: str | None = Field(default=None, max_length=40)
-    grades: list[int] | None = Field(default=None, max_length=4)
+    grades: list[Grade] | None = Field(default=None, max_length=5)
     hours_per_week: int | None = Field(default=None, ge=0, le=168)
     weeks_per_year: int | None = Field(default=None, ge=0, le=52)
+    status: Literal["draft", "ready"] | None = None
+    timing: list[Timing] | None = Field(default=None, max_length=3)
+    intend_in_college: bool | None = None
 
 
 class ItemOrderIn(BaseModel):
@@ -287,6 +301,9 @@ async def create_item(
         grades=tuple(body.grades),
         hours_per_week=body.hours_per_week,
         weeks_per_year=body.weeks_per_year,
+        status=body.status,
+        timing=tuple(body.timing),
+        intend_in_college=body.intend_in_college,
     )
     view = await container.admission.items.create(
         ctx, item, [m.draft() for m in body.metrics]
@@ -301,6 +318,10 @@ async def patch_item(
     changes = body.model_dump(exclude_unset=True, exclude={"lock_version"})
     if "grades" in changes and changes["grades"] is not None:
         changes["grades"] = tuple(changes["grades"])
+    if "timing" in changes:
+        changes["timing"] = tuple(changes["timing"] or ())
+    if changes.get("status") is None:
+        changes.pop("status", None)
     for key in ("title", "organization", "description"):
         if key in changes and changes[key] is None:
             changes[key] = ""

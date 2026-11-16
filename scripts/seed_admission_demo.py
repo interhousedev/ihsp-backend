@@ -31,6 +31,7 @@ from app.modules.admission.infrastructure.orm.access import (
     StaffRoleRow,
 )
 from app.modules.admission.infrastructure.orm.applications import (
+    ChecklistItemRow,
     ListEntryRow,
     TranscriptRequestRow,
 )
@@ -41,7 +42,7 @@ from app.settings import load_settings
 from app.shared.actor import Role
 from app.shared.logging import configure_logging
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 PASSWORD = "DemoAdmission1"
@@ -152,6 +153,17 @@ class _ChecklistUow:
         self.shortlist = SqlListRepository(s)
 
 
+# template key -> (important, urgent): one group per Eisenhower quadrant.
+PRIORITIES = {
+    "entry.application_form": (True, True),
+    "shared.transcript": (True, True),
+    "entry.essay": (True, False),
+    "shared.translation": (True, False),
+    "entry.fee": (False, True),
+    "entry.recommendation": (False, False),
+}
+
+
 async def _checklist(s: AsyncSession, student: UUID) -> None:
     """One list entry (the first published institution), then generate the rows."""
     entry_id = uuid5(_NS, "list-entry")
@@ -176,6 +188,16 @@ async def _checklist(s: AsyncSession, student: UUID) -> None:
             )
             await s.flush()
     await ensure_all(cast("AdmissionUnitOfWork", _ChecklistUow(s)), student)
+    for key, (important, urgent) in PRIORITIES.items():
+        await s.execute(
+            update(ChecklistItemRow)
+            .where(
+                ChecklistItemRow.student_id == student,
+                ChecklistItemRow.template_key == key,
+                ChecklistItemRow.status != "done",
+            )
+            .values(important=important, urgent_override=urgent)
+        )
 
 
 async def seed(container: Container) -> dict[str, UUID]:

@@ -24,6 +24,8 @@ OPENUI_REPAIR_MODEL: Final = "qwen/qwen3-coder-30b-a3b-instruct"
 # outputs scored best in the 2026-10 studio bench (ru, thin and long sources) at a
 # tenth of the price of Haiku 4.5; reasoning is switched off for them (below).
 NOTEBOOK_MODEL: Final = "anthropic/claude-haiku-5.5"
+# The lead agent of the full application review merges seven section reports.
+APP_REVIEW_LEAD_MODEL: Final = "anthropic/claude-sonnet-5.5"
 # The smart tier: Gemini 3.8 Flash at `low` effort (benchmarked: no reasoning tokens,
 # good answers) costs about 7.5x Claude Haiku 5.5, so one smart token counts 8x.
 SMART_REASONING: Final = "low"
@@ -37,6 +39,9 @@ CHEAP_MODEL: Final = TRANSLATE_MODEL
 COMPACT_MODEL: Final = TRANSLATE_MODEL
 # Reads images and audio (Gemini Flash-Lite class): describes gathered media cheaply.
 MEDIA_MODEL: Final = "google/gemini-3.5-flash-lite"
+# OpenRouter audio endpoints (admission voice answers): cheap Gemini speech models.
+SPEECH_TO_TEXT_MODEL: Final = "google/gemini-3.5-transcribe"
+TEXT_TO_SPEECH_MODEL: Final = "google/gemini-3.8-flash-lite-tts"
 EMBEDDING_MODEL: Final = "qwen/qwen3-embedding-4b"
 EMBEDDING_DIMENSIONS: Final = 1024  # must equal the `vectors.embeddings` column size
 EMBEDDING_BATCH_SIZE: Final = 32
@@ -101,6 +106,25 @@ class AiTask(StrEnum):
     ADMIT_PROOF_EXTRACT = "admit_proof_extract"
     ADMIT_UNIVERSITY_RESEARCH = "admit_university_research"
     ADMIT_GOAL_PLAN = "admit_goal_plan"
+    ADMIT_CAREER_PROFESSIONS = "admit_career_professions"
+    ADMIT_CAREER_MAJORS = "admit_career_majors"
+    ADMIT_CAREER_SPIKE = "admit_career_spike"
+    ADMIT_LIST_SUGGEST = "admit_list_suggest"
+    ADMIT_TASKS_SUGGEST = "admit_tasks_suggest"
+    ADMIT_ASSISTANT = "admit_assistant"
+    ADMIT_VOICE_TRANSCRIBE = "admit_voice_transcribe"
+    ADMIT_QUESTION_SPEECH = "admit_question_speech"
+    ADMIT_ESSAY_COACH = "admit_essay_coach"
+    ADMIT_OPPORTUNITY_INTAKE = "admit_opportunity_intake"
+    ADMIT_OPPORTUNITY_PLAN = "admit_opportunity_plan"
+    ADMIT_APP_REVIEW_PROFILE = "admit_app_review_profile"
+    ADMIT_APP_REVIEW_ACTIVITIES = "admit_app_review_activities"
+    ADMIT_APP_REVIEW_ALIGNMENT = "admit_app_review_alignment"
+    ADMIT_APP_REVIEW_ESSAYS = "admit_app_review_essays"
+    ADMIT_APP_REVIEW_ACADEMICS = "admit_app_review_academics"
+    ADMIT_APP_REVIEW_UNIVERSITIES = "admit_app_review_universities"
+    ADMIT_APP_REVIEW_READINESS = "admit_app_review_readiness"
+    ADMIT_APP_REVIEW_LEAD = "admit_app_review_lead"
 
 
 @dataclass(frozen=True, slots=True)
@@ -151,6 +175,56 @@ def _admission(
 
 
 TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
+    AiTask.ADMIT_CAREER_PROFESSIONS: _admission(
+        "Admission: professions that fit an applicant's interests and activities.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_CAREER_MAJORS: _admission(
+        "Admission: ranks majors and minors of the taxonomy by fit.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_CAREER_SPIKE: _admission(
+        "Admission: one primary spike with evidence from activities and gaps.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_LIST_SUGGEST: _admission(
+        "Admission: suggests reach, target and safety universities for the list.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_TASKS_SUGGEST: _admission(
+        "Admission: suggests actionable tasks with steps and links.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_ASSISTANT: _admission(
+        "Admission: the student's assistant; answers about the current screen with "
+        "read-only tools over the student's own data.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_VOICE_TRANSCRIBE: _admission(
+        "Admission: speech to text of a spoken answer; the recording is never "
+        "stored.",
+        model=SPEECH_TO_TEXT_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_QUESTION_SPEECH: _admission(
+        "Admission: reads a career question aloud; the audio is never stored.",
+        model=TEXT_TO_SPEECH_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
     AiTask.STUDENT_CHAT: TaskSpec(
         "assistant", "Student assistant, fast tier (the default of a new chat)."
     ),
@@ -490,6 +564,47 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
         model=NOTEBOOK_MODEL,
         budget_weight=1,
         reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_ESSAY_COACH: _admission(
+        "Admission: essay coach (brainstorm, idea angles, outline, draft feedback).",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_OPPORTUNITY_INTAKE: _admission(
+        "Admission: turns an event post sent to the bot into an opportunity draft.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_OPPORTUNITY_PLAN: _admission(
+        "Admission: grade 9-12 plan of the opportunities a student saved.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    **{
+        task: _admission(
+            f"Admission: full application review, {area} section agent.",
+            model=NOTEBOOK_MODEL,
+            budget_weight=1,
+            reasoning_effort=_NO_REASONING,
+        )
+        for task, area in (
+            (AiTask.ADMIT_APP_REVIEW_PROFILE, "background answers"),
+            (AiTask.ADMIT_APP_REVIEW_ACTIVITIES, "activities and honors"),
+            (AiTask.ADMIT_APP_REVIEW_ALIGNMENT, "profile words alignment"),
+            (AiTask.ADMIT_APP_REVIEW_ESSAYS, "essays"),
+            (AiTask.ADMIT_APP_REVIEW_ACADEMICS, "courses and academics"),
+            (AiTask.ADMIT_APP_REVIEW_UNIVERSITIES, "university list fit"),
+            (AiTask.ADMIT_APP_REVIEW_READINESS, "documents and deadlines"),
+        )
+    },
+    AiTask.ADMIT_APP_REVIEW_LEAD: _admission(
+        "Admission: full application review, lead agent that merges the sections.",
+        model=APP_REVIEW_LEAD_MODEL,
+        budget_weight=4,
+        reasoning_effort=SMART_REASONING,
     ),
 }
 

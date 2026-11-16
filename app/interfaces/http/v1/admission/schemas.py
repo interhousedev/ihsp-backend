@@ -68,6 +68,11 @@ class WorkflowOptionsOut(BaseModel):
     milestone_statuses: list[str]
     affordability_statuses: list[str]
     affordability_ack_statuses: list[str]
+    task_statuses: list[str]
+    task_priorities: list[str]
+    task_sources: list[str]
+    task_link_kinds: list[str]
+    task_horizons: list[str]
 
     @classmethod
     def of(cls, w: WorkflowOptions) -> "WorkflowOptionsOut":
@@ -87,6 +92,11 @@ class WorkflowOptionsOut(BaseModel):
             milestone_statuses=list(w.milestone_statuses),
             affordability_statuses=list(w.affordability_statuses),
             affordability_ack_statuses=list(w.affordability_ack_statuses),
+            task_statuses=list(w.task_statuses),
+            task_priorities=list(w.task_priorities),
+            task_sources=list(w.task_sources),
+            task_link_kinds=list(w.task_link_kinds),
+            task_horizons=list(w.task_horizons),
         )
 
 

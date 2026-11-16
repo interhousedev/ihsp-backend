@@ -73,7 +73,8 @@ run() { # name, dir, command...
     pids+=("$!")
 }
 
-for proc in api worker bot; do
+# `all` serves identity (/v1/id, /v1/oauth) and the API on :8000; `api` alone has no sign-in.
+for proc in all worker bot; do
     run "$proc" "$backend_dir" uv run python -m app "$proc"
 done
 for app in id admission admin share; do

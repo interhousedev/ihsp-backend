@@ -1,5 +1,6 @@
 """Profile, three words and alignment routes (`/v1/admission/*`)."""
 
+import dataclasses
 import datetime as dt
 from typing import Any
 from uuid import UUID
@@ -32,7 +33,8 @@ class ProfileOut(BaseModel):
     @classmethod
     def of(cls, v: ProfileView) -> "ProfileOut":
         """Map the application view."""
-        return cls(**{**v.__dict__, "missing_required": list(v.missing_required)})
+        data = dataclasses.asdict(v)
+        return cls(**{**data, "missing_required": list(v.missing_required)})
 
 
 class ProfilePutIn(BaseModel):

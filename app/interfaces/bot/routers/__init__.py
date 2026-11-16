@@ -10,6 +10,9 @@ from aiogram import Router
 def build_routers() -> list[Router]:
     """Build every router in the order they must be tried."""
     # Imported here so that importing the package stays cheap and cycle free.
+    from app.interfaces.bot.routers.admission_intake import (
+        build_router as admission_intake,
+    )
     from app.interfaces.bot.routers.admission_officer import (
         build_router as admission_officer,
     )
@@ -91,6 +94,7 @@ def build_routers() -> list[Router]:
         teacher_work_offs,
         student_work_offs,
         admission_officer,
+        admission_intake,  # /event and its FSM answers: before the assistant
         feedback,  # FSM steps of a report: before the assistant takes free text
         assistant,  # free text of linked users: the last before the fallback
         unexpected,

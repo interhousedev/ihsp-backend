@@ -11,10 +11,24 @@ from app.modules.academic.domain.schedule import subject_names
 from app.modules.admission.infrastructure.ai.prompts import (
     alignment_map as admit_alignment,
 )
+from app.modules.admission.infrastructure.ai.prompts import app_review as admit_review
+from app.modules.admission.infrastructure.ai.prompts import assistant as admit_assistant
+from app.modules.admission.infrastructure.ai.prompts import career as admit_career
+from app.modules.admission.infrastructure.ai.prompts import essays as admit_essays
 from app.modules.admission.infrastructure.ai.prompts import goal_plan as admit_goal_plan
 from app.modules.admission.infrastructure.ai.prompts import items as admit_items
+from app.modules.admission.infrastructure.ai.prompts import (
+    list_suggest as admit_list_suggest,
+)
+from app.modules.admission.infrastructure.ai.prompts import (
+    opportunity_intake as admit_opportunity_intake,
+)
+from app.modules.admission.infrastructure.ai.prompts import (
+    opportunity_plan as admit_opportunity_plan,
+)
 from app.modules.admission.infrastructure.ai.prompts import profile_words as admit_words
 from app.modules.admission.infrastructure.ai.prompts import research as admit_research
+from app.modules.admission.infrastructure.ai.prompts import tasks_suggest as admit_tasks
 from app.modules.ai.application import transcribe_audio
 from app.modules.ai.domain import prompts, prompts_author, web_prompts
 from app.modules.ai.domain.prompt_registry import PromptSlot
@@ -106,6 +120,94 @@ _PARTS: tuple[tuple[Iterable[AiTask], str, str, str, bool], ...] = (
         "system",
         "Admission: milestone suggestions for the goal plan",
         admit_goal_plan.SYSTEM,
+        False,
+    ),
+    (
+        (AiTask.ADMIT_CAREER_PROFESSIONS,),
+        "system",
+        "Admission career: profession suggestions",
+        admit_career.PROFESSIONS,
+        False,
+    ),
+    (
+        (AiTask.ADMIT_CAREER_MAJORS,),
+        "system",
+        "Admission career: fit of majors and minors",
+        admit_career.MAJORS,
+        False,
+    ),
+    (
+        (AiTask.ADMIT_CAREER_SPIKE,),
+        "system",
+        "Admission career: spike draft",
+        admit_career.SPIKE,
+        False,
+    ),
+    (
+        (AiTask.ADMIT_LIST_SUGGEST,),
+        "system",
+        "Admission chooser: balanced list suggestions",
+        admit_list_suggest.SYSTEM,
+        False,
+    ),
+    (
+        (AiTask.ADMIT_TASKS_SUGGEST,),
+        "system",
+        "Admission tasks: suggested tasks with steps and links",
+        admit_tasks.SYSTEM,
+        False,
+    ),
+    (
+        (AiTask.ADMIT_ASSISTANT,),
+        "system",
+        "Admission assistant: system prompt",
+        admit_assistant.SYSTEM,
+        False,
+    ),
+    *(
+        (
+            (AiTask.ADMIT_ESSAY_COACH,),
+            name,
+            f"Admission essay coach: {label}",
+            admit_essays.PROMPTS[name],
+            False,
+        )
+        for name, label in (
+            ("brainstorm", "brainstorm questions"),
+            ("expand", "angles on one idea"),
+            ("outline", "outline suggestion"),
+            ("feedback", "feedback on a draft"),
+        )
+    ),
+    (
+        (AiTask.ADMIT_OPPORTUNITY_INTAKE,),
+        "system",
+        "Admission: event post into an opportunity draft (bot intake)",
+        admit_opportunity_intake.SYSTEM,
+        False,
+    ),
+    (
+        (AiTask.ADMIT_OPPORTUNITY_PLAN,),
+        "system",
+        "Admission: grade 9-12 plan of saved opportunities",
+        admit_opportunity_plan.SYSTEM,
+        False,
+    ),
+    *(
+        (
+            (task,),
+            "system",
+            f"Admission: full application review, {key} section",
+            admit_review.SECTION_SYSTEMS[key],
+            False,
+        )
+        for key, task in admit_review.SECTION_TASKS.items()
+    ),
+    (
+        (AiTask.ADMIT_APP_REVIEW_LEAD,),
+        "system",
+        "Admission: full application review, lead merge",
+        admit_review.LEAD_SYSTEM,
         False,
     ),
     (
@@ -291,11 +393,25 @@ _PARTS: tuple[tuple[Iterable[AiTask], str, str, str, bool], ...] = (
 )
 
 
+# slots whose override must keep the injection and safeguarding rules
+_GUARDS: dict[tuple[AiTask, str], str] = {
+    (AiTask.ADMIT_ITEM_REVIEW, "system"): admit_items.SAFETY,
+    (AiTask.ADMIT_ITEM_INTERVIEW, "system"): admit_items.SAFETY,
+    **{(t, "system"): admit_review.SAFETY for t in admit_review.SECTION_TASKS.values()},
+    (AiTask.ADMIT_APP_REVIEW_LEAD, "system"): admit_review.SAFETY,
+}
+
+
 def prompt_slots() -> list[PromptSlot]:
     """Every editable prompt slot."""
     return [
         PromptSlot(
-            task=task.value, name=name, summary=summary, builtin=text, template=template
+            task=task.value,
+            name=name,
+            summary=summary,
+            builtin=text,
+            template=template,
+            guard=_GUARDS.get((task, name), ""),
         )
         for tasks, name, summary, text, template in _PARTS
         for task in tasks

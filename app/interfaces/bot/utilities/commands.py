@@ -24,6 +24,7 @@ COMMAND_KEYS = {
     "mail": "bot-command-mail",
     "workoffs": "bot-command-workoffs",
     "transcripts": "bot-command-transcripts",
+    "event": "bot-command-event",
     "settings": "bot-command-settings",
     "new": "bot-command-new",
     "delete": "bot-command-delete",
@@ -36,6 +37,11 @@ COMMAND_KEYS = {
 STUDENT_ONLY = frozenset({"marks", "homework", "mail"})
 TEACHER_ONLY = frozenset({"lesson"})
 OFFICER_ONLY = frozenset({"transcripts"})
+# Event intake: students, counselors, mentors and admins; students' posts always
+# wait in moderation (helpers with grants may use it too, but grants are not
+# roles, so the menu cannot list it for them).
+ADMISSION_ONLY = frozenset({"event"})
+ADMISSION_ROLES = frozenset({Role.STUDENT, Role.COUNSELOR, Role.MENTOR, Role.ADMIN})
 
 
 def command_names_for(roles: Iterable[Role]) -> list[str]:
@@ -48,6 +54,8 @@ def command_names_for(roles: Iterable[Role]) -> list[str]:
         hidden |= TEACHER_ONLY
     if Role.TRANSCRIPT_OFFICER not in held:
         hidden |= OFFICER_ONLY
+    if not held & ADMISSION_ROLES:
+        hidden |= ADMISSION_ONLY
     return [name for name in COMMAND_KEYS if name not in hidden]
 
 

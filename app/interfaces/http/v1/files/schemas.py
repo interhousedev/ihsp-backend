@@ -50,6 +50,7 @@ class RequestUploadBody(BaseModel):
         "library_material",
         "lms_video",
         "feedback",
+        "admission_document",
     ]
 
 

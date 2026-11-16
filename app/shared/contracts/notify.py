@@ -1,11 +1,12 @@
 """Notify contracts (provider: notify module; consumers: bot and composition)."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Collection
 from dataclasses import dataclass
 from typing import Any, Protocol, runtime_checkable
 from uuid import UUID
 
 from app.shared.contracts.identity import UserRef
+from app.shared.notifications import NotificationType
 
 
 class NotifyApi(Protocol):
@@ -19,6 +20,12 @@ class NotifyApi(Protocol):
         self, user_id: UUID, limit: int = 3
     ) -> list[dict[str, Any]]:
         """Return the newest announcements."""
+        ...
+
+    async def delete_for_user(
+        self, user_id: UUID, types: Collection[NotificationType]
+    ) -> int:
+        """Delete the user's notifications of the given types; return how many."""
         ...
 
 

@@ -35,6 +35,19 @@ def normalize_app(value: str | None) -> str:
     return name if name in APP_SCOPES else GLOBAL_APP
 
 
+_PATH_SCOPES = (("/v1/admission", "admission"),)
+"""Route prefixes that always need one app's documents, whatever the header says."""
+
+
+def scopes_for_request(header: str | None, path: str) -> tuple[str, ...]:
+    """Scopes a request needs: the header's app plus the one its route implies."""
+    scopes = [normalize_app(header)]
+    for prefix, scope in _PATH_SCOPES:
+        if (path == prefix or path.startswith(prefix + "/")) and scope not in scopes:
+            scopes.append(scope)
+    return tuple(scopes)
+
+
 @dataclass(frozen=True, slots=True)
 class LegalItem:
     """One accepted document: its kind, version number and app scope."""
