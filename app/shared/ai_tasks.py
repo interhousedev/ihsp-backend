@@ -99,6 +99,7 @@ class AiTask(StrEnum):
     ADMIT_PROFILE_WORDS = "admit_profile_words"
     ADMIT_ITEM_INTERVIEW = "admit_item_interview"
     ADMIT_ITEM_REVIEW = "admit_item_review"
+    ADMIT_ACTIVITY_GRADE = "admit_activity_grade"
     ADMIT_ITEM_REWRITE_FIX = "admit_item_rewrite_fix"
     ADMIT_ESSAY_REVIEW = "admit_essay_review"
     ADMIT_ALIGNMENT_MAP = "admit_alignment_map"
@@ -206,11 +207,11 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
         reasoning_effort=_NO_REASONING,
     ),
     AiTask.ADMIT_ASSISTANT: _admission(
-        "Admission: the student's assistant; answers about the current screen with "
-        "read-only tools over the student's own data.",
-        model=NOTEBOOK_MODEL,
-        budget_weight=1,
-        reasoning_effort=_NO_REASONING,
+        "Admission: the student's assistant in the AI chats; reads the application, "
+        "searches the FAQ and suggests courses, opportunities and universities.",
+        model=SMART_MODEL,
+        budget_weight=SMART_BUDGET_WEIGHT,
+        reasoning_effort=SMART_REASONING,
     ),
     AiTask.ADMIT_VOICE_TRANSCRIBE: _admission(
         "Admission: speech to text of a spoken answer; the recording is never "
@@ -519,6 +520,12 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
     ),
     AiTask.ADMIT_ITEM_REVIEW: _admission(
         "Admission: rubric review of one activity or honor description.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_ACTIVITY_GRADE: _admission(
+        "Admission: A-E grade and tip for an activity or honor title and description.",
         model=NOTEBOOK_MODEL,
         budget_weight=1,
         reasoning_effort=_NO_REASONING,

@@ -24,7 +24,7 @@ class ChatItemView:
     """One row of the chat list."""
 
     id: UUID
-    assistant: Literal["student", "admin", "lms_author"]
+    assistant: Literal["student", "admin", "lms_author", "admission"]
     title: str
     last_message_at: datetime
     pending_approvals: int

@@ -84,6 +84,7 @@ from app.modules.identity.application.passwordless_otp_check import Passwordless
 from app.modules.identity.application.personal_tokens import (
     CreatePersonalToken,
     ListPersonalTokens,
+    RevokeAdmissionTokens,
     RevokePersonalToken,
 )
 from app.modules.identity.application.photo_files import PhotoUrls
@@ -271,6 +272,7 @@ class AuthServices:
     create_personal_token: CreatePersonalToken
     list_personal_tokens: ListPersonalTokens
     revoke_personal_token: RevokePersonalToken
+    revoke_admission_tokens: RevokeAdmissionTokens
     get_vault_status: GetVaultStatus
     unseal_vault: UnsealVault
     revoke_connector: RevokeConnector
@@ -697,6 +699,9 @@ def build_auth(
         ),
         list_personal_tokens=ListPersonalTokens(uow_factory=uow_factory),
         revoke_personal_token=RevokePersonalToken(uow_factory=uow_factory, clock=clock),
+        revoke_admission_tokens=RevokeAdmissionTokens(
+            uow_factory=uow_factory, clock=clock
+        ),
         get_vault_status=GetVaultStatus(seal=seal),
         unseal_vault=UnsealVault(
             uow_factory=uow_factory, seal=seal, rate_limiter=limiter

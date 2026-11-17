@@ -179,5 +179,10 @@
   "ai-voice-too-long": "Yozuv {max_seconds} soniyadan uzun.",
   "ai-voice-format": "Bu audio formati qoʼllab-quvvatlanmaydi. Quyidagilardan birini ishlating: {formats}.",
   "ai-project-not-found": "Loyiha topilmadi.",
-  "ai-note-search-project-files": "Loyiha fayllaridan qidirildi"
+  "ai-note-search-project-files": "Loyiha fayllaridan qidirildi",
+  "ai-note-admission-get-application": "Arizangiz oʼqildi",
+  "ai-note-admission-search-faq": "Qabul boʼyicha FAQ dan qidirildi",
+  "ai-note-admission-suggest": "Takliflar tanlandi",
+  "ai-note-admission-add-suggestion": "Taklif qoʼshildi",
+  "ai-preview-admission-add-suggestion": "«{title}» ni rejangizga qoʼshish"
 }

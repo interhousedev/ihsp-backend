@@ -179,5 +179,10 @@
   "ai-voice-too-long": "The recording is longer than {max_seconds} seconds.",
   "ai-voice-format": "This audio format is not supported. Use one of: {formats}.",
   "ai-project-not-found": "The project was not found.",
-  "ai-note-search-project-files": "Searched the project's files"
+  "ai-note-search-project-files": "Searched the project's files",
+  "ai-note-admission-get-application": "Read your application",
+  "ai-note-admission-search-faq": "Searched the admission FAQ",
+  "ai-note-admission-suggest": "Picked suggestions",
+  "ai-note-admission-add-suggestion": "Added a suggestion",
+  "ai-preview-admission-add-suggestion": "Add “{title}” to your plan"
 }

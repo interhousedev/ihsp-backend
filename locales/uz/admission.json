@@ -17,8 +17,6 @@
   "admission-invalid-proof-url": "Tasdiq havolasi yaroqsiz.",
   "admission-invalid-media-url": "Rasm havolasi yaroqli https manzil boʻlishi kerak.",
   "admission-test-score-invalid": "Test yozuvi yaroqsiz. Ballar, sanalar va majburiy maydonlarni tekshiring.",
-  "admission-guest-link-limit": "Siz eng koʼp mehmon havolalarini yaratdingiz.",
-  "admission-self-claim": "Oʼz arizangizni oʼzingiz tasdiqlay olmaysiz.",
   "admission-invalid-transition": "Bu qadam joriy holatda mumkin emas.",
   "admission-pickup-not-set": "Olib ketish joyi hali belgilanmagan.",
   "admission-undo-expired": "Bu amalni bekor qilish uchun kech.",

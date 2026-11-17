@@ -800,7 +800,34 @@ def _deadline_changed(p: dict[str, Any], v: _View) -> Description:
     )
 
 
+_CONSULT_EVENTS = frozenset(
+    {
+        "requested",
+        "accepted",
+        "proposed",
+        "declined",
+        "completed",
+        "confirmed",
+        "rejected",
+        "cancelled",
+    }
+)
+
+
+def _consultation(p: dict[str, Any], v: _View) -> Description:
+    """A step of a consultation request; the reader is the student or staff."""
+    event = str(p.get("event") or "")
+    key = f"notify-consult-{event if event in _CONSULT_EVENTS else 'updated'}"
+    return Description(
+        v.t(f"{key}-title"),
+        v.t(f"{key}-body", topic=p.get("topic", "")),
+        _adm(v, "/consultations/", staff=bool(p.get("staff"))),
+    )
+
+
 def _admission_help_requested(p: dict[str, Any], v: _View) -> Description:
+    if p.get("kind") == "consultation":
+        return _consultation(p, v)
     return Description(
         v.t("notify-admission-help-requested-title"),
         v.t("notify-admission-help-requested-body", student=p.get("student_name", "")),
@@ -814,6 +841,8 @@ _HELP_EVENTS = frozenset(
 
 
 def _admission_help_responded(p: dict[str, Any], v: _View) -> Description:
+    if p.get("kind") == "consultation":
+        return _consultation(p, v)
     event = str(p.get("event") or "")
     suffix = event.replace("_", "-") if event in _HELP_EVENTS else "responded"
     request_id = p.get("request_id") or p.get("help_request_id") or ""
@@ -825,9 +854,11 @@ def _admission_help_responded(p: dict[str, Any], v: _View) -> Description:
 
 
 def _admission_comment_added(p: dict[str, Any], v: _View) -> Description:
+    report = p.get("kind") == "opportunity_report"
+    key = "notify-admission-comment-report" if report else "notify-admission-comment"
     return Description(
-        v.t("notify-admission-comment-title"),
-        v.t("notify-admission-comment-body", author=p.get("author_name", "")),
+        v.t(f"{key}-title"),
+        v.t(f"{key}-body", author=p.get("author_name", "")),
         _adm(v, str(p.get("path") or "/"), staff=v.staff),
     )
 

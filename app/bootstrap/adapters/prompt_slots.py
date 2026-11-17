@@ -12,10 +12,10 @@ from app.modules.admission.infrastructure.ai.prompts import (
     alignment_map as admit_alignment,
 )
 from app.modules.admission.infrastructure.ai.prompts import app_review as admit_review
-from app.modules.admission.infrastructure.ai.prompts import assistant as admit_assistant
 from app.modules.admission.infrastructure.ai.prompts import career as admit_career
 from app.modules.admission.infrastructure.ai.prompts import essays as admit_essays
 from app.modules.admission.infrastructure.ai.prompts import goal_plan as admit_goal_plan
+from app.modules.admission.infrastructure.ai.prompts import item_grade as admit_grade
 from app.modules.admission.infrastructure.ai.prompts import items as admit_items
 from app.modules.admission.infrastructure.ai.prompts import (
     list_suggest as admit_list_suggest,
@@ -158,10 +158,10 @@ _PARTS: tuple[tuple[Iterable[AiTask], str, str, str, bool], ...] = (
         False,
     ),
     (
-        (AiTask.ADMIT_ASSISTANT,),
+        (AiTask.ADMIT_ACTIVITY_GRADE,),
         "system",
-        "Admission assistant: system prompt",
-        admit_assistant.SYSTEM,
+        "Admission activities: A-E grade of title and description",
+        admit_grade.SYSTEM,
         False,
     ),
     *(

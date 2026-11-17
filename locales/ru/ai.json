@@ -179,5 +179,10 @@
   "ai-voice-too-long": "Запись длиннее {max_seconds} секунд.",
   "ai-voice-format": "Этот формат аудио не поддерживается. Используйте один из: {formats}.",
   "ai-project-not-found": "Проект не найден.",
-  "ai-note-search-project-files": "Поиск по файлам проекта"
+  "ai-note-search-project-files": "Поиск по файлам проекта",
+  "ai-note-admission-get-application": "Прочитана ваша заявка",
+  "ai-note-admission-search-faq": "Поиск по FAQ о поступлении",
+  "ai-note-admission-suggest": "Подобраны предложения",
+  "ai-note-admission-add-suggestion": "Добавлено предложение",
+  "ai-preview-admission-add-suggestion": "Добавить «{title}» в ваш план"
 }

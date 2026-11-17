@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from app.modules.dashboard.wiring import DashboardServices
     from app.modules.faces.wiring import FacesServices
     from app.modules.feedback.wiring import FeedbackServices
+    from app.modules.files.ports.content_sniffer import ContentSniffer
     from app.modules.files.wiring import FilesServices
     from app.modules.flashcards.wiring import FlashcardsServices
     from app.modules.identity.application.student_card import StudentCardService
@@ -104,6 +105,7 @@ class Container:
     mcp_connector_courses: "ConnectorCoursesPort" = NOT_BUILT
     mcp_call_log: "McpCallLog" = NOT_BUILT
     mcp_scope_overlay: "McpScopeOverlayPort | None" = None
+    content_sniffer: "ContentSniffer" = NOT_BUILT
     mcp_academic_tools: "McpAcademicTools" = NOT_BUILT
     mcp_teacher_tools: "McpTeacherTools" = NOT_BUILT
     teacher_ai_tools: "TeacherAiTools | None" = None

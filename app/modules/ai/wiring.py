@@ -44,6 +44,7 @@ from app.modules.ai.application.tools.admin_forward import (
     AdminReadTool,
     AdminWriteTool,
 )
+from app.modules.ai.application.tools.admission import make_admission_tools
 from app.modules.ai.application.tools.base import Tool
 from app.modules.ai.application.tools.create_artifact import CreateArtifact
 from app.modules.ai.application.tools.create_flashcard_set import CreateFlashcardSet
@@ -71,6 +72,9 @@ from app.modules.ai.application.tools.read_chat_history import ReadChatHistory
 from app.modules.ai.application.tools.read_file import ReadFile
 from app.modules.ai.application.tools.read_notebook_source import ReadNotebookSource
 from app.modules.ai.application.tools.registry import ToolRegistry
+from app.modules.ai.application.tools.research_institution import (
+    ResearchInstitution,
+)
 from app.modules.ai.application.tools.search_files import SearchFiles
 from app.modules.ai.application.tools.search_knowledge_base import (
     SearchKnowledgeBase,
@@ -235,6 +239,7 @@ def make_student_tools(
         ReadNotebookSource(bindings),
         ListNotebookArtifacts(bindings),
         SearchWeb(bindings, limits),
+        ResearchInstitution(bindings),
         SearchKnowledgeBase(bindings, "student"),
         FindFeature(urls),
         SearchProjectFiles(uow_factory, files),
@@ -308,7 +313,9 @@ def build(
         limits=limits,
     )
     gate = LateAuthorGate(bindings, settings)
-    guard = ChatGuard(gate, deps.rate_limiter, settings, limits=limits)
+    guard = ChatGuard(
+        gate, deps.rate_limiter, settings, limits=limits, bindings=bindings
+    )
     locks = over.turn_lock or RedisTurnLock(deps.redis)
     history = ReadChatHistory(uow_factory)  # every assistant (AI-EFF-3)
     registry = ToolRegistry(
@@ -333,6 +340,7 @@ def build(
             history,
         ],
         telegram=[ShowUiBlock()] if settings.ai.openui_enabled else [],
+        admission=[*make_admission_tools(bindings), history],
     )
     locale = LocaleResolver(identity)
     views = ChatViews(deps.i18n)
@@ -358,6 +366,7 @@ def build(
             limits,
             openui=settings.ai.openui_enabled,
             projects=project_instructions_from(uow_factory),
+            uni_chat=lambda: bindings.uni_chat,
         ),
         clock=deps.clock,
         settings=settings,

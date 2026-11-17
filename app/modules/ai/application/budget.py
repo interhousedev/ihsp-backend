@@ -143,10 +143,11 @@ class BudgetService:
 
     async def usage(self, user_id: UUID, assistant: Assistant) -> UsageInfo:
         """Return the session and day usage with their limits (no smart count)."""
-        # Only the student assistant is limited for students; the other assistants
-        # belong to staff, who have no quota (the pool is still counted).
+        # Only the student and admission assistants are limited for students; the
+        # others belong to staff, who have no quota (the pool is still counted).
         limits = await self.limits.for_user(
-            user_id, unlimited=assistant is not Assistant.STUDENT
+            user_id,
+            unlimited=assistant not in (Assistant.STUDENT, Assistant.ADMISSION),
         )
         profile = profile_for(assistant, self.settings, limits=limits)
         store = self._store(assistant)

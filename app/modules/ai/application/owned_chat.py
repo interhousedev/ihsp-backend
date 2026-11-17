@@ -8,10 +8,15 @@ from the course loses the assistant at once.
 from uuid import UUID
 
 from app.modules.ai.application.assistant_profile import require_assistant_role
+from app.modules.ai.application.late_bindings import LateBindings
 from app.modules.ai.domain.assistant import Assistant
 from app.modules.ai.domain.chat import Chat
 from app.modules.ai.domain.chat_scope import ChatScope
-from app.modules.ai.domain.errors import ChatNotFoundError, CourseRequiredError
+from app.modules.ai.domain.errors import (
+    ChatNotFoundError,
+    CourseRequiredError,
+    WrongAssistantError,
+)
 from app.modules.ai.ports.author_gate import AuthorGate
 from app.modules.ai.ports.unit_of_work import AiUnitOfWork
 from app.settings import Settings
@@ -32,12 +37,17 @@ class ChatGuard:
         rate_limiter: RateLimiter,
         settings: Settings,
         limits: LimitsProvider | None = None,
+        bindings: LateBindings | None = None,
     ) -> None:
-        """Store the course gate, the rate limiter and the limits (the provider's)."""
+        """Store the course gate, the rate limiter, the limits and the late bindings.
+
+        The admission assistant is allowed by the admission module (`bindings`).
+        """
         self.gate = gate
         self.rate_limiter = rate_limiter
         self.settings = settings
         self.limits = limits or StaticLimits(settings.limits)
+        self.bindings = bindings
 
     async def assistant(
         self, actor: Actor, assistant: Assistant, course_id: UUID | None = None
@@ -50,6 +60,12 @@ class ChatGuard:
             AuthorUnavailableError: The author assistant is switched off.
         """
         require_assistant_role(actor, assistant)
+        if assistant is Assistant.ADMISSION:
+            admission = self.bindings.admission if self.bindings else None
+            if admission is None:
+                raise WrongAssistantError(params={"assistant": assistant.value})
+            await admission.require_assistant(actor)
+            return
         if assistant is not Assistant.LMS_AUTHOR:
             return
         if course_id is None:
@@ -103,6 +119,10 @@ class ChatGuard:
         Raises:
             RateLimitedError: More than ``lms_ai_chat_per_minute`` in a minute.
         """
+        if chat.assistant is Assistant.ADMISSION:
+            if self.bindings and self.bindings.admission:
+                await self.bindings.admission.admit_turn(actor)
+            return
         if chat.assistant is not Assistant.LMS_AUTHOR:
             return
         limits = await self.limits.current()

@@ -8,6 +8,7 @@ from app.modules.ai.domain.assistant import Assistant
 from app.modules.ai.domain.prompts import SURFACE_TELEGRAM
 
 PROJECT_TOOL: Final = "search_project_files"
+UNI_TOOL: Final = "research_institution"
 # Still callable (an earlier answer may have used them) but not offered to the model:
 # make_document does the same job with a far smaller schema.
 _NOT_OFFERED: Final[dict[Assistant, frozenset[str]]] = {
@@ -30,6 +31,7 @@ class ToolRegistry:
         admin: Sequence[Tool],
         author: Sequence[Tool] = (),
         telegram: Sequence[Tool] = (),
+        admission: Sequence[Tool] = (),
     ) -> None:
         """Index the tools of the three assistants.
 
@@ -40,6 +42,7 @@ class ToolRegistry:
             Assistant.STUDENT: {tool.name: tool for tool in student},
             Assistant.ADMIN: {tool.name: tool for tool in admin},
             Assistant.LMS_AUTHOR: {tool.name: tool for tool in author},
+            Assistant.ADMISSION: {tool.name: tool for tool in admission},
         }
 
     def get(self, assistant: Assistant, name: str) -> Tool | None:
@@ -51,16 +54,20 @@ class ToolRegistry:
         assistant: Assistant,
         *,
         in_project: bool = True,
+        in_uni_chat: bool = False,
         surface: str = "web",
     ) -> list[dict[str, Any]]:
         """Return the tool list of a model request (OpenAI function format).
 
         The list is stable within a chat, so the provider's prompt cache keeps
-        working. The author assistant keeps its full schemas.
+        working. The author assistant keeps its full schemas. The university
+        research tool is offered only in an admission university chat.
         """
         hidden = _NOT_OFFERED.get(assistant, frozenset())
         if not in_project:
             hidden |= {PROJECT_TOOL}
+        if not in_uni_chat:
+            hidden |= {UNI_TOOL}
         compact = assistant is not Assistant.LMS_AUTHOR
         tools = [t for t in self._tools[assistant].values() if t.name not in hidden]
         if surface == SURFACE_TELEGRAM:

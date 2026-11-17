@@ -1,6 +1,7 @@
 """Deterministic LlmGateway for development and tests (`OPENROUTER__MODE=fake`)."""
 
 import json
+import re
 from collections import deque
 from collections.abc import AsyncIterator
 from typing import Any
@@ -21,7 +22,10 @@ from app.modules.ai.infrastructure.fake_subjects import (
     SUBJECT_NAMES_SCHEMA,
     subject_names_document,
 )
-from app.modules.ai.infrastructure.fake_tasks import build_tasks_document
+from app.modules.ai.infrastructure.fake_tasks import (
+    build_item_grade_document,
+    build_tasks_document,
+)
 from app.modules.ai.infrastructure.fake_teacher import build_teacher_document
 from app.shared.contracts.ai import LlmTuning
 from app.shared.ids import new_id
@@ -115,6 +119,7 @@ class FakeLlmGateway:
             built = built or build_career_document(schema_name, messages)
             built = built or build_list_suggest_document(schema_name, messages)
             built = built or build_tasks_document(schema_name)
+            built = built or build_item_grade_document(schema_name)
             if built is None and schema_name not in BUILDERS:
                 # Schemas of other modules (admission): a valid document by shape.
                 built = document_for(schema)
@@ -191,7 +196,12 @@ class FakeLlmGateway:
             return "", [_call("create_flashcard_set", _flashcards(last))]
         if "homework" in lowered:
             return "", [_call("get_homework", {})]
-        return f"(fake) {last}", []
+        return f"(fake) {_WEB_BLOCK.sub('', last).strip()}", []
+
+
+# The web results block (with its bracketed intro line) a web-search turn appends to
+# the user message; a real model never repeats it, so the echo leaves it out too.
+_WEB_BLOCK = re.compile(r"(?:\n*\[[^\n]*\]\n)?<web_results>.*?</web_results>", re.S)
 
 
 def _usage(system: str, messages: list[dict[str, Any]], text: str) -> dict[str, int]:

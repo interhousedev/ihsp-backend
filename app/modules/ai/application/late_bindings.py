@@ -10,6 +10,7 @@ from dataclasses import dataclass
 
 from app.modules.ai.ports.knowledge import KnowledgeGapReporter, KnowledgeLookup
 from app.modules.ai.ports.share_lookup import ChatShareLookup
+from app.shared.contracts.admission_assistant import AdmissionAssistantApi
 from app.shared.contracts.documents import DocumentRenderer
 from app.shared.contracts.links import LinksApi
 from app.shared.contracts.lms import (
@@ -20,6 +21,7 @@ from app.shared.contracts.lms import (
 )
 from app.shared.contracts.notebooks import NotebooksCommands, NotebooksQueries
 from app.shared.contracts.notify import ChatAnswerNotifier
+from app.shared.contracts.uni_chat import UniChatSource
 from app.shared.contracts.web_search import PlatformSearch, WebSearchApi
 
 
@@ -34,6 +36,8 @@ class LateBindings:
     shared_search: PlatformSearch | None = None
     notebooks_commands: NotebooksCommands | None = None
     documents: DocumentRenderer | None = None
+    uni_chat: UniChatSource | None = None  # admission university chats
+    admission: AdmissionAssistantApi | None = None  # the admission assistant
     web: WebSearchApi | None = None  # the assistant's search_web tool
     knowledge: KnowledgeLookup | None = None  # search_knowledge_base
     knowledge_gaps: KnowledgeGapReporter | None = None

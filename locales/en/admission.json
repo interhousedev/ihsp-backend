@@ -17,8 +17,6 @@
   "admission-invalid-proof-url": "The link to the proof is not valid.",
   "admission-invalid-media-url": "The image link must be a valid https address.",
   "admission-test-score-invalid": "This test entry is not valid. Check the scores, dates and required fields.",
-  "admission-guest-link-limit": "You have created the maximum number of guest links.",
-  "admission-self-claim": "You cannot confirm your own claim.",
   "admission-invalid-transition": "This step is not allowed in the current state.",
   "admission-pickup-not-set": "The pickup location has not been set yet.",
   "admission-undo-expired": "It is too late to undo this action.",

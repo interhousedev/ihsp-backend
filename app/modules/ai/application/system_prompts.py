@@ -23,6 +23,7 @@ from app.modules.ai.ports.unit_of_work import AiUnitOfWork
 from app.shared.ai.answer_language import answer_language, language_line
 from app.shared.ai.prompt_cache import with_volatile_tail
 from app.shared.clock import Clock, local_today
+from app.shared.contracts.uni_chat import UniChatSource
 from app.shared.limits import LimitsProvider
 from app.shared.openui.prompt import openui_prompt, telegram_openui_prompt
 
@@ -61,17 +62,20 @@ class SystemPrompts:
         *,
         openui: bool = False,
         projects: ProjectInstructions | None = None,
+        uni_chat: Callable[[], UniChatSource | None] | None = None,
     ) -> None:
         """Store the course gate (outline), the clock (date) and the runtime limits.
 
         `openui` adds the OpenUI block instructions (AI-OPENUI) to every assistant.
         `projects` gives the instructions of a chat's project, if it has one.
+        `uni_chat` reads the late-bound admission source of university chats.
         """
         self.gate = gate
         self.clock = clock
         self.limits = limits
         self.openui = openui
         self.projects = projects
+        self.uni_chat = uni_chat
 
     async def build(
         self,
@@ -93,6 +97,9 @@ class SystemPrompts:
         block = await self._project_block(chat)
         if block:
             prompt = f"{prompt}\n\n{block}"
+        uni = await self._uni_block(chat)
+        if uni:
+            prompt = f"{prompt}\n\n{uni}"
         if surface == SURFACE_TELEGRAM:
             prompt = f"{prompt}\n\n{TELEGRAM_RULES}"
             if self.openui:  # blocks come by the show_ui_block tool, never in text
@@ -115,6 +122,21 @@ class SystemPrompts:
         if chat.project_id is None or self.projects is None:
             return ""
         return project_block(await self.projects(chat.project_id))
+
+    async def _uni_block(self, chat: Chat) -> str:
+        if chat.assistant is not Assistant.STUDENT or self.uni_chat is None:
+            return ""
+        source = self.uni_chat()
+        if source is None:
+            return ""
+        return await source.brief(chat.id, chat.owner_id) or ""
+
+    async def in_uni_chat(self, chat: Chat) -> bool:
+        """Whether the chat is an admission university chat (its tool is offered)."""
+        if chat.assistant is not Assistant.STUDENT or self.uni_chat is None:
+            return False
+        source = self.uni_chat()
+        return source is not None and await source.is_uni_chat(chat.id, chat.owner_id)
 
     async def _base(self, chat: Chat) -> str:
         today = local_today(self.clock)

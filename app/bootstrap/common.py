@@ -17,6 +17,7 @@ from app.bootstrap.adapters.admission import (
     AdmissionCourseSourcesAdapter,
     AdmissionLmsCourseLookupAdapter,
     AdmissionMembershipAdapter,
+    AdmissionUniChatsAdapter,
     AdmissionWebSearchAdapter,
 )
 from app.bootstrap.adapters.admission_staff import AdmissionStaffDirectoryAdapter
@@ -88,9 +89,6 @@ from app.modules.admin.wiring import build as build_admin
 from app.modules.admission.application.student_search import StudentSearchService
 from app.modules.admission.infrastructure.ai.prompt_source import RegistryPrompts
 from app.modules.admission.infrastructure.ai_gateway import GatewayStructuredAi
-from app.modules.admission.infrastructure.assistant_adapters import (
-    GatewayAssistantModel,
-)
 from app.modules.admission.infrastructure.student_chunks_repository import (
     SqlChunkCollector,
     SqlChunkStore,
@@ -101,6 +99,7 @@ from app.modules.admission.wiring import build as build_admission
 from app.modules.ai.infrastructure.access_guard import AccessGuardedLlmGateway
 from app.modules.ai.infrastructure.gateway_factory import (
     make_embedding_gateway,
+    make_exa_page_reader,
     make_llm_gateway,
     make_web_search_gateway,
 )
@@ -602,8 +601,13 @@ class _Assembler:
     def build_admission(self) -> None:
         """Admission platform; LMS courses only where LMS is built."""
         c = self.container
-        lms = c.lms.learning.list_my_courses if self.plan.lms else None
-        course_sources = AdmissionCourseSourcesAdapter(c.academic.marks.queries, lms)
+        lms = c.lms.learning if self.plan.lms else None
+        course_sources = AdmissionCourseSourcesAdapter(
+            c.academic.marks.queries,
+            lms.list_my_courses if lms else None,
+            lms.list_catalog if lms else None,
+            lms.enroll_in_course if lms else None,
+        )
         c.admission = build_admission(
             self.deps,
             membership=AdmissionMembershipAdapter(c.academic.schedule.queries),
@@ -612,9 +616,6 @@ class _Assembler:
             staff_directory=AdmissionStaffDirectoryAdapter(c.identity.directory),
             ai=GatewayStructuredAi(NotebookLlm(c.llm, c.settings)) if c.llm else None,
             llm=NotebookLlm(c.llm, c.settings) if c.llm else None,
-            assistant_model=(
-                GatewayAssistantModel(NotebookLlm(c.llm, c.settings)) if c.llm else None
-            ),
             files=c.files.public,
             identity=c.identity.directory,
             prompts=RegistryPrompts(self.prompts.registry),
@@ -634,9 +635,23 @@ class _Assembler:
                 lambda: self.embedding_index,
                 self.deps.clock,
             ),
-            erasers=[self._erase_notifications],
+            erasers=[self._revoke_admission_tokens, self._erase_notifications],
             final_erasers=[self._forget_admission_acceptances],
+            uni_chats=AdmissionUniChatsAdapter(c.ai) if c.ai is not None else None,
+            uni_web=c.ai.web_search if c.ai is not None else None,
+            uni_pages=(
+                make_exa_page_reader(c.settings, c.redis, required=self.plan.ai_keys)
+                if c.ai is not None
+                else None
+            ),
         )
+        if c.ai is not None:
+            c.ai.bindings.uni_chat = c.admission.uni_chat
+            c.ai.bindings.admission = c.admission.assistant
+
+    async def _revoke_admission_tokens(self, user_id: UUID) -> None:
+        """Revoke the user's admission-scoped personal tokens before the erase."""
+        await self.container.identity.auth.revoke_admission_tokens.execute(user_id)
 
     async def _erase_notifications(self, user_id: UUID) -> None:
         """Delete the admission notifications of the user for good."""
@@ -818,6 +833,7 @@ class _Assembler:
         c.mcp_connector_courses = ConnectorCoursesAdapter(c.identity.auth.uow_factory)
         c.mcp_call_log = McpCallLogAdapter(c.sessionmaker)
         c.mcp_scope_overlay = build_scope_overlay(c)
+        c.content_sniffer = self.make_sniffer()
         c.mcp_academic_tools = build_academic_tools(c)
         c.mcp_teacher_tools = build_teacher_tools(c)
         c.mcp_content_tools = build_content_tools(c)

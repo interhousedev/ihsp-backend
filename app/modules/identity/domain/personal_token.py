@@ -14,10 +14,26 @@ MAX_NAME_LENGTH = 80
 
 
 class PersonalTokenScope(StrEnum):
-    """What a personal token may do under /v1/me/*."""
+    """What a personal token may do: /v1/me/*, or the admission MCP server."""
 
     ME_READ = "me:read"
     ME_WRITE = "me:write"
+    ADMISSION_READ = "admission:read"
+    ADMISSION_MEMORY = "admission:memory"
+    ADMISSION_DOCS = "admission:docs"
+    ADMISSION_DOCUMENTS = "admission:documents"
+
+
+# Admission scopes reach a student's application data: shorter tokens only.
+ADMISSION_SCOPES = frozenset(
+    {
+        PersonalTokenScope.ADMISSION_READ.value,
+        PersonalTokenScope.ADMISSION_MEMORY.value,
+        PersonalTokenScope.ADMISSION_DOCS.value,
+        PersonalTokenScope.ADMISSION_DOCUMENTS.value,
+    }
+)
+ADMISSION_MAX_EXPIRY_DAYS = 90
 
 
 @dataclass(slots=True)

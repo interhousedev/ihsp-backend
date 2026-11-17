@@ -17,8 +17,6 @@
   "admission-invalid-proof-url": "Ссылка на подтверждение недействительна.",
   "admission-invalid-media-url": "Ссылка на изображение должна быть адресом https.",
   "admission-test-score-invalid": "Запись о тесте недопустима. Проверьте баллы, даты и обязательные поля.",
-  "admission-guest-link-limit": "Вы создали максимальное число гостевых ссылок.",
-  "admission-self-claim": "Нельзя подтвердить собственную заявку.",
   "admission-invalid-transition": "Этот шаг недоступен в текущем состоянии.",
   "admission-pickup-not-set": "Место получения ещё не указано.",
   "admission-undo-expired": "Отменить это действие уже нельзя.",

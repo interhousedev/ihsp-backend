@@ -950,9 +950,18 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "feedback strengths risks",
     ),
     _d(
+        "admission-faq",
+        "admission",
+        "/faq/",
+        _ST,
+        ("Qabul boʼyicha FAQ", "FAQ о поступлении", "Admission FAQ"),
+        "faq savollar maslahat вопросы ответы справка early decision test-optional "
+        "transcript recommendation costs aid стоимость рекомендации транскрипт",
+    ),
+    _d(
         "admission-students",
         "admission",
-        "/students/",
+        "/staff/",
         _ADM,
         ("Abituriyentlar", "Абитуриенты", "Applicants"),
         "abituriyent talaba абитуриенты ученики applicants students counselor "
@@ -966,6 +975,19 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         ("Universitet tanlash", "Выбор университетов", "University chooser"),
         "universitet tanlash список университетов выбор вуз stipendiya стипендия "
         "university list chooser scholarships shortlist",
+    ),
+    _d(
+        "admission-uni-chat",
+        "admission",
+        "/colleges/discover/",
+        _ST,
+        (
+            "Universitet bo\u02bcyicha AI suhbat",
+            "ИИ-чат по университету",
+            "AI chat about a university",
+        ),
+        "universitet suhbat savol grant stipendiya чат вуз вопросы гранты "
+        "стипендии требования university chat ask aid requirements research",
     ),
     _d(
         "admission-colleges-algorithm",
@@ -1020,12 +1042,36 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "calendar export reminders",
     ),
     _d(
-        "admission-help",
+        "admission-consultations",
         "admission",
         "/help/",
         _ST,
-        ("Yordam so\u02bcrash", "Помощь с поступлением", "Admission help"),
-        "yordam akkaunt помощь аккаунт гость help guest account proofs",
+        (
+            "Maslahatlashuv",
+            "Консультации с консультантом",
+            "Consultations with a counselor",
+        ),
+        "maslahat maslahatchi mentor konsultatsiya консультация консультант "
+        "ментор эссе проект запись consultation counselor mentor essay project "
+        "book appointment documents process transcript",
+    ),
+    _d(
+        "admission-staff-consultations",
+        "admission",
+        "/staff/consultations/",
+        _ADM,
+        ("Maslahatlar navbati", "Очередь консультаций", "Consultation queue"),
+        "maslahat navbat qabul очередь консультаций принять предложить время "
+        "consultation queue accept propose time counselor",
+    ),
+    _d(
+        "admission-kb-editor",
+        "admission",
+        "/staff/kb/",
+        _ADM,
+        ("FAQ muharriri", "Редактор FAQ", "FAQ editor"),
+        "faq savol javob bilimlar bazasi редактор вопросы ответы база знаний "
+        "faq knowledge base editor",
     ),
     _d(
         "admission-items",
@@ -1048,10 +1094,19 @@ APP_MAP: Final[tuple[Destination, ...]] = (
     _d(
         "admission-profile",
         "admission",
-        "/setup/",
+        "/profile/",
         _ST,
         ("Abituriyent profili", "Профиль абитуриента", "Applicant profile"),
         "profil sozlash профиль настройка абитуриент profile setup applicant",
+    ),
+    _d(
+        "admission-outcomes",
+        "admission",
+        "/outcomes/",
+        _ST,
+        ("Qabul natijalari", "Результаты поступления", "Admission results"),
+        "natija qabul qilindi rad результаты поступления приняли отказ "
+        "outcomes results admitted rejected waitlisted where IHT students applied",
     ),
     _d(
         "admission-opportunities",
@@ -1061,7 +1116,9 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         ("Imkoniyatlar", "Возможности", "Opportunities"),
         "imkoniyat imtihon sertifikat olimpiada возможности экзамены сертификаты "
         "олимпиады курсы opportunities exams certifications courses events programs "
-        "summer pre-college research",
+        "summer pre-college research stipendiya grant stipend scholarships "
+        "fellowships grants free university courses стипендии гранты "
+        "бесплатные курсы",
     ),
     _d(
         "admission-opportunities-plan",

@@ -2,6 +2,11 @@
 
 from app.modules.ai.infrastructure.anthropic_gateway import AnthropicLlmGateway
 from app.modules.ai.infrastructure.exa import ExaApi, ExaClient
+from app.modules.ai.infrastructure.exa_contents import (
+    CONTENTS_PATH,
+    PAGE_CHARS,
+    ExaPageReader,
+)
 from app.modules.ai.infrastructure.exa_rate_limit import ExaRateLimiter, LimitedExa
 from app.modules.ai.infrastructure.exa_search import ExaWebSearch
 from app.modules.ai.infrastructure.fake_embeddings import FakeEmbeddingGateway
@@ -175,6 +180,34 @@ def make_exa_web_search(
             config,
         )
     return ExaWebSearch(client, settings.web_search, config)
+
+
+def make_exa_page_reader(
+    settings: Settings, redis: Redis | None, *, required: bool = True
+) -> ExaPageReader:
+    """Exa contents (full page texts) on the same key and rate limit as the search."""
+    config = settings.exa
+    client: ExaApi
+    if config.mode == "fake":
+        client = FakeExaClient()
+    elif config.api_key is None:
+        if required:
+            raise ValueError("EXA__API_KEY is required when EXA__MODE=real")
+        client = UnavailableExaClient("EXA__API_KEY is not set here")
+    else:
+        if redis is None:
+            raise ValueError("Redis is required for the Exa rate limit")
+        client = LimitedExa(
+            ExaClient(
+                api_key=config.api_key.get_secret_value(),
+                base_url=config.base_url,
+                timeout_seconds=config.timeout_seconds,
+                path=CONTENTS_PATH,
+            ),
+            ExaRateLimiter(redis),
+            config,
+        )
+    return ExaPageReader(client, max_characters=PAGE_CHARS)
 
 
 def make_embedding_gateway(settings: Settings, llm: LlmGateway) -> EmbeddingGateway:

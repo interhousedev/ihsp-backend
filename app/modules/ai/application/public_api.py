@@ -172,7 +172,7 @@ class AiQueriesImpl:
         return {"owner_id": chat.owner_id, "text": found.text}
 
 
-_PRIVATE = (Assistant.ADMIN, Assistant.LMS_AUTHOR)
+_PRIVATE = (Assistant.ADMIN, Assistant.LMS_AUTHOR, Assistant.ADMISSION)
 
 
 def _readable_by(chat: Chat, owner_id: UUID) -> bool:

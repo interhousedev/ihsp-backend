@@ -11,6 +11,7 @@ class Assistant(StrEnum):
     STUDENT = "student"
     ADMIN = "admin"
     LMS_AUTHOR = "lms_author"  # course staff, inside one course workspace
+    ADMISSION = "admission"  # university admission; access checked by the module
 
 
 # The author assistant has no global role: course staff may use it, checked per course.

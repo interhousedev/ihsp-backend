@@ -17,6 +17,8 @@ from app.modules.identity.domain.errors import (
     SecondFactorRequiredError,
 )
 from app.modules.identity.domain.personal_token import (
+    ADMISSION_MAX_EXPIRY_DAYS,
+    ADMISSION_SCOPES,
     ALLOWED_EXPIRY_DAYS,
     MAX_NAME_LENGTH,
     PersonalToken,
@@ -99,7 +101,10 @@ class CreatePersonalToken:
             reasons.append("name")
         if not scopes or not set(scopes) <= _SCOPES:
             reasons.append("scopes")
-        if expires_in_days not in ALLOWED_EXPIRY_DAYS:
+        if expires_in_days not in ALLOWED_EXPIRY_DAYS or (
+            ADMISSION_SCOPES & set(scopes)
+            and expires_in_days > ADMISSION_MAX_EXPIRY_DAYS
+        ):
             reasons.append("expires_in_days")
         if reasons:
             raise PersonalTokenInvalidError(params={"fields": reasons})
@@ -142,4 +147,22 @@ class RevokePersonalToken:
                     token_id=str(token.id),
                 )
             )
+            await uow.commit()
+
+
+@dataclass(frozen=True, slots=True)
+class RevokeAdmissionTokens:
+    """Revokes every live token of a user that carries an admission scope."""
+
+    uow_factory: UowFactory
+    clock: Clock
+
+    async def execute(self, user_id: UUID) -> None:
+        """Revoke them; called when the user's admission data is erased."""
+        async with self.uow_factory() as uow:
+            now = self.clock.now()
+            for token in await uow.personal_tokens.list_for_user(user_id):
+                if token.revoked_at is None and ADMISSION_SCOPES & set(token.scopes):
+                    token.revoked_at = now
+                    await uow.personal_tokens.save(token)
             await uow.commit()

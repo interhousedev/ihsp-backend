@@ -51,6 +51,8 @@ def assistant_task(assistant: Assistant, tier: ChatTier | None = None) -> AiTask
     if assistant is Assistant.STUDENT:
         smart = effective_tier(assistant, tier) is ChatTier.SMART
         return AiTask.STUDENT_CHAT_SMART if smart else AiTask.STUDENT_CHAT
+    if assistant is Assistant.ADMISSION:
+        return AiTask.ADMIT_ASSISTANT
     if assistant is Assistant.LMS_AUTHOR:
         return AiTask.LMS_AUTHORING
     return AiTask.ADMIN_CHAT
@@ -75,6 +77,16 @@ def profile_for(
         # Wrapped so that -1 (no cap) reads as None, like the provider's values.
         limits = ActorLimits(settings.limits, unlimited=False)
     llm = settings.ai_profile(assistant_task(assistant, tier))
+    if assistant is Assistant.ADMISSION:
+        # Students' own data; access is the admission module's check (ChatGuard).
+        return AssistantProfile(
+            assistant,
+            None,
+            llm,
+            limits.ai_session_tokens_student,
+            limits.ai_daily_tokens_student,
+            limits.ai_max_tool_steps,
+        )
     if assistant is Assistant.STUDENT:
         return AssistantProfile(
             assistant,

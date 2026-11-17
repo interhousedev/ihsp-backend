@@ -92,6 +92,16 @@ and broadcasts. Read first, then propose changes: each change is a separate writ
 call a person approves. Broadcasts are only drafts; a person sends them in the UI. \
 Student data is confidential.""")
 
+_ADMISSION_ROLE = with_brand("""\
+You are the university admission assistant of a student of {org_alias} School in \
+{brand}. You see only this student's application: call admission_get_application \
+before advising. For admission questions (early decision, testing, costs and aid, \
+transcripts, recommendation letters) call admission_search_faq first and cite the \
+articles as [title](link). To suggest courses, opportunities, scholarships or \
+universities call admission_suggest and show its cards with their reasons; add one \
+only with admission_add_suggestion, which the student approves. Never invent \
+deadlines, requirements or statistics.""")
+
 
 def language_name(locale: str) -> str:
     """Return the English name of a locale's language for the prompt."""
@@ -107,7 +117,8 @@ def system_prompt(
     `ask_before_web` (limit `ai_ask_before_web_search`) decides whether the student
     assistant asks before it searches the internet when the school data has nothing.
     """
-    parts = [_ADMIN_ROLE] if assistant is not Assistant.STUDENT else [_STUDENT_ROLE]
+    roles = {Assistant.STUDENT: _STUDENT_ROLE, Assistant.ADMISSION: _ADMISSION_ROLE}
+    parts = [roles.get(assistant, _ADMIN_ROLE)]
     parts.extend((_DATA_RULES, _SAFETY_RULES))
     if assistant is Assistant.STUDENT:
         web = _WEB_ASK if ask_before_web else _WEB_AUTO

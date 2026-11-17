@@ -37,6 +37,7 @@ class Chat(IdMixin, TimestampMixin, Base):
             "student",
             "admin",
             "lms_author",
+            "admission",
             name="assistant",
             native_enum=False,
             create_constraint=True,

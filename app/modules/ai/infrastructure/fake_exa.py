@@ -22,6 +22,15 @@ class FakeExaClient:
 
     async def search(self, body: dict[str, Any]) -> dict[str, Any]:
         """Return up to `numResults` pages, with highlights when they are asked for."""
+        urls = body.get("urls")
+        if isinstance(urls, list):  # a /contents call
+            return {
+                "requestId": "fake",
+                "results": [
+                    {"url": u, "text": f"(fake) Page text of {u}."} for u in urls
+                ],
+                "costDollars": {"total": self.cost_dollars},
+            }
         query = str(body.get("query") or "")[:100]
         limit = _count(body.get("numResults"))
         wants_highlights = "highlights" in (body.get("contents") or {})

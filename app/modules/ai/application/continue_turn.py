@@ -206,7 +206,7 @@ class ContinueTurn:
         )
         window = select_window(tail, run.after_seq)
         messages = to_llm_messages(window, run.summary)
-        tools = self._tools(chat, run.surface)
+        tools = await self._tools(chat, run.surface)
         if await self._over_budget(chat, system, messages, tools):
             return TurnStatus.LIMIT_REACHED
         task = profile_for(chat.assistant, self.settings, chat.tier).llm
@@ -286,10 +286,13 @@ class ContinueTurn:
         text = str(response.get("text") or "")
         return response, strip_narration(text, **options)
 
-    def _tools(self, chat: Chat, surface: str = "web") -> list[dict[str, Any]]:
+    async def _tools(self, chat: Chat, surface: str = "web") -> list[dict[str, Any]]:
         """The tools offered in this chat; the list stays the same within it."""
         return self.registry.llm_tools(
-            chat.assistant, in_project=chat.project_id is not None, surface=surface
+            chat.assistant,
+            in_project=chat.project_id is not None,
+            in_uni_chat=await self.prompts.in_uni_chat(chat),
+            surface=surface,
         )
 
     async def _streamed(
@@ -327,7 +330,7 @@ class ContinueTurn:
         window = select_window(tail[-WINDOW_MESSAGES:], 0)
         messages = [*to_llm_messages(window), {"role": "user", "content": text}]
         system = await self.prompts.build(chat, locale)
-        return await self._check(chat, system, messages, self._tools(chat))
+        return await self._check(chat, system, messages, await self._tools(chat))
 
     async def precheck_replay(self, chat: Chat, locale: str) -> LimitHit | None:
         """Return the limit answering the last user message again would run into."""
@@ -339,7 +342,7 @@ class ContinueTurn:
         window = select_window(history[-WINDOW_MESSAGES:], 0)
         system = await self.prompts.build(chat, locale)
         return await self._check(
-            chat, system, to_llm_messages(window), self._tools(chat)
+            chat, system, to_llm_messages(window), await self._tools(chat)
         )
 
     def _weight(self, chat: Chat) -> int:

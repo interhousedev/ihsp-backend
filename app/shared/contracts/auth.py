@@ -10,6 +10,7 @@ AUDIENCE_MCP_LMS = "mcp-lms"
 AUDIENCE_MCP_ADMIN = "mcp-admin"
 AUDIENCE_MCP_TEACHER = "mcp-teacher"
 AUDIENCE_MCP_APP = "mcp-app"
+AUDIENCE_MCP_ADMISSION = "mcp-admission"
 
 
 class AccessTokenVerifier(Protocol):
