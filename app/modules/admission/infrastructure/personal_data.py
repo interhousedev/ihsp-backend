@@ -32,6 +32,20 @@ SPECS: tuple[PersonalTable, ...] = (
         note="the account's staff grants end with it; admission audit events stay",
     ),
     PersonalTable(StaffSavedViewRow, E, owner="user_id"),
+    PersonalTable(
+        CalendarFeedRow,
+        E,
+        owner="user_id",
+        exclude=("token_hash",),
+        note="the calendar feed of the account; the token hash is a secret",
+    ),
+    PersonalTable(
+        CalendarReminderRow,
+        E,
+        owner="user_id",
+        export=False,
+        note="ledger of reminders already sent; meaningless without the account",
+    ),
 )
 
 

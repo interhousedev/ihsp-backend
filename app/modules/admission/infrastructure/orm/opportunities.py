@@ -29,7 +29,15 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-_KINDS = ("exam", "certification", "course", "event", "recurring", "program")
+_KINDS = (
+    "exam",
+    "certification",
+    "course",
+    "event",
+    "recurring",
+    "program",
+    "scholarship",
+)
 
 
 class OpportunityTaxonomyRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
@@ -60,7 +68,7 @@ class OpportunityRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
         JSONB, server_default=text("'[]'::jsonb")
     )
     archived: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
-    created_by: Mapped[UUID] = mapped_column(Uuid)
+    created_by: Mapped[UUID | None] = mapped_column(Uuid)
 
 
 class OpportunitySubmissionRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):

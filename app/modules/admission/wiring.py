@@ -36,9 +36,8 @@ from app.modules.admission.application.essays import (
 )
 from app.modules.admission.application.goal_plan import GoalPlanService
 from app.modules.admission.application.goal_plan_suggest import GoalPlanSuggester
-from app.modules.admission.application.guest import GuestService
-from app.modules.admission.application.help import HelpService
 from app.modules.admission.application.interview import ItemInterviewService
+from app.modules.admission.application.item_grade import ItemGradeService
 from app.modules.admission.application.items import ItemService
 from app.modules.admission.application.list_plan import ListPlanService
 from app.modules.admission.application.matching import MatchService
@@ -47,6 +46,7 @@ from app.modules.admission.application.opportunities import (
     LmsCourseLookup,
     OpportunityService,
 )
+from app.modules.admission.application.opportunity_comments import OppCommentService
 from app.modules.admission.application.opportunity_intake import OpportunityIntake
 from app.modules.admission.application.opportunity_planner import OpportunityPlanner
 from app.modules.admission.application.privacy import Eraser, PrivacyService
@@ -57,10 +57,12 @@ from app.modules.admission.application.readiness import ReadinessService
 from app.modules.admission.application.review import ItemReviewService
 from app.modules.admission.application.runtime_settings import RuntimeSettingsService
 from app.modules.admission.application.staff import StaffService
+from app.modules.admission.application.supp_prompts import SuppPromptService
 from app.modules.admission.application.tasks import TaskService
 from app.modules.admission.application.tasks_suggest import TaskSuggester
 from app.modules.admission.application.test_scores import ScoreService
 from app.modules.admission.application.transcripts import TranscriptService
+from app.modules.admission.application.uni_chat import UniChatService
 from app.modules.admission.application.voice import VoiceService
 from app.modules.admission.application.words import WordsService
 from app.modules.admission.infrastructure.ai.prompt_source import BuiltinPrompts
@@ -68,16 +70,15 @@ from app.modules.admission.infrastructure.app_review_repository import (
     SqlAppReviewRepository,
 )
 from app.modules.admission.infrastructure.assistant_adapters import UowAssistantData
-from app.modules.admission.infrastructure.assistant_repository import (
-    SqlAssistantRepository,
-)
 from app.modules.admission.infrastructure.calendar_repository import (
     SqlCalendarStore,
 )
 from app.modules.admission.infrastructure.catalog_data import study_fields as _fields
+from app.modules.admission.infrastructure.uni_chat_repository import (
+    SqlUniChatRepository,
+)
 from app.modules.admission.infrastructure.uow import SqlAdmissionUnitOfWork
 from app.modules.admission.ports.ai import PromptSource, QuotaOf, StructuredAi
-from app.modules.admission.ports.assistant import AssistantModel
 from app.modules.admission.ports.calendar import CalendarStore
 from app.modules.admission.ports.consent import (
     MemoryPurposeConsents,
@@ -86,14 +87,15 @@ from app.modules.admission.ports.consent import (
 from app.modules.admission.ports.courses import CourseSources
 from app.modules.admission.ports.essays import EssayReader
 from app.modules.admission.ports.staff import StaffDirectory
-from app.modules.admission.ports.student_search import StudentDataHit, StudentDataSearch
+from app.modules.admission.ports.student_search import StudentDataSearch
+from app.modules.admission.ports.uni_chat import UniChats, UniPageReader
 from app.modules.admission.ports.unit_of_work import UowFactory
 from app.modules.admission.ports.voice import VoiceAi
 from app.modules.notebooks.application.llm import NotebookLlm
 from app.shared.contracts.academic import AcademicMembership
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.identity import IdentityDirectory
-from app.shared.contracts.web_search import WebSearchGateway
+from app.shared.contracts.web_search import WebSearchApi, WebSearchGateway
 from app.shared.wiring import ModuleDeps
 
 
@@ -103,29 +105,6 @@ class UnavailableAi:
     async def json(self, **_: object) -> tuple[dict[str, object], str]:
         """Refuse: the AI is not built in this process."""
         raise RuntimeError("admission AI is not configured")
-
-
-class UnavailableAssistantModel:
-    """Stands in when no model is configured."""
-
-    async def turn(self, **_: object) -> dict[str, object]:
-        """Refuse: the AI is not built in this process."""
-        raise RuntimeError("admission AI is not configured")
-
-
-class NoStudentSearch:
-    """Stands in when no student search is built: it finds nothing."""
-
-    async def search(self, *_: object, **__: object) -> list[StudentDataHit]:
-        """No hits."""
-        return []
-
-    async def reindex(self, *_: object) -> int:
-        """Nothing to index."""
-        return 0
-
-    async def forget(self, *_: object) -> None:
-        """Nothing to forget."""
 
 
 @dataclass(slots=True)
@@ -147,6 +126,7 @@ class AdmissionServices:
     mentoring: MentoringService
     catalog: CatalogService
     catalog_proposals: CatalogProposalService
+    supp_prompts: SuppPromptService
     chooser: ListService
     chances: ChancesService
     catalog_research: CatalogResearch | None
@@ -155,8 +135,6 @@ class AdmissionServices:
     words: WordsService
     alignment: AlignmentService
     proofs: ProofService
-    help: HelpService
-    guest: GuestService
     documents: DocumentService
     transcripts: TranscriptService
     deadlines: DeadlineService
@@ -167,9 +145,12 @@ class AdmissionServices:
     essay_coach: EssayCoach
     essay_reader: EssayReader
     item_reviews: ItemReviewService
+    item_grades: ItemGradeService
     item_interviews: ItemInterviewService
     opportunity_intake: OpportunityIntake
     opportunities: OpportunityService
+    orgs: OrgService
+    opportunity_comments: OppCommentService
     opportunity_planner: OpportunityPlanner
     app_review: AppReviewService
     career: CareerService
@@ -179,10 +160,16 @@ class AdmissionServices:
     calendar: CalendarService
     tasks: TaskService
     test_scores: ScoreService
+    consultations: ConsultationService
+    profile_details: ProfileDetailsService
+    document_process: DocumentProcessService
     matching: MatchService
     readiness: ReadinessService
     tasks_ai: TaskSuggester
     assistant: AssistantService
+    memory_notes: MemoryNoteService
+    uni_chat: UniChatService
+    kb: KbService
 
 
 @dataclass(frozen=True, slots=True)
@@ -211,9 +198,11 @@ def build(
     lms_courses: LmsCourseLookup | None = None,
     voice: VoiceAi | None = None,
     student_search: StudentDataSearch | None = None,
-    assistant_model: AssistantModel | None = None,
     erasers: Sequence[Eraser] = (),
     final_erasers: Sequence[Eraser] = (),
+    uni_chats: UniChats | None = None,
+    uni_web: WebSearchApi | None = None,
+    uni_pages: UniPageReader | None = None,
 ) -> AdmissionServices:
     """Wire the module; without `purpose_consents` they live in process memory."""
     over = overrides or AdmissionOverrides()
@@ -231,10 +220,15 @@ def build(
     runtime = RuntimeSettingsService(uow_factory, ttl=settings.runtime_cache_seconds)
     model = ai or UnavailableAi()
     texts = prompts or BuiltinPrompts()
-    assistant_repo = SqlAssistantRepository(deps.sessionmaker)
+    kb = KbService(SqlKbRepository(deps.sessionmaker), deps.clock)
     limits = deps.effective_limits
+
+    async def org_exists(org_id: UUID) -> bool:
+        async with uow_factory() as uow:
+            return await uow.orgs.get(org_id) is not None
+
     opportunities = OpportunityService(
-        uow_factory, access, deps.clock, lms_courses, deps.rate_limiter
+        uow_factory, access, deps.clock, lms_courses, deps.rate_limiter, org_exists
     )
     chooser = ListService(uow_factory, access, runtime, settings, deps.clock, identity)
     calendar = CalendarService(
@@ -260,6 +254,17 @@ def build(
         texts,
         student_search,
     )
+    uni = UniChatService(
+        uow_factory,
+        access,
+        consents,
+        SqlUniChatRepository(deps.sessionmaker),
+        uni_chats,
+        UowAssistantData(uow_factory),
+        uni_web,
+        deps.clock,
+        uni_pages,
+    )
     return AdmissionServices(
         actor=ResolveAdmissionActor(uow_factory, membership, deps.clock, grades),
         access=access,
@@ -283,6 +288,9 @@ def build(
         ),
         catalog=CatalogService(uow_factory),
         catalog_proposals=CatalogProposalService(uow_factory, deps.clock),
+        supp_prompts=SuppPromptService(
+            uow_factory, CatalogProposalService(uow_factory, deps.clock).can_review
+        ),
         chooser=chooser,
         chances=ChancesService(uow_factory, runtime, settings),
         catalog_research=CatalogResearch(uow_factory, llm, texts) if llm else None,
@@ -446,6 +454,7 @@ def build(
             deps.clock,
         ),
         calendar=calendar,
+        uni_chat=uni,
     )
 
 

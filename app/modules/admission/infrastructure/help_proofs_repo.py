@@ -1,4 +1,5 @@
 """SQL repository of proofs, help requests and guest links."""
+"""SQL repository of the proofs of items."""
 
 import re
 from datetime import datetime
@@ -35,9 +36,12 @@ from app.modules.admission.infrastructure.orm.profile import (
     ProfileRow,
     ProofRow,
 )
+from app.modules.admission.domain.help_proofs import Proof, ProofKind, ProofStatus
+from app.modules.admission.infrastructure.orm.profile import ItemRow, ProofRow
 from app.shared.ids import new_id
 
 from sqlalchemy import func, select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 _FINISHED = ("closed", "cancelled", "expired", "declined")
@@ -115,6 +119,7 @@ def _like(query: str) -> str:
 
 class SqlHelpProofsRepository:
     """Proofs, help requests and guest links on one session."""
+    """Proofs on one session."""
 
     def __init__(self, session: AsyncSession) -> None:
         """Bind the session."""

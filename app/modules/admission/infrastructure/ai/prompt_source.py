@@ -5,10 +5,10 @@ from typing import Protocol
 from app.modules.admission.infrastructure.ai.prompts import (
     alignment_map,
     app_review,
-    assistant,
     career,
     essays,
     goal_plan,
+    item_grade,
     items,
     list_suggest,
     opportunity_intake,
@@ -45,7 +45,7 @@ BUILTIN_PROMPTS: dict[tuple[str, str], str] = {
     (AiTask.ADMIT_CAREER_SPIKE.value, "system"): career.SPIKE,
     (AiTask.ADMIT_LIST_SUGGEST.value, "system"): list_suggest.SYSTEM,
     (AiTask.ADMIT_TASKS_SUGGEST.value, "system"): tasks_suggest.SYSTEM,
-    (AiTask.ADMIT_ASSISTANT.value, "system"): assistant.SYSTEM,
+    (AiTask.ADMIT_ACTIVITY_GRADE.value, "system"): item_grade.SYSTEM,
 }
 
 

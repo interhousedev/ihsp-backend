@@ -1,4 +1,4 @@
-"""Adapters of the assistant ports.
+"""The assistant's read-only view of one student's data, over the unit of work."""
 
 The model runs over the notebook LLM, the data over the unit of work. Both only read.
 """
@@ -11,42 +11,6 @@ from typing import Any
 from uuid import UUID
 
 from app.modules.admission.ports.unit_of_work import UowFactory
-from app.modules.notebooks.application.llm import NotebookLlm
-from app.shared.ai_tasks import AiTask
-
-
-class GatewayAssistantModel:
-    """One tool-enabled request through the task's profile."""
-
-    def __init__(self, llm: NotebookLlm) -> None:
-        """Keep the client."""
-        self._llm = llm
-
-    async def turn(
-        self,
-        *,
-        task: AiTask,
-        system: str,
-        messages: list[dict[str, Any]],
-        tools: list[dict[str, Any]],
-        max_tokens: int,
-    ) -> dict[str, Any]:
-        """Return `{text, tool_calls, usage}` of the gateway result."""
-        profile = self._llm.profile(task)
-        result = await self._llm.gateway.complete(
-            model=profile.model,
-            system=system,
-            messages=messages,
-            tools=tools,
-            max_tokens=max_tokens,
-            provider=profile.provider(),
-            tuning=profile.tuning,
-        )
-        return {
-            "text": result.get("text", "") or "",
-            "tool_calls": list(result.get("tool_calls") or []),
-            "usage": result.get("usage", {}),
-        }
 
 
 def _plain(value: Any) -> Any:
@@ -118,6 +82,7 @@ class UowAssistantData:
             )
         return [
             {
+                "institution_id": str(e.institution_id),
                 "name": names.get(e.institution_id, ""),
                 "round": e.round,
                 "status": e.status,
@@ -150,3 +115,32 @@ class UowAssistantData:
         async with self._uow() as uow:
             rows = await uow.courses.list_for(student_id)
         return [_row(c) for c in rows if c.included]
+
+    async def essays(self, student_id: UUID) -> list[dict[str, Any]]:
+        """Essays without their text: title, kind, status and words."""
+        async with self._uow() as uow:
+            rows = await uow.essays.list_for(student_id)
+        return [
+            {
+                "title": e.title,
+                "kind": e.kind,
+                "status": e.status,
+                "word_count": e.word_count,
+                "word_limit": e.word_limit,
+            }
+            for e in rows
+        ]
+
+    async def documents(self, student_id: UUID) -> list[dict[str, Any]]:
+        """Metadata of the documents the student may see (never confidential)."""
+        async with self._uow() as uow:
+            rows = await uow.documents.for_students([student_id])
+        return [
+            {
+                "kind": d.kind,
+                "review_status": d.review_status,
+                "versions": d.current_version,
+            }
+            for d in rows
+            if d.visibility != "confidential"
+        ]

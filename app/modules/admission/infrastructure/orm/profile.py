@@ -115,7 +115,7 @@ class ItemRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
     __table_args__ = (
         check_in("kind", ("activity", "honor")),
         check_in("status", ("draft", "ready")),
-        max_len("position", 50),
+        max_len("position", 60),
         max_len("org", 100),
         CheckConstraint(
             "char_length(description) <= "
@@ -128,7 +128,7 @@ class ItemRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
 
     student_id: Mapped[UUID] = mapped_column(Uuid)
     kind: Mapped[str] = mapped_column(String(8))
-    position: Mapped[str] = mapped_column(String(50))
+    position: Mapped[str] = mapped_column(String(60))
     org: Mapped[str] = mapped_column(String(100), server_default="")
     description: Mapped[str] = mapped_column(String(150), server_default="")
     category: Mapped[str | None] = mapped_column(String(40))
@@ -144,6 +144,7 @@ class ItemRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
     status: Mapped[str] = mapped_column(String(8), server_default="draft")
     timing: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
     intend_in_college: Mapped[bool | None] = mapped_column(Boolean)
+    ai_grade: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
 
 
 class ItemMetricRow(IdMixin, CreatedMixin, UpdatedMixin, Base):

@@ -1,6 +1,7 @@
 """SQL repository of items, metrics, interview rounds and item reviews."""
 
 from collections.abc import Sequence
+from dataclasses import asdict
 from datetime import datetime
 from typing import Any, cast
 from uuid import UUID
@@ -9,7 +10,7 @@ from app.modules.admission.domain.errors import (
     AdmissionConflictError,
     AdmissionNotFoundError,
 )
-from app.modules.admission.domain.items import Item, ItemKind, ItemStatus
+from app.modules.admission.domain.items import Item, ItemGrade, ItemKind, ItemStatus
 from app.modules.admission.infrastructure.orm.profile import (
     ItemInterviewRow,
     ItemMetricRow,
@@ -53,7 +54,14 @@ def _item(row: ItemRow) -> Item:
         status=cast(ItemStatus, row.status),
         timing=tuple(row.timing or ()),
         intend_in_college=row.intend_in_college,
+        grade=_grade(row.ai_grade),
     )
+
+
+def _grade(raw: dict[str, Any] | None) -> ItemGrade | None:
+    if not raw:
+        return None
+    return ItemGrade(**raw)
 
 
 def _metric(row: ItemMetricRow) -> Metric:
@@ -185,6 +193,12 @@ class SqlItemRepository:
             await self._s.execute(
                 update(ItemRow).where(ItemRow.id == item_id).values(sort_order=index)
             )
+
+    async def set_grade(self, item_id: UUID, grade: ItemGrade) -> None:
+        """Store the AI grade of the item; the lock version stays."""
+        await self._s.execute(
+            update(ItemRow).where(ItemRow.id == item_id).values(ai_grade=asdict(grade))
+        )
 
     async def metrics_for(self, item_ids: Sequence[UUID]) -> dict[UUID, list[Metric]]:
         """Return the metrics of the items."""

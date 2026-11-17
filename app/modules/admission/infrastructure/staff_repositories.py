@@ -11,6 +11,7 @@ from app.modules.admission.domain.access import (
     ScopeKind,
     StaffRole,
 )
+from app.modules.admission.domain.consultations import ACTIVE
 from app.modules.admission.domain.errors import AdmissionConflictError
 from app.modules.admission.domain.staff import (
     AuditRecord,
@@ -34,12 +35,13 @@ from app.modules.admission.infrastructure.orm.calendar import (
     CalendarReminderRow,
 )
 from app.modules.admission.infrastructure.orm.catalog import CatalogProposalRow
-from app.modules.admission.infrastructure.orm.help import (
-    GuestLinkRow,
-    HelpRequestRow,
-    HelpResponseRow,
+from app.modules.admission.infrastructure.orm.consultations import ConsultationRow
+from app.modules.admission.infrastructure.orm.opp_social import (
+    OppCommentReportRow,
+    OppCommentRow,
 )
 from app.modules.admission.infrastructure.orm.opportunities import (
+    OpportunityRow,
     OpportunitySubmissionRow,
 )
 from app.modules.admission.infrastructure.orm.profile import (
@@ -55,8 +57,6 @@ from app.shared.ids import new_id
 from sqlalchemy import and_, delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-OPEN_HELP = ("open", "assigned", "accepted", "delivered")
-"""Help request statuses that still wait for something."""
 DONE_ITEMS = ("done", "n_a")
 SECRET_COLUMNS = frozenset({"token_hash", "token_prefix", "session_hash", "ip_hash"})
 """Columns that never leave the server in an export."""
@@ -233,10 +233,11 @@ class SqlStaffRepository:
         )
         helps = (
             select(
-                HelpRequestRow.student_id.label("sid"), func.count().label("open_help")
+                ConsultationRow.student_id.label("sid"),
+                func.count().label("open_help"),
             )
-            .where(HelpRequestRow.status.in_(OPEN_HELP))
-            .group_by(HelpRequestRow.student_id)
+            .where(ConsultationRow.status.in_(ACTIVE))
+            .group_by(ConsultationRow.student_id)
             .subquery()
         )
         stmt = (
@@ -381,13 +382,21 @@ def _student_tables() -> list[Any]:
     ]
 
 
-_USER_KEYED: Final[tuple[tuple[Any, str, bool], ...]] = (
-    (CalendarFeedRow.__table__, "user_id", False),
-    (CalendarReminderRow.__table__, "user_id", False),
-    (CatalogProposalRow.__table__, "proposed_by", True),
-    (OpportunitySubmissionRow.__table__, "submitted_by", True),
+_USER_KEYED: Final[tuple[tuple[Any, str], ...]] = (
+    (CalendarFeedRow.__table__, "user_id"),
+    (CalendarReminderRow.__table__, "user_id"),
+    (CatalogProposalRow.__table__, "proposed_by"),
+    (OpportunitySubmissionRow.__table__, "submitted_by"),
+    (OppCommentReportRow.__table__, "reporter_id"),
+    (OppCommentRow.__table__, "author_id"),
 )
-"""Tables keyed by user rather than student; proposals only while unapplied."""
+"""Tables keyed by user rather than student; their rows are deleted."""
+
+_USER_NULLED: Final[tuple[tuple[Any, str], ...]] = (
+    (KbArticleRow.__table__, "author_id"),
+    (OpportunityRow.__table__, "created_by"),
+)
+"""Shared content that outlives its author; the reference is cleared."""
 
 
 class SqlPrivacyRepository:
@@ -424,11 +433,15 @@ class SqlPrivacyRepository:
             n = cast(Any, res).rowcount or 0
             if n:
                 counts[table.name] = n
-        for table, col, pending_only in _USER_KEYED:
-            cond = [table.c[col] == student_id]
-            if pending_only:
-                cond.append(table.c.applied_id.is_(None))
-            res = await self._s.execute(delete(table).where(*cond))
+        for table, col in _USER_KEYED:
+            res = await self._s.execute(delete(table).where(table.c[col] == student_id))
+            n = cast(Any, res).rowcount or 0
+            if n:
+                counts[table.name] = n
+        for table, col in _USER_NULLED:
+            res = await self._s.execute(
+                update(table).where(table.c[col] == student_id).values({col: None})
+            )
             n = cast(Any, res).rowcount or 0
             if n:
                 counts[table.name] = n
@@ -447,13 +460,7 @@ class SqlPrivacyRepository:
                 select(ItemRow.id).where(ItemRow.student_id == student_id)
             ),
         )
-        replies = select(HelpResponseRow.file_id).where(
-            HelpResponseRow.file_id.is_not(None),
-            HelpResponseRow.help_request_id.in_(
-                select(HelpRequestRow.id).where(HelpRequestRow.student_id == student_id)
-            ),
-        )
-        rows = await self._s.scalars(docs.union(proofs, replies))
+        rows = await self._s.scalars(docs.union(proofs))
         return list(rows)
 
     async def audit(self, student_id: UUID, limit: int) -> list[AuditRecord]:
@@ -472,23 +479,3 @@ class SqlPrivacyRepository:
             .limit(limit)
         )
         return [AuditRecord(*r) for r in rows.tuples()]
-
-    async def revoke_sharing(self, student_id: UUID, now: dt.datetime) -> None:
-        """Revoke guest links and unassign helpers."""
-        await self._s.execute(
-            update(GuestLinkRow)
-            .where(
-                GuestLinkRow.student_id == student_id,
-                GuestLinkRow.revoked_at.is_(None),
-            )
-            .values(revoked_at=now, revoked_reason="consent_withdrawn")
-        )
-        await self._s.execute(
-            update(HelpRequestRow)
-            .where(
-                HelpRequestRow.student_id == student_id,
-                HelpRequestRow.helper_user_id.is_not(None),
-                HelpRequestRow.status.in_(("assigned", "accepted", "delivered")),
-            )
-            .values(helper_user_id=None, status="open")
-        )

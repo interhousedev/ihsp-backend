@@ -7,10 +7,17 @@ from app.modules.admission.infrastructure.career_repository import (
 )
 from app.modules.admission.infrastructure.catalog_proposals_repository import (
     SqlCatalogProposalRepository,
+from app.modules.admission.infrastructure.documents_repositories import (
+    SqlChecklistRepository,
+    SqlDeadlineRepository,
+    SqlDocumentRepository,
+    SqlTranscriptRepository,
 )
-from app.modules.admission.infrastructure.chooser_repositories import (
-    SqlCatalogRepository,
-    SqlListRepository,
+from app.modules.admission.infrastructure.essays_repository import (
+    SqlEssayRepository,
+)
+from app.modules.admission.infrastructure.goal_plan_repository import (
+    SqlGoalRepository,
 )
 from app.modules.admission.infrastructure.documents_repositories import (
     SqlChecklistRepository,
@@ -32,6 +39,10 @@ from app.modules.admission.infrastructure.matching_repository import (
     SqlDecisionRepository,
     SqlPreferenceRepository,
 )
+from app.modules.admission.infrastructure.opp_social_repository import (
+    SqlOppCommentRepository,
+    SqlOrgRepository,
+)
 from app.modules.admission.infrastructure.opportunities_repository import (
     SqlOpportunityRepository,
 )
@@ -48,6 +59,9 @@ from app.modules.admission.infrastructure.staff_repositories import (
     SqlCommentRepository,
     SqlPrivacyRepository,
     SqlStaffRepository,
+)
+from app.modules.admission.infrastructure.supp_prompts_repository import (
+    SqlSuppPromptRepository,
 )
 from app.modules.admission.infrastructure.tasks_repository import SqlTaskRepository
 from app.modules.admission.infrastructure.test_scores_repository import (
@@ -71,6 +85,8 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
     staff: SqlStaffRepository
     comments: SqlCommentRepository
     privacy: SqlPrivacyRepository
+    orgs: SqlOrgRepository
+    opp_comments: SqlOppCommentRepository
     help_proofs: SqlHelpProofsRepository
     documents: SqlDocumentRepository
     checklist: SqlChecklistRepository
@@ -85,6 +101,10 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
     test_scores: SqlScoreRepository
     preferences: SqlPreferenceRepository
     decisions: SqlDecisionRepository
+    consultations: SqlConsultationRepository
+    profile_details: SqlProfileDetailsRepository
+    memory_notes: SqlMemoryNoteRepository
+    supp_prompts: SqlSuppPromptRepository
 
     def __init__(
         self,
@@ -109,6 +129,8 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
         self.staff = SqlStaffRepository(self.session)
         self.comments = SqlCommentRepository(self.session)
         self.privacy = SqlPrivacyRepository(self.session)
+        self.orgs = SqlOrgRepository(self.session)
+        self.opp_comments = SqlOppCommentRepository(self.session)
         self.help_proofs = SqlHelpProofsRepository(self.session)
         self.documents = SqlDocumentRepository(self.session)
         self.checklist = SqlChecklistRepository(self.session)
@@ -123,6 +145,10 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
         self.test_scores = SqlScoreRepository(self.session)
         self.preferences = SqlPreferenceRepository(self.session)
         self.decisions = SqlDecisionRepository(self.session)
+        self.consultations = SqlConsultationRepository(self.session)
+        self.profile_details = SqlProfileDetailsRepository(self.session)
+        self.memory_notes = SqlMemoryNoteRepository(self.session)
+        self.supp_prompts = SqlSuppPromptRepository(self.session)
 
     async def cancel_notification(self, dedupe_key: str) -> bool:
         """Cancel a still-pending notification; False when it was claimed."""

@@ -1,6 +1,5 @@
 """SQL repositories of the admission foundation."""
 
-import datetime as dt
 from collections.abc import Sequence
 from typing import Any, cast
 from uuid import UUID
@@ -24,7 +23,6 @@ from app.modules.admission.infrastructure.orm.access import (
     StaffAssignmentRow,
     StaffRoleRow,
 )
-from app.modules.admission.infrastructure.orm.help import HelpRequestRow
 from app.modules.admission.infrastructure.orm.profile import CourseRow, ProfileRow
 from app.modules.admission.ports.repositories import AuditEvent, OptIns
 from app.shared.ids import new_id
@@ -32,9 +30,6 @@ from app.shared.ids import new_id
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
-
-LIVE_HELP_STATUSES = ("assigned", "accepted", "delivered")
-"""Help request statuses in which the assigned helper may see the request."""
 
 
 def _role(row: StaffRoleRow) -> StaffRole:
@@ -117,16 +112,6 @@ class SqlAccessRepository:
             for a, r in rows.tuples()
         )
 
-    async def helper_of(self, user_id: UUID, now: dt.datetime) -> frozenset[UUID]:
-        """Return the students of the user's live help requests."""
-        rows = await self._s.scalars(
-            select(HelpRequestRow.student_id).where(
-                HelpRequestRow.helper_user_id == user_id,
-                HelpRequestRow.status.in_(LIVE_HELP_STATUSES),
-                HelpRequestRow.expires_at > now,
-            )
-        )
-        return frozenset(rows)
 
     async def opt_ins(self, user_ids: Sequence[UUID]) -> dict[UUID, OptIns]:
         """Return the mentoring switches of existing profiles."""
