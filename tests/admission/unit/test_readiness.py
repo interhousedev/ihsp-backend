@@ -74,10 +74,14 @@ class ReadinessUow(FakeUow):
         self.goals = Rows(data["goals"], "list_for")
         self.career = SimpleNamespace(plan=self._plan)
         self.checklist = SimpleNamespace(for_student=self._checklist)
+        self.profile_details = SimpleNamespace(get_quiz=self._quiz)
         self.data = data
 
     async def _plan(self, student_id: UUID) -> Any:
         return self.data["career"][0] if self.data["career"] else None
+
+    async def _quiz(self, student_id: UUID, quiz: str) -> Any:
+        return self.data.get("quiz")
 
     async def _checklist(self, student_id: UUID) -> list[Any]:
         return self.data["checklist"]

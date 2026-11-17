@@ -44,12 +44,8 @@ def test_stored_row_wins_even_when_revoked() -> None:
 
 def test_actor_kinds() -> None:
     ent = Entitlement(USER, "alumni", 2025, None, NOW)
-    assert AdmissionActor(USER, ent, frozenset(), False).kind == "applicant"
-    staff = AdmissionActor(USER, None, frozenset({Role.COUNSELOR}), False)
+    assert AdmissionActor(USER, ent, frozenset()).kind == "applicant"
+    staff = AdmissionActor(USER, None, frozenset({Role.COUNSELOR}))
     assert staff.kind == "staff" and staff.may_enter
-    helper = AdmissionActor(USER, None, frozenset(), True)
-    assert helper.helper_only and helper.may_enter
-    nobody = AdmissionActor(USER, None, frozenset(), False)
+    nobody = AdmissionActor(USER, None, frozenset())
     assert nobody.kind == "none" and not nobody.may_enter
-    blocked = AdmissionActor(USER, ent, frozenset(), False, blocked=True)
-    assert blocked.kind == "none"

@@ -15,6 +15,7 @@ from app.modules.admission.application.interview import (
     MAX_ROUNDS,
     ItemInterviewService,
 )
+from app.modules.admission.application.item_grade import ItemGradeService
 from app.modules.admission.application.items import ItemService, MetricDraft
 from app.modules.admission.application.review import ItemReviewService
 from app.modules.admission.domain.errors import (
@@ -26,7 +27,7 @@ from app.modules.admission.domain.errors import (
     ProjectedDateRequiredError,
     QuotaExceededError,
 )
-from app.modules.admission.domain.items import MAX_DRAFTS, MAX_HONORS, Item
+from app.modules.admission.domain.items import MAX_DRAFTS, MAX_HONORS, Item, ItemGrade
 from app.modules.admission.infrastructure.ai.prompt_source import BuiltinPrompts
 from app.modules.admission.ports.consent import AI, STAFF_VIEW
 from app.modules.admission.ports.items import (
@@ -95,6 +96,9 @@ class MemItems:
     async def set_order(self, ordered: Sequence[UUID]) -> None:
         for n, i in enumerate(ordered):
             self.d.items[i] = replace(self.d.items[i], position=n)
+
+    async def set_grade(self, item_id: UUID, grade: ItemGrade) -> None:
+        self.d.items[item_id] = replace(self.d.items[item_id], grade=grade)
 
     async def metrics_for(self, item_ids: Sequence[UUID]) -> dict[UUID, list[Metric]]:
         return {i: list(self.d.metrics.get(i, [])) for i in item_ids}
@@ -500,3 +504,103 @@ async def test_review_and_interview_need_ai_consent(
     with pytest.raises(ConsentRequiredError):
         await w.interviews.step(ctx, item.id, {}, "en")
     assert w.ai.calls == []
+
+
+class _NoLimit:
+    async def hit(self, key: str, *, limit: int, window_seconds: int) -> None:
+        return None
+
+
+def _grader(w: World) -> ItemGradeService:
+    return ItemGradeService(
+        lambda: ItemsUow(w.store, w.data),
+        w.policy,
+        w.ai,
+        w.consents,
+        BuiltinPrompts(),
+        _NoLimit(),  # type: ignore[arg-type]
+        _per_day(10),
+    )
+
+
+def _graded(**kw: str) -> dict[str, Any]:
+    return {
+        "title_grade": "B",
+        "title_tip": "Name the role.",
+        "description_grade": "C",
+        "description_tip": "Add a number.",
+    } | kw
+
+
+async def test_grade_is_cached_by_content_and_locale() -> None:
+    w = World(_graded(), _graded(), _graded())
+    grader = _grader(w)
+    ctx = await w.ctx()
+    item = await w.item()
+    first = await grader.grade(ctx, item.id, "en")
+    again = await grader.grade(ctx, item.id, "en")
+    assert first == again and len(w.ai.calls) == 1
+    stored = w.data.items[item.id]
+    assert stored.grade == first and not stored.grade_stale
+    await grader.grade(ctx, item.id, "ru")
+    assert len(w.ai.calls) == 2
+    changed = replace(w.data.items[item.id], description="Led 40 members")
+    w.data.items[item.id] = changed
+    assert changed.grade_stale
+    await grader.grade(ctx, item.id, "ru")
+    assert len(w.ai.calls) == 3
+
+
+async def test_grade_rules() -> None:
+    w = World(_graded(title_grade="Z"))
+    grader = _grader(w)
+    item = await w.item()
+    with pytest.raises(AdmissionNotFoundError):
+        await grader.grade(await w.ctx(OTHER), item.id, "en")
+    with pytest.raises(AiInvalidOutputError):
+        await grader.grade(await w.ctx(), item.id, "en")
+    assert w.data.items[item.id].grade is None
+    w.consents.grants[STUDENT] = frozenset({STAFF_VIEW})
+    with pytest.raises(ConsentRequiredError):
+        await grader.grade(await w.ctx(), item.id, "en")
+
+
+async def test_move_honor_between_columns_and_reorder() -> None:
+    w = World()
+    ctx = await w.ctx()
+    a = (await w.items.create(ctx, _ready_honor())).item
+    b = (await w.items.create(ctx, _ready_honor())).item
+    draft = (await w.items.create(ctx, _bare())).item
+    await w.items.move(ctx, b.id, "ready", 0)
+    assert w.data.items[b.id].position == 0 and w.data.items[a.id].position == 1
+    await w.items.move(ctx, a.id, "draft", 0)
+    assert w.data.items[a.id].status == "draft"
+    assert w.data.items[a.id].position == 0 and w.data.items[draft.id].position == 1
+    with pytest.raises(ItemIncompleteError):
+        await w.items.move(ctx, draft.id, "ready", 0)
+
+
+async def test_move_honor_to_ready_respects_cap() -> None:
+    w = World()
+    ctx = await w.ctx()
+    for _ in range(MAX_HONORS):
+        await w.items.create(ctx, _ready_honor())
+    spare = (await w.items.create(ctx, replace(_ready_honor(), status="draft"))).item
+    with pytest.raises(ItemLimitError):
+        await w.items.move(ctx, spare.id, "ready", 0)
+
+
+async def test_item_validation_of_category_hours_and_grades() -> None:
+    w = World()
+    ctx = await w.ctx()
+    for kw in (
+        {"category": "state_regional"},
+        {"hours_per_week": 169},
+        {"weeks_per_year": 53},
+        {"grades": (8,)},
+    ):
+        bad = Item(new_id(), STUDENT, "honor", "Win", "", "", **kw)
+        with pytest.raises(InvalidAnswerError):
+            await w.items.create(ctx, bad)
+    ok = Item(new_id(), STUDENT, "activity", "Club", "", "", category="stem_research")
+    assert (await w.items.create(ctx, ok)).item.category == "stem_research"

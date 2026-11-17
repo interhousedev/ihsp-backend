@@ -25,6 +25,7 @@ from app.modules.admission.domain.staff import (
     SavedView,
     StaffUser,
 )
+from app.modules.admission.domain.supp_prompts import SuppPrompt
 from app.modules.admission.ports.repositories import AuditEvent, OptIns
 from app.shared.actor import Actor
 from app.shared.contracts.academic import StudentRef
@@ -43,9 +44,9 @@ class FakeStore:
         self.proposals: dict[UUID, CatalogProposal] = {}
         self.applied: list[CatalogProposal] = []
         self.known_targets: set[UUID] = set()
+        self.supp_prompts: dict[UUID, dict[str, list[SuppPrompt]]] = {}
         self.entitlements: dict[UUID, Entitlement] = {}
         self.assignments: dict[UUID, tuple[Assignment, ...]] = {}
-        self.helpers: dict[UUID, frozenset[UUID]] = {}
         self.opt_ins: dict[UUID, OptIns] = {}
         self.audit: list[AuditEvent] = []
         self.courses: dict[UUID, Course] = {}
@@ -68,7 +69,6 @@ class FakeStore:
         self.export_tables: dict[str, list[dict[str, Any]]] = {}
         self.erased: list[UUID] = []
         self.stored_file_ids: list[UUID] = []
-        self.sharing_revoked: list[UUID] = []
         self.audit_records: list[AuditRecord] = []
 
 
@@ -81,9 +81,6 @@ class _Access:
 
     async def assignments_for(self, user_id: UUID) -> tuple[Assignment, ...]:
         return self.s.assignments.get(user_id, ())
-
-    async def helper_of(self, user_id: UUID, now: dt.datetime) -> frozenset[UUID]:
-        return self.s.helpers.get(user_id, frozenset())
 
     async def opt_ins(self, user_ids: Sequence[UUID]) -> dict[UUID, OptIns]:
         return {u: self.s.opt_ins[u] for u in user_ids if u in self.s.opt_ins}
@@ -424,9 +421,6 @@ class _Privacy:
     async def audit(self, student_id: UUID, limit: int) -> list[AuditRecord]:
         return self.s.audit_records[:limit]
 
-    async def revoke_sharing(self, student_id: UUID, now: dt.datetime) -> None:
-        self.s.sharing_revoked.append(student_id)
-
 
 class _CatalogProposals:
     def __init__(self, s: FakeStore) -> None:
@@ -494,6 +488,29 @@ class _Checklist:
         )
 
 
+class _SuppPrompts:
+    def __init__(self, s: FakeStore) -> None:
+        self.s = s
+
+    async def institution_exists(self, institution_id: UUID) -> bool:
+        return (
+            institution_id in self.s.known_targets
+            or institution_id in self.s.institutions
+        )
+
+    async def by_cycle(self, institution_id: UUID) -> dict[str, list[SuppPrompt]]:
+        return dict(self.s.supp_prompts.get(institution_id, {}))
+
+    async def replace(
+        self, institution_id: UUID, cycle: str, prompts: Sequence[SuppPrompt]
+    ) -> None:
+        by = self.s.supp_prompts.setdefault(institution_id, {})
+        if prompts:
+            by[cycle] = list(prompts)
+        else:
+            by.pop(cycle, None)
+
+
 class _NoDeadlines:
     async def current(self, **_: Any) -> list[Any]:
         return []
@@ -520,6 +537,7 @@ class FakeUow:
         self.checklist: Any = _Checklist(s.checklist)
         self.deadlines: Any = _NoDeadlines()
         self.notify: Any = lambda *drafts: s.notifications.extend(drafts)
+        self.supp_prompts = _SuppPrompts(s)
 
     async def __aenter__(self) -> Self:
         return self
@@ -576,6 +594,14 @@ class FakeSources:
 
     async def lms_courses(self, actor: Actor) -> list[Course]:
         return list(self.lms)
+
+    async def lms_catalog(self, actor: Actor, query: str | None) -> list[Course]:
+        q = (query or "").lower()
+        catalog = getattr(self, "catalog", [])
+        return [c for c in catalog if q in c.title.lower()]
+
+    async def lms_enroll(self, actor: Actor, course_id: UUID) -> None:
+        self.enrolled = [*getattr(self, "enrolled", []), course_id]
 
 
 def student_ref(user_id: UUID, group_id: UUID, group_name: str = "11-A") -> StudentRef:

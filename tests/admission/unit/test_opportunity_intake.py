@@ -38,8 +38,6 @@ TAXONOMY = [
 def ctx(
     *,
     staff: bool = True,
-    helper: bool = False,
-    blocked: bool = False,
     student: bool = False,
 ) -> Any:
     roles = frozenset({Role.STUDENT}) if student else frozenset()
@@ -118,14 +116,14 @@ async def test_blocked_urls_are_never_fetched_and_telegram_uses_the_preview() ->
     assert "<event_text>" in ai.calls[0]["user"]
 
 
-async def test_helpers_may_research_and_others_are_refused() -> None:
+async def test_staff_may_research_and_others_are_refused() -> None:
     fetcher: Any = RecordingFetcher()
     intake = OpportunityIntake(FakeAi(answer()), FakePrompts(), fetcher=fetcher)
     draft = await intake.research(
-        ctx(staff=False, helper=True), "Olympiad", locale="en", today=TODAY, taxonomy=[]
+        ctx(), "Olympiad", locale="en", today=TODAY, taxonomy=[]
     )
     assert draft.title == "Math olympiad"
-    for denied in (ctx(staff=False), ctx(blocked=True)):
+    for denied in (ctx(staff=False),):
         with pytest.raises(AdmissionForbiddenError):
             await intake.research(
                 denied, "Olympiad", locale="en", today=TODAY, taxonomy=[]

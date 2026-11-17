@@ -158,16 +158,3 @@ async def test_no_consent_limits_to_403() -> None:
     with pytest.raises(AdmissionForbiddenError):
         await w.policy.require(ctx, STUDENT, Permission.PROFILE_READ)
     assert w.store.audit == []
-
-
-async def test_helper_reaches_only_helped_student() -> None:
-    w = World()
-    w.store.helpers[STAFF] = frozenset({STUDENT})
-    ctx = await w.ctx(STAFF)
-    assert ctx.admission.helper_only
-    await w.policy.require(ctx, STUDENT, Permission.HELP_RESPOND)
-    with pytest.raises(AdmissionForbiddenError):
-        await w.policy.require(ctx, STUDENT, Permission.PROFILE_READ)
-    with pytest.raises(AdmissionNotFoundError):
-        await w.policy.require(ctx, OTHER, Permission.HELP_RESPOND)
-    assert w.policy.scope(ctx).student_ids == frozenset({STUDENT})

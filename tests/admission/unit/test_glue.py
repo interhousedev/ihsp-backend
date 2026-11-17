@@ -51,7 +51,7 @@ def test_app_map_has_the_admission_pages() -> None:
     assert {
         "admission-chooser",
         "admission-documents",
-        "admission-help",
+        "admission-consultations",
         "admission-items",
         "admission-profile",
     } <= ids

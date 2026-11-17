@@ -88,6 +88,7 @@ def test_the_catalog_lists_the_places_that_call_a_model() -> None:
         "admit_profile_words",
         "admit_item_interview",
         "admit_item_review",
+        "admit_activity_grade",
         "admit_item_rewrite_fix",
         "admit_essay_review",
         "admit_alignment_map",

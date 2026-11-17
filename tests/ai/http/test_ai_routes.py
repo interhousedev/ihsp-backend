@@ -133,7 +133,7 @@ async def test_approval_over_http_and_the_tool_call_view(
     )
     assert set(call) == {
         *("id", "tool", "access", "status", "note"),
-        *("preview", "reject_reason", "expires_at", "document"),
+        *("preview", "reject_reason", "expires_at", "document", "cards"),
     }
     assert call["status"] == "pending_approval" and call["access"] == "write"
     assert set(call["preview"]) == {"title", "fields", "items"}

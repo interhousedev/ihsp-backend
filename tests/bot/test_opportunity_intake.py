@@ -91,9 +91,7 @@ def install(harness: Harness, *, staff: bool) -> tuple[FakeAi, Fetcher, Opportun
     async def execute(actor: Any) -> Any:
         return SimpleNamespace(
             actor=actor,
-            admission=SimpleNamespace(
-                is_staff=staff, has_help_grants=False, blocked=False
-            ),
+            admission=SimpleNamespace(is_staff=staff, blocked=False),
         )
 
     harness.world.container.admission = SimpleNamespace(

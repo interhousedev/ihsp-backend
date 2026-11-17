@@ -38,7 +38,9 @@ NOT_STUDENT_DATA = frozenset(
         "exam_dates",
         "facts",
         "institutions",
+        "kb_articles",
         "officer_settings",
+        "orgs",
         "opportunities",
         "opportunity_taxonomy",
         "places",
@@ -52,6 +54,8 @@ NOT_STUDENT_DATA = frozenset(
         "staff_assignments",
         "staff_roles",
         "staff_saved_views",
+        "supp_prompts",
+        "uni_web_cache",
         "test_catalog",
         "audit_events",
         "entitlements",
@@ -122,6 +126,8 @@ def test_every_admission_table_is_accounted_for() -> None:
         "calendar_reminders",
         "catalog_proposals",
         "opportunity_submissions",
+        "opportunity_comments",
+        "opportunity_comment_reports",
     }
     changed = True
     while changed:

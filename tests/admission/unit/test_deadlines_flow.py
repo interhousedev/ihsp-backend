@@ -17,7 +17,7 @@ from app.shared.actor import Role
 from app.shared.ids import new_id
 from app.shared.notifications import NotificationType
 from tests.admission.unit.fakes import NOW
-from tests.admission.unit.fakes_documents import DocKit
+from tests.admission.unit.fakes_documents import DocKit, DocUow
 from tests.admission.unit.test_access_policy import _assign
 
 import pytest
@@ -62,6 +62,45 @@ async def test_documents_counselor_can_manage_and_edit_versions() -> None:
     assert [x.id for x in await k.deadlines.listing(ctx, institution_id=INST)] == [
         d2.id
     ]
+
+
+async def test_patch_with_explicit_null_clears_nullable_fields() -> None:
+    k = DocKit()
+    ctx = await _admin(k)
+    d1 = await k.deadlines.create(
+        ctx,
+        institution_id=INST,
+        cycle=2026,
+        round="RD",
+        data=dataclasses.replace(CONFIRMED, source_text="site"),
+    )
+    patch = {"local_date": None, "source_text": None}
+    d2 = await k.deadlines.edit(ctx, d1.id, DeadlineInput.from_patch(patch))
+    assert d2.local_date is None and d2.source_text is None
+    assert d2.cutoff_time == dt.time(23, 59)
+    # a field missing from the patch is kept
+    d3 = await k.deadlines.edit(ctx, d2.id, DeadlineInput.from_patch({}))
+    assert d3.status == "confirmed"
+
+
+async def test_remove_runs_in_one_unit_of_work(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    k = DocKit()
+    ctx = await _admin(k)
+    d1 = await k.deadlines.create(
+        ctx, institution_id=INST, cycle=2026, round="RD", data=CONFIRMED
+    )
+    commits: list[int] = []
+    real = DocUow.commit
+
+    async def counting(self: DocUow) -> None:
+        commits.append(1)
+        await real(self)
+
+    monkeypatch.setattr(DocUow, "commit", counting)
+    await k.deadlines.remove(ctx, d1.id)
+    assert len(commits) == 1
 
 
 async def test_edit_moves_milestones_and_notifies_students() -> None:

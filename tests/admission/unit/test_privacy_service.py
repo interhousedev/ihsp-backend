@@ -9,7 +9,6 @@ from app.modules.admission.ports.consent import (
     AI,
     PURPOSE_VERSIONS,
     PURPOSES,
-    SHARING,
     STAFF_VIEW,
     MemoryPurposeConsents,
 )
@@ -43,16 +42,6 @@ async def test_grant_and_withdraw_with_non_ai_mode() -> None:
         "consent.withdrawn",
     ]
 
-
-async def test_withdrawing_staff_view_revokes_sharing() -> None:
-    w = World()
-    svc = _svc(w)
-    ctx = await w.ctx(STUDENT, Role.STUDENT)
-    await svc.grant(ctx, [STAFF_VIEW, SHARING])
-    await svc.withdraw(ctx, SHARING)
-    assert w.store.sharing_revoked == [STUDENT]
-    await svc.withdraw(ctx, AI)
-    assert w.store.sharing_revoked == [STUDENT]
 
 
 async def test_unknown_purpose_is_404() -> None:
