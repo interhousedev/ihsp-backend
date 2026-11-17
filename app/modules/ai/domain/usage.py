@@ -98,6 +98,7 @@ _FEATURE_OF: dict[str, str] = {
     "admit_career_professions": "admission",
     "admit_career_majors": "admission",
     "admit_career_spike": "admission",
+    "admit_uni_advice": "admission",
     "admit_list_suggest": "admission",
     "admit_tasks_suggest": "admission",
     "admit_assistant": "admission",

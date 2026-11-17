@@ -122,3 +122,49 @@ async def test_double_review_and_stale_lock() -> None:
     await _svc(w).review(ctx, p.id, approve=True, note=None, lock_version=0)
     with pytest.raises(InvalidTransitionError):
         await _svc(w).review(ctx, p.id, approve=False, note=None, lock_version=1)
+
+
+async def _logo_ctx(w: World, who: str) -> AdmissionContext:
+    if who == "curator":
+        return await _curator(w)
+    roles = {"admin": Role.ADMIN, "teacher": Role.TEACHER, "counselor": Role.COUNSELOR}
+    return await w.ctx(STAFF, roles[who])
+
+
+@pytest.mark.parametrize("who", ["admin", "curator"])
+async def test_logo_edit_by_curators_is_audited(who: str) -> None:
+    w = World()
+    ctx = await _logo_ctx(w, who)
+    target = new_id()
+    w.store.known_targets.add(target)
+    await _svc(w).edit_logo(ctx, target, zoom=2.5, fit="circle")
+    assert w.store.logos[target] == (2.5, "circle")
+    assert w.store.audit[-1].action == "catalog.logo_edited"
+    assert w.store.audit[-1].object_id == target
+
+
+@pytest.mark.parametrize("who", ["teacher", "counselor"])
+async def test_logo_edit_needs_a_live_curate_grant(who: str) -> None:
+    w = World()
+    ctx = await _logo_ctx(w, who)
+    target = new_id()
+    w.store.known_targets.add(target)
+    with pytest.raises(AdmissionForbiddenError):
+        await _svc(w).edit_logo(ctx, target, zoom=1.0, fit=None)
+    assert target not in w.store.logos and w.store.audit == []
+
+
+async def test_logo_edit_rejects_other_roles_and_bad_values() -> None:
+    w = World()
+    target = new_id()
+    w.store.known_targets.add(target)
+    student = await w.ctx(STUDENT, Role.STUDENT)
+    with pytest.raises(AdmissionForbiddenError):
+        await _svc(w).edit_logo(student, target, zoom=1.0, fit=None)
+    curator = await _curator(w)
+    for zoom, fit in ((0.4, None), (3.1, None), (1.0, "cover"), (None, None)):
+        with pytest.raises(ValidationFailedError):
+            await _svc(w).edit_logo(curator, target, zoom=zoom, fit=fit)
+    with pytest.raises(AdmissionNotFoundError):
+        await _svc(w).edit_logo(curator, new_id(), zoom=1.0, fit=None)
+    assert w.store.audit == []

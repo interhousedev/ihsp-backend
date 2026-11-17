@@ -233,3 +233,42 @@ async def test_last_used_is_updated_at_most_once_a_minute(auth_world: World) -> 
         Role.STUDENT
         in (await verify(auth_world, "GET", "/v1/me/x", created.secret)).roles
     )
+
+
+async def test_admission_tokens_expire_within_90_days(auth_world: World) -> None:
+    """An admission scope caps the expiry; the token stops working when it ends."""
+    user = await auth_world.add_user(roles={Role.STUDENT})
+    with pytest.raises(PersonalTokenInvalidError):
+        await create(auth_world, user, scopes=["admission:read"], expires_in_days=365)
+    created = await create(
+        auth_world, user, scopes=["admission:read"], expires_in_days=90
+    )
+    verifier = auth_world.auth.personal_token_verifier
+    actor = await verifier.verify_personal(created.secret)
+    assert actor.scopes == frozenset({"admission:read"})
+    auth_world.clock.advance(days=91)
+    with pytest.raises(UnauthorizedError):
+        await verifier.verify_personal(created.secret)
+
+
+async def test_admission_erase_revokes_only_admission_tokens(
+    auth_world: World,
+) -> None:
+    """Erasing admission data stops the user's admission tokens, not the others."""
+    user = await auth_world.add_user(roles={Role.STUDENT})
+    other = await auth_world.add_user(login="other.user", roles={Role.STUDENT})
+    admission = await create(
+        auth_world, user, scopes=["admission:documents"], expires_in_days=90
+    )
+    plain = await create(auth_world, user)
+    foreign = await create(
+        auth_world, other, scopes=["admission:read"], expires_in_days=90
+    )
+
+    await auth_world.auth.revoke_admission_tokens.execute(user.id)
+
+    verifier = auth_world.auth.personal_token_verifier
+    with pytest.raises(UnauthorizedError):
+        await verifier.verify_personal(admission.secret)
+    await verifier.verify_personal(plain.secret)
+    await verifier.verify_personal(foreign.secret)

@@ -11,11 +11,14 @@ All notable changes to this project are documented here. The format follows [Kee
 - The `admission` Hydra client, the `admission.ihsu.uz` host in compose and nginx, and the `X-IHSP-App` CORS header.
 - Admission workflow: journey path, preferences questionnaire, Discover matches with swipe decisions and undo, per-university chances (hidden unless `ESTIMATES_STUDENT_VISIBLE`), university logo and cover, documents checklist priorities, mentoring switches, and voice input behind the AI consent.
 - Demo catalog: Wikimedia logos and covers, institution type and setting facts, and checklist priorities for the demo student.
+- Admission refinement round: activity and honor categories with A–E grades and Common App limits, self-reported outcomes with deadline nudges, prep plans, a catalog of opportunities and scholarships (tuition, money, fellowships; local and international) with organization logos, comments and reports, a per-university AI chat with automatic research once per student and university (Exa results cached 14 days), supplemental essay prompts per institution and cycle, consultations in place of help requests, a staff-edited knowledge base, scoped MCP personal tokens, logo zoom and fit, and per-university academic and activity suggestions.
 
 ### Changed
 
 - Admission: a binding round without an affordability sign-off answers `admission/affordability_gate`; proofs with several sources answer `admission/proof_source`; help notifications carry `request_id`.
 - The AI consent purpose is version 2 (it now mentions audio); students re-consent once.
+- Admission access: the outcomes summary shows hidden names only to admins and assigned staff, and audits each view; consultations are limited to admins and staff assigned to the student; supplemental prompts and logo edits need `catalog:curate`; MCP `read_document` needs the new `admission:documents` scope and the student's consent; erasing a student also clears authored KB articles and opportunities and revokes admission tokens (`opportunities.created_by` is nullable, migration `admission_0034`). `AdmissionActor.blocked` and the `blocked` ineligible reason are removed.
+- Admission uni chats run on the fast tier, so automatic research no longer uses the weekly smart limit; deadline PATCH clears fields sent as null; deadline removal is one transaction; KB status filtering happens in SQL.
 
 ### Security
 

@@ -87,3 +87,16 @@ def test_balance_verdicts() -> None:
     assert balance(["reach", "target", "target", "target"]).status == "no_safety"
     assert balance(["reach"] * 3 + ["safety"]).status == "too_many_reach"
     assert balance(["reach", "target", "safety", None]).status == "balanced"
+
+
+def test_every_round_code_has_a_locale_line() -> None:
+    """ADM-CAL: no round code renders as a raw `calendar-round-*` key."""
+    import json
+    from pathlib import Path
+
+    from app.modules.admission.application.calendar import KNOWN_ROUNDS
+
+    for loc in ("uz", "ru", "en"):
+        lines = json.loads(Path(f"locales/{loc}/admission_calendar.json").read_text())
+        for code in KNOWN_ROUNDS:
+            assert f"calendar-round-{code}" in lines, (loc, code)

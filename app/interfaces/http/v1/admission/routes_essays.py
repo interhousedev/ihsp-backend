@@ -319,9 +319,52 @@ class CoachOutlineOut(BaseModel):
     sections: list[CoachSectionOut]
 
 
+class CoachSentenceOut(BaseModel):
+    """A comment on one sentence."""
+
+    quote: str
+    comment: str
+
+
+class CoachReviewIn(BaseModel):
+    """How to review the draft; `excerpt` is used by `partial`."""
+
+    mode: Literal["overall", "sentences", "both", "partial"] = "overall"
+    excerpt: str = Field(default="", max_length=BODY_MAX)
+
+
+class CoachRefineIn(BaseModel):
+    """A passage to polish."""
+
+    action: Literal["reword", "transition", "merge"]
+    text: str = Field(min_length=1, max_length=2000)
+
+
+class CoachHintsOut(BaseModel):
+    """Hints for polishing a passage."""
+
+    hints: list[str]
+
+
+class LifeStoryIn(BaseModel):
+    """A free life story."""
+
+    text: str = Field(min_length=1, max_length=BODY_MAX)
+
+
+class LifeStoryOut(BaseModel):
+    """What the story shows."""
+
+    drivers: list[str]
+    support: list[str]
+    leave_out: list[str]
+    ideas: list[str]
+
+
 class CoachFeedbackOut(BaseModel):
     """Comments on the draft against its prompt and word limit."""
 
+    sentences: list[CoachSentenceOut] = []
     summary: str
     strengths: list[str]
     suggestions: list[str]
@@ -506,6 +549,53 @@ async def coach_feedback(
     )
 
 
+async def coach_review(
+    essay_id: UUID,
+    body: CoachReviewIn,
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+    lang: Lang = None,
+) -> CoachFeedbackOut:
+    """Review my draft overall, by sentence, both or one excerpt (AI consent)."""
+    f = await container.admission.essay_coach.review(
+        ctx, essay_id, _locale(lang), body.mode, body.excerpt
+    )
+    return CoachFeedbackOut(
+        summary=f.summary,
+        strengths=f.strengths,
+        suggestions=f.suggestions,
+        word_count=f.word_count,
+        word_limit=f.word_limit,
+        sentences=[
+            CoachSentenceOut(quote=n.quote, comment=n.comment) for n in f.sentences
+        ],
+    )
+
+
+async def coach_refine(
+    essay_id: UUID,
+    body: CoachRefineIn,
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+    lang: Lang = None,
+) -> CoachHintsOut:
+    """Hints to reword, connect or merge a passage; never new text (AI consent)."""
+    out = await container.admission.essay_coach.refine(
+        ctx, essay_id, _locale(lang), body.action, body.text
+    )
+    return CoachHintsOut(hints=out)
+
+
+async def read_life_story(
+    body: LifeStoryIn, container: ContainerDep, ctx: AdmissionCtx, lang: Lang = None
+) -> LifeStoryOut:
+    """What drives me, what to support and leave out (AI consent)."""
+    r = await container.admission.essay_coach.life_story(ctx, body.text, _locale(lang))
+    return LifeStoryOut(
+        drivers=r.drivers, support=r.support, leave_out=r.leave_out, ideas=r.ideas
+    )
+
+
 async def coach_expand(
     idea_id: UUID, container: ContainerDep, ctx: AdmissionCtx, lang: Lang = None
 ) -> CoachExpansionOut:
@@ -595,6 +685,27 @@ _route(
     "POST",
     "coach_essay_feedback",
     response_model=CoachFeedbackOut,
+)
+_route(
+    "/essays/{essay_id}/coach/review",
+    coach_review,
+    "POST",
+    "coach_essay_review",
+    response_model=CoachFeedbackOut,
+)
+_route(
+    "/essays/{essay_id}/coach/refine",
+    coach_refine,
+    "POST",
+    "coach_essay_refine",
+    response_model=CoachHintsOut,
+)
+_route(
+    "/essay-life-story",
+    read_life_story,
+    "POST",
+    "read_essay_life_story",
+    response_model=LifeStoryOut,
 )
 _route(
     "/essay-ideas", list_ideas, "GET", "list_essay_ideas", response_model=IdeaListOut

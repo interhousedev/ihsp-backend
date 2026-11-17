@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 from app.interfaces.mcp.admin.server import build_admin_server
+from app.interfaces.mcp.admission.server import build_admission_server
 from app.interfaces.mcp.constants import MOUNT_PREFIX, SCOPES_BY_SERVER, SERVERS
 from app.interfaces.mcp.deps import McpDeps, deps_from_container
 from app.interfaces.mcp.endpoints import resource_url
@@ -85,6 +86,10 @@ def build_apps(deps: McpDeps) -> list[McpApp]:
         server = _BUILDERS[name](deps)
         app = server.streamable_http_app()  # creates server.session_manager
         apps.append((f"{MOUNT_PREFIX}/{name}", app, server.session_manager.run()))
+    if deps.admission is not None and deps.personal_tokens is not None:
+        admission = build_admission_server(deps)
+        app = admission.streamable_http_app()
+        apps.append((f"{MOUNT_PREFIX}/admission", app, admission.session_manager.run()))
     return apps
 
 

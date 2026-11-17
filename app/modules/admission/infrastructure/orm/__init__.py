@@ -12,6 +12,7 @@ from app.modules.admission.infrastructure.orm.matching import *  # noqa: F401,F4
 from app.modules.admission.infrastructure.orm.memory_notes import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.opp_social import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.opportunities import *  # noqa: F401,F403
+from app.modules.admission.infrastructure.orm.outcomes import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.profile import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.student_chunks import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.supp_prompts import *  # noqa: F401,F403

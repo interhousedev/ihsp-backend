@@ -43,9 +43,7 @@ def ctx(
     roles = frozenset({Role.STUDENT}) if student else frozenset()
     return SimpleNamespace(
         actor=SimpleNamespace(roles=roles),
-        admission=SimpleNamespace(
-            is_staff=staff, has_help_grants=helper, blocked=blocked
-        ),
+        admission=SimpleNamespace(is_staff=staff),
     )
 
 

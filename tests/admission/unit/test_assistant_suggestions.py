@@ -18,6 +18,8 @@ from app.shared.actor import Actor, Role
 from app.shared.contracts.admission_assistant import SuggestionCard
 from tests.admission.unit.fakes import FakeSources
 
+import pytest
+
 ACTOR = Actor(user_id=uuid4(), roles=frozenset({Role.STUDENT}))
 
 

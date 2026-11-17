@@ -10,6 +10,7 @@ from app.modules.ai.application.views import (
     DocumentCardView,
     PreviewFieldView,
     PreviewView,
+    SuggestionCardView,
     ToolCallView,
 )
 from app.modules.ai.domain.chat import Chat, ChatMessage
@@ -77,6 +78,7 @@ class ChatViews:
             expires_at=call.expires_at,
             document=self._document(call),
             ui_block=self._ui_block(call),
+            cards=self._cards(call),
         )
 
     @staticmethod
@@ -86,6 +88,26 @@ class ChatViews:
             return None
         block = (call.result or {}).get("block")
         return block if isinstance(block, str) and block else None
+
+    @staticmethod
+    def _cards(call: ToolCall) -> list[SuggestionCardView]:
+        """The suggestion cards of a finished ``admission_suggest`` call."""
+        if call.tool != "admission_suggest" or call.status is not ToolStatus.DONE:
+            return []
+        raw = (call.result or {}).get("cards")
+        if not isinstance(raw, list):
+            return []
+        return [
+            SuggestionCardView(
+                type=card["type"],
+                id=str(card["id"]),
+                title=str(card["title"]),
+                reason=str(card.get("reason", "")),
+                link=str(card.get("link", "")),
+            )
+            for card in raw
+            if isinstance(card, dict) and {"type", "id", "title"} <= card.keys()
+        ]
 
     @staticmethod
     def _document(call: ToolCall) -> DocumentCardView | None:

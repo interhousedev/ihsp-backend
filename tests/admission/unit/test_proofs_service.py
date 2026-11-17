@@ -10,7 +10,7 @@ from app.modules.admission.domain.errors import (
 )
 from app.modules.admission.domain.help_proofs import detect_url_kind, validate_proof_url
 from app.shared.safe_fetch import FetchedBody
-from tests.admission.unit.help_kit import OTHER, HelpKit
+from tests.admission.unit.proofs_kit import OTHER, ProofKit
 
 import pytest
 
@@ -59,14 +59,14 @@ def test_kind_detection() -> None:
 
 async def test_url_checked_with_title() -> None:
     f: Any = Fetcher()
-    k = HelpKit(f)
+    k = ProofKit(f)
     res = await k.proofs.add(await k.ctx(), k.item, url="https://example.com/a")
     assert res.proof.status == "checked" and res.title == "My site"
     assert [p.status for p in await k.proofs.list(await k.ctx(), k.item)] == ["checked"]
 
 
 async def test_failed_and_linkedin_never_checked() -> None:
-    k = HelpKit(Fetcher(fail=True))
+    k = ProofKit(Fetcher(fail=True))
     ctx = await k.ctx()
     bad = await k.proofs.add(ctx, k.item, url="https://example.com/a")
     assert bad.proof.status == "failed"
@@ -75,7 +75,7 @@ async def test_failed_and_linkedin_never_checked() -> None:
 
 
 async def test_text_proof_unverifiable_and_source_exactly_one() -> None:
-    k = HelpKit(Fetcher())
+    k = ProofKit(Fetcher())
     ctx = await k.ctx()
     res = await k.proofs.add(ctx, k.item, pasted_text="I did it")
     assert res.proof.status == "unverifiable"
@@ -84,7 +84,7 @@ async def test_text_proof_unverifiable_and_source_exactly_one() -> None:
 
 
 async def test_stranger_cannot_touch_item() -> None:
-    k = HelpKit(Fetcher())
+    k = ProofKit(Fetcher())
     other = await k.ctx(OTHER)
     with pytest.raises(AdmissionNotFoundError):
         await k.proofs.add(other, k.item, pasted_text="x")

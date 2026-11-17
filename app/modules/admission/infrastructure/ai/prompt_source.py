@@ -16,6 +16,7 @@ from app.modules.admission.infrastructure.ai.prompts import (
     profile_words,
     research,
     tasks_suggest,
+    uni_advice,
 )
 from app.shared.ai_tasks import AiTask
 
@@ -43,6 +44,7 @@ BUILTIN_PROMPTS: dict[tuple[str, str], str] = {
     (AiTask.ADMIT_CAREER_PROFESSIONS.value, "system"): career.PROFESSIONS,
     (AiTask.ADMIT_CAREER_MAJORS.value, "system"): career.MAJORS,
     (AiTask.ADMIT_CAREER_SPIKE.value, "system"): career.SPIKE,
+    (AiTask.ADMIT_UNI_ADVICE.value, "system"): uni_advice.SYSTEM,
     (AiTask.ADMIT_LIST_SUGGEST.value, "system"): list_suggest.SYSTEM,
     (AiTask.ADMIT_TASKS_SUGGEST.value, "system"): tasks_suggest.SYSTEM,
     (AiTask.ADMIT_ACTIVITY_GRADE.value, "system"): item_grade.SYSTEM,

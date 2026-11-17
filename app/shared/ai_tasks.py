@@ -110,6 +110,7 @@ class AiTask(StrEnum):
     ADMIT_CAREER_PROFESSIONS = "admit_career_professions"
     ADMIT_CAREER_MAJORS = "admit_career_majors"
     ADMIT_CAREER_SPIKE = "admit_career_spike"
+    ADMIT_UNI_ADVICE = "admit_uni_advice"
     ADMIT_LIST_SUGGEST = "admit_list_suggest"
     ADMIT_TASKS_SUGGEST = "admit_tasks_suggest"
     ADMIT_ASSISTANT = "admit_assistant"
@@ -190,6 +191,12 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
     ),
     AiTask.ADMIT_CAREER_SPIKE: _admission(
         "Admission: one primary spike with evidence from activities and gaps.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_UNI_ADVICE: _admission(
+        "Admission: questions, academic and activity advice for one university.",
         model=NOTEBOOK_MODEL,
         budget_weight=1,
         reasoning_effort=_NO_REASONING,

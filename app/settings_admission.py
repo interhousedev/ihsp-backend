@@ -3,7 +3,6 @@
 from pydantic import BaseModel, Field, SecretStr
 
 
-
 class ReadinessSettings(BaseModel):
     """Defaults of the college readiness score (admins override the weights)."""
 

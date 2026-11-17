@@ -19,6 +19,8 @@ from app.modules.admission.domain.kb import Article
 from app.shared.actor import Actor, Role
 from tests.fakes.clock import FixedClock
 
+import pytest
+
 
 class FakeKb:
     """In-memory KbRepository; the query matches a substring of title or body."""

@@ -64,6 +64,17 @@ async def test_documents_counselor_can_manage_and_edit_versions() -> None:
     ]
 
 
+async def test_edit_of_the_citation_keeps_status_and_date() -> None:
+    k = DocKit()
+    ctx = await _admin(k)
+    d1 = await k.deadlines.create(
+        ctx, institution_id=INST, cycle=2026, round="RD", data=CONFIRMED
+    )
+    d2 = await k.deadlines.edit(ctx, d1.id, DeadlineInput(source_text="site"))
+    assert d2.status == "confirmed" and d2.local_date == d1.local_date
+    assert d2.source_text == "site"
+
+
 async def test_patch_with_explicit_null_clears_nullable_fields() -> None:
     k = DocKit()
     ctx = await _admin(k)
@@ -81,6 +92,17 @@ async def test_patch_with_explicit_null_clears_nullable_fields() -> None:
     # a field missing from the patch is kept
     d3 = await k.deadlines.edit(ctx, d2.id, DeadlineInput.from_patch({}))
     assert d3.status == "confirmed"
+
+
+async def test_remove_leaves_no_live_version() -> None:
+    k = DocKit()
+    ctx = await _admin(k)
+    d1 = await k.deadlines.create(
+        ctx, institution_id=INST, cycle=2026, round="RD", data=CONFIRMED
+    )
+    await k.deadlines.remove(ctx, d1.id)
+    assert await k.deadlines.listing(ctx, institution_id=INST) == []
+    assert {d.status for d in k.d.deadlines.values()} == {"confirmed", "unknown"}
 
 
 async def test_remove_runs_in_one_unit_of_work(
@@ -101,6 +123,15 @@ async def test_remove_runs_in_one_unit_of_work(
     monkeypatch.setattr(DocUow, "commit", counting)
     await k.deadlines.remove(ctx, d1.id)
     assert len(commits) == 1
+
+
+async def test_staff_listing_resolves_university_names() -> None:
+    k = DocKit()
+    ctx = await _admin(k)
+    await k.deadlines.create(
+        ctx, institution_id=INST, cycle=2026, round="RD", data=CONFIRMED
+    )
+    assert await k.deadlines.institution_names(ctx, {INST}) == {INST: "Uni"}
 
 
 async def test_edit_moves_milestones_and_notifies_students() -> None:

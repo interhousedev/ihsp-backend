@@ -6,6 +6,10 @@ from app.modules.admission.infrastructure.orm.access import (
     StaffAssignmentRow,
     StaffSavedViewRow,
 )
+from app.modules.admission.infrastructure.orm.calendar import (
+    CalendarFeedRow,
+    CalendarReminderRow,
+)
 from app.shared.personal_data import PersonalTable, SqlPersonalData, Treatment
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker

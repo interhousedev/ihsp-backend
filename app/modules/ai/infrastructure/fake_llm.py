@@ -27,6 +27,7 @@ from app.modules.ai.infrastructure.fake_tasks import (
     build_tasks_document,
 )
 from app.modules.ai.infrastructure.fake_teacher import build_teacher_document
+from app.modules.ai.infrastructure.fake_uni_advice import build_uni_advice_document
 from app.shared.contracts.ai import LlmTuning
 from app.shared.ids import new_id
 
@@ -117,6 +118,7 @@ class FakeLlmGateway:
             built = built or build_teacher_document(schema_name, messages)
             built = built or build_admission_document(schema_name, system)
             built = built or build_career_document(schema_name, messages)
+            built = built or build_uni_advice_document(schema_name, messages)
             built = built or build_list_suggest_document(schema_name, messages)
             built = built or build_tasks_document(schema_name)
             built = built or build_item_grade_document(schema_name)

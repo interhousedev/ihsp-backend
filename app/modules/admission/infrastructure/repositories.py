@@ -112,7 +112,6 @@ class SqlAccessRepository:
             for a, r in rows.tuples()
         )
 
-
     async def opt_ins(self, user_ids: Sequence[UUID]) -> dict[UUID, OptIns]:
         """Return the mentoring switches of existing profiles."""
         if not user_ids:

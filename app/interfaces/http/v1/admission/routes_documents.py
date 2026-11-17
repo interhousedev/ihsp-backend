@@ -274,6 +274,7 @@ class DeadlineOut(BaseModel):
 
     id: UUID
     institution_id: UUID
+    institution_name: str = ""
     cycle: int
     round: str
     program_id: UUID | None
@@ -289,10 +290,12 @@ class DeadlineOut(BaseModel):
     version: int
 
     @classmethod
-    def of(cls, d: Deadline) -> "DeadlineOut":
-        """Map the deadline."""
-        keys = set(cls.model_fields) - set()
-        return cls(**{k: getattr(d, k) for k in keys})
+    def of(cls, d: Deadline, institution_name: str = "") -> "DeadlineOut":
+        """Map the deadline; the caller supplies the university name."""
+        keys = set(cls.model_fields) - {"institution_name"}
+        return cls(
+            institution_name=institution_name, **{k: getattr(d, k) for k in keys}
+        )
 
 
 class MilestoneOut(BaseModel):
@@ -661,7 +664,10 @@ async def staff_deadlines(
     items = await container.admission.deadlines.listing(
         ctx, institution_id=institution_id, cycle=cycle
     )
-    return [DeadlineOut.of(d) for d in items]
+    names = await container.admission.deadlines.institution_names(
+        ctx, {d.institution_id for d in items}
+    )
+    return [DeadlineOut.of(d, names.get(d.institution_id, "")) for d in items]
 
 
 async def create_deadline(
@@ -697,7 +703,7 @@ async def edit_deadline(
 async def remove_deadline(
     deadline_id: UUID, container: ContainerDep, ctx: AdmissionCtx
 ) -> None:
-    """Mark a deadline unknown."""
+    """Retire a deadline."""
     await container.admission.deadlines.remove(ctx, deadline_id)
 
 

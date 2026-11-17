@@ -4,6 +4,8 @@ import datetime as dt
 from typing import Literal
 from uuid import UUID
 
+from app.interfaces.http.v1.admission.schemas_opp_comments import OppCommentOut
+from app.interfaces.http.v1.admission.schemas_orgs import OrgOut
 from app.modules.admission.application.opportunities import (
     OpportunityDeadline,
     PlanView,

@@ -4,7 +4,7 @@ from app.shared.db import models  # noqa: F401  (imports every module's ORM pack
 from app.shared.db.base import Base
 
 EXPECTED_TABLES = {
-    # admission (73)
+    # admission (85)
     "admission.admission_stats",
     "admission.affordability_checks",
     "admission.aid_policies",
@@ -252,10 +252,10 @@ EXPECTED_TABLES = {
 
 
 def test_metadata_contains_every_table_of_the_models_readme() -> None:
-    """spec -> Models plus the later modules (217 tables)."""
+    """spec -> Models plus the later modules (224 tables)."""
     actual = {table.fullname for table in Base.metadata.tables.values()}
 
-    assert len(EXPECTED_TABLES) == 217
+    assert len(EXPECTED_TABLES) == 224
     assert actual == EXPECTED_TABLES
 
 

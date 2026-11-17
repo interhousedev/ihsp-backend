@@ -85,6 +85,20 @@ class SqlCatalogProposalRepository:
         """Return whether the row to edit exists."""
         return await self._s.get(_TARGETS[kind], target_id) is not None
 
+    async def set_logo(
+        self, institution_id: UUID, *, zoom: float | None, fit: str | None
+    ) -> bool:
+        """Set the given logo fields of an institution; False when it is unknown."""
+        row = await self._s.get(InstitutionRow, institution_id)
+        if row is None:
+            return False
+        if zoom is not None:
+            row.logo_zoom = zoom
+        if fit is not None:
+            row.logo_fit = fit
+        await self._s.flush()
+        return True
+
     async def apply(self, proposal: CatalogProposal) -> UUID:
         """Create or update the catalog row and publish it."""
         source = SourceRow(

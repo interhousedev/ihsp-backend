@@ -2,12 +2,18 @@
 
 import datetime as dt
 from decimal import Decimal
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep
+from app.interfaces.http.v1.admission.routes_items import _locale
 from app.modules.admission.application.chooser import ListItem
 from app.modules.admission.application.estimates import EstimateView
+from app.modules.admission.domain.catalog_display import (
+    clean_deadlines,
+    highlights,
+    resolve_logo_fit,
+)
 from app.modules.admission.domain.chooser import (
     AffordabilityCheck,
     CatalogFilters,
@@ -16,7 +22,7 @@ from app.modules.admission.domain.chooser import (
 )
 from app.modules.admission.domain.errors import AdmissionNotFoundError
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Header, Query
 from pydantic import BaseModel, ConfigDict, Field
 
 router = APIRouter(prefix="/v1/admission", tags=["admission"])
@@ -24,16 +30,41 @@ router = APIRouter(prefix="/v1/admission", tags=["admission"])
 Round = Literal["ED", "ED2", "EA", "REA", "RD", "ROLLING"]
 Bucket = Literal["reach", "target", "safety"]
 Status = Literal["considering", "applying", "applied", "dropped"]
+CYCLE_RE = r"^[0-9]{4}-[0-9]{2}$"
+Lang = Annotated[str | None, Header(alias="Accept-Language")]
 
 
 class FactOut(BaseModel):
     """One cited catalog fact."""
 
     value: Any
-    source_url: str | None
-    year: int | None
-    note: str | None
     verified: bool
+
+
+class SourceOut(BaseModel):
+    """Where a fact came from; kept apart from the facts themselves."""
+
+    key: str
+    url: str | None
+    year: int | None
+
+
+class HighlightOut(BaseModel):
+    """One ready-to-show line of the institution card."""
+
+    key: str
+    label: str
+    value_text: str
+
+
+class DeadlineOut(BaseModel):
+    """One application deadline with plain text only."""
+
+    plan: str
+    date: dt.date
+    notify_by: dt.date | None
+    cycle: str | None
+    label_short: str
 
 
 class InstitutionOut(BaseModel):
@@ -46,6 +77,13 @@ class InstitutionOut(BaseModel):
     city: str | None
     verified: bool
     facts: dict[str, FactOut]
+    sources: list[SourceOut]
+    highlights: list[HighlightOut]
+    deadlines: list[DeadlineOut]
+    aliases: list[str]
+    name_local: str | None
+    logo_zoom: float
+    logo_fit: Literal["circle", "contain"]
     coa_total: Decimal | None
     coa_currency: str | None
     aid_basis: str | None
@@ -55,8 +93,9 @@ class InstitutionOut(BaseModel):
     cover_url: str | None
 
     @classmethod
-    def of(cls, i: CatalogInstitution) -> "InstitutionOut":
-        """Map the domain institution."""
+    def of(cls, i: CatalogInstitution, locale: str = "en") -> "InstitutionOut":
+        """Map the domain institution; text is localized, notes are left out."""
+        deadlines = i.facts.get("deadlines")
         return cls(
             id=i.id,
             slug=i.slug,
@@ -65,15 +104,23 @@ class InstitutionOut(BaseModel):
             city=i.city,
             verified=i.verified,
             facts={
-                k: FactOut(
-                    value=f.value,
-                    source_url=f.source_url,
-                    year=f.year,
-                    note=f.note,
-                    verified=f.verified,
-                )
+                k: FactOut(value=f.value, verified=f.verified)
                 for k, f in i.facts.items()
+                if k != "deadlines"
             },
+            sources=[
+                SourceOut(key=k, url=f.source_url, year=f.year)
+                for k, f in i.facts.items()
+                if k != "deadlines" and (f.source_url or f.year)
+            ],
+            highlights=[HighlightOut(**h) for h in highlights(i, locale)],
+            deadlines=[
+                DeadlineOut(**d)
+                for d in clean_deadlines(deadlines.value if deadlines else None, locale)
+            ],
+            aliases=list(i.aliases),
+            name_local=i.name_local,
+            logo_zoom=i.logo_zoom,
             logo_fit=resolve_logo_fit(i.logo_fit, i.logo_aspect),
             coa_total=i.coa_total,
             coa_currency=i.coa_currency,
@@ -206,16 +253,17 @@ class ListEntryOut(BaseModel):
     affordability_status: str
     affordability: AffordabilityOut | None
     estimate: EstimateOut
+    cycle: str | None
     lock_version: int
 
     @classmethod
-    def of(cls, i: ListItem) -> "ListEntryOut":
+    def of(cls, i: ListItem, locale: str = "en") -> "ListEntryOut":
         """Map the list item."""
         e = i.entry
         return cls(
             id=e.id,
             student_id=e.student_id,
-            institution=InstitutionOut.of(i.institution),
+            institution=InstitutionOut.of(i.institution, locale),
             round=e.round,
             status=e.status,
             bucket=e.bucket,
@@ -229,6 +277,7 @@ class ListEntryOut(BaseModel):
                 else None
             ),
             estimate=EstimateOut.of(i.estimate),
+            cycle=e.cycle,
             lock_version=e.lock_version,
         )
 
@@ -242,6 +291,7 @@ class ListAddIn(BaseModel):
     round: Round = "RD"
     bucket: Bucket | None = None
     notes: str | None = Field(default=None, max_length=2000)
+    cycle: str | None = Field(default=None, pattern=CYCLE_RE)
 
 
 class ListPatchIn(BaseModel):
@@ -254,6 +304,7 @@ class ListPatchIn(BaseModel):
     status: Status | None = None
     bucket: Bucket | None = None
     notes: str | None = Field(default=None, max_length=2000)
+    cycle: str | None = Field(default=None, pattern=CYCLE_RE)
 
 
 class LabelOverrideIn(BaseModel):
@@ -289,22 +340,35 @@ async def search_institutions(
     country: str | None = None,
     field: str | None = None,
     city_type: str | None = None,
-    study_type: str | None = None,
+    institution_type: str | None = None,
+    setting: str | None = None,
+    test_policy: str | None = None,
+    merit_intl: bool | None = None,
+    plan: str | None = None,
+    cycle: str | None = Query(None, pattern=CYCLE_RE),
     max_crime_index: float | None = None,
     aid: str | None = None,
     scholarships: bool | None = None,
     max_cost: Decimal | None = None,
     cursor: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=50),
+    accept_language: Lang = None,
 ) -> InstitutionPageOut:
-    """Filter the catalog by field, city, study type, safety, aid and cost."""
+    """Search and filter the catalog; name and alias matches come first.
+
+    `setting` is the campus setting (`city_type` is the same filter).
+    """
     page = await container.admission.catalog.search(
         CatalogFilters(
             q=q,
             country=country,
             field=field,
-            city_type=city_type,
-            study_type=study_type,
+            city_type=setting or city_type,
+            institution_type=institution_type,
+            test_policy=test_policy,
+            merit_intl=merit_intl,
+            plan=plan,
+            cycle=cycle,
             max_crime_index=max_crime_index,
             aid=aid,
             scholarships=scholarships,
@@ -314,17 +378,21 @@ async def search_institutions(
         limit=limit,
     )
     return InstitutionPageOut(
-        items=[InstitutionOut.of(i) for i in page.items],
+        items=[InstitutionOut.of(i, _locale(accept_language)) for i in page.items],
         next_cursor=page.next_cursor,
     )
 
 
 async def get_institution(
-    institution_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+    institution_id: UUID,
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+    accept_language: Lang = None,
 ) -> InstitutionOut:
-    """Return one institution with cited facts."""
+    """Return one institution with localized highlights and deadlines."""
     return InstitutionOut.of(
-        await container.admission.catalog.institution(institution_id)
+        await container.admission.catalog.institution(institution_id),
+        _locale(accept_language),
     )
 
 
@@ -359,18 +427,27 @@ async def summarise_institution(
     return SummaryOut(**await research.summarise(institution_id, language))
 
 
-async def get_my_list(container: ContainerDep, ctx: AdmissionCtx) -> list[ListEntryOut]:
-    """Return my university list."""
-    items = await container.admission.chooser.view(ctx, ctx.user_id)
-    return [ListEntryOut.of(i) for i in items]
+async def get_my_list(
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+    cycle: str | None = Query(None, pattern=CYCLE_RE),
+    accept_language: Lang = None,
+) -> list[ListEntryOut]:
+    """Return my university list, optionally one cycle (`2026-27`)."""
+    items = await container.admission.chooser.view(ctx, ctx.user_id, cycle)
+    return [ListEntryOut.of(i, _locale(accept_language)) for i in items]
 
 
 async def get_student_list(
-    student_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+    student_id: UUID,
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+    cycle: str | None = Query(None, pattern=CYCLE_RE),
+    accept_language: Lang = None,
 ) -> list[ListEntryOut]:
-    """Return a student's list as the caller may see it."""
-    items = await container.admission.chooser.view(ctx, student_id)
-    return [ListEntryOut.of(i) for i in items]
+    """Return a student's list as the caller may see it, optionally one cycle."""
+    items = await container.admission.chooser.view(ctx, student_id, cycle)
+    return [ListEntryOut.of(i, _locale(accept_language)) for i in items]
 
 
 async def add_to_list(
@@ -383,6 +460,7 @@ async def add_to_list(
         round_=body.round,
         bucket=body.bucket,
         notes=body.notes,
+        cycle=body.cycle,
     )
     return ListEntryOut.of(item)
 
@@ -399,6 +477,7 @@ async def patch_list_entry(
         status=body.status,
         bucket=body.bucket,
         notes=body.notes,
+        cycle=body.cycle,
         clear_bucket="bucket" in body.model_fields_set and body.bucket is None,
     )
     return ListEntryOut.of(item)

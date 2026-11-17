@@ -103,3 +103,15 @@ async def test_the_fake_stream_ends_with_the_tool_calls_when_tools_are_given() -
 
     assert items[-1]["tool_calls"][0]["name"] == "get_homework"
     assert "usage" in items[-1]
+
+
+async def test_echo_leaves_out_the_web_results_block() -> None:
+    """A web-search turn's results block is prompt input, never part of the answer."""
+    message = (
+        "Research this university\n\n"
+        "[Web search results. Cite them like ⟦w1⟧.]\n"
+        "<web_results>\n[W1] Page (site.org)\nhttps://site.org\n</web_results>"
+    )
+    result = await ask(FakeLlmGateway(), {"role": "user", "content": message})
+
+    assert result["text"] == "(fake) Research this university"

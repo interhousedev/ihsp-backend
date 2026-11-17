@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "iht-web",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "--cwd", "/Users/aliakseych/Projects/Social/iht/iht-web", "--filter", "./apps/{id,sp,staff,admin,lms,library}", "dev"],
+      "port": 3002
+    }
+  ]
+}

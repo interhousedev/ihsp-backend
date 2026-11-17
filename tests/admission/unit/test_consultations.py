@@ -33,6 +33,8 @@ from tests.admission.unit.test_access_policy import (
 )
 from tests.fakes.clock import FixedClock
 
+import pytest
+
 pytestmark = pytest.mark.asyncio
 
 SOON = NOW + dt.timedelta(days=2)
@@ -251,6 +253,7 @@ async def test_reject_notifies_the_proposing_staff_member() -> None:
     assert [(n.user_id, n.payload["event"]) for n in k.notified] == [
         (STAFF, "rejected")
     ]
+
 
 async def test_illegal_transitions() -> None:
     k = Kit()

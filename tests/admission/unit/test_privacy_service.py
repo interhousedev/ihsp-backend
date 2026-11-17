@@ -43,7 +43,6 @@ async def test_grant_and_withdraw_with_non_ai_mode() -> None:
     ]
 
 
-
 async def test_unknown_purpose_is_404() -> None:
     w = World()
     svc = _svc(w)

@@ -42,3 +42,15 @@ def build_tasks_document(schema_name: str) -> dict[str, Any] | None:
             },
         ]
     }
+
+
+def build_item_grade_document(schema_name: str) -> dict[str, Any] | None:
+    """Return a schema-valid activity grade (title B, description C), else None."""
+    if schema_name != "item_grade":
+        return None
+    return {
+        "title_grade": "B",
+        "title_tip": "Name your role and the organization exactly.",
+        "description_grade": "C",
+        "description_tip": "Add a number and a result, and say what you did.",
+    }

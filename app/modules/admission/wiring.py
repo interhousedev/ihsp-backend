@@ -26,8 +26,10 @@ from app.modules.admission.application.chances import ChancesService
 from app.modules.admission.application.chooser import CatalogService, ListService
 from app.modules.admission.application.comments import CommentService
 from app.modules.admission.application.config import GetConfig
+from app.modules.admission.application.consultations import ConsultationService
 from app.modules.admission.application.courses import CourseService
 from app.modules.admission.application.deadlines import DeadlineService
+from app.modules.admission.application.document_process import DocumentProcessService
 from app.modules.admission.application.documents import DocumentService
 from app.modules.admission.application.essays import (
     EssayCoach,
@@ -39,9 +41,12 @@ from app.modules.admission.application.goal_plan_suggest import GoalPlanSuggeste
 from app.modules.admission.application.interview import ItemInterviewService
 from app.modules.admission.application.item_grade import ItemGradeService
 from app.modules.admission.application.items import ItemService
+from app.modules.admission.application.kb import KbService
 from app.modules.admission.application.list_plan import ListPlanService
 from app.modules.admission.application.matching import MatchService
+from app.modules.admission.application.memory_notes import MemoryNoteService
 from app.modules.admission.application.mentoring import MentoringService
+from app.modules.admission.application.nudges import NudgeService
 from app.modules.admission.application.opportunities import (
     LmsCourseLookup,
     OpportunityService,
@@ -49,9 +54,12 @@ from app.modules.admission.application.opportunities import (
 from app.modules.admission.application.opportunity_comments import OppCommentService
 from app.modules.admission.application.opportunity_intake import OpportunityIntake
 from app.modules.admission.application.opportunity_planner import OpportunityPlanner
+from app.modules.admission.application.orgs import OrgService
+from app.modules.admission.application.outcomes import OutcomeService
 from app.modules.admission.application.privacy import Eraser, PrivacyService
 from app.modules.admission.application.profile import ProfileService
 from app.modules.admission.application.profile_alignment import AlignmentService
+from app.modules.admission.application.profile_details import ProfileDetailsService
 from app.modules.admission.application.proofs import ProofService
 from app.modules.admission.application.readiness import ReadinessService
 from app.modules.admission.application.review import ItemReviewService
@@ -62,6 +70,7 @@ from app.modules.admission.application.tasks import TaskService
 from app.modules.admission.application.tasks_suggest import TaskSuggester
 from app.modules.admission.application.test_scores import ScoreService
 from app.modules.admission.application.transcripts import TranscriptService
+from app.modules.admission.application.uni_advice import UniAdviceService
 from app.modules.admission.application.uni_chat import UniChatService
 from app.modules.admission.application.voice import VoiceService
 from app.modules.admission.application.words import WordsService
@@ -74,6 +83,7 @@ from app.modules.admission.infrastructure.calendar_repository import (
     SqlCalendarStore,
 )
 from app.modules.admission.infrastructure.catalog_data import study_fields as _fields
+from app.modules.admission.infrastructure.kb_repository import SqlKbRepository
 from app.modules.admission.infrastructure.uni_chat_repository import (
     SqlUniChatRepository,
 )
@@ -138,6 +148,8 @@ class AdmissionServices:
     documents: DocumentService
     transcripts: TranscriptService
     deadlines: DeadlineService
+    outcomes: OutcomeService
+    nudges: NudgeService
     items: ItemService
     goal_plan: GoalPlanService
     goal_plan_suggest: GoalPlanSuggester
@@ -168,7 +180,9 @@ class AdmissionServices:
     tasks_ai: TaskSuggester
     assistant: AssistantService
     memory_notes: MemoryNoteService
+    application_data: UowAssistantData  # read-only view for /mcp/admission
     uni_chat: UniChatService
+    uni_advice: UniAdviceService
     kb: KbService
 
 
@@ -265,6 +279,18 @@ def build(
         deps.clock,
         uni_pages,
     )
+    uni_advice = UniAdviceService(
+        uow_factory,
+        access,
+        consents,
+        SqlUniChatRepository(deps.sessionmaker),
+        UowAssistantData(uow_factory),
+        model,
+        deps.rate_limiter,
+        _quota_of(deps, "admit_list_suggest_per_week"),
+        texts,
+        deps.clock,
+    )
     return AdmissionServices(
         actor=ResolveAdmissionActor(uow_factory, membership, deps.clock, grades),
         access=access,
@@ -281,8 +307,7 @@ def build(
             consents,
             deps.clock,
             student_search,
-            assistant=assistant_repo,
-            erasers=erasers,
+            erasers=[*erasers, uni.erase],
             file_remover=files.delete_file if files else None,
             final_erasers=final_erasers,
         ),
@@ -314,19 +339,6 @@ def build(
             _quota_of(deps, "admit_proof_check_per_day"),
             files,
         ),
-        help=HelpService(
-            uow_factory, access, deps.clock, deps.rate_limiter, files, identity
-        ),
-        guest=GuestService(
-            uow_factory,
-            access,
-            deps.clock,
-            deps.rate_limiter,
-            default_days=settings.guest_links.ttl_days,
-            default_sessions=settings.guest_links.max_sessions,
-            max_active=settings.guest_links.max_active_per_student,
-            identity=identity,
-        ),
         documents=DocumentService(
             uow_factory, access, deps.clock, files, identity, limits
         ),
@@ -334,6 +346,8 @@ def build(
             uow_factory, access, runtime, deps.clock, membership, files, identity
         ),
         deadlines=DeadlineService(uow_factory, access, deps.clock),
+        outcomes=OutcomeService(uow_factory, access, identity),
+        nudges=NudgeService(uow_factory, deps.clock),
         items=ItemService(uow_factory, access),
         goal_plan=GoalPlanService(uow_factory, access, deps.clock),
         goal_plan_suggest=GoalPlanSuggester(
@@ -369,6 +383,15 @@ def build(
             texts,
             per_day=_quota_of(deps, "admit_item_review_per_day"),
         ),
+        item_grades=ItemGradeService(
+            uow_factory,
+            access,
+            model,
+            consents,
+            texts,
+            deps.rate_limiter,
+            _quota_of(deps, "admit_item_review_per_day"),
+        ),
         item_interviews=ItemInterviewService(
             uow_factory, access, model, consents, texts
         ),
@@ -376,6 +399,10 @@ def build(
             model, texts, web_search=web_search, profile_of=profile_of
         ),
         opportunities=opportunities,
+        orgs=OrgService(uow_factory, opportunities, deps.clock),
+        opportunity_comments=OppCommentService(
+            uow_factory, opportunities, deps.clock, identity
+        ),
         opportunity_planner=OpportunityPlanner(
             uow_factory,
             access,
@@ -426,6 +453,9 @@ def build(
         list_plan=list_plan,
         tasks=TaskService(uow_factory, access, deps.clock),
         test_scores=scores,
+        consultations=ConsultationService(uow_factory, access, deps.clock, identity),
+        profile_details=ProfileDetailsService(uow_factory, access, deps.clock),
+        document_process=DocumentProcessService(uow_factory, access),
         matching=MatchService(uow_factory, chooser, deps.clock),
         readiness=ReadinessService(
             uow_factory, access, runtime, settings.readiness, deps.clock, list_plan
@@ -444,17 +474,23 @@ def build(
         assistant=AssistantService(
             access,
             UowAssistantData(uow_factory),
-            student_search or NoStudentSearch(),
-            assistant_model or UnavailableAssistantModel(),
-            assistant_repo,
             consents,
             deps.rate_limiter,
             _quota_of(deps, "admit_assistant_per_day"),
-            texts,
-            deps.clock,
+            kb,
+            opportunities,
+            chooser,
+            CatalogService(uow_factory),
+            CourseService(uow_factory, access, course_sources),
+            course_sources,
+            ResolveAdmissionActor(uow_factory, membership, deps.clock, grades),
         ),
+        kb=kb,
+        memory_notes=MemoryNoteService(uow_factory, access, deps.clock),
+        application_data=UowAssistantData(uow_factory),
         calendar=calendar,
         uni_chat=uni,
+        uni_advice=uni_advice,
     )
 
 

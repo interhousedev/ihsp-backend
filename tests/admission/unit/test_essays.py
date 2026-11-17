@@ -282,3 +282,39 @@ def test_strict_schemas_cover_every_helper() -> None:
     assert set(prompts.PROMPTS) == set(prompts.SCHEMAS)
     for _, schema in prompts.SCHEMAS.values():
         assert schema["additionalProperties"] is False
+
+
+async def test_review_refine_and_life_story_clean_output() -> None:
+    d = Desk(
+        {
+            "summary": "ok",
+            "strengths": [],
+            "suggestions": [],
+            "sentences": [
+                {"quote": "I **built** it", "comment": "Say what you learned"},
+                {"quote": "", "comment": "dropped"},
+            ],
+        },
+        {"hints": ["The word 'good' repeats", ""]},
+        {
+            "drivers": ["curiosity"],
+            "support": ["physics"],
+            "leave_out": [],
+            "ideas": [],
+        },
+    )
+    ctx = await d.w.ctx()
+    e = await d.svc.create(ctx, {})
+    e = await d.svc.save(ctx, e.id, e.lock_version, {"body": "I built it. Then more."})
+    review = await d.coach.review(ctx, e.id, "en", "both", "")
+    assert [(n.quote, n.comment) for n in review.sentences] == [
+        ("I built it", "Say what you learned")
+    ]
+    assert await d.coach.refine(ctx, e.id, "en", "reword", "good good") == [
+        "The word 'good' repeats"
+    ]
+    d.coach._limiter = _Hits()  # type: ignore[assignment]
+    story = await d.coach.life_story(ctx, "I like physics", "en")
+    assert story.drivers == ["curiosity"] and story.support == ["physics"]
+    with pytest.raises(CharLimitError):
+        await d.coach.review(ctx, e.id, "en", "partial", "  ")

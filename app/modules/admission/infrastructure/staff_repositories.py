@@ -36,6 +36,7 @@ from app.modules.admission.infrastructure.orm.calendar import (
 )
 from app.modules.admission.infrastructure.orm.catalog import CatalogProposalRow
 from app.modules.admission.infrastructure.orm.consultations import ConsultationRow
+from app.modules.admission.infrastructure.orm.kb import KbArticleRow
 from app.modules.admission.infrastructure.orm.opp_social import (
     OppCommentReportRow,
     OppCommentRow,
@@ -448,7 +449,7 @@ class SqlPrivacyRepository:
         return counts
 
     async def stored_file_ids(self, student_id: UUID) -> list[UUID]:
-        """Return the file ids of document versions, proofs and help responses."""
+        """Return the file ids of document versions and proofs."""
         docs = select(DocumentVersionRow.file_id).where(
             DocumentVersionRow.document_id.in_(
                 select(DocumentRow.id).where(DocumentRow.student_id == student_id)

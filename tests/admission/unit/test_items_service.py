@@ -22,6 +22,7 @@ from app.modules.admission.domain.errors import (
     AdmissionConflictError,
     AdmissionNotFoundError,
     ConsentRequiredError,
+    InvalidAnswerError,
     ItemIncompleteError,
     ItemLimitError,
     ProjectedDateRequiredError,
@@ -37,6 +38,7 @@ from app.modules.admission.ports.items import (
     StoredReview,
 )
 from app.shared.actor import Actor, Role
+from app.shared.contracts.ai import AiInvalidOutputError
 from app.shared.ids import new_id
 from tests.admission.unit.fakes import (
     NOW,

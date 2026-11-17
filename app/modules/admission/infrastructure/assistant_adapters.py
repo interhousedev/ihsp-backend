@@ -1,8 +1,5 @@
 """The assistant's read-only view of one student's data, over the unit of work."""
 
-The model runs over the notebook LLM, the data over the unit of work. Both only read.
-"""
-
 import dataclasses
 import datetime as dt
 import enum
@@ -115,6 +112,19 @@ class UowAssistantData:
         async with self._uow() as uow:
             rows = await uow.courses.list_for(student_id)
         return [_row(c) for c in rows if c.included]
+
+    async def memory_notes(self, student_id: UUID) -> list[dict[str, Any]]:
+        """Saved memory notes: content, source and date only."""
+        async with self._uow() as uow:
+            rows = await uow.memory_notes.list_for(student_id)
+        return [
+            {
+                "content": n.content,
+                "source": n.source,
+                "created_at": _plain(n.created_at),
+            }
+            for n in rows
+        ]
 
     async def essays(self, student_id: UUID) -> list[dict[str, Any]]:
         """Essays without their text: title, kind, status and words."""

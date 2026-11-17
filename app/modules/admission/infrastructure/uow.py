@@ -7,17 +7,14 @@ from app.modules.admission.infrastructure.career_repository import (
 )
 from app.modules.admission.infrastructure.catalog_proposals_repository import (
     SqlCatalogProposalRepository,
-from app.modules.admission.infrastructure.documents_repositories import (
-    SqlChecklistRepository,
-    SqlDeadlineRepository,
-    SqlDocumentRepository,
-    SqlTranscriptRepository,
 )
-from app.modules.admission.infrastructure.essays_repository import (
-    SqlEssayRepository,
+from app.modules.admission.infrastructure.chooser_repositories import (
+    SqlCatalogRepository,
+    SqlListRepository,
 )
-from app.modules.admission.infrastructure.goal_plan_repository import (
-    SqlGoalRepository,
+from app.modules.admission.infrastructure.consult_repository import (
+    SqlConsultationRepository,
+    SqlProfileDetailsRepository,
 )
 from app.modules.admission.infrastructure.documents_repositories import (
     SqlChecklistRepository,
@@ -39,12 +36,18 @@ from app.modules.admission.infrastructure.matching_repository import (
     SqlDecisionRepository,
     SqlPreferenceRepository,
 )
+from app.modules.admission.infrastructure.memory_notes_repository import (
+    SqlMemoryNoteRepository,
+)
 from app.modules.admission.infrastructure.opp_social_repository import (
     SqlOppCommentRepository,
     SqlOrgRepository,
 )
 from app.modules.admission.infrastructure.opportunities_repository import (
     SqlOpportunityRepository,
+)
+from app.modules.admission.infrastructure.outcomes_repository import (
+    SqlOutcomeRepository,
 )
 from app.modules.admission.infrastructure.profile_repositories import (
     SqlProfileRepository,
@@ -101,6 +104,7 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
     test_scores: SqlScoreRepository
     preferences: SqlPreferenceRepository
     decisions: SqlDecisionRepository
+    outcomes: SqlOutcomeRepository
     consultations: SqlConsultationRepository
     profile_details: SqlProfileDetailsRepository
     memory_notes: SqlMemoryNoteRepository
@@ -145,6 +149,7 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
         self.test_scores = SqlScoreRepository(self.session)
         self.preferences = SqlPreferenceRepository(self.session)
         self.decisions = SqlDecisionRepository(self.session)
+        self.outcomes = SqlOutcomeRepository(self.session)
         self.consultations = SqlConsultationRepository(self.session)
         self.profile_details = SqlProfileDetailsRepository(self.session)
         self.memory_notes = SqlMemoryNoteRepository(self.session)

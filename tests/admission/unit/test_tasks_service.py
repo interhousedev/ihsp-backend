@@ -253,7 +253,6 @@ async def test_peer_helper_cannot_read_the_task_board() -> None:
     w = World()
     owner = await w.ctx(STUDENT, Role.STUDENT)
     made = await w.svc.create(owner, STUDENT, _draft())
-    w.store.helpers[OTHER] = frozenset({STUDENT})
     helper = await w.ctx(OTHER, Role.STUDENT)
     with pytest.raises(AdmissionNotFoundError):
         await w.svc.list_for(helper, STUDENT)

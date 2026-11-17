@@ -142,6 +142,16 @@ class DocumentCardResponse(_Response):
     size: int
 
 
+class SuggestionCardResponse(_Response):
+    """A suggestion of the admission assistant, addable with one click."""
+
+    type: Literal["course", "opportunity", "scholarship", "university"]
+    id: str
+    title: str
+    reason: str
+    link: str
+
+
 class ToolCallViewResponse(_Response):
     """ToolCallView."""
 
@@ -162,6 +172,8 @@ class ToolCallViewResponse(_Response):
     reject_reason: str | None
     expires_at: datetime | None
     document: DocumentCardResponse | None = None
+    cards: list[SuggestionCardResponse] = Field(default_factory=list)
+    """Cards of a finished `admission_suggest` call."""
 
 
 class ChatMessageViewResponse(_Response):

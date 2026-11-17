@@ -12,6 +12,7 @@ import json
 from pathlib import Path
 from typing import Any, Literal
 
+from app.modules.admission.domain.study_fields import canonical_names
 from app.modules.admission.infrastructure.catalog_data.profiles import PROFILES
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
@@ -154,9 +155,5 @@ def load_programs() -> list[dict[str, Any]]:
 
 
 def study_fields() -> tuple[str, ...]:
-    """Fields of study of the seed catalog, one spelling per name (case-insensitive)."""
-    seen: dict[str, str] = {}
-    for institution in load_seed():
-        for name in institution["fields"]:
-            seen.setdefault(name.strip().casefold(), name.strip())
-    return tuple(sorted(seen.values(), key=str.casefold))
+    """Fields of study of the seed catalog, merged to canonical names."""
+    return tuple(canonical_names([n for inst in load_seed() for n in inst["fields"]]))

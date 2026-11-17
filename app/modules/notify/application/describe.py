@@ -755,6 +755,18 @@ def _document_rejected(p: dict[str, Any], v: _View) -> Description:
 def _admission_deadline_reminder(p: dict[str, Any], v: _View) -> Description:
     if p.get("source"):
         return _admission_calendar_reminder(p, v)
+    kind = p.get("kind")
+    if kind in ("d30", "d7", "d0", "result"):
+        return Description(
+            v.t(f"notify-nudge-{kind}-title", institution=p.get("institution", "")),
+            v.t(
+                f"notify-nudge-{kind}-body",
+                institution=p.get("institution", ""),
+                days=p.get("days", ""),
+                due=fmt_date(p.get("due_utc")),
+            ),
+            _adm(v, "/outcomes/" if kind == "result" else "/deadlines/"),
+        )
     return Description(
         v.t("notify-deadline-reminder-title"),
         v.t(

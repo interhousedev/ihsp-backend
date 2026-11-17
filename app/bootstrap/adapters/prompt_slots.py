@@ -29,6 +29,9 @@ from app.modules.admission.infrastructure.ai.prompts import (
 from app.modules.admission.infrastructure.ai.prompts import profile_words as admit_words
 from app.modules.admission.infrastructure.ai.prompts import research as admit_research
 from app.modules.admission.infrastructure.ai.prompts import tasks_suggest as admit_tasks
+from app.modules.admission.infrastructure.ai.prompts import (
+    uni_advice as admit_uni_advice,
+)
 from app.modules.ai.application import transcribe_audio
 from app.modules.ai.domain import prompts, prompts_author, web_prompts
 from app.modules.ai.domain.prompt_registry import PromptSlot
@@ -141,6 +144,13 @@ _PARTS: tuple[tuple[Iterable[AiTask], str, str, str, bool], ...] = (
         "system",
         "Admission career: spike draft",
         admit_career.SPIKE,
+        False,
+    ),
+    (
+        (AiTask.ADMIT_UNI_ADVICE,),
+        "system",
+        "Admission: advice for one university",
+        admit_uni_advice.SYSTEM,
         False,
     ),
     (

@@ -73,9 +73,30 @@ ACCOUNTS = (
 )
 
 ITEMS = (
-    ("activity", "Founder", "Robotics club", "Built and led a 12-person team.", 4),
-    ("activity", "Volunteer", "Tashkent food bank", "Weekly food packing shifts.", 2),
-    ("honor", "Gold medal", "Republic Math Olympiad", "Regional gold medal.", 0),
+    (
+        "activity",
+        "Founder",
+        "Robotics club",
+        "Built and led a 12-person team.",
+        4,
+        "stem_research",
+    ),
+    (
+        "activity",
+        "Volunteer",
+        "Tashkent food bank",
+        "Weekly food packing shifts.",
+        2,
+        "leadership_service",
+    ),
+    (
+        "honor",
+        "Gold medal",
+        "Republic Math Olympiad",
+        "Regional gold medal.",
+        0,
+        "national",
+    ),
 )
 
 
@@ -106,14 +127,19 @@ async def _assign(
 
 
 async def _items(s: AsyncSession, student: UUID) -> None:
-    for n, (kind, position, org, desc, hours) in enumerate(ITEMS):
+    for n, (kind, position, org, desc, hours, category) in enumerate(ITEMS):
         item_id = uuid5(_NS, f"item:{n}")
-        if await s.get(ItemRow, item_id) is None:
+        existing = await s.get(ItemRow, item_id)
+        if existing is not None:
+            if existing.category is None:
+                existing.category = category
+        else:
             s.add(
                 ItemRow(
                     id=item_id,
                     student_id=student,
                     kind=kind,
+                    category=category,
                     position=position,
                     org=org,
                     description=desc,

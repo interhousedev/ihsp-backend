@@ -44,6 +44,7 @@ class FakeStore:
         self.proposals: dict[UUID, CatalogProposal] = {}
         self.applied: list[CatalogProposal] = []
         self.known_targets: set[UUID] = set()
+        self.logos: dict[UUID, tuple[float | None, str | None]] = {}
         self.supp_prompts: dict[UUID, dict[str, list[SuppPrompt]]] = {}
         self.entitlements: dict[UUID, Entitlement] = {}
         self.assignments: dict[UUID, tuple[Assignment, ...]] = {}
@@ -445,6 +446,14 @@ class _CatalogProposals:
 
     async def target_exists(self, kind: str, target_id: UUID) -> bool:
         return target_id in self.s.known_targets
+
+    async def set_logo(
+        self, institution_id: UUID, *, zoom: float | None, fit: str | None
+    ) -> bool:
+        if institution_id not in self.s.known_targets:
+            return False
+        self.s.logos[institution_id] = (zoom, fit)
+        return True
 
     async def apply(self, proposal: CatalogProposal) -> UUID:
         self.s.applied.append(proposal)

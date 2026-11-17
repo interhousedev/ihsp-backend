@@ -162,6 +162,11 @@ class SqlCatalogRepository:
                     scholarship_count=int(counts.get(r.id, 0)),
                     logo_url=r.logo_url,
                     cover_url=r.cover_url,
+                    name_local=r.name_local,
+                    aliases=tuple(r.aliases or ()),
+                    logo_zoom=float(r.logo_zoom),
+                    logo_fit=r.logo_fit,
+                    logo_aspect=r.logo_aspect,
                 )
             )
         return out
@@ -182,6 +187,7 @@ def _entry(r: ListEntryRow) -> ListEntry:
         override_at=r.override_at,
         affordability_status=r.affordability_status,
         lock_version=r.lock_version,
+        cycle=r.cycle,
     )
 
 
@@ -195,6 +201,7 @@ def _apply(row: ListEntryRow, e: ListEntry) -> None:
     row.override_by = e.override_by
     row.override_at = e.override_at
     row.affordability_status = e.affordability_status
+    row.cycle = e.cycle
 
 
 def _check(r: AffordabilityCheckRow) -> AffordabilityCheck:

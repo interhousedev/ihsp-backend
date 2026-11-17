@@ -102,6 +102,7 @@ class ListEntryRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
         ),
         check_in("affordability_status", ("feasible", "gap", "unknown", "signed_off")),
         max_len("override_note", 300),
+        CheckConstraint("cycle IS NULL OR cycle ~ '^[0-9]{4}-[0-9]{2}$'", name="cycle"),
         S,
     )
 
@@ -128,6 +129,7 @@ class ListEntryRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
         String(10), server_default="unknown"
     )
     eligibility_outcome: Mapped[str | None] = mapped_column(String(14))
+    cycle: Mapped[str | None] = mapped_column(String(7), index=True)
 
 
 class AffordabilityCheckRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):

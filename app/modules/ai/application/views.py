@@ -62,6 +62,17 @@ class DocumentCardView:
 
 
 @dataclass(frozen=True, slots=True)
+class SuggestionCardView:
+    """One card of a finished `admission_suggest` call."""
+
+    type: Literal["course", "opportunity", "scholarship", "university"]
+    id: str
+    title: str
+    reason: str
+    link: str
+
+
+@dataclass(frozen=True, slots=True)
 class ToolCallView:
     """A tool call as shown in the chat."""
 
@@ -75,6 +86,7 @@ class ToolCallView:
     expires_at: datetime | None
     document: DocumentCardView | None = None
     ui_block: str | None = None  # a finished show_ui_block call: the block code
+    cards: list[SuggestionCardView] = field(default_factory=list)
 
 
 @dataclass(frozen=True, slots=True)

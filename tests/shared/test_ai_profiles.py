@@ -100,6 +100,7 @@ def test_the_catalog_lists_the_places_that_call_a_model() -> None:
         "admit_career_professions",
         "admit_career_majors",
         "admit_career_spike",
+        "admit_uni_advice",
         "admit_list_suggest",
         "admit_tasks_suggest",
         "admit_assistant",

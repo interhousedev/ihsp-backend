@@ -63,6 +63,9 @@ PROFILES: Final[dict[str, dict[str, str]]] = {
     "columbia": {
         "city_type": ("urban"),
         "institution_type": ("private"),
+        "logo_url": (
+            "https://upload.wikimedia.org/wikipedia/commons/a/a6/Columbia_University_Shield.svg"
+        ),
         "cover_url": (
             "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Columbia_University_-_Low_Memorial_Library_%2848170370506%29.jpg/960px-Columbia_University_-_Low_Memorial_Library_%2848170370506%29.jpg"
         ),
@@ -70,6 +73,9 @@ PROFILES: Final[dict[str, dict[str, str]]] = {
     "upenn": {
         "city_type": ("urban"),
         "institution_type": ("private"),
+        "logo_url": (
+            "https://upload.wikimedia.org/wikipedia/commons/9/92/UPenn_shield_with_banner.svg"
+        ),
         "cover_url": (
             "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/College_Hall%2C_University_of_Pennsylvania.jpg/960px-College_Hall%2C_University_of_Pennsylvania.jpg"
         ),
@@ -77,6 +83,9 @@ PROFILES: Final[dict[str, dict[str, str]]] = {
     "cornell": {
         "city_type": ("rural"),
         "institution_type": ("private"),
+        "logo_url": (
+            "https://upload.wikimedia.org/wikipedia/commons/4/47/Cornell_University_seal.svg"
+        ),
         "cover_url": (
             "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Cornell_University%2C_Ho_Plaza_and_Sage_Hall.jpg/960px-Cornell_University%2C_Ho_Plaza_and_Sage_Hall.jpg"
         ),
@@ -221,6 +230,9 @@ PROFILES: Final[dict[str, dict[str, str]]] = {
     "bologna": {
         "city_type": ("urban"),
         "institution_type": ("public"),
+        "logo_url": (
+            "https://upload.wikimedia.org/wikipedia/commons/d/d0/Seal_of_the_University_of_Bologna.svg"
+        ),
         "cover_url": (
             "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/C%C3%A0_Grande_dei_Malvezzi_-_Sala_Borsa_06.jpg/960px-C%C3%A0_Grande_dei_Malvezzi_-_Sala_Borsa_06.jpg"
         ),
@@ -228,6 +240,9 @@ PROFILES: Final[dict[str, dict[str, str]]] = {
     "corvinus": {
         "city_type": ("urban"),
         "institution_type": ("public"),
+        "logo_url": (
+            "https://upload.wikimedia.org/wikipedia/commons/5/57/Corvinus_eng_logo.jpg"
+        ),
         "cover_url": (
             "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Corvinus_foepulet.jpg/960px-Corvinus_foepulet.jpg"
         ),
@@ -235,6 +250,9 @@ PROFILES: Final[dict[str, dict[str, str]]] = {
     "semmelweis": {
         "city_type": ("urban"),
         "institution_type": ("public"),
+        "logo_url": (
+            "https://upload.wikimedia.org/wikipedia/commons/0/07/Logo_univsemmelweis.svg"
+        ),
         "cover_url": (
             "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Semmelweis_University%2C_main_building.jpg/960px-Semmelweis_University%2C_main_building.jpg"
         ),
@@ -242,6 +260,9 @@ PROFILES: Final[dict[str, dict[str, str]]] = {
     "elte": {
         "city_type": ("urban"),
         "institution_type": ("public"),
+        "logo_url": (
+            "https://upload.wikimedia.org/wikipedia/commons/8/80/ELTE_logo_new.svg"
+        ),
     },
     "kaist": {
         "city_type": ("urban"),
@@ -335,9 +356,15 @@ PROFILES: Final[dict[str, dict[str, str]]] = {
     "nyuad": {
         "city_type": ("urban"),
         "institution_type": ("private"),
+        "logo_url": (
+            "https://upload.wikimedia.org/wikipedia/commons/3/35/NYU_Abu_Dhabi_Logo%28cropped%29.jpg"
+        ),
     },
     "khalifa": {
         "city_type": ("urban"),
         "institution_type": ("public"),
+        "logo_url": (
+            "https://upload.wikimedia.org/wikipedia/commons/c/c5/Khalifa_University_New_Logo.png"
+        ),
     },
 }

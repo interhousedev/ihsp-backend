@@ -78,6 +78,11 @@ class InstitutionRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
             " AND (cover_url IS NULL OR cover_url LIKE 'https://%')",
             name="media_https",
         ),
+        CheckConstraint("logo_zoom >= 0.5 AND logo_zoom <= 3", name="logo_zoom"),
+        CheckConstraint(
+            "logo_fit IS NULL OR logo_fit IN ('circle', 'contain')",
+            name="logo_fit",
+        ),
         Index(
             "ix_institutions_name_trgm",
             "name",
@@ -104,6 +109,10 @@ class InstitutionRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
     status: Mapped[str] = mapped_column(String(12), server_default="provisional")
     logo_url: Mapped[str | None] = mapped_column(String(2000))
     cover_url: Mapped[str | None] = mapped_column(String(2000))
+    aliases: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
+    logo_zoom: Mapped[float] = mapped_column(Float, server_default="1.0")
+    logo_fit: Mapped[str | None] = mapped_column(String(8))
+    logo_aspect: Mapped[float | None] = mapped_column(Float)
 
 
 class CampusRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
