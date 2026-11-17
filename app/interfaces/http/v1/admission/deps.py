@@ -24,16 +24,7 @@ async def resolve_admission_context(
 async def require_admission_actor(
     ctx: Annotated[AdmissionContext, Depends(resolve_admission_context)],
 ) -> AdmissionContext:
-    """Admit applicants and staff; helpers only on `/help/*` (own dependency)."""
-    if not ctx.admission.may_enter or ctx.admission.helper_only:
-        raise NotEntitledError()
-    return ctx
-
-
-async def require_helper_actor(
-    ctx: Annotated[AdmissionContext, Depends(resolve_admission_context)],
-) -> AdmissionContext:
-    """Admit anyone who may enter, including helpers (for `/help/*` routes)."""
+    """Admit applicants and staff."""
     if not ctx.admission.may_enter:
         raise NotEntitledError()
     return ctx
@@ -41,4 +32,3 @@ async def require_helper_actor(
 
 AnyContext = Annotated[AdmissionContext, Depends(resolve_admission_context)]
 AdmissionCtx = Annotated[AdmissionContext, Depends(require_admission_actor)]
-HelperCtx = Annotated[AdmissionContext, Depends(require_helper_actor)]

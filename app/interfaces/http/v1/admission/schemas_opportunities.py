@@ -19,10 +19,17 @@ from app.modules.admission.domain.opportunities import (
     PlanEntry,
     TaxonomyNode,
 )
+from app.modules.admission.domain.orgs import Organization
 
 from pydantic import BaseModel, Field
 
-Kind = Literal["exam", "certification", "course", "event", "recurring", "program"]
+Kind = Literal[
+    "exam", "certification", "course", "event", "recurring", "program", "scholarship"
+]
+AwardType = Literal["scholarship", "fellowship", "grant", "tuition_waiver", "program"]
+Coverage = Literal["full_tuition", "partial_tuition", "stipend", "cash", "travel"]
+Scope = Literal["local", "international"]
+CollegeCredit = Literal["none", "possible", "yes"]
 Sort = Literal["title", "ranking", "acceptance", "tuition"]
 MaterialKind = Literal["link", "lms_course", "alumni", "center"]
 Status = Literal["pending", "approved", "rejected"]
@@ -142,6 +149,18 @@ class OpportunityFields(BaseModel):
     host_institution: str | None = Field(default=None, max_length=300)
     duration_weeks: int | None = Field(default=None, ge=1)
     ranking: int | None = Field(default=None, ge=1)
+    org_id: UUID | None = None
+    award_type: AwardType | None = None
+    coverage: list[Coverage] = Field(default_factory=list, max_length=5)
+    scope: Scope | None = None
+    amount_text: str | None = Field(default=None, max_length=300)
+    amount_value: float | None = Field(default=None, ge=0)
+    currency: str | None = Field(default=None, min_length=3, max_length=8)
+    essay_required: bool = False
+    eligibility: str | None = Field(default=None, max_length=2000)
+    source_url: str | None = Field(default=None, max_length=2000)
+    college_credit: CollegeCredit | None = None
+    credit_note: str | None = Field(default=None, max_length=300)
 
     def draft(self, note: str | None) -> OpportunityDraft:
         """The domain draft."""
@@ -178,6 +197,18 @@ class OpportunityFields(BaseModel):
             host_institution=self.host_institution,
             duration_weeks=self.duration_weeks,
             ranking=self.ranking,
+            org_id=self.org_id,
+            award_type=self.award_type,
+            coverage=tuple(self.coverage),
+            scope=self.scope,
+            amount_text=self.amount_text,
+            amount_value=self.amount_value,
+            currency=self.currency,
+            essay_required=self.essay_required,
+            eligibility=self.eligibility,
+            source_url=self.source_url,
+            college_credit=self.college_credit,
+            credit_note=self.credit_note,
         )
 
     @classmethod
@@ -215,6 +246,18 @@ class OpportunityFields(BaseModel):
             host_institution=d.host_institution,
             duration_weeks=d.duration_weeks,
             ranking=d.ranking,
+            org_id=d.org_id,
+            award_type=d.award_type,
+            coverage=list(d.coverage),
+            scope=d.scope,
+            amount_text=d.amount_text,
+            amount_value=d.amount_value,
+            currency=d.currency,
+            essay_required=d.essay_required,
+            eligibility=d.eligibility,
+            source_url=d.source_url,
+            college_credit=d.college_credit,
+            credit_note=d.credit_note,
         )
 
 
@@ -307,9 +350,17 @@ class OpportunityOut(BaseModel):
     updated_at: dt.datetime
     lock_version: int
     upcoming: list[DatedEventOut]
+    org: OrgOut | None = None
+    comment_count: int = 0
 
     @classmethod
-    def of(cls, o: Opportunity, upcoming: list[DatedEvent]) -> "OpportunityOut":
+    def of(
+        cls,
+        o: Opportunity,
+        upcoming: list[DatedEvent],
+        org: Organization | None = None,
+        comment_count: int = 0,
+    ) -> "OpportunityOut":
         """Map an entry."""
         return cls(
             id=o.id,
@@ -319,7 +370,16 @@ class OpportunityOut(BaseModel):
             updated_at=o.updated_at,
             lock_version=o.lock_version,
             upcoming=[DatedEventOut.of(e) for e in upcoming],
+            org=OrgOut.of(org) if org else None,
+            comment_count=comment_count,
         )
+
+
+class OpportunityDetailOut(OpportunityOut):
+    """An entry with its organization and published comments."""
+
+    comments: list[OppCommentOut] = Field(default_factory=list)
+    can_moderate: bool = False
 
 
 class OpportunityListOut(BaseModel):

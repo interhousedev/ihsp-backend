@@ -10,7 +10,7 @@ from app.modules.admission.application.interview import InterviewState
 from app.modules.admission.application.items import ItemView, MetricDraft
 from app.modules.admission.application.review import NOTE_MAX
 from app.modules.admission.application.review_prompts import LANGUAGES
-from app.modules.admission.domain.items import Item
+from app.modules.admission.domain.items import Item, ItemGrade
 from app.modules.admission.ports.items import Metric, StoredReview
 
 from fastapi import APIRouter, Header, Response, status
@@ -103,6 +103,27 @@ class ReviewOut(BaseModel):
         )
 
 
+class ItemGradeOut(BaseModel):
+    """An A-E grade with a one-line tip for the title and the description."""
+
+    title_grade: str
+    title_tip: str
+    description_grade: str
+    description_tip: str
+    model: str
+
+    @classmethod
+    def of(cls, g: ItemGrade) -> "ItemGradeOut":
+        """Map the stored grade."""
+        return cls(
+            title_grade=g.title_grade,
+            title_tip=g.title_tip,
+            description_grade=g.description_grade,
+            description_tip=g.description_tip,
+            model=g.model,
+        )
+
+
 class ItemOut(BaseModel):
     """An activity or honor with metrics and its newest review."""
 
@@ -124,6 +145,8 @@ class ItemOut(BaseModel):
     metrics: list[MetricOut]
     review: ReviewOut | None
     review_stale: bool
+    grade: ItemGradeOut | None
+    grade_stale: bool
 
     @classmethod
     def of(cls, v: ItemView) -> "ItemOut":
@@ -148,6 +171,8 @@ class ItemOut(BaseModel):
             metrics=[MetricOut.of(m) for m in v.metrics],
             review=ReviewOut.of(v.review) if v.review else None,
             review_stale=v.stale,
+            grade=ItemGradeOut.of(i.grade) if i.grade else None,
+            grade_stale=i.grade_stale,
         )
 
 

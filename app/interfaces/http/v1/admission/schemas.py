@@ -108,7 +108,6 @@ class AdmissionConfigOut(BaseModel):
     options: dict[str, list[str]]
     stages: list[str]
     limits: dict[str, int]
-    guest_links: dict[str, int]
     estimates_student_visible: bool
     wellbeing_questions_enabled: bool
     sub_roles: list[SubRoleOut]
@@ -141,7 +140,6 @@ class AdmissionConfigOut(BaseModel):
             options={k: list(v) for k, v in cfg.options.items()},
             stages=list(cfg.stages),
             limits=cfg.limits,
-            guest_links=cfg.guest_links,
             estimates_student_visible=cfg.estimates_student_visible,
             wellbeing_questions_enabled=cfg.wellbeing_questions_enabled,
             sub_roles=[
@@ -175,15 +173,13 @@ class AssignmentOut(BaseModel):
 class AdmissionMeOut(BaseModel):
     """The caller's standing in the admission app."""
 
-    kind: Literal["applicant", "staff", "helper_only", "none"]
+    kind: Literal["applicant", "staff", "none"]
     may_enter: bool
-    helper_only: bool
     ineligible_reason: str | None
     grade: int | None
     entitlement_kind: str | None
     staff_roles: list[str]
     sub_roles: list[AssignmentOut]
-    helps_students: int
 
     @classmethod
     def of(cls, me: AdmissionMe) -> "AdmissionMeOut":
@@ -194,13 +190,11 @@ class AdmissionMeOut(BaseModel):
         return cls(
             kind=me.kind,
             may_enter=me.may_enter,
-            helper_only=me.helper_only,
             ineligible_reason=me.ineligible_reason,
             grade=me.grade,
             entitlement_kind=me.entitlement_kind,
             staff_roles=list(me.staff_roles),
             sub_roles=[AssignmentOut(**s) for s in subs],
-            helps_students=me.helps_students,
         )
 
 

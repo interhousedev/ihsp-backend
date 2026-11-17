@@ -689,7 +689,7 @@ async def edit_deadline(
 ) -> DeadlineOut:
     """Edit a deadline; students on the list are told."""
     patch = body.model_dump(exclude_unset=True)
-    data = DeadlineInput(**patch)
+    data = DeadlineInput.from_patch(patch)
     d = await container.admission.deadlines.edit(ctx, deadline_id, data)
     return DeadlineOut.of(d)
 

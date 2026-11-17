@@ -16,7 +16,7 @@ from app.modules.ai.application.views import (
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-AssistantName = Literal["student", "admin", "lms_author"]
+AssistantName = Literal["student", "admin", "lms_author", "admission"]
 TierName = Literal["fast", "smart"]
 
 

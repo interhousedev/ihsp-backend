@@ -1,4 +1,4 @@
-"""Admission app routes (`/v1/admission/*`, guest links under `/v1/public/...`)."""
+"""Admission app routes (`/v1/admission/*`)."""
 
 from app.interfaces.http.v1.admission import (
     routes_app_review,
@@ -11,18 +11,21 @@ from app.interfaces.http.v1.admission import (
     routes_documents,
     routes_essays,
     routes_goal_plan,
-    routes_guest,
-    routes_help,
+    routes_item_grades,
     routes_items,
+    routes_kb,
     routes_list_plan,
     routes_matching,
     routes_opportunities,
+    routes_opportunity_comments,
+    routes_orgs,
     routes_profile,
     routes_proofs,
     routes_readiness,
     routes_staff,
     routes_tasks,
     routes_test_scores,
+    routes_uni_chat,
 )
 from app.interfaces.http.v1.admission.router import router
 
@@ -34,11 +37,10 @@ ROUTERS: list[APIRouter] = [
     routes_chooser.router,
     routes_chances.router,
     routes_proofs.router,
-    routes_help.router,
-    routes_guest.router,
     routes_staff.router,
     routes_documents.router,
     routes_items.router,
+    routes_item_grades.router,
     routes_goal_plan.router,
     routes_essays.router,
     routes_catalog_staff.router,
@@ -52,4 +54,11 @@ ROUTERS: list[APIRouter] = [
     routes_readiness.router,
     routes_test_scores.router,
     routes_assistant.router,
+    routes_memory_mcp.router,
+    routes_consultations.router,
+    routes_profile_details.router,
+    routes_orgs.router,
+    routes_opportunity_comments.router,
+    routes_uni_chat.router,
+    routes_kb.router,
 ]

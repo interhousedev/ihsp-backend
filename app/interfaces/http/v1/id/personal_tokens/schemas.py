@@ -8,7 +8,14 @@ from app.modules.identity.domain.personal_token import PersonalToken
 
 from pydantic import BaseModel, Field
 
-TokenScopeName = Literal["me:read", "me:write"]
+TokenScopeName = Literal[
+    "me:read",
+    "me:write",
+    "admission:read",
+    "admission:memory",
+    "admission:docs",
+    "admission:documents",
+]
 
 
 class PersonalTokenResponse(BaseModel):

@@ -74,6 +74,7 @@ class InstitutionOut(BaseModel):
                 )
                 for k, f in i.facts.items()
             },
+            logo_fit=resolve_logo_fit(i.logo_fit, i.logo_aspect),
             coa_total=i.coa_total,
             coa_currency=i.coa_currency,
             aid_basis=i.aid_basis,

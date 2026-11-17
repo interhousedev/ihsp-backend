@@ -86,6 +86,7 @@ class McpDeps:
     maintenance: MaintenanceGate | None = None
     # Refuses users who have not accepted the current legal documents; None: off.
     consent: ConsentGate | None = None
+    sniffer: Any | None = None  # ContentSniffer, for admission uploads
 
     def t(self, key: str, **params: Any) -> str:  # noqa: ANN401 - i18n params
         """Translate a message key into the language of tool errors."""
@@ -156,6 +157,7 @@ def deps_from_container(
         lms_ai=getattr(container, "lms_ai_tools", None),
         maintenance=getattr(getattr(container, "admin", None), "migration", None),
         consent=getattr(getattr(container, "legal", None), "require_consent", None),
+        sniffer=getattr(container, "content_sniffer", None),
     )
 
 

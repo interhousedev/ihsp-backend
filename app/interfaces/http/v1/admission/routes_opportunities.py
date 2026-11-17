@@ -8,20 +8,25 @@ from typing import Annotated, Literal
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, AnyContext, ContainerDep
+from app.interfaces.http.v1.admission.schemas_opp_comments import OppCommentOut
 from app.interfaces.http.v1.admission.schemas_opportunities import (
     AiPlanEnvelope,
     AiPlanIn,
     AiPlanOut,
     ArchiveIn,
+    AwardType,
+    CollegeCredit,
     DeadlineListOut,
     DeadlineOut,
     Kind,
+    OpportunityDetailOut,
     OpportunityListOut,
     OpportunityOut,
     PlanEntryIn,
     PlanEntryOut,
     PlanOut,
     ReviewIn,
+    Scope,
     Sort,
     SubmissionIn,
     SubmissionListOut,
@@ -101,6 +106,10 @@ async def list_opportunities(
     online: bool | None = None,
     free: bool | None = None,
     max_tuition: Annotated[int | None, Query(ge=0)] = None,
+    award_type: AwardType | None = None,
+    scope: Scope | None = None,
+    org_id: UUID | None = None,
+    college_credit: CollegeCredit | None = None,
     sort: Sort = "title",
     page: Annotated[int, Query(ge=1)] = 1,
     size: Annotated[int, Query(ge=1, le=200)] = 200,
@@ -119,13 +128,31 @@ async def list_opportunities(
             online=online,
             free=free,
             max_tuition=max_tuition,
+            award_type=award_type,
+            scope=scope,
+            org_id=org_id,
+            college_credit=college_credit,
             sort=sort,
             page=page,
             size=size,
         )
     )
+    orgs = await container.admission.orgs.by_ids(
+        [o.draft.org_id for o in found.items if o.draft.org_id]
+    )
+    counts = await container.admission.opportunity_comments.counts(
+        [o.id for o in found.items]
+    )
     return OpportunityListOut(
-        items=[OpportunityOut.of(o, svc.upcoming(o)) for o in found.items],
+        items=[
+            OpportunityOut.of(
+                o,
+                svc.upcoming(o),
+                orgs.get(o.draft.org_id) if o.draft.org_id else None,
+                counts.get(o.id, 0),
+            )
+            for o in found.items
+        ],
         total=found.total,
         page=found.page,
         size=found.size,
@@ -134,11 +161,24 @@ async def list_opportunities(
 
 async def get_opportunity(
     opportunity_id: UUID, container: ContainerDep, ctx: AnyContext
-) -> OpportunityOut:
-    """One published entry with its next (or expected) dates."""
+) -> OpportunityDetailOut:
+    """One published entry with its next dates, organization and comments."""
     svc = container.admission.opportunities
     o = await svc.get(opportunity_id)
-    return OpportunityOut.of(o, svc.upcoming(o))
+    org = None
+    if o.draft.org_id:
+        org = (await container.admission.orgs.by_ids([o.draft.org_id])).get(
+            o.draft.org_id
+        )
+    comments = await container.admission.opportunity_comments.list(ctx, o.id)
+    base = OpportunityOut.of(o, svc.upcoming(o), org, 0)
+    return OpportunityDetailOut(
+        **base.model_dump(exclude={"comment_count", "org"}),
+        org=base.org,
+        comment_count=sum(1 for c in comments if c.comment.status == "published"),
+        comments=[OppCommentOut.of(c) for c in comments],
+        can_moderate=svc.can_moderate(ctx),
+    )
 
 
 async def submit_opportunity(
@@ -381,6 +421,6 @@ _R(
     "/opportunities/{opportunity_id}",
     get_opportunity,
     methods=["GET"],
-    response_model=OpportunityOut,
+    response_model=OpportunityDetailOut,
     operation_id="admission_get_opportunity",
 )
