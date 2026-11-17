@@ -51,6 +51,7 @@ NEXT_ACTIONS: Final[dict[str, tuple[str, str]]] = {
     "tasks": ("clear_tasks", "/tasks"),
 }
 FIELDS_QUESTION: Final = "q18"
+STUDY_FIELDS_ANSWER: Final = "study_fields"
 COUNTRIES_QUESTION: Final = "q24"
 LABELS: Final = ("reach", "target", "safety")
 """Dream (reach), target and safety: the kinds a balanced list holds."""
@@ -169,10 +170,13 @@ class ReadinessService:
             checklist = await uow.checklist.for_student(target)
             shortlist = await uow.shortlist.entries(target)
             tasks = await uow.tasks.list_for(target)
+            quiz = await uow.profile_details.get_quiz(target, "career")
         answers = profile.answers if profile is not None else {}
         scores: dict[str, int | None] = {}
-        has_major = bool(career and career.majors) or _filled(
-            answers.get(FIELDS_QUESTION)
+        has_major = (
+            bool(career and career.majors)
+            or _filled(answers.get(FIELDS_QUESTION))
+            or _filled(quiz.answers.get(STUDY_FIELDS_ANSWER) if quiz else None)
         )
         scores["major"] = 100 if has_major else 0
         planned = sum(1 for g in goals if g.status != "dropped")

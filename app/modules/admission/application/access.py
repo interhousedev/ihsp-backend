@@ -125,7 +125,7 @@ class AccessPolicy:
         now = self._clock.now()
         everyone = False
         groups: set[UUID] = set()
-        students: set[UUID] = set(ctx.helper_of)
+        students: set[UUID] = set()
         for a in ctx.assignments:
             if (
                 not a.active_at(now)

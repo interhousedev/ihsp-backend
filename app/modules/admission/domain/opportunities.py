@@ -13,7 +13,7 @@ from typing import Any, Final, Literal, get_args
 from uuid import UUID
 
 OpportunityKind = Literal[
-    "exam", "certification", "course", "event", "recurring", "program"
+    "exam", "certification", "course", "event", "recurring", "program", "scholarship"
 ]
 MaterialKind = Literal["link", "lms_course", "alumni", "center"]
 TaxonomyLevel = Literal["field", "subfield", "subject"]
@@ -22,6 +22,10 @@ SubmitterRole = Literal["student", "staff", "helper", "admin"]
 Freq = Literal["YEARLY", "MONTHLY", "WEEKLY"]
 
 KINDS: Final = get_args(OpportunityKind)
+AWARD_TYPES: Final = ("scholarship", "fellowship", "grant", "tuition_waiver", "program")
+COVERAGES: Final = ("full_tuition", "partial_tuition", "stipend", "cash", "travel")
+SCOPES: Final = ("local", "international")
+CREDITS: Final = ("none", "possible", "yes")
 MATERIAL_KINDS: Final = get_args(MaterialKind)
 LEVELS: Final = get_args(TaxonomyLevel)
 PARENT_LEVEL: Final[dict[str, str | None]] = {
@@ -93,16 +97,65 @@ class OpportunityDraft:
     host_institution: str | None = None
     duration_weeks: int | None = None
     ranking: int | None = None
+    org_id: UUID | None = None
+    award_type: str | None = None
+    coverage: tuple[str, ...] = ()
+    scope: str | None = None
+    amount_text: str | None = None
+    amount_value: float | None = None
+    currency: str | None = None
+    essay_required: bool = False
+    eligibility: str | None = None
+    source_url: str | None = None
+    college_credit: str | None = None
+    credit_note: str | None = None
 
     def urls(self) -> list[str]:
         """Every link the draft carries."""
         return [
-            u for u in [self.url, self.logo_url, *(m.url for m in self.materials)] if u
+            u
+            for u in [
+                self.url,
+                self.logo_url,
+                self.source_url,
+                *(m.url for m in self.materials),
+            ]
+            if u
         ]
 
     def problems(self) -> list[str]:
         """Return the names of the invalid fields (empty when valid)."""
-        return [*self._field_problems(), *self._link_problems()]
+        return [
+            *self._field_problems(),
+            *self._link_problems(),
+            *self._scholar_problems(),
+        ]
+
+    def _scholar_problems(self) -> list[str]:
+        bad: list[str] = []
+        if self.award_type is not None and self.award_type not in AWARD_TYPES:
+            bad.append("award_type")
+        if any(c not in COVERAGES for c in self.coverage):
+            bad.append("coverage")
+        if self.scope is not None and self.scope not in SCOPES:
+            bad.append("scope")
+        if self.college_credit is not None and self.college_credit not in CREDITS:
+            bad.append("college_credit")
+        if self.amount_value is not None and self.amount_value < 0:
+            bad.append("amount_value")
+        if self.currency is not None and not 3 <= len(self.currency) <= 8:
+            bad.append("currency")
+        return bad + self._scholar_text_problems()
+
+    def _scholar_text_problems(self) -> list[str]:
+        bad = [
+            name
+            for name in ("amount_text", "currency", "credit_note")
+            if (value := getattr(self, name)) is not None and len(value) > TEXT_MAX
+        ]
+        if self.eligibility is not None and len(self.eligibility) > SUMMARY_MAX:
+            bad.append("eligibility")
+        return bad
 
     def _optional_text_problems(self) -> list[str]:
         bad: list[str] = []
@@ -192,6 +245,18 @@ class OpportunityDraft:
             "host_institution": self.host_institution,
             "duration_weeks": self.duration_weeks,
             "ranking": self.ranking,
+            "org_id": str(self.org_id) if self.org_id else None,
+            "award_type": self.award_type,
+            "coverage": list(self.coverage),
+            "scope": self.scope,
+            "amount_text": self.amount_text,
+            "amount_value": self.amount_value,
+            "currency": self.currency,
+            "essay_required": self.essay_required,
+            "eligibility": self.eligibility,
+            "source_url": self.source_url,
+            "college_credit": self.college_credit,
+            "credit_note": self.credit_note,
             "materials": [
                 {
                     "kind": m.kind,
@@ -242,6 +307,18 @@ class OpportunityDraft:
             host_institution=p.get("host_institution"),
             duration_weeks=p.get("duration_weeks"),
             ranking=p.get("ranking"),
+            org_id=_uuid(p.get("org_id")),
+            award_type=p.get("award_type"),
+            coverage=tuple(p.get("coverage", [])),
+            scope=p.get("scope"),
+            amount_text=p.get("amount_text"),
+            amount_value=p.get("amount_value"),
+            currency=p.get("currency"),
+            essay_required=bool(p.get("essay_required", False)),
+            eligibility=p.get("eligibility"),
+            source_url=p.get("source_url"),
+            college_credit=p.get("college_credit"),
+            credit_note=p.get("credit_note"),
         )
 
 
@@ -263,7 +340,7 @@ class Opportunity:
 
     id: UUID
     draft: OpportunityDraft
-    created_by: UUID
+    created_by: UUID | None
     created_at: dt.datetime
     updated_at: dt.datetime
     archived: bool = False

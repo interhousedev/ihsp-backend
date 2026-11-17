@@ -20,6 +20,10 @@ INSTITUTION_FIELDS: Final = frozenset(
         "setting",
         "languages",
         "logo_url",
+        "logo_zoom",
+        "logo_fit",
+        "logo_aspect",
+        "aliases",
         "cover_url",
     }
 )

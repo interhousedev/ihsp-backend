@@ -7,6 +7,10 @@ from typing import Protocol, Self
 from app.modules.admission.ports.career import CareerRepository
 from app.modules.admission.ports.catalog_proposals import CatalogProposalRepository
 from app.modules.admission.ports.chooser import CatalogRepository, ListRepository
+from app.modules.admission.ports.consultations import (
+    ConsultationRepository,
+    ProfileDetailsRepository,
+)
 from app.modules.admission.ports.documents import (
     ChecklistRepository,
     DeadlineRepository,
@@ -21,7 +25,13 @@ from app.modules.admission.ports.matching import (
     DecisionRepository,
     PreferenceRepository,
 )
+from app.modules.admission.ports.memory_notes import MemoryNoteRepository
+from app.modules.admission.ports.opp_social import (
+    OppCommentRepository,
+    OrgRepository,
+)
 from app.modules.admission.ports.opportunities import OpportunityRepository
+from app.modules.admission.ports.outcomes import OutcomeRepository
 from app.modules.admission.ports.profile import ProfileRepository, ReviewRepository
 from app.modules.admission.ports.repositories import (
     AccessRepository,
@@ -33,6 +43,7 @@ from app.modules.admission.ports.staff import (
     PrivacyRepository,
     StaffRepository,
 )
+from app.modules.admission.ports.supp_prompts import SuppPromptRepository
 from app.modules.admission.ports.tasks import TaskRepository
 from app.modules.admission.ports.test_scores import ScoreRepository
 from app.shared.notifications import NotificationDraft
@@ -59,6 +70,16 @@ class AdmissionUnitOfWork(Protocol):
     @property
     def opportunities(self) -> OpportunityRepository:
         """Opportunities catalog, submissions and student plans."""
+        ...
+
+    @property
+    def orgs(self) -> OrgRepository:
+        """Organizations behind opportunities."""
+        ...
+
+    @property
+    def opp_comments(self) -> OppCommentRepository:
+        """Comments under opportunities and their reports."""
         ...
 
     @property
@@ -127,6 +148,11 @@ class AdmissionUnitOfWork(Protocol):
         ...
 
     @property
+    def outcomes(self) -> OutcomeRepository:
+        """Self-reported application outcomes."""
+        ...
+
+    @property
     def help_proofs(self) -> HelpProofsRepository:
         """Proofs, help requests and guest links."""
         ...
@@ -168,6 +194,26 @@ class AdmissionUnitOfWork(Protocol):
     @property
     def privacy(self) -> PrivacyRepository:
         """Export, erasure and the audit view."""
+        ...
+
+    @property
+    def consultations(self) -> ConsultationRepository:
+        """Consultation requests."""
+        ...
+
+    @property
+    def profile_details(self) -> ProfileDetailsRepository:
+        """Interests and quiz answers."""
+        ...
+
+    @property
+    def memory_notes(self) -> MemoryNoteRepository:
+        """Memory notes of the student's AI agent."""
+        ...
+
+    @property
+    def supp_prompts(self) -> SuppPromptRepository:
+        """Supplemental essay prompts per institution and cycle."""
         ...
 
     def notify(self, *drafts: NotificationDraft) -> None:

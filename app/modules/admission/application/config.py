@@ -26,7 +26,7 @@ from app.modules.admission.domain.documents import (
 from app.modules.admission.domain.entitlement import ActorKind
 from app.modules.admission.domain.goal_plan import GoalStatus
 from app.modules.admission.domain.items import (
-    ACTIVITY_TYPES,
+    ACTIVITY_CATEGORIES,
     GRADES,
     MAX_ACTIVITIES,
     MAX_DRAFTS,
@@ -134,7 +134,6 @@ class AdmissionConfig:
     options: dict[str, tuple[str, ...]]
     stages: tuple[str, ...]
     limits: dict[str, int]
-    guest_links: dict[str, int]
     estimates_student_visible: bool
     wellbeing_questions_enabled: bool
     sub_roles: tuple[BuiltinRole, ...]
@@ -175,7 +174,7 @@ class GetConfig:
                 **OPTION_LISTS,
                 "countries": COUNTRIES,
                 "fields": self._study_fields(),
-                "activity_types": ACTIVITY_TYPES,
+                "activity_categories": ACTIVITY_CATEGORIES,
                 "recognition_levels": RECOGNITION_LEVELS,
                 "activity_timing": TIMINGS,
                 "item_grades": tuple(str(g) for g in GRADES),
@@ -186,7 +185,6 @@ class GetConfig:
                 for name, value in (await self._limits.current()).model_dump().items()
                 if name.startswith("admit_")
             },
-            guest_links=self._settings.guest_links.model_dump(),
             estimates_student_visible=bool(
                 rs.get(
                     ESTIMATES_STUDENT_VISIBLE, self._settings.estimates_student_visible
@@ -210,13 +208,11 @@ class AdmissionMe:
 
     kind: ActorKind
     may_enter: bool
-    helper_only: bool
     ineligible_reason: IneligibleReason | None
     grade: int | None
     entitlement_kind: str | None
     staff_roles: tuple[str, ...]
     sub_roles: tuple[dict[str, Any], ...]
-    helps_students: int
 
 
 def get_me(ctx: AdmissionContext, now: dt.datetime) -> AdmissionMe:
@@ -225,7 +221,6 @@ def get_me(ctx: AdmissionContext, now: dt.datetime) -> AdmissionMe:
     return AdmissionMe(
         kind=adm.kind,
         may_enter=adm.may_enter,
-        helper_only=adm.helper_only,
         ineligible_reason=adm.ineligible_reason(ctx.grade),
         grade=ctx.grade,
         entitlement_kind=adm.entitlement.kind if adm.entitlement else None,
@@ -244,5 +239,4 @@ def get_me(ctx: AdmissionContext, now: dt.datetime) -> AdmissionMe:
             for a in ctx.assignments
             if a.active_at(now)
         ),
-        helps_students=len(ctx.helper_of),
     )

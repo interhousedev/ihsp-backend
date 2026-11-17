@@ -1,23 +1,18 @@
-"""Proofs, help responses, guest-link tokens and the reduced helper view (§7, §10)."""
+"""Proofs of items: URL validation and the proof record (§7)."""
 
 import ipaddress
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from typing import Final, Literal
 from urllib.parse import urlsplit
 from uuid import UUID
 
 from app.modules.admission.domain.errors import InvalidProofUrlError
-from app.modules.admission.domain.workflow import GuestLink
-from app.shared.ids import hash_token, random_token
 
 ProofKind = Literal["linkedin", "telegram", "website", "file", "self_provided"]
 ProofStatus = Literal["pending", "checked", "unverifiable", "failed"]
 
 PROOF_URL_MAX: Final = 2000
-GUEST_TOKEN_PREFIX: Final = "gst_"
-GUEST_SESSION_PREFIX: Final = "gss_"
-TOKEN_PREFIX_LEN: Final = 8
 _BLOCKED_SUFFIXES: Final = (".internal", ".local", ".localhost", ".lan", ".home")
 _LINKEDIN: Final = ("linkedin.com",)
 _TELEGRAM: Final = ("t.me", "telegram.me", "telegram.dog")
@@ -73,26 +68,6 @@ def detect_url_kind(url: str) -> ProofKind:
 
 
 @dataclass(frozen=True, slots=True)
-class IssuedToken:
-    """A new token: shown once, only the hash and the prefix are stored."""
-
-    token: str
-    token_hash: str
-    prefix: str
-
-
-def issue_token(marker: str = GUEST_TOKEN_PREFIX) -> IssuedToken:
-    """Return a random `marker`+43-char token with its stored hash and prefix."""
-    token = marker + random_token(32)
-    return IssuedToken(token, hash_token(token), token[:TOKEN_PREFIX_LEN])
-
-
-def token_hash(token: str) -> str:
-    """Return the stored hash of a presented token."""
-    return hash_token(token)
-
-
-@dataclass(frozen=True, slots=True)
 class Proof:
     """Evidence for an item."""
 
@@ -107,58 +82,3 @@ class Proof:
     fetched_at: datetime | None = None
     next_check_at: datetime | None = None
     lock_version: int = 0
-
-
-@dataclass(frozen=True, slots=True)
-class HelpResponse:
-    """A response of a helper (account or guest) to a request."""
-
-    id: UUID
-    help_request_id: UUID
-    text: str
-    created_at: datetime
-    author_user_id: UUID | None = None
-    guest_link_id: UUID | None = None
-    url: str | None = None
-    file_id: UUID | None = None
-
-
-@dataclass(frozen=True, slots=True)
-class GuestLinkRecord:
-    """A guest link with the fields the student's list shows."""
-
-    link: GuestLink
-    label: str | None
-    created_at: datetime
-    last_used_at: datetime | None = None
-    revoked_reason: str | None = None
-    rotated_from: UUID | None = None
-    claimed_by: UUID | None = None
-
-
-@dataclass(frozen=True, slots=True)
-class MetricView:
-    """A current metric of an item."""
-
-    label: str
-    value: str
-    unit: str | None
-
-
-@dataclass(frozen=True, slots=True)
-class HelperActivity:
-    """What a helper sees of an activity (D1): no private notes, no projections."""
-
-    position: str
-    org: str
-    description: str
-    kind: str
-    current_metrics: tuple[MetricView, ...] = field(default_factory=tuple)
-
-
-@dataclass(frozen=True, slots=True)
-class HelperDirectoryEntry:
-    """An opted-in helper in the directory: id and display name only."""
-
-    user_id: UUID
-    display_name: str

@@ -6,6 +6,7 @@ from urllib.parse import urlsplit
 from uuid import UUID
 
 from app.modules.admission.application.actor import AdmissionContext
+from app.modules.admission.domain.catalog_display import LOGO_FITS, valid_logo_zoom
 from app.modules.admission.domain.catalog_proposals import (
     FIELDS,
     MEDIA_FIELDS,
@@ -27,6 +28,33 @@ from app.shared.actor import Role
 from app.shared.base_error import ValidationFailedError
 from app.shared.clock import Clock
 from app.shared.ids import new_id
+
+
+def _clean_payload(
+    kind: ProposalKind, fields: dict[str, Any], source_url: str
+) -> dict[str, Any]:
+    """Return the known, non-empty fields; raise when any is invalid."""
+    parts = urlsplit(source_url)
+    if parts.scheme != "https" or not parts.hostname:
+        raise InvalidProofUrlError()
+    payload = {
+        k: v for k, v in fields.items() if k in FIELDS[kind] and v not in (None, "", [])
+    }
+    if not payload:
+        raise ValidationFailedError(params={"field": "fields"})
+    for key in MEDIA_FIELDS:
+        if key in payload and not is_https_url(payload[key]):
+            raise InvalidMediaUrlError(params={"field": key})
+    if "logo_zoom" in payload and not valid_logo_zoom(payload["logo_zoom"]):
+        raise ValidationFailedError(params={"field": "logo_zoom"})
+    if "logo_fit" in payload and payload["logo_fit"] not in LOGO_FITS:
+        raise ValidationFailedError(params={"field": "logo_fit"})
+    aspect = payload.get("logo_aspect")
+    if "logo_aspect" in payload and not (
+        isinstance(aspect, (int, float)) and aspect > 0
+    ):
+        raise ValidationFailedError(params={"field": "logo_aspect"})
+    return payload
 
 
 class CatalogProposalService:
@@ -69,19 +97,7 @@ class CatalogProposalService:
         """Store a pending proposal; a new row needs its required fields."""
         if not self._may_propose(ctx):
             raise AdmissionForbiddenError(params={"permission": "catalog:propose"})
-        parts = urlsplit(source_url)
-        if parts.scheme != "https" or not parts.hostname:
-            raise InvalidProofUrlError()
-        payload = {
-            k: v
-            for k, v in fields.items()
-            if k in FIELDS[kind] and v not in (None, "", [])
-        }
-        if not payload:
-            raise ValidationFailedError(params={"field": "fields"})
-        for key in MEDIA_FIELDS:
-            if key in payload and not is_https_url(payload[key]):
-                raise InvalidMediaUrlError(params={"field": key})
+        payload = _clean_payload(kind, fields, source_url)
         proposal = CatalogProposal(
             id=new_id(),
             kind=kind,
@@ -104,6 +120,40 @@ class CatalogProposalService:
             saved = await uow.catalog_proposals.add(proposal)
             await uow.commit()
         return saved
+
+    async def edit_logo(
+        self,
+        ctx: AdmissionContext,
+        institution_id: UUID,
+        *,
+        zoom: float | None,
+        fit: str | None,
+    ) -> None:
+        """Set the logo zoom or fit of an institution (admin or live curator)."""
+        if not self.can_review(ctx):
+            raise AdmissionForbiddenError(params={"permission": "catalog:curate"})
+        if zoom is not None and not valid_logo_zoom(zoom):
+            raise ValidationFailedError(params={"field": "logo_zoom"})
+        if fit is not None and fit not in LOGO_FITS:
+            raise ValidationFailedError(params={"field": "logo_fit"})
+        if zoom is None and fit is None:
+            raise ValidationFailedError(params={"field": "fields"})
+        async with self._uow() as uow:
+            if not await uow.catalog_proposals.set_logo(
+                institution_id, zoom=zoom, fit=fit
+            ):
+                raise AdmissionNotFoundError()
+            uow.access.audit(
+                AuditEvent(
+                    action="catalog.logo_edited",
+                    actor_id=ctx.user_id,
+                    student_id=None,
+                    object_type="catalog_institution",
+                    object_id=institution_id,
+                    meta={"logo_zoom": zoom, "logo_fit": fit},
+                )
+            )
+            await uow.commit()
 
     async def list(
         self, ctx: AdmissionContext, *, status: str | None

@@ -106,7 +106,7 @@ class StaffService:
     @staticmethod
     def _empty_caseload(ctx: AdmissionContext) -> list[CaseloadItem]:
         """An admin without assignments reaches no student; others are refused."""
-        if Role.ADMIN in ctx.actor.roles and not ctx.admission.blocked:
+        if Role.ADMIN in ctx.actor.roles:
             return []
         raise AdmissionForbiddenError(params={"permission": "caseload"})
 
@@ -339,7 +339,7 @@ class StaffService:
 
     @staticmethod
     def _need_admin(ctx: AdmissionContext) -> None:
-        if Role.ADMIN not in ctx.actor.roles or ctx.admission.blocked:
+        if Role.ADMIN not in ctx.actor.roles:
             raise AdmissionForbiddenError(params={"permission": "officers:cover_all"})
 
     async def covering_officers(

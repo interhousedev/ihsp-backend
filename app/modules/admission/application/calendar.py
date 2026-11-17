@@ -52,6 +52,11 @@ from app.shared.notifications import NotificationDraft, NotificationType
 Translate = Callable[..., str]
 """`t(locale, key, **params)` over the backend locales."""
 
+KNOWN_ROUNDS: Final = frozenset(
+    {"ed", "ed2", "ea", "rea", "scea", "rd", "rolling", "other"}
+)
+"""Plan codes with a locale line `calendar-round-<code>`; others use `other`."""
+
 MAX_RANGE_DAYS: Final = 400
 FEED_PAST_DAYS: Final = 30
 FEED_AHEAD_DAYS: Final = 400
@@ -115,7 +120,8 @@ class UniversitySource:
                     if day is None or not start <= day <= end:
                         continue
                     plan = str(raw.get("plan") or "other")
-                    key = f"calendar-round-{plan.lower()}"
+                    code = plan.lower()
+                    key = f"calendar-round-{code if code in KNOWN_ROUNDS else 'other'}"
                     out.append(
                         CalendarEntry(
                             key=f"uni:{e.id}:{plan}:{day.isoformat()}",

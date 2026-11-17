@@ -1,85 +1,8 @@
-"""The admission assistant: threads, messages, replies and starter questions."""
+"""Starter questions of the admission assistant, per screen."""
 
-import datetime as dt
-from dataclasses import dataclass, field
-from typing import Any, Final, Literal
-from uuid import UUID
+from typing import Final
 
-MESSAGE_MAX: Final = 2000
 SCREEN_PATH_MAX: Final = 300
-SCREEN_TITLE_MAX: Final = 200
-SCREEN_SUMMARY_MAX: Final = 6000
-TITLE_MAX: Final = 80
-MAX_ROUNDS: Final = 4
-"""Most model requests in one turn; the last one runs without tools."""
-HISTORY_TURNS: Final = 12
-"""Most earlier messages of the thread sent to the model."""
-THREADS_MAX: Final = 50
-
-Role = Literal["user", "assistant"]
-
-
-@dataclass(frozen=True, slots=True)
-class Screen:
-    """What the student's page showed when they asked (untrusted text)."""
-
-    path: str
-    title: str
-    summary: str
-
-
-@dataclass(frozen=True, slots=True)
-class Citation:
-    """A record of the student's data an answer relied on."""
-
-    source: str
-    title: str
-    url_path: str
-
-
-@dataclass(frozen=True, slots=True)
-class Action:
-    """A button the answer offers: open a page or propose a task (nothing is made)."""
-
-    kind: Literal["open", "propose_task"]
-    label: str
-    url_path: str | None = None
-    task: dict[str, Any] | None = None
-
-
-@dataclass(slots=True)
-class Message:
-    """One message of a thread."""
-
-    id: UUID
-    thread_id: UUID
-    role: Role
-    text: str
-    created_at: dt.datetime
-    citations: list[Citation] = field(default_factory=list)
-    actions: list[Action] = field(default_factory=list)
-
-
-@dataclass(slots=True)
-class Thread:
-    """A conversation of one student."""
-
-    id: UUID
-    student_id: UUID
-    title: str
-    created_at: dt.datetime
-    updated_at: dt.datetime
-
-
-@dataclass(frozen=True, slots=True)
-class Reply:
-    """The assistant's answer to one message."""
-
-    thread_id: UUID
-    message_id: UUID
-    text: str
-    citations: list[Citation]
-    actions: list[Action]
 
 
 _T = tuple[str, str, str]  # uz, ru, en

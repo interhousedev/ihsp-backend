@@ -6,7 +6,7 @@ never writes the essay.
 """
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, field, replace
 from typing import Any, Final
 from uuid import UUID
 
@@ -500,6 +500,24 @@ class OutlineSection:
 
 
 @dataclass(frozen=True, slots=True)
+class SentenceNote:
+    """A comment on one sentence."""
+
+    quote: str
+    comment: str
+
+
+@dataclass(frozen=True)
+class LifeStoryReading:
+    """What a free life story shows about the student."""
+
+    drivers: list[str]
+    support: list[str]
+    leave_out: list[str]
+    ideas: list[str]
+
+
+@dataclass(frozen=True)
 class Feedback:
     """Comments on a draft; never replacement text."""
 
@@ -508,6 +526,7 @@ class Feedback:
     suggestions: list[str]
     word_count: int
     word_limit: int | None
+    sentences: list[SentenceNote] = field(default_factory=list)
 
 
 @dataclass(frozen=True, slots=True)
@@ -730,6 +749,76 @@ class EssayCoach:
             _lines(data.get("suggestions"), prompt.MAX_POINTS),
             count,
             essay.word_limit,
+        )
+
+    async def review(
+        self,
+        ctx: AdmissionContext,
+        essay_id: UUID,
+        locale: str,
+        mode: str,
+        excerpt: str,
+    ) -> Feedback:
+        """Review the draft in a mode: overall, by sentence, both or one excerpt."""
+        if mode == "overall":
+            return await self.feedback(ctx, essay_id, locale)
+        await self._gate(ctx)
+        async with self._uow() as uow:
+            essay = await self._essay(uow, ctx, essay_id)
+        text = excerpt.strip() if mode == "partial" else essay.body
+        if not text.strip():
+            raise CharLimitError(params={"field": "body", "limit": 1, "count": 0})
+        lines = self._brief(essay) + [
+            f"Review mode: {mode}",
+            f"Word count: {essay.word_count}",
+            f"Draft: {text[:_BODY_TO_MODEL]}",
+        ]
+        data = await self._ask(ctx, "sentences", locale, lines)
+        notes = []
+        for raw in (data.get("sentences") or [])[: prompt.MAX_SENTENCES]:
+            quote, comment = _line(_get(raw, "quote")), _line(_get(raw, "comment"))
+            if quote and comment:
+                notes.append(SentenceNote(quote[:80], comment))
+        return Feedback(
+            _line(data.get("summary")),
+            _lines(data.get("strengths"), prompt.MAX_POINTS),
+            _lines(data.get("suggestions"), prompt.MAX_POINTS),
+            essay.word_count,
+            essay.word_limit,
+            notes,
+        )
+
+    async def refine(
+        self, ctx: AdmissionContext, essay_id: UUID, locale: str, action: str, text: str
+    ) -> list[str]:
+        """Hints for rewording, connecting or merging a passage; never new text."""
+        await self._gate(ctx)
+        async with self._uow() as uow:
+            essay = await self._essay(uow, ctx, essay_id)
+        data = await self._ask(
+            ctx,
+            "refine",
+            locale,
+            self._brief(essay) + [f"Action: {action}", f"Passage: {text[:2000]}"],
+        )
+        return _lines(data.get("hints"), prompt.MAX_HINTS)
+
+    async def life_story(
+        self, ctx: AdmissionContext, text: str, locale: str
+    ) -> LifeStoryReading:
+        """Read a free life story: drivers, fields to support, topics to leave out."""
+        await self._gate(ctx)
+        async with self._uow() as uow:
+            lines = await self._context(uow, ctx)
+        data = await self._ask(
+            ctx, "life_story", locale, [*lines, f"Story: {text[:_BODY_TO_MODEL]}"]
+        )
+        cap = prompt.MAX_POINTS
+        return LifeStoryReading(
+            _lines(data.get("drivers"), cap),
+            _lines(data.get("support"), cap),
+            _lines(data.get("leave_out"), cap),
+            _lines(data.get("ideas"), prompt.MAX_HINTS),
         )
 
 

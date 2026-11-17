@@ -8,13 +8,10 @@ from uuid import UUID
 from app.modules.admission.application.actor import AdmissionContext
 from app.modules.admission.domain.errors import AdmissionNotFoundError
 from app.modules.admission.domain.staff import AuditRecord
-from app.modules.admission.ports.assistant import AssistantRepository
 from app.modules.admission.ports.consent import (
     AI,
     PURPOSE_VERSIONS,
     PURPOSES,
-    SHARING,
-    STAFF_VIEW,
     PurposeConsentStore,
     PurposeGrant,
 )
@@ -24,8 +21,6 @@ from app.modules.admission.ports.unit_of_work import UowFactory
 from app.shared.clock import Clock
 
 AUDIT_LIMIT = 200
-CASCADING = frozenset({STAFF_VIEW, SHARING})
-"""Withdrawing one of these also ends guest links and helper access."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,7 +67,6 @@ class PrivacyService:
         consents: PurposeConsentStore,
         clock: Clock,
         student_search: StudentDataSearch | None = None,
-        assistant: AssistantRepository | None = None,
         *,
         erasers: Sequence[Eraser] = (),
         file_remover: Eraser | None = None,
@@ -85,7 +79,6 @@ class PrivacyService:
         file by id.
         """
         self._student_search = student_search
-        self._assistant = assistant
         self._uow = uow_factory
         self._consents = consents
         self._clock = clock
@@ -111,14 +104,12 @@ class PrivacyService:
         return await self.consent(ctx)
 
     async def withdraw(self, ctx: AdmissionContext, purpose: str) -> ConsentState:
-        """Withdraw a purpose; staff view and sharing also end shared access."""
+        """Withdraw a purpose and record it in the audit log."""
         if purpose not in PURPOSES:
             raise AdmissionNotFoundError()
         now = self._clock.now()
         await self._consents.withdraw(ctx.user_id, purpose, now=now)
         async with self._uow() as uow:
-            if purpose in CASCADING:
-                await uow.privacy.revoke_sharing(ctx.user_id, now)
             uow.access.audit(
                 AuditEvent(
                     action="consent.withdrawn",
@@ -179,10 +170,6 @@ class PrivacyService:
                 )
             )
             await uow.commit()
-        if self._assistant is not None:
-            threads, messages = await self._assistant.erase(ctx.user_id)
-            counts["assistant_threads"] = threads
-            counts["assistant_messages"] = messages
         await self._consents.forget(ctx.user_id)
         for eraser in self._final_erasers:
             await eraser(ctx.user_id)

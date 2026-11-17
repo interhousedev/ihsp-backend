@@ -7,7 +7,6 @@ from typing import Final, Literal
 from uuid import UUID
 
 from app.modules.admission.domain.permissions import (
-    HELPER_SET,
     KIND_ALLOW_LIST,
     KIND_ROLE,
     NO_CONSENT_SET,
@@ -20,7 +19,7 @@ from app.shared.actor import Role
 EntitlementKind = Literal["school_student", "alumni", "staff"]
 ScopeKind = Literal["all", "cohort", "student"]
 GrantedVia = Literal["admin", "delegation"]
-IneligibleReason = Literal["not_in_grade", "no_entitlement", "blocked"]
+IneligibleReason = Literal["not_in_grade", "no_entitlement"]
 
 APPLICANT_KINDS: Final = frozenset({"school_student", "alumni"})
 
@@ -120,7 +119,6 @@ class ActorFacts:
     roles: frozenset[Role]
     mentor_opt_in: bool = False
     assignments: tuple[Assignment, ...] = ()
-    helper_of: frozenset[UUID] = frozenset()
 
 
 @dataclass(frozen=True, slots=True)
@@ -174,9 +172,6 @@ def resolve(
     limited = covering and not student.staff_view_consent
     if limited:
         perms &= NO_CONSENT_SET
-    if student.student_id in actor.helper_of:
-        covering = True
-        perms |= HELPER_SET
     return Resolution(
         frozenset(perms),
         in_scope=covering,

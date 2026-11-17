@@ -7,7 +7,7 @@ from decimal import Decimal
 from typing import Any, Literal, Protocol
 from uuid import UUID
 
-from app.modules.admission.domain.items import Item
+from app.modules.admission.domain.items import Item, ItemGrade
 
 Horizon = Literal["current", "projected"]
 Provenance = Literal["self_stated", "source_supported", "independently_verified"]
@@ -99,6 +99,10 @@ class ItemRepository(Protocol):
 
     async def set_order(self, ordered: Sequence[UUID]) -> None:
         """Set the sort order of the given items to their list position."""
+        ...
+
+    async def set_grade(self, item_id: UUID, grade: ItemGrade) -> None:
+        """Store the AI grade of the item; the lock version stays."""
         ...
 
     async def metrics_for(self, item_ids: Sequence[UUID]) -> dict[UUID, list[Metric]]:

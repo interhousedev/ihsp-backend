@@ -1,6 +1,5 @@
 """Ports: repositories of the admission foundation (access, courses, settings)."""
 
-import datetime as dt
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any, Literal, Protocol
@@ -43,10 +42,6 @@ class AccessRepository(Protocol):
 
     async def assignments_for(self, user_id: UUID) -> tuple[Assignment, ...]:
         """Return the user's unrevoked assignments with their roles."""
-        ...
-
-    async def helper_of(self, user_id: UUID, now: dt.datetime) -> frozenset[UUID]:
-        """Return the students whose live help requests the user was given."""
         ...
 
     async def opt_ins(self, user_ids: Sequence[UUID]) -> dict[UUID, OptIns]:

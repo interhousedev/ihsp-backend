@@ -11,6 +11,11 @@ from app.modules.admission.application.checklist import ensure_entry, ensure_sha
 from app.modules.admission.application.estimates import EstimateView, view_estimate
 from app.modules.admission.application.runtime_settings import RuntimeSettingsService
 from app.modules.admission.application.staff_notice import permitted_staff
+from app.modules.admission.domain.catalog_display import (
+    FacetInput,
+    deadline_cycles,
+    facets,
+)
 from app.modules.admission.domain.chooser import (
     AffordabilityCheck,
     CatalogFilters,
@@ -18,8 +23,10 @@ from app.modules.admission.domain.chooser import (
     CatalogScholarship,
     ListEntry,
     check_affordability,
+    cycle_of,
     matches,
     needs_affordability_gate,
+    rank_hits,
 )
 from app.modules.admission.domain.errors import (
     AdmissionForbiddenError,
@@ -30,6 +37,7 @@ from app.modules.admission.domain.errors import (
 from app.modules.admission.domain.estimates import estimate
 from app.modules.admission.domain.permissions import Permission
 from app.modules.admission.domain.runtime_settings import ESTIMATES_STUDENT_VISIBLE
+from app.modules.admission.domain.study_fields import build_taxonomy
 from app.modules.admission.ports.repositories import AuditEvent
 from app.modules.admission.ports.unit_of_work import (
     AdmissionUnitOfWork,
@@ -63,16 +71,41 @@ class CatalogService:
     async def search(
         self, filters: CatalogFilters, *, cursor: int = 0, limit: int = 20
     ) -> CatalogPage:
-        """Filter institutions by name and facts; offset cursor, name order."""
+        """Filter institutions by text and facts; best text match first."""
         limit = max(1, min(limit, MAX_PAGE))
         async with self._uow() as uow:
             found = await uow.catalog.institutions(
                 country=filters.country.upper() if filters.country else None
             )
-        hits = [i for i in found if matches(i, filters)]
+        hits = rank_hits([i for i in found if matches(i, filters)], filters.q)
         page = hits[cursor : cursor + limit]
         more = cursor + limit < len(hits)
         return CatalogPage(page, cursor + limit if more else None)
+
+    async def facets(self, locale: str = "en") -> list[dict[str, Any]]:
+        """Filter descriptors with labels; options reflect the stored catalog."""
+        async with self._uow() as uow:
+            found = await uow.catalog.institutions()
+        costs = [i.coa_total for i in found if i.coa_total is not None]
+        return facets(
+            FacetInput(
+                countries=sorted({i.country for i in found}),
+                cycles=deadline_cycles(found),
+                max_cost=max(costs) if costs else None,
+            ),
+            locale,
+        )
+
+    async def study_fields(self, locale: str = "en") -> list[dict[str, Any]]:
+        """Grouped, deduplicated fields of study with stable ids."""
+        async with self._uow() as uow:
+            found = await uow.catalog.institutions()
+        raw = [
+            str(n)
+            for i in found
+            for n in (i.facts["fields"].value if "fields" in i.facts else [])
+        ]
+        return build_taxonomy(raw, locale)
 
     async def institution(self, institution_id: UUID) -> CatalogInstitution:
         """Return one institution or raise not found."""
@@ -165,8 +198,10 @@ class ListService:
         amounts = owner or Permission.FINANCE_READ in permissions
         return ListItem(entry, inst, view, check, amounts)
 
-    async def view(self, ctx: AdmissionContext, student_id: UUID) -> list[ListItem]:
-        """The list of a student the caller may read (the owner or staff)."""
+    async def view(
+        self, ctx: AdmissionContext, student_id: UUID, cycle: str | None = None
+    ) -> list[ListItem]:
+        """The list of a student the caller may read; `cycle` keeps one cycle."""
         res = await self._access.require(
             ctx, student_id, Permission.LIST_READ, object_type="list"
         )
@@ -175,6 +210,8 @@ class ListService:
             entries = await uow.shortlist.entries(student_id)
             out: list[ListItem] = []
             for e in entries:
+                if cycle is not None and e.cycle != cycle:
+                    continue
                 inst = await uow.catalog.institution(e.institution_id)
                 if inst is None:
                     continue
@@ -200,8 +237,12 @@ class ListService:
         round_: str = "RD",
         bucket: str | None = None,
         notes: str | None = None,
+        cycle: str | None = None,
     ) -> ListItem:
-        """Put an institution on the caller's list; once per institution."""
+        """Put an institution on the caller's list; once per institution.
+
+        The cycle defaults to the one running now.
+        """
         await self._owner(ctx)
         visible = await self._visible()
         async with self._uow() as uow:
@@ -229,6 +270,7 @@ class ListService:
                 bucket=bucket,
                 notes=notes,
                 lock_version=0,
+                cycle=cycle or cycle_of(self._clock.now().date()),
             )
             entry = await uow.shortlist.add(entry)
             entry, check = await self._recompute(uow, entry, inst)
@@ -297,8 +339,9 @@ class ListService:
         bucket: str | None = None,
         notes: str | None = None,
         clear_bucket: bool = False,
+        cycle: str | None = None,
     ) -> ListItem:
-        """Change round, status, bucket or notes; ED/ED2 needs affordability."""
+        """Change round, status, bucket, notes or cycle; ED/ED2 needs affordability."""
         await self._owner(ctx)
         visible = await self._visible()
         async with self._uow() as uow:
@@ -308,7 +351,12 @@ class ListService:
                 raise AdmissionNotFoundError()
             changes: dict[str, Any] = {
                 k: v
-                for k, v in (("round", round_), ("status", status), ("notes", notes))
+                for k, v in (
+                    ("round", round_),
+                    ("status", status),
+                    ("notes", notes),
+                    ("cycle", cycle),
+                )
                 if v is not None
             }
             if bucket is not None or clear_bucket:

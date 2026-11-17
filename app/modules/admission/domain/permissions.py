@@ -7,7 +7,7 @@ from app.shared.actor import Role
 
 
 class Permission(StrEnum):
-    """What a staff member, helper or owner may do with one student's data."""
+    """What a staff member or owner may do with one student's data."""
 
     PROFILE_READ = "profile:read"
     PROFILE_COMMENT = "profile:comment"
@@ -34,7 +34,6 @@ class Permission(StrEnum):
     ESTIMATES_VIEW_UNCALIBRATED = "estimates:view_uncalibrated"
     CATALOG_CURATE = "catalog:curate"
     OPPORTUNITIES_MODERATE = "opportunities:moderate"
-    HELP_RESPOND = "help:respond"
 
 
 P = Permission
@@ -60,11 +59,9 @@ _MENTOR_FORBIDDEN: Final = frozenset(
         P.STUDENTS_ASSIGN,
         P.TRANSCRIPTS_FULFIL,
         P.TRANSCRIPTS_OVERSEE,
-        P.HELP_RESPOND,
     }
 )
-# Staff sub-roles never carry the helper permission; it comes from help grants.
-_STAFF: Final = frozenset(P) - {P.HELP_RESPOND}
+_STAFF: Final = frozenset(P)
 
 KIND_ALLOW_LIST: Final[dict[str, frozenset[Permission]]] = {
     "counselor": _STAFF - {P.TRANSCRIPTS_FULFIL},
@@ -88,7 +85,6 @@ OWNER_SET: Final = _STAFF - {
     P.DOCUMENTS_REVIEW,
 }
 
-HELPER_SET: Final = frozenset({P.ACTIVITIES_READ, P.HELP_RESPOND})
 
 # Without the `admission_staff_view` consent staff see only name, class and the
 # checklist status; no content permission survives.

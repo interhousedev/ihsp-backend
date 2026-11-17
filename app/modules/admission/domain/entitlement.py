@@ -8,7 +8,7 @@ from app.modules.admission.domain.access import Entitlement, IneligibleReason
 from app.modules.admission.domain.permissions import KIND_ROLE
 from app.shared.actor import Role
 
-ActorKind = Literal["applicant", "staff", "helper_only", "none"]
+ActorKind = Literal["applicant", "staff", "none"]
 # Administrators enter the staff area too (settings, student list, saved views).
 STAFF_ROLES: Final = frozenset({*KIND_ROLE.values(), Role.ADMIN})
 ELIGIBLE_GRADES: Final = frozenset({10, 11})
@@ -21,32 +21,24 @@ class AdmissionActor:
     user_id: UUID
     entitlement: Entitlement | None
     staff_roles: frozenset[Role]
-    has_help_grants: bool
-    blocked: bool = False
 
     @property
     def is_applicant(self) -> bool:
         """Return whether the caller may use the student side."""
-        return not self.blocked and (
-            self.entitlement is not None and self.entitlement.is_applicant
-        )
+        return self.entitlement is not None and self.entitlement.is_applicant
 
     @property
     def is_staff(self) -> bool:
         """Return whether the caller holds an admission staff role."""
-        return not self.blocked and bool(self.staff_roles)
+        return bool(self.staff_roles)
 
     @property
     def kind(self) -> ActorKind:
         """Classify the caller; applicant wins over staff for the default view."""
-        if self.blocked:
-            return "none"
         if self.is_applicant:
             return "applicant"
         if self.is_staff:
             return "staff"
-        if self.has_help_grants:
-            return "helper_only"
         return "none"
 
     @property
@@ -54,15 +46,8 @@ class AdmissionActor:
         """Return whether any admission route besides `/me` is reachable."""
         return self.kind != "none"
 
-    @property
-    def helper_only(self) -> bool:
-        """Return whether only `/help/*` and `/me` are reachable."""
-        return self.kind == "helper_only"
-
     def ineligible_reason(self, grade: int | None) -> IneligibleReason | None:
         """Return why the caller cannot use the student side, if they cannot."""
-        if self.blocked:
-            return "blocked"
         if self.is_applicant:
             return None
         if grade is not None and grade not in ELIGIBLE_GRADES:

@@ -48,7 +48,7 @@ class DeadlineItem:
 
 @dataclass(frozen=True, slots=True)
 class DeadlineInput:
-    """Editable fields of a deadline; `None` keeps the current value on edit."""
+    """Editable fields of a deadline; `None` keeps a value unless in `clear`."""
 
     status: DeadlineStatus | None = None
     precision: str | None = None
@@ -59,6 +59,13 @@ class DeadlineInput:
     instant_utc: dt.datetime | None = None
     binding: bool | None = None
     applies_to: str | None = None
+    clear: frozenset[str] = frozenset()
+
+    @classmethod
+    def from_patch(cls, patch: dict[str, object]) -> DeadlineInput:
+        """Build from a set-fields-only patch; an explicit null clears a nullable."""
+        clear = frozenset(k for k, v in patch.items() if v is None and k in _NULLABLE)
+        return cls(**patch, clear=clear)  # type: ignore[arg-type]
 
 
 def _can_manage(ctx: AdmissionContext) -> bool:
@@ -103,6 +110,14 @@ class DeadlineService:
                 institution_id=institution_id, cycle=cycle
             )
 
+    async def institution_names(
+        self, ctx: AdmissionContext, ids: set[UUID]
+    ) -> dict[UUID, str]:
+        """Return the university names of the given ids."""
+        self._need_manage(ctx)
+        async with self._uow() as uow:
+            return await uow.deadlines.institution_names(ids)
+
     async def create(
         self,
         ctx: AdmissionContext,
@@ -134,24 +149,41 @@ class DeadlineService:
         """Add a new version, supersede the old one and move the milestones."""
         self._need_manage(ctx)
         async with self._uow() as uow:
-            old = await uow.deadlines.get(deadline_id)
-            if old is None:
-                raise AdmissionNotFoundError()
-            if old.superseded_by is not None:
-                raise InvalidTransitionError(params={"status": "superseded"})
-            new = dataclasses.replace(
-                old, id=new_id(), version=old.version + 1, superseded_by=None
-            )
-            _apply(new, data)
-            await uow.deadlines.add(new)
-            await uow.deadlines.supersede(old.id, new.id)
-            await self._move_milestones(uow, old, new)
+            new = await self._new_version(uow, deadline_id, data)
             await uow.commit()
         return new
 
+    async def _new_version(
+        self, uow: AdmissionUnitOfWork, deadline_id: UUID, data: DeadlineInput
+    ) -> Deadline:
+        old = await uow.deadlines.get(deadline_id)
+        if old is None:
+            raise AdmissionNotFoundError()
+        if old.superseded_by is not None:
+            raise InvalidTransitionError(params={"status": "superseded"})
+        new = dataclasses.replace(
+            old, id=new_id(), version=old.version + 1, superseded_by=None
+        )
+        _apply(new, data)
+        await uow.deadlines.add(new)
+        await uow.deadlines.supersede(old.id, new.id)
+        await self._move_milestones(uow, old, new)
+        return new
+
     async def remove(self, ctx: AdmissionContext, deadline_id: UUID) -> None:
-        """Retire a deadline: it becomes `unknown` and reminders stop."""
-        await self.edit(ctx, deadline_id, DeadlineInput(status="unknown"))
+        """Retire a deadline: reminders stop and it leaves the live list.
+
+        The last version is `unknown` and points at itself, so no version of the
+        deadline is live; milestones keep it as their undated reference. All of it
+        happens in one unit of work.
+        """
+        self._need_manage(ctx)
+        async with self._uow() as uow:
+            retired = await self._new_version(
+                uow, deadline_id, DeadlineInput(status="unknown")
+            )
+            await uow.deadlines.supersede(retired.id, retired.id)
+            await uow.commit()
 
     async def _move_milestones(
         self, uow: AdmissionUnitOfWork, old: Deadline, new: Deadline
@@ -303,6 +335,9 @@ class DeadlineService:
         return queued
 
 
+_NULLABLE = frozenset({"source_text", "local_date"})
+
+
 def _apply(deadline: Deadline, data: DeadlineInput) -> None:
     for name in (
         "status",
@@ -318,3 +353,5 @@ def _apply(deadline: Deadline, data: DeadlineInput) -> None:
         value = getattr(data, name)
         if value is not None:
             setattr(deadline, name, value)
+        elif name in data.clear:
+            setattr(deadline, name, None)

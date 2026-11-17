@@ -109,20 +109,6 @@ class ProofSourceError(ValidationFailedError):
     message_key = "admission-proof-source"
 
 
-class GuestLinkLimitError(ValidationFailedError):
-    """Too many active guest links, or a limit outside the allowed range."""
-
-    code = "admission/guest_link_limit"
-    message_key = "admission-guest-link-limit"
-
-
-class SelfClaimError(ValidationFailedError):
-    """A student cannot accept their own help request."""
-
-    code = "admission/self_claim"
-    message_key = "admission-self-claim"
-
-
 class InvalidTransitionError(ConflictError):
     """The status change is not allowed from the current status. Params: status."""
 
@@ -223,8 +209,6 @@ ALL_ERRORS: tuple[type[BaseError], ...] = (
     ProofSourceError,
     InvalidProofUrlError,
     InvalidMediaUrlError,
-    GuestLinkLimitError,
-    SelfClaimError,
     InvalidTransitionError,
     PickupNotSetError,
     UndoExpiredError,

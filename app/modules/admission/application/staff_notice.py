@@ -45,12 +45,10 @@ async def permitted_staff(
                 user_id=user_id,
                 entitlement=None,
                 staff_roles=admission_staff_roles(actor.roles),
-                has_help_grants=False,
             ),
             grade=None,
             group_ids=frozenset(),
             assignments=assignments,
-            helper_of=frozenset(),
             mentor_opt_in=False,
         )
         res = await access.resolve(staff_ctx, student_id)

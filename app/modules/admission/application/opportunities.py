@@ -2,7 +2,7 @@
 
 import dataclasses
 import datetime as dt
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Final, Protocol
 from urllib.parse import urlsplit
@@ -100,6 +100,10 @@ class CatalogFilter:
     online: bool | None = None
     free: bool | None = None
     max_tuition: int | None = None
+    award_type: str | None = None
+    scope: str | None = None
+    org_id: UUID | None = None
+    college_credit: str | None = None
     sort: str = "title"
     page: int = 1
     size: int = 200
@@ -228,6 +232,20 @@ def _matches_program(d: OpportunityDraft, f: CatalogFilter) -> bool:
     )
 
 
+async def _any_org(org_id: UUID) -> bool:
+    return True
+
+
+def _matches_award(d: OpportunityDraft, f: CatalogFilter) -> bool:
+    """The award type, scope, organization and college-credit filters."""
+    return (
+        (f.award_type is None or d.award_type == f.award_type)
+        and (f.scope is None or d.scope == f.scope)
+        and (f.org_id is None or d.org_id == f.org_id)
+        and (f.college_credit is None or d.college_credit == f.college_credit)
+    )
+
+
 class OpportunityService:
     """Everyone in the app submits; administrators and grantees moderate."""
 
@@ -238,6 +256,7 @@ class OpportunityService:
         clock: Clock,
         lms: LmsCourseLookup | None = None,
         limiter: RateLimiter | None = None,
+        org_exists: Callable[[UUID], Awaitable[bool]] | None = None,
     ) -> None:
         """Keep the collaborators; `lms` is None where LMS is not built."""
         self._uow = uow_factory
@@ -245,13 +264,12 @@ class OpportunityService:
         self._clock = clock
         self._lms = lms
         self._limiter = limiter
+        self._org_exists = org_exists or _any_org
 
     # - - - Roles - - -
 
     def can_moderate(self, ctx: AdmissionContext) -> bool:
         """Administrators, and staff holding a live `opportunities:moderate` grant."""
-        if ctx.admission.blocked:
-            return False
         if Role.ADMIN in ctx.actor.roles:
             return True
         now = self._clock.now()
@@ -264,8 +282,6 @@ class OpportunityService:
 
     def may_submit(self, ctx: AdmissionContext) -> bool:
         """Students, staff, helpers (alumni, consultants) and moderators."""
-        if ctx.admission.blocked:
-            return False
         return (
             ctx.admission.may_enter
             or Role.STUDENT in ctx.actor.roles
@@ -363,6 +379,8 @@ class OpportunityService:
         for course_id in {c for c in courses if c is not None}:
             if self._lms is None or await self._lms.course_title(course_id) is None:
                 raise ValidationFailedError(params={"field": "lms_course_id"})
+        if draft.org_id is not None and not await self._org_exists(draft.org_id):
+            raise ValidationFailedError(params={"field": "org_id"})
 
     async def submit(
         self,
@@ -519,6 +537,7 @@ class OpportunityService:
                 )
                 and (f.field_id is None or f.field_id in {fld.get(s) for s in subs})
                 and _matches_program(d, f)
+                and _matches_award(d, f)
                 and (
                     not q
                     or q in d.title.casefold()

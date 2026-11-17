@@ -27,6 +27,12 @@ class CatalogProposalRepository(Protocol):
         """Return whether the institution or scholarship to edit exists."""
         ...
 
+    async def set_logo(
+        self, institution_id: UUID, *, zoom: float | None, fit: str | None
+    ) -> bool:
+        """Set the given logo fields of a published institution; False: unknown."""
+        ...
+
     async def apply(self, proposal: CatalogProposal) -> UUID:
         """Create or update the catalog row, publish it, return its id."""
         ...

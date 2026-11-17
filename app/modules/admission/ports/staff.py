@@ -119,7 +119,3 @@ class PrivacyRepository(Protocol):
     async def audit(self, student_id: UUID, limit: int) -> list[AuditRecord]:
         """Return who accessed the student's data, newest first."""
         ...
-
-    async def revoke_sharing(self, student_id: UUID, now: dt.datetime) -> None:
-        """Revoke guest links and unassign helpers."""
-        ...

@@ -53,7 +53,6 @@ class AdmissionContext:
     grade: int | None
     group_ids: frozenset[UUID]
     assignments: tuple[Assignment, ...]
-    helper_of: frozenset[UUID]
     mentor_opt_in: bool
 
     @property
@@ -65,18 +64,15 @@ class AdmissionContext:
         """Return the actor side of `resolve`."""
         return ActorFacts(
             user_id=self.actor.user_id,
-            active=not self.admission.blocked,
+            active=True,
             roles=self.actor.roles,
             mentor_opt_in=self.mentor_opt_in,
             assignments=self.assignments,
-            helper_of=self.helper_of,
         )
 
 
 def can_edit_settings(ctx: AdmissionContext, now: dt.datetime) -> bool:
-    """Admission settings: an administrator or a live counselor, not blocked."""
-    if ctx.admission.blocked:
-        return False
+    """Admission settings: an administrator or a live counselor."""
     if Role.ADMIN in ctx.actor.roles:
         return True
     return any(
@@ -104,7 +100,7 @@ class ResolveAdmissionActor:
         self._grades = frozenset(eligible_grades)
 
     async def execute(self, actor: Actor) -> AdmissionContext:
-        """Read entitlement, assignments, help grants and the caller's group."""
+        """Read entitlement, assignments and the caller's group."""
         now = self._clock.now()
         student = (
             await self._membership.student(actor.user_id)
@@ -114,7 +110,6 @@ class ResolveAdmissionActor:
         async with self._uow() as uow:
             stored = await uow.access.entitlement(actor.user_id)
             assignments = await uow.access.assignments_for(actor.user_id)
-            helper_of = await uow.access.helper_of(actor.user_id, now)
             opt_ins = await uow.access.opt_ins([actor.user_id])
         entitlement = effective_entitlement(stored, student, self._grades, now)
         mine = opt_ins.get(actor.user_id)
@@ -124,11 +119,9 @@ class ResolveAdmissionActor:
                 user_id=actor.user_id,
                 entitlement=entitlement,
                 staff_roles=admission_staff_roles(actor.roles),
-                has_help_grants=bool(helper_of),
             ),
             grade=grade_from_group_name(student.group_name) if student else None,
             group_ids=frozenset({student.group_id}) if student else frozenset(),
             assignments=assignments,
-            helper_of=helper_of,
             mentor_opt_in=bool(mine and mine.mentor_opt_in),
         )

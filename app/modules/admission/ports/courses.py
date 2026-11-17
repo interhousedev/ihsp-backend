@@ -17,3 +17,11 @@ class CourseSources(Protocol):
     async def lms_courses(self, actor: Actor) -> list[Course]:
         """Return the LMS courses the actor is enrolled in."""
         ...
+
+    async def lms_catalog(self, actor: Actor, query: str | None) -> list[Course]:
+        """Return public LMS courses the actor may open, filtered by title."""
+        ...
+
+    async def lms_enroll(self, actor: Actor, course_id: UUID) -> None:
+        """Enroll the actor in a public LMS course."""
+        ...

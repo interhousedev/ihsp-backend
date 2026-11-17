@@ -1,236 +1,259 @@
-"""The admission assistant: answers about the student's own data, with tools."""
+"""The admission assistant's side of the unified AI chat (assistant `admission`).
 
-import datetime as dt
-import json
+The chat, streaming and tool loop live in the AI module; this service answers its
+tools for the applicant: a read of the whole application, the FAQ search and
+one-click suggestions of courses, opportunities, scholarships and universities.
+"""
+
 from typing import Any, Final
 from uuid import UUID
 
 from app.modules.admission.application.access import AccessPolicy
-from app.modules.admission.application.actor import AdmissionContext
-from app.modules.admission.application.assistant_tools import TOOLS, ToolBox
-from app.modules.admission.application.words import delimit
-from app.modules.admission.domain.assistant import (
-    HISTORY_TURNS,
-    MAX_ROUNDS,
-    THREADS_MAX,
-    TITLE_MAX,
-    Message,
-    Reply,
-    Screen,
-    Thread,
-    starter_questions,
+from app.modules.admission.application.actor import (
+    AdmissionContext,
+    ResolveAdmissionActor,
 )
+from app.modules.admission.application.chooser import CatalogService, ListService
+from app.modules.admission.application.courses import CourseService
+from app.modules.admission.application.kb import KbService
+from app.modules.admission.application.opportunities import (
+    CatalogFilter,
+    OpportunityService,
+)
+from app.modules.admission.domain.assistant import starter_questions
+from app.modules.admission.domain.chooser import CatalogFilters
 from app.modules.admission.domain.errors import (
     AdmissionForbiddenError,
     AdmissionNotFoundError,
-    CharLimitError,
     ConsentRequiredError,
 )
-from app.modules.admission.ports.ai import PromptSource, QuotaOf
-from app.modules.admission.ports.assistant import (
-    AssistantData,
-    AssistantModel,
-    AssistantRepository,
-)
+from app.modules.admission.domain.kb import snippet
+from app.modules.admission.ports.ai import QuotaOf
+from app.modules.admission.ports.assistant import AssistantData
 from app.modules.admission.ports.consent import AI, PurposeConsents
-from app.modules.admission.ports.student_search import StudentDataSearch
-from app.shared.ai_tasks import AiTask
-from app.shared.brand import with_brand
-from app.shared.clock import Clock
-from app.shared.ids import new_id
+from app.modules.admission.ports.courses import CourseSources
+from app.shared.actor import Actor
+from app.shared.contracts.admission_assistant import (
+    SUGGESTION_KINDS,
+    FaqHit,
+    SuggestionCard,
+    SuggestionKind,
+)
 from app.shared.rate_limit import RateLimiter
 
 _DAY: Final = 24 * 3600
-_TOKENS: Final = 1500
-_FALLBACK: Final = {
-    "uz": "Javob topa olmadim. Savolni boshqacha so‘rab ko‘ring.",
-    "ru": "Не удалось найти ответ. Попробуйте переформулировать вопрос.",
-    "en": "I could not find an answer. Try asking in other words.",
-}
+_LIMIT_MAX: Final = 10
+_REASON_MAX: Final = 300
 
 
-def _clean_attr(value: str) -> str:
-    return " ".join(value.replace("<", "").replace(">", "").replace('"', "").split())
+def _reason(*parts: str | None) -> str:
+    return " · ".join(p.strip() for p in parts if p and p.strip())[:_REASON_MAX]
 
 
-def screen_block(screen: Screen) -> str:
-    """The untrusted screen text wrapped as data; angle brackets are escaped."""
-    body = screen.summary.replace("<", "&lt;").replace(">", "&gt;")
-    return (
-        f'<screen path="{_clean_attr(screen.path)}" '
-        f'title="{_clean_attr(screen.title)}">\n{body}\n</screen>'
-    )
-
-
-def _title(message: str) -> str:
-    return " ".join(message.split())[:TITLE_MAX]
+def _uuid(value: str) -> UUID:
+    try:
+        return UUID(value)
+    except ValueError:
+        raise AdmissionNotFoundError() from None
 
 
 class AssistantService:
-    """Chat turns, thread history and starter questions of the applicant."""
+    """Implements `AdmissionAssistantApi` for the AI module's tools."""
 
     def __init__(
         self,
         access: AccessPolicy,
         data: AssistantData,
-        search: StudentDataSearch,
-        model: AssistantModel,
-        repo: AssistantRepository,
         consents: PurposeConsents,
         limiter: RateLimiter,
         quota: QuotaOf,
-        prompts: PromptSource,
-        clock: Clock,
+        kb: KbService,
+        opportunities: OpportunityService,
+        lists: ListService,
+        catalog: CatalogService,
+        courses: CourseService,
+        course_sources: CourseSources,
+        actor_resolver: ResolveAdmissionActor,
     ) -> None:
         """Keep the collaborators."""
         self._access = access
         self._data = data
-        self._search = search
-        self._model = model
-        self._repo = repo
         self._consents = consents
         self._limiter = limiter
         self._quota = quota
-        self._prompts = prompts
-        self._clock = clock
-
-    async def _guard(self, ctx: AdmissionContext, *, ai: bool) -> None:
-        if not ctx.admission.is_applicant:
-            raise AdmissionForbiddenError(params={"permission": "assistant:use"})
-        res = await self._access.resolve(ctx, ctx.user_id)
-        if not res.owner:
-            raise AdmissionForbiddenError(params={"permission": "assistant:use"})
-        if ai:
-            granted = (await self._consents.granted([ctx.user_id])).get(
-                ctx.user_id, frozenset()
-            )
-            if AI not in granted:
-                raise ConsentRequiredError(params={"purpose": AI})
-
-    async def _own(self, ctx: AdmissionContext, thread_id: UUID) -> Thread:
-        thread = await self._repo.get_thread(ctx.user_id, thread_id)
-        if thread is None:
-            raise AdmissionNotFoundError()
-        return thread
+        self._kb = kb
+        self._opportunities = opportunities
+        self._lists = lists
+        self._catalog = catalog
+        self._courses = courses
+        self._sources = course_sources
+        self._resolve = actor_resolver
 
     def suggestions(self, path: str, locale: str) -> list[str]:
         """Three starter questions of the screen, from the configuration."""
         return starter_questions(path, locale)
 
-    async def threads(self, ctx: AdmissionContext) -> list[Thread]:
-        """The caller's threads, latest first."""
-        await self._guard(ctx, ai=False)
-        return await self._repo.list_threads(ctx.user_id, THREADS_MAX)
+    async def _ctx(self, actor: Actor) -> AdmissionContext:
+        ctx = await self._resolve.execute(actor)
+        if not ctx.admission.is_applicant:
+            raise AdmissionForbiddenError(params={"permission": "assistant:use"})
+        if not (await self._access.resolve(ctx, ctx.user_id)).owner:
+            raise AdmissionForbiddenError(params={"permission": "assistant:use"})
+        return ctx
 
-    async def thread(
-        self, ctx: AdmissionContext, thread_id: UUID
-    ) -> tuple[Thread, list[Message]]:
-        """One thread with its messages."""
-        await self._guard(ctx, ai=False)
-        thread = await self._own(ctx, thread_id)
-        return thread, await self._repo.messages(ctx.user_id, thread_id)
+    async def require_assistant(self, actor: Actor) -> None:
+        """Raise unless the actor is an applicant who owns an application."""
+        await self._ctx(actor)
 
-    async def delete(self, ctx: AdmissionContext, thread_id: UUID) -> None:
-        """Delete one of the caller's threads."""
-        await self._guard(ctx, ai=False)
-        if not await self._repo.delete_thread(ctx.user_id, thread_id):
-            raise AdmissionNotFoundError()
-
-    async def send(
-        self,
-        ctx: AdmissionContext,
-        thread_id: UUID | None,
-        message: str,
-        screen: Screen | None,
-        locale: str,
-    ) -> Reply:
-        """Answer a message; stores both sides in the thread."""
-        message = message.strip()
-        if not message:
-            raise CharLimitError(params={"field": "message", "limit": 1, "count": 0})
-        await self._guard(ctx, ai=True)
-        thread = await self._own(ctx, thread_id) if thread_id else None
-        history = await self._repo.messages(ctx.user_id, thread.id) if thread else []
+    async def admit_turn(self, actor: Actor) -> None:
+        """Check the AI consent and count one turn against the daily quota."""
+        ctx = await self._ctx(actor)
+        granted = (await self._consents.granted([ctx.user_id])).get(
+            ctx.user_id, frozenset()
+        )
+        if AI not in granted:
+            raise ConsentRequiredError(params={"purpose": AI})
         limit = await self._quota(ctx.user_id)
         if limit is not None:
             await self._limiter.hit(
                 f"admission:assistant:{ctx.user_id}", limit=limit, window_seconds=_DAY
             )
-        system = with_brand(
-            await self._prompts.text(AiTask.ADMIT_ASSISTANT, "system", locale)
-        )
-        box = ToolBox(ctx.user_id, self._data, self._search, screen)
-        question = delimit([message])
-        if screen is not None:
-            question = f"{screen_block(screen)}\n{question}"
-        messages = [
-            {
-                "role": m.role,
-                "content": delimit([m.text]) if m.role == "user" else m.text,
-            }
-            for m in history[-HISTORY_TURNS:]
-        ] + [{"role": "user", "content": question}]
-        text = await self._loop(system, messages, box)
-        text = text.strip() or _FALLBACK.get(locale, _FALLBACK["en"])
-        now = self._clock.now()
-        if thread is None:
-            thread = Thread(new_id(), ctx.user_id, _title(message), now, now)
-            await self._repo.create_thread(thread)
-        asked = Message(new_id(), thread.id, "user", message, now)
-        answer = Message(
-            new_id(),
-            thread.id,
-            "assistant",
-            text,
-            now + dt.timedelta(microseconds=1),
-            box.citations,
-            box.actions,
-        )
-        await self._repo.append(ctx.user_id, [asked, answer])
-        return Reply(thread.id, answer.id, text, box.citations, box.actions)
 
-    async def _loop(
-        self, system: str, messages: list[dict[str, Any]], box: ToolBox
-    ) -> str:
-        text = ""
-        for round_ in range(MAX_ROUNDS):
-            last = round_ == MAX_ROUNDS - 1
-            turn = await self._model.turn(
-                task=AiTask.ADMIT_ASSISTANT,
-                system=system,
-                messages=messages,
-                tools=[] if last else TOOLS,
-                max_tokens=_TOKENS,
+    async def application(self, actor: Actor) -> dict[str, Any]:
+        """The caller's whole application as plain JSON-ready data."""
+        uid = (await self._ctx(actor)).user_id
+        d = self._data
+        return {
+            "profile": await d.profile(uid),
+            "activities_and_honors": await d.items(uid),
+            "essays": await d.essays(uid),
+            "universities": await d.universities(uid),
+            "deadlines": await d.deadlines(uid),
+            "test_scores": await d.test_scores(uid),
+            "memory_notes": await d.memory_notes(uid),
+            "courses": await d.courses(uid),
+            "documents": await d.documents(uid),
+            "tasks": await d.tasks(uid),
+        }
+
+    async def search_faq(
+        self, actor: Actor, query: str, locale: str | None, limit: int
+    ) -> list[FaqHit]:
+        """Published FAQ articles matching the query, the locale's first."""
+        await self._ctx(actor)
+        found = await self._kb.published(query, locale, max(1, min(limit, _LIMIT_MAX)))
+        return [
+            FaqHit(
+                id=str(a.id),
+                title=a.title,
+                snippet=snippet(a.body),
+                locale=a.locale,
+                link=f"/faq/?id={a.id}",
+                tags=list(a.tags),
             )
-            text = str(turn.get("text") or "")
-            calls = turn.get("tool_calls") or []
-            if not calls or last:
-                return "" if calls else text
-            messages.append(
-                {
-                    "role": "assistant",
-                    "content": text or None,
-                    "tool_calls": [
-                        {
-                            "id": c["id"],
-                            "type": "function",
-                            "function": {
-                                "name": c["name"],
-                                "arguments": json.dumps(c["arguments"]),
-                            },
-                        }
-                        for c in calls
-                    ],
-                }
+            for a in found
+        ]
+
+    async def suggest(
+        self, actor: Actor, kind: SuggestionKind, query: str, limit: int
+    ) -> list[SuggestionCard]:
+        """Cards of things the caller does not have yet, best matches first."""
+        ctx = await self._ctx(actor)
+        if kind not in SUGGESTION_KINDS:
+            raise AdmissionNotFoundError()
+        limit = max(1, min(limit, _LIMIT_MAX))
+        q = query.strip() or None
+        if kind == "course":
+            have = {c.source_ref for c in await self._sources.lms_courses(ctx.actor)}
+            found = await self._sources.lms_catalog(ctx.actor, q)
+            return [
+                self._course_card(c.source_ref, c.title, c.provider)
+                for c in found
+                if c.source_ref and c.source_ref not in have
+            ][:limit]
+        if kind == "university":
+            listed = {
+                u.get("institution_id")
+                for u in await self._data.universities(ctx.user_id)
+            }
+            page = await self._catalog.search(CatalogFilters(q=q), limit=limit * 2)
+            return [
+                self._university_card(i) for i in page.items if str(i.id) not in listed
+            ][:limit]
+        f = CatalogFilter(
+            query=q, kind="scholarship" if kind == "scholarship" else None
+        )
+        found_o = await self._opportunities.browse(f)
+        return [
+            self._opportunity_card(kind, o)
+            for o in found_o
+            if (o.draft.kind == "scholarship") == (kind == "scholarship")
+        ][:limit]
+
+    async def describe(
+        self, actor: Actor, kind: SuggestionKind, item_id: str
+    ) -> SuggestionCard:
+        """The card of one item, for the approval preview."""
+        ctx = await self._ctx(actor)
+        if kind == "course":
+            for c in await self._sources.lms_catalog(ctx.actor, None):
+                if c.source_ref == item_id:
+                    return self._course_card(c.source_ref, c.title, c.provider)
+            raise AdmissionNotFoundError()
+        if kind == "university":
+            return self._university_card(
+                await self._catalog.institution(_uuid(item_id))
             )
-            for c in calls:
-                args = c["arguments"] if isinstance(c["arguments"], dict) else {}
-                result = await box.run(str(c["name"]), args)
-                messages.append(
-                    {
-                        "role": "tool",
-                        "tool_call_id": c["id"],
-                        "content": json.dumps(result, ensure_ascii=False),
-                    }
-                )
-        return text
+        if kind in ("opportunity", "scholarship"):
+            o = await self._opportunities.get(_uuid(item_id))
+            return self._opportunity_card(kind, o)
+        raise AdmissionNotFoundError()
+
+    async def add_suggestion(
+        self, actor: Actor, kind: SuggestionKind, item_id: str
+    ) -> SuggestionCard:
+        """Add the item: enroll in a course, plan an opportunity, list a university."""
+        card = await self.describe(actor, kind, item_id)
+        ctx = await self._ctx(actor)
+        ref = _uuid(item_id)
+        if kind == "course":
+            await self._sources.lms_enroll(ctx.actor, ref)
+            await self._courses.add_from_lms(ctx, ref)
+        elif kind == "university":
+            await self._lists.add(ctx, ref)
+        else:
+            await self._opportunities.save_to_plan(
+                ctx, ref, planned_grade=None, note=None
+            )
+        return card
+
+    @staticmethod
+    def _course_card(ref: str, title: str, provider: str | None) -> SuggestionCard:
+        return SuggestionCard(
+            type="course",
+            id=ref,
+            title=title,
+            reason=_reason(provider),
+            link=f"/courses/?lms={ref}",
+        )
+
+    @staticmethod
+    def _university_card(inst: Any) -> SuggestionCard:
+        return SuggestionCard(
+            type="university",
+            id=str(inst.id),
+            title=inst.name,
+            reason=_reason(inst.city, inst.country),
+            link=f"/chooser/institution/?id={inst.id}",
+        )
+
+    @staticmethod
+    def _opportunity_card(kind: SuggestionKind, o: Any) -> SuggestionCard:
+        d = o.draft
+        return SuggestionCard(
+            type=kind,
+            id=str(o.id),
+            title=d.title,
+            reason=_reason(d.provider, d.summary, d.kind),
+            link=f"/opportunities/?id={o.id}",
+        )

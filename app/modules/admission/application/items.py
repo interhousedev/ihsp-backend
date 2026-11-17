@@ -277,6 +277,29 @@ class ItemService:
             await uow.items.set_order(list(ordered))
             await uow.commit()
 
+    async def move(
+        self, ctx: AdmissionContext, item_id: UUID, status: ItemStatus, index: int
+    ) -> None:
+        """Put an item at `index` of the `status` column of its kind (a drag-drop).
+
+        Entering another column follows `_check_slot`; the column is renumbered.
+        """
+        async with self._uow() as uow:
+            item = await owned_item(self._access, uow, ctx, item_id)
+            others = [
+                i
+                for i in await uow.items.list_for(item.student_id)
+                if i.kind == item.kind and i.id != item.id
+            ]
+            if status != item.status:
+                moved = replace(item, status=status)
+                _check_slot(moved, others)
+                await uow.items.update(moved)
+            column = [i.id for i in others if i.status == status]
+            column.insert(max(0, min(index, len(column))), item.id)
+            await uow.items.set_order(column)
+            await uow.commit()
+
     async def set_metrics(
         self, ctx: AdmissionContext, item_id: UUID, metrics: Sequence[MetricDraft]
     ) -> list[Metric]:

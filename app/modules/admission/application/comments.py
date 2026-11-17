@@ -27,8 +27,6 @@ def comment_path(target_kind: str, target_id: UUID) -> str:
     """Return the student-side page of a comment target."""
     if target_kind == "item":
         return f"/items/view/?id={target_id}"
-    if target_kind == "help_request":
-        return f"/help/request/?id={target_id}"
     if target_kind == "essay":
         return f"/essays/edit/?id={target_id}"
     return "/"

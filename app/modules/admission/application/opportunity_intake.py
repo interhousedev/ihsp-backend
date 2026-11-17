@@ -131,11 +131,9 @@ class IntakeDraft:
 
 
 def may_submit(ctx: AdmissionContext) -> bool:
-    """Staff, helpers with live grants and students may submit (all moderated)."""
+    """Staff and students may submit (all moderated)."""
     actor = ctx.admission
-    return not actor.blocked and (
-        actor.is_staff or actor.has_help_grants or Role.STUDENT in ctx.actor.roles
-    )
+    return actor.is_staff or Role.STUDENT in ctx.actor.roles
 
 
 def extract_links(text: str) -> list[str]:
