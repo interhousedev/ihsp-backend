@@ -64,6 +64,7 @@ Students and teachers can share a manual notebook or a personal file with a sign
 - **Presigned URLs outlive revocation briefly.** An open returns a presigned storage URL that lives up to 15 minutes, and revoking does not cancel one already issued.
 - **Call log.** Each MCP tool call is logged with redacted arguments and counts, never content. Traces are removed after 90 days. Users see their own calls; administrators' reads are audited.
 - **Scope offers.** A new release may offer new scopes for existing student and LMS connectors, never Administration ones. Nothing widens until the owner accepts, from the Telegram buttons or the signed-in connectors page. An offer is single use, lasts 14 days and re-checks the user's status, role and each key at the moment of the grant. Someone else's offer answers the same as an unknown one. The web path needs no step-up code, the same bar as creating a student or LMS connector.
+- **The `admission:catalog` token is a proposal-queue key.** Only non-student staff can issue it (OTP step-up, sole scope, at most 90 days). It may read the catalog and create or list catalog proposals through the route allowlist `_CATALOG_ALLOWLIST`; it cannot approve or review them, edit institutions, or read any student data. The MCP servers refuse it. Proposals take effect only after a human review.
 
 ## Faces and entrance devices
 

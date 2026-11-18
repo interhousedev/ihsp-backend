@@ -12,6 +12,9 @@ All notable changes to this project are documented here. The format follows [Kee
 - Admission workflow: journey path, preferences questionnaire, Discover matches with swipe decisions and undo, per-university chances (hidden unless `ESTIMATES_STUDENT_VISIBLE`), university logo and cover, documents checklist priorities, mentoring switches, and voice input behind the AI consent.
 - Demo catalog: Wikimedia logos and covers, institution type and setting facts, and checklist priorities for the demo student.
 - Admission refinement round: activity and honor categories with A–E grades and Common App limits, self-reported outcomes with deadline nudges, prep plans, a catalog of opportunities and scholarships (tuition, money, fellowships; local and international) with organization logos, comments and reports, a per-university AI chat with automatic research once per student and university (Exa results cached 14 days), supplemental essay prompts per institution and cycle, consultations in place of help requests, a staff-edited knowledge base, scoped MCP personal tokens, logo zoom and fit, and per-university academic and activity suggestions.
+- Admission international-student catalog: a fact spec (`GET /v1/admission/staff/catalog/fact-spec`) with typed facts, a cited `source_url` and year per fact on proposals, `details` and `factors` on the institution detail, `binding` and `time_zone` on deadlines, and `IHSP_ADMISSION__CATALOG_PROPOSALS_PER_DAY`.
+- Admission essay check: `POST /v1/admission/essays/{essay_id}/coach/check` scores six dimensions against the prompt (score, band, quotes, first fix); it is not stored and answers `admission/essay_too_short` under 50 words.
+- Personal token scope `admission:catalog` with an agent catalog API: staff-only, sole scope, at most 90 days, a route allowlist for reading the catalog and creating proposals; a human still approves, and MCP refuses it.
 
 ### Changed
 

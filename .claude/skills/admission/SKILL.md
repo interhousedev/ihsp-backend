@@ -30,6 +30,16 @@ Admission prompts and answers (essays, grades, wellbeing) are private: their AI 
 
 `scripts/admission_import_catalog.py` and `infrastructure/catalog_data/` hold universities and programs. Only facts cited from an official source (the school, Scorecard, IPEDS) with source and year; where there is no cited official fact the field is `null`, never a guess, an estimate from memory or a model answer. Estimates (`domain/estimates.py`) are labelled as estimates and hidden from students unless `estimates_student_visible`.
 
+## Catalog agent API
+
+- The fact catalogue (keys, kinds, bounds, options, citation rules) is `domain/intl_facts.py`; labels and the detail view are `domain/intl_fact_display.py`. `GET /v1/admission/staff/catalog/fact-spec` serves it. Add a fact there, never in a route.
+- A personal token with scope `admission:catalog` lets an agent propose catalog data. Only staff may issue it (any role except student: counselor, admin); creation needs the OTP step-up, the scope must be the only scope, and expiry is at most 90 days (`PersonalTokenInvalidError`, fields `scopes` / `expires_in_days`).
+- The route allowlist is `_CATALOG_ALLOWLIST` in `app/interfaces/http/dependencies.py`: GET `/v1/admission/catalog/{institutions, institutions/{id}, scholarships, facets, study-fields, institutions/{id}/supp-prompts}`, GET `/v1/admission/staff/catalog/{institutions/{id}, fact-spec}`, GET and POST `/v1/admission/staff/catalog/proposals`. Everything else is refused; a new route is never added to it without a security review.
+- A proposal for an institution carries `facts`: each fact cites its own https `source_url` and `year`, with an optional `note`; unfilled facts are omitted, never guessed.
+- Errors: 422 `admission/catalog_fact_invalid` with `{fact, reason}`, 409 `admission/catalog_duplicate`, 429 `admission/catalog_proposal_limit` (per user and day, `IHSP_ADMISSION__CATALOG_PROPOSALS_PER_DAY`).
+- A token can never approve: a human reviews in the staff catalog page (`POST .../proposals/{id}/review`, outside the allowlist). The MCP server refuses catalog tokens (`scope-catalog` in `app/interfaces/mcp/admission/auth.py`).
+- Essay check: `POST /v1/admission/essays/{essay_id}/coach/check` uses AI task `admit_essay_coach` (private content). The result is not persisted. The score is `round(sum / 30 * 100)` over six 0-5 dimensions; bands exceptional (85+), strong (60+), solid (35+), developing (15+), weak.
+
 ## Checks
 
 New tables or columns: `scripts/check_migrations.sh` (skill `migrations`). New routes: export OpenAPI (skill `api-contract`) and add the page to `app/shared/app_map.py`. Tests use fakes in `tests/fakes/admission/`.
