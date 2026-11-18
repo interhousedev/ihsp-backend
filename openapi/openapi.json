@@ -7926,9 +7926,88 @@
         "title": "CaseloadOut",
         "type": "object"
       },
+      "CatalogFactIn": {
+        "description": "One international fact with the page it comes from.",
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "source_url": {
+            "maxLength": 2000,
+            "title": "Source Url",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value"
+          },
+          "year": {
+            "maximum": 2100.0,
+            "minimum": 2000.0,
+            "title": "Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "value",
+          "source_url",
+          "year"
+        ],
+        "title": "CatalogFactIn",
+        "type": "object"
+      },
+      "CatalogFactOut": {
+        "description": "A fact of a proposal.",
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "source_url": {
+            "title": "Source Url",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value"
+          },
+          "year": {
+            "title": "Year",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "value",
+          "source_url",
+          "year"
+        ],
+        "title": "CatalogFactOut",
+        "type": "object"
+      },
       "CatalogProposalIn": {
         "description": "Propose a new institution or scholarship, or an edit of an existing one.",
         "properties": {
+          "facts": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CatalogFactIn"
+            },
+            "title": "Facts",
+            "type": "object"
+          },
           "fields": {
             "additionalProperties": true,
             "title": "Fields",
@@ -7974,7 +8053,6 @@
         },
         "required": [
           "kind",
-          "fields",
           "source_url"
         ],
         "title": "CatalogProposalIn",
@@ -8021,6 +8099,13 @@
             "format": "date-time",
             "title": "Created At",
             "type": "string"
+          },
+          "facts": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/CatalogFactOut"
+            },
+            "title": "Facts",
+            "type": "object"
           },
           "fields": {
             "additionalProperties": true,
@@ -9725,6 +9810,179 @@
           "login_cues"
         ],
         "title": "ClientFeatures",
+        "type": "object"
+      },
+      "CoachCheckDimensionOut": {
+        "description": "One rubric dimension: score 0-5, a verified quote and a comment.",
+        "properties": {
+          "comment": {
+            "title": "Comment",
+            "type": "string"
+          },
+          "dim": {
+            "enum": [
+              "hook",
+              "theme",
+              "detail",
+              "authenticity",
+              "reflection",
+              "writing"
+            ],
+            "title": "Dim",
+            "type": "string"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "dim",
+          "score",
+          "quote",
+          "comment"
+        ],
+        "title": "CoachCheckDimensionOut",
+        "type": "object"
+      },
+      "CoachCheckOut": {
+        "description": "The draft scored on six dimensions against its prompt; not stored.",
+        "properties": {
+          "band": {
+            "enum": [
+              "exceptional",
+              "strong",
+              "solid",
+              "developing",
+              "weak"
+            ],
+            "title": "Band",
+            "type": "string"
+          },
+          "dimensions": {
+            "items": {
+              "$ref": "#/components/schemas/CoachCheckDimensionOut"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "first_fix": {
+            "title": "First Fix",
+            "type": "string"
+          },
+          "flagged_paragraph": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flagged Paragraph"
+          },
+          "flagged_reason": {
+            "title": "Flagged Reason",
+            "type": "string"
+          },
+          "flagged_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flagged Text"
+          },
+          "generic": {
+            "title": "Generic",
+            "type": "boolean"
+          },
+          "over_limit": {
+            "title": "Over Limit",
+            "type": "boolean"
+          },
+          "prompt_fit": {
+            "enum": [
+              "yes",
+              "partial",
+              "no",
+              "unknown"
+            ],
+            "title": "Prompt Fit",
+            "type": "string"
+          },
+          "prompt_fit_reason": {
+            "title": "Prompt Fit Reason",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          },
+          "strongest": {
+            "enum": [
+              "hook",
+              "theme",
+              "detail",
+              "authenticity",
+              "reflection",
+              "writing"
+            ],
+            "title": "Strongest",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          },
+          "word_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Word Limit"
+          }
+        },
+        "required": [
+          "score",
+          "band",
+          "dimensions",
+          "prompt_fit",
+          "prompt_fit_reason",
+          "strongest",
+          "first_fix",
+          "flagged_paragraph",
+          "flagged_text",
+          "flagged_reason",
+          "summary",
+          "word_count",
+          "word_limit",
+          "over_limit",
+          "generic"
+        ],
+        "title": "CoachCheckOut",
         "type": "object"
       },
       "CoachExpansionOut": {
@@ -13061,7 +13319,8 @@
                 "admission:read",
                 "admission:memory",
                 "admission:docs",
-                "admission:documents"
+                "admission:documents",
+                "admission:catalog"
               ],
               "type": "string"
             },
@@ -15096,6 +15355,90 @@
           "status"
         ],
         "title": "DeliveryOut",
+        "type": "object"
+      },
+      "DetailGroupOut": {
+        "description": "Facts of one registry group.",
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/DetailRowOut"
+            },
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "rows"
+        ],
+        "title": "DetailGroupOut",
+        "type": "object"
+      },
+      "DetailRowOut": {
+        "description": "One fact of a school in the detail view, with display text.",
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "value": {
+            "title": "Value"
+          },
+          "value_text": {
+            "title": "Value Text",
+            "type": "string"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "kind",
+          "value",
+          "value_text",
+          "source_url",
+          "year"
+        ],
+        "title": "DetailRowOut",
         "type": "object"
       },
       "DeviceCallListOut": {
@@ -19186,6 +19529,212 @@
         "title": "FactOut",
         "type": "object"
       },
+      "FactSpecGroupOut": {
+        "description": "A group of facts on the staff form.",
+        "properties": {
+          "facts": {
+            "items": {
+              "$ref": "#/components/schemas/FactSpecItemOut"
+            },
+            "title": "Facts",
+            "type": "array"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "facts"
+        ],
+        "title": "FactSpecGroupOut",
+        "type": "object"
+      },
+      "FactSpecItemOut": {
+        "description": "One fact the staff form can fill in.",
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/FactSpecOptionOut"
+            },
+            "title": "Options",
+            "type": "array"
+          },
+          "parts": {
+            "items": {
+              "$ref": "#/components/schemas/FactSpecPartOut"
+            },
+            "title": "Parts",
+            "type": "array"
+          },
+          "step": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "kind",
+          "options",
+          "parts",
+          "min",
+          "max",
+          "step",
+          "unit"
+        ],
+        "title": "FactSpecItemOut",
+        "type": "object"
+      },
+      "FactSpecOptionOut": {
+        "description": "One allowed value of a choice fact.",
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "value",
+          "label"
+        ],
+        "title": "FactSpecOptionOut",
+        "type": "object"
+      },
+      "FactSpecOut": {
+        "description": "The registry of international facts, labelled in the caller's language.",
+        "properties": {
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/FactSpecGroupOut"
+            },
+            "title": "Groups",
+            "type": "array"
+          }
+        },
+        "required": [
+          "groups"
+        ],
+        "title": "FactSpecOut",
+        "type": "object"
+      },
+      "FactSpecPartOut": {
+        "description": "One part of a composite fact (range ends, factor levels).",
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max"
+          },
+          "min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min"
+          },
+          "step": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "min",
+          "max",
+          "step"
+        ],
+        "title": "FactSpecPartOut",
+        "type": "object"
+      },
       "FeedAction": {
         "description": "`POST .../feeds/{id}/{action}`; only enable and disable work without a sync.",
         "enum": [
@@ -22545,6 +23094,30 @@
         "title": "Importance",
         "type": "string"
       },
+      "ImportanceFactorOut": {
+        "description": "How much one factor weighs in the school's admission decision.",
+        "properties": {
+          "importance": {
+            "title": "Importance",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "importance"
+        ],
+        "title": "ImportanceFactorOut",
+        "type": "object"
+      },
       "ImportedMatchResponse": {
         "description": "An imported record that may be the student's.",
         "properties": {
@@ -22775,6 +23348,22 @@
               "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_chooser__DeadlineOut"
             },
             "title": "Deadlines",
+            "type": "array"
+          },
+          "details": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DetailGroupOut"
+            },
+            "title": "Details",
+            "type": "array"
+          },
+          "factors": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ImportanceFactorOut"
+            },
+            "title": "Factors",
             "type": "array"
           },
           "facts": {
@@ -62297,6 +62886,17 @@
       "app__interfaces__http__v1__admission__routes_chooser__DeadlineOut": {
         "description": "One application deadline with plain text only.",
         "properties": {
+          "binding": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Binding"
+          },
           "cycle": {
             "anyOf": [
               {
@@ -62332,6 +62932,17 @@
           "plan": {
             "title": "Plan",
             "type": "string"
+          },
+          "time_zone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Zone"
           }
         },
         "required": [
@@ -80591,6 +81202,66 @@
         ]
       }
     },
+    "/v1/admission/essays/{essay_id}/coach/check": {
+      "post": {
+        "description": "Score my draft on six dimensions against its prompt (AI consent, daily limit).",
+        "operationId": "admission_check_essay",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoachCheckOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Coach Check",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/essays/{essay_id}/coach/feedback": {
       "post": {
         "description": "Feedback on my draft (AI consent and a daily limit apply).",
@@ -85700,6 +86371,56 @@
           }
         },
         "summary": "Revoke Assignment",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/catalog/fact-spec": {
+      "get": {
+        "description": "The international facts the proposal form can fill, labelled by locale.",
+        "operationId": "admission_catalog_fact_spec",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FactSpecOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Catalog Fact Spec",
         "tags": [
           "admission"
         ]
