@@ -458,6 +458,9 @@ class _CatalogProposals:
         self.s.logos[institution_id] = (zoom, fit)
         return True
 
+    async def lock_submissions(self) -> None:
+        return None
+
     async def find_duplicate(
         self, names: Sequence[str], website_domain: str | None
     ) -> tuple[Literal["institution", "proposal"], UUID] | None:
@@ -469,6 +472,13 @@ class _CatalogProposals:
             if p.kind == "institution" and p.status == "pending" and not p.target_id:
                 raw = [p.payload.get("name"), *(p.payload.get("aliases") or [])]
                 if any(isinstance(n, str) and fold_name(n) in names for n in raw):
+                    return "proposal", p.id
+                pd = p.payload.get("website_domain")
+                if (
+                    website_domain
+                    and isinstance(pd, str)
+                    and fold_name(pd) == website_domain
+                ):
                     return "proposal", p.id
         return None
 

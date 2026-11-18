@@ -13,6 +13,7 @@ from app.modules.admission.domain.catalog_proposals import (
     MEDIA_FIELDS,
     CatalogProposal,
     ProposalKind,
+    invalid_field,
 )
 from app.modules.admission.domain.errors import (
     AdmissionForbiddenError,
@@ -42,6 +43,7 @@ from app.shared.rate_limit import RateLimiter
 
 _DAY = 86_400
 DEFAULT_PER_DAY = 100
+_ASPECT_MAX = 1000
 
 
 def _fold_text_fields(payload: dict[str, Any]) -> None:
@@ -79,6 +81,9 @@ def _clean_payload(
     payload = {
         k: v for k, v in fields.items() if k in FIELDS[kind] and v not in (None, "", [])
     }
+    bad = invalid_field(kind, payload)
+    if bad is not None:
+        raise ValidationFailedError(params={"field": bad})
     _fold_text_fields(payload)
     if not payload and not allow_empty:
         raise ValidationFailedError(params={"field": "fields"})
@@ -97,7 +102,9 @@ def _check_media_fields(payload: dict[str, Any]) -> None:
         raise ValidationFailedError(params={"field": "logo_fit"})
     aspect = payload.get("logo_aspect")
     if "logo_aspect" in payload and not (
-        isinstance(aspect, (int, float)) and aspect > 0
+        isinstance(aspect, (int, float))
+        and not isinstance(aspect, bool)
+        and 0 < aspect < _ASPECT_MAX
     ):
         raise ValidationFailedError(params={"field": "logo_aspect"})
 
@@ -193,7 +200,10 @@ class CatalogProposalService:
             repo = uow.catalog_proposals
             if target_id is not None and not await repo.target_exists(kind, target_id):
                 raise AdmissionNotFoundError()
+            if kind == "scholarship":
+                await self._check_scholarship_institution(repo, payload)
             if kind == "institution" and target_id is None:
+                await repo.lock_submissions()
                 aliases = payload.get("aliases")
                 aliases = aliases if isinstance(aliases, list) else []
                 raw = [payload["name"], *aliases]
@@ -219,6 +229,15 @@ class CatalogProposalService:
             )
             await uow.commit()
         return saved
+
+    @staticmethod
+    async def _check_scholarship_institution(
+        repo: Any, payload: Mapping[str, Any]
+    ) -> None:
+        """Raise when the scholarship names an institution that does not exist."""
+        raw = payload.get("institution_id")
+        if raw is not None and not await repo.target_exists("institution", UUID(raw)):
+            raise ValidationFailedError(params={"field": "institution_id"})
 
     async def _hit(self, ctx: AdmissionContext) -> None:
         if self._limiter is None:

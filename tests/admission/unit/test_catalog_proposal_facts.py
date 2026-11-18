@@ -21,7 +21,7 @@ from app.modules.admission.domain.errors import (
 )
 from app.modules.admission.domain.intl_fact_display import fact_spec_view
 from app.shared.actor import Role
-from app.shared.base_error import RateLimitedError
+from app.shared.base_error import RateLimitedError, ValidationFailedError
 from app.shared.ids import new_id
 from tests.admission.unit.fakes import NOW, FakeUow
 from tests.admission.unit.test_access_policy import STAFF, STUDENT, World, _assign
@@ -259,3 +259,29 @@ async def test_proposal_text_fields_are_folded_before_storing() -> None:
     stored = w.store.proposals[p.id].payload
     assert stored["name"] == "Foo Bar"
     assert stored["aliases"] == ["A B"]
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [
+        {"name": 42, "country": "US"},
+        {"name": "X U", "country": {"code": "US"}},
+        {"name": "X U", "country": "US", "aliases": "Harvard"},
+        {"name": "X U", "country": "US", "aliases": ["ok", 7]},
+        {"name": "X" * 201, "country": "US"},
+        {"name": "X U", "country": "USA"},
+        {"name": "X U", "country": "US", "kind": "school"},
+        {"name": "X U", "country": "US", "website_domain": ["a.edu"]},
+    ],
+)
+async def test_institution_fields_are_typed_before_the_quota(
+    fields: dict[str, Any],
+) -> None:
+    """ADM-INTL-SEC-11: wrong-typed or oversized fields are 422, nothing stored."""
+    w = World()
+    ctx = await _curator(w)
+    limiter = _Limiter()
+    with pytest.raises(ValidationFailedError):
+        await _propose(w, ctx, _svc(w, limiter), fields=fields)
+    assert not w.store.proposals
+    assert limiter.hits == 0

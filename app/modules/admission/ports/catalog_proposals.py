@@ -35,13 +35,20 @@ class CatalogProposalRepository(Protocol):
         """Set the given logo fields of a published institution; False: unknown."""
         ...
 
+    async def lock_submissions(self) -> None:
+        """Serialise institution submissions until the transaction ends.
+
+        Take it before `find_duplicate` so the lookup and the insert are atomic.
+        """
+        ...
+
     async def find_duplicate(
         self, names: Sequence[str], website_domain: str | None
     ) -> tuple[Literal["institution", "proposal"], UUID] | None:
         """Find an institution or a pending create proposal that equals the input.
 
         `names` are NFC-casefolded; an institution matches by name, alias or
-        domain, a pending create proposal by name.
+        domain, a pending create proposal by name, alias or domain.
         """
         ...
 

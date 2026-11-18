@@ -39,6 +39,9 @@ _TARGETS: dict[str, Any] = {
     "scholarship": ScholarshipRow,
 }
 
+_SUBMIT_LOCK_KEY = 0x4348_5052_4F50
+"""Advisory-lock key of catalog proposal submission (ASCII `CHPROP`)."""
+
 
 def _fold_sql(expr: Any) -> ColumnElement[str]:
     """SQL twin of `fold_name`: NFC, collapsed whitespace, trimmed, lower-cased."""
@@ -135,6 +138,10 @@ class SqlCatalogProposalRepository:
         await self._s.flush()
         return True
 
+    async def lock_submissions(self) -> None:
+        """Take the transaction-scoped advisory lock of catalog submissions."""
+        await self._s.execute(select(func.pg_advisory_xact_lock(_SUBMIT_LOCK_KEY)))
+
     async def find_duplicate(
         self, names: Sequence[str], website_domain: str | None
     ) -> tuple[Literal["institution", "proposal"], UUID] | None:
@@ -173,20 +180,26 @@ class SqlCatalogProposalRepository:
             .table_valued("alias")
             .render_derived(name="pending_alias")
         )
+        pending_conds: list[ColumnElement[bool]] = [
+            _fold_sql(CatalogProposalRow.payload["name"].astext).in_(names),
+            exists(
+                select(1)
+                .select_from(pending_alias)
+                .where(_fold_sql(pending_alias.c.alias).in_(names))
+            ),
+        ]
+        if website_domain:
+            pending_conds.append(
+                func.lower(CatalogProposalRow.payload["website_domain"].astext)
+                == website_domain
+            )
         pending = await self._s.scalar(
             select(CatalogProposalRow.id)
             .where(
                 CatalogProposalRow.kind == "institution",
                 CatalogProposalRow.status == "pending",
                 CatalogProposalRow.target_id.is_(None),
-                or_(
-                    _fold_sql(CatalogProposalRow.payload["name"].astext).in_(names),
-                    exists(
-                        select(1)
-                        .select_from(pending_alias)
-                        .where(_fold_sql(pending_alias.c.alias).in_(names))
-                    ),
-                ),
+                or_(*pending_conds),
             )
             .limit(1)
         )

@@ -191,19 +191,22 @@ _BAD_NUMBERS = [float("nan"), float("inf"), float("-inf")]
 _NUM_IDS = ["nan", "inf", "-inf"]
 
 
-@pytest.mark.parametrize("n", [*_BAD_NUMBERS, 1e300, 1_000_000_000_001])
+@pytest.mark.parametrize("n", [*_BAD_NUMBERS, 1e300, 10_000_000_000, 1_000_000_000_001])
 def test_money_rejects_non_finite_and_absurd_amounts(n: float) -> None:
-    """ADM-INTL-SEC-1: a money amount is finite and at most 10^12 in any currency."""
+    """ADM-INTL-SEC-1: a money amount is finite and at most 9,999,999,999.99.
+
+    The bound holds in any currency.
+    """
     assert reason("intl_coa_usd", {"amount": n, "currency": "USD"}) == "value"
     assert reason("application_fee", {"amount": n, "currency": "UZS"}) == "value"
 
 
 def test_money_keeps_large_but_sane_amounts() -> None:
-    """ADM-INTL-SEC-1: 50 million UZS and the 10^12 bound itself still pass."""
+    """ADM-INTL-SEC-1: 50 million UZS and the column bound itself still pass."""
     fee = ok("application_fee", {"amount": 50_000_000, "currency": "UZS"})
     assert fee.value == {"amount": 50_000_000, "currency": "UZS"}
-    top = ok("application_fee", {"amount": 1_000_000_000_000, "currency": "UZS"})
-    assert top.value["amount"] == 1_000_000_000_000
+    top = ok("application_fee", {"amount": 9_999_999_999.99, "currency": "UZS"})
+    assert top.value["amount"] == 9_999_999_999.99
 
 
 @pytest.mark.parametrize("n", _BAD_NUMBERS, ids=_NUM_IDS)

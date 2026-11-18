@@ -23,7 +23,8 @@ from app.modules.admission.domain.catalog_display import (
 from app.modules.admission.domain.errors import CatalogFactInvalidError
 from app.modules.admission.domain.study_fields import canonical_id, labels_of
 
-MONEY_MAX: Final = 1_000_000_000_000
+MONEY_MAX: Final = 9_999_999_999.99
+"""The largest amount a `Numeric(12, 2)` cost column holds."""
 _SPACES = re.compile(r"\s+", re.ASCII)
 
 
