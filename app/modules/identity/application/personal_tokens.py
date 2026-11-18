@@ -20,13 +20,15 @@ from app.modules.identity.domain.personal_token import (
     ADMISSION_MAX_EXPIRY_DAYS,
     ADMISSION_SCOPES,
     ALLOWED_EXPIRY_DAYS,
+    CATALOG_MAX_EXPIRY_DAYS,
+    CATALOG_SCOPES,
     MAX_NAME_LENGTH,
     PersonalToken,
     PersonalTokenScope,
     new_token,
 )
 from app.modules.identity.ports.unit_of_work import UowFactory
-from app.shared.actor import Actor
+from app.shared.actor import Actor, Role
 from app.shared.base_error import NotFoundError
 from app.shared.clock import Clock
 from app.shared.ids import new_id
@@ -63,7 +65,7 @@ class CreatePersonalToken:
         """Create the token and return the secret (never stored in clear)."""
         name = name.strip()
         unique_scopes = list(dict.fromkeys(scopes))
-        self._validate(name, unique_scopes, expires_in_days)
+        self._validate(actor, name, unique_scopes, expires_in_days)
         async with self.uow_factory() as uow:
             user = await require_user(uow, actor.user_id)
             if not otp_code:
@@ -95,16 +97,26 @@ class CreatePersonalToken:
         return NewPersonalToken(token=token, secret=secret)
 
     @staticmethod
-    def _validate(name: str, scopes: list[str], expires_in_days: int) -> None:
+    def _validate(
+        actor: Actor, name: str, scopes: list[str], expires_in_days: int
+    ) -> None:
         reasons: list[str] = []
+        requested = set(scopes)
         if not name or len(name) > MAX_NAME_LENGTH:
             reasons.append("name")
-        if not scopes or not set(scopes) <= _SCOPES:
+        if not scopes or not requested <= _SCOPES:
+            reasons.append("scopes")
+        elif CATALOG_SCOPES & requested and (
+            requested != CATALOG_SCOPES
+            or not any(role != Role.STUDENT for role in actor.roles)
+        ):
+            # Catalog alone, and only for a staff account (never a student's).
             reasons.append("scopes")
         if expires_in_days not in ALLOWED_EXPIRY_DAYS or (
-            ADMISSION_SCOPES & set(scopes)
-            and expires_in_days > ADMISSION_MAX_EXPIRY_DAYS
+            ADMISSION_SCOPES & requested and expires_in_days > ADMISSION_MAX_EXPIRY_DAYS
         ):
+            reasons.append("expires_in_days")
+        elif CATALOG_SCOPES & requested and expires_in_days > CATALOG_MAX_EXPIRY_DAYS:
             reasons.append("expires_in_days")
         if reasons:
             raise PersonalTokenInvalidError(params={"fields": reasons})

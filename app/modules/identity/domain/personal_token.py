@@ -14,7 +14,7 @@ MAX_NAME_LENGTH = 80
 
 
 class PersonalTokenScope(StrEnum):
-    """What a personal token may do: /v1/me/*, or the admission MCP server."""
+    """What a personal token may do: /v1/me/*, admission MCP, or the catalog."""
 
     ME_READ = "me:read"
     ME_WRITE = "me:write"
@@ -22,6 +22,7 @@ class PersonalTokenScope(StrEnum):
     ADMISSION_MEMORY = "admission:memory"
     ADMISSION_DOCS = "admission:docs"
     ADMISSION_DOCUMENTS = "admission:documents"
+    ADMISSION_CATALOG = "admission:catalog"
 
 
 # Admission scopes reach a student's application data: shorter tokens only.
@@ -34,6 +35,11 @@ ADMISSION_SCOPES = frozenset(
     }
 )
 ADMISSION_MAX_EXPIRY_DAYS = 90
+
+# The catalog scope reads the public catalog and files proposals for review: never
+# student data, never mixed with another scope, staff owners only, short-lived.
+CATALOG_SCOPES = frozenset({PersonalTokenScope.ADMISSION_CATALOG.value})
+CATALOG_MAX_EXPIRY_DAYS = 90
 
 
 @dataclass(slots=True)

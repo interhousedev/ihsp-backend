@@ -260,3 +260,12 @@ async def test_verifier_admits_students_with_an_admission_scope_only() -> None:
     me_only = student(frozenset({"me:read"}))
     assert await _verifier(me_only).verify_token(PAT) is None
     assert await _verifier(None).verify_token("hydra-jwt") is not None
+
+
+async def test_verifier_refuses_catalog_tokens() -> None:
+    """ADM-INTL-3: an admission:catalog token never opens the MCP server."""
+    catalog = frozenset({"admission:catalog"})
+    counselor = Actor(STUDENT, frozenset({Role.COUNSELOR}), scopes=catalog)
+    assert await _verifier(counselor).verify_token(PAT) is None
+    assert await _verifier(student(catalog)).verify_token(PAT) is None
+    assert await _verifier(student(ALL | catalog)).verify_token(PAT) is None

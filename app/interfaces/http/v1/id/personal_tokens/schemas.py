@@ -15,6 +15,7 @@ TokenScopeName = Literal[
     "admission:memory",
     "admission:docs",
     "admission:documents",
+    "admission:catalog",
 ]
 
 

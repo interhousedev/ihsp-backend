@@ -272,3 +272,125 @@ async def test_admission_erase_revokes_only_admission_tokens(
         await verifier.verify_personal(admission.secret)
     await verifier.verify_personal(plain.secret)
     await verifier.verify_personal(foreign.secret)
+
+
+_UID = "0191d7a2-1b2c-7d3e-8f40-123456789abc"
+CATALOG = ["admission:catalog"]
+
+
+@pytest.mark.parametrize(
+    "roles", [{Role.TEACHER}, {Role.COUNSELOR}, {Role.STUDENT, Role.TEACHER}]
+)
+async def test_staff_create_catalog_tokens_up_to_90_days(
+    auth_world: World, roles: set[Role]
+) -> None:
+    """ADM-INTL-3: a non-student account issues a catalog-only token (≤ 90 days)."""
+    user = await auth_world.add_user(roles=roles)
+
+    created = await create(auth_world, user, scopes=CATALOG, expires_in_days=90)
+
+    assert list(created.token.scopes) == CATALOG
+
+
+@pytest.mark.parametrize(
+    ("roles", "overrides", "field"),
+    [
+        ({Role.STUDENT}, {"scopes": CATALOG}, "scopes"),
+        ({Role.TEACHER}, {"scopes": [*CATALOG, "me:read"]}, "scopes"),
+        ({Role.TEACHER}, {"scopes": [*CATALOG, "admission:read"]}, "scopes"),
+        (
+            {Role.TEACHER},
+            {"scopes": CATALOG, "expires_in_days": 365},
+            "expires_in_days",
+        ),
+    ],
+)
+async def test_catalog_token_rules_are_enforced(
+    auth_world: World, roles: set[Role], overrides: dict[str, Any], field: str
+) -> None:
+    """ADM-INTL-3: catalog alone, staff owners only, at most 90 days."""
+    user = await auth_world.add_user(roles=roles)
+
+    with pytest.raises(PersonalTokenInvalidError) as caught:
+        await create(auth_world, user, **overrides)
+
+    assert field in caught.value.params["fields"]
+    assert auth_world.store.personal_tokens == {}
+
+
+async def test_catalog_token_still_needs_the_step_up_code(auth_world: World) -> None:
+    """ADM-INTL-3: the OTP step-up is unchanged for catalog tokens."""
+    user = await auth_world.add_user(roles={Role.COUNSELOR})
+
+    with pytest.raises(SecondFactorRequiredError):
+        await create(auth_world, user, scopes=CATALOG, otp_code=None)
+
+
+@pytest.mark.parametrize("days", [7, 0, 365])
+async def test_catalog_token_expiry_must_be_30_or_90_days(
+    auth_world: World, days: int
+) -> None:
+    """ADM-INTL-SEC-7: 7, 0 (no expiry) and 365 days are refused for a catalog token."""
+    user = await auth_world.add_user(roles={Role.COUNSELOR})
+
+    with pytest.raises(PersonalTokenInvalidError) as caught:
+        await create(auth_world, user, scopes=CATALOG, expires_in_days=days)
+
+    assert "expires_in_days" in caught.value.params["fields"]
+    assert auth_world.store.personal_tokens == {}
+
+
+_CATALOG_ALLOWED = [
+    ("GET", "/v1/admission/catalog/institutions"),
+    ("GET", f"/v1/admission/catalog/institutions/{_UID}"),
+    ("GET", "/v1/admission/catalog/scholarships"),
+    ("GET", "/v1/admission/catalog/facets"),
+    ("GET", "/v1/admission/catalog/study-fields"),
+    ("GET", f"/v1/admission/catalog/institutions/{_UID}/supp-prompts"),
+    ("GET", f"/v1/admission/staff/catalog/institutions/{_UID}"),
+    ("GET", "/v1/admission/staff/catalog/fact-spec"),
+    ("GET", "/v1/admission/staff/catalog/proposals"),
+    ("POST", "/v1/admission/staff/catalog/proposals"),
+]
+_CATALOG_REFUSED = [
+    ("POST", f"/v1/admission/staff/catalog/proposals/{_UID}/review"),
+    ("DELETE", "/v1/admission/staff/catalog/proposals"),
+    ("PATCH", f"/v1/admission/staff/catalog/institutions/{_UID}"),  # logo edit
+    ("PUT", f"/v1/admission/staff/catalog/institutions/{_UID}/supp-prompts/2026-27"),
+    ("POST", f"/v1/admission/catalog/institutions/{_UID}/summary"),
+    ("POST", "/v1/admission/catalog/institutions"),
+    ("GET", f"/v1/admission/catalog/institutions/{_UID}/extra"),
+    ("GET", "/v1/admission/catalog/institutionsX"),
+    ("GET", "/v1/admission/catalog/institutions/../../students"),
+    ("GET", f"/v1/admission/students/{_UID}/list"),
+    ("GET", "/v1/admission/me"),
+    ("GET", "/v1/me"),
+    ("GET", "/v1/me/profile"),
+    ("PATCH", "/v1/me/profile"),
+]
+
+
+async def test_catalog_token_reaches_only_the_allowlist(auth_world: World) -> None:
+    """ADM-INTL-3: a catalog token passes the allowlist and nothing else."""
+    user = await auth_world.add_user(roles={Role.COUNSELOR})
+    created = await create(auth_world, user, scopes=CATALOG)
+
+    for method, path in _CATALOG_ALLOWED:
+        actor = await verify(auth_world, method, path, created.secret)
+        assert actor.user_id == user.id
+    for method, path in _CATALOG_REFUSED:
+        with pytest.raises(TokenScopeError):
+            await verify(auth_world, method, path, created.secret)
+
+
+async def test_other_scopes_do_not_reach_the_catalog(auth_world: World) -> None:
+    """ADM-INTL-3: me:* and admission MCP tokens are refused on catalog routes."""
+    user = await auth_world.add_user(roles={Role.STUDENT, Role.TEACHER})
+    me = await create(auth_world, user, scopes=["me:read", "me:write"])
+    admission = await create(auth_world, user, scopes=["admission:read"])
+
+    for token in (me.secret, admission.secret):
+        for method, path in _CATALOG_ALLOWED:
+            with pytest.raises(TokenScopeError):
+                await verify(auth_world, method, path, token)
+    await verify(auth_world, "GET", "/v1/me", me.secret)

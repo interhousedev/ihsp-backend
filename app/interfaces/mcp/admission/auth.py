@@ -5,6 +5,7 @@ from typing import Protocol
 from app.interfaces.mcp.auth import IhspAccessToken
 from app.modules.identity.domain.personal_token import (
     ADMISSION_SCOPES,
+    CATALOG_SCOPES,
     looks_like_token,
 )
 from app.shared.actor import Actor, Role
@@ -51,6 +52,9 @@ class AdmissionTokenVerifier:
             actor = await self._authenticate(token)
         except BaseError as error:
             log.info("mcp.token_rejected", server="admission", code=error.code)
+            return None
+        if actor.scopes & CATALOG_SCOPES:
+            log.info("mcp.token_rejected", server="admission", code="scope-catalog")
             return None
         if not actor.has(Role.STUDENT):
             log.info("mcp.token_rejected", server="admission", code="role-missing")

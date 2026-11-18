@@ -1,5 +1,6 @@
 """FastAPI dependencies: container, actor, roles, client IP."""
 
+import re
 from collections.abc import Awaitable, Callable
 from typing import Annotated
 
@@ -35,9 +36,32 @@ def _bearer_token(request: Request) -> str | None:
     return token.strip()
 
 
+_ID = r"[0-9A-Fa-f-]{36}"
+_CATALOG = "/v1/admission/catalog"
+_STAFF_CATALOG = "/v1/admission/staff/catalog"
+# Every route an admission:catalog token may call; anything else is refused.
+_CATALOG_ALLOWLIST: tuple[tuple[frozenset[str], re.Pattern[str]], ...] = tuple(
+    (frozenset(methods), re.compile(pattern))
+    for methods, pattern in (
+        (("GET",), rf"{_CATALOG}/institutions"),
+        (("GET",), rf"{_CATALOG}/institutions/{_ID}"),
+        (("GET",), rf"{_CATALOG}/scholarships"),
+        (("GET",), rf"{_CATALOG}/facets"),
+        (("GET",), rf"{_CATALOG}/study-fields"),
+        (("GET",), rf"{_CATALOG}/institutions/{_ID}/supp-prompts"),
+        (("GET",), rf"{_STAFF_CATALOG}/institutions/{_ID}"),
+        (("GET",), rf"{_STAFF_CATALOG}/fact-spec"),
+        (("GET", "POST"), rf"{_STAFF_CATALOG}/proposals"),
+    )
+)
+
+
 def _personal_token_scope(request: Request) -> PersonalTokenScope | None:
     """Scope a personal token needs for this request; None when none fits."""
     path = request.url.path
+    for methods, pattern in _CATALOG_ALLOWLIST:
+        if request.method in methods and pattern.fullmatch(path):
+            return PersonalTokenScope.ADMISSION_CATALOG
     if path != "/v1/me" and not path.startswith("/v1/me/"):
         return None
     if request.method in ("GET", "HEAD"):
