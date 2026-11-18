@@ -263,3 +263,31 @@ class ReadinessWeightsError(ValidationFailedError):
 
     code = "admission/readiness_weights"
     message_key = "admission-readiness-weights"
+
+
+class CatalogFactInvalidError(ValidationFailedError):
+    """A proposed catalog fact is not valid. Params: fact, reason."""
+
+    code = "admission/catalog_fact_invalid"
+    message_key = "admission-catalog-fact-invalid"
+
+
+class CatalogDuplicateError(ConflictError):
+    """The school or a pending proposal exists. Params: institution_id, proposal_id."""
+
+    code = "admission/catalog_duplicate"
+    message_key = "admission-catalog-duplicate"
+
+
+class CatalogProposalLimitError(RateLimitedError):
+    """Too many catalog proposals today. Params: limit."""
+
+    code = "admission/catalog_proposal_limit"
+    message_key = "admission-catalog-proposal-limit"
+
+
+class EssayTooShortError(ValidationFailedError):
+    """The essay is too short to check. Params: min, count."""
+
+    code = "admission/essay_too_short"
+    message_key = "admission-essay-too-short"

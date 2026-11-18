@@ -39,5 +39,9 @@
   "admission-purpose-sharing-title": "Yordamchilar bilan ulashish",
   "admission-purpose-sharing-text": "Tanlangan yozuvlarni yordamchilar va mehmonlar bilan havola orqali ulashishim mumkin.",
   "admission-purpose-finance-title": "Moliyaviy maʼlumotlar",
-  "admission-purpose-finance-text": "Byudjet va yordam boʼyicha javoblarim toʼlov imkoniyatini tekshirish uchun ishlatilishi va maslahatchiga koʼrinishi mumkin."
+  "admission-purpose-finance-text": "Byudjet va yordam boʼyicha javoblarim toʼlov imkoniyatini tekshirish uchun ishlatilishi va maslahatchiga koʼrinishi mumkin.",
+  "admission-catalog-fact-invalid": "Bu maʼlumot qabul qilinmadi. Qiymatni, manba havolasini va yilni tekshiring.",
+  "admission-catalog-duplicate": "Bu maktab katalogda bor yoki uning taklifi koʻrib chiqilmoqda.",
+  "admission-catalog-proposal-limit": "Katalog uchun kunlik {limit} ta taklif limitiga yetdingiz. Ertaga urinib koʻring.",
+  "admission-essay-too-short": "Insho tekshirish uchun juda qisqa. Kamida {min} ta soʻz yozing, hozir {count} ta."
 }

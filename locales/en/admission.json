@@ -39,5 +39,9 @@
   "admission-purpose-sharing-title": "Sharing with helpers",
   "admission-purpose-sharing-text": "I may share selected items with helpers and guests by link.",
   "admission-purpose-finance-title": "Financial information",
-  "admission-purpose-finance-text": "My budget and aid answers may be used to check affordability and seen by my counselor."
+  "admission-purpose-finance-text": "My budget and aid answers may be used to check affordability and seen by my counselor.",
+  "admission-catalog-fact-invalid": "This fact is not valid. Check the value, the source link and the year.",
+  "admission-catalog-duplicate": "This school is already in the catalog or has a pending proposal.",
+  "admission-catalog-proposal-limit": "You have reached the daily limit of {limit} catalog proposals. Try again tomorrow.",
+  "admission-essay-too-short": "The essay is too short to check. Write at least {min} words; it has {count} now."
 }

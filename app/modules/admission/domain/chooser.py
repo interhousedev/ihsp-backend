@@ -29,6 +29,7 @@ class FactView:
     year: int | None = None
     note: str | None = None
     verified: bool = False
+    unit: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

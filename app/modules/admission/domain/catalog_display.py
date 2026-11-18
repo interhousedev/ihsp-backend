@@ -241,7 +241,9 @@ def clean_note(note: str | None) -> str | None:
 
 
 def clean_deadlines(raw: Any, locale: str = "en") -> list[dict[str, Any]]:
-    """Structured deadlines [{plan, date, notify_by, cycle, label_short}], by date.
+    """Structured deadlines, by date.
+
+    Items: {plan, date, notify_by, cycle, binding, time_zone, label_short}.
 
     `raw` is the stored `deadlines` fact; notes never leave this function.
     """
@@ -263,6 +265,8 @@ def clean_deadlines(raw: Any, locale: str = "en") -> list[dict[str, Any]]:
                 "date": date,
                 "notify_by": notify_by(x.get("note"), date),
                 "cycle": x.get("cycle"),
+                "binding": x["binding"] if isinstance(x.get("binding"), bool) else None,
+                "time_zone": x.get("time_zone") or None,
                 "label_short": label,
             }
         )

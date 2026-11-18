@@ -70,6 +70,8 @@ class CatalogProposal:
     review_note: str | None = None
     applied_id: UUID | None = None
     extra: dict[str, Any] = field(default_factory=dict)
+    facts: dict[str, dict[str, Any]] = field(default_factory=dict)
+    """Typed facts `{key: {value, source_url, year, note}}`; never in `payload`."""
 
     def missing_on_create(self) -> list[str]:
         """Return the required fields a new row still lacks."""
