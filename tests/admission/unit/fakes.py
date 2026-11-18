@@ -3,7 +3,7 @@
 import datetime as dt
 from collections.abc import Sequence
 from dataclasses import replace
-from typing import Any, Self
+from typing import Any, Literal, Self
 from uuid import UUID
 
 from app.modules.admission.domain.access import Assignment, Entitlement, StaffRole
@@ -16,6 +16,7 @@ from app.modules.admission.domain.chooser import (
 )
 from app.modules.admission.domain.courses import Course
 from app.modules.admission.domain.errors import AdmissionConflictError
+from app.modules.admission.domain.intl_facts import fold_name
 from app.modules.admission.domain.profile import AdmissionProfile
 from app.modules.admission.domain.profile_words import ReviewRecord, WordsState
 from app.modules.admission.domain.staff import (
@@ -44,6 +45,8 @@ class FakeStore:
         self.proposals: dict[UUID, CatalogProposal] = {}
         self.applied: list[CatalogProposal] = []
         self.known_targets: set[UUID] = set()
+        self.institution_names: dict[str, UUID] = {}
+        """Casefolded name, alias or domain of a known institution -> its id."""
         self.logos: dict[UUID, tuple[float | None, str | None]] = {}
         self.supp_prompts: dict[UUID, dict[str, list[SuppPrompt]]] = {}
         self.entitlements: dict[UUID, Entitlement] = {}
@@ -455,7 +458,23 @@ class _CatalogProposals:
         self.s.logos[institution_id] = (zoom, fit)
         return True
 
-    async def apply(self, proposal: CatalogProposal) -> UUID:
+    async def find_duplicate(
+        self, names: Sequence[str], website_domain: str | None
+    ) -> tuple[Literal["institution", "proposal"], UUID] | None:
+        known = {fold_name(k): v for k, v in self.s.institution_names.items()}
+        for key in (*names, website_domain):
+            if key is not None and key in known:
+                return "institution", known[key]
+        for p in self.s.proposals.values():
+            if p.kind == "institution" and p.status == "pending" and not p.target_id:
+                raw = [p.payload.get("name"), *(p.payload.get("aliases") or [])]
+                if any(isinstance(n, str) and fold_name(n) in names for n in raw):
+                    return "proposal", p.id
+        return None
+
+    async def apply(
+        self, proposal: CatalogProposal, *, reviewer_id: UUID, now: dt.datetime
+    ) -> UUID:
         self.s.applied.append(proposal)
         return proposal.target_id or new_id()
 

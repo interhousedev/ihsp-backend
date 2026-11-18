@@ -312,7 +312,12 @@ def build(
             final_erasers=final_erasers,
         ),
         catalog=CatalogService(uow_factory),
-        catalog_proposals=CatalogProposalService(uow_factory, deps.clock),
+        catalog_proposals=CatalogProposalService(
+            uow_factory,
+            deps.clock,
+            deps.rate_limiter,
+            settings.catalog_proposals_per_day,
+        ),
         supp_prompts=SuppPromptService(
             uow_factory, CatalogProposalService(uow_factory, deps.clock).can_review
         ),

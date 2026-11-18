@@ -118,6 +118,7 @@ class SqlCatalogRepository:
                 source_url=url,
                 year=fact.cycle,
                 note=fact.excerpt,
+                unit=fact.unit,
                 verified=fact.confidence in REVIEWED_CONFIDENCE
                 or fact.reviewer_id is not None,
             )

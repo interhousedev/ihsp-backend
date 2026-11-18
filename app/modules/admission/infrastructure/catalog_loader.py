@@ -80,9 +80,13 @@ class _Loader:
     ) -> None:
         if value is None:
             return
+        fid = seed_id("fact", inst, key)
+        existing = await self.s.get(FactRow, fid)
+        if existing is not None and existing.reviewer_id is not None:
+            return  # a staff-reviewed fact is never overwritten by the seed
         await self.s.merge(
             FactRow(
-                id=seed_id("fact", inst, key),
+                id=fid,
                 entity_kind="institution",
                 entity_id=inst,
                 key=key,

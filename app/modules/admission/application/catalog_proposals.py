@@ -1,6 +1,7 @@
 """Catalog proposals: staff propose, an administrator or curator reviews."""
 
 import dataclasses
+from collections.abc import Mapping
 from typing import Any
 from urllib.parse import urlsplit
 from uuid import UUID
@@ -16,32 +17,77 @@ from app.modules.admission.domain.catalog_proposals import (
 from app.modules.admission.domain.errors import (
     AdmissionForbiddenError,
     AdmissionNotFoundError,
+    CatalogDuplicateError,
+    CatalogFactInvalidError,
+    CatalogProposalLimitError,
     InvalidMediaUrlError,
     InvalidProofUrlError,
     InvalidTransitionError,
+)
+from app.modules.admission.domain.intl_facts import (
+    clean_facts,
+    clean_name,
+    fold_name,
+    has_userinfo,
 )
 from app.modules.admission.domain.permissions import KIND_ROLE, Permission
 from app.modules.admission.domain.urls import is_https_url
 from app.modules.admission.ports.repositories import AuditEvent
 from app.modules.admission.ports.unit_of_work import UowFactory
 from app.shared.actor import Role
-from app.shared.base_error import ValidationFailedError
+from app.shared.base_error import RateLimitedError, ValidationFailedError
 from app.shared.clock import Clock
 from app.shared.ids import new_id
+from app.shared.rate_limit import RateLimiter
+
+_DAY = 86_400
+DEFAULT_PER_DAY = 100
+
+
+def _fold_text_fields(payload: dict[str, Any]) -> None:
+    """Store the name and the aliases NFC, single-spaced and stripped, case kept."""
+    name = payload.get("name")
+    if isinstance(name, str):
+        if clean_name(name):
+            payload["name"] = clean_name(name)
+        else:
+            del payload["name"]
+    aliases = payload.get("aliases")
+    if isinstance(aliases, list):
+        kept = dict.fromkeys(
+            clean_name(a) for a in aliases if isinstance(a, str) and clean_name(a)
+        )
+        if kept:
+            payload["aliases"] = list(kept)
+        else:
+            del payload["aliases"]
 
 
 def _clean_payload(
-    kind: ProposalKind, fields: dict[str, Any], source_url: str
+    kind: ProposalKind,
+    fields: dict[str, Any],
+    source_url: str,
+    *,
+    allow_empty: bool = False,
 ) -> dict[str, Any]:
     """Return the known, non-empty fields; raise when any is invalid."""
+    if has_userinfo(source_url):
+        raise InvalidProofUrlError()
     parts = urlsplit(source_url)
     if parts.scheme != "https" or not parts.hostname:
         raise InvalidProofUrlError()
     payload = {
         k: v for k, v in fields.items() if k in FIELDS[kind] and v not in (None, "", [])
     }
-    if not payload:
+    _fold_text_fields(payload)
+    if not payload and not allow_empty:
         raise ValidationFailedError(params={"field": "fields"})
+    _check_media_fields(payload)
+    return payload
+
+
+def _check_media_fields(payload: dict[str, Any]) -> None:
+    """Raise when a logo or media field of the payload is invalid."""
     for key in MEDIA_FIELDS:
         if key in payload and not is_https_url(payload[key]):
             raise InvalidMediaUrlError(params={"field": key})
@@ -54,16 +100,23 @@ def _clean_payload(
         isinstance(aspect, (int, float)) and aspect > 0
     ):
         raise ValidationFailedError(params={"field": "logo_aspect"})
-    return payload
 
 
 class CatalogProposalService:
     """Propose, list and review catalog edits."""
 
-    def __init__(self, uow_factory: UowFactory, clock: Clock) -> None:
-        """Keep the transaction factory and the clock."""
+    def __init__(
+        self,
+        uow_factory: UowFactory,
+        clock: Clock,
+        limiter: RateLimiter | None = None,
+        per_day: int = DEFAULT_PER_DAY,
+    ) -> None:
+        """Keep the transaction factory, the clock and the daily proposal limit."""
         self._uow = uow_factory
         self._clock = clock
+        self._limiter = limiter
+        self._per_day = per_day
 
     def can_review(self, ctx: AdmissionContext) -> bool:
         """Return whether the caller is an administrator or a live catalog curator."""
@@ -84,6 +137,11 @@ class CatalogProposalService:
             or self.can_review(ctx)
         )
 
+    def require_proposer(self, ctx: AdmissionContext) -> None:
+        """Raise `AdmissionForbiddenError` unless the caller may propose."""
+        if not self._may_propose(ctx):
+            raise AdmissionForbiddenError(params={"permission": "catalog:propose"})
+
     async def propose(
         self,
         ctx: AdmissionContext,
@@ -93,11 +151,21 @@ class CatalogProposalService:
         fields: dict[str, Any],
         source_url: str,
         note: str | None,
+        facts: Mapping[str, Mapping[str, Any]] | None = None,
     ) -> CatalogProposal:
-        """Store a pending proposal; a new row needs its required fields."""
+        """Store a pending proposal; a new row needs its required fields.
+
+        `facts` (institutions only) are the sourced international facts; a proposal
+        may carry only facts when it edits an existing institution.
+        """
         if not self._may_propose(ctx):
             raise AdmissionForbiddenError(params={"permission": "catalog:propose"})
-        payload = _clean_payload(kind, fields, source_url)
+        if facts and kind != "institution":
+            raise CatalogFactInvalidError(
+                params={"fact": next(iter(facts)), "reason": "kind"}
+            )
+        cleaned = clean_facts(facts or {})
+        payload = _clean_payload(kind, fields, source_url, allow_empty=bool(cleaned))
         proposal = CatalogProposal(
             id=new_id(),
             kind=kind,
@@ -108,18 +176,63 @@ class CatalogProposalService:
             status="pending",
             proposed_by=ctx.user_id,
             created_at=self._clock.now(),
+            facts={
+                k: {
+                    "value": f.value,
+                    "source_url": f.source_url,
+                    "year": f.year,
+                    "note": f.note,
+                }
+                for k, f in cleaned.items()
+            },
         )
         missing = proposal.missing_on_create()
         if missing:
             raise ValidationFailedError(params={"field": missing[0]})
         async with self._uow() as uow:
-            if target_id is not None and not await uow.catalog_proposals.target_exists(
-                kind, target_id
-            ):
+            repo = uow.catalog_proposals
+            if target_id is not None and not await repo.target_exists(kind, target_id):
                 raise AdmissionNotFoundError()
-            saved = await uow.catalog_proposals.add(proposal)
+            if kind == "institution" and target_id is None:
+                aliases = payload.get("aliases")
+                aliases = aliases if isinstance(aliases, list) else []
+                raw = [payload["name"], *aliases]
+                names = [fold_name(n) for n in raw if isinstance(n, str) and n.strip()]
+                domain = payload.get("website_domain")
+                found = await repo.find_duplicate(
+                    names, fold_name(domain) if isinstance(domain, str) else None
+                )
+                if found is not None:
+                    which, found_id = found
+                    raise CatalogDuplicateError(params={f"{which}_id": str(found_id)})
+            await self._hit(ctx)
+            saved = await repo.add(proposal)
+            uow.access.audit(
+                AuditEvent(
+                    action="catalog.proposal_created",
+                    actor_id=ctx.user_id,
+                    student_id=None,
+                    object_type=f"catalog_{kind}",
+                    object_id=saved.id,
+                    meta={"target_id": str(target_id) if target_id else None},
+                )
+            )
             await uow.commit()
         return saved
+
+    async def _hit(self, ctx: AdmissionContext) -> None:
+        if self._limiter is None:
+            return
+        try:
+            await self._limiter.hit(
+                f"admission:catalog_propose:{ctx.user_id}",
+                limit=self._per_day,
+                window_seconds=_DAY,
+            )
+        except RateLimitedError as e:
+            raise CatalogProposalLimitError(
+                params={**(e.params or {}), "limit": self._per_day}
+            ) from e
 
     async def edit_logo(
         self,
@@ -185,12 +298,19 @@ class CatalogProposalService:
                 raise AdmissionNotFoundError()
             if current.status != "pending":
                 raise InvalidTransitionError(params={"status": current.status})
-            applied = await uow.catalog_proposals.apply(current) if approve else None
+            now = self._clock.now()
+            applied = (
+                await uow.catalog_proposals.apply(
+                    current, reviewer_id=ctx.user_id, now=now
+                )
+                if approve
+                else None
+            )
             reviewed = dataclasses.replace(
                 current,
                 status="approved" if approve else "rejected",
                 reviewed_by=ctx.user_id,
-                reviewed_at=self._clock.now(),
+                reviewed_at=now,
                 review_note=note,
                 applied_id=applied,
             )

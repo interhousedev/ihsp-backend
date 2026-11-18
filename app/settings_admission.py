@@ -55,4 +55,7 @@ class AdmissionSettings(BaseModel):
     runtime_cache_seconds: float = 30.0
     """How long a process caches the admin-edited runtime settings."""
 
+    catalog_proposals_per_day: int = 100
+    """Catalog proposals one user may submit in a rolling 24 hours."""
+
     readiness: ReadinessSettings = Field(default_factory=ReadinessSettings)

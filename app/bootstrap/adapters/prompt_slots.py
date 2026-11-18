@@ -187,6 +187,7 @@ _PARTS: tuple[tuple[Iterable[AiTask], str, str, str, bool], ...] = (
             ("expand", "angles on one idea"),
             ("outline", "outline suggestion"),
             ("feedback", "feedback on a draft"),
+            ("check", "essay check against its prompt and the rubric"),
         )
     ),
     (

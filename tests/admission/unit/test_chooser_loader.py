@@ -15,6 +15,9 @@ class _Session:
         self.rows[(type(obj), obj.id)] = obj
         return obj
 
+    async def get(self, model: type, key: Any) -> Any:
+        return self.rows.get((model, key))
+
     async def flush(self) -> None:
         return None
 

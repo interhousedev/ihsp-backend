@@ -1,6 +1,8 @@
 """Port: staff catalog proposals and applying an approved one."""
 
-from typing import Protocol
+import datetime as dt
+from collections.abc import Sequence
+from typing import Literal, Protocol
 from uuid import UUID
 
 from app.modules.admission.domain.catalog_proposals import CatalogProposal
@@ -33,8 +35,20 @@ class CatalogProposalRepository(Protocol):
         """Set the given logo fields of a published institution; False: unknown."""
         ...
 
-    async def apply(self, proposal: CatalogProposal) -> UUID:
-        """Create or update the catalog row, publish it, return its id."""
+    async def find_duplicate(
+        self, names: Sequence[str], website_domain: str | None
+    ) -> tuple[Literal["institution", "proposal"], UUID] | None:
+        """Find an institution or a pending create proposal that equals the input.
+
+        `names` are NFC-casefolded; an institution matches by name, alias or
+        domain, a pending create proposal by name.
+        """
+        ...
+
+    async def apply(
+        self, proposal: CatalogProposal, *, reviewer_id: UUID, now: dt.datetime
+    ) -> UUID:
+        """Create or update the catalog row and its facts, publish, return its id."""
         ...
 
     async def save_review(
