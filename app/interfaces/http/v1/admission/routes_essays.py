@@ -372,6 +372,38 @@ class CoachFeedbackOut(BaseModel):
     word_limit: int | None
 
 
+CheckDimT = Literal["hook", "theme", "detail", "authenticity", "reflection", "writing"]
+
+
+class CoachCheckDimensionOut(BaseModel):
+    """One rubric dimension: score 0-5, a verified quote and a comment."""
+
+    dim: CheckDimT
+    score: int
+    quote: str | None
+    comment: str
+
+
+class CoachCheckOut(BaseModel):
+    """The draft scored on six dimensions against its prompt; not stored."""
+
+    score: int
+    band: Literal["exceptional", "strong", "solid", "developing", "weak"]
+    dimensions: list[CoachCheckDimensionOut]
+    prompt_fit: Literal["yes", "partial", "no", "unknown"]
+    prompt_fit_reason: str
+    strongest: CheckDimT
+    first_fix: str
+    flagged_paragraph: int | None
+    flagged_text: str | None
+    flagged_reason: str
+    summary: str
+    word_count: int
+    word_limit: int | None
+    over_limit: bool
+    generic: bool
+
+
 async def list_essays(container: ContainerDep, ctx: AdmissionCtx) -> EssayListOut:
     """My essays."""
     rows = await container.admission.essays.mine(ctx)
@@ -549,6 +581,38 @@ async def coach_feedback(
     )
 
 
+async def coach_check(
+    essay_id: UUID, container: ContainerDep, ctx: AdmissionCtx, lang: Lang = None
+) -> CoachCheckOut:
+    """Score my draft on six dimensions against its prompt (AI consent, daily limit)."""
+    c = await container.admission.essay_coach.check(ctx, essay_id, _locale(lang))
+    return CoachCheckOut(
+        score=c.score,
+        band=c.band,
+        dimensions=[
+            CoachCheckDimensionOut(
+                dim=d.dim,
+                score=d.score,
+                quote=d.quote,
+                comment=d.comment,
+            )
+            for d in c.dimensions
+        ],
+        prompt_fit=c.prompt_fit,
+        prompt_fit_reason=c.prompt_fit_reason,
+        strongest=c.strongest,
+        first_fix=c.first_fix,
+        flagged_paragraph=c.flagged_paragraph,
+        flagged_text=c.flagged_text,
+        flagged_reason=c.flagged_reason,
+        summary=c.summary,
+        word_count=c.word_count,
+        word_limit=c.word_limit,
+        over_limit=c.over_limit,
+        generic=c.generic,
+    )
+
+
 async def coach_review(
     essay_id: UUID,
     body: CoachReviewIn,
@@ -685,6 +749,13 @@ _route(
     "POST",
     "coach_essay_feedback",
     response_model=CoachFeedbackOut,
+)
+_route(
+    "/essays/{essay_id}/coach/check",
+    coach_check,
+    "POST",
+    "check_essay",
+    response_model=CoachCheckOut,
 )
 _route(
     "/essays/{essay_id}/coach/review",

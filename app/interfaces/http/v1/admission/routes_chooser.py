@@ -21,6 +21,10 @@ from app.modules.admission.domain.chooser import (
     CatalogScholarship,
 )
 from app.modules.admission.domain.errors import AdmissionNotFoundError
+from app.modules.admission.domain.intl_fact_display import (
+    detail_groups,
+    importance_factors,
+)
 
 from fastapi import APIRouter, Header, Query
 from pydantic import BaseModel, ConfigDict, Field
@@ -64,7 +68,37 @@ class DeadlineOut(BaseModel):
     date: dt.date
     notify_by: dt.date | None
     cycle: str | None
+    binding: bool | None = None
+    time_zone: str | None = None
     label_short: str
+
+
+class DetailRowOut(BaseModel):
+    """One fact of a school in the detail view, with display text."""
+
+    key: str
+    label: str
+    kind: str
+    value: Any
+    value_text: str
+    source_url: str | None
+    year: int | None
+
+
+class DetailGroupOut(BaseModel):
+    """Facts of one registry group."""
+
+    key: str
+    label: str
+    rows: list[DetailRowOut]
+
+
+class ImportanceFactorOut(BaseModel):
+    """How much one factor weighs in the school's admission decision."""
+
+    key: str
+    label: str
+    importance: str
 
 
 class InstitutionOut(BaseModel):
@@ -91,10 +125,17 @@ class InstitutionOut(BaseModel):
     scholarship_count: int
     logo_url: str | None
     cover_url: str | None
+    details: list[DetailGroupOut] = []
+    factors: list[ImportanceFactorOut] = []
 
     @classmethod
-    def of(cls, i: CatalogInstitution, locale: str = "en") -> "InstitutionOut":
-        """Map the domain institution; text is localized, notes are left out."""
+    def of(
+        cls, i: CatalogInstitution, locale: str = "en", *, detail: bool = False
+    ) -> "InstitutionOut":
+        """Map the domain institution; text is localized, notes are left out.
+
+        `details` and `factors` are filled only when `detail` is set.
+        """
         deadlines = i.facts.get("deadlines")
         return cls(
             id=i.id,
@@ -129,6 +170,16 @@ class InstitutionOut(BaseModel):
             scholarship_count=i.scholarship_count,
             logo_url=i.logo_url,
             cover_url=i.cover_url,
+            details=(
+                [DetailGroupOut(**g) for g in detail_groups(i, locale)]
+                if detail
+                else []
+            ),
+            factors=(
+                [ImportanceFactorOut(**f) for f in importance_factors(i, locale)]
+                if detail
+                else []
+            ),
         )
 
 
@@ -393,6 +444,7 @@ async def get_institution(
     return InstitutionOut.of(
         await container.admission.catalog.institution(institution_id),
         _locale(accept_language),
+        detail=True,
     )
 
 

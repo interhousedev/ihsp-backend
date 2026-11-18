@@ -4,12 +4,16 @@ from typing import Annotated, Literal
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AnyContext, ContainerDep
+from app.interfaces.http.v1.admission.routes_chooser import Lang
+from app.interfaces.http.v1.admission.routes_items import _locale
 from app.interfaces.http.v1.admission.schemas_catalog_staff import (
     CatalogProposalIn,
     CatalogProposalListOut,
     CatalogProposalOut,
     CatalogReviewIn,
+    FactSpecOut,
 )
+from app.modules.admission.domain.intl_fact_display import fact_spec_view
 
 from fastapi import APIRouter, Query, status
 
@@ -25,6 +29,7 @@ async def create_catalog_proposal(
         kind=body.kind,
         target_id=body.target_id,
         fields=body.fields,
+        facts={k: f.model_dump() for k, f in body.facts.items()},
         source_url=body.source_url,
         note=body.note,
     )
@@ -65,6 +70,15 @@ async def review_catalog_proposal(
     return CatalogProposalOut.of(reviewed)
 
 
+async def catalog_fact_spec(
+    container: ContainerDep, ctx: AnyContext, accept_language: Lang = None
+) -> FactSpecOut:
+    """The international facts the proposal form can fill, labelled by locale."""
+    container.admission.catalog_proposals.require_proposer(ctx)
+    groups = fact_spec_view(_locale(accept_language))
+    return FactSpecOut.model_validate({"groups": groups})
+
+
 _R = router.add_api_route
 _R(
     "/staff/catalog/proposals",
@@ -87,4 +101,11 @@ _R(
     methods=["POST"],
     response_model=CatalogProposalOut,
     operation_id="admission_review_catalog_proposal",
+)
+_R(
+    "/staff/catalog/fact-spec",
+    catalog_fact_spec,
+    methods=["GET"],
+    response_model=FactSpecOut,
+    operation_id="admission_catalog_fact_spec",
 )
