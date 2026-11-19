@@ -1,7 +1,7 @@
 """Documents, checklist, transcripts, officer and deadline routes."""
 
 import datetime as dt
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import (
@@ -23,6 +23,7 @@ from app.modules.admission.domain.documents import (
     Transcript,
     sniff_upload,
 )
+from app.modules.admission.domain.institution_brand import InstitutionBrand
 from app.modules.admission.domain.workflow import DocumentKind
 from app.modules.files.domain.errors import FileTooLargeError, TypeNotAllowedError
 
@@ -30,6 +31,10 @@ from fastapi import APIRouter, File, Form, Query, UploadFile
 from pydantic import BaseModel, ConfigDict, Field
 
 router = APIRouter(prefix="/v1/admission", tags=["admission"])
+
+_BRAND_FIELDS: Final = frozenset(
+    {"institution_name", "logo_url", "logo_fit", "logo_zoom"}
+)
 
 
 class VersionOut(BaseModel):
@@ -146,21 +151,27 @@ class ChecklistOut(BaseModel):
     important: bool
     urgent_override: bool | None
     institution_name: str | None = None
+    logo_url: str | None = None
+    logo_fit: Literal["circle", "contain"] = "circle"
+    logo_zoom: float = 1.0
     app_path: str | None = None
     urgent: bool = False
     quadrant: Literal["do", "schedule", "delegate", "drop"] = "drop"
 
     @classmethod
     def of(
-        cls, c: ChecklistItem, institution_name: str | None = None
+        cls, c: ChecklistItem, brand: InstitutionBrand | None = None
     ) -> "ChecklistOut":
-        """Map the item; `institution_name` is set for per-university items."""
-        derived = {"institution_name", "app_path", "urgent", "quadrant"}
+        """Map the item; the brand is set for per-university items."""
+        derived = {*_BRAND_FIELDS, "app_path", "urgent", "quadrant"}
         data = {k: getattr(c, k) for k in cls.model_fields if k not in derived}
         now = dt.datetime.now(dt.UTC)
         return cls(
             **data,
-            institution_name=institution_name,
+            institution_name=brand.name if brand else None,
+            logo_url=brand.logo_url if brand else None,
+            logo_fit=brand.logo_fit if brand else "circle",
+            logo_zoom=brand.logo_zoom if brand else 1.0,
             app_path=deep_link(c.template_key),
             urgent=is_urgent(c, now),
             quadrant=quadrant(c, now),
@@ -275,6 +286,9 @@ class DeadlineOut(BaseModel):
     id: UUID
     institution_id: UUID
     institution_name: str = ""
+    logo_url: str | None = None
+    logo_fit: Literal["circle", "contain"] = "circle"
+    logo_zoom: float = 1.0
     cycle: int
     round: str
     program_id: UUID | None
@@ -290,11 +304,16 @@ class DeadlineOut(BaseModel):
     version: int
 
     @classmethod
-    def of(cls, d: Deadline, institution_name: str = "") -> "DeadlineOut":
-        """Map the deadline; the caller supplies the university name."""
-        keys = set(cls.model_fields) - {"institution_name"}
+    def of(cls, d: Deadline, brand: InstitutionBrand | None = None) -> "DeadlineOut":
+        """Map the deadline; the caller supplies the university brand."""
+        brand = brand or InstitutionBrand("")
+        keys = set(cls.model_fields) - _BRAND_FIELDS
         return cls(
-            institution_name=institution_name, **{k: getattr(d, k) for k in keys}
+            institution_name=brand.name,
+            logo_url=brand.logo_url,
+            logo_fit=brand.logo_fit,
+            logo_zoom=brand.logo_zoom,
+            **{k: getattr(d, k) for k in keys},
         )
 
 
@@ -308,6 +327,9 @@ class MilestoneOut(BaseModel):
     predicted: bool
     institution_id: UUID
     institution_name: str
+    logo_url: str | None = None
+    logo_fit: Literal["circle", "contain"] = "circle"
+    logo_zoom: float = 1.0
 
     @classmethod
     def of(cls, i: DeadlineItem) -> "MilestoneOut":
@@ -320,7 +342,10 @@ class MilestoneOut(BaseModel):
             due_utc=m.due_utc,
             predicted=m.predicted,
             institution_id=i.institution_id,
-            institution_name=i.institution_name,
+            institution_name=i.brand.name,
+            logo_url=i.brand.logo_url,
+            logo_fit=i.brand.logo_fit,
+            logo_zoom=i.brand.logo_zoom,
         )
 
 
@@ -489,14 +514,14 @@ async def get_checklist(
 ) -> list[ChecklistOut]:
     """The document checklist."""
     items = await container.admission.documents.checklist(ctx, student_id)
-    return [ChecklistOut.of(i, name) for i, name in items]
+    return [ChecklistOut.of(i, brand) for i, brand in items]
 
 
 async def patch_checklist(
     item_id: UUID, body: ChecklistPatchIn, container: ContainerDep, ctx: AdmissionCtx
 ) -> ChecklistOut:
     """Change a checklist item."""
-    item, name = await container.admission.documents.patch_checklist(
+    item, brand = await container.admission.documents.patch_checklist(
         ctx,
         item_id,
         status=body.status,
@@ -509,7 +534,7 @@ async def patch_checklist(
         ),
         source_url=body.source_url if "source_url" in body.model_fields_set else UNSET,
     )
-    return ChecklistOut.of(item, name)
+    return ChecklistOut.of(item, brand)
 
 
 # -- transcripts ------------------------------------------------------------
@@ -664,10 +689,10 @@ async def staff_deadlines(
     items = await container.admission.deadlines.listing(
         ctx, institution_id=institution_id, cycle=cycle
     )
-    names = await container.admission.deadlines.institution_names(
+    brands = await container.admission.deadlines.institution_brands(
         ctx, {d.institution_id for d in items}
     )
-    return [DeadlineOut.of(d, names.get(d.institution_id, "")) for d in items]
+    return [DeadlineOut.of(d, brands.get(d.institution_id)) for d in items]
 
 
 async def create_deadline(

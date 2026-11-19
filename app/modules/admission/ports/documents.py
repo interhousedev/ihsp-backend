@@ -18,6 +18,7 @@ from app.modules.admission.domain.documents import (
     ReminderRecord,
     Transcript,
 )
+from app.modules.admission.domain.institution_brand import InstitutionBrand
 
 
 class DocumentRepository(Protocol):
@@ -166,6 +167,12 @@ class DeadlineRepository(Protocol):
 
     async def institution_names(self, ids: Collection[UUID]) -> dict[UUID, str]:
         """Return institution names by id."""
+        ...
+
+    async def institution_brands(
+        self, ids: Collection[UUID]
+    ) -> dict[UUID, InstitutionBrand]:
+        """Return institution names and logos by id."""
         ...
 
 

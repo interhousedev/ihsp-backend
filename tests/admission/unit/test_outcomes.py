@@ -10,6 +10,7 @@ from app.modules.admission.application.access import VIEWED
 from app.modules.admission.application.nudges import NudgeService
 from app.modules.admission.application.outcomes import OutcomeService
 from app.modules.admission.domain.documents import Deadline, ReminderPrefs
+from app.modules.admission.domain.institution_brand import InstitutionBrand
 from app.modules.admission.domain.outcomes import (
     NudgeTarget,
     Outcome,
@@ -199,6 +200,9 @@ class _Summary:
 
     async def institution_names(self, ids: Any) -> dict[UUID, str]:
         return dict.fromkeys(ids, "MIT")
+
+    async def institution_brands(self, ids: Any) -> dict[UUID, InstitutionBrand]:
+        return dict.fromkeys(ids, InstitutionBrand("MIT"))
 
     def audit(self, event: Any) -> None:
         self.events.append(event)

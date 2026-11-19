@@ -5,6 +5,7 @@ from typing import Annotated, Any
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AnyContext, ContainerDep
+from app.interfaces.http.v1.admission.routes_exemplars import ProblemOut
 from app.modules.admission.application.kb import ArticleChanges, ArticleDraft
 from app.modules.admission.domain.kb import (
     BODY_MAX,
@@ -136,6 +137,18 @@ async def delete_article(
     return Response(status_code=204)
 
 
+_INVALID = {
+    422: {
+        "model": ProblemOut,
+        "description": (
+            "A field breaks a rule, or the body has more than 3 OpenUI blocks, "
+            "a block over 6000 characters, a bad block or a link that is not "
+            "https, mailto or relative."
+        ),
+    }
+}
+
+
 def _route(path: str, endpoint: Any, method: str, op: str, **kw: Any) -> None:
     router.add_api_route(
         path, endpoint, methods=[method], operation_id=f"admission_kb_{op}", **kw
@@ -156,6 +169,7 @@ _route(
     "POST",
     "create",
     response_model=KbArticleOut,
+    responses=_INVALID,
     status_code=201,
 )
 _route(
@@ -164,6 +178,7 @@ _route(
     "PATCH",
     "update",
     response_model=KbArticleOut,
+    responses=_INVALID,
 )
 _route(
     "/kb/articles/{article_id}",

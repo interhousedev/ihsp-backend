@@ -27,6 +27,7 @@ from app.modules.admission.domain.errors import (
     CharLimitError,
     ScanPendingError,
 )
+from app.modules.admission.domain.institution_brand import InstitutionBrand
 from app.modules.admission.domain.permissions import Permission
 from app.modules.admission.domain.workflow import DocumentKind, default_visibility
 from app.modules.admission.ports.repositories import AuditEvent
@@ -490,20 +491,20 @@ class DocumentService:
 
     async def checklist(
         self, ctx: AdmissionContext, student_id: UUID | None = None
-    ) -> list[tuple[ChecklistItem, str | None]]:
-        """Return the student checklist; per-university items name the institution."""
+    ) -> list[tuple[ChecklistItem, InstitutionBrand | None]]:
+        """Return the student checklist; per-university items carry the brand."""
         target = student_id or ctx.user_id
         await self._access.require(ctx, target, Permission.DOCUMENTS_READ)
         async with self._uow() as uow:
             items = await uow.checklist.for_student(target)
             entries = await uow.shortlist.entries(target)
             by_entry = {e.id: e.institution_id for e in entries}
-            names = await uow.deadlines.institution_names(set(by_entry.values()))
+            brands = await uow.deadlines.institution_brands(set(by_entry.values()))
         return [
             (
                 i,
                 (
-                    names.get(by_entry[i.list_entry_id])
+                    brands.get(by_entry[i.list_entry_id])
                     if i.list_entry_id in by_entry
                     else None
                 ),
@@ -530,8 +531,8 @@ class DocumentService:
         important: bool | None = None,
         urgent_override: bool | None | Unset = UNSET,
         source_url: str | None | Unset = UNSET,
-    ) -> tuple[ChecklistItem, str | None]:
-        """Change an item; the university name is set for per-university items.
+    ) -> tuple[ChecklistItem, InstitutionBrand | None]:
+        """Change an item; the university brand is set for per-university items.
 
         Status and document follow the owner rule; importance and the urgency
         override are the student's own priority; the external link is staff-set.
@@ -577,6 +578,6 @@ class DocumentService:
                 else []
             )
             inst_ids = {e.institution_id for e in entry if e.id == saved.list_entry_id}
-            names = await uow.deadlines.institution_names(inst_ids) if inst_ids else {}
+            brands = await uow.deadlines.institution_brands(inst_ids)
             await uow.commit()
-            return saved, next(iter(names.values()), None)
+            return saved, next(iter(brands.values()), None)

@@ -5,6 +5,7 @@ from collections.abc import Collection, Sequence
 from typing import Any, cast
 from uuid import UUID
 
+from app.modules.admission.domain.catalog_display import resolve_logo_fit
 from app.modules.admission.domain.documents import (
     LIVE_ENTRY_STATUSES,
     AttachmentRecord,
@@ -20,6 +21,7 @@ from app.modules.admission.domain.documents import (
     Transcript,
 )
 from app.modules.admission.domain.errors import AdmissionConflictError
+from app.modules.admission.domain.institution_brand import InstitutionBrand
 from app.modules.admission.infrastructure.orm.access import OfficerSettingsRow
 from app.modules.admission.infrastructure.orm.applications import (
     ChecklistItemRow,
@@ -577,6 +579,32 @@ class SqlDeadlineRepository:
             )
         )
         return dict(rows.tuples().all())
+
+    async def institution_brands(
+        self, ids: Collection[UUID]
+    ) -> dict[UUID, InstitutionBrand]:
+        """Return institution names and logos by id."""
+        if not ids:
+            return {}
+        rows = await self._s.execute(
+            select(
+                InstitutionRow.id,
+                InstitutionRow.name,
+                InstitutionRow.logo_url,
+                InstitutionRow.logo_fit,
+                InstitutionRow.logo_aspect,
+                InstitutionRow.logo_zoom,
+            ).where(InstitutionRow.id.in_(list(ids)))
+        )
+        return {
+            i: InstitutionBrand(
+                name=name,
+                logo_url=url,
+                logo_fit=resolve_logo_fit(fit, aspect),
+                logo_zoom=zoom,
+            )
+            for i, name, url, fit, aspect, zoom in rows.tuples().all()
+        }
 
 
 class SqlTranscriptRepository:

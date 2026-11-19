@@ -16,6 +16,7 @@ from app.modules.admission.domain.kb import (
     check_article,
     clean_tags,
 )
+from app.modules.admission.domain.kb_body import check_body
 from app.modules.admission.ports.kb import KbRepository
 from app.shared.clock import Clock
 from app.shared.ids import new_id
@@ -113,6 +114,7 @@ class KbService:
         self._require_edit(ctx)
         tags = clean_tags(draft.tags)
         check_article(draft.title, draft.body, tags)
+        check_body(draft.body)
         now = self._clock.now()
         article = Article(
             id=new_id(),
@@ -146,6 +148,8 @@ class KbService:
             article.status = changes.status
         if changes.tags is not None:
             article.tags = clean_tags(changes.tags)
+        if changes.body is not None:
+            check_body(article.body)
         check_article(article.title, article.body, article.tags)
         article.updated_at = self._clock.now()
         await self._repo.save(article)

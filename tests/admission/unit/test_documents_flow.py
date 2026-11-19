@@ -187,7 +187,7 @@ async def test_checklist_names_the_university_of_per_entry_items() -> None:
     )
     k.d.items[shared.id] = shared
     k.d.items[per_uni.id] = per_uni
-    names = {i.id: name for i, name in await k.docs.checklist(ctx)}
+    names = {i.id: b.name if b else None for i, b in await k.docs.checklist(ctx)}
     assert names == {shared.id: None, per_uni.id: "Columbia"}
 
 

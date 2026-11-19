@@ -27,6 +27,7 @@ from app.modules.admission.domain.errors import (
     AdmissionNotFoundError,
     InvalidTransitionError,
 )
+from app.modules.admission.domain.institution_brand import InstitutionBrand
 from app.modules.admission.domain.permissions import Permission
 from app.modules.admission.ports.unit_of_work import AdmissionUnitOfWork, UowFactory
 from app.shared.actor import Role
@@ -43,7 +44,7 @@ class DeadlineItem:
 
     milestone: Milestone
     institution_id: UUID
-    institution_name: str
+    brand: InstitutionBrand
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,13 +111,13 @@ class DeadlineService:
                 institution_id=institution_id, cycle=cycle
             )
 
-    async def institution_names(
+    async def institution_brands(
         self, ctx: AdmissionContext, ids: set[UUID]
-    ) -> dict[UUID, str]:
-        """Return the university names of the given ids."""
+    ) -> dict[UUID, InstitutionBrand]:
+        """Return the university names and logos of the given ids."""
         self._need_manage(ctx)
         async with self._uow() as uow:
-            return await uow.deadlines.institution_names(ids)
+            return await uow.deadlines.institution_brands(ids)
 
     async def create(
         self,
@@ -219,19 +220,19 @@ class DeadlineService:
     async def mine(
         self, ctx: AdmissionContext, student_id: UUID | None = None
     ) -> list[DeadlineItem]:
-        """Return the milestones of the student's list with institution names."""
+        """Return the milestones of the student's list with institution brands."""
         target = student_id or ctx.user_id
         await self._access.require(ctx, target, Permission.LIST_READ)
         async with self._uow() as uow:
             entries = await uow.shortlist.entries(target)
             by_entry = {e.id: e.institution_id for e in entries}
             milestones = await uow.deadlines.milestones_of_entries(list(by_entry))
-            names = await uow.deadlines.institution_names(set(by_entry.values()))
+            brands = await uow.deadlines.institution_brands(set(by_entry.values()))
         items = [
             DeadlineItem(
                 m,
                 by_entry[m.list_entry_id],
-                names.get(by_entry[m.list_entry_id], ""),
+                brands.get(by_entry[m.list_entry_id], InstitutionBrand("")),
             )
             for m in milestones
         ]

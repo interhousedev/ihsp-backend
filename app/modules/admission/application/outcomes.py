@@ -16,6 +16,7 @@ from app.modules.admission.domain.errors import (
     AdmissionNotFoundError,
     InvalidAnswerError,
 )
+from app.modules.admission.domain.institution_brand import InstitutionBrand
 from app.modules.admission.domain.outcomes import (
     MAX_CYCLE,
     MIN_CYCLE,
@@ -36,10 +37,10 @@ from app.shared.ids import new_id
 
 @dataclass(frozen=True, slots=True)
 class OutcomeSummary:
-    """Tallies per institution and cycle, with the institutions' names."""
+    """Tallies per institution and cycle, with the institutions' names and logos."""
 
     tallies: list[OutcomeTally]
-    institutions: dict[UUID, str]
+    institutions: dict[UUID, InstitutionBrand]
     reported: int
     accepted: int
 
@@ -165,7 +166,7 @@ class OutcomeService:
             raise AdmissionForbiddenError()
         async with self._uow() as uow:
             rows = await uow.outcomes.all(institution_id=institution_id, cycle=cycle)
-            institutions = await uow.deadlines.institution_names(
+            institutions = await uow.deadlines.institution_brands(
                 {o.institution_id for o in rows}
             )
         ids = revealed_students(rows, reveal_all=False)

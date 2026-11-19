@@ -20,6 +20,7 @@ from app.modules.admission.domain.documents import (
     Transcript,
 )
 from app.modules.admission.domain.errors import AdmissionConflictError
+from app.modules.admission.domain.institution_brand import InstitutionBrand
 from app.settings import LimitsSettings
 from app.shared.actor import Role
 from app.shared.contracts.files import FilePurpose, FileRef, FileScope, SignedDownload
@@ -48,6 +49,7 @@ class DocState:
         self.notifications: list[Any] = []
         self.pending_keys: set[str] = set()
         self.institution_names: dict[UUID, str] = {}
+        self.institution_logos: dict[UUID, InstitutionBrand] = {}
 
 
 def _lock(row: Any, expected: int) -> None:
@@ -265,6 +267,15 @@ class FakeDeadlines:
 
     async def institution_names(self, ids: Collection[UUID]) -> dict[UUID, str]:
         return {i: self.d.institution_names.get(i, "Uni") for i in ids}
+
+    async def institution_brands(
+        self, ids: Collection[UUID]
+    ) -> dict[UUID, InstitutionBrand]:
+        return {
+            i: self.d.institution_logos.get(i)
+            or InstitutionBrand(self.d.institution_names.get(i, "Uni"))
+            for i in ids
+        }
 
 
 class FakeTranscripts:

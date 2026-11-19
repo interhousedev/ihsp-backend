@@ -131,7 +131,8 @@ async def test_staff_listing_resolves_university_names() -> None:
     await k.deadlines.create(
         ctx, institution_id=INST, cycle=2026, round="RD", data=CONFIRMED
     )
-    assert await k.deadlines.institution_names(ctx, {INST}) == {INST: "Uni"}
+    brands = await k.deadlines.institution_brands(ctx, {INST})
+    assert {i: b.name for i, b in brands.items()} == {INST: "Uni"}
 
 
 async def test_edit_moves_milestones_and_notifies_students() -> None:

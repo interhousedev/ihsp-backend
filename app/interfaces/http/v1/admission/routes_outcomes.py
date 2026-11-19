@@ -6,6 +6,7 @@ from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AnyContext, ContainerDep
 from app.modules.admission.application.outcomes import OutcomeSummary
+from app.modules.admission.domain.institution_brand import InstitutionBrand
 from app.modules.admission.domain.outcomes import (
     MAX_CYCLE,
     MIN_CYCLE,
@@ -101,6 +102,9 @@ class OutcomeTallyOut(BaseModel):
 
     institution_id: UUID
     institution_name: str
+    logo_url: str | None = None
+    logo_fit: Literal["circle", "contain"] = "circle"
+    logo_zoom: float = 1.0
     cycle: int
     applied: int
     accepted: int
@@ -108,11 +112,17 @@ class OutcomeTallyOut(BaseModel):
     names: list[SharedNameOut]
 
     @classmethod
-    def of(cls, t: OutcomeTally, institutions: dict[UUID, str]) -> "OutcomeTallyOut":
+    def of(
+        cls, t: OutcomeTally, institutions: dict[UUID, InstitutionBrand]
+    ) -> "OutcomeTallyOut":
         """Map the tally."""
+        brand = institutions.get(t.institution_id) or InstitutionBrand("")
         return cls(
             institution_id=t.institution_id,
-            institution_name=institutions.get(t.institution_id, ""),
+            institution_name=brand.name,
+            logo_url=brand.logo_url,
+            logo_fit=brand.logo_fit,
+            logo_zoom=brand.logo_zoom,
             cycle=t.cycle,
             applied=t.reported,
             accepted=t.accepted,
