@@ -34,6 +34,7 @@ from app.modules.admission.ports.ai import PromptSource, StructuredAi
 from app.modules.admission.ports.unit_of_work import AdmissionUnitOfWork
 from app.shared.ai_tasks import AiTask
 from app.shared.brand import with_brand
+from app.shared.contracts.ai import AiProviderError
 
 CHECK_MAX_SCORE: Final = 5
 CHECK_GENERIC_DIMS: Final = 3
@@ -386,6 +387,22 @@ def _base_review(
     )
 
 
+def is_degenerate(review: BaseReview) -> bool:
+    """A base review that is a scoring failure: every dimension at 0 or no feedback.
+
+    The schema accepts it, but real essays are uneven: an all-zero score or an empty
+    summary means the model did not do the work, so the reply is not stored.
+    """
+    return all(d.score == 0 for d in review.dimensions) or not review.summary.strip()
+
+
+_BASE_ATTEMPTS: Final = 2
+
+
+class DegenerateReviewError(AiProviderError):
+    """The model twice returned an all-zero or empty review: the provider path."""
+
+
 async def run_base_review(
     ai: StructuredAi,
     prompts: PromptSource,
@@ -405,17 +422,21 @@ async def run_base_review(
             f"[exemplar id={ex.id}] {ex.school_name} {ex.kind}: "
             f"{ex.body[:_EXEMPLAR_TO_MODEL]}"
         )
-    data, model = await _ask(
-        ai,
-        prompts,
-        task=AiTask.ADMIT_ESSAY_REVIEW,
-        name="base",
-        schema=review.SCHEMAS["base"],
-        locale=locale,
-        lines=lines,
-        max_tokens=_REVIEW_TOKENS,
-    )
-    return _base_review(data, essay, exemplars), model
+    for _ in range(_BASE_ATTEMPTS):
+        data, model = await _ask(
+            ai,
+            prompts,
+            task=AiTask.ADMIT_ESSAY_REVIEW,
+            name="base",
+            schema=review.SCHEMAS["base"],
+            locale=locale,
+            lines=lines,
+            max_tokens=_REVIEW_TOKENS,
+        )
+        result = _base_review(data, essay, exemplars)
+        if not is_degenerate(result):
+            return result, model
+    raise DegenerateReviewError()
 
 
 def _uni_review(data: dict[str, Any], essay: EssayInput, uni: UniContext) -> UniReview:

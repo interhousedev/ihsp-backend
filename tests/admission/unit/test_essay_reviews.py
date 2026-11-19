@@ -17,6 +17,7 @@ from app.modules.admission.infrastructure.ai.prompts import essay_review
 from app.modules.admission.infrastructure.ai.prompts import essays as coach_prompts
 from app.modules.admission.ports.consent import AI, STAFF_VIEW
 from app.shared.base_error import RateLimitedError
+from app.shared.contracts.ai import AiProviderError
 from app.shared.ids import new_id
 from tests.admission.unit.fakes import NOW
 from tests.admission.unit.fakes_reviews import FixedExemplars
@@ -295,3 +296,55 @@ async def test_check_is_stored_and_latest_reports_stale() -> None:
     assert len(b.w.ai.calls) == 1
     with pytest.raises(AdmissionNotFoundError):
         await b.coach.latest_check(await b.w.ctx(OTHER), e.id, "en")
+
+
+def _degenerate(**kw: Any) -> dict[str, Any]:
+    reply = _base(**kw)
+    for d in reply["dimensions"]:
+        d["score"] = 0
+    return reply
+
+
+@pytest.mark.parametrize("bad", [_degenerate(), _base(summary="")])
+async def test_degenerate_first_output_is_retried_once_and_the_valid_one_stored(
+    bad: dict[str, Any],
+) -> None:
+    """ADM-REV-FAIR-1: an all-zero or empty-feedback review is retried once."""
+    b = Bench(bad, _base())
+    ctx, e = await b.essay()
+    r = await b.reviewer.run(ctx, e.id, [], refresh=False, locale="en")
+    assert r.base is not None and r.base.score == 60
+    assert len(b.w.ai.calls) == 2
+    assert [s.kind for s in b.reviews.rows] == ["base"]
+    assert b.hits.count == 1
+
+
+async def test_two_degenerate_outputs_raise_the_provider_error_and_store_nothing() -> (
+    None
+):
+    """ADM-REV-FAIR-1: two degenerate outputs take the AI-provider error path."""
+    b = Bench(_degenerate(), _degenerate())
+    ctx, e = await b.essay()
+    with pytest.raises(AiProviderError):
+        await b.reviewer.run(ctx, e.id, [], refresh=False, locale="en")
+    assert len(b.w.ai.calls) == 2
+    assert b.reviews.rows == []
+    assert b.hits.count == 1
+
+
+def test_identity_neutral_line_is_in_every_review_prompt_once() -> None:
+    """ADM-REV-FAIR-2: base and university prompts carry the neutral line once."""
+    for text in (essay_review.BASE, essay_review.UNI):
+        assert essay_review.IDENTITY_NEUTRAL in text
+        assert text.count(essay_review.IDENTITY_NEUTRAL) == 1
+        assert coach_prompts.FAIRNESS in text
+    assert "{" not in essay_review.IDENTITY_NEUTRAL
+
+
+async def test_a_valid_review_is_not_retried() -> None:
+    """ADM-REV-FAIR-3: a normal review costs one call and keeps its dimensions."""
+    b = Bench(_base())
+    ctx, e = await b.essay()
+    r = await b.reviewer.run(ctx, e.id, [], refresh=False, locale="en")
+    assert len(b.w.ai.calls) == 1
+    assert r.base is not None and all(d.score == 3 for d in r.base.dimensions)

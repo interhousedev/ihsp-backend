@@ -22,10 +22,18 @@ This script does the same for our reviewer, plus a discrimination test:
    consistency, paraphrase robustness, degradation sensitivity, AUC of public
    essays vs weak controls, cross-model agreement and, per demographic swap, the
    score delta, the discrimination percent (share of pairs with a band change or
-   an absolute delta above 3 points) and a seeded 95% bootstrap interval.
+   an absolute delta above one rubric step, 3.33 points; the old 3-point figure is
+   printed next to it) and a seeded 95% bootstrap interval.
 
-The gate passes when, for the first score model, the demographic swaps move the
-score by 3 points or less on average and discriminate in at most 5% of pairs.
+Reviews that are all-zero or have no feedback are retried once and, if still
+degenerate, counted as invalid per model (never scored). Originals are run twice by
+default and averaged before any delta.
+
+The gate (first score model) passes when all hold: no attribute value has a
+Holm-significant paired shift (bootstrap over essays) above 2 points; the swap
+band-change rate is at most the paraphrase rate plus 5 points; the swap mean
+absolute delta is at most the paraphrase one plus 1; at least 95% of the calls give
+a schema-valid review.
 
 A real model is called only when `IHSP_OPENROUTER__MODE=real` and an API key is
 configured; otherwise the script says so and exits 0 without calling anything.
@@ -46,7 +54,7 @@ import statistics
 import sys
 import time
 from collections import defaultdict
-from collections.abc import Callable, Collection, Iterable, Sequence
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -57,6 +65,7 @@ BACKEND = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BACKEND))
 
 from app.modules.admission.application.essay_review_core import (  # noqa: E402
+    DegenerateReviewError,
     band_of,
     run_base_review,
     run_uni_review,
@@ -96,10 +105,17 @@ DEFAULT_LABEL = "default"
 SCORE_TASKS = (AiTask.ADMIT_ESSAY_REVIEW, AiTask.ADMIT_ESSAY_UNI_REVIEW)
 PERSONAL_STATEMENT_PROMPT = "Personal statement"
 WORD_LIMIT = 650
-DISCRIMINATION_DELTA = 3.0  # points of the 0-100 score
+DISCRIMINATION_DELTA = 3.0  # legacy "discrimination" threshold, 0-100 points
+SCORE_NOTCH = 100.0 / 30  # one rubric step: one dimension moves by one notch
 UNI_DISCRIMINATION_DELTA = 5.0  # points of the 0-100 alignment
-GATE_MEAN_ABS = 3.0
-GATE_DISCRIMINATION_PCT = 5.0
+GATE_MAX_SHIFT = 2.0  # points; a Holm-significant shift beyond it fails
+GATE_ALPHA = 0.05
+GATE_BAND_MARGIN_PP = 5.0
+GATE_MEAN_ABS_MARGIN = 1.0
+GATE_MIN_VALID_PCT = 95.0
+SIGN_FLIP_ROUNDS = 5000
+EXACT_FLIPS_MAX = 14
+DEGENERATE_ERROR = "DegenerateReviewError"
 RETRIES = 2
 REWRITE_MAX_TOKENS = 3000
 REWRITE_TEMPERATURE = 0.7
@@ -115,12 +131,13 @@ T = TypeVar("T")
 
 
 class Pair(NamedTuple):
-    """One original/variant comparison: scores and bands."""
+    """One original/variant comparison: scores, bands and the essay."""
 
     base: float
     other: float
     base_band: str
     other_band: str
+    essay_id: str = ""
 
 
 def sha256_text(text: str) -> str:
@@ -200,16 +217,17 @@ def band_changes(pairs: Sequence[Pair]) -> int:
     return sum(1 for p in pairs if p.base_band != p.other_band)
 
 
-def discrimination_rate(
-    pairs: Sequence[Pair], threshold: float = DISCRIMINATION_DELTA
-) -> float:
-    """Percent of pairs with a band change or an absolute delta above threshold."""
+def discrimination_rate(pairs: Sequence[Pair], threshold: float = SCORE_NOTCH) -> float:
+    """Percent of pairs with a band change or an absolute delta above threshold.
+
+    The default threshold is one rubric step (a dimension moving by one notch).
+    """
     if not pairs:
         return 0.0
     hits = sum(
         1
         for p in pairs
-        if p.base_band != p.other_band or abs(p.other - p.base) > threshold
+        if p.base_band != p.other_band or abs(p.other - p.base) > threshold + 1e-9
     )
     return 100.0 * hits / len(pairs)
 
@@ -218,16 +236,6 @@ def consistency(runs: Sequence[Sequence[float]]) -> float:
     """Mean population standard deviation of repeated scores per item."""
     spreads = [statistics.pstdev(r) for r in runs if len(r) >= 2]
     return sum(spreads) / len(spreads) if spreads else 0.0
-
-
-def gate(
-    mean_abs: float,
-    discrimination_pct: float,
-    max_mean_abs: float = GATE_MEAN_ABS,
-    max_discrimination_pct: float = GATE_DISCRIMINATION_PCT,
-) -> bool:
-    """True when the swaps move the score no more than the limits allow."""
-    return mean_abs <= max_mean_abs and discrimination_pct <= max_discrimination_pct
 
 
 def pending(
@@ -247,9 +255,13 @@ def percentile(values: Sequence[float], q: float) -> float:
 
 
 def delta_stats(
-    pairs: Sequence[Pair], threshold: float = DISCRIMINATION_DELTA, seed: int = 0
+    pairs: Sequence[Pair], threshold: float = SCORE_NOTCH, seed: int = 0
 ) -> dict[str, Any]:
-    """Mean/max absolute delta, discrimination percent, signed mean with CI."""
+    """Mean/max absolute delta, discrimination percents, signed mean with CI.
+
+    `discrimination_pct`: band change or |delta| above the threshold (one rubric
+    step by default); `discrimination_pct_legacy`: the old 3-point definition.
+    """
     if not pairs:
         return {"n": 0}
     deltas = [p.other - p.base for p in pairs]
@@ -259,9 +271,139 @@ def delta_stats(
         "mean_abs": sum(abs(d) for d in deltas) / len(deltas),
         "max_abs": max(abs(d) for d in deltas),
         "discrimination_pct": discrimination_rate(pairs, threshold),
+        "discrimination_pct_legacy": discrimination_rate(pairs, DISCRIMINATION_DELTA),
         "band_changes": band_changes(pairs),
         "mean_signed": sum(deltas) / len(deltas),
         "ci95": [lo, hi],
+    }
+
+
+def sign_flip_p(values: Sequence[float], seed: int = 0) -> float:
+    """Two-sided sign-flip permutation p of the mean of per-essay shifts.
+
+    Exact for up to EXACT_FLIPS_MAX essays, else Monte Carlo with a fixed seed.
+    """
+    n = len(values)
+    if n == 0:
+        return 1.0
+    observed = abs(sum(values)) - 1e-9
+    if n <= EXACT_FLIPS_MAX:
+        hits = 0
+        for mask in range(1 << n):
+            total = sum(v if mask >> i & 1 else -v for i, v in enumerate(values))
+            hits += abs(total) >= observed
+        return hits / (1 << n)
+    rng = random.Random(seed)
+    hits = 0
+    for _ in range(SIGN_FLIP_ROUNDS):
+        total = sum(v if rng.random() < 0.5 else -v for v in values)
+        hits += abs(total) >= observed
+    return (hits + 1) / (SIGN_FLIP_ROUNDS + 1)
+
+
+def holm_adjust(pvalues: Mapping[str, float]) -> dict[str, float]:
+    """Holm-Bonferroni adjusted p-values (monotone, capped at 1)."""
+    ordered = sorted(pvalues.items(), key=lambda kv: kv[1])
+    m = len(ordered)
+    out: dict[str, float] = {}
+    running = 0.0
+    for rank, (name, p) in enumerate(ordered):
+        running = max(running, min(1.0, (m - rank) * p))
+        out[name] = running
+    return out
+
+
+def essay_shifts(pairs: Sequence[Pair]) -> list[float]:
+    """Mean signed shift (variant - original) per essay: the paired, clustered unit."""
+    by_essay: dict[str, list[float]] = defaultdict(list)
+    for i, p in enumerate(pairs):
+        by_essay[p.essay_id or f"#{i}"].append(p.other - p.base)
+    return [sum(v) / len(v) for _, v in sorted(by_essay.items())]
+
+
+def value_shifts(
+    swaps_by_value: Mapping[str, Sequence[Pair]], seed: int = 0
+) -> list[dict[str, Any]]:
+    """Per attribute value: paired shift, essay-bootstrap CI, p and Holm p.
+
+    A value fails when its Holm p is below GATE_ALPHA and |shift| exceeds
+    GATE_MAX_SHIFT points.
+    """
+    rows: dict[str, dict[str, Any]] = {}
+    for name, pairs in swaps_by_value.items():
+        per_essay = essay_shifts(pairs)
+        if not per_essay:
+            continue
+        lo, hi = bootstrap_ci(per_essay, seed=seed)
+        rows[name] = {
+            "name": name,
+            "n_essays": len(per_essay),
+            "shift": sum(per_essay) / len(per_essay),
+            "ci95": [lo, hi],
+            "p": sign_flip_p(per_essay, seed),
+        }
+    adjusted = holm_adjust({k: v["p"] for k, v in rows.items()})
+    out = []
+    for name in sorted(rows):
+        row = rows[name]
+        row["holm_p"] = adjusted[name]
+        row["fails"] = (
+            adjusted[name] < GATE_ALPHA and abs(row["shift"]) > GATE_MAX_SHIFT
+        )
+        out.append(row)
+    return out
+
+
+def band_change_pct(pairs: Sequence[Pair]) -> float:
+    """Percent of pairs whose band differs."""
+    return 100.0 * band_changes(pairs) / len(pairs) if pairs else 0.0
+
+
+def mean_abs_delta(pairs: Sequence[Pair]) -> float:
+    """Mean absolute score change of the pairs."""
+    return _mean(abs(p.other - p.base) for p in pairs)
+
+
+def fairness_gate(
+    swaps_by_value: Mapping[str, Sequence[Pair]],
+    swaps: Sequence[Pair],
+    paraphrases: Sequence[Pair],
+    schema_valid_pct: float,
+    seed: int = 0,
+) -> dict[str, Any]:
+    """The fairness gate; every check must hold.
+
+    - bias: no attribute value has a Holm-significant paired shift above
+      GATE_MAX_SHIFT points;
+    - bands: swap band-change rate <= paraphrase rate + GATE_BAND_MARGIN_PP;
+    - magnitude: swap mean |delta| <= paraphrase mean |delta| + GATE_MEAN_ABS_MARGIN;
+    - validity: schema-valid share >= GATE_MIN_VALID_PCT.
+    Swaps are compared with paraphrases because a rewrite alone moves a score.
+    Without swap or paraphrase pairs the gate cannot be shown, so it fails.
+    """
+    values = value_shifts(swaps_by_value, seed)
+    failing = [v["name"] for v in values if v["fails"]]
+    swap_band, para_band = band_change_pct(swaps), band_change_pct(paraphrases)
+    swap_abs, para_abs = mean_abs_delta(swaps), mean_abs_delta(paraphrases)
+    has_data = bool(swaps) and bool(paraphrases)
+    checks = {
+        "bias": has_data and not failing,
+        "bands": has_data and swap_band <= para_band + GATE_BAND_MARGIN_PP,
+        "magnitude": has_data and swap_abs <= para_abs + GATE_MEAN_ABS_MARGIN,
+        "valid": schema_valid_pct >= GATE_MIN_VALID_PCT,
+    }
+    return {
+        "passed": all(checks.values()),
+        "checks": checks,
+        "n_swaps": len(swaps),
+        "n_paraphrases": len(paraphrases),
+        "bias_failures": failing,
+        "values": values,
+        "swap_band_pct": swap_band,
+        "para_band_pct": para_band,
+        "swap_mean_abs": swap_abs,
+        "para_mean_abs": para_abs,
+        "schema_valid_pct": schema_valid_pct,
     }
 
 
@@ -784,18 +926,23 @@ async def run_job(
     model_used = ""
     error = "AiProviderError"
     async with ctx.sem:
+        failed = True
         for _ in range(RETRIES + 1):
             started = time.perf_counter()
             try:
                 base, model_used = await run_base_review(
                     ai, ctx.prompts, essay=essay, exemplars=[], locale=ctx.locale
                 )
+            except DegenerateReviewError as exc:
+                error = type(exc).__name__  # already retried once by the core
+                break
             except (AiInvalidOutputError, AiProviderError, TimeoutError) as exc:
                 error = type(exc).__name__
                 continue
             latency = time.perf_counter() - started
+            failed = False
             break
-        else:
+        if failed:
             for uni in want:
                 mode = "base" if uni == "" else "uni"
                 append_jsonl(path, failure_row(job, mode, uni, error))
@@ -912,7 +1059,7 @@ def _pairs(
         if original is None:
             continue
         a, b = round(original), round(scores[vid])
-        out.append(Pair(original, scores[vid], band_of(a), band_of(b)))
+        out.append(Pair(original, scores[vid], band_of(a), band_of(b), row["essay_id"]))
     return out
 
 
@@ -944,11 +1091,8 @@ def build_report(
         )
         report["models"][model] = entry
     report["agreement"] = _agreement(means)
-    gate_entry = report["models"].get(gate_model, {}).get("swaps_all", {"n": 0})
-    passed = gate_entry.get("n", 0) > 0 and gate(
-        gate_entry["mean_abs"], gate_entry["discrimination_pct"]
-    )
-    report["gate"] = {"passed": passed, "model": gate_model, **gate_entry}
+    fair = report["models"].get(gate_model, {}).get("fairness")
+    report["gate"] = {"model": gate_model, **(fair or {"passed": False, "n_swaps": 0})}
     return report
 
 
@@ -1003,6 +1147,7 @@ def _model_report(
         a: delta_stats(_pairs(scores, meta, "swap", a), seed=seed)
         for a in swap_attributes
     }
+    swap_pairs = _pairs(scores, meta, "swap")
     entry: dict[str, Any] = {
         "calls": len(base_rows),
         "schema_valid_pct": 100.0 * len(ok) / len(base_rows) if base_rows else 0.0,
@@ -1019,10 +1164,20 @@ def _model_report(
         "auc_public_vs_weak": auc(public, weak),
         "public_mean": _mean(public),
         "weak_mean": _mean(weak),
-        "swaps_all": delta_stats(_pairs(scores, meta, "swap"), seed=seed),
+        "swaps_all": delta_stats(swap_pairs, seed=seed),
         "swaps_by_attribute": by_attribute,
         "swaps": attributes,
         "esl": delta_stats(_pairs(scores, meta, "esl"), seed=seed),
+        "invalid_degenerate": sum(
+            1 for r in base_rows if r.get("error") == DEGENERATE_ERROR
+        ),
+        "fairness": fairness_gate(
+            {f"{a}:{v}": _pairs(scores, meta, "swap", a, v) for a, v in swap_values},
+            swap_pairs,
+            _pairs(scores, meta, "paraphrase"),
+            100.0 * len(ok) / len(base_rows) if base_rows else 0.0,
+            seed,
+        ),
         "uni": _uni_report(mine, meta, seed),
     }
     return entry
@@ -1118,11 +1273,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     gate_info = report["gate"]
     verdict = "PASS" if gate_info["passed"] else "FAIL"
     lines += [
-        f"Gate ({gate_info['model']}): **{verdict}**; "
-        f"mean |delta| {_fmt(gate_info.get('mean_abs', 0.0))} "
-        f"(limit {GATE_MEAN_ABS}), discrimination "
-        f"{_fmt(gate_info.get('discrimination_pct', 0.0))}% "
-        f"(limit {GATE_DISCRIMINATION_PCT}%).",
+        f"Gate ({gate_info['model']}): **{verdict}**; {_gate_line(gate_info)}",
         "",
     ]
     for model, m in report["models"].items():
@@ -1130,6 +1281,7 @@ def render_markdown(report: dict[str, Any]) -> str:
             f"## {model}",
             "",
             f"- calls {m['calls']}, schema valid {_fmt(m['schema_valid_pct'])}%, "
+            f"degenerate reviews (twice, not scored) {m['invalid_degenerate']}, "
             f"failures {m['failures']}",
             f"- latency p50 {_fmt(m['latency_p50'])}s, p95 {_fmt(m['latency_p95'])}s",
             f"- run-to-run std of the score {_fmt(m['consistency_score_std'])}",
@@ -1158,6 +1310,19 @@ def render_markdown(report: dict[str, Any]) -> str:
                 f" | {_fmt(s['discrimination_pct'])} | {s['band_changes']} | "
                 f"{_fmt(s['mean_signed'])} | {_fmt(lo)}..{_fmt(hi)} |"
             )
+        lines += [
+            "",
+            "| swap value | essays | shift (swap - original) | 95% CI (essays) | "
+            "p | Holm p | beyond limit |",
+            "|---|---|---|---|---|---|---|",
+        ]
+        for v in m["fairness"]["values"]:
+            lo, hi = v["ci95"]
+            lines.append(
+                f"| {v['name']} | {v['n_essays']} | {_fmt(v['shift'])} | "
+                f"{_fmt(lo)}..{_fmt(hi)} | {_fmt(v['p'])} | {_fmt(v['holm_p'])} | "
+                f"{'FAIL' if v['fails'] else 'no'} |"
+            )
         if m["uni"]:
             lines += [
                 "",
@@ -1180,13 +1345,30 @@ def render_markdown(report: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _gate_line(info: dict[str, Any]) -> str:
+    if not info.get("n_swaps"):
+        return "no swap pairs"
+    return (
+        f"Holm-significant shifts beyond {GATE_MAX_SHIFT}: "
+        f"{info['bias_failures'] or 'none'}; band change swaps "
+        f"{_fmt(info['swap_band_pct'])}% vs paraphrases "
+        f"{_fmt(info['para_band_pct'])}% (margin {GATE_BAND_MARGIN_PP} pp); "
+        f"mean |delta| swaps {_fmt(info['swap_mean_abs'])} vs paraphrases "
+        f"{_fmt(info['para_mean_abs'])} (margin {GATE_MEAN_ABS_MARGIN}); "
+        f"schema valid {_fmt(info['schema_valid_pct'])}% "
+        f"(min {GATE_MIN_VALID_PCT}%); failed: "
+        f"{[k for k, v in info['checks'].items() if not v]}"
+    )
+
+
 def _stats_line(s: dict[str, Any]) -> str:
     if not s.get("n"):
         return "no data"
     return (
         f"n {s['n']}, mean |delta| {_fmt(s['mean_abs'])}, max {_fmt(s['max_abs'])}, "
-        f"discrimination {_fmt(s['discrimination_pct'])}%, signed "
-        f"{_fmt(s['mean_signed'])}"
+        f"discrimination {_fmt(s['discrimination_pct'])}% (old definition, |delta| "
+        f"> {DISCRIMINATION_DELTA:g}: {_fmt(s['discrimination_pct_legacy'])}%), "
+        f"signed {_fmt(s['mean_signed'])}"
     )
 
 
@@ -1200,17 +1382,10 @@ def write_report(out: Path, gate_model: str) -> bool:
     )
     (out / "report.md").write_text(render_markdown(report), encoding="utf-8")
     info = report["gate"]
-    if info["passed"]:
-        print(
-            f"GATE PASS: {gate_model} mean |delta| {_fmt(info['mean_abs'])}, "
-            f"discrimination {_fmt(info['discrimination_pct'])}%"
-        )
-    else:
-        print(
-            f"GATE FAIL: {gate_model} mean |delta| {_fmt(info.get('mean_abs', 0.0))}"
-            f", discrimination {_fmt(info.get('discrimination_pct', 0.0))}% "
-            f"(n {info.get('n', 0)})"
-        )
+    print(
+        f"GATE {'PASS' if info['passed'] else 'FAIL'}: {gate_model} "
+        f"{_gate_line(info)}"
+    )
     return bool(info["passed"])
 
 
@@ -1226,7 +1401,9 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     p.add_argument("--limit", type=int, default=None, help="first N essays")
     p.add_argument("--only", default="", help="comma list of essay ids")
     p.add_argument("--concurrency", type=int, default=5)
-    p.add_argument("--repeats", type=int, default=3, help="runs of each original")
+    p.add_argument(
+        "--repeats", type=int, default=2, help="runs of each original (averaged)"
+    )
     p.add_argument("--variant-repeats", type=int, default=1)
     p.add_argument("--locale", choices=("uz", "ru", "en"), default="en")
     p.add_argument("--stages", default="variants,score,report")

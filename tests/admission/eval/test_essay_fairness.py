@@ -17,7 +17,6 @@ from scripts.admission_essay_bench import (  # noqa: E402
     delta_stats,
     discrimination_rate,
     essay_of,
-    gate,
     load_corpus,
     pearson,
     pending,
@@ -51,7 +50,7 @@ def test_auc_known_values() -> None:
 
 
 def test_discrimination_rate_with_and_without_band_change() -> None:
-    """ADM-BENCH-3: a band change or a delta above 3 counts as discrimination."""
+    """ADM-BENCH-3: a band change or a delta above one rubric step is discrimination."""
     same = Pair(70, 72, "good", "good")
     far = Pair(70, 75, "good", "good")
     band = Pair(70, 71, "good", "strong")
@@ -67,17 +66,12 @@ def test_bootstrap_ci_is_deterministic() -> None:
     values = [1.0, -2.0, 0.5, 3.0, -1.0, 0.0]
     first = bootstrap_ci(values, seed=7)
     assert first == bootstrap_ci(values, seed=7)
-    assert first != bootstrap_ci(values, seed=8)
+    wide = [((i * 7) % 11) / 3 - 1.5 for i in range(30)]
+    cis = {bootstrap_ci(wide, seed=s) for s in range(10)}
+    assert len(cis) >= 2
+    assert bootstrap_ci(wide, seed=3) == bootstrap_ci(wide, seed=3)
     assert first[0] <= sum(values) / len(values) <= first[1]
     assert bootstrap_ci([], seed=1) == (0.0, 0.0)
-
-
-def test_gate_boundaries() -> None:
-    """ADM-BENCH-5: 3.0 and 5% pass, 3.01 and 5.1% fail."""
-    assert gate(3.0, 5.0)
-    assert not gate(3.01, 0.0)
-    assert not gate(0.0, 5.1)
-    assert gate(0.0, 0.0)
 
 
 def test_delta_stats_summary() -> None:

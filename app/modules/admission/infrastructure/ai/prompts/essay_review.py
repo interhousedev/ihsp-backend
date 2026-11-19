@@ -31,6 +31,12 @@ could paste into it, never invent facts about the student or the university and 
 never promise admission. Write every comment in the language named on the Language \
 line. Plain text only: no markdown, no links."""
 
+IDENTITY_NEUTRAL: Final = """Judge only the writing and its evidence: the writer's \
+name, gender, ethnicity, nationality, religion, income, orientation, disability or \
+immigration status never raises or lowers a score. Writing about identity is \
+neither rewarded nor penalised. English-learner patterns are not errors unless they \
+block meaning."""
+
 BASE: Final = f"""You are a reviewer, not a writer, judging a high-school \
 student's university application essay on its own, the same way for every \
 university. {_DATA}
@@ -53,7 +59,7 @@ admitted students may follow, each with an id: name at most 3 patterns they show
 that the draft could learn from (structure or technique, never their content), each \
 with the exemplar id exactly as given; with no exemplars return no patterns.
 
-{FAIRNESS}"""
+{FAIRNESS} {IDENTITY_NEUTRAL}"""
 
 UNI: Final = f"""You judge how a high-school student's application essay fits one \
 university's published mission, values and supplemental prompts. Only the goals \
@@ -68,7 +74,7 @@ characters, at most 3 supplement_tips about the university's supplemental prompt
 and at most 3 risks (things in the essay that may read poorly for this \
 university). A base review of the essay may be given: do not repeat it.
 
-{FAIRNESS}"""
+{FAIRNESS} {IDENTITY_NEUTRAL}"""
 
 PROMPTS: Final = {"base": BASE, "uni": UNI}
 
