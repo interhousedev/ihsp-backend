@@ -82,14 +82,24 @@ class FactSpecOut(BaseModel):
     groups: list[FactSpecGroupOut]
 
 
+class CatalogProgramIn(BaseModel):
+    """A study program of an institution; `field_ids` are canonical field ids."""
+
+    school: str | None = Field(default=None, max_length=120)
+    name: str = Field(min_length=1, max_length=200)
+    degree: Literal["bachelor", "master", "foundation", "other"]
+    field_ids: list[str] = Field(default_factory=list, max_length=8)
+
+
 class CatalogFieldsIn(BaseModel):
     """Plain fields of an institution or scholarship; unknown keys are ignored.
 
     Institutions: name, country (required when creating), name_local, city,
     website_domain, kind, size_band, setting, languages, aliases, logo_url,
-    logo_zoom, logo_fit, logo_aspect, cover_url. Scholarships: name, provider,
-    basis (required when creating), institution_id, country, coverage_pct_min,
-    coverage_pct_max, covers, eligibility, url, cycle. Values are checked on save.
+    logo_zoom, logo_fit, logo_aspect, cover_url, programs. Scholarships: name,
+    provider, basis (required when creating), institution_id, country,
+    coverage_pct_min, coverage_pct_max, covers, eligibility, url, cycle.
+    Values are checked on save.
     """
 
     name: Any = Field(default=None, description="Name, at most 200 characters.")
@@ -115,6 +125,9 @@ class CatalogFieldsIn(BaseModel):
     logo_fit: Any = Field(default=None, description="circle | contain.")
     logo_aspect: Any = Field(default=None, description="Logo width / height ratio.")
     cover_url: Any = Field(default=None, description="https cover image address.")
+    programs: list[CatalogProgramIn] | None = Field(
+        default=None, max_length=60, description="Study programs, at most 60."
+    )
     provider: Any = Field(
         default=None, description="Scholarship: institution|government|foundation."
     )

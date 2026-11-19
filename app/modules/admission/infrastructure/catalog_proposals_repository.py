@@ -16,6 +16,7 @@ from app.modules.admission.infrastructure.orm.catalog import (
     CostOfAttendanceRow,
     FactRow,
     InstitutionRow,
+    ProgramRow,
     ScholarshipRow,
     SourceRow,
 )
@@ -221,6 +222,10 @@ class SqlCatalogProposalRepository:
         self._s.add(source)
         model = _TARGETS[proposal.kind]
         values = {**proposal.payload, "source_id": source.id}
+        raw_programs = values.pop("programs", None)
+        programs: list[dict[str, Any]] = (
+            list(raw_programs) if isinstance(raw_programs, list) else []
+        )
         if proposal.kind == "institution":
             values.pop("source_id")
         values["status"] = "published"
@@ -234,6 +239,17 @@ class SqlCatalogProposalRepository:
             row = model(id=new_id(), **values)
             self._s.add(row)
         await self._s.flush()
+        for p in programs:
+            self._s.add(
+                ProgramRow(
+                    id=new_id(),
+                    institution_id=row.id,
+                    school=p.get("school"),
+                    name=p["name"],
+                    level=p["degree"],
+                    field_ids=list(p.get("field_ids", [])),
+                )
+            )
         if proposal.facts:
             await self._apply_facts(row.id, proposal, reviewer_id, now)
         return row.id  # type: ignore[no-any-return]

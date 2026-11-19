@@ -134,7 +134,11 @@ class ProgramRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
     """A study program."""
 
     __tablename__ = "programs"
-    __table_args__ = (check_in("level", ("bachelor", "foundation", "2plus2")), S)
+    __table_args__ = (
+        check_in("level", ("bachelor", "master", "foundation", "other", "2plus2")),
+        max_len("school", 120),
+        S,
+    )
 
     institution_id: Mapped[UUID] = _inst()
     campus_id: Mapped[UUID | None] = mapped_column(
@@ -145,6 +149,10 @@ class ProgramRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
     cip_code: Mapped[str | None] = mapped_column(String(10))
     language: Mapped[str | None] = mapped_column(String(8))
     duration_years: Mapped[Decimal | None] = mapped_column(Numeric(3, 1))
+    school: Mapped[str | None] = mapped_column(String(120))
+    field_ids: Mapped[list[str]] = mapped_column(
+        ARRAY(Text), server_default=text("'{}'"), default=list
+    )
 
 
 class FactRow(IdMixin, CreatedMixin, UpdatedMixin, Base):

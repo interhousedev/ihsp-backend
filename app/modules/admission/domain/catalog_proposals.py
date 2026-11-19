@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 from typing import Any, Final, Literal
 from uuid import UUID
 
+from app.modules.admission.domain.study_fields import is_field_id
+
 ProposalKind = Literal["institution", "scholarship"]
 ProposalStatus = Literal["pending", "approved", "rejected"]
 
@@ -26,6 +28,7 @@ INSTITUTION_FIELDS: Final = frozenset(
         "logo_aspect",
         "aliases",
         "cover_url",
+        "programs",
     }
 )
 SCHOLARSHIP_FIELDS: Final = frozenset(
@@ -93,6 +96,38 @@ def _json_object(v: Any) -> bool:
     return isinstance(v, dict) and all(isinstance(k, str) for k in v)
 
 
+PROGRAMS_MAX: Final = 60
+"""Most programs proposed for one institution in one proposal."""
+PROGRAM_DEGREES: Final = ("bachelor", "master", "foundation", "other")
+PROGRAM_FIELD_IDS_MAX: Final = 8
+
+
+def _program_ok(p: Any) -> bool:
+    allowed = {"school", "name", "degree", "field_ids"}
+    if not isinstance(p, dict) or not set(p) <= allowed:
+        return False
+    school = p.get("school")
+    name = p.get("name")
+    fields = p.get("field_ids", [])
+    return (
+        (school is None or (isinstance(school, str) and 0 < len(school) <= 120))
+        and isinstance(name, str)
+        and 0 < len(name) <= 200
+        and p.get("degree") in PROGRAM_DEGREES
+        and isinstance(fields, list)
+        and len(fields) <= PROGRAM_FIELD_IDS_MAX
+        and all(isinstance(f, str) and is_field_id(f) for f in fields)
+    )
+
+
+def _programs(v: Any) -> bool:
+    return (
+        isinstance(v, list)
+        and len(v) <= PROGRAMS_MAX
+        and all(_program_ok(p) for p in v)
+    )
+
+
 _FIELD_CHECKS: Final[dict[str, dict[str, _Check]]] = {
     "institution": {
         "name": _text(200),
@@ -105,6 +140,7 @@ _FIELD_CHECKS: Final[dict[str, dict[str, _Check]]] = {
         "setting": _one_of(_SETTING_VALUES),
         "languages": _text_list(ALIASES_MAX, 100),
         "aliases": _text_list(ALIASES_MAX, 200),
+        "programs": _programs,
     },
     "scholarship": {
         "name": _text(200),

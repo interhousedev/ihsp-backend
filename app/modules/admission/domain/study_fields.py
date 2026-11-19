@@ -140,7 +140,7 @@ FIELDS: tuple[StudyField, ...] = (
         "business",
         "business_economics",
         ("Business", "Бизнес", "Biznes"),
-        ("business administration", "hospitality"),
+        ("business administration",),
     ),
     _F(
         "management",
@@ -185,7 +185,6 @@ FIELDS: tuple[StudyField, ...] = (
         (
             "life sciences",
             "mathematical physical and life sciences",
-            "brain and cognitive sciences",
         ),
     ),
     _F(
@@ -204,7 +203,7 @@ FIELDS: tuple[StudyField, ...] = (
         "social_sciences",
         "social_sciences",
         ("Social Sciences", "Социальные науки", "Ijtimoiy fanlar"),
-        ("social science", "sociology"),
+        ("social science",),
     ),
     _F("geography", "social_sciences", ("Geography", "География", "Geografiya")),
     _F("law", "law_politics", ("Law", "Право", "Huquq")),
@@ -212,9 +211,9 @@ FIELDS: tuple[StudyField, ...] = (
         "politics",
         "law_politics",
         ("Politics & Government", "Политика и государство", "Siyosat va davlat"),
-        ("government", "political science", "international relations"),
+        ("government", "political science"),
     ),
-    _F("history", "humanities", ("History", "История", "Tarix"), ("archaeology",)),
+    _F("history", "humanities", ("History", "История", "Tarix")),
     _F(
         "literature_languages",
         "humanities",
@@ -269,7 +268,6 @@ FIELDS: tuple[StudyField, ...] = (
         (
             "environmental studies",
             "earth atmospheric and planetary sciences",
-            "earth sciences",
         ),
     ),
     _F(
@@ -283,7 +281,271 @@ FIELDS: tuple[StudyField, ...] = (
             "interdisciplinary gallatin",
         ),
     ),
+    _F(
+        "urban_planning",
+        "architecture_planning",
+        ("Urban Planning", "Градостроительство", "Shaharsozlik"),
+    ),
+    _F("nursing", "life_health", ("Nursing", "Сестринское дело", "Hamshiralik")),
+    _F("pharmacy", "life_health", ("Pharmacy", "Фармация", "Farmatsiya")),
+    _F(
+        "public_health",
+        "life_health",
+        ("Public Health", "Общественное здравоохранение", "Jamoat salomatligi"),
+    ),
+    _F(
+        "dentistry",
+        "life_health",
+        ("Dentistry", "Стоматология", "Stomatologiya"),
+    ),
+    _F(
+        "veterinary",
+        "life_health",
+        ("Veterinary Medicine", "Ветеринария", "Veterinariya"),
+    ),
+    _F(
+        "kinesiology",
+        "life_health",
+        ("Kinesiology", "Кинезиология", "Kineziologiya"),
+    ),
+    _F(
+        "nutrition",
+        "life_health",
+        ("Nutrition", "Питание и диетология", "Ovqatlanish"),
+    ),
+    _F(
+        "neuroscience",
+        "life_health",
+        ("Neuroscience", "Нейронауки", "Neyrofanlar"),
+    ),
+    _F(
+        "cognitive_science",
+        "life_health",
+        ("Cognitive Science", "Когнитивные науки", "Kognitiv fanlar"),
+    ),
+    _F(
+        "biochemistry",
+        "life_health",
+        ("Biochemistry", "Биохимия", "Biokimyo"),
+    ),
+    _F(
+        "marine_biology",
+        "life_health",
+        ("Marine Biology", "Морская биология", "Dengiz biologiyasi"),
+    ),
+    _F(
+        "food_science",
+        "life_health",
+        ("Food Science", "Пищевые технологии", "Oziq-ovqat fanlari"),
+    ),
+    _F("statistics", "natural_sciences", ("Statistics", "Статистика", "Statistika")),
+    _F("astronomy", "natural_sciences", ("Astronomy", "Астрономия", "Astronomiya")),
+    _F(
+        "software_engineering",
+        "computer_data",
+        ("Software Engineering", "Программная инженерия", "Dasturiy injiniring"),
+    ),
+    _F(
+        "cybersecurity",
+        "computer_data",
+        ("Cybersecurity", "Кибербезопасность", "Kiberxavfsizlik"),
+    ),
+    _F(
+        "electrical_engineering",
+        "engineering",
+        ("Electrical Engineering", "Электротехника", "Elektrotexnika"),
+    ),
+    _F(
+        "mechanical_engineering",
+        "engineering",
+        ("Mechanical Engineering", "Машиностроение", "Mashinasozlik"),
+    ),
+    _F(
+        "civil_engineering",
+        "engineering",
+        ("Civil Engineering", "Строительная инженерия", "Qurilish muhandisligi"),
+    ),
+    _F(
+        "aerospace_engineering",
+        "engineering",
+        (
+            "Aerospace Engineering",
+            "Аэрокосмическая инженерия",
+            "Aerokosmik muhandislik",
+        ),
+    ),
+    _F(
+        "industrial_engineering",
+        "engineering",
+        ("Industrial Engineering", "Промышленная инженерия", "Sanoat muhandisligi"),
+    ),
+    _F(
+        "materials_engineering",
+        "engineering",
+        ("Materials Engineering", "Материаловедение", "Materiallar muhandisligi"),
+    ),
+    _F(
+        "petroleum_engineering",
+        "engineering",
+        ("Petroleum Engineering", "Нефтегазовая инженерия", "Neft muhandisligi"),
+    ),
+    _F(
+        "nuclear_engineering",
+        "engineering",
+        ("Nuclear Engineering", "Ядерная инженерия", "Yadro muhandisligi"),
+    ),
+    _F("aviation", "engineering", ("Aviation", "Авиация", "Aviatsiya")),
+    _F("finance", "business_economics", ("Finance", "Финансы", "Moliya")),
+    _F(
+        "accounting",
+        "business_economics",
+        ("Accounting", "Бухгалтерский учёт", "Buxgalteriya hisobi"),
+    ),
+    _F("marketing", "business_economics", ("Marketing", "Маркетинг", "Marketing")),
+    _F(
+        "entrepreneurship",
+        "business_economics",
+        ("Entrepreneurship", "Предпринимательство", "Tadbirkorlik"),
+    ),
+    _F(
+        "hospitality",
+        "business_economics",
+        (
+            "Hospitality & Tourism",
+            "Гостиничное дело и туризм",
+            "Mehmonxona va turizm",
+        ),
+        ("hospitality management", "tourism"),
+    ),
+    _F(
+        "supply_chain",
+        "business_economics",
+        ("Supply Chain", "Логистика и цепочки поставок", "Ta'minot zanjiri"),
+    ),
+    _F(
+        "real_estate",
+        "business_economics",
+        ("Real Estate", "Недвижимость", "Koʻchmas mulk"),
+    ),
+    _F(
+        "sports_management",
+        "business_economics",
+        ("Sports Management", "Менеджмент спорта", "Sport menejmenti"),
+    ),
+    _F(
+        "international_relations",
+        "law_politics",
+        (
+            "International Relations",
+            "Международные отношения",
+            "Xalqaro munosabatlar",
+        ),
+    ),
+    _F(
+        "criminology",
+        "social_sciences",
+        ("Criminology", "Криминология", "Kriminologiya"),
+    ),
+    _F(
+        "social_work",
+        "social_sciences",
+        ("Social Work", "Социальная работа", "Ijtimoiy ish"),
+    ),
+    _F(
+        "anthropology",
+        "social_sciences",
+        ("Anthropology", "Антропология", "Antropologiya"),
+    ),
+    _F(
+        "sociology",
+        "social_sciences",
+        ("Sociology", "Социология", "Sotsiologiya"),
+    ),
+    _F(
+        "philosophy",
+        "humanities",
+        ("Philosophy", "Философия", "Falsafa"),
+    ),
+    _F(
+        "religious_studies",
+        "humanities",
+        ("Religious Studies", "Религиоведение", "Dinshunoslik"),
+    ),
+    _F(
+        "archaeology",
+        "humanities",
+        ("Archaeology", "Археология", "Arxeologiya"),
+    ),
+    _F(
+        "linguistics",
+        "humanities",
+        ("Linguistics", "Лингвистика", "Tilshunoslik"),
+    ),
+    _F(
+        "creative_writing",
+        "humanities",
+        ("Creative Writing", "Литературное творчество", "Ijodiy yozuvchilik"),
+    ),
+    _F(
+        "journalism",
+        "humanities",
+        ("Journalism", "Журналистика", "Jurnalistika"),
+    ),
+    _F(
+        "communications",
+        "humanities",
+        ("Communications", "Коммуникации", "Kommunikatsiya"),
+    ),
+    _F(
+        "media_studies",
+        "humanities",
+        ("Media Studies", "Медиаисследования", "Media tadqiqotlari"),
+    ),
+    _F(
+        "area_studies",
+        "interdisciplinary",
+        ("Area Studies", "Регионоведение", "Hududshunoslik"),
+    ),
+    _F(
+        "gender_studies",
+        "interdisciplinary",
+        ("Gender Studies", "Гендерные исследования", "Gender tadqiqotlari"),
+    ),
+    _F("film", "arts_design", ("Film", "Кино", "Kino")),
+    _F(
+        "theatre",
+        "arts_design",
+        ("Theatre", "Театральное искусство", "Teatr san'ati"),
+    ),
+    _F("dance", "arts_design", ("Dance", "Хореография", "Raqs san'ati")),
+    _F("fashion", "arts_design", ("Fashion", "Мода", "Moda")),
+    _F(
+        "graphic_design",
+        "arts_design",
+        ("Graphic Design", "Графический дизайн", "Grafik dizayn"),
+    ),
+    _F(
+        "game_design",
+        "arts_design",
+        ("Game Design", "Гейм-дизайн", "O'yin dizayni"),
+    ),
+    _F(
+        "earth_sciences",
+        "environment",
+        ("Earth Sciences", "Науки о Земле", "Yer fanlari"),
+    ),
+    _F(
+        "agriculture",
+        "environment",
+        ("Agriculture", "Сельское хозяйство", "Qishloq xoʻjaligi"),
+    ),
 )
+
+
+def is_field_id(item_id: str) -> bool:
+    """Whether `item_id` is a canonical id of the taxonomy."""
+    return item_id in _BY_ID
+
 
 _GENERIC = frozenset({"general"})
 _PAREN = re.compile(r"\s*\([^)]*\)")

@@ -55,6 +55,7 @@ _CATALOG_ALLOWLIST: tuple[tuple[frozenset[str], re.Pattern[str]], ...] = tuple(
         (("GET", "POST"), rf"{_STAFF_CATALOG}/proposals"),
         (("POST",), rf"{_STAFF_EXEMPLARS}"),
         (("POST",), rf"{_STAFF_EXEMPLARS}/import"),
+        (("POST",), r"/v1/admission/opportunities/submissions"),
     )
 )
 
