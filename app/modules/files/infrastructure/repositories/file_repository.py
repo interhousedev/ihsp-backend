@@ -13,6 +13,7 @@ from app.shared.contracts.files import FilePurpose, FileScope
 
 from sqlalchemy import (
     ColumnElement,
+    String,
     and_,
     delete,
     distinct,
@@ -36,6 +37,11 @@ _HEADLINE_OPTIONS = (
 # Library files belong to the library: not My files, not the assistant's, not
 # deleted with the account, and never cleaned up (FILE-6 is for students and mail).
 _NOT_LIBRARY: ColumnElement[bool] = File.scope != FileScope.LIBRARY.value
+# Face-enrolment images and profile photos are system files: not listed or
+# counted for the owner, but still exported and erased with the account.
+_NOT_SYSTEM: ColumnElement[bool] = File.meta.op("->>", return_type=String)(
+    _PURPOSE_KEY
+).is_distinct_from(FilePurpose.USER_PHOTO.value)
 _COUNTED = (
     FileStatus.PENDING.value,
     FileStatus.PROCESSING.value,
@@ -115,6 +121,7 @@ class SqlFileRepository:
             File.owner_id == owner_id,
             File.scope == scope.value,
             File.status.in_(_COUNTED),
+            _NOT_SYSTEM,
         )
         if scope == FileScope.STUDENT:
             stmt = stmt.where(
@@ -186,6 +193,7 @@ class SqlFileRepository:
         stmt = select(File).where(
             File.owner_id == owner_id,
             _NOT_LIBRARY,
+            _NOT_SYSTEM,
             File.status.not_in((FileStatus.PENDING.value, FileStatus.DELETED.value)),
         )
         if purpose is not None:
@@ -218,6 +226,7 @@ class SqlFileRepository:
             .where(
                 File.owner_id == owner_id,
                 _NOT_LIBRARY,
+                _NOT_SYSTEM,
                 File.status == FileStatus.READY.value,
             )
             .order_by(File.created_at.desc(), File.id.desc())

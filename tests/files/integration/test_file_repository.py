@@ -355,3 +355,31 @@ async def test_delete_rows_removes_them_and_get_many_skips_missing(
     found = await uow.files.get_many([keep.id, drop.id, uuid4()])
     assert [f.id for f in found] == [keep.id]
     assert await uow.files.get_many([]) == []
+
+
+async def test_system_photos_are_hidden_and_uncounted_but_still_exported(
+    uow: SqlFilesUnitOfWork, clock: FixedClock
+) -> None:
+    """FILES-FACE-6: SQL lists and usage skip user_photo; the export list keeps it."""
+    owner = uuid4()
+    note = make_file(clock, owner_id=owner, scope=FileScope.STAFF, byte_size=5)
+    face = make_file(
+        clock,
+        owner_id=owner,
+        scope=FileScope.STAFF,
+        purpose=FilePurpose.USER_PHOTO,
+        byte_size=700,
+        name="face.jpg",
+    )
+    await uow.files.add(note)
+    await uow.files.add(face)
+
+    listed = await uow.files.list_for_owner(owner, purpose=None, after=None, limit=10)
+    ready = await uow.files.list_ready(owner, 10)
+    used = await uow.files.used_bytes(owner, FileScope.STAFF, None)
+    exported = await uow.files.list_for_owner_all(owner, 10)
+
+    assert [f.id for f in listed] == [note.id]
+    assert [f.id for f in ready] == [note.id]
+    assert used == sum(f.byte_size for f in listed) == 5
+    assert {f.id for f in exported} == {note.id, face.id}

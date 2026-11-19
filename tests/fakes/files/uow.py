@@ -22,6 +22,11 @@ def _study_file(file: StoredFile) -> bool:
     return file.scope != FileScope.LIBRARY
 
 
+def _not_system(file: StoredFile) -> bool:
+    """Face images and profile photos are hidden from the owner's lists and usage."""
+    return file.purpose != FilePurpose.USER_PHOTO
+
+
 class InMemoryFileShares:
     """FileShareRepository over dictionaries of the store."""
 
@@ -121,6 +126,7 @@ class InMemoryFileRepository:
             if f.owner_id == owner_id
             and f.scope == scope
             and f.status in _COUNTED
+            and _not_system(f)
             and (scope != FileScope.STUDENT or f.term_id == term_id)
         )
 
@@ -180,6 +186,7 @@ class InMemoryFileRepository:
             for f in self.store.rows.values()
             if f.owner_id == owner_id
             and _study_file(f)
+            and _not_system(f)
             and f.status not in {FileStatus.PENDING, FileStatus.DELETED}
             and (purpose is None or f.purpose == purpose)
             and (not name_query or name_query.lower() in f.name.lower())
@@ -197,6 +204,7 @@ class InMemoryFileRepository:
             for f in self.store.rows.values()
             if f.owner_id == owner_id
             and _study_file(f)
+            and _not_system(f)
             and f.status == FileStatus.READY
         ]
         rows.sort(key=lambda f: (f.created_at, f.id), reverse=True)

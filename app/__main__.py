@@ -23,6 +23,7 @@ PROCESSES = (
     "seed-review",
     "backfill-subject-notebooks",
     "backfill-course-notebooks",
+    "backfill-profile-photos",
 )
 NOT_WIRED_EXIT_CODE = 2
 BAD_SETTINGS_EXIT_CODE = 78  # EX_CONFIG

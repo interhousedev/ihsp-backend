@@ -1,4 +1,4 @@
-"""Profile photos over HTTP: Administration sets any user's, teachers set their own."""
+"""Profile photos over HTTP: Administration sets any user's, everyone their own."""
 
 from types import SimpleNamespace
 
@@ -8,11 +8,12 @@ from app.interfaces.http.v1.me_photo import ROUTERS as ME_PHOTO_ROUTERS
 from app.modules.identity.domain.photo import MAX_PHOTO_BYTES
 from app.shared.actor import Actor, Role
 from app.shared.base_error import UnauthorizedError
+from app.shared.contracts.files import FilePurpose
 from app.shared.ids import new_id
 from tests.conftest import HttpClientFactory
 from tests.identity.http.conftest import Api
 from tests.identity.support import World
-from tests.identity.unit.test_user_photo import jpeg, png
+from tests.identity.unit.test_user_photo import file_of, jpeg, png
 
 import pytest
 from httpx import Response
@@ -192,3 +193,81 @@ async def test_the_staff_route_refuses_what_the_admin_route_refuses(
     big = await upload(api, "/v1/staff/me/photo", jpeg(MAX_PHOTO_BYTES + 1))
 
     assert text.status_code == 422 and big.status_code == 413
+
+
+@pytest.mark.parametrize("role", [Role.STUDENT, Role.TEACHER, Role.ADMIN])
+async def test_any_role_sets_and_removes_their_own_photo(
+    photo_api: Api, role: Role
+) -> None:
+    """ID-PHOTO-1: PUT and DELETE /v1/me/photo work for every signed-in role."""
+    api = photo_api
+    user = await api.world.add_user(roles={role})
+    other = await api.world.add_user(
+        roles={Role.STUDENT}, login="o.ther", recovery_email="o@example.org"
+    )
+    api.login_as(user)
+
+    put = await upload(api, "/v1/me/photo", jpeg(), name="a.jpg")
+    stored = api.world.user(user.id).photo_file_id
+    deleted = await api.client.delete("/v1/me/photo")
+
+    assert put.status_code == 200 and put.json()["photo_url"]
+    assert stored is not None
+    assert deleted.status_code == 200 and deleted.json() == {"photo_url": None}
+    assert api.world.user(user.id).photo_file_id is None
+    assert api.world.user(other.id).photo_file_id is None
+
+
+async def test_my_photo_needs_a_signed_in_user(photo_api: Api) -> None:
+    """ID-PHOTO-2: anonymous callers get 401."""
+    api = photo_api
+
+    put = await upload(api, "/v1/me/photo", png())
+    delete = await api.client.delete("/v1/me/photo")
+
+    assert put.status_code == delete.status_code == 401
+
+
+async def test_my_photo_refuses_what_the_staff_route_refuses(photo_api: Api) -> None:
+    """ID-PHOTO-3: same validation: text 422, empty 422, over limit 413."""
+    api = photo_api
+    student = await api.world.add_user()
+    api.login_as(student)
+
+    text = await upload(api, "/v1/me/photo", b"hello")
+    empty = await upload(api, "/v1/me/photo", b"")
+    big = await upload(api, "/v1/me/photo", jpeg(MAX_PHOTO_BYTES + 1))
+    limit = await upload(api, "/v1/me/photo", jpeg(MAX_PHOTO_BYTES))
+
+    assert text.status_code == 422
+    assert empty.status_code == 422 and empty.json()["type"] == "id/photo-empty"
+    assert big.status_code == 413 and big.json()["type"] == "id/photo-too-large"
+    assert limit.status_code == 200
+
+
+async def test_the_staff_photo_routes_are_deprecated(photo_api: Api) -> None:
+    """ID-PHOTO-4: the staff routes stay but are marked deprecated."""
+    api = photo_api
+
+    schema = (await api.client.get("/openapi.json")).json()["paths"]
+
+    assert schema["/v1/staff/me/photo"]["put"]["deprecated"] is True
+    assert schema["/v1/staff/me/photo"]["delete"]["deprecated"] is True
+    assert not schema["/v1/me/photo"]["put"].get("deprecated")
+
+
+async def test_put_me_photo_stores_a_system_file_hidden_from_my_files(
+    photo_api: Api,
+) -> None:
+    """FILES-FACE-5: the stored profile photo is a user_photo file, not a listed one."""
+    api = photo_api
+    user = await api.world.add_user(roles={Role.TEACHER})
+    api.login_as(user)
+
+    response = await upload(api, "/v1/me/photo", png())
+
+    assert response.status_code == 200
+    ref = await file_of(api.world, api.world.user(user.id).photo_file_id)
+    assert ref is not None and ref.purpose == FilePurpose.USER_PHOTO
+    owned = await api.world.files.services.list_owned_files.execute(user.id, limit=10)
+    assert owned == []
