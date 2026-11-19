@@ -1,6 +1,7 @@
 """University chooser: catalog search, the student's list, affordability (§11-12)."""
 
 import dataclasses
+import datetime as dt
 from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
@@ -27,6 +28,7 @@ from app.modules.admission.domain.chooser import (
     matches,
     needs_affordability_gate,
     rank_hits,
+    sort_by_deadline,
 )
 from app.modules.admission.domain.errors import (
     AdmissionForbiddenError,
@@ -50,7 +52,7 @@ from app.modules.admission.ports.unit_of_work import (
 )
 from app.settings_admission import AdmissionSettings
 from app.shared.actor import Role
-from app.shared.clock import Clock
+from app.shared.clock import Clock, SystemClock, local_today
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.ids import new_id
 from app.shared.notifications import NotificationDraft, NotificationType
@@ -74,15 +76,29 @@ class CatalogService:
         self._uow = uow_factory
 
     async def search(
-        self, filters: CatalogFilters, *, cursor: int = 0, limit: int = 20
+        self,
+        filters: CatalogFilters,
+        *,
+        cursor: int = 0,
+        limit: int = 20,
+        sort: str | None = None,
+        today: dt.date | None = None,
     ) -> CatalogPage:
-        """Filter institutions by text and facts; best text match first."""
+        """Filter institutions by text and facts; best text match first.
+
+        `sort="deadline"` puts the soonest next deadline first (Tashkent `today`,
+        default: today in Tashkent), institutions without one last.
+        """
         limit = max(1, min(limit, MAX_PAGE))
         async with self._uow() as uow:
             found = await uow.catalog.institutions(
                 country=filters.country.upper() if filters.country else None
             )
-        hits = rank_hits([i for i in found if matches(i, filters)], filters.q)
+        hits = [i for i in found if matches(i, filters)]
+        if sort == "deadline":
+            hits = sort_by_deadline(hits, today or local_today(SystemClock()))
+        else:
+            hits = rank_hits(hits, filters.q)
         page = hits[cursor : cursor + limit]
         more = cursor + limit < len(hits)
         return CatalogPage(page, cursor + limit if more else None)

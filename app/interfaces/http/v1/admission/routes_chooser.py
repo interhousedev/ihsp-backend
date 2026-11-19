@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep
+from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep, StudentCtx
 from app.interfaces.http.v1.admission.routes_items import _locale
 from app.modules.admission.application.chooser import ListItem
 from app.modules.admission.application.estimates import EstimateView
@@ -19,12 +19,14 @@ from app.modules.admission.domain.chooser import (
     CatalogFilters,
     CatalogInstitution,
     CatalogScholarship,
+    next_deadline,
 )
 from app.modules.admission.domain.errors import AdmissionNotFoundError
 from app.modules.admission.domain.intl_fact_display import (
     detail_groups,
     importance_factors,
 )
+from app.shared.clock import SystemClock, local_today
 
 from fastapi import APIRouter, Header, Query
 from pydantic import BaseModel, ConfigDict, Field
@@ -32,6 +34,7 @@ from pydantic import BaseModel, ConfigDict, Field
 router = APIRouter(prefix="/v1/admission", tags=["admission"])
 
 Round = Literal["ED", "ED2", "EA", "REA", "SCEA", "RD", "ROLLING"]
+CatalogSort = Literal["deadline"]
 Bucket = Literal["reach", "target", "safety"]
 FeeStatus = Literal["unpaid", "paid", "waiver_requested", "waiver_approved"]
 Status = Literal["considering", "applying", "applied", "dropped"]
@@ -120,6 +123,7 @@ class InstitutionOut(BaseModel):
     sources: list[SourceOut]
     highlights: list[HighlightOut]
     deadlines: list[DeadlineOut]
+    next_deadline: dt.date | None
     aliases: list[str]
     name_local: str | None
     logo_zoom: float
@@ -137,10 +141,17 @@ class InstitutionOut(BaseModel):
 
     @classmethod
     def of(
-        cls, i: CatalogInstitution, locale: str = "en", *, detail: bool = False
+        cls,
+        i: CatalogInstitution,
+        locale: str = "en",
+        *,
+        today: dt.date | None = None,
+        detail: bool = False,
     ) -> "InstitutionOut":
         """Map the domain institution; text is localized, notes are left out.
 
+        `next_deadline` is the earliest deadline on or after `today` (default:
+        today in Tashkent).
         `details` and `factors` are filled only when `detail` is set.
         """
         deadlines = i.facts.get("deadlines")
@@ -163,6 +174,7 @@ class InstitutionOut(BaseModel):
             ],
             highlights=[HighlightOut(**h) for h in highlights(i, locale)],
             deadlines=dated_deadlines(deadlines.value if deadlines else None, locale),
+            next_deadline=next_deadline(i, today or local_today(SystemClock())),
             aliases=list(i.aliases),
             name_local=i.name_local,
             logo_zoom=i.logo_zoom,
@@ -323,13 +335,13 @@ class ListEntryOut(BaseModel):
     conflicts: list[PlanConflictOut]
 
     @classmethod
-    def of(cls, i: ListItem, locale: str = "en") -> "ListEntryOut":
+    def of(cls, i: ListItem, locale: str = "en", *, today: dt.date) -> "ListEntryOut":
         """Map the list item."""
         e = i.entry
         return cls(
             id=e.id,
             student_id=e.student_id,
-            institution=InstitutionOut.of(i.institution, locale),
+            institution=InstitutionOut.of(i.institution, locale, today=today),
             round=e.round,
             status=e.status,
             bucket=e.bucket,
@@ -424,14 +436,17 @@ async def search_institutions(
     aid: str | None = None,
     scholarships: bool | None = None,
     max_cost: Decimal | None = None,
+    sort: CatalogSort | None = None,
     cursor: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=50),
     accept_language: Lang = None,
 ) -> InstitutionPageOut:
     """Search and filter the catalog; name and alias matches come first.
 
-    `setting` is the campus setting (`city_type` is the same filter).
+    `setting` is the campus setting (`city_type` is the same filter). `sort=deadline`
+    lists the soonest next deadline first, institutions without one last.
     """
+    today = local_today(container.clock)
     page = await container.admission.catalog.search(
         CatalogFilters(
             q=q,
@@ -448,11 +463,16 @@ async def search_institutions(
             scholarships=scholarships,
             max_cost=max_cost,
         ),
+        sort=sort,
+        today=today,
         cursor=cursor,
         limit=limit,
     )
     return InstitutionPageOut(
-        items=[InstitutionOut.of(i, _locale(accept_language)) for i in page.items],
+        items=[
+            InstitutionOut.of(i, _locale(accept_language), today=today)
+            for i in page.items
+        ],
         next_cursor=page.next_cursor,
     )
 
@@ -467,6 +487,7 @@ async def get_institution(
     return InstitutionOut.of(
         await container.admission.catalog.institution(institution_id),
         _locale(accept_language),
+        today=local_today(container.clock),
         detail=True,
     )
 
@@ -504,13 +525,14 @@ async def summarise_institution(
 
 async def get_my_list(
     container: ContainerDep,
-    ctx: AdmissionCtx,
+    ctx: StudentCtx,
     cycle: str | None = Query(None, pattern=CYCLE_RE),
     accept_language: Lang = None,
 ) -> list[ListEntryOut]:
     """Return my university list, optionally one cycle (`2026-27`)."""
     items = await container.admission.chooser.view(ctx, ctx.user_id, cycle)
-    return [ListEntryOut.of(i, _locale(accept_language)) for i in items]
+    today = local_today(container.clock)
+    return [ListEntryOut.of(i, _locale(accept_language), today=today) for i in items]
 
 
 async def get_student_list(
@@ -522,11 +544,12 @@ async def get_student_list(
 ) -> list[ListEntryOut]:
     """Return a student's list as the caller may see it, optionally one cycle."""
     items = await container.admission.chooser.view(ctx, student_id, cycle)
-    return [ListEntryOut.of(i, _locale(accept_language)) for i in items]
+    today = local_today(container.clock)
+    return [ListEntryOut.of(i, _locale(accept_language), today=today) for i in items]
 
 
 async def add_to_list(
-    body: ListAddIn, container: ContainerDep, ctx: AdmissionCtx
+    body: ListAddIn, container: ContainerDep, ctx: StudentCtx
 ) -> ListEntryOut:
     """Add an institution to my list."""
     item = await container.admission.chooser.add(
@@ -537,11 +560,11 @@ async def add_to_list(
         notes=body.notes,
         cycle=body.cycle,
     )
-    return ListEntryOut.of(item)
+    return ListEntryOut.of(item, today=local_today(container.clock))
 
 
 async def patch_list_entry(
-    entry_id: UUID, body: ListPatchIn, container: ContainerDep, ctx: AdmissionCtx
+    entry_id: UUID, body: ListPatchIn, container: ContainerDep, ctx: StudentCtx
 ) -> ListEntryOut:
     """Change round, status, bucket or notes of my entry."""
     item = await container.admission.chooser.update(
@@ -556,18 +579,18 @@ async def patch_list_entry(
         fee_status=body.fee_status,
         clear_bucket="bucket" in body.model_fields_set and body.bucket is None,
     )
-    return ListEntryOut.of(item)
+    return ListEntryOut.of(item, today=local_today(container.clock))
 
 
 async def delete_list_entry(
-    entry_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+    entry_id: UUID, container: ContainerDep, ctx: StudentCtx
 ) -> None:
     """Remove an institution from my list."""
     await container.admission.chooser.remove(ctx, entry_id)
 
 
 async def get_entry_estimate(
-    entry_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+    entry_id: UUID, container: ContainerDep, ctx: StudentCtx
 ) -> EstimateOut:
     """Return the estimate as the caller may see it."""
     return EstimateOut.of(await container.admission.chooser.estimate(ctx, entry_id))
@@ -586,11 +609,14 @@ async def put_label_override(
         lock_version=body.lock_version,
     )
     items = await svc.view(ctx, entry.student_id)
-    return ListEntryOut.of(next(i for i in items if i.entry.id == entry.id))
+    return ListEntryOut.of(
+        next(i for i in items if i.entry.id == entry.id),
+        today=local_today(container.clock),
+    )
 
 
 async def check_affordability(
-    entry_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+    entry_id: UUID, container: ContainerDep, ctx: StudentCtx
 ) -> AffordabilityOut:
     """Recompute the cost check against my budget band."""
     check, _ = await container.admission.chooser.affordability(ctx, entry_id)
@@ -598,7 +624,7 @@ async def check_affordability(
 
 
 async def request_sign_off(
-    entry_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+    entry_id: UUID, container: ContainerDep, ctx: StudentCtx
 ) -> AffordabilityOut:
     """Ask a counselor to sign off a gap or unknown cost."""
     check = await container.admission.chooser.request_sign_off(ctx, entry_id)

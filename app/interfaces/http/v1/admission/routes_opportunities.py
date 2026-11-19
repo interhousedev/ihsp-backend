@@ -149,6 +149,7 @@ async def list_opportunities(
             OpportunityOut.of(
                 o,
                 svc.upcoming(o),
+                svc.next_deadline(o),
                 orgs.get(o.draft.org_id) if o.draft.org_id else None,
                 counts.get(o.id, 0),
                 o.id in found.for_you,
@@ -174,7 +175,7 @@ async def get_opportunity(
             o.draft.org_id
         )
     comments = await container.admission.opportunity_comments.list(ctx, o.id)
-    base = OpportunityOut.of(o, svc.upcoming(o), org, 0)
+    base = OpportunityOut.of(o, svc.upcoming(o), svc.next_deadline(o), org, 0)
     return OpportunityDetailOut(
         **base.model_dump(exclude={"comment_count", "org"}),
         org=base.org,

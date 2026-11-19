@@ -539,6 +539,11 @@ class DatedEvent:
     projected: bool
 
 
+def next_registration(draft: OpportunityDraft, today: dt.date) -> dt.date | None:
+    """Earliest announced registration deadline on or after `today`."""
+    return min((d for d in draft.registration_deadlines if d >= today), default=None)
+
+
 def upcoming_dates(
     draft: OpportunityDraft, today: dt.date, horizon: dt.date
 ) -> list[DatedEvent]:

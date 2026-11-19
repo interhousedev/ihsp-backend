@@ -8,6 +8,7 @@ from typing import Any
 from uuid import UUID
 
 from app.modules.admission.domain.catalog_display import (
+    clean_deadlines,
     country_label,
     effective_aid_basis,
     effective_merit,
@@ -222,6 +223,28 @@ def rank_hits(
     if not q or not q.strip():
         return sorted(hits, key=lambda i: i.name.casefold())
     return sorted(hits, key=lambda i: (search_rank(i, q) or 0, i.name.casefold()))
+
+
+def next_deadline(inst: CatalogInstitution, today: dt.date) -> dt.date | None:
+    """Earliest dated deadline on or after `today` (Tashkent day); None if none."""
+    f = inst.fact("deadlines")
+    dates = [d["date"] for d in clean_deadlines(f.value if f is not None else None)]
+    return min((d for d in dates if d is not None and d >= today), default=None)
+
+
+def sort_by_deadline(
+    hits: list[CatalogInstitution], today: dt.date
+) -> list[CatalogInstitution]:
+    """Soonest next deadline first, institutions without one last; then by name."""
+    due = {i.id: next_deadline(i, today) for i in hits}
+    return sorted(
+        hits,
+        key=lambda i: (
+            due[i.id] is None,
+            due[i.id] or dt.date.max,
+            i.name.casefold(),
+        ),
+    )
 
 
 def cycle_of(day: dt.date) -> str:

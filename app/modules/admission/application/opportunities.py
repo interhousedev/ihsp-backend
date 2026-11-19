@@ -35,6 +35,7 @@ from app.modules.admission.domain.opportunities import (
     TaxonomyLevel,
     TaxonomyNode,
     analyse,
+    next_registration,
     review_transition,
     upcoming_dates,
 )
@@ -45,7 +46,7 @@ from app.modules.admission.ports.repositories import AuditEvent
 from app.modules.admission.ports.unit_of_work import AdmissionUnitOfWork
 from app.shared.actor import Role
 from app.shared.base_error import ValidationFailedError
-from app.shared.clock import Clock
+from app.shared.clock import Clock, local_today
 from app.shared.ids import new_id
 from app.shared.rate_limit import RateLimiter
 
@@ -124,7 +125,7 @@ class CatalogPage:
     for_you: frozenset[UUID] = frozenset()
 
 
-SORTS: Final = ("title", "ranking", "acceptance", "tuition", "relevance")
+SORTS: Final = ("title", "ranking", "acceptance", "tuition", "relevance", "deadline")
 _NO_MATCH: Final = 2
 
 
@@ -542,6 +543,17 @@ class OpportunityService:
             ranks = {o.id: relevance_rank(o.draft, focus.field_ids) for o in rows}
             rows.sort(key=lambda o: (ranks[o.id], o.draft.title.casefold()))
             for_you = frozenset(i for i, r in ranks.items() if r < _NO_MATCH)
+        elif sort == "deadline":
+            today = local_today(self._clock)
+            due = {o.id: next_registration(o.draft, today) for o in rows}
+            rows.sort(
+                key=lambda o: (
+                    due[o.id] is None,
+                    due[o.id] or dt.date.max,
+                    o.draft.title.casefold(),
+                )
+            )
+            for_you = frozenset()
         else:
             rows.sort(key=_sort_key(sort))
             for_you = frozenset()
@@ -602,6 +614,10 @@ class OpportunityService:
         """Next dates of an entry within the planning horizon."""
         today = self._clock.now().date()
         return upcoming_dates(o.draft, today, today + dt.timedelta(days=HORIZON_DAYS))
+
+    def next_deadline(self, o: Opportunity) -> dt.date | None:
+        """Earliest announced registration deadline on or after today (Tashkent)."""
+        return next_registration(o.draft, local_today(self._clock))
 
     # - - - Plans - - -
 

@@ -39,7 +39,7 @@ AwardType = Literal["scholarship", "fellowship", "grant", "tuition_waiver", "pro
 Coverage = Literal["full_tuition", "partial_tuition", "stipend", "cash", "travel"]
 Scope = Literal["local", "international"]
 CollegeCredit = Literal["none", "possible", "yes"]
-Sort = Literal["title", "ranking", "acceptance", "tuition", "relevance"]
+Sort = Literal["title", "ranking", "acceptance", "tuition", "relevance", "deadline"]
 MaterialKind = Literal["link", "lms_course", "alumni", "center"]
 Status = Literal["pending", "approved", "rejected"]
 Level = Literal["field", "subfield", "subject"]
@@ -362,6 +362,7 @@ class OpportunityOut(BaseModel):
     updated_at: dt.datetime
     lock_version: int
     upcoming: list[DatedEventOut]
+    next_deadline: dt.date | None
     org: OrgOut | None = None
     comment_count: int = 0
     for_you: bool = False
@@ -371,6 +372,7 @@ class OpportunityOut(BaseModel):
         cls,
         o: Opportunity,
         upcoming: list[DatedEvent],
+        next_deadline: dt.date | None,
         org: Organization | None = None,
         comment_count: int = 0,
         for_you: bool = False,
@@ -384,6 +386,7 @@ class OpportunityOut(BaseModel):
             updated_at=o.updated_at,
             lock_version=o.lock_version,
             upcoming=[DatedEventOut.of(e) for e in upcoming],
+            next_deadline=next_deadline,
             org=OrgOut.of(org) if org else None,
             comment_count=comment_count,
             for_you=for_you,
@@ -487,7 +490,7 @@ class PlanOut(BaseModel):
         a = v.analytics
         return cls(
             entries=[PlanEntryOut.of(e) for e in v.entries],
-            opportunities=[OpportunityOut.of(o, []) for o in v.catalog.values()],
+            opportunities=[OpportunityOut.of(o, [], None) for o in v.catalog.values()],
             analytics=AnalyticsOut(
                 load=a.load,
                 coverage={str(k): n for k, n in a.coverage.items()},
