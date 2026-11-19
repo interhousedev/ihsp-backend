@@ -10,7 +10,7 @@ from uuid import UUID
 
 from app.modules.admission.domain.transitions import check_transition
 
-Round = Literal["RD", "EA", "ED", "ED2", "REA", "rolling", "other"]
+Round = Literal["RD", "EA", "ED", "ED2", "REA", "SCEA", "rolling", "other"]
 ListStatus = Literal[
     "considering", "applying", "submitted", "admitted", "waitlisted", "deferred",
     "rejected", "enrolled", "withdrawn",

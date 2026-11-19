@@ -205,7 +205,7 @@ def matches(inst: CatalogInstitution, f: CatalogFilters) -> bool:
     """Whether the institution passes every set filter."""
     if f.q and search_rank(inst, f.q) is None:
         return False
-    if f.country and inst.country != f.country.upper():
+    if f.country and inst.country.upper() != f.country.upper():
         return False
     if f.field and canonical_id(f.field) not in _field_ids(inst):
         return False
@@ -247,6 +247,7 @@ class ListEntry:
     affordability_status: str = "unknown"
     lock_version: int = 1
     cycle: str | None = None
+    fee_status: str = "unpaid"
 
 
 @dataclass(frozen=True, slots=True)

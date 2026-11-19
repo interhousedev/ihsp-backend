@@ -23,7 +23,7 @@ from app.shared.ids import new_id
 
 RULE_VERSION = 1
 BINDING_ROUNDS = frozenset({"ED", "ED2"})
-ALL_ROUNDS = frozenset({"RD", "EA", "ED", "ED2", "REA", "rolling", "other"})
+ALL_ROUNDS = frozenset({"RD", "EA", "ED", "ED2", "REA", "SCEA", "rolling", "other"})
 
 
 @dataclass(frozen=True, slots=True)

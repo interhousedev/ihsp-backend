@@ -31,8 +31,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 router = APIRouter(prefix="/v1/admission", tags=["admission"])
 
-Round = Literal["ED", "ED2", "EA", "REA", "RD", "ROLLING"]
+Round = Literal["ED", "ED2", "EA", "REA", "SCEA", "RD", "ROLLING"]
 Bucket = Literal["reach", "target", "safety"]
+FeeStatus = Literal["unpaid", "paid", "waiver_requested", "waiver_approved"]
 Status = Literal["considering", "applying", "applied", "dropped"]
 CYCLE_RE = r"^[0-9]{4}-[0-9]{2}$"
 Lang = Annotated[str | None, Header(alias="Accept-Language")]
@@ -71,6 +72,11 @@ class DeadlineOut(BaseModel):
     binding: bool | None = None
     time_zone: str | None = None
     label_short: str
+
+
+def dated_deadlines(raw: Any, locale: str = "en") -> list[DeadlineOut]:
+    """Deadlines that have a date; a stored one without a date is not listed."""
+    return [DeadlineOut(**d) for d in clean_deadlines(raw, locale) if d["date"]]
 
 
 class DetailRowOut(BaseModel):
@@ -155,10 +161,7 @@ class InstitutionOut(BaseModel):
                 if k != "deadlines" and (f.source_url or f.year)
             ],
             highlights=[HighlightOut(**h) for h in highlights(i, locale)],
-            deadlines=[
-                DeadlineOut(**d)
-                for d in clean_deadlines(deadlines.value if deadlines else None, locale)
-            ],
+            deadlines=dated_deadlines(deadlines.value if deadlines else None, locale),
             aliases=list(i.aliases),
             name_local=i.name_local,
             logo_zoom=i.logo_zoom,
@@ -289,6 +292,14 @@ class AffordabilityOut(BaseModel):
         )
 
 
+class PlanConflictOut(BaseModel):
+    """A warning about conflicting early-application plans; never blocks."""
+
+    code: str
+    severity: Literal["conflict", "check"]
+    entry_ids: list[UUID]
+
+
 class ListEntryOut(BaseModel):
     """A list entry with institution, estimate and affordability."""
 
@@ -302,10 +313,12 @@ class ListEntryOut(BaseModel):
     label_override: str | None
     override_note: str | None
     affordability_status: str
+    fee_status: FeeStatus
     affordability: AffordabilityOut | None
     estimate: EstimateOut
     cycle: str | None
     lock_version: int
+    conflicts: list[PlanConflictOut]
 
     @classmethod
     def of(cls, i: ListItem, locale: str = "en") -> "ListEntryOut":
@@ -322,6 +335,7 @@ class ListEntryOut(BaseModel):
             label_override=e.label_override,
             override_note=e.override_note,
             affordability_status=e.affordability_status,
+            fee_status=e.fee_status,
             affordability=(
                 AffordabilityOut.of(i.affordability)
                 if i.affordability is not None and i.amounts_visible
@@ -330,6 +344,12 @@ class ListEntryOut(BaseModel):
             estimate=EstimateOut.of(i.estimate),
             cycle=e.cycle,
             lock_version=e.lock_version,
+            conflicts=[
+                PlanConflictOut(
+                    code=c.code, severity=c.severity, entry_ids=list(c.entry_ids)
+                )
+                for c in i.conflicts
+            ],
         )
 
 
@@ -356,6 +376,7 @@ class ListPatchIn(BaseModel):
     bucket: Bucket | None = None
     notes: str | None = Field(default=None, max_length=2000)
     cycle: str | None = Field(default=None, pattern=CYCLE_RE)
+    fee_status: FeeStatus | None = None
 
 
 class LabelOverrideIn(BaseModel):
@@ -530,6 +551,7 @@ async def patch_list_entry(
         bucket=body.bucket,
         notes=body.notes,
         cycle=body.cycle,
+        fee_status=body.fee_status,
         clear_bucket="bucket" in body.model_fields_set and body.bucket is None,
     )
     return ListEntryOut.of(item)

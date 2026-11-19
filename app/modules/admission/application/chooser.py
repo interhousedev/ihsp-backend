@@ -36,6 +36,11 @@ from app.modules.admission.domain.errors import (
 )
 from app.modules.admission.domain.estimates import estimate
 from app.modules.admission.domain.permissions import Permission
+from app.modules.admission.domain.plan_conflicts import (
+    PlanConflict,
+    PlanEntry,
+    plan_conflicts,
+)
 from app.modules.admission.domain.runtime_settings import ESTIMATES_STUDENT_VISIBLE
 from app.modules.admission.domain.study_fields import build_taxonomy
 from app.modules.admission.ports.repositories import AuditEvent
@@ -142,6 +147,7 @@ class ListItem:
     estimate: EstimateView
     affordability: AffordabilityCheck | None
     amounts_visible: bool
+    conflicts: tuple[PlanConflict, ...] = ()
 
 
 class ListService:
@@ -198,6 +204,34 @@ class ListService:
         amounts = owner or Permission.FINANCE_READ in permissions
         return ListItem(entry, inst, view, check, amounts)
 
+    async def _conflicts(
+        self, uow: AdmissionUnitOfWork, student_id: UUID
+    ) -> tuple[PlanConflict, ...]:
+        """Plan conflicts of every cycle of the list; withdrawn entries are out."""
+        groups: dict[str | None, list[PlanEntry]] = {}
+        for e in await uow.shortlist.entries(student_id):
+            if e.status == "withdrawn":
+                continue
+            inst = await uow.catalog.institution(e.institution_id)
+            if inst is None:
+                continue
+            kind = inst.fact("institution_type")
+            groups.setdefault(e.cycle, []).append(
+                PlanEntry(
+                    e.id,
+                    e.round,
+                    inst.country or None,
+                    str(kind.value) if kind is not None else None,
+                )
+            )
+        return tuple(c for g in groups.values() for c in plan_conflicts(g))
+
+    @staticmethod
+    def _own(item: ListItem, found: tuple[PlanConflict, ...]) -> ListItem:
+        """The item with the conflicts that involve its entry."""
+        mine = tuple(c for c in found if item.entry.id in c.entry_ids)
+        return dataclasses.replace(item, conflicts=mine)
+
     async def view(
         self, ctx: AdmissionContext, student_id: UUID, cycle: str | None = None
     ) -> list[ListItem]:
@@ -208,6 +242,7 @@ class ListService:
         visible = await self._visible()
         async with self._uow() as uow:
             entries = await uow.shortlist.entries(student_id)
+            found = await self._conflicts(uow, student_id)
             out: list[ListItem] = []
             for e in entries:
                 if cycle is not None and e.cycle != cycle:
@@ -216,17 +251,16 @@ class ListService:
                 if inst is None:
                     continue
                 check = await uow.shortlist.affordability(e.id)
-                out.append(
-                    await self._item(
-                        ctx,
-                        e,
-                        inst,
-                        check,
-                        owner=res.owner,
-                        permissions=res.permissions,
-                        visible=visible,
-                    )
+                item = await self._item(
+                    ctx,
+                    e,
+                    inst,
+                    check,
+                    owner=res.owner,
+                    permissions=res.permissions,
+                    visible=visible,
                 )
+                out.append(self._own(item, found))
         return out
 
     async def add(
@@ -252,15 +286,19 @@ class ListService:
             existing = await uow.shortlist.find(ctx.user_id, institution_id)
             if existing is not None:
                 await ensure_entry(uow, existing)
+                found = await self._conflicts(uow, ctx.user_id)
                 await uow.commit()
-                return await self._item(
-                    ctx,
-                    existing,
-                    inst,
-                    await uow.shortlist.affordability(existing.id),
-                    owner=True,
-                    permissions=frozenset(),
-                    visible=visible,
+                return self._own(
+                    await self._item(
+                        ctx,
+                        existing,
+                        inst,
+                        await uow.shortlist.affordability(existing.id),
+                        owner=True,
+                        permissions=frozenset(),
+                        visible=visible,
+                    ),
+                    found,
                 )
             entry = ListEntry(
                 id=new_id(),
@@ -276,15 +314,19 @@ class ListService:
             entry, check = await self._recompute(uow, entry, inst)
             await ensure_shared(uow, ctx.user_id)
             await ensure_entry(uow, entry)
+            found = await self._conflicts(uow, ctx.user_id)
             await uow.commit()
-        return await self._item(
-            ctx,
-            entry,
-            inst,
-            check,
-            owner=True,
-            permissions=frozenset(),
-            visible=visible,
+        return self._own(
+            await self._item(
+                ctx,
+                entry,
+                inst,
+                check,
+                owner=True,
+                permissions=frozenset(),
+                visible=visible,
+            ),
+            found,
         )
 
     async def _recompute(
@@ -340,8 +382,9 @@ class ListService:
         notes: str | None = None,
         clear_bucket: bool = False,
         cycle: str | None = None,
+        fee_status: str | None = None,
     ) -> ListItem:
-        """Change round, status, bucket, notes or cycle; ED/ED2 needs affordability."""
+        """Change round, status, bucket, notes, cycle or fee; ED/ED2 needs means."""
         await self._owner(ctx)
         visible = await self._visible()
         async with self._uow() as uow:
@@ -356,6 +399,7 @@ class ListService:
                     ("status", status),
                     ("notes", notes),
                     ("cycle", cycle),
+                    ("fee_status", fee_status),
                 )
                 if v is not None
             }
@@ -371,15 +415,19 @@ class ListService:
                 )
             new = await uow.shortlist.save(new, expected_lock=lock_version)
             check = await uow.shortlist.affordability(new.id)
+            found = await self._conflicts(uow, ctx.user_id)
             await uow.commit()
-        return await self._item(
-            ctx,
-            new,
-            inst,
-            check,
-            owner=True,
-            permissions=frozenset(),
-            visible=visible,
+        return self._own(
+            await self._item(
+                ctx,
+                new,
+                inst,
+                check,
+                owner=True,
+                permissions=frozenset(),
+                visible=visible,
+            ),
+            found,
         )
 
     async def remove(self, ctx: AdmissionContext, entry_id: UUID) -> None:

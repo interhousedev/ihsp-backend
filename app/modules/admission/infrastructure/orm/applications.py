@@ -47,7 +47,8 @@ LIST_STATUSES = (
     "enrolled",
     "withdrawn",
 )
-ROUNDS = ("RD", "EA", "ED", "ED2", "REA", "rolling", "other")
+FEE_STATUSES = ("unpaid", "paid", "waiver_requested", "waiver_approved")
+ROUNDS = ("RD", "EA", "ED", "ED2", "REA", "SCEA", "rolling", "other")
 DOC_KINDS = (
     "transcript",
     "school_report",
@@ -101,6 +102,7 @@ class ListEntryRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
             name="label_override",
         ),
         check_in("affordability_status", ("feasible", "gap", "unknown", "signed_off")),
+        check_in("fee_status", FEE_STATUSES),
         max_len("override_note", 300),
         CheckConstraint("cycle IS NULL OR cycle ~ '^[0-9]{4}-[0-9]{2}$'", name="cycle"),
         S,
@@ -128,6 +130,7 @@ class ListEntryRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
     affordability_status: Mapped[str] = mapped_column(
         String(10), server_default="unknown"
     )
+    fee_status: Mapped[str] = mapped_column(Text, server_default="unpaid")
     eligibility_outcome: Mapped[str | None] = mapped_column(String(14))
     cycle: Mapped[str | None] = mapped_column(String(7), index=True)
 

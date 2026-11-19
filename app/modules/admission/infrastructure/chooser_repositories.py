@@ -64,7 +64,7 @@ class SqlCatalogRepository:
         """Return non-archived institutions ordered by name."""
         q = select(InstitutionRow).where(InstitutionRow.status != "archived")
         if country:
-            q = q.where(InstitutionRow.country == country.upper())
+            q = q.where(func.upper(InstitutionRow.country) == country.upper())
         rows = (await self._s.scalars(q.order_by(InstitutionRow.name))).all()
         return await self._build(rows)
 
@@ -189,6 +189,7 @@ def _entry(r: ListEntryRow) -> ListEntry:
         affordability_status=r.affordability_status,
         lock_version=r.lock_version,
         cycle=r.cycle,
+        fee_status=r.fee_status,
     )
 
 
@@ -203,6 +204,7 @@ def _apply(row: ListEntryRow, e: ListEntry) -> None:
     row.override_at = e.override_at
     row.affordability_status = e.affordability_status
     row.cycle = e.cycle
+    row.fee_status = e.fee_status
 
 
 def _check(r: AffordabilityCheckRow) -> AffordabilityCheck:
