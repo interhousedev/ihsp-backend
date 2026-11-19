@@ -13,6 +13,9 @@ from app.modules.admission.infrastructure.ai.prompts import (
 )
 from app.modules.admission.infrastructure.ai.prompts import app_review as admit_review
 from app.modules.admission.infrastructure.ai.prompts import career as admit_career
+from app.modules.admission.infrastructure.ai.prompts import (
+    essay_review as admit_essay_review,
+)
 from app.modules.admission.infrastructure.ai.prompts import essays as admit_essays
 from app.modules.admission.infrastructure.ai.prompts import goal_plan as admit_goal_plan
 from app.modules.admission.infrastructure.ai.prompts import item_grade as admit_grade
@@ -189,6 +192,20 @@ _PARTS: tuple[tuple[Iterable[AiTask], str, str, str, bool], ...] = (
             ("feedback", "feedback on a draft"),
             ("check", "essay check against its prompt and the rubric"),
         )
+    ),
+    (
+        (AiTask.ADMIT_ESSAY_REVIEW,),
+        "base",
+        "Admission essay review: base review of the writing",
+        admit_essay_review.BASE,
+        False,
+    ),
+    (
+        (AiTask.ADMIT_ESSAY_UNI_REVIEW,),
+        "uni",
+        "Admission essay review: fit with one university's sourced goals",
+        admit_essay_review.UNI,
+        False,
     ),
     (
         (AiTask.ADMIT_OPPORTUNITY_INTAKE,),

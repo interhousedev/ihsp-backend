@@ -59,6 +59,8 @@ UNLIMITABLE: frozenset[str] = frozenset(
         "web_search_per_day_student",
         "admit_item_review_per_day",
         "admit_essay_review_per_week",
+        "admit_essay_uni_review_per_week",
+        "admit_essay_studio_runs_per_day",
         "admit_alignment_map_per_week",
         "admit_research_per_day",
         "admit_proof_check_per_day",
