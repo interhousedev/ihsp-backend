@@ -47,6 +47,7 @@ async def test_get_me_returns_the_user_me_shape(api: Api) -> None:
         "emis_status",
         "mailbox",
         "photo_url",
+        "photo_source",
         "preferences",
         "telegram",
     }

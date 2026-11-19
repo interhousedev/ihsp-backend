@@ -84,19 +84,17 @@ class FaceEnroller:
             raise
         if current is not None:
             await self._files.delete_file(current.photo_file_id)
-        await self._set_profile_photo(user_id, data, by_staff=by_staff)
+        await self._set_profile_photo(user_id, data)
         return profile
 
-    async def _set_profile_photo(
-        self, user_id: UUID, data: bytes, *, by_staff: bool
-    ) -> None:
+    async def _set_profile_photo(self, user_id: UUID, data: bytes) -> None:
         """Copy the face to the profile photo; the face is saved even if this fails.
 
-        The student's own upload never replaces a photo set some other way (by an
-        administrator or the user); a staff upload always does.
+        The face is the profile photo until the user uploads another one: only an
+        empty photo or an earlier face copy is replaced, never a chosen photo.
         """
         try:
-            if not by_staff and await self._profile_photos.source(user_id) == "other":
+            if await self._profile_photos.source(user_id) == "other":
                 return
             await self._profile_photos.set_photo(user_id, data)
         except Exception:  # the face is committed; never fail the upload for this

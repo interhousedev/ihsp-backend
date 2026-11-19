@@ -185,6 +185,11 @@ class FakeFaceFiles:
     def __init__(self) -> None:
         """No files yet."""
         self.files: dict[UUID, FileRef] = {}
+        self.blobs: dict[UUID, bytes] = {}
+
+    async def read_bytes(self, file_id: UUID) -> bytes:
+        """The stored content."""
+        return self.blobs[file_id]
 
     async def store_bytes(
         self,
@@ -202,11 +207,13 @@ class FakeFaceFiles:
             "ready", None,
         )  # fmt: skip
         self.files[ref.id] = ref
+        self.blobs[ref.id] = data
         return ref
 
     async def delete_file(self, file_id: UUID) -> None:
         """Forget the file."""
         self.files.pop(file_id, None)
+        self.blobs.pop(file_id, None)
 
     async def download_url(
         self,

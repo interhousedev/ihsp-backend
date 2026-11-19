@@ -2,6 +2,7 @@
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import Literal
 from uuid import UUID
 
 from app.modules.identity.domain.user import User
@@ -13,6 +14,10 @@ import structlog
 log = structlog.get_logger(__name__)
 
 PHOTO_URL_TTL_SECONDS = 3600
+FACE_PHOTO_STEM = "face"
+
+
+PhotoSourceName = Literal["upload", "face"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,6 +26,17 @@ class PhotoUrls:
 
     files: FilesApi
     ttl_seconds: int = PHOTO_URL_TTL_SECONDS
+
+    async def source(self, file_id: UUID | None) -> PhotoSourceName | None:
+        """Say whether the photo is an upload or a copy of the face (named `face.*`)."""
+        if file_id is None:
+            return None
+        ref = await self.files.get(file_id)
+        if ref is None:
+            return None
+        if ref.name.startswith(f"{FACE_PHOTO_STEM}."):
+            return "face"
+        return "upload"
 
     async def url(
         self, file_id: UUID | None, ttl_seconds: int | None = None

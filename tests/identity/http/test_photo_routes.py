@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 from app.interfaces.http.dependencies import get_actor
 from app.interfaces.http.v1.admin_users import ROUTERS as ADMIN_ROUTERS
+from app.interfaces.http.v1.id import ROUTERS as ID_ROUTERS
 from app.interfaces.http.v1.me_photo import ROUTERS as ME_PHOTO_ROUTERS
 from app.modules.identity.domain.photo import MAX_PHOTO_BYTES
 from app.shared.actor import Actor, Role
@@ -30,10 +31,15 @@ async def photo_api(auth_world: World, http_client: HttpClientFactory) -> Api:
             raise UnauthorizedError(support_details="no test actor")
         return actor
 
+    class NoFaceOnFile:
+        async def execute(self, user_id: object) -> bool:
+            return False
+
     client = await http_client(
         [*ADMIN_ROUTERS, *ME_PHOTO_ROUTERS],
         {get_actor: current_actor},
         identity=SimpleNamespace(auth=auth_world.auth, token_verifier=None),
+        faces=SimpleNamespace(restore_profile_photo=NoFaceOnFile()),
     )
     return Api(client=client, world=auth_world, holder=holder)
 
@@ -213,7 +219,8 @@ async def test_any_role_sets_and_removes_their_own_photo(
 
     assert put.status_code == 200 and put.json()["photo_url"]
     assert stored is not None
-    assert deleted.status_code == 200 and deleted.json() == {"photo_url": None}
+    assert deleted.status_code == 200
+    assert deleted.json() == {"photo_url": None, "photo_source": None}
     assert api.world.user(user.id).photo_file_id is None
     assert api.world.user(other.id).photo_file_id is None
 
@@ -271,3 +278,35 @@ async def test_put_me_photo_stores_a_system_file_hidden_from_my_files(
     assert ref is not None and ref.purpose == FilePurpose.USER_PHOTO
     owned = await api.world.files.services.list_owned_files.execute(user.id, limit=10)
     assert owned == []
+
+
+async def test_my_photo_reports_its_source_and_falls_back_to_the_face(
+    auth_world: World, http_client: HttpClientFactory
+) -> None:
+    """ID-PHOTO-RULE-2: upload, face fallback after DELETE, source on /id/me."""
+    user = await auth_world.add_user(roles={Role.STUDENT})
+    actor = Actor(user_id=user.id, roles=frozenset({Role.STUDENT}))
+
+    class FaceRestore:
+        async def execute(self, user_id: object) -> bool:
+            await auth_world.auth.set_user_photo.execute(user.id, png(), stem="face")
+            return True
+
+    client = await http_client(
+        [*ME_PHOTO_ROUTERS, *ID_ROUTERS],
+        {get_actor: lambda: actor},
+        identity=SimpleNamespace(auth=auth_world.auth, token_verifier=None),
+        faces=SimpleNamespace(restore_profile_photo=FaceRestore()),
+    )
+
+    put = await client.put(
+        "/v1/me/photo", files={"file": ("a.png", png(), "image/png")}
+    )
+    me = await client.get("/v1/id/me")
+    deleted = await client.delete("/v1/me/photo")
+    me_after = await client.get("/v1/id/me")
+
+    assert put.json()["photo_source"] == "upload"
+    assert me.json()["photo_source"] == "upload"
+    assert deleted.json()["photo_source"] == "face" and deleted.json()["photo_url"]
+    assert me_after.json()["photo_source"] == "face"

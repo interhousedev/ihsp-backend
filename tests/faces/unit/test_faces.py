@@ -3,6 +3,7 @@
 from datetime import timedelta
 from uuid import UUID
 
+from app.modules.faces.application.face_queries import RestoreFaceProfilePhoto
 from app.modules.faces.domain.device_token import hash_token
 from app.modules.faces.domain.errors import (
     DeviceUnauthorizedError,
@@ -26,6 +27,7 @@ from app.shared.ids import new_id
 from app.shared.notifications import NotificationType
 from tests.faces.conftest import PNG, FacesHarness, photo
 from tests.fakes.clock import FixedClock
+from tests.fakes.faces.uow import FakeFacesUow
 
 import pytest
 
@@ -70,7 +72,48 @@ async def test_own_face_keeps_a_photo_set_otherwise(fh: FacesHarness) -> None:
     await fh.services.upload_my_face.execute(me.user_id, photo("a"))
     assert fh.profile_photos.photos[me.user_id] == b"admin photo"
     await fh.services.staff_upload.execute(fh.admin, me.user_id, photo("b"))
+    assert fh.profile_photos.photos[me.user_id] == b"admin photo"
+
+
+async def test_a_new_face_replaces_the_previous_face_copy(fh: FacesHarness) -> None:
+    """ID-PHOTO-RULE-1: a face copy as profile photo follows the newest face."""
+    me = student_actor(fh)
+    await fh.services.upload_my_face.execute(me.user_id, photo("a"))
+    await fh.services.upload_my_face.execute(me.user_id, photo("b"))
     assert fh.profile_photos.photos[me.user_id] == photo("b")
+    assert fh.profile_photos.sources[me.user_id] == "face"
+
+
+async def test_removing_the_upload_falls_back_to_the_face(fh: FacesHarness) -> None:
+    """ID-PHOTO-RULE-2: with the upload gone the face is the profile photo again."""
+    me = student_actor(fh)
+    await fh.services.upload_my_face.execute(me.user_id, photo("a"))
+    fh.profile_photos.sources[me.user_id] = "other"
+    fh.profile_photos.photos[me.user_id] = b"own upload"
+    restore = RestoreFaceProfilePhoto(
+        uow_factory=lambda: FakeFacesUow(fh.store),
+        files=fh.files,  # type: ignore[arg-type]
+        profile_photos=fh.profile_photos,
+    )
+    assert await restore.execute(me.user_id) is False  # an upload is still there
+
+    await fh.profile_photos.remove_photo(me.user_id)
+
+    assert await restore.execute(me.user_id) is True
+    assert fh.profile_photos.photos[me.user_id] == photo("a")
+    assert fh.profile_photos.sources[me.user_id] == "face"
+
+
+async def test_nothing_to_restore_without_a_face(fh: FacesHarness) -> None:
+    """ID-PHOTO-RULE-2: no face on file, no profile photo appears."""
+    me = student_actor(fh)
+    restore = RestoreFaceProfilePhoto(
+        uow_factory=lambda: FakeFacesUow(fh.store),
+        files=fh.files,  # type: ignore[arg-type]
+        profile_photos=fh.profile_photos,
+    )
+    assert await restore.execute(me.user_id) is False
+    assert me.user_id not in fh.profile_photos.photos
 
 
 async def test_removing_the_face_removes_its_profile_copy(fh: FacesHarness) -> None:

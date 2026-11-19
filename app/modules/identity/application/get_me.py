@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 
 from app.modules.identity.application.load_user import require_user
-from app.modules.identity.application.photo_files import PhotoUrls
+from app.modules.identity.application.photo_files import PhotoSourceName, PhotoUrls
 from app.modules.identity.domain.telegram_link import TelegramLink
 from app.modules.identity.domain.user import User
 from app.modules.identity.ports.unit_of_work import UowFactory
@@ -18,6 +18,7 @@ class MeView:
     telegram: list[TelegramLink]
     mailbox: str | None
     photo_url: str | None = None
+    photo_source: PhotoSourceName | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -38,6 +39,7 @@ class GetMe:
             telegram=links,
             mailbox=self.mailbox_of(user),
             photo_url=await self.photos.url(user.photo_file_id),
+            photo_source=await self.photos.source(user.photo_file_id),
         )
 
     def mailbox_of(self, user: User) -> str | None:

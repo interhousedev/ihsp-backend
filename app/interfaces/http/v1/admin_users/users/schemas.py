@@ -1,5 +1,7 @@
 """Request bodies of the Administration user routes."""
 
+from typing import Literal
+
 from app.interfaces.http.v1.admin_users.schemas import AdminUserResponse
 from app.shared.actor import Role
 from app.shared.contracts.identity import AccountKind
@@ -77,4 +79,13 @@ class UserPhotoResponse(BaseModel):
 
     photo_url: str | None = Field(
         description="Link to the photo, valid for an hour; null when there is none."
+    )
+
+
+class MePhotoResponse(UserPhotoResponse):
+    """The caller's own photo with where it came from."""
+
+    photo_source: Literal["upload", "face"] | None = Field(
+        default=None,
+        description="An upload or the entrance face photo; null when there is none.",
     )

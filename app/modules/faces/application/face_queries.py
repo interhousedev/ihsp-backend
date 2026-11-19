@@ -5,6 +5,7 @@ from uuid import UUID
 from app.modules.faces.application.enroll import FaceEnroller
 from app.modules.faces.application.views import FaceView
 from app.modules.faces.domain.errors import FaceNotFoundError
+from app.modules.faces.ports.profile_photo import ProfilePhotos
 from app.modules.faces.ports.unit_of_work import UowFactory
 from app.shared.contracts.files import FilesApi
 
@@ -86,3 +87,31 @@ class GetUserFacePhoto:
             profile.photo_file_id, inline=True, ttl_seconds=300
         )
         return FaceView(True, profile.locked, profile.updated_at, url)
+
+
+class RestoreFaceProfilePhoto:
+    """Gives the profile photo back to the face after the user removed their upload."""
+
+    def __init__(
+        self,
+        *,
+        uow_factory: UowFactory,
+        files: FilesApi,
+        profile_photos: ProfilePhotos,
+    ) -> None:
+        """Store the dependencies."""
+        self._uow_factory = uow_factory
+        self._files = files
+        self._profile_photos = profile_photos
+
+    async def execute(self, user_id: UUID) -> bool:
+        """Copy the face to an empty profile photo; True when it was copied."""
+        if await self._profile_photos.source(user_id) != "none":
+            return False
+        async with self._uow_factory() as uow:
+            profile = await uow.profiles.get(user_id)
+        if profile is None:
+            return False
+        data = await self._files.read_bytes(profile.photo_file_id)
+        await self._profile_photos.set_photo(user_id, data)
+        return True

@@ -28,6 +28,10 @@ class UserMeResponse(BaseModel):
     emis_status: Literal["active", "needs_reauth"] | None
     mailbox: str | None
     photo_url: str | None
+    photo_source: Literal["upload", "face"] | None = Field(
+        default=None,
+        description="Where the photo came from: an upload or the entrance face photo.",
+    )
     preferences: UserPreferences
     telegram: list[TelegramAccountResponse]
 
@@ -49,6 +53,7 @@ class UserMeResponse(BaseModel):
             emis_status=user.emis_status,
             mailbox=view.mailbox,
             photo_url=view.photo_url,
+            photo_source=view.photo_source,
             preferences=UserPreferences.model_validate(user.preferences),
             telegram=[TelegramAccountResponse.of(link) for link in view.telegram],
         )

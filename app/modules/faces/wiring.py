@@ -16,6 +16,7 @@ from app.modules.faces.application.face_queries import (
     GetMyFace,
     GetUserFacePhoto,
     HasFace,
+    RestoreFaceProfilePhoto,
     UploadMyFace,
 )
 from app.modules.faces.application.identify_face import (
@@ -56,6 +57,7 @@ class FacesServices:
     list_calls: ListDeviceCalls
     identify: IdentifyFace
     purge_old: PurgeOld
+    restore_profile_photo: RestoreFaceProfilePhoto
 
 
 @dataclass(frozen=True, slots=True)
@@ -119,6 +121,9 @@ def build(
             per_minute=settings.device_rate_per_minute,
         ),
         purge_old=PurgeOld(uow_factory=uow_factory, clock=deps.clock),
+        restore_profile_photo=RestoreFaceProfilePhoto(
+            uow_factory=uow_factory, files=files, profile_photos=profile_photos
+        ),
     )
 
 
