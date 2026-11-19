@@ -77,6 +77,7 @@ def signals_of(answers: Mapping[str, Any]) -> StudentSignals:
     """Read GPA (q10), English tests (q14) and SAT/ACT (q15) from the answers."""
     english_opts = _options(answers.get("q14"))
     english: Literal["taken", "planned", "none"] | None = None
+    # `sat_erw` is recorded evidence only: it is not an IELTS/TOEFL substitute.
     if english_opts & {"ielts", "toefl", "duolingo"}:
         english = "taken"
     elif "planned" in english_opts:

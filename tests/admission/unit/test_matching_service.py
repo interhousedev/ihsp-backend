@@ -145,15 +145,15 @@ class World:
 async def test_preferences_partial_merge() -> None:
     w = World()
     assert (await w.svc.preferences(w.ctx)).updated_at is None
-    await w.svc.save_preferences(w.ctx, {"setting": "city"})
-    v = await w.svc.save_preferences(w.ctx, {"region": "US"})
-    assert v.tags == ["setting:city", "region:US"]
+    await w.svc.save_preferences(w.ctx, {"setting": ["city", "city", "rural"]})
+    v = await w.svc.save_preferences(w.ctx, {"region": ["us"]})
+    assert v.tags == ["setting:city", "setting:rural", "region:US"]
     assert not v.completed and v.updated_at == NOW
 
 
 async def test_matches_rank_and_exclude_decided() -> None:
     w = World()
-    await w.svc.save_preferences(w.ctx, {"region": "US"})
+    await w.svc.save_preferences(w.ctx, {"region": ["US"]})
     items = await w.svc.matches(w.ctx, 20)
     assert [m.institution.name for m in items] == ["Alpha", "Beta"]
     assert items[0].match_pct == 100 and items[1].match_pct == 0
@@ -216,7 +216,7 @@ async def test_writes_require_applicant() -> None:
     w = World()
     w.ctx.admission.is_applicant = False
     with pytest.raises(AdmissionForbiddenError):
-        await w.svc.save_preferences(w.ctx, {"setting": "city"})
+        await w.svc.save_preferences(w.ctx, {"setting": ["city"]})
     with pytest.raises(AdmissionForbiddenError):
         await w.svc.decide(w.ctx, w.us.id, "interested")
     with pytest.raises(AdmissionForbiddenError):

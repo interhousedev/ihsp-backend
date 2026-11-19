@@ -95,7 +95,7 @@ class Preferences:
     """The student's stated preferences that matter here; None when unanswered."""
 
     budget: str | None = None
-    region: str | None = None
+    region: tuple[str, ...] | None = None
     need_aid: bool | None = None
 
 
@@ -271,7 +271,7 @@ def _cost(inst: CatalogInstitution, st: StudentData) -> Factor:
         if cost_n is not None:
             detail["cost"] = round(cost_n)
         return Factor(
-            "cost", "unknown", detail, Action("set_budget", "/colleges/algorithm")
+            "cost", "unknown", detail, Action("set_budget", "/chooser/budget/")
         )
     detail = {"cost": round(cost_n)}
     if upper is None:
@@ -295,22 +295,22 @@ def _budget_upper(band: str | None) -> float | None:
 
 
 def _location(inst: CatalogInstitution, st: StudentData) -> Factor:
-    region = (st.prefs.region or "").strip()
-    if not region:
+    regions = st.prefs.region
+    if regions is None:
         return Factor(
             "location",
             "unknown",
             {"country": inst.country},
-            Action("set_region", "/colleges/algorithm"),
+            Action("set_region", "/chooser/search/?prefs=1"),
         )
-    if region.casefold() == "any":
+    if not regions:
         return Factor("location", "ok", {"country": inst.country})
-    same = region.casefold() == inst.country.casefold()
+    same = inst.country.casefold() in {r.casefold() for r in regions}
     return Factor(
         "location",
         "strong" if same else "weak",
-        {"country": inst.country, "region": region},
-        None if same else Action("set_region", "/colleges/algorithm"),
+        {"country": inst.country, "region": ",".join(regions)},
+        None if same else Action("set_region", "/chooser/search/?prefs=1"),
     )
 
 

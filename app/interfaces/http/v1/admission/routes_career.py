@@ -6,6 +6,7 @@ from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, AnyContext, ContainerDep
 from app.interfaces.http.v1.admission.routes_items import _locale
+from app.modules.admission.application.study_focus import StudyFocus
 from app.modules.admission.application.voice import VoiceService
 from app.modules.admission.domain.career import (
     ANSWER_MAX,
@@ -147,6 +148,13 @@ class SpikeOut(BaseModel):
     confirmed_at: dt.datetime | None
 
 
+class StudyFocusOut(BaseModel):
+    """The field of study from the plan, the career quiz and the setup answer."""
+
+    field_ids: list[str]
+    labels: list[str]
+
+
 class CareerPlanOut(BaseModel):
     """A student's career exploration."""
 
@@ -157,10 +165,11 @@ class CareerPlanOut(BaseModel):
     minors: list[str]
     fit: list[FitOut]
     spike: SpikeOut | None
+    study_focus: StudyFocusOut
     lock_version: int
 
     @classmethod
-    def of(cls, p: CareerPlan) -> "CareerPlanOut":
+    def of(cls, p: CareerPlan, focus: StudyFocus, locale: str) -> "CareerPlanOut":
         """From the domain object."""
         spike = None
         if p.spike is not None:
@@ -185,6 +194,9 @@ class CareerPlanOut(BaseModel):
             minors=p.minors,
             fit=[FitOut(code=f.code, score=f.score, reason=f.reason) for f in p.fit],
             spike=spike,
+            study_focus=StudyFocusOut(
+                field_ids=list(focus.field_ids), labels=list(focus.labels(locale))
+            ),
             lock_version=p.lock_version,
         )
 
@@ -246,17 +258,31 @@ class SpeechIn(BaseModel):
     question_id: UUID
 
 
-async def get_career(container: ContainerDep, ctx: AdmissionCtx) -> CareerPlanOut:
+async def _plan_out(
+    container: ContainerDep, plan: CareerPlan, accept_language: Lang
+) -> CareerPlanOut:
+    """The plan with the study focus read for its owner (already authorized)."""
+    focus = await container.admission.career.focus(plan.student_id)
+    return CareerPlanOut.of(plan, focus, _locale(accept_language))
+
+
+async def get_career(
+    container: ContainerDep, ctx: AdmissionCtx, accept_language: Lang = None
+) -> CareerPlanOut:
     """My career plan."""
     plan = await container.admission.career.plan(ctx, ctx.user_id)
-    return CareerPlanOut.of(plan)
+    return await _plan_out(container, plan, accept_language)
 
 
 async def get_student_career(
-    student_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+    student_id: UUID,
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+    accept_language: Lang = None,
 ) -> CareerPlanOut:
     """A student's career plan (staff in scope or the student)."""
-    return CareerPlanOut.of(await container.admission.career.plan(ctx, student_id))
+    plan = await container.admission.career.plan(ctx, student_id)
+    return await _plan_out(container, plan, accept_language)
 
 
 async def list_questions(container: ContainerDep, ctx: AdmissionCtx) -> QuestionsOut:
@@ -272,37 +298,49 @@ async def list_majors(container: ContainerDep, ctx: AdmissionCtx) -> MajorsOut:
 
 
 async def put_answers(
-    body: AnswersIn, container: ContainerDep, ctx: AdmissionCtx
+    body: AnswersIn,
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+    accept_language: Lang = None,
 ) -> CareerPlanOut:
     """Save my inventory answers."""
     plan = await container.admission.career.save_answers(
         ctx, body.answers, body.lock_version
     )
-    return CareerPlanOut.of(plan)
+    return await _plan_out(container, plan, accept_language)
 
 
 async def put_shortlist(
-    body: ShortlistIn, container: ContainerDep, ctx: AdmissionCtx
+    body: ShortlistIn,
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+    accept_language: Lang = None,
 ) -> CareerPlanOut:
     """Keep up to five suggested professions."""
     plan = await container.admission.career.shortlist(
         ctx, body.titles, body.lock_version
     )
-    return CareerPlanOut.of(plan)
+    return await _plan_out(container, plan, accept_language)
 
 
 async def put_choice(
-    body: ChoiceIn, container: ContainerDep, ctx: AdmissionCtx
+    body: ChoiceIn,
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+    accept_language: Lang = None,
 ) -> CareerPlanOut:
     """Choose majors and minors from the taxonomy."""
     plan = await container.admission.career.choose(
         ctx, body.majors, body.minors, body.lock_version
     )
-    return CareerPlanOut.of(plan)
+    return await _plan_out(container, plan, accept_language)
 
 
 async def put_spike(
-    body: SpikeIn, container: ContainerDep, ctx: AdmissionCtx
+    body: SpikeIn,
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+    accept_language: Lang = None,
 ) -> CareerPlanOut:
     """Confirm my spike."""
     plan = await container.admission.career.confirm_spike(
@@ -313,7 +351,7 @@ async def put_spike(
         body.gaps,
         body.lock_version,
     )
-    return CareerPlanOut.of(plan)
+    return await _plan_out(container, plan, accept_language)
 
 
 async def suggest_professions(
@@ -321,7 +359,8 @@ async def suggest_professions(
 ) -> CareerPlanOut:
     """Suggest professions with AI (consent and a weekly limit apply)."""
     ai = container.admission.career_ai
-    return CareerPlanOut.of(await ai.professions(ctx, _locale(accept_language)))
+    plan = await ai.professions(ctx, _locale(accept_language))
+    return await _plan_out(container, plan, accept_language)
 
 
 async def suggest_fit(
@@ -329,7 +368,8 @@ async def suggest_fit(
 ) -> CareerPlanOut:
     """Rank the majors with AI (consent and a weekly limit apply)."""
     ai = container.admission.career_ai
-    return CareerPlanOut.of(await ai.majors_fit(ctx, _locale(accept_language)))
+    plan = await ai.majors_fit(ctx, _locale(accept_language))
+    return await _plan_out(container, plan, accept_language)
 
 
 async def suggest_spike(
@@ -337,7 +377,8 @@ async def suggest_spike(
 ) -> CareerPlanOut:
     """Draft my spike with AI (consent and a weekly limit apply)."""
     ai = container.admission.career_ai
-    return CareerPlanOut.of(await ai.spike(ctx, _locale(accept_language)))
+    plan = await ai.spike(ctx, _locale(accept_language))
+    return await _plan_out(container, plan, accept_language)
 
 
 async def admin_questions(container: ContainerDep, ctx: AnyContext) -> QuestionsOut:

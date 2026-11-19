@@ -5,7 +5,7 @@ import datetime as dt
 from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Final
+from typing import Any, Final
 from uuid import UUID
 
 from app.modules.admission.application.actor import AdmissionContext
@@ -77,6 +77,18 @@ def _view(a: PreferenceAnswers, at: dt.datetime | None) -> PreferenceView:
     return PreferenceView(a, preference_tags(a), a.completed, at)
 
 
+def _normalised(patch: dict[str, object]) -> dict[str, object]:
+    """The patch with the multi-select answers as unique tuples (region upper-cased)."""
+    out = dict(patch)
+    for key in ("setting", "region"):
+        items = out.get(key)
+        if isinstance(items, list | tuple):
+            out[key] = tuple(
+                dict.fromkeys(str(v).upper() if key == "region" else v for v in items)
+            )
+    return out
+
+
 class MatchService:
     """Student-scoped: answers, ranked undecided universities, decisions."""
 
@@ -103,7 +115,8 @@ class MatchService:
         async with self._uow() as uow:
             row = await uow.preferences.get(ctx.user_id)
             current = row[0] if row else PreferenceAnswers()
-            merged = dataclasses.replace(current, **patch)  # type: ignore[arg-type]
+            changes: Any = _normalised(patch)
+            merged = dataclasses.replace(current, **changes)
             await uow.preferences.save(ctx.user_id, merged, now)
             await uow.commit()
         return _view(merged, now)

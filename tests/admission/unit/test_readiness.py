@@ -72,13 +72,16 @@ class ReadinessUow(FakeUow):
         self.test_scores = Rows(data["scores"], "entries")
         self.tasks = Rows(data["tasks"], "list_for")
         self.goals = Rows(data["goals"], "list_for")
-        self.career = SimpleNamespace(plan=self._plan)
+        self.career = SimpleNamespace(plan=self._plan, majors=self._majors)
         self.checklist = SimpleNamespace(for_student=self._checklist)
         self.profile_details = SimpleNamespace(get_quiz=self._quiz)
         self.data = data
 
     async def _plan(self, student_id: UUID) -> Any:
         return self.data["career"][0] if self.data["career"] else None
+
+    async def _majors(self, active_only: bool = True) -> list[Any]:
+        return []
 
     async def _quiz(self, student_id: UUID, quiz: str) -> Any:
         return self.data.get("quiz")
@@ -140,10 +143,10 @@ async def test_empty_student_leaves_out_tasks_and_documents() -> None:
     assert parts["essays"].next_action == "write_essay"
     assert parts["essays"].url_path == "/essays"
     assert parts["essays"].weight == 20
-    assert parts["major"].url_path == "/career"
-    assert parts["countries"].url_path == "/setup/?q=q24"
-    assert parts["plans"].url_path == "/plan"
-    assert parts["list"].url_path == "/chooser"
+    assert parts["major"].url_path == "/career/"
+    assert parts["countries"].url_path == "/chooser/search/?prefs=1"
+    assert parts["plans"].url_path == "/plan/"
+    assert parts["list"].url_path == "/chooser/list/"
 
 
 async def test_inapplicable_parts_do_not_count_as_zero() -> None:

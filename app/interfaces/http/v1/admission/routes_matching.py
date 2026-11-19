@@ -1,7 +1,7 @@
 """Preferences, matches and swipe decisions (`/preferences`, `/matches`)."""
 
 import datetime as dt
-from typing import Literal
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep
@@ -14,9 +14,29 @@ from app.modules.admission.application.matching import (
 from app.modules.admission.domain.matching import MAJOR_MAX, REGION_MAX
 
 from fastapi import APIRouter, Query, Response, status
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StringConstraints
 
 router = APIRouter(prefix="/v1/admission", tags=["admission"])
+
+
+def _unique(items: list[Any]) -> list[Any]:
+    if len(set(items)) != len(items):
+        raise ValueError("items must be unique")
+    return items
+
+
+_UniqueSettings = Annotated[
+    list[Literal["rural", "suburban", "city"]],
+    Field(max_length=3),
+    AfterValidator(_unique),
+]
+"""Campus settings; an empty list means no preference."""
+_UniqueRegions = Annotated[
+    list[Annotated[str, StringConstraints(pattern=r"^[A-Z]{2}$")]],
+    Field(max_length=REGION_MAX),
+    AfterValidator(_unique),
+]
+"""ISO-3166 alpha-2 country codes; an empty list means anywhere."""
 
 
 class PreferenceAnswersIO(BaseModel):
@@ -25,9 +45,8 @@ class PreferenceAnswersIO(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     experience: Literal["academic", "social", "adventure", "holistic"] | None = None
-    setting: Literal["rural", "suburban", "city"] | None = None
-    region: str | None = Field(default=None, min_length=1, max_length=REGION_MAX)
-    distance: Literal["any", "near", "far"] | None = None
+    setting: _UniqueSettings | None = None
+    region: _UniqueRegions | None = None
     small_classes: bool | None = None
     ec_important: bool | None = None
     food_important: bool | None = None

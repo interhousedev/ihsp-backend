@@ -6,7 +6,7 @@ out of the score instead of being guessed.
 """
 
 import re
-from collections.abc import Iterable, Sequence
+from collections.abc import Container, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Final, Literal
@@ -20,14 +20,12 @@ from app.modules.admission.domain.chooser import CatalogInstitution
 
 Experience = Literal["academic", "social", "adventure", "holistic"]
 Setting = Literal["rural", "suburban", "city"]
-Distance = Literal["any", "near", "far"]
 Budget = Literal["under_10k", "under_30k", "under_50k", "any"]
 Decision = Literal["interested", "not_my_vibe"]
 Status = Literal["safety", "target", "reach"]
 
 EXPERIENCES: Final = ("academic", "social", "adventure", "holistic")
 SETTINGS: Final = ("rural", "suburban", "city")
-DISTANCES: Final = ("any", "near", "far")
 BUDGETS: Final = ("under_10k", "under_30k", "under_50k", "any")
 DECISIONS: Final = ("interested", "not_my_vibe")
 BUDGET_CAP: Final = {
@@ -44,7 +42,7 @@ BOOL_TAGS: Final = (
     ("need_aid", "aid_needed"),
     ("cost_major", "cost_major"),
 )
-QUESTIONS: Final = 13
+QUESTIONS: Final = 12
 """Number of questions; `completed` means all are answered."""
 MAJOR_MAX: Final = 60
 REGION_MAX: Final = 8
@@ -94,9 +92,8 @@ class PreferenceAnswers:
     """What the student said about the university they want; all optional."""
 
     experience: Experience | None = None
-    setting: Setting | None = None
-    region: str | None = None
-    distance: Distance | None = None
+    setting: tuple[Setting, ...] | None = None
+    region: tuple[str, ...] | None = None
     small_classes: bool | None = None
     ec_important: bool | None = None
     food_important: bool | None = None
@@ -123,9 +120,32 @@ def slug(text: str) -> str:
     return _SLUG.sub("-", text.casefold()).strip("-")
 
 
-def _region_tag(region: str) -> str:
-    code = region.strip()
-    return "region:any" if code.casefold() in ("", "any") else f"region:{code}"
+def _tuple(value: object, allowed: Container[str] | None = None) -> tuple[str, ...]:
+    """Unique strings of a stored list (a legacy plain string is one element)."""
+    items = [value] if isinstance(value, str) else value
+    if not isinstance(items, list | tuple):
+        return ()
+    kept = (v for v in items if isinstance(v, str) and v.casefold() != "any")
+    return tuple(dict.fromkeys(v for v in kept if allowed is None or v in allowed))
+
+
+def answers_from_stored(raw: Mapping[str, object]) -> PreferenceAnswers:
+    """Answers from the stored JSON.
+
+    Legacy shapes (`"any"`, a string, `distance`) are read as the multi-select
+    lists and unknown keys are ignored.
+    """
+    known = {k: v for k, v in raw.items() if k in _STORED_FIELDS}
+    if "setting" in known:
+        known["setting"] = _tuple(known["setting"], SETTINGS)
+    if "region" in known:
+        known["region"] = tuple(
+            r.strip().upper() for r in _tuple(known["region"]) if r.strip()
+        )
+    return PreferenceAnswers(**known)  # type: ignore[arg-type]
+
+
+_STORED_FIELDS: Final = frozenset(PreferenceAnswers.__dataclass_fields__)
 
 
 def preference_tags(a: PreferenceAnswers) -> list[str]:
@@ -134,11 +154,9 @@ def preference_tags(a: PreferenceAnswers) -> list[str]:
     if a.budget:
         tags.append(f"budget:{a.budget}")
     if a.setting:
-        tags.append(f"setting:{a.setting}")
+        tags.extend(f"setting:{s}" for s in a.setting)
     if a.region:
-        tags.append(_region_tag(a.region))
-    if a.distance:
-        tags.append(f"distance:{a.distance}")
+        tags.extend(f"region:{r}" for r in a.region)
     if a.experience:
         tags.append(f"experience:{a.experience}")
     tags.extend(tag for attr, tag in BOOL_TAGS if getattr(a, attr) is True)
@@ -198,7 +216,7 @@ def _rate_and_aid_tags(inst: CatalogInstitution) -> list[str]:
 
 def university_tags(inst: CatalogInstitution) -> list[str]:
     """Tags a university satisfies, plus `known:<dimension>` for the data it has."""
-    tags = ["budget:any", "region:any", "distance:any"]
+    tags = ["budget:any"]
     cost = cost_usd(inst)
     if cost is not None:
         tags.append(f"{KNOWN_PREFIX}budget")
@@ -215,12 +233,11 @@ def _evaluable(tag: str) -> bool:
         "budget",
         "setting",
         "region",
-        "distance",
         "major",
         "prestige",
         "academics_first",
         "aid_needed",
-    } and tag not in ("distance:near", "distance:far")
+    }
 
 
 @dataclass(frozen=True, slots=True)
@@ -240,10 +257,18 @@ def _known(tag: str, have: set[str]) -> bool:
     return f"{KNOWN_PREFIX}{dim}" in have
 
 
+def _dimension_key(tag: str) -> str:
+    """Setting and region tags are alternatives: meeting any one meets the answer."""
+    prefix = tag.split(":", 1)[0]
+    return prefix if prefix in ("setting", "region") else tag
+
+
 def match(pref_tags: Sequence[str], uni_tags: Iterable[str]) -> tuple[int, Overlap]:
-    """Percentage (0..100) and overlap of the preference tags a university meets."""
+    """Percentage (0..100) and overlap of the preference answers a university meets."""
     have = set(uni_tags)
     asked = [t for t in pref_tags if _evaluable(t) and _known(t, have)]
     hit = tuple(t for t in asked if t in have)
-    pct = round(100 * len(hit) / len(asked)) if asked else 0
-    return pct, Overlap(len(hit), len(asked), hit)
+    total = len({_dimension_key(t) for t in asked})
+    count = len({_dimension_key(t) for t in hit})
+    pct = round(100 * count / total) if total else 0
+    return pct, Overlap(count, total, hit)

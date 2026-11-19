@@ -11,6 +11,7 @@ from uuid import UUID
 from app.modules.admission.application.access import AccessPolicy
 from app.modules.admission.application.actor import AdmissionContext, can_edit_settings
 from app.modules.admission.application.review_checks import nfc
+from app.modules.admission.application.study_focus import StudyFocus, load_study_focus
 from app.modules.admission.domain.career import (
     EVIDENCE_MAX,
     GAPS_MAX,
@@ -89,6 +90,11 @@ class CareerService:
             plan = await owner_plan(uow, student_id)
             await uow.commit()
         return plan
+
+    async def focus(self, student_id: UUID) -> StudyFocus:
+        """The study focus; call it only after `plan` authorized the read."""
+        async with self._uow() as uow:
+            return await load_study_focus(uow, student_id)
 
     async def _edit(
         self, ctx: AdmissionContext, lock_version: int, change: _Change

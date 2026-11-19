@@ -62,7 +62,7 @@ _SECTION_RULES: Final = (
     "selective university application). Give at most 8 findings, each a strength, "
     "a risk or a gap, in at most 300 characters, and cite in evidence only the "
     "references shown in square brackets in the data, exactly as written (for "
-    "example item:..., answer:q05, essay:...). Give at most 4 small, concrete next "
+    "example item:..., answer:q20, essay:...). Give at most 4 small, concrete next "
     "actions. Write in the language of the locale line of the data. Plain text "
     "only: no markdown, no links.\n" + SAFETY
 )

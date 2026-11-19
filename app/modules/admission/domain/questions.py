@@ -81,7 +81,7 @@ SCHOLARSHIP_BASIS: Final = ("merit", "need", "government", "sports", "work_study
 FEE_WAIVER: Final = ("can_pay", "need_waiver", "not_sure")
 FACILITIES: Final = ("halal_food", "prayer_room", "community")
 GENDERS: Final = ("female", "male")
-ENGLISH_TESTS: Final = ("ielts", "toefl", "duolingo", "none", "planned")
+ENGLISH_TESTS: Final = ("ielts", "toefl", "duolingo", "sat_erw", "none", "planned")
 SAT_ACT: Final = ("taken", "planned", "not_planning")
 OTHER_TESTS: Final = ("ap", "a_level", "subject", "nuet", "dtm")
 SUBJECTS: Final = (
@@ -134,14 +134,6 @@ QUESTIONS: Final[tuple[Question, ...]] = (
         max_choices=3,
         sensitivity="identity",
         visible_to="staff",
-    ),
-    _q(
-        5,
-        "about",
-        "country",
-        prefill_source="emis",
-        visible_to="staff",
-        origin="kollegio_policy",
     ),
     _q(6, "about", "single", options=YES_NO_APPLYING, visible_to="staff"),
     _q(7, "about", "repeat", options=LANGUAGES),

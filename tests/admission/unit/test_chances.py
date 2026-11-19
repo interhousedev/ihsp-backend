@@ -124,11 +124,11 @@ def test_location_activities_and_rigor() -> None:
                 activities=7,
                 course_titles=["AP Physics", "IB Math HL", "Art"],
                 course_levels=[None, None, None],
-                prefs=Preferences(region="GB"),
+                prefs=Preferences(region=("GB", "FR")),
             ),
         )
     )
-    assert f["location"].level == "weak" and f["location"].detail["region"] == "GB"
+    assert f["location"].level == "weak" and f["location"].detail["region"] == "GB,FR"
     assert f["activities"].level == "strong"
     assert f["course_rigor"].detail == {"advanced": 2, "total": 3}
     assert f["course_rigor"].level == "ok"
@@ -217,12 +217,12 @@ async def test_service_unknown_university_and_empty_student() -> None:
     assert len(c.factors) == 5
     f = _by_key(c)
     assert f["location"].detail["region"] == "GB"
-    assert f["location"].action.href == "/colleges/algorithm"
+    assert f["location"].action.href == "/chooser/search/?prefs=1"
 
 
 class _Prefs:
     async def get(self, student_id: Any) -> Any:
-        return PreferenceAnswers(region="GB", budget="under_10k"), None
+        return PreferenceAnswers(region=("GB",), budget="under_10k"), None
 
 
 class _Empty:

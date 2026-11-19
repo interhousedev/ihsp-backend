@@ -4,7 +4,10 @@ import dataclasses
 import datetime as dt
 from uuid import UUID
 
-from app.modules.admission.domain.matching import PreferenceAnswers
+from app.modules.admission.domain.matching import (
+    PreferenceAnswers,
+    answers_from_stored,
+)
 from app.modules.admission.infrastructure.orm.matching import (
     DecisionRow,
     StudentPreferenceRow,
@@ -14,8 +17,6 @@ from app.shared.ids import new_id
 from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
-
-_FIELDS = {f.name for f in dataclasses.fields(PreferenceAnswers)}
 
 
 class SqlPreferenceRepository:
@@ -32,8 +33,7 @@ class SqlPreferenceRepository:
         row = await self._s.get(StudentPreferenceRow, student_id)
         if row is None:
             return None
-        known = {k: v for k, v in row.answers.items() if k in _FIELDS}
-        return PreferenceAnswers(**known), row.updated_at
+        return answers_from_stored(row.answers), row.updated_at
 
     async def save(
         self, student_id: UUID, answers: PreferenceAnswers, now: dt.datetime

@@ -16,6 +16,7 @@ from app.modules.admission.application.actor import (
 )
 from app.modules.admission.application.list_plan import ListPlanService
 from app.modules.admission.application.runtime_settings import RuntimeSettingsService
+from app.modules.admission.application.study_focus import load_study_focus
 from app.modules.admission.domain.calendar import TASHKENT
 from app.modules.admission.domain.errors import (
     AdmissionForbiddenError,
@@ -40,18 +41,16 @@ COMPONENTS: Final = (
     "tasks",
 )
 NEXT_ACTIONS: Final[dict[str, tuple[str, str]]] = {
-    "major": ("choose_major", "/career"),
-    "plans": ("add_plans", "/plan"),
-    "countries": ("choose_countries", "/setup/?q=q24"),
-    "list": ("balance_list", "/chooser"),
+    "major": ("choose_major", "/career/"),
+    "plans": ("add_plans", "/plan/"),
+    "countries": ("choose_countries", "/chooser/search/?prefs=1"),
+    "list": ("balance_list", "/chooser/list/"),
     "essays": ("write_essay", "/essays"),
     "activities": ("ready_activities", "/activities"),
     "tests": ("add_test_score", "/tests"),
     "documents": ("upload_documents", "/documents"),
     "tasks": ("clear_tasks", "/tasks"),
 }
-FIELDS_QUESTION: Final = "q18"
-STUDY_FIELDS_ANSWER: Final = "study_fields"
 COUNTRIES_QUESTION: Final = "q24"
 LABELS: Final = ("reach", "target", "safety")
 """Dream (reach), target and safety: the kinds a balanced list holds."""
@@ -162,7 +161,6 @@ class ReadinessService:
         )
         async with self._uow() as uow:
             profile = await uow.profiles.get(target)
-            career = await uow.career.plan(target)
             goals = await uow.goals.list_for(target)
             items = await uow.items.list_for(target)
             essays = await uow.essays.list_for(target)
@@ -170,15 +168,10 @@ class ReadinessService:
             checklist = await uow.checklist.for_student(target)
             shortlist = await uow.shortlist.entries(target)
             tasks = await uow.tasks.list_for(target)
-            quiz = await uow.profile_details.get_quiz(target, "career")
+            focus = await load_study_focus(uow, target)
         answers = profile.answers if profile is not None else {}
         scores: dict[str, int | None] = {}
-        has_major = (
-            bool(career and career.majors)
-            or _filled(answers.get(FIELDS_QUESTION))
-            or _filled(quiz.answers.get(STUDY_FIELDS_ANSWER) if quiz else None)
-        )
-        scores["major"] = 100 if has_major else 0
+        scores["major"] = 100 if focus.chosen else 0
         planned = sum(1 for g in goals if g.status != "dropped")
         scores["plans"] = ratio_score(planned, max(cfg.plans_target, 1))
         scores["countries"] = 100 if _filled(answers.get(COUNTRIES_QUESTION)) else 0

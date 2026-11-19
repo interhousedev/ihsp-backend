@@ -6,6 +6,7 @@ from app.modules.admission.domain.admit_rate import admission_rate
 from app.modules.admission.domain.chooser import CatalogInstitution, FactView
 from app.modules.admission.domain.matching import (
     PreferenceAnswers,
+    answers_from_stored,
     match,
     preference_tags,
     status_of,
@@ -15,9 +16,8 @@ from app.shared.ids import new_id
 
 FULL = PreferenceAnswers(
     experience="academic",
-    setting="city",
-    region="US",
-    distance="far",
+    setting=("city",),
+    region=("US",),
     small_classes=True,
     ec_important=False,
     food_important=False,
@@ -49,15 +49,29 @@ def test_tags_empty_and_full() -> None:
     assert FULL.completed
     tags = preference_tags(FULL)
     assert "budget:under_30k" in tags and "setting:city" in tags
-    assert "region:US" in tags and "distance:far" in tags
+    assert "region:US" in tags and not any(t.startswith("distance") for t in tags)
     assert "experience:academic" in tags and "major:computer_science" in tags
     assert {"small_classes", "prestige", "academics_first", "aid_needed"} <= set(tags)
     assert "ec_important" not in tags and "cost_major" not in tags
 
 
-def test_region_any_and_need_aid_false() -> None:
-    a = PreferenceAnswers(region="any", need_aid=False)
-    assert preference_tags(a) == ["region:any"]
+def test_empty_lists_are_answers_without_tags_and_legacy_is_read() -> None:
+    """ADM-U1-1: an empty list is answered (no filter); legacy shapes are read."""
+    a = PreferenceAnswers(setting=(), region=(), need_aid=False)
+    assert preference_tags(a) == [] and a.answered == 3
+    legacy = answers_from_stored(
+        {"setting": "city", "region": "any", "distance": "far", "budget": "any"}
+    )
+    assert legacy.setting == ("city",) and legacy.region == ()
+    assert answers_from_stored({"region": "us"}).region == ("US",)
+
+
+def test_any_listed_setting_or_country_meets_the_answer() -> None:
+    """ADM-U1-2: an institution matches when its country is in the list."""
+    pref = preference_tags(PreferenceAnswers(region=("GB", "US")))
+    pct, ov = match(pref, university_tags(_inst()))
+    assert pct == 100 and (ov.count, ov.total) == (1, 1)
+    assert match(pref, university_tags(_inst(country="DE")))[0] == 0
 
 
 def test_admission_rate_and_status() -> None:
@@ -140,7 +154,7 @@ def test_seed_like_institution_matches_career_major_and_setting() -> None:
         coa_currency="USD",
     )
     prefs = preference_tags(
-        PreferenceAnswers(setting="city", major="computer_science", budget="any")
+        PreferenceAnswers(setting=("city",), major="computer_science", budget="any")
     )
     pct, ov = match(prefs, university_tags(mit))
     assert {"setting:city", "major:computer_science"} <= set(ov.tags)
