@@ -4,6 +4,11 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Security
+
+- The edge nginx runs 1.31.9, which fixes the ten vulnerabilities disclosed on 2026-11-18, among them the HTTP/2 remote code execution CVE-2026-123007 ("nginx2root"). The web image keeps `nginx-unprivileged` 1.31.7 until upstream publishes 1.31.9; it listens only on the internal network behind the edge nginx.
+- Compose images: bugsink 2.6.3, python 3.13.18.
+
 ## [1.6.3] - 2026-11-16
 
 ### Added

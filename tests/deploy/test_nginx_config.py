@@ -11,7 +11,7 @@ import pytest
 
 pytestmark = requires_compose
 
-NGINX_IMAGE = "nginx:1.31.7-alpine"
+NGINX_IMAGE = "nginx:1.31.9-alpine"
 HOST_ENV = {
     "HOST_ID": "id.ihsu.test",
     "HOST_MY": "my.ihsu.test",
