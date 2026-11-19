@@ -51,6 +51,12 @@ FACT_LABELS: Final[dict[str, Labels]] = {
         "Платформы подачи",
         "Topshirish platformalari",
     ),
+    "mission": ("Mission", "Миссия", "Missiya"),
+    "admission_values": (
+        "What admissions looks for",
+        "Что ценит приёмная комиссия",
+        "Qabul komissiyasi nimani qadrlaydi",
+    ),
     "acceptance_rate": ("Acceptance rate", "Доля принятых", "Qabul foizi"),
     "intl_acceptance_rate": (
         "International acceptance rate",
@@ -167,6 +173,11 @@ PART_LABELS: Final[dict[str, Labels]] = {
     "ielts": ("IELTS", "IELTS", "IELTS"),
     "duolingo": ("Duolingo", "Duolingo", "Duolingo"),
     "pte": ("PTE", "PTE", "PTE"),
+    "sat_erw": (
+        "SAT English",
+        "SAT English (чтение и письмо)",
+        "SAT ingliz tili (oʻqish va yozish)",
+    ),
     "rigor": ("Course rigor", "Сложность программы", "Dastur murakkabligi"),
     "class_rank": ("Class rank", "Место в классе", "Sinfdagi oʻrni"),
     "gpa": ("GPA", "Средний балл", "Oʻrtacha ball"),
@@ -242,6 +253,7 @@ OPTION_LABELS: Final[dict[str, Opt]] = {
         "uc": ("UC application", "Заявка UC", "UC arizasi"),
         "own": ("Own portal", "Собственный портал", "Oʻz portali"),
         "questbridge": ("QuestBridge", "QuestBridge", "QuestBridge"),
+        "ouac": ("OUAC", "OUAC", "OUAC"),
     },
     "aid_application_timing": {
         k: _TIMING[k] for k in ("with_application", "after_admission")
@@ -330,6 +342,50 @@ def _label(table: dict[str, Labels], key: str, locale: str) -> str:
     return labels[_loc(locale)] if labels else key.replace("_", " ").capitalize()
 
 
+_SHAPES: Final[dict[str, str]] = {
+    "bool": "true or false",
+    "int": "a whole number within min..max",
+    "percent": "a number within min..max (0-100)",
+    "money": '{"amount": number >= 0, "currency": ISO-4217 code, e.g. "USD"}',
+    "date": 'a calendar date "YYYY-MM-DD"',
+    "text": "plain text, at most 300 characters",
+    "enum": "exactly one of the option values",
+    "multi": "a non-empty list of distinct option values",
+    "range": '{"min": number, "max": number} within min..max, min <= max; '
+    "a single number means min = max",
+    "scores": "an object of part keys with a number each, within each part's range",
+    "factors": "an object of part keys, each set to one of the option values",
+    "deadlines": '[{"plan": ED|ED2|EA|REA|SCEA|RD|ROLLING|OTHER, "date": '
+    '"YYYY-MM-DD", "cycle": "YYYY-YY", "binding"?: bool, "time_zone"?: IANA zone, '
+    '"note"?: text <= 200}], at most 12',
+    "study_fields": "a list of 1-40 field-of-study names or canonical ids",
+}
+
+
+def _example(spec: FactSpec) -> Any:
+    """A valid sample value of the fact, for the staff form and API agents."""
+    first = spec.options[0] if spec.options else None
+    low = spec.min if spec.min is not None else 0
+    high = spec.max if spec.max is not None else low + 1
+    part = spec.parts[0] if spec.parts else None
+    examples: dict[str, Any] = {
+        "bool": True,
+        "int": int(low),
+        "percent": low,
+        "money": {"amount": 52000, "currency": spec.unit or "USD"},
+        "date": "2026-01-15",
+        "text": "One or two plain sentences.",
+        "enum": first,
+        "multi": [first],
+        "range": {"min": low, "max": high},
+        "scores": {part.key: part.max or 1} if part else {},
+        "factors": {part.key: first} if part else {},
+        "deadlines": [{"plan": "RD", "date": "2027-01-05", "cycle": "2026-27"}],
+        "study_fields": ["Computer science"],
+    }
+    return examples[spec.kind]
+
+
 def fact_spec_view(locale: str = "en") -> list[dict[str, Any]]:
     """Registry for the staff form: groups with facts, labels in the locale."""
     groups: list[dict[str, Any]] = []
@@ -362,6 +418,8 @@ def fact_spec_view(locale: str = "en") -> list[dict[str, Any]]:
                     "max": spec.max,
                     "step": spec.step,
                     "unit": spec.unit,
+                    "value_shape": _SHAPES[spec.kind],
+                    "example": _example(spec),
                 }
             )
         groups.append(

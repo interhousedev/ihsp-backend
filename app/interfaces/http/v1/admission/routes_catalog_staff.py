@@ -14,6 +14,7 @@ from app.interfaces.http.v1.admission.schemas_catalog_staff import (
     FactSpecOut,
 )
 from app.modules.admission.domain.intl_fact_display import fact_spec_view
+from app.modules.identity.domain.personal_token import PersonalTokenScope
 
 from fastapi import APIRouter, Query, status
 
@@ -28,7 +29,8 @@ async def create_catalog_proposal(
         ctx,
         kind=body.kind,
         target_id=body.target_id,
-        fields=body.fields,
+        fields=body.fields.model_dump(exclude_none=True),
+        supp_prompts=[x.model_dump() for x in body.supp_prompts],
         facts={k: f.model_dump() for k, f in body.facts.items()},
         source_url=body.source_url,
         note=body.note,
@@ -49,7 +51,8 @@ async def list_catalog_proposals(
     items = await service.list(ctx, status=proposal_status)
     return CatalogProposalListOut(
         items=[CatalogProposalOut.of(p) for p in items],
-        can_review=service.can_review(ctx),
+        can_review=service.can_review(ctx)
+        and PersonalTokenScope.ADMISSION_CATALOG.value not in ctx.actor.scopes,
     )
 
 

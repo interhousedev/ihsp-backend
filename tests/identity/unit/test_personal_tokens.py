@@ -351,10 +351,16 @@ _CATALOG_ALLOWED = [
     ("GET", "/v1/admission/staff/catalog/fact-spec"),
     ("GET", "/v1/admission/staff/catalog/proposals"),
     ("POST", "/v1/admission/staff/catalog/proposals"),
+    ("POST", "/v1/admission/staff/exemplars"),
+    ("POST", "/v1/admission/staff/exemplars/import"),
 ]
 _CATALOG_REFUSED = [
     ("POST", f"/v1/admission/staff/catalog/proposals/{_UID}/review"),
     ("DELETE", "/v1/admission/staff/catalog/proposals"),
+    ("GET", "/v1/admission/staff/exemplars"),
+    ("PATCH", f"/v1/admission/staff/exemplars/{_UID}"),
+    ("DELETE", f"/v1/admission/staff/exemplars/{_UID}"),
+    ("GET", "/v1/admission/exemplars"),
     ("PATCH", f"/v1/admission/staff/catalog/institutions/{_UID}"),  # logo edit
     ("PUT", f"/v1/admission/staff/catalog/institutions/{_UID}/supp-prompts/2026-27"),
     ("POST", f"/v1/admission/catalog/institutions/{_UID}/summary"),

@@ -1,12 +1,16 @@
 """Catalog proposals: staff propose, an administrator or curator reviews."""
 
 import dataclasses
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Any
 from urllib.parse import urlsplit
 from uuid import UUID
 
 from app.modules.admission.application.actor import AdmissionContext
+from app.modules.admission.application.supp_prompts import (
+    apply_proposed,
+    clean_proposed,
+)
 from app.modules.admission.domain.catalog_display import LOGO_FITS, valid_logo_zoom
 from app.modules.admission.domain.catalog_proposals import (
     FIELDS,
@@ -88,6 +92,8 @@ def _clean_payload(
     if not payload and not allow_empty:
         raise ValidationFailedError(params={"field": "fields"})
     _check_media_fields(payload)
+    if "country" in payload:
+        payload["country"] = payload["country"].upper()
     return payload
 
 
@@ -159,11 +165,13 @@ class CatalogProposalService:
         source_url: str,
         note: str | None,
         facts: Mapping[str, Mapping[str, Any]] | None = None,
+        supp_prompts: Sequence[Mapping[str, Any]] | None = None,
     ) -> CatalogProposal:
         """Store a pending proposal; a new row needs its required fields.
 
-        `facts` (institutions only) are the sourced international facts; a proposal
-        may carry only facts when it edits an existing institution.
+        `facts` (institutions only) are the sourced international facts;
+        `supp_prompts` (institutions only) are supplement prompts per cycle. A
+        proposal may carry only facts or prompts when it edits an institution.
         """
         if not self._may_propose(ctx):
             raise AdmissionForbiddenError(params={"permission": "catalog:propose"})
@@ -171,8 +179,13 @@ class CatalogProposalService:
             raise CatalogFactInvalidError(
                 params={"fact": next(iter(facts)), "reason": "kind"}
             )
+        if supp_prompts and kind != "institution":
+            raise ValidationFailedError(params={"field": "supp_prompts"})
         cleaned = clean_facts(facts or {})
-        payload = _clean_payload(kind, fields, source_url, allow_empty=bool(cleaned))
+        prompts = clean_proposed(supp_prompts or [])
+        payload = _clean_payload(
+            kind, fields, source_url, allow_empty=bool(cleaned or prompts)
+        )
         proposal = CatalogProposal(
             id=new_id(),
             kind=kind,
@@ -183,6 +196,7 @@ class CatalogProposalService:
             status="pending",
             proposed_by=ctx.user_id,
             created_at=self._clock.now(),
+            supp_prompts=prompts,
             facts={
                 k: {
                     "value": f.value,
@@ -203,18 +217,7 @@ class CatalogProposalService:
             if kind == "scholarship":
                 await self._check_scholarship_institution(repo, payload)
             if kind == "institution" and target_id is None:
-                await repo.lock_submissions()
-                aliases = payload.get("aliases")
-                aliases = aliases if isinstance(aliases, list) else []
-                raw = [payload["name"], *aliases]
-                names = [fold_name(n) for n in raw if isinstance(n, str) and n.strip()]
-                domain = payload.get("website_domain")
-                found = await repo.find_duplicate(
-                    names, fold_name(domain) if isinstance(domain, str) else None
-                )
-                if found is not None:
-                    which, found_id = found
-                    raise CatalogDuplicateError(params={f"{which}_id": str(found_id)})
+                await self._reject_duplicate(repo, payload)
             await self._hit(ctx)
             saved = await repo.add(proposal)
             uow.access.audit(
@@ -229,6 +232,22 @@ class CatalogProposalService:
             )
             await uow.commit()
         return saved
+
+    @staticmethod
+    async def _reject_duplicate(repo: Any, payload: Mapping[str, Any]) -> None:
+        """Lock submissions and raise when the institution already exists."""
+        await repo.lock_submissions()
+        aliases = payload.get("aliases")
+        aliases = aliases if isinstance(aliases, list) else []
+        raw = [payload["name"], *aliases]
+        names = [fold_name(n) for n in raw if isinstance(n, str) and n.strip()]
+        domain = payload.get("website_domain")
+        found = await repo.find_duplicate(
+            names, fold_name(domain) if isinstance(domain, str) else None
+        )
+        if found is not None:
+            which, found_id = found
+            raise CatalogDuplicateError(params={f"{which}_id": str(found_id)})
 
     @staticmethod
     async def _check_scholarship_institution(
@@ -325,6 +344,8 @@ class CatalogProposalService:
                 if approve
                 else None
             )
+            if applied is not None and current.supp_prompts:
+                await apply_proposed(uow, applied, current.supp_prompts)
             reviewed = dataclasses.replace(
                 current,
                 status="approved" if approve else "rejected",

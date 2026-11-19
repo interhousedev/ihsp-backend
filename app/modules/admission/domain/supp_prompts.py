@@ -9,6 +9,8 @@ MAX_PROMPTS: Final = 30
 MAX_PROMPT_LEN: Final = 4000
 MAX_URL_LEN: Final = 500
 MAX_WORD_LIMIT: Final = 5000
+MAX_PROPOSED_PROMPTS: Final = 12
+"""Most supplement prompts one catalog proposal carries."""
 
 PromptStatus = Literal["new", "changed", "same", "removed"]
 

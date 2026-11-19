@@ -4,12 +4,13 @@ from typing import Any, Literal
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, AnyContext, ContainerDep
-from app.interfaces.http.v1.admission.routes_chooser import DeadlineOut, Lang
-from app.interfaces.http.v1.admission.routes_items import _locale
-from app.modules.admission.domain.catalog_display import (
-    clean_deadlines,
-    resolve_logo_fit,
+from app.interfaces.http.v1.admission.routes_chooser import (
+    DeadlineOut,
+    Lang,
+    dated_deadlines,
 )
+from app.interfaces.http.v1.admission.routes_items import _locale
+from app.modules.admission.domain.catalog_display import resolve_logo_fit
 from app.modules.admission.domain.errors import AdmissionForbiddenError
 from app.modules.admission.domain.supp_prompts import (
     MAX_PROMPT_LEN,
@@ -218,9 +219,7 @@ async def _staff_view(
             )
             for k, f in inst.facts.items()
         ],
-        deadlines=[
-            DeadlineOut(**d) for d in clean_deadlines(raw.value if raw else None)
-        ],
+        deadlines=dated_deadlines(raw.value if raw else None),
         logo_zoom=inst.logo_zoom,
         logo_fit=resolve_logo_fit(inst.logo_fit, inst.logo_aspect),
     )

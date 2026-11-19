@@ -131,6 +131,7 @@ ENGLISH_PARTS: Final = (
     FactPart("ielts", 0, 9, 0.5),
     FactPart("duolingo", 10, 160, 5),
     FactPart("pte", 10, 90, 1),
+    FactPart("sat_erw", 200, 800, 10),
 )
 
 _CURRENCY = re.compile(r"^[A-Z]{3}$")
@@ -169,8 +170,10 @@ def _build() -> dict[str, FactSpec]:
         _multi(
             "application_platforms",
             "overview",
-            ("common_app", "coalition", "ucas", "uc", "own", "questbridge"),
+            ("common_app", "coalition", "ucas", "uc", "own", "questbridge", "ouac"),
         ),
+        FactSpec("mission", "overview", "text"),
+        FactSpec("admission_values", "overview", "text"),
         FactSpec(
             "acceptance_rate",
             "selectivity",

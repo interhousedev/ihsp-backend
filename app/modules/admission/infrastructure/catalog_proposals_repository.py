@@ -57,12 +57,14 @@ def _fold_sql(expr: Any) -> ColumnElement[str]:
 def _proposal(r: CatalogProposalRow) -> CatalogProposal:
     payload = dict(r.payload)
     facts = payload.pop("facts", None) or {}
+    supp_prompts = payload.pop("supp_prompts", None) or []
     return CatalogProposal(
         id=r.id,
         kind=r.kind,  # type: ignore[arg-type]
         target_id=r.target_id,
         payload=payload,
         facts=dict(facts),
+        supp_prompts=list(supp_prompts),
         source_url=r.source_url,
         note=r.note,
         status=r.status,  # type: ignore[arg-type]
@@ -89,11 +91,15 @@ class SqlCatalogProposalRepository:
             id=proposal.id,
             kind=proposal.kind,
             target_id=proposal.target_id,
-            payload=(
-                {**proposal.payload, "facts": proposal.facts}
-                if proposal.facts
-                else proposal.payload
-            ),
+            payload={
+                **proposal.payload,
+                **({"facts": proposal.facts} if proposal.facts else {}),
+                **(
+                    {"supp_prompts": proposal.supp_prompts}
+                    if proposal.supp_prompts
+                    else {}
+                ),
+            },
             source_url=proposal.source_url,
             note=proposal.note,
             status="pending",

@@ -1,6 +1,7 @@
 """Supplemental essay prompts: students read them, curators replace a cycle."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any
 from uuid import UUID
 
 from app.modules.admission.application.actor import AdmissionContext
@@ -11,6 +12,7 @@ from app.modules.admission.domain.errors import (
 from app.modules.admission.domain.supp_prompts import (
     MAX_PROMPT_LEN,
     MAX_PROMPTS,
+    MAX_PROPOSED_PROMPTS,
     MAX_URL_LEN,
     MAX_WORD_LIMIT,
     CyclePrompts,
@@ -40,6 +42,61 @@ def _clean(prompts: list[SuppPrompt]) -> list[SuppPrompt]:
             raise ValidationFailedError(params={"field": "source_url"})
         out.append(SuppPrompt(i, text, p.word_limit, p.required, url))
     return out
+
+
+def clean_proposed(raw: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    """Validate the prompts of a catalog proposal like the staff PUT does.
+
+    Each item is `{cycle, prompt, word_limit, required, source_url}`; the source
+    is mandatory. Raises `ValidationFailedError` naming the invalid field.
+    """
+    if len(raw) > MAX_PROPOSED_PROMPTS:
+        raise ValidationFailedError(params={"field": "supp_prompts"})
+    by_cycle: dict[str, list[SuppPrompt]] = {}
+    for x in raw:
+        cycle = x.get("cycle")
+        if not isinstance(cycle, str) or not valid_cycle(cycle):
+            raise ValidationFailedError(params={"field": "cycle"})
+        url = x.get("source_url")
+        if not isinstance(url, str) or not url.strip():
+            raise ValidationFailedError(params={"field": "source_url"})
+        by_cycle.setdefault(cycle, []).append(
+            SuppPrompt(
+                0,
+                str(x.get("prompt") or ""),
+                x.get("word_limit"),
+                bool(x.get("required", True)),
+                url,
+            )
+        )
+    return [
+        {
+            "cycle": cycle,
+            "prompt": p.prompt,
+            "word_limit": p.word_limit,
+            "required": p.required,
+            "source_url": p.source_url,
+        }
+        for cycle, prompts in by_cycle.items()
+        for p in _clean(prompts)
+    ]
+
+
+async def apply_proposed(
+    uow: Any, institution_id: UUID, raw: Sequence[Mapping[str, Any]]
+) -> None:
+    """Write the approved prompts of a proposal, one cycle at a time.
+
+    Same cleaning and storage as `SuppPromptService.replace`, inside the caller's
+    unit of work.
+    """
+    by_cycle: dict[str, list[SuppPrompt]] = {}
+    for x in raw:
+        by_cycle.setdefault(x["cycle"], []).append(
+            SuppPrompt(0, x["prompt"], x["word_limit"], x["required"], x["source_url"])
+        )
+    for cycle, prompts in by_cycle.items():
+        await uow.supp_prompts.replace(institution_id, cycle, _clean(prompts))
 
 
 class SuppPromptService:

@@ -156,6 +156,8 @@ class CatalogProposal:
     extra: dict[str, Any] = field(default_factory=dict)
     facts: dict[str, dict[str, Any]] = field(default_factory=dict)
     """Typed facts `{key: {value, source_url, year, note}}`; never in `payload`."""
+    supp_prompts: list[dict[str, Any]] = field(default_factory=list)
+    """Supplement prompts `{cycle, prompt, word_limit, required, source_url}`."""
 
     def missing_on_create(self) -> list[str]:
         """Return the required fields a new row still lacks."""

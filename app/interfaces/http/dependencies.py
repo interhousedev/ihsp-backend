@@ -39,6 +39,7 @@ def _bearer_token(request: Request) -> str | None:
 _ID = r"[0-9A-Fa-f-]{36}"
 _CATALOG = "/v1/admission/catalog"
 _STAFF_CATALOG = "/v1/admission/staff/catalog"
+_STAFF_EXEMPLARS = "/v1/admission/staff/exemplars"
 # Every route an admission:catalog token may call; anything else is refused.
 _CATALOG_ALLOWLIST: tuple[tuple[frozenset[str], re.Pattern[str]], ...] = tuple(
     (frozenset(methods), re.compile(pattern))
@@ -52,6 +53,8 @@ _CATALOG_ALLOWLIST: tuple[tuple[frozenset[str], re.Pattern[str]], ...] = tuple(
         (("GET",), rf"{_STAFF_CATALOG}/institutions/{_ID}"),
         (("GET",), rf"{_STAFF_CATALOG}/fact-spec"),
         (("GET", "POST"), rf"{_STAFF_CATALOG}/proposals"),
+        (("POST",), rf"{_STAFF_EXEMPLARS}"),
+        (("POST",), rf"{_STAFF_EXEMPLARS}/import"),
     )
 )
 
