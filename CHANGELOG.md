@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-11-19
+
 ### Added
 
 - Admission: `GET /v1/admission/consent/purposes` (localized titles and texts), `student_name` in the caseload rows and `stages` in the config.
@@ -13,6 +15,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - Demo catalog: Wikimedia logos and covers, institution type and setting facts, and checklist priorities for the demo student.
 - Admission refinement round: activity and honor categories with A–E grades and Common App limits, self-reported outcomes with deadline nudges, prep plans, a catalog of opportunities and scholarships (tuition, money, fellowships; local and international) with organization logos, comments and reports, a per-university AI chat with automatic research once per student and university (Exa results cached 14 days), supplemental essay prompts per institution and cycle, consultations in place of help requests, a staff-edited knowledge base, scoped MCP personal tokens, logo zoom and fit, and per-university academic and activity suggestions.
 - Admission international-student catalog: a fact spec (`GET /v1/admission/staff/catalog/fact-spec`) with typed facts, a cited `source_url` and year per fact on proposals, `details` and `factors` on the institution detail, `binding` and `time_zone` on deadlines, and `IHSP_ADMISSION__CATALOG_PROPOSALS_PER_DAY`.
+- Admission supplemental prompts carry `limit_unit` (words or characters), `limit_min` and `choice_group` (for "choose one of" prompts); a catalog proposal may name only the admission cycle open today or the next one (`admission/catalog_cycle`). Institutions expose `website_url` in the chooser.
 - Admission essay check: `POST /v1/admission/essays/{essay_id}/coach/check` scores six dimensions against the prompt (score, band, quotes, first fix); it is not stored and answers `admission/essay_too_short` under 50 words.
 - Personal token scope `admission:catalog` with an agent catalog API: staff-only, sole scope, at most 90 days, a route allowlist for reading the catalog and creating proposals; a human still approves, and MCP refuses it.
 - Admission essay reviews: one base review per essay text and locale plus one review per chosen university (at most 5 per request). Weekly limits `IHSP_LIMITS__ADMIT_ESSAY_REVIEW_PER_WEEK` (10) and `IHSP_LIMITS__ADMIT_ESSAY_UNI_REVIEW_PER_WEEK` (30), and the admin "Limits & usage" group "Essay reviewer" (with `admit_essay_studio_runs_per_day`, 30 prompt studio runs per staff member and day).
@@ -22,9 +25,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - Admission: `GET /v1/admission/chooser/budget` (cost to apply per university with the fee status: unpaid, paid, waiver requested, waiver approved), ED/REA/SCEA conflict warnings and the SCEA round, an opportunities `research` kind, study fields and a relevance sort, seeded real opportunity offerings, preference lists for campus setting and country or region, SAT English as evidence, and university logos in documents, deadlines and outcomes.
 - Admission knowledge base: rich-text articles with OpenUI blocks and safe links; an invalid body answers 422 `admission/kb_body_invalid`.
 - The assistant discovers LMS courses with a new tool and shows OpenUI blocks.
-- `scripts/admission_essay_bench.py`, a quality and fairness benchmark of the essay reviewer, and an undecided-student account in the demo seed.
-- Migrations `admission_0035` to `admission_0041`.
-
+- `scripts/admission_essay_bench.py`, a quality and fairness benchmark of the essay reviewer (with a statistical fairness gate and an identity-neutral review rule), and an undecided-student account in the demo seed.
+- Migrations `admission_0035` to `admission_0043`.
 
 ### Changed
 
@@ -35,13 +37,29 @@ All notable changes to this project are documented here. The format follows [Kee
 - Admission preferences no longer ask for a distance; the setup no longer asks for residence, field and countries; the study focus is one source of truth. The student app is organised in five sections (Career & study, Activities & honors, Universities & budget, Essays, Documents & applying) with a Home overview; old routes redirect.
 - The Face ID photo now syncs to the profile photo reliably, and the header shows the user's name and photo.
 
+### Fixed
+
+- Admission essay routes answer 503 `admission/essay_key_unavailable` when a student's key is missing, instead of failing with an internal error.
+- The essay reviewer retries a model answer that comes back broken instead of failing the review.
+- Admission money (budgets, costs, fees) is capped at `Numeric(12,2)`; pending catalog proposals are deduplicated per domain; submissions are serialised so concurrent submits do not race; proposal fields are typed.
+- Admission catalog API fixes found while wiring the research agents, plus official links, localized study fields, a plan filter and corrected uz wording.
+- An entrance photo stays the profile photo until the user uploads one; the photo's origin is recorded as `photo_source`.
+
 ### Security
 
 - Admission essay text is encrypted per student (AES-256-GCM, a key per student in Vault KV v2, `owner|record|column` bound as associated data, in-process key cache of 5 minutes). Without the `admission-essays` AppRole essays fail closed with 503. Erasing a student destroys the key, which shreds the essays. Migration `admission_0035` replaces the plaintext columns and deletes existing essays, versions, ideas, essay comments and search chunks; production had no admission data yet.
 - Guest review links are bearer capabilities stored only as hashes, with rate limits and revocation; the `admission:catalog` token allowlist now also covers adding and importing exemplars.
+- The edge nginx runs 1.31.9, which fixes the ten vulnerabilities disclosed on 2026-11-18, among them the HTTP/2 remote code execution CVE-2026-123007 ("nginx2root"). The web image keeps `nginx-unprivileged` 1.31.7 until upstream publishes 1.31.9; it listens only on the internal network behind the edge nginx.
+- Compose images: bugsink 2.6.3, python 3.13.18.
 
 ### Known issues
 
+- Dev Vault runs in memory: after a restart, dev essays answer 503 until the demo data is re-seeded (run the seed repair).
+- After log out, my.iht lands on the ID welcome page.
+- The fairness benchmark's full re-score under the new identity-neutral rule is pending. A small per-university run (3 essays) failed the band and magnitude checks and showed no Holm-significant group shift.
+- Production needs `scripts/prod_init.sh vault` (essay AppRole) before essays work; until then they fail closed with 503.
+- The web image stays on `nginx-unprivileged` 1.31.7.
+- Next 16.4.3 has two moderate advisories (GHSA-mfr8-8qww-v76h, GHSA-vc7v-qv4w-wrv8) in `iht-web`.
 - A destroyed essay key may stay usable in another process for up to 5 minutes (key cache).
 - UniLibrary stays off until the operator agrees in writing.
 
@@ -50,13 +68,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - `scripts/prod_init.sh vault` now also creates the `admission-essays` AppRole and writes `IHSP_ESSAY_VAULT__ROLE_ID` and `IHSP_ESSAY_VAULT__SECRET_ID` to `.env.prod`; run it (or set both) before deploying, then recreate the services, otherwise essays answer 503. Re-running it revokes earlier secret ids.
 - Run `python -m app backfill-profile-photos` once to turn enrolled faces into profile photos.
 - `iht-web` needs `bun run sync:openapi`.
-- Run `alembic upgrade heads`; `admission_0035` deletes essays (none in production).
-
-
-### Security
-
-- The edge nginx runs 1.31.9, which fixes the ten vulnerabilities disclosed on 2026-11-18, among them the HTTP/2 remote code execution CVE-2026-123007 ("nginx2root"). The web image keeps `nginx-unprivileged` 1.31.7 until upstream publishes 1.31.9; it listens only on the internal network behind the edge nginx.
-- Compose images: bugsink 2.6.3, python 3.13.18.
+- Run `alembic upgrade heads`; migrations `admission_0035` to `admission_0043` apply, and `admission_0035` deletes essays (none in production).
 
 ## [1.6.3] - 2026-11-16
 

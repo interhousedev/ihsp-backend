@@ -59,6 +59,12 @@ The token reaches only these routes (`_CATALOG_ALLOWLIST` in `app/interfaces/htt
 
 An agent reads `fact-spec` for the typed facts, looks at what the catalog already has, researches the official sources and posts a proposal with a cited `source_url` and year for every fact. Proposals are rate limited by `IHSP_ADMISSION__CATALOG_PROPOSALS_PER_DAY`, cannot be approved by the token, and take effect only after a human review. The token cannot read any student data. Exemplar creation is also open to it, so keep it for trusted agents.
 
+## Catalog cycles, supplemental prompts and website
+
+- Admission cycles are named `YYYY-YY` (for example `2026-27`) and start in July. A proposal may name only the cycle open on the day it is made or the next one; any other cycle answers `admission/catalog_cycle`.
+- A supplemental prompt has `cycle`, `prompt`, `word_limit`, `limit_unit` (`words`, up to 5000, or `characters`, up to 30000; default `words`), `limit_min` (at least 1 and no more than `word_limit`), `choice_group` (up to 40 characters) and `source_url`, which is mandatory. A proposal holds up to 12 prompts.
+- Institutions expose `website_url` (`https://` plus the catalog's website domain) in the chooser; it is empty when the catalog has no domain.
+
 ## Profile photos
 
 Every role can set its own photo with `PUT /v1/me/photo` and remove it with `DELETE /v1/me/photo`. After an upgrade run `python -m app backfill-profile-photos` once to create photos from enrolled faces.
