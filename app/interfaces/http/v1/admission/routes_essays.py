@@ -6,6 +6,7 @@ from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep
 from app.interfaces.http.v1.admission.routes_items import _locale
+from app.modules.admission.application.essay_review_core import EssayCheck
 from app.modules.admission.application.essays import SharedEssay
 from app.modules.admission.domain.essays import (
     BODY_MAX,
@@ -385,7 +386,7 @@ class CoachCheckDimensionOut(BaseModel):
 
 
 class CoachCheckOut(BaseModel):
-    """The draft scored on six dimensions against its prompt; not stored."""
+    """The draft scored on six dimensions against its prompt; the latest is stored."""
 
     score: int
     band: Literal["exceptional", "strong", "solid", "developing", "weak"]
@@ -402,6 +403,13 @@ class CoachCheckOut(BaseModel):
     word_limit: int | None
     over_limit: bool
     generic: bool
+
+
+class LatestCheckOut(CoachCheckOut):
+    """The stored latest check; `stale` when the draft changed since."""
+
+    stale: bool
+    created_at: dt.datetime
 
 
 async def list_essays(container: ContainerDep, ctx: AdmissionCtx) -> EssayListOut:
@@ -586,31 +594,42 @@ async def coach_check(
 ) -> CoachCheckOut:
     """Score my draft on six dimensions against its prompt (AI consent, daily limit)."""
     c = await container.admission.essay_coach.check(ctx, essay_id, _locale(lang))
-    return CoachCheckOut(
-        score=c.score,
-        band=c.band,
-        dimensions=[
+    return CoachCheckOut(**_check_fields(c))
+
+
+async def latest_check(
+    essay_id: UUID, container: ContainerDep, ctx: AdmissionCtx, lang: Lang = None
+) -> LatestCheckOut:
+    """My latest stored check; 404 before the first check, no model call."""
+    c, stale, at = await container.admission.essay_coach.latest_check(
+        ctx, essay_id, _locale(lang)
+    )
+    return LatestCheckOut(**_check_fields(c), stale=stale, created_at=at)
+
+
+def _check_fields(c: EssayCheck) -> dict[str, Any]:
+    return {
+        "score": c.score,
+        "band": c.band,
+        "dimensions": [
             CoachCheckDimensionOut(
-                dim=d.dim,
-                score=d.score,
-                quote=d.quote,
-                comment=d.comment,
+                dim=d.dim, score=d.score, quote=d.quote, comment=d.comment
             )
             for d in c.dimensions
         ],
-        prompt_fit=c.prompt_fit,
-        prompt_fit_reason=c.prompt_fit_reason,
-        strongest=c.strongest,
-        first_fix=c.first_fix,
-        flagged_paragraph=c.flagged_paragraph,
-        flagged_text=c.flagged_text,
-        flagged_reason=c.flagged_reason,
-        summary=c.summary,
-        word_count=c.word_count,
-        word_limit=c.word_limit,
-        over_limit=c.over_limit,
-        generic=c.generic,
-    )
+        "prompt_fit": c.prompt_fit,
+        "prompt_fit_reason": c.prompt_fit_reason,
+        "strongest": c.strongest,
+        "first_fix": c.first_fix,
+        "flagged_paragraph": c.flagged_paragraph,
+        "flagged_text": c.flagged_text,
+        "flagged_reason": c.flagged_reason,
+        "summary": c.summary,
+        "word_count": c.word_count,
+        "word_limit": c.word_limit,
+        "over_limit": c.over_limit,
+        "generic": c.generic,
+    }
 
 
 async def coach_review(
@@ -756,6 +775,17 @@ _route(
     "POST",
     "check_essay",
     response_model=CoachCheckOut,
+)
+_route(
+    "/essays/{essay_id}/coach/check/latest",
+    latest_check,
+    "GET",
+    "get_latest_essay_check",
+    response_model=LatestCheckOut,
+    responses={
+        404: {"description": "Not my essay, or it has never been checked."},
+        503: {"description": "The essay key service is down."},
+    },
 )
 _route(
     "/essays/{essay_id}/coach/review",

@@ -234,6 +234,13 @@ EOF
     set_env IHSP_BOT_VAULT__ROLE_ID "$bot_role_id"
     set_env IHSP_BOT_VAULT__SECRET_ID "$bot_secret_id"
     say "stored the telegram-bots AppRole credentials in $ENV_FILE"
+    local essay_role_id essay_secret_id
+    essay_role_id=$(printf '%s\n' "$out" | sed -n 's/^IHSP_ESSAY_VAULT__ROLE_ID=//p')
+    essay_secret_id=$(printf '%s\n' "$out" | sed -n 's/^IHSP_ESSAY_VAULT__SECRET_ID=//p')
+    [ -n "$essay_role_id" ] && [ -n "$essay_secret_id" ] || die "vault-setup did not print the admission-essays AppRole credentials"
+    set_env IHSP_ESSAY_VAULT__ROLE_ID "$essay_role_id"
+    set_env IHSP_ESSAY_VAULT__SECRET_ID "$essay_secret_id"
+    say "stored the admission-essays AppRole credentials in $ENV_FILE"
 
     say "creating the backup AppRole (may only read Raft snapshots)"
     local backup_ids
@@ -255,7 +262,8 @@ EOF
     say "stored the backup AppRole credentials in $ENV_FILE"
     cat << EOF
 
-  Earlier AppRole secret ids (identity, telegram-bots, backup) are revoked. Running
+  Earlier AppRole secret ids (identity, telegram-bots, admission-essays, backup) are
+  revoked. Running
   services keep their Vault token until it expires (1 h, at most 24 h) and then log in
   with the new secret id from $ENV_FILE: recreate api, bot, worker and identity now.
   The 15 minute Vault token used by this run is revoked.

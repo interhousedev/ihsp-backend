@@ -22,6 +22,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    LargeBinary,
     Numeric,
     String,
     Text,
@@ -342,14 +343,12 @@ class EssayRow(IdMixin, UpdatedMixin, CreatedMixin, LockMixin, Base):
     prompt_text: Mapped[str] = mapped_column(Text, server_default="")
     word_limit: Mapped[int | None] = mapped_column(Integer)
     current_version: Mapped[int] = mapped_column(Integer, server_default=text("0"))
-    body: Mapped[str] = mapped_column(Text, server_default="")
+    body: Mapped[bytes] = mapped_column(LargeBinary)  # sealed
     status: Mapped[str] = mapped_column(String(8), server_default="draft")
     kind: Mapped[str] = mapped_column(String(20), server_default="personal_statement")
-    title: Mapped[str] = mapped_column(String(120), server_default="")
-    notes: Mapped[str] = mapped_column(Text, server_default="")
-    plan: Mapped[list[dict[str, Any]]] = mapped_column(
-        JSONB, server_default=text("'[]'")
-    )
+    title: Mapped[bytes] = mapped_column(LargeBinary)  # sealed
+    notes: Mapped[bytes] = mapped_column(LargeBinary)  # sealed
+    plan: Mapped[bytes] = mapped_column(LargeBinary)  # sealed JSON list
     links: Mapped[list[dict[str, Any]]] = mapped_column(
         JSONB, server_default=text("'[]'")
     )
@@ -362,7 +361,6 @@ class EssayVersionRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
     __tablename__ = "essay_versions"
     __table_args__ = (
         UniqueConstraint("essay_id", "version", name="uq_essay_versions_version"),
-        max_len("name", 60),
         check_in("source", ("interval", "explicit", "restore")),
         S,
     )
@@ -371,8 +369,8 @@ class EssayVersionRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
         ForeignKey("admission.essays.id", ondelete="CASCADE")
     )
     version: Mapped[int] = mapped_column(Integer)
-    name: Mapped[str | None] = mapped_column(String(60))
-    body: Mapped[str] = mapped_column(Text)
+    name: Mapped[bytes | None] = mapped_column(LargeBinary)  # sealed
+    body: Mapped[bytes] = mapped_column(LargeBinary)  # sealed
     created_by: Mapped[UUID] = mapped_column(Uuid)
     source: Mapped[str] = mapped_column(String(10), server_default="explicit")
     shared: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
@@ -385,7 +383,6 @@ class EssayIdeaRow(IdMixin, UpdatedMixin, CreatedMixin, LockMixin, Base):
     __tablename__ = "essay_ideas"
     __table_args__ = (
         check_in("status", ("explore", "keep", "drop")),
-        max_len("body", 1000),
         S,
     )
 
@@ -393,8 +390,8 @@ class EssayIdeaRow(IdMixin, UpdatedMixin, CreatedMixin, LockMixin, Base):
     essay_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("admission.essays.id", ondelete="CASCADE"), index=True
     )
-    body: Mapped[str] = mapped_column(Text)
-    tags: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
+    body: Mapped[bytes] = mapped_column(LargeBinary)  # sealed
+    tags: Mapped[bytes] = mapped_column(LargeBinary)  # sealed JSON list
     status: Mapped[str] = mapped_column(String(8), server_default="explore")
     sort_order: Mapped[int] = mapped_column(Integer, server_default=text("0"))
 

@@ -5,18 +5,33 @@ the live draft, notes, plan or ideas. The coach asks questions and comments; it
 never writes the essay.
 """
 
-import re
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, replace
+from datetime import datetime
 from typing import Any, Final
 from uuid import UUID
 
 from app.modules.admission.application.access import AccessPolicy
 from app.modules.admission.application.actor import AdmissionContext
+from app.modules.admission.application.essay_review_core import (
+    EssayCheck,
+    Feedback,
+    SentenceNote,
+    _get,
+    _line,
+    _lines,
+    brief,
+    check_from,
+    check_key,
+    check_payload,
+    essay_input,
+    run_check,
+    run_feedback,
+)
 from app.modules.admission.application.items import items_summary
 from app.modules.admission.application.review_checks import nfc
 from app.modules.admission.application.student_context import student_block
-from app.modules.admission.application.words import delimit, plain
+from app.modules.admission.application.words import delimit
 from app.modules.admission.domain.errors import (
     AdmissionForbiddenError,
     AdmissionNotFoundError,
@@ -25,6 +40,7 @@ from app.modules.admission.domain.errors import (
     EssayTooShortError,
     ItemLimitError,
 )
+from app.modules.admission.domain.essay_reviews import StoredReview
 from app.modules.admission.domain.essays import (
     KINDS,
     LINK_KINDS,
@@ -44,6 +60,7 @@ from app.modules.admission.domain.questions import BY_ID
 from app.modules.admission.infrastructure.ai.prompts import essays as prompt
 from app.modules.admission.ports.ai import PromptSource, QuotaOf, StructuredAi
 from app.modules.admission.ports.consent import AI, PurposeConsents
+from app.modules.admission.ports.essay_crypto import EssayCipher
 from app.modules.admission.ports.essays import EssayText
 from app.modules.admission.ports.student_search import StudentDataSearch
 from app.modules.admission.ports.unit_of_work import AdmissionUnitOfWork, UowFactory
@@ -69,19 +86,7 @@ EDITABLE: Final = frozenset(
 )
 IDEA_EDITABLE: Final = frozenset({"body", "essay_id", "tags", "status", "sort_order"})
 _DAY: Final = 24 * 3600
-_CHECK_TOKENS: Final = 3000
-_FLAGGED_MAX: Final = 1200
-_PARAGRAPHS: Final = re.compile(r"\n\s*\n")
 CHECK_MIN_WORDS: Final = 50
-CHECK_MAX_SCORE: Final = 5
-CHECK_GENERIC_DIMS: Final = 3
-CHECK_BANDS: Final = (
-    (85, "exceptional"),
-    (60, "strong"),
-    (35, "solid"),
-    (15, "developing"),
-    (0, "weak"),
-)
 _TOKENS: Final = 1200
 _BODY_TO_MODEL: Final = 12000
 
@@ -501,10 +506,6 @@ def _coerce_idea(values: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
-def _get(obj: Any, key: str) -> Any:
-    return obj.get(key) if isinstance(obj, Mapping) else getattr(obj, key, None)
-
-
 @dataclass(frozen=True, slots=True)
 class OutlineSection:
     """A proposed section; the student decides whether to keep it."""
@@ -512,14 +513,6 @@ class OutlineSection:
     heading: str
     note: str
     share_percent: int
-
-
-@dataclass(frozen=True, slots=True)
-class SentenceNote:
-    """A comment on one sentence."""
-
-    quote: str
-    comment: str
 
 
 @dataclass(frozen=True)
@@ -532,156 +525,12 @@ class LifeStoryReading:
     ideas: list[str]
 
 
-@dataclass(frozen=True)
-class Feedback:
-    """Comments on a draft; never replacement text."""
-
-    summary: str
-    strengths: list[str]
-    suggestions: list[str]
-    word_count: int
-    word_limit: int | None
-    sentences: list[SentenceNote] = field(default_factory=list)
-
-
 @dataclass(frozen=True, slots=True)
 class Expansion:
     """How an idea could fit, and angles to think about."""
 
     fit: str
     angles: list[str]
-
-
-@dataclass(frozen=True, slots=True)
-class CheckDimension:
-    """One scored rubric dimension; the quote is verified against the essay."""
-
-    dim: str
-    score: int
-    quote: str | None
-    comment: str
-
-
-@dataclass(frozen=True, slots=True)
-class EssayCheck:
-    """An essay scored against its prompt and the rubric; never persisted."""
-
-    score: int
-    band: str
-    dimensions: list[CheckDimension]
-    prompt_fit: str
-    prompt_fit_reason: str
-    strongest: str
-    first_fix: str
-    flagged_paragraph: int | None
-    flagged_text: str | None
-    flagged_reason: str
-    summary: str
-    word_count: int
-    word_limit: int | None
-    over_limit: bool
-    generic: bool
-
-
-def _flat(text: str) -> str:
-    """NFC with every whitespace run collapsed, for verbatim comparison."""
-    return " ".join(nfc(text).split())
-
-
-def _int(value: Any, default: int = 0) -> int:
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return default
-
-
-def band_of(score: int) -> str:
-    """Name the band of a 0-100 score."""
-    for floor, name in CHECK_BANDS:
-        if score >= floor:
-            return name
-    return CHECK_BANDS[-1][1]
-
-
-def _checked(
-    data: dict[str, Any],
-    body: str,
-    count: int,
-    limit: int | None,
-    has_prompt: bool,
-) -> EssayCheck:
-    """Turn the model's reply into a check the code can stand behind."""
-    haystack = _flat(body)
-    given: dict[str, Any] = {}
-    for raw in data.get("dimensions") or []:
-        dim = _get(raw, "dim")
-        if dim in prompt.DIMENSIONS and dim not in given:
-            given[dim] = raw
-    dims: list[CheckDimension] = []
-    for name in prompt.DIMENSIONS:
-        raw = given.get(name)
-        if raw is None:
-            dims.append(CheckDimension(name, 0, None, ""))
-            continue
-        quote = _flat(str(_get(raw, "quote") or ""))[: prompt.QUOTE_MAX]
-        found = bool(quote) and quote in haystack
-        dims.append(
-            CheckDimension(
-                name,
-                min(max(_int(_get(raw, "score")), 0), CHECK_MAX_SCORE),
-                quote if found else None,
-                _line(_get(raw, "comment")),
-            )
-        )
-    total = sum(d.score for d in dims)
-    score = round(total * 100 / (CHECK_MAX_SCORE * len(dims)))
-    fit = data.get("prompt_fit")
-    if not has_prompt:
-        fit, reason = "unknown", ""
-    else:
-        fit = fit if fit in prompt.PROMPT_FITS else "partial"
-        reason = _line(data.get("prompt_fit_reason"))
-    strongest = data.get("strongest")
-    if strongest not in prompt.DIMENSIONS:
-        strongest = max(dims, key=lambda d: d.score).dim
-    paragraphs = [p.strip() for p in _PARAGRAPHS.split(body) if p.strip()]
-    index: int | None = None
-    text: str | None = None
-    if paragraphs:
-        index = min(max(_int(data.get("flagged_paragraph")), 0), len(paragraphs) - 1)
-        text = _flat(paragraphs[index])[:_FLAGGED_MAX]
-    return EssayCheck(
-        score=score,
-        band=band_of(score),
-        dimensions=dims,
-        prompt_fit=fit,
-        prompt_fit_reason=reason,
-        strongest=strongest,
-        first_fix=_line(data.get("first_fix")),
-        flagged_paragraph=index,
-        flagged_text=text,
-        flagged_reason=_line(data.get("flagged_reason")),
-        summary=nfc(plain(str(data.get("summary") or ""))).strip()[
-            : prompt.SUMMARY_MAX
-        ],
-        word_count=count,
-        word_limit=limit,
-        over_limit=limit is not None and count > limit,
-        generic=sum(1 for d in dims if d.score <= 1) >= CHECK_GENERIC_DIMS,
-    )
-
-
-def _line(value: Any) -> str:
-    return nfc(plain(str(value or ""))).strip()[: prompt.LINE_MAX]
-
-
-def _lines(values: Any, limit: int) -> list[str]:
-    out: list[str] = []
-    for raw in values or ():
-        line = _line(raw)
-        if line and line not in out:
-            out.append(line)
-    return out[:limit]
 
 
 class EssayCoach:
@@ -701,6 +550,8 @@ class EssayCoach:
         daily_limit: QuotaOf,
         prompts: PromptSource,
         search: StudentDataSearch | None = None,
+        *,
+        cipher: EssayCipher,
     ) -> None:
         """Keep the collaborators and the reader of the soft daily limit."""
         self._uow = uow_factory
@@ -712,6 +563,7 @@ class EssayCoach:
         self._limit = daily_limit
         self._prompts = prompts
         self._search = search
+        self._cipher = cipher
 
     async def _gate(self, ctx: AdmissionContext) -> None:
         res = await self._access.resolve(ctx, ctx.user_id)
@@ -777,14 +629,7 @@ class EssayCoach:
 
     @staticmethod
     def _brief(essay: Essay) -> list[str]:
-        lines = [f"Essay kind: {essay.kind}"]
-        if essay.title:
-            lines.append(f"Title: {essay.title}")
-        if essay.prompt_text:
-            lines.append(f"Prompt: {essay.prompt_text}")
-        if essay.word_limit:
-            lines.append(f"Word limit: {essay.word_limit}")
-        return lines
+        return brief(essay_input(essay))
 
     async def _essay(
         self, uow: AdmissionUnitOfWork, ctx: AdmissionContext, essay_id: UUID
@@ -866,6 +711,15 @@ class EssayCoach:
             )
         return out
 
+    async def _hit(self, ctx: AdmissionContext) -> None:
+        limit = await self._limit(ctx.user_id)
+        if limit is not None:
+            await self._limiter.hit(
+                f"admission:essay_coach:{ctx.user_id}",
+                limit=limit,
+                window_seconds=_DAY,
+            )
+
     async def feedback(
         self, ctx: AdmissionContext, essay_id: UUID, locale: str
     ) -> Feedback:
@@ -875,40 +729,70 @@ class EssayCoach:
             essay = await self._essay(uow, ctx, essay_id)
         if not essay.body.strip():
             raise CharLimitError(params={"field": "body", "limit": 1, "count": 0})
-        count = essay.word_count
-        lines = self._brief(essay) + [
-            f"Word count: {count}",
-            f"Draft: {essay.body[:_BODY_TO_MODEL]}",
-        ]
-        lines += await self._recall(ctx, [essay.prompt_text, essay.title], essay.id)
-        data = await self._ask(ctx, "feedback", locale, lines)
-        return Feedback(
-            _line(data.get("summary")),
-            _lines(data.get("strengths"), prompt.MAX_POINTS),
-            _lines(data.get("suggestions"), prompt.MAX_POINTS),
-            count,
-            essay.word_limit,
+        context = await self._recall(ctx, [essay.prompt_text, essay.title], essay.id)
+        await self._hit(ctx)
+        out, _ = await run_feedback(
+            self._ai,
+            self._prompts,
+            essay=essay_input(essay),
+            locale=locale,
+            context=context,
         )
+        return out
 
     async def check(
         self, ctx: AdmissionContext, essay_id: UUID, locale: str
     ) -> EssayCheck:
-        """Score the draft on six dimensions against its prompt; nothing is stored."""
+        """Score the draft on six dimensions against its prompt and store it."""
         await self._gate(ctx)
         async with self._uow() as uow:
             essay = await self._essay(uow, ctx, essay_id)
         count = essay.word_count
         if count < CHECK_MIN_WORDS:
             raise EssayTooShortError(params={"min": CHECK_MIN_WORDS, "count": count})
-        has_prompt = bool(essay.prompt_text.strip())
-        lines = self._brief(essay) + [
-            f"Word count: {count}",
-            f"Essay: {essay.body[:_BODY_TO_MODEL]}",
-        ]
-        if not has_prompt:
-            lines.insert(1, "Prompt: none given")
-        data = await self._ask(ctx, "check", locale, lines, max_tokens=_CHECK_TOKENS)
-        return _checked(data, essay.body, count, essay.word_limit, has_prompt)
+        text = essay_input(essay)
+        await self._hit(ctx)
+        result, model = await run_check(
+            self._ai, self._prompts, essay=text, locale=locale
+        )
+        digest = await self._cipher.digest(
+            ctx.user_id, "essay_review", check_key(text, locale)
+        )
+        async with self._uow() as uow:
+            await uow.essay_reviews.save(
+                StoredReview(
+                    id=new_id(),
+                    essay_id=essay.id,
+                    student_id=ctx.user_id,
+                    kind="check",
+                    institution_id=None,
+                    input_digest=digest,
+                    payload=check_payload(result),
+                    model=model,
+                    prompt_ref=f"{AiTask.ADMIT_ESSAY_COACH.value}/check",
+                    created_at=self._clock.now(),
+                )
+            )
+            await uow.commit()
+        return result
+
+    async def latest_check(
+        self, ctx: AdmissionContext, essay_id: UUID, locale: str
+    ) -> tuple[EssayCheck, bool, datetime]:
+        """The last stored check, whether the essay changed since, and its time.
+
+        Never calls the model and never spends quota; a foreign essay is 404.
+        """
+        async with self._uow() as uow:
+            essay = await self._essay(uow, ctx, essay_id)
+            stored = await uow.essay_reviews.latest(essay.id, "check", None)
+        if stored is None:
+            raise AdmissionNotFoundError()
+        digest = await self._cipher.digest(
+            ctx.user_id, "essay_review", check_key(essay_input(essay), locale)
+        )
+        stale = stored.input_digest != digest
+        return check_from(stored.payload), stale, stored.created_at
 
     async def review(
         self,

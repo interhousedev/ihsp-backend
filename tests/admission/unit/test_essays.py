@@ -27,6 +27,8 @@ from app.modules.admission.ports.consent import AI, STAFF_VIEW
 from app.shared.actor import Actor, Role
 from app.shared.base_error import RateLimitedError
 from tests.admission.unit.fakes import NOW, FakeConsents
+from tests.admission.unit.fakes_crypto import PlainCipher
+from tests.admission.unit.fakes_reviews import MemReviews
 from tests.admission.unit.test_access_policy import STAFF, _assign
 from tests.admission.unit.test_items_service import (
     OTHER,
@@ -128,6 +130,8 @@ class Desk:
     def __init__(self, *replies: dict[str, Any], consent: bool = True) -> None:
         self.w = World(*replies)
         self.repo = MemEssays()
+        self.reviews = MemReviews()
+        self.cipher = PlainCipher()
         self.clock = FixedClock(NOW)
         self.consents = FakeConsents(
             {STUDENT: frozenset({STAFF_VIEW, AI} if consent else {STAFF_VIEW})}
@@ -136,6 +140,7 @@ class Desk:
         def uow() -> Any:
             u = ItemsUow(self.w.store, self.w.data)
             u.essays = self.repo  # type: ignore[attr-defined]
+            u.essay_reviews = self.reviews  # type: ignore[attr-defined]
             return u
 
         async def quota(_: UUID) -> int | None:
@@ -151,6 +156,7 @@ class Desk:
             _Hits(),  # type: ignore[arg-type]
             quota,
             BuiltinPrompts(),
+            cipher=self.cipher,
         )
         self.reader = UowEssayReader(uow)
 
