@@ -282,7 +282,7 @@ cmd_certs() {
     domain=$(get_env DOMAIN)
     email=$(get_env ACME_EMAIL)
     storage=$(get_env STORAGE_PUBLIC_HOST)
-    for h in "" id. my. app. staff. admin. lms. lib. s. api. mcp. logs. mail.; do
+    for h in "" id. my. app. staff. admin. lms. lib. s. api. mcp. logs. mail. admission.; do
         hosts+=(-d "$h$domain")
     done
     [ -n "$storage" ] && hosts+=(-d "$storage")
