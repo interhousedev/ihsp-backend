@@ -3123,6 +3123,50 @@
         "title": "AppVersionResponse",
         "type": "object"
       },
+      "ApplicationFeeOut": {
+        "description": "A cited application fee.",
+        "properties": {
+          "amount": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Amount",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "amount",
+          "currency",
+          "source_url",
+          "year"
+        ],
+        "title": "ApplicationFeeOut",
+        "type": "object"
+      },
       "ApplyBody": {
         "description": "What the author chose in the Apply dialog (all fields optional).\n\nA new step is created when no ``target_step_id`` is given and a\n``target_section_id`` is. A lesson draft made for a step (its ``step_id``\noption) goes there by default. ``plan`` and ``draft`` carry the author's edits of\nthe output; they are validated again on the server.",
         "properties": {
@@ -5218,6 +5262,97 @@
         "title": "BalanceOut",
         "type": "object"
       },
+      "BaseReviewOut": {
+        "description": "The review of the writing; the same for every university.",
+        "properties": {
+          "band": {
+            "title": "Band",
+            "type": "string"
+          },
+          "dimensions": {
+            "items": {
+              "$ref": "#/components/schemas/DimensionScoreOut"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "generic": {
+            "title": "Generic",
+            "type": "boolean"
+          },
+          "improvements": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Improvements",
+            "type": "array"
+          },
+          "over_limit": {
+            "title": "Over Limit",
+            "type": "boolean"
+          },
+          "paragraphs": {
+            "items": {
+              "$ref": "#/components/schemas/ParagraphNoteOut"
+            },
+            "title": "Paragraphs",
+            "type": "array"
+          },
+          "patterns": {
+            "items": {
+              "$ref": "#/components/schemas/ExemplarPatternOut"
+            },
+            "title": "Patterns",
+            "type": "array"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          },
+          "strengths": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Strengths",
+            "type": "array"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          },
+          "word_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Word Limit"
+          }
+        },
+        "required": [
+          "score",
+          "band",
+          "dimensions",
+          "summary",
+          "strengths",
+          "improvements",
+          "paragraphs",
+          "patterns",
+          "word_count",
+          "word_limit",
+          "over_limit",
+          "generic"
+        ],
+        "title": "BaseReviewOut",
+        "type": "object"
+      },
       "Bell-Input": {
         "description": "Start and end of one period on some weekdays (jsonb of Term.bells).\n\n``source`` says who set the bell: the EMIS ``class-hours`` sync (``emis``, the\ndefault, kept equal to EMIS), Administration for a period of their own\n(``manual``; EMIS replaces it when it lists the period) or Administration\noverriding an EMIS period (``override``: time and weekdays stay, the sync leaves\nthem alone). ``emis_start`` and ``emis_end`` remember what EMIS says for the\nperiod, so an override can be reset.",
         "properties": {
@@ -5739,6 +5874,20 @@
           "file"
         ],
         "title": "Body_import_preview_v1_admin_students_import_post",
+        "type": "object"
+      },
+      "Body_me_put_photo": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_me_put_photo",
         "type": "object"
       },
       "Body_put_lyceum_logo_v1_admin_settings_lyceum_logo_put": {
@@ -7041,6 +7190,73 @@
         "title": "BroadcastResponse",
         "type": "object"
       },
+      "BudgetInstitutionOut": {
+        "description": "The institution fields the budget table shows.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "logo_fit": {
+            "enum": [
+              "circle",
+              "contain"
+            ],
+            "title": "Logo Fit",
+            "type": "string"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          },
+          "logo_zoom": {
+            "title": "Logo Zoom",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "logo_url",
+          "logo_fit",
+          "logo_zoom"
+        ],
+        "title": "BudgetInstitutionOut",
+        "type": "object"
+      },
+      "BudgetOut": {
+        "description": "The application budget of a list.",
+        "properties": {
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/BudgetRowOut"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/BudgetTotalsOut"
+          }
+        },
+        "required": [
+          "rows",
+          "totals"
+        ],
+        "title": "BudgetOut",
+        "type": "object"
+      },
       "BudgetResponse": {
         "description": "The session and the day budget.",
         "properties": {
@@ -7056,6 +7272,121 @@
           "day"
         ],
         "title": "BudgetResponse",
+        "type": "object"
+      },
+      "BudgetRowOut": {
+        "description": "One list entry of the budget.",
+        "properties": {
+          "aid_deadline": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aid Deadline"
+          },
+          "aid_forms": {
+            "items": {
+              "enum": [
+                "css_profile",
+                "fafsa",
+                "idoc",
+                "institutional"
+              ],
+              "type": "string"
+            },
+            "title": "Aid Forms",
+            "type": "array"
+          },
+          "aid_forms_known": {
+            "title": "Aid Forms Known",
+            "type": "boolean"
+          },
+          "application_fee": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ApplicationFeeOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "cost_to_attend": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CostToAttendOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "entry_id": {
+            "format": "uuid",
+            "title": "Entry Id",
+            "type": "string"
+          },
+          "fee_status": {
+            "enum": [
+              "unpaid",
+              "paid",
+              "waiver_requested",
+              "waiver_approved"
+            ],
+            "title": "Fee Status",
+            "type": "string"
+          },
+          "institution": {
+            "$ref": "#/components/schemas/BudgetInstitutionOut"
+          },
+          "round": {
+            "title": "Round",
+            "type": "string"
+          }
+        },
+        "required": [
+          "entry_id",
+          "institution",
+          "round",
+          "application_fee",
+          "fee_status",
+          "aid_forms",
+          "aid_forms_known",
+          "aid_deadline",
+          "cost_to_attend"
+        ],
+        "title": "BudgetRowOut",
+        "type": "object"
+      },
+      "BudgetTotalsOut": {
+        "description": "Totals per currency; currencies are never summed together.",
+        "properties": {
+          "by_currency": {
+            "items": {
+              "$ref": "#/components/schemas/CurrencyTotalOut"
+            },
+            "title": "By Currency",
+            "type": "array"
+          },
+          "css_profile_schools": {
+            "title": "Css Profile Schools",
+            "type": "integer"
+          },
+          "unknown_fee_count": {
+            "title": "Unknown Fee Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "by_currency",
+          "unknown_fee_count",
+          "css_profile_schools"
+        ],
+        "title": "BudgetTotalsOut",
         "type": "object"
       },
       "BulkDeleteLoginCuesBody": {
@@ -7632,6 +7963,9 @@
             "format": "uuid",
             "title": "Student Id",
             "type": "string"
+          },
+          "study_focus": {
+            "$ref": "#/components/schemas/StudyFocusOut"
           }
         },
         "required": [
@@ -7642,6 +7976,7 @@
           "minors",
           "fit",
           "spike",
+          "study_focus",
           "lock_version"
         ],
         "title": "CareerPlanOut",
@@ -7998,6 +8333,109 @@
         "title": "CatalogFactOut",
         "type": "object"
       },
+      "CatalogFieldsIn": {
+        "description": "Plain fields of an institution or scholarship; unknown keys are ignored.\n\nInstitutions: name, country (required when creating), name_local, city,\nwebsite_domain, kind, size_band, setting, languages, aliases, logo_url,\nlogo_zoom, logo_fit, logo_aspect, cover_url. Scholarships: name, provider,\nbasis (required when creating), institution_id, country, coverage_pct_min,\ncoverage_pct_max, covers, eligibility, url, cycle. Values are checked on save.",
+        "properties": {
+          "aliases": {
+            "description": "List of other names, <= 50.",
+            "title": "Aliases"
+          },
+          "basis": {
+            "description": "Scholarship: merit | need | government | sports | work_study.",
+            "title": "Basis"
+          },
+          "city": {
+            "description": "City, at most 120 characters.",
+            "title": "City"
+          },
+          "country": {
+            "description": "ISO 3166-1 alpha-2 code, e.g. `GB`; stored upper.",
+            "title": "Country"
+          },
+          "cover_url": {
+            "description": "https cover image address.",
+            "title": "Cover Url"
+          },
+          "coverage_pct_max": {
+            "description": "Scholarship: 0-100.",
+            "title": "Coverage Pct Max"
+          },
+          "coverage_pct_min": {
+            "description": "Scholarship: 0-100.",
+            "title": "Coverage Pct Min"
+          },
+          "covers": {
+            "description": "Scholarship: what it covers.",
+            "title": "Covers"
+          },
+          "cycle": {
+            "description": "Scholarship: start year, 2000-2100.",
+            "title": "Cycle"
+          },
+          "eligibility": {
+            "description": "Scholarship: JSON object.",
+            "title": "Eligibility"
+          },
+          "institution_id": {
+            "description": "Scholarship: school id.",
+            "title": "Institution Id"
+          },
+          "kind": {
+            "description": "university | college | foundation_provider.",
+            "title": "Kind"
+          },
+          "languages": {
+            "description": "List of teaching languages.",
+            "title": "Languages"
+          },
+          "logo_aspect": {
+            "description": "Logo width / height ratio.",
+            "title": "Logo Aspect"
+          },
+          "logo_fit": {
+            "description": "circle | contain.",
+            "title": "Logo Fit"
+          },
+          "logo_url": {
+            "description": "https image address.",
+            "title": "Logo Url"
+          },
+          "logo_zoom": {
+            "description": "Logo zoom, 0.5 to 3.0.",
+            "title": "Logo Zoom"
+          },
+          "name": {
+            "description": "Name, at most 200 characters.",
+            "title": "Name"
+          },
+          "name_local": {
+            "description": "Name in the local language.",
+            "title": "Name Local"
+          },
+          "provider": {
+            "description": "Scholarship: institution|government|foundation.",
+            "title": "Provider"
+          },
+          "setting": {
+            "description": "big_city | college_town | campus | small_city.",
+            "title": "Setting"
+          },
+          "size_band": {
+            "description": "Size band label, <= 10 chars.",
+            "title": "Size Band"
+          },
+          "url": {
+            "description": "Scholarship: page address.",
+            "title": "Url"
+          },
+          "website_domain": {
+            "description": "Site domain without scheme, e.g. `ox.ac.uk`.",
+            "title": "Website Domain"
+          }
+        },
+        "title": "CatalogFieldsIn",
+        "type": "object"
+      },
       "CatalogProposalIn": {
         "description": "Propose a new institution or scholarship, or an edit of an existing one.",
         "properties": {
@@ -8009,9 +8447,7 @@
             "type": "object"
           },
           "fields": {
-            "additionalProperties": true,
-            "title": "Fields",
-            "type": "object"
+            "$ref": "#/components/schemas/CatalogFieldsIn"
           },
           "kind": {
             "enum": [
@@ -8037,6 +8473,15 @@
             "maxLength": 2000,
             "title": "Source Url",
             "type": "string"
+          },
+          "supp_prompts": {
+            "description": "Institutions only. Applied like the staff supplement PUT.",
+            "items": {
+              "$ref": "#/components/schemas/SuppPromptProposalIn"
+            },
+            "maxItems": 12,
+            "title": "Supp Prompts",
+            "type": "array"
           },
           "target_id": {
             "anyOf": [
@@ -8192,6 +8637,13 @@
             ],
             "title": "Status",
             "type": "string"
+          },
+          "supp_prompts": {
+            "items": {
+              "$ref": "#/components/schemas/SuppPromptProposalOut"
+            },
+            "title": "Supp Prompts",
+            "type": "array"
           },
           "target_id": {
             "anyOf": [
@@ -9377,6 +9829,31 @@
             ],
             "title": "List Entry Id"
           },
+          "logo_fit": {
+            "default": "circle",
+            "enum": [
+              "circle",
+              "contain"
+            ],
+            "title": "Logo Fit",
+            "type": "string"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          },
+          "logo_zoom": {
+            "default": 1.0,
+            "title": "Logo Zoom",
+            "type": "number"
+          },
           "owner": {
             "title": "Owner",
             "type": "string"
@@ -9857,7 +10334,7 @@
         "type": "object"
       },
       "CoachCheckOut": {
-        "description": "The draft scored on six dimensions against its prompt; not stored.",
+        "description": "The draft scored on six dimensions against its prompt; the latest is stored.",
         "properties": {
           "band": {
             "enum": [
@@ -10363,66 +10840,6 @@
           "item_count"
         ],
         "title": "CollectionResponse",
-        "type": "object"
-      },
-      "CommentIn": {
-        "description": "A new comment.",
-        "properties": {
-          "anchor": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Anchor"
-          },
-          "body": {
-            "title": "Body",
-            "type": "string"
-          },
-          "student_id": {
-            "format": "uuid",
-            "title": "Student Id",
-            "type": "string"
-          },
-          "target_id": {
-            "format": "uuid",
-            "title": "Target Id",
-            "type": "string"
-          },
-          "target_kind": {
-            "enum": [
-              "profile",
-              "help_request",
-              "item",
-              "list_entry",
-              "essay",
-              "words"
-            ],
-            "title": "Target Kind",
-            "type": "string"
-          },
-          "visibility": {
-            "default": "student_and_staff",
-            "enum": [
-              "staff_only",
-              "student_and_staff"
-            ],
-            "title": "Visibility",
-            "type": "string"
-          }
-        },
-        "required": [
-          "student_id",
-          "target_kind",
-          "target_id",
-          "body"
-        ],
-        "title": "CommentIn",
         "type": "object"
       },
       "CommentListOut": {
@@ -11768,6 +12185,52 @@
           "created"
         ],
         "title": "CopyResponse",
+        "type": "object"
+      },
+      "CostToAttendOut": {
+        "description": "Yearly cost to attend; separate from the cost to apply.",
+        "properties": {
+          "aid_estimate": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aid Estimate"
+          },
+          "annual_cost": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Annual Cost",
+            "type": "string"
+          },
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "gap": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gap"
+          }
+        },
+        "required": [
+          "annual_cost",
+          "currency",
+          "aid_estimate",
+          "gap"
+        ],
+        "title": "CostToAttendOut",
         "type": "object"
       },
       "CountsResponse": {
@@ -13870,6 +14333,38 @@
         "title": "CuratorStudentResponse",
         "type": "object"
       },
+      "CurrencyTotalOut": {
+        "description": "Fee totals of one currency.",
+        "properties": {
+          "currency": {
+            "title": "Currency",
+            "type": "string"
+          },
+          "known_total": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Known Total",
+            "type": "string"
+          },
+          "paid_total": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Paid Total",
+            "type": "string"
+          },
+          "waived_total": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Waived Total",
+            "type": "string"
+          }
+        },
+        "required": [
+          "currency",
+          "known_total",
+          "paid_total",
+          "waived_total"
+        ],
+        "title": "CurrencyTotalOut",
+        "type": "object"
+      },
       "CurriculumDirectionResponse": {
         "description": "The education direction.",
         "properties": {
@@ -15357,6 +15852,56 @@
         "title": "DeliveryOut",
         "type": "object"
       },
+      "DeltaOut": {
+        "description": "How the draft differs from the active prompt.",
+        "properties": {
+          "band_after": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Band After"
+          },
+          "band_before": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Band Before"
+          },
+          "band_changed": {
+            "title": "Band Changed",
+            "type": "boolean"
+          },
+          "score_delta": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Delta"
+          }
+        },
+        "required": [
+          "score_delta",
+          "band_before",
+          "band_after",
+          "band_changed"
+        ],
+        "title": "DeltaOut",
+        "type": "object"
+      },
       "DetailGroupOut": {
         "description": "Facts of one registry group.",
         "properties": {
@@ -15638,6 +16183,42 @@
           "last_used_at"
         ],
         "title": "DeviceOut",
+        "type": "object"
+      },
+      "DimensionScoreOut": {
+        "description": "One rubric dimension scored 0 to 5 with a verbatim quote.",
+        "properties": {
+          "comment": {
+            "title": "Comment",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "score",
+          "quote",
+          "comment"
+        ],
+        "title": "DimensionScoreOut",
         "type": "object"
       },
       "Direction": {
@@ -15928,7 +16509,7 @@
           },
           "versions": {
             "items": {
-              "$ref": "#/components/schemas/VersionOut"
+              "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_documents__VersionOut"
             },
             "title": "Versions",
             "type": "array"
@@ -17787,6 +18368,65 @@
         "title": "EssayPatchIn",
         "type": "object"
       },
+      "EssayReviewsIn": {
+        "description": "The universities to review the essay for; `refresh` ignores stored results.",
+        "properties": {
+          "institution_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 5,
+            "title": "Institution Ids",
+            "type": "array"
+          },
+          "refresh": {
+            "default": false,
+            "title": "Refresh",
+            "type": "boolean"
+          }
+        },
+        "title": "EssayReviewsIn",
+        "type": "object"
+      },
+      "EssayReviewsOut": {
+        "description": "The base review (null before the first run) and the university reviews.",
+        "properties": {
+          "base": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BaseReviewOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "base_cached": {
+            "title": "Base Cached",
+            "type": "boolean"
+          },
+          "base_stale": {
+            "title": "Base Stale",
+            "type": "boolean"
+          },
+          "universities": {
+            "items": {
+              "$ref": "#/components/schemas/UniEntryOut"
+            },
+            "title": "Universities",
+            "type": "array"
+          }
+        },
+        "required": [
+          "base",
+          "base_cached",
+          "base_stale",
+          "universities"
+        ],
+        "title": "EssayReviewsOut",
+        "type": "object"
+      },
       "EssaySummaryOut": {
         "description": "A row of the essays list.",
         "properties": {
@@ -18744,6 +19384,679 @@
         "title": "ExcuseTemplateOut",
         "type": "object"
       },
+      "ExemplarExcerptListOut": {
+        "description": "A page of excerpts.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ExemplarExcerptOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "ExemplarExcerptListOut",
+        "type": "object"
+      },
+      "ExemplarExcerptOut": {
+        "description": "What a student sees: an excerpt of about 80 words and the source.",
+        "properties": {
+          "excerpt": {
+            "title": "Excerpt",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "institution_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution Id"
+          },
+          "kind": {
+            "enum": [
+              "personal_statement",
+              "supplement",
+              "why_us",
+              "activity",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "language": {
+            "title": "Language",
+            "type": "string"
+          },
+          "prompt": {
+            "title": "Prompt",
+            "type": "string"
+          },
+          "school_name": {
+            "title": "School Name",
+            "type": "string"
+          },
+          "source_name": {
+            "title": "Source Name",
+            "type": "string"
+          },
+          "source_url": {
+            "title": "Source Url",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "id",
+          "institution_id",
+          "school_name",
+          "year",
+          "kind",
+          "prompt",
+          "title",
+          "excerpt",
+          "word_count",
+          "source_url",
+          "source_name",
+          "tags",
+          "language"
+        ],
+        "title": "ExemplarExcerptOut",
+        "type": "object"
+      },
+      "ExemplarImportIn": {
+        "description": "Up to 50 exemplars; all are stored as drafts.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ExemplarIn"
+            },
+            "maxItems": 200,
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ExemplarImportIn",
+        "type": "object"
+      },
+      "ExemplarImportOut": {
+        "description": "New drafts and the ids of exemplars that were already there.",
+        "properties": {
+          "created": {
+            "items": {
+              "$ref": "#/components/schemas/ExemplarOut"
+            },
+            "title": "Created",
+            "type": "array"
+          },
+          "duplicates": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Duplicates",
+            "type": "array"
+          }
+        },
+        "required": [
+          "created",
+          "duplicates"
+        ],
+        "title": "ExemplarImportOut",
+        "type": "object"
+      },
+      "ExemplarIn": {
+        "description": "A new exemplar; a catalog token always gets a draft.",
+        "properties": {
+          "body": {
+            "maxLength": 40000,
+            "title": "Body",
+            "type": "string"
+          },
+          "institution_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution Id"
+          },
+          "kind": {
+            "enum": [
+              "personal_statement",
+              "supplement",
+              "why_us",
+              "activity",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "language": {
+            "default": "en",
+            "maxLength": 16,
+            "title": "Language",
+            "type": "string"
+          },
+          "notes": {
+            "default": "",
+            "maxLength": 20000,
+            "title": "Notes",
+            "type": "string"
+          },
+          "prompt": {
+            "default": "",
+            "maxLength": 8000,
+            "title": "Prompt",
+            "type": "string"
+          },
+          "school_name": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "School Name",
+            "type": "string"
+          },
+          "source_name": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Source Name",
+            "type": "string"
+          },
+          "source_url": {
+            "maxLength": 1000,
+            "title": "Source Url",
+            "type": "string"
+          },
+          "status": {
+            "default": "draft",
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 48,
+            "title": "Tags",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 400,
+            "title": "Title",
+            "type": "string"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "kind",
+          "title",
+          "body",
+          "source_url"
+        ],
+        "title": "ExemplarIn",
+        "type": "object"
+      },
+      "ExemplarListOut": {
+        "description": "A page of exemplars for curators.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ExemplarOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "ExemplarListOut",
+        "type": "object"
+      },
+      "ExemplarOut": {
+        "description": "An exemplar with its body, for curators.",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "institution_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution Id"
+          },
+          "kind": {
+            "enum": [
+              "personal_statement",
+              "supplement",
+              "why_us",
+              "activity",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "language": {
+            "title": "Language",
+            "type": "string"
+          },
+          "lock_version": {
+            "title": "Lock Version",
+            "type": "integer"
+          },
+          "notes": {
+            "title": "Notes",
+            "type": "string"
+          },
+          "prompt": {
+            "title": "Prompt",
+            "type": "string"
+          },
+          "school_name": {
+            "title": "School Name",
+            "type": "string"
+          },
+          "source_name": {
+            "title": "Source Name",
+            "type": "string"
+          },
+          "source_url": {
+            "title": "Source Url",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "published",
+              "archived"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "updated_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated By"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "id",
+          "institution_id",
+          "school_name",
+          "year",
+          "kind",
+          "prompt",
+          "title",
+          "body",
+          "word_count",
+          "source_url",
+          "source_name",
+          "tags",
+          "notes",
+          "status",
+          "language",
+          "created_by",
+          "updated_by",
+          "created_at",
+          "updated_at",
+          "lock_version"
+        ],
+        "title": "ExemplarOut",
+        "type": "object"
+      },
+      "ExemplarPatchIn": {
+        "description": "Changed fields only, with the lock of the version they were read at.",
+        "properties": {
+          "body": {
+            "anyOf": [
+              {
+                "maxLength": 40000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Body"
+          },
+          "institution_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution Id"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "personal_statement",
+                  "supplement",
+                  "why_us",
+                  "activity",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "lock_version": {
+            "title": "Lock Version",
+            "type": "integer"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "prompt": {
+            "anyOf": [
+              {
+                "maxLength": 8000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt"
+          },
+          "school_name": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School Name"
+          },
+          "source_name": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Name"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "draft",
+                  "published",
+                  "archived"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 48,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 400,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "lock_version"
+        ],
+        "title": "ExemplarPatchIn",
+        "type": "object"
+      },
+      "ExemplarPatternOut": {
+        "description": "A pattern of a published exemplar the draft could use.",
+        "properties": {
+          "exemplar_id": {
+            "format": "uuid",
+            "title": "Exemplar Id",
+            "type": "string"
+          },
+          "pattern": {
+            "title": "Pattern",
+            "type": "string"
+          },
+          "school_name": {
+            "title": "School Name",
+            "type": "string"
+          },
+          "source_url": {
+            "title": "Source Url",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "exemplar_id",
+          "title",
+          "school_name",
+          "source_url",
+          "pattern"
+        ],
+        "title": "ExemplarPatternOut",
+        "type": "object"
+      },
       "ExerciseCreate": {
         "description": "A practice exercise (passages and typed questions).",
         "properties": {
@@ -19559,6 +20872,10 @@
       "FactSpecItemOut": {
         "description": "One fact the staff form can fill in.",
         "properties": {
+          "example": {
+            "description": "A valid sample `value` of this fact.",
+            "title": "Example"
+          },
           "key": {
             "title": "Key",
             "type": "string"
@@ -19628,6 +20945,11 @@
               }
             ],
             "title": "Unit"
+          },
+          "value_shape": {
+            "description": "Shape of `value` in a proposal fact, as text.",
+            "title": "Value Shape",
+            "type": "string"
           }
         },
         "required": [
@@ -19639,7 +20961,9 @@
           "min",
           "max",
           "step",
-          "unit"
+          "unit",
+          "value_shape",
+          "example"
         ],
         "title": "FactSpecItemOut",
         "type": "object"
@@ -20140,115 +21464,18 @@
         "title": "FeedbackDetailOut",
         "type": "object"
       },
-      "FeedbackListOut": {
-        "description": "Body of GET /v1/feedback/mine.",
+      "FeedbackPatchIn": {
+        "description": "Resolve a comment or open it again.",
         "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/FeedbackOut"
-            },
-            "title": "Items",
-            "type": "array"
+          "resolved": {
+            "title": "Resolved",
+            "type": "boolean"
           }
         },
         "required": [
-          "items"
+          "resolved"
         ],
-        "title": "FeedbackListOut",
-        "type": "object"
-      },
-      "FeedbackOut": {
-        "description": "A feedback item as its reporter sees it.",
-        "properties": {
-          "area": {
-            "enum": [
-              "id",
-              "my",
-              "staff",
-              "admin",
-              "lms",
-              "library",
-              "share",
-              "bot",
-              "ai",
-              "notebooks",
-              "mail",
-              "other"
-            ],
-            "title": "Area",
-            "type": "string"
-          },
-          "attachments": {
-            "items": {
-              "$ref": "#/components/schemas/app__interfaces__http__v1__feedback__schemas__AttachmentOut"
-            },
-            "title": "Attachments",
-            "type": "array"
-          },
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "description": {
-            "title": "Description",
-            "type": "string"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "kind": {
-            "enum": [
-              "idea",
-              "bug",
-              "other"
-            ],
-            "title": "Kind",
-            "type": "string"
-          },
-          "response_count": {
-            "title": "Response Count",
-            "type": "integer"
-          },
-          "source": {
-            "enum": [
-              "web",
-              "bot"
-            ],
-            "title": "Source",
-            "type": "string"
-          },
-          "status": {
-            "enum": [
-              "new",
-              "in_review",
-              "planned",
-              "done",
-              "rejected"
-            ],
-            "title": "Status",
-            "type": "string"
-          },
-          "title": {
-            "title": "Title",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "kind",
-          "area",
-          "title",
-          "description",
-          "status",
-          "source",
-          "created_at",
-          "attachments",
-          "response_count"
-        ],
-        "title": "FeedbackOut",
+        "title": "FeedbackPatchIn",
         "type": "object"
       },
       "FeedbackStatusIn": {
@@ -20961,6 +22188,64 @@
           }
         },
         "title": "FormulaSpec",
+        "type": "object"
+      },
+      "GoalAlignmentOut": {
+        "description": "How the essay meets one sourced goal of the university.",
+        "properties": {
+          "alignment": {
+            "enum": [
+              "strong",
+              "partial",
+              "missing"
+            ],
+            "title": "Alignment",
+            "type": "string"
+          },
+          "evidence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Evidence"
+          },
+          "goal": {
+            "title": "Goal",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "suggestion": {
+            "title": "Suggestion",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "goal",
+          "source_url",
+          "alignment",
+          "evidence",
+          "suggestion"
+        ],
+        "title": "GoalAlignmentOut",
         "type": "object"
       },
       "GoalPlanOut": {
@@ -21970,6 +23255,173 @@
           "contacts"
         ],
         "title": "GroupTeacherRef",
+        "type": "object"
+      },
+      "GuestCommentOut": {
+        "description": "A comment left through this link.",
+        "properties": {
+          "anchor_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor End"
+          },
+          "anchor_start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor Start"
+          },
+          "author_name": {
+            "title": "Author Name",
+            "type": "string"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "detached": {
+            "title": "Detached",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote"
+          },
+          "resolved": {
+            "title": "Resolved",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "parent_id",
+          "author_name",
+          "quote",
+          "anchor_start",
+          "anchor_end",
+          "detached",
+          "body",
+          "resolved",
+          "created_at"
+        ],
+        "title": "GuestCommentOut",
+        "type": "object"
+      },
+      "GuestEssayOut": {
+        "description": "The essay as a reviewer sees it, with no owner identity.",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "prompt_text": {
+            "title": "Prompt Text",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "title",
+          "prompt_text",
+          "body",
+          "word_count"
+        ],
+        "title": "GuestEssayOut",
+        "type": "object"
+      },
+      "GuestReviewOut": {
+        "description": "What a link opens: the essay and the comments of this link.",
+        "properties": {
+          "audience": {
+            "enum": [
+              "classmate",
+              "parent",
+              "counselor",
+              "other"
+            ],
+            "title": "Audience",
+            "type": "string"
+          },
+          "can_comment": {
+            "title": "Can Comment",
+            "type": "boolean"
+          },
+          "comments": {
+            "items": {
+              "$ref": "#/components/schemas/GuestCommentOut"
+            },
+            "title": "Comments",
+            "type": "array"
+          },
+          "essay": {
+            "$ref": "#/components/schemas/GuestEssayOut"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "essay",
+          "audience",
+          "can_comment",
+          "expires_at",
+          "comments"
+        ],
+        "title": "GuestReviewOut",
         "type": "object"
       },
       "H5PBlock-Input": {
@@ -23798,6 +25250,258 @@
         "title": "InviteCodeResponse",
         "type": "object"
       },
+      "InviteCreatedOut": {
+        "description": "A new link with its plain token, shown this once.",
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "audience": {
+            "enum": [
+              "classmate",
+              "parent",
+              "counselor",
+              "other"
+            ],
+            "title": "Audience",
+            "type": "string"
+          },
+          "can_comment": {
+            "title": "Can Comment",
+            "type": "boolean"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "last_opened_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Opened At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "audience",
+          "label",
+          "can_comment",
+          "expires_at",
+          "revoked_at",
+          "last_opened_at",
+          "created_at",
+          "active",
+          "token"
+        ],
+        "title": "InviteCreatedOut",
+        "type": "object"
+      },
+      "InviteIn": {
+        "description": "A new review link.",
+        "properties": {
+          "audience": {
+            "enum": [
+              "classmate",
+              "parent",
+              "counselor",
+              "other"
+            ],
+            "title": "Audience",
+            "type": "string"
+          },
+          "can_comment": {
+            "default": true,
+            "title": "Can Comment",
+            "type": "boolean"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "ttl_days": {
+            "default": 30,
+            "maximum": 90.0,
+            "minimum": 1.0,
+            "title": "Ttl Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "audience"
+        ],
+        "title": "InviteIn",
+        "type": "object"
+      },
+      "InviteListOut": {
+        "description": "The links of an essay.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/InviteOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "InviteListOut",
+        "type": "object"
+      },
+      "InviteOut": {
+        "description": "A review link; the token is never shown again.",
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "audience": {
+            "enum": [
+              "classmate",
+              "parent",
+              "counselor",
+              "other"
+            ],
+            "title": "Audience",
+            "type": "string"
+          },
+          "can_comment": {
+            "title": "Can Comment",
+            "type": "boolean"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "last_opened_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Opened At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          }
+        },
+        "required": [
+          "id",
+          "audience",
+          "label",
+          "can_comment",
+          "expires_at",
+          "revoked_at",
+          "last_opened_at",
+          "created_at",
+          "active"
+        ],
+        "title": "InviteOut",
+        "type": "object"
+      },
       "InvitedUserResponse": {
         "description": "The created account and its one-time Telegram invitation.",
         "properties": {
@@ -23815,6 +25519,34 @@
           "invite_url"
         ],
         "title": "InvitedUserResponse",
+        "type": "object"
+      },
+      "IssueOut": {
+        "description": "A finding of the draft validation.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "severity": {
+            "enum": [
+              "error",
+              "warning"
+            ],
+            "title": "Severity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "severity",
+          "code",
+          "detail"
+        ],
+        "title": "IssueOut",
         "type": "object"
       },
       "IssuedFeedOut": {
@@ -25729,6 +27461,146 @@
         ],
         "title": "LabelRunStatus",
         "type": "string"
+      },
+      "LatestCheckOut": {
+        "description": "The stored latest check; `stale` when the draft changed since.",
+        "properties": {
+          "band": {
+            "enum": [
+              "exceptional",
+              "strong",
+              "solid",
+              "developing",
+              "weak"
+            ],
+            "title": "Band",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "dimensions": {
+            "items": {
+              "$ref": "#/components/schemas/CoachCheckDimensionOut"
+            },
+            "title": "Dimensions",
+            "type": "array"
+          },
+          "first_fix": {
+            "title": "First Fix",
+            "type": "string"
+          },
+          "flagged_paragraph": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flagged Paragraph"
+          },
+          "flagged_reason": {
+            "title": "Flagged Reason",
+            "type": "string"
+          },
+          "flagged_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Flagged Text"
+          },
+          "generic": {
+            "title": "Generic",
+            "type": "boolean"
+          },
+          "over_limit": {
+            "title": "Over Limit",
+            "type": "boolean"
+          },
+          "prompt_fit": {
+            "enum": [
+              "yes",
+              "partial",
+              "no",
+              "unknown"
+            ],
+            "title": "Prompt Fit",
+            "type": "string"
+          },
+          "prompt_fit_reason": {
+            "title": "Prompt Fit Reason",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          },
+          "stale": {
+            "title": "Stale",
+            "type": "boolean"
+          },
+          "strongest": {
+            "enum": [
+              "hook",
+              "theme",
+              "detail",
+              "authenticity",
+              "reflection",
+              "writing"
+            ],
+            "title": "Strongest",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          },
+          "word_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Word Limit"
+          }
+        },
+        "required": [
+          "score",
+          "band",
+          "dimensions",
+          "prompt_fit",
+          "prompt_fit_reason",
+          "strongest",
+          "first_fix",
+          "flagged_paragraph",
+          "flagged_text",
+          "flagged_reason",
+          "summary",
+          "word_count",
+          "word_limit",
+          "over_limit",
+          "generic",
+          "stale",
+          "created_at"
+        ],
+        "title": "LatestCheckOut",
+        "type": "object"
       },
       "LearningAnswerBody": {
         "description": "`Answer`: the chosen options, a text or a number (one of them per question).",
@@ -29933,6 +31805,7 @@
               "ED2",
               "EA",
               "REA",
+              "SCEA",
               "RD",
               "ROLLING"
             ],
@@ -29974,6 +31847,13 @@
             ],
             "title": "Bucket"
           },
+          "conflicts": {
+            "items": {
+              "$ref": "#/components/schemas/PlanConflictOut"
+            },
+            "title": "Conflicts",
+            "type": "array"
+          },
           "cycle": {
             "anyOf": [
               {
@@ -29987,6 +31867,16 @@
           },
           "estimate": {
             "$ref": "#/components/schemas/EstimateOut"
+          },
+          "fee_status": {
+            "enum": [
+              "unpaid",
+              "paid",
+              "waiver_requested",
+              "waiver_approved"
+            ],
+            "title": "Fee Status",
+            "type": "string"
           },
           "id": {
             "format": "uuid",
@@ -30058,10 +31948,12 @@
           "label_override",
           "override_note",
           "affordability_status",
+          "fee_status",
           "affordability",
           "estimate",
           "cycle",
-          "lock_version"
+          "lock_version",
+          "conflicts"
         ],
         "title": "ListEntryOut",
         "type": "object"
@@ -30124,6 +32016,23 @@
             ],
             "title": "Cycle"
           },
+          "fee_status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "unpaid",
+                  "paid",
+                  "waiver_requested",
+                  "waiver_approved"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fee Status"
+          },
           "lock_version": {
             "title": "Lock Version",
             "type": "integer"
@@ -30148,6 +32057,7 @@
                   "ED2",
                   "EA",
                   "REA",
+                  "SCEA",
                   "RD",
                   "ROLLING"
                 ],
@@ -34264,6 +36174,70 @@
         "title": "NextSuggestionResponse",
         "type": "object"
       },
+      "NoteIn": {
+        "description": "My own note, or a reply to a comment.",
+        "properties": {
+          "anchor_end": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor End"
+          },
+          "anchor_start": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor Start"
+          },
+          "body": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Body",
+            "type": "string"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "title": "NoteIn",
+        "type": "object"
+      },
       "NoteInput": {
         "description": "A note written by the student.",
         "properties": {
@@ -35453,6 +37427,22 @@
         "title": "OpenCourseWorkspaceBody",
         "type": "object"
       },
+      "OpenIn": {
+        "description": "The token from the link fragment.",
+        "properties": {
+          "token": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "title": "OpenIn",
+        "type": "object"
+      },
       "OppCommentIn": {
         "description": "Post a comment.",
         "properties": {
@@ -35644,6 +37634,11 @@
           },
           "fields": {
             "$ref": "#/components/schemas/OpportunityFields"
+          },
+          "for_you": {
+            "default": false,
+            "title": "For You",
+            "type": "boolean"
           },
           "id": {
             "format": "uuid",
@@ -35881,7 +37876,8 @@
               "event",
               "recurring",
               "program",
-              "scholarship"
+              "scholarship",
+              "research"
             ],
             "title": "Kind",
             "type": "string"
@@ -36028,6 +38024,14 @@
             ],
             "title": "Source Url"
           },
+          "study_field_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "title": "Study Field Ids",
+            "type": "array"
+          },
           "subject_ids": {
             "items": {
               "format": "uuid",
@@ -36104,6 +38108,17 @@
             "title": "Size",
             "type": "integer"
           },
+          "sort": {
+            "enum": [
+              "title",
+              "ranking",
+              "acceptance",
+              "tuition",
+              "relevance"
+            ],
+            "title": "Sort",
+            "type": "string"
+          },
           "total": {
             "title": "Total",
             "type": "integer"
@@ -36113,7 +38128,8 @@
           "items",
           "total",
           "page",
-          "size"
+          "size",
+          "sort"
         ],
         "title": "OpportunityListOut",
         "type": "object"
@@ -36137,6 +38153,11 @@
           },
           "fields": {
             "$ref": "#/components/schemas/OpportunityFields"
+          },
+          "for_you": {
+            "default": false,
+            "title": "For You",
+            "type": "boolean"
           },
           "id": {
             "format": "uuid",
@@ -36912,6 +38933,31 @@
             "title": "Institution Name",
             "type": "string"
           },
+          "logo_fit": {
+            "default": "circle",
+            "enum": [
+              "circle",
+              "contain"
+            ],
+            "title": "Logo Fit",
+            "type": "string"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          },
+          "logo_zoom": {
+            "default": 1.0,
+            "title": "Logo Zoom",
+            "type": "number"
+          },
           "names": {
             "items": {
               "$ref": "#/components/schemas/SharedNameOut"
@@ -37602,6 +39648,25 @@
         "title": "PairInput",
         "type": "object"
       },
+      "ParagraphNoteOut": {
+        "description": "A note on one paragraph; `paragraph` is 1-based.",
+        "properties": {
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "paragraph": {
+            "title": "Paragraph",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "paragraph",
+          "note"
+        ],
+        "title": "ParagraphNoteOut",
+        "type": "object"
+      },
       "PassageDetailResponse": {
         "description": "`PassageDetail`: a passage with the passages before and after it.",
         "properties": {
@@ -38259,6 +40324,38 @@
           "artifact"
         ],
         "title": "PlanConfirmResponse",
+        "type": "object"
+      },
+      "PlanConflictOut": {
+        "description": "A warning about conflicting early-application plans; never blocks.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "entry_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Entry Ids",
+            "type": "array"
+          },
+          "severity": {
+            "enum": [
+              "conflict",
+              "check"
+            ],
+            "title": "Severity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "severity",
+          "entry_ids"
+        ],
+        "title": "PlanConflictOut",
         "type": "object"
       },
       "PlanCreateBody": {
@@ -39540,22 +41637,6 @@
             ],
             "title": "Cost Major"
           },
-          "distance": {
-            "anyOf": [
-              {
-                "enum": [
-                  "any",
-                  "near",
-                  "far"
-                ],
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Distance"
-          },
           "ec_important": {
             "anyOf": [
               {
@@ -39633,9 +41714,12 @@
           "region": {
             "anyOf": [
               {
-                "maxLength": 8,
-                "minLength": 1,
-                "type": "string"
+                "items": {
+                  "pattern": "^[A-Z]{2}$",
+                  "type": "string"
+                },
+                "maxItems": 8,
+                "type": "array"
               },
               {
                 "type": "null"
@@ -39646,12 +41730,16 @@
           "setting": {
             "anyOf": [
               {
-                "enum": [
-                  "rural",
-                  "suburban",
-                  "city"
-                ],
-                "type": "string"
+                "items": {
+                  "enum": [
+                    "rural",
+                    "suburban",
+                    "city"
+                  ],
+                  "type": "string"
+                },
+                "maxItems": 3,
+                "type": "array"
               },
               {
                 "type": "null"
@@ -40256,6 +42344,41 @@
           "preview"
         ],
         "title": "PreviewStepResponse",
+        "type": "object"
+      },
+      "ProblemOut": {
+        "description": "problem+json body of a refused request.",
+        "properties": {
+          "message_key": {
+            "title": "Message Key",
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": true,
+            "title": "Params",
+            "type": "object"
+          },
+          "status": {
+            "title": "Status",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "title",
+          "status",
+          "message_key",
+          "params"
+        ],
+        "title": "ProblemOut",
         "type": "object"
       },
       "ProblemResponse": {
@@ -44312,6 +46435,31 @@
         "title": "ReportOptions",
         "type": "object"
       },
+      "ReportOut": {
+        "description": "The comparison on every sample.",
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SampleResultOut"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/IssueOut"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "warnings",
+          "results"
+        ],
+        "title": "ReportOut",
+        "type": "object"
+      },
       "ReportReason": {
         "description": "Why a user reports an item.",
         "enum": [
@@ -45724,6 +47872,26 @@
         "title": "RoundOptionOut",
         "type": "object"
       },
+      "RunOut": {
+        "description": "One model run.",
+        "properties": {
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "output": {
+            "additionalProperties": true,
+            "title": "Output",
+            "type": "object"
+          }
+        },
+        "required": [
+          "model",
+          "output"
+        ],
+        "title": "RunOut",
+        "type": "object"
+      },
       "RunSyncBody": {
         "description": "Start a sync for one student, or for everybody when ``user_id`` is absent.",
         "properties": {
@@ -45741,6 +47909,88 @@
           }
         },
         "title": "RunSyncBody",
+        "type": "object"
+      },
+      "SampleIn": {
+        "description": "A pasted essay or a library exemplar; never a student's essay.",
+        "properties": {
+          "exemplar_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exemplar Id"
+          },
+          "kind": {
+            "default": "personal_statement",
+            "maxLength": 40,
+            "title": "Kind",
+            "type": "string"
+          },
+          "prompt_text": {
+            "default": "",
+            "maxLength": 4000,
+            "title": "Prompt Text",
+            "type": "string"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "title": "SampleIn",
+        "type": "object"
+      },
+      "SampleResultOut": {
+        "description": "Both runs on one sample.",
+        "properties": {
+          "active": {
+            "$ref": "#/components/schemas/RunOut"
+          },
+          "delta": {
+            "$ref": "#/components/schemas/DeltaOut"
+          },
+          "draft": {
+            "$ref": "#/components/schemas/RunOut"
+          },
+          "exemplar_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exemplar Id"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "exemplar_id",
+          "active",
+          "draft",
+          "delta"
+        ],
+        "title": "SampleResultOut",
         "type": "object"
       },
       "SanctionBody": {
@@ -45876,6 +48126,39 @@
         "title": "SaveDashboardRequest",
         "type": "object"
       },
+      "SaveIn": {
+        "description": "A new prompt version.",
+        "properties": {
+          "locale": {
+            "default": "",
+            "enum": [
+              "",
+              "uz",
+              "ru",
+              "en"
+            ],
+            "title": "Locale",
+            "type": "string"
+          },
+          "note": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Note",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 50000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "SaveIn",
+        "type": "object"
+      },
       "SaveNoteBody": {
         "description": "`POST /notebooks/{id}/chat/messages/{mid}/save-note`.",
         "properties": {
@@ -45966,6 +48249,27 @@
           "byte_size"
         ],
         "title": "SavedFileResponse",
+        "type": "object"
+      },
+      "SavedOut": {
+        "description": "A stored version with the non-blocking findings.",
+        "properties": {
+          "version": {
+            "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_prompt_studio__VersionOut"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/IssueOut"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "version",
+          "warnings"
+        ],
+        "title": "SavedOut",
         "type": "object"
       },
       "SavedViewIn": {
@@ -49089,6 +51393,88 @@
           }
         },
         "title": "SlidesOptions",
+        "type": "object"
+      },
+      "SlotListOut": {
+        "description": "The editable slots.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SlotOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "SlotListOut",
+        "type": "object"
+      },
+      "SlotOut": {
+        "description": "A prompt slot with its active text and history.",
+        "properties": {
+          "active_hash": {
+            "title": "Active Hash",
+            "type": "string"
+          },
+          "active_text": {
+            "title": "Active Text",
+            "type": "string"
+          },
+          "active_version": {
+            "title": "Active Version",
+            "type": "integer"
+          },
+          "builtin": {
+            "title": "Builtin",
+            "type": "string"
+          },
+          "fields": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Fields",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "task": {
+            "title": "Task",
+            "type": "string"
+          },
+          "template": {
+            "title": "Template",
+            "type": "boolean"
+          },
+          "versions": {
+            "items": {
+              "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_prompt_studio__VersionOut"
+            },
+            "title": "Versions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "task",
+          "name",
+          "summary",
+          "template",
+          "fields",
+          "builtin",
+          "active_text",
+          "active_version",
+          "active_hash",
+          "versions"
+        ],
+        "title": "SlotOut",
         "type": "object"
       },
       "SnapshotIn": {
@@ -52581,6 +54967,60 @@
         "title": "StudentsResponse",
         "type": "object"
       },
+      "StudioTestIn": {
+        "description": "A draft to run against the active prompt.",
+        "properties": {
+          "institution_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution Id"
+          },
+          "locale": {
+            "anyOf": [
+              {
+                "enum": [
+                  "uz",
+                  "ru",
+                  "en"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locale"
+          },
+          "samples": {
+            "items": {
+              "$ref": "#/components/schemas/SampleIn"
+            },
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Samples",
+            "type": "array"
+          },
+          "text": {
+            "maxLength": 50000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "samples"
+        ],
+        "title": "StudioTestIn",
+        "type": "object"
+      },
       "StudyCardResponse": {
         "description": "The card to show now.",
         "properties": {
@@ -52609,6 +55049,31 @@
           "state"
         ],
         "title": "StudyCardResponse",
+        "type": "object"
+      },
+      "StudyFocusOut": {
+        "description": "The field of study from the plan, the career quiz and the setup answer.",
+        "properties": {
+          "field_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Field Ids",
+            "type": "array"
+          },
+          "labels": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Labels",
+            "type": "array"
+          }
+        },
+        "required": [
+          "field_ids",
+          "labels"
+        ],
+        "title": "StudyFocusOut",
         "type": "object"
       },
       "StudyGroupOut": {
@@ -54967,6 +57432,96 @@
           "previous_text"
         ],
         "title": "SuppPromptOut",
+        "type": "object"
+      },
+      "SuppPromptProposalIn": {
+        "description": "One supplement prompt of a proposal, with the page it was read on.",
+        "properties": {
+          "cycle": {
+            "description": "Admission cycle, e.g. \"2025-26\".",
+            "pattern": "^\\d{4}-\\d{2}$",
+            "title": "Cycle",
+            "type": "string"
+          },
+          "prompt": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Prompt",
+            "type": "string"
+          },
+          "required": {
+            "default": true,
+            "title": "Required",
+            "type": "boolean"
+          },
+          "source_url": {
+            "description": "https page.",
+            "maxLength": 500,
+            "pattern": "^https://",
+            "title": "Source Url",
+            "type": "string"
+          },
+          "word_limit": {
+            "anyOf": [
+              {
+                "maximum": 5000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Word Limit"
+          }
+        },
+        "required": [
+          "cycle",
+          "prompt",
+          "source_url"
+        ],
+        "title": "SuppPromptProposalIn",
+        "type": "object"
+      },
+      "SuppPromptProposalOut": {
+        "description": "A supplement prompt carried by a proposal.",
+        "properties": {
+          "cycle": {
+            "title": "Cycle",
+            "type": "string"
+          },
+          "prompt": {
+            "title": "Prompt",
+            "type": "string"
+          },
+          "required": {
+            "title": "Required",
+            "type": "boolean"
+          },
+          "source_url": {
+            "title": "Source Url",
+            "type": "string"
+          },
+          "word_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Word Limit"
+          }
+        },
+        "required": [
+          "cycle",
+          "prompt",
+          "word_limit",
+          "required",
+          "source_url"
+        ],
+        "title": "SuppPromptProposalOut",
         "type": "object"
       },
       "SuppPromptsPutIn": {
@@ -58726,6 +61281,40 @@
         "title": "UniChatSuggestionsOut",
         "type": "object"
       },
+      "UniEntryOut": {
+        "description": "The review for one university; `stale` when the essay changed since.",
+        "properties": {
+          "cached": {
+            "title": "Cached",
+            "type": "boolean"
+          },
+          "institution_id": {
+            "format": "uuid",
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "review": {
+            "$ref": "#/components/schemas/UniReviewOut"
+          },
+          "stale": {
+            "title": "Stale",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "institution_id",
+          "name",
+          "cached",
+          "stale",
+          "review"
+        ],
+        "title": "UniEntryOut",
+        "type": "object"
+      },
       "UniLibraryAccessFilter": {
         "description": "`?access=` of the search; `any` sends no access filter.",
         "enum": [
@@ -58885,6 +61474,54 @@
           "enabled"
         ],
         "title": "UniLibraryTaxonomyResponse",
+        "type": "object"
+      },
+      "UniReviewOut": {
+        "description": "The fit with one university; `alignment` is 0 to 100.",
+        "properties": {
+          "alignment": {
+            "title": "Alignment",
+            "type": "integer"
+          },
+          "fit_summary": {
+            "title": "Fit Summary",
+            "type": "string"
+          },
+          "goals": {
+            "items": {
+              "$ref": "#/components/schemas/GoalAlignmentOut"
+            },
+            "title": "Goals",
+            "type": "array"
+          },
+          "risks": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Risks",
+            "type": "array"
+          },
+          "sourced": {
+            "title": "Sourced",
+            "type": "boolean"
+          },
+          "supplement_tips": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Supplement Tips",
+            "type": "array"
+          }
+        },
+        "required": [
+          "alignment",
+          "goals",
+          "fit_summary",
+          "supplement_tips",
+          "risks",
+          "sourced"
+        ],
+        "title": "UniReviewOut",
         "type": "object"
       },
       "UnreadCountResponse": {
@@ -60991,44 +63628,6 @@
         "title": "VersionMetaView",
         "type": "object"
       },
-      "VersionOut": {
-        "description": "One uploaded version of a document.",
-        "properties": {
-          "file_id": {
-            "format": "uuid",
-            "title": "File Id",
-            "type": "string"
-          },
-          "scan_status": {
-            "title": "Scan Status",
-            "type": "string"
-          },
-          "uploaded_at": {
-            "anyOf": [
-              {
-                "format": "date-time",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Uploaded At"
-          },
-          "version": {
-            "title": "Version",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "version",
-          "file_id",
-          "scan_status",
-          "uploaded_at"
-        ],
-        "title": "VersionOut",
-        "type": "object"
-      },
       "VersionResponse": {
         "description": "`VersionView`.",
         "properties": {
@@ -63065,6 +65664,31 @@
             ],
             "title": "Local Date"
           },
+          "logo_fit": {
+            "default": "circle",
+            "enum": [
+              "circle",
+              "contain"
+            ],
+            "title": "Logo Fit",
+            "type": "string"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          },
+          "logo_zoom": {
+            "default": 1.0,
+            "title": "Logo Zoom",
+            "type": "number"
+          },
           "precision": {
             "title": "Precision",
             "type": "string"
@@ -63173,6 +65797,31 @@
             "format": "uuid",
             "title": "List Entry Id",
             "type": "string"
+          },
+          "logo_fit": {
+            "default": "circle",
+            "enum": [
+              "circle",
+              "contain"
+            ],
+            "title": "Logo Fit",
+            "type": "string"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          },
+          "logo_zoom": {
+            "default": 1.0,
+            "title": "Logo Zoom",
+            "type": "number"
           },
           "predicted": {
             "title": "Predicted",
@@ -63357,6 +66006,273 @@
         "title": "TranscriptOut",
         "type": "object"
       },
+      "app__interfaces__http__v1__admission__routes_documents__VersionOut": {
+        "description": "One uploaded version of a document.",
+        "properties": {
+          "file_id": {
+            "format": "uuid",
+            "title": "File Id",
+            "type": "string"
+          },
+          "scan_status": {
+            "title": "Scan Status",
+            "type": "string"
+          },
+          "uploaded_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Uploaded At"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "file_id",
+          "scan_status",
+          "uploaded_at"
+        ],
+        "title": "VersionOut",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__admission__routes_essay_invites__FeedbackListOut": {
+        "description": "Every comment on an essay.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_essay_invites__FeedbackOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "FeedbackListOut",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__admission__routes_essay_invites__FeedbackOut": {
+        "description": "A comment placed in the current text.",
+        "properties": {
+          "anchor_end": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor End"
+          },
+          "anchor_start": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor Start"
+          },
+          "audience": {
+            "anyOf": [
+              {
+                "enum": [
+                  "classmate",
+                  "parent",
+                  "counselor",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audience"
+          },
+          "author_name": {
+            "title": "Author Name",
+            "type": "string"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "detached": {
+            "title": "Detached",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "invite_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invite Id"
+          },
+          "invite_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invite Label"
+          },
+          "mine": {
+            "title": "Mine",
+            "type": "boolean"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          }
+        },
+        "required": [
+          "id",
+          "invite_id",
+          "parent_id",
+          "mine",
+          "author_name",
+          "invite_label",
+          "audience",
+          "quote",
+          "anchor_start",
+          "anchor_end",
+          "detached",
+          "body",
+          "resolved_at",
+          "created_at"
+        ],
+        "title": "FeedbackOut",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__admission__routes_essay_review_public__CommentIn": {
+        "description": "A guest comment, optionally anchored to a quoted span.",
+        "properties": {
+          "anchor_end": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor End"
+          },
+          "anchor_start": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor Start"
+          },
+          "author_name": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Author Name",
+            "type": "string"
+          },
+          "body": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Body",
+            "type": "string"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote"
+          },
+          "token": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "author_name",
+          "body"
+        ],
+        "title": "CommentIn",
+        "type": "object"
+      },
       "app__interfaces__http__v1__admission__routes_goal_plan__MilestoneOut": {
         "description": "A stored milestone.",
         "properties": {
@@ -63501,6 +66417,51 @@
           "kind"
         ],
         "title": "FeedbackIn",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__admission__routes_prompt_studio__VersionOut": {
+        "description": "One stored prompt version.",
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "hash": {
+            "title": "Hash",
+            "type": "string"
+          },
+          "locale": {
+            "title": "Locale",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "locale",
+          "text",
+          "hash",
+          "active",
+          "note",
+          "created_at"
+        ],
+        "title": "VersionOut",
         "type": "object"
       },
       "app__interfaces__http__v1__admission__routes_tasks__AcceptIn": {
@@ -63848,6 +66809,66 @@
           "parent_assignment_id"
         ],
         "title": "AssignmentOut",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__admission__schemas_staff__CommentIn": {
+        "description": "A new comment.",
+        "properties": {
+          "anchor": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "student_id": {
+            "format": "uuid",
+            "title": "Student Id",
+            "type": "string"
+          },
+          "target_id": {
+            "format": "uuid",
+            "title": "Target Id",
+            "type": "string"
+          },
+          "target_kind": {
+            "enum": [
+              "profile",
+              "help_request",
+              "item",
+              "list_entry",
+              "essay",
+              "words"
+            ],
+            "title": "Target Kind",
+            "type": "string"
+          },
+          "visibility": {
+            "default": "student_and_staff",
+            "enum": [
+              "staff_only",
+              "student_and_staff"
+            ],
+            "title": "Visibility",
+            "type": "string"
+          }
+        },
+        "required": [
+          "student_id",
+          "target_kind",
+          "target_id",
+          "body"
+        ],
+        "title": "CommentIn",
         "type": "object"
       },
       "app__interfaces__http__v1__ai__schemas__SendMessageBody": {
@@ -65068,6 +68089,117 @@
           "description"
         ],
         "title": "FeedbackIn",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__feedback__schemas__FeedbackListOut": {
+        "description": "Body of GET /v1/feedback/mine.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/app__interfaces__http__v1__feedback__schemas__FeedbackOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "FeedbackListOut",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__feedback__schemas__FeedbackOut": {
+        "description": "A feedback item as its reporter sees it.",
+        "properties": {
+          "area": {
+            "enum": [
+              "id",
+              "my",
+              "staff",
+              "admin",
+              "lms",
+              "library",
+              "share",
+              "bot",
+              "ai",
+              "notebooks",
+              "mail",
+              "other"
+            ],
+            "title": "Area",
+            "type": "string"
+          },
+          "attachments": {
+            "items": {
+              "$ref": "#/components/schemas/app__interfaces__http__v1__feedback__schemas__AttachmentOut"
+            },
+            "title": "Attachments",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "idea",
+              "bug",
+              "other"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "response_count": {
+            "title": "Response Count",
+            "type": "integer"
+          },
+          "source": {
+            "enum": [
+              "web",
+              "bot"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "new",
+              "in_review",
+              "planned",
+              "done",
+              "rejected"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "area",
+          "title",
+          "description",
+          "status",
+          "source",
+          "created_at",
+          "attachments",
+          "response_count"
+        ],
+        "title": "FeedbackOut",
         "type": "object"
       },
       "app__interfaces__http__v1__files__schemas__FileItem": {
@@ -77864,6 +80996,24 @@
       "get": {
         "description": "My career plan.",
         "operationId": "admission_career_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -77874,6 +81024,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "summary": "Get Career",
@@ -78118,6 +81278,24 @@
       "put": {
         "description": "Save my inventory answers.",
         "operationId": "admission_career_put_answers",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -78160,6 +81338,24 @@
       "put": {
         "description": "Choose majors and minors from the taxonomy.",
         "operationId": "admission_career_put_choice",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -78346,6 +81542,24 @@
       "put": {
         "description": "Keep up to five suggested professions.",
         "operationId": "admission_career_put_shortlist",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -78388,6 +81602,24 @@
       "put": {
         "description": "Confirm my spike.",
         "operationId": "admission_career_put_spike",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -79267,6 +82499,90 @@
         ]
       }
     },
+    "/v1/admission/chooser/budget": {
+      "get": {
+        "description": "Return the application budget of my list (staff pass `student_id`).\n\nUnreadable students answer 404. Cost to attend is null where the caller\nmay not see amounts.",
+        "operationId": "admission_chooser_budget",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "student_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Student Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cycle",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^[0-9]{4}-[0-9]{2}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cycle"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BudgetOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Budget",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/comments": {
       "get": {
         "description": "Comments on one object the caller may see.",
@@ -79336,7 +82652,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CommentIn"
+                "$ref": "#/components/schemas/app__interfaces__http__v1__admission__schemas_staff__CommentIn"
               }
             }
           },
@@ -81262,6 +84578,72 @@
         ]
       }
     },
+    "/v1/admission/essays/{essay_id}/coach/check/latest": {
+      "get": {
+        "description": "My latest stored check; 404 before the first check, no model call.",
+        "operationId": "admission_get_latest_essay_check",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LatestCheckOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not my essay, or it has never been checked."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "description": "The essay key service is down."
+          }
+        },
+        "summary": "Latest Check",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/essays/{essay_id}/coach/feedback": {
       "post": {
         "description": "Feedback on my draft (AI consent and a daily limit apply).",
@@ -81517,6 +84899,672 @@
           }
         },
         "summary": "Coach Review",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/{essay_id}/feedback": {
+      "get": {
+        "description": "Every comment on my essay, placed in the current text.",
+        "operationId": "admission_list_essay_feedback",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_essay_invites__FeedbackListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not my essay or no such row."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The essay key service is down."
+          }
+        },
+        "summary": "List Feedback",
+        "tags": [
+          "admission"
+        ]
+      },
+      "post": {
+        "description": "Add my own note or a reply.",
+        "operationId": "admission_add_essay_feedback",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoteIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_essay_invites__FeedbackOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not my essay or no such row."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "A field breaks a rule."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The essay key service is down."
+          }
+        },
+        "summary": "Add Feedback",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/{essay_id}/feedback/{feedback_id}": {
+      "delete": {
+        "description": "Delete a comment with its replies.",
+        "operationId": "admission_delete_essay_feedback",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "feedback_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Feedback Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not my essay or no such row."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Feedback",
+        "tags": [
+          "admission"
+        ]
+      },
+      "patch": {
+        "description": "Resolve a comment or open it again.",
+        "operationId": "admission_patch_essay_feedback",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "feedback_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Feedback Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackPatchIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_essay_invites__FeedbackOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not my essay or no such row."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "A field breaks a rule."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The essay key service is down."
+          }
+        },
+        "summary": "Patch Feedback",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/{essay_id}/invites": {
+      "get": {
+        "description": "The review links of my essay.",
+        "operationId": "admission_list_essay_invites",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not my essay or no such row."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The essay key service is down."
+          }
+        },
+        "summary": "List Invites",
+        "tags": [
+          "admission"
+        ]
+      },
+      "post": {
+        "description": "Make a review link of my essay; the token is shown only here.",
+        "operationId": "admission_create_essay_invite",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteCreatedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not my essay or no such row."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "A field breaks a rule, or 20 links are already active."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The essay key service is down."
+          }
+        },
+        "summary": "Create Invite",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/{essay_id}/invites/{invite_id}": {
+      "delete": {
+        "description": "Switch a review link off.",
+        "operationId": "admission_revoke_essay_invite",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "invite_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Invite Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not my essay or no such row."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revoke Invite",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/{essay_id}/reviews": {
+      "get": {
+        "description": "My stored essay reviews, marked stale when the essay changed; no model call.",
+        "operationId": "admission_get_essay_reviews",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EssayReviewsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not the owner, or no AI consent."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not my essay or no such university."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The essay key service is down."
+          }
+        },
+        "summary": "Get Reviews",
+        "tags": [
+          "admission"
+        ]
+      },
+      "post": {
+        "description": "Review my essay and its fit with up to 5 universities (AI consent, limit).",
+        "operationId": "admission_run_essay_reviews",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EssayReviewsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EssayReviewsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not the owner, or no AI consent."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not my essay or no such university."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "More than 5 universities, or the essay has under 50 words."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The weekly limit is used up."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The essay key service is down."
+          }
+        },
+        "summary": "Run Reviews",
         "tags": [
           "admission"
         ]
@@ -81783,6 +85831,174 @@
           }
         },
         "summary": "Share Version",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/exemplars": {
+      "get": {
+        "description": "Published exemplars as 80-word excerpts with their source.",
+        "operationId": "admission_list_public_exemplars",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "personal_statement",
+                    "supplement",
+                    "why_us",
+                    "activity",
+                    "other"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "institution_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Institution Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExemplarExcerptListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Public Exemplars",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/exemplars/{exemplar_id}": {
+      "get": {
+        "description": "One published exemplar as an excerpt; a draft answers 404.",
+        "operationId": "admission_get_public_exemplar",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "exemplar_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Exemplar Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExemplarExcerptOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "No such exemplar."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Public Exemplar",
         "tags": [
           "admission"
         ]
@@ -82259,11 +86475,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ProblemOut"
                 }
               }
             },
-            "description": "Validation Error"
+            "description": "A field breaks a rule, or the body has more than 3 OpenUI blocks, a block over 6000 characters, a bad block or a link that is not https, mailto or relative."
           }
         },
         "summary": "Create Article",
@@ -82390,11 +86606,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "$ref": "#/components/schemas/ProblemOut"
                 }
               }
             },
-            "description": "Validation Error"
+            "description": "A field breaks a rule, or the body has more than 3 OpenUI blocks, a block over 6000 characters, a bad block or a link that is not https, mailto or relative."
           }
         },
         "summary": "Update Article",
@@ -84680,7 +88896,8 @@
                     "event",
                     "recurring",
                     "program",
-                    "scholarship"
+                    "scholarship",
+                    "research"
                   ],
                   "type": "string"
                 },
@@ -84878,15 +89095,22 @@
             "name": "sort",
             "required": false,
             "schema": {
-              "default": "title",
-              "enum": [
-                "title",
-                "ranking",
-                "acceptance",
-                "tuition"
+              "anyOf": [
+                {
+                  "enum": [
+                    "title",
+                    "ranking",
+                    "acceptance",
+                    "tuition",
+                    "relevance"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
               ],
-              "title": "Sort",
-              "type": "string"
+              "title": "Sort"
             }
           },
           {
@@ -86992,6 +91216,484 @@
         ]
       }
     },
+    "/v1/admission/staff/exemplars": {
+      "get": {
+        "description": "The library with bodies, newest first (exemplars:curate).",
+        "operationId": "admission_list_exemplars",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "draft",
+                    "published",
+                    "archived"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "personal_statement",
+                    "supplement",
+                    "why_us",
+                    "activity",
+                    "other"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "institution_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Institution Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExemplarListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "No exemplars:curate."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Exemplars",
+        "tags": [
+          "admission"
+        ]
+      },
+      "post": {
+        "description": "Add an exemplar; a catalog token always creates a draft.",
+        "operationId": "admission_create_exemplar",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExemplarIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExemplarOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "No exemplars:curate."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Same source link and title exist."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "A field breaks a rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Token write limit reached."
+          }
+        },
+        "summary": "Create Exemplar",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/exemplars/import": {
+      "post": {
+        "description": "Import up to 50 drafts; duplicates by (source_url, title) are skipped.",
+        "operationId": "admission_import_exemplars",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExemplarImportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExemplarImportOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "No exemplars:curate."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "A field breaks a rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Token write limit reached."
+          }
+        },
+        "summary": "Import Exemplars",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/exemplars/{exemplar_id}": {
+      "delete": {
+        "description": "Delete an exemplar for good.",
+        "operationId": "admission_delete_exemplar",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "exemplar_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Exemplar Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "No exemplars:curate."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "No such exemplar."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Exemplar",
+        "tags": [
+          "admission"
+        ]
+      },
+      "get": {
+        "description": "One exemplar with its body (exemplars:curate).",
+        "operationId": "admission_get_exemplar",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "exemplar_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Exemplar Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExemplarOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "No exemplars:curate."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "No such exemplar."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Exemplar",
+        "tags": [
+          "admission"
+        ]
+      },
+      "patch": {
+        "description": "Edit, publish (status=published) or archive an exemplar.",
+        "operationId": "admission_patch_exemplar",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "exemplar_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Exemplar Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExemplarPatchIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExemplarOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "No exemplars:curate."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "No such exemplar."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Stale lock_version or duplicate link and title."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "A field breaks a rule."
+          }
+        },
+        "summary": "Patch Exemplar",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/staff/opportunities/reports": {
       "get": {
         "description": "Open reports (staff).",
@@ -87502,6 +92204,361 @@
         ]
       }
     },
+    "/v1/admission/staff/prompt-studio/slots": {
+      "get": {
+        "description": "The four editable reviewer prompts with their active text.",
+        "operationId": "admission_prompt_studio_slots",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlotListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "The caller may not edit the essay prompts"
+          },
+          "404": {
+            "description": "Unknown slot, version, exemplar or university"
+          },
+          "422": {
+            "description": "The draft or the samples are invalid"
+          }
+        },
+        "summary": "List Slots",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/prompt-studio/slots/{task}/{name}": {
+      "delete": {
+        "description": "Drop the override so the built-in text applies again.",
+        "operationId": "admission_prompt_studio_revert",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task",
+            "required": true,
+            "schema": {
+              "title": "Task",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "locale",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "uz",
+                "ru",
+                "en"
+              ],
+              "title": "Locale",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "The caller may not edit the essay prompts"
+          },
+          "404": {
+            "description": "Unknown slot, version, exemplar or university"
+          },
+          "422": {
+            "description": "The draft or the samples are invalid"
+          }
+        },
+        "summary": "Revert Slot",
+        "tags": [
+          "admission"
+        ]
+      },
+      "get": {
+        "description": "One slot with the text in force for a locale and its versions.",
+        "operationId": "admission_prompt_studio_slot",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task",
+            "required": true,
+            "schema": {
+              "title": "Task",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "locale",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "uz",
+                "ru",
+                "en"
+              ],
+              "title": "Locale",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlotOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "The caller may not edit the essay prompts"
+          },
+          "404": {
+            "description": "Unknown slot, version, exemplar or university"
+          },
+          "422": {
+            "description": "The draft or the samples are invalid"
+          }
+        },
+        "summary": "Get Slot",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Store a validated draft as the new active version.",
+        "operationId": "admission_prompt_studio_save",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task",
+            "required": true,
+            "schema": {
+              "title": "Task",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "The caller may not edit the essay prompts"
+          },
+          "404": {
+            "description": "Unknown slot, version, exemplar or university"
+          },
+          "422": {
+            "description": "The draft or the samples are invalid"
+          }
+        },
+        "summary": "Save Version",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/prompt-studio/slots/{task}/{name}/test": {
+      "post": {
+        "description": "Run the draft and the active prompt on pasted samples and compare.",
+        "operationId": "admission_prompt_studio_test",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task",
+            "required": true,
+            "schema": {
+              "title": "Task",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StudioTestIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "The caller may not edit the essay prompts"
+          },
+          "404": {
+            "description": "Unknown slot, version, exemplar or university"
+          },
+          "422": {
+            "description": "The draft or the samples are invalid"
+          },
+          "429": {
+            "description": "Daily test-run limit reached"
+          }
+        },
+        "summary": "Test Slot",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/prompt-studio/slots/{task}/{name}/versions/{version}/activate": {
+      "post": {
+        "description": "Make a stored version the active one.",
+        "operationId": "admission_prompt_studio_activate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task",
+            "required": true,
+            "schema": {
+              "title": "Task",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "title": "Version",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_prompt_studio__VersionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "The caller may not edit the essay prompts"
+          },
+          "404": {
+            "description": "Unknown slot, version, exemplar or university"
+          },
+          "422": {
+            "description": "The draft or the samples are invalid"
+          }
+        },
+        "summary": "Activate Version",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/staff/saved-views": {
       "get": {
         "description": "The caller's saved caseload views.",
@@ -88000,6 +93057,22 @@
               "format": "uuid",
               "title": "Student Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
             }
           }
         ],
@@ -92479,7 +97552,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FeedbackOut"
+                  "$ref": "#/components/schemas/app__interfaces__http__v1__feedback__schemas__FeedbackOut"
                 }
               }
             },
@@ -92511,7 +97584,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FeedbackListOut"
+                  "$ref": "#/components/schemas/app__interfaces__http__v1__feedback__schemas__FeedbackListOut"
                 }
               }
             },
@@ -107979,6 +113052,73 @@
         ]
       }
     },
+    "/v1/me/photo": {
+      "delete": {
+        "description": "Remove the caller's photo; nothing happens when there is none.",
+        "operationId": "me_delete_photo",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPhotoResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Not signed in."
+          }
+        },
+        "summary": "Delete My Profile Photo",
+        "tags": [
+          "photo"
+        ]
+      },
+      "put": {
+        "description": "Replace the caller's photo, any role (JPEG or PNG, up to 5 MB).",
+        "operationId": "me_put_photo",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_me_put_photo"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserPhotoResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "description": "Not signed in."
+          },
+          "404": {
+            "description": "The account no longer exists."
+          },
+          "413": {
+            "description": "The photo is larger than 5 MB."
+          },
+          "422": {
+            "description": "The photo is empty, not JPEG or PNG, or unreadable."
+          }
+        },
+        "summary": "Put My Profile Photo",
+        "tags": [
+          "photo"
+        ]
+      }
+    },
     "/v1/me/privacy/erasure": {
       "delete": {
         "description": "Withdraw a request that is still waiting for review.",
@@ -113613,6 +118753,160 @@
         ]
       }
     },
+    "/v1/public/admission/essay-review/comments": {
+      "post": {
+        "description": "Leave a comment through a review link (no account).",
+        "operationId": "admission_add_essay_review_comment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_essay_review_public__CommentIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuestCommentOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The link is read-only."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Unknown, expired or revoked."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "A field breaks a rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Too many requests."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The essay key service is down."
+          }
+        },
+        "summary": "Add Comment",
+        "tags": [
+          "admission-public"
+        ]
+      }
+    },
+    "/v1/public/admission/essay-review/open": {
+      "post": {
+        "description": "Open an essay through a review link (no account).",
+        "operationId": "admission_open_essay_review",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GuestReviewOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Unknown, expired or revoked."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "A field breaks a rule."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Too many requests."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The essay key service is down."
+          }
+        },
+        "summary": "Open Review",
+        "tags": [
+          "admission-public"
+        ]
+      }
+    },
     "/v1/public/client-config": {
       "get": {
         "description": "Return the public feature flags and documentation links.",
@@ -116310,7 +121604,8 @@
     },
     "/v1/staff/me/photo": {
       "delete": {
-        "description": "Remove the caller's photo; nothing happens when there is none.",
+        "deprecated": true,
+        "description": "Remove the teacher's photo (deprecated: use DELETE /v1/me/photo).",
         "operationId": "delete_my_photo_v1_staff_me_photo_delete",
         "responses": {
           "200": {
@@ -116330,7 +121625,8 @@
         ]
       },
       "put": {
-        "description": "Replace the caller's photo (JPEG or PNG, up to 5 MB).",
+        "deprecated": true,
+        "description": "Replace the teacher's photo (deprecated: use PUT /v1/me/photo).",
         "operationId": "put_my_photo_v1_staff_me_photo_put",
         "requestBody": {
           "content": {
