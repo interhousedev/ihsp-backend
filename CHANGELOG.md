@@ -4,6 +4,21 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-11-19
+
+### Added
+
+- Admission catalog proposals carry study programs (school, degree, canonical field ids); the study field list grows from 31 to 88 fields with uz, ru and en labels. Catalog tokens may submit opportunities.
+- `next_deadline` on institutions and opportunities and `sort=deadline` (soonest first) on both lists.
+
+### Changed
+
+- Student-only admission routes (profile, essays, list, items, reviews, courses, career, documents, deadlines, plans, quizzes) need the student role; other callers get 403 `admission/not_applicant`. Staff routes are unchanged.
+
+### Upgrade notes
+
+- Migration `admission_0044_program_fields`.
+
 ## [1.7.0] - 2026-11-19
 
 ### Added
