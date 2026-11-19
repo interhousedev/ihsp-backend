@@ -489,6 +489,7 @@ def _seed(table: sa.Table) -> None:
     rows = []
     for slug, (url, cycles) in SEED.items():
         inst = conn.execute(
+            # nosemgrep: avoid-sqlalchemy-text -- constant schema, bound parameters
             sa.text(f"SELECT id FROM {S}.institutions WHERE slug = :slug"),
             {"slug": slug},
         ).scalar()

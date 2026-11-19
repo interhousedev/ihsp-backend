@@ -138,6 +138,7 @@ def upgrade() -> None:
         schema=S,
     )
     op.execute(
+        # nosemgrep: avoid-sqlalchemy-text -- constant schema, bound parameters
         sa.text(
             f"UPDATE {S}.staff_roles SET permissions = "
             "array_append(permissions, :p) WHERE key = 'counselor_full' "
@@ -149,6 +150,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Take the permission back and drop the table."""
     op.execute(
+        # nosemgrep: avoid-sqlalchemy-text -- constant schema, bound parameters
         sa.text(
             f"UPDATE {S}.staff_roles SET permissions = "
             "array_remove(permissions, :p) WHERE key = 'counselor_full'"
