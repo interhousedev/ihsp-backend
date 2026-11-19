@@ -4,7 +4,7 @@ Routes: `/v1/admission/opportunities/*`, `/v1/admission/staff/opportunities/*`.
 """
 
 import datetime as dt
-from typing import Annotated, Literal
+from typing import Annotated, Literal, cast
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, AnyContext, ContainerDep
@@ -110,7 +110,7 @@ async def list_opportunities(
     scope: Scope | None = None,
     org_id: UUID | None = None,
     college_credit: CollegeCredit | None = None,
-    sort: Sort = "title",
+    sort: Sort | None = None,
     page: Annotated[int, Query(ge=1)] = 1,
     size: Annotated[int, Query(ge=1, le=200)] = 200,
 ) -> OpportunityListOut:
@@ -135,7 +135,8 @@ async def list_opportunities(
             sort=sort,
             page=page,
             size=size,
-        )
+        ),
+        ctx,
     )
     orgs = await container.admission.orgs.by_ids(
         [o.draft.org_id for o in found.items if o.draft.org_id]
@@ -150,12 +151,14 @@ async def list_opportunities(
                 svc.upcoming(o),
                 orgs.get(o.draft.org_id) if o.draft.org_id else None,
                 counts.get(o.id, 0),
+                o.id in found.for_you,
             )
             for o in found.items
         ],
         total=found.total,
         page=found.page,
         size=found.size,
+        sort=cast(Sort, found.sort),
     )
 
 

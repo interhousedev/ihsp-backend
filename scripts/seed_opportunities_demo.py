@@ -115,6 +115,26 @@ _PROGRAMS: tuple[_Program, ...] = (
 )
 # fmt: on
 
+# Study fields (canonical ids) per program key; unlisted programs stay general.
+_PROGRAM_FIELDS: dict[str, tuple[str, ...]] = {
+    "rsi": ("natural_sciences", "engineering"),
+    "ssp": ("physics", "natural_sciences"),
+    "ai4all": ("computer_science",),
+    "promys": ("mathematics",),
+    "mathcamp": ("mathematics",),
+    "ross": ("mathematics",),
+    "hcssim": ("mathematics",),
+    "sumac": ("mathematics",),
+    "mites": ("engineering", "computer_science"),
+    "beaver": ("engineering", "computer_science"),
+    "caltechqs": ("natural_sciences",),
+    "lumiere": ("social_sciences",),
+    "lseyoung": ("economics",),
+    "imperial": ("engineering",),
+    "ethzurich": ("engineering",),
+    "mitoc": ("engineering", "computer_science"),
+}
+
 
 def _id(*parts: str) -> UUID:
     return uuid5(_NS, "/".join(parts))
@@ -154,6 +174,7 @@ def _entries(year: int) -> list[tuple[str, OpportunityDraft]]:
                     ),
                 ),
                 note=None,
+                study_field_ids=("mathematics", "literature_languages"),
             ),
         ),
         (
@@ -173,6 +194,7 @@ def _entries(year: int) -> list[tuple[str, OpportunityDraft]]:
                 lms_course_id=None,
                 materials=(),
                 note=None,
+                study_field_ids=("literature_languages",),
             ),
         ),
         (
@@ -192,6 +214,7 @@ def _entries(year: int) -> list[tuple[str, OpportunityDraft]]:
                 lms_course_id=None,
                 materials=(),
                 note=None,
+                study_field_ids=("computer_science", "mathematics"),
             ),
         ),
     ]
@@ -216,6 +239,7 @@ def _program_rows() -> list[OpportunityRow]:
             host_institution=host,
             duration_weeks=weeks,
             ranking=rank,
+            study_field_ids=_PROGRAM_FIELDS.get(key, ()),
         ).to_payload()
         rows.append(
             OpportunityRow(

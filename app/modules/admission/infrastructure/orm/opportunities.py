@@ -37,6 +37,7 @@ _KINDS = (
     "recurring",
     "program",
     "scholarship",
+    "research",
 )
 
 

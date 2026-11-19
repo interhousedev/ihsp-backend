@@ -26,13 +26,20 @@ from app.modules.admission.domain.orgs import Organization
 from pydantic import BaseModel, Field
 
 Kind = Literal[
-    "exam", "certification", "course", "event", "recurring", "program", "scholarship"
+    "exam",
+    "certification",
+    "course",
+    "event",
+    "recurring",
+    "program",
+    "scholarship",
+    "research",
 ]
 AwardType = Literal["scholarship", "fellowship", "grant", "tuition_waiver", "program"]
 Coverage = Literal["full_tuition", "partial_tuition", "stipend", "cash", "travel"]
 Scope = Literal["local", "international"]
 CollegeCredit = Literal["none", "possible", "yes"]
-Sort = Literal["title", "ranking", "acceptance", "tuition"]
+Sort = Literal["title", "ranking", "acceptance", "tuition", "relevance"]
 MaterialKind = Literal["link", "lms_course", "alumni", "center"]
 Status = Literal["pending", "approved", "rejected"]
 Level = Literal["field", "subfield", "subject"]
@@ -163,6 +170,7 @@ class OpportunityFields(BaseModel):
     source_url: str | None = Field(default=None, max_length=2000)
     college_credit: CollegeCredit | None = None
     credit_note: str | None = Field(default=None, max_length=300)
+    study_field_ids: list[str] = Field(default_factory=list, max_length=8)
 
     def draft(self, note: str | None) -> OpportunityDraft:
         """The domain draft."""
@@ -211,6 +219,7 @@ class OpportunityFields(BaseModel):
             source_url=self.source_url,
             college_credit=self.college_credit,
             credit_note=self.credit_note,
+            study_field_ids=tuple(self.study_field_ids),
         )
 
     @classmethod
@@ -260,6 +269,7 @@ class OpportunityFields(BaseModel):
             source_url=d.source_url,
             college_credit=d.college_credit,
             credit_note=d.credit_note,
+            study_field_ids=list(d.study_field_ids),
         )
 
 
@@ -354,6 +364,7 @@ class OpportunityOut(BaseModel):
     upcoming: list[DatedEventOut]
     org: OrgOut | None = None
     comment_count: int = 0
+    for_you: bool = False
 
     @classmethod
     def of(
@@ -362,6 +373,7 @@ class OpportunityOut(BaseModel):
         upcoming: list[DatedEvent],
         org: Organization | None = None,
         comment_count: int = 0,
+        for_you: bool = False,
     ) -> "OpportunityOut":
         """Map an entry."""
         return cls(
@@ -374,6 +386,7 @@ class OpportunityOut(BaseModel):
             upcoming=[DatedEventOut.of(e) for e in upcoming],
             org=OrgOut.of(org) if org else None,
             comment_count=comment_count,
+            for_you=for_you,
         )
 
 
@@ -391,6 +404,7 @@ class OpportunityListOut(BaseModel):
     total: int
     page: int
     size: int
+    sort: Sort
 
 
 class PlanEntryIn(BaseModel):

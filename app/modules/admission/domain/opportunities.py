@@ -12,8 +12,17 @@ from dataclasses import dataclass, field
 from typing import Any, Final, Literal, get_args
 from uuid import UUID
 
+from app.modules.admission.domain.study_fields import canonical_id
+
 OpportunityKind = Literal[
-    "exam", "certification", "course", "event", "recurring", "program", "scholarship"
+    "exam",
+    "certification",
+    "course",
+    "event",
+    "recurring",
+    "program",
+    "scholarship",
+    "research",
 ]
 MaterialKind = Literal["link", "lms_course", "alumni", "center"]
 TaxonomyLevel = Literal["field", "subfield", "subject"]
@@ -43,6 +52,7 @@ REASON_MAX: Final = 500
 MAX_DATES: Final = 12
 MAX_MATERIALS: Final = 20
 MAX_SUBJECTS: Final = 10
+MAX_STUDY_FIELDS: Final = 8
 MAX_PLAN_ITEMS: Final = 60
 NAME_MAX: Final = 120
 LOCALES: Final = ("uz", "ru", "en")
@@ -109,6 +119,7 @@ class OpportunityDraft:
     source_url: str | None = None
     college_credit: str | None = None
     credit_note: str | None = None
+    study_field_ids: tuple[str, ...] = ()
 
     def urls(self) -> list[str]:
         """Every link the draft carries."""
@@ -190,10 +201,18 @@ class OpportunityDraft:
         if self.summary is not None and len(self.summary) > SUMMARY_MAX:
             bad.append("summary")
         bad += self._optional_text_problems()
+        return bad + self._collection_problems()
+
+    def _collection_problems(self) -> list[str]:
+        bad: list[str] = []
         if len(self.subject_ids) > MAX_SUBJECTS:
             bad.append("subject_ids")
         if any(g not in GRADES for g in self.grades):
             bad.append("grades")
+        if len(self.study_field_ids) > MAX_STUDY_FIELDS or any(
+            canonical_id(f) != f for f in self.study_field_ids
+        ):
+            bad.append("study_field_ids")
         for name in ("registration_deadlines", "exam_dates", "last_year_dates"):
             if len(getattr(self, name)) > MAX_DATES:
                 bad.append(name)
@@ -257,6 +276,7 @@ class OpportunityDraft:
             "source_url": self.source_url,
             "college_credit": self.college_credit,
             "credit_note": self.credit_note,
+            "study_field_ids": list(self.study_field_ids),
             "materials": [
                 {
                     "kind": m.kind,
@@ -319,6 +339,7 @@ class OpportunityDraft:
             source_url=p.get("source_url"),
             college_credit=p.get("college_credit"),
             credit_note=p.get("credit_note"),
+            study_field_ids=tuple(p.get("study_field_ids", [])),
         )
 
 

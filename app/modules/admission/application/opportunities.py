@@ -4,12 +4,13 @@ import dataclasses
 import datetime as dt
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Final, Protocol
+from typing import Final, Protocol, cast
 from urllib.parse import urlsplit
 from uuid import UUID
 
 from app.modules.admission.application.access import AccessPolicy
 from app.modules.admission.application.actor import AdmissionContext
+from app.modules.admission.application.study_focus import StudyFocus, load_study_focus
 from app.modules.admission.domain.errors import (
     AdmissionForbiddenError,
     AdmissionNotFoundError,
@@ -38,8 +39,10 @@ from app.modules.admission.domain.opportunities import (
     upcoming_dates,
 )
 from app.modules.admission.domain.permissions import KIND_ROLE, Permission
+from app.modules.admission.domain.study_fields import group_of
 from app.modules.admission.ports.opportunities import OpportunityUnitOfWork
 from app.modules.admission.ports.repositories import AuditEvent
+from app.modules.admission.ports.unit_of_work import AdmissionUnitOfWork
 from app.shared.actor import Role
 from app.shared.base_error import ValidationFailedError
 from app.shared.clock import Clock
@@ -104,22 +107,35 @@ class CatalogFilter:
     scope: str | None = None
     org_id: UUID | None = None
     college_credit: str | None = None
-    sort: str = "title"
+    sort: str | None = None
     page: int = 1
     size: int = 200
 
 
 @dataclass(frozen=True, slots=True)
 class CatalogPage:
-    """One page of the filtered catalog."""
+    """One page of the filtered catalog; `sort` is the order actually used."""
 
     items: list[Opportunity]
     total: int
     page: int
     size: int
+    sort: str = "title"
+    for_you: frozenset[UUID] = frozenset()
 
 
-SORTS: Final = ("title", "ranking", "acceptance", "tuition")
+SORTS: Final = ("title", "ranking", "acceptance", "tuition", "relevance")
+_NO_MATCH: Final = 2
+
+
+def relevance_rank(draft: OpportunityDraft, field_ids: tuple[str, ...]) -> int:
+    """0 for a shared study field, 1 for a shared study group, 2 otherwise."""
+    own = set(draft.study_field_ids)
+    if own & set(field_ids):
+        return 0
+    if {group_of(i) for i in own} & {group_of(i) for i in field_ids}:
+        return 1
+    return _NO_MATCH
 
 
 def _sort_key(sort: str) -> Callable[[Opportunity], tuple[int, float, str]]:
@@ -133,7 +149,7 @@ def _sort_key(sort: str) -> Callable[[Opportunity], tuple[int, float, str]]:
             "tuition": d.tuition_usd,
         }.get(sort)
         title = d.title.casefold()
-        if sort == "title":
+        if sort in ("title", "relevance"):
             return (0, 0.0, title)
         return (1, 0.0, title) if value is None else (0, float(value), title)
 
@@ -510,12 +526,36 @@ class OpportunityService:
 
     # - - - Browsing - - -
 
-    async def catalog(self, f: CatalogFilter) -> CatalogPage:
-        """One page of the filtered, sorted catalog."""
+    async def catalog(
+        self, f: CatalogFilter, ctx: AdmissionContext | None = None
+    ) -> CatalogPage:
+        """One page of the filtered, sorted catalog.
+
+        An explicit sort wins. Otherwise a student who named a field of study
+        gets `relevance` (matching field, then same group, then the rest; nothing
+        is hidden) and everyone else gets `title`.
+        """
         rows = await self.browse(f)
-        rows.sort(key=_sort_key(f.sort))
+        focus = await self._focus(ctx)
+        sort = f.sort or ("relevance" if focus and focus.field_ids else "title")
+        if sort == "relevance" and focus is not None:
+            ranks = {o.id: relevance_rank(o.draft, focus.field_ids) for o in rows}
+            rows.sort(key=lambda o: (ranks[o.id], o.draft.title.casefold()))
+            for_you = frozenset(i for i, r in ranks.items() if r < _NO_MATCH)
+        else:
+            rows.sort(key=_sort_key(sort))
+            for_you = frozenset()
         start = (f.page - 1) * f.size
-        return CatalogPage(rows[start : start + f.size], len(rows), f.page, f.size)
+        return CatalogPage(
+            rows[start : start + f.size], len(rows), f.page, f.size, sort, for_you
+        )
+
+    async def _focus(self, ctx: AdmissionContext | None) -> StudyFocus | None:
+        """The student's study fields; None for anyone who is not a student."""
+        if ctx is None or Role.STUDENT not in ctx.actor.roles:
+            return None
+        async with self._uow() as uow:
+            return await load_study_focus(cast(AdmissionUnitOfWork, uow), ctx.user_id)
 
     async def browse(self, f: CatalogFilter) -> list[Opportunity]:
         """Live entries matching the filters, by title."""
