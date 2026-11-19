@@ -3,7 +3,7 @@
 import datetime as dt
 from uuid import UUID
 
-from app.interfaces.http.v1.admission.deps import require_applicant
+from app.interfaces.http.v1.admission.deps import ensure_applicant, require_applicant
 from app.modules.admission.application.actor import ResolveAdmissionActor
 from app.modules.admission.domain.access import Entitlement
 from app.modules.admission.domain.errors import NotApplicantError
@@ -83,3 +83,12 @@ def test_revoked_row_is_not_an_applicant() -> None:
     )
     actor = AdmissionActor(COUNSELOR, revoked, frozenset(), student_role=True)
     assert not actor.is_applicant
+
+
+async def test_ensure_applicant_refuses_counselor_without_student_role() -> None:
+    store = FakeStore()
+    ctx = await _resolver(store, FakeMembership([])).execute(
+        Actor(COUNSELOR, frozenset({Role.COUNSELOR}))
+    )
+    with pytest.raises(NotApplicantError):
+        ensure_applicant(ctx)

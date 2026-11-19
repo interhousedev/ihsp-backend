@@ -7,6 +7,7 @@ from uuid import UUID
 from app.interfaces.http.v1.admission.deps import (
     AdmissionCtx,
     ContainerDep,
+    ensure_applicant,
 )
 from app.modules.admission.application.deadlines import DeadlineInput, DeadlineItem
 from app.modules.admission.application.documents import DocumentView
@@ -430,6 +431,8 @@ async def list_documents(
     container: ContainerDep, ctx: AdmissionCtx, student_id: UUID | None = None
 ) -> list[DocumentOut]:
     """List my documents (staff pass `student_id`)."""
+    if student_id is None:
+        ensure_applicant(ctx)
     views = await container.admission.documents.listing(ctx, student_id)
     return [DocumentOut.of(v) for v in views]
 
@@ -655,6 +658,8 @@ async def my_deadlines(
     container: ContainerDep, ctx: AdmissionCtx, student_id: UUID | None = None
 ) -> list[MilestoneOut]:
     """Deadlines of the list's universities."""
+    if student_id is None:
+        ensure_applicant(ctx)
     items = await container.admission.deadlines.mine(ctx, student_id)
     return [MilestoneOut.of(i) for i in items]
 

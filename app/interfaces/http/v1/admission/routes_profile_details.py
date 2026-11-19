@@ -2,7 +2,7 @@
 
 from typing import Any, Literal
 
-from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep
+from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep, StudentCtx
 from app.interfaces.http.v1.admission.routes_items import _locale
 from app.modules.admission.application.document_process import ProcessStep
 from app.modules.admission.application.profile_details import DetailsOverview
@@ -113,7 +113,7 @@ async def put_interests(
 
 
 async def get_quiz(
-    quiz: QuizT, container: ContainerDep, ctx: AdmissionCtx
+    quiz: QuizT, container: ContainerDep, ctx: StudentCtx
 ) -> QuizAnswersIO:
     """My stored answers of a quiz."""
     return QuizAnswersIO.of(
@@ -122,7 +122,7 @@ async def get_quiz(
 
 
 async def put_quiz(
-    quiz: QuizT, body: QuizAnswersIO, container: ContainerDep, ctx: AdmissionCtx
+    quiz: QuizT, body: QuizAnswersIO, container: ContainerDep, ctx: StudentCtx
 ) -> QuizAnswersIO:
     """Replace my answers of a quiz."""
     saved = await container.admission.profile_details.put_quiz(

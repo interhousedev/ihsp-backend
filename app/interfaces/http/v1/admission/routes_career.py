@@ -4,7 +4,12 @@ import datetime as dt
 from typing import Annotated
 from uuid import UUID
 
-from app.interfaces.http.v1.admission.deps import AdmissionCtx, AnyContext, ContainerDep
+from app.interfaces.http.v1.admission.deps import (
+    AdmissionCtx,
+    AnyContext,
+    ContainerDep,
+    StudentCtx,
+)
 from app.interfaces.http.v1.admission.routes_items import _locale
 from app.modules.admission.application.study_focus import StudyFocus
 from app.modules.admission.application.voice import VoiceService
@@ -267,7 +272,7 @@ async def _plan_out(
 
 
 async def get_career(
-    container: ContainerDep, ctx: AdmissionCtx, accept_language: Lang = None
+    container: ContainerDep, ctx: StudentCtx, accept_language: Lang = None
 ) -> CareerPlanOut:
     """My career plan."""
     plan = await container.admission.career.plan(ctx, ctx.user_id)

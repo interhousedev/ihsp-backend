@@ -30,13 +30,18 @@ async def require_admission_actor(
     return ctx
 
 
-async def require_applicant(
-    ctx: Annotated[AdmissionContext, Depends(resolve_admission_context)],
-) -> AdmissionContext:
-    """Admit only the student side: the caller holds the student role (or alumni)."""
+def ensure_applicant(ctx: AdmissionContext) -> AdmissionContext:
+    """Refuse callers without the student role (alumni excepted)."""
     if not ctx.admission.is_applicant:
         raise NotApplicantError()
     return ctx
+
+
+async def require_applicant(
+    ctx: Annotated[AdmissionContext, Depends(resolve_admission_context)],
+) -> AdmissionContext:
+    """Admit only the student side."""
+    return ensure_applicant(ctx)
 
 
 AnyContext = Annotated[AdmissionContext, Depends(resolve_admission_context)]

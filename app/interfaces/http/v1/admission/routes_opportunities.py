@@ -7,7 +7,12 @@ import datetime as dt
 from typing import Annotated, Literal, cast
 from uuid import UUID
 
-from app.interfaces.http.v1.admission.deps import AdmissionCtx, AnyContext, ContainerDep
+from app.interfaces.http.v1.admission.deps import (
+    AdmissionCtx,
+    AnyContext,
+    ContainerDep,
+    StudentCtx,
+)
 from app.interfaces.http.v1.admission.schemas_opp_comments import OppCommentOut
 from app.interfaces.http.v1.admission.schemas_opportunities import (
     AiPlanEnvelope,
@@ -235,9 +240,7 @@ async def archive_opportunity(
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-async def get_my_opportunity_plan(
-    container: ContainerDep, ctx: AdmissionCtx
-) -> PlanOut:
+async def get_my_opportunity_plan(container: ContainerDep, ctx: StudentCtx) -> PlanOut:
     """The caller's saved entries with analytics."""
     view = await container.admission.opportunities.plan_of(ctx, ctx.user_id)
     return PlanOut.of(view)
@@ -271,7 +274,7 @@ async def remove_opportunity_from_plan(
 
 async def list_opportunity_deadlines(
     container: ContainerDep,
-    ctx: AdmissionCtx,
+    ctx: StudentCtx,
     start: dt.date,
     end: dt.date,
 ) -> DeadlineListOut:
@@ -284,7 +287,7 @@ async def list_opportunity_deadlines(
 
 
 async def get_opportunity_ai_plan(
-    container: ContainerDep, ctx: AdmissionCtx
+    container: ContainerDep, ctx: StudentCtx
 ) -> AiPlanEnvelope:
     """The last generated grade 9–12 plan."""
     plan = await container.admission.opportunity_planner.last(ctx)
@@ -292,7 +295,7 @@ async def get_opportunity_ai_plan(
 
 
 async def generate_opportunity_ai_plan(
-    body: AiPlanIn, container: ContainerDep, ctx: AdmissionCtx
+    body: AiPlanIn, container: ContainerDep, ctx: StudentCtx
 ) -> AiPlanOut:
     """Build a grade 9–12 plan from the saved entries (needs `admission_ai`)."""
     plan = await container.admission.opportunity_planner.generate(
