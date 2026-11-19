@@ -503,7 +503,7 @@ def test_bugsink_has_its_own_database_and_is_only_reached_through_the_edge(
 ) -> None:
     services = prod_model["services"]
     bugsink = services["bugsink"]
-    assert bugsink["image"] == "bugsink/bugsink:2.6.2"
+    assert bugsink["image"] == "bugsink/bugsink:2.6.3"
     assert set(bugsink["networks"]) == {"data", "edge"}
     assert any(
         str(v.get("target", "")).endswith("11-bugsink.sh")
