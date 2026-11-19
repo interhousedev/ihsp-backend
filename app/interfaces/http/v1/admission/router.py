@@ -2,7 +2,12 @@
 
 from uuid import UUID
 
-from app.interfaces.http.v1.admission.deps import AdmissionCtx, AnyContext, ContainerDep
+from app.interfaces.http.v1.admission.deps import (
+    AdmissionCtx,
+    AnyContext,
+    ContainerDep,
+    StudentCtx,
+)
 from app.interfaces.http.v1.admission.schemas import (
     AdmissionConfigOut,
     AdmissionMeOut,
@@ -29,7 +34,7 @@ async def get_admission_me(container: ContainerDep, ctx: AnyContext) -> Admissio
     return AdmissionMeOut.of(get_me(ctx, container.clock.now()))
 
 
-async def list_my_courses(container: ContainerDep, ctx: AdmissionCtx) -> CourseListOut:
+async def list_my_courses(container: ContainerDep, ctx: StudentCtx) -> CourseListOut:
     """The caller's merged courses."""
     rows = await container.admission.courses.list(ctx, ctx.user_id)
     return CourseListOut(items=[CourseOut.of(c) for c in rows])
@@ -44,7 +49,7 @@ async def list_student_courses(
 
 
 async def add_manual_course(
-    body: ManualCourseIn, container: ContainerDep, ctx: AdmissionCtx
+    body: ManualCourseIn, container: ContainerDep, ctx: StudentCtx
 ) -> CourseOut:
     """Add a course taken elsewhere."""
     course = Course(
@@ -61,7 +66,7 @@ async def add_manual_course(
 
 
 async def add_lms_course(
-    lms_course_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+    lms_course_id: UUID, container: ContainerDep, ctx: StudentCtx
 ) -> CourseOut:
     """Store a snapshot of one of the caller's LMS courses (idempotent)."""
     row = await container.admission.courses.add_from_lms(ctx, lms_course_id)
@@ -69,7 +74,7 @@ async def add_lms_course(
 
 
 async def set_course_included(
-    course_id: UUID, body: CourseIncludedIn, container: ContainerDep, ctx: AdmissionCtx
+    course_id: UUID, body: CourseIncludedIn, container: ContainerDep, ctx: StudentCtx
 ) -> CourseOut:
     """Include or exclude a course."""
     row = await container.admission.courses.set_included(ctx, course_id, body.included)

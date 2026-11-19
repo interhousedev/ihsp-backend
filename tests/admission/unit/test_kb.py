@@ -71,7 +71,9 @@ def ctx(*roles: Role, applicant: bool = False) -> AdmissionContext:
     staff = frozenset(r for r in roles if r in {Role.COUNSELOR, Role.MENTOR})
     return AdmissionContext(
         actor=Actor(user_id=user, roles=frozenset(roles)),
-        admission=AdmissionActor(user, entitlement, staff),
+        admission=AdmissionActor(
+            user, entitlement, staff, student_role=Role.STUDENT in roles
+        ),
         grade=11 if applicant else None,
         group_ids=frozenset(),
         assignments=(),

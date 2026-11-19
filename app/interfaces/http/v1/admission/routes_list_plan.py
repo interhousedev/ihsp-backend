@@ -8,7 +8,7 @@ add to the caller's own list (AI consent and a weekly limit apply).
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep
+from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep, StudentCtx
 from app.interfaces.http.v1.admission.routes_items import _locale
 
 from fastapi import APIRouter, Header, Query
@@ -108,7 +108,7 @@ async def list_insights(
 
 
 async def suggest_list(
-    container: ContainerDep, ctx: AdmissionCtx, accept_language: Lang = None
+    container: ContainerDep, ctx: StudentCtx, accept_language: Lang = None
 ) -> ListSuggestionsOut:
     """AI ideas for my list (needs the `admission_ai` consent)."""
     rows = await container.admission.list_plan.suggest(ctx, _locale(accept_language))

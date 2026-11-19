@@ -5,7 +5,7 @@ import datetime as dt
 from typing import Any
 from uuid import UUID
 
-from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep
+from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep, StudentCtx
 from app.modules.admission.application.profile import ProfileView
 from app.modules.admission.application.profile_alignment import AlignmentResult
 from app.modules.admission.domain.errors import AdmissionNotFoundError
@@ -121,13 +121,13 @@ class AlignmentOut(BaseModel):
         )
 
 
-async def get_my_profile(container: ContainerDep, ctx: AdmissionCtx) -> ProfileOut:
+async def get_my_profile(container: ContainerDep, ctx: StudentCtx) -> ProfileOut:
     """Return my profile answers and where to resume."""
     return ProfileOut.of(await container.admission.profile.get(ctx, ctx.user_id))
 
 
 async def put_my_profile(
-    body: ProfilePutIn, container: ContainerDep, ctx: AdmissionCtx
+    body: ProfilePutIn, container: ContainerDep, ctx: StudentCtx
 ) -> ProfileOut:
     """Save answers (partial saves allowed)."""
     view = await container.admission.profile.save(ctx, body.answers, body.lock_version)
@@ -141,20 +141,20 @@ async def get_student_profile(
     return ProfileOut.of(await container.admission.profile.get(ctx, student_id))
 
 
-async def get_my_words(container: ContainerDep, ctx: AdmissionCtx) -> WordsOut:
+async def get_my_words(container: ContainerDep, ctx: StudentCtx) -> WordsOut:
     """Return my three words and suggestions."""
     return WordsOut.of(await container.admission.words.get(ctx, ctx.user_id))
 
 
 async def put_my_words(
-    body: WordsPutIn, container: ContainerDep, ctx: AdmissionCtx
+    body: WordsPutIn, container: ContainerDep, ctx: StudentCtx
 ) -> WordsOut:
     """Confirm the three words (creates a new version)."""
     state = await container.admission.words.set(ctx, body.words, body.lock_version)
     return WordsOut.of(state)
 
 
-async def suggest_my_words(container: ContainerDep, ctx: AdmissionCtx) -> WordsOut:
+async def suggest_my_words(container: ContainerDep, ctx: StudentCtx) -> WordsOut:
     """Ask the AI for eight candidate words."""
     return WordsOut.of(await container.admission.words.suggest(ctx))
 
@@ -166,12 +166,12 @@ async def get_student_words(
     return WordsOut.of(await container.admission.words.get(ctx, student_id))
 
 
-async def run_my_alignment(container: ContainerDep, ctx: AdmissionCtx) -> AlignmentOut:
+async def run_my_alignment(container: ContainerDep, ctx: StudentCtx) -> AlignmentOut:
     """Run (or reuse) the alignment map."""
     return AlignmentOut.of(await container.admission.alignment.run(ctx))
 
 
-async def get_my_alignment(container: ContainerDep, ctx: AdmissionCtx) -> AlignmentOut:
+async def get_my_alignment(container: ContainerDep, ctx: StudentCtx) -> AlignmentOut:
     """Return my latest alignment map."""
     return await _latest(container, ctx, ctx.user_id)
 

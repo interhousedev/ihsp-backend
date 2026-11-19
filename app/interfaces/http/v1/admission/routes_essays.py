@@ -4,7 +4,7 @@ import datetime as dt
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep
+from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep, StudentCtx
 from app.interfaces.http.v1.admission.routes_items import _locale
 from app.modules.admission.application.essay_review_core import EssayCheck
 from app.modules.admission.application.essays import SharedEssay
@@ -412,28 +412,28 @@ class LatestCheckOut(CoachCheckOut):
     created_at: dt.datetime
 
 
-async def list_essays(container: ContainerDep, ctx: AdmissionCtx) -> EssayListOut:
+async def list_essays(container: ContainerDep, ctx: StudentCtx) -> EssayListOut:
     """My essays."""
     rows = await container.admission.essays.mine(ctx)
     return EssayListOut(items=[EssaySummaryOut.of(e) for e in rows])
 
 
 async def create_essay(
-    body: EssayIn, container: ContainerDep, ctx: AdmissionCtx
+    body: EssayIn, container: ContainerDep, ctx: StudentCtx
 ) -> EssayOut:
     """Start an essay (at most 40)."""
     return EssayOut.of(await container.admission.essays.create(ctx, body.model_dump()))
 
 
 async def get_essay(
-    essay_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+    essay_id: UUID, container: ContainerDep, ctx: StudentCtx
 ) -> EssayOut:
     """One of my essays with its draft, notes and plan."""
     return EssayOut.of(await container.admission.essays.get(ctx, essay_id))
 
 
 async def patch_essay(
-    essay_id: UUID, body: EssayPatchIn, container: ContainerDep, ctx: AdmissionCtx
+    essay_id: UUID, body: EssayPatchIn, container: ContainerDep, ctx: StudentCtx
 ) -> EssayOut:
     """Autosave; 409 when another tab saved first. May snapshot a version."""
     changes = body.model_dump(exclude_unset=True, exclude={"lock_version"})
@@ -449,7 +449,7 @@ async def patch_essay(
 
 
 async def delete_essay(
-    essay_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+    essay_id: UUID, container: ContainerDep, ctx: StudentCtx
 ) -> Response:
     """Delete my essay and its versions."""
     await container.admission.essays.delete(ctx, essay_id)
@@ -457,7 +457,7 @@ async def delete_essay(
 
 
 async def list_versions(
-    essay_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+    essay_id: UUID, container: ContainerDep, ctx: StudentCtx
 ) -> EssayVersionListOut:
     """All versions of my essay, newest first."""
     rows = await container.admission.essays.versions(ctx, essay_id)
@@ -465,7 +465,7 @@ async def list_versions(
 
 
 async def snapshot_essay(
-    essay_id: UUID, body: SnapshotIn, container: ContainerDep, ctx: AdmissionCtx
+    essay_id: UUID, body: SnapshotIn, container: ContainerDep, ctx: StudentCtx
 ) -> EssayVersionOut:
     """Save the current draft as a version."""
     out = await container.admission.essays.snapshot(
@@ -479,7 +479,7 @@ async def restore_version(
     version: int,
     body: RestoreIn,
     container: ContainerDep,
-    ctx: AdmissionCtx,
+    ctx: StudentCtx,
 ) -> EssayOut:
     """Restore an old version; the current draft is kept as a version first."""
     out = await container.admission.essays.restore(
@@ -493,7 +493,7 @@ async def share_version(
     version: int,
     body: ShareIn,
     container: ContainerDep,
-    ctx: AdmissionCtx,
+    ctx: StudentCtx,
 ) -> EssayVersionOut:
     """Share or unshare a version with my mentors and counselors."""
     out = await container.admission.essays.share(ctx, essay_id, version, body.shared)
@@ -517,21 +517,21 @@ async def list_student_essays(
     return SharedEssayListOut(items=[SharedEssayOut.of(s) for s in rows])
 
 
-async def list_ideas(container: ContainerDep, ctx: AdmissionCtx) -> IdeaListOut:
+async def list_ideas(container: ContainerDep, ctx: StudentCtx) -> IdeaListOut:
     """My ideas board."""
     rows = await container.admission.essays.ideas(ctx)
     return IdeaListOut(items=[IdeaOut.of(i) for i in rows])
 
 
 async def create_idea(
-    body: IdeaIn, container: ContainerDep, ctx: AdmissionCtx
+    body: IdeaIn, container: ContainerDep, ctx: StudentCtx
 ) -> IdeaOut:
     """Pin an idea (at most 100)."""
     return IdeaOut.of(await container.admission.essays.add_idea(ctx, body.model_dump()))
 
 
 async def patch_idea(
-    idea_id: UUID, body: IdeaPatchIn, container: ContainerDep, ctx: AdmissionCtx
+    idea_id: UUID, body: IdeaPatchIn, container: ContainerDep, ctx: StudentCtx
 ) -> IdeaOut:
     """Change an idea."""
     changes = body.model_dump(exclude_unset=True, exclude={"lock_version"})
@@ -545,7 +545,7 @@ async def patch_idea(
 
 
 async def delete_idea(
-    idea_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+    idea_id: UUID, container: ContainerDep, ctx: StudentCtx
 ) -> Response:
     """Delete an idea."""
     await container.admission.essays.delete_idea(ctx, idea_id)
@@ -553,7 +553,7 @@ async def delete_idea(
 
 
 async def coach_brainstorm(
-    essay_id: UUID, container: ContainerDep, ctx: AdmissionCtx, lang: Lang = None
+    essay_id: UUID, container: ContainerDep, ctx: StudentCtx, lang: Lang = None
 ) -> CoachQuestionsOut:
     """Questions that help me find my story (AI consent and a daily limit apply)."""
     out = await container.admission.essay_coach.brainstorm(ctx, essay_id, _locale(lang))
@@ -561,7 +561,7 @@ async def coach_brainstorm(
 
 
 async def coach_outline(
-    essay_id: UUID, container: ContainerDep, ctx: AdmissionCtx, lang: Lang = None
+    essay_id: UUID, container: ContainerDep, ctx: StudentCtx, lang: Lang = None
 ) -> CoachOutlineOut:
     """A proposed outline (AI consent and a daily limit apply)."""
     out = await container.admission.essay_coach.outline(ctx, essay_id, _locale(lang))
@@ -576,7 +576,7 @@ async def coach_outline(
 
 
 async def coach_feedback(
-    essay_id: UUID, container: ContainerDep, ctx: AdmissionCtx, lang: Lang = None
+    essay_id: UUID, container: ContainerDep, ctx: StudentCtx, lang: Lang = None
 ) -> CoachFeedbackOut:
     """Feedback on my draft (AI consent and a daily limit apply)."""
     f = await container.admission.essay_coach.feedback(ctx, essay_id, _locale(lang))
@@ -590,7 +590,7 @@ async def coach_feedback(
 
 
 async def coach_check(
-    essay_id: UUID, container: ContainerDep, ctx: AdmissionCtx, lang: Lang = None
+    essay_id: UUID, container: ContainerDep, ctx: StudentCtx, lang: Lang = None
 ) -> CoachCheckOut:
     """Score my draft on six dimensions against its prompt (AI consent, daily limit)."""
     c = await container.admission.essay_coach.check(ctx, essay_id, _locale(lang))
@@ -598,7 +598,7 @@ async def coach_check(
 
 
 async def latest_check(
-    essay_id: UUID, container: ContainerDep, ctx: AdmissionCtx, lang: Lang = None
+    essay_id: UUID, container: ContainerDep, ctx: StudentCtx, lang: Lang = None
 ) -> LatestCheckOut:
     """My latest stored check; 404 before the first check, no model call."""
     c, stale, at = await container.admission.essay_coach.latest_check(
@@ -636,7 +636,7 @@ async def coach_review(
     essay_id: UUID,
     body: CoachReviewIn,
     container: ContainerDep,
-    ctx: AdmissionCtx,
+    ctx: StudentCtx,
     lang: Lang = None,
 ) -> CoachFeedbackOut:
     """Review my draft overall, by sentence, both or one excerpt (AI consent)."""
@@ -659,7 +659,7 @@ async def coach_refine(
     essay_id: UUID,
     body: CoachRefineIn,
     container: ContainerDep,
-    ctx: AdmissionCtx,
+    ctx: StudentCtx,
     lang: Lang = None,
 ) -> CoachHintsOut:
     """Hints to reword, connect or merge a passage; never new text (AI consent)."""
@@ -670,7 +670,7 @@ async def coach_refine(
 
 
 async def read_life_story(
-    body: LifeStoryIn, container: ContainerDep, ctx: AdmissionCtx, lang: Lang = None
+    body: LifeStoryIn, container: ContainerDep, ctx: StudentCtx, lang: Lang = None
 ) -> LifeStoryOut:
     """What drives me, what to support and leave out (AI consent)."""
     r = await container.admission.essay_coach.life_story(ctx, body.text, _locale(lang))
@@ -680,7 +680,7 @@ async def read_life_story(
 
 
 async def coach_expand(
-    idea_id: UUID, container: ContainerDep, ctx: AdmissionCtx, lang: Lang = None
+    idea_id: UUID, container: ContainerDep, ctx: StudentCtx, lang: Lang = None
 ) -> CoachExpansionOut:
     """Angles on one idea (AI consent and a daily limit apply)."""
     out = await container.admission.essay_coach.expand(ctx, idea_id, _locale(lang))

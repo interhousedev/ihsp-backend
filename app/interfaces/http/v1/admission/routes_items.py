@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep
+from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep, StudentCtx
 from app.modules.admission.application.interview import InterviewState
 from app.modules.admission.application.items import ItemView, MetricDraft
 from app.modules.admission.application.review import NOTE_MAX
@@ -297,7 +297,7 @@ class FeedbackIn(BaseModel):
     note: str | None = Field(default=None, max_length=NOTE_MAX)
 
 
-async def list_my_items(container: ContainerDep, ctx: AdmissionCtx) -> ItemListOut:
+async def list_my_items(container: ContainerDep, ctx: StudentCtx) -> ItemListOut:
     """Return my activities and honors."""
     views = await container.admission.items.list_items(ctx, ctx.user_id)
     return ItemListOut(items=[ItemOut.of(v) for v in views])
@@ -312,7 +312,7 @@ async def list_student_items(
 
 
 async def create_item(
-    body: ItemCreateIn, container: ContainerDep, ctx: AdmissionCtx
+    body: ItemCreateIn, container: ContainerDep, ctx: StudentCtx
 ) -> ItemOut:
     """Add an activity or honor at the end of its list."""
     item = Item(
@@ -337,7 +337,7 @@ async def create_item(
 
 
 async def patch_item(
-    item_id: UUID, body: ItemPatchIn, container: ContainerDep, ctx: AdmissionCtx
+    item_id: UUID, body: ItemPatchIn, container: ContainerDep, ctx: StudentCtx
 ) -> ItemOut:
     """Change fields of my item."""
     changes = body.model_dump(exclude_unset=True, exclude={"lock_version"})
@@ -355,7 +355,7 @@ async def patch_item(
 
 
 async def delete_item(
-    item_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+    item_id: UUID, container: ContainerDep, ctx: StudentCtx
 ) -> Response:
     """Delete my item with its metrics, interview and reviews."""
     await container.admission.items.delete(ctx, item_id)
@@ -363,7 +363,7 @@ async def delete_item(
 
 
 async def order_items(
-    body: ItemOrderIn, container: ContainerDep, ctx: AdmissionCtx
+    body: ItemOrderIn, container: ContainerDep, ctx: StudentCtx
 ) -> ItemListOut:
     """Set the display order of my items."""
     await container.admission.items.order(ctx, body.ids)
@@ -371,7 +371,7 @@ async def order_items(
 
 
 async def put_metrics(
-    item_id: UUID, body: MetricsIn, container: ContainerDep, ctx: AdmissionCtx
+    item_id: UUID, body: MetricsIn, container: ContainerDep, ctx: StudentCtx
 ) -> MetricsOut:
     """Replace the metrics of my item."""
     rows = await container.admission.items.set_metrics(
@@ -381,7 +381,7 @@ async def put_metrics(
 
 
 async def get_interview(
-    item_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+    item_id: UUID, container: ContainerDep, ctx: StudentCtx
 ) -> InterviewOut:
     """Return the interview of my item so far."""
     return InterviewOut.of(await container.admission.item_interviews.get(ctx, item_id))
@@ -391,7 +391,7 @@ async def step_interview(
     item_id: UUID,
     body: InterviewIn,
     container: ContainerDep,
-    ctx: AdmissionCtx,
+    ctx: StudentCtx,
     accept_language: LocaleHeader = None,
 ) -> InterviewOut:
     """Answer the last round and get the next one or the proposal."""
@@ -404,7 +404,7 @@ async def step_interview(
 async def review_item(
     item_id: UUID,
     container: ContainerDep,
-    ctx: AdmissionCtx,
+    ctx: StudentCtx,
     accept_language: LocaleHeader = None,
 ) -> ReviewOut:
     """Review my item (cached per input; soft daily limits)."""
@@ -415,7 +415,7 @@ async def review_item(
 
 
 async def review_feedback(
-    review_id: UUID, body: FeedbackIn, container: ContainerDep, ctx: AdmissionCtx
+    review_id: UUID, body: FeedbackIn, container: ContainerDep, ctx: StudentCtx
 ) -> Response:
     """Mark my review as helpful or unfair."""
     await container.admission.item_reviews.feedback(

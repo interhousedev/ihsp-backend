@@ -119,6 +119,7 @@ class ResolveAdmissionActor:
                 user_id=actor.user_id,
                 entitlement=entitlement,
                 staff_roles=admission_staff_roles(actor.roles),
+                student_role=Role.STUDENT in actor.roles,
             ),
             grade=grade_from_group_name(student.group_name) if student else None,
             group_ids=frozenset({student.group_id}) if student else frozenset(),

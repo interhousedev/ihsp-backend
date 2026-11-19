@@ -5,7 +5,7 @@ from typing import Annotated
 from app.bootstrap.container import Container
 from app.interfaces.http.dependencies import get_actor, get_container
 from app.modules.admission.application.actor import AdmissionContext
-from app.modules.admission.domain.errors import NotEntitledError
+from app.modules.admission.domain.errors import NotApplicantError, NotEntitledError
 from app.shared.actor import Actor
 
 from fastapi import Depends
@@ -30,5 +30,15 @@ async def require_admission_actor(
     return ctx
 
 
+async def require_applicant(
+    ctx: Annotated[AdmissionContext, Depends(resolve_admission_context)],
+) -> AdmissionContext:
+    """Admit only the student side: the caller holds the student role (or alumni)."""
+    if not ctx.admission.is_applicant:
+        raise NotApplicantError()
+    return ctx
+
+
 AnyContext = Annotated[AdmissionContext, Depends(resolve_admission_context)]
 AdmissionCtx = Annotated[AdmissionContext, Depends(require_admission_actor)]
+StudentCtx = Annotated[AdmissionContext, Depends(require_applicant)]

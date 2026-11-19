@@ -2,6 +2,7 @@
   "admission-not-found": "Topilmadi.",
   "admission-forbidden": "Bu amal uchun ruxsatingiz yoʼq.",
   "admission-not-entitled": "Universitetga kirish ilovasi 10- va 11-sinf oʼquvchilari hamda qabul xodimlari uchun.",
+  "admission-not-applicant": "Ilovaning bu boʼlimi oʼquvchi hisobiga ega oʼquvchilar uchun.",
   "admission-consent-required": "Davom etish uchun rozilik bering.",
   "admission-guardian-consent-required": "Avval ota-ona yoki vasiy rozilik berishi kerak.",
   "admission-char-limit": "Matn ruxsat etilganidan uzun.",

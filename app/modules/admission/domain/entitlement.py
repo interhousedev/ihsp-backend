@@ -21,11 +21,16 @@ class AdmissionActor:
     user_id: UUID
     entitlement: Entitlement | None
     staff_roles: frozenset[Role]
+    # A school_student entitlement counts only with the school student role; an
+    # alumni entitlement needs no role (§4.1).
+    student_role: bool = False
 
     @property
     def is_applicant(self) -> bool:
         """Return whether the caller may use the student side."""
-        return self.entitlement is not None and self.entitlement.is_applicant
+        if self.entitlement is None or not self.entitlement.is_applicant:
+            return False
+        return self.student_role or self.entitlement.kind == "alumni"
 
     @property
     def is_staff(self) -> bool:

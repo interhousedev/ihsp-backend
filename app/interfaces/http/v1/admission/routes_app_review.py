@@ -9,7 +9,7 @@ import datetime as dt
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep
+from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep, StudentCtx
 from app.interfaces.http.v1.admission.routes_items import _locale
 from app.modules.admission.domain.app_review import AppReview
 
@@ -136,7 +136,7 @@ Lang = Annotated[str | None, Header(alias="Accept-Language")]
 
 
 async def start_app_review(
-    container: ContainerDep, ctx: AdmissionCtx, accept_language: Lang = None
+    container: ContainerDep, ctx: StudentCtx, accept_language: Lang = None
 ) -> AppReviewOut:
     """Queue a new review (AI consent and a weekly limit apply)."""
     review = await container.admission.app_review.start(ctx, _locale(accept_language))
@@ -144,7 +144,7 @@ async def start_app_review(
 
 
 async def list_app_reviews(
-    container: ContainerDep, ctx: AdmissionCtx
+    container: ContainerDep, ctx: StudentCtx
 ) -> AppReviewListOut:
     """My review versions."""
     rows = await container.admission.app_review.list_mine(ctx)
@@ -152,7 +152,7 @@ async def list_app_reviews(
 
 
 async def get_app_review(
-    review_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+    review_id: UUID, container: ContainerDep, ctx: StudentCtx
 ) -> AppReviewOut:
     """One of my review versions (poll while queued or running)."""
     return AppReviewOut.of(

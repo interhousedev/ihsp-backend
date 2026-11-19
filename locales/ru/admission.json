@@ -2,6 +2,7 @@
   "admission-not-found": "Не найдено.",
   "admission-forbidden": "У вас нет прав на это действие.",
   "admission-not-entitled": "Приложение поступления доступно ученикам 10 и 11 классов и сотрудникам приёмной.",
+  "admission-not-applicant": "Этот раздел доступен ученикам с учётной записью ученика.",
   "admission-consent-required": "Дайте согласие, чтобы продолжить.",
   "admission-guardian-consent-required": "Сначала нужно согласие родителя или опекуна.",
   "admission-char-limit": "Текст длиннее допустимого.",

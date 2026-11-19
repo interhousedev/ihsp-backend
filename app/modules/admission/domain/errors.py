@@ -32,6 +32,13 @@ class NotEntitledError(ForbiddenError):
     message_key = "admission-not-entitled"
 
 
+class NotApplicantError(ForbiddenError):
+    """The student side needs the student role (or an alumni entitlement)."""
+
+    code = "admission/not_applicant"
+    message_key = "admission-not-applicant"
+
+
 class ConsentRequiredError(ForbiddenError):
     """A consent purpose is missing. Params: purpose."""
 
@@ -196,6 +203,7 @@ class CalendarInputError(ValidationFailedError):
 ALL_ERRORS: tuple[type[BaseError], ...] = (
     AdmissionNotFoundError,
     AdmissionForbiddenError,
+    NotApplicantError,
     NotEntitledError,
     ConsentRequiredError,
     GuardianConsentRequiredError,

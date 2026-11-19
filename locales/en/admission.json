@@ -2,6 +2,7 @@
   "admission-not-found": "Not found.",
   "admission-forbidden": "You do not have permission for this action.",
   "admission-not-entitled": "The admission app is open to students of grades 10 and 11 and to admission staff.",
+  "admission-not-applicant": "This part of the app is for students with a student account.",
   "admission-consent-required": "Give your consent to continue.",
   "admission-guardian-consent-required": "A parent or guardian must give consent first.",
   "admission-char-limit": "The text is longer than allowed.",
