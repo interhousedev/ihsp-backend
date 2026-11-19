@@ -291,3 +291,46 @@ class EssayTooShortError(ValidationFailedError):
 
     code = "admission/essay_too_short"
     message_key = "admission-essay-too-short"
+
+
+class EssayVaultUnavailableError(BaseError):
+    """The essay key service is unreachable; essays stay sealed (fail closed)."""
+
+    code = "admission/essay_vault_unavailable"
+    status = 503
+    message_key = "admission-essay-vault-unavailable"
+
+
+class InviteNotFoundError(NotFoundError):
+    """The review link is unknown, expired or revoked (one answer for all)."""
+
+    code = "admission/invite_not_found"
+    message_key = "admission-invite-not-found"
+
+
+class InviteLimitError(ValidationFailedError):
+    """Too many active review links on one essay. Params: limit."""
+
+    code = "admission/invite_limit"
+    message_key = "admission-invite-limit"
+
+
+class ExemplarInvalidError(ValidationFailedError):
+    """An exemplar essay field is not valid. Params: field, reason."""
+
+    code = "admission/exemplar_invalid"
+    message_key = "admission-exemplar-invalid"
+
+
+class ExemplarDuplicateError(ConflictError):
+    """The exemplar essay is already in the library. Params: exemplar_id."""
+
+    code = "admission/exemplar_duplicate"
+    message_key = "admission-exemplar-duplicate"
+
+
+class KbBodyInvalidError(ValidationFailedError):
+    """An FAQ article body breaks the rich-content rules. Params: reason."""
+
+    code = "admission/kb_body_invalid"
+    message_key = "admission-kb-body-invalid"

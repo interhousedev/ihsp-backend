@@ -30,6 +30,7 @@ from app.modules.admission.domain.supp_prompts import SuppPrompt
 from app.modules.admission.ports.repositories import AuditEvent, OptIns
 from app.shared.actor import Actor
 from app.shared.contracts.academic import StudentRef
+from app.shared.contracts.admission_assistant import CourseHit
 from app.shared.ids import new_id
 
 NOW = dt.datetime(2026, 3, 2, 9, 0, tzinfo=dt.UTC)
@@ -237,7 +238,11 @@ class _Catalog:
     async def institutions(
         self, *, country: str | None = None
     ) -> list[CatalogInstitution]:
-        rows = [i for i in self.s.institutions.values() if country in (None, i.country)]
+        rows = [
+            i
+            for i in self.s.institutions.values()
+            if country is None or i.country.upper() == country.upper()
+        ]
         return sorted(rows, key=lambda i: i.name)
 
     async def institution(self, institution_id: UUID) -> CatalogInstitution | None:
@@ -637,6 +642,11 @@ class FakeSources:
         q = (query or "").lower()
         catalog = getattr(self, "catalog", [])
         return [c for c in catalog if q in c.title.lower()]
+
+    async def lms_find(
+        self, actor: Actor, query: str | None, limit: int
+    ) -> list[CourseHit]:
+        return []
 
     async def lms_enroll(self, actor: Actor, course_id: UUID) -> None:
         self.enrolled = [*getattr(self, "enrolled", []), course_id]

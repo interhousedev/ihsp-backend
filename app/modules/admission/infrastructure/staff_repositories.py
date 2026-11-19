@@ -1,6 +1,7 @@
 """SQL repositories of staff, comments and privacy."""
 
 import datetime as dt
+import json
 from collections.abc import Sequence
 from typing import Any, Final, cast
 from uuid import UUID
@@ -12,7 +13,10 @@ from app.modules.admission.domain.access import (
     StaffRole,
 )
 from app.modules.admission.domain.consultations import ACTIVE
-from app.modules.admission.domain.errors import AdmissionConflictError
+from app.modules.admission.domain.errors import (
+    AdmissionConflictError,
+    EssayVaultUnavailableError,
+)
 from app.modules.admission.domain.staff import (
     AuditRecord,
     CaseloadRow,
@@ -36,6 +40,7 @@ from app.modules.admission.infrastructure.orm.calendar import (
 )
 from app.modules.admission.infrastructure.orm.catalog import CatalogProposalRow
 from app.modules.admission.infrastructure.orm.consultations import ConsultationRow
+from app.modules.admission.infrastructure.orm.exemplars import ExemplarRow
 from app.modules.admission.infrastructure.orm.kb import KbArticleRow
 from app.modules.admission.infrastructure.orm.opp_social import (
     OppCommentReportRow,
@@ -51,12 +56,17 @@ from app.modules.admission.infrastructure.orm.profile import (
     ProfileRow,
     ProofRow,
 )
+from app.modules.admission.infrastructure.orm.sealed import SEALED_COLUMNS, SEALED_JSON
 from app.modules.admission.infrastructure.repositories import _role
+from app.modules.admission.ports.essay_crypto import EssayCipher
 from app.shared.db.base import Base
 from app.shared.ids import new_id
 
+import structlog
 from sqlalchemy import and_, delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+
+log = structlog.get_logger(__name__)
 
 DONE_ITEMS = ("done", "n_a")
 SECRET_COLUMNS = frozenset({"token_hash", "token_prefix", "session_hash", "ip_hash"})
@@ -394,6 +404,8 @@ _USER_KEYED: Final[tuple[tuple[Any, str], ...]] = (
 """Tables keyed by user rather than student; their rows are deleted."""
 
 _USER_NULLED: Final[tuple[tuple[Any, str], ...]] = (
+    (ExemplarRow.__table__, "created_by"),
+    (ExemplarRow.__table__, "updated_by"),
     (KbArticleRow.__table__, "author_id"),
     (OpportunityRow.__table__, "created_by"),
 )
@@ -403,9 +415,10 @@ _USER_NULLED: Final[tuple[tuple[Any, str], ...]] = (
 class SqlPrivacyRepository:
     """Export, erasure and audit view, generic over the student tables."""
 
-    def __init__(self, session: AsyncSession) -> None:
-        """Keep the open session."""
+    def __init__(self, session: AsyncSession, cipher: EssayCipher) -> None:
+        """Keep the open session and the cipher of the sealed essay columns."""
         self._s = session
+        self._cipher = cipher
 
     async def export(self, student_id: UUID) -> dict[str, list[dict[str, Any]]]:
         """Return the student's rows per table, without staff-only data."""
@@ -420,9 +433,31 @@ class SqlPrivacyRepository:
             cols = [c for c in table.c if c.name not in SECRET_COLUMNS]
             rows = await self._s.execute(select(*cols).where(*cond))
             data = [dict(r._mapping) for r in rows]
+            if table.name in SEALED_COLUMNS:
+                data = [await self._opened(table.name, d) for d in data]
             if data:
                 out[table.name] = data
         return out
+
+    async def _opened(self, table: str, row: dict[str, Any]) -> dict[str, Any]:
+        """Replace the sealed blobs of a row with their plaintext (None if lost)."""
+        failed = 0
+        for col in SEALED_COLUMNS[table] & row.keys():
+            blob = row[col]
+            if blob is None:
+                continue
+            try:
+                text = await self._cipher.open(
+                    row["student_id"], row["id"], col, bytes(blob)
+                )
+            except (ValueError, EssayVaultUnavailableError):
+                failed += 1
+                row[col] = None
+                continue
+            row[col] = json.loads(text) if (table, col) in SEALED_JSON else text
+        if failed:
+            log.warning("essay_export_unreadable", table=table, columns=failed)
+        return row
 
     async def erase(self, student_id: UUID) -> dict[str, int]:
         """Delete the student's rows, children first."""

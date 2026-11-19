@@ -180,6 +180,17 @@ class BotVaultSettings(VaultSettings):
     """Path prefix inside the KV mount; one secret per bot id."""
 
 
+class EssayVaultSettings(VaultSettings):
+    """Vault access for the per-student essay keys (AppRole `admission-essays`).
+
+    The api and worker processes hold one data key per student under the prefix;
+    the identity AppRole that opens the EMIS secrets is never needed for essays.
+    """
+
+    kv_prefix: str = "admission-essays"
+    """Path prefix inside the KV mount; one secret per student id."""
+
+
 class HydraSettings(BaseModel):
     """Ory Hydra endpoints."""
 
@@ -1281,7 +1292,17 @@ class LimitsSettings(BaseModel):
     """Admission app: item reviews a student may ask a day; -1 is no cap."""
 
     admit_essay_review_per_week: int = Field(default=10, ge=-1)
-    """Admission app: Essay reviews per week. -1 means no cap."""
+    """Admission app: base essay reviews (one per request that runs the model) per
+    week. -1 means no cap."""
+
+    admit_essay_uni_review_per_week: int = Field(default=30, ge=-1)
+    """Admission app: per-university essay reviews (one per university the model
+    reviews) per week. -1 means no cap."""
+
+    admit_essay_studio_runs_per_day: int = Field(default=30, ge=-1)
+    """Admission app, prompt studio: sample runs (one per essay sample, each runs
+    the model twice) per staff member and day. The value is the same for every
+    staff member (staff are not unlimited here); -1 means no cap."""
 
     admit_alignment_map_per_week: int = Field(default=5, ge=-1)
     """Admission app: Alignment maps per week. -1 means no cap."""
@@ -1423,6 +1444,7 @@ class Settings(BaseSettings):
     s3: S3Settings = Field(default_factory=S3Settings)
     vault: VaultSettings = Field(default_factory=VaultSettings)
     bot_vault: BotVaultSettings = Field(default_factory=BotVaultSettings)
+    essay_vault: EssayVaultSettings = Field(default_factory=EssayVaultSettings)
     hydra: HydraSettings = Field(default_factory=HydraSettings)
     jwt_bearer: JwtBearerSettings = Field(default_factory=JwtBearerSettings)
     tokens: TokensSettings = Field(default_factory=TokensSettings)
@@ -1473,20 +1495,8 @@ class Settings(BaseSettings):
         """Refuse development defaults that every process would share in production."""
         if self.env != "prod":
             return self
-        if self.vault.role_id and self.vault.secret_id:
-            self.vault.token = None  # AppRole replaces the dev token
-        elif (
-            self.vault.token is not None
-            and self.vault.token.get_secret_value() == DEV_VAULT_TOKEN
-        ):
-            self.vault.token = None  # the dev token is never used in production
-        if self.bot_vault.role_id and self.bot_vault.secret_id:
-            self.bot_vault.token = None
-        elif (
-            self.bot_vault.token is not None
-            and self.bot_vault.token.get_secret_value() == DEV_VAULT_TOKEN
-        ):
-            self.bot_vault.token = None
+        for vault in (self.vault, self.bot_vault, self.essay_vault):
+            self._drop_dev_vault_token(vault)
         if self.telegram.bot_token.get_secret_value() == DEV_BOT_TOKEN:
             # An unset or empty env token arrives as the dev default; in production
             # that means "use the default bot's token from Vault".
@@ -1495,6 +1505,16 @@ class Settings(BaseSettings):
         if problems:
             raise ValueError("production settings missing: " + ", ".join(problems))
         return self
+
+    @staticmethod
+    def _drop_dev_vault_token(vault: VaultSettings) -> None:
+        """Drop the dev token: AppRole replaces it and production never uses it."""
+        if vault.role_id and vault.secret_id:
+            vault.token = None
+        elif vault.token is not None and vault.token.get_secret_value() == (
+            DEV_VAULT_TOKEN
+        ):
+            vault.token = None
 
     def require_production_ready(self, process: str) -> None:
         """Check what only some processes need: AppRole, JWT key, AI keys, webhook.

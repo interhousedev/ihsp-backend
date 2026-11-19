@@ -383,13 +383,18 @@ class SqlChunkCollector:
         )
 
     async def _essays(self, s: AsyncSession, sid: UUID) -> list[Chunk]:
-        rows = await s.scalars(select(EssayRow).where(EssayRow.student_id == sid))
+        """Index the plaintext columns only; sealed essay text never leaves."""
+        rows = await s.execute(
+            select(EssayRow.id, EssayRow.kind, EssayRow.prompt_text).where(
+                EssayRow.student_id == sid
+            )
+        )
         return self._each(
             "essay",
             rows,
             lambda r: (
-                r.title or r.prompt_text[:80] or "Essay",
-                f"{_lines(('Prompt', r.prompt_text))}\n{r.body}",
+                r.prompt_text[:80] or "Essay",
+                _lines(("Kind", r.kind), ("Prompt", r.prompt_text)),
             ),
         )
 

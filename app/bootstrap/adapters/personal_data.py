@@ -45,14 +45,19 @@ def all_specs() -> list[PersonalTable]:
 
 def build_sources(
     sessionmaker: async_sessionmaker[AsyncSession],
+    extra_erase: Sequence[PersonalData] = (),
 ) -> tuple[Sequence[PersonalData], Sequence[PersonalData]]:
     """Return (export source, erase source).
 
     The erase source leaves out tables that ``<module>.delete_owner`` erases, because
-    those tasks also delete the objects the rows point to.
+    those tasks also delete the objects the rows point to. ``extra_erase`` runs after
+    the rows are gone (the essay key shredder).
     """
     specs = all_specs()
     return (
         [SqlPersonalData(sessionmaker, specs)],
-        [SqlPersonalData(sessionmaker, [s for s in specs if not s.erased_elsewhere])],
+        [
+            SqlPersonalData(sessionmaker, [s for s in specs if not s.erased_elsewhere]),
+            *extra_erase,
+        ],
     )

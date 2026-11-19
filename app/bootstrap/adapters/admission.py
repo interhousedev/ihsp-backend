@@ -9,6 +9,7 @@ from app.modules.ai.domain.assistant import Assistant
 from app.modules.ai.domain.chat import ChatTier
 from app.shared.actor import SYSTEM_ACTOR, Actor
 from app.shared.contracts.academic import ScheduleQueries, StudentRef
+from app.shared.contracts.admission_assistant import CourseHit
 from app.shared.contracts.web_search import SearchCall, SearchReply, WebSearchApi
 
 
@@ -103,6 +104,26 @@ class AdmissionCourseSourcesAdapter:
             for card in cards
             if not card.locked
         ]
+
+    async def lms_find(
+        self, actor: Actor, query: str | None, limit: int
+    ) -> list[CourseHit]:
+        """Open LMS courses the actor may see, with the actor's enrolments marked."""
+        if self._catalog is None:
+            return []
+        cards = await self._catalog.execute(query=query, actor=actor)
+        mine = {c.source_ref for c in await self.lms_courses(actor)}
+        return [
+            CourseHit(
+                id=str(card.id),
+                title=card.title,
+                summary=card.summary or card.description,
+                url=f"/courses/?lms={card.id}",
+                enrolled=str(card.id) in mine,
+            )
+            for card in cards
+            if not card.locked
+        ][:limit]
 
     async def lms_enroll(self, actor: Actor, course_id: UUID) -> None:
         """Enroll the actor; a no-op without LMS."""

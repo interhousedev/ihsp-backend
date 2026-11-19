@@ -6,6 +6,7 @@ from app.modules.admission.infrastructure.ai.prompts import (
     alignment_map,
     app_review,
     career,
+    essay_review,
     essays,
     goal_plan,
     item_grade,
@@ -36,6 +37,8 @@ BUILTIN_PROMPTS: dict[tuple[str, str], str] = {
         (AiTask.ADMIT_ESSAY_COACH.value, name): text
         for name, text in essays.PROMPTS.items()
     },
+    (AiTask.ADMIT_ESSAY_REVIEW.value, "base"): essay_review.BASE,
+    (AiTask.ADMIT_ESSAY_UNI_REVIEW.value, "uni"): essay_review.UNI,
     **{
         (task.value, "system"): app_review.SECTION_SYSTEMS[key]
         for key, task in app_review.SECTION_TASKS.items()

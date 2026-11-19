@@ -1,6 +1,6 @@
 """Builds the admission module (container.admission)."""
 
-from collections.abc import Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from functools import cache
 from typing import Any
@@ -11,6 +11,7 @@ from app.modules.admission.application.actor import ResolveAdmissionActor
 from app.modules.admission.application.app_review import AppReviewService
 from app.modules.admission.application.app_review_inputs import UowReviewInputs
 from app.modules.admission.application.assistant import AssistantService
+from app.modules.admission.application.budget import BudgetService
 from app.modules.admission.application.calendar import (
     CalendarService,
     OpportunitySource,
@@ -31,11 +32,15 @@ from app.modules.admission.application.courses import CourseService
 from app.modules.admission.application.deadlines import DeadlineService
 from app.modules.admission.application.document_process import DocumentProcessService
 from app.modules.admission.application.documents import DocumentService
+from app.modules.admission.application.essay_invites import EssayInviteService
+from app.modules.admission.application.essay_reviews import EssayReviewService
 from app.modules.admission.application.essays import (
     EssayCoach,
     EssayService,
     UowEssayReader,
 )
+from app.modules.admission.application.exemplar_search import UowExemplarSource
+from app.modules.admission.application.exemplars import ExemplarService
 from app.modules.admission.application.goal_plan import GoalPlanService
 from app.modules.admission.application.goal_plan_suggest import GoalPlanSuggester
 from app.modules.admission.application.interview import ItemInterviewService
@@ -60,6 +65,10 @@ from app.modules.admission.application.privacy import Eraser, PrivacyService
 from app.modules.admission.application.profile import ProfileService
 from app.modules.admission.application.profile_alignment import AlignmentService
 from app.modules.admission.application.profile_details import ProfileDetailsService
+from app.modules.admission.application.prompt_studio import (
+    CoreStudioRunner,
+    PromptStudioService,
+)
 from app.modules.admission.application.proofs import ProofService
 from app.modules.admission.application.readiness import ReadinessService
 from app.modules.admission.application.review import ItemReviewService
@@ -83,6 +92,10 @@ from app.modules.admission.infrastructure.calendar_repository import (
     SqlCalendarStore,
 )
 from app.modules.admission.infrastructure.catalog_data import study_fields as _fields
+from app.modules.admission.infrastructure.essay_crypto import (
+    AesGcmEssayCipher,
+    MemoryEssayKeyStore,
+)
 from app.modules.admission.infrastructure.kb_repository import SqlKbRepository
 from app.modules.admission.infrastructure.uni_chat_repository import (
     SqlUniChatRepository,
@@ -95,7 +108,9 @@ from app.modules.admission.ports.consent import (
     PurposeConsentStore,
 )
 from app.modules.admission.ports.courses import CourseSources
+from app.modules.admission.ports.essay_crypto import EssayCipher
 from app.modules.admission.ports.essays import EssayReader
+from app.modules.admission.ports.prompt_studio import PromptStudioAdmin
 from app.modules.admission.ports.staff import StaffDirectory
 from app.modules.admission.ports.student_search import StudentDataSearch
 from app.modules.admission.ports.uni_chat import UniChats, UniPageReader
@@ -138,6 +153,7 @@ class AdmissionServices:
     catalog_proposals: CatalogProposalService
     supp_prompts: SuppPromptService
     chooser: ListService
+    budget: BudgetService
     chances: ChancesService
     catalog_research: CatalogResearch | None
     uow_factory: UowFactory
@@ -184,6 +200,11 @@ class AdmissionServices:
     uni_chat: UniChatService
     uni_advice: UniAdviceService
     kb: KbService
+    cipher: EssayCipher
+    essay_reviews: EssayReviewService
+    essay_invites: EssayInviteService
+    exemplars: ExemplarService
+    prompt_studio: PromptStudioService
 
 
 @dataclass(frozen=True, slots=True)
@@ -217,10 +238,13 @@ def build(
     uni_chats: UniChats | None = None,
     uni_web: WebSearchApi | None = None,
     uni_pages: UniPageReader | None = None,
+    cipher: EssayCipher | None = None,
+    studio_admin: PromptStudioAdmin,
 ) -> AdmissionServices:
     """Wire the module; without `purpose_consents` they live in process memory."""
     over = overrides or AdmissionOverrides()
-    uow_factory = over.uow_factory or _sql_uow_factory(deps)
+    cipher = cipher or AesGcmEssayCipher(MemoryEssayKeyStore())
+    uow_factory = over.uow_factory or _sql_uow_factory(deps, cipher)
     settings = deps.settings.admission
     grades = settings.eligible_grades
     consents = purpose_consents or MemoryPurposeConsents()
@@ -245,6 +269,7 @@ def build(
         uow_factory, access, deps.clock, lms_courses, deps.rate_limiter, org_exists
     )
     chooser = ListService(uow_factory, access, runtime, settings, deps.clock, identity)
+    budget = BudgetService(chooser)
     calendar = CalendarService(
         uow_factory,
         access,
@@ -291,6 +316,7 @@ def build(
         texts,
         deps.clock,
     )
+    exemplar_source = UowExemplarSource(uow_factory, deps.clock)
     return AdmissionServices(
         actor=ResolveAdmissionActor(uow_factory, membership, deps.clock, grades),
         access=access,
@@ -309,7 +335,7 @@ def build(
             student_search,
             erasers=[*erasers, uni.erase],
             file_remover=files.delete_file if files else None,
-            final_erasers=final_erasers,
+            final_erasers=[*final_erasers, cipher.forget],
         ),
         catalog=CatalogService(uow_factory),
         catalog_proposals=CatalogProposalService(
@@ -322,9 +348,11 @@ def build(
             uow_factory, CatalogProposalService(uow_factory, deps.clock).can_review
         ),
         chooser=chooser,
+        budget=budget,
         chances=ChancesService(uow_factory, runtime, settings),
         catalog_research=CatalogResearch(uow_factory, llm, texts) if llm else None,
         uow_factory=uow_factory,
+        cipher=cipher,
         profile=ProfileService(uow_factory, access, runtime, deps.clock),
         words=WordsService(uow_factory, access, model, consents, deps.clock, texts),
         alignment=AlignmentService(
@@ -377,6 +405,7 @@ def build(
             _quota_of(deps, "admit_essay_coach_per_day"),
             texts,
             student_search,
+            cipher=cipher,
         ),
         essay_reader=UowEssayReader(uow_factory),
         item_reviews=ItemReviewService(
@@ -496,7 +525,43 @@ def build(
         calendar=calendar,
         uni_chat=uni,
         uni_advice=uni_advice,
+        essay_reviews=EssayReviewService(
+            uow_factory,
+            access,
+            model,
+            consents,
+            deps.clock,
+            deps.rate_limiter,
+            _quota_of(deps, "admit_essay_review_per_week"),
+            _quota_of(deps, "admit_essay_uni_review_per_week"),
+            texts,
+            exemplar_source,
+            cipher,
+        ),
+        essay_invites=EssayInviteService(
+            uow_factory, access, deps.clock, deps.rate_limiter
+        ),
+        exemplars=ExemplarService(uow_factory, deps.clock, deps.rate_limiter),
+        prompt_studio=PromptStudioService(
+            studio_admin,
+            CoreStudioRunner(model),
+            texts,
+            uow_factory,
+            deps.clock,
+            deps.rate_limiter,
+            per_day=_studio_runs_of(deps),
+        ),
     )
+
+
+def _studio_runs_of(deps: ModuleDeps) -> Callable[[], Awaitable[int | None]]:
+    """Read the studio's daily run limit at call time (the same for all staff)."""
+
+    async def read() -> int | None:
+        value = (await deps.effective_limits.current()).admit_essay_studio_runs_per_day
+        return None if value < 0 else int(value)
+
+    return read
 
 
 def _quota_of(deps: ModuleDeps, name: str) -> QuotaOf:
@@ -509,7 +574,7 @@ def _quota_of(deps: ModuleDeps, name: str) -> QuotaOf:
     return read
 
 
-def _sql_uow_factory(deps: ModuleDeps) -> UowFactory:
+def _sql_uow_factory(deps: ModuleDeps, cipher: EssayCipher) -> UowFactory:
     """Return a factory of SQL units of work on the shared sessionmaker."""
 
     def factory() -> SqlAdmissionUnitOfWork:
@@ -519,6 +584,7 @@ def _sql_uow_factory(deps: ModuleDeps) -> UowFactory:
             deps.audit_writer,
             deps.outbox_committed_hook,
             notification_outbox=deps.notification_outbox,
+            cipher=cipher,
         )
 
     return factory

@@ -17,7 +17,13 @@ from app.modules.admission.ports.documents import (
     DocumentRepository,
     TranscriptRepository,
 )
+from app.modules.admission.ports.essay_invites import (
+    EssayFeedbackRepository,
+    EssayInviteRepository,
+)
+from app.modules.admission.ports.essay_reviews import EssayReviewRepository
 from app.modules.admission.ports.essays import EssayRepository
+from app.modules.admission.ports.exemplars import ExemplarRepository
 from app.modules.admission.ports.goal_plan import GoalRepository
 from app.modules.admission.ports.help_proofs import HelpProofsRepository
 from app.modules.admission.ports.items import ItemRepository
@@ -125,6 +131,26 @@ class AdmissionUnitOfWork(Protocol):
     @property
     def essays(self) -> EssayRepository:
         """Essays, versions and the ideas board."""
+        ...
+
+    @property
+    def essay_reviews(self) -> EssayReviewRepository:
+        """Stored base and per-university essay reviews."""
+        ...
+
+    @property
+    def essay_invites(self) -> EssayInviteRepository:
+        """Review links a student shares for an essay."""
+        ...
+
+    @property
+    def essay_feedback(self) -> EssayFeedbackRepository:
+        """Comments that reviewers and the student leave on an essay."""
+        ...
+
+    @property
+    def exemplars(self) -> ExemplarRepository:
+        """The library of published essays of admitted students."""
         ...
 
     @property

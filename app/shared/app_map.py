@@ -970,7 +970,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
     _d(
         "admission-chooser",
         "admission",
-        "/chooser/",
+        "/chooser/list/",
         _ST,
         ("Universitet tanlash", "Выбор университетов", "University chooser"),
         "universitet tanlash список университетов выбор вуз stipendiya стипендия "
@@ -979,7 +979,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
     _d(
         "admission-uni-chat",
         "admission",
-        "/colleges/discover/",
+        "/chooser/search/?view=discover",
         _ST,
         (
             "Universitet bo\u02bcyicha AI suhbat",
@@ -992,7 +992,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
     _d(
         "admission-colleges-algorithm",
         "admission",
-        "/colleges/algorithm/",
+        "/chooser/search/?prefs=1",
         _ST,
         (
             "Kollej tanlash anketasi",
@@ -1005,7 +1005,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
     _d(
         "admission-colleges-discover",
         "admission",
-        "/colleges/discover/",
+        "/chooser/search/?view=discover",
         _ST,
         (
             "Universitetlarni kashf etish",
@@ -1018,7 +1018,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
     _d(
         "admission-journey",
         "admission",
-        "/journey/",
+        "/#journey",
         _ST,
         ("Qabul yo\u02bclim", "Путь поступления", "Admission journey"),
         "yo'l bosqich путь этапы поступление journey path steps roadmap",
@@ -1087,14 +1087,66 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "admission",
         "/essays/",
         _ST,
-        ("Esselar", "Эссе", "Essays"),
+        ("Insholar", "Эссе", "Essays"),
         "esse insho reja g'oya эссе сочинение черновик идеи essays personal "
         "statement draft ideas outline",
     ),
     _d(
+        "admission-essay-review",
+        "admission",
+        "/essays/",
+        _ST,
+        (
+            "Insho tahlili va ulashish",
+            "Разбор и отправка эссе",
+            "Essay review and sharing",
+        ),
+        "insho tahlil ulashish fikr эссе разбор обратная связь поделиться "
+        "essay review share feedback",
+    ),
+    _d(
+        "admission-essay-examples",
+        "admission",
+        "/essays/?tab=examples",
+        _ST,
+        (
+            "Qabul qilingan insho namunalari",
+            "Примеры принятых эссе",
+            "Admitted essay examples",
+        ),
+        "insho namuna qabul qilingan эссе примеры принятые admitted essay "
+        "examples excerpts samples",
+    ),
+    _d(
+        "admission-budget",
+        "admission",
+        "/chooser/budget/",
+        _ST,
+        ("Topshirish byudjeti", "Бюджет подачи", "Application budget"),
+        "byudjet narx badal to'lov бюджет стоимость подачи сбор waiver "
+        "budget cost fee application fee aid css profile fafsa",
+    ),
+    _d(
+        "admission-exemplars",
+        "admission",
+        "/staff/exemplars/",
+        _ADM,
+        ("Insho namunalari", "Образцы эссе", "Essay exemplars"),
+        "insho namuna эссе образцы примеры exemplars admitted essays curate",
+    ),
+    _d(
+        "admission-prompt-studio",
+        "admission",
+        "/staff/prompt-studio/",
+        _ADM,
+        ("Prompt studiyasi", "Студия промптов", "Prompt studio"),
+        "prompt studiya промпт студия insho эссе essay prompts university "
+        "prompt studio",
+    ),
+    _d(
         "admission-profile",
         "admission",
-        "/profile/",
+        "/settings/?tab=profile",
         _ST,
         ("Abituriyent profili", "Профиль абитуриента", "Applicant profile"),
         "profil sozlash профиль настройка абитуриент profile setup applicant",
@@ -1123,11 +1175,32 @@ APP_MAP: Final[tuple[Destination, ...]] = (
     _d(
         "admission-opportunities-plan",
         "admission",
-        "/opportunities/plan/",
+        "/plan/",
         _ST,
         ("Imkoniyatlar rejasi", "План возможностей", "Opportunities plan"),
         "reja muddat 9-12 sinf план дедлайны 9-12 класс plan deadlines grades "
         "ai planner",
+    ),
+    _d(
+        "admission-fellowships",
+        "admission",
+        "/opportunities/?kind=research",
+        _ST,
+        (
+            "Stipendiyalar va tadqiqot",
+            "Стипендии и исследования",
+            "Fellowships and research",
+        ),
+        "tadqiqot stipendiya grant стипендии исследования гранты стажировка "
+        "fellowships research grants internship",
+    ),
+    _d(
+        "admission-opportunity-courses",
+        "admission",
+        "/opportunities/?kind=course",
+        _ST,
+        ("Kurslarni topish", "Поиск курсов", "Find courses"),
+        "kurs onlayn kurslar курсы онлайн найти courses online find free mooc",
     ),
     _d(
         "admission-career",

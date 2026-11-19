@@ -3,6 +3,10 @@
 from uuid import UUID
 
 from app.bootstrap import common  # noqa: F401  (registers every model)
+from app.modules.admission.infrastructure.essay_crypto import (
+    AesGcmEssayCipher,
+    MemoryEssayKeyStore,
+)
 from app.modules.admission.infrastructure.orm.applications import (
     DocumentRow,
     DocumentVersionRow,
@@ -36,6 +40,7 @@ NOT_STUDENT_DATA = frozenset(
         "deadlines",
         "eligibility_rules",
         "exam_dates",
+        "exemplar_essays",
         "facts",
         "institutions",
         "kb_articles",
@@ -103,7 +108,7 @@ async def test_erase_empties_the_student_and_spares_others(
     file_b = UUID("00000000-0000-0000-0000-0000000000f2")
     await _seed(db_session, A, FILE_A)
     await _seed(db_session, B, file_b)
-    repo = SqlPrivacyRepository(db_session)
+    repo = SqlPrivacyRepository(db_session, AesGcmEssayCipher(MemoryEssayKeyStore()))
     assert await repo.stored_file_ids(A) == [FILE_A]
 
     counts = await repo.erase(A)

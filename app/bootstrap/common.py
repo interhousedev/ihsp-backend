@@ -20,6 +20,8 @@ from app.bootstrap.adapters.admission import (
     AdmissionUniChatsAdapter,
     AdmissionWebSearchAdapter,
 )
+from app.bootstrap.adapters.admission_crypto import EssayKeyShredder
+from app.bootstrap.adapters.admission_prompt_studio import AiPromptStudioAdmin
 from app.bootstrap.adapters.admission_staff import AdmissionStaffDirectoryAdapter
 from app.bootstrap.adapters.certificate_students import CertificateStudentsAdapter
 from app.bootstrap.adapters.composition.library_platform_search import (
@@ -89,6 +91,7 @@ from app.modules.admin.wiring import build as build_admin
 from app.modules.admission.application.student_search import StudentSearchService
 from app.modules.admission.infrastructure.ai.prompt_source import RegistryPrompts
 from app.modules.admission.infrastructure.ai_gateway import GatewayStructuredAi
+from app.modules.admission.infrastructure.essay_crypto import essay_cipher
 from app.modules.admission.infrastructure.student_chunks_repository import (
     SqlChunkCollector,
     SqlChunkStore,
@@ -294,6 +297,8 @@ class _Assembler:
         )
         self.deps = make_deps(container)
         self.prompts = build_prompts(self.deps, prompt_slots())
+        # Built before privacy and admission: erasure shreds the essay data key.
+        self.essay_cipher = essay_cipher(container.settings)
 
     def add_closer(self, closer: Callable[[], Awaitable[None]]) -> None:
         """Register something to close with the container."""
@@ -399,7 +404,9 @@ class _Assembler:
     def build_privacy(self) -> None:
         """Data export and account erasure; identity reaches it through a proxy."""
         c = self.container
-        export_sources, erase_sources = build_sources(self.deps.sessionmaker)
+        export_sources, erase_sources = build_sources(
+            self.deps.sessionmaker, extra_erase=[EssayKeyShredder(self.essay_cipher)]
+        )
         c.privacy = build_privacy(
             self.deps,
             accounts=c.identity.auth.account_control,
@@ -644,6 +651,8 @@ class _Assembler:
                 if c.ai is not None
                 else None
             ),
+            cipher=self.essay_cipher,
+            studio_admin=AiPromptStudioAdmin(self.prompts.admin),
         )
         if c.ai is not None:
             c.ai.bindings.uni_chat = c.admission.uni_chat

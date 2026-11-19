@@ -102,6 +102,7 @@ class AiTask(StrEnum):
     ADMIT_ACTIVITY_GRADE = "admit_activity_grade"
     ADMIT_ITEM_REWRITE_FIX = "admit_item_rewrite_fix"
     ADMIT_ESSAY_REVIEW = "admit_essay_review"
+    ADMIT_ESSAY_UNI_REVIEW = "admit_essay_uni_review"
     ADMIT_ALIGNMENT_MAP = "admit_alignment_map"
     ADMIT_ALIGNMENT_REFRESH = "admit_alignment_refresh"
     ADMIT_PROOF_EXTRACT = "admit_proof_extract"
@@ -544,10 +545,16 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
         reasoning_effort=_NO_REASONING,
     ),
     AiTask.ADMIT_ESSAY_REVIEW: _admission(
-        "Admission: essay feedback (never rewrites the essay).",
+        "Admission: base essay review on its own (never rewrites the essay).",
         model=SMART_MODEL,
         budget_weight=SMART_BUDGET_WEIGHT,
         reasoning_effort=SMART_REASONING,
+    ),
+    AiTask.ADMIT_ESSAY_UNI_REVIEW: _admission(
+        "Admission: fit of an essay with one university's sourced goals.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
     ),
     AiTask.ADMIT_ALIGNMENT_MAP: _admission(
         "Admission: maps profile words to activities, essays and the list.",

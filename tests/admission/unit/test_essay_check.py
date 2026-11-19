@@ -3,7 +3,7 @@
 import unicodedata
 from typing import Any
 
-from app.modules.admission.application.essays import (
+from app.modules.admission.application.essay_review_core import (
     _checked,
     band_of,
 )

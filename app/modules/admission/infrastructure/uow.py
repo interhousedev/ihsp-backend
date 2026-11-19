@@ -22,8 +22,18 @@ from app.modules.admission.infrastructure.documents_repositories import (
     SqlDocumentRepository,
     SqlTranscriptRepository,
 )
+from app.modules.admission.infrastructure.essay_invites_repository import (
+    SqlEssayFeedbackRepository,
+    SqlEssayInviteRepository,
+)
+from app.modules.admission.infrastructure.essay_reviews_repository import (
+    SqlEssayReviewRepository,
+)
 from app.modules.admission.infrastructure.essays_repository import (
     SqlEssayRepository,
+)
+from app.modules.admission.infrastructure.exemplars_repository import (
+    SqlExemplarRepository,
 )
 from app.modules.admission.infrastructure.goal_plan_repository import (
     SqlGoalRepository,
@@ -70,6 +80,7 @@ from app.modules.admission.infrastructure.tasks_repository import SqlTaskReposit
 from app.modules.admission.infrastructure.test_scores_repository import (
     SqlScoreRepository,
 )
+from app.modules.admission.ports.essay_crypto import EssayCipher
 from app.shared.db.uow import SqlUnitOfWork
 from app.shared.notifications import NotificationOutbox
 
@@ -99,6 +110,10 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
     goals: SqlGoalRepository
     career: SqlCareerRepository
     essays: SqlEssayRepository
+    essay_reviews: SqlEssayReviewRepository
+    essay_invites: SqlEssayInviteRepository
+    essay_feedback: SqlEssayFeedbackRepository
+    exemplars: SqlExemplarRepository
     opportunities: SqlOpportunityRepository
     tasks: SqlTaskRepository
     test_scores: SqlScoreRepository
@@ -113,11 +128,13 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
     def __init__(
         self,
         *args: Any,
+        cipher: EssayCipher,
         notification_outbox: NotificationOutbox | None = None,
         **kwargs: Any,
     ) -> None:
-        """Keep the outbox that can cancel pending notifications."""
+        """Keep the essay cipher and the outbox that can cancel notifications."""
         super().__init__(*args, **kwargs)
+        self._cipher = cipher
         self._notification_outbox = notification_outbox
 
     def _init_repos(self) -> None:
@@ -132,7 +149,7 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
         self.reviews = SqlReviewRepository(self.session)
         self.staff = SqlStaffRepository(self.session)
         self.comments = SqlCommentRepository(self.session)
-        self.privacy = SqlPrivacyRepository(self.session)
+        self.privacy = SqlPrivacyRepository(self.session, self._cipher)
         self.orgs = SqlOrgRepository(self.session)
         self.opp_comments = SqlOppCommentRepository(self.session)
         self.help_proofs = SqlHelpProofsRepository(self.session)
@@ -143,7 +160,11 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
         self.items = SqlItemRepository(self.session)
         self.goals = SqlGoalRepository(self.session)
         self.career = SqlCareerRepository(self.session)
-        self.essays = SqlEssayRepository(self.session)
+        self.essays = SqlEssayRepository(self.session, self._cipher)
+        self.essay_reviews = SqlEssayReviewRepository(self.session, self._cipher)
+        self.essay_invites = SqlEssayInviteRepository(self.session, self._cipher)
+        self.essay_feedback = SqlEssayFeedbackRepository(self.session, self._cipher)
+        self.exemplars = SqlExemplarRepository(self.session)
         self.opportunities = SqlOpportunityRepository(self.session)
         self.tasks = SqlTaskRepository(self.session)
         self.test_scores = SqlScoreRepository(self.session)

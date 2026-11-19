@@ -17,13 +17,13 @@ MAX_VECTOR_DISTANCE: Final = 0.6
 SNIPPET_CHARS: Final = 240
 
 _PATHS: Final[dict[str, str]] = {
-    "profile": "/setup",
+    "profile": "/settings/?tab=profile",
     "item": "/activities",
     "task": "/tasks",
     "test_score": "/tests",
     "document": "/documents",
     "career": "/career",
-    "list": "/chooser",
+    "list": "/chooser/list",
     "opportunity": "/opportunities",
     "course": "/courses",
     "grade": "/courses",

@@ -43,5 +43,11 @@
   "admission-catalog-fact-invalid": "This fact is not valid. Check the value, the source link and the year.",
   "admission-catalog-duplicate": "This school is already in the catalog or has a pending proposal.",
   "admission-catalog-proposal-limit": "You have reached the daily limit of {limit} catalog proposals. Try again tomorrow.",
-  "admission-essay-too-short": "The essay is too short to check. Write at least {min} words; it has {count} now."
+  "admission-essay-too-short": "The essay is too short to check. Write at least {min} words; it has {count} now.",
+  "admission-essay-vault-unavailable": "Essays are locked for a moment because the key service is not answering. Your text is safe; try again in a few minutes.",
+  "admission-invite-not-found": "This review link does not work. It may have expired or been switched off; ask the student for a new one.",
+  "admission-invite-limit": "An essay can have at most {limit} active review links. Switch one off to add another.",
+  "admission-exemplar-invalid": "This exemplar essay is not valid. Check the {field} field.",
+  "admission-exemplar-duplicate": "This exemplar essay is already in the library.",
+  "admission-kb-body-invalid": "The article body is not accepted. Use at most 3 OpenUI blocks of up to 6000 characters each, and only https, mailto or relative links."
 }

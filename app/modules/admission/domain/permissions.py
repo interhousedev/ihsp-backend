@@ -34,6 +34,8 @@ class Permission(StrEnum):
     ESTIMATES_VIEW_UNCALIBRATED = "estimates:view_uncalibrated"
     CATALOG_CURATE = "catalog:curate"
     OPPORTUNITIES_MODERATE = "opportunities:moderate"
+    EXEMPLARS_CURATE = "exemplars:curate"
+    ESSAY_PROMPTS_EDIT = "essay_prompts:edit"
 
 
 P = Permission
@@ -59,6 +61,8 @@ _MENTOR_FORBIDDEN: Final = frozenset(
         P.STUDENTS_ASSIGN,
         P.TRANSCRIPTS_FULFIL,
         P.TRANSCRIPTS_OVERSEE,
+        P.EXEMPLARS_CURATE,
+        P.ESSAY_PROMPTS_EDIT,
     }
 )
 _STAFF: Final = frozenset(P)
@@ -83,6 +87,8 @@ OWNER_SET: Final = _STAFF - {
     P.CATALOG_CURATE,
     P.AFFORDABILITY_SIGN_OFF,
     P.DOCUMENTS_REVIEW,
+    P.EXEMPLARS_CURATE,
+    P.ESSAY_PROMPTS_EDIT,
 }
 
 

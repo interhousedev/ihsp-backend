@@ -40,6 +40,7 @@ from app.modules.admission.infrastructure.orm.profile import ItemRow
 from app.modules.admission.ports.unit_of_work import AdmissionUnitOfWork
 from app.settings import load_settings
 from app.shared.actor import Role
+from app.shared.contracts.identity import UserStatus
 from app.shared.logging import configure_logging
 
 from sqlalchemy import select, update
@@ -51,6 +52,8 @@ _NS = uuid5(NAMESPACE_URL, "admission.demo.seed")
 # (key, login, first, last, roles, built-in staff role key)
 ACCOUNTS = (
     ("student", "demo.student", "Aziza", "Demo", {Role.STUDENT}, None),
+    # Undecided: no list, no field, no essays, no activities (nothing below attaches data to it).
+    ("undecided", "demo.undecided", "Sardor", "Demo", {Role.STUDENT}, None),
     (
         "counselor",
         "demo.counselor",
@@ -226,6 +229,28 @@ async def _checklist(s: AsyncSession, student: UUID) -> None:
         )
 
 
+async def _repair(container: Container, user_id: UUID, roles: set[Role]) -> None:
+    """Bring an account created by an earlier run back to the demo state."""
+    auth = container.identity.auth
+    async with auth.uow_factory() as uow:
+        user = await uow.users.get(user_id)
+        if user is None:
+            return
+        changed = False
+        if not await auth.hasher.verify(user.password_hash, PASSWORD):
+            user.password_hash = await auth.hasher.hash(PASSWORD)
+            changed = True
+        if user.status != UserStatus.ACTIVE:
+            user.status = UserStatus.ACTIVE
+            changed = True
+        if user.roles != roles:
+            user.roles = set(roles)
+            changed = True
+        if changed:
+            await uow.users.save(user)
+            await uow.commit()
+
+
 async def seed(container: Container) -> dict[str, UUID]:
     """Create everything; running it again adds nothing."""
     ids: dict[str, UUID] = {}
@@ -238,12 +263,14 @@ async def seed(container: Container) -> dict[str, UUID]:
             password=PASSWORD,
             roles=set(roles),
         )
+        await _repair(container, ids[key], set(roles))
     now = container.clock.now()
     student = ids["student"]
     async with container.sessionmaker() as s:
         await load_catalog(s, now)
-        if await s.get(EntitlementRow, student) is None:
-            s.add(EntitlementRow(user_id=student, kind="school_student"))
+        for owner in (student, ids["undecided"]):
+            if await s.get(EntitlementRow, owner) is None:
+                s.add(EntitlementRow(user_id=owner, kind="school_student"))
         role_ids = {
             r.key: r.id for r in (await s.scalars(select(StaffRoleRow))).all() if r.key
         }
