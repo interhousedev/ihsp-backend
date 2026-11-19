@@ -1,6 +1,6 @@
 ---
 name: admission
-description: Use for app/modules/admission and /v1/admission routes: access policy, contexts, settings, consents, catalog data; not for other modules.
+description: "Use for app/modules/admission and /v1/admission routes: access policy, contexts, settings, consents, catalog data; not for other modules."
 ---
 
 # Admission module
@@ -29,6 +29,13 @@ Admission prompts and answers (essays, grades, wellbeing) are private: their AI 
 ## Catalog data
 
 `scripts/admission_import_catalog.py` and `infrastructure/catalog_data/` hold universities and programs. Only facts cited from an official source (the school, Scorecard, IPEDS) with source and year; where there is no cited official fact the field is `null`, never a guess, an estimate from memory or a model answer. Estimates (`domain/estimates.py`) are labelled as estimates and hidden from students unless `estimates_student_visible`.
+
+## Data rules
+- Produce a per-field coverage report (sourced / null counts) after each import or proposal batch.
+- "Verified" means all required fields are sourced, not one.
+
+## Demo data
+Seed scripts create clearly prefixed demo rows. Never delete rows you did not create; ask first.
 
 ## Catalog agent API
 

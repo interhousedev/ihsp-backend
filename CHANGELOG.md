@@ -15,6 +15,16 @@ All notable changes to this project are documented here. The format follows [Kee
 - Admission international-student catalog: a fact spec (`GET /v1/admission/staff/catalog/fact-spec`) with typed facts, a cited `source_url` and year per fact on proposals, `details` and `factors` on the institution detail, `binding` and `time_zone` on deadlines, and `IHSP_ADMISSION__CATALOG_PROPOSALS_PER_DAY`.
 - Admission essay check: `POST /v1/admission/essays/{essay_id}/coach/check` scores six dimensions against the prompt (score, band, quotes, first fix); it is not stored and answers `admission/essay_too_short` under 50 words.
 - Personal token scope `admission:catalog` with an agent catalog API: staff-only, sole scope, at most 90 days, a route allowlist for reading the catalog and creating proposals; a human still approves, and MCP refuses it.
+- Admission essay reviews: one base review per essay text and locale plus one review per chosen university (at most 5 per request). Weekly limits `IHSP_LIMITS__ADMIT_ESSAY_REVIEW_PER_WEEK` (10) and `IHSP_LIMITS__ADMIT_ESSAY_UNI_REVIEW_PER_WEEK` (30), and the admin "Limits & usage" group "Essay reviewer" (with `admit_essay_studio_runs_per_day`, 30 prompt studio runs per staff member and day).
+- Admission essay sharing for review: a link whose token sits in the URL fragment and is stored as a SHA-256 hash, valid 1 to 90 days (30 by default, at most 20 active links per essay), revocable; guests comment on anchored spans (20 comments per link and hour, 60 opens per address and hour) through `/v1/public/admission/essay-review`. The reviewer page is in the share app.
+- Admission exemplar library of admitted essays: counselors add or import (up to 50 at once) exemplars, students see excerpts with a link to the source, and the AI compares an essay with exemplars. Prompt studio for staff (`/v1/admission/staff/prompt-studio`): edit the four reviewer prompt slots (base, university, check, feedback) with validation, test runs on up to 3 samples, publish and revert to an earlier version.
+- `python -m app backfill-profile-photos` and `PUT`/`DELETE /v1/me/photo`: a profile photo for every role (`/v1/staff/me/photo` is deprecated).
+- Admission: `GET /v1/admission/chooser/budget` (cost to apply per university with the fee status: unpaid, paid, waiver requested, waiver approved), ED/REA/SCEA conflict warnings and the SCEA round, an opportunities `research` kind, study fields and a relevance sort, seeded real opportunity offerings, preference lists for campus setting and country or region, SAT English as evidence, and university logos in documents, deadlines and outcomes.
+- Admission knowledge base: rich-text articles with OpenUI blocks and safe links; an invalid body answers 422 `admission/kb_body_invalid`.
+- The assistant discovers LMS courses with a new tool and shows OpenUI blocks.
+- `scripts/admission_essay_bench.py`, a quality and fairness benchmark of the essay reviewer, and an undecided-student account in the demo seed.
+- Migrations `admission_0035` to `admission_0041`.
+
 
 ### Changed
 
@@ -22,6 +32,26 @@ All notable changes to this project are documented here. The format follows [Kee
 - The AI consent purpose is version 2 (it now mentions audio); students re-consent once.
 - Admission access: the outcomes summary shows hidden names only to admins and assigned staff, and audits each view; consultations are limited to admins and staff assigned to the student; supplemental prompts and logo edits need `catalog:curate`; MCP `read_document` needs the new `admission:documents` scope and the student's consent; erasing a student also clears authored KB articles and opportunities and revokes admission tokens (`opportunities.created_by` is nullable, migration `admission_0034`). `AdmissionActor.blocked` and the `blocked` ineligible reason are removed.
 - Admission uni chats run on the fast tier, so automatic research no longer uses the weekly smart limit; deadline PATCH clears fields sent as null; deadline removal is one transaction; KB status filtering happens in SQL.
+- Admission preferences no longer ask for a distance; the setup no longer asks for residence, field and countries; the study focus is one source of truth. The student app is organised in five sections (Career & study, Activities & honors, Universities & budget, Essays, Documents & applying) with a Home overview; old routes redirect.
+- The Face ID photo now syncs to the profile photo reliably, and the header shows the user's name and photo.
+
+### Security
+
+- Admission essay text is encrypted per student (AES-256-GCM, a key per student in Vault KV v2, `owner|record|column` bound as associated data, in-process key cache of 5 minutes). Without the `admission-essays` AppRole essays fail closed with 503. Erasing a student destroys the key, which shreds the essays. Migration `admission_0035` replaces the plaintext columns and deletes existing essays, versions, ideas, essay comments and search chunks; production had no admission data yet.
+- Guest review links are bearer capabilities stored only as hashes, with rate limits and revocation; the `admission:catalog` token allowlist now also covers adding and importing exemplars.
+
+### Known issues
+
+- A destroyed essay key may stay usable in another process for up to 5 minutes (key cache).
+- UniLibrary stays off until the operator agrees in writing.
+
+### Upgrade notes
+
+- `scripts/prod_init.sh vault` now also creates the `admission-essays` AppRole and writes `IHSP_ESSAY_VAULT__ROLE_ID` and `IHSP_ESSAY_VAULT__SECRET_ID` to `.env.prod`; run it (or set both) before deploying, then recreate the services, otherwise essays answer 503. Re-running it revokes earlier secret ids.
+- Run `python -m app backfill-profile-photos` once to turn enrolled faces into profile photos.
+- `iht-web` needs `bun run sync:openapi`.
+- Run `alembic upgrade heads`; `admission_0035` deletes essays (none in production).
+
 
 ### Security
 
