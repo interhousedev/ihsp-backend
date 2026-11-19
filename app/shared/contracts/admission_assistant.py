@@ -18,6 +18,10 @@ SUGGESTION_KINDS: tuple[SuggestionKind, ...] = (
     "scholarship",
     "university",
 )
+COURSE_LIMIT_DEFAULT = 5
+COURSE_LIMIT_MAX = 8
+COURSE_SUMMARY_MAX = 300
+COURSE_TITLE_MAX = 200
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,6 +45,17 @@ class FaqHit:
     locale: str
     link: str
     tags: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
+class CourseHit:
+    """An LMS course the actor may open; the text comes from course authors."""
+
+    id: str
+    title: str
+    summary: str
+    url: str
+    enrolled: bool
 
 
 class AdmissionAssistantApi(Protocol):
@@ -68,6 +83,15 @@ class AdmissionAssistantApi(Protocol):
         self, actor: Actor, kind: SuggestionKind, query: str, limit: int
     ) -> list[SuggestionCard]:
         """Suggestions of one kind the applicant has not added yet."""
+        ...
+
+    async def find_courses(
+        self, actor: Actor, query: str, limit: int
+    ) -> list[CourseHit]:
+        """List LMS courses the actor may see that match the query.
+
+        `enrolled` marks the ones the actor already takes.
+        """
         ...
 
     async def describe(

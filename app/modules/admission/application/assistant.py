@@ -5,6 +5,7 @@ tools for the applicant: a read of the whole application, the FAQ search and
 one-click suggestions of courses, opportunities, scholarships and universities.
 """
 
+import unicodedata
 from typing import Any, Final
 from uuid import UUID
 
@@ -34,7 +35,11 @@ from app.modules.admission.ports.consent import AI, PurposeConsents
 from app.modules.admission.ports.courses import CourseSources
 from app.shared.actor import Actor
 from app.shared.contracts.admission_assistant import (
+    COURSE_LIMIT_MAX,
+    COURSE_SUMMARY_MAX,
+    COURSE_TITLE_MAX,
     SUGGESTION_KINDS,
+    CourseHit,
     FaqHit,
     SuggestionCard,
     SuggestionKind,
@@ -48,6 +53,19 @@ _REASON_MAX: Final = 300
 
 def _reason(*parts: str | None) -> str:
     return " · ".join(p.strip() for p in parts if p and p.strip())[:_REASON_MAX]
+
+
+def _plain(text: str | None, limit: int) -> str:
+    """Clean third-party course text.
+
+    No control or format characters, one line, cut to `limit`. It reaches the
+    model only as data.
+    """
+    kept = (
+        " " if unicodedata.category(ch).startswith(("C", "Z")) else ch
+        for ch in text or ""
+    )
+    return " ".join("".join(kept).split())[:limit]
 
 
 def _uuid(value: str) -> UUID:
@@ -153,6 +171,24 @@ class AssistantService:
             )
             for a in found
         ]
+
+    async def find_courses(
+        self, actor: Actor, query: str, limit: int
+    ) -> list[CourseHit]:
+        """LMS courses the caller may see (never locked ones), `enrolled` marked."""
+        ctx = await self._ctx(actor)
+        limit = max(1, min(limit, COURSE_LIMIT_MAX))
+        found = await self._sources.lms_find(ctx.actor, query.strip() or None, limit)
+        return [
+            CourseHit(
+                id=c.id,
+                title=_plain(c.title, COURSE_TITLE_MAX),
+                summary=_plain(c.summary, COURSE_SUMMARY_MAX),
+                url=c.url,
+                enrolled=c.enrolled,
+            )
+            for c in found
+        ][:limit]
 
     async def suggest(
         self, actor: Actor, kind: SuggestionKind, query: str, limit: int

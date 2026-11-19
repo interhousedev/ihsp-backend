@@ -91,6 +91,7 @@ def test_the_catalog_lists_the_places_that_call_a_model() -> None:
         "admit_activity_grade",
         "admit_item_rewrite_fix",
         "admit_essay_review",
+        "admit_essay_uni_review",
         "admit_alignment_map",
         "admit_alignment_refresh",
         "admit_proof_extract",

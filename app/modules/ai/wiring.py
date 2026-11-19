@@ -365,6 +365,7 @@ def build(
             deps.clock,
             limits,
             openui=settings.ai.openui_enabled,
+            admission_openui=settings.ai.openui_admission_enabled,
             projects=project_instructions_from(uow_factory),
             uni_chat=lambda: bindings.uni_chat,
         ),

@@ -5,6 +5,7 @@ from uuid import UUID
 
 from app.modules.admission.domain.courses import Course
 from app.shared.actor import Actor
+from app.shared.contracts.admission_assistant import CourseHit
 
 
 class CourseSources(Protocol):
@@ -20,6 +21,12 @@ class CourseSources(Protocol):
 
     async def lms_catalog(self, actor: Actor, query: str | None) -> list[Course]:
         """Return public LMS courses the actor may open, filtered by title."""
+        ...
+
+    async def lms_find(
+        self, actor: Actor, query: str | None, limit: int
+    ) -> list[CourseHit]:
+        """Return open LMS courses the actor may see, enrolments marked."""
         ...
 
     async def lms_enroll(self, actor: Actor, course_id: UUID) -> None:

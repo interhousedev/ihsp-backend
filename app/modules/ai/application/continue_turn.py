@@ -130,6 +130,12 @@ class ContinueTurn:
             enabled=settings.ai.openui_enabled,
             convert_tables=True,
         )
+        self.openui_admission = OpenUiFinalizer(  # ADM-OUI: on without the global one
+            llm,
+            settings.ai_profile(AiTask.OPENUI_REPAIR),
+            enabled=settings.ai.openui_admission_enabled,
+            convert_tables=True,
+        )
 
     async def execute(
         self,
@@ -257,7 +263,9 @@ class ContinueTurn:
         """Repair OpenUI blocks of a web answer; the bot's blocks come by the tool."""
         if run.surface == SURFACE_TELEGRAM:
             return text
-        return await self.openui.finalize(text, count=self._repair_counter(chat))
+        admission = chat.assistant is Assistant.ADMISSION
+        finalizer = self.openui_admission if admission else self.openui
+        return await finalizer.finalize(text, count=self._repair_counter(chat))
 
     async def _refuse_rule_attack(self, run: _Run, asked: str) -> TurnStatus:
         """End the turn with the fixed refusal, in the language of the message."""

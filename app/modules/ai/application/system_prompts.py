@@ -11,6 +11,7 @@ from app.modules.ai.domain.prompts import (
     PRIORITIES,
     SURFACE_TELEGRAM,
     TELEGRAM_RULES,
+    admission_openui_prompt,
     system_prompt,
 )
 from app.modules.ai.domain.prompts_author import (
@@ -61,12 +62,14 @@ class SystemPrompts:
         limits: LimitsProvider | None = None,
         *,
         openui: bool = False,
+        admission_openui: bool = False,
         projects: ProjectInstructions | None = None,
         uni_chat: Callable[[], UniChatSource | None] | None = None,
     ) -> None:
         """Store the course gate (outline), the clock (date) and the runtime limits.
 
         `openui` adds the OpenUI block instructions (AI-OPENUI) to every assistant.
+        `admission_openui` gives the admission assistant its own subset of blocks.
         `projects` gives the instructions of a chat's project, if it has one.
         `uni_chat` reads the late-bound admission source of university chats.
         """
@@ -74,6 +77,7 @@ class SystemPrompts:
         self.clock = clock
         self.limits = limits
         self.openui = openui
+        self.admission_openui = admission_openui
         self.projects = projects
         self.uni_chat = uni_chat
 
@@ -100,12 +104,7 @@ class SystemPrompts:
         uni = await self._uni_block(chat)
         if uni:
             prompt = f"{prompt}\n\n{uni}"
-        if surface == SURFACE_TELEGRAM:
-            prompt = f"{prompt}\n\n{TELEGRAM_RULES}"
-            if self.openui:  # blocks come by the show_ui_block tool, never in text
-                prompt += telegram_openui_prompt()
-        elif self.openui:
-            prompt += openui_prompt()
+        prompt += self._surface_suffix(chat, surface)
         language = answer_language(last_user_text, locale)
         tail = [ANSWER_NOW] if answer_now else []
         if chat.assistant is Assistant.LMS_AUTHOR:
@@ -117,6 +116,18 @@ class SystemPrompts:
         prompt = f"{prompt}\n\n{PRIORITIES}"
         tail.append(language_line(language))
         return with_volatile_tail(prompt, "\n".join(tail))
+
+    def _surface_suffix(self, chat: Chat, surface: str) -> str:
+        if surface == SURFACE_TELEGRAM:
+            suffix = f"\n\n{TELEGRAM_RULES}"
+            if self.openui:  # blocks come by the show_ui_block tool, never in text
+                suffix += telegram_openui_prompt()
+            return suffix
+        if chat.assistant is Assistant.ADMISSION and self.admission_openui:
+            return admission_openui_prompt()
+        if self.openui:
+            return openui_prompt()
+        return ""
 
     async def _project_block(self, chat: Chat) -> str:
         if chat.project_id is None or self.projects is None:

@@ -190,6 +190,11 @@ class AiSettings(BaseModel):
     (charts, tables, cards, link lists); broken blocks are repaired by the
     `OPENUI_REPAIR` task or dropped before the answer is stored."""
 
+    openui_admission_enabled: bool = True
+    """True: the admission assistant may answer with OpenUI blocks (cards, lists,
+    checklists, links), validated and repaired like every other answer. It does not
+    depend on `openui_enabled`."""
+
     openui_studio_enabled: bool = False
     """True: Studio quiz and flash card items may carry a small OpenUI block (chart,
     table, diagram) in a stimulus or explanation."""
