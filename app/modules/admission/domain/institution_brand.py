@@ -14,3 +14,4 @@ class InstitutionBrand:
     logo_url: str | None = None
     logo_fit: str = "circle"
     logo_zoom: float = 1.0
+    website_url: str | None = None

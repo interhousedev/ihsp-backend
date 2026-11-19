@@ -102,15 +102,8 @@ class CatalogService:
         )
 
     async def study_fields(self, locale: str = "en") -> list[dict[str, Any]]:
-        """Grouped, deduplicated fields of study with stable ids."""
-        async with self._uow() as uow:
-            found = await uow.catalog.institutions()
-        raw = [
-            str(n)
-            for i in found
-            for n in (i.facts["fields"].value if "fields" in i.facts else [])
-        ]
-        return build_taxonomy(raw, locale)
+        """Canonical, localized fields of study grouped, with stable ids."""
+        return build_taxonomy(locale)
 
     async def institution(self, institution_id: UUID) -> CatalogInstitution:
         """Return one institution or raise not found."""

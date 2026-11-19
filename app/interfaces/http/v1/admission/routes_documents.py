@@ -33,7 +33,7 @@ from pydantic import BaseModel, ConfigDict, Field
 router = APIRouter(prefix="/v1/admission", tags=["admission"])
 
 _BRAND_FIELDS: Final = frozenset(
-    {"institution_name", "logo_url", "logo_fit", "logo_zoom"}
+    {"institution_name", "logo_url", "logo_fit", "logo_zoom", "institution_website_url"}
 )
 
 
@@ -154,6 +154,7 @@ class ChecklistOut(BaseModel):
     logo_url: str | None = None
     logo_fit: Literal["circle", "contain"] = "circle"
     logo_zoom: float = 1.0
+    institution_website_url: str | None = None
     app_path: str | None = None
     urgent: bool = False
     quadrant: Literal["do", "schedule", "delegate", "drop"] = "drop"
@@ -172,6 +173,7 @@ class ChecklistOut(BaseModel):
             logo_url=brand.logo_url if brand else None,
             logo_fit=brand.logo_fit if brand else "circle",
             logo_zoom=brand.logo_zoom if brand else 1.0,
+            institution_website_url=brand.website_url if brand else None,
             app_path=deep_link(c.template_key),
             urgent=is_urgent(c, now),
             quadrant=quadrant(c, now),

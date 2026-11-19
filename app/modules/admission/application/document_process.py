@@ -30,7 +30,7 @@ _STEPS: Final[tuple[_Step, ...]] = (
             "uz": (
                 "Transkript",
                 "Registrator (transkript xodimi)",
-                "Rasmiy o'quv transkripti. Talabni ilovada yuboring.",
+                "Rasmiy oʻquv transkripti. Talabni ilovada yuboring.",
             ),
             "ru": (
                 "Транскрипт",
@@ -53,7 +53,7 @@ _STEPS: Final[tuple[_Step, ...]] = (
             "uz": (
                 "Maktab profili",
                 "Maslahatchi",
-                "Litsey haqida umumiy ma'lumot; qabul komissiyalari uchun.",
+                "Litsey haqida umumiy maʼlumot; qabul komissiyalari uchun.",
             ),
             "ru": (
                 "Школьный профиль",
@@ -74,8 +74,8 @@ _STEPS: Final[tuple[_Step, ...]] = (
         {
             "uz": (
                 "Tavsiya xatlari",
-                "O'qituvchilar",
-                "O'qituvchilardan 3-4 hafta oldin so'rang.",
+                "Oʻqituvchilar",
+                "Oʻqituvchilardan 3-4 hafta oldin soʻrang.",
             ),
             "ru": (
                 "Рекомендательные письма",

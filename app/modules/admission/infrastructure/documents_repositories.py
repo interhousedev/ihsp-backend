@@ -594,6 +594,7 @@ class SqlDeadlineRepository:
                 InstitutionRow.logo_fit,
                 InstitutionRow.logo_aspect,
                 InstitutionRow.logo_zoom,
+                InstitutionRow.website_domain,
             ).where(InstitutionRow.id.in_(list(ids)))
         )
         return {
@@ -602,8 +603,9 @@ class SqlDeadlineRepository:
                 logo_url=url,
                 logo_fit=resolve_logo_fit(fit, aspect),
                 logo_zoom=zoom,
+                website_url=f"https://{domain}" if domain else None,
             )
-            for i, name, url, fit, aspect, zoom in rows.tuples().all()
+            for i, name, url, fit, aspect, zoom, domain in rows.tuples().all()
         }
 
 

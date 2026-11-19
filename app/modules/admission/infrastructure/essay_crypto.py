@@ -24,7 +24,10 @@ from datetime import UTC, datetime
 from typing import Final, TypeVar
 from uuid import UUID
 
-from app.modules.admission.domain.errors import EssayVaultUnavailableError
+from app.modules.admission.domain.errors import (
+    EssayKeyUnavailableError,
+    EssayVaultUnavailableError,
+)
 from app.modules.admission.ports.essay_crypto import (
     KEY_BYTES,
     EssayCipher,
@@ -139,14 +142,15 @@ class AesGcmEssayCipher:
     async def open(
         self, owner_id: UUID, record_id: UUID, column: str, blob: bytes
     ) -> str:
-        """Decrypt a blob; ValueError on tampering, a foreign row or a missing key."""
+        """Decrypt a blob; ValueError if tampered or foreign, 503 without a key."""
         if len(blob) < 1 + NONCE_BYTES + TAG_BYTES:
             raise ValueError("essay blob too short")
         if blob[0] != VERSION_AES_GCM:
             raise ValueError("unknown essay blob version")
         key = await self._key(owner_id, create=False)
         if key is None:
-            raise ValueError("essay key missing")
+            log.error("essay_key_missing", owner_id=str(owner_id))
+            raise EssayKeyUnavailableError(support_details="essay key missing")
         nonce, sealed = blob[1 : 1 + NONCE_BYTES], blob[1 + NONCE_BYTES :]
         try:
             plain = AESGCM(key.secret).decrypt(

@@ -87,3 +87,13 @@ async def test_quiz_and_setup_alone_count() -> None:
     """ADM-U6-SYNC-5: the quiz answer or the legacy answer alone is a focus."""
     assert (await load_study_focus(_uow(quiz=["Biology"]), STUDENT)).field_ids == (BIO,)
     assert (await load_study_focus(_uow(q18="Biology"), STUDENT)).field_ids == (BIO,)
+
+
+def test_focus_labels_follow_the_request_locale() -> None:
+    """ADM-STUDY-1: labels use the picker's names in the locale; unknown are cased."""
+    from app.modules.admission.application.study_focus import StudyFocus
+
+    focus = StudyFocus((CS, canonical_id("data science"), "x_zzqx_thing"), ())
+    assert focus.labels("ru")[:2] == ("Информатика", "Наука о данных")
+    assert focus.labels("uz")[0] == "Informatika"
+    assert focus.labels("en") == ("Computer Science", "Data Science", "Zzqx Thing")

@@ -55,6 +55,7 @@ class CatalogInstitution:
     logo_zoom: float = 1.0
     logo_fit: str | None = None
     logo_aspect: float | None = None
+    website_domain: str | None = None
 
     @property
     def verified(self) -> bool:

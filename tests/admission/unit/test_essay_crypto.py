@@ -6,7 +6,10 @@ from types import SimpleNamespace
 from typing import Any, cast
 from uuid import UUID
 
-from app.modules.admission.domain.errors import EssayVaultUnavailableError
+from app.modules.admission.domain.errors import (
+    EssayKeyUnavailableError,
+    EssayVaultUnavailableError,
+)
 from app.modules.admission.infrastructure.essay_crypto import (
     NONCE_BYTES,
     VERSION_AES_GCM_SIV,
@@ -149,7 +152,7 @@ async def test_forget_shreds_the_key() -> None:
     blob = await cipher.seal(OWNER, RECORD, "body", "secret")
     await cipher.forget(OWNER)
     assert OWNER not in store.keys
-    with pytest.raises(ValueError):
+    with pytest.raises(EssayKeyUnavailableError):
         await cipher.open(OWNER, RECORD, "body", blob)
 
 

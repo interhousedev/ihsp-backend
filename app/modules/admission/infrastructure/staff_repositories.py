@@ -15,6 +15,7 @@ from app.modules.admission.domain.access import (
 from app.modules.admission.domain.consultations import ACTIVE
 from app.modules.admission.domain.errors import (
     AdmissionConflictError,
+    EssayKeyUnavailableError,
     EssayVaultUnavailableError,
 )
 from app.modules.admission.domain.staff import (
@@ -450,7 +451,7 @@ class SqlPrivacyRepository:
                 text = await self._cipher.open(
                     row["student_id"], row["id"], col, bytes(blob)
                 )
-            except (ValueError, EssayVaultUnavailableError):
+            except (ValueError, EssayKeyUnavailableError, EssayVaultUnavailableError):
                 failed += 1
                 row[col] = None
                 continue

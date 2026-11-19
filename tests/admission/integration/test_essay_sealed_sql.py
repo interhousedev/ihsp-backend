@@ -3,6 +3,7 @@
 from uuid import UUID
 
 from app.bootstrap import common  # noqa: F401  (registers every model)
+from app.modules.admission.domain.errors import EssayKeyUnavailableError
 from app.modules.admission.domain.essays import Essay, EssayIdea, PlanSection
 from app.modules.admission.infrastructure.essay_crypto import (
     AesGcmEssayCipher,
@@ -118,7 +119,7 @@ async def test_shredded_key_fails_closed_on_read(db_session: AsyncSession) -> No
     await cipher.forget(STUDENT)
     db_session.expunge_all()
 
-    with pytest.raises(ValueError):
+    with pytest.raises(EssayKeyUnavailableError):
         await repo.get(essay.id)
-    with pytest.raises(ValueError):
+    with pytest.raises(EssayKeyUnavailableError):
         await repo.get_idea(idea.id)

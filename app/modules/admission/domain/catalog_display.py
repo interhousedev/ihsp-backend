@@ -274,15 +274,29 @@ def clean_deadlines(raw: Any, locale: str = "en") -> list[dict[str, Any]]:
     return out
 
 
+def _plan_code(raw: Any) -> str:
+    """A round as its code: `ed`, `Early Decision` and `ED` all become `ED`."""
+    text = str(raw or "").strip()
+    for code, labels in PLAN.items():
+        if text.upper() == code or text.casefold() in {x.casefold() for x in labels}:
+            return code
+    return text.upper()
+
+
 def has_deadline(
     inst: "CatalogInstitution", plan: str | None, cycle: str | None
 ) -> bool:
-    """Whether a stored deadline has the plan and (or) the cycle."""
+    """Whether a stored deadline has the plan and (or) the cycle.
+
+    `ED` matches ED and ED2; a missing or unknown round never matches a plan.
+    """
     f = inst.fact("deadlines")
     rows = f.value if f is not None and isinstance(f.value, list) else []
+    want = _plan_code(plan) if plan else None
+    accepted = {"ED", "ED2"} if want == "ED" else {want}
     return any(
         isinstance(x, dict)
-        and (plan is None or x.get("plan") == plan)
+        and (want is None or _plan_code(x.get("plan")) in accepted)
         and (cycle is None or str(x.get("cycle")) == cycle)
         for x in rows
     )

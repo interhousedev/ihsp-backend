@@ -135,7 +135,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "sp",
         "/teachers/",
         _ST,
-        ("O'qituvchilar", "Учителя", "Teachers"),
+        ("Oʻqituvchilar", "Учителя", "Teachers"),
         "oqituvchi oqituvchilar ustoz учитель учителя преподаватели teacher teachers",
     ),
     _d(
@@ -215,7 +215,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "sp",
         "/excuses/",
         _ST,
-        ("Sababli yo'qlik", "Справки об отсутствии", "Absence excuses"),
+        ("Sababli yoʻqlik", "Справки об отсутствии", "Absence excuses"),
         "sabab sababli yoqlik spravka справка пропуск отсутствие болезнь excuse "
         "excuses absence sick note",
     ),
@@ -281,7 +281,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "staff",
         "/students/",
         _TE,
-        ("O'quvchilarni qidirish", "Поиск учеников", "Student search"),
+        ("Oʻquvchilarni qidirish", "Поиск учеников", "Student search"),
         "oquvchi oquvchilar ученик ученики студенты student students search "
         "qidiruv поиск",
     ),
@@ -330,7 +330,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "staff",
         "/certificates/",
         _TE,
-        ("Ma'lumotnomalar", "Справки", "Certificates"),
+        ("Maʼlumotnomalar", "Справки", "Certificates"),
         "malumotnoma spravka справка справки certificate certificates",
     ),
     _d(
@@ -362,7 +362,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "staff",
         "/excuses/",
         _TE,
-        ("Sababli yo'qlik", "Справки об отсутствии", "Absence excuses"),
+        ("Sababli yoʻqlik", "Справки об отсутствии", "Absence excuses"),
         "sabab sababli yoqlik spravka справка пропуск отсутствие excuse excuses "
         "absence sick note",
     ),
@@ -380,7 +380,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "admin",
         "/students/",
         _AD,
-        ("O'quvchilar", "Ученики", "Students"),
+        ("Oʻquvchilar", "Ученики", "Students"),
         "oquvchi oquvchilar ученик ученики student students",
     ),
     _d(
@@ -388,7 +388,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "admin",
         "/teachers/",
         _AD,
-        ("O'qituvchilar", "Учителя", "Teachers"),
+        ("Oʻqituvchilar", "Учителя", "Teachers"),
         "oqituvchi ustoz учитель учителя teacher teachers",
     ),
     _d(
@@ -501,7 +501,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "admin",
         "/certificates/",
         _AD,
-        ("Ma'lumotnomalar", "Справки", "Certificates"),
+        ("Maʼlumotnomalar", "Справки", "Certificates"),
         "malumotnoma spravka справка справки certificate certificates",
     ),
     _d(
@@ -509,7 +509,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "admin",
         "/certificate-types/",
         _AD,
-        ("Ma'lumotnoma turlari", "Типы справок", "Certificate types"),
+        ("Maʼlumotnoma turlari", "Типы справок", "Certificate types"),
         "tur turlari типы справок certificate types",
     ),
     _d(
@@ -549,7 +549,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "admin",
         "/broadcasts/",
         _AD,
-        ("E'lonlar", "Рассылки", "Broadcasts"),
+        ("Eʼlonlar", "Рассылки", "Broadcasts"),
         "elon elonlar рассылка рассылки объявление broadcast broadcasts announcement",
     ),
     _d(
@@ -613,7 +613,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "admin",
         "/excuses/",
         _AD,
-        ("Sababli yo'qlik", "Справки об отсутствии", "Absence excuses"),
+        ("Sababli yoʻqlik", "Справки об отсутствии", "Absence excuses"),
         "sabab sababli yoqlik spravka справка пропуск отсутствие excuse excuses "
         "absence sick note",
     ),
@@ -703,7 +703,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "id",
         "/security/delete/",
         _ST,
-        ("Hisobni o'chirish", "Удаление аккаунта", "Delete account"),
+        ("Hisobni oʻchirish", "Удаление аккаунта", "Delete account"),
         "ochirish удалить удаление delete account hisob",
     ),
     _d(
@@ -719,7 +719,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "id",
         "/appearance/",
         _ALL,
-        ("Ko'rinish", "Оформление", "Appearance"),
+        ("Koʻrinish", "Оформление", "Appearance"),
         "korinish оформление appearance theme tema тема dark qorongi темная",
     ),
     _d(
@@ -760,7 +760,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "library",
         "/lists/",
         _ALL,
-        ("Ro'yxatlar", "Списки", "Lists"),
+        ("Roʻyxatlar", "Списки", "Lists"),
         "royxat royxatlar списки список lists reading shelf",
     ),
     _d(
@@ -808,7 +808,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "library",
         "/manage/collections/",
         _LIBM,
-        ("To'plamlar", "Подборки", "Collections"),
+        ("Toʻplamlar", "Подборки", "Collections"),
         "toplam toplamlar подборки коллекции collections",
     ),
     _d(
@@ -857,7 +857,7 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "lms",
         "/join/",
         _ALL,
-        ("Kursga qo'shilish", "Вступить в курс", "Join a course"),
+        ("Kursga qoʻshilish", "Вступить в курс", "Join a course"),
         "qoshilish вступить код join code kurs курс invite",
     ),
     _d(

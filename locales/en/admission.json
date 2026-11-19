@@ -49,5 +49,7 @@
   "admission-invite-limit": "An essay can have at most {limit} active review links. Switch one off to add another.",
   "admission-exemplar-invalid": "This exemplar essay is not valid. Check the {field} field.",
   "admission-exemplar-duplicate": "This exemplar essay is already in the library.",
-  "admission-kb-body-invalid": "The article body is not accepted. Use at most 3 OpenUI blocks of up to 6000 characters each, and only https, mailto or relative links."
+  "admission-kb-body-invalid": "The article body is not accepted. Use at most 3 OpenUI blocks of up to 6000 characters each, and only https, mailto or relative links.",
+  "admission-essay-key-unavailable": "Your essays are temporarily unavailable. Try again later or contact support.",
+  "admission-catalog-cycle": "The cycle must be the current or the next admission cycle, written as 2026-27 (cycle: {cycle})."
 }

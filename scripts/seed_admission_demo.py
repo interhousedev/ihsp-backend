@@ -17,6 +17,8 @@ from app.bootstrap.common import build_container
 from app.bootstrap.container import Container
 from app.bootstrap.seed.users import _ensure
 from app.modules.admission.application.checklist import ensure_all
+from app.modules.admission.domain.errors import EssayKeyUnavailableError
+from app.modules.admission.domain.essays import Essay
 from app.modules.admission.infrastructure.catalog_loader import load_catalog
 from app.modules.admission.infrastructure.chooser_repositories import (
     SqlListRepository,
@@ -25,6 +27,8 @@ from app.modules.admission.infrastructure.documents_repositories import (
     SqlChecklistRepository,
     SqlDeadlineRepository,
 )
+from app.modules.admission.infrastructure.essay_crypto import essay_cipher
+from app.modules.admission.infrastructure.essays_repository import SqlEssayRepository
 from app.modules.admission.infrastructure.orm.access import (
     EntitlementRow,
     StaffAssignmentRow,
@@ -36,7 +40,7 @@ from app.modules.admission.infrastructure.orm.applications import (
     TranscriptRequestRow,
 )
 from app.modules.admission.infrastructure.orm.catalog import InstitutionRow
-from app.modules.admission.infrastructure.orm.profile import ItemRow
+from app.modules.admission.infrastructure.orm.profile import EssayRow, ItemRow
 from app.modules.admission.ports.unit_of_work import AdmissionUnitOfWork
 from app.settings import load_settings
 from app.shared.actor import Role
@@ -229,6 +233,35 @@ async def _checklist(s: AsyncSession, student: UUID) -> None:
         )
 
 
+ESSAY_TEXTS = (
+    (
+        "Why robotics",
+        "Building the robot taught me to test every idea until it works. "
+        "I led a team of twelve through three failed prototypes before the fourth.",
+    ),
+    (
+        "Serving the community",
+        "Every Saturday the food bank needs more hands than it has. "
+        "Packing those boxes showed me how much planning sits behind one meal.",
+    ),
+)
+
+
+async def _essays(container: Container, s: AsyncSession, student: UUID) -> None:
+    """Demo essays with fixed ids; a row whose text no longer opens is recreated."""
+    repo = SqlEssayRepository(s, essay_cipher(container.settings))
+    for n, (title, body) in enumerate(ESSAY_TEXTS):
+        essay_id = uuid5(_NS, f"essay:{n}")
+        if await s.get(EssayRow, essay_id) is not None:
+            try:
+                await repo.get(essay_id)
+                continue
+            except (EssayKeyUnavailableError, ValueError):
+                await repo.delete(essay_id)
+                print(f"recreating demo essay {n}: its key is gone")
+        await repo.add(Essay(id=essay_id, student_id=student, title=title, body=body))
+
+
 async def _repair(container: Container, user_id: UUID, roles: set[Role]) -> None:
     """Bring an account created by an earlier run back to the demo state."""
     auth = container.identity.auth
@@ -278,6 +311,7 @@ async def seed(container: Container) -> dict[str, UUID]:
         await _items(s, student)
         await _transcript(s, student)
         await _checklist(s, student)
+        await _essays(container, s, student)
         await s.commit()
     return ids
 

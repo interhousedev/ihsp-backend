@@ -163,6 +163,7 @@ class SqlCatalogRepository:
                     scholarship_count=int(counts.get(r.id, 0)),
                     logo_url=r.logo_url,
                     cover_url=r.cover_url,
+                    website_domain=r.website_domain,
                     name_local=r.name_local,
                     aliases=tuple(r.aliases or ()),
                     logo_zoom=float(r.logo_zoom),

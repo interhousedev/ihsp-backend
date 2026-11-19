@@ -110,6 +110,12 @@ FIELDS: tuple[StudyField, ...] = (
         ("Information Systems", "Информационные системы", "Axborot tizimlari"),
     ),
     _F(
+        "data_science",
+        "computer_data",
+        ("Data Science", "Наука о данных", "Maʼlumotlar fani"),
+        ("data analytics", "data and ai", "artificial intelligence"),
+    ),
+    _F(
         "engineering",
         "engineering",
         ("Engineering", "Инженерия", "Muhandislik"),
@@ -374,32 +380,30 @@ def _label(labels: Labels, locale: str) -> str:
 def labels_of(item_id: str, raw: str, locale: str = "en") -> str:
     """Display label of an item; unknown items keep their first raw spelling."""
     known = _BY_ID.get(item_id)
-    return _label(known.labels, locale) if known is not None else raw.strip()
+    if known is not None:
+        return _label(known.labels, locale)
+    text = raw.strip()
+    return text.title() if text.islower() else text
 
 
 def canonical_names(raw_values: list[str]) -> tuple[str, ...]:
-    """Deduplicated English labels of the given stored spellings, sorted."""
+    """Deduplicated English labels of the canonical fields among the spellings."""
     seen: dict[str, str] = {}
     for raw in raw_values:
         cid = canonical_id(raw)
-        seen.setdefault(cid, labels_of(cid, raw))
+        if cid in _BY_ID:
+            seen.setdefault(cid, labels_of(cid, raw))
     return tuple(sorted(seen.values(), key=str.casefold))
 
 
-def build_taxonomy(
-    raw_values: list[str] | None = None, locale: str = "en"
-) -> list[dict[str, Any]]:
-    """Groups with items; known items are always listed, unknown ones are added.
+def build_taxonomy(locale: str = "en") -> list[dict[str, Any]]:
+    """Groups with the canonical fields only, localized and sorted by label.
 
     Each group is {id, label, items: [{id, label}]}; empty groups are dropped.
+    Scraped program names are not fields of study and never appear here.
     """
     items: dict[str, tuple[str, str]] = {f.id: (f.group, f.labels[0]) for f in FIELDS}
     names = {f.id: _label(f.labels, locale) for f in FIELDS}
-    for raw in raw_values or ():
-        cid = canonical_id(raw)
-        if cid not in items:
-            items[cid] = (group_of(cid, raw), raw.strip())
-            names[cid] = raw.strip()
     out: list[dict[str, Any]] = []
     for group in GROUPS:
         members = [

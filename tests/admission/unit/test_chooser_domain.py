@@ -69,6 +69,19 @@ def test_filters_exclude_missing_facts() -> None:
     assert not matches(i, CatalogFilters(max_cost=Decimal(1000)))
 
 
+def test_plan_filter_ed_matches_ed_and_ed2_only() -> None:
+    """ADM-SEARCH-PLAN: the ED plan keeps ED/ED2 schools, drops REA/unknown."""
+    ed = _inst(deadlines=FactView([{"plan": "ED2", "cycle": "2026-27"}], "u", 2025))
+    harvard = _inst(deadlines=FactView([{"plan": "REA"}, {"plan": "RD"}], "u", 2025))
+    ed_label = _inst(deadlines=FactView([{"plan": "Early Decision"}], "u", 2025))
+    f = CatalogFilters(plan="ED")
+    assert matches(ed, f) and matches(ed_label, f)
+    assert not matches(harvard, f)
+    assert not matches(_inst(), f)
+    assert not matches(_inst(deadlines=FactView([{"plan": None}], "u", 2025)), f)
+    assert matches(harvard, CatalogFilters(plan="REA"))
+
+
 def test_budget_bands_and_gate() -> None:
     assert budget_upper("5k_15k") == 15000 and budget_upper("over_50k") is None
     assert check_affordability("under_5k", Decimal(60000)) == (

@@ -301,6 +301,21 @@ class EssayVaultUnavailableError(BaseError):
     message_key = "admission-essay-vault-unavailable"
 
 
+class EssayKeyUnavailableError(BaseError):
+    """A student's essay key is gone while sealed text exists (fail closed)."""
+
+    code = "admission/essay_key_unavailable"
+    status = 503
+    message_key = "admission-essay-key-unavailable"
+
+
+class CatalogCycleError(ValidationFailedError):
+    """A proposal names a cycle other than the current or next one. Params: cycle."""
+
+    code = "admission/catalog_cycle"
+    message_key = "admission-catalog-cycle"
+
+
 class InviteNotFoundError(NotFoundError):
     """The review link is unknown, expired or revoked (one answer for all)."""
 

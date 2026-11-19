@@ -29,6 +29,8 @@ Essay text (drafts, versions, ideas, comments, reviews) is encrypted per student
 - Production needs the `admission-essays` AppRole: `IHSP_ESSAY_VAULT__ROLE_ID` and `IHSP_ESSAY_VAULT__SECRET_ID`. `scripts/prod_init.sh vault` creates it and writes both to `.env.prod`. Without them essays fail closed with HTTP 503 instead of storing plaintext. The identity AppRole is never used for essays.
 - Erasing a student destroys the key, so remaining blobs cannot be read. After erasure, a process may still use a cached key for up to 5 minutes.
 - Back up Vault with the other data: an essay without its key is lost.
+- The dev Vault in `materials/docker-compose.dev.yaml` runs in memory, so its keys are gone after a restart. Essays of such a student answer 503 `admission/essay_key_unavailable` until the demo data is re-seeded; a new essay still works.
+- Essay routes return 503 `admission/essay_key_unavailable` when a student's key is missing. Nothing is stored in plaintext.
 
 ## Sharing an essay for review
 

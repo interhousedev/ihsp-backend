@@ -131,6 +131,7 @@ class InstitutionOut(BaseModel):
     scholarship_count: int
     logo_url: str | None
     cover_url: str | None
+    website_url: str | None
     details: list[DetailGroupOut] = []
     factors: list[ImportanceFactorOut] = []
 
@@ -173,6 +174,7 @@ class InstitutionOut(BaseModel):
             scholarship_count=i.scholarship_count,
             logo_url=i.logo_url,
             cover_url=i.cover_url,
+            website_url=(f"https://{i.website_domain}" if i.website_domain else None),
             details=(
                 [DetailGroupOut(**g) for g in detail_groups(i, locale)]
                 if detail

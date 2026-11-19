@@ -17,6 +17,8 @@ from app.interfaces.http.v1.admin_ai.schemas import (
     LimitsResponse,
     PromptAnalyticsResponse,
     PromptBody,
+    PromptCallOut,
+    PromptCallsResponse,
     PromptDetailOut,
     PromptSlotOut,
     PromptSlotsResponse,
@@ -181,6 +183,35 @@ async def get_prompt_analytics(
         from_day=start_day,
         to_day=end_day,
         items=[PromptStatsOut.of(row) for row in rows],
+    )
+
+
+@router.get("/prompts/analytics/calls", response_model=PromptCallsResponse)
+async def get_prompt_calls(
+    container: ContainerDep,
+    actor: AdminActor,
+    task: Annotated[str, Query(min_length=1, max_length=64)],
+    version: Annotated[int | None, Query(ge=0)] = None,
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
+) -> PromptCallsResponse:
+    """The latest calls of a task or one prompt version: metadata only, no text."""
+    rows = await _prompts(container).analytics.trace(actor, task, version, limit)
+    return PromptCallsResponse(
+        items=[
+            PromptCallOut(
+                occurred_at=r.occurred_at,
+                task=r.task,
+                model=r.model,
+                version=r.version,
+                input_tokens=r.input_tokens,
+                output_tokens=r.output_tokens,
+                cost_usd=None if r.cost_micro is None else r.cost_micro / 1_000_000,
+                latency_ms=r.latency_ms,
+                success=r.success,
+                error=r.error,
+            )
+            for r in rows
+        ]
     )
 
 
