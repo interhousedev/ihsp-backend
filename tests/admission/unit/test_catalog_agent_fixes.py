@@ -219,7 +219,6 @@ async def test_rejected_proposal_writes_no_prompts() -> None:
 @pytest.mark.parametrize(
     ("items", "field"),
     [
-        ([{**PROMPT, "cycle": "2025-27"}], "cycle"),
         ([{**PROMPT, "prompt": "  "}], "prompt"),
         ([{**PROMPT, "word_limit": 0}], "word_limit"),
         ([{**PROMPT, "source_url": "http://example.edu"}], "source_url"),

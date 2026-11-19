@@ -2,6 +2,7 @@
 
 import re
 from dataclasses import dataclass
+from datetime import date
 from typing import Final, Literal
 
 CYCLE_RE: Final = re.compile(r"^(\d{4})-(\d{2})$")
@@ -9,6 +10,11 @@ MAX_PROMPTS: Final = 30
 MAX_PROMPT_LEN: Final = 4000
 MAX_URL_LEN: Final = 500
 MAX_WORD_LIMIT: Final = 5000
+MAX_CHAR_LIMIT: Final = 30000
+"""Largest character limit a supplement prompt may state."""
+MAX_CHOICE_GROUP_LEN: Final = 40
+LIMIT_UNITS: Final = ("words", "characters")
+LimitUnit = Literal["words", "characters"]
 MAX_PROPOSED_PROMPTS: Final = 12
 """Most supplement prompts one catalog proposal carries."""
 
@@ -24,6 +30,9 @@ class SuppPrompt:
     word_limit: int | None
     required: bool
     source_url: str | None
+    limit_unit: LimitUnit = "words"
+    limit_min: int | None = None
+    choice_group: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -56,6 +65,35 @@ def previous_cycle(cycle: str) -> str:
     """The cycle one year earlier: `2025-26` gives `2024-25`."""
     start = int(cycle[:4]) - 1
     return f"{start}-{(start + 1) % 100:02d}"
+
+
+def proposal_cycles(today: date) -> frozenset[str]:
+    """Cycles a proposal may name: the admission cycle open on `today` and the next.
+
+    A cycle starts in July: 2026-11-19 gives `2026-27` and `2027-28`.
+    """
+    start = today.year if today.month >= 7 else today.year - 1
+    return frozenset(f"{y}-{(y + 1) % 100:02d}" for y in (start, start + 1))
+
+
+def limits_error(
+    unit: str, word_limit: int | None, limit_min: int | None, choice_group: str | None
+) -> str | None:
+    """Name of the first invalid limit field, or None when all are valid."""
+    if unit not in LIMIT_UNITS:
+        return "limit_unit"
+    max_limit = MAX_WORD_LIMIT if unit == "words" else MAX_CHAR_LIMIT
+    if word_limit is not None and not 1 <= word_limit <= max_limit:
+        return "word_limit"
+    if limit_min is not None and (
+        word_limit is None or not 1 <= limit_min <= word_limit
+    ):
+        return "limit_min"
+    if choice_group is not None and not (
+        1 <= len(choice_group) <= MAX_CHOICE_GROUP_LEN
+    ):
+        return "choice_group"
+    return None
 
 
 def normalize(text: str) -> str:

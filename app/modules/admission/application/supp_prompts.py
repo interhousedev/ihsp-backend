@@ -1,6 +1,7 @@
 """Supplemental essay prompts: students read them, curators replace a cycle."""
 
 from collections.abc import Callable, Mapping, Sequence
+from datetime import date
 from typing import Any
 from uuid import UUID
 
@@ -8,16 +9,18 @@ from app.modules.admission.application.actor import AdmissionContext
 from app.modules.admission.domain.errors import (
     AdmissionForbiddenError,
     AdmissionNotFoundError,
+    CatalogCycleError,
 )
 from app.modules.admission.domain.supp_prompts import (
     MAX_PROMPT_LEN,
     MAX_PROMPTS,
     MAX_PROPOSED_PROMPTS,
     MAX_URL_LEN,
-    MAX_WORD_LIMIT,
     CyclePrompts,
     SuppPrompt,
     history,
+    limits_error,
+    proposal_cycles,
     valid_cycle,
 )
 from app.modules.admission.domain.urls import is_https_url
@@ -35,28 +38,46 @@ def _clean(prompts: list[SuppPrompt]) -> list[SuppPrompt]:
         text = p.prompt.strip()
         if not text or len(text) > MAX_PROMPT_LEN:
             raise ValidationFailedError(params={"field": "prompt"})
-        if p.word_limit is not None and not 1 <= p.word_limit <= MAX_WORD_LIMIT:
-            raise ValidationFailedError(params={"field": "word_limit"})
+        group = (p.choice_group or "").strip() or None
+        bad = limits_error(p.limit_unit, p.word_limit, p.limit_min, group)
+        if bad:
+            raise ValidationFailedError(params={"field": bad})
         url = (p.source_url or "").strip() or None
         if url is not None and (len(url) > MAX_URL_LEN or not is_https_url(url)):
             raise ValidationFailedError(params={"field": "source_url"})
-        out.append(SuppPrompt(i, text, p.word_limit, p.required, url))
+        out.append(
+            SuppPrompt(
+                i,
+                text,
+                p.word_limit,
+                p.required,
+                url,
+                p.limit_unit,
+                p.limit_min,
+                group,
+            )
+        )
     return out
 
 
-def clean_proposed(raw: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+def clean_proposed(
+    raw: Sequence[Mapping[str, Any]], today: date
+) -> list[dict[str, Any]]:
     """Validate the prompts of a catalog proposal like the staff PUT does.
 
-    Each item is `{cycle, prompt, word_limit, required, source_url}`; the source
-    is mandatory. Raises `ValidationFailedError` naming the invalid field.
+    Each item is `{cycle, prompt, word_limit, limit_unit, limit_min,`
+    choice_group, `required`, `source_url`; the source is mandatory. The cycle
+    must be the admission cycle open on `today` or the next one
+    (`CatalogCycleError`). Other invalid fields raise `ValidationFailedError`.
     """
     if len(raw) > MAX_PROPOSED_PROMPTS:
         raise ValidationFailedError(params={"field": "supp_prompts"})
+    allowed = proposal_cycles(today)
     by_cycle: dict[str, list[SuppPrompt]] = {}
     for x in raw:
         cycle = x.get("cycle")
-        if not isinstance(cycle, str) or not valid_cycle(cycle):
-            raise ValidationFailedError(params={"field": "cycle"})
+        if not isinstance(cycle, str) or cycle not in allowed:
+            raise CatalogCycleError(params={"cycle": str(cycle)})
         url = x.get("source_url")
         if not isinstance(url, str) or not url.strip():
             raise ValidationFailedError(params={"field": "source_url"})
@@ -67,6 +88,9 @@ def clean_proposed(raw: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
                 x.get("word_limit"),
                 bool(x.get("required", True)),
                 url,
+                x.get("limit_unit") or "words",
+                x.get("limit_min"),
+                x.get("choice_group"),
             )
         )
     return [
@@ -76,6 +100,9 @@ def clean_proposed(raw: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
             "word_limit": p.word_limit,
             "required": p.required,
             "source_url": p.source_url,
+            "limit_unit": p.limit_unit,
+            "limit_min": p.limit_min,
+            "choice_group": p.choice_group,
         }
         for cycle, prompts in by_cycle.items()
         for p in _clean(prompts)
@@ -93,7 +120,16 @@ async def apply_proposed(
     by_cycle: dict[str, list[SuppPrompt]] = {}
     for x in raw:
         by_cycle.setdefault(x["cycle"], []).append(
-            SuppPrompt(0, x["prompt"], x["word_limit"], x["required"], x["source_url"])
+            SuppPrompt(
+                0,
+                x["prompt"],
+                x["word_limit"],
+                x["required"],
+                x["source_url"],
+                x.get("limit_unit", "words"),
+                x.get("limit_min"),
+                x.get("choice_group"),
+            )
         )
     for cycle, prompts in by_cycle.items():
         await uow.supp_prompts.replace(institution_id, cycle, _clean(prompts))

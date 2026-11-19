@@ -41,6 +41,11 @@ class SqlSuppPromptRepository:
                     word_limit=r.word_limit,
                     required=r.required,
                     source_url=r.source_url,
+                    limit_unit=(
+                        "characters" if r.limit_unit == "characters" else "words"
+                    ),
+                    limit_min=r.limit_min,
+                    choice_group=r.choice_group,
                 )
             )
         return out
@@ -66,6 +71,9 @@ class SqlSuppPromptRepository:
                 word_limit=p.word_limit,
                 required=p.required,
                 source_url=p.source_url,
+                limit_unit=p.limit_unit,
+                limit_min=p.limit_min,
+                choice_group=p.choice_group,
             )
             for p in prompts
         )

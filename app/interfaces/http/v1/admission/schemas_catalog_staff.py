@@ -6,10 +6,10 @@ from uuid import UUID
 
 from app.modules.admission.domain.catalog_proposals import CatalogProposal
 from app.modules.admission.domain.supp_prompts import (
+    MAX_CHAR_LIMIT,
     MAX_PROMPT_LEN,
     MAX_PROPOSED_PROMPTS,
     MAX_URL_LEN,
-    MAX_WORD_LIMIT,
 )
 
 from pydantic import BaseModel, Field
@@ -138,7 +138,10 @@ class SuppPromptProposalIn(BaseModel):
         pattern=r"^\d{4}-\d{2}$", description='Admission cycle, e.g. "2025-26".'
     )
     prompt: str = Field(min_length=1, max_length=MAX_PROMPT_LEN)
-    word_limit: int | None = Field(default=None, ge=1, le=MAX_WORD_LIMIT)
+    word_limit: int | None = Field(default=None, ge=1, le=MAX_CHAR_LIMIT)
+    limit_unit: Literal["words", "characters"] = "words"
+    limit_min: int | None = Field(default=None, ge=1)
+    choice_group: str | None = Field(default=None, max_length=40)
     required: bool = True
     source_url: str = Field(
         max_length=MAX_URL_LEN, pattern=r"^https://", description="https page."
@@ -151,6 +154,9 @@ class SuppPromptProposalOut(BaseModel):
     cycle: str
     prompt: str
     word_limit: int | None
+    limit_unit: str = "words"
+    limit_min: int | None = None
+    choice_group: str | None = None
     required: bool
     source_url: str
 

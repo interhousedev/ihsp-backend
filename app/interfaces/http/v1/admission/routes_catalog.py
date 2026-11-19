@@ -13,10 +13,10 @@ from app.interfaces.http.v1.admission.routes_items import _locale
 from app.modules.admission.domain.catalog_display import resolve_logo_fit
 from app.modules.admission.domain.errors import AdmissionForbiddenError
 from app.modules.admission.domain.supp_prompts import (
+    MAX_CHAR_LIMIT,
     MAX_PROMPT_LEN,
     MAX_PROMPTS,
     MAX_URL_LEN,
-    MAX_WORD_LIMIT,
     CyclePrompts,
     PromptStatus,
     SuppPrompt,
@@ -98,6 +98,9 @@ class SuppPromptOut(BaseModel):
     position: int
     prompt: str
     word_limit: int | None
+    limit_unit: Literal["words", "characters"]
+    limit_min: int | None
+    choice_group: str | None
     required: bool
     source_url: str | None
     status: PromptStatus
@@ -115,7 +118,10 @@ class SuppPromptIn(BaseModel):
     """One prompt to store; the list order gives the position."""
 
     prompt: str = Field(min_length=1, max_length=MAX_PROMPT_LEN)
-    word_limit: int | None = Field(default=None, ge=1, le=MAX_WORD_LIMIT)
+    word_limit: int | None = Field(default=None, ge=1, le=MAX_CHAR_LIMIT)
+    limit_unit: Literal["words", "characters"] = "words"
+    limit_min: int | None = Field(default=None, ge=1)
+    choice_group: str | None = Field(default=None, max_length=40)
     required: bool = True
     source_url: str | None = Field(default=None, max_length=MAX_URL_LEN)
 
@@ -137,6 +143,9 @@ def _cycles_out(cycles: list[CyclePrompts]) -> list[SuppCycleOut]:
                     word_limit=p.prompt.word_limit,
                     required=p.prompt.required,
                     source_url=p.prompt.source_url,
+                    limit_unit=p.prompt.limit_unit,
+                    limit_min=p.prompt.limit_min,
+                    choice_group=p.prompt.choice_group,
                     status=p.status,
                     previous_text=p.previous_text,
                 )
@@ -163,7 +172,16 @@ async def put_staff_supp_prompts(
 ) -> list[SuppCycleOut]:
     """Replace the prompts of one cycle (curator roles); returns every cycle."""
     prompts = [
-        SuppPrompt(i, p.prompt, p.word_limit, p.required, p.source_url)
+        SuppPrompt(
+            i,
+            p.prompt,
+            p.word_limit,
+            p.required,
+            p.source_url,
+            p.limit_unit,
+            p.limit_min,
+            p.choice_group,
+        )
         for i, p in enumerate(body.prompts)
     ]
     cycles = await container.admission.supp_prompts.replace(

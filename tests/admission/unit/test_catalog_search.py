@@ -42,13 +42,21 @@ def test_taxonomy_merges_spellings() -> None:
 
 
 def test_taxonomy_groups_have_stable_ids_and_labels() -> None:
-    a = build_taxonomy(["Computer Science", "Underwater Basketry"], "ru")
-    b = build_taxonomy(["Underwater Basketry", "Computer Science"], "ru")
-    assert a == b
-    items = [i for g in a for i in g["items"]]
+    """ADM-STUDY-2: the picker lists canonical, localized fields, no scraped names."""
+    ru = build_taxonomy("ru")
+    assert ru == build_taxonomy("ru")
+    items = [i for g in ru for i in g["items"]]
     assert len({i["id"] for i in items}) == len(items)
-    assert all(g["label"] and g["items"] for g in a)
-    assert any(i["id"].startswith("x_") for i in items)
+    assert all(g["label"] and g["items"] for g in ru)
+    assert not any(i["id"].startswith("x_") for i in items)
+    assert {"Информатика", "Наука о данных"} <= {i["label"] for i in items}
+    assert all(i["label"][0].isupper() for i in items)
+
+
+def test_canonical_names_drop_program_names() -> None:
+    """ADM-STUDY-2: scraped program names are not offered as fields of study."""
+    names = canonical_names(["computer science", "advanced convergence (AI)"])
+    assert names == ("Computer Science",)
 
 
 def test_deadline_notes_never_leak() -> None:

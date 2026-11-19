@@ -182,7 +182,7 @@ class CatalogProposalService:
         if supp_prompts and kind != "institution":
             raise ValidationFailedError(params={"field": "supp_prompts"})
         cleaned = clean_facts(facts or {})
-        prompts = clean_proposed(supp_prompts or [])
+        prompts = clean_proposed(supp_prompts or [], self._clock.now().date())
         payload = _clean_payload(
             kind, fields, source_url, allow_empty=bool(cleaned or prompts)
         )
