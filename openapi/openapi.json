@@ -8334,7 +8334,7 @@
         "type": "object"
       },
       "CatalogFieldsIn": {
-        "description": "Plain fields of an institution or scholarship; unknown keys are ignored.\n\nInstitutions: name, country (required when creating), name_local, city,\nwebsite_domain, kind, size_band, setting, languages, aliases, logo_url,\nlogo_zoom, logo_fit, logo_aspect, cover_url. Scholarships: name, provider,\nbasis (required when creating), institution_id, country, coverage_pct_min,\ncoverage_pct_max, covers, eligibility, url, cycle. Values are checked on save.",
+        "description": "Plain fields of an institution or scholarship; unknown keys are ignored.\n\nInstitutions: name, country (required when creating), name_local, city,\nwebsite_domain, kind, size_band, setting, languages, aliases, logo_url,\nlogo_zoom, logo_fit, logo_aspect, cover_url, programs. Scholarships: name,\nprovider, basis (required when creating), institution_id, country,\ncoverage_pct_min, coverage_pct_max, covers, eligibility, url, cycle.\nValues are checked on save.",
         "properties": {
           "aliases": {
             "description": "List of other names, <= 50.",
@@ -8412,6 +8412,22 @@
             "description": "Name in the local language.",
             "title": "Name Local"
           },
+          "programs": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CatalogProgramIn"
+                },
+                "maxItems": 60,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Study programs, at most 60.",
+            "title": "Programs"
+          },
           "provider": {
             "description": "Scholarship: institution|government|foundation.",
             "title": "Provider"
@@ -8434,6 +8450,53 @@
           }
         },
         "title": "CatalogFieldsIn",
+        "type": "object"
+      },
+      "CatalogProgramIn": {
+        "description": "A study program of an institution; `field_ids` are canonical field ids.",
+        "properties": {
+          "degree": {
+            "enum": [
+              "bachelor",
+              "master",
+              "foundation",
+              "other"
+            ],
+            "title": "Degree",
+            "type": "string"
+          },
+          "field_ids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "title": "Field Ids",
+            "type": "array"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "school": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "School"
+          }
+        },
+        "required": [
+          "name",
+          "degree"
+        ],
+        "title": "CatalogProgramIn",
         "type": "object"
       },
       "CatalogProposalIn": {
@@ -24897,6 +24960,18 @@
             ],
             "title": "Name Local"
           },
+          "next_deadline": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Deadline"
+          },
           "scholarship_count": {
             "title": "Scholarship Count",
             "type": "integer"
@@ -24946,6 +25021,7 @@
           "sources",
           "highlights",
           "deadlines",
+          "next_deadline",
           "aliases",
           "name_local",
           "logo_zoom",
@@ -37710,6 +37786,18 @@
             "title": "Lock Version",
             "type": "integer"
           },
+          "next_deadline": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Deadline"
+          },
           "org": {
             "anyOf": [
               {
@@ -37740,7 +37828,8 @@
           "created_at",
           "updated_at",
           "lock_version",
-          "upcoming"
+          "upcoming",
+          "next_deadline"
         ],
         "title": "OpportunityDetailOut",
         "type": "object"
@@ -38175,7 +38264,8 @@
               "ranking",
               "acceptance",
               "tuition",
-              "relevance"
+              "relevance",
+              "deadline"
             ],
             "title": "Sort",
             "type": "string"
@@ -38229,6 +38319,18 @@
             "title": "Lock Version",
             "type": "integer"
           },
+          "next_deadline": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Deadline"
+          },
           "org": {
             "anyOf": [
               {
@@ -38259,7 +38361,8 @@
           "created_at",
           "updated_at",
           "lock_version",
-          "upcoming"
+          "upcoming",
+          "next_deadline"
         ],
         "title": "OpportunityOut",
         "type": "object"
@@ -81967,7 +82070,7 @@
     },
     "/v1/admission/catalog/institutions": {
       "get": {
-        "description": "Search and filter the catalog; name and alias matches come first.\n\n`setting` is the campus setting (`city_type` is the same filter).",
+        "description": "Search and filter the catalog; name and alias matches come first.\n\n`setting` is the campus setting (`city_type` is the same filter). `sort=deadline`\nlists the soonest next deadline first, institutions without one last.",
         "operationId": "admission_search_institutions",
         "parameters": [
           {
@@ -82197,6 +82300,23 @@
                 }
               ],
               "title": "Max Cost"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "const": "deadline",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sort"
             }
           },
           {
@@ -89305,7 +89425,8 @@
                     "ranking",
                     "acceptance",
                     "tuition",
-                    "relevance"
+                    "relevance",
+                    "deadline"
                   ],
                   "type": "string"
                 },
