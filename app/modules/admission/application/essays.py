@@ -13,6 +13,7 @@ from uuid import UUID
 
 from app.modules.admission.application.access import AccessPolicy
 from app.modules.admission.application.actor import AdmissionContext
+from app.modules.admission.application.essay_prompts import resolve_targets
 from app.modules.admission.application.essay_review_core import (
     EssayCheck,
     Feedback,
@@ -28,7 +29,6 @@ from app.modules.admission.application.essay_review_core import (
     run_check,
     run_feedback,
 )
-from app.modules.admission.application.essay_prompts import resolve_targets
 from app.modules.admission.application.items import items_summary
 from app.modules.admission.application.review_checks import nfc
 from app.modules.admission.application.student_context import student_block

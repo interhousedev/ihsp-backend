@@ -9,6 +9,7 @@ from app.modules.admission.domain.errors import (
     AdmissionNotFoundError,
     ConsentRequiredError,
     EssayTooShortError,
+    ForkLastTargetError,
 )
 from app.modules.admission.domain.essay_flow import PromptTarget
 from app.modules.admission.ports.consent import SHARING
@@ -106,3 +107,37 @@ async def test_fork_takes_target_from_parent() -> None:
         await h.hall.fork(ctx, e.id, UNI, 2)
     with pytest.raises(AdmissionNotFoundError):
         await h.hall.fork(await h.w.ctx(OTHER), e.id, UNI, 1)
+
+
+async def test_fork_position_zero_is_valid() -> None:
+    h = Hall()
+    ctx = await h.w.ctx(STUDENT)
+    t0 = PromptTarget(UNI, 0, "Personal statement", 650)
+    t1 = PromptTarget(UNI, 1, "Why us?", 250)
+    e = await h.svc.create(ctx, {"body": "shared body", "targets": [t0, t1]})
+    parent, child = await h.hall.fork(ctx, e.id, UNI, 0)
+    assert child.targets == (t0,) and parent.targets == (t1,)
+
+
+async def test_fork_of_last_supplemental_target_is_rejected() -> None:
+    h = Hall()
+    ctx = await h.w.ctx(STUDENT)
+    t1 = PromptTarget(UNI, 1, "Why us?", 250)
+    e = await h.svc.create(
+        ctx, {"kind": "supplemental", "body": "text", "targets": [t1]}
+    )
+    with pytest.raises(ForkLastTargetError):
+        await h.hall.fork(ctx, e.id, UNI, 1)
+
+
+async def test_published_card_keeps_title_and_prompt_as_published() -> None:
+    h = Hall()
+    ctx = await h.w.ctx(STUDENT)
+    t1 = PromptTarget(UNI, 1, "Why us?", 250)
+    e = await h.svc.create(
+        ctx, {"title": "Old", "body": "hello world", "targets": [t1]}
+    )
+    await h.hall.publish(ctx, e.id)
+    await h.svc.save(ctx, e.id, 1, {"title": "New", "body": "hello world"})
+    mine = (await h.hall.browse(ctx)).mine[0]
+    assert mine.title == "Old" and mine.targets == (t1,)

@@ -44,6 +44,7 @@
   "admission-catalog-fact-invalid": "Bu maʼlumot qabul qilinmadi. Qiymatni, manba havolasini va yilni tekshiring.",
   "admission-catalog-duplicate": "Bu maktab katalogda bor yoki uning taklifi koʻrib chiqilmoqda.",
   "admission-catalog-proposal-limit": "Katalog uchun kunlik {limit} ta taklif limitiga yetdingiz. Ertaga urinib koʻring.",
+  "admission-fork-last-target": "Qoʻshimcha insho kamida bitta savolga ega boʻlishi kerak. Oxirgi savolni bu inshoda qoldiring yoki uni oʻzgartiring.",
   "admission-essay-too-short": "Insho tekshirish uchun juda qisqa. Kamida {min} ta soʻz yozing, hozir {count} ta.",
   "admission-essay-vault-unavailable": "Insholar vaqtincha yopiq: kalitlar xizmati javob bermayapti. Matningiz xavfsiz, bir necha daqiqadan soʻng urinib koʻring.",
   "admission-invite-not-found": "Bu sharh havolasi ishlamaydi. Muddati tugagan yoki oʻchirilgan boʻlishi mumkin; oʻquvchidan yangisini soʻrang.",

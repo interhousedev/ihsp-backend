@@ -363,6 +363,11 @@ class GalleryEntry:
     student_id: UUID
     version: int
     published_at: dt.datetime | None = None
+    # Frozen at publish; `None` for entries published before the freeze.
+    title: str | None = None
+    prompt_text: str | None = None
+    word_limit: int | None = None
+    targets: "tuple[PromptTarget, ...]" = ()
 
 
 @dataclass(frozen=True, slots=True)

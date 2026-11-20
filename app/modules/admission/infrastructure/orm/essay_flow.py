@@ -1,6 +1,7 @@
 """ORM of the essay flow: daily practice, the shared gallery and the match slots."""
 
 import datetime as dt
+from typing import Any
 from uuid import UUID
 
 from app.modules.admission.infrastructure.orm._common import (
@@ -19,9 +20,12 @@ from sqlalchemy import (
     Integer,
     LargeBinary,
     String,
+    Text,
     UniqueConstraint,
     Uuid,
+    text,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 __all__ = ["EssayGalleryRow", "EssayPracticeRow", "EssaySlotRow"]
@@ -60,6 +64,12 @@ class EssayGalleryRow(IdMixin, CreatedMixin, Base):
     )
     student_id: Mapped[UUID] = mapped_column(Uuid)
     version: Mapped[int] = mapped_column(Integer)
+    title: Mapped[str | None] = mapped_column(Text)
+    prompt_text: Mapped[str | None] = mapped_column(Text)
+    word_limit: Mapped[int | None] = mapped_column(Integer)
+    targets: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB, server_default=text("'[]'")
+    )
 
 
 class EssaySlotRow(IdMixin, CreatedMixin, UpdatedMixin, Base):

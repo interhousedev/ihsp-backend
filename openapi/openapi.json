@@ -23188,7 +23188,8 @@
             "title": "Institution Id"
           },
           "position": {
-            "minimum": 1.0,
+            "maximum": 999.0,
+            "minimum": 0.0,
             "title": "Position",
             "type": "integer"
           }

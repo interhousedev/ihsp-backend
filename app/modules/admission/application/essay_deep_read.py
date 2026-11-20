@@ -212,9 +212,8 @@ class EssayDeepReadService:
             await self._limiter.hit(
                 f"admission:essay_review:{uid}", limit=limit, window_seconds=_WEEK
             )
-        numbered = [
-            f"[{i}] {p}" for i, p in enumerate(paragraphs_of(text.body), start=1)
-        ]
+        body = text.body[:_BODY_TO_MODEL]
+        numbered = [f"[{i}] {p}" for i, p in enumerate(paragraphs_of(body), start=1)]
         lines = [f"Language: {locale}", f"Essay kind: {text.kind}"]
         if text.prompt_text:
             lines.append(f"Prompt: {text.prompt_text}")
@@ -226,12 +225,12 @@ class EssayDeepReadService:
         data, model = await self._ai.json(
             task=task,
             system=with_brand(await self._prompts.text(task, "deep_read", locale)),
-            user=delimit(lines)[:_BODY_TO_MODEL],
+            user=delimit(lines),
             schema_name=schema[0],
             schema=schema[1],
             max_tokens=_TOKENS,
         )
-        read = _read(data, text.body)
+        read = _read(data, body)
         if not read.paragraphs:
             raise DegenerateReviewError()
         async with self._uow() as uow:

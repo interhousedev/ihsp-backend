@@ -15,6 +15,7 @@ from app.modules.admission.application.essay_prompts import FlowGate
 from app.modules.admission.domain.errors import (
     AdmissionNotFoundError,
     EssayTooShortError,
+    ForkLastTargetError,
     ItemLimitError,
 )
 from app.modules.admission.domain.essay_flow import (
@@ -113,7 +114,15 @@ class EssayGalleryService:
             )
             entry = await uow.gallery.publish(
                 GalleryEntry(
-                    new_id(), saved.id, ctx.user_id, version.version, published_at=now
+                    new_id(),
+                    saved.id,
+                    ctx.user_id,
+                    version.version,
+                    published_at=now,
+                    title=saved.title,
+                    prompt_text=saved.prompt_text,
+                    word_limit=saved.word_limit,
+                    targets=saved.targets,
                 )
             )
             await uow.commit()
@@ -170,6 +179,8 @@ class EssayGalleryService:
             target = next((t for t in parent.targets if t.key == key), None)
             if target is None:
                 raise AdmissionNotFoundError()
+            if parent.kind == "supplemental" and len(parent.targets) == 1:
+                raise ForkLastTargetError()
             if len(await uow.essays.list_for(ctx.user_id)) >= MAX_ESSAYS:
                 raise ItemLimitError(params={"kind": "essay", "limit": MAX_ESSAYS})
             child = await uow.essays.add(
@@ -199,10 +210,12 @@ def _item(essay: Essay, entry: GalleryEntry, body: str) -> GalleryItem:
     return GalleryItem(
         essay_id=essay.id,
         kind=essay.kind,
-        title=essay.title,
-        prompt_text=essay.prompt_text,
-        word_limit=essay.word_limit,
-        targets=essay.targets,
+        title=essay.title if entry.title is None else entry.title,
+        prompt_text=(
+            essay.prompt_text if entry.prompt_text is None else entry.prompt_text
+        ),
+        word_limit=essay.word_limit if entry.title is None else entry.word_limit,
+        targets=essay.targets if entry.title is None else entry.targets,
         version=entry.version,
         body=body,
         word_count=word_count(body),

@@ -17,6 +17,10 @@ from app.modules.admission.domain.essay_flow import (
     SlotAssignment,
     prompt_key,
 )
+from app.modules.admission.infrastructure.essays_repository import (
+    _target_json,
+    _targets,
+)
 from app.modules.admission.infrastructure.orm.catalog import InstitutionRow
 from app.modules.admission.infrastructure.orm.essay_flow import (
     EssayGalleryRow,
@@ -189,6 +193,10 @@ def _entry(row: EssayGalleryRow) -> GalleryEntry:
         student_id=row.student_id,
         version=row.version,
         published_at=row.created_at,
+        title=row.title,
+        prompt_text=row.prompt_text,
+        word_limit=row.word_limit,
+        targets=_targets(row.targets or []),
     )
 
 
@@ -217,6 +225,10 @@ class SqlGalleryRepository:
             )
             self._s.add(row)
         row.version = entry.version
+        row.title = entry.title
+        row.prompt_text = entry.prompt_text
+        row.word_limit = entry.word_limit
+        row.targets = [_target_json(t) for t in entry.targets]
         if entry.published_at is not None:
             row.created_at = entry.published_at
         await self._s.flush()

@@ -43,7 +43,7 @@ class ForkIn(BaseModel):
     """The prompt of the group the new essay takes (`null` owner: Common App)."""
 
     institution_id: UUID | None = None
-    position: int = Field(ge=1)
+    position: int = Field(ge=0, le=999)
 
 
 class ForkOut(BaseModel):
