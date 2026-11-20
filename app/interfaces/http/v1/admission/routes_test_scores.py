@@ -6,6 +6,7 @@ from typing import Any, Literal
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, AnyContext, ContainerDep
+from app.modules.admission.application.score_certificates import ExamCertificate
 from app.modules.admission.application.test_scores import ScoreOverview
 from app.modules.admission.domain.test_scores import (
     LABEL_MAX,
@@ -173,6 +174,8 @@ class ScoreEntryOut(BaseModel):
     verified_at: dt.datetime | None
     created_at: dt.datetime
     updated_at: dt.datetime
+    source: Literal["manual", "certificate"]
+    """`certificate`: from the student's platform certificates, read-only here."""
 
     @classmethod
     def of(cls, e: ScoreEntry) -> "ScoreEntryOut":
@@ -195,6 +198,30 @@ class ScoreEntryOut(BaseModel):
             verified_at=e.verified_at,
             created_at=e.created_at,
             updated_at=e.updated_at,
+            source=e.source,
+        )
+
+
+class ExamCertificateOut(BaseModel):
+    """A standard certificate of the platform that no catalog test matches."""
+
+    entry_id: UUID
+    type_code: str
+    name: dict[str, str]
+    issued_at: dt.date | None
+    expires_at: dt.date | None
+    values: dict[str, Any]
+
+    @classmethod
+    def of(cls, c: ExamCertificate) -> "ExamCertificateOut":
+        """Map the exam."""
+        return cls(
+            entry_id=c.entry_id,
+            type_code=c.type_code,
+            name=c.names,
+            issued_at=c.issued_at,
+            expires_at=c.expires_at,
+            values=c.values,
         )
 
 
@@ -231,6 +258,7 @@ class ScoreOverviewOut(BaseModel):
     summaries: list[ScoreSummaryOut]
     is_owner: bool
     can_verify: bool
+    exams: list[ExamCertificateOut]
 
     @classmethod
     def of(cls, o: ScoreOverview) -> "ScoreOverviewOut":
@@ -240,6 +268,7 @@ class ScoreOverviewOut(BaseModel):
             summaries=[ScoreSummaryOut.of(s) for s in o.summaries],
             is_owner=o.is_owner,
             can_verify=o.can_verify,
+            exams=[ExamCertificateOut.of(c) for c in o.exams],
         )
 
 

@@ -67,6 +67,7 @@ def item_lines(item: Item, locale: str) -> list[str]:
         f"Language: {locale}",
         f"[kind] {item.kind}",
         f"[category] {item.category or ''}",
+        f"[level] {item.level or ''}",
         f"[organization] {item.organization}",
         f"[title] {item.title}",
         f"[description] {item.description}",

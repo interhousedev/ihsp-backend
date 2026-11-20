@@ -67,6 +67,7 @@ class ItemsData:
         self.reviews: list[StoredReview] = []
         self.feedback: list[tuple[UUID, str]] = []
         self.words: dict[UUID, ProfileWordsRef] = {}
+        self.dismissed: dict[UUID, set[UUID]] = {}
 
 
 class MemItems:
@@ -98,6 +99,12 @@ class MemItems:
     async def set_order(self, ordered: Sequence[UUID]) -> None:
         for n, i in enumerate(ordered):
             self.d.items[i] = replace(self.d.items[i], position=n)
+
+    async def dismissed_certificates(self, student_id: UUID) -> set[UUID]:
+        return set(self.d.dismissed.get(student_id, set()))
+
+    async def dismiss_certificate(self, student_id: UUID, entry_id: UUID) -> None:
+        self.d.dismissed.setdefault(student_id, set()).add(entry_id)
 
     async def set_grade(self, item_id: UUID, grade: ItemGrade) -> None:
         self.d.items[item_id] = replace(self.d.items[item_id], grade=grade)
@@ -304,7 +311,8 @@ def _ready_honor(**kw: Any) -> Item:
         "Winner",
         "Olympiad",
         "",
-        category="national",
+        category="award",
+        level="national",
         grades=(11,),
         status="ready",
         **kw,
@@ -351,14 +359,14 @@ async def test_ready_requires_complete_fields() -> None:
     ready = replace(_bare(), status="ready")
     with pytest.raises(ItemIncompleteError) as err:
         await w.items.create(ctx, ready)
-    assert set(err.value.params["fields"]) == {"category", "grades"}
+    assert set(err.value.params["fields"]) == {"category", "level", "grades"}
     draft = (await w.items.create(ctx, _bare())).item
     with pytest.raises(ItemIncompleteError):
         await w.items.update(ctx, draft.id, {"status": "ready"}, draft.lock_version)
     done = await w.items.update(
         ctx,
         draft.id,
-        {"status": "ready", "category": "school", "grades": (10,)},
+        {"status": "ready", "category": "award", "level": "school", "grades": (10,)},
         draft.lock_version,
     )
     assert done.status == "ready"
@@ -370,7 +378,12 @@ async def test_draft_to_ready_respects_cap() -> None:
     for _ in range(MAX_HONORS):
         await w.items.create(ctx, _ready_honor())
     draft = (await w.items.create(ctx, _bare())).item
-    changes = {"status": "ready", "category": "school", "grades": (10,)}
+    changes = {
+        "status": "ready",
+        "category": "award",
+        "level": "school",
+        "grades": (10,),
+    }
     with pytest.raises(ItemLimitError):
         await w.items.update(ctx, draft.id, changes, draft.lock_version)
 
@@ -596,7 +609,8 @@ async def test_item_validation_of_category_hours_and_grades() -> None:
     w = World()
     ctx = await w.ctx()
     for kw in (
-        {"category": "state_regional"},
+        {"category": "national"},
+        {"level": "state_regional"},
         {"hours_per_week": 169},
         {"weeks_per_year": 53},
         {"grades": (8,)},

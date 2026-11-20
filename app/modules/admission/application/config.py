@@ -53,6 +53,7 @@ from app.modules.admission.domain.workflow import (
     Round,
 )
 from app.settings_admission import AdmissionSettings
+from app.shared.honor_categories import HONOR_CATEGORIES
 from app.shared.limits import LimitsProvider
 
 OPTION_LISTS: dict[str, tuple[str, ...]] = {
@@ -177,6 +178,7 @@ class GetConfig:
                 "fields": self._study_fields(),
                 "activity_categories": ACTIVITY_CATEGORIES,
                 "recognition_levels": RECOGNITION_LEVELS,
+                "honor_categories": HONOR_CATEGORIES,
                 "activity_timing": TIMINGS,
                 "item_grades": tuple(str(g) for g in GRADES),
             },

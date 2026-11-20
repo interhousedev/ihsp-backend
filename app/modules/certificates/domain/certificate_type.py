@@ -19,6 +19,10 @@ class CertificateType:
     name: dict[str, str]
     builtin: bool = False
     position: int = 0
+    standard: bool = False
+    """A standardised exam (SAT, IELTS ...): a test score, not an honor."""
+    category: str | None = None
+    """One of ``HONOR_CATEGORIES`` (shared with admission honors), or None."""
     custom_fields: list["CustomField"] = field(default_factory=list)
 
     def title(self, locale: str) -> str:
@@ -26,4 +30,4 @@ class CertificateType:
         return self.name.get(locale) or self.name.get("en") or self.code
 
 
-TYPE_FIELDS = ("code", "name", "position", "custom_fields")
+TYPE_FIELDS = ("code", "name", "position", "standard", "category", "custom_fields")

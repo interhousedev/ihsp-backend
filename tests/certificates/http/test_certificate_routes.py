@@ -16,7 +16,16 @@ from tests.certificates.conftest import (
 import pytest
 from httpx import AsyncClient, Response
 
-TYPE_KEYS = {"id", "code", "name", "builtin", "position", "custom_fields"}
+TYPE_KEYS = {
+    "id",
+    "code",
+    "name",
+    "builtin",
+    "position",
+    "standard",
+    "category",
+    "custom_fields",
+}
 ENTRY_KEYS = {
     "id", "type_id", "source", "issued_at", "expires_at", "files", "custom_values",
     "created_at",

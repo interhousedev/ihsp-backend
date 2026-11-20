@@ -35,6 +35,7 @@ from app.modules.admission.domain.items import (
 from app.modules.admission.domain.permissions import Permission
 from app.modules.admission.ports.items import Horizon, Metric, StoredReview
 from app.modules.admission.ports.unit_of_work import UowFactory
+from app.shared.contracts.certificates import CertificateDirectory
 from app.shared.ids import new_id
 
 LABEL_MAX: Final = 80
@@ -52,6 +53,7 @@ EDITABLE: Final = frozenset(
         "status",
         "timing",
         "intend_in_college",
+        "level",
     }
 )
 
@@ -160,10 +162,16 @@ def _check_slot(item: Item, others: Sequence[Item]) -> None:
 class ItemService:
     """CRUD of a student's items; only the owner edits, staff read in scope."""
 
-    def __init__(self, uow_factory: UowFactory, access: AccessPolicy) -> None:
-        """Keep the transaction factory and the access policy."""
+    def __init__(
+        self,
+        uow_factory: UowFactory,
+        access: AccessPolicy,
+        certificates: CertificateDirectory | None = None,
+    ) -> None:
+        """Keep the transaction factory, the access policy and the certificates."""
         self._uow = uow_factory
         self._access = access
+        self._certificates = certificates
 
     async def _owner(self, ctx: AdmissionContext) -> None:
         res = await self._access.resolve(ctx, ctx.user_id)
@@ -220,6 +228,7 @@ class ItemService:
             raise ItemLimitError(params={"kind": "metric", "limit": MAX_METRICS})
         async with self._uow() as uow:
             all_items = await uow.items.list_for(ctx.user_id)
+            await self._check_certificate(ctx, draft, all_items)
             same = [i for i in all_items if i.kind == item.kind]
             _check_slot(draft, same)
             draft.position = max((i.position for i in same), default=-1) + 1
@@ -229,6 +238,23 @@ class ItemService:
                 await uow.items.replace_metrics(stored.id, rows)
             await uow.commit()
         return ItemView(stored, rows, None, False)
+
+    async def _check_certificate(
+        self, ctx: AdmissionContext, draft: Item, items: Sequence[Item]
+    ) -> None:
+        """The linked certificate must be the caller's and not used by another honor."""
+        entry_id = draft.certificate_entry_id
+        if entry_id is None:
+            return
+        mine = (
+            await self._certificates.for_student(ctx.user_id)
+            if self._certificates
+            else []
+        )
+        if entry_id not in {c.entry_id for c in mine}:
+            raise AdmissionNotFoundError()
+        if any(i.certificate_entry_id == entry_id for i in items):
+            raise AdmissionConflictError(params={"field": "certificate_entry_id"})
 
     async def update(
         self,

@@ -203,6 +203,7 @@ def delimit(item: Item, metrics: Sequence[Metric], *, strict: bool) -> str:
         f"organization: {neutral(item.organization)}",
         f"description: {neutral(item.description)}",
         f"category: {neutral(item.category or '')}",
+        f"level: {neutral(item.level or '')}",
         f"grades: {', '.join(str(g) for g in item.grades)}",
         f"hours_per_week: {item.hours_per_week or ''}",
         f"weeks_per_year: {item.weeks_per_year or ''}",

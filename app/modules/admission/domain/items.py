@@ -9,6 +9,7 @@ from uuid import UUID
 
 from app.modules.admission.domain.errors import InvalidAnswerError
 from app.modules.admission.domain.profile import ensure_max_chars
+from app.shared.honor_categories import HONOR_CATEGORIES
 
 ItemKind = Literal["activity", "honor"]
 ItemStatus = Literal["draft", "ready"]
@@ -30,8 +31,9 @@ TIMINGS: Final = ("school_year", "school_break", "all_year")
 RECOGNITION_LEVELS: Final = ("school", "regional", "national", "international")
 MAX_HOURS_PER_WEEK: Final = 168
 MAX_WEEKS_PER_YEAR: Final = 52
-# An activity's `category` holds one of ACTIVITY_CATEGORIES, an honor's `category`
-# holds one of RECOGNITION_LEVELS (its level).
+# An activity's `category` holds one of ACTIVITY_CATEGORIES; an honor's `category` holds
+# one of HONOR_CATEGORIES (shared with certificate types) and its `level` one of
+# RECOGNITION_LEVELS.
 ACTIVITY_CATEGORIES: Final = (
     "academic",
     "arts",
@@ -70,6 +72,7 @@ def grade_content_hash(item: "Item", locale: str) -> str:
             locale,
             item.kind,
             item.category or "",
+            item.level or "",
             item.title.strip(),
             item.organization.strip(),
             item.description.strip(),
@@ -104,6 +107,10 @@ class Item:
     timing: tuple[str, ...] = ()
     intend_in_college: bool | None = None
     grade: ItemGrade | None = None
+    level: str | None = None
+    """Honors only: one of RECOGNITION_LEVELS."""
+    certificate_entry_id: UUID | None = None
+    """Honors only: the platform certificate this honor was made from."""
 
     @property
     def grade_stale(self) -> bool:
@@ -117,9 +124,15 @@ class Item:
         self.organization = ensure_max_chars(self.organization, ORG_MAX, "organization")
         limit = HONOR_DESCRIPTION_MAX if self.kind == "honor" else DESCRIPTION_MAX
         self.description = ensure_max_chars(self.description, limit, "description")
-        allowed = RECOGNITION_LEVELS if self.kind == "honor" else ACTIVITY_CATEGORIES
+        allowed = HONOR_CATEGORIES if self.kind == "honor" else ACTIVITY_CATEGORIES
         if self.category is not None and self.category not in allowed:
             raise InvalidAnswerError(params={"question": "category"})
+        if self.level is not None and (
+            self.kind != "honor" or self.level not in RECOGNITION_LEVELS
+        ):
+            raise InvalidAnswerError(params={"question": "level"})
+        if self.certificate_entry_id is not None and self.kind != "honor":
+            raise InvalidAnswerError(params={"question": "certificate_entry_id"})
         if not set(self.grades) <= set(GRADES):
             raise InvalidAnswerError(params={"question": "grades"})
         for name, value, top in (
@@ -135,8 +148,10 @@ class Item:
         if not self.title.strip():
             missing.append("title")
         if self.kind == "honor":
-            if self.category not in RECOGNITION_LEVELS:
+            if self.category not in HONOR_CATEGORIES:
                 missing.append("category")
+            if self.level not in RECOGNITION_LEVELS:
+                missing.append("level")
             missing.extend(self._missing_grades())
             return missing
         if self.category not in ACTIVITY_CATEGORIES:

@@ -19,6 +19,8 @@ class CertificateTypeRow(IdMixin, TimestampMixin, Base):
     name: Mapped[dict[str, Any]] = mapped_column(JSONB)
     builtin: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
     position: Mapped[int] = mapped_column(Integer, server_default=text("0"))
+    standard: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    category: Mapped[str | None] = mapped_column(String(24))
     custom_fields: Mapped[list[dict[str, Any]]] = mapped_column(
         JSONB, server_default=text("'[]'")
     )

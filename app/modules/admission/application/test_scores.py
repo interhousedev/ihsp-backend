@@ -3,7 +3,7 @@
 import dataclasses
 import datetime as dt
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Final, Literal
 from uuid import UUID
 
@@ -11,6 +11,10 @@ from app.modules.admission.application.access import AccessPolicy
 from app.modules.admission.application.actor import (
     AdmissionContext,
     can_edit_settings,
+)
+from app.modules.admission.application.score_certificates import (
+    ExamCertificate,
+    merge_certificates,
 )
 from app.modules.admission.domain.errors import (
     AdmissionConflictError,
@@ -34,6 +38,7 @@ from app.modules.admission.domain.test_scores import (
 from app.modules.admission.ports.repositories import AuditEvent
 from app.modules.admission.ports.test_scores import ScoreUnitOfWork
 from app.shared.clock import Clock
+from app.shared.contracts.certificates import CertificateDirectory
 from app.shared.ids import new_id
 
 ScoreUowFactory = Callable[[], ScoreUnitOfWork]
@@ -50,6 +55,8 @@ class ScoreOverview:
     summaries: list[ScoreSummary]
     is_owner: bool
     can_verify: bool
+    exams: list[ExamCertificate] = field(default_factory=list)
+    """Standard certificates of the platform with no matching test (owner only)."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,12 +73,17 @@ class ScoreService:
     """Use cases of the tests & certificates slice."""
 
     def __init__(
-        self, uow_factory: ScoreUowFactory, access: AccessPolicy, clock: Clock
+        self,
+        uow_factory: ScoreUowFactory,
+        access: AccessPolicy,
+        clock: Clock,
+        certificates: CertificateDirectory | None = None,
     ) -> None:
         """Keep the collaborators."""
         self._uow = uow_factory
         self._access = access
         self._clock = clock
+        self._certificates = certificates
 
     # - - - Catalog - - -
 
@@ -136,15 +148,24 @@ class ScoreService:
             }
             await uow.commit()
         can_verify = False
+        exams: list[ExamCertificate] = []
         if not res.owner:
             can_verify = Permission.DOCUMENTS_REVIEW in res.permissions
+        elif self._certificates is not None:
+            entries, exams = merge_certificates(
+                target,
+                entries,
+                list(tests.values()),
+                await self._certificates.for_student(target),
+                self._clock.now(),
+            )
         by_test: dict[UUID, list[ScoreEntry]] = {}
         for e in entries:
             by_test.setdefault(e.test_id, []).append(e)
         summaries = [
             summarise(tests[i], rows) for i, rows in by_test.items() if i in tests
         ]
-        return ScoreOverview(entries, summaries, res.owner, can_verify)
+        return ScoreOverview(entries, summaries, res.owner, can_verify, exams)
 
     async def _owner(self, ctx: AdmissionContext) -> None:
         res = await self._access.require(ctx, ctx.user_id, Permission.PROFILE_READ)

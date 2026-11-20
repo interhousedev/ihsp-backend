@@ -20,6 +20,7 @@ from app.bootstrap.adapters.admission import (
     AdmissionUniChatsAdapter,
     AdmissionWebSearchAdapter,
 )
+from app.bootstrap.adapters.admission_certificates import AdmissionCertificatesAdapter
 from app.bootstrap.adapters.admission_crypto import EssayKeyShredder
 from app.bootstrap.adapters.admission_prompt_studio import AiPromptStudioAdmin
 from app.bootstrap.adapters.admission_staff import AdmissionStaffDirectoryAdapter
@@ -627,6 +628,9 @@ class _Assembler:
             course_sources=course_sources,
             purpose_consents=SqlPurposeConsents(self.deps.sessionmaker),
             staff_directory=AdmissionStaffDirectoryAdapter(c.identity.directory),
+            certificates=AdmissionCertificatesAdapter(
+                c.certificates.list_types, c.certificates.list_my_entries
+            ),
             ai=GatewayStructuredAi(NotebookLlm(c.llm, c.settings)) if c.llm else None,
             llm=NotebookLlm(c.llm, c.settings) if c.llm else None,
             files=c.files.public,
@@ -659,6 +663,7 @@ class _Assembler:
             ),
             cipher=self.essay_cipher,
             studio_admin=AiPromptStudioAdmin(self.prompts.admin),
+            embeddings=lambda: self.embedding_index,
         )
         if c.ai is not None:
             c.ai.bindings.uni_chat = c.admission.uni_chat
