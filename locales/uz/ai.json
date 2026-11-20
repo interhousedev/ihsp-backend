@@ -174,6 +174,7 @@
   "ai-value-yes": "Ha",
   "ai-wrong-assistant": "Bu yordamchidan foydalana olmaysiz.",
   "ai-usage-range-invalid": "Sana oraligʻi notoʻgʻri yoki {max_days} kundan uzun.",
+  "ai-analytics-range-too-large": "Sana oraligʻi notoʻgʻri yoki {max_days} kundan uzun.",
   "ai-status-thinking": "Oʻylayapman…",
   "ai-voice-too-large": "Yozuv {max_mb} MB dan katta.",
   "ai-voice-too-long": "Yozuv {max_seconds} soniyadan uzun.",
@@ -184,5 +185,12 @@
   "ai-note-admission-search-faq": "Qabul boʼyicha FAQ dan qidirildi",
   "ai-note-admission-suggest": "Takliflar tanlandi",
   "ai-note-admission-add-suggestion": "Taklif qoʼshildi",
-  "ai-preview-admission-add-suggestion": "«{title}» ni rejangizga qoʼshish"
+  "ai-preview-admission-add-suggestion": "«{title}» ni rejangizga qoʼshish",
+  "ai-connector-not-found": "Konnektor topilmadi.",
+  "ai-connector-exists": "Bunday id li konnektor allaqachon mavjud.",
+  "ai-connector-in-use": "Konnektor hali quyidagi pipelineʼlarda ishlatilmoqda: {pipelines}.",
+  "ai-connector-kind-mismatch": "Bu konnektor turi pipelineʼga mos kelmaydi.",
+  "ai-connector-vault-unavailable": "Kalitlar ombori (Vault) oʼchirilgan yoki mavjud emas.",
+  "ai-pipeline-not-found": "Pipeline topilmadi.",
+  "ai-connector-invalid": "Konnektor maydonlari notoʼgʼri ({field})."
 }

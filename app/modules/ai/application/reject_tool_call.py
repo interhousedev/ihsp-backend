@@ -51,6 +51,7 @@ class RejectToolCall:
         call_id: str,
         reason: str | None,
         surface: str = "web",
+        app: str | None = None,
     ) -> AsyncIterator[TurnEvent]:
         """The turn as live events; a refusal raises before the first one."""
         events = TurnEvents()
@@ -63,6 +64,7 @@ class RejectToolCall:
                 reason=reason,
                 events=events,
                 surface=surface,
+                app=app,
             ),
         )
 
@@ -75,6 +77,7 @@ class RejectToolCall:
         reason: str | None,
         events: TurnEvents | None = None,
         surface: str = "web",
+        app: str | None = None,
     ) -> TurnResultView:
         """Reject the call and let the assistant answer."""
         locale = await self.locale.locale_of(actor.user_id)
@@ -99,5 +102,6 @@ class RejectToolCall:
                     changed=[claim.message],
                     events=events,
                     surface=surface,
+                    app=app,
                 )
         return await self.results.build(actor, locale, progress)

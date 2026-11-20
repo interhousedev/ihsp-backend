@@ -1,5 +1,11 @@
 """Chooses the LlmGateway, the WebSearchGateway and the embeddings from the settings."""
 
+from collections.abc import AsyncIterator
+from dataclasses import replace
+from typing import Any, cast
+
+from app.modules.ai.application.routing import current_route
+from app.modules.ai.domain.connectors import EffectiveRoute, Pipeline
 from app.modules.ai.infrastructure.anthropic_gateway import AnthropicLlmGateway
 from app.modules.ai.infrastructure.exa import ExaApi, ExaClient
 from app.modules.ai.infrastructure.exa_contents import (
@@ -36,11 +42,16 @@ from app.modules.ai.infrastructure.unavailable import (
     UnavailableExaClient,
     UnavailableLlmGateway,
 )
+from app.modules.ai.ports.connectors import RouteResolver
 from app.settings import Settings
 from app.shared.ai_tasks import AiTask
-from app.shared.contracts.ai import LlmGateway
+from app.shared.contracts.ai import AiProviderError, LlmGateway, LlmTuning
 from app.shared.contracts.embeddings import EmbeddingGateway
-from app.shared.contracts.web_search import WebSearchGateway
+from app.shared.contracts.web_search import (
+    SearchCall,
+    SearchReply,
+    WebSearchGateway,
+)
 
 from redis.asyncio import Redis
 
@@ -218,8 +229,156 @@ def make_embedding_gateway(settings: Settings, llm: LlmGateway) -> EmbeddingGate
     size and batch size, so the pipeline is shaped as in production.
     """
     profile = settings.ai_profile(AiTask.EMBEDDING)
+    if isinstance(llm, RoutedLlmGateway):
+        llm = llm.base  # embeddings stay on the environment's OpenRouter connection
     if isinstance(llm, FallbackLlmGateway):
         llm = llm.first if isinstance(llm.first, OpenRouterGateway) else llm.second
     if settings.openrouter.mode == "real" and isinstance(llm, OpenRouterGateway):
         return OpenRouterEmbeddings(llm, profile)
     return FakeEmbeddingGateway(dims=profile.dimensions, batch_size=profile.batch_size)
+
+
+class RoutedLlmGateway:
+    """Implements `LlmGateway`: sends each call where its pipeline's route says.
+
+    The task of the call (`tuning.task`) gives the pipeline; the route (runtime route,
+    task, pipeline, default) names the connector and may replace the model and the
+    reasoning effort. A call of no known task goes to the environment's gateway.
+    """
+
+    def __init__(self, base: LlmGateway, resolver: RouteResolver) -> None:
+        """Keep the environment's gateway and the route resolver."""
+        self.base = base
+        self._resolver = resolver
+
+    def __getattr__(self, name: str) -> Any:
+        """Other methods of the environment's gateway (`chat`, `embeddings`)."""
+        return getattr(self.base, name)
+
+    async def _target(
+        self, model: str, tuning: LlmTuning | None
+    ) -> tuple[LlmGateway, str, LlmTuning | None]:
+        try:
+            task = AiTask(tuning.task) if tuning and tuning.task else None
+        except ValueError:
+            task = None
+        if task is None:
+            return self.base, model, tuning
+        route = await self._resolver.route(task)
+        current_route.set(route)
+        client = await self._client(route)
+        if route.runtime_model:
+            model = route.model
+        if route.runtime_effort:
+            effort = cast(Any, route.reasoning_effort)
+            tuning = replace(
+                tuning or LlmTuning(task=task.value), reasoning_effort=effort
+            )
+        return client, model, tuning
+
+    async def _client(self, route: EffectiveRoute) -> LlmGateway:
+        try:
+            return cast(LlmGateway, await self._resolver.client_for(route.connector_id))
+        except Exception as exc:
+            raise AiProviderError(
+                support_details=f"connector {route.connector_id}: {type(exc).__name__}"
+            ) from exc
+
+    async def complete(
+        self,
+        *,
+        model: str,
+        system: str,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]],
+        max_tokens: int,
+        provider: dict[str, Any] | None = None,
+        tuning: LlmTuning | None = None,
+    ) -> dict[str, Any]:
+        """Run `complete` on the routed connector."""
+        client, model, tuning = await self._target(model, tuning)
+        return await client.complete(
+            model=model,
+            system=system,
+            messages=messages,
+            tools=tools,
+            max_tokens=max_tokens,
+            provider=provider,
+            tuning=tuning,
+        )
+
+    async def complete_json(
+        self,
+        *,
+        model: str,
+        system: str,
+        messages: list[dict[str, Any]],
+        schema_name: str,
+        schema: dict[str, Any],
+        max_tokens: int,
+        provider: dict[str, Any] | None = None,
+        timeout_seconds: float | None = None,
+        tuning: LlmTuning | None = None,
+    ) -> dict[str, Any]:
+        """Run `complete_json` on the routed connector."""
+        client, model, tuning = await self._target(model, tuning)
+        return await client.complete_json(
+            model=model,
+            system=system,
+            messages=messages,
+            schema_name=schema_name,
+            schema=schema,
+            max_tokens=max_tokens,
+            provider=provider,
+            timeout_seconds=timeout_seconds,
+            tuning=tuning,
+        )
+
+    async def stream(
+        self,
+        *,
+        model: str,
+        system: str,
+        messages: list[dict[str, Any]],
+        max_tokens: int,
+        provider: dict[str, Any] | None = None,
+        timeout_seconds: float | None = None,
+        tuning: LlmTuning | None = None,
+        tools: list[dict[str, Any]] | None = None,
+    ) -> AsyncIterator[dict[str, Any]]:
+        """Run `stream` on the routed connector."""
+        client, model, tuning = await self._target(model, tuning)
+        async for item in client.stream(
+            model=model,
+            system=system,
+            messages=messages,
+            max_tokens=max_tokens,
+            provider=provider,
+            timeout_seconds=timeout_seconds,
+            tuning=tuning,
+            tools=tools,
+        ):
+            yield item
+
+
+class RoutedWebSearchGateway:
+    """Implements `WebSearchGateway`: a runtime route of `web_search` wins.
+
+    The route names an Exa connector with its own key; without one the environment's
+    search runs.
+    """
+
+    def __init__(self, base: WebSearchGateway, resolver: RouteResolver) -> None:
+        """Keep the environment's gateway and the route resolver."""
+        self._base = base
+        self._resolver = resolver
+
+    async def search(self, call: SearchCall) -> SearchReply:
+        """Search through the routed connector, or the environment's gateway."""
+        route = await self._resolver.route_of(Pipeline.WEB_SEARCH)
+        if route.source != "runtime":
+            return await self._base.search(call)
+        client = cast(
+            WebSearchGateway, await self._resolver.client_for(route.connector_id)
+        )
+        return await client.search(call)

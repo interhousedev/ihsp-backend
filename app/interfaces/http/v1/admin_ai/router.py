@@ -6,6 +6,9 @@ from uuid import UUID
 
 from app.bootstrap.container import Container
 from app.interfaces.http.dependencies import get_container, require_roles
+from app.interfaces.http.v1.admin_ai.analytics import router as analytics_router
+from app.interfaces.http.v1.admin_ai.connectors import router as connectors_router
+from app.interfaces.http.v1.admin_ai.requests import router as requests_router
 from app.interfaces.http.v1.admin_ai.schemas import (
     AiAccessBody,
     AiAccessOut,
@@ -36,6 +39,9 @@ from app.shared.clock import TASHKENT, local_today
 from fastapi import APIRouter, Depends, Path, Query, Response, status
 
 router = APIRouter(prefix="/v1/admin/ai", tags=["admin-ai"])
+router.include_router(analytics_router)
+router.include_router(connectors_router)
+router.include_router(requests_router)
 
 ContainerDep = Annotated[Container, Depends(get_container)]
 AdminActor = Annotated[Actor, Depends(require_roles(Role.ADMIN))]

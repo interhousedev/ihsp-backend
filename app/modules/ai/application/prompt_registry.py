@@ -11,7 +11,7 @@ import asyncio
 import time
 from collections.abc import Callable, Sequence
 from contextvars import ContextVar
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 from types import TracebackType
 from typing import Protocol, Self
@@ -29,6 +29,11 @@ from app.modules.ai.domain.prompt_registry import (
     check_override,
     prompt_hash,
     resolve,
+)
+from app.modules.ai.domain.requests import (
+    PromptDiff,
+    estimate_tokens,
+    unified_diff,
 )
 from app.modules.ai.ports.prompts import (
     PromptAnalyticsReader,
@@ -273,6 +278,12 @@ class PromptAdmin:
             raise PromptInvalidError(support_details=f"admin/prompt-invalid:{reason}")
         async with self.uow_factory() as uow:
             number = await uow.prompts.next_version(task)
+            history = await uow.prompts.history(task, name)
+            previous = next(
+                (v for v in history if v.active and v.locale == locale), None
+            )
+            before_text = previous.text if previous else slot.builtin
+            before_version = previous.version if previous else BUILT_IN_VERSION
             version = PromptVersion(
                 id=new_id(),
                 task=task,
@@ -285,6 +296,12 @@ class PromptAdmin:
                 created_at=self.clock.now(),
                 created_by=actor.user_id,
                 note=note.strip()[:500],
+                source="admin",
+                diff=unified_diff(
+                    before_text, text, f"v{before_version}", f"v{number}"
+                ),
+                chars=len(text),
+                tokens_est=estimate_tokens(text),
             )
             await uow.prompts.add(version)
             await uow.prompts.activate(task, name, locale, number)
@@ -328,6 +345,59 @@ class PromptAdmin:
                 await uow.commit()
         self.registry.invalidate()
 
+    async def versions(
+        self, actor: Actor, task: str, name: str, locale: str | None = None
+    ) -> list[PromptVersion]:
+        """The stored versions of the slot (of one locale when given), newest first."""
+        self._slot(task, name)
+        if locale is not None:
+            _check_locale(locale)
+        async with self.uow_factory() as uow:
+            history = await uow.prompts.history(task, name)
+        return [v for v in history if locale is None or v.locale == locale]
+
+    async def diff(
+        self,
+        actor: Actor,
+        task: str,
+        name: str,
+        *,
+        locale: str = ALL_LOCALES,
+        from_version: int | None = None,
+        to_version: int | None = None,
+    ) -> PromptDiff:
+        """The unified diff between two versions of the locale (0 is the built-in).
+
+        `to_version` defaults to the latest, `from_version` to the one before it
+        (the built-in when there is none).
+        """
+        slot = self._slot(task, name)
+        _check_locale(locale)
+        async with self.uow_factory() as uow:
+            history = await uow.prompts.history(task, name)
+        stored = {v.version: v for v in history if v.locale == locale}
+        if to_version is None:
+            if not stored:
+                raise PromptNotFoundError()
+            to_version = max(stored)
+        if from_version is None:
+            lower = [n for n in stored if n < to_version]
+            from_version = max(lower) if lower else BUILT_IN_VERSION
+        if from_version >= to_version:
+            raise PromptInvalidError(support_details="admin/prompt-invalid:range")
+        old = _text_of(slot, stored, from_version)
+        new = _text_of(slot, stored, to_version)
+        return PromptDiff(
+            task=task,
+            name=name,
+            locale=locale,
+            from_version=from_version,
+            to_version=to_version,
+            diff=unified_diff(old, new, f"v{from_version}", f"v{to_version}"),
+            chars_delta=len(new) - len(old),
+            tokens_delta=estimate_tokens(new) - estimate_tokens(old),
+        )
+
     def _slot(self, task: str, name: str) -> PromptSlot:
         slot = self.registry.slot(task, name)
         if slot is None:
@@ -355,20 +425,18 @@ def _audit(kind: str, actor: Actor, version: PromptVersion) -> AuditDraft:
     )
 
 
+def _text_of(slot: PromptSlot, stored: dict[int, PromptVersion], number: int) -> str:
+    """The text of a stored version; 0 is the built-in; others must exist."""
+    if number == BUILT_IN_VERSION:
+        return slot.builtin
+    found = stored.get(number)
+    if found is None:
+        raise PromptNotFoundError()
+    return found.text
+
+
 def _replace_active(version: PromptVersion, active: bool) -> PromptVersion:
-    return PromptVersion(
-        id=version.id,
-        task=version.task,
-        name=version.name,
-        locale=version.locale,
-        version=version.version,
-        text=version.text,
-        hash=version.hash,
-        active=active,
-        created_at=version.created_at,
-        created_by=version.created_by,
-        note=version.note,
-    )
+    return replace(version, active=active)
 
 
 @dataclass(frozen=True, slots=True)

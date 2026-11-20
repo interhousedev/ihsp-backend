@@ -3,6 +3,9 @@
 import asyncio
 from dataclasses import dataclass
 
+from app.modules.ai.application.requests import AiRequests
+from app.modules.ai.domain.prompt_registry import PromptSlot
+from app.modules.ai.domain.requests import AiRequestSpec
 from app.modules.notebooks.application.add_default_material import AddDefaultMaterial
 from app.modules.notebooks.application.add_sources import AddSources
 from app.modules.notebooks.application.apply_course_artifact import ApplyCourseArtifact
@@ -125,6 +128,7 @@ from app.modules.notebooks.application.update_presentation_plan import (
     UpdatePresentationPlan,
 )
 from app.modules.notebooks.application.update_source import UpdateSource
+from app.modules.notebooks.domain.prompts import studio
 from app.modules.notebooks.infrastructure.repositories.shared_passage_repository import (  # noqa: E501
     SqlSharedPassageReader,
 )
@@ -156,6 +160,29 @@ from app.shared.contracts.school_knowledge import (
 )
 from app.shared.contracts.web_search import WebSearchApi
 from app.shared.wiring import ModuleDeps
+
+# AI requests this module declares; the AI module publishes them at startup.
+AI_REQUESTS: tuple[AiRequestSpec, ...] = (
+    AiRequestSpec(
+        id="notebooks.studio_quiz.generate",
+        owner_app="notebooks",
+        task="studio_quiz",
+        template=PromptSlot(
+            "studio_quiz", "studio", "Studio artifact", studio._SYSTEM, template=True
+        ),
+        args_schema={
+            "type": "object",
+            "properties": {
+                "language": {"type": "string"},
+                "count": {"type": "integer", "minimum": 1},
+                "mode": {"type": "string"},
+            },
+            "required": ["language"],
+            "additionalProperties": False,
+        },
+        summary="Studio: one batch of quiz questions from the selected sources",
+    ),
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -281,6 +308,7 @@ def build(
     library_queries: LibraryQueries | None = None,
     knowledge: KnowledgeLookup | None = None,
     knowledge_gaps: KnowledgeGapReporter | None = None,
+    requests: AiRequests | None = None,
 ) -> NotebooksServices:
     """Wire the module over the other modules' public APIs.
 
@@ -305,6 +333,7 @@ def build(
         embeddings=embeddings,
         knowledge=knowledge,
         knowledge_gaps=knowledge_gaps,
+        requests=requests,
     )
     notebooks = build_notebooks(core, schedule)
     workspaces = build_workspace(core)

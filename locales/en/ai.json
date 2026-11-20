@@ -174,6 +174,7 @@
   "ai-value-yes": "Yes",
   "ai-wrong-assistant": "You cannot use this assistant.",
   "ai-usage-range-invalid": "The date range is invalid or longer than {max_days} days.",
+  "ai-analytics-range-too-large": "The date range is invalid or longer than {max_days} days.",
   "ai-status-thinking": "Thinking…",
   "ai-voice-too-large": "The recording is larger than {max_mb} MB.",
   "ai-voice-too-long": "The recording is longer than {max_seconds} seconds.",
@@ -184,5 +185,12 @@
   "ai-note-admission-search-faq": "Searched the admission FAQ",
   "ai-note-admission-suggest": "Picked suggestions",
   "ai-note-admission-add-suggestion": "Added a suggestion",
-  "ai-preview-admission-add-suggestion": "Add “{title}” to your plan"
+  "ai-preview-admission-add-suggestion": "Add “{title}” to your plan",
+  "ai-connector-not-found": "Connector not found.",
+  "ai-connector-exists": "A connector with this id already exists.",
+  "ai-connector-in-use": "Pipelines still use this connector: {pipelines}.",
+  "ai-connector-kind-mismatch": "This connector kind does not fit the pipeline.",
+  "ai-connector-vault-unavailable": "The key store (Vault) is off or unavailable.",
+  "ai-pipeline-not-found": "Pipeline not found.",
+  "ai-connector-invalid": "The connector fields are not valid ({field})."
 }

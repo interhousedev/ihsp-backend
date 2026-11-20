@@ -38,3 +38,7 @@ class PromptVersionRow(IdMixin, TimestampMixin, Base):
     active: Mapped[bool] = mapped_column(Boolean, server_default=sql_text("false"))
     created_by: Mapped[UUID | None] = mapped_column(Uuid)
     note: Mapped[str] = mapped_column(String(500), server_default=sql_text("''"))
+    source: Mapped[str] = mapped_column(String(8), server_default=sql_text("'admin'"))
+    diff: Mapped[str | None] = mapped_column(Text)
+    chars: Mapped[int] = mapped_column(Integer, server_default=sql_text("0"))
+    tokens_est: Mapped[int] = mapped_column(Integer, server_default=sql_text("0"))

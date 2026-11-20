@@ -6,6 +6,7 @@ from typing import Any
 from uuid import UUID
 
 from app.bootstrap.adapters.signature_sniffer import SignatureSniffer
+from app.modules.ai.application.requests import AiRequests
 from app.modules.ai.domain.assistant import Assistant
 from app.modules.ai.ports.turn_lock import TurnLock
 from app.modules.ai.ports.unit_of_work import UowFactory
@@ -136,6 +137,7 @@ def make_harness(
         features: dict[str, bool] | None = None,
         lock: TurnLock | None = None,
         uow_factory: UowFactory | None = None,
+        requests: AiRequests | None = None,
     ) -> AiHarness:
         student_user = make_user(Role.STUDENT, first="Aziza", last="Karimova")
         other_user = make_user(Role.STUDENT, first="Bobur", last="Rashidov")
@@ -197,6 +199,7 @@ def make_harness(
             links=parts["links"],
             web_search=search,
             sniffer=SignatureSniffer(),
+            requests=requests,
             overrides=AiOverrides(
                 budget_store=budget,
                 course_budget_store=course_budget,

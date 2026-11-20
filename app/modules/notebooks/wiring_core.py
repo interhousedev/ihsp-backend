@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 
+from app.modules.ai.application.requests import AiRequests
 from app.modules.notebooks.application.budget import NotebookBudget
 from app.modules.notebooks.application.context_builder import ContextBuilder
 from app.modules.notebooks.application.course_context import CourseContextLoader
@@ -86,6 +87,8 @@ class NotebooksCore:
     school_knowledge: SchoolKnowledge | None = None
     # AI-OPENUI: repairs or drops broken OpenUI blocks of an answer (None: as is).
     openui: OpenUiFinalizer | None = None
+    # The registered AI requests (None: calls run without a request id in the ledger).
+    requests: AiRequests | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -167,6 +170,7 @@ def build_core(
     embeddings: EmbeddingIndex | None = None,
     knowledge: KnowledgeLookup | None = None,
     knowledge_gaps: KnowledgeGapReporter | None = None,
+    requests: AiRequests | None = None,
 ) -> NotebooksCore:
     """Build the shared services; `overrides` replace the stores (tests).
 
@@ -209,4 +213,5 @@ def build_core(
             settings.ai_profile(AiTask.OPENUI_REPAIR),
             enabled=settings.ai.openui_enabled,
         ),
+        requests=requests,
     )

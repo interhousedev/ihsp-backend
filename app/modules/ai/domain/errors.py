@@ -164,3 +164,53 @@ class ToolFailedError(BaseError):
     code = "ai/tool-failed"
     status = 422
     message_key = "ai-tool-failed"
+
+
+class ConnectorNotFoundError(NotFoundError):
+    """No connector has this id."""
+
+    code = "connector_not_found"
+    message_key = "ai-connector-not-found"
+
+
+class ConnectorExistsError(ConflictError):
+    """A connector with this id already exists."""
+
+    code = "connector_exists"
+    message_key = "ai-connector-exists"
+
+
+class ConnectorInUseError(ConflictError):
+    """Pipelines still route to the connector (param: pipelines)."""
+
+    code = "connector_in_use"
+    message_key = "ai-connector-in-use"
+
+
+class ConnectorKindMismatchError(ValidationFailedError):
+    """The connector's kind does not fit the pipeline (search vs model)."""
+
+    code = "connector_kind_mismatch"
+    message_key = "ai-connector-kind-mismatch"
+
+
+class ConnectorSecretUnavailableError(BaseError):
+    """Vault is off or cannot be reached, so a connector key cannot be saved or read."""
+
+    code = "connector_vault_unavailable"
+    status = 503
+    message_key = "ai-connector-vault-unavailable"
+
+
+class PipelineNotFoundError(NotFoundError):
+    """No pipeline has this name."""
+
+    code = "pipeline_not_found"
+    message_key = "ai-pipeline-not-found"
+
+
+class ConnectorInvalidError(ValidationFailedError):
+    """The connector's fields break a rule (params: field)."""
+
+    code = "validation_error"
+    message_key = "ai-connector-invalid"

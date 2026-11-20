@@ -12,6 +12,7 @@ from sqlalchemy import (
     DateTime,
     Index,
     Integer,
+    SmallInteger,
     String,
     Uuid,
     text,
@@ -26,6 +27,7 @@ class UsageEventRow(IdMixin, TimestampMixin, Base):
     __table_args__ = (
         Index("ix_usage_events_occurred_at", "occurred_at"),
         Index("ix_usage_events_user_id_occurred_at", "user_id", "occurred_at"),
+        Index("ix_usage_events_request_occurred_at", "request_id", "occurred_at"),
         Index("ix_usage_events_task_occurred_at", "task", "occurred_at"),
         CheckConstraint(
             "role IN ('student', 'teacher', 'admin', 'staff', 'system')",
@@ -52,3 +54,11 @@ class UsageEventRow(IdMixin, TimestampMixin, Base):
     prompt_version: Mapped[int | None] = mapped_column(Integer)
     prompt_hash: Mapped[str | None] = mapped_column(String(16))
     latency_ms: Mapped[int | None] = mapped_column(Integer)
+    # Analytics: the request this call belongs to, its pipeline and connector.
+    request_id: Mapped[str | None] = mapped_column(String(96))
+    pipeline: Mapped[str | None] = mapped_column(String(32))
+    connector_id: Mapped[str | None] = mapped_column(String(48))
+    prompt_chars: Mapped[int | None] = mapped_column(Integer)
+    prompt_tokens_est: Mapped[int | None] = mapped_column(Integer)
+    answer_chars: Mapped[int | None] = mapped_column(Integer)
+    tool_calls: Mapped[int] = mapped_column(SmallInteger, server_default=text("0"))

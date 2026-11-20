@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 from uuid import UUID
 
+from app.modules.ai.application.tools.app_skills import app_section
 from app.modules.ai.domain.assistant import Assistant
 from app.modules.ai.domain.chat import Chat
 from app.modules.ai.domain.project import project_block
@@ -87,15 +88,17 @@ class SystemPrompts:
         locale: str,
         *,
         surface: str = "web",
+        app: str | None = None,
         last_user_text: str = "",
         answer_now: bool = False,
     ) -> str:
         """Return the system prompt of the chat's assistant.
 
         `surface` "telegram" adds the rich-formatting rules of the bot; the web prompt
-        is returned unchanged. The language of `last_user_text` (else the locale) and
-        `answer_now` (the last model request of a turn) go in a volatile tail after
-        the cache breakpoint, so the stable part stays the same for everybody.
+        is returned unchanged. `app` adds the app's section (see app_skills.py). The
+        language of `last_user_text` (else the locale) and `answer_now` (the last
+        model request of a turn) go in a volatile tail after the cache breakpoint, so
+        the stable part stays the same for everybody.
         """
         prompt = await self._base(chat)
         block = await self._project_block(chat)
@@ -104,6 +107,9 @@ class SystemPrompts:
         uni = await self._uni_block(chat)
         if uni:
             prompt = f"{prompt}\n\n{uni}"
+        section = app_section(app)
+        if section:
+            prompt = f"{prompt}\n\n{section}"
         prompt += self._surface_suffix(chat, surface)
         language = answer_language(last_user_text, locale)
         tail = [ANSWER_NOW] if answer_now else []

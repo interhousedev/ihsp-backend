@@ -8,7 +8,9 @@ from app.interfaces.http.dependencies import get_actor, get_container
 from app.interfaces.http.v1.ai.handlers.send_message import stream_turn
 from app.interfaces.http.v1.ai.schemas import TurnResultResponse
 from app.interfaces.http.v1.notebooks.handlers.sse import wants_stream
+from app.modules.ai.application.tools.app_skills import app_for
 from app.shared.actor import Actor
+from app.shared.contracts.legal import APP_HEADER
 
 from fastapi import Depends, Request
 from fastapi.responses import StreamingResponse
@@ -22,13 +24,14 @@ async def approve_tool_call(
     actor: Annotated[Actor, Depends(get_actor)],
 ) -> TurnResultResponse | StreamingResponse:
     """Approve a pending write; it runs once and the assistant continues."""
+    app = app_for(request.headers.get(APP_HEADER), actor.client_id)
     if wants_stream(request):
         return await stream_turn(
             container.ai.approve_tool_call.stream(
-                actor=actor, chat_id=chat_id, call_id=call_id
+                actor=actor, chat_id=chat_id, call_id=call_id, app=app
             )
         )
     view = await container.ai.approve_tool_call.execute(
-        actor=actor, chat_id=chat_id, call_id=call_id
+        actor=actor, chat_id=chat_id, call_id=call_id, app=app
     )
     return TurnResultResponse.from_view(view)

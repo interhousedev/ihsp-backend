@@ -138,6 +138,8 @@ async def test_backend_tools_forward_their_own_name(world: World) -> None:
         "get_student": {"user_id": str(USER)},
         "get_group": {"group_id": str(GROUP)},
         "find_feature": {"query": "users"},
+        "ai_prompt_versions": {"task": "chat", "name": "main"},
+        "ai_prompt_diff": {"task": "chat", "name": "main"},
     }
 
     async with world.session("admin", token) as session:

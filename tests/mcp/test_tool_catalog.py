@@ -170,6 +170,13 @@ ADMIN_TOOLS: dict[str, tuple[str, dict[str, Any]]] = {
     "list_broadcasts": ("broadcasts:read", {}),
     "audit_log": ("audit:read", {}),
     "sync_status": ("audit:read", {}),
+    "ai_list_requests": ("audit:read", {}),
+    "ai_list_prompts": ("audit:read", {}),
+    "ai_prompt_versions": ("audit:read", {"task": "chat", "name": "main"}),
+    "ai_prompt_diff": ("audit:read", {"task": "chat", "name": "main"}),
+    "ai_request_stats": ("audit:read", {}),
+    "ai_spend": ("audit:read", {}),
+    "ai_pipelines": ("audit:read", {}),
 }
 CATALOG: dict[ServerName, dict[str, tuple[str, dict[str, Any]]]] = {
     "student": STUDENT_TOOLS,

@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable, Mapping
 from typing import Any
 
+from app.bootstrap.adapters import admin_tools_ai as ai
 from app.bootstrap.adapters import admin_tools_read as read
 from app.bootstrap.adapters import admin_tools_write as write
 from app.bootstrap.container import Container
@@ -24,6 +25,13 @@ READ_TOOLS: dict[str, ToolHandler] = {
     "list_broadcasts": read.list_broadcasts,
     "sync_status": read.sync_status,
     "audit_log": read.audit_log,
+    "ai_list_requests": ai.ai_list_requests,
+    "ai_list_prompts": ai.ai_list_prompts,
+    "ai_prompt_versions": ai.ai_prompt_versions,
+    "ai_prompt_diff": ai.ai_prompt_diff,
+    "ai_request_stats": ai.ai_request_stats,
+    "ai_spend": ai.ai_spend,
+    "ai_pipelines": ai.ai_pipelines,
 }
 
 WRITE_TOOLS: dict[str, ToolHandler] = {

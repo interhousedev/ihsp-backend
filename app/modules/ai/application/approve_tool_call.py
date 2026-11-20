@@ -55,7 +55,13 @@ class ApproveToolCall:
         self.results = results
 
     def stream(
-        self, *, actor: Actor, chat_id: UUID, call_id: str, surface: str = "web"
+        self,
+        *,
+        actor: Actor,
+        chat_id: UUID,
+        call_id: str,
+        surface: str = "web",
+        app: str | None = None,
     ) -> AsyncIterator[TurnEvent]:
         """The turn as live events; a refusal raises before the first one."""
         events = TurnEvents()
@@ -67,6 +73,7 @@ class ApproveToolCall:
                 call_id=call_id,
                 events=events,
                 surface=surface,
+                app=app,
             ),
         )
 
@@ -78,6 +85,7 @@ class ApproveToolCall:
         call_id: str,
         events: TurnEvents | None = None,
         surface: str = "web",
+        app: str | None = None,
     ) -> TurnResultView:
         """Approve the call, run it, store the result and continue the turn."""
         locale = await self.locale.locale_of(actor.user_id)
@@ -100,6 +108,7 @@ class ApproveToolCall:
                     changed=[message],
                     events=events,
                     surface=surface,
+                    app=app,
                 )
         return await self.results.build(actor, locale, progress)
 

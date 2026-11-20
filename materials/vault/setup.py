@@ -3,14 +3,17 @@
 Enables the Transit and AppRole engines (and KV v2 at ``secret/`` when it is missing),
 creates the Transit key ``emis-passwords``, writes the ``identity`` policy and the
 ``identity`` AppRole, the ``telegram-bots`` policy and AppRole (bot tokens), and the
-``admission-essays`` policy and AppRole (essay data keys). Needs the ``hvac`` package.
+``admission-essays`` policy and AppRole (essay data keys), and the ``ai-connectors``
+policy and AppRole (keys of the AI connectors). Needs the ``hvac`` package.
 
 Environment: VAULT_ADDR (default http://localhost:8200), VAULT_TOKEN (a root or
 equivalent token; dev: dev-root), VAULT_CACERT (optional CA file).
 
 ``--print-credentials`` prints the role and secret ids of every AppRole as ``KEY=value``
 lines (IHSP_VAULT__ROLE_ID, IHSP_VAULT__SECRET_ID, IHSP_BOT_VAULT__ROLE_ID,
-IHSP_BOT_VAULT__SECRET_ID, IHSP_ESSAY_VAULT__ROLE_ID, IHSP_ESSAY_VAULT__SECRET_ID).
+IHSP_BOT_VAULT__SECRET_ID, IHSP_ESSAY_VAULT__ROLE_ID, IHSP_ESSAY_VAULT__SECRET_ID,
+IHSP_AI_CONNECTOR_VAULT__ROLE_ID,
+IHSP_AI_CONNECTOR_VAULT__SECRET_ID).
 They are secrets: ``scripts/prod_init.sh`` captures the
 output into the env file; never run it where stdout goes to a terminal or a CI log.
 """
@@ -30,6 +33,8 @@ BOT_ROLE = "telegram-bots"
 BOT_POLICY_FILE = Path(__file__).parent / "policies" / "telegram-bots.hcl"
 ESSAY_ROLE = "admission-essays"
 ESSAY_POLICY_FILE = Path(__file__).parent / "policies" / "admission-essays.hcl"
+AI_CONNECTOR_ROLE = "ai-connectors"
+AI_CONNECTOR_POLICY_FILE = Path(__file__).parent / "policies" / "ai-connectors.hcl"
 KV_MAX_VERSIONS = 2  # keep old EMIS secrets from piling up in history
 
 
@@ -77,6 +82,16 @@ def bootstrap(client: hvac.Client) -> None:
         token_ttl="1h",
         token_max_ttl="24h",
     )
+    client.sys.create_or_update_policy(
+        name=AI_CONNECTOR_ROLE,
+        policy=AI_CONNECTOR_POLICY_FILE.read_text(encoding="utf-8"),
+    )
+    client.auth.approle.create_or_update_approle(
+        role_name=AI_CONNECTOR_ROLE,
+        token_policies=[AI_CONNECTOR_ROLE],
+        token_ttl="1h",
+        token_max_ttl="24h",
+    )
 
 
 def revoke_secret_ids(client: hvac.Client, role: str) -> None:
@@ -121,6 +136,7 @@ def main() -> int:
         role_id, secret_id = credentials(client)
         bot_role_id, bot_secret_id = credentials(client, BOT_ROLE)
         essay_role_id, essay_secret_id = credentials(client, ESSAY_ROLE)
+        ai_role_id, ai_secret_id = credentials(client, AI_CONNECTOR_ROLE)
         sys.stdout.write(
             f"IHSP_VAULT__ROLE_ID={role_id}\n"
             f"IHSP_VAULT__SECRET_ID={secret_id}\n"
@@ -128,6 +144,8 @@ def main() -> int:
             f"IHSP_BOT_VAULT__SECRET_ID={bot_secret_id}\n"
             f"IHSP_ESSAY_VAULT__ROLE_ID={essay_role_id}\n"
             f"IHSP_ESSAY_VAULT__SECRET_ID={essay_secret_id}\n"
+            f"IHSP_AI_CONNECTOR_VAULT__ROLE_ID={ai_role_id}\n"
+            f"IHSP_AI_CONNECTOR_VAULT__SECRET_ID={ai_secret_id}\n"
         )
     return 0
 

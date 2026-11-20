@@ -102,6 +102,13 @@ ADMIN_READ_TOOLS: Final = frozenset(
         "audit_log",
         "sync_status",
         "find_feature",
+        "ai_list_requests",
+        "ai_list_prompts",
+        "ai_prompt_versions",
+        "ai_prompt_diff",
+        "ai_request_stats",
+        "ai_spend",
+        "ai_pipelines",
     }
 )
 

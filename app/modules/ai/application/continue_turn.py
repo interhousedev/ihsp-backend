@@ -1,14 +1,15 @@
 """The model/tool loop of one turn (AI-2, AI-8, AI-9)."""
 
 import json
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field, replace
 from typing import Any
 from uuid import UUID
 
-from app.modules.ai.application.assistant_profile import profile_for
+from app.modules.ai.application.assistant_profile import assistant_task, profile_for
 from app.modules.ai.application.budget import BudgetService, LimitHit
 from app.modules.ai.application.history_summarizer import HistorySummarizer
+from app.modules.ai.application.requests import AiRequests
 from app.modules.ai.application.system_prompts import SystemPrompts
 from app.modules.ai.application.tool_runner import ToolRunner
 from app.modules.ai.application.tools.base import ToolContext
@@ -90,6 +91,7 @@ class _Run:
     message_seq: int | None = None  # the one assistant message of this answer
     events: TurnEvents | None = None  # the live events of a streamed turn
     surface: str = "web"  # "telegram" adds the bot's formatting rules to the prompt
+    app: str | None = None  # the web app of the request (app_skills.py)
     seen: dict[str, ToolCall] = field(default_factory=dict)  # read calls by key
     answer_now: bool = False  # the next model request may not call tools
 
@@ -111,8 +113,10 @@ class ContinueTurn:
         settings: Settings,
         i18n: I18nCore,
         limits: LimitsProvider | None = None,
+        requests: AiRequests | None = None,
     ) -> None:
-        """Store the collaborators."""
+        """Store the collaborators; `requests` runs each model call as its request."""
+        self.requests = requests
         self.prompts = prompts
         self.uow_factory = uow_factory
         self.limits = limits or StaticLimits(settings.limits)
@@ -146,6 +150,7 @@ class ContinueTurn:
         changed: list[ChatMessage] | None = None,
         events: TurnEvents | None = None,
         surface: str = "web",
+        app: str | None = None,
     ) -> TurnProgress:
         """Run model steps; `changed` carries messages the caller already touched.
 
@@ -170,6 +175,7 @@ class ContinueTurn:
             progress,
             history_span(history),
             surface=surface,
+            app=app,
         )
         run.events = events
         if tail and tail[-1].role is MessageRole.ASSISTANT:
@@ -207,12 +213,13 @@ class ContinueTurn:
             chat,
             run.ctx.locale,
             surface=run.surface,
+            app=run.app,
             last_user_text=asked,
             answer_now=run.answer_now,
         )
         window = select_window(tail, run.after_seq)
         messages = to_llm_messages(window, run.summary)
-        tools = await self._tools(chat, run.surface)
+        tools = await self._tools(chat, run.surface, run.app)
         if await self._over_budget(chat, system, messages, tools):
             return TurnStatus.LIMIT_REACHED
         task = profile_for(chat.assistant, self.settings, chat.tier).llm
@@ -286,21 +293,39 @@ class ContinueTurn:
             "about_student": _about_student(chat, asked),
             "language": answer_language(asked, run.ctx.locale),
         }
-        if run.events is None:
-            response = await self.llm.complete(**request)
-        else:
-            guard = NarrationFilter(**options)
-            response = await self._streamed(run.events, request, guard)
+        events = run.events
+
+        async def call() -> dict[str, Any]:
+            if events is None:
+                return await self.llm.complete(**request)
+            return await self._streamed(events, request, NarrationFilter(**options))
+
+        response = await self._as_request(run, chat, call)
         text = str(response.get("text") or "")
         return response, strip_narration(text, **options)
 
-    async def _tools(self, chat: Chat, surface: str = "web") -> list[dict[str, Any]]:
+    async def _as_request(
+        self, run: _Run, chat: Chat, call: Callable[[], Awaitable[dict[str, Any]]]
+    ) -> dict[str, Any]:
+        """Run the model call as the chat's registered request, when there is one."""
+        request_id = f"ai.{assistant_task(chat.assistant, chat.tier).value}.turn"
+        if self.requests is None or not self.requests.has(request_id):
+            return await call()
+        args = {"surface": run.surface, "answer_now": run.answer_now}
+        return await self.requests.run(
+            request_id, args, locale=run.ctx.locale, call=lambda _: call()
+        )
+
+    async def _tools(
+        self, chat: Chat, surface: str = "web", app: str | None = None
+    ) -> list[dict[str, Any]]:
         """The tools offered in this chat; the list stays the same within it."""
         return self.registry.llm_tools(
             chat.assistant,
             in_project=chat.project_id is not None,
             in_uni_chat=await self.prompts.in_uni_chat(chat),
             surface=surface,
+            app=app,
         )
 
     async def _streamed(

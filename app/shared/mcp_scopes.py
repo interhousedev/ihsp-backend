@@ -234,7 +234,20 @@ SCOPE_CATALOG: Final[dict[str, tuple[ScopeInfo, ...]]] = {
         ScopeInfo("timetable:read", ("get_timetable", "list_lessons")),
         ScopeInfo("attendance:read", ("attendance_stats", "missing_attendance")),
         ScopeInfo("broadcasts:read", ("list_broadcasts",)),
-        ScopeInfo("audit:read", ("audit_log", "sync_status")),
+        ScopeInfo(
+            "audit:read",
+            (
+                "audit_log",
+                "sync_status",
+                "ai_list_requests",
+                "ai_list_prompts",
+                "ai_prompt_versions",
+                "ai_prompt_diff",
+                "ai_request_stats",
+                "ai_spend",
+                "ai_pipelines",
+            ),
+        ),
     ),
     "teacher": (
         ScopeInfo(

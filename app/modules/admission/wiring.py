@@ -116,12 +116,16 @@ from app.modules.admission.ports.student_search import StudentDataSearch
 from app.modules.admission.ports.uni_chat import UniChats, UniPageReader
 from app.modules.admission.ports.unit_of_work import UowFactory
 from app.modules.admission.ports.voice import VoiceAi
+from app.modules.ai.domain.requests import AiRequestSpec
 from app.modules.notebooks.application.llm import NotebookLlm
 from app.shared.contracts.academic import AcademicMembership
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.contracts.web_search import WebSearchApi, WebSearchGateway
 from app.shared.wiring import ModuleDeps
+
+# AI requests this module declares; the AI module publishes them at startup.
+AI_REQUESTS: tuple[AiRequestSpec, ...] = ()
 
 
 class UnavailableAi:

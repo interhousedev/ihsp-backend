@@ -1,6 +1,10 @@
 """The Administration MCP server: read-only, every call audited (MCP-1)."""
 
 from app.interfaces.mcp.admin.tools import (
+    ai_analytics,
+    ai_pipelines,
+    ai_prompts,
+    ai_requests,
     attendance_stats,
     audit_log,
     find_feature,
@@ -35,6 +39,10 @@ TOOL_MODULES = (
     audit_log,
     sync_status,
     find_feature,
+    ai_requests,
+    ai_prompts,
+    ai_analytics,
+    ai_pipelines,
 )
 
 

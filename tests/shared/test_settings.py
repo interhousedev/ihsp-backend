@@ -230,7 +230,7 @@ def test_the_cli_checks_the_process_before_it_starts(
 def test_every_variable_in_the_env_files_is_a_real_setting(name: str) -> None:
     """materials/.env.sample documents every variable; dev.env has no typos."""
     for variable in env_names(MATERIALS / name):
-        name = variable.replace("<TASK>", "STUDIO_QUIZ")
+        name = variable.replace("<TASK>", "STUDIO_QUIZ").replace("<PIPELINE>", "STUDIO")
         parts = name.removeprefix("IHSP_").lower().split("__")
         if parts == ["env_file"]:
             continue

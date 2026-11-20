@@ -126,6 +126,10 @@ class PromptVersion:
     created_at: datetime
     created_by: UUID | None = None
     note: str = ""
+    source: str = "admin"  # "admin" (an administrator's text) or "code" (a deploy)
+    diff: str | None = None  # unified diff against the previous text of the slot
+    chars: int = 0
+    tokens_est: int = 0
 
 
 @dataclass(frozen=True, slots=True)

@@ -143,6 +143,14 @@ class UsageEvent:
     prompt_version: int | None = None
     prompt_hash: str | None = None
     latency_ms: int | None = None
+    # Analytics: the request, pipeline and connector of the call, and its sizes.
+    request_id: str | None = None
+    pipeline: str | None = None
+    connector_id: str | None = None
+    prompt_chars: int | None = None
+    prompt_tokens_est: int | None = None
+    answer_chars: int | None = None
+    tool_calls: int = 0
 
 
 @dataclass(frozen=True, slots=True)

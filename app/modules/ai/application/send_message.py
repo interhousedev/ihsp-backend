@@ -101,6 +101,7 @@ class SendMessage:
         args: str = "",
         events: TurnEvents | None = None,
         surface: str = "web",
+        app: str | None = None,
     ) -> TurnResultView:
         """Run the turn for a new user message.
 
@@ -141,6 +142,7 @@ class SendMessage:
                     changed=changed,
                     events=events,
                     surface=surface,
+                    app=app,
                 )
         return await self.results.build(actor, locale, progress)
 
@@ -155,6 +157,7 @@ class SendMessage:
         command: str | None = None,
         args: str = "",
         surface: str = "web",
+        app: str | None = None,
     ) -> AsyncIterator[TurnEvent]:
         """The turn as live events (`status`, `step`, `delta`, then `done`/`error`).
 
@@ -173,6 +176,7 @@ class SendMessage:
                 args=args,
                 events=events,
                 surface=surface,
+                app=app,
             )
 
         async def left_alone(result: TurnResultView) -> None:

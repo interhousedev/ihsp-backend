@@ -21,6 +21,8 @@
   "admin-limit-user-not-found": "O‘quvchi topilmadi.",
   "admin-prompt-not-found": "Bunday prompt yoki versiya yoʼq.",
   "admin-prompt-invalid": "Prompt matni boʼsh, juda uzun yoki asl matnda yoʼq oʼrinbosarlardan foydalanadi.",
+  "admin-ai-request-not-found": "Bunday AI soʼrovi yoʼq.",
+  "admin-ai-request-args-invalid": "Soʼrov argumentlari uning sxemasiga mos emas.",
   "error-maintenance": "Platforma yangi serverga koʼchirilmoqda va faqat oʼqish uchun ochiq. Keyinroq urinib koʼring.",
   "admin-migration-not-configured": "Bu serverda boshqa serverga koʼchirish sozlanmagan.",
   "admin-migration-not-allowed": "Koʼchirishning hozirgi bosqichida bu amalni bajarib boʼlmaydi.",

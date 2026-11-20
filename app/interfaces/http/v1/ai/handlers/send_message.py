@@ -13,8 +13,10 @@ from app.interfaces.http.v1.notebooks.handlers.sse import (
     MEDIA_TYPE,
     wants_stream,
 )
+from app.modules.ai.application.tools.app_skills import app_for
 from app.modules.ai.application.turn_events import TurnEvent
 from app.shared.actor import Actor
+from app.shared.contracts.legal import APP_HEADER
 
 from fastapi import Depends, Request
 from fastapi.responses import StreamingResponse
@@ -34,6 +36,7 @@ async def send_message(
     stored messages and usage) or `error`.
     """
     use_case = container.ai.send_message
+    app = app_for(request.headers.get(APP_HEADER), actor.client_id)
     if wants_stream(request):
         events = use_case.stream(
             actor=actor,
@@ -43,6 +46,7 @@ async def send_message(
             args=body.args,
             file_ids=body.file_ids,
             web_search=body.web_search,
+            app=app,
         )
         return await stream_turn(events)
     view = await use_case.execute(
@@ -53,6 +57,7 @@ async def send_message(
         args=body.args,
         file_ids=body.file_ids,
         web_search=body.web_search,
+        app=app,
     )
     return TurnResultResponse.from_view(view)
 

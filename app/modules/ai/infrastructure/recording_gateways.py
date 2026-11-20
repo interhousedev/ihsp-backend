@@ -13,6 +13,8 @@ from collections.abc import AsyncIterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
+from app.modules.ai.application.request_context import current_request
+from app.modules.ai.application.routing import current_route
 from app.modules.ai.domain.prompt_registry import PromptRef, note_prompt
 from app.modules.ai.domain.structured_check import schema_violation
 from app.modules.ai.domain.usage import UNKNOWN_TASK, UsageEvent, counts_of, feature_of
@@ -84,6 +86,8 @@ class UsageRecorder:
                 prompt_version=prompt.version if prompt else None,
                 prompt_hash=prompt.hash if prompt else None,
             )
+        request = current_request.get()
+        route = current_route.get()
         return PendingCall(
             recorder=self,
             actor=actor,
@@ -93,6 +97,10 @@ class UsageRecorder:
             private=private,
             prompt=prompt,
             started=time.monotonic(),
+            request_id=request.request_id if request else None,
+            pipeline=request.pipeline if request else None,
+            connector_id=route.connector_id if route else None,
+            prompt_chars=_prompt_chars(content),
         )
 
     async def note_free(self, *, task: str, model: str) -> None:
@@ -105,6 +113,7 @@ class UsageRecorder:
         usage: Mapping[str, Any] | None,
         *,
         error: str | None,
+        output: Any | None = None,
     ) -> None:
         try:
             counts = counts_of(usage)
@@ -126,6 +135,13 @@ class UsageRecorder:
                     prompt_version=pending.prompt.version if pending.prompt else None,
                     prompt_hash=pending.prompt.hash if pending.prompt else None,
                     latency_ms=round((time.monotonic() - pending.started) * 1000),
+                    request_id=pending.request_id,
+                    pipeline=pending.pipeline,
+                    connector_id=pending.connector_id,
+                    prompt_chars=pending.prompt_chars,
+                    prompt_tokens_est=_tokens_est(pending.prompt_chars),
+                    answer_chars=_answer_chars(output),
+                    tool_calls=_tool_calls(output),
                 )
             )
         except Exception:
@@ -144,6 +160,10 @@ class PendingCall:
     private: bool = False
     prompt: PromptRef | None = None
     started: float = 0.0
+    request_id: str | None = None
+    pipeline: str | None = None
+    connector_id: str | None = None
+    prompt_chars: int | None = None
 
     async def finish(
         self,
@@ -160,7 +180,41 @@ class PendingCall:
                 error=error,
                 output=None if self.private else output,
             )
-        await self.recorder._write(self, usage, error=error)
+        await self.recorder._write(self, usage, error=error, output=output)
+
+
+def _prompt_chars(content: Any | None) -> int | None:
+    """Characters of the system prompt and the messages of a completion call."""
+    if not isinstance(content, dict):
+        return None
+    total = len(content.get("system") or "")
+    for message in content.get("messages") or []:
+        body = message.get("content") if isinstance(message, dict) else None
+        if isinstance(body, str):
+            total += len(body)
+        elif isinstance(body, list):
+            total += sum(
+                len(part.get("text") or "") for part in body if isinstance(part, dict)
+            )
+    return total
+
+
+def _tokens_est(chars: int | None) -> int | None:
+    """The same ceil(chars / 4) heuristic as `estimate_tokens`, on a length."""
+    return None if chars is None else -(-chars // 4)
+
+
+def _answer_chars(output: Any | None) -> int | None:
+    if not isinstance(output, dict) or not isinstance(output.get("text"), str):
+        return None
+    return len(output["text"])
+
+
+def _tool_calls(output: Any | None) -> int:
+    if not isinstance(output, dict):
+        return 0
+    calls = output.get("tool_calls") or []
+    return len(calls) if isinstance(calls, list) else 0
 
 
 def _model_of(usage: Mapping[str, Any] | None, requested: str) -> str:

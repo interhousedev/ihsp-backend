@@ -241,6 +241,13 @@ EOF
     set_env IHSP_ESSAY_VAULT__ROLE_ID "$essay_role_id"
     set_env IHSP_ESSAY_VAULT__SECRET_ID "$essay_secret_id"
     say "stored the admission-essays AppRole credentials in $ENV_FILE"
+    local ai_role_id ai_secret_id
+    ai_role_id=$(printf '%s\n' "$out" | sed -n 's/^IHSP_AI_CONNECTOR_VAULT__ROLE_ID=//p')
+    ai_secret_id=$(printf '%s\n' "$out" | sed -n 's/^IHSP_AI_CONNECTOR_VAULT__SECRET_ID=//p')
+    [ -n "$ai_role_id" ] && [ -n "$ai_secret_id" ] || die "vault-setup did not print the ai-connectors AppRole credentials"
+    set_env IHSP_AI_CONNECTOR_VAULT__ROLE_ID "$ai_role_id"
+    set_env IHSP_AI_CONNECTOR_VAULT__SECRET_ID "$ai_secret_id"
+    say "stored the ai-connectors AppRole credentials in $ENV_FILE"
 
     say "creating the backup AppRole (may only read Raft snapshots)"
     local backup_ids

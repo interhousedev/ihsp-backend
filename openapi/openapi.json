@@ -11348,6 +11348,207 @@
         "title": "ConflictResponse",
         "type": "object"
       },
+      "ConnectorBody": {
+        "additionalProperties": false,
+        "description": "POST /connectors: a new connector; the key goes to Vault.",
+        "properties": {
+          "api_key": {
+            "anyOf": [
+              {
+                "format": "password",
+                "type": "string",
+                "writeOnly": true
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Write-only.",
+            "title": "Api Key"
+          },
+          "base_url": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required for openai_compatible.",
+            "title": "Base Url"
+          },
+          "headers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Extra headers (openai_compatible), write-only.",
+            "title": "Headers",
+            "type": "object"
+          },
+          "id": {
+            "description": "Slug: a-z, 0-9, _ and -.",
+            "maxLength": 48,
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ConnectorKind"
+          },
+          "title": {
+            "maxLength": 120,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title"
+        ],
+        "title": "ConnectorBody",
+        "type": "object"
+      },
+      "ConnectorKind": {
+        "description": "What a connector talks to.",
+        "enum": [
+          "openrouter",
+          "anthropic",
+          "openai_compatible",
+          "exa"
+        ],
+        "title": "ConnectorKind",
+        "type": "string"
+      },
+      "ConnectorOut": {
+        "description": "A connector; the key is never returned, only whether one is stored.",
+        "properties": {
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
+          },
+          "builtin": {
+            "title": "Builtin",
+            "type": "boolean"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "has_secret": {
+            "title": "Has Secret",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ConnectorKind"
+          },
+          "secret_last4": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Secret Last4"
+          },
+          "source": {
+            "enum": [
+              "env",
+              "db"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "base_url",
+          "enabled",
+          "has_secret",
+          "secret_last4",
+          "builtin",
+          "source"
+        ],
+        "title": "ConnectorOut",
+        "type": "object"
+      },
+      "ConnectorPatchBody": {
+        "additionalProperties": false,
+        "description": "PATCH /connectors/{id}: only the fields sent change.",
+        "properties": {
+          "api_key": {
+            "anyOf": [
+              {
+                "format": "password",
+                "type": "string",
+                "writeOnly": true
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Write-only.",
+            "title": "Api Key"
+          },
+          "base_url": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
+          },
+          "enabled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Enabled"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "ConnectorPatchBody",
+        "type": "object"
+      },
       "ConnectorResponse": {
         "description": "Connector.",
         "properties": {
@@ -11483,6 +11684,62 @@
           "revoked_at"
         ],
         "title": "ConnectorResponse",
+        "type": "object"
+      },
+      "ConnectorTestOut": {
+        "description": "POST /connectors/{id}/test.",
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "latency_ms": {
+            "title": "Latency Ms",
+            "type": "integer"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok",
+          "latency_ms",
+          "error"
+        ],
+        "title": "ConnectorTestOut",
+        "type": "object"
+      },
+      "ConnectorsResponse": {
+        "description": "GET /connectors.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ConnectorOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "kinds": {
+            "items": {
+              "$ref": "#/components/schemas/ConnectorKind"
+            },
+            "title": "Kinds",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items",
+          "kinds"
+        ],
+        "title": "ConnectorsResponse",
         "type": "object"
       },
       "ConsentBody": {
@@ -16739,6 +16996,46 @@
         "title": "DraftIn",
         "type": "object"
       },
+      "EffectiveOut": {
+        "description": "What the calls of a pipeline use now.",
+        "properties": {
+          "connector_id": {
+            "title": "Connector Id",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "reasoning_effort": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reasoning Effort"
+          },
+          "source": {
+            "enum": [
+              "runtime",
+              "env"
+            ],
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "connector_id",
+          "model",
+          "reasoning_effort",
+          "source"
+        ],
+        "title": "EffectiveOut",
+        "type": "object"
+      },
       "EmailChangeBody": {
         "description": "POST /v1/id/me/email/change.",
         "properties": {
@@ -17993,6 +18290,37 @@
           "to_date"
         ],
         "title": "EmisYearResponse",
+        "type": "object"
+      },
+      "EnvDefaultOut": {
+        "description": "What the pipeline uses without a runtime route.",
+        "properties": {
+          "connector_id": {
+            "title": "Connector Id",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "reasoning_effort": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reasoning Effort"
+          }
+        },
+        "required": [
+          "connector_id",
+          "model",
+          "reasoning_effort"
+        ],
+        "title": "EnvDefaultOut",
         "type": "object"
       },
       "ErasedOut": {
@@ -40473,6 +40801,107 @@
         "title": "PinReadingListBody",
         "type": "object"
       },
+      "PipelineOut": {
+        "description": "One pipeline with its tasks and routes.",
+        "properties": {
+          "effective": {
+            "$ref": "#/components/schemas/EffectiveOut"
+          },
+          "env_default": {
+            "$ref": "#/components/schemas/EnvDefaultOut"
+          },
+          "pipeline": {
+            "title": "Pipeline",
+            "type": "string"
+          },
+          "route": {
+            "$ref": "#/components/schemas/RouteOut"
+          },
+          "tasks": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tasks",
+            "type": "array"
+          }
+        },
+        "required": [
+          "pipeline",
+          "tasks",
+          "route",
+          "effective",
+          "env_default"
+        ],
+        "title": "PipelineOut",
+        "type": "object"
+      },
+      "PipelineRouteBody": {
+        "additionalProperties": false,
+        "description": "PUT /pipelines/{pipeline}: each field null falls through to the environment.",
+        "properties": {
+          "connector_id": {
+            "anyOf": [
+              {
+                "maxLength": 48,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connector Id"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "reasoning_effort": {
+            "anyOf": [
+              {
+                "enum": [
+                  "none",
+                  "minimal",
+                  "low",
+                  "medium",
+                  "high"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reasoning Effort"
+          }
+        },
+        "title": "PipelineRouteBody",
+        "type": "object"
+      },
+      "PipelinesResponse": {
+        "description": "GET /pipelines.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PipelineOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "PipelinesResponse",
+        "type": "object"
+      },
       "PlanConfirmResponse": {
         "description": "The confirmed plan and the deck that is being generated.",
         "properties": {
@@ -43199,6 +43628,131 @@
         "title": "PromptDetailOut",
         "type": "object"
       },
+      "PromptDiffOut": {
+        "description": "The unified diff between two versions of a slot (0 is the built-in).",
+        "properties": {
+          "chars_delta": {
+            "title": "Chars Delta",
+            "type": "integer"
+          },
+          "diff": {
+            "title": "Diff",
+            "type": "string"
+          },
+          "from_version": {
+            "title": "From Version",
+            "type": "integer"
+          },
+          "locale": {
+            "title": "Locale",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "task": {
+            "title": "Task",
+            "type": "string"
+          },
+          "to_version": {
+            "title": "To Version",
+            "type": "integer"
+          },
+          "tokens_delta": {
+            "title": "Tokens Delta",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "task",
+          "name",
+          "locale",
+          "from_version",
+          "to_version",
+          "diff",
+          "chars_delta",
+          "tokens_delta"
+        ],
+        "title": "PromptDiffOut",
+        "type": "object"
+      },
+      "PromptSizeOut": {
+        "description": "The size of one prompt version (0 is the built-in text).",
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "chars": {
+            "title": "Chars",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "locale": {
+            "title": "Locale",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "code",
+              "admin"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "task": {
+            "title": "Task",
+            "type": "string"
+          },
+          "tokens_est": {
+            "title": "Tokens Est",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "task",
+          "name",
+          "locale",
+          "version",
+          "source",
+          "chars",
+          "tokens_est",
+          "created_at",
+          "active"
+        ],
+        "title": "PromptSizeOut",
+        "type": "object"
+      },
+      "PromptSizesResponse": {
+        "description": "Prompt sizes per slot and version.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PromptSizeOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "PromptSizesResponse",
+        "type": "object"
+      },
       "PromptSlotOut": {
         "description": "An editable piece of a task's prompt, overridden or built-in.",
         "properties": {
@@ -43359,6 +43913,11 @@
             "title": "Active",
             "type": "boolean"
           },
+          "chars": {
+            "default": 0,
+            "title": "Chars",
+            "type": "integer"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -43393,9 +43952,19 @@
             "title": "Note",
             "type": "string"
           },
+          "source": {
+            "default": "admin",
+            "title": "Source",
+            "type": "string"
+          },
           "text": {
             "title": "Text",
             "type": "string"
+          },
+          "tokens_est": {
+            "default": 0,
+            "title": "Tokens Est",
+            "type": "integer"
           },
           "version": {
             "title": "Version",
@@ -43414,6 +43983,98 @@
           "note"
         ],
         "title": "PromptVersionOut",
+        "type": "object"
+      },
+      "PromptVersionSummaryOut": {
+        "description": "A stored version without its text.",
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "chars": {
+            "title": "Chars",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "has_diff": {
+            "title": "Has Diff",
+            "type": "boolean"
+          },
+          "hash": {
+            "title": "Hash",
+            "type": "string"
+          },
+          "locale": {
+            "title": "Locale",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "source": {
+            "description": "`admin` (an administrator) or `code` (a deploy).",
+            "title": "Source",
+            "type": "string"
+          },
+          "tokens_est": {
+            "description": "About a quarter of the characters.",
+            "title": "Tokens Est",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "locale",
+          "source",
+          "active",
+          "hash",
+          "chars",
+          "tokens_est",
+          "created_at",
+          "created_by",
+          "note",
+          "has_diff"
+        ],
+        "title": "PromptVersionSummaryOut",
+        "type": "object"
+      },
+      "PromptVersionsResponse": {
+        "description": "The versions of one slot, newest first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PromptVersionSummaryOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "PromptVersionsResponse",
         "type": "object"
       },
       "ProofIn": {
@@ -46690,6 +47351,225 @@
         "title": "ReporterOut",
         "type": "object"
       },
+      "RequestOut": {
+        "description": "A request the code published, and the state of its prompt template.",
+        "properties": {
+          "active_version": {
+            "description": "The template version in force; 0 is built-in.",
+            "title": "Active Version",
+            "type": "integer"
+          },
+          "args_schema": {
+            "additionalProperties": true,
+            "title": "Args Schema",
+            "type": "object"
+          },
+          "code_changed_since_active": {
+            "description": "An administrator's text predates the latest code default.",
+            "title": "Code Changed Since Active",
+            "type": "boolean"
+          },
+          "code_version": {
+            "description": "The version that recorded the code's text.",
+            "title": "Code Version",
+            "type": "integer"
+          },
+          "id": {
+            "examples": [
+              "notebooks.studio_quiz.generate"
+            ],
+            "title": "Id",
+            "type": "string"
+          },
+          "owner_app": {
+            "title": "Owner App",
+            "type": "string"
+          },
+          "pipeline": {
+            "title": "Pipeline",
+            "type": "string"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "retired": {
+            "description": "True once no code declares the request.",
+            "title": "Retired",
+            "type": "boolean"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "task": {
+            "title": "Task",
+            "type": "string"
+          },
+          "template_id": {
+            "description": "`<task>/<name>` of the prompt slot.",
+            "title": "Template Id",
+            "type": "string"
+          },
+          "tools": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "owner_app",
+          "task",
+          "pipeline",
+          "template_id",
+          "args_schema",
+          "tools",
+          "summary",
+          "published_at",
+          "retired",
+          "active_version",
+          "code_version",
+          "code_changed_since_active"
+        ],
+        "title": "RequestOut",
+        "type": "object"
+      },
+      "RequestStatsOut": {
+        "description": "Averages and totals of one group of calls.",
+        "properties": {
+          "avg_answer_chars": {
+            "title": "Avg Answer Chars",
+            "type": "number"
+          },
+          "avg_output_tokens": {
+            "title": "Avg Output Tokens",
+            "type": "number"
+          },
+          "avg_prompt_chars": {
+            "title": "Avg Prompt Chars",
+            "type": "number"
+          },
+          "avg_prompt_tokens": {
+            "title": "Avg Prompt Tokens",
+            "type": "number"
+          },
+          "avg_tool_calls": {
+            "title": "Avg Tool Calls",
+            "type": "number"
+          },
+          "calls": {
+            "title": "Calls",
+            "type": "integer"
+          },
+          "cost_micro": {
+            "title": "Cost Micro",
+            "type": "integer"
+          },
+          "failed": {
+            "title": "Failed",
+            "type": "integer"
+          },
+          "key": {
+            "description": "Request id, day, user id or pipeline.",
+            "title": "Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "calls",
+          "failed",
+          "avg_prompt_tokens",
+          "avg_prompt_chars",
+          "avg_answer_chars",
+          "avg_output_tokens",
+          "avg_tool_calls",
+          "cost_micro"
+        ],
+        "title": "RequestStatsOut",
+        "type": "object"
+      },
+      "RequestStatsResponse": {
+        "description": "Per-group statistics and their totals.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RequestStatsOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/RequestTotalsOut"
+          }
+        },
+        "required": [
+          "items",
+          "totals"
+        ],
+        "title": "RequestStatsResponse",
+        "type": "object"
+      },
+      "RequestTotalsOut": {
+        "description": "The totals over every group (averages weighted by calls).",
+        "properties": {
+          "avg_answer_chars": {
+            "title": "Avg Answer Chars",
+            "type": "number"
+          },
+          "avg_output_tokens": {
+            "title": "Avg Output Tokens",
+            "type": "number"
+          },
+          "avg_prompt_chars": {
+            "title": "Avg Prompt Chars",
+            "type": "number"
+          },
+          "avg_prompt_tokens": {
+            "title": "Avg Prompt Tokens",
+            "type": "number"
+          },
+          "avg_tool_calls": {
+            "title": "Avg Tool Calls",
+            "type": "number"
+          },
+          "calls": {
+            "title": "Calls",
+            "type": "integer"
+          },
+          "cost_micro": {
+            "title": "Cost Micro",
+            "type": "integer"
+          },
+          "failed": {
+            "title": "Failed",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "calls",
+          "failed",
+          "avg_prompt_tokens",
+          "avg_prompt_chars",
+          "avg_answer_chars",
+          "avg_output_tokens",
+          "avg_tool_calls",
+          "cost_micro"
+        ],
+        "title": "RequestTotalsOut",
+        "type": "object"
+      },
       "RequestUploadBody": {
         "description": "Declared properties of the file the client is going to upload.",
         "properties": {
@@ -46737,6 +47617,23 @@
           "purpose"
         ],
         "title": "RequestUploadBody",
+        "type": "object"
+      },
+      "RequestsResponse": {
+        "description": "The registered requests.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RequestOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "RequestsResponse",
         "type": "object"
       },
       "ResolveAction": {
@@ -48034,6 +48931,64 @@
           "binding"
         ],
         "title": "RoundOptionOut",
+        "type": "object"
+      },
+      "RouteOut": {
+        "description": "The runtime route of a pipeline.",
+        "properties": {
+          "connector_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Connector Id"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "reasoning_effort": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reasoning Effort"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "connector_id",
+          "model",
+          "reasoning_effort",
+          "updated_at"
+        ],
+        "title": "RouteOut",
         "type": "object"
       },
       "RunOut": {
@@ -52164,6 +53119,145 @@
           "question_id"
         ],
         "title": "SpeechIn",
+        "type": "object"
+      },
+      "SpendDailyOut": {
+        "description": "Spend of one request on one day (`other` folds the tail).",
+        "properties": {
+          "calls": {
+            "title": "Calls",
+            "type": "integer"
+          },
+          "cost_micro": {
+            "title": "Cost Micro",
+            "type": "integer"
+          },
+          "day": {
+            "title": "Day",
+            "type": "string"
+          },
+          "request_id": {
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "day",
+          "request_id",
+          "cost_micro",
+          "calls"
+        ],
+        "title": "SpendDailyOut",
+        "type": "object"
+      },
+      "SpendDailyResponse": {
+        "description": "The day x request matrix.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SpendDailyOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "SpendDailyResponse",
+        "type": "object"
+      },
+      "SpendOut": {
+        "description": "Spend of one day, request or user.",
+        "properties": {
+          "calls": {
+            "title": "Calls",
+            "type": "integer"
+          },
+          "cost_micro": {
+            "title": "Cost Micro",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "user": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SpendUserOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "users": {
+            "title": "Users",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "cost_micro",
+          "calls",
+          "users",
+          "user"
+        ],
+        "title": "SpendOut",
+        "type": "object"
+      },
+      "SpendResponse": {
+        "description": "Spend rows, most expensive first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SpendOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total_cost_micro": {
+            "title": "Total Cost Micro",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total_cost_micro"
+        ],
+        "title": "SpendResponse",
+        "type": "object"
+      },
+      "SpendUserOut": {
+        "description": "The user of a spend row grouped by user.",
+        "properties": {
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          }
+        },
+        "required": [
+          "id",
+          "full_name",
+          "role"
+        ],
+        "title": "SpendUserOut",
         "type": "object"
       },
       "SpikeIn": {
@@ -63332,13 +64426,6 @@
           "status": {
             "title": "Status",
             "type": "string"
-          },
-          "telegram": {
-            "items": {
-              "$ref": "#/components/schemas/app__interfaces__http__v1__id__schemas__TelegramAccountResponse"
-            },
-            "title": "Telegram",
-            "type": "array"
           }
         },
         "required": [
@@ -63355,8 +64442,7 @@
           "emis_status",
           "mailbox",
           "photo_url",
-          "preferences",
-          "telegram"
+          "preferences"
         ],
         "title": "UserMeResponse",
         "type": "object"
@@ -70966,6 +72052,632 @@
         ]
       }
     },
+    "/v1/admin/ai/analytics/prompt-sizes": {
+      "get": {
+        "description": "Characters and estimated tokens of every prompt version, the built-in as v0.",
+        "operationId": "prompt_sizes_v1_admin_ai_analytics_prompt_sizes_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "task",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Task"
+            }
+          },
+          {
+            "in": "query",
+            "name": "name",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptSizesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Prompt Sizes",
+        "tags": [
+          "admin-ai"
+        ]
+      }
+    },
+    "/v1/admin/ai/analytics/requests": {
+      "get": {
+        "description": "Averages, totals and cost per request, day, user or pipeline.",
+        "operationId": "request_stats_v1_admin_ai_analytics_requests_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "in": "query",
+            "name": "request_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 96,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Request Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pipeline",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pipeline"
+            }
+          },
+          {
+            "in": "query",
+            "name": "user_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "User Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group_by",
+            "required": false,
+            "schema": {
+              "default": "request",
+              "enum": [
+                "request",
+                "day",
+                "user",
+                "pipeline"
+              ],
+              "title": "Group By",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestStatsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request Stats",
+        "tags": [
+          "admin-ai"
+        ]
+      }
+    },
+    "/v1/admin/ai/analytics/spend": {
+      "get": {
+        "description": "Spend per day, request or user, most expensive first.",
+        "operationId": "spend_v1_admin_ai_analytics_spend_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "in": "query",
+            "name": "by",
+            "required": false,
+            "schema": {
+              "default": "day",
+              "enum": [
+                "day",
+                "request",
+                "user"
+              ],
+              "title": "By",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "request_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 96,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Request Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "user_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "User Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpendResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Spend",
+        "tags": [
+          "admin-ai"
+        ]
+      }
+    },
+    "/v1/admin/ai/analytics/spend/daily": {
+      "get": {
+        "description": "Spend per day and request: the twenty costliest requests, the rest folded.",
+        "operationId": "spend_daily_v1_admin_ai_analytics_spend_daily_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "in": "query",
+            "name": "end",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "in": "query",
+            "name": "request_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 96,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Request Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "user_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "User Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SpendDailyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Spend Daily",
+        "tags": [
+          "admin-ai"
+        ]
+      }
+    },
+    "/v1/admin/ai/connectors": {
+      "get": {
+        "description": "Every connector: made from the environment or added here (no keys).",
+        "operationId": "list_connectors_v1_admin_ai_connectors_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Connectors",
+        "tags": [
+          "admin-ai"
+        ]
+      },
+      "post": {
+        "description": "Add a connector; its key is written to Vault first and never read back.",
+        "operationId": "add_connector_v1_admin_ai_connectors_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectorBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Connector",
+        "tags": [
+          "admin-ai"
+        ]
+      }
+    },
+    "/v1/admin/ai/connectors/{connector_id}": {
+      "delete": {
+        "description": "Remove a connector and its key; a built-in one returns to the environment.",
+        "operationId": "remove_connector_v1_admin_ai_connectors__connector_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "connector_id",
+            "required": true,
+            "schema": {
+              "title": "Connector Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Connector",
+        "tags": [
+          "admin-ai"
+        ]
+      },
+      "patch": {
+        "description": "Change a connector; a connector of the environment gets an override row.",
+        "operationId": "change_connector_v1_admin_ai_connectors__connector_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "connector_id",
+            "required": true,
+            "schema": {
+              "title": "Connector Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectorPatchBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change Connector",
+        "tags": [
+          "admin-ai"
+        ]
+      }
+    },
+    "/v1/admin/ai/connectors/{connector_id}/test": {
+      "post": {
+        "description": "Ask the provider something tiny; the answer never contains the key.",
+        "operationId": "test_connector_v1_admin_ai_connectors__connector_id__test_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "connector_id",
+            "required": true,
+            "schema": {
+              "title": "Connector Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectorTestOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Test Connector",
+        "tags": [
+          "admin-ai"
+        ]
+      }
+    },
     "/v1/admin/ai/limit-extensions": {
       "get": {
         "description": "Every extension, or only the one of a student.",
@@ -71208,6 +72920,115 @@
           }
         },
         "summary": "Put Limits",
+        "tags": [
+          "admin-ai"
+        ]
+      }
+    },
+    "/v1/admin/ai/pipelines": {
+      "get": {
+        "description": "Every pipeline with its tasks, runtime route and what its calls use.",
+        "operationId": "list_pipelines_v1_admin_ai_pipelines_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelinesResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Pipelines",
+        "tags": [
+          "admin-ai"
+        ]
+      }
+    },
+    "/v1/admin/ai/pipelines/{pipeline}": {
+      "delete": {
+        "description": "Send the pipeline back to the environment's values.",
+        "operationId": "reset_pipeline_v1_admin_ai_pipelines__pipeline__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pipeline",
+            "required": true,
+            "schema": {
+              "title": "Pipeline",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reset Pipeline",
+        "tags": [
+          "admin-ai"
+        ]
+      },
+      "put": {
+        "description": "Route a pipeline to a connector, model and effort; applies within 30 s.",
+        "operationId": "route_pipeline_v1_admin_ai_pipelines__pipeline__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "pipeline",
+            "required": true,
+            "schema": {
+              "title": "Pipeline",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PipelineRouteBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipelineOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Route Pipeline",
         "tags": [
           "admin-ai"
         ]
@@ -71581,6 +73402,176 @@
         ]
       }
     },
+    "/v1/admin/ai/prompts/{task}/{name}/diff": {
+      "get": {
+        "description": "The unified diff between two versions (0 is the built-in); latest by default.",
+        "operationId": "get_prompt_diff_v1_admin_ai_prompts__task___name__diff_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task",
+            "required": true,
+            "schema": {
+              "title": "Task",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "locale",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "uz",
+                "ru",
+                "en"
+              ],
+              "title": "Locale",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "From"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptDiffOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Prompt Diff",
+        "tags": [
+          "admin-ai"
+        ]
+      }
+    },
+    "/v1/admin/ai/prompts/{task}/{name}/versions": {
+      "get": {
+        "description": "The stored versions of a slot for a locale, without their text.",
+        "operationId": "list_prompt_versions_v1_admin_ai_prompts__task___name__versions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task",
+            "required": true,
+            "schema": {
+              "title": "Task",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "title": "Name",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "locale",
+            "required": false,
+            "schema": {
+              "default": "",
+              "enum": [
+                "",
+                "uz",
+                "ru",
+                "en"
+              ],
+              "title": "Locale",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptVersionsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Prompt Versions",
+        "tags": [
+          "admin-ai"
+        ]
+      }
+    },
     "/v1/admin/ai/prompts/{task}/{name}/versions/{version}/activate": {
       "post": {
         "description": "Make a stored version the active one of its locale again (a rollback).",
@@ -71638,6 +73629,127 @@
           }
         },
         "summary": "Activate Prompt",
+        "tags": [
+          "admin-ai"
+        ]
+      }
+    },
+    "/v1/admin/ai/requests": {
+      "get": {
+        "description": "The registered AI requests, with the state of their prompt templates.",
+        "operationId": "list_requests_v1_admin_ai_requests_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "owner_app",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Owner App"
+            }
+          },
+          {
+            "in": "query",
+            "name": "pipeline",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Pipeline"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_retired",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Retired",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Requests",
+        "tags": [
+          "admin-ai"
+        ]
+      }
+    },
+    "/v1/admin/ai/requests/{request_id}": {
+      "get": {
+        "description": "One registered AI request.",
+        "operationId": "get_request_v1_admin_ai_requests__request_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "title": "Request Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Request",
         "tags": [
           "admin-ai"
         ]

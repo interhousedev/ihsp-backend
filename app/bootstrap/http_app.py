@@ -2,8 +2,8 @@
 
 import asyncio
 import os
-from collections.abc import Callable
-from contextlib import AbstractAsyncContextManager
+from collections.abc import AsyncIterator, Callable
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
 
 from app.bootstrap.common import build_container
 from app.bootstrap.container import Container
@@ -39,6 +39,25 @@ def _hook(
     return enter
 
 
+def publish_hook(
+    container: Container,
+) -> Callable[[], AbstractAsyncContextManager[None]]:
+    """A lifespan hook that publishes prompt defaults and the AI request registry."""
+
+    @asynccontextmanager
+    async def publish() -> AsyncIterator[None]:
+        from app.modules.ai.wiring import publish_prompts_on_startup
+
+        prompts = container.ai.prompts if container.ai is not None else None
+        if prompts is not None:
+            await publish_prompts_on_startup(
+                prompts, container.settings.ai.publish_prompts_on_startup
+            )
+        yield
+
+    return publish
+
+
 def mcp_parts(
     container: Container,
 ) -> tuple[
@@ -65,6 +84,7 @@ def build_http_app(container: Container, *, process: str) -> FastAPI:
     hooks: list[Callable[[], AbstractAsyncContextManager[None]]] = []
     if process in HOSTS_WITH_MCP:
         mounts, hooks = mcp_parts(container)
+        hooks.append(publish_hook(container))
     app = create_app(
         container,
         routers=routers_for(process, container.settings),

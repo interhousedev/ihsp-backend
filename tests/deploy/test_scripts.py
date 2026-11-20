@@ -85,6 +85,8 @@ def test_prod_init_can_read_every_credential_vault_setup_prints(
         "IHSP_BOT_VAULT__SECRET_ID",
         "IHSP_ESSAY_VAULT__ROLE_ID",
         "IHSP_ESSAY_VAULT__SECRET_ID",
+        "IHSP_AI_CONNECTOR_VAULT__ROLE_ID",
+        "IHSP_AI_CONNECTOR_VAULT__SECRET_ID",
     }
     spec = importlib.util.spec_from_file_location(
         "vault_setup", MATERIALS_DIR / "vault" / "setup.py"
@@ -115,6 +117,8 @@ def test_prod_init_can_read_every_credential_vault_setup_prints(
         "IHSP_BOT_VAULT__SECRET_ID": "secret-of-telegram-bots",
         "IHSP_ESSAY_VAULT__ROLE_ID": "role-of-admission-essays",
         "IHSP_ESSAY_VAULT__SECRET_ID": "secret-of-admission-essays",
+        "IHSP_AI_CONNECTOR_VAULT__ROLE_ID": "role-of-ai-connectors",
+        "IHSP_AI_CONNECTOR_VAULT__SECRET_ID": "secret-of-ai-connectors",
     }
 
 

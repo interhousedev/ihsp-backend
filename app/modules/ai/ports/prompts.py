@@ -23,6 +23,12 @@ class PromptVersionRepository(Protocol):
         """Every version of a slot, every locale, newest first."""
         ...
 
+    async def get_version(
+        self, task: str, name: str, locale: str, version: int
+    ) -> PromptVersion | None:
+        """One stored version of a slot and locale, or None."""
+        ...
+
     async def active(self, task: str | None = None) -> list[PromptVersion]:
         """The active versions (of one task when given)."""
         ...

@@ -168,7 +168,10 @@ def build_studio(
             course_context=core.course_context,
             faithfulness=FaithfulnessCheck(core.llm, settings),
             assessment=AssessmentPipeline(
-                core.llm, settings, _studio_openui(core.openui, settings)
+                core.llm,
+                settings,
+                _studio_openui(core.openui, settings),
+                requests=core.requests,
             ),
             limits=deps.effective_limits,
             slide_pipeline=slide_pipeline,

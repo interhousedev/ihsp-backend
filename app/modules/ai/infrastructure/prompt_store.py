@@ -31,6 +31,10 @@ def _entity(row: PromptVersionRow) -> PromptVersion:
         created_at=row.created_at,
         created_by=row.created_by,
         note=row.note,
+        source=row.source,
+        diff=row.diff,
+        chars=row.chars,
+        tokens_est=row.tokens_est,
     )
 
 
@@ -49,6 +53,20 @@ class SqlPromptVersionRepository:
             .order_by(PromptVersionRow.version.desc())
         )
         return [_entity(row) for row in rows]
+
+    async def get_version(
+        self, task: str, name: str, locale: str, version: int
+    ) -> PromptVersion | None:
+        """One stored version of the slot and locale, or None."""
+        row = await self.session.scalar(
+            select(PromptVersionRow).where(
+                PromptVersionRow.task == task,
+                PromptVersionRow.name == name,
+                PromptVersionRow.locale == locale,
+                PromptVersionRow.version == version,
+            )
+        )
+        return None if row is None else _entity(row)
 
     async def active(self, task: str | None = None) -> list[PromptVersion]:
         """The active versions (of one task)."""
@@ -80,6 +98,10 @@ class SqlPromptVersionRepository:
                 active=False,
                 created_by=version.created_by,
                 note=version.note,
+                source=version.source,
+                diff=version.diff,
+                chars=version.chars,
+                tokens_est=version.tokens_est,
                 created_at=version.created_at,
             )
         )

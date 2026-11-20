@@ -5,6 +5,7 @@ import hmac
 from dataclasses import dataclass
 from uuid import UUID
 
+from app.modules.ai.domain.requests import AiRequestSpec
 from app.modules.lms.application.h5p_links import H5PLinks
 from app.modules.lms.application.learning.audience import StudentGroupLookup
 from app.modules.lms.application.public_course_ops import LmsCourseOpsImpl
@@ -16,6 +17,9 @@ from app.shared.contracts.academic import GroupDirectory, ScheduleQueries
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.wiring import ModuleDeps
+
+# AI requests this module declares; the AI module publishes them at startup.
+AI_REQUESTS: tuple[AiRequestSpec, ...] = ()
 
 
 @dataclass(slots=True)

@@ -45,6 +45,13 @@ class SqlUsageStore:
                         prompt_version=event.prompt_version,
                         prompt_hash=event.prompt_hash,
                         latency_ms=event.latency_ms,
+                        request_id=event.request_id,
+                        pipeline=event.pipeline,
+                        connector_id=event.connector_id,
+                        prompt_chars=event.prompt_chars,
+                        prompt_tokens_est=event.prompt_tokens_est,
+                        answer_chars=event.answer_chars,
+                        tool_calls=event.tool_calls,
                     )
                 )
                 await session.commit()

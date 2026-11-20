@@ -20,6 +20,7 @@ from dataclasses import dataclass, field
 from functools import partial
 from typing import Any, Final, cast
 
+from app.modules.ai.application.requests import AiRequests
 from app.modules.notebooks.application.exercise_pipeline import (
     ExerciseJob,
     ExercisePipeline,
@@ -82,6 +83,7 @@ from app.modules.notebooks.domain.assessment.profile import (
     profile_message,
 )
 from app.modules.notebooks.domain.errors import OutputInvalidError
+from app.modules.notebooks.domain.language import language_name
 from app.settings import Settings
 from app.shared.ai_tasks import AiTask
 from app.shared.openui.blocks import split_blocks
@@ -95,6 +97,7 @@ log = structlog.get_logger(__name__)
 
 BLUEPRINT_KEY: Final = "blueprint"  # in `artifacts.content`
 _OPTION_IDS: Final = "abcdefgh"
+QUIZ_REQUEST: Final = "notebooks.studio_quiz.generate"  # the registered AI request
 
 # One model call: (task, system, messages, schema name, schema, max tokens).
 Ask = Callable[
@@ -212,8 +215,10 @@ class AssessmentPipeline:
         llm: NotebookLlm,
         settings: Settings,
         openui: OpenUiFinalizer | None = None,
+        requests: AiRequests | None = None,
     ) -> None:
-        """Store the model, the settings and the studio OpenUI finalizer."""
+        """Store the model, the settings, the studio OpenUI finalizer and requests."""
+        self.requests = requests
         self.llm = llm
         self.settings = settings
         self.openui = openui if openui is not None and openui.enabled else None
@@ -376,15 +381,26 @@ class AssessmentPipeline:
         if self.openui is not None and not job.cards:
             task = f"{task}\n{VISUAL_BLOCKS}\n{openui_prompt('studio')}"
         schema = to_strict_schema(CardBatchOut if job.cards else QuizBatchOut)
-        try:
-            done = await ask(
-                job.task,
-                job.system,
-                [job.context, {"role": "user", "content": job.wrap(task)}],
-                job.handler.schema_name,
-                schema,
-                self.llm.max_tokens(job.task, batch_tokens(len(specs))),
+        messages = [job.context, {"role": "user", "content": job.wrap(task)}]
+        tokens = self.llm.max_tokens(job.task, batch_tokens(len(specs)))
+
+        async def write(_: object = None) -> JsonCompletion:
+            return await ask(
+                job.task, job.system, messages, job.handler.schema_name, schema, tokens
             )
+
+        try:
+            if self.requests is not None and job.task is AiTask.STUDIO_QUIZ:
+                args = {
+                    "language": language_name(job.ctx.language),
+                    "count": len(specs),
+                    "mode": mode,
+                }
+                done = await self.requests.run(
+                    QUIZ_REQUEST, args, locale=job.ctx.language, call=write
+                )
+            else:
+                done = await write()
         except OutputInvalidError as exc:
             state.problems.extend(exc.problems)
             return

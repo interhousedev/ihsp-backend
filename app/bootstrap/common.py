@@ -99,8 +99,11 @@ from app.modules.admission.infrastructure.student_chunks_repository import (
 from app.modules.admission.infrastructure.voice_openrouter import make_voice
 from app.modules.admission.ports.erasure import ADMISSION_NOTIFICATION_TYPES
 from app.modules.admission.wiring import build as build_admission
+from app.modules.ai.application.request_catalog import declared_requests
 from app.modules.ai.infrastructure.access_guard import AccessGuardedLlmGateway
 from app.modules.ai.infrastructure.gateway_factory import (
+    RoutedLlmGateway,
+    RoutedWebSearchGateway,
     make_embedding_gateway,
     make_exa_page_reader,
     make_llm_gateway,
@@ -115,7 +118,7 @@ from app.modules.ai.infrastructure.recording_gateways import (
 )
 from app.modules.ai.infrastructure.usage_store import SqlUsageStore
 from app.modules.ai.wiring import build as build_ai
-from app.modules.ai.wiring import build_prompts
+from app.modules.ai.wiring import build_connectors, build_prompts
 from app.modules.certificates.wiring import build as build_certificates
 from app.modules.dashboard.wiring import build as build_dashboard
 from app.modules.faces.wiring import build as build_faces
@@ -296,7 +299,7 @@ class _Assembler:
             SqlUsageStore(container.sessionmaker), container.clock, tracer
         )
         self.deps = make_deps(container)
-        self.prompts = build_prompts(self.deps, prompt_slots())
+        self.prompts = build_prompts(self.deps, prompt_slots(), declared_requests())
         # Built before privacy and admission: erasure shreds the essay data key.
         self.essay_cipher = essay_cipher(container.settings)
 
@@ -472,11 +475,14 @@ class _Assembler:
             c.settings,
             gateway=identity.emis_services.gateway if identity.emis_services else None,
             in_process=self.plan.in_process_emis_source,
+            redis=c.redis,
+            clock=c.clock,
         )
         if closer is not None:
             self.add_closer(closer)
         c.student_card = StudentCardService(
             directory=identity.directory,
+            facts=schedule.enrollment,
             emis=source,
             files=c.files.public,
             store=RedisTicketStore(c.redis),
@@ -698,8 +704,19 @@ class _Assembler:
         c = self.container
         tools = AdminToolBackendAdapter(c)
         c.admin_tools = tools
-        self.raw_llm = self.overrides.llm or make_llm_gateway(
+        env_llm = self.overrides.llm or make_llm_gateway(
             c.settings, required=self.plan.ai_keys
+        )
+        env_search = make_web_search_gateway(
+            c.settings, c.redis, required=self.plan.ai_keys
+        )
+        connectors = build_connectors(self.deps, llm=env_llm, search=env_search)
+        # Administration can route a pipeline at runtime: calls go through the router
+        # (a test's own gateway is used as it is).
+        self.raw_llm = (
+            env_llm
+            if self.overrides.llm
+            else RoutedLlmGateway(env_llm, connectors.routing)
         )
         # Revoked users are refused before the call; the ledger counts the refusal.
         guarded = AccessGuardedLlmGateway(self.raw_llm, self.deps.effective_limits)
@@ -710,6 +727,7 @@ class _Assembler:
         ai = build_ai(
             self.deps,
             llm=self.llm,
+            requests=self.prompts.requests,
             sniffer=self.make_sniffer(),
             identity=c.identity.directory,
             schedule=c.academic.schedule.queries,
@@ -720,15 +738,14 @@ class _Assembler:
             admin_tools=tools,
             links=c.links.public,
             web_search=RecordingWebSearch(
-                make_web_search_gateway(
-                    c.settings, c.redis, required=self.plan.ai_keys
-                ),
+                RoutedWebSearchGateway(env_search, connectors.routing),
                 self.recorder,
             ),
             embeddings=lambda: self.embedding_index,
             free_usage=self.recorder,
         )
         ai.prompts = self.prompts
+        ai.connectors = connectors
         ai.bindings.share_lookup = c.links.public
         self.knowledge_lookup = KnowledgeLookupAdapter(c.knowledge.public)
         self.knowledge_gaps = KnowledgeGapAdapter(c.notify.public)
@@ -811,6 +828,7 @@ class _Assembler:
             web_search=c.ai.web_search,
             workspace=c.lms.authoring.workspace if self.plan.lms else None,
             embeddings=self.build_embeddings(),
+            requests=self.prompts.requests,
             lms_apply=(
                 LmsApplyPorts(
                     workspace=c.lms.authoring.workspace_commands,

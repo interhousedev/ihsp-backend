@@ -3,9 +3,11 @@
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
+from app.modules.ai.application.ai_analytics import AiAnalytics
 from app.modules.ai.application.approve_tool_call import ApproveToolCall
 from app.modules.ai.application.budget import BudgetService
 from app.modules.ai.application.chat_views import ChatViews
+from app.modules.ai.application.connectors import ConnectorAdmin, PipelineAdmin
 from app.modules.ai.application.continue_turn import ContinueTurn
 from app.modules.ai.application.create_chat import CreateChat
 from app.modules.ai.application.decide_tool_call import CallDecider
@@ -24,12 +26,16 @@ from app.modules.ai.application.prompt_registry import (
     PromptRegistry,
 )
 from app.modules.ai.application.public_api import AiQueriesImpl
+from app.modules.ai.application.publish_requests import RequestPublisher
 from app.modules.ai.application.purge_admin_chats import PurgeAdminChats
 from app.modules.ai.application.purge_usage_events import PurgeUsageEvents
 from app.modules.ai.application.purge_web_pages import PurgeWebPages
 from app.modules.ai.application.regenerate_answer import RegenerateAnswer
 from app.modules.ai.application.reject_tool_call import RejectToolCall
 from app.modules.ai.application.rename_chat import RenameChat
+from app.modules.ai.application.request_admin import RequestAdmin
+from app.modules.ai.application.requests import AiRequests
+from app.modules.ai.application.routing import RouteService
 from app.modules.ai.application.send_message import SendMessage
 from app.modules.ai.application.set_message_feedback import SetMessageFeedback
 from app.modules.ai.application.system_prompts import (
@@ -60,6 +66,7 @@ from app.modules.ai.application.tools.get_my_subjects import GetMySubjects
 from app.modules.ai.application.tools.get_notebook import GetNotebook
 from app.modules.ai.application.tools.get_schedule import GetSchedule
 from app.modules.ai.application.tools.get_subject_lessons import GetSubjectLessons
+from app.modules.ai.application.tools.library_search import SearchLibrary
 from app.modules.ai.application.tools.list_files import ListFiles
 from app.modules.ai.application.tools.list_flashcard_sets import ListFlashcardSets
 from app.modules.ai.application.tools.list_notebook_artifacts import (
@@ -90,10 +97,22 @@ from app.modules.ai.application.turn_result import TurnResults
 from app.modules.ai.application.usage_report import UsageReport
 from app.modules.ai.application.web_pages import WebPageIndex
 from app.modules.ai.application.web_search import WebSearchService
+from app.modules.ai.domain import prompts as chat_prompts
 from app.modules.ai.domain.admin_tools import ADMIN_TOOLS
 from app.modules.ai.domain.prompt_registry import PromptSlot
+from app.modules.ai.domain.requests import AiRequestSpec, build_catalog
 from app.modules.ai.domain.tool_call import ToolAccess
+from app.modules.ai.infrastructure.analytics_reader import SqlAiAnalyticsReader
 from app.modules.ai.infrastructure.author_gate import LateAuthorGate
+from app.modules.ai.infrastructure.connector_clients import EnvConnectorRuntime
+from app.modules.ai.infrastructure.connector_store import (
+    SqlConnectorUnitOfWork,
+    SqlRoutingLoader,
+)
+from app.modules.ai.infrastructure.connector_vault import (
+    DisabledConnectorSecrets,
+    VaultConnectorSecrets,
+)
 from app.modules.ai.infrastructure.exa_search import ExaWebSearch
 from app.modules.ai.infrastructure.fake_exa import FakeExaClient
 from app.modules.ai.infrastructure.notebook_platform_search import (
@@ -114,16 +133,19 @@ from app.modules.ai.infrastructure.redis_budget_store import (
 from app.modules.ai.infrastructure.redis_search_quota import RedisSearchQuotaStore
 from app.modules.ai.infrastructure.redis_summary_store import RedisSummaryStore
 from app.modules.ai.infrastructure.redis_turn_lock import RedisTurnLock
+from app.modules.ai.infrastructure.request_store import SqlRequestPublishUnitOfWork
 from app.modules.ai.infrastructure.uow import SqlAiUnitOfWork
 from app.modules.ai.infrastructure.usage_reader import SqlUsageReader
 from app.modules.ai.infrastructure.usage_store import SqlUsageStore
 from app.modules.ai.ports.budget_store import BudgetStore
+from app.modules.ai.ports.connectors import ConnectorSecrets
 from app.modules.ai.ports.search_quota import SearchQuotaStore
 from app.modules.ai.ports.summary_store import SummaryStore
 from app.modules.ai.ports.turn_lock import TurnLock
 from app.modules.ai.ports.unit_of_work import UowFactory
 from app.modules.ai.ports.usage import FreeUsage
 from app.settings import UrlsSettings
+from app.shared.ai_tasks import AiTask
 from app.shared.contracts.academic import (
     ClassworkQueries,
     MarksQueries,
@@ -138,6 +160,37 @@ from app.shared.contracts.links import LinksApi
 from app.shared.contracts.web_search import WebSearchApi, WebSearchGateway
 from app.shared.limits import LimitsProvider
 from app.shared.wiring import ModuleDeps
+
+
+def _chat_request(task: AiTask, summary: str) -> AiRequestSpec:
+    return AiRequestSpec(
+        id=f"ai.{task.value}.turn",
+        owner_app="ai",
+        task=task.value,
+        template=PromptSlot(
+            task.value, "priorities", "Priorities", chat_prompts.PRIORITIES
+        ),
+        args_schema={
+            "type": "object",
+            "properties": {
+                "surface": {"type": "string"},
+                "answer_now": {"type": "boolean"},
+            },
+            "required": ["surface", "answer_now"],
+            "additionalProperties": False,
+        },
+        summary=summary,
+    )
+
+
+# AI requests this module declares; the AI module publishes them at startup.
+AI_REQUESTS: tuple[AiRequestSpec, ...] = (
+    _chat_request(AiTask.STUDENT_CHAT, "Student assistant: one model request"),
+    _chat_request(
+        AiTask.STUDENT_CHAT_SMART, "Student assistant, smart tier: one model request"
+    ),
+    _chat_request(AiTask.ADMIN_CHAT, "Administration assistant: one model request"),
+)
 
 
 @dataclass(slots=True)
@@ -165,8 +218,11 @@ class AiServices:
     transcribe_audio: TranscribeAudio
     projects: ProjectService
     telegram_topics: TelegramTopics
+    analytics: AiAnalytics
     # Editable prompts; set by the composition root (it builds them before the LLM).
     prompts: "PromptServices | None" = None
+    # Connectors and pipeline routes; set by the composition root with the prompts.
+    connectors: "ConnectorServices | None" = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -176,14 +232,82 @@ class PromptServices:
     registry: PromptRegistry
     admin: PromptAdmin
     analytics: PromptAnalytics
+    requests: AiRequests
+    request_admin: RequestAdmin
+    publisher: RequestPublisher
+    catalog: tuple[AiRequestSpec, ...]
 
 
-def build_prompts(deps: ModuleDeps, slots: Sequence[PromptSlot]) -> PromptServices:
-    """The registry over the stored versions, and its admin and analytics."""
+@dataclass(frozen=True, slots=True)
+class ConnectorServices:
+    """Connectors and pipeline routes: the router the gateways ask, and its admin."""
+
+    routing: RouteService
+    connectors: ConnectorAdmin
+    pipelines: PipelineAdmin
+
+
+def build_connectors(
+    deps: ModuleDeps,
+    *,
+    llm: LlmGateway,
+    search: WebSearchGateway | None,
+) -> ConnectorServices:
+    """The route resolver over the stored routes, and the administration of both."""
+    settings = deps.settings
+    vault = settings.ai_connector_vault
+    secrets: ConnectorSecrets = (
+        VaultConnectorSecrets(vault) if vault.enabled else DisabledConnectorSecrets()
+    )
+    runtime = EnvConnectorRuntime(
+        settings, secrets, llm=llm, search=search, redis=deps.redis
+    )
+    routing = RouteService(settings, SqlRoutingLoader(deps.sessionmaker), runtime)
+
+    def make_uow() -> SqlConnectorUnitOfWork:
+        return SqlConnectorUnitOfWork(
+            deps.sessionmaker,
+            deps.outbox_writer,
+            deps.audit_writer,
+            deps.outbox_committed_hook,
+        )
+
+    return ConnectorServices(
+        routing=routing,
+        connectors=ConnectorAdmin(
+            make_uow,
+            secrets,
+            runtime,
+            routing,
+            allow_plain_local_urls=settings.env != "prod",
+        ),
+        pipelines=PipelineAdmin(make_uow, runtime, routing, deps.clock),
+    )
+
+
+def build_prompts(
+    deps: ModuleDeps,
+    slots: Sequence[PromptSlot],
+    declared: Sequence[AiRequestSpec] = (),
+) -> PromptServices:
+    """The registry over the stored versions, its admin and analytics, and requests.
+
+    `declared` are the requests the modules declare; each prompt slot none of them
+    renders gets an automatic one. A duplicate request id raises here (startup).
+    """
     registry = PromptRegistry(slots, SqlPromptVersionLoader(deps.sessionmaker))
+    catalog = tuple(build_catalog(slots, declared))
 
     def make_uow() -> SqlPromptUnitOfWork:
         return SqlPromptUnitOfWork(
+            deps.sessionmaker,
+            deps.outbox_writer,
+            deps.audit_writer,
+            deps.outbox_committed_hook,
+        )
+
+    def make_publish_uow() -> SqlRequestPublishUnitOfWork:
+        return SqlRequestPublishUnitOfWork(
             deps.sessionmaker,
             deps.outbox_writer,
             deps.audit_writer,
@@ -194,7 +318,18 @@ def build_prompts(deps: ModuleDeps, slots: Sequence[PromptSlot]) -> PromptServic
         registry=registry,
         admin=PromptAdmin(registry, make_uow, deps.clock),
         analytics=PromptAnalytics(SqlPromptAnalyticsReader(deps.sessionmaker)),
+        requests=AiRequests(catalog, registry),
+        request_admin=RequestAdmin(make_publish_uow),
+        publisher=RequestPublisher(make_publish_uow, deps.clock),
+        catalog=catalog,
     )
+
+
+async def publish_prompts_on_startup(prompts: PromptServices, enabled: bool) -> None:
+    """Publish the code's prompt defaults and the request registry (api process)."""
+    if not enabled:
+        return
+    await prompts.publisher.publish(prompts.registry.slots(), prompts.catalog)
 
 
 @dataclass(frozen=True, slots=True)
@@ -240,6 +375,7 @@ def make_student_tools(
         ListNotebookArtifacts(bindings),
         SearchWeb(bindings, limits),
         ResearchInstitution(bindings),
+        SearchLibrary(bindings),
         SearchKnowledgeBase(bindings, "student"),
         FindFeature(urls),
         SearchProjectFiles(uow_factory, files),
@@ -292,6 +428,7 @@ def build(
     overrides: AiOverrides | None = None,
     sniffer: AudioSniffer,
     free_usage: FreeUsage | None = None,
+    requests: AiRequests | None = None,
 ) -> AiServices:
     """Wire the module.
 
@@ -341,6 +478,11 @@ def build(
         ],
         telegram=[ShowUiBlock()] if settings.ai.openui_enabled else [],
         admission=[*make_admission_tools(bindings), history],
+        staff=[
+            *make_author_tools(bindings, deps.i18n),
+            *make_office_tools(files, bindings),
+            history,
+        ],
     )
     locale = LocaleResolver(identity)
     views = ChatViews(deps.i18n)
@@ -373,6 +515,7 @@ def build(
         settings=settings,
         i18n=deps.i18n,
         limits=limits,
+        requests=requests,
     )
     decider = CallDecider(uow_factory=uow_factory, guard=guard, clock=deps.clock)
     pages = WebPageIndex(
@@ -482,6 +625,11 @@ def build(
         purge_web_pages=PurgeWebPages(pages),
         projects=ProjectService(uow_factory=uow_factory, files=files, clock=deps.clock),
         telegram_topics=TelegramTopics(uow_factory),
+        analytics=AiAnalytics(
+            reader=SqlAiAnalyticsReader(deps.sessionmaker),
+            identity=identity,
+            clock=deps.clock,
+        ),
         transcribe_audio=TranscribeAudio(
             llm=llm,
             budget=budget,

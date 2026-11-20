@@ -23,6 +23,8 @@ from app.shared.ai_tasks import (
     DataCollection,
     Modality,
     ModelProfile,
+    Pipeline,
+    pipeline_of,
 )
 from app.shared.contracts.ai import ReasoningEffort
 
@@ -50,6 +52,10 @@ def _comma_list(value: object) -> object:
 
 class AiDefaults(BaseModel):
     """What every task uses unless the task sets its own value."""
+
+    connector_id: str | None = None
+    """Connector the calls go to (`openrouter`, `anthropic`, `exa` or an id added on the
+    admin AI page); empty: `openrouter` for models, `exa` for web search."""
 
     model: str = Field(default=DEFAULT_MODEL, min_length=1)
     """OpenRouter model id used by every task without its own model."""
@@ -89,6 +95,9 @@ class AiDefaults(BaseModel):
 
 class AiTaskSettings(BaseModel):
     """Overrides of one task (`IHSP_AI__TASKS__<TASK>__<FIELD>`); empty inherits."""
+
+    connector_id: str | None = Field(default=None, min_length=1)
+    """Connector for this task."""
 
     model: str | None = Field(default=None, min_length=1)
     """Model id for this task."""
@@ -143,6 +152,22 @@ class AiTaskSettings(BaseModel):
         return _comma_list(value)
 
 
+class AiPipelineSettings(BaseModel):
+    """Overrides of a pipeline (`IHSP_AI__PIPELINES__<PIPELINE>__<FIELD>`).
+
+    The tasks of the pipeline use them unless the task has its own value.
+    """
+
+    connector_id: str | None = Field(default=None, min_length=1)
+    """Connector for the pipeline's tasks."""
+
+    model: str | None = Field(default=None, min_length=1)
+    """Model id for the pipeline's tasks."""
+
+    reasoning_effort: ReasoningEffort | None = None
+    """Reasoning effort (none, minimal, low, medium or high) of the pipeline."""
+
+
 def _first[T](*values: T | None) -> T:
     """The first value that is not None (the last one always is)."""
     for value in values:
@@ -157,12 +182,24 @@ class AiSettings(BaseModel):
     default: AiDefaults = Field(default_factory=AiDefaults)
     """Defaults of every task."""
 
+    publish_prompts_on_startup: bool = True
+    """Whether the api process, on start, stores the changed built-in prompt texts as
+    `source=code` versions and publishes the AI request registry."""
+
     usage_retention_days: int = Field(default=400, ge=60, le=3650)
     """Days the usage ledger (one row per model call, for the Limits & usage page) is
     kept; a daily job deletes the older rows."""
 
     tasks: dict[AiTask, AiTaskSettings] = Field(default_factory=dict)
     """Per-task overrides, keyed by task name (see the task list above)."""
+
+    pipelines: dict[Pipeline, AiPipelineSettings] = Field(default_factory=dict)
+    """Per-pipeline overrides (chat, notebooks, studio, admission, teacher, lms,
+    embeddings, web_search, voice, utility); a task's own value wins. Administration
+    can route a pipeline at runtime (it wins over every value here)."""
+
+    routing_ttl_seconds: int = Field(default=30, ge=1, le=3600)
+    """Seconds the runtime connector and pipeline routes are cached per process."""
 
     chat_history_limit: int | None = Field(default=None, ge=2, le=200)
     """Latest chat messages sent to the model with each question; empty keeps 20.
@@ -209,12 +246,15 @@ class AiSettings(BaseModel):
         spec = TASK_SPECS[task]
         own = self.tasks.get(task) or AiTaskSettings()
         base = self.default
+        group = self.pipelines.get(pipeline_of(task)) or AiPipelineSettings()
         return ModelProfile(
             task=task,
-            model=_first(own.model, spec.model, base.model),
+            connector_id=own.connector_id or group.connector_id or base.connector_id,
+            model=_first(own.model, group.model, spec.model, base.model),
             temperature=_first(own.temperature, base.temperature),
             max_output_tokens=own.max_output_tokens or base.max_output_tokens,
             reasoning_effort=own.reasoning_effort
+            or group.reasoning_effort
             or spec.reasoning_effort
             or base.reasoning_effort,
             fallbacks=_first(own.fallbacks, base.fallbacks),

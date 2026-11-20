@@ -322,6 +322,9 @@ class PromptVersionOut(BaseModel):
     created_at: datetime
     created_by: UUID | None
     note: str
+    source: str = "admin"
+    chars: int = 0
+    tokens_est: int = 0
 
     @classmethod
     def of(cls, version: PromptVersion) -> "PromptVersionOut":
@@ -336,6 +339,9 @@ class PromptVersionOut(BaseModel):
             created_at=version.created_at,
             created_by=version.created_by,
             note=version.note,
+            source=version.source,
+            chars=version.chars,
+            tokens_est=version.tokens_est,
         )
 
 

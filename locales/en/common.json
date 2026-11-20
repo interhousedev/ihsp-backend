@@ -21,6 +21,8 @@
   "admin-limit-user-not-found": "Student not found.",
   "admin-prompt-not-found": "This prompt or version does not exist.",
   "admin-prompt-invalid": "The prompt text is empty, too long or uses placeholders the built-in text does not have.",
+  "admin-ai-request-not-found": "This AI request does not exist.",
+  "admin-ai-request-args-invalid": "The request arguments do not match its schema.",
   "error-maintenance": "The platform is read-only while it is being moved to a new server. Try again later.",
   "admin-migration-not-configured": "Server migration is not set up on this server.",
   "admin-migration-not-allowed": "This action is not possible in the current migration phase.",

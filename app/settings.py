@@ -191,6 +191,21 @@ class EssayVaultSettings(VaultSettings):
     """Path prefix inside the KV mount; one secret per student id."""
 
 
+class AiConnectorVaultSettings(VaultSettings):
+    """Vault access for the AI connector keys (AppRole `ai-connectors`).
+
+    Keys of connectors added on the admin AI page live under the prefix, one secret per
+    connector id. Off by default: then only the connectors made from the environment
+    (`OPENROUTER__*`, `ANTHROPIC__*`, `EXA__*`) work and a key cannot be saved.
+    """
+
+    enabled: bool = False
+    """True: administrators may save connector keys in Vault."""
+
+    kv_prefix: str = "ai/connectors"
+    """Path prefix inside the KV mount; one secret per connector id."""
+
+
 class HydraSettings(BaseModel):
     """Ory Hydra endpoints."""
 
@@ -370,6 +385,12 @@ class EmisSettings(BaseModel):
     # with the timetable; `EMIS__IMPORT_TOPICS=false` leaves them out. Times, rooms,
     # teachers, odd/even weeks, halves and the lesson kind are imported either way.
     import_topics: bool = True
+
+    cache_ttl_seconds: int = Field(default=3600, ge=1, le=86400)
+    """Seconds a cached EMIS student profile stays valid (Redis and in process)."""
+
+    cache_maxsize: int = Field(default=512, ge=1, le=100000)
+    """Profiles kept in the in-process LFU cache of one process."""
 
 
 class LangfuseSettings(BaseModel):
@@ -1445,6 +1466,9 @@ class Settings(BaseSettings):
     vault: VaultSettings = Field(default_factory=VaultSettings)
     bot_vault: BotVaultSettings = Field(default_factory=BotVaultSettings)
     essay_vault: EssayVaultSettings = Field(default_factory=EssayVaultSettings)
+    ai_connector_vault: AiConnectorVaultSettings = Field(
+        default_factory=AiConnectorVaultSettings
+    )
     hydra: HydraSettings = Field(default_factory=HydraSettings)
     jwt_bearer: JwtBearerSettings = Field(default_factory=JwtBearerSettings)
     tokens: TokensSettings = Field(default_factory=TokensSettings)
@@ -1495,7 +1519,12 @@ class Settings(BaseSettings):
         """Refuse development defaults that every process would share in production."""
         if self.env != "prod":
             return self
-        for vault in (self.vault, self.bot_vault, self.essay_vault):
+        for vault in (
+            self.vault,
+            self.bot_vault,
+            self.essay_vault,
+            self.ai_connector_vault,
+        ):
             self._drop_dev_vault_token(vault)
         if self.telegram.bot_token.get_secret_value() == DEV_BOT_TOKEN:
             # An unset or empty env token arrives as the dev default; in production

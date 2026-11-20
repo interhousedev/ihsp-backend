@@ -662,6 +662,8 @@ class ModelProfile:
     batch_size: int = EMBEDDING_BATCH_SIZE
     query_prefix: str = ""
     document_prefix: str = ""
+    # Environment choice of the connector (None: the code's default for the pipeline).
+    connector_id: str | None = None
 
     @property
     def tuning(self) -> LlmTuning:
@@ -688,3 +690,77 @@ class ModelProfile:
         if self.provider_order:
             routing["order"] = list(self.provider_order)
         return routing or None
+
+
+class Pipeline(StrEnum):
+    """The routing groups: an administrator routes a whole pipeline to a model."""
+
+    CHAT = "chat"
+    NOTEBOOKS = "notebooks"
+    STUDIO = "studio"
+    ADMISSION = "admission"
+    TEACHER = "teacher"
+    LMS = "lms"
+    EMBEDDINGS = "embeddings"
+    WEB_SEARCH = "web_search"
+    VOICE = "voice"
+    UTILITY = "utility"
+
+
+PIPELINE_OF: Final[dict[AiTask, Pipeline]] = {
+    AiTask.STUDENT_CHAT: Pipeline.CHAT,
+    AiTask.STUDENT_CHAT_SMART: Pipeline.CHAT,
+    AiTask.ADMIN_CHAT: Pipeline.CHAT,
+    AiTask.GUEST_CHAT: Pipeline.CHAT,
+    AiTask.DISCOVER: Pipeline.CHAT,
+    AiTask.NOTEBOOK_CHAT: Pipeline.NOTEBOOKS,
+    AiTask.SOURCE_GUIDE: Pipeline.NOTEBOOKS,
+    AiTask.SOURCE_VISION_EXTRACT: Pipeline.NOTEBOOKS,
+    AiTask.NOTEBOOK_SUMMARY: Pipeline.NOTEBOOKS,
+    AiTask.SOURCE_LABELS: Pipeline.NOTEBOOKS,
+    AiTask.MEDIA_DESCRIBE: Pipeline.NOTEBOOKS,
+    AiTask.STUDIO_REPORT: Pipeline.STUDIO,
+    AiTask.STUDIO_MIND_MAP: Pipeline.STUDIO,
+    AiTask.STUDIO_FLASHCARDS: Pipeline.STUDIO,
+    AiTask.STUDIO_QUIZ: Pipeline.STUDIO,
+    AiTask.STUDIO_DATA_TABLE: Pipeline.STUDIO,
+    AiTask.STUDIO_SLIDES: Pipeline.STUDIO,
+    AiTask.STUDIO_SLIDES_REVISE: Pipeline.STUDIO,
+    AiTask.STUDIO_INFOGRAPHIC: Pipeline.STUDIO,
+    AiTask.STUDIO_EXERCISE: Pipeline.STUDIO,
+    AiTask.STUDIO_FAITHFULNESS: Pipeline.STUDIO,
+    AiTask.STUDIO_SOURCE_PROFILE: Pipeline.STUDIO,
+    AiTask.STUDIO_ASSESSMENT_PLAN: Pipeline.STUDIO,
+    AiTask.STUDIO_ITEM_VERIFY: Pipeline.STUDIO,
+    AiTask.EXERCISE_FEEDBACK: Pipeline.STUDIO,
+    AiTask.LMS_AUTHORING: Pipeline.LMS,
+    AiTask.EMBEDDING: Pipeline.EMBEDDINGS,
+    AiTask.WEB_SEARCH: Pipeline.WEB_SEARCH,
+    AiTask.VOICE_TRANSCRIBE: Pipeline.VOICE,
+    AiTask.ADMIT_VOICE_TRANSCRIBE: Pipeline.VOICE,
+    AiTask.ADMIT_QUESTION_SPEECH: Pipeline.VOICE,
+    AiTask.CHAT_SUMMARY: Pipeline.UTILITY,
+    AiTask.CONTEXT_COMPACT: Pipeline.UTILITY,
+    AiTask.SUBJECT_TRANSLATE: Pipeline.UTILITY,
+    AiTask.RETRIEVAL_PLAN: Pipeline.UTILITY,
+    AiTask.QUERY_DECOMPOSE: Pipeline.UTILITY,
+    AiTask.WEB_MATERIAL_TRIAGE: Pipeline.UTILITY,
+    AiTask.OPENUI_REPAIR: Pipeline.UTILITY,
+    AiTask.TEACHER_QUESTIONS: Pipeline.TEACHER,
+    AiTask.TEACHER_HANDOUT: Pipeline.TEACHER,
+    AiTask.TEACHER_WORK_CHECK: Pipeline.TEACHER,
+    AiTask.TEACHER_AI_CHECK: Pipeline.TEACHER,
+    AiTask.TEACHER_LESSON_PLAN: Pipeline.TEACHER,
+}
+PIPELINE_OF.update(
+    {
+        task: Pipeline.ADMISSION
+        for task in AiTask
+        if task.value.startswith("admit_") and task not in PIPELINE_OF
+    }
+)
+
+
+def pipeline_of(task: AiTask) -> Pipeline:
+    """Return the routing pipeline of a task."""
+    return PIPELINE_OF[task]
