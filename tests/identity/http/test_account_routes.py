@@ -49,21 +49,12 @@ async def test_get_me_returns_the_user_me_shape(api: Api) -> None:
         "photo_url",
         "photo_source",
         "preferences",
-        "telegram",
     }
     assert body["roles"] == ["student"] and body["status"] == "active"
     assert body["mailbox"] == f"{user.login}@mail.ihsu.uz"
     assert body["preferences"]["locale"] == "uz"
     assert body["preferences"]["marks_values"] == [2, 3, 4, 5]
-    assert body["telegram"] == [
-        {
-            "telegram_user_id": 555,
-            "username": "ali",
-            "otp_delivery": True,
-            "blocked": False,
-            "linked_at": api.world.clock.now().isoformat().replace("+00:00", "Z"),
-        }
-    ]
+    assert "telegram" not in body  # linked accounts only via GET /me/telegram
 
 
 async def test_theme_defaults_to_light_until_the_user_chooses(api: Api) -> None:

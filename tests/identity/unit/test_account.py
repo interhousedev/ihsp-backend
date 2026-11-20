@@ -32,18 +32,16 @@ def actor_of(user: User, session: LoginSession | None = None) -> Actor:
 # - - - Account and preferences - - -
 
 
-async def test_me_shows_the_account_with_telegram_and_mailbox(
+async def test_me_shows_the_account_and_mailbox(
     auth_world: World,
 ) -> None:
-    """WEB-16: profile, mailbox for students, Telegram accounts."""
+    """WEB-16: profile and mailbox for students."""
     user = await auth_world.add_user()
-    auth_world.add_link(user, 555, username="ali")
 
     view = await auth_world.auth.get_me.execute(actor_of(user))
 
     assert view.user.id == user.id
     assert view.mailbox == f"{user.login}@mail.ihsu.uz"
-    assert [link.telegram_user_id for link in view.telegram] == [555]
 
 
 async def test_teachers_have_no_mailbox(auth_world: World) -> None:

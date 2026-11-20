@@ -4,7 +4,6 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from app.interfaces.http.v1.id.schemas import TelegramAccountResponse
 from app.modules.identity.application.get_me import MeView
 from app.shared.actor import Role
 from app.shared.contracts.identity import UserPreferences
@@ -33,7 +32,6 @@ class UserMeResponse(BaseModel):
         description="Where the photo came from: an upload or the entrance face photo.",
     )
     preferences: UserPreferences
-    telegram: list[TelegramAccountResponse]
 
     @classmethod
     def of(cls, view: MeView) -> "UserMeResponse":
@@ -55,7 +53,6 @@ class UserMeResponse(BaseModel):
             photo_url=view.photo_url,
             photo_source=view.photo_source,
             preferences=UserPreferences.model_validate(user.preferences),
-            telegram=[TelegramAccountResponse.of(link) for link in view.telegram],
         )
 
 
