@@ -11,9 +11,9 @@ from app.interfaces.http.v1.admission.routes_chooser import (
     Lang,
 )
 from app.modules.admission.application.budget import BudgetView
-from app.modules.admission.domain.budget import AttendCost, FeeFact
+from app.modules.admission.domain.budget import AdmitRate, AttendCost, FeeFact
 from app.modules.admission.domain.catalog_display import resolve_logo_fit
-from app.modules.admission.domain.chooser import CatalogInstitution
+from app.modules.admission.domain.chooser import AidProfile, CatalogInstitution
 
 from fastapi import APIRouter, Query
 from pydantic import BaseModel
@@ -79,6 +79,68 @@ class CostToAttendOut(BaseModel):
         )
 
 
+class AidProfileOut(BaseModel):
+    """How the institution's aid meets need.
+
+    Every field is null when no source gives it. `avg_aid` is in USD and
+    `avg_aid_scope` says whether it is the average for international students or
+    for all students. The three shares split the package into grants, student
+    loans and work-study.
+    """
+
+    need_blind_intl: bool | None
+    meets_full_need: bool | None
+    avg_aid: Decimal | None
+    avg_aid_scope: Literal["intl", "overall"] | None
+    grant_pct: int | None
+    loan_pct: int | None
+    work_pct: int | None
+    source_url: str | None
+    year: int | None
+
+    @classmethod
+    def of(cls, a: AidProfile) -> "AidProfileOut":
+        """Map the profile."""
+        return cls(
+            need_blind_intl=a.need_blind_intl,
+            meets_full_need=a.meets_full_need,
+            avg_aid=a.avg_aid,
+            avg_aid_scope=(
+                "intl"
+                if a.avg_aid_scope == "intl"
+                else ("overall" if a.avg_aid_scope == "overall" else None)
+            ),
+            grant_pct=a.grant_pct,
+            loan_pct=a.loan_pct,
+            work_pct=a.work_pct,
+            source_url=a.source_url,
+            year=a.year,
+        )
+
+
+class AdmitRateOut(BaseModel):
+    """The admit rate in percent.
+
+    `intl` is the rate for international applicants, `overall` the all-applicant
+    rate shown when no international one is known.
+    """
+
+    percent: float
+    scope: Literal["intl", "overall"]
+    year: int | None
+    source_url: str | None
+
+    @classmethod
+    def of(cls, r: AdmitRate) -> "AdmitRateOut":
+        """Map the rate."""
+        return cls(
+            percent=round(r.percent, 1),
+            scope="intl" if r.scope == "intl" else "overall",
+            year=r.year,
+            source_url=r.source_url,
+        )
+
+
 class BudgetRowOut(BaseModel):
     """One list entry of the budget."""
 
@@ -91,6 +153,8 @@ class BudgetRowOut(BaseModel):
     aid_forms_known: bool
     aid_deadline: str | None
     cost_to_attend: CostToAttendOut | None
+    aid_profile: AidProfileOut | None
+    admit_rate: AdmitRateOut | None
 
 
 class CurrencyTotalOut(BaseModel):
@@ -135,6 +199,16 @@ class BudgetOut(BaseModel):
                     cost_to_attend=(
                         CostToAttendOut.of(r.cost_to_attend)
                         if r.cost_to_attend is not None
+                        else None
+                    ),
+                    aid_profile=(
+                        AidProfileOut.of(r.aid_profile)
+                        if r.aid_profile is not None
+                        else None
+                    ),
+                    admit_rate=(
+                        AdmitRateOut.of(r.admit_rate)
+                        if r.admit_rate is not None
                         else None
                     ),
                 )

@@ -9,6 +9,8 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
+from app.modules.admission.domain.chooser import AidProfile
+
 FEE_STATUSES = ("unpaid", "paid", "waiver_requested", "waiver_approved")
 AID_FORMS = ("css_profile", "fafsa", "idoc", "institutional")
 
@@ -34,6 +36,39 @@ class AttendCost:
 
 
 @dataclass(frozen=True, slots=True)
+class AdmitRate:
+    """The admit rate in percent, for international applicants when published.
+
+    `intl` is the international rate, `overall` the all-applicant rate used when
+    no international one is known.
+    """
+
+    percent: float
+    scope: str
+    year: int | None = None
+    source_url: str | None = None
+
+
+def admit_rate_of(intl: Any, overall: Any) -> AdmitRate | None:
+    """Pick the international rate, else the overall one.
+
+    Each argument is a fact view (`.value`, `.year`, `.source_url`) or None; a
+    range gives its midpoint.
+    """
+    if intl is not None and isinstance(intl.value, int | float):
+        return AdmitRate(float(intl.value), "intl", intl.year, intl.source_url)
+    value = overall.value if overall is not None else None
+    if isinstance(value, dict):
+        lo, hi = value.get("min"), value.get("max")
+        parts = [v for v in (lo, hi) if isinstance(v, int | float)]
+        if parts:
+            return AdmitRate(
+                sum(parts) / len(parts), "overall", overall.year, overall.source_url
+            )
+    return None
+
+
+@dataclass(frozen=True, slots=True)
 class BudgetInput:
     """Everything the budget needs about one non-withdrawn list entry."""
 
@@ -46,6 +81,8 @@ class BudgetInput:
     aid_forms_known: bool
     aid_deadline: str | None
     cost_to_attend: AttendCost | None
+    aid_profile: AidProfile | None = None
+    admit_rate: AdmitRate | None = None
 
 
 @dataclass(frozen=True, slots=True)

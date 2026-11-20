@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 router = APIRouter(prefix="/v1/admission", tags=["admission"])
 
 AnswerT = bool | int | str | list[str]
-QuizT = Literal["career", "algorithm"]
+QuizT = Literal["career", "algorithm", "budget"]
 
 
 class InterestsIO(BaseModel):

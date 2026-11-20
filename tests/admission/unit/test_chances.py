@@ -49,7 +49,7 @@ def _by_key(c: Any) -> dict[str, Any]:
 
 
 def test_rate_is_international_first() -> None:
-    i = _inst((40, 60), acceptance_rate_international={"min": 10, "max": 20})
+    i = _inst((40, 60), intl_acceptance_rate={"min": 10, "max": 20})
     assert admission_rate(i) == pytest.approx(0.15)
 
 
@@ -253,3 +253,12 @@ def test_https_url_rejects_unsafe_characters() -> None:
     for bad in ("https://x.uz/a b", 'https://x.uz/"', "https://x.uz/(a)", "https://x/'",
                 "https://x.uz/\\a", "http://x.uz", "https://x.uz/a\nb"):  # fmt: skip
         assert not is_https_url(bad)
+
+
+def test_rate_reads_scalar_intl_fact_in_both_rate_readers() -> None:
+    from app.modules.admission.domain.estimates import _rate
+
+    i = _inst((40, 60), intl_acceptance_rate=2.5)
+    assert admission_rate(i) == pytest.approx(0.025)
+    rate, basis = _rate(i)
+    assert rate == 2.5 and basis["cohort"] == "international"

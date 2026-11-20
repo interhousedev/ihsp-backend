@@ -130,8 +130,10 @@ def computed_label(
 
 
 def _rate_of(inst: CatalogInstitution) -> float:
-    for key in ("acceptance_rate_international", "acceptance_rate"):
+    for key in ("intl_acceptance_rate", "acceptance_rate"):
         f = inst.fact(key)
+        if f is not None and isinstance(f.value, int | float):
+            return float(f.value)
         if f is not None and isinstance(f.value, dict):
             vals = [
                 float(v)

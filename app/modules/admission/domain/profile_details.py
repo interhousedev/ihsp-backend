@@ -38,7 +38,9 @@ SERVICE_INTERESTS: Final = (
     "child_elder_care",
     "civic_political",
 )
-QUIZZES: Final = ("career", "algorithm")
+QUIZZES: Final = ("career", "algorithm", "budget")
+"""`budget` has no questions: its `completed` flag marks the budget step of the
+universities flow as reviewed."""
 MAX_QUESTIONS: Final = 80
 MAX_KEY: Final = 60
 MAX_TEXT: Final = 300

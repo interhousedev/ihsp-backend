@@ -11,6 +11,7 @@ from app.modules.admission.domain.budget import (
     BudgetInput,
     BudgetTotals,
     FeeFact,
+    admit_rate_of,
     budget_totals,
     money_fact,
 )
@@ -59,6 +60,10 @@ def to_input(item: ListItem) -> BudgetInput:
         aid_forms_known=forms is not None,
         aid_deadline=str(deadline.value) if deadline is not None else None,
         cost_to_attend=_attend(item),
+        aid_profile=inst.aid_profile,
+        admit_rate=admit_rate_of(
+            inst.fact("intl_acceptance_rate"), inst.fact("acceptance_rate")
+        ),
     )
 
 

@@ -153,6 +153,7 @@ class _Loader:
                 verified=verified,
                 unit="percent",
             )
+        await put("intl_acceptance_rate", d.get("intl_acceptance_rate"), unit="percent")
         await put("test_policy", d.get("test_policy"))
         for key in ("intl_tuition_usd", "intl_coa_usd"):
             f = d.get(key)
@@ -160,6 +161,7 @@ class _Loader:
         aid = d.get("aid") or {}
         await put("aid_basis", aid.get("basis"))
         await put("merit_for_internationals", aid.get("merit_for_internationals"))
+        await put("meets_full_need", aid.get("meets_full_need"))
         await put("crime_index", (d.get("safety") or {}).get("crime_index"))
         deadlines = [
             {
@@ -212,22 +214,36 @@ class _Loader:
                     source_id=await self.source(coa.get("source_url")),
                 )
             )
-        basis = (d.get("aid") or {}).get("basis") or {}
-        if basis.get("value") in _AID:
-            kind, full = _AID[basis["value"]]
-            merit = (d.get("aid") or {}).get("merit_for_internationals") or {}
-            cycle = basis.get("year") or d["year"]
+        aid = d.get("aid") or {}
+        basis = aid.get("basis") or {}
+        merit = aid.get("merit_for_internationals") or {}
+        explicit = (aid.get("meets_full_need") or {}).get("value")
+        avg = aid.get("avg_aid") or {}
+        if basis.get("value") in _AID or avg.get("value") or explicit is not None:
+            kind, full = _AID.get(str(basis.get("value")), ("unknown", None))
+            cycle = basis.get("year") or avg.get("year") or d["year"]
             await self.s.merge(
                 AidPolicyRow(
                     id=seed_id("aid", inst, cycle),
                     institution_id=inst,
                     cycle=cycle,
                     intl_need_based=kind,
-                    meets_full_need=full,
+                    meets_full_need=full if explicit is None else bool(explicit),
                     merit_available=bool(
                         merit.get("value") or basis["value"] == "merit_only"
                     ),
-                    source_id=await self.source(basis.get("source_url")),
+                    avg_aid=(
+                        Decimal(str(avg["value"]))
+                        if avg.get("value") is not None
+                        else None
+                    ),
+                    avg_aid_scope=avg.get("scope") if avg.get("value") else None,
+                    grant_pct=avg.get("grant_pct"),
+                    loan_pct=avg.get("loan_pct"),
+                    work_pct=avg.get("work_pct"),
+                    source_id=await self.source(
+                        avg.get("source_url") or basis.get("source_url")
+                    ),
                 )
             )
 

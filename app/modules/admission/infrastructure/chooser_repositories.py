@@ -6,6 +6,7 @@ from uuid import UUID
 
 from app.modules.admission.domain.chooser import (
     AffordabilityCheck,
+    AidProfile,
     CatalogInstitution,
     CatalogScholarship,
     FactView,
@@ -138,6 +139,19 @@ class SqlCatalogRepository:
         )
         for a in await self._s.scalars(aq):
             aid[a.institution_id] = a
+        aid_urls: dict[UUID, str] = {
+            sid: url
+            for sid, url in (
+                await self._s.execute(
+                    select(SourceRow.id, SourceRow.url).where(
+                        SourceRow.id.in_(
+                            [a.source_id for a in aid.values() if a.source_id]
+                        )
+                    )
+                )
+            ).tuples()
+            if url
+        }
         sq = (
             select(ScholarshipRow.institution_id, func.count())
             .where(ScholarshipRow.institution_id.in_(ids))
@@ -160,6 +174,7 @@ class SqlCatalogRepository:
                     coa_currency=cost.currency if cost else None,
                     aid_basis=policy.intl_need_based if policy else None,
                     merit_available=policy.merit_available if policy else None,
+                    aid_profile=_aid_profile(policy, aid_urls) if policy else None,
                     scholarship_count=int(counts.get(r.id, 0)),
                     logo_url=r.logo_url,
                     cover_url=r.cover_url,
@@ -172,6 +187,25 @@ class SqlCatalogRepository:
                 )
             )
         return out
+
+
+def _aid_profile(row: AidPolicyRow, urls: dict[UUID, str]) -> AidProfile:
+    """The aid columns of a policy row with the URL of its source."""
+    return AidProfile(
+        need_blind_intl=(
+            None
+            if row.intl_need_based == "unknown"
+            else row.intl_need_based == "need_blind"
+        ),
+        meets_full_need=row.meets_full_need,
+        avg_aid=row.avg_aid,
+        avg_aid_scope=row.avg_aid_scope,
+        grant_pct=row.grant_pct,
+        loan_pct=row.loan_pct,
+        work_pct=row.work_pct,
+        source_url=urls.get(row.source_id) if row.source_id else None,
+        year=row.cycle,
+    )
 
 
 def _entry(r: ListEntryRow) -> ListEntry:

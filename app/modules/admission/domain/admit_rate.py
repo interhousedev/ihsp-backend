@@ -8,7 +8,7 @@ from app.modules.admission.domain.chooser import CatalogInstitution
 SAFETY_RATE: Final = 0.6
 TARGET_RATE: Final = 0.2
 """Rates (0..1) from which an institution is a safety and a target."""
-RATE_FACTS: Final = ("acceptance_rate_international", "acceptance_rate")
+RATE_FACTS: Final = ("intl_acceptance_rate", "acceptance_rate")
 
 
 def _number(value: object) -> float | None:
@@ -31,7 +31,11 @@ def admission_rate(inst: CatalogInstitution) -> float | None:
     """
     for key in RATE_FACTS:
         f = inst.fact(key)
-        if f is None or not isinstance(f.value, dict):
+        if f is None:
+            continue
+        if not isinstance(f.value, dict):
+            if (n := _number(f.value)) is not None:
+                return max(0.0, min(1.0, n / 100))
             continue
         edges = [
             n

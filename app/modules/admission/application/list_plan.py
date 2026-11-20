@@ -25,7 +25,9 @@ from app.modules.admission.domain.errors import (
     ConsentRequiredError,
 )
 from app.modules.admission.domain.estimates import estimate
+from app.modules.admission.domain.list_brief import BriefCandidate, brief_candidates
 from app.modules.admission.domain.permissions import Permission
+from app.modules.admission.infrastructure.ai.prompts import list_brief as brief_prompt
 from app.modules.admission.infrastructure.ai.prompts import list_suggest as prompt
 from app.modules.admission.ports.ai import PromptSource, QuotaOf, StructuredAi
 from app.modules.admission.ports.consent import AI, PurposeConsents
@@ -67,6 +69,26 @@ class ListSuggestion:
     institution: CatalogInstitution
     label: str
     reason: str
+
+
+@dataclass(frozen=True, slots=True)
+class BriefSuggestion:
+    """A candidate the brief recommends: its computed role and the model's reason."""
+
+    candidate: BriefCandidate
+    reason: str
+
+
+@dataclass(frozen=True, slots=True)
+class ListBrief:
+    """The written brief: the model's text, the computed balance and candidates."""
+
+    headline: str
+    diagnosis: str
+    next_steps: list[str]
+    suggestions: list[BriefSuggestion]
+    balance: Balance
+    entries: int
 
 
 class ListPlanService:
@@ -200,6 +222,121 @@ class ListPlanService:
             max_tokens=_TOKENS,
         )
         return self._clean(data, pool)
+
+    async def brief(self, ctx: AdmissionContext, locale: str) -> ListBrief:
+        """Write the brief on the owner's list balance (AI consent and limit apply).
+
+        The candidates (institutions off the list that fit as safety or target)
+        are computed from catalog data and the student's profile; the model picks
+        among them and writes the diagnosis, reasons and next steps.
+        """
+        res = await self._access.resolve(ctx, ctx.user_id)
+        if not res.owner:
+            raise AdmissionForbiddenError(params={"permission": "list:edit"})
+        granted = (await self._consents.granted([ctx.user_id])).get(
+            ctx.user_id, frozenset()
+        )
+        if AI not in granted:
+            raise ConsentRequiredError(params={"purpose": AI})
+        current = await self.insights(ctx, ctx.user_id)
+        signals = await self._signals(ctx, ctx.user_id)
+        async with self._uow() as uow:
+            catalog = await uow.catalog.institutions()
+        names = {i.id: i.name for i in catalog}
+        pool = brief_candidates(
+            catalog,
+            {c.institution_id for c in current.entries},
+            current.balance,
+            signals,
+            self._clock.now().year,
+        )
+        limit = await self._limit(ctx.user_id)
+        if limit is not None:
+            await self._limiter.hit(
+                f"admission:list_brief:{ctx.user_id}",
+                limit=limit,
+                window_seconds=_WEEK,
+            )
+        b = current.balance
+        lines = [
+            f"Language: {locale}",
+            f"Balance: {b.status}; reach={b.reach} target={b.target} "
+            f"safety={b.safety} unlabelled={b.unlabelled}",
+        ]
+        lines += [
+            f"[on_list] {names.get(c.institution_id, '')} "
+            f"label={c.classification.effective or 'unknown'}"
+            for c in current.entries
+        ]
+        lines += await student_block(
+            self._search,
+            ctx.user_id,
+            ["intended major", "budget", "grades"],
+            ("profile", "course", "grade", "test_score", "list"),
+        )
+        for n, c in enumerate(pool, start=1):
+            rate = (
+                f"admit_rate={c.admit_rate.percent:.1f}% ({c.admit_rate.scope})"
+                if c.admit_rate
+                else "admit_rate=unknown (not published: a cheaper option to check, "
+                "do not state a chance)"
+            )
+            lines.append(
+                f"[candidate:{n}] {c.institution.name} "
+                f"({c.institution.country}) role={c.role} {rate}"
+            )
+        data, _ = await self._ai.json(
+            task=AiTask.ADMIT_LIST_BRIEF,
+            system=with_brand(
+                await self._prompts.text(AiTask.ADMIT_LIST_BRIEF, "system", locale)
+            ),
+            user=delimit(lines),
+            schema_name=brief_prompt.SCHEMA_NAME,
+            schema=brief_prompt.SCHEMA,
+            max_tokens=_TOKENS,
+        )
+        return self._clean_brief(data, pool, b, len(current.entries))
+
+    @staticmethod
+    def _clean_brief(
+        data: dict[str, Any],
+        pool: list[BriefCandidate],
+        balance_: Balance,
+        entries: int,
+    ) -> ListBrief:
+        """Keep text within its limits and only distinct, listed candidates."""
+
+        def text(key: str, limit: int) -> str:
+            return nfc(plain(str(data.get(key, "")))).strip()[:limit]
+
+        seen: set[int] = set()
+        picks: list[BriefSuggestion] = []
+        for raw in data.get("suggestions", []):
+            if len(picks) >= brief_prompt.MAX_SUGGESTED:
+                break
+            try:
+                n = int(raw.get("candidate", 0))
+            except (TypeError, ValueError, AttributeError):
+                continue
+            if not 1 <= n <= len(pool) or n in seen:
+                continue
+            seen.add(n)
+            reason = nfc(plain(str(raw.get("reason", "")))).strip()
+            picks.append(
+                BriefSuggestion(pool[n - 1], reason[: brief_prompt.REASON_MAX])
+            )
+        steps = [
+            nfc(plain(str(s))).strip()[: brief_prompt.STEP_MAX]
+            for s in data.get("next_steps", [])
+        ]
+        return ListBrief(
+            text("headline", brief_prompt.HEADLINE_MAX),
+            text("diagnosis", brief_prompt.DIAGNOSIS_MAX),
+            [s for s in steps if s][: brief_prompt.MAX_STEPS],
+            picks,
+            balance_,
+            entries,
+        )
 
     @staticmethod
     def _clean(

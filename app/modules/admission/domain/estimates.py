@@ -34,13 +34,20 @@ class Estimate:
 
 def _rate(inst: CatalogInstitution) -> tuple[float | None, dict[str, Any]]:
     for key, cohort in (
-        ("acceptance_rate_international", "international"),
+        ("intl_acceptance_rate", "international"),
         ("acceptance_rate", "all"),
     ):
         f = inst.fact(key)
-        if f is None or not isinstance(f.value, dict):
+        if f is None:
             continue
-        lo, hi = f.value.get("min"), f.value.get("max")
+        lo: Any
+        hi: Any
+        if isinstance(f.value, int | float) and not isinstance(f.value, bool):
+            lo = hi = f.value
+        elif isinstance(f.value, dict):
+            lo, hi = f.value.get("min"), f.value.get("max")
+        else:
+            continue
         vals = [float(v) for v in (lo, hi) if isinstance(v, int | float)]
         if not vals:
             continue
