@@ -101,7 +101,10 @@ class OpportunityPlanEntryRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
     __tablename__ = "opportunity_plan_entries"
     __table_args__ = (
         UniqueConstraint("student_id", "opportunity_id"),
-        CheckConstraint("planned_grade BETWEEN 9 AND 12", name="planned_grade"),
+        CheckConstraint("planned_grade BETWEEN 1 AND 12", name="planned_grade"),
+        CheckConstraint(
+            "planned_term IN ('fall', 'spring', 'summer')", name="planned_term"
+        ),
         S,
     )
 
@@ -110,6 +113,7 @@ class OpportunityPlanEntryRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
         ForeignKey("admission.opportunities.id", ondelete="CASCADE")
     )
     planned_grade: Mapped[int | None] = mapped_column(SmallInteger)
+    planned_term: Mapped[str | None] = mapped_column(String(10))
     note: Mapped[str | None] = mapped_column(String(500))
 
 

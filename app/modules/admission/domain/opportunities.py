@@ -43,6 +43,8 @@ PARENT_LEVEL: Final[dict[str, str | None]] = {
     "subject": "subfield",
 }
 GRADES: Final = (9, 10, 11, 12)
+TERMS: Final = ("fall", "spring", "summer")
+MAX_HOURS_PER_WEEK: Final = 80.0
 TITLE_MAX: Final = 200
 SUMMARY_MAX: Final = 2000
 TEXT_MAX: Final = 300
@@ -120,6 +122,16 @@ class OpportunityDraft:
     college_credit: str | None = None
     credit_note: str | None = None
     study_field_ids: tuple[str, ...] = ()
+    hours_per_week: float | None = None
+    starts_on: dt.date | None = None
+
+    @property
+    def delivery(self) -> Literal["local", "external"]:
+        """`local` when the lyceum LMS runs it, `external` otherwise."""
+        local = self.lms_course_id is not None or any(
+            m.kind == "lms_course" for m in self.materials
+        )
+        return "local" if local else "external"
 
     def urls(self) -> list[str]:
         """Every link the draft carries."""
@@ -190,6 +202,10 @@ class OpportunityDraft:
             bad.append("duration_weeks")
         if self.ranking is not None and self.ranking < 1:
             bad.append("ranking")
+        if self.hours_per_week is not None and not (
+            0 < self.hours_per_week <= MAX_HOURS_PER_WEEK
+        ):
+            bad.append("hours_per_week")
         return bad
 
     def _field_problems(self) -> list[str]:
@@ -277,6 +293,8 @@ class OpportunityDraft:
             "college_credit": self.college_credit,
             "credit_note": self.credit_note,
             "study_field_ids": list(self.study_field_ids),
+            "hours_per_week": self.hours_per_week,
+            "starts_on": self.starts_on.isoformat() if self.starts_on else None,
             "materials": [
                 {
                     "kind": m.kind,
@@ -340,6 +358,10 @@ class OpportunityDraft:
             college_credit=p.get("college_credit"),
             credit_note=p.get("credit_note"),
             study_field_ids=tuple(p.get("study_field_ids", [])),
+            hours_per_week=p.get("hours_per_week"),
+            starts_on=(
+                dt.date.fromisoformat(p["starts_on"]) if p.get("starts_on") else None
+            ),
         )
 
 
@@ -415,6 +437,7 @@ class PlanEntry:
     planned_grade: int | None
     note: str | None
     created_at: dt.datetime
+    planned_term: str | None = None
 
 
 # - - - Recurrence - - -
@@ -544,6 +567,21 @@ def next_registration(draft: OpportunityDraft, today: dt.date) -> dt.date | None
     return min((d for d in draft.registration_deadlines if d >= today), default=None)
 
 
+def next_start(draft: OpportunityDraft, today: dt.date) -> dt.date | None:
+    """When it begins: `starts_on` if still ahead, else the next exam or event date."""
+    if draft.starts_on is not None and draft.starts_on >= today:
+        return draft.starts_on
+    horizon = today + dt.timedelta(days=366)
+    return next(
+        (
+            e.day
+            for e in upcoming_dates(draft, today, horizon)
+            if e.kind != "registration"
+        ),
+        None,
+    )
+
+
 def upcoming_dates(
     draft: OpportunityDraft, today: dt.date, horizon: dt.date
 ) -> list[DatedEvent]:
@@ -619,7 +657,7 @@ def analyse(
         if e.planned_grade is None:
             unplaced += 1
         else:
-            term = term_of(main.day) if main else "any"
+            term = e.planned_term or (term_of(main.day) if main else "any")
             key = f"{e.planned_grade}:{term}"
             load[key] = load.get(key, 0) + 1
         for d in dates:

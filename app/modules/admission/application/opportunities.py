@@ -19,12 +19,12 @@ from app.modules.admission.domain.errors import (
     ItemLimitError,
 )
 from app.modules.admission.domain.opportunities import (
-    GRADES,
     LOCALES,
     MAX_PLAN_ITEMS,
     NAME_MAX,
     PARENT_LEVEL,
     REASON_MAX,
+    TERMS,
     DatedEvent,
     Opportunity,
     OpportunityDraft,
@@ -36,6 +36,7 @@ from app.modules.admission.domain.opportunities import (
     TaxonomyNode,
     analyse,
     next_registration,
+    next_start,
     review_transition,
     upcoming_dates,
 )
@@ -108,6 +109,10 @@ class CatalogFilter:
     scope: str | None = None
     org_id: UUID | None = None
     college_credit: str | None = None
+    delivery: str | None = None
+    max_hours: float | None = None
+    starts_within: int | None = None
+    starts_month: int | None = None
     sort: str | None = None
     page: int = 1
     size: int = 200
@@ -247,6 +252,26 @@ def _matches_program(d: OpportunityDraft, f: CatalogFilter) -> bool:
     return f.max_tuition is None or (
         d.tuition_usd is not None and d.tuition_usd <= f.max_tuition
     )
+
+
+def _matches_load(d: OpportunityDraft, f: CatalogFilter, today: dt.date) -> bool:
+    """The delivery, weekly-hours and start-date filters; unknown values never match."""
+    if f.delivery is not None and d.delivery != f.delivery:
+        return False
+    if f.max_hours is not None and (
+        d.hours_per_week is None or d.hours_per_week > f.max_hours
+    ):
+        return False
+    if f.starts_within is None and f.starts_month is None:
+        return True
+    start = next_start(d, today)
+    if start is None:
+        return False
+    if f.starts_within is not None and start > today + dt.timedelta(
+        days=f.starts_within
+    ):
+        return False
+    return f.starts_month is None or start.month == f.starts_month
 
 
 async def _any_org(org_id: UUID) -> bool:
@@ -575,6 +600,7 @@ class OpportunityService:
             nodes = await uow.opportunities.taxonomy()
             rows = await uow.opportunities.list_published()
         sub, fld = _parents(nodes)
+        today = local_today(self._clock)
         q = (f.query or "").strip().casefold()
 
         def keep(o: Opportunity) -> bool:
@@ -590,6 +616,7 @@ class OpportunityService:
                 and (f.field_id is None or f.field_id in {fld.get(s) for s in subs})
                 and _matches_program(d, f)
                 and _matches_award(d, f)
+                and _matches_load(d, f, today)
                 and (
                     not q
                     or q in d.title.casefold()
@@ -632,12 +659,17 @@ class OpportunityService:
         opportunity_id: UUID,
         *,
         planned_grade: int | None,
+        planned_term: str | None = None,
         note: str | None,
     ) -> PlanEntry:
         """Save (or move) an entry in the caller's plan."""
         await self._owner(ctx)
-        if planned_grade is not None and planned_grade not in GRADES:
+        if planned_grade is not None and planned_grade not in (
+            await self._access.school_grades()
+        ):
             raise ValidationFailedError(params={"field": "planned_grade"})
+        if planned_term is not None and planned_term not in TERMS:
+            raise ValidationFailedError(params={"field": "planned_term"})
         if note is not None and len(note) > REASON_MAX:
             raise ValidationFailedError(params={"field": "note"})
         async with self._uow() as uow:
@@ -657,6 +689,7 @@ class OpportunityService:
                     student_id=ctx.user_id,
                     opportunity_id=opportunity_id,
                     planned_grade=planned_grade,
+                    planned_term=planned_term,
                     note=note,
                     created_at=known.created_at if known else self._clock.now(),
                 )

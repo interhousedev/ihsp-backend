@@ -499,14 +499,14 @@ async def test_planner_fake_output_places_every_saved_entry() -> None:
         ids.append(r.applied_id)
     st = await e.student()
     await e.svc.save_to_plan(st, ids[0], planned_grade=None, note=None)
-    await e.svc.save_to_plan(st, ids[1], planned_grade=12, note=None)
+    await e.svc.save_to_plan(st, ids[1], planned_grade=11, note=None)
     view = await e.svc.plan_of(st, STUDENT)
     bogus = {"steps": [{"opportunity_id": str(new_id()), "grade": 9, "term": "x"}]}
     plan = place_rest(clean_plan(bogus, {str(i) for i in ids}, 10, NOW), view, 10)
     assert isinstance(plan, AiPlan)
     by = {s.opportunity_id: s for s in plan.steps}
     assert set(by) == set(ids)
-    assert by[ids[0]].grade == 10 and by[ids[1]].grade == 12
+    assert by[ids[0]].grade == 10 and by[ids[1]].grade == 11
     assert all(s.term in ("fall", "spring", "summer") for s in plan.steps)
 
 
