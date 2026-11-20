@@ -5,13 +5,15 @@
 #
 # Stages (default: lint migrations test openapi security):
 #   lint       black, isort, flake8, mypy, ty (scripts/style_check.sh)
-#   migrations migration gate (scripts/check_migrations.sh); skipped when postgres is unreachable
+#   migrations migration gate (scripts/check_migrations.sh); fails when postgres is unreachable
+#              unless --allow-skip is given
 #   unit       the unit tests only (tests/*/unit), no services
 #   test       the whole pytest suite against the dev compose services (starts them, stops them after)
 #   openapi    openapi/openapi.json matches the exported document
 #   security   scripts/security_scan.sh (gitleaks, trivy, semgrep, osv-scanner, pip-audit, bandit, CodeQL)
 #
 #   --fast     lint unit openapi: what to run before every push
+#   --allow-skip  let the migrations stage pass without a reachable dev postgres (not for CI)
 #
 # Every stage runs even when an earlier one fails; the summary lists the failures and the exit code is
 # non-zero if there were any. Logs: reports/ci-local/<stage>.log (git-ignored). Stages run one at a time
@@ -27,10 +29,12 @@ COMPOSE=(docker compose -f materials/docker-compose.dev.yaml)
 usage() { sed -n '2,/^set -uo/{/^set -uo/d;s/^# \{0,1\}//;p;}' "${BASH_SOURCE[0]}"; }
 
 STAGES=()
+ALLOW_SKIP=0
 for a in "$@"; do
   case "$a" in
     -h|--help) usage; exit 0 ;;
     --fast) STAGES+=(lint unit openapi) ;;
+    --allow-skip) ALLOW_SKIP=1 ;;
     lint|migrations|unit|test|openapi|security) STAGES+=("$a") ;;
     *) echo "unknown stage or option '$a' (see --help)" >&2; exit 2 ;;
   esac
@@ -62,8 +66,13 @@ stage_lint() { uv sync --frozen && scripts/style_check.sh; }
 stage_migrations() {
   uv sync --frozen || return 1
   if ! (exec 3<>/dev/tcp/127.0.0.1/5433) 2>/dev/null; then
-    echo "SKIPPED: postgres is unreachable on 127.0.0.1:5433 (docker compose -f materials/docker-compose.dev.yaml up -d --wait postgres)"
-    return 0
+    local msg="postgres is unreachable on 127.0.0.1:5433 (docker compose -f materials/docker-compose.dev.yaml up -d --wait postgres)"
+    if [[ $ALLOW_SKIP -eq 1 ]]; then
+      echo "SKIPPED (--allow-skip): $msg"
+      return 0
+    fi
+    echo "FAILED: $msg; pass --allow-skip to skip this stage"
+    return 1
   fi
   scripts/check_migrations.sh
 }

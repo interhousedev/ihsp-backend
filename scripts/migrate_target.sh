@@ -18,8 +18,10 @@
 #          marker, SHA256SUMS, every dump readable) before anything is stopped. Then it
 #          restores the staged copy here: the config, PostgreSQL (ihsp, hydra, bugsink, with
 #          their owners and the copied passwords), Redis, the object store (replaced, not
-#          merged), the Vault snapshot and the backups. Afterwards Vault needs the OLD
-#          server's unseal keys. A restored set is never restored twice.
+#          merged), the Vault snapshot and the backups. Then it compares the row counts of every store
+#          and the alembic revision with the old server's counts (exit 4 and no RESTORED
+#          marker on a mismatch). Afterwards Vault needs the OLD server's unseal keys. A
+#          restored set is never restored twice.
 # abort    removes the key. Before a restore started it also removes the received data;
 #          after, it stops this server's stack and keeps every recovery artifact.
 #
@@ -152,6 +154,7 @@ finish() {
     restore_redis "$dir"
     restore_vault "$dir" "$keys"
     if [ -f "$dir/backups.tar" ]; then tar -C "$ROOT" -xf "$dir/backups.tar"; fi
+    verify_restore "$dir"
     touch "$dir/RESTORED"
     local start="BUGSINK_DB_HOST=postgres"
     [ "$(get_env BUGSINK_DB_MODE)" = dedicated ] &&
@@ -178,6 +181,7 @@ check_dumps() {
     for f in config.tar ihsp.dump hydra.dump redis.rdb; do
         [ -s "$dir/$f" ] || die "$dir/$f is missing or empty"
     done
+    [ -f "$dir/counts.tsv" ] || die "$dir/counts.tsv is missing: the source did not count its data"
     dc up -d --wait postgres
     for f in ihsp.dump hydra.dump bugsink.dump; do
         [ -f "$dir/$f" ] || continue
@@ -300,6 +304,50 @@ restore_vault() {
     dc exec -T vault rm -f "$snap"
     # Those keys and that token are void now: `prod_init.sh unseal` must ask for the old ones.
     mv "$keys" "$ROOT/secrets/vault-init.before-migration.txt"
+}
+
+# verify_restore DIR: this server's row counts and alembic revision against what the old
+# server counted (counts.tsv). Every store must match and alembic current must be the heads.
+# A mismatch prints the table and exits 4; the restore is then not marked RESTORED.
+verify_restore() {
+    local dir=$1 heads current
+    say "verifying the restore against the old server"
+    IHSP_ROOT=$ROOT bash "$SCRIPTS/migration_counts.sh" > "$dir/target-counts.tsv"
+    heads=$(dc run --rm --no-deps -T --entrypoint sh migrate -c 'python -m alembic heads' \
+        | awk '$2 ~ /^\(/ { print $1 }' | sort | paste -sd, -)
+    current=$(dc run --rm --no-deps -T --entrypoint sh migrate -c 'python -m alembic current' \
+        | awk '$2 ~ /^\(/ { print $1 }' | sort | paste -sd, -)
+    python3 - "$dir/counts.tsv" "$dir/target-counts.tsv" "$heads" "$current" << 'PY'
+import sys
+
+source_path, target_path, heads, current = sys.argv[1:5]
+
+
+def load(path):
+    rows = {}
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            parts = line.rstrip("\n").split("\t")
+            if len(parts) == 3:
+                rows[(parts[0], parts[1])] = parts[2]
+    return rows
+
+
+source, target = load(source_path), load(target_path)
+table = [("store", "item", "source", "target", "result")]
+for key in sorted(set(source) | set(target)):
+    s, t = source.get(key, "-"), target.get(key, "-")
+    table.append((*key, s, t, "ok" if s == t else "MISMATCH"))
+table.append(("alembic", "heads", heads or "-", current or "-",
+              "ok" if heads == current else "MISMATCH"))
+widths = [max(len(row[i]) for row in table) for i in range(5)]
+for row in table:
+    print("  ".join(c.ljust(w) for c, w in zip(row, widths)), file=sys.stderr)
+if any(row[4] == "MISMATCH" for row in table[1:]):
+    print("error: this server does not match the old one; nothing is marked restored",
+          file=sys.stderr)
+    sys.exit(4)
+PY
 }
 
 abort() {

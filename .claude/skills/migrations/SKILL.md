@@ -1,39 +1,36 @@
 ---
 name: migrations
-description: Use for DB table, column, constraint, index, enum, data or module schema changes and the migration gate; not for ad hoc queries
+description: Use for schema changes (tables, columns, constraints, indexes, enums), data backfills, seeds and imports, and the server-to-server copy checks. Not for ad hoc queries.
 ---
 
 # Migrations
 
-Details are in [migrations/README.md](../../../migrations/README.md).
+## When to run this
 
-## Rules
+- Run it when the user asks for it, and whenever a change lands that touches data: a table, column, constraint, index, enum value, seed, import or backfill.
+- Before a server-to-server copy (`scripts/migrate_runner.sh` on the old server, `scripts/migrate_target.sh` on the new one), check the data on both sides.
 
-- Every module owns one PostgreSQL schema and one Alembic **branch** in `migrations/versions/<module>/`. Never read or write another module's tables.
-- Always `alembic upgrade heads` (plural). There is no single head.
-- **Never edit a revision that has been applied** anywhere (dev databases, CI, production). Write a new revision. Migrations are forward only in production.
-- Data migrations are idempotent and batch large tables.
+## Per-change checks
 
-## New revision in an existing module
+1. Write the model change and the Alembic revision under `migrations/versions/<module>/`. Use the module's branch. Never edit an applied migration.
+2. Run `scripts/check_migrations.sh`. It needs the dev postgres (`docker compose -f materials/docker-compose.dev.yaml up -d --wait postgres`). It checks: a single head per branch, an empty upgrade that matches the models, and an upgrade on an existing database.
+3. The upgrade-on-existing-database rehearsal is mandatory. Downgrade is not required.
+4. Data backfills must be idempotent: running them twice changes nothing.
+5. `ci_local.sh` runs the migrations stage. It fails when postgres is unreachable. `--allow-skip` is for local work only, never for a release.
 
-```bash
-IHSP_ENV_FILE=materials/dev.env uv run alembic revision --autogenerate \
-  --head <module>@head -m "<what changes>"
-```
+## Server-to-server copy checks
 
-Review the generated file: schema names, server defaults, enum changes, index names. Autogenerate misses some changes (enum values, extension-backed types); write them by hand.
+- `migrate_runner.sh` (old server) stops the worker, scheduler, bot and mail, dumps Postgres, snapshots Redis, copies objects, config, Vault and backups, then counts every store (`scripts/migration_counts.sh` writes `counts.tsv`) and transfers.
+- `migrate_target.sh finish` (new server) checks the checksums and `counts.tsv`, restores, then runs `verify_restore`. It prints a table of every store (ihsp, hydra, bugsink, redis, s3, vault seal state, alembic `heads` and `current`) with source and target values.
+- Any mismatch exits 4 and leaves no `RESTORED` marker. Do not start the stack; fix the cause or run `abort`.
+- Counts are taken while the source is quiet. If the API was still writing, a mismatch can be live traffic, not corruption. Stop the stack first and count again.
+- Vault is compared by its seal state, not by row count. Unseal it with the old server's keys.
 
-## New module
+## Checklist
 
-1. Create `migrations/versions/<module>/` and the first revision with `--branch-label <module>` and `--version-path`.
-2. Add the folder to `version_locations` in `alembic.ini` (colon-separated list).
-3. Add the schema to `SCHEMAS` in `migrations/env.py`, or autogenerate ignores it.
-4. Import the module's ORM in the metadata the env loads.
-
-## Migration gate (mandatory)
-
-Any change touching the database (new table, column, constraint, index, enum value, check constraint, data migration) must pass `scripts/check_migrations.sh` before the work is reported done. It needs the dev compose postgres and does, on a throw-away database `ihsp_migcheck_<pid>`: `alembic heads` loads (no `op.*` call at module level; `op.f()` only inside `upgrade`/`downgrade`); `upgrade heads` from empty equals the ORM metadata (empty autogenerate diff); the **upgrade-on-existing-database rehearsal**: upgrade to every head minus the revisions new on this branch, then `upgrade heads` again. It is the `migrations` stage of `scripts/ci_local.sh`. A data migration also needs a test in `tests/models/test_migrations.py` with rows in place before the upgrade.
-
-## Checks
-
-`tests/models/test_migrations.py` must pass: upgrade heads builds exactly the models, downgrade base and upgrade again works, branches apply in any order. Add a test for any data migration.
+- [ ] Revision added under `migrations/versions/<module>/`; models match.
+- [ ] `scripts/check_migrations.sh` passes, including the upgrade on an existing database.
+- [ ] Backfills and seeds are idempotent.
+- [ ] `ci_local.sh migrations` ran without `--allow-skip`.
+- [ ] For a copy: `counts.tsv` present, and `verify_restore` printed only `ok` rows.
+- [ ] No applied migration edited; no secret printed or committed.

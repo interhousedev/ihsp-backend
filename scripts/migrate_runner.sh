@@ -14,7 +14,8 @@
 #   status.json   written by this script (no secrets): id, state, step, steps_done, error.
 #
 # Steps (the admin page shows them as a checklist): stop_services, dump_postgres,
-# snapshot_redis, copy_objects, copy_config, copy_vault, copy_backups, transfer, verify.
+# snapshot_redis, copy_objects, copy_config, copy_vault, copy_backups, count_rows, transfer,
+# verify.
 # Source data is never deleted or modified: Postgres, Redis, the object store and Vault are
 # only read; worker, scheduler, bot and mail are stopped (restarted on failure or cancel).
 # The staged copy (a plain copy of the whole database and the keys!) lives in a root-only
@@ -30,8 +31,9 @@ umask 077
 ROOT=${IHSP_ROOT:-/opt/ihsp}
 DIR=${IHSP_MIGRATION_DIR:-$ROOT/data/migration}
 WORK=${IHSP_MIGRATION_WORK:-/var/lib/ihsp-migration}
+SCRIPTS=$(cd "$(dirname "$0")" && pwd)
 STEPS=(stop_services dump_postgres snapshot_redis copy_objects copy_config copy_vault
-    copy_backups transfer verify)
+    copy_backups count_rows transfer verify)
 RESTART=(worker scheduler bot mail)
 DRY=0
 ID=""
@@ -272,6 +274,12 @@ step_copy_backups() {
     if [ -d "$ROOT/backups" ]; then
         tar -C "$ROOT" -cf "$OUT/backups.tar" backups
     fi
+}
+
+# Row counts of every store, taken while the services are stopped and before the copy
+# leaves the host: migrate_target.sh compares them with its own after the restore.
+step_count_rows() {
+    IHSP_ROOT=$ROOT bash "$SCRIPTS/migration_counts.sh" > "$OUT/counts.tsv"
 }
 
 step_transfer() {

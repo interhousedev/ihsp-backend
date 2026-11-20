@@ -29,6 +29,11 @@ case "$args" in
     *" cp cid-s3:/data/. - "*) echo OBJECTS ;;
     *" compose "*" cp "*) echo "COPY" > "${@: -1}" ;;
     *" exec -T vault sh -c "*"mktemp"*) cat > /dev/null; echo /tmp/vault-restore.x ;;
+    *"query_to_xml"*) echo "public|${FAKE_ROWS:-42}" ;;
+    *" DBSIZE "*) echo 42 ;;
+    *"find /data -type f"*) echo 7 ;;
+    *"alembic heads"*) echo "rev1 (ihsp) (head)" ;;
+    *"alembic current"*) echo "${FAKE_CURRENT:-rev1 (ihsp) (head)}" ;;
     *) [ -t 0 ] || cat > /dev/null ;;
 esac
 exit 0
@@ -161,6 +166,17 @@ SOURCE_ENV = [
 ]
 
 
+# What the old server counted right after its dump (scripts/migration_counts.sh).
+SOURCE_COUNTS = (
+    "ihsp\tpublic\t42\n"
+    "hydra\tpublic\t42\n"
+    "bugsink\tpublic\t42\n"
+    "redis\tkeys\t42\n"
+    "s3\tobjects\texternal\n"
+    "vault\tsealed\tfalse\n"
+)
+
+
 def _received(tmp: Path, *, objects: bool = True, mode: str = "main") -> Path:
     """A complete transfer as the runner leaves it in incoming/<id>."""
     src = tmp / "src-config"
@@ -180,6 +196,7 @@ def _received(tmp: Path, *, objects: bool = True, mode: str = "main") -> Path:
         files.append("s3_data.tar")
     for name in files:
         (out / name).write_text(f"data of {name}")
+    (out / "counts.tsv").write_text(SOURCE_COUNTS)
     sums = [
         f"{hashlib.sha256(p.read_bytes()).hexdigest()}  ./{p.name}"
         for p in sorted(out.iterdir())
@@ -199,7 +216,7 @@ def _finish_setup(tmp: Path, **kw: object) -> tuple[Path, dict[str, str]]:
     (home / ".ssh").mkdir(parents=True)
     (home / ".ssh" / "authorized_keys").write_text("restrict key\n")
     _received(tmp, **kw)  # type: ignore[arg-type]
-    return root, _env(tmp, IHSP_MIGRATE_HOME=str(home))
+    return root, _env(tmp, IHSP_MIGRATE_HOME=str(home), FAKE_BUGSINK_DB="1")
 
 
 def test_finish_refuses_an_incomplete_transfer(tmp_path: Path) -> None:
@@ -341,6 +358,51 @@ def test_finish_skips_an_external_object_store(tmp_path: Path) -> None:
     assert done.returncode == 0, done.stderr
     assert "nothing to restore" in done.stderr
     assert not any("find /data" in line for line in _log(tmp_path))
+
+
+def test_finish_checks_every_store_against_the_source_counts(tmp_path: Path) -> None:
+    _, env = _finish_setup(tmp_path)
+    done = _run(TARGET, env, "finish", "m-1")
+    assert done.returncode == 0, done.stderr
+    assert "verification" in done.stderr
+    assert "MISMATCH" not in done.stderr
+    for row in ("ihsp", "hydra", "bugsink", "redis", "s3", "vault", "alembic"):
+        assert row in done.stderr
+    assert (tmp_path / STAGED / "RESTORED").exists()
+
+
+def test_finish_refuses_a_row_count_mismatch(tmp_path: Path) -> None:
+    _, env = _finish_setup(tmp_path)
+    env["FAKE_ROWS"] = "41"
+    done = _run(TARGET, env, "finish", "m-1")
+    assert done.returncode == 4
+    assert "MISMATCH" in done.stderr
+    assert not (tmp_path / STAGED / "RESTORED").exists()
+
+
+def test_finish_refuses_when_alembic_is_not_at_the_heads(tmp_path: Path) -> None:
+    _, env = _finish_setup(tmp_path)
+    env["FAKE_CURRENT"] = "rev0 (ihsp) (head)"
+    done = _run(TARGET, env, "finish", "m-1")
+    assert done.returncode == 4
+    assert "alembic" in done.stderr
+    assert "MISMATCH" in done.stderr
+
+
+def test_finish_refuses_a_transfer_without_counts(tmp_path: Path) -> None:
+    _, env = _finish_setup(tmp_path)
+    out = tmp_path / "root" / "incoming" / "m-1"
+    (out / "counts.tsv").unlink()
+    sums = [
+        f"{hashlib.sha256(p.read_bytes()).hexdigest()}  ./{p.name}"
+        for p in sorted(out.iterdir())
+        if p.name not in ("SHA256SUMS", "READY")
+    ]
+    (out / "SHA256SUMS").write_text("\n".join(sums) + "\n")
+    done = _run(TARGET, env, "finish", "m-1")
+    assert done.returncode != 0
+    assert "counts.tsv is missing" in done.stderr
+    assert not any("down" in line for line in _log(tmp_path))
 
 
 def test_abort_before_a_restore_drops_the_data(tmp_path: Path) -> None:
@@ -496,6 +558,15 @@ def test_the_runner_carries_bugsink(
     assert any(needle in line for line in _log(tmp_path))
     assert (dest / "s3_data.tar").read_text() == "OBJECTS\n"
     assert (dest / "READY").exists()
+
+
+def test_the_runner_counts_every_store_before_the_transfer(tmp_path: Path) -> None:
+    dest = _runner(tmp_path, ["IHSP_S3__ENDPOINT_URL=http://s3:9000"])
+    counts = (dest / "counts.tsv").read_text(encoding="utf-8").splitlines()
+    assert "ihsp\tpublic\t42" in counts
+    assert "redis\tkeys\t42" in counts
+    assert "s3\tobjects\t7" in counts
+    assert "vault\tsealed\tfalse" in counts
 
 
 def test_the_runner_skips_bugsink_when_it_has_no_database(tmp_path: Path) -> None:

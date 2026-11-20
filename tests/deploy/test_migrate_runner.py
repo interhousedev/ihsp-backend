@@ -20,6 +20,7 @@ STEPS = [
     "copy_config",
     "copy_vault",
     "copy_backups",
+    "count_rows",
     "transfer",
     "verify",
 ]
