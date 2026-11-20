@@ -114,6 +114,7 @@ class AdmissionConfigOut(BaseModel):
     pickup_location: dict[str, str] | None
     item_caps: dict[str, int]
     workflow: WorkflowOptionsOut
+    school_grades: list[int]
 
     @classmethod
     def of(cls, cfg: AdmissionConfig) -> "AdmissionConfigOut":
@@ -154,6 +155,7 @@ class AdmissionConfigOut(BaseModel):
             pickup_location=cfg.pickup_location,
             item_caps=cfg.item_caps,
             workflow=WorkflowOptionsOut.of(cfg.workflow),
+            school_grades=list(cfg.school_grades),
         )
 
 

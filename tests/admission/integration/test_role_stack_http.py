@@ -128,3 +128,32 @@ async def test_non_student_non_staff_cannot_enter(
         assert me["kind"] == "none", me
         codes = {path: (await c.get(path)).status_code for path in STUDENT_SIDE}
     assert set(codes.values()) <= {403, 404}, codes
+
+
+SCHOOL_GRADES = "/v1/admission/settings/school-grades"
+
+
+async def test_admin_sets_school_grades_and_config_follows(
+    make_container: ContainerFactory, apps: list[FastAPI]
+) -> None:
+    async with await _client(make_container, apps, frozenset({Role.ADMIN})) as admin:
+        assert (await admin.get(SCHOOL_GRADES)).json() == {"grades": [10, 11]}
+        saved = await admin.put(SCHOOL_GRADES, json={"grades": [11, 9, 10]})
+        assert saved.status_code == 200 and saved.json() == {"grades": [9, 10, 11]}
+        assert (await admin.get("/v1/admission/config")).json()["school_grades"] == [
+            9,
+            10,
+            11,
+        ]
+        for bad in ([10, 12], [0, 1], [13]):
+            r = await admin.put(SCHOOL_GRADES, json={"grades": bad})
+            assert r.status_code == 422, (bad, r.text)
+
+
+async def test_school_grades_are_admin_only(
+    make_container: ContainerFactory, apps: list[FastAPI]
+) -> None:
+    async with await _client(make_container, apps, MIXED - {Role.ADMIN}) as client:
+        assert (await client.get(SCHOOL_GRADES)).status_code == 200
+        r = await client.put(SCHOOL_GRADES, json={"grades": [10, 11]})
+        assert r.status_code == 403, r.text

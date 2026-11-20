@@ -5,6 +5,7 @@ from collections.abc import Collection
 from dataclasses import dataclass
 from uuid import UUID
 
+from app.modules.admission.application.runtime_settings import RuntimeSettingsService
 from app.modules.admission.domain.access import ActorFacts, Assignment, Entitlement
 from app.modules.admission.domain.entitlement import (
     AdmissionActor,
@@ -16,6 +17,15 @@ from app.modules.admission.ports.unit_of_work import UowFactory
 from app.shared.actor import Actor, Role
 from app.shared.clock import Clock
 from app.shared.contracts.academic import AcademicMembership, StudentRef
+
+
+async def school_grades(
+    runtime: RuntimeSettingsService | None, default: Collection[int]
+) -> frozenset[int]:
+    """Return the school grades set by an administrator, else the env default."""
+    if runtime is None:
+        return frozenset(default)
+    return frozenset((await runtime.get()).school_grades(default))
 
 
 def effective_entitlement(
@@ -107,12 +117,14 @@ class ResolveAdmissionActor:
         membership: AcademicMembership,
         clock: Clock,
         eligible_grades: Collection[int],
+        runtime: RuntimeSettingsService | None = None,
     ) -> None:
-        """Keep the transaction factory, membership, clock and eligible grades."""
+        """Keep the collaborators; `runtime` overrides the env grade range."""
         self._uow = uow_factory
         self._membership = membership
         self._clock = clock
         self._grades = frozenset(eligible_grades)
+        self._runtime = runtime
 
     async def execute(self, actor: Actor) -> AdmissionContext:
         """Read entitlement, assignments and the caller's group."""
@@ -129,7 +141,7 @@ class ResolveAdmissionActor:
         entitlement = effective_entitlement(
             stored,
             student,
-            self._grades,
+            await school_grades(self._runtime, self._grades),
             now,
             student_role=Role.STUDENT in actor.roles,
             user_id=actor.user_id,

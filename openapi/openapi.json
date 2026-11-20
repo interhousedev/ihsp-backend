@@ -1775,6 +1775,13 @@
             "title": "Questions",
             "type": "array"
           },
+          "school_grades": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "School Grades",
+            "type": "array"
+          },
           "stages": {
             "items": {
               "type": "string"
@@ -1808,7 +1815,8 @@
           "sub_roles",
           "pickup_location",
           "item_caps",
-          "workflow"
+          "workflow",
+          "school_grades"
         ],
         "title": "AdmissionConfigOut",
         "type": "object"
@@ -49666,6 +49674,25 @@
         "title": "ScholarshipOut",
         "type": "object"
       },
+      "SchoolGradesBody": {
+        "description": "A contiguous range of school grades, e.g. [10, 11].",
+        "properties": {
+          "grades": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 12,
+            "minItems": 1,
+            "title": "Grades",
+            "type": "array"
+          }
+        },
+        "required": [
+          "grades"
+        ],
+        "title": "SchoolGradesBody",
+        "type": "object"
+      },
       "ScopeCatalogResponse": {
         "description": "ScopeCatalog.",
         "properties": {
@@ -92709,6 +92736,68 @@
           }
         },
         "summary": "Put Prefs",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/settings/school-grades": {
+      "get": {
+        "description": "The school grades in force (who is entitled, which grades are planned).",
+        "operationId": "admission_school_grades",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolGradesBody"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get School Grades",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Replace the school grades (administrators; contiguous, 1–12).",
+        "operationId": "admission_set_school_grades",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SchoolGradesBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolGradesBody"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put School Grades",
         "tags": [
           "admission"
         ]

@@ -73,6 +73,7 @@ from app.modules.admission.application.proofs import ProofService
 from app.modules.admission.application.readiness import ReadinessService
 from app.modules.admission.application.review import ItemReviewService
 from app.modules.admission.application.runtime_settings import RuntimeSettingsService
+from app.modules.admission.application.school_grades import SchoolGradesService
 from app.modules.admission.application.staff import StaffService
 from app.modules.admission.application.supp_prompts import SuppPromptService
 from app.modules.admission.application.tasks import TaskService
@@ -147,6 +148,7 @@ class AdmissionServices:
     actor: ResolveAdmissionActor
     access: AccessPolicy
     runtime: RuntimeSettingsService
+    school_grades: SchoolGradesService
     config: GetConfig
     courses: CourseService
     staff: StaffService
@@ -252,6 +254,7 @@ def build(
     settings = deps.settings.admission
     grades = settings.eligible_grades
     consents = purpose_consents or MemoryPurposeConsents()
+    runtime = RuntimeSettingsService(uow_factory, ttl=settings.runtime_cache_seconds)
     access = AccessPolicy(
         uow_factory,
         membership,
@@ -259,8 +262,8 @@ def build(
         deps.clock,
         grades,
         identity,
+        runtime,
     )
-    runtime = RuntimeSettingsService(uow_factory, ttl=settings.runtime_cache_seconds)
     model = ai or UnavailableAi()
     texts = prompts or BuiltinPrompts()
     kb = KbService(SqlKbRepository(deps.sessionmaker), deps.clock)
@@ -323,9 +326,12 @@ def build(
     )
     exemplar_source = UowExemplarSource(uow_factory, deps.clock)
     return AdmissionServices(
-        actor=ResolveAdmissionActor(uow_factory, membership, deps.clock, grades),
+        actor=ResolveAdmissionActor(
+            uow_factory, membership, deps.clock, grades, runtime
+        ),
         access=access,
         runtime=runtime,
+        school_grades=SchoolGradesService(uow_factory, runtime, grades),
         config=GetConfig(settings, runtime, limits, cache(_fields)),
         courses=CourseService(uow_factory, access, course_sources),
         staff=StaffService(
@@ -522,7 +528,7 @@ def build(
             CatalogService(uow_factory),
             CourseService(uow_factory, access, course_sources),
             course_sources,
-            ResolveAdmissionActor(uow_factory, membership, deps.clock, grades),
+            ResolveAdmissionActor(uow_factory, membership, deps.clock, grades, runtime),
         ),
         kb=kb,
         memory_notes=MemoryNoteService(uow_factory, access, deps.clock),

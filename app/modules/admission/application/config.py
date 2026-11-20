@@ -139,6 +139,7 @@ class AdmissionConfig:
     sub_roles: tuple[BuiltinRole, ...]
     pickup_location: dict[str, str] | None
     item_caps: dict[str, int]
+    school_grades: tuple[int, ...]
     workflow: WorkflowOptions
 
 
@@ -199,6 +200,7 @@ class GetConfig:
                 "drafts": MAX_DRAFTS,
             },
             workflow=WORKFLOW_OPTIONS,
+            school_grades=rs.school_grades(self._settings.eligible_grades),
         )
 
 

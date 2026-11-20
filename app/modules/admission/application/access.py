@@ -7,7 +7,9 @@ from uuid import UUID
 from app.modules.admission.application.actor import (
     AdmissionContext,
     effective_entitlement,
+    school_grades,
 )
+from app.modules.admission.application.runtime_settings import RuntimeSettingsService
 from app.modules.admission.domain.access import (
     Resolution,
     StudentAccessFacts,
@@ -58,6 +60,7 @@ class AccessPolicy:
         clock: Clock,
         eligible_grades: Collection[int],
         identity: IdentityDirectory | None = None,
+        runtime: RuntimeSettingsService | None = None,
     ) -> None:
         """Keep the collaborators; `identity` supplies other users' roles."""
         self._uow = uow_factory
@@ -66,6 +69,11 @@ class AccessPolicy:
         self._clock = clock
         self._grades = frozenset(eligible_grades)
         self._identity = identity
+        self._runtime = runtime
+
+    async def school_grades(self) -> tuple[int, ...]:
+        """Return the school grades in force, ascending."""
+        return tuple(sorted(await school_grades(self._runtime, self._grades)))
 
     async def _has_student_role(self, student_id: UUID) -> bool:
         if self._identity is None:
@@ -88,7 +96,7 @@ class AccessPolicy:
         entitlement = effective_entitlement(
             stored,
             student,
-            self._grades,
+            await school_grades(self._runtime, self._grades),
             now,
             student_role=student_role,
             user_id=student_id,

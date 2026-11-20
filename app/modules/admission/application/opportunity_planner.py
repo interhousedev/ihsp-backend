@@ -1,6 +1,7 @@
-"""AI plan of saved opportunities over grades 9-12; the owner needs AI consent."""
+"""AI plan of saved opportunities over the school grades; needs AI consent."""
 
 import datetime as dt
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any, Final
 from uuid import UUID
@@ -105,10 +106,14 @@ def _text(value: Any) -> str:
 
 
 def clean_plan(
-    data: dict[str, Any], known: set[str], grade_now: int, at: dt.datetime
+    data: dict[str, Any],
+    known: set[str],
+    grade_now: int,
+    at: dt.datetime,
+    grades: Sequence[int] = GRADES,
 ) -> AiPlan:
-    """Keep known ids, grades from now to 12, valid terms; each entry once."""
-    first = max(min(grade_now, GRADES[-1]), GRADES[0])
+    """Keep known ids, grades from now to the last school grade, valid terms."""
+    first = max(min(grade_now, grades[-1]), grades[0])
     steps: list[AiPlanStep] = []
     placed: set[str] = set()
     for raw in list(data.get("steps") or [])[: prompt.MAX_STEPS]:
@@ -124,7 +129,7 @@ def clean_plan(
         steps.append(
             AiPlanStep(
                 UUID(ref),
-                min(max(grade, first), GRADES[-1]),
+                min(max(grade, first), grades[-1]),
                 term if term in _TERMS else _TERMS[0],
                 _text(raw.get("why")),
             )
@@ -183,13 +188,15 @@ def _profile_lines(
     return lines
 
 
-def place_rest(plan: AiPlan, view: PlanView, grade_now: int) -> AiPlan:
+def place_rest(
+    plan: AiPlan, view: PlanView, grade_now: int, grades: Sequence[int] = GRADES
+) -> AiPlan:
     """Place saved entries the model left out.
 
     The planned grade, else the first recommended grade from now, in the term of
-    the next dated event.
+    the next dated event; always inside the school grades.
     """
-    first = max(min(grade_now, GRADES[-1]), GRADES[0])
+    first = max(min(grade_now, grades[-1]), grades[0])
     placed = {s.opportunity_id for s in plan.steps}
     extra: list[AiPlanStep] = []
     for e in view.entries:
@@ -200,7 +207,7 @@ def place_rest(plan: AiPlan, view: PlanView, grade_now: int) -> AiPlan:
         grade = e.planned_grade or (fits[0] if fits else first)
         days = sorted(d.day for d in view.deadlines if d.opportunity_id == o.id)
         term = term_of(days[0]) if days else _TERMS[0]
-        extra.append(AiPlanStep(o.id, max(grade, first), term, ""))
+        extra.append(AiPlanStep(o.id, min(max(grade, first), grades[-1]), term, ""))
     if not extra:
         return plan
     steps = sorted([*plan.steps, *extra], key=lambda s: (s.grade, _TERMS.index(s.term)))
@@ -291,7 +298,8 @@ class OpportunityPlanner:
                 limit=limit,
                 window_seconds=_WEEK,
             )
-        grade = ctx.grade or GRADES[0]
+        grades = await self._access.school_grades()
+        grade = ctx.grade or grades[0]
         lines = _profile_lines(grade, locale, interests, career, words, profile)
         lines += [f"[activity] {i}" for i in items_summary(items, metrics)]
         lines += self._entry_lines(view)
@@ -309,7 +317,10 @@ class OpportunityPlanner:
         )
         known = {str(e.opportunity_id) for e in view.entries}
         plan = place_rest(
-            clean_plan(data, known, grade, self._clock.now()), view, grade
+            clean_plan(data, known, grade, self._clock.now(), grades),
+            view,
+            grade,
+            grades,
         )
         async with self._uow() as uow:
             await uow.opportunities.save_ai_plan(
