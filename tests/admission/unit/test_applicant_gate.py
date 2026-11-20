@@ -54,6 +54,30 @@ async def test_counselor_with_student_role_passes_both_sides() -> None:
     assert await require_applicant(ctx) is ctx
 
 
+@pytest.mark.parametrize("group", [None, "9-A", "Staff"])
+async def test_student_role_stacks_with_other_roles(group: str | None) -> None:
+    store = FakeStore()
+    refs = [student_ref(COUNSELOR, GROUP, group)] if group else []
+    roles = {Role.ADMIN, Role.LIBRARIAN, Role.LMS_ADMIN, Role.LMS_CREATOR}
+    ctx = await _resolver(store, FakeMembership(refs)).execute(
+        Actor(COUNSELOR, frozenset({*roles, Role.STUDENT}))
+    )
+    assert ctx.admission.is_applicant and ctx.admission.is_staff
+    assert await require_applicant(ctx) is ctx
+
+
+async def test_revoked_row_closes_student_side_despite_role() -> None:
+    store = FakeStore()
+    store.entitlements[COUNSELOR] = Entitlement(
+        COUNSELOR, "school_student", None, None, NOW, revoked_at=NOW
+    )
+    ctx = await _resolver(store, FakeMembership([])).execute(
+        Actor(COUNSELOR, frozenset({Role.ADMIN, Role.STUDENT}))
+    )
+    with pytest.raises(NotApplicantError):
+        await require_applicant(ctx)
+
+
 async def test_stored_school_student_row_needs_student_role() -> None:
     store = FakeStore()
     store.entitlements[COUNSELOR] = _row(COUNSELOR, "school_student")

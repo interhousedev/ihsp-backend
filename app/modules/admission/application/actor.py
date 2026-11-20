@@ -112,14 +112,15 @@ class ResolveAdmissionActor:
             assignments = await uow.access.assignments_for(actor.user_id)
             opt_ins = await uow.access.opt_ins([actor.user_id])
         entitlement = effective_entitlement(stored, student, self._grades, now)
+        revoked = stored is not None and stored.revoked_at is not None
         if (
-            entitlement is None
-            and stored is None
-            and student is None
-            and (Role.STUDENT in actor.roles)
+            Role.STUDENT in actor.roles
+            and not revoked
+            and (entitlement is None or not entitlement.is_applicant)
         ):
-            # A student-role account without a lyceum group (staff who are also
-            # students, external applicants) uses the student side too.
+            # Access stacks: the student role alone opens the student side, whatever
+            # other roles, group or grade the account has. Only an explicit
+            # revocation by staff closes it.
             entitlement = Entitlement(
                 user_id=actor.user_id,
                 kind="school_student",
