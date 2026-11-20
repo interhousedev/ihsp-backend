@@ -4,6 +4,23 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-11-20
+
+### Added
+
+- AI harness: connectors declared in code with keys in Vault KV (`ai/connectors/<id>`, off by default via `IHSP_AI_CONNECTOR_VAULT__ENABLED`), runtime pipeline routes (connector, model, reasoning; DB route > env task > env pipeline > default, 30 s refresh), a request registry published by each module, prompt versions with source and diff (code defaults re-pushed on startup), analytics (prompt size, answer length, tool calls, spend per request, user and day), admin endpoints under `/v1/admin/ai` and seven read-only `ai_*` MCP tools. Migrations `ai_0010`–`ai_0012`.
+- Per-app assistant skills: the app (header `X-IHSP-App`, else the OAuth client) picks the tool set and a system-prompt section; a library search tool.
+- Groups keep the EMIS group name, course, direction, speciality and institution (`academic_0015`); EMIS profile reads are cached in Redis (`IHSP_EMIS__CACHE_TTL_SECONDS`) behind an in-process LFU cache, with hit/miss/age logged.
+
+### Changed
+
+- Admission access stacks: the student role opens the student side alongside any other role; only an explicit revocation closes it (1.8.1, 1.8.2).
+- `scripts/ci_local.sh` fails the migrations stage when Postgres is unreachable (`--allow-skip` to skip); the server-to-server migration verifies row counts per database.
+
+### Security
+
+- `GET /v1/id/me` no longer returns linked Telegram accounts; they are read only from `GET /v1/id/me/telegram`.
+
 ## [1.8.0] - 2026-11-19
 
 ### Added
