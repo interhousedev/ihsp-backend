@@ -258,6 +258,7 @@ def build(
         consents,
         deps.clock,
         grades,
+        identity,
     )
     runtime = RuntimeSettingsService(uow_factory, ttl=settings.runtime_cache_seconds)
     model = ai or UnavailableAi()

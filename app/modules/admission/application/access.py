@@ -21,8 +21,10 @@ from app.modules.admission.domain.permissions import KIND_ROLE, Permission
 from app.modules.admission.ports.consent import STAFF_VIEW, PurposeConsents
 from app.modules.admission.ports.repositories import AuditEvent
 from app.modules.admission.ports.unit_of_work import UowFactory
+from app.shared.actor import Role
 from app.shared.clock import Clock
 from app.shared.contracts.academic import AcademicMembership
+from app.shared.contracts.identity import IdentityDirectory
 
 VIEWED = "student.viewed"
 
@@ -55,23 +57,42 @@ class AccessPolicy:
         consents: PurposeConsents,
         clock: Clock,
         eligible_grades: Collection[int],
+        identity: IdentityDirectory | None = None,
     ) -> None:
-        """Keep the collaborators."""
+        """Keep the collaborators; `identity` supplies other users' roles."""
         self._uow = uow_factory
         self._membership = membership
         self._consents = consents
         self._clock = clock
         self._grades = frozenset(eligible_grades)
+        self._identity = identity
 
-    async def student_facts(self, student_id: UUID) -> StudentAccessFacts:
-        """Read the student side of `resolve`."""
+    async def _has_student_role(self, student_id: UUID) -> bool:
+        if self._identity is None:
+            return False
+        user = await self._identity.get_user(student_id)
+        return user is not None and Role.STUDENT in user.roles
+
+    async def student_facts(
+        self, student_id: UUID, *, student_role: bool | None = None
+    ) -> StudentAccessFacts:
+        """Read the student side of `resolve`; roles are looked up when not given."""
         now = self._clock.now()
         student = await self._membership.student(student_id)
         granted = await self._consents.granted([student_id])
         async with self._uow() as uow:
             stored = await uow.access.entitlement(student_id)
             opt_ins = await uow.access.opt_ins([student_id])
-        entitlement = effective_entitlement(stored, student, self._grades, now)
+        if student_role is None:
+            student_role = await self._has_student_role(student_id)
+        entitlement = effective_entitlement(
+            stored,
+            student,
+            self._grades,
+            now,
+            student_role=student_role,
+            user_id=student_id,
+        )
         mine = opt_ins.get(student_id)
         return StudentAccessFacts(
             student_id=student_id,
@@ -83,7 +104,10 @@ class AccessPolicy:
 
     async def resolve(self, ctx: AdmissionContext, student_id: UUID) -> Resolution:
         """Return the caller's permissions over the student."""
-        facts = await self.student_facts(student_id)
+        own = student_id == ctx.user_id
+        facts = await self.student_facts(
+            student_id, student_role=(Role.STUDENT in ctx.actor.roles) if own else None
+        )
         return resolve(ctx.facts(), facts, self._clock.now())
 
     async def require(

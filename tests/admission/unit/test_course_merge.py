@@ -4,10 +4,7 @@ from app.modules.admission.application.access import AccessPolicy
 from app.modules.admission.application.actor import ResolveAdmissionActor
 from app.modules.admission.application.courses import CourseService
 from app.modules.admission.domain.courses import Course, merge
-from app.modules.admission.domain.errors import (
-    AdmissionForbiddenError,
-    AdmissionNotFoundError,
-)
+from app.modules.admission.domain.errors import AdmissionNotFoundError
 from app.modules.admission.ports.consent import NoPurposeConsents
 from app.shared.actor import Actor, Role
 from app.shared.ids import new_id
@@ -82,7 +79,8 @@ async def test_stranger_cannot_edit_or_toggle() -> None:
     maths, _ = await service.list(owner, STUDENT)
     assert maths.id is not None
     other = await resolver.execute(Actor(new_id(), frozenset({Role.STUDENT})))
-    with pytest.raises(AdmissionForbiddenError):
+    # Another student is a real applicant now; a foreign course stays hidden.
+    with pytest.raises(AdmissionNotFoundError):
         await service.set_included(other, maths.id, False)
     with pytest.raises(AdmissionNotFoundError):
         await service.list(other, STUDENT)

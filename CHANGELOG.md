@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Fixed
+
+- Admission: a student without an eligible lyceum group (for example a staff account that also holds the student role) got 404 on `/list`, `/list/insights`, `/me/profile`, `/readiness`, `/test-scores` and other owner routes; the per-student access policy now applies the same role-stacking entitlement as the caller resolver.
+
 ## [1.9.0] - 2026-11-20
 
 ### Added

@@ -23,12 +23,27 @@ def effective_entitlement(
     student: StudentRef | None,
     eligible_grades: Collection[int],
     now: dt.datetime,
+    *,
+    student_role: bool,
+    user_id: UUID,
 ) -> Entitlement | None:
-    """Return the stored entitlement, or the implicit one of an eligible student.
+    """Return the entitlement the admission app applies to a user.
 
-    A lyceum student of an eligible grade is entitled without a row; a stored row
-    (granted or revoked by an administrator) always wins.
+    Access stacks by role: the student role alone opens the student side, whatever
+    other roles, group or grade the account has. A live stored row is kept and only
+    an explicit revocation closes the side. Without the student role the stored row
+    (e.g. alumni) or an eligible lyceum group decides.
     """
+    if stored is not None and (stored.revoked_at is not None or stored.is_applicant):
+        return stored
+    if student_role:
+        return Entitlement(
+            user_id=user_id,
+            kind="school_student",
+            cohort_year=None,
+            granted_by=None,
+            granted_at=now,
+        )
     if stored is not None:
         return stored
     if student is None:
@@ -111,23 +126,14 @@ class ResolveAdmissionActor:
             stored = await uow.access.entitlement(actor.user_id)
             assignments = await uow.access.assignments_for(actor.user_id)
             opt_ins = await uow.access.opt_ins([actor.user_id])
-        entitlement = effective_entitlement(stored, student, self._grades, now)
-        revoked = stored is not None and stored.revoked_at is not None
-        if (
-            Role.STUDENT in actor.roles
-            and not revoked
-            and (entitlement is None or not entitlement.is_applicant)
-        ):
-            # Access stacks: the student role alone opens the student side, whatever
-            # other roles, group or grade the account has. Only an explicit
-            # revocation by staff closes it.
-            entitlement = Entitlement(
-                user_id=actor.user_id,
-                kind="school_student",
-                cohort_year=None,
-                granted_by=None,
-                granted_at=now,
-            )
+        entitlement = effective_entitlement(
+            stored,
+            student,
+            self._grades,
+            now,
+            student_role=Role.STUDENT in actor.roles,
+            user_id=actor.user_id,
+        )
         mine = opt_ins.get(actor.user_id)
         return AdmissionContext(
             actor=actor,
