@@ -112,6 +112,21 @@ class ResolveAdmissionActor:
             assignments = await uow.access.assignments_for(actor.user_id)
             opt_ins = await uow.access.opt_ins([actor.user_id])
         entitlement = effective_entitlement(stored, student, self._grades, now)
+        if (
+            entitlement is None
+            and stored is None
+            and student is None
+            and (Role.STUDENT in actor.roles)
+        ):
+            # A student-role account without a lyceum group (staff who are also
+            # students, external applicants) uses the student side too.
+            entitlement = Entitlement(
+                user_id=actor.user_id,
+                kind="school_student",
+                cohort_year=None,
+                granted_by=None,
+                granted_at=now,
+            )
         mine = opt_ins.get(actor.user_id)
         return AdmissionContext(
             actor=actor,
