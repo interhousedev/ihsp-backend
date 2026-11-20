@@ -20,6 +20,11 @@ class Group:
     emis_group_id: int | None = None
     current_semester: int | None = None
     emis_curriculum_id: int | None = None
+    emis_name: str | None = None
+    course: int | None = None
+    direction: str | None = None
+    speciality: str | None = None
+    institution_name: dict[str, str] | None = None
     subject_ids: list[UUID] = field(default_factory=list)
     curator_id: UUID | None = None
     head_student_id: UUID | None = None

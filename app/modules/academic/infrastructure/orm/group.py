@@ -15,6 +15,7 @@ from sqlalchemy import (
     Uuid,
     text,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 
@@ -38,6 +39,11 @@ class Group(IdMixin, TimestampMixin, Base):
     slug: Mapped[str] = mapped_column(String(64))
     current_semester: Mapped[int | None] = mapped_column(SmallInteger)
     emis_curriculum_id: Mapped[int | None] = mapped_column(Integer)
+    emis_name: Mapped[str | None] = mapped_column(String(64))
+    course: Mapped[int | None] = mapped_column(SmallInteger)
+    direction: Mapped[str | None] = mapped_column(String(255))
+    speciality: Mapped[str | None] = mapped_column(String(255))
+    institution_name: Mapped[dict[str, str] | None] = mapped_column(JSONB)
     subject_ids: Mapped[list[UUID]] = mapped_column(
         ARRAY(Uuid), server_default=text("'{}'")
     )

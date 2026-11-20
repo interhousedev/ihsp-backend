@@ -7,7 +7,7 @@ from typing import Any, Literal, Protocol
 from uuid import UUID
 
 from app.shared.actor import Actor
-from app.shared.contracts.emis import EmisSubject
+from app.shared.contracts.emis import EmisProfile, EmisSubject
 from app.shared.lesson_kind import LessonKind, TopicSource
 
 
@@ -419,6 +419,16 @@ class AcademicEnrollment(Protocol):
         curriculum_id: int | None,
     ) -> StudentRef:
         """Create or update the student's group membership."""
+        ...
+
+    async def record_emis_facts(self, *, group_id: UUID, profile: EmisProfile) -> None:
+        """Store the EMIS facts of the student's group (name, course, direction...)."""
+        ...
+
+    async def record_user_emis_facts(
+        self, *, user_id: UUID, profile: EmisProfile
+    ) -> None:
+        """Store the EMIS facts of the student's current group, if there is one."""
         ...
 
     async def find_imported_student(

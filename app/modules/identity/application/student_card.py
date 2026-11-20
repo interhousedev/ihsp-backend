@@ -19,6 +19,7 @@ from app.modules.identity.domain.student_card import (
     token_key,
 )
 from app.modules.identity.infrastructure.redis.ticket_store import RedisTicketStore
+from app.modules.identity.ports.student_card_facts import StudentCardFacts
 from app.shared.clock import Clock
 from app.shared.contracts.emis import EmisProfile, EmisSource
 from app.shared.contracts.files import FilesApi
@@ -94,6 +95,7 @@ class StudentCardService:
         *,
         directory: IdentityDirectory,
         emis: EmisSource,
+        facts: StudentCardFacts,
         files: FilesApi,
         store: RedisTicketStore,
         limiter: RateLimiter,
@@ -102,12 +104,15 @@ class StudentCardService:
         """Keep the ports."""
         self._directory = directory
         self._emis = emis
+        self._facts = facts
         self._files = files
         self._store = store
         self._limiter = limiter
         self._clock = clock
 
-    async def _build(self, user_id: UUID) -> tuple[StudentCard, UUID | None]:
+    async def _build(
+        self, user_id: UUID
+    ) -> tuple[StudentCard, UUID | None, EmisProfile]:
         user = await self._directory.get_user(user_id)
         if user is None:
             raise StudentCardNotFoundError()
@@ -122,11 +127,11 @@ class StudentCardService:
             speciality=profile.speciality,
             has_photo=user.photo_file_id is not None,
         )
-        return card, user.photo_file_id
+        return card, user.photo_file_id, profile
 
     async def card(self, user_id: UUID) -> StudentCard:
         """Return the student's own card."""
-        card, _ = await self._build(user_id)
+        card, _, _ = await self._build(user_id)
         return card
 
     async def issue(self, user_id: UUID) -> IssuedToken:
@@ -136,7 +141,8 @@ class StudentCardService:
             limit=ISSUE_LIMIT_PER_MINUTE,
             window_seconds=60,
         )
-        card, photo = await self._build(user_id)
+        card, photo, profile = await self._build(user_id)
+        await self._facts.record_user_emis_facts(user_id=user_id, profile=profile)
         expires_at = self._clock.now() + timedelta(seconds=CARD_TTL_SECONDS)
         token = secrets.token_urlsafe(24)
         snapshot = CardSnapshot(user_id, photo, card, expires_at)

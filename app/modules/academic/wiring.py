@@ -17,6 +17,10 @@ from app.modules.academic.wiring_excuses import ExcuseServices, build_excuses
 from app.modules.academic.wiring_marks import MarksServices, build_marks
 from app.modules.academic.wiring_schedule import ScheduleServices, build_schedule
 from app.modules.academic.wiring_teaching import TeachingServices, build_teaching
+from app.modules.ai.domain.requests import AiRequestSpec
+
+# AI requests this module declares; the AI module publishes them at startup.
+AI_REQUESTS: tuple[AiRequestSpec, ...] = ()
 
 __all__ = [
     "AcademicModule",

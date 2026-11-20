@@ -40,7 +40,7 @@ from app.shared.contracts.academic import (
     RoomRef,
     StudentRef,
 )
-from app.shared.contracts.emis import EmisSubject
+from app.shared.contracts.emis import EmisProfile, EmisSubject
 from app.shared.contracts.identity import IdentityDirectory, UserStatus
 from app.shared.ids import new_id
 from app.shared.notifications import NotificationDraft, NotificationType
@@ -243,6 +243,40 @@ class AcademicEnrollmentImpl:
             needs_curriculum=needs_curriculum,
             group_first_linked=first_linked,
         )
+
+    async def record_emis_facts(self, *, group_id: UUID, profile: EmisProfile) -> None:
+        """Store what EMIS says about the group; a later read overwrites it."""
+        semester = profile.current_semester
+        course = (semester + 1) // 2 if semester is not None and semester >= 1 else None
+        async with self.uow_factory() as uow:
+            group = await uow.groups.get(group_id)
+            if group is None:
+                return
+            group.emis_name = profile.group_name
+            group.course = course
+            group.direction = profile.direction
+            group.speciality = profile.speciality
+            group.institution_name = (
+                {
+                    "uz": profile.institution_name.uz,
+                    "ru": profile.institution_name.ru,
+                    "en": profile.institution_name.en,
+                }
+                if profile.institution_name is not None
+                else None
+            )
+            await uow.groups.save(group)
+            await uow.commit()
+
+    async def record_user_emis_facts(
+        self, *, user_id: UUID, profile: EmisProfile
+    ) -> None:
+        """Store the EMIS facts of the student's current group; no-op without one."""
+        async with self.uow_factory() as uow:
+            student = await uow.students.get(user_id)
+        if student is None or student.group_id is None:
+            return
+        await self.record_emis_facts(group_id=student.group_id, profile=profile)
 
     async def _lacks_timetable(self, uow: ScheduleUnitOfWork, group_id: UUID) -> bool:
         """True when a current term exists and the group has no entries in it."""

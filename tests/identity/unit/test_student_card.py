@@ -63,17 +63,43 @@ class _Files:
         return b"png"
 
 
+class _Facts:
+    def __init__(self) -> None:
+        self.calls: list[tuple[UUID, EmisProfile]] = []
+
+    async def record_user_emis_facts(
+        self, *, user_id: UUID, profile: EmisProfile
+    ) -> None:
+        self.calls.append((user_id, profile))
+
+
 def _service(
-    redis: FakeAsyncRedis, clock: FixedClock, photo: bool = True
+    redis: FakeAsyncRedis,
+    clock: FixedClock,
+    photo: bool = True,
+    facts: _Facts | None = None,
 ) -> StudentCardService:
     return StudentCardService(
         directory=_Directory(photo),  # type: ignore[arg-type]
         emis=_Emis(),  # type: ignore[arg-type]
         files=_Files(),  # type: ignore[arg-type]
+        facts=facts or _Facts(),  # type: ignore[arg-type]
         store=RedisTicketStore(redis),
         limiter=RateLimiter(redis),
         clock=clock,
     )
+
+
+async def test_issue_persists_emis_facts_of_the_student(
+    redis: FakeAsyncRedis, clock: FixedClock
+) -> None:
+    facts = _Facts()
+    service = _service(redis, clock, facts=facts)
+    await service.issue(USER_ID)
+    assert len(facts.calls) == 1
+    user_id, profile = facts.calls[0]
+    assert user_id == USER_ID
+    assert profile == _profile()
 
 
 async def test_token_resolves_before_ttl_and_not_after(

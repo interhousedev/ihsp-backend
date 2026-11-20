@@ -16,6 +16,7 @@ class FakeEnrollment:
         """Answer ensure_student with this reference."""
         self.ref = ref
         self.ensured: list[dict[str, Any]] = []
+        self.facts: list[dict[str, Any]] = []
         self.left: list[tuple[UUID, str]] = []
         self.synced_subjects: list[tuple[UUID, Sequence[EmisSubject]]] = []
 
@@ -23,6 +24,10 @@ class FakeEnrollment:
         """Record the call."""
         self.ensured.append(kwargs)
         return self.ref
+
+    async def record_emis_facts(self, **kwargs: Any) -> None:
+        """Record the call."""
+        self.facts.append(kwargs)
 
     async def find_imported_student(self, **kwargs: Any) -> UUID | None:
         """Not used by marks."""

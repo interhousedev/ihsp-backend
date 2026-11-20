@@ -77,6 +77,11 @@ def group_to_entity(row: GroupRow) -> Group:
         emis_group_id=row.emis_group_id,
         current_semester=row.current_semester,
         emis_curriculum_id=row.emis_curriculum_id,
+        emis_name=row.emis_name,
+        course=row.course,
+        direction=row.direction,
+        speciality=row.speciality,
+        institution_name=dict(row.institution_name) if row.institution_name else None,
         subject_ids=list(row.subject_ids or []),
         curator_id=row.curator_id,
         head_student_id=row.head_student_id,
@@ -91,6 +96,11 @@ def group_apply(row: GroupRow, group: Group) -> None:
     row.slug = group.slug
     row.current_semester = group.current_semester
     row.emis_curriculum_id = group.emis_curriculum_id
+    row.emis_name = group.emis_name
+    row.course = group.course
+    row.direction = group.direction
+    row.speciality = group.speciality
+    row.institution_name = group.institution_name
     row.subject_ids = list(group.subject_ids)
     row.curator_id = group.curator_id
     row.head_student_id = group.head_student_id

@@ -150,6 +150,7 @@ class SyncStudent:
             current_semester=profile.current_semester,
             curriculum_id=profile.curriculum_id,
         )
+        await self._enrollment.record_emis_facts(group_id=ref.group_id, profile=profile)
         await self._identity_commands.update_names(
             user_id,
             first_name=profile.first_name,
