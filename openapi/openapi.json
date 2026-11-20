@@ -1897,6 +1897,53 @@
         "title": "AdmissionMeOut",
         "type": "object"
       },
+      "AdmitRateOut": {
+        "description": "The admit rate in percent.\n\n`intl` is the rate for international applicants, `overall` the all-applicant\nrate shown when no international one is known.",
+        "properties": {
+          "percent": {
+            "title": "Percent",
+            "type": "number"
+          },
+          "scope": {
+            "enum": [
+              "intl",
+              "overall"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "percent",
+          "scope",
+          "year",
+          "source_url"
+        ],
+        "title": "AdmitRateOut",
+        "type": "object"
+      },
       "AdviceItemOut": {
         "description": "A titled suggestion.",
         "properties": {
@@ -2329,6 +2376,128 @@
           "why"
         ],
         "title": "AiStepOut",
+        "type": "object"
+      },
+      "AidProfileOut": {
+        "description": "How the institution's aid meets need.\n\nEvery field is null when no source gives it. `avg_aid` is in USD and\n`avg_aid_scope` says whether it is the average for international students or\nfor all students. The three shares split the package into grants, student\nloans and work-study.",
+        "properties": {
+          "avg_aid": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Aid"
+          },
+          "avg_aid_scope": {
+            "anyOf": [
+              {
+                "enum": [
+                  "intl",
+                  "overall"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Aid Scope"
+          },
+          "grant_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grant Pct"
+          },
+          "loan_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Loan Pct"
+          },
+          "meets_full_need": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meets Full Need"
+          },
+          "need_blind_intl": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Need Blind Intl"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "work_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Work Pct"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "need_blind_intl",
+          "meets_full_need",
+          "avg_aid",
+          "avg_aid_scope",
+          "grant_pct",
+          "loan_pct",
+          "work_pct",
+          "source_url",
+          "year"
+        ],
+        "title": "AidProfileOut",
         "type": "object"
       },
       "AlarmsIn": {
@@ -6928,6 +7097,126 @@
         "title": "BreakerState",
         "type": "string"
       },
+      "BriefBalanceOut": {
+        "description": "Counts per label and the verdict, for the brief's header.",
+        "properties": {
+          "reach": {
+            "title": "Reach",
+            "type": "integer"
+          },
+          "safety": {
+            "title": "Safety",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "empty",
+              "too_few",
+              "no_safety",
+              "too_many_reach",
+              "balanced"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "integer"
+          },
+          "unlabelled": {
+            "title": "Unlabelled",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "reach",
+          "target",
+          "safety",
+          "unlabelled",
+          "status"
+        ],
+        "title": "BriefBalanceOut",
+        "type": "object"
+      },
+      "BriefSuggestionOut": {
+        "description": "A catalog institution that fits the list.\n\nThe role comes from published data, the reason from the model. Adding it to\nthe list is the caller's action.",
+        "properties": {
+          "admit_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admit Percent"
+          },
+          "admit_scope": {
+            "anyOf": [
+              {
+                "enum": [
+                  "intl",
+                  "overall"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admit Scope"
+          },
+          "admit_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admit Year"
+          },
+          "country": {
+            "title": "Country",
+            "type": "string"
+          },
+          "institution_id": {
+            "format": "uuid",
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "safety",
+              "target"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "institution_id",
+          "name",
+          "country",
+          "role",
+          "reason",
+          "admit_percent",
+          "admit_scope",
+          "admit_year"
+        ],
+        "title": "BriefSuggestionOut",
+        "type": "object"
+      },
       "BroadcastInputBody": {
         "description": "Create a broadcast draft.",
         "properties": {
@@ -7285,6 +7574,16 @@
       "BudgetRowOut": {
         "description": "One list entry of the budget.",
         "properties": {
+          "admit_rate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdmitRateOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "aid_deadline": {
             "anyOf": [
               {
@@ -7312,6 +7611,16 @@
           "aid_forms_known": {
             "title": "Aid Forms Known",
             "type": "boolean"
+          },
+          "aid_profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AidProfileOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "application_fee": {
             "anyOf": [
@@ -7365,7 +7674,9 @@
           "aid_forms",
           "aid_forms_known",
           "aid_deadline",
-          "cost_to_attend"
+          "cost_to_attend",
+          "aid_profile",
+          "admit_rate"
         ],
         "title": "BudgetRowOut",
         "type": "object"
@@ -8917,6 +9228,28 @@
       "CertificateTypeInput": {
         "description": "Body of POST /admin/types.",
         "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "enum": [
+                  "olympiad",
+                  "award",
+                  "scholarship",
+                  "research",
+                  "leadership",
+                  "arts",
+                  "sports",
+                  "academic",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
           "code": {
             "maxLength": 40,
             "minLength": 1,
@@ -8946,6 +9279,11 @@
               }
             ],
             "title": "Position"
+          },
+          "standard": {
+            "default": false,
+            "title": "Standard",
+            "type": "boolean"
           }
         },
         "required": [
@@ -8958,6 +9296,28 @@
       "CertificateTypePatch": {
         "description": "Body of PATCH /admin/types/{id}: only the sent fields change.",
         "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "enum": [
+                  "olympiad",
+                  "award",
+                  "scholarship",
+                  "research",
+                  "leadership",
+                  "arts",
+                  "sports",
+                  "academic",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
           "code": {
             "anyOf": [
               {
@@ -9008,6 +9368,17 @@
               }
             ],
             "title": "Position"
+          },
+          "standard": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Standard"
           }
         },
         "title": "CertificateTypePatch",
@@ -9019,6 +9390,28 @@
           "builtin": {
             "title": "Builtin",
             "type": "boolean"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "enum": [
+                  "olympiad",
+                  "award",
+                  "scholarship",
+                  "research",
+                  "leadership",
+                  "arts",
+                  "sports",
+                  "academic",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
           },
           "code": {
             "title": "Code",
@@ -9042,6 +9435,10 @@
           "position": {
             "title": "Position",
             "type": "integer"
+          },
+          "standard": {
+            "title": "Standard",
+            "type": "boolean"
           }
         },
         "required": [
@@ -9050,6 +9447,8 @@
           "name",
           "builtin",
           "position",
+          "standard",
+          "category",
           "custom_fields"
         ],
         "title": "CertificateTypeResponse",
@@ -16050,6 +16449,111 @@
         "title": "DeclineSuggestionBody",
         "type": "object"
       },
+      "DeepReadBodyOut": {
+        "description": "The reading: paragraphs, uniqueness 0-100, tropes, moments and one fix.",
+        "properties": {
+          "fix_dimension": {
+            "title": "Fix Dimension",
+            "type": "string"
+          },
+          "fix_paragraph": {
+            "title": "Fix Paragraph",
+            "type": "integer"
+          },
+          "fix_problem": {
+            "title": "Fix Problem",
+            "type": "string"
+          },
+          "fix_try": {
+            "title": "Fix Try",
+            "type": "string"
+          },
+          "moments": {
+            "items": {
+              "$ref": "#/components/schemas/MomentOut"
+            },
+            "title": "Moments",
+            "type": "array"
+          },
+          "paragraphs": {
+            "items": {
+              "$ref": "#/components/schemas/ParagraphReadOut"
+            },
+            "title": "Paragraphs",
+            "type": "array"
+          },
+          "tropes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tropes",
+            "type": "array"
+          },
+          "uniqueness": {
+            "title": "Uniqueness",
+            "type": "integer"
+          },
+          "uniqueness_note": {
+            "title": "Uniqueness Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paragraphs",
+          "uniqueness",
+          "uniqueness_note",
+          "tropes",
+          "moments",
+          "fix_paragraph",
+          "fix_dimension",
+          "fix_problem",
+          "fix_try"
+        ],
+        "title": "DeepReadBodyOut",
+        "type": "object"
+      },
+      "DeepReadIn": {
+        "description": "`refresh` ignores the stored reading and reads again.",
+        "properties": {
+          "refresh": {
+            "default": false,
+            "title": "Refresh",
+            "type": "boolean"
+          }
+        },
+        "title": "DeepReadIn",
+        "type": "object"
+      },
+      "DeepReadOut": {
+        "description": "The stored deep read (`read` is null before the first run).",
+        "properties": {
+          "cached": {
+            "title": "Cached",
+            "type": "boolean"
+          },
+          "read": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeepReadBodyOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stale": {
+            "title": "Stale",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "read",
+          "cached",
+          "stale"
+        ],
+        "title": "DeepReadOut",
+        "type": "object"
+      },
       "DefaultMaterialKind": {
         "description": "Where a default material's text comes from.",
         "enum": [
@@ -18450,6 +18954,14 @@
             "title": "Prompt Text",
             "type": "string"
           },
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/PromptTargetIn"
+            },
+            "maxItems": 5,
+            "title": "Targets",
+            "type": "array"
+          },
           "title": {
             "default": "",
             "maxLength": 120,
@@ -18526,6 +19038,18 @@
             "title": "Current Version",
             "type": "integer"
           },
+          "forked_from": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forked From"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -18577,6 +19101,13 @@
             "title": "Status",
             "type": "string"
           },
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/PromptTargetOut"
+            },
+            "title": "Targets",
+            "type": "array"
+          },
           "title": {
             "title": "Title",
             "type": "string"
@@ -18624,6 +19155,8 @@
           "status",
           "current_version",
           "lock_version",
+          "targets",
+          "forked_from",
           "updated_at"
         ],
         "title": "EssayOut",
@@ -18745,6 +19278,21 @@
               }
             ],
             "title": "Status"
+          },
+          "targets": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/PromptTargetIn"
+                },
+                "maxItems": 5,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targets"
           },
           "title": {
             "anyOf": [
@@ -19119,6 +19667,66 @@
           "note"
         ],
         "title": "EvidenceOut",
+        "type": "object"
+      },
+      "ExamCertificateOut": {
+        "description": "A standard certificate of the platform that no catalog test matches.",
+        "properties": {
+          "entry_id": {
+            "format": "uuid",
+            "title": "Entry Id",
+            "type": "string"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "issued_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued At"
+          },
+          "name": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Name",
+            "type": "object"
+          },
+          "type_code": {
+            "title": "Type Code",
+            "type": "string"
+          },
+          "values": {
+            "additionalProperties": true,
+            "title": "Values",
+            "type": "object"
+          }
+        },
+        "required": [
+          "entry_id",
+          "type_code",
+          "name",
+          "issued_at",
+          "expires_at",
+          "values"
+        ],
+        "title": "ExamCertificateOut",
         "type": "object"
       },
       "ExamDateIn": {
@@ -22564,6 +23172,50 @@
         "title": "FlashcardsOptions",
         "type": "object"
       },
+      "ForkIn": {
+        "description": "The prompt of the group the new essay takes (`null` owner: Common App).",
+        "properties": {
+          "institution_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution Id"
+          },
+          "position": {
+            "minimum": 1.0,
+            "title": "Position",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "position"
+        ],
+        "title": "ForkIn",
+        "type": "object"
+      },
+      "ForkOut": {
+        "description": "`parent` without the taken target; `essay` is the new fork.",
+        "properties": {
+          "essay": {
+            "$ref": "#/components/schemas/EssayOut"
+          },
+          "parent": {
+            "$ref": "#/components/schemas/EssayOut"
+          }
+        },
+        "required": [
+          "parent",
+          "essay"
+        ],
+        "title": "ForkOut",
+        "type": "object"
+      },
       "FormulaSpec": {
         "description": "The expected expression of a math formula question.",
         "properties": {
@@ -22598,6 +23250,109 @@
           }
         },
         "title": "FormulaSpec",
+        "type": "object"
+      },
+      "GalleryItemOut": {
+        "description": "A published essay version; it never carries the author.",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "essay_id": {
+            "format": "uuid",
+            "title": "Essay Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "prompt_text": {
+            "title": "Prompt Text",
+            "type": "string"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/PromptTargetOut"
+            },
+            "title": "Targets",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          },
+          "word_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Word Limit"
+          }
+        },
+        "required": [
+          "essay_id",
+          "kind",
+          "title",
+          "prompt_text",
+          "word_limit",
+          "targets",
+          "version",
+          "body",
+          "word_count",
+          "published_at"
+        ],
+        "title": "GalleryItemOut",
+        "type": "object"
+      },
+      "GalleryOut": {
+        "description": "`items`: others' essays; `mine`: what the student published.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/GalleryItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "mine": {
+            "items": {
+              "$ref": "#/components/schemas/GalleryItemOut"
+            },
+            "title": "Mine",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items",
+          "mine"
+        ],
+        "title": "GalleryOut",
         "type": "object"
       },
       "GoalAlignmentOut": {
@@ -22960,6 +23715,18 @@
           "name"
         ],
         "title": "GroupCreateBody",
+        "type": "object"
+      },
+      "GroupCritiqueIn": {
+        "description": "`refresh` ignores stored reviews and reviews again.",
+        "properties": {
+          "refresh": {
+            "default": false,
+            "title": "Refresh",
+            "type": "boolean"
+          }
+        },
+        "title": "GroupCritiqueIn",
         "type": "object"
       },
       "GroupDetailResponse": {
@@ -24214,6 +24981,95 @@
         "title": "HomeworkSubmissionsResponse",
         "type": "object"
       },
+      "HonorSuggestionOut": {
+        "description": "A platform certificate with the honor fields it prefills.",
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "dismissed": {
+            "title": "Dismissed",
+            "type": "boolean"
+          },
+          "entry_id": {
+            "format": "uuid",
+            "title": "Entry Id",
+            "type": "string"
+          },
+          "issued_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued At"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "entry_id",
+          "name",
+          "title",
+          "description",
+          "category",
+          "level",
+          "issued_at",
+          "dismissed"
+        ],
+        "title": "HonorSuggestionOut",
+        "type": "object"
+      },
+      "HonorSuggestionsOut": {
+        "description": "Suggestion row (`suggested`) and the creation pick list (`available`).",
+        "properties": {
+          "available": {
+            "items": {
+              "$ref": "#/components/schemas/HonorSuggestionOut"
+            },
+            "title": "Available",
+            "type": "array"
+          },
+          "suggested": {
+            "items": {
+              "$ref": "#/components/schemas/HonorSuggestionOut"
+            },
+            "title": "Suggested",
+            "type": "array"
+          }
+        },
+        "required": [
+          "suggested",
+          "available"
+        ],
+        "title": "HonorSuggestionsOut",
+        "type": "object"
+      },
       "HonourAward": {
         "description": "An award with its enabled rules.",
         "properties": {
@@ -24436,6 +25292,49 @@
           "serials"
         ],
         "title": "HonoursSerialsBody",
+        "type": "object"
+      },
+      "IdeaFitIn": {
+        "description": "An idea text to match against the prompts.",
+        "properties": {
+          "text": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "IdeaFitIn",
+        "type": "object"
+      },
+      "IdeaFitOut": {
+        "description": "Uncovered prompts, best fit first; empty when `available` is false.",
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PromptFitOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          }
+        },
+        "required": [
+          "available",
+          "model",
+          "items"
+        ],
+        "title": "IdeaFitOut",
         "type": "object"
       },
       "IdeaIn": {
@@ -26022,6 +26921,18 @@
             ],
             "title": "Category"
           },
+          "certificate_entry_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Certificate Entry Id"
+          },
           "description": {
             "default": "",
             "title": "Description",
@@ -26073,6 +26984,18 @@
             ],
             "title": "Kind",
             "type": "string"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
           },
           "metrics": {
             "items": {
@@ -26340,6 +27263,18 @@
             ],
             "title": "Category"
           },
+          "certificate_entry_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Certificate Entry Id"
+          },
           "description": {
             "title": "Description",
             "type": "string"
@@ -26395,6 +27330,17 @@
           "kind": {
             "title": "Kind",
             "type": "string"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
           },
           "lock_version": {
             "title": "Lock Version",
@@ -26481,7 +27427,9 @@
           "review",
           "review_stale",
           "grade",
-          "grade_stale"
+          "grade_stale",
+          "level",
+          "certificate_entry_id"
         ],
         "title": "ItemOut",
         "type": "object"
@@ -26558,6 +27506,18 @@
               }
             ],
             "title": "Intend In College"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
           },
           "lock_version": {
             "title": "Lock Version",
@@ -32254,6 +33214,50 @@
         "title": "ListAddIn",
         "type": "object"
       },
+      "ListBriefOut": {
+        "description": "The brief on the balance of my list: diagnosis, suggestions, next steps.",
+        "properties": {
+          "balance": {
+            "$ref": "#/components/schemas/BriefBalanceOut"
+          },
+          "diagnosis": {
+            "title": "Diagnosis",
+            "type": "string"
+          },
+          "entries": {
+            "title": "Entries",
+            "type": "integer"
+          },
+          "headline": {
+            "title": "Headline",
+            "type": "string"
+          },
+          "next_steps": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Next Steps",
+            "type": "array"
+          },
+          "suggestions": {
+            "items": {
+              "$ref": "#/components/schemas/BriefSuggestionOut"
+            },
+            "title": "Suggestions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "headline",
+          "diagnosis",
+          "balance",
+          "entries",
+          "suggestions",
+          "next_steps"
+        ],
+        "title": "ListBriefOut",
+        "type": "object"
+      },
       "ListEntryOut": {
         "description": "A list entry with institution, estimate and affordability.",
         "properties": {
@@ -33871,6 +34875,52 @@
         "title": "MarkupShapeSchema",
         "type": "object"
       },
+      "MatchCandidateOut": {
+        "description": "An essay that may fill the slot; `alignment` is the stored review, 0-100.",
+        "properties": {
+          "alignment": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alignment"
+          },
+          "essay_id": {
+            "title": "Essay Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "target_match": {
+            "title": "Target Match",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "essay_id",
+          "title",
+          "kind",
+          "word_count",
+          "alignment",
+          "target_match"
+        ],
+        "title": "MatchCandidateOut",
+        "type": "object"
+      },
       "MatchListOut": {
         "description": "Undecided universities, best match first.",
         "properties": {
@@ -34017,6 +35067,91 @@
           "status"
         ],
         "title": "MatchOut",
+        "type": "object"
+      },
+      "MatchSlotOut": {
+        "description": "One slot: `ps` (no prompt) or `supp:<position>`; candidates best first.",
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/MatchCandidateOut"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "essay_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Essay Id"
+          },
+          "prompt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt"
+          },
+          "slot": {
+            "title": "Slot",
+            "type": "string"
+          },
+          "word_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Word Limit"
+          }
+        },
+        "required": [
+          "slot",
+          "prompt",
+          "word_limit",
+          "essay_id",
+          "candidates"
+        ],
+        "title": "MatchSlotOut",
+        "type": "object"
+      },
+      "MatchTableOut": {
+        "description": "The matching table of one university.",
+        "properties": {
+          "institution_id": {
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "institution_name": {
+            "title": "Institution Name",
+            "type": "string"
+          },
+          "slots": {
+            "items": {
+              "$ref": "#/components/schemas/MatchSlotOut"
+            },
+            "title": "Slots",
+            "type": "array"
+          }
+        },
+        "required": [
+          "institution_id",
+          "institution_name",
+          "slots"
+        ],
+        "title": "MatchTableOut",
         "type": "object"
       },
       "MaterialBlockSchema": {
@@ -35940,6 +37075,35 @@
           "next_cursor"
         ],
         "title": "ModerationPageResponse",
+        "type": "object"
+      },
+      "MomentOut": {
+        "description": "A line (verbatim from the essay) that lands an insight.",
+        "properties": {
+          "kind": {
+            "enum": [
+              "surprising",
+              "fresh",
+              "earned"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "paragraph": {
+            "title": "Paragraph",
+            "type": "integer"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paragraph",
+          "quote",
+          "kind"
+        ],
+        "title": "MomentOut",
         "type": "object"
       },
       "MonthOut": {
@@ -38105,6 +39269,15 @@
             "title": "Created At",
             "type": "string"
           },
+          "delivery": {
+            "default": "external",
+            "enum": [
+              "local",
+              "external"
+            ],
+            "title": "Delivery",
+            "type": "string"
+          },
           "fields": {
             "$ref": "#/components/schemas/OpportunityFields"
           },
@@ -38354,6 +39527,19 @@
             ],
             "title": "Host Institution"
           },
+          "hours_per_week": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 80.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hours Per Week"
+          },
           "kind": {
             "enum": [
               "exam",
@@ -38510,6 +39696,18 @@
             ],
             "title": "Source Url"
           },
+          "starts_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts On"
+          },
           "study_field_ids": {
             "items": {
               "type": "string"
@@ -38636,6 +39834,15 @@
           "created_at": {
             "format": "date-time",
             "title": "Created At",
+            "type": "string"
+          },
+          "delivery": {
+            "default": "external",
+            "enum": [
+              "local",
+              "external"
+            ],
+            "title": "Delivery",
             "type": "string"
           },
           "fields": {
@@ -40167,6 +41374,48 @@
         "title": "ParagraphNoteOut",
         "type": "object"
       },
+      "ParagraphReadOut": {
+        "description": "What one paragraph (1-based) does and reveals about the writer.",
+        "properties": {
+          "paragraph": {
+            "title": "Paragraph",
+            "type": "integer"
+          },
+          "reveals": {
+            "title": "Reveals",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "hook",
+              "context",
+              "turn",
+              "evidence",
+              "insight",
+              "close"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "strength": {
+            "enum": [
+              "strong",
+              "ok",
+              "weak"
+            ],
+            "title": "Strength",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paragraph",
+          "role",
+          "reveals",
+          "strength"
+        ],
+        "title": "ParagraphReadOut",
+        "type": "object"
+      },
       "PassageDetailResponse": {
         "description": "`PassageDetail`: a passage with the passages before and after it.",
         "properties": {
@@ -41033,8 +42282,8 @@
           "planned_grade": {
             "anyOf": [
               {
-                "maximum": 12.0,
-                "minimum": 9.0,
+                "maximum": 20.0,
+                "minimum": 1.0,
                 "type": "integer"
               },
               {
@@ -41042,6 +42291,22 @@
               }
             ],
             "title": "Planned Grade"
+          },
+          "planned_term": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fall",
+                  "spring",
+                  "summer"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Term"
           }
         },
         "title": "PlanEntryIn",
@@ -41086,12 +42351,29 @@
               }
             ],
             "title": "Planned Grade"
+          },
+          "planned_term": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fall",
+                  "spring",
+                  "summer"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Term"
           }
         },
         "required": [
           "id",
           "opportunity_id",
           "planned_grade",
+          "planned_term",
           "note",
           "created_at"
         ],
@@ -42193,6 +43475,204 @@
           "items"
         ],
         "title": "PostsResponse",
+        "type": "object"
+      },
+      "PracticeBodyIn": {
+        "description": "The text of today's entry.",
+        "properties": {
+          "body": {
+            "maxLength": 6000,
+            "title": "Body",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "title": "PracticeBodyIn",
+        "type": "object"
+      },
+      "PracticeEntryOut": {
+        "description": "One day's entry.",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "day": {
+            "format": "date",
+            "title": "Day",
+            "type": "string"
+          },
+          "evaluation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PracticeEvaluationOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "theme": {
+            "title": "Theme",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "day",
+          "theme",
+          "body",
+          "word_count",
+          "evaluation",
+          "updated_at"
+        ],
+        "title": "PracticeEntryOut",
+        "type": "object"
+      },
+      "PracticeEvaluationOut": {
+        "description": "The coach's reading of one entry; never a rewrite.",
+        "properties": {
+          "idea_seeds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Idea Seeds",
+            "type": "array"
+          },
+          "praise": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Praise",
+            "type": "array"
+          },
+          "scores": {
+            "items": {
+              "$ref": "#/components/schemas/PracticeScoreOut"
+            },
+            "title": "Scores",
+            "type": "array"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "try_next": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Try Next",
+            "type": "array"
+          }
+        },
+        "required": [
+          "summary",
+          "scores",
+          "praise",
+          "try_next",
+          "idea_seeds"
+        ],
+        "title": "PracticeEvaluationOut",
+        "type": "object"
+      },
+      "PracticeListOut": {
+        "description": "My recent entries, newest first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PracticeEntryOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "PracticeListOut",
+        "type": "object"
+      },
+      "PracticeScoreOut": {
+        "description": "One creative-writing dimension, 0 to 5.",
+        "properties": {
+          "comment": {
+            "title": "Comment",
+            "type": "string"
+          },
+          "key": {
+            "enum": [
+              "imagery",
+              "voice",
+              "structure",
+              "originality"
+            ],
+            "title": "Key",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "score",
+          "comment"
+        ],
+        "title": "PracticeScoreOut",
+        "type": "object"
+      },
+      "PracticeTodayOut": {
+        "description": "Today's theme (`theme` is a stable key, `prompt` its English text).",
+        "properties": {
+          "day": {
+            "format": "date",
+            "title": "Day",
+            "type": "string"
+          },
+          "entry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PracticeEntryOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "prompt": {
+            "title": "Prompt",
+            "type": "string"
+          },
+          "theme": {
+            "title": "Theme",
+            "type": "string"
+          }
+        },
+        "required": [
+          "day",
+          "theme",
+          "prompt",
+          "entry"
+        ],
+        "title": "PracticeTodayOut",
         "type": "object"
       },
       "PreferenceAnswersIO": {
@@ -43685,6 +45165,172 @@
         "title": "PromptDiffOut",
         "type": "object"
       },
+      "PromptFitOut": {
+        "description": "Fit of the idea to one prompt: 0 to 100.",
+        "properties": {
+          "distance": {
+            "title": "Distance",
+            "type": "number"
+          },
+          "prompt": {
+            "$ref": "#/components/schemas/PromptRefOut"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "prompt",
+          "distance",
+          "score"
+        ],
+        "title": "PromptFitOut",
+        "type": "object"
+      },
+      "PromptGroupOut": {
+        "description": "Prompts one essay can answer.",
+        "properties": {
+          "covered": {
+            "description": "An essay or slot already answers a member.",
+            "title": "Covered",
+            "type": "boolean"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "common",
+              "shared",
+              "unique"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "prompts": {
+            "items": {
+              "$ref": "#/components/schemas/PromptRefOut"
+            },
+            "title": "Prompts",
+            "type": "array"
+          },
+          "spread": {
+            "title": "Spread",
+            "type": "number"
+          }
+        },
+        "required": [
+          "key",
+          "kind",
+          "spread",
+          "prompts",
+          "covered"
+        ],
+        "title": "PromptGroupOut",
+        "type": "object"
+      },
+      "PromptMapOut": {
+        "description": "The prompt map; `available` is false when no embedding model was reachable.",
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "delta": {
+            "title": "Delta",
+            "type": "number"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/PromptGroupOut"
+            },
+            "title": "Groups",
+            "type": "array"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          }
+        },
+        "required": [
+          "available",
+          "model",
+          "delta",
+          "groups"
+        ],
+        "title": "PromptMapOut",
+        "type": "object"
+      },
+      "PromptRefOut": {
+        "description": "One prompt: a Common App prompt (`institution_id` null) or a supplement.",
+        "properties": {
+          "in_list": {
+            "title": "In List",
+            "type": "boolean"
+          },
+          "institution_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution Id"
+          },
+          "institution_name": {
+            "title": "Institution Name",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "limit_unit": {
+            "title": "Limit Unit",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "prompt": {
+            "title": "Prompt",
+            "type": "string"
+          },
+          "required": {
+            "title": "Required",
+            "type": "boolean"
+          },
+          "word_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Word Limit"
+          }
+        },
+        "required": [
+          "key",
+          "institution_id",
+          "institution_name",
+          "position",
+          "prompt",
+          "word_limit",
+          "limit_unit",
+          "required",
+          "in_list"
+        ],
+        "title": "PromptRefOut",
+        "type": "object"
+      },
       "PromptSizeOut": {
         "description": "The size of one prompt version (0 is the built-in text).",
         "properties": {
@@ -43912,6 +45558,78 @@
           "rating_average"
         ],
         "title": "PromptStatsOut",
+        "type": "object"
+      },
+      "PromptTargetIn": {
+        "description": "A prompt the draft answers: `institution_id` null is the Common App.",
+        "properties": {
+          "institution_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution Id"
+          },
+          "position": {
+            "maximum": 999.0,
+            "minimum": 0.0,
+            "title": "Position",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "position"
+        ],
+        "title": "PromptTargetIn",
+        "type": "object"
+      },
+      "PromptTargetOut": {
+        "description": "A prompt the draft answers, with the text copied from the catalog.",
+        "properties": {
+          "institution_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution Id"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "prompt": {
+            "title": "Prompt",
+            "type": "string"
+          },
+          "word_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Word Limit"
+          }
+        },
+        "required": [
+          "institution_id",
+          "position",
+          "prompt",
+          "word_limit"
+        ],
+        "title": "PromptTargetOut",
         "type": "object"
       },
       "PromptVersionOut": {
@@ -50133,6 +51851,14 @@
             ],
             "title": "Send Note"
           },
+          "source": {
+            "enum": [
+              "manual",
+              "certificate"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
           "status": {
             "title": "Status",
             "type": "string"
@@ -50216,7 +51942,8 @@
           "is_official",
           "verified_at",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "source"
         ],
         "title": "ScoreEntryOut",
         "type": "object"
@@ -50235,6 +51962,13 @@
             "title": "Entries",
             "type": "array"
           },
+          "exams": {
+            "items": {
+              "$ref": "#/components/schemas/ExamCertificateOut"
+            },
+            "title": "Exams",
+            "type": "array"
+          },
           "is_owner": {
             "title": "Is Owner",
             "type": "boolean"
@@ -50251,7 +51985,8 @@
           "entries",
           "summaries",
           "is_owner",
-          "can_verify"
+          "can_verify",
+          "exams"
         ],
         "title": "ScoreOverviewOut",
         "type": "object"
@@ -52539,6 +54274,21 @@
           }
         },
         "title": "SlidesOptions",
+        "type": "object"
+      },
+      "SlotIn": {
+        "description": "The essay to place into the slot.",
+        "properties": {
+          "essay_id": {
+            "format": "uuid",
+            "title": "Essay Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "essay_id"
+        ],
+        "title": "SlotIn",
         "type": "object"
       },
       "SlotListOut": {
@@ -62159,6 +63909,62 @@
           "expires_at"
         ],
         "title": "ToolCallViewResponse",
+        "type": "object"
+      },
+      "TopEssayOut": {
+        "description": "An essay with its stored base review score, 0 to 100.",
+        "properties": {
+          "band": {
+            "title": "Band",
+            "type": "string"
+          },
+          "essay_id": {
+            "title": "Essay Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "essay_id",
+          "title",
+          "kind",
+          "word_count",
+          "score",
+          "band"
+        ],
+        "title": "TopEssayOut",
+        "type": "object"
+      },
+      "TopEssaysOut": {
+        "description": "My best essays, at most ten, best first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TopEssayOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "TopEssaysOut",
         "type": "object"
       },
       "TopItemResponse": {
@@ -86789,6 +88595,450 @@
         ]
       }
     },
+    "/v1/admission/essays/gallery": {
+      "get": {
+        "description": "Others' published essays (anonymous) and my own.",
+        "operationId": "admission_essay_gallery",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GalleryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Browse Gallery",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/ideas/fit": {
+      "post": {
+        "description": "Score an idea against the prompts no essay or slot covers (AI consent).",
+        "operationId": "admission_essay_idea_fit",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdeaFitIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdeaFitOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not the owner, or no AI consent."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The idea text is empty."
+          }
+        },
+        "summary": "Fit Idea",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/match/{university_id}": {
+      "get": {
+        "description": "The slots of a university with the essays that may fill them.",
+        "operationId": "admission_essay_match",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "university_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "University Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchTableOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Essay Match",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/match/{university_id}/slots/{slot_key}": {
+      "delete": {
+        "description": "Empty a slot.",
+        "operationId": "admission_essay_match_clear",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "university_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "University Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "slot_key",
+            "required": true,
+            "schema": {
+              "title": "Slot Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchTableOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Essay Match Clear",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Place an essay into a slot; it leaves its other slot of the university.",
+        "operationId": "admission_essay_match_assign",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "university_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "University Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "slot_key",
+            "required": true,
+            "schema": {
+              "title": "Slot Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SlotIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchTableOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Essay Match Assign",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/practice": {
+      "get": {
+        "description": "My recent entries, newest first.",
+        "operationId": "admission_essay_practice_history",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticeListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Practice History",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/practice/today": {
+      "get": {
+        "description": "Today's theme and my entry for it, if I started one.",
+        "operationId": "admission_essay_practice_today",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticeTodayOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Practice Today",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Write today's entry (sealed at rest); a changed text drops its evaluation.",
+        "operationId": "admission_essay_practice_save",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PracticeBodyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticeTodayOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Practice Save",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/practice/today/evaluate": {
+      "post": {
+        "description": "Evaluate today's entry (AI consent, daily limit); cached until it changes.",
+        "operationId": "admission_essay_practice_evaluate",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticeTodayOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Practice Evaluate",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/prompt-map": {
+      "get": {
+        "description": "The prompts grouped into common, shared and unique clusters.",
+        "operationId": "admission_essay_prompt_map",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptMapOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not the owner, or no AI consent."
+          }
+        },
+        "summary": "Get Prompt Map",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/top": {
+      "get": {
+        "description": "My best essays by stored review score (at most ten).",
+        "operationId": "admission_essay_top",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TopEssaysOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Essay Top",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/essays/{essay_id}": {
       "delete": {
         "description": "Delete my essay and its versions.",
@@ -87366,6 +89616,194 @@
         ]
       }
     },
+    "/v1/admission/essays/{essay_id}/deep-read": {
+      "get": {
+        "description": "My stored deep read, marked stale when the essay changed; no model call.",
+        "operationId": "admission_essay_deep_read_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeepReadOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not the owner, or no AI."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not my essay."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The essay has under 50 words."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The weekly limit is used up."
+          }
+        },
+        "summary": "Get Deep Read",
+        "tags": [
+          "admission"
+        ]
+      },
+      "post": {
+        "description": "Read my essay paragraph by paragraph (AI consent, weekly review limit).",
+        "operationId": "admission_essay_deep_read",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeepReadIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeepReadOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not the owner, or no AI."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not my essay."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The essay has under 50 words."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The weekly limit is used up."
+          }
+        },
+        "summary": "Run Deep Read",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/essays/{essay_id}/feedback": {
       "get": {
         "description": "Every comment on my essay, placed in the current text.",
@@ -87636,6 +90074,239 @@
           }
         },
         "summary": "Patch Feedback",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/{essay_id}/fork": {
+      "post": {
+        "description": "Copy the body into a new essay for one target of the group.",
+        "operationId": "admission_essay_fork",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForkIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForkOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Fork Essay",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/{essay_id}/gallery": {
+      "delete": {
+        "description": "Take my essay out of the gallery.",
+        "operationId": "admission_essay_unpublish",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unpublish Essay",
+        "tags": [
+          "admission"
+        ]
+      },
+      "post": {
+        "description": "Publish the current text of my essay as a new version (needs sharing).",
+        "operationId": "admission_essay_publish",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GalleryItemOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Publish Essay",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/{essay_id}/group-critique": {
+      "post": {
+        "description": "Review my essay for each target university under that target's prompt.",
+        "operationId": "admission_essay_group_critique",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupCritiqueIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EssayReviewsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not the owner, or no AI."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not my essay."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The essay has under 50 words."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The weekly limit is used up."
+          }
+        },
+        "summary": "Group Critique",
         "tags": [
           "admission"
         ]
@@ -89192,6 +91863,56 @@
         ]
       }
     },
+    "/v1/admission/list/brief": {
+      "post": {
+        "description": "A written brief on my list's balance (needs the `admission_ai` consent).",
+        "operationId": "admission_list_brief",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListBriefOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Brief",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/list/insights": {
       "get": {
         "description": "Classification and balance of my list or of a student's list.",
@@ -89950,6 +92671,93 @@
         ]
       }
     },
+    "/v1/admission/me/honor-suggestions": {
+      "get": {
+        "description": "Non-standard certificates of mine that can become honors.",
+        "operationId": "admission_list_honor_suggestions",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HonorSuggestionsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Honor Suggestions",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/me/honor-suggestions/{entry_id}/dismiss": {
+      "post": {
+        "description": "Hide a suggestion; the certificate stays in the creation pick list.",
+        "operationId": "admission_dismiss_honor_suggestion",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Dismiss Honor Suggestion",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/me/items": {
       "get": {
         "description": "Return my activities and honors.",
@@ -90649,7 +93457,8 @@
             "schema": {
               "enum": [
                 "career",
-                "algorithm"
+                "algorithm",
+                "budget"
               ],
               "title": "Quiz",
               "type": "string"
@@ -90694,7 +93503,8 @@
             "schema": {
               "enum": [
                 "career",
-                "algorithm"
+                "algorithm",
+                "budget"
               ],
               "title": "Quiz",
               "type": "string"
@@ -91377,8 +94187,8 @@
             "schema": {
               "anyOf": [
                 {
-                  "maximum": 12,
-                  "minimum": 9,
+                  "maximum": 20,
+                  "minimum": 1,
                   "type": "integer"
                 },
                 {
@@ -91550,6 +94360,80 @@
                 }
               ],
               "title": "College Credit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "delivery",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "local",
+                    "external"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Delivery"
+            }
+          },
+          {
+            "in": "query",
+            "name": "max_hours",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 80,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Max Hours"
+            }
+          },
+          {
+            "in": "query",
+            "name": "starts_within",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 730,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Starts Within"
+            }
+          },
+          {
+            "in": "query",
+            "name": "starts_month",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 12,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Starts Month"
             }
           },
           {

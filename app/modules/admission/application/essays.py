@@ -28,6 +28,7 @@ from app.modules.admission.application.essay_review_core import (
     run_check,
     run_feedback,
 )
+from app.modules.admission.application.essay_prompts import resolve_targets
 from app.modules.admission.application.items import items_summary
 from app.modules.admission.application.review_checks import nfc
 from app.modules.admission.application.student_context import student_block
@@ -40,6 +41,7 @@ from app.modules.admission.domain.errors import (
     EssayTooShortError,
     ItemLimitError,
 )
+from app.modules.admission.domain.essay_flow import PromptTarget
 from app.modules.admission.domain.essay_reviews import StoredReview
 from app.modules.admission.domain.essays import (
     KINDS,
@@ -82,6 +84,7 @@ EDITABLE: Final = frozenset(
         "plan",
         "links",
         "status",
+        "targets",
     }
 )
 IDEA_EDITABLE: Final = frozenset({"body", "essay_id", "tags", "status", "sort_order"})
@@ -145,11 +148,12 @@ class EssayService:
         if essay.kind not in KINDS:
             raise CharLimitError(params={"field": "kind", "limit": 0, "count": 0})
         essay.validate()
+        essay.targets = await resolve_targets(uow, essay.targets)
         if essay.list_entry_id is not None:
             entry = await uow.shortlist.entry(essay.list_entry_id)
             if entry is None or entry.student_id != ctx.user_id:
                 raise AdmissionNotFoundError()
-        elif essay.kind == "supplemental":
+        elif essay.kind == "supplemental" and not essay.targets:
             raise CharLimitError(
                 params={"field": "list_entry_id", "limit": 1, "count": 0}
             )
@@ -471,7 +475,19 @@ def _coerce(values: dict[str, Any]) -> dict[str, Any]:
             EssayLink(_get(link, "kind"), str(_get(link, "ref")))
             for link in out["links"] or ()
         )
+    if "targets" in out:
+        out["targets"] = tuple(_target(t) for t in out["targets"] or ())
     return out
+
+
+def _target(raw: Any) -> PromptTarget:
+    """A request target: only the owner and position count, the text comes later."""
+    if isinstance(raw, PromptTarget):
+        return raw
+    owner = _get(raw, "institution_id")
+    return PromptTarget(
+        None if owner is None else UUID(str(owner)), int(_get(raw, "position")), ""
+    )
 
 
 async def _check_link(

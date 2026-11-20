@@ -7,6 +7,7 @@ from typing import Final, Literal
 from uuid import UUID
 
 from app.modules.admission.domain.errors import CharLimitError, ItemLimitError
+from app.modules.admission.domain.essay_flow import MAX_GROUP, PromptTarget
 
 EssayKind = Literal["personal_statement", "supplemental", "other"]
 EssayStatus = Literal["draft", "final"]
@@ -81,6 +82,8 @@ class Essay:
     notes: str = ""
     plan: tuple[PlanSection, ...] = ()
     links: tuple[EssayLink, ...] = ()
+    targets: tuple[PromptTarget, ...] = ()
+    forked_from: UUID | None = None
     status: EssayStatus = "draft"
     current_version: int = 0
     last_snapshot_at: dt.datetime | None = None
@@ -114,6 +117,8 @@ class Essay:
             _limit("note", section.note, SECTION_NOTE_MAX)
         if len(self.links) > MAX_LINKS:
             raise ItemLimitError(params={"kind": "links", "limit": MAX_LINKS})
+        if len(self.targets) > MAX_GROUP:
+            raise ItemLimitError(params={"kind": "targets", "limit": MAX_GROUP})
 
 
 @dataclass(frozen=True, slots=True)

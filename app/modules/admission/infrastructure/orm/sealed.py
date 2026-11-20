@@ -28,13 +28,19 @@ SEALED_COLUMNS: Final[dict[str, frozenset[str]]] = {
     "essay_versions": frozenset({"body", "name"}),
     "essay_ideas": frozenset({"body", "tags"}),
     "essay_reviews": frozenset({"result"}),
+    "essay_practice": frozenset({"body", "evaluation"}),
     "essay_invites": frozenset({"label"}),
     "essay_feedback": frozenset({"quote", "body", "author_name"}),
 }
 """Table (in the admission schema) to its sealed columns."""
 
 SEALED_JSON: Final[frozenset[tuple[str, str]]] = frozenset(
-    {("essays", "plan"), ("essay_ideas", "tags"), ("essay_reviews", "result")}
+    {
+        ("essays", "plan"),
+        ("essay_ideas", "tags"),
+        ("essay_reviews", "result"),
+        ("essay_practice", "evaluation"),
+    }
 )
 """Sealed columns whose plaintext is JSON."""
 

@@ -22,6 +22,12 @@ from app.modules.admission.infrastructure.documents_repositories import (
     SqlDocumentRepository,
     SqlTranscriptRepository,
 )
+from app.modules.admission.infrastructure.essay_flow_repository import (
+    SqlGalleryRepository,
+    SqlPracticeRepository,
+    SqlPromptCatalog,
+    SqlSlotRepository,
+)
 from app.modules.admission.infrastructure.essay_invites_repository import (
     SqlEssayFeedbackRepository,
     SqlEssayInviteRepository,
@@ -124,6 +130,10 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
     profile_details: SqlProfileDetailsRepository
     memory_notes: SqlMemoryNoteRepository
     supp_prompts: SqlSuppPromptRepository
+    prompt_catalog: SqlPromptCatalog
+    practice: SqlPracticeRepository
+    gallery: SqlGalleryRepository
+    slots: SqlSlotRepository
 
     def __init__(
         self,
@@ -175,6 +185,10 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
         self.profile_details = SqlProfileDetailsRepository(self.session)
         self.memory_notes = SqlMemoryNoteRepository(self.session)
         self.supp_prompts = SqlSuppPromptRepository(self.session)
+        self.prompt_catalog = SqlPromptCatalog(self.session)
+        self.practice = SqlPracticeRepository(self.session, self._cipher)
+        self.gallery = SqlGalleryRepository(self.session)
+        self.slots = SqlSlotRepository(self.session)
 
     async def cancel_notification(self, dedupe_key: str) -> bool:
         """Cancel a still-pending notification; False when it was claimed."""

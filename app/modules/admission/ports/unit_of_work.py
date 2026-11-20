@@ -17,6 +17,12 @@ from app.modules.admission.ports.documents import (
     DocumentRepository,
     TranscriptRepository,
 )
+from app.modules.admission.ports.essay_flow import (
+    GalleryRepository,
+    PracticeRepository,
+    PromptCatalog,
+    SlotRepository,
+)
 from app.modules.admission.ports.essay_invites import (
     EssayFeedbackRepository,
     EssayInviteRepository,
@@ -240,6 +246,26 @@ class AdmissionUnitOfWork(Protocol):
     @property
     def supp_prompts(self) -> SuppPromptRepository:
         """Supplemental essay prompts per institution and cycle."""
+        ...
+
+    @property
+    def prompt_catalog(self) -> PromptCatalog:
+        """Common App and supplemental prompts for the prompt map."""
+        ...
+
+    @property
+    def practice(self) -> PracticeRepository:
+        """Daily practice entries."""
+        ...
+
+    @property
+    def gallery(self) -> GalleryRepository:
+        """Essay versions published to other students."""
+        ...
+
+    @property
+    def slots(self) -> SlotRepository:
+        """Essays placed into the prompt slots of universities."""
         ...
 
     def notify(self, *drafts: NotificationDraft) -> None:

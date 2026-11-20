@@ -103,6 +103,8 @@ class AiTask(StrEnum):
     ADMIT_ITEM_REWRITE_FIX = "admit_item_rewrite_fix"
     ADMIT_ESSAY_REVIEW = "admit_essay_review"
     ADMIT_ESSAY_UNI_REVIEW = "admit_essay_uni_review"
+    ADMIT_ESSAY_PRACTICE = "admit_essay_practice"
+    ADMIT_ESSAY_DEEP_READ = "admit_essay_deep_read"
     ADMIT_ALIGNMENT_MAP = "admit_alignment_map"
     ADMIT_ALIGNMENT_REFRESH = "admit_alignment_refresh"
     ADMIT_PROOF_EXTRACT = "admit_proof_extract"
@@ -113,6 +115,7 @@ class AiTask(StrEnum):
     ADMIT_CAREER_SPIKE = "admit_career_spike"
     ADMIT_UNI_ADVICE = "admit_uni_advice"
     ADMIT_LIST_SUGGEST = "admit_list_suggest"
+    ADMIT_LIST_BRIEF = "admit_list_brief"
     ADMIT_TASKS_SUGGEST = "admit_tasks_suggest"
     ADMIT_ASSISTANT = "admit_assistant"
     ADMIT_VOICE_TRANSCRIBE = "admit_voice_transcribe"
@@ -204,6 +207,12 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
     ),
     AiTask.ADMIT_LIST_SUGGEST: _admission(
         "Admission: suggests reach, target and safety universities for the list.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_LIST_BRIEF: _admission(
+        "Admission: a written brief on the balance of the university list.",
         model=NOTEBOOK_MODEL,
         budget_weight=1,
         reasoning_effort=_NO_REASONING,
@@ -555,6 +564,18 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
         model=NOTEBOOK_MODEL,
         budget_weight=1,
         reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_ESSAY_PRACTICE: _admission(
+        "Admission: creative-writing evaluation of one daily practice entry.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_ESSAY_DEEP_READ: _admission(
+        "Admission: paragraph by paragraph reading of an essay and its uniqueness.",
+        model=SMART_MODEL,
+        budget_weight=SMART_BUDGET_WEIGHT,
+        reasoning_effort=SMART_REASONING,
     ),
     AiTask.ADMIT_ALIGNMENT_MAP: _admission(
         "Admission: maps profile words to activities, essays and the list.",

@@ -12,10 +12,10 @@ from datetime import datetime
 from typing import Any, Final, Literal
 from uuid import UUID
 
-ReviewKind = Literal["check", "base", "uni"]
+ReviewKind = Literal["check", "base", "uni", "deep"]
 Alignment = Literal["strong", "partial", "missing"]
 
-REVIEW_KINDS: Final[tuple[ReviewKind, ...]] = ("check", "base", "uni")
+REVIEW_KINDS: Final[tuple[ReviewKind, ...]] = ("check", "base", "uni", "deep")
 ALIGNMENTS: Final[tuple[Alignment, ...]] = ("strong", "partial", "missing")
 MAX_UNIVERSITIES: Final = 5
 MAX_LIST: Final = 3

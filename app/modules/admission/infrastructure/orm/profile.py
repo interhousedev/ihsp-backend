@@ -146,6 +146,18 @@ class ItemRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
     timing: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
     intend_in_college: Mapped[bool | None] = mapped_column(Boolean)
     ai_grade: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    level: Mapped[str | None] = mapped_column(String(16))
+    certificate_entry_id: Mapped[UUID | None] = mapped_column(Uuid)
+
+
+class HonorSuggestionDismissalRow(CreatedMixin, Base):
+    """A certificate the student waved away from the honor suggestions."""
+
+    __tablename__ = "honor_dismissals"
+    __table_args__ = (S,)
+
+    student_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    certificate_entry_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
 
 
 class ItemMetricRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
@@ -353,6 +365,12 @@ class EssayRow(IdMixin, UpdatedMixin, CreatedMixin, LockMixin, Base):
         JSONB, server_default=text("'[]'")
     )
     last_snapshot_at: Mapped[datetime | None]
+    targets: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB, server_default=text("'[]'")
+    )
+    forked_from: Mapped[UUID | None] = mapped_column(
+        ForeignKey("admission.essays.id", ondelete="SET NULL")
+    )
 
 
 class EssayVersionRow(IdMixin, CreatedMixin, UpdatedMixin, Base):

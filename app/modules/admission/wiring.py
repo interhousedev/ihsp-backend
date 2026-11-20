@@ -32,7 +32,13 @@ from app.modules.admission.application.courses import CourseService
 from app.modules.admission.application.deadlines import DeadlineService
 from app.modules.admission.application.document_process import DocumentProcessService
 from app.modules.admission.application.documents import DocumentService
+from app.modules.admission.application.essay_deep_read import EssayDeepReadService
+from app.modules.admission.application.essay_gallery import EssayGalleryService
 from app.modules.admission.application.essay_invites import EssayInviteService
+from app.modules.admission.application.essay_match import EssayMatchService
+from app.modules.admission.application.essay_practice import EssayPracticeService
+from app.modules.admission.application.essay_prompt_map import EssayPromptMap
+from app.modules.admission.application.essay_prompts import FlowGate
 from app.modules.admission.application.essay_reviews import EssayReviewService
 from app.modules.admission.application.essays import (
     EssayCoach,
@@ -43,6 +49,7 @@ from app.modules.admission.application.exemplar_search import UowExemplarSource
 from app.modules.admission.application.exemplars import ExemplarService
 from app.modules.admission.application.goal_plan import GoalPlanService
 from app.modules.admission.application.goal_plan_suggest import GoalPlanSuggester
+from app.modules.admission.application.honor_suggestions import HonorSuggestionService
 from app.modules.admission.application.interview import ItemInterviewService
 from app.modules.admission.application.item_grade import ItemGradeService
 from app.modules.admission.application.items import ItemService
@@ -98,6 +105,7 @@ from app.modules.admission.infrastructure.essay_crypto import (
     MemoryEssayKeyStore,
 )
 from app.modules.admission.infrastructure.kb_repository import SqlKbRepository
+from app.modules.admission.infrastructure.prompt_vectors import EmbeddingPromptVectors
 from app.modules.admission.infrastructure.uni_chat_repository import (
     SqlUniChatRepository,
 )
@@ -120,6 +128,8 @@ from app.modules.admission.ports.voice import VoiceAi
 from app.modules.ai.domain.requests import AiRequestSpec
 from app.modules.notebooks.application.llm import NotebookLlm
 from app.shared.contracts.academic import AcademicMembership
+from app.shared.contracts.certificates import CertificateDirectory
+from app.shared.contracts.embeddings import EmbeddingIndex
 from app.shared.contracts.files import FilesApi
 from app.shared.contracts.identity import IdentityDirectory
 from app.shared.contracts.web_search import WebSearchApi, WebSearchGateway
@@ -173,6 +183,7 @@ class AdmissionServices:
     outcomes: OutcomeService
     nudges: NudgeService
     items: ItemService
+    honor_suggestions: HonorSuggestionService
     goal_plan: GoalPlanService
     goal_plan_suggest: GoalPlanSuggester
     essays: EssayService
@@ -211,6 +222,11 @@ class AdmissionServices:
     essay_invites: EssayInviteService
     exemplars: ExemplarService
     prompt_studio: PromptStudioService
+    essay_prompt_map: EssayPromptMap
+    essay_practice: EssayPracticeService
+    essay_gallery: EssayGalleryService
+    essay_match: EssayMatchService
+    essay_deep_read: EssayDeepReadService
 
 
 @dataclass(frozen=True, slots=True)
@@ -246,6 +262,8 @@ def build(
     uni_pages: UniPageReader | None = None,
     cipher: EssayCipher | None = None,
     studio_admin: PromptStudioAdmin,
+    certificates: CertificateDirectory | None = None,
+    embeddings: Callable[[], EmbeddingIndex | None] = lambda: None,
 ) -> AdmissionServices:
     """Wire the module; without `purpose_consents` they live in process memory."""
     over = overrides or AdmissionOverrides()
@@ -266,6 +284,7 @@ def build(
     )
     model = ai or UnavailableAi()
     texts = prompts or BuiltinPrompts()
+    flow_gate = FlowGate(access, consents)
     kb = KbService(SqlKbRepository(deps.sessionmaker), deps.clock)
     limits = deps.effective_limits
 
@@ -287,7 +306,7 @@ def build(
         deps.i18n.t,
     )
     calendar.register(OpportunitySource(opportunities.deadlines_for, calendar.store))
-    scores = ScoreService(uow_factory, access, deps.clock)
+    scores = ScoreService(uow_factory, access, deps.clock, certificates)
     calendar.register(ScoreCalendarSource(scores.dated, calendar.store, deps.i18n.t))
     list_plan = ListPlanService(
         uow_factory,
@@ -325,6 +344,19 @@ def build(
         deps.clock,
     )
     exemplar_source = UowExemplarSource(uow_factory, deps.clock)
+    essay_reviews = EssayReviewService(
+        uow_factory,
+        access,
+        model,
+        consents,
+        deps.clock,
+        deps.rate_limiter,
+        _quota_of(deps, "admit_essay_review_per_week"),
+        _quota_of(deps, "admit_essay_uni_review_per_week"),
+        texts,
+        exemplar_source,
+        cipher,
+    )
     return AdmissionServices(
         actor=ResolveAdmissionActor(
             uow_factory, membership, deps.clock, grades, runtime
@@ -392,7 +424,8 @@ def build(
         deadlines=DeadlineService(uow_factory, access, deps.clock),
         outcomes=OutcomeService(uow_factory, access, identity),
         nudges=NudgeService(uow_factory, deps.clock),
-        items=ItemService(uow_factory, access),
+        items=ItemService(uow_factory, access, certificates),
+        honor_suggestions=HonorSuggestionService(uow_factory, access, certificates),
         goal_plan=GoalPlanService(uow_factory, access, deps.clock),
         goal_plan_suggest=GoalPlanSuggester(
             uow_factory,
@@ -536,19 +569,7 @@ def build(
         calendar=calendar,
         uni_chat=uni,
         uni_advice=uni_advice,
-        essay_reviews=EssayReviewService(
-            uow_factory,
-            access,
-            model,
-            consents,
-            deps.clock,
-            deps.rate_limiter,
-            _quota_of(deps, "admit_essay_review_per_week"),
-            _quota_of(deps, "admit_essay_uni_review_per_week"),
-            texts,
-            exemplar_source,
-            cipher,
-        ),
+        essay_reviews=essay_reviews,
         essay_invites=EssayInviteService(
             uow_factory, access, deps.clock, deps.rate_limiter
         ),
@@ -561,6 +582,33 @@ def build(
             deps.clock,
             deps.rate_limiter,
             per_day=_studio_runs_of(deps),
+        ),
+        essay_prompt_map=EssayPromptMap(
+            uow_factory,
+            flow_gate,
+            EmbeddingPromptVectors(deps.sessionmaker, embeddings),
+        ),
+        essay_practice=EssayPracticeService(
+            uow_factory,
+            flow_gate,
+            model,
+            deps.clock,
+            deps.rate_limiter,
+            _quota_of(deps, "admit_essay_coach_per_day"),
+            texts,
+        ),
+        essay_gallery=EssayGalleryService(uow_factory, flow_gate, deps.clock),
+        essay_match=EssayMatchService(uow_factory, flow_gate),
+        essay_deep_read=EssayDeepReadService(
+            uow_factory,
+            flow_gate,
+            model,
+            deps.clock,
+            deps.rate_limiter,
+            _quota_of(deps, "admit_essay_review_per_week"),
+            texts,
+            cipher,
+            essay_reviews,
         ),
     )
 

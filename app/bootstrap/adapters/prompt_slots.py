@@ -14,12 +14,18 @@ from app.modules.admission.infrastructure.ai.prompts import (
 from app.modules.admission.infrastructure.ai.prompts import app_review as admit_review
 from app.modules.admission.infrastructure.ai.prompts import career as admit_career
 from app.modules.admission.infrastructure.ai.prompts import (
+    essay_flow as admit_essay_flow,
+)
+from app.modules.admission.infrastructure.ai.prompts import (
     essay_review as admit_essay_review,
 )
 from app.modules.admission.infrastructure.ai.prompts import essays as admit_essays
 from app.modules.admission.infrastructure.ai.prompts import goal_plan as admit_goal_plan
 from app.modules.admission.infrastructure.ai.prompts import item_grade as admit_grade
 from app.modules.admission.infrastructure.ai.prompts import items as admit_items
+from app.modules.admission.infrastructure.ai.prompts import (
+    list_brief as admit_list_brief,
+)
 from app.modules.admission.infrastructure.ai.prompts import (
     list_suggest as admit_list_suggest,
 )
@@ -164,6 +170,13 @@ _PARTS: tuple[tuple[Iterable[AiTask], str, str, str, bool], ...] = (
         False,
     ),
     (
+        (AiTask.ADMIT_LIST_BRIEF,),
+        "system",
+        "Admission chooser: written brief on the balance of the list",
+        admit_list_brief.SYSTEM,
+        False,
+    ),
+    (
         (AiTask.ADMIT_TASKS_SUGGEST,),
         "system",
         "Admission tasks: suggested tasks with steps and links",
@@ -205,6 +218,20 @@ _PARTS: tuple[tuple[Iterable[AiTask], str, str, str, bool], ...] = (
         "uni",
         "Admission essay review: fit with one university's sourced goals",
         admit_essay_review.UNI,
+        False,
+    ),
+    (
+        (AiTask.ADMIT_ESSAY_PRACTICE,),
+        "practice",
+        "Admission essay flow: creative-writing evaluation of a daily practice entry",
+        admit_essay_flow.PRACTICE,
+        False,
+    ),
+    (
+        (AiTask.ADMIT_ESSAY_DEEP_READ,),
+        "deep_read",
+        "Admission essay flow: paragraph by paragraph reading of an essay",
+        admit_essay_flow.DEEP_READ,
         False,
     ),
     (

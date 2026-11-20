@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+
+- Admission honors: shared honor categories (`app/shared/honor_categories.py`), a `standard` flag and category on certificate types (`certificates_0005`), honor suggestions from the student's certificates (`GET /v1/admission/me/honor-suggestions`, dismiss), standard certificates merged into `/test-scores` (`admission_0045`).
+- Admission universities: per-university aid profile (full need, need-blind, aid composition, average international aid, international admit rate, with sources; `admission_0046`), the budget step marks itself reviewed, and an AI list brief (`POST /v1/admission/list/brief`, task `ADMIT_LIST_BRIEF`).
+- Admission opportunities: hours per week, start date and delivery (local/external) with filters, a planned term on plan entries (`admission_0047`); the school grade range is admin-editable (`GET/PUT /v1/admission/settings/school-grades`, `admission_0048`).
+- Admission essays: a linear flow with a prompt map clustered by embeddings, daily practice, prompt-group drafts and forks, a consent-gated anonymous gallery, a paragraph-level deep read, and drag-and-drop matching of essays to university slots (`admission_0049`, tasks `ADMIT_ESSAY_PRACTICE`, `ADMIT_ESSAY_DEEP_READ`).
+
 ### Fixed
 
 - Admission: a student without an eligible lyceum group (for example a staff account that also holds the student role) got 404 on `/list`, `/list/insights`, `/me/profile`, `/readiness`, `/test-scores` and other owner routes; the per-student access policy now applies the same role-stacking entitlement as the caller resolver.

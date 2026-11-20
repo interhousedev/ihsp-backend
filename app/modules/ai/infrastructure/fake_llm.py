@@ -11,8 +11,10 @@ from app.modules.ai.infrastructure.fake_admission import build_admission_documen
 from app.modules.ai.infrastructure.fake_author import author_answer, is_author_chat
 from app.modules.ai.infrastructure.fake_career import build_career_document
 from app.modules.ai.infrastructure.fake_course import build_course_document
+from app.modules.ai.infrastructure.fake_essays import build_essay_document
 from app.modules.ai.infrastructure.fake_exercise import build_exercise_document
 from app.modules.ai.infrastructure.fake_list_suggest import (
+    build_list_brief_document,
     build_list_suggest_document,
 )
 from app.modules.ai.infrastructure.fake_schema import document_for
@@ -117,9 +119,11 @@ class FakeLlmGateway:
             ) or build_exercise_document(schema_name, messages)
             built = built or build_teacher_document(schema_name, messages)
             built = built or build_admission_document(schema_name, system)
+            built = built or build_essay_document(schema_name, messages)
             built = built or build_career_document(schema_name, messages)
             built = built or build_uni_advice_document(schema_name, messages)
             built = built or build_list_suggest_document(schema_name, messages)
+            built = built or build_list_brief_document(schema_name, messages)
             built = built or build_tasks_document(schema_name)
             built = built or build_item_grade_document(schema_name)
             if built is None and schema_name not in BUILDERS:

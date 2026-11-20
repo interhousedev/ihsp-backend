@@ -8,6 +8,7 @@ from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep, St
 from app.interfaces.http.v1.admission.routes_items import _locale
 from app.modules.admission.application.essay_review_core import EssayCheck
 from app.modules.admission.application.essays import SharedEssay
+from app.modules.admission.domain.essay_flow import MAX_GROUP
 from app.modules.admission.domain.essays import (
     BODY_MAX,
     HEADING_MAX,
@@ -51,6 +52,22 @@ class EssayLinkIO(BaseModel):
     ref: str = Field(min_length=1, max_length=64)
 
 
+class PromptTargetIn(BaseModel):
+    """A prompt the draft answers: `institution_id` null is the Common App."""
+
+    institution_id: UUID | None = None
+    position: int = Field(ge=0, le=999)
+
+
+class PromptTargetOut(BaseModel):
+    """A prompt the draft answers, with the text copied from the catalog."""
+
+    institution_id: UUID | None
+    position: int
+    prompt: str
+    word_limit: int | None
+
+
 class EssayIn(BaseModel):
     """A new essay; supplemental essays need `list_entry_id`."""
 
@@ -59,6 +76,7 @@ class EssayIn(BaseModel):
     prompt_text: str = Field(default="", max_length=PROMPT_MAX)
     word_limit: int | None = Field(default=None, ge=1, le=WORD_LIMIT_MAX)
     list_entry_id: UUID | None = None
+    targets: list[PromptTargetIn] = Field(default_factory=list, max_length=MAX_GROUP)
 
 
 class EssayPatchIn(BaseModel):
@@ -75,6 +93,7 @@ class EssayPatchIn(BaseModel):
     plan: list[PlanSectionIO] | None = Field(default=None, max_length=MAX_SECTIONS)
     links: list[EssayLinkIO] | None = Field(default=None, max_length=MAX_LINKS)
     status: Literal["draft", "final"] | None = None
+    targets: list[PromptTargetIn] | None = Field(default=None, max_length=MAX_GROUP)
 
 
 class EssayOut(BaseModel):
@@ -94,6 +113,8 @@ class EssayOut(BaseModel):
     status: str
     current_version: int
     lock_version: int
+    targets: list[PromptTargetOut]
+    forked_from: UUID | None
     updated_at: dt.datetime | None
 
     @classmethod
@@ -114,6 +135,16 @@ class EssayOut(BaseModel):
             status=e.status,
             current_version=e.current_version,
             lock_version=e.lock_version,
+            targets=[
+                PromptTargetOut(
+                    institution_id=t.institution_id,
+                    position=t.position,
+                    prompt=t.prompt,
+                    word_limit=t.word_limit,
+                )
+                for t in e.targets
+            ],
+            forked_from=e.forked_from,
             updated_at=e.updated_at,
         )
 
@@ -437,7 +468,16 @@ async def patch_essay(
 ) -> EssayOut:
     """Autosave; 409 when another tab saved first. May snapshot a version."""
     changes = body.model_dump(exclude_unset=True, exclude={"lock_version"})
-    for key in ("kind", "title", "prompt_text", "body", "notes", "plan", "links"):
+    for key in (
+        "kind",
+        "title",
+        "prompt_text",
+        "body",
+        "notes",
+        "plan",
+        "links",
+        "targets",
+    ):
         if key in changes and changes[key] is None:
             del changes[key]
     if changes.get("status") is None:

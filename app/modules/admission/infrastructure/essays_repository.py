@@ -12,6 +12,7 @@ from app.modules.admission.domain.errors import (
     AdmissionConflictError,
     AdmissionNotFoundError,
 )
+from app.modules.admission.domain.essay_flow import PromptTarget
 from app.modules.admission.domain.essays import (
     Essay,
     EssayIdea,
@@ -49,6 +50,27 @@ def _links(raw: list[dict[str, Any]]) -> tuple[EssayLink, ...]:
     )
 
 
+def _targets(raw: list[dict[str, Any]]) -> tuple[PromptTarget, ...]:
+    return tuple(
+        PromptTarget(
+            UUID(t["institution_id"]) if t.get("institution_id") else None,
+            int(t["position"]),
+            str(t.get("prompt", "")),
+            t.get("word_limit"),
+        )
+        for t in raw
+    )
+
+
+def _target_json(t: PromptTarget) -> dict[str, Any]:
+    return {
+        "institution_id": None if t.institution_id is None else str(t.institution_id),
+        "position": t.position,
+        "prompt": t.prompt,
+        "word_limit": t.word_limit,
+    }
+
+
 class SqlEssayRepository:
     """Essays on an open session; text columns are sealed with the owner's key."""
 
@@ -84,6 +106,8 @@ class SqlEssayRepository:
             notes=await self._open(o, rid, "notes", row.notes),
             plan=_plan(plan or []),
             links=_links(row.links or []),
+            targets=_targets(row.targets or []),
+            forked_from=row.forked_from,
             status=cast(EssayStatus, row.status),
             current_version=row.current_version,
             last_snapshot_at=row.last_snapshot_at,
@@ -136,6 +160,8 @@ class SqlEssayRepository:
         row.notes = await self._seal(o, rid, "notes", essay.notes)
         row.plan = await self._seal(o, rid, "plan", to_json(plan))
         row.links = [{"kind": link.kind, "ref": link.ref} for link in essay.links]
+        row.targets = [_target_json(t) for t in essay.targets]
+        row.forked_from = essay.forked_from
         row.status = essay.status
         row.current_version = essay.current_version
         row.last_snapshot_at = essay.last_snapshot_at
