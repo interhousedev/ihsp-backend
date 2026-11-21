@@ -135,7 +135,7 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ihsp -d ihsp"]
 
   redis:
-    image: redis:7.4.11-alpine
+    image: redis:7.4.12-alpine
     restart: unless-stopped
     logging: *logging
     command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
