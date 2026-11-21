@@ -14,6 +14,7 @@ from app.modules.admission.application.essay_prompt_map import (
     PromptFit,
     PromptMapView,
 )
+from app.modules.admission.domain.essay_categories import Category, ShortAnswer
 from app.modules.admission.domain.essay_flow import PromptRef
 from app.modules.admission.domain.essays import IDEA_MAX
 
@@ -52,6 +53,25 @@ class PromptRefOut(BaseModel):
         )
 
 
+class ShortAnswerOut(BaseModel):
+    """A short answer to one prompt; `word_count` counts whitespace-separated words."""
+
+    prompt_key: str
+    text: str
+    word_count: int
+    updated_at: dt.datetime | None
+
+    @classmethod
+    def of(cls, a: ShortAnswer) -> "ShortAnswerOut":
+        """Build from a stored short answer."""
+        return cls(
+            prompt_key=a.prompt_key,
+            text=a.text,
+            word_count=a.word_count,
+            updated_at=a.updated_at,
+        )
+
+
 class PromptGroupOut(BaseModel):
     """Prompts one essay can answer."""
 
@@ -60,6 +80,13 @@ class PromptGroupOut(BaseModel):
         description="Short name of the shared theme in the UI language, stored."
     )
     kind: Literal["common", "shared", "unique"]
+    category: Category = Field(
+        description="What the prompts ask, derived on the server from the prompt "
+        "text, the stored group label and the word limit."
+    )
+    short_answers: list[ShortAnswerOut] = Field(
+        description="My short texts for member prompts; only for `short_answer`."
+    )
     spread: float
     prompts: list[PromptRefOut]
     covered: bool = Field(description="An essay or slot already answers a member.")
@@ -79,6 +106,8 @@ class PromptGroupOut(BaseModel):
             key=g.group.key,
             label=g.label,
             kind=g.group.kind,
+            category=g.category,
+            short_answers=[ShortAnswerOut.of(a) for a in g.short_answers],
             spread=g.group.spread,
             prompts=[PromptRefOut.of(p) for p in g.group.prompts],
             covered=any(p.key in covered for p in g.group.prompts),

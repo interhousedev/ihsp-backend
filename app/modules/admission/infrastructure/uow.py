@@ -30,6 +30,7 @@ from app.modules.admission.infrastructure.essay_flow_repository import (
     SqlIdeaFitCache,
     SqlPracticeRepository,
     SqlPromptCatalog,
+    SqlShortAnswerRepository,
     SqlSlotRepository,
 )
 from app.modules.admission.infrastructure.essay_invites_repository import (
@@ -166,6 +167,7 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
     practice: SqlPracticeRepository
     gallery: SqlGalleryRepository
     slots: SqlSlotRepository
+    short_answers: SqlShortAnswerRepository
     group_labels: SqlGroupLabelRepository
     idea_fits: SqlIdeaFitCache
 
@@ -252,6 +254,7 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
         self.practice = SqlPracticeRepository(self.session, self._cipher)
         self.gallery = SqlGalleryRepository(self.session)
         self.slots = SqlSlotRepository(self.session)
+        self.short_answers = SqlShortAnswerRepository(self.session, self._cipher)
         self.group_labels = SqlGroupLabelRepository(self.session)
         self.idea_fits = SqlIdeaFitCache(self.session)
 

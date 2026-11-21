@@ -23,6 +23,7 @@ from app.modules.admission.ports.essay_flow import (
     IdeaFitCache,
     PracticeRepository,
     PromptCatalog,
+    ShortAnswerRepository,
     SlotRepository,
 )
 from app.modules.admission.ports.essay_invites import (
@@ -298,6 +299,11 @@ class AdmissionUnitOfWork(Protocol):
     @property
     def slots(self) -> SlotRepository:
         """Essays placed into the prompt slots of universities."""
+        ...
+
+    @property
+    def short_answers(self) -> ShortAnswerRepository:
+        """Sealed short texts per supplemental prompt."""
         ...
 
     def notify(self, *drafts: NotificationDraft) -> None:

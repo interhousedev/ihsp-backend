@@ -6,14 +6,19 @@ from uuid import UUID
 
 from app.modules.admission.application.essay_match import EssayMatchService
 from app.modules.admission.application.essay_prompts import FlowGate
-from app.modules.admission.domain.chooser import CatalogInstitution
+from app.modules.admission.domain.chooser import (
+    CatalogInstitution,
+    FactView,
+    ListEntry,
+)
 from app.modules.admission.domain.errors import AdmissionNotFoundError
+from app.modules.admission.domain.essay_categories import ShortAnswer
 from app.modules.admission.domain.essay_flow import PromptRef, PromptTarget, prompt_key
 from app.modules.admission.domain.essay_reviews import StoredReview
 from app.modules.admission.domain.essays import Essay
 from app.shared.base_error import ValidationFailedError
 from app.shared.ids import new_id
-from tests.admission.unit.fakes_flow import MemPrompts, MemSlots
+from tests.admission.unit.fakes_flow import MemPrompts, MemShortAnswers, MemSlots
 from tests.admission.unit.test_essays import Desk
 from tests.admission.unit.test_items_service import STUDENT, ItemsUow
 
@@ -28,6 +33,7 @@ class Bench(Desk):
     def __init__(self) -> None:
         super().__init__()
         self.slots = MemSlots()
+        self.answers = MemShortAnswers()
         self.prompts = MemPrompts(
             [
                 PromptRef(prompt_key(UNI, 0), UNI, "U", 0, "Why us?", 250),
@@ -45,6 +51,7 @@ class Bench(Desk):
             u.essay_reviews = self.reviews  # type: ignore[attr-defined]
             u.prompt_catalog = self.prompts  # type: ignore[attr-defined]
             u.slots = self.slots  # type: ignore[attr-defined]
+            u.short_answers = self.answers  # type: ignore[attr-defined]
             return u
 
         self.match = EssayMatchService(uow, FlowGate(self.w.policy, self.consents))
@@ -170,3 +177,61 @@ async def test_rejects_unknown_slot_essay_university_and_foreign_essay() -> None
         await b.match.assign(ctx, UNI, "ps", new_id())
     with pytest.raises(AdmissionNotFoundError):
         await b.match.table(ctx, new_id())
+
+
+def _common_app(b: Bench, *ids: UUID) -> None:
+    for iid in ids:
+        inst = b.w.store.institutions[iid]
+        inst.facts["application_platforms"] = FactView(["common_app", "own"])
+        b.w.store.list_entries[new_id()] = ListEntry(new_id(), STUDENT, iid)
+
+
+async def test_common_app_slot_is_one_call_for_every_common_app_university() -> None:
+    b = Bench()
+    ctx = await b.w.ctx()
+    _common_app(b, UNI)
+    b.w.store.institutions[OTHER].facts["application_platforms"] = FactView(["ucas"])
+    b.w.store.list_entries[new_id()] = ListEntry(new_id(), STUDENT, OTHER)
+    ps = await b.essay()
+    tables = {t.institution_id: t for t in await b.match.set_common_app(ctx, ps.id)}
+    assert tables[UNI].slots[0].shared and tables[UNI].slots[0].essay_id == ps.id
+    assert not tables[OTHER].slots[0].shared and tables[OTHER].slots[0].essay_id is None
+    cleared = await b.match.set_common_app(ctx, None)
+    assert all(t.slots[0].essay_id is None for t in cleared)
+    supp = await b.essay("supplemental")
+    with pytest.raises(ValidationFailedError):
+        await b.match.set_common_app(ctx, supp.id)
+    with pytest.raises(AdmissionNotFoundError):
+        await b.match.set_common_app(ctx, new_id())
+
+
+async def test_short_answer_slot_carries_the_sealed_text() -> None:
+    b = Bench()
+    ctx = await b.w.ctx()
+    key = prompt_key(UNI, 2)
+    b.prompts.refs.append(PromptRef(key, UNI, "U", 2, "Name a book you loved", 80))
+    b.answers.rows[(STUDENT, key)] = ShortAnswer(STUDENT, key, "tiny text", 2)
+    b.answers.rows[(STUDENT, prompt_key(UNI, 1))] = ShortAnswer(
+        STUDENT, prompt_key(UNI, 1), "x", 1
+    )
+    t = await b.match.table(ctx, UNI)
+    assert t.slots[2].category == "community" and t.slots[2].short_answer is None
+    last = t.slots[3]
+    assert last.category == "short_answer" and last.prompt_key == key
+    assert last.short_answer is not None and last.short_answer.word_count == 2
+
+
+def test_unknown_platforms_default_to_common_app_only_in_the_us() -> None:
+    from app.modules.admission.application.essay_match import uses_common_app
+
+    def inst(facts: dict[str, FactView], country: str = "US") -> CatalogInstitution:
+        return CatalogInstitution(new_id(), "s", "U", country, None, "published", facts)
+
+    assert uses_common_app(inst({}))
+    assert uses_common_app(inst({"application_platforms": FactView([])}))
+    assert not uses_common_app(inst({}, "IT"))
+    assert not uses_common_app(inst({}, "UZ"))
+    assert uses_common_app(
+        inst({"application_platforms": FactView(["common_app"])}, "GB")
+    )
+    assert not uses_common_app(inst({"application_platforms": FactView(["own"])}))

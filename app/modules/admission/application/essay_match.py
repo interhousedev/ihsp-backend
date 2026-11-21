@@ -3,6 +3,8 @@
 Both read the stored reviews only (no model call). The table has one slot per
 prompt of the university (`supp:<n>`) and the personal statement slot (`ps`),
 which only personal statements may fill. An essay holds one slot per university.
+The `ps` slot of a university on Common App is shared: one call fills it for all.
+Short prompts also carry the student's sealed short answer.
 """
 
 import datetime as dt
@@ -13,7 +15,13 @@ from uuid import UUID
 from app.modules.admission.application.actor import AdmissionContext
 from app.modules.admission.application.essay_due import DueDate, application_dues
 from app.modules.admission.application.essay_prompts import FlowGate
+from app.modules.admission.domain.chooser import CatalogInstitution
 from app.modules.admission.domain.errors import AdmissionNotFoundError
+from app.modules.admission.domain.essay_categories import (
+    Category,
+    ShortAnswer,
+    classify_prompt,
+)
 from app.modules.admission.domain.essay_flow import (
     PS_SLOT,
     TOP_ESSAYS,
@@ -74,6 +82,12 @@ class MatchSlot:
     candidates: tuple[MatchCandidate, ...]
     required: bool = True
     assigned: AssignedEssay | None = None
+    shared: bool = False
+    """The personal statement of a Common App university: one essay for all."""
+    category: Category | None = None
+    prompt_key: str | None = None
+    short_answer: ShortAnswer | None = None
+    """The sealed short text, only on `short_answer` slots."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -102,6 +116,23 @@ def _assigned(essay: Essay | None, limit: int | None) -> AssignedEssay | None:
         essay.status,
         limit is not None and essay.word_count > limit,
     )
+
+
+def uses_common_app(inst: CatalogInstitution) -> bool:
+    """The university takes the Common App personal statement.
+
+    A known `application_platforms` fact decides. Without one, US universities
+    count as Common App members (almost all are) and the rest keep their own
+    personal-statement slot, so a European or Uzbek university is never filled
+    from the shared slot by accident.
+    """
+    fact = inst.facts.get("application_platforms")
+    value = None if fact is None else fact.value
+    if value in (None, [], ()):
+        return inst.country == "US"
+    if isinstance(value, str):
+        return value == "common_app"
+    return isinstance(value, list | tuple) and "common_app" in value
 
 
 def _bad_slot() -> ValidationFailedError:
@@ -190,6 +221,43 @@ class EssayMatchService:
             await uow.commit()
         return table
 
+    async def set_common_app(
+        self, ctx: AdmissionContext, essay_id: UUID | None
+    ) -> list[MatchTable]:
+        """Fill (or empty) the personal statement of every listed Common App university.
+
+        One call for the one shared slot; universities that do not use Common App
+        keep their own `ps` slot.
+        """
+        await self._gate.owner(ctx)
+        async with self._uow() as uow:
+            if essay_id is not None:
+                essay = await uow.essays.get(essay_id)
+                if essay is None or essay.student_id != ctx.user_id:
+                    raise AdmissionNotFoundError()
+                if essay.kind != "personal_statement":
+                    raise _bad_slot()
+            ids = list(
+                dict.fromkeys(
+                    e.institution_id for e in await uow.shortlist.entries(ctx.user_id)
+                )
+            )
+            for iid in ids:
+                inst = await uow.catalog.institution(iid)
+                if inst is None or not uses_common_app(inst):
+                    continue
+                if essay_id is None:
+                    await uow.slots.clear(ctx.user_id, iid, PS_SLOT)
+                else:
+                    await uow.slots.put(
+                        SlotAssignment(ctx.user_id, iid, PS_SLOT, essay_id)
+                    )
+            dues = await application_dues(uow, ctx.user_id)
+            tables = [await self._table(uow, ctx.user_id, i, dues) for i in ids]
+            await uow.commit()
+        far = dt.datetime.max.replace(tzinfo=dt.UTC)
+        return sorted(tables, key=lambda t: (t.due_utc or far, t.institution_name))
+
     async def clear(
         self, ctx: AdmissionContext, institution_id: UUID, slot: str
     ) -> MatchTable:
@@ -221,6 +289,11 @@ class EssayMatchService:
         dues: dict[UUID, DueDate] | None = None,
     ) -> MatchTable:
         name, refs = await self._university(uow, institution_id)
+        inst = await uow.catalog.institution(institution_id)
+        common = inst is not None and uses_common_app(inst)
+        answers = {
+            a.prompt_key: a for a in await uow.short_answers.for_student(student_id)
+        }
         if dues is None:
             dues = await application_dues(uow, student_id)
         due = dues.get(institution_id)
@@ -240,11 +313,14 @@ class EssayMatchService:
                 (),
                 True,
                 _assigned(_held(by_id, placed.get(PS_SLOT)), None),
+                common,
+                "personal_statement",
             )
         ]
         slots[0] = self._slot(slots[0], essays, alignment, institution_id, None)
         for ref in sorted(refs, key=lambda r: r.position):
             key = supp_slot(ref.position)
+            category = classify_prompt(ref)
             base = MatchSlot(
                 key,
                 ref.prompt,
@@ -253,6 +329,10 @@ class EssayMatchService:
                 (),
                 ref.required,
                 _assigned(_held(by_id, placed.get(key)), ref.word_limit),
+                False,
+                category,
+                ref.key,
+                answers.get(ref.key) if category == "short_answer" else None,
             )
             slots.append(self._slot(base, essays, alignment, institution_id, ref))
         return MatchTable(
@@ -301,6 +381,10 @@ class EssayMatchService:
             tuple(cands),
             slot.required,
             slot.assigned,
+            slot.shared,
+            slot.category,
+            slot.prompt_key,
+            slot.short_answer,
         )
 
     @staticmethod

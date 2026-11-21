@@ -1835,6 +1835,12 @@
             ],
             "title": "Entitlement Kind"
           },
+          "estimates_visible": {
+            "default": true,
+            "description": "Whether admission estimates are shown to this caller.",
+            "title": "Estimates Visible",
+            "type": "boolean"
+          },
           "grade": {
             "anyOf": [
               {
@@ -11652,6 +11658,28 @@
           "anchor"
         ],
         "title": "CommentOut",
+        "type": "object"
+      },
+      "CommonAppIn": {
+        "description": "The personal statement for every Common App university; null empties it.",
+        "properties": {
+          "essay_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Essay Id"
+          }
+        },
+        "required": [
+          "essay_id"
+        ],
+        "title": "CommonAppIn",
         "type": "object"
       },
       "CommonWorkOffBody": {
@@ -26615,6 +26643,20 @@
             "title": "Facts",
             "type": "object"
           },
+          "fit_total": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Fit for the caller (as /list/fit); null when not computable.",
+            "title": "Fit Total"
+          },
           "highlights": {
             "items": {
               "$ref": "#/components/schemas/HighlightOut"
@@ -26626,6 +26668,19 @@
             "format": "uuid",
             "title": "Id",
             "type": "string"
+          },
+          "known_share": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Known Share"
           },
           "logo_fit": {
             "enum": [
@@ -35462,6 +35517,18 @@
             ],
             "title": "Admission Rate"
           },
+          "avg_aid_intl": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Average aid for international students, USD.",
+            "title": "Avg Aid Intl"
+          },
           "city": {
             "anyOf": [
               {
@@ -35499,6 +35566,19 @@
             ],
             "title": "Cover Url"
           },
+          "fit_total": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fit Total"
+          },
           "institution_type": {
             "anyOf": [
               {
@@ -35509,6 +35589,32 @@
               }
             ],
             "title": "Institution Type"
+          },
+          "intl_acceptance_rate": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intl Acceptance Rate"
+          },
+          "known_share": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Known Share"
           },
           "logo_url": {
             "anyOf": [
@@ -35527,9 +35633,30 @@
             "title": "Match Pct",
             "type": "integer"
           },
+          "meets_full_need": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meets Full Need"
+          },
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "next_deadline": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NextDeadlineOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "overlap": {
             "$ref": "#/components/schemas/OverlapOut"
@@ -35592,6 +35719,18 @@
             "title": "Candidates",
             "type": "array"
           },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Prompt category (see the prompt map); null for no prompt.",
+            "title": "Category"
+          },
           "essay_id": {
             "anyOf": [
               {
@@ -35614,9 +35753,37 @@
             ],
             "title": "Prompt"
           },
+          "prompt_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Key of the prompt; null for `ps`.",
+            "title": "Prompt Key"
+          },
           "required": {
             "title": "Required",
             "type": "boolean"
+          },
+          "shared": {
+            "description": "The personal statement of a Common App university: set once for all of them with `PUT /essays/match/common-app`.",
+            "title": "Shared",
+            "type": "boolean"
+          },
+          "short_answer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ShortAnswerOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "My short text; only on `short_answer` slots, null until written."
           },
           "slot": {
             "title": "Slot",
@@ -35641,7 +35808,11 @@
           "required",
           "essay_id",
           "assigned",
-          "candidates"
+          "candidates",
+          "shared",
+          "category",
+          "prompt_key",
+          "short_answer"
         ],
         "title": "MatchSlotOut",
         "type": "object"
@@ -38454,6 +38625,26 @@
           "kind"
         ],
         "title": "NextActionOut",
+        "type": "object"
+      },
+      "NextDeadlineOut": {
+        "description": "The soonest upcoming deadline and its round (plan code).",
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "round": {
+            "title": "Round",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "round"
+        ],
+        "title": "NextDeadlineOut",
         "type": "object"
       },
       "NextSectionResponse": {
@@ -46016,6 +46207,20 @@
       "PromptGroupOut": {
         "description": "Prompts one essay can answer.",
         "properties": {
+          "category": {
+            "description": "What the prompts ask, derived on the server from the prompt text, the stored group label and the word limit.",
+            "enum": [
+              "personal_statement",
+              "why_us",
+              "community",
+              "academic",
+              "activity",
+              "short_answer",
+              "other"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
           "covered": {
             "description": "An essay or slot already answers a member.",
             "title": "Covered",
@@ -46078,6 +46283,14 @@
             "title": "Prompts",
             "type": "array"
           },
+          "short_answers": {
+            "description": "My short texts for member prompts; only for `short_answer`.",
+            "items": {
+              "$ref": "#/components/schemas/ShortAnswerOut"
+            },
+            "title": "Short Answers",
+            "type": "array"
+          },
           "spread": {
             "title": "Spread",
             "type": "number"
@@ -46087,6 +46300,8 @@
           "key",
           "label",
           "kind",
+          "category",
+          "short_answers",
           "spread",
           "prompts",
           "covered",
@@ -55114,6 +55329,58 @@
         ],
         "title": "ShelfState",
         "type": "string"
+      },
+      "ShortAnswerIn": {
+        "description": "The short text (at most 150 words and the prompt's own limit).",
+        "properties": {
+          "text": {
+            "maxLength": 2000,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "ShortAnswerIn",
+        "type": "object"
+      },
+      "ShortAnswerOut": {
+        "description": "A short answer to one prompt; `word_count` counts whitespace-separated words.",
+        "properties": {
+          "prompt_key": {
+            "title": "Prompt Key",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "prompt_key",
+          "text",
+          "word_count",
+          "updated_at"
+        ],
+        "title": "ShortAnswerOut",
+        "type": "object"
       },
       "ShortlistIn": {
         "description": "The professions the student keeps.",
@@ -87418,7 +87685,7 @@
     },
     "/v1/admission/catalog/institutions": {
       "get": {
-        "description": "Search and filter the catalog; name and alias matches come first.\n\n`setting` is the campus setting (`city_type` is the same filter). `sort=deadline`\nlists the soonest next deadline first, institutions without one last.",
+        "description": "Search and filter the catalog; name and alias matches come first.\n\n`setting` is the campus setting (`city_type` is the same filter). `sort=deadline`\nlists the soonest next deadline first, institutions without one last;\n`sort=fit` lists the highest fit for the caller first, unscored last.",
         "operationId": "admission_search_institutions",
         "parameters": [
           {
@@ -87657,7 +87924,10 @@
             "schema": {
               "anyOf": [
                 {
-                  "const": "deadline",
+                  "enum": [
+                    "deadline",
+                    "fit"
+                  ],
                   "type": "string"
                 },
                 {
@@ -90146,6 +90416,48 @@
         ]
       }
     },
+    "/v1/admission/essays/match/common-app": {
+      "put": {
+        "description": "Fill or empty the shared personal statement of every Common App university.",
+        "operationId": "admission_essay_match_common_app",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommonAppIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EssayMatchListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Essay Match Common App",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/essays/match/{university_id}": {
       "get": {
         "description": "The slots of a university with the essays that may fill them.",
@@ -90507,6 +90819,100 @@
           }
         },
         "summary": "Get Prompt Map",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/short-answers/{slot_key}": {
+      "get": {
+        "description": "My short answer to a supplemental prompt (`slot_key` is the prompt key).",
+        "operationId": "admission_essay_short_answer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slot_key",
+            "required": true,
+            "schema": {
+              "title": "Slot Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShortAnswerOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Essay Short Answer",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Store the short answer sealed; 422 above 150 words or the prompt's limit.",
+        "operationId": "admission_essay_short_answer_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slot_key",
+            "required": true,
+            "schema": {
+              "title": "Slot Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShortAnswerIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShortAnswerOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Essay Short Answer Put",
         "tags": [
           "admission"
         ]
@@ -93903,6 +94309,22 @@
               "minimum": 1,
               "title": "Limit",
               "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
             }
           }
         ],

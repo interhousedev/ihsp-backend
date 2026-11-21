@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
 
+from app.modules.admission.domain.essay_categories import ShortAnswer
 from app.modules.admission.domain.essay_flow import (
     GalleryEntry,
     GroupLabel,
@@ -28,6 +29,7 @@ from app.modules.admission.infrastructure.orm.catalog import InstitutionRow
 from app.modules.admission.infrastructure.orm.essay_flow import (
     EssayGalleryRow,
     EssayPracticeRow,
+    EssayShortAnswerRow,
     EssaySlotRow,
     IdeaFitRow,
     PromptGroupLabelRow,
@@ -421,3 +423,55 @@ class SqlIdeaFitCache:
                 },
             )
         )
+
+
+class SqlShortAnswerRepository:
+    """Short answers in `admission.essay_short_answers`; `text` is sealed."""
+
+    def __init__(self, session: AsyncSession, cipher: EssayCipher) -> None:
+        """Keep the session and the cipher."""
+        self._s = session
+        self._cipher = cipher
+
+    async def _view(self, row: EssayShortAnswerRow) -> ShortAnswer:
+        text = await self._cipher.open(row.student_id, row.id, "text", row.text)
+        return ShortAnswer(
+            row.student_id, row.prompt_key, text, row.word_count, row.updated_at
+        )
+
+    async def for_student(self, student_id: UUID) -> list[ShortAnswer]:
+        """All of a student's short answers."""
+        q = select(EssayShortAnswerRow).where(
+            EssayShortAnswerRow.student_id == student_id
+        )
+        return [await self._view(r) for r in await self._s.scalars(q)]
+
+    async def get(self, student_id: UUID, prompt_key: str) -> ShortAnswer | None:
+        """The answer to one prompt, or None."""
+        row = await self._row(student_id, prompt_key)
+        return None if row is None else await self._view(row)
+
+    async def _row(
+        self, student_id: UUID, prompt_key: str
+    ) -> EssayShortAnswerRow | None:
+        q = select(EssayShortAnswerRow).where(
+            EssayShortAnswerRow.student_id == student_id,
+            EssayShortAnswerRow.prompt_key == prompt_key,
+        )
+        return (await self._s.scalars(q)).first()
+
+    async def put(self, answer: ShortAnswer) -> ShortAnswer:
+        """Insert or replace the answer of the student and prompt."""
+        row = await self._row(answer.student_id, answer.prompt_key)
+        if row is None:
+            row = EssayShortAnswerRow(
+                id=new_id(),
+                student_id=answer.student_id,
+                prompt_key=answer.prompt_key,
+            )
+            self._s.add(row)
+        row.text = await self._cipher.seal(row.student_id, row.id, "text", answer.text)
+        row.word_count = answer.word_count
+        await self._s.flush()
+        await self._s.refresh(row)
+        return await self._view(row)

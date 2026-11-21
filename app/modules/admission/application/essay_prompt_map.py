@@ -21,6 +21,11 @@ from app.modules.admission.application.essay_due import (
 from app.modules.admission.application.essay_group_labels import GroupLabeler
 from app.modules.admission.application.essay_prompts import FlowGate
 from app.modules.admission.domain.errors import InvalidAnswerError
+from app.modules.admission.domain.essay_categories import (
+    Category,
+    ShortAnswer,
+    classify_group,
+)
 from app.modules.admission.domain.essay_flow import (
     GroupLabel,
     PromptGroup,
@@ -57,6 +62,9 @@ class GroupView:
     in_list_count: int
     due_utc: dt.datetime | None
     due_predicted: bool
+    category: Category = "other"
+    short_answers: tuple[ShortAnswer, ...] = ()
+    """The student's short texts for member prompts; only in `short_answer` groups."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -128,6 +136,10 @@ class EssayPromptMap:
             covered = await self._covered(uow, ctx)
             dues = await application_dues(uow, ctx.user_id)
             essays = await uow.essays.list_for(ctx.user_id)
+            answers = {
+                a.prompt_key: a
+                for a in await uow.short_answers.for_student(ctx.user_id)
+            }
         refs = [replace(r, in_list=r.institution_id in listed) for r in refs]
         found = await self._vectors.of_texts([r.prompt for r in refs])
         available = found is not None and len(found.vectors) == len(refs)
@@ -146,7 +158,9 @@ class EssayPromptMap:
         for e in essays:
             for t in e.targets:
                 by_key.setdefault(t.key, []).append(e.id)
-        views = tuple(self._view(g, labels, by_key, dues, locale) for g in groups)
+        views = tuple(
+            self._view(g, labels, by_key, dues, locale, answers) for g in groups
+        )
         return PromptMapView(pmap, available, covered, views)
 
     @staticmethod
@@ -156,6 +170,7 @@ class EssayPromptMap:
         by_key: dict[str, list[UUID]],
         dues: dict[UUID, DueDate],
         locale: str,
+        answers: dict[str, ShortAnswer],
     ) -> GroupView:
         ids = dict.fromkeys(i for p in g.prompts for i in by_key.get(p.key, ()))
         institutions = {
@@ -163,6 +178,9 @@ class EssayPromptMap:
         }
         due = earliest([dues[i] for i in institutions if i in dues])
         label = labels.get(g.key)
+        category = classify_group(
+            g.prompts, "" if label is None else f"{label.en}\n{label.ru}\n{label.uz}"
+        )
         return GroupView(
             g,
             label.of(locale) if label is not None else fallback_label(g.prompts),
@@ -170,6 +188,12 @@ class EssayPromptMap:
             len(institutions),
             None if due is None else due.due_utc,
             due is not None and due.predicted,
+            category,
+            tuple(
+                answers[p.key]
+                for p in g.prompts
+                if category == "short_answer" and p.key in answers
+            ),
         )
 
     async def fit(

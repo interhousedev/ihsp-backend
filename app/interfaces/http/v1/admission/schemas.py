@@ -182,6 +182,10 @@ class AdmissionMeOut(BaseModel):
     entitlement_kind: str | None
     staff_roles: list[str]
     sub_roles: list[AssignmentOut]
+    estimates_visible: bool = Field(
+        default=True,
+        description="Whether admission estimates are shown to this caller.",
+    )
 
     @classmethod
     def of(cls, me: AdmissionMe) -> "AdmissionMeOut":

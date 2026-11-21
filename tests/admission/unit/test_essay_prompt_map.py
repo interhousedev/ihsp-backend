@@ -29,6 +29,7 @@ from tests.admission.unit.fakes_flow import (
     FakeVectors,
     MemIdeaFits,
     MemPrompts,
+    MemShortAnswers,
     MemSlots,
 )
 from tests.admission.unit.test_essays import Desk
@@ -64,6 +65,7 @@ def _svc(
         u.prompt_catalog = prompts  # type: ignore[attr-defined]
         u.slots = slots  # type: ignore[attr-defined]
         u.idea_fits = fits  # type: ignore[attr-defined]
+        u.short_answers = MemShortAnswers()  # type: ignore[attr-defined]
         return u
 
     gate = FlowGate(d.w.policy, d.consents)

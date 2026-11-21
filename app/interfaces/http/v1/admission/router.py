@@ -53,7 +53,9 @@ async def put_school_grades(
 
 async def get_admission_me(container: ContainerDep, ctx: AnyContext) -> AdmissionMeOut:
     """The caller's role, entitlement and assignments (never refused)."""
-    return AdmissionMeOut.of(get_me(ctx, container.clock.now()))
+    out = AdmissionMeOut.of(get_me(ctx, container.clock.now()))
+    out.estimates_visible = await container.admission.config.estimates_visible(ctx)
+    return out
 
 
 router.add_api_route(

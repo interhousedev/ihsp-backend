@@ -8,6 +8,7 @@ from dataclasses import replace
 from typing import Any
 from uuid import UUID
 
+from app.modules.admission.domain.essay_categories import ShortAnswer
 from app.modules.admission.domain.essay_flow import (
     GalleryEntry,
     PracticeEntry,
@@ -172,3 +173,20 @@ class MemIdeaFits:
 
     async def put(self, student_id: UUID, text_digest: str, fit: Any) -> None:
         self.rows[(student_id, text_digest)] = fit
+
+
+class MemShortAnswers:
+    """Short answers by student and prompt key."""
+
+    def __init__(self) -> None:
+        self.rows: dict[tuple[UUID, str], ShortAnswer] = {}
+
+    async def for_student(self, student_id: UUID) -> list[ShortAnswer]:
+        return [a for (s, _), a in self.rows.items() if s == student_id]
+
+    async def get(self, student_id: UUID, prompt_key: str) -> ShortAnswer | None:
+        return self.rows.get((student_id, prompt_key))
+
+    async def put(self, answer: ShortAnswer) -> ShortAnswer:
+        self.rows[(answer.student_id, answer.prompt_key)] = answer
+        return answer

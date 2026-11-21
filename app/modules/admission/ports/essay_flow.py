@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Protocol
 from uuid import UUID
 
+from app.modules.admission.domain.essay_categories import ShortAnswer
 from app.modules.admission.domain.essay_flow import (
     GalleryEntry,
     GroupLabel,
@@ -88,6 +89,22 @@ class SlotRepository(Protocol):
 
     async def clear(self, student_id: UUID, institution_id: UUID, slot: str) -> None:
         """Empty one slot (no error when it is empty)."""
+        ...
+
+
+class ShortAnswerRepository(Protocol):
+    """Sealed short texts per supplemental prompt."""
+
+    async def for_student(self, student_id: UUID) -> list[ShortAnswer]:
+        """All of a student's short answers."""
+        ...
+
+    async def get(self, student_id: UUID, prompt_key: str) -> ShortAnswer | None:
+        """The answer to one prompt, or None."""
+        ...
+
+    async def put(self, answer: ShortAnswer) -> ShortAnswer:
+        """Insert or replace the answer of the student and prompt."""
         ...
 
 

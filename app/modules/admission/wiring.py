@@ -41,6 +41,7 @@ from app.modules.admission.application.essay_practice import EssayPracticeServic
 from app.modules.admission.application.essay_prompt_map import EssayPromptMap
 from app.modules.admission.application.essay_prompts import FlowGate
 from app.modules.admission.application.essay_reviews import EssayReviewService
+from app.modules.admission.application.essay_short_answers import EssayShortAnswers
 from app.modules.admission.application.essays import (
     EssayCoach,
     EssayService,
@@ -240,6 +241,7 @@ class AdmissionServices:
     essay_practice: EssayPracticeService
     essay_gallery: EssayGalleryService
     essay_match: EssayMatchService
+    essay_short_answers: EssayShortAnswers
     essay_deep_read: EssayDeepReadService
 
 
@@ -632,6 +634,7 @@ def build(
         ),
         essay_gallery=EssayGalleryService(uow_factory, flow_gate, deps.clock),
         essay_match=EssayMatchService(uow_factory, flow_gate),
+        essay_short_answers=EssayShortAnswers(uow_factory, flow_gate),
         essay_deep_read=EssayDeepReadService(
             uow_factory,
             flow_gate,

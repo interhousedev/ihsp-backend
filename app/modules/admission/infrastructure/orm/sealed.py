@@ -29,6 +29,7 @@ SEALED_COLUMNS: Final[dict[str, frozenset[str]]] = {
     "essay_ideas": frozenset({"body", "tags"}),
     "essay_reviews": frozenset({"result"}),
     "essay_practice": frozenset({"body", "evaluation"}),
+    "essay_short_answers": frozenset({"text"}),
     "essay_invites": frozenset({"label"}),
     "essay_feedback": frozenset({"quote", "body", "author_name"}),
 }

@@ -31,6 +31,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 __all__ = [
     "EssayGalleryRow",
     "EssayPracticeRow",
+    "EssayShortAnswerRow",
     "EssaySlotRow",
     "IdeaFitRow",
     "PromptGroupLabelRow",
@@ -127,3 +128,19 @@ class IdeaFitRow(CreatedMixin, UpdatedMixin, Base):
     text_digest: Mapped[str] = mapped_column(String(128), primary_key=True)
     version: Mapped[str] = mapped_column(String(64))
     payload: Mapped[dict[str, Any]] = mapped_column(JSONB)
+
+
+class EssayShortAnswerRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
+    """A student's short text for one supplemental prompt; `text` is sealed."""
+
+    __tablename__ = "essay_short_answers"
+    __table_args__ = (
+        UniqueConstraint("student_id", "prompt_key", name="uq_essay_short_answers_key"),
+        Index("ix_essay_short_answers_student_id", "student_id"),
+        S,
+    )
+
+    student_id: Mapped[UUID] = mapped_column(Uuid)
+    prompt_key: Mapped[str] = mapped_column(String(80))
+    text: Mapped[bytes] = mapped_column(LargeBinary)  # sealed
+    word_count: Mapped[int] = mapped_column(Integer)

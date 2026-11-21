@@ -4,6 +4,7 @@ import datetime as dt
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import ContainerDep, StudentCtx
+from app.interfaces.http.v1.admission.routes_essay_prompt_map import ShortAnswerOut
 from app.modules.admission.application.essay_match import (
     AssignedEssay,
     MatchCandidate,
@@ -13,7 +14,7 @@ from app.modules.admission.application.essay_match import (
 )
 
 from fastapi import APIRouter
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/v1/admission", tags=["admission"])
 
@@ -103,6 +104,17 @@ class MatchSlotOut(BaseModel):
     essay_id: str | None
     assigned: AssignedEssayOut | None
     candidates: list[MatchCandidateOut]
+    shared: bool = Field(
+        description="The personal statement of a Common App university: set once "
+        "for all of them with `PUT /essays/match/common-app`."
+    )
+    category: str | None = Field(
+        description="Prompt category (see the prompt map); null for no prompt."
+    )
+    prompt_key: str | None = Field(description="Key of the prompt; null for `ps`.")
+    short_answer: ShortAnswerOut | None = Field(
+        description="My short text; only on `short_answer` slots, null until written."
+    )
 
     @classmethod
     def of(cls, s: MatchSlot) -> "MatchSlotOut":
@@ -115,6 +127,12 @@ class MatchSlotOut(BaseModel):
             assigned=None if s.assigned is None else AssignedEssayOut.of(s.assigned),
             essay_id=None if s.essay_id is None else str(s.essay_id),
             candidates=[MatchCandidateOut.of(c) for c in s.candidates],
+            shared=s.shared,
+            category=s.category,
+            prompt_key=s.prompt_key,
+            short_answer=(
+                None if s.short_answer is None else ShortAnswerOut.of(s.short_answer)
+            ),
         )
 
 
@@ -149,6 +167,18 @@ class SlotIn(BaseModel):
     """The essay to place into the slot."""
 
     essay_id: UUID
+
+
+class CommonAppIn(BaseModel):
+    """The personal statement for every Common App university; null empties it."""
+
+    essay_id: UUID | None
+
+
+class ShortAnswerIn(BaseModel):
+    """The short text (at most 150 words and the prompt's own limit)."""
+
+    text: str = Field(max_length=2000)
 
 
 @router.get(
@@ -216,3 +246,42 @@ async def essay_match_clear(
     """Empty a slot."""
     table = await container.admission.essay_match.clear(ctx, university_id, slot_key)
     return MatchTableOut.of(table)
+
+
+@router.put(
+    "/essays/match/common-app",
+    operation_id="admission_essay_match_common_app",
+    response_model=EssayMatchListOut,
+)
+async def essay_match_common_app(
+    body: CommonAppIn, container: ContainerDep, ctx: StudentCtx
+) -> EssayMatchListOut:
+    """Fill or empty the shared personal statement of every Common App university."""
+    tables = await container.admission.essay_match.set_common_app(ctx, body.essay_id)
+    return EssayMatchListOut(items=[MatchTableOut.of(t) for t in tables])
+
+
+@router.get(
+    "/essays/short-answers/{slot_key}",
+    operation_id="admission_essay_short_answer",
+    response_model=ShortAnswerOut,
+)
+async def essay_short_answer(
+    slot_key: str, container: ContainerDep, ctx: StudentCtx
+) -> ShortAnswerOut:
+    """My short answer to a supplemental prompt (`slot_key` is the prompt key)."""
+    got = await container.admission.essay_short_answers.get(ctx, slot_key)
+    return ShortAnswerOut.of(got)
+
+
+@router.put(
+    "/essays/short-answers/{slot_key}",
+    operation_id="admission_essay_short_answer_put",
+    response_model=ShortAnswerOut,
+)
+async def essay_short_answer_put(
+    slot_key: str, body: ShortAnswerIn, container: ContainerDep, ctx: StudentCtx
+) -> ShortAnswerOut:
+    """Store the short answer sealed; 422 above 150 words or the prompt's limit."""
+    saved = await container.admission.essay_short_answers.put(ctx, slot_key, body.text)
+    return ShortAnswerOut.of(saved)
