@@ -4,6 +4,24 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-11-21
+
+### Added
+
+- Admission counselor workspace: caseload scopes (`/staff/students?scope=mine|all&q=`), admin assign/revoke, pinned notes (`admission_0056`), caseload deadlines (`/staff/caseload-deadlines`); counselors read the profile frame, list, tasks, documents and scores without consent, everything else stays behind it.
+- Admission fit: fit total and known share on catalogue, detail and match (`sort=fit`), international aid and admit facts, `estimates_visible` on `/me`; Today snooze (`admission_0055`).
+- Admission essays: server essay categories, a shared Common App slot (`PUT /essays/match/common-app`), sealed short answers (`/essays/short-answers/{prompt_key}`, `admission_0058`); institution detail carries the aid profile.
+- Admission honors: shared honor categories (`app/shared/honor_categories.py`), a `standard` flag and category on certificate types (`certificates_0005`), honor suggestions from the student's certificates (`GET /v1/admission/me/honor-suggestions`, dismiss), standard certificates merged into `/test-scores` (`admission_0045`).
+- Admission universities: per-university aid profile (full need, need-blind, aid composition, average international aid, international admit rate, with sources; `admission_0046`), the budget step marks itself reviewed, and an AI list brief (`POST /v1/admission/list/brief`, task `ADMIT_LIST_BRIEF`).
+- Admission opportunities: hours per week, start date and delivery (local/external) with filters, a planned term on plan entries (`admission_0047`); the school grade range is admin-editable (`GET/PUT /v1/admission/settings/school-grades`, `admission_0048`).
+- Admission essays: a linear flow with a prompt map clustered by embeddings, daily practice, prompt-group drafts and forks, a consent-gated anonymous gallery, a paragraph-level deep read, and drag-and-drop matching of essays to university slots (`admission_0049`, tasks `ADMIT_ESSAY_PRACTICE`, `ADMIT_ESSAY_DEEP_READ`).
+
+### Fixed
+
+- Admission: a student without an eligible lyceum group (for example a staff account that also holds the student role) got 404 on `/list`, `/list/insights`, `/me/profile`, `/readiness`, `/test-scores` and other owner routes; the per-student access policy now applies the same role-stacking entitlement as the caller resolver.
+- Admission: readiness no longer needs the essay key; an essay that does not decrypt is logged and left out instead of failing the list; Common App prompts are offered only when a listed university uses Common App.
+- Deploy: `cloud_deploy.sh` recreates only application services, so Vault stays unsealed across deploys.
+
 ## [1.9.0] - 2026-11-20
 
 ### Added

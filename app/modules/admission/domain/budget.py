@@ -9,6 +9,8 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
+from app.modules.admission.domain.chooser import AidProfile
+
 FEE_STATUSES = ("unpaid", "paid", "waiver_requested", "waiver_approved")
 AID_FORMS = ("css_profile", "fafsa", "idoc", "institutional")
 
@@ -33,6 +35,65 @@ class AttendCost:
     gap: Decimal | None = None
 
 
+def estimated_aid(
+    coa_total: Decimal | None, currency: str | None, profile: AidProfile | None
+) -> Decimal | None:
+    """The average aid of the institution's aid policy, USD only, capped at the cost.
+
+    One source for the budget and the institution page: the sticker price minus
+    this is the cost after aid.
+    """
+    if (
+        coa_total is None
+        or currency != "USD"
+        or profile is None
+        or profile.avg_aid is None
+    ):
+        return None
+    return min(profile.avg_aid, coa_total)
+
+
+def cost_after_aid(
+    coa_total: Decimal | None, currency: str | None, profile: AidProfile | None
+) -> Decimal | None:
+    """Yearly cost after the average aid, or None when no aid average is known."""
+    aid = estimated_aid(coa_total, currency, profile)
+    return None if aid is None or coa_total is None else coa_total - aid
+
+
+@dataclass(frozen=True, slots=True)
+class AdmitRate:
+    """The admit rate in percent, for international applicants when published.
+
+    `intl` is the international rate, `overall` the all-applicant rate used when
+    no international one is known.
+    """
+
+    percent: float
+    scope: str
+    year: int | None = None
+    source_url: str | None = None
+
+
+def admit_rate_of(intl: Any, overall: Any) -> AdmitRate | None:
+    """Pick the international rate, else the overall one.
+
+    Each argument is a fact view (`.value`, `.year`, `.source_url`) or None; a
+    range gives its midpoint.
+    """
+    if intl is not None and isinstance(intl.value, int | float):
+        return AdmitRate(float(intl.value), "intl", intl.year, intl.source_url)
+    value = overall.value if overall is not None else None
+    if isinstance(value, dict):
+        lo, hi = value.get("min"), value.get("max")
+        parts = [v for v in (lo, hi) if isinstance(v, int | float)]
+        if parts:
+            return AdmitRate(
+                sum(parts) / len(parts), "overall", overall.year, overall.source_url
+            )
+    return None
+
+
 @dataclass(frozen=True, slots=True)
 class BudgetInput:
     """Everything the budget needs about one non-withdrawn list entry."""
@@ -46,6 +107,8 @@ class BudgetInput:
     aid_forms_known: bool
     aid_deadline: str | None
     cost_to_attend: AttendCost | None
+    aid_profile: AidProfile | None = None
+    admit_rate: AdmitRate | None = None
 
 
 @dataclass(frozen=True, slots=True)

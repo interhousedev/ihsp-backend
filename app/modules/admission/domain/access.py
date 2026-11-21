@@ -7,6 +7,7 @@ from typing import Final, Literal
 from uuid import UUID
 
 from app.modules.admission.domain.permissions import (
+    COUNSELOR_DEFAULT_SET,
     KIND_ALLOW_LIST,
     KIND_ROLE,
     NO_CONSENT_SET,
@@ -165,13 +166,18 @@ def resolve(
             return Resolution(OWNER_SET, in_scope=True, owner=True)
         return Resolution(frozenset(), in_scope=False)
     covered = _covering(actor, student, now)
+    consent = student.staff_view_consent
     perms: set[Permission] = set()
     for a in covered:
-        perms |= a.role.effective_permissions
+        granted = a.role.effective_permissions
+        if not consent:
+            floor = (
+                COUNSELOR_DEFAULT_SET if a.role.kind == "counselor" else NO_CONSENT_SET
+            )
+            granted = granted & floor
+        perms |= granted
     covering = bool(covered)
-    limited = covering and not student.staff_view_consent
-    if limited:
-        perms &= NO_CONSENT_SET
+    limited = covering and not consent
     return Resolution(
         frozenset(perms),
         in_scope=covering,

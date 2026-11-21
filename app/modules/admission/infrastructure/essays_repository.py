@@ -12,6 +12,7 @@ from app.modules.admission.domain.errors import (
     AdmissionConflictError,
     AdmissionNotFoundError,
 )
+from app.modules.admission.domain.essay_flow import PromptTarget
 from app.modules.admission.domain.essays import (
     Essay,
     EssayIdea,
@@ -32,8 +33,11 @@ from app.modules.admission.infrastructure.orm.profile import (
 from app.modules.admission.infrastructure.orm.sealed import to_json
 from app.modules.admission.ports.essay_crypto import EssayCipher
 
+import structlog
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+
+log = structlog.get_logger(__name__)
 
 
 def _plan(raw: list[dict[str, Any]]) -> tuple[PlanSection, ...]:
@@ -47,6 +51,27 @@ def _links(raw: list[dict[str, Any]]) -> tuple[EssayLink, ...]:
         EssayLink(cast(LinkKind, str(link.get("kind"))), str(link.get("ref", "")))
         for link in raw
     )
+
+
+def _targets(raw: list[dict[str, Any]]) -> tuple[PromptTarget, ...]:
+    return tuple(
+        PromptTarget(
+            UUID(t["institution_id"]) if t.get("institution_id") else None,
+            int(t["position"]),
+            str(t.get("prompt", "")),
+            t.get("word_limit"),
+        )
+        for t in raw
+    )
+
+
+def _target_json(t: PromptTarget) -> dict[str, Any]:
+    return {
+        "institution_id": None if t.institution_id is None else str(t.institution_id),
+        "position": t.position,
+        "prompt": t.prompt,
+        "word_limit": t.word_limit,
+    }
 
 
 class SqlEssayRepository:
@@ -84,6 +109,8 @@ class SqlEssayRepository:
             notes=await self._open(o, rid, "notes", row.notes),
             plan=_plan(plan or []),
             links=_links(row.links or []),
+            targets=_targets(row.targets or []),
+            forked_from=row.forked_from,
             status=cast(EssayStatus, row.status),
             current_version=row.current_version,
             last_snapshot_at=row.last_snapshot_at,
@@ -136,6 +163,8 @@ class SqlEssayRepository:
         row.notes = await self._seal(o, rid, "notes", essay.notes)
         row.plan = await self._seal(o, rid, "plan", to_json(plan))
         row.links = [{"kind": link.kind, "ref": link.ref} for link in essay.links]
+        row.targets = [_target_json(t) for t in essay.targets]
+        row.forked_from = essay.forked_from
         row.status = essay.status
         row.current_version = essay.current_version
         row.last_snapshot_at = essay.last_snapshot_at
@@ -149,13 +178,31 @@ class SqlEssayRepository:
         row.sort_order = idea.sort_order
 
     async def list_for(self, student_id: UUID) -> list[Essay]:
-        """Return the essays, newest edit first."""
+        """Return the essays, newest edit first.
+
+        A row that does not open under the owner's key (tampered, or sealed by a
+        key that no longer exists) is logged and left out, so one bad row never
+        blanks the student's whole essay list. A missing key still raises.
+        """
         rows = await self._s.scalars(
             select(EssayRow)
             .where(EssayRow.student_id == student_id)
             .order_by(EssayRow.updated_at.desc(), EssayRow.id)
         )
-        return [await self._essay(r) for r in rows]
+        essays: list[Essay] = []
+        for row in rows:
+            try:
+                essays.append(await self._essay(row))
+            except ValueError:
+                log.error("essay_unreadable", essay_id=str(row.id))
+        return essays
+
+    async def statuses(self, student_id: UUID) -> list[str]:
+        """Return the status of each essay; nothing is decrypted."""
+        rows = await self._s.scalars(
+            select(EssayRow.status).where(EssayRow.student_id == student_id)
+        )
+        return list(rows)
 
     async def get(self, essay_id: UUID) -> Essay | None:
         """Return one essay."""

@@ -18,6 +18,7 @@ from app.modules.certificates.domain.errors import (
     CertificateInvalidError,
     CertificateTypeBuiltinError,
 )
+from app.shared.honor_categories import HONOR_CATEGORIES
 
 CODE_RE = re.compile(r"^[a-z0-9][a-z0-9_]{0,39}$")
 MAX_NAME_LEN = 120
@@ -35,6 +36,8 @@ def check_type(kind: CertificateType) -> None:
         title = kind.name.get(locale, "").strip()
         if not title or len(title) > MAX_NAME_LEN:
             raise _fail("name")
+    if kind.category is not None and kind.category not in HONOR_CATEGORIES:
+        raise _fail("category")
     check_fields(kind.custom_fields)
 
 
@@ -45,6 +48,8 @@ def apply_changes(kind: CertificateType, changes: Mapping[str, Any]) -> None:
             continue
         if key == "code" and kind.builtin and value != kind.code:
             raise CertificateTypeBuiltinError()
+        if key == "standard" and value is None:
+            continue
         if key == "custom_fields":
             value = [_as_field(item) for item in value or []]
         setattr(kind, key, value)

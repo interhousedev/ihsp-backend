@@ -1,6 +1,6 @@
 """Request and response models of the staff, comment and privacy routes."""
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any, Literal
 from uuid import UUID
 
@@ -15,6 +15,15 @@ from app.shared.contracts.identity import UserRef
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class AssignedStaffOut(BaseModel):
+    """A staff member assigned to the student."""
+
+    assignment_id: UUID
+    user_id: UUID
+    name: str
+    kind: str
+
+
 class CaseloadItemOut(BaseModel):
     """One student on the staff member's list."""
 
@@ -27,6 +36,7 @@ class CaseloadItemOut(BaseModel):
     overdue: int
     open_help: int
     limited: bool
+    assigned_staff: list[AssignedStaffOut] = []
 
     @classmethod
     def of(cls, item: CaseloadItem) -> "CaseloadItemOut":
@@ -42,6 +52,15 @@ class CaseloadItemOut(BaseModel):
             overdue=r.overdue,
             open_help=r.open_help,
             limited=item.limited,
+            assigned_staff=[
+                AssignedStaffOut(
+                    assignment_id=a.assignment_id,
+                    user_id=a.user_id,
+                    name=a.name,
+                    kind=a.kind,
+                )
+                for a in item.assigned
+            ],
         )
 
 
@@ -392,3 +411,44 @@ class MentoringSwitchIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     enabled: bool
+
+
+class PinIn(BaseModel):
+    """The action to pin on a student's Today (14 days)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    title: str = Field(min_length=1, max_length=200)
+    href: str | None = Field(default=None, max_length=500)
+    note: str | None = Field(default=None, max_length=500)
+
+
+class PinOut(BaseModel):
+    """The stored pin."""
+
+    student_id: UUID
+    title: str
+    href: str | None
+    note: str | None
+    pinned_by: str
+    expires_at: datetime
+
+
+class StudentDeadlineOut(BaseModel):
+    """One dated item of one student on the caseload."""
+
+    student_id: UUID
+    student_name: str | None
+    group_name: str | None
+    date: date
+    title: str
+    kind: str = Field(description="A calendar source, or `task`.")
+    href: str
+    list_entry_id: UUID | None
+    by_staff: bool = Field(description="A task a staff member set for the student.")
+
+
+class StaffDeadlinesOut(BaseModel):
+    """The caseload timeline, soonest first."""
+
+    items: list[StudentDeadlineOut]

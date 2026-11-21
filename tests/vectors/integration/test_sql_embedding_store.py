@@ -111,7 +111,11 @@ async def test_the_dimension_column_records_the_size(
     async with sessionmaker_in_tx() as session:
         dims = (
             await session.execute(
-                text("SELECT dims, vector_dims(embedding) FROM vectors.embeddings")
+                text(
+                    "SELECT dims, vector_dims(embedding) FROM vectors.embeddings"
+                    " WHERE content_hash = :a"
+                ),
+                {"a": A},
             )
         ).one()
 

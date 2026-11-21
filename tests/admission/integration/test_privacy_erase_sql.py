@@ -32,6 +32,7 @@ NOT_STUDENT_DATA = frozenset(
         # Reference catalog, staff and platform tables: nothing is about one student.
         # Add a table here only after deciding that, in review.
         "admission_stats",
+        "prompt_group_labels",  # labels of public prompt groups, keyed by a hash
         "aid_policies",
         "campuses",
         "career_majors",

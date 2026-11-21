@@ -558,6 +558,9 @@ class _NoDeadlines:
     async def current(self, **_: Any) -> list[Any]:
         return []
 
+    async def milestones_of_entries(self, entry_ids: Any) -> list[Any]:
+        return []
+
 
 class FakeUow:
     """Unit of work over a FakeStore; audit events land only on commit."""

@@ -156,6 +156,7 @@ class Task:
     priority: TaskPriority = "medium"
     start_date: dt.date | None = None
     deadline: dt.date | None = None
+    list_entry_id: UUID | None = None
     created_by: TaskSource = "student"
     creator_id: UUID | None = None
     steps: tuple[TaskStep, ...] = ()

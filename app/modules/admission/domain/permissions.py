@@ -92,9 +92,23 @@ OWNER_SET: Final = _STAFF - {
 }
 
 
-# Without the `admission_staff_view` consent staff see only name, class and the
-# checklist status; no content permission survives.
+# Without the `admission_staff_view` consent a mentor or transcript officer sees
+# only name, class and the checklist status; no content permission survives.
 NO_CONSENT_SET: Final = frozenset({P.TRANSCRIPTS_FULFIL, P.TRANSCRIPTS_OVERSEE})
+
+# An assigned counselor reads the student's list, tasks, documents, deadlines and
+# test scores without the consent, and sets tasks and deadlines for the student.
+# Essays, words, activities, AI reviews, confidential documents and finance stay
+# behind the consent (the family budget behind the finance consent).
+COUNSELOR_DEFAULT_SET: Final = NO_CONSENT_SET | {
+    P.PROFILE_READ,
+    P.LIST_READ,
+    P.LIST_COMMENT,
+    P.PROFILE_COMMENT,
+    P.DOCUMENTS_READ,
+    P.DEADLINES_MANAGE,
+    P.NOTES_STAFF,
+}
 
 
 class BuiltinRole:

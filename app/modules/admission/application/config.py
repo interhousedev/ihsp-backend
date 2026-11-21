@@ -53,6 +53,7 @@ from app.modules.admission.domain.workflow import (
     Round,
 )
 from app.settings_admission import AdmissionSettings
+from app.shared.honor_categories import HONOR_CATEGORIES
 from app.shared.limits import LimitsProvider
 
 OPTION_LISTS: dict[str, tuple[str, ...]] = {
@@ -139,6 +140,7 @@ class AdmissionConfig:
     sub_roles: tuple[BuiltinRole, ...]
     pickup_location: dict[str, str] | None
     item_caps: dict[str, int]
+    school_grades: tuple[int, ...]
     workflow: WorkflowOptions
 
 
@@ -158,6 +160,15 @@ class GetConfig:
         self._limits = limits
         self._runtime = runtime
 
+    async def estimates_visible(self, ctx: AdmissionContext) -> bool:
+        """Whether the caller sees estimates: staff always, students per setting."""
+        if ctx.admission.is_staff:
+            return True
+        rs = await self._runtime.get()
+        return bool(
+            rs.get(ESTIMATES_STUDENT_VISIBLE, self._settings.estimates_student_visible)
+        )
+
     async def execute(self) -> AdmissionConfig:
         """Return the config; the wellbeing section is hidden unless enabled."""
         rs = await self._runtime.get()
@@ -176,6 +187,7 @@ class GetConfig:
                 "fields": self._study_fields(),
                 "activity_categories": ACTIVITY_CATEGORIES,
                 "recognition_levels": RECOGNITION_LEVELS,
+                "honor_categories": HONOR_CATEGORIES,
                 "activity_timing": TIMINGS,
                 "item_grades": tuple(str(g) for g in GRADES),
             },
@@ -199,6 +211,7 @@ class GetConfig:
                 "drafts": MAX_DRAFTS,
             },
             workflow=WORKFLOW_OPTIONS,
+            school_grades=rs.school_grades(self._settings.eligible_grades),
         )
 
 

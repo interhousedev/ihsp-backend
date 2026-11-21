@@ -251,7 +251,7 @@ services:
     networks: [data]
 
   redis:
-    image: redis:7.4.11-alpine
+    image: redis:7.4.12-alpine
     restart: unless-stopped
     logging: *logging
     # AOF on, no eviction (rate limits, FSM, the taskiq stream and budgets live here).
@@ -653,7 +653,7 @@ services:
   # Renews the certificate twice a day when due. Reload nginx and restart `mail` after a
   # renewal (the host cron line that scripts/prod_init.sh prints does it weekly).
   certbot:
-    image: certbot/certbot:v5.9.0
+    image: certbot/certbot:v5.10.0
     restart: unless-stopped
     logging: *logging
     security_opt:

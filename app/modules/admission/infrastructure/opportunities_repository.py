@@ -72,6 +72,7 @@ def _entry(r: OpportunityPlanEntryRow) -> PlanEntry:
         student_id=r.student_id,
         opportunity_id=r.opportunity_id,
         planned_grade=r.planned_grade,
+        planned_term=r.planned_term,
         note=r.note,
         created_at=r.created_at,
     )
@@ -255,11 +256,16 @@ class SqlOpportunityRepository:
             student_id=entry.student_id,
             opportunity_id=entry.opportunity_id,
             planned_grade=entry.planned_grade,
+            planned_term=entry.planned_term,
             note=entry.note,
         )
         stmt = ins.on_conflict_do_update(
             index_elements=[tbl.student_id, tbl.opportunity_id],
-            set_={"planned_grade": entry.planned_grade, "note": entry.note},
+            set_={
+                "planned_grade": entry.planned_grade,
+                "planned_term": entry.planned_term,
+                "note": entry.note,
+            },
         ).returning(tbl)
         row = (
             await self._s.execute(stmt, execution_options={"populate_existing": True})

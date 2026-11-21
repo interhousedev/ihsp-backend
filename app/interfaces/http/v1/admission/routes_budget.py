@@ -7,11 +7,12 @@ from uuid import UUID
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep
 from app.interfaces.http.v1.admission.routes_chooser import (
     CYCLE_RE,
+    AidProfileOut,
     FeeStatus,
     Lang,
 )
 from app.modules.admission.application.budget import BudgetView
-from app.modules.admission.domain.budget import AttendCost, FeeFact
+from app.modules.admission.domain.budget import AdmitRate, AttendCost, FeeFact
 from app.modules.admission.domain.catalog_display import resolve_logo_fit
 from app.modules.admission.domain.chooser import CatalogInstitution
 
@@ -79,6 +80,29 @@ class CostToAttendOut(BaseModel):
         )
 
 
+class AdmitRateOut(BaseModel):
+    """The admit rate in percent.
+
+    `intl` is the rate for international applicants, `overall` the all-applicant
+    rate shown when no international one is known.
+    """
+
+    percent: float
+    scope: Literal["intl", "overall"]
+    year: int | None
+    source_url: str | None
+
+    @classmethod
+    def of(cls, r: AdmitRate) -> "AdmitRateOut":
+        """Map the rate."""
+        return cls(
+            percent=round(r.percent, 1),
+            scope="intl" if r.scope == "intl" else "overall",
+            year=r.year,
+            source_url=r.source_url,
+        )
+
+
 class BudgetRowOut(BaseModel):
     """One list entry of the budget."""
 
@@ -91,6 +115,8 @@ class BudgetRowOut(BaseModel):
     aid_forms_known: bool
     aid_deadline: str | None
     cost_to_attend: CostToAttendOut | None
+    aid_profile: AidProfileOut | None
+    admit_rate: AdmitRateOut | None
 
 
 class CurrencyTotalOut(BaseModel):
@@ -135,6 +161,16 @@ class BudgetOut(BaseModel):
                     cost_to_attend=(
                         CostToAttendOut.of(r.cost_to_attend)
                         if r.cost_to_attend is not None
+                        else None
+                    ),
+                    aid_profile=(
+                        AidProfileOut.of(r.aid_profile)
+                        if r.aid_profile is not None
+                        else None
+                    ),
+                    admit_rate=(
+                        AdmitRateOut.of(r.admit_rate)
+                        if r.admit_rate is not None
                         else None
                     ),
                 )

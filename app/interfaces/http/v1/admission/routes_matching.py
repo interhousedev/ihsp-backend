@@ -5,15 +5,20 @@ from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep
+from app.interfaces.http.v1.admission.routes_items import _locale
 from app.modules.admission.application.matching import (
     DEFAULT_LIMIT,
     MAX_LIMIT,
     MatchItem,
     PreferenceView,
 )
+from app.modules.admission.domain.admit_rate import intl_admission_rate
+from app.modules.admission.domain.chooser import next_deadline_round
+from app.modules.admission.domain.fit import FitResult
 from app.modules.admission.domain.matching import MAJOR_MAX, REGION_MAX
+from app.shared.clock import local_today
 
-from fastapi import APIRouter, Query, Response, status
+from fastapi import APIRouter, Header, Query, Response, status
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StringConstraints
 
 router = APIRouter(prefix="/v1/admission", tags=["admission"])
@@ -86,6 +91,13 @@ class OverlapOut(BaseModel):
     tags: list[str]
 
 
+class NextDeadlineOut(BaseModel):
+    """The soonest upcoming deadline and its round (plan code)."""
+
+    date: dt.date
+    round: str
+
+
 class MatchOut(BaseModel):
     """A university with its match for the caller."""
 
@@ -101,11 +113,22 @@ class MatchOut(BaseModel):
     match_pct: int = Field(ge=0, le=100)
     overlap: OverlapOut
     status: Literal["safety", "target", "reach"] | None
+    fit_total: int | None = Field(default=None, ge=0, le=100)
+    known_share: float | None = Field(default=None, ge=0, le=1)
+    avg_aid_intl: float | None = Field(
+        default=None, description="Average aid for international students, USD."
+    )
+    intl_acceptance_rate: float | None = Field(default=None, ge=0, le=1)
+    meets_full_need: bool | None = None
+    next_deadline: NextDeadlineOut | None = None
 
     @classmethod
-    def of(cls, m: MatchItem) -> "MatchOut":
+    def of(
+        cls, m: MatchItem, fit: FitResult | None = None, *, today: dt.date
+    ) -> "MatchOut":
         """Map the application result."""
         i = m.institution
+        aid = i.aid_profile
         return cls(
             university_id=i.id,
             name=i.name,
@@ -127,6 +150,22 @@ class MatchOut(BaseModel):
                 count=m.overlap.count, total=m.overlap.total, tags=list(m.overlap.tags)
             ),
             status=m.status,
+            fit_total=fit.total if fit is not None else None,
+            known_share=fit.known_share if fit is not None else None,
+            avg_aid_intl=(
+                float(aid.avg_aid)
+                if aid is not None
+                and aid.avg_aid is not None
+                and aid.avg_aid_scope == "intl"
+                else None
+            ),
+            intl_acceptance_rate=intl_admission_rate(i),
+            meets_full_need=aid.meets_full_need if aid is not None else None,
+            next_deadline=(
+                NextDeadlineOut(date=due[0], round=due[1])
+                if (due := next_deadline_round(i, today)) is not None
+                else None
+            ),
         )
 
 
@@ -164,10 +203,20 @@ async def list_matches(
     container: ContainerDep,
     ctx: AdmissionCtx,
     limit: int = Query(default=DEFAULT_LIMIT, ge=1, le=MAX_LIMIT),
+    accept_language: Annotated[str | None, Header(alias="Accept-Language")] = None,
 ) -> MatchListOut:
     """Universities not yet decided on, ranked by the caller's preferences."""
     rows = await container.admission.matching.matches(ctx, limit)
-    return MatchListOut(items=[MatchOut.of(m) for m in rows])
+    fits = await container.admission.fit.fits_for(
+        ctx,
+        [m.institution for m in rows],
+        _locale(accept_language),
+        container.clock.now().year,
+    )
+    today = local_today(container.clock)
+    return MatchListOut(
+        items=[MatchOut.of(m, fits.get(m.institution.id), today=today) for m in rows]
+    )
 
 
 async def decide(

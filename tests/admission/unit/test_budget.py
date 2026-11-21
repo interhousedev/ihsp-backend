@@ -69,3 +69,15 @@ def test_money_fact_parsing() -> None:
     assert money_fact({"amount": 75, "currency": "USD"}) == (Decimal(75), "USD")
     assert money_fact({"amount": "x", "currency": "USD"}) is None
     assert money_fact(None) is None
+
+
+def test_cost_after_aid_uses_average_aid_capped_at_cost() -> None:
+    from app.modules.admission.domain.budget import cost_after_aid, estimated_aid
+    from app.modules.admission.domain.chooser import AidProfile
+
+    prof = AidProfile(avg_aid=Decimal(92699), avg_aid_scope="intl")
+    assert cost_after_aid(Decimal(99774), "USD", prof) == Decimal(7075)
+    assert estimated_aid(Decimal(50000), "USD", prof) == Decimal(50000)
+    assert cost_after_aid(Decimal(99774), "GBP", prof) is None
+    assert cost_after_aid(Decimal(99774), "USD", None) is None
+    assert cost_after_aid(None, "USD", prof) is None

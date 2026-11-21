@@ -77,7 +77,7 @@ class QuizAnswersRow(CreatedMixin, UpdatedMixin, Base):
     """The stored answers of one quiz of a student."""
 
     __tablename__ = "quiz_answers"
-    __table_args__ = (check_in("quiz", ("career", "algorithm")), S)
+    __table_args__ = (check_in("quiz", ("career", "algorithm", "budget")), S)
 
     student_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     quiz: Mapped[str] = mapped_column(String(12), primary_key=True)

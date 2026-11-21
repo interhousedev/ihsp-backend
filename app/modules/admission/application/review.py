@@ -117,6 +117,7 @@ def review_hash(
                 "org": nfc(item.organization),
                 "description": nfc(item.description),
                 "category": item.category,
+                "level": item.level,
                 "grades": list(item.grades),
                 "hours": item.hours_per_week,
                 "weeks": item.weeks_per_year,

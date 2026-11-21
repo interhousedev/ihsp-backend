@@ -130,7 +130,7 @@ def test_missing_data_is_not_a_miss() -> None:
 def test_admission_rate_prefers_international_and_survives_garbage() -> None:
     inst = _inst(
         facts={
-            "acceptance_rate_international": FactView({"min": "10", "max": 30}),
+            "intl_acceptance_rate": FactView({"min": "10", "max": 30}),
             "acceptance_rate": FactView({"min": 80, "max": 90}),
         }
     )

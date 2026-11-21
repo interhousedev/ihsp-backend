@@ -54,6 +54,23 @@ class RangeFact(_Model):
     note: str | None = None
 
 
+class AvgAid(_Model):
+    """The average aid package in USD and how it splits (each share 0-100).
+
+    ``scope`` is ``intl`` for international students, ``overall`` when the
+    institution publishes no international figure.
+    """
+
+    value: float | None = Field(default=None, ge=0)
+    scope: Literal["intl", "overall"]
+    grant_pct: int | None = Field(default=None, ge=0, le=100)
+    loan_pct: int | None = Field(default=None, ge=0, le=100)
+    work_pct: int | None = Field(default=None, ge=0, le=100)
+    source_url: HttpUrl
+    year: int = Field(ge=2000, le=2100)
+    note: str | None = None
+
+
 class Deadline(_Model):
     """An application deadline for one plan and cycle."""
 
@@ -79,6 +96,8 @@ class Aid(_Model):
 
     basis: Fact = Fact()  # value: AidBasis
     merit_for_internationals: Fact = Fact()  # value: bool
+    meets_full_need: Fact = Fact()  # value: bool
+    avg_aid: AvgAid | None = None
 
 
 class Safety(_Model):
@@ -97,6 +116,7 @@ class Institution(_Model):
     city_type: CityType | None = None
     fields: list[str] = []
     acceptance_rate: RangeFact | None = None  # percent
+    intl_acceptance_rate: Fact | None = None  # value: percent
     test_policy: Fact | None = None  # value: TestPolicy
     intl_tuition_usd: Money | None = None
     intl_coa_usd: Money | None = None

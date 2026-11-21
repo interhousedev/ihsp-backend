@@ -12,7 +12,7 @@ from app.modules.admission.domain.errors import AdmissionNotFoundError
 from app.modules.admission.domain.profile_words import WordsState
 
 from fastapi import APIRouter
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 router = APIRouter(prefix="/v1/admission", tags=["admission"])
 
@@ -29,6 +29,11 @@ class ProfileOut(BaseModel):
     missing_required: list[str]
     setup_completed: bool
     lock_version: int
+    family_budget: str | None = Field(
+        default=None,
+        description="Budget band; set only when the student shares it.",
+    )
+    budget_shared: bool = False
 
     @classmethod
     def of(cls, v: ProfileView) -> "ProfileOut":

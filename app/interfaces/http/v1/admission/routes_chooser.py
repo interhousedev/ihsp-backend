@@ -1,6 +1,7 @@
 """University chooser routes: catalog, my list, estimates, affordability."""
 
 import datetime as dt
+from collections.abc import Sequence
 from decimal import Decimal
 from typing import Annotated, Any, Literal
 from uuid import UUID
@@ -9,6 +10,7 @@ from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep, St
 from app.interfaces.http.v1.admission.routes_items import _locale
 from app.modules.admission.application.chooser import ListItem
 from app.modules.admission.application.estimates import EstimateView
+from app.modules.admission.domain.budget import cost_after_aid
 from app.modules.admission.domain.catalog_display import (
     clean_deadlines,
     highlights,
@@ -16,12 +18,14 @@ from app.modules.admission.domain.catalog_display import (
 )
 from app.modules.admission.domain.chooser import (
     AffordabilityCheck,
+    AidProfile,
     CatalogFilters,
     CatalogInstitution,
     CatalogScholarship,
     next_deadline,
 )
 from app.modules.admission.domain.errors import AdmissionNotFoundError
+from app.modules.admission.domain.fit import FitResult
 from app.modules.admission.domain.intl_fact_display import (
     detail_groups,
     importance_factors,
@@ -34,7 +38,7 @@ from pydantic import BaseModel, ConfigDict, Field
 router = APIRouter(prefix="/v1/admission", tags=["admission"])
 
 Round = Literal["ED", "ED2", "EA", "REA", "SCEA", "RD", "ROLLING"]
-CatalogSort = Literal["deadline"]
+CatalogSort = Literal["deadline", "fit"]
 Bucket = Literal["reach", "target", "safety"]
 FeeStatus = Literal["unpaid", "paid", "waiver_requested", "waiver_approved"]
 Status = Literal["considering", "applying", "applied", "dropped"]
@@ -110,6 +114,45 @@ class ImportanceFactorOut(BaseModel):
     importance: str
 
 
+class AidProfileOut(BaseModel):
+    """How the institution's aid meets need.
+
+    Every field is null when no source gives it. `avg_aid` is in USD and
+    `avg_aid_scope` says whether it is the average for international students or
+    for all students. The three shares split the package into grants, student
+    loans and work-study.
+    """
+
+    need_blind_intl: bool | None
+    meets_full_need: bool | None
+    avg_aid: Decimal | None
+    avg_aid_scope: Literal["intl", "overall"] | None
+    grant_pct: int | None
+    loan_pct: int | None
+    work_pct: int | None
+    source_url: str | None
+    year: int | None
+
+    @classmethod
+    def of(cls, a: AidProfile) -> "AidProfileOut":
+        """Map the profile."""
+        return cls(
+            need_blind_intl=a.need_blind_intl,
+            meets_full_need=a.meets_full_need,
+            avg_aid=a.avg_aid,
+            avg_aid_scope=(
+                "intl"
+                if a.avg_aid_scope == "intl"
+                else ("overall" if a.avg_aid_scope == "overall" else None)
+            ),
+            grant_pct=a.grant_pct,
+            loan_pct=a.loan_pct,
+            work_pct=a.work_pct,
+            source_url=a.source_url,
+            year=a.year,
+        )
+
+
 class InstitutionOut(BaseModel):
     """A catalog institution with its cited facts."""
 
@@ -130,12 +173,24 @@ class InstitutionOut(BaseModel):
     logo_fit: Literal["circle", "contain"]
     coa_total: Decimal | None
     coa_currency: str | None
+    cost_after_aid: Decimal | None
     aid_basis: str | None
     merit_available: bool | None
     scholarship_count: int
     logo_url: str | None
     cover_url: str | None
     website_url: str | None
+    fit_total: int | None = Field(
+        default=None,
+        ge=0,
+        le=100,
+        description="Fit for the caller (as /list/fit); null when not computable.",
+    )
+    known_share: float | None = Field(default=None, ge=0, le=1)
+    aid_profile: AidProfileOut | None = Field(
+        default=None,
+        description="Aid shares (grant, loan, work-study); detail view only.",
+    )
     details: list[DetailGroupOut] = []
     factors: list[ImportanceFactorOut] = []
 
@@ -147,6 +202,7 @@ class InstitutionOut(BaseModel):
         *,
         today: dt.date | None = None,
         detail: bool = False,
+        fit: FitResult | None = None,
     ) -> "InstitutionOut":
         """Map the domain institution; text is localized, notes are left out.
 
@@ -181,12 +237,20 @@ class InstitutionOut(BaseModel):
             logo_fit=resolve_logo_fit(i.logo_fit, i.logo_aspect),
             coa_total=i.coa_total,
             coa_currency=i.coa_currency,
+            cost_after_aid=cost_after_aid(i.coa_total, i.coa_currency, i.aid_profile),
             aid_basis=i.aid_basis,
             merit_available=i.merit_available,
             scholarship_count=i.scholarship_count,
             logo_url=i.logo_url,
             cover_url=i.cover_url,
             website_url=(f"https://{i.website_domain}" if i.website_domain else None),
+            fit_total=fit.total if fit is not None else None,
+            known_share=fit.known_share if fit is not None else None,
+            aid_profile=(
+                AidProfileOut.of(i.aid_profile)
+                if detail and i.aid_profile is not None
+                else None
+            ),
             details=(
                 [DetailGroupOut(**g) for g in detail_groups(i, locale)]
                 if detail
@@ -444,9 +508,19 @@ async def search_institutions(
     """Search and filter the catalog; name and alias matches come first.
 
     `setting` is the campus setting (`city_type` is the same filter). `sort=deadline`
-    lists the soonest next deadline first, institutions without one last.
+    lists the soonest next deadline first, institutions without one last;
+    `sort=fit` lists the highest fit for the caller first, unscored last.
     """
     today = local_today(container.clock)
+    locale = _locale(accept_language)
+
+    async def scorer(
+        hits: Sequence[CatalogInstitution],
+    ) -> dict[UUID, FitResult]:
+        return await container.admission.fit.fits_for(
+            ctx, hits, locale, container.clock.now().year
+        )
+
     page = await container.admission.catalog.search(
         CatalogFilters(
             q=q,
@@ -467,10 +541,12 @@ async def search_institutions(
         today=today,
         cursor=cursor,
         limit=limit,
+        scorer=scorer,
     )
+    fits = await scorer(page.items)
     return InstitutionPageOut(
         items=[
-            InstitutionOut.of(i, _locale(accept_language), today=today)
+            InstitutionOut.of(i, locale, today=today, fit=fits.get(i.id))
             for i in page.items
         ],
         next_cursor=page.next_cursor,
@@ -484,11 +560,17 @@ async def get_institution(
     accept_language: Lang = None,
 ) -> InstitutionOut:
     """Return one institution with localized highlights and deadlines."""
+    inst = await container.admission.catalog.institution(institution_id)
+    locale = _locale(accept_language)
+    fits = await container.admission.fit.fits_for(
+        ctx, [inst], locale, container.clock.now().year
+    )
     return InstitutionOut.of(
-        await container.admission.catalog.institution(institution_id),
-        _locale(accept_language),
+        inst,
+        locale,
         today=local_today(container.clock),
         detail=True,
+        fit=fits.get(inst.id),
     )
 
 

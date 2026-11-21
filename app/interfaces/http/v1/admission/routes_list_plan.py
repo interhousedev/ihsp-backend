@@ -2,7 +2,9 @@
 
 `GET /v1/admission/list/insights` classifies the entries of a list the caller
 may read; `POST /v1/admission/list/suggest` asks the model for institutions to
-add to the caller's own list (AI consent and a weekly limit apply).
+add to the caller's own list (AI consent and a weekly limit apply);
+`POST /v1/admission/list/brief` writes a brief on the list's balance with
+candidates that fit as safety or target (same consent and limit).
 """
 
 from typing import Annotated, Any, Literal
@@ -126,6 +128,87 @@ async def suggest_list(
     )
 
 
+class BriefBalanceOut(BaseModel):
+    """Counts per label and the verdict, for the brief's header."""
+
+    reach: int
+    target: int
+    safety: int
+    unlabelled: int
+    status: Literal["empty", "too_few", "no_safety", "too_many_reach", "balanced"]
+
+
+class BriefSuggestionOut(BaseModel):
+    """A catalog institution that fits the list.
+
+    The role comes from published data, the reason from the model. Adding it to
+    the list is the caller's action.
+    """
+
+    institution_id: UUID
+    name: str
+    country: str
+    role: Literal["safety", "target"]
+    reason: str
+    admit_percent: float | None
+    admit_scope: Literal["intl", "overall"] | None
+    admit_year: int | None
+
+
+class ListBriefOut(BaseModel):
+    """The brief on the balance of my list: diagnosis, suggestions, next steps."""
+
+    headline: str
+    diagnosis: str
+    balance: BriefBalanceOut
+    entries: int
+    suggestions: list[BriefSuggestionOut]
+    next_steps: list[str]
+
+
+async def list_brief(
+    container: ContainerDep, ctx: StudentCtx, accept_language: Lang = None
+) -> ListBriefOut:
+    """A written brief on my list's balance (needs the `admission_ai` consent)."""
+    b = await container.admission.list_plan.brief(ctx, _locale(accept_language))
+    return ListBriefOut(
+        headline=b.headline,
+        diagnosis=b.diagnosis,
+        balance=BriefBalanceOut(
+            reach=b.balance.reach,
+            target=b.balance.target,
+            safety=b.balance.safety,
+            unlabelled=b.balance.unlabelled,
+            status=b.balance.status,
+        ),
+        entries=b.entries,
+        suggestions=[
+            BriefSuggestionOut(
+                institution_id=s.candidate.institution.id,
+                name=s.candidate.institution.name,
+                country=s.candidate.institution.country,
+                role="safety" if s.candidate.role == "safety" else "target",
+                reason=s.reason,
+                admit_percent=(
+                    round(s.candidate.admit_rate.percent, 1)
+                    if s.candidate.admit_rate
+                    else None
+                ),
+                admit_scope=(
+                    "intl"
+                    if s.candidate.admit_rate and s.candidate.admit_rate.scope == "intl"
+                    else ("overall" if s.candidate.admit_rate else None)
+                ),
+                admit_year=(
+                    s.candidate.admit_rate.year if s.candidate.admit_rate else None
+                ),
+            )
+            for s in b.suggestions
+        ],
+        next_steps=b.next_steps,
+    )
+
+
 def _route(path: str, endpoint: Any, method: str, op: str, **kw: Any) -> None:
     router.add_api_route(
         path, endpoint, methods=[method], operation_id=f"admission_{op}", **kw
@@ -145,4 +228,11 @@ _route(
     "POST",
     "suggest_list",
     response_model=ListSuggestionsOut,
+)
+_route(
+    "/list/brief",
+    list_brief,
+    "POST",
+    "list_brief",
+    response_model=ListBriefOut,
 )

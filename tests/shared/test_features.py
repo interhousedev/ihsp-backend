@@ -12,15 +12,15 @@ from app.settings_features import FeaturesSettings
 from app.shared.features import Feature, is_enabled
 
 import pytest
+from fastapi import FastAPI
 
 
 def route_paths(settings: Settings | None) -> set[str]:
     """Every path the api process serves."""
-    return {
-        route.path  # type: ignore[attr-defined]
-        for router in routers_for("api", settings)
-        for route in router.routes
-    }
+    app = FastAPI()
+    for router in routers_for("api", settings):
+        app.include_router(router)
+    return set(app.openapi()["paths"])
 
 
 def test_every_feature_has_a_flag_and_every_flag_a_feature() -> None:

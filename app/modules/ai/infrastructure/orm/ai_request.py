@@ -29,3 +29,9 @@ class AiRequestRow(Base):
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     retired: Mapped[bool] = mapped_column(Boolean, server_default=sql_text("false"))
     code_version: Mapped[int] = mapped_column(Integer, server_default=sql_text("0"))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=sql_text("now()")
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=sql_text("now()")
+    )

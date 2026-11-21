@@ -1,0 +1,2589 @@
+{
+ "retrieved": "2026-11-21",
+ "sources": {
+  "exposure": {
+   "label": "ILO GenAI exposure 2025 (Gmyrek et al., WP140), CC BY 4.0",
+   "url": "https://github.com/pgmyrek/2025_GenAI_scores_ISCO08"
+  },
+  "names_en": {
+   "label": "ESCO ISCO-08 concepts, European Commission",
+   "url": "https://ec.europa.eu/esco/api"
+  },
+  "names_ru_uz": {
+   "label": "In-house translation of the ISCO-08 titles (ru, uz)",
+   "url": "https://isco.ilo.org/"
+  }
+ },
+ "groups": {
+  "1": {
+   "en": "Managers",
+   "ru": "Руководители",
+   "uz": "Rahbarlar"
+  },
+  "2": {
+   "en": "Professionals",
+   "ru": "Специалисты высшего уровня квалификации",
+   "uz": "Oliy malakali mutaxassislar"
+  },
+  "3": {
+   "en": "Technicians and associate professionals",
+   "ru": "Специалисты среднего уровня квалификации",
+   "uz": "Oʻrta malakali mutaxassislar"
+  }
+ },
+ "items": [
+  {
+   "id": "1120",
+   "group": "1",
+   "name": {
+    "en": "Managing directors and chief executives",
+    "ru": "Генеральный директор",
+    "uz": "Bosh direktor"
+   },
+   "ai_exposure": 0.38,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "management",
+    "business",
+    "entrepreneurship"
+   ]
+  },
+  {
+   "id": "1211",
+   "group": "1",
+   "name": {
+    "en": "Finance managers",
+    "ru": "Финансовый директор",
+    "uz": "Moliya direktori"
+   },
+   "ai_exposure": 0.37,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "finance",
+    "accounting",
+    "business"
+   ]
+  },
+  {
+   "id": "1212",
+   "group": "1",
+   "name": {
+    "en": "Human resource managers",
+    "ru": "Руководитель по персоналу",
+    "uz": "Kadrlar boʻyicha rahbar"
+   },
+   "ai_exposure": 0.36,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "management",
+    "psychology"
+   ]
+  },
+  {
+   "id": "1213",
+   "group": "1",
+   "name": {
+    "en": "Policy and planning managers",
+    "ru": "Руководитель по стратегии и планированию",
+    "uz": "Strategiya va rejalashtirish rahbari"
+   },
+   "ai_exposure": 0.36,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "management",
+    "economics"
+   ]
+  },
+  {
+   "id": "1221",
+   "group": "1",
+   "name": {
+    "en": "Sales and marketing managers",
+    "ru": "Руководитель по продажам и маркетингу",
+    "uz": "Savdo va marketing rahbari"
+   },
+   "ai_exposure": 0.41,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "marketing",
+    "business"
+   ]
+  },
+  {
+   "id": "1222",
+   "group": "1",
+   "name": {
+    "en": "Advertising and public relations managers",
+    "ru": "Руководитель по рекламе и PR",
+    "uz": "Reklama va PR rahbari"
+   },
+   "ai_exposure": 0.39,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "marketing",
+    "communications"
+   ]
+  },
+  {
+   "id": "1223",
+   "group": "1",
+   "name": {
+    "en": "Research and development managers",
+    "ru": "Руководитель исследований и разработок",
+    "uz": "Tadqiqot va ishlanmalar rahbari"
+   },
+   "ai_exposure": 0.4,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "engineering",
+    "natural_sciences",
+    "management"
+   ]
+  },
+  {
+   "id": "1321",
+   "group": "1",
+   "name": {
+    "en": "Manufacturing managers",
+    "ru": "Руководитель производства",
+    "uz": "Ishlab chiqarish rahbari"
+   },
+   "ai_exposure": 0.38,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "industrial_engineering",
+    "management"
+   ]
+  },
+  {
+   "id": "1323",
+   "group": "1",
+   "name": {
+    "en": "Construction managers",
+    "ru": "Руководитель строительства",
+    "uz": "Qurilish rahbari"
+   },
+   "ai_exposure": 0.34,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "civil_engineering",
+    "management"
+   ]
+  },
+  {
+   "id": "1330",
+   "group": "1",
+   "name": {
+    "en": "Information and communications technology service managers",
+    "ru": "Руководитель ИТ-службы",
+    "uz": "AKT xizmati rahbari"
+   },
+   "ai_exposure": 0.44,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "computer_science",
+    "information_systems",
+    "management"
+   ]
+  },
+  {
+   "id": "1342",
+   "group": "1",
+   "name": {
+    "en": "Health services managers",
+    "ru": "Руководитель в здравоохранении",
+    "uz": "Sogʻliqni saqlash rahbari"
+   },
+   "ai_exposure": 0.36,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "public_health",
+    "management"
+   ]
+  },
+  {
+   "id": "1345",
+   "group": "1",
+   "name": {
+    "en": "Education managers",
+    "ru": "Руководитель образовательной организации",
+    "uz": "Taʼlim muassasasi rahbari"
+   },
+   "ai_exposure": 0.36,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "education",
+    "management"
+   ]
+  },
+  {
+   "id": "2111",
+   "group": "2",
+   "name": {
+    "en": "Physicists and astronomers",
+    "ru": "Физик и астроном",
+    "uz": "Fizik va astronom"
+   },
+   "ai_exposure": 0.38,
+   "gradient": "Exposed: Gradient 1",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "physics",
+    "astronomy"
+   ]
+  },
+  {
+   "id": "2112",
+   "group": "2",
+   "name": {
+    "en": "Meteorologists",
+    "ru": "Метеоролог",
+    "uz": "Meteorolog"
+   },
+   "ai_exposure": 0.54,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "earth_sciences",
+    "physics"
+   ]
+  },
+  {
+   "id": "2113",
+   "group": "2",
+   "name": {
+    "en": "Chemists",
+    "ru": "Химик",
+    "uz": "Kimyogar"
+   },
+   "ai_exposure": 0.39,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "chemistry",
+    "biochemistry"
+   ]
+  },
+  {
+   "id": "2114",
+   "group": "2",
+   "name": {
+    "en": "Geologists and geophysicists",
+    "ru": "Геолог и геофизик",
+    "uz": "Geolog va geofizik"
+   },
+   "ai_exposure": 0.36,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "earth_sciences",
+    "geography"
+   ]
+  },
+  {
+   "id": "2120",
+   "group": "2",
+   "name": {
+    "en": "Mathematicians, actuaries and statisticians",
+    "ru": "Математик, актуарий, статистик",
+    "uz": "Matematik, aktuariy, statistik"
+   },
+   "ai_exposure": 0.56,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "mathematics",
+    "statistics"
+   ]
+  },
+  {
+   "id": "2131",
+   "group": "2",
+   "name": {
+    "en": "Biologists, botanists, zoologists and related professionals",
+    "ru": "Биолог, ботаник, зоолог",
+    "uz": "Biolog, botanik, zoolog"
+   },
+   "ai_exposure": 0.4,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "biology",
+    "marine_biology"
+   ]
+  },
+  {
+   "id": "2132",
+   "group": "2",
+   "name": {
+    "en": "Farming, forestry and fisheries advisers",
+    "ru": "Консультант по сельскому и лесному хозяйству",
+    "uz": "Qishloq va oʻrmon xoʻjaligi maslahatchisi"
+   },
+   "ai_exposure": 0.29,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "agriculture",
+    "environmental_science"
+   ]
+  },
+  {
+   "id": "2133",
+   "group": "2",
+   "name": {
+    "en": "Environmental protection professionals",
+    "ru": "Специалист по охране окружающей среды",
+    "uz": "Atrof-muhitni muhofaza qilish mutaxassisi"
+   },
+   "ai_exposure": 0.38,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "environmental_science"
+   ]
+  },
+  {
+   "id": "2141",
+   "group": "2",
+   "name": {
+    "en": "Industrial and production engineers",
+    "ru": "Инженер по организации производства",
+    "uz": "Ishlab chiqarishni tashkil etish muhandisi"
+   },
+   "ai_exposure": 0.37,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "industrial_engineering",
+    "engineering"
+   ]
+  },
+  {
+   "id": "2142",
+   "group": "2",
+   "name": {
+    "en": "Civil engineers",
+    "ru": "Инженер-строитель",
+    "uz": "Qurilish muhandisi"
+   },
+   "ai_exposure": 0.3,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "civil_engineering",
+    "engineering"
+   ]
+  },
+  {
+   "id": "2143",
+   "group": "2",
+   "name": {
+    "en": "Environmental engineers",
+    "ru": "Инженер-эколог",
+    "uz": "Ekolog muhandis"
+   },
+   "ai_exposure": 0.38,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "environmental_science",
+    "engineering"
+   ]
+  },
+  {
+   "id": "2144",
+   "group": "2",
+   "name": {
+    "en": "Mechanical engineers",
+    "ru": "Инженер-механик",
+    "uz": "Muhandis-mexanik"
+   },
+   "ai_exposure": 0.32,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "mechanical_engineering",
+    "engineering"
+   ]
+  },
+  {
+   "id": "2145",
+   "group": "2",
+   "name": {
+    "en": "Chemical engineers",
+    "ru": "Инженер-химик",
+    "uz": "Muhandis-kimyogar"
+   },
+   "ai_exposure": 0.35,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "chemical_engineering",
+    "chemistry"
+   ]
+  },
+  {
+   "id": "2146",
+   "group": "2",
+   "name": {
+    "en": "Mining engineers, metallurgists and related professionals",
+    "ru": "Горный инженер и металлург",
+    "uz": "Togʻ-kon muhandisi va metallurg"
+   },
+   "ai_exposure": 0.29,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "petroleum_engineering",
+    "materials_engineering"
+   ]
+  },
+  {
+   "id": "2149",
+   "group": "2",
+   "name": {
+    "en": "Engineering professionals not elsewhere classified",
+    "ru": "Инженер (прочие специальности)",
+    "uz": "Muhandis (boshqa yoʻnalishlar)"
+   },
+   "ai_exposure": 0.3,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "engineering",
+    "aerospace_engineering",
+    "nuclear_engineering"
+   ]
+  },
+  {
+   "id": "2151",
+   "group": "2",
+   "name": {
+    "en": "Electrical engineers",
+    "ru": "Инженер-электрик",
+    "uz": "Muhandis-elektrik"
+   },
+   "ai_exposure": 0.31,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "electrical_engineering",
+    "engineering"
+   ]
+  },
+  {
+   "id": "2152",
+   "group": "2",
+   "name": {
+    "en": "Electronics engineers",
+    "ru": "Инженер-электронщик",
+    "uz": "Muhandis-elektronchi"
+   },
+   "ai_exposure": 0.42,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "electrical_engineering",
+    "engineering"
+   ]
+  },
+  {
+   "id": "2153",
+   "group": "2",
+   "name": {
+    "en": "Telecommunications engineers",
+    "ru": "Инженер по телекоммуникациям",
+    "uz": "Telekommunikatsiya muhandisi"
+   },
+   "ai_exposure": 0.48,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "electrical_engineering",
+    "computer_science"
+   ]
+  },
+  {
+   "id": "2161",
+   "group": "2",
+   "name": {
+    "en": "Building architects",
+    "ru": "Архитектор",
+    "uz": "Arxitektor"
+   },
+   "ai_exposure": 0.37,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "architecture"
+   ]
+  },
+  {
+   "id": "2162",
+   "group": "2",
+   "name": {
+    "en": "Landscape architects",
+    "ru": "Ландшафтный архитектор",
+    "uz": "Landshaft arxitektori"
+   },
+   "ai_exposure": 0.37,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "architecture",
+    "environmental_science"
+   ]
+  },
+  {
+   "id": "2163",
+   "group": "2",
+   "name": {
+    "en": "Product and garment designers",
+    "ru": "Промышленный дизайнер и дизайнер одежды",
+    "uz": "Sanoat va kiyim dizayneri"
+   },
+   "ai_exposure": 0.35,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "design",
+    "fashion"
+   ]
+  },
+  {
+   "id": "2164",
+   "group": "2",
+   "name": {
+    "en": "Town and traffic planners",
+    "ru": "Градостроитель и транспортный планировщик",
+    "uz": "Shaharsozlik va transport rejalashtiruvchisi"
+   },
+   "ai_exposure": 0.41,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "urban_planning",
+    "architecture"
+   ]
+  },
+  {
+   "id": "2165",
+   "group": "2",
+   "name": {
+    "en": "Cartographers and surveyors",
+    "ru": "Картограф и геодезист",
+    "uz": "Kartograf va geodezist"
+   },
+   "ai_exposure": 0.44,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "geography",
+    "earth_sciences"
+   ]
+  },
+  {
+   "id": "2166",
+   "group": "2",
+   "name": {
+    "en": "Graphic and multimedia designers",
+    "ru": "Графический дизайнер и мультимедиа-дизайнер",
+    "uz": "Grafik va multimedia dizayner"
+   },
+   "ai_exposure": 0.49,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "graphic_design",
+    "design",
+    "media_studies"
+   ]
+  },
+  {
+   "id": "2211",
+   "group": "2",
+   "name": {
+    "en": "Generalist medical practitioners",
+    "ru": "Врач общей практики",
+    "uz": "Umumiy amaliyot shifokori"
+   },
+   "ai_exposure": 0.29,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "medicine"
+   ]
+  },
+  {
+   "id": "2212",
+   "group": "2",
+   "name": {
+    "en": "Specialist medical practitioners",
+    "ru": "Врач-специалист",
+    "uz": "Mutaxassis shifokor"
+   },
+   "ai_exposure": 0.27,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "medicine",
+    "neuroscience"
+   ]
+  },
+  {
+   "id": "2221",
+   "group": "2",
+   "name": {
+    "en": "Nursing professionals",
+    "ru": "Медицинская сестра (специалист)",
+    "uz": "Hamshira (mutaxassis)"
+   },
+   "ai_exposure": 0.25,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "nursing"
+   ]
+  },
+  {
+   "id": "2222",
+   "group": "2",
+   "name": {
+    "en": "Midwifery professionals",
+    "ru": "Акушер",
+    "uz": "Akusher"
+   },
+   "ai_exposure": 0.3,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "nursing",
+    "medicine"
+   ]
+  },
+  {
+   "id": "2250",
+   "group": "2",
+   "name": {
+    "en": "Veterinarians",
+    "ru": "Ветеринар",
+    "uz": "Veterinar"
+   },
+   "ai_exposure": 0.14,
+   "gradient": "Not Exposed",
+   "ai_risk": "low",
+   "horizon": "10y+",
+   "related_fields": [
+    "veterinary",
+    "biology"
+   ]
+  },
+  {
+   "id": "2261",
+   "group": "2",
+   "name": {
+    "en": "Dentists",
+    "ru": "Стоматолог",
+    "uz": "Stomatolog"
+   },
+   "ai_exposure": 0.15,
+   "gradient": "Not Exposed",
+   "ai_risk": "low",
+   "horizon": "10y+",
+   "related_fields": [
+    "dentistry"
+   ]
+  },
+  {
+   "id": "2262",
+   "group": "2",
+   "name": {
+    "en": "Pharmacists",
+    "ru": "Фармацевт",
+    "uz": "Farmatsevt"
+   },
+   "ai_exposure": 0.33,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "pharmacy",
+    "chemistry"
+   ]
+  },
+  {
+   "id": "2263",
+   "group": "2",
+   "name": {
+    "en": "Environmental and occupational health and hygiene professionals",
+    "ru": "Специалист по гигиене и охране здоровья на труде",
+    "uz": "Gigiyena va mehnat salomatligi mutaxassisi"
+   },
+   "ai_exposure": 0.28,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "public_health"
+   ]
+  },
+  {
+   "id": "2264",
+   "group": "2",
+   "name": {
+    "en": "Physiotherapists",
+    "ru": "Физиотерапевт",
+    "uz": "Fizioterapevt"
+   },
+   "ai_exposure": 0.28,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "kinesiology",
+    "medicine"
+   ]
+  },
+  {
+   "id": "2265",
+   "group": "2",
+   "name": {
+    "en": "Dieticians and nutritionists",
+    "ru": "Диетолог и нутрициолог",
+    "uz": "Dietolog va nutritsiolog"
+   },
+   "ai_exposure": 0.41,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "nutrition",
+    "food_science"
+   ]
+  },
+  {
+   "id": "2266",
+   "group": "2",
+   "name": {
+    "en": "Audiologists and speech therapists",
+    "ru": "Аудиолог и логопед",
+    "uz": "Audiolog va logoped"
+   },
+   "ai_exposure": 0.24,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "medicine",
+    "psychology",
+    "linguistics"
+   ]
+  },
+  {
+   "id": "2267",
+   "group": "2",
+   "name": {
+    "en": "Optometrists and ophthalmic opticians",
+    "ru": "Оптометрист",
+    "uz": "Optometrist"
+   },
+   "ai_exposure": 0.24,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "medicine"
+   ]
+  },
+  {
+   "id": "2269",
+   "group": "2",
+   "name": {
+    "en": "Health professionals not elsewhere classified",
+    "ru": "Специалист здравоохранения (прочие)",
+    "uz": "Sogʻliqni saqlash mutaxassisi (boshqa)"
+   },
+   "ai_exposure": 0.2,
+   "gradient": "Not Exposed",
+   "ai_risk": "low",
+   "horizon": "10y+",
+   "related_fields": [
+    "public_health",
+    "biology"
+   ]
+  },
+  {
+   "id": "2310",
+   "group": "2",
+   "name": {
+    "en": "University and higher education teachers",
+    "ru": "Преподаватель университета",
+    "uz": "Universitet oʻqituvchisi"
+   },
+   "ai_exposure": 0.37,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "education",
+    "liberal_arts"
+   ]
+  },
+  {
+   "id": "2320",
+   "group": "2",
+   "name": {
+    "en": "Vocational education teachers",
+    "ru": "Преподаватель профессионального обучения",
+    "uz": "Kasb-hunar taʼlimi oʻqituvchisi"
+   },
+   "ai_exposure": 0.35,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "education"
+   ]
+  },
+  {
+   "id": "2330",
+   "group": "2",
+   "name": {
+    "en": "Secondary education teachers",
+    "ru": "Учитель средней школы",
+    "uz": "Umumiy oʻrta taʼlim oʻqituvchisi"
+   },
+   "ai_exposure": 0.3,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "education"
+   ]
+  },
+  {
+   "id": "2341",
+   "group": "2",
+   "name": {
+    "en": "Primary school teachers",
+    "ru": "Учитель начальной школы",
+    "uz": "Boshlangʻich sinf oʻqituvchisi"
+   },
+   "ai_exposure": 0.26,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "education"
+   ]
+  },
+  {
+   "id": "2342",
+   "group": "2",
+   "name": {
+    "en": "Early childhood educators",
+    "ru": "Воспитатель детского сада",
+    "uz": "Maktabgacha taʼlim tarbiyachisi"
+   },
+   "ai_exposure": 0.21,
+   "gradient": "Not Exposed",
+   "ai_risk": "low",
+   "horizon": "10y+",
+   "related_fields": [
+    "education",
+    "psychology"
+   ]
+  },
+  {
+   "id": "2351",
+   "group": "2",
+   "name": {
+    "en": "Education methods specialists",
+    "ru": "Методист в образовании",
+    "uz": "Taʼlim metodisti"
+   },
+   "ai_exposure": 0.39,
+   "gradient": "Exposed: Gradient 1",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "education"
+   ]
+  },
+  {
+   "id": "2352",
+   "group": "2",
+   "name": {
+    "en": "Special needs teachers",
+    "ru": "Учитель для детей с особыми потребностями",
+    "uz": "Maxsus ehtiyojli bolalar oʻqituvchisi"
+   },
+   "ai_exposure": 0.28,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "education",
+    "psychology"
+   ]
+  },
+  {
+   "id": "2353",
+   "group": "2",
+   "name": {
+    "en": "Other language teachers",
+    "ru": "Преподаватель иностранных языков",
+    "uz": "Chet tili oʻqituvchisi"
+   },
+   "ai_exposure": 0.34,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "linguistics",
+    "literature_languages",
+    "education"
+   ]
+  },
+  {
+   "id": "2354",
+   "group": "2",
+   "name": {
+    "en": "Other music teachers",
+    "ru": "Преподаватель музыки",
+    "uz": "Musiqa oʻqituvchisi"
+   },
+   "ai_exposure": 0.35,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "music_performing",
+    "education"
+   ]
+  },
+  {
+   "id": "2355",
+   "group": "2",
+   "name": {
+    "en": "Other arts teachers",
+    "ru": "Преподаватель искусства",
+    "uz": "Sanʼat oʻqituvchisi"
+   },
+   "ai_exposure": 0.35,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "arts",
+    "education"
+   ]
+  },
+  {
+   "id": "2356",
+   "group": "2",
+   "name": {
+    "en": "Information technology trainers",
+    "ru": "Тренер по информационным технологиям",
+    "uz": "AKT boʻyicha trener"
+   },
+   "ai_exposure": 0.47,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "computer_science",
+    "education"
+   ]
+  },
+  {
+   "id": "2411",
+   "group": "2",
+   "name": {
+    "en": "Accountants",
+    "ru": "Бухгалтер",
+    "uz": "Buxgalter"
+   },
+   "ai_exposure": 0.51,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "accounting",
+    "finance"
+   ]
+  },
+  {
+   "id": "2412",
+   "group": "2",
+   "name": {
+    "en": "Financial and investment advisers",
+    "ru": "Финансовый и инвестиционный консультант",
+    "uz": "Moliyaviy va investitsiya maslahatchisi"
+   },
+   "ai_exposure": 0.57,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "finance",
+    "economics"
+   ]
+  },
+  {
+   "id": "2413",
+   "group": "2",
+   "name": {
+    "en": "Financial analysts",
+    "ru": "Финансовый аналитик",
+    "uz": "Moliyaviy tahlilchi"
+   },
+   "ai_exposure": 0.62,
+   "gradient": "Exposed: Gradient 4",
+   "ai_risk": "high",
+   "horizon": "now",
+   "related_fields": [
+    "finance",
+    "economics",
+    "statistics"
+   ]
+  },
+  {
+   "id": "2421",
+   "group": "2",
+   "name": {
+    "en": "Management and organisation analysts",
+    "ru": "Аналитик по управлению и организации",
+    "uz": "Boshqaruv va tashkilot tahlilchisi"
+   },
+   "ai_exposure": 0.46,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "management",
+    "business"
+   ]
+  },
+  {
+   "id": "2422",
+   "group": "2",
+   "name": {
+    "en": "Policy administration professionals",
+    "ru": "Специалист по государственной политике",
+    "uz": "Davlat siyosati mutaxassisi"
+   },
+   "ai_exposure": 0.42,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "politics",
+    "economics"
+   ]
+  },
+  {
+   "id": "2423",
+   "group": "2",
+   "name": {
+    "en": "Personnel and careers professionals",
+    "ru": "Специалист по персоналу и карьере",
+    "uz": "Kadrlar va karyera mutaxassisi"
+   },
+   "ai_exposure": 0.45,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "psychology",
+    "management"
+   ]
+  },
+  {
+   "id": "2424",
+   "group": "2",
+   "name": {
+    "en": "Training and staff development professionals",
+    "ru": "Специалист по обучению персонала",
+    "uz": "Xodimlarni oʻqitish mutaxassisi"
+   },
+   "ai_exposure": 0.41,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "education",
+    "management"
+   ]
+  },
+  {
+   "id": "2431",
+   "group": "2",
+   "name": {
+    "en": "Advertising and marketing professionals",
+    "ru": "Специалист по рекламе и маркетингу",
+    "uz": "Reklama va marketing mutaxassisi"
+   },
+   "ai_exposure": 0.55,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "marketing",
+    "communications"
+   ]
+  },
+  {
+   "id": "2432",
+   "group": "2",
+   "name": {
+    "en": "Public relations professionals",
+    "ru": "Специалист по связям с общественностью",
+    "uz": "Jamoatchilik bilan aloqa mutaxassisi"
+   },
+   "ai_exposure": 0.43,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "communications",
+    "media_studies"
+   ]
+  },
+  {
+   "id": "2433",
+   "group": "2",
+   "name": {
+    "en": "Technical and medical sales professionals (excluding ICT)",
+    "ru": "Менеджер по техническим и медицинским продажам",
+    "uz": "Texnik va tibbiy savdo menejeri"
+   },
+   "ai_exposure": 0.5,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "business",
+    "marketing"
+   ]
+  },
+  {
+   "id": "2434",
+   "group": "2",
+   "name": {
+    "en": "Information and communications technology sales professionals",
+    "ru": "Менеджер по продажам ИКТ",
+    "uz": "AKT savdo menejeri"
+   },
+   "ai_exposure": 0.51,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "business",
+    "computer_science"
+   ]
+  },
+  {
+   "id": "2511",
+   "group": "2",
+   "name": {
+    "en": "Systems analysts",
+    "ru": "Системный аналитик",
+    "uz": "Tizim tahlilchisi"
+   },
+   "ai_exposure": 0.49,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "information_systems",
+    "computer_science"
+   ]
+  },
+  {
+   "id": "2512",
+   "group": "2",
+   "name": {
+    "en": "Software developers",
+    "ru": "Разработчик программного обеспечения",
+    "uz": "Dasturiy taʼminot dasturchisi"
+   },
+   "ai_exposure": 0.53,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "software_engineering",
+    "computer_science"
+   ]
+  },
+  {
+   "id": "2513",
+   "group": "2",
+   "name": {
+    "en": "Web and multimedia developers",
+    "ru": "Веб- и мультимедиа-разработчик",
+    "uz": "Veb va multimedia dasturchisi"
+   },
+   "ai_exposure": 0.6,
+   "gradient": "Exposed: Gradient 4",
+   "ai_risk": "high",
+   "horizon": "now",
+   "related_fields": [
+    "software_engineering",
+    "computer_science",
+    "design"
+   ]
+  },
+  {
+   "id": "2514",
+   "group": "2",
+   "name": {
+    "en": "Applications programmers",
+    "ru": "Прикладной программист",
+    "uz": "Amaliy dasturchi"
+   },
+   "ai_exposure": 0.57,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "software_engineering",
+    "computer_science"
+   ]
+  },
+  {
+   "id": "2519",
+   "group": "2",
+   "name": {
+    "en": "Software and applications developers and analysts not elsewhere classified",
+    "ru": "Разработчик и аналитик ПО (прочие)",
+    "uz": "Dasturiy taʼminot tahlilchisi (boshqa)"
+   },
+   "ai_exposure": 0.55,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "software_engineering",
+    "data_science",
+    "game_design"
+   ]
+  },
+  {
+   "id": "2521",
+   "group": "2",
+   "name": {
+    "en": "Database designers and administrators",
+    "ru": "Проектировщик и администратор баз данных",
+    "uz": "Maʼlumotlar bazasi loyihachisi va administratori"
+   },
+   "ai_exposure": 0.57,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "information_systems",
+    "data_science"
+   ]
+  },
+  {
+   "id": "2522",
+   "group": "2",
+   "name": {
+    "en": "Systems administrators",
+    "ru": "Системный администратор",
+    "uz": "Tizim administratori"
+   },
+   "ai_exposure": 0.57,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "information_systems",
+    "cybersecurity"
+   ]
+  },
+  {
+   "id": "2523",
+   "group": "2",
+   "name": {
+    "en": "Computer network professionals",
+    "ru": "Специалист по компьютерным сетям",
+    "uz": "Kompyuter tarmoqlari mutaxassisi"
+   },
+   "ai_exposure": 0.52,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "computer_science",
+    "cybersecurity"
+   ]
+  },
+  {
+   "id": "2529",
+   "group": "2",
+   "name": {
+    "en": "Database and network professionals not elsewhere classified",
+    "ru": "Специалист по базам данных и сетям (прочие)",
+    "uz": "Maʼlumotlar bazasi va tarmoq mutaxassisi (boshqa)"
+   },
+   "ai_exposure": 0.49,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "cybersecurity",
+    "data_science"
+   ]
+  },
+  {
+   "id": "2611",
+   "group": "2",
+   "name": {
+    "en": "Lawyers",
+    "ru": "Юрист",
+    "uz": "Yurist"
+   },
+   "ai_exposure": 0.36,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "law"
+   ]
+  },
+  {
+   "id": "2612",
+   "group": "2",
+   "name": {
+    "en": "Judges",
+    "ru": "Судья",
+    "uz": "Sudya"
+   },
+   "ai_exposure": 0.31,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "law"
+   ]
+  },
+  {
+   "id": "2619",
+   "group": "2",
+   "name": {
+    "en": "Legal professionals not elsewhere classified",
+    "ru": "Юрист (прочие специальности)",
+    "uz": "Huquqshunos (boshqa)"
+   },
+   "ai_exposure": 0.37,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "law",
+    "criminology"
+   ]
+  },
+  {
+   "id": "2621",
+   "group": "2",
+   "name": {
+    "en": "Archivists and curators",
+    "ru": "Архивист и куратор",
+    "uz": "Arxivchi va kurator"
+   },
+   "ai_exposure": 0.47,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "history",
+    "humanities"
+   ]
+  },
+  {
+   "id": "2622",
+   "group": "2",
+   "name": {
+    "en": "Librarians and related information professionals",
+    "ru": "Библиотекарь и информационный специалист",
+    "uz": "Kutubxonachi va axborot mutaxassisi"
+   },
+   "ai_exposure": 0.55,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "humanities",
+    "information_systems"
+   ]
+  },
+  {
+   "id": "2631",
+   "group": "2",
+   "name": {
+    "en": "Economists",
+    "ru": "Экономист",
+    "uz": "Iqtisodchi"
+   },
+   "ai_exposure": 0.55,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "economics",
+    "statistics"
+   ]
+  },
+  {
+   "id": "2632",
+   "group": "2",
+   "name": {
+    "en": "Sociologists, anthropologists and related professionals",
+    "ru": "Социолог и антрополог",
+    "uz": "Sotsiolog va antropolog"
+   },
+   "ai_exposure": 0.48,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "sociology",
+    "anthropology",
+    "social_sciences"
+   ]
+  },
+  {
+   "id": "2633",
+   "group": "2",
+   "name": {
+    "en": "Philosophers, historians and political scientists",
+    "ru": "Философ, историк, политолог",
+    "uz": "Faylasuf, tarixchi, siyosatshunos"
+   },
+   "ai_exposure": 0.47,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "philosophy",
+    "history",
+    "politics"
+   ]
+  },
+  {
+   "id": "2634",
+   "group": "2",
+   "name": {
+    "en": "Psychologists",
+    "ru": "Психолог",
+    "uz": "Psixolog"
+   },
+   "ai_exposure": 0.39,
+   "gradient": "Exposed: Gradient 1",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "psychology",
+    "cognitive_science",
+    "neuroscience"
+   ]
+  },
+  {
+   "id": "2635",
+   "group": "2",
+   "name": {
+    "en": "Social work and counselling professionals",
+    "ru": "Социальный работник и консультант",
+    "uz": "Ijtimoiy ishchi va maslahatchi"
+   },
+   "ai_exposure": 0.28,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "social_work",
+    "psychology"
+   ]
+  },
+  {
+   "id": "2641",
+   "group": "2",
+   "name": {
+    "en": "Authors and related writers",
+    "ru": "Автор и писатель",
+    "uz": "Muallif va yozuvchi"
+   },
+   "ai_exposure": 0.55,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "creative_writing",
+    "literature_languages"
+   ]
+  },
+  {
+   "id": "2642",
+   "group": "2",
+   "name": {
+    "en": "Journalists",
+    "ru": "Журналист",
+    "uz": "Jurnalist"
+   },
+   "ai_exposure": 0.54,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "journalism",
+    "communications"
+   ]
+  },
+  {
+   "id": "2643",
+   "group": "2",
+   "name": {
+    "en": "Translators, interpreters and other linguists",
+    "ru": "Переводчик и лингвист",
+    "uz": "Tarjimon va tilshunos"
+   },
+   "ai_exposure": 0.59,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "linguistics",
+    "literature_languages"
+   ]
+  },
+  {
+   "id": "2651",
+   "group": "2",
+   "name": {
+    "en": "Visual artists",
+    "ru": "Художник",
+    "uz": "Rassom"
+   },
+   "ai_exposure": 0.21,
+   "gradient": "Not Exposed",
+   "ai_risk": "low",
+   "horizon": "10y+",
+   "related_fields": [
+    "arts",
+    "design"
+   ]
+  },
+  {
+   "id": "2652",
+   "group": "2",
+   "name": {
+    "en": "Musicians, singers and composers",
+    "ru": "Музыкант, певец, композитор",
+    "uz": "Musiqachi, qoʻshiqchi, kompozitor"
+   },
+   "ai_exposure": 0.28,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "music_performing"
+   ]
+  },
+  {
+   "id": "2653",
+   "group": "2",
+   "name": {
+    "en": "Dancers and choreographers",
+    "ru": "Танцор и хореограф",
+    "uz": "Raqqosa va xoreograf"
+   },
+   "ai_exposure": 0.19,
+   "gradient": "Not Exposed",
+   "ai_risk": "low",
+   "horizon": "10y+",
+   "related_fields": [
+    "dance"
+   ]
+  },
+  {
+   "id": "2654",
+   "group": "2",
+   "name": {
+    "en": "Film, stage and related directors and producers",
+    "ru": "Режиссёр и продюсер",
+    "uz": "Rejissyor va prodyuser"
+   },
+   "ai_exposure": 0.37,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "film",
+    "theatre",
+    "media_studies"
+   ]
+  },
+  {
+   "id": "2655",
+   "group": "2",
+   "name": {
+    "en": "Actors",
+    "ru": "Актёр",
+    "uz": "Aktyor"
+   },
+   "ai_exposure": 0.31,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "theatre",
+    "film"
+   ]
+  },
+  {
+   "id": "2656",
+   "group": "2",
+   "name": {
+    "en": "Announcers on radio, television and other media",
+    "ru": "Диктор и ведущий",
+    "uz": "Diktor va boshlovchi"
+   },
+   "ai_exposure": 0.47,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "media_studies",
+    "communications"
+   ]
+  },
+  {
+   "id": "2659",
+   "group": "2",
+   "name": {
+    "en": "Creative and performing artists not elsewhere classified",
+    "ru": "Творческий работник (прочие)",
+    "uz": "Ijodiy xodim (boshqa)"
+   },
+   "ai_exposure": 0.13,
+   "gradient": "Not Exposed",
+   "ai_risk": "low",
+   "horizon": "10y+",
+   "related_fields": [
+    "arts",
+    "film",
+    "game_design"
+   ]
+  },
+  {
+   "id": "3111",
+   "group": "3",
+   "name": {
+    "en": "Chemical and physical science technicians",
+    "ru": "Лаборант по химии и физике",
+    "uz": "Kimyo va fizika laboranti"
+   },
+   "ai_exposure": 0.26,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "chemistry",
+    "physics"
+   ]
+  },
+  {
+   "id": "3112",
+   "group": "3",
+   "name": {
+    "en": "Civil engineering technicians",
+    "ru": "Техник-строитель",
+    "uz": "Qurilish texnigi"
+   },
+   "ai_exposure": 0.28,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "civil_engineering"
+   ]
+  },
+  {
+   "id": "3113",
+   "group": "3",
+   "name": {
+    "en": "Electrical engineering technicians",
+    "ru": "Техник-электрик",
+    "uz": "Elektrik texnik"
+   },
+   "ai_exposure": 0.27,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "electrical_engineering"
+   ]
+  },
+  {
+   "id": "3114",
+   "group": "3",
+   "name": {
+    "en": "Electronics engineering technicians",
+    "ru": "Техник-электронщик",
+    "uz": "Elektronika texnigi"
+   },
+   "ai_exposure": 0.38,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "electrical_engineering"
+   ]
+  },
+  {
+   "id": "3115",
+   "group": "3",
+   "name": {
+    "en": "Mechanical engineering technicians",
+    "ru": "Техник-механик",
+    "uz": "Mexanik texnik"
+   },
+   "ai_exposure": 0.26,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "mechanical_engineering"
+   ]
+  },
+  {
+   "id": "3116",
+   "group": "3",
+   "name": {
+    "en": "Chemical engineering technicians",
+    "ru": "Техник-химик",
+    "uz": "Kimyo texnigi"
+   },
+   "ai_exposure": 0.32,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "chemical_engineering"
+   ]
+  },
+  {
+   "id": "3117",
+   "group": "3",
+   "name": {
+    "en": "Mining and metallurgical technicians",
+    "ru": "Техник горный и металлургический",
+    "uz": "Togʻ-kon va metallurgiya texnigi"
+   },
+   "ai_exposure": 0.28,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "materials_engineering"
+   ]
+  },
+  {
+   "id": "3118",
+   "group": "3",
+   "name": {
+    "en": "Draughtspersons",
+    "ru": "Чертёжник",
+    "uz": "Chizmachi"
+   },
+   "ai_exposure": 0.35,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "architecture",
+    "engineering"
+   ]
+  },
+  {
+   "id": "3119",
+   "group": "3",
+   "name": {
+    "en": "Physical and engineering science technicians not elsewhere classified",
+    "ru": "Технический специалист (прочие)",
+    "uz": "Texnik mutaxassis (boshqa)"
+   },
+   "ai_exposure": 0.26,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "engineering"
+   ]
+  },
+  {
+   "id": "3141",
+   "group": "3",
+   "name": {
+    "en": "Life science technicians (excluding medical)",
+    "ru": "Лаборант по биологии",
+    "uz": "Biologiya laboranti"
+   },
+   "ai_exposure": 0.38,
+   "gradient": "Exposed: Gradient 1",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "biology",
+    "biochemistry"
+   ]
+  },
+  {
+   "id": "3151",
+   "group": "3",
+   "name": {
+    "en": "Ships’ engineers",
+    "ru": "Судовой механик",
+    "uz": "Kema mexanigi"
+   },
+   "ai_exposure": 0.23,
+   "gradient": "Not Exposed",
+   "ai_risk": "low",
+   "horizon": "10y+",
+   "related_fields": [
+    "mechanical_engineering"
+   ]
+  },
+  {
+   "id": "3152",
+   "group": "3",
+   "name": {
+    "en": "Ships' deck officers and pilots",
+    "ru": "Штурман и лоцман",
+    "uz": "Kema shturmani va lotsman"
+   },
+   "ai_exposure": 0.29,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "aviation",
+    "engineering"
+   ]
+  },
+  {
+   "id": "3153",
+   "group": "3",
+   "name": {
+    "en": "Aircraft pilots and related associate professionals",
+    "ru": "Пилот",
+    "uz": "Uchuvchi"
+   },
+   "ai_exposure": 0.27,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "aviation",
+    "aerospace_engineering"
+   ]
+  },
+  {
+   "id": "3154",
+   "group": "3",
+   "name": {
+    "en": "Air traffic controllers",
+    "ru": "Авиадиспетчер",
+    "uz": "Aviadispetcher"
+   },
+   "ai_exposure": 0.31,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "aviation"
+   ]
+  },
+  {
+   "id": "3211",
+   "group": "3",
+   "name": {
+    "en": "Medical imaging and therapeutic equipment technicians",
+    "ru": "Техник по медицинской визуализации",
+    "uz": "Tibbiy tasvirlash texnigi"
+   },
+   "ai_exposure": 0.22,
+   "gradient": "Not Exposed",
+   "ai_risk": "low",
+   "horizon": "10y+",
+   "related_fields": [
+    "medicine",
+    "biomedical_engineering"
+   ]
+  },
+  {
+   "id": "3212",
+   "group": "3",
+   "name": {
+    "en": "Medical and pathology laboratory technicians",
+    "ru": "Лаборант медицинской диагностики",
+    "uz": "Tibbiy laborant"
+   },
+   "ai_exposure": 0.31,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "medicine",
+    "biochemistry"
+   ]
+  },
+  {
+   "id": "3221",
+   "group": "3",
+   "name": {
+    "en": "Nursing associate professionals",
+    "ru": "Медицинская сестра",
+    "uz": "Hamshira"
+   },
+   "ai_exposure": 0.22,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "low",
+   "horizon": "10y+",
+   "related_fields": [
+    "nursing"
+   ]
+  },
+  {
+   "id": "3253",
+   "group": "3",
+   "name": {
+    "en": "Community health workers",
+    "ru": "Работник общественного здравоохранения",
+    "uz": "Jamoat salomatligi xodimi"
+   },
+   "ai_exposure": 0.22,
+   "gradient": "Not Exposed",
+   "ai_risk": "low",
+   "horizon": "10y+",
+   "related_fields": [
+    "public_health",
+    "nursing"
+   ]
+  },
+  {
+   "id": "3256",
+   "group": "3",
+   "name": {
+    "en": "Medical assistants",
+    "ru": "Помощник врача",
+    "uz": "Shifokor yordamchisi"
+   },
+   "ai_exposure": 0.35,
+   "gradient": "Exposed: Gradient 1",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "medicine",
+    "nursing"
+   ]
+  },
+  {
+   "id": "3257",
+   "group": "3",
+   "name": {
+    "en": "Environmental and occupational health inspectors and associates",
+    "ru": "Инспектор по гигиене и охране труда",
+    "uz": "Gigiyena va mehnat muhofazasi inspektori"
+   },
+   "ai_exposure": 0.24,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "public_health",
+    "environmental_science"
+   ]
+  },
+  {
+   "id": "3311",
+   "group": "3",
+   "name": {
+    "en": "Securities and finance dealers and brokers",
+    "ru": "Брокер и дилер ценных бумаг",
+    "uz": "Qimmatli qogʻozlar brokeri va dilleri"
+   },
+   "ai_exposure": 0.63,
+   "gradient": "Exposed: Gradient 4",
+   "ai_risk": "high",
+   "horizon": "now",
+   "related_fields": [
+    "finance",
+    "economics"
+   ]
+  },
+  {
+   "id": "3312",
+   "group": "3",
+   "name": {
+    "en": "Credit and loans officers",
+    "ru": "Кредитный специалист",
+    "uz": "Kredit mutaxassisi"
+   },
+   "ai_exposure": 0.6,
+   "gradient": "Exposed: Gradient 4",
+   "ai_risk": "high",
+   "horizon": "now",
+   "related_fields": [
+    "finance"
+   ]
+  },
+  {
+   "id": "3313",
+   "group": "3",
+   "name": {
+    "en": "Accounting associate professionals",
+    "ru": "Помощник бухгалтера",
+    "uz": "Buxgalter yordamchisi"
+   },
+   "ai_exposure": 0.49,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "accounting"
+   ]
+  },
+  {
+   "id": "3314",
+   "group": "3",
+   "name": {
+    "en": "Statistical, mathematical and related associate professionals",
+    "ru": "Специалист по статистике",
+    "uz": "Statistika mutaxassisi"
+   },
+   "ai_exposure": 0.57,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "statistics",
+    "mathematics"
+   ]
+  },
+  {
+   "id": "3315",
+   "group": "3",
+   "name": {
+    "en": "Valuers and loss assessors",
+    "ru": "Оценщик и эксперт по убыткам",
+    "uz": "Baholovchi va zarar eksperti"
+   },
+   "ai_exposure": 0.45,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "finance",
+    "real_estate"
+   ]
+  },
+  {
+   "id": "3321",
+   "group": "3",
+   "name": {
+    "en": "Insurance representatives",
+    "ru": "Страховой агент",
+    "uz": "Sugʻurta agenti"
+   },
+   "ai_exposure": 0.53,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "finance",
+    "business"
+   ]
+  },
+  {
+   "id": "3322",
+   "group": "3",
+   "name": {
+    "en": "Commercial sales representatives",
+    "ru": "Торговый представитель",
+    "uz": "Savdo vakili"
+   },
+   "ai_exposure": 0.49,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "business",
+    "marketing"
+   ]
+  },
+  {
+   "id": "3323",
+   "group": "3",
+   "name": {
+    "en": "Buyers",
+    "ru": "Закупщик",
+    "uz": "Xaridor-menejer"
+   },
+   "ai_exposure": 0.39,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "supply_chain",
+    "business"
+   ]
+  },
+  {
+   "id": "3324",
+   "group": "3",
+   "name": {
+    "en": "Trade brokers",
+    "ru": "Торговый брокер",
+    "uz": "Savdo brokeri"
+   },
+   "ai_exposure": 0.44,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "business",
+    "supply_chain"
+   ]
+  },
+  {
+   "id": "3331",
+   "group": "3",
+   "name": {
+    "en": "Clearing and forwarding agents",
+    "ru": "Таможенный и экспедиторский агент",
+    "uz": "Bojxona va ekspeditorlik agenti"
+   },
+   "ai_exposure": 0.57,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "supply_chain",
+    "international_relations"
+   ]
+  },
+  {
+   "id": "3332",
+   "group": "3",
+   "name": {
+    "en": "Conference and event planners",
+    "ru": "Организатор мероприятий",
+    "uz": "Tadbirlar tashkilotchisi"
+   },
+   "ai_exposure": 0.48,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "hospitality",
+    "communications"
+   ]
+  },
+  {
+   "id": "3333",
+   "group": "3",
+   "name": {
+    "en": "Employment agents and contractors",
+    "ru": "Агент по трудоустройству",
+    "uz": "Bandlik agenti"
+   },
+   "ai_exposure": 0.39,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "management",
+    "psychology"
+   ]
+  },
+  {
+   "id": "3334",
+   "group": "3",
+   "name": {
+    "en": "Real estate agents and property managers",
+    "ru": "Агент по недвижимости",
+    "uz": "Koʻchmas mulk agenti"
+   },
+   "ai_exposure": 0.35,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "real_estate"
+   ]
+  },
+  {
+   "id": "3343",
+   "group": "3",
+   "name": {
+    "en": "Administrative and executive secretaries",
+    "ru": "Административный секретарь",
+    "uz": "Maʼmuriy kotib"
+   },
+   "ai_exposure": 0.54,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "management",
+    "business"
+   ]
+  },
+  {
+   "id": "3351",
+   "group": "3",
+   "name": {
+    "en": "Customs and border inspectors",
+    "ru": "Таможенный и пограничный инспектор",
+    "uz": "Bojxona va chegara inspektori"
+   },
+   "ai_exposure": 0.32,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "law",
+    "international_relations"
+   ]
+  },
+  {
+   "id": "3352",
+   "group": "3",
+   "name": {
+    "en": "Government tax and excise officials",
+    "ru": "Налоговый инспектор",
+    "uz": "Soliq inspektori"
+   },
+   "ai_exposure": 0.49,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "taxation",
+    "accounting"
+   ]
+  },
+  {
+   "id": "3355",
+   "group": "3",
+   "name": {
+    "en": "Police inspectors and detectives",
+    "ru": "Следователь и детектив",
+    "uz": "Tergovchi va detektiv"
+   },
+   "ai_exposure": 0.23,
+   "gradient": "Not Exposed",
+   "ai_risk": "low",
+   "horizon": "10y+",
+   "related_fields": [
+    "criminology",
+    "law"
+   ]
+  },
+  {
+   "id": "3412",
+   "group": "3",
+   "name": {
+    "en": "Social work associate professionals",
+    "ru": "Помощник социального работника",
+    "uz": "Ijtimoiy ishchi yordamchisi"
+   },
+   "ai_exposure": 0.33,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "social_work"
+   ]
+  },
+  {
+   "id": "3421",
+   "group": "3",
+   "name": {
+    "en": "Athletes and sports players",
+    "ru": "Спортсмен",
+    "uz": "Sportchi"
+   },
+   "ai_exposure": 0.23,
+   "gradient": "Not Exposed",
+   "ai_risk": "low",
+   "horizon": "10y+",
+   "related_fields": [
+    "kinesiology",
+    "sports_management"
+   ]
+  },
+  {
+   "id": "3422",
+   "group": "3",
+   "name": {
+    "en": "Sports coaches, instructors and officials",
+    "ru": "Тренер и спортивный судья",
+    "uz": "Murabbiy va sport hakami"
+   },
+   "ai_exposure": 0.37,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "kinesiology",
+    "sports_management"
+   ]
+  },
+  {
+   "id": "3423",
+   "group": "3",
+   "name": {
+    "en": "Fitness and recreation instructors and program leaders",
+    "ru": "Фитнес-инструктор",
+    "uz": "Fitnes instruktori"
+   },
+   "ai_exposure": 0.25,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "kinesiology",
+    "nutrition"
+   ]
+  },
+  {
+   "id": "3431",
+   "group": "3",
+   "name": {
+    "en": "Photographers",
+    "ru": "Фотограф",
+    "uz": "Fotograf"
+   },
+   "ai_exposure": 0.39,
+   "gradient": "Exposed: Gradient 1",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "arts",
+    "media_studies",
+    "film"
+   ]
+  },
+  {
+   "id": "3432",
+   "group": "3",
+   "name": {
+    "en": "Interior designers and decorators",
+    "ru": "Дизайнер интерьера",
+    "uz": "Interer dizayneri"
+   },
+   "ai_exposure": 0.37,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "design",
+    "architecture"
+   ]
+  },
+  {
+   "id": "3433",
+   "group": "3",
+   "name": {
+    "en": "Gallery, museum and library technicians",
+    "ru": "Технический сотрудник музея и библиотеки",
+    "uz": "Muzey va kutubxona texnik xodimi"
+   },
+   "ai_exposure": 0.37,
+   "gradient": "Exposed: Gradient 1",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "humanities",
+    "arts"
+   ]
+  },
+  {
+   "id": "3434",
+   "group": "3",
+   "name": {
+    "en": "Chefs",
+    "ru": "Шеф-повар",
+    "uz": "Bosh oshpaz"
+   },
+   "ai_exposure": 0.25,
+   "gradient": "Not Exposed",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "hospitality",
+    "food_science"
+   ]
+  },
+  {
+   "id": "3511",
+   "group": "3",
+   "name": {
+    "en": "Information and communications technology operations technicians",
+    "ru": "Техник по эксплуатации ИКТ",
+    "uz": "AKT operatsiyalari texnigi"
+   },
+   "ai_exposure": 0.43,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "information_systems",
+    "cybersecurity"
+   ]
+  },
+  {
+   "id": "3512",
+   "group": "3",
+   "name": {
+    "en": "Information and communications technology user support technicians",
+    "ru": "Техник поддержки пользователей ИКТ",
+    "uz": "AKT foydalanuvchilarni qoʻllab-quvvatlash texnigi"
+   },
+   "ai_exposure": 0.47,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "information_systems"
+   ]
+  },
+  {
+   "id": "3513",
+   "group": "3",
+   "name": {
+    "en": "Computer network and systems technicians",
+    "ru": "Техник по сетям и системам",
+    "uz": "Tarmoq va tizim texnigi"
+   },
+   "ai_exposure": 0.43,
+   "gradient": "Exposed: Gradient 2",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "computer_science",
+    "cybersecurity"
+   ]
+  },
+  {
+   "id": "3514",
+   "group": "3",
+   "name": {
+    "en": "Web technicians",
+    "ru": "Веб-техник",
+    "uz": "Veb texnik"
+   },
+   "ai_exposure": 0.53,
+   "gradient": "Exposed: Gradient 3",
+   "ai_risk": "high",
+   "horizon": "5y",
+   "related_fields": [
+    "computer_science",
+    "software_engineering"
+   ]
+  },
+  {
+   "id": "3521",
+   "group": "3",
+   "name": {
+    "en": "Broadcasting and audiovisual technicians",
+    "ru": "Техник по вещанию и аудиовизуальной технике",
+    "uz": "Eshittirish va audiovizual texnika texnigi"
+   },
+   "ai_exposure": 0.35,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "media_studies",
+    "film"
+   ]
+  },
+  {
+   "id": "3522",
+   "group": "3",
+   "name": {
+    "en": "Telecommunications engineering technicians",
+    "ru": "Техник по телекоммуникациям",
+    "uz": "Telekommunikatsiya texnigi"
+   },
+   "ai_exposure": 0.45,
+   "gradient": "Minimal Exposure",
+   "ai_risk": "medium",
+   "horizon": "10y+",
+   "related_fields": [
+    "electrical_engineering"
+   ]
+  }
+ ]
+}

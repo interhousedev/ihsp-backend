@@ -12,6 +12,7 @@ from app.modules.admission.domain.errors import (
 )
 from app.modules.admission.domain.items import Item, ItemGrade, ItemKind, ItemStatus
 from app.modules.admission.infrastructure.orm.profile import (
+    HonorSuggestionDismissalRow,
     ItemInterviewRow,
     ItemMetricRow,
     ItemRow,
@@ -33,6 +34,7 @@ from app.modules.admission.ports.items import (
 from app.shared.ids import new_id
 
 from sqlalchemy import delete, func, select, update
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -55,6 +57,8 @@ def _item(row: ItemRow) -> Item:
         timing=tuple(row.timing or ()),
         intend_in_college=row.intend_in_college,
         grade=_grade(row.ai_grade),
+        level=row.level,
+        certificate_entry_id=row.certificate_entry_id,
     )
 
 
@@ -127,6 +131,24 @@ class SqlItemRepository:
         )
         return [_item(r) for r in rows]
 
+    async def dismissed_certificates(self, student_id: UUID) -> set[UUID]:
+        """Return the certificate entries the student dismissed from suggestions."""
+        rows = await self._s.scalars(
+            select(HonorSuggestionDismissalRow.certificate_entry_id).where(
+                HonorSuggestionDismissalRow.student_id == student_id
+            )
+        )
+        return set(rows)
+
+    async def dismiss_certificate(self, student_id: UUID, entry_id: UUID) -> None:
+        """Remember a dismissal (idempotent)."""
+        stmt = (
+            pg_insert(HonorSuggestionDismissalRow)
+            .values(student_id=student_id, certificate_entry_id=entry_id)
+            .on_conflict_do_nothing()
+        )
+        await self._s.execute(stmt)
+
     async def get(self, item_id: UUID) -> Item | None:
         """Return one item."""
         row = await self._s.get(ItemRow, item_id)
@@ -149,6 +171,8 @@ class SqlItemRepository:
             status=item.status,
             timing=list(item.timing),
             intend_in_college=item.intend_in_college,
+            level=item.level,
+            certificate_entry_id=item.certificate_entry_id,
             lock_version=0,
         )
         self._s.add(row)
@@ -173,6 +197,7 @@ class SqlItemRepository:
         row.status = item.status
         row.timing = list(item.timing)
         row.intend_in_college = item.intend_in_college
+        row.level = item.level
         row.lock_version = item.lock_version + 1
         await self._s.flush()
         await self._s.refresh(row)

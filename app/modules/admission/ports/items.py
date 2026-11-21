@@ -101,6 +101,14 @@ class ItemRepository(Protocol):
         """Set the sort order of the given items to their list position."""
         ...
 
+    async def dismissed_certificates(self, student_id: UUID) -> set[UUID]:
+        """Return the certificate entries the student dismissed from suggestions."""
+        ...
+
+    async def dismiss_certificate(self, student_id: UUID, entry_id: UUID) -> None:
+        """Remember a dismissal (idempotent)."""
+        ...
+
     async def set_grade(self, item_id: UUID, grade: ItemGrade) -> None:
         """Store the AI grade of the item; the lock version stays."""
         ...

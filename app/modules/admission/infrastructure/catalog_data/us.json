@@ -55,6 +55,16 @@
      "source_url": "https://college.harvard.edu/admissions/apply/international-applicants",
      "year": 2026,
      "note": "Need-blind; internationals receive the same aid as domestic students"
+    },
+    "avg_aid": {
+     "value": 83013,
+     "scope": "intl",
+     "grant_pct": null,
+     "loan_pct": null,
+     "work_pct": null,
+     "source_url": "https://oira.harvard.edu/files/2026/07/CDS_2025-2026.pdf",
+     "year": 2025,
+     "note": "CDS H6: average institutional aid to degree-seeking nonresidents, CDS 2025-26"
     }
    },
    "deadlines": [
@@ -130,6 +140,16 @@
      "source_url": "https://sfs.mit.edu/financial-aid-mit",
      "year": 2026,
      "note": "Need-blind and full-need for internationals"
+    },
+    "avg_aid": {
+     "value": 81991,
+     "scope": "intl",
+     "grant_pct": null,
+     "loan_pct": null,
+     "work_pct": null,
+     "source_url": "https://ir.mit.edu/projects/2025-26-common-data-set/",
+     "year": 2025,
+     "note": "CDS H6: average institutional aid to degree-seeking nonresidents, CDS 2025-26"
     }
    },
    "deadlines": [
@@ -185,6 +205,22 @@
      "source_url": "https://www.stanford.edu/admissions-aid",
      "year": 2026,
      "note": "Need-blind for all but some international applicants"
+    },
+    "avg_aid": {
+     "value": 85424,
+     "scope": "intl",
+     "grant_pct": null,
+     "loan_pct": null,
+     "work_pct": null,
+     "source_url": "https://drive.google.com/file/d/1GIPKgVj1d86dkmLkHI_mZVCk_iY6kiCp/view?usp=sharing",
+     "year": 2025,
+     "note": "CDS H6: average institutional aid to degree-seeking nonresidents, CDS 2025-26"
+    },
+    "meets_full_need": {
+     "value": true,
+     "source_url": "https://admission.stanford.edu/apply/international/",
+     "year": 2026,
+     "note": "Official page: 100% of demonstrated need met for admitted international students"
     }
    },
    "deadlines": [
@@ -247,6 +283,16 @@
      "source_url": "https://admissions.yale.edu/international",
      "year": 2026,
      "note": "Need-blind for all applicants, meets 100% of demonstrated need"
+    },
+    "avg_aid": {
+     "value": 84185,
+     "scope": "intl",
+     "grant_pct": null,
+     "loan_pct": null,
+     "work_pct": null,
+     "source_url": "https://oir.yale.edu/sites/default/files/yale_cds_2025-26_md_20260616.pdf",
+     "year": 2025,
+     "note": "CDS H6: average institutional aid to degree-seeking nonresidents, CDS 2025-26"
     }
    },
    "deadlines": [
@@ -302,6 +348,16 @@
      "source_url": "https://admission.princeton.edu/apply/international-students",
      "year": 2026,
      "note": "No merit scholarships"
+    },
+    "avg_aid": {
+     "value": 75600,
+     "scope": "intl",
+     "grant_pct": null,
+     "loan_pct": null,
+     "work_pct": null,
+     "source_url": "https://ir.princeton.edu/sites/g/files/toruqf2041/files/documents/CDS_2425_Princeton_v1.2.pdf",
+     "year": 2024,
+     "note": "CDS H6: average institutional aid to degree-seeking nonresidents, CDS 2024-25"
     }
    },
    "deadlines": [
@@ -321,7 +377,13 @@
     }
    ],
    "scholarships": [],
-   "verified": true
+   "verified": true,
+   "intl_acceptance_rate": {
+    "value": 2.1,
+    "source_url": "https://ir.princeton.edu/sites/g/files/toruqf2041/files/documents/CDS_2425_Princeton_v1.2.pdf",
+    "year": 2024,
+    "note": "CDS C1 residency breakdown: 209 admitted of 9891 international applicants"
+   }
   },
   {
    "slug": "columbia",
@@ -364,6 +426,22 @@
      "source_url": "https://undergrad.admissions.columbia.edu/apply/international",
      "year": 2026,
      "note": "Need-blind applies to US citizens/undocumented; internationals seeking aid can fall outside it"
+    },
+    "avg_aid": {
+     "value": 92699,
+     "scope": "intl",
+     "grant_pct": null,
+     "loan_pct": null,
+     "work_pct": null,
+     "source_url": "https://opir.columbia.edu/sites/opir.columbia.edu/files/content/Common%20Data%20Set/2025-26_Columbia_College_and_Columbia_Enginnering_CDS.pdf",
+     "year": 2025,
+     "note": "CDS H6: average institutional aid to degree-seeking nonresidents, CDS 2025-26"
+    },
+    "meets_full_need": {
+     "value": true,
+     "source_url": "https://undergrad.admissions.columbia.edu/apply/international/aid",
+     "year": 2026,
+     "note": "Official page: 100% of demonstrated need met for admitted international students"
     }
    },
    "deadlines": [
@@ -383,7 +461,13 @@
     }
    ],
    "scholarships": [],
-   "verified": true
+   "verified": true,
+   "intl_acceptance_rate": {
+    "value": 2.6,
+    "source_url": "https://opir.columbia.edu/sites/opir.columbia.edu/files/content/Common%20Data%20Set/2025-26_Columbia_College_and_Columbia_Enginnering_CDS.pdf",
+    "year": 2025,
+    "note": "CDS C1 residency breakdown: 407 admitted of 15380 international applicants"
+   }
   },
   {
    "slug": "upenn",
@@ -413,6 +497,22 @@
      "source_url": "https://srfs.upenn.edu/financial-aid/international",
      "year": 2026,
      "note": "Need-aware admissions for international applicants"
+    },
+    "avg_aid": {
+     "value": 80607,
+     "scope": "intl",
+     "grant_pct": null,
+     "loan_pct": null,
+     "work_pct": null,
+     "source_url": "https://ira.upenn.edu/penn-numbers/common-data-set",
+     "year": 2025,
+     "note": "CDS H6: average institutional aid to degree-seeking nonresidents, CDS 2025-26"
+    },
+    "meets_full_need": {
+     "value": true,
+     "source_url": "https://admissions.upenn.edu/affording-penn/international-aid",
+     "year": 2026,
+     "note": "Official page: 100% of demonstrated need met for admitted international students"
     }
    },
    "deadlines": [
@@ -432,7 +532,13 @@
     }
    ],
    "scholarships": [],
-   "verified": true
+   "verified": true,
+   "intl_acceptance_rate": {
+    "value": 2.5,
+    "source_url": "https://ira.upenn.edu/penn-numbers/common-data-set",
+    "year": 2025,
+    "note": "CDS C1 residency breakdown: 441 admitted of 17882 international applicants"
+   }
   },
   {
    "slug": "cornell",
@@ -486,7 +592,31 @@
     }
    ],
    "scholarships": [],
-   "verified": true
+   "verified": true,
+   "aid": {
+    "avg_aid": {
+     "value": 88263,
+     "scope": "intl",
+     "grant_pct": null,
+     "loan_pct": null,
+     "work_pct": null,
+     "source_url": "https://irp.cornell.edu/common-data-set",
+     "year": 2025,
+     "note": "CDS H6: average institutional aid to degree-seeking nonresidents, CDS 2025-26"
+    },
+    "meets_full_need": {
+     "value": true,
+     "source_url": "https://finaid.cornell.edu/first-year-and-transfer-students-international",
+     "year": 2026,
+     "note": "Official page: 100% of demonstrated need met for admitted international students"
+    }
+   },
+   "intl_acceptance_rate": {
+    "value": 3.6,
+    "source_url": "https://irp.cornell.edu/common-data-set",
+    "year": 2025,
+    "note": "CDS C1 residency breakdown: 664 admitted of 18566 international applicants"
+   }
   },
   {
    "slug": "duke",
@@ -533,7 +663,19 @@
     }
    ],
    "scholarships": [],
-   "verified": true
+   "verified": true,
+   "aid": {
+    "avg_aid": {
+     "value": 87841,
+     "scope": "intl",
+     "grant_pct": null,
+     "loan_pct": null,
+     "work_pct": null,
+     "source_url": "https://ir.provost.duke.edu/sites/default/files/CDS_PDF_2025-2026-20260622-website-published-version.pdf",
+     "year": 2025,
+     "note": "CDS H6: average institutional aid to degree-seeking nonresidents, CDS 2025-26"
+    }
+   }
   },
   {
    "slug": "jhu",
@@ -569,6 +711,12 @@
      "source_url": "https://apply.jhu.edu/international-applicants",
      "year": 2026,
      "note": "Need-aware for international applicants applying for aid; meets 100% of demonstrated need"
+    },
+    "meets_full_need": {
+     "value": true,
+     "source_url": "https://apply.jhu.edu/international-applicants/",
+     "year": 2026,
+     "note": "Official page: Hopkins meets 100% of demonstrated need for all admitted students, including international"
     }
    },
    "deadlines": [],
@@ -609,7 +757,25 @@
    },
    "deadlines": [],
    "scholarships": [],
-   "verified": false
+   "verified": false,
+   "aid": {
+    "avg_aid": {
+     "value": 35436,
+     "scope": "intl",
+     "grant_pct": null,
+     "loan_pct": null,
+     "work_pct": null,
+     "source_url": "https://www.nyu.edu/content/dam/nyu/institutionalResearch/documents/cds-2024-2025/CDS_2024-2025-1.pdf",
+     "year": 2024,
+     "note": "CDS H6: average institutional aid to degree-seeking nonresidents, CDS 2024-25"
+    },
+    "meets_full_need": {
+     "value": true,
+     "source_url": "https://www.nyu.edu/admissions/financial-aid-and-scholarships/applying-as-a-prospective-undergraduate-student/first-year-applicants/the-nyu-promise.html",
+     "year": 2026,
+     "note": "Official page: 100% of demonstrated need met for admitted international students"
+    }
+   }
   },
   {
    "slug": "cmu",
@@ -660,6 +826,12 @@
      "source_url": "https://www.cmu.edu/ira/CDS/pdf/cds_2024-25/cds-2024-h-student-financial-aid-21feb2025.pdf",
      "year": 2025,
      "note": "CDS 2024-25 H6: institutional scholarship/grant aid not available to nonresident internationals."
+    },
+    "meets_full_need": {
+     "value": false,
+     "source_url": "https://www.cmu.edu/ira/CDS/pdf/cds_2025_26/cds_2025_full_pdf_updated_11jun26.pdf",
+     "year": 2025,
+     "note": "CDS H6: no institutional aid for nonresidents"
     }
    },
    "deadlines": [
@@ -748,7 +920,21 @@
      "year": 2026
     }
    ],
-   "verified": true
+   "verified": true,
+   "aid": {
+    "meets_full_need": {
+     "value": false,
+     "source_url": "https://irp.gatech.edu/sites/default/files/CDS/CDS_2025-2026_FINAL_R4_03JUN2026.pdf",
+     "year": 2025,
+     "note": "CDS H6: no institutional aid for nonresidents"
+    }
+   },
+   "intl_acceptance_rate": {
+    "value": 7.3,
+    "source_url": "https://irp.gatech.edu/sites/default/files/CDS/CDS_2025-2026_FINAL_R4_03JUN2026.pdf",
+    "year": 2025,
+    "note": "CDS C1 residency breakdown: 716 admitted of 9758 international applicants"
+   }
   },
   {
    "slug": "umich",
@@ -760,7 +946,15 @@
    "year": 2026,
    "deadlines": [],
    "scholarships": [],
-   "verified": false
+   "verified": false,
+   "aid": {
+    "meets_full_need": {
+     "value": false,
+     "source_url": "https://obp.umich.edu/wp-content/uploads/pubdata/cds/cds_2025-26_umaa.pdf",
+     "year": 2025,
+     "note": "CDS H6: no institutional aid for nonresidents"
+    }
+   }
   }
  ]
 }

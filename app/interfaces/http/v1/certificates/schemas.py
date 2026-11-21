@@ -19,6 +19,7 @@ from app.modules.certificates.domain.certificate_type import CertificateType
 from app.modules.certificates.domain.custom_fields import CustomField
 from app.modules.certificates.domain.entry import CertificateEntry, EntryFile
 from app.modules.certificates.ports.student_directory import GroupInfo
+from app.shared.honor_categories import HonorCategory
 
 from pydantic import BaseModel, Field
 
@@ -79,6 +80,9 @@ class CertificateTypeInput(BaseModel):
     code: str = Field(min_length=1, max_length=40)
     name: TypeName
     position: int | None = Field(default=None, ge=0, le=10_000)
+    standard: bool = False
+    """A standardised exam: listed among test scores, never suggested as an honor."""
+    category: HonorCategory | None = None
     custom_fields: list[CustomFieldInput] = Field(default_factory=list, max_length=20)
 
 
@@ -88,6 +92,8 @@ class CertificateTypePatch(BaseModel):
     code: str | None = Field(default=None, min_length=1, max_length=40)
     name: TypeName | None = None
     position: int | None = Field(default=None, ge=0, le=10_000)
+    standard: bool | None = None
+    category: HonorCategory | None = None
     custom_fields: list[CustomFieldInput] | None = Field(default=None, max_length=20)
 
 
@@ -99,6 +105,8 @@ class CertificateTypeResponse(BaseModel):
     name: TypeName
     builtin: bool
     position: int
+    standard: bool
+    category: HonorCategory | None
     custom_fields: list[CustomFieldResponse]
 
     @classmethod
@@ -114,6 +122,8 @@ class CertificateTypeResponse(BaseModel):
             ),
             builtin=kind.builtin,
             position=kind.position,
+            standard=kind.standard,
+            category=kind.category,
             custom_fields=[
                 CustomFieldResponse.from_domain(item) for item in kind.custom_fields
             ],

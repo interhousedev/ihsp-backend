@@ -11,7 +11,9 @@ from app.modules.admission.domain.budget import (
     BudgetInput,
     BudgetTotals,
     FeeFact,
+    admit_rate_of,
     budget_totals,
+    estimated_aid,
     money_fact,
 )
 from app.modules.admission.domain.chooser import CatalogInstitution
@@ -36,9 +38,12 @@ def _attend(item: ListItem) -> AttendCost | None:
             if check.confirmed_aid is not None
             else check.estimated_aid
         )
+        if aid is None:
+            aid = estimated_aid(check.coa_total, inst.coa_currency, inst.aid_profile)
         return AttendCost(check.coa_total, inst.coa_currency, aid, check.gap)
     if inst.coa_total is not None and inst.coa_currency:
-        return AttendCost(inst.coa_total, inst.coa_currency)
+        aid = estimated_aid(inst.coa_total, inst.coa_currency, inst.aid_profile)
+        return AttendCost(inst.coa_total, inst.coa_currency, aid)
     return None
 
 
@@ -59,6 +64,10 @@ def to_input(item: ListItem) -> BudgetInput:
         aid_forms_known=forms is not None,
         aid_deadline=str(deadline.value) if deadline is not None else None,
         cost_to_attend=_attend(item),
+        aid_profile=inst.aid_profile,
+        admit_rate=admit_rate_of(
+            inst.fact("intl_acceptance_rate"), inst.fact("acceptance_rate")
+        ),
     )
 
 

@@ -258,3 +258,28 @@ async def test_peer_helper_cannot_read_the_task_board() -> None:
         await w.svc.list_for(helper, STUDENT)
     with pytest.raises(AdmissionNotFoundError):
         await w.svc.get(helper, made.id)
+
+
+async def test_list_entry_must_belong_to_the_same_student() -> None:
+    from app.modules.admission.domain.workflow import ListEntry
+
+    w = World()
+    ctx = await w.ctx(STUDENT, Role.STUDENT)
+    mine = ListEntry(new_id(), STUDENT, new_id())
+    theirs = ListEntry(new_id(), OTHER, new_id())
+    w.store.list_entries |= {mine.id: mine, theirs.id: theirs}
+    made = await w.svc.create(ctx, STUDENT, _draft(list_entry_id=mine.id))
+    assert made.list_entry_id == mine.id
+    with pytest.raises(InvalidAnswerError):
+        await w.svc.create(ctx, STUDENT, _draft(list_entry_id=theirs.id))
+    with pytest.raises(InvalidAnswerError):
+        await w.svc.create(ctx, STUDENT, _draft(list_entry_id=new_id()))
+    plain = await w.svc.create(ctx, STUDENT, _draft())
+    with pytest.raises(InvalidAnswerError):
+        await w.svc.update(
+            ctx, plain.id, {"list_entry_id": theirs.id}, plain.lock_version
+        )
+    moved = await w.svc.update(
+        ctx, plain.id, {"list_entry_id": mine.id}, plain.lock_version
+    )
+    assert moved.list_entry_id == mine.id

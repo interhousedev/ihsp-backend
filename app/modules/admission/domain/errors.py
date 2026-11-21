@@ -301,6 +301,13 @@ class EssayTooShortError(ValidationFailedError):
     message_key = "admission-essay-too-short"
 
 
+class ForkLastTargetError(ConflictError):
+    """Forking the last prompt would leave a supplemental essay without a prompt."""
+
+    code = "admission/fork_last_target"
+    message_key = "admission-fork-last-target"
+
+
 class EssayVaultUnavailableError(BaseError):
     """The essay key service is unreachable; essays stay sealed (fail closed)."""
 

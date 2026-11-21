@@ -114,6 +114,7 @@ class AdmissionConfigOut(BaseModel):
     pickup_location: dict[str, str] | None
     item_caps: dict[str, int]
     workflow: WorkflowOptionsOut
+    school_grades: list[int]
 
     @classmethod
     def of(cls, cfg: AdmissionConfig) -> "AdmissionConfigOut":
@@ -154,6 +155,7 @@ class AdmissionConfigOut(BaseModel):
             pickup_location=cfg.pickup_location,
             item_caps=cfg.item_caps,
             workflow=WorkflowOptionsOut.of(cfg.workflow),
+            school_grades=list(cfg.school_grades),
         )
 
 
@@ -180,6 +182,10 @@ class AdmissionMeOut(BaseModel):
     entitlement_kind: str | None
     staff_roles: list[str]
     sub_roles: list[AssignmentOut]
+    estimates_visible: bool = Field(
+        default=True,
+        description="Whether admission estimates are shown to this caller.",
+    )
 
     @classmethod
     def of(cls, me: AdmissionMe) -> "AdmissionMeOut":

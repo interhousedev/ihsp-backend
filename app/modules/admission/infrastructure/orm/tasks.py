@@ -14,7 +14,16 @@ from app.modules.admission.infrastructure.orm._common import (
 )
 from app.shared.db.base import Base, IdMixin
 
-from sqlalchemy import CheckConstraint, Date, DateTime, String, Text, Uuid, text
+from sqlalchemy import (
+    CheckConstraint,
+    Date,
+    DateTime,
+    ForeignKey,
+    String,
+    Text,
+    Uuid,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -44,6 +53,9 @@ class TaskRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
     priority: Mapped[str] = mapped_column(String(6), server_default="medium")
     start_date: Mapped[date | None] = mapped_column(Date)
     deadline: Mapped[date | None] = mapped_column(Date)
+    list_entry_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("admission.list_entries.id", ondelete="SET NULL"), index=True
+    )
     created_by: Mapped[str] = mapped_column(String(10), server_default="student")
     creator_id: Mapped[UUID | None] = mapped_column(Uuid)
     steps: Mapped[list[dict[str, Any]]] = mapped_column(

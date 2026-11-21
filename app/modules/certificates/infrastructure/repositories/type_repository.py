@@ -20,6 +20,8 @@ def to_entity(row: Row) -> CertificateType:
         name={str(k): str(v) for k, v in row.name.items()},
         builtin=row.builtin,
         position=row.position,
+        standard=row.standard,
+        category=row.category,
         custom_fields=[field_from_dict(item) for item in row.custom_fields or []],
     )
 
@@ -29,6 +31,8 @@ def _apply(row: Row, kind: CertificateType) -> None:
     row.name = dict(kind.name)
     row.builtin = kind.builtin
     row.position = kind.position
+    row.standard = kind.standard
+    row.category = kind.category
     row.custom_fields = [item.to_dict() for item in kind.custom_fields]
 
 

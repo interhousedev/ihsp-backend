@@ -6,7 +6,7 @@ result is stored sealed under a keyed digest of its input, so an unchanged
 input is served without a model call and without spending quota.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Final
 from uuid import UUID
 
@@ -109,6 +109,14 @@ def _uni_key(essay: EssayInput, locale: str, uni: UniContext) -> str:
         review.UNI,
         *uni_lines(uni),
     )
+
+
+def for_university(text: EssayInput, essay: Essay, institution_id: UUID) -> EssayInput:
+    """The input a university review reads: the essay under that target's prompt."""
+    for t in essay.targets:
+        if t.institution_id == institution_id and t.prompt:
+            return replace(text, prompt_text=t.prompt, word_limit=t.word_limit)
+    return text
 
 
 class EssayReviewService:
@@ -285,6 +293,7 @@ class EssayReviewService:
                 uni.institution_id, uni.name, unsourced_review(uni), False, False
             )
         uid = essay.student_id
+        text = for_university(text, essay, uni.institution_id)
         digest = await self._digest(uid, _uni_key(text, locale, uni))
         async with self._uow() as uow:
             hit = (
@@ -344,7 +353,10 @@ class EssayReviewService:
             uni = unis[iid]
             result = uni_from(row.payload)
             stale = uni is None or (
-                await self._digest(uid, _uni_key(text, locale, uni)) != row.input_digest
+                await self._digest(
+                    uid, _uni_key(for_university(text, essay, iid), locale, uni)
+                )
+                != row.input_digest
             )
             name = uni.name if uni is not None else result.institution_name
             entries.append(UniEntry(iid, name, result, True, stale))

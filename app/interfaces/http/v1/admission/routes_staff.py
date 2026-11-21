@@ -1,10 +1,12 @@
 """Staff caseload, delegation, comments and privacy (`/v1/admission/*`)."""
 
+from dataclasses import asdict
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, AnyContext, ContainerDep
+from app.interfaces.http.v1.admission.routes_items import _locale
 from app.interfaces.http.v1.admission.schemas_staff import (
     AssignableRoleListOut,
     AssignableRoleOut,
@@ -28,17 +30,22 @@ from app.interfaces.http.v1.admission.schemas_staff import (
     ErasedOut,
     MentoringOut,
     MentoringSwitchIn,
+    PinIn,
+    PinOut,
     PurposeListOut,
     PurposeOut,
     SavedViewIn,
     SavedViewListOut,
     SavedViewOut,
     SavedViewPatch,
+    StaffDeadlinesOut,
+    StudentDeadlineOut,
 )
 from app.modules.admission.application.privacy import describe_purposes
 from app.modules.admission.application.staff import CaseloadFilters
+from app.modules.admission.domain.today import Pin
 
-from fastapi import APIRouter, Query, Response, status
+from fastapi import APIRouter, Header, Query, Response, status
 
 router = APIRouter(prefix="/v1/admission", tags=["admission"])
 
@@ -50,10 +57,16 @@ async def list_caseload(
     risk: Annotated[bool, Query()] = False,
     deadline_before: Annotated[datetime | None, Query()] = None,
     group_id: Annotated[UUID | None, Query()] = None,
+    scope: Annotated[Literal["mine", "all"], Query()] = "mine",
+    q: Annotated[str, Query(max_length=80)] = "",
 ) -> CaseloadOut:
-    """Students the caller reaches, soonest deadline first."""
-    items = await container.admission.staff.caseload(
-        ctx, CaseloadFilters(stage, risk, deadline_before, group_id)
+    """Students the caller reaches, soonest deadline first; `all` is admin-only."""
+    filters = CaseloadFilters(stage, risk, deadline_before, group_id, scope, q)
+    staff = container.admission.staff
+    items = (
+        await staff.all_students(ctx, filters)
+        if scope == "all"
+        else await staff.caseload(ctx, filters)
     )
     return CaseloadOut(items=[CaseloadItemOut.of(i) for i in items])
 
@@ -293,6 +306,55 @@ async def set_mentor(
     return MentoringOut.of(state)
 
 
+async def staff_deadlines(
+    container: ContainerDep,
+    ctx: AdmissionCtx,
+    scope: Annotated[Literal["mine", "all"], Query()] = "mine",
+    accept_language: Annotated[str | None, Header(alias="Accept-Language")] = None,
+) -> StaffDeadlinesOut:
+    """Deadlines and tasks of the students the caller reaches (`mine`: assigned)."""
+    rows = await container.admission.staff_timeline.get(
+        ctx, scope, _locale(accept_language)
+    )
+    return StaffDeadlinesOut(items=[StudentDeadlineOut(**asdict(r)) for r in rows])
+
+
+async def pin_action(
+    student_id: UUID, body: PinIn, container: ContainerDep, ctx: AdmissionCtx
+) -> PinOut:
+    """Pin one action at the top of the student's Today for 14 days."""
+    p = await container.admission.staff.pin(
+        ctx, student_id, body.title, body.href, body.note
+    )
+    return _pin_out(p)
+
+
+def _pin_out(p: Pin) -> PinOut:
+    return PinOut(
+        student_id=p.student_id,
+        title=p.title,
+        href=p.href,
+        note=p.note,
+        pinned_by=p.pinned_by_name,
+        expires_at=p.expires_at,
+    )
+
+
+async def get_pin(
+    student_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+) -> PinOut:
+    """The pinned action in force; 404 when there is none."""
+    return _pin_out(await container.admission.staff.current_pin(ctx, student_id))
+
+
+async def unpin_action(
+    student_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+) -> Response:
+    """Remove the pinned action."""
+    await container.admission.staff.unpin(ctx, student_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 _R = router.add_api_route
 _R(
     "/staff/students",
@@ -486,4 +548,32 @@ _R(
     methods=["PUT"],
     response_model=MentoringOut,
     operation_id="admission_set_mentor_opt_in",
+)
+_R(
+    "/staff/students/{student_id}/pin",
+    pin_action,
+    methods=["POST"],
+    response_model=PinOut,
+    operation_id="admission_staff_pin_action",
+)
+_R(
+    "/staff/students/{student_id}/pin",
+    unpin_action,
+    methods=["DELETE"],
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="admission_staff_unpin_action",
+)
+_R(
+    "/staff/caseload-deadlines",
+    staff_deadlines,
+    methods=["GET"],
+    response_model=StaffDeadlinesOut,
+    operation_id="admission_staff_caseload_deadlines",
+)
+_R(
+    "/staff/students/{student_id}/pin",
+    get_pin,
+    methods=["GET"],
+    response_model=PinOut,
+    operation_id="admission_staff_get_pin",
 )

@@ -1,7 +1,7 @@
 """Schemas of the opportunities catalog and plans (`/v1/admission/opportunities`)."""
 
 import datetime as dt
-from typing import Literal
+from typing import Literal, cast
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.schemas_opp_comments import OppCommentOut
@@ -39,6 +39,8 @@ AwardType = Literal["scholarship", "fellowship", "grant", "tuition_waiver", "pro
 Coverage = Literal["full_tuition", "partial_tuition", "stipend", "cash", "travel"]
 Scope = Literal["local", "international"]
 CollegeCredit = Literal["none", "possible", "yes"]
+Term = Literal["fall", "spring", "summer"]
+Delivery = Literal["local", "external"]
 Sort = Literal["title", "ranking", "acceptance", "tuition", "relevance", "deadline"]
 MaterialKind = Literal["link", "lms_course", "alumni", "center"]
 Status = Literal["pending", "approved", "rejected"]
@@ -171,6 +173,8 @@ class OpportunityFields(BaseModel):
     college_credit: CollegeCredit | None = None
     credit_note: str | None = Field(default=None, max_length=300)
     study_field_ids: list[str] = Field(default_factory=list, max_length=8)
+    hours_per_week: float | None = Field(default=None, gt=0, le=80)
+    starts_on: dt.date | None = None
 
     def draft(self, note: str | None) -> OpportunityDraft:
         """The domain draft."""
@@ -220,6 +224,8 @@ class OpportunityFields(BaseModel):
             college_credit=self.college_credit,
             credit_note=self.credit_note,
             study_field_ids=tuple(self.study_field_ids),
+            hours_per_week=self.hours_per_week,
+            starts_on=self.starts_on,
         )
 
     @classmethod
@@ -270,6 +276,8 @@ class OpportunityFields(BaseModel):
             college_credit=d.college_credit,
             credit_note=d.credit_note,
             study_field_ids=list(d.study_field_ids),
+            hours_per_week=d.hours_per_week,
+            starts_on=d.starts_on,
         )
 
 
@@ -366,6 +374,7 @@ class OpportunityOut(BaseModel):
     org: OrgOut | None = None
     comment_count: int = 0
     for_you: bool = False
+    delivery: Literal["local", "external"] = "external"
 
     @classmethod
     def of(
@@ -390,6 +399,7 @@ class OpportunityOut(BaseModel):
             org=OrgOut.of(org) if org else None,
             comment_count=comment_count,
             for_you=for_you,
+            delivery=o.draft.delivery,
         )
 
 
@@ -413,7 +423,8 @@ class OpportunityListOut(BaseModel):
 class PlanEntryIn(BaseModel):
     """Save an entry to the plan, optionally placed in a grade."""
 
-    planned_grade: int | None = Field(default=None, ge=9, le=12)
+    planned_grade: int | None = Field(default=None, ge=1, le=20)
+    planned_term: Term | None = None
     note: str | None = Field(default=None, max_length=500)
 
 
@@ -423,6 +434,7 @@ class PlanEntryOut(BaseModel):
     id: UUID
     opportunity_id: UUID
     planned_grade: int | None
+    planned_term: Term | None
     note: str | None
     created_at: dt.datetime
 
@@ -433,6 +445,7 @@ class PlanEntryOut(BaseModel):
             id=e.id,
             opportunity_id=e.opportunity_id,
             planned_grade=e.planned_grade,
+            planned_term=cast(Term | None, e.planned_term),
             note=e.note,
             created_at=e.created_at,
         )

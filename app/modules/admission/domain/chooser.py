@@ -34,6 +34,27 @@ class FactView:
 
 
 @dataclass(frozen=True, slots=True)
+class AidProfile:
+    """How an institution's aid meets need, from its aid policy row.
+
+    `avg_aid` is in USD; `avg_aid_scope` is `intl` for international students and
+    `overall` when only the all-student average is published. The percentages split
+    the average package into grants, student loans and work-study. Every value is
+    None when no source gives it; `source_url` and `year` cite the row.
+    """
+
+    need_blind_intl: bool | None = None
+    meets_full_need: bool | None = None
+    avg_aid: Decimal | None = None
+    avg_aid_scope: str | None = None
+    grant_pct: int | None = None
+    loan_pct: int | None = None
+    work_pct: int | None = None
+    source_url: str | None = None
+    year: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class CatalogInstitution:
     """An institution with its facts, flattened for the chooser."""
 
@@ -57,6 +78,7 @@ class CatalogInstitution:
     logo_fit: str | None = None
     logo_aspect: float | None = None
     website_domain: str | None = None
+    aid_profile: AidProfile | None = None
 
     @property
     def verified(self) -> bool:
@@ -230,6 +252,19 @@ def next_deadline(inst: CatalogInstitution, today: dt.date) -> dt.date | None:
     f = inst.fact("deadlines")
     dates = [d["date"] for d in clean_deadlines(f.value if f is not None else None)]
     return min((d for d in dates if d is not None and d >= today), default=None)
+
+
+def next_deadline_round(
+    inst: CatalogInstitution, today: dt.date
+) -> tuple[dt.date, str] | None:
+    """Earliest dated deadline on or after `today` with its round (plan code)."""
+    f = inst.fact("deadlines")
+    due = [
+        (d["date"], str(d["plan"]))
+        for d in clean_deadlines(f.value if f is not None else None)
+        if d["date"] is not None and d["date"] >= today
+    ]
+    return min(due, default=None)
 
 
 def sort_by_deadline(

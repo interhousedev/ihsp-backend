@@ -23,6 +23,7 @@ from sqlalchemy import (
     Index,
     Integer,
     Numeric,
+    SmallInteger,
     String,
     Text,
     Uuid,
@@ -211,6 +212,10 @@ class AidPolicyRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
     __tablename__ = "aid_policies"
     __table_args__ = (
         check_in("intl_need_based", ("need_blind", "need_aware", "none", "unknown")),
+        check_in("avg_aid_scope", ("intl", "overall")),
+        CheckConstraint("grant_pct BETWEEN 0 AND 100", name="grant_pct"),
+        CheckConstraint("loan_pct BETWEEN 0 AND 100", name="loan_pct"),
+        CheckConstraint("work_pct BETWEEN 0 AND 100", name="work_pct"),
         S,
     )
 
@@ -219,7 +224,12 @@ class AidPolicyRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
     intl_need_based: Mapped[str] = mapped_column(String(10), server_default="unknown")
     meets_full_need: Mapped[bool | None] = mapped_column(Boolean)
     merit_available: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
-    avg_intl_award: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
+    avg_aid: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
+    """Average aid package in USD; `avg_aid_scope` says whose average it is."""
+    avg_aid_scope: Mapped[str | None] = mapped_column(String(8))
+    grant_pct: Mapped[int | None] = mapped_column(SmallInteger)
+    loan_pct: Mapped[int | None] = mapped_column(SmallInteger)
+    work_pct: Mapped[int | None] = mapped_column(SmallInteger)
     forms: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'"))
     source_id: Mapped[UUID | None] = _src()
 

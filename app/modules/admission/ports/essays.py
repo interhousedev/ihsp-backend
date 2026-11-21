@@ -15,6 +15,10 @@ class EssayRepository(Protocol):
         """Return the student's essays, newest edit first."""
         ...
 
+    async def statuses(self, student_id: UUID) -> list[str]:
+        """Return the status of each essay without opening the sealed text."""
+        ...
+
     async def get(self, essay_id: UUID) -> Essay | None:
         """Return one essay."""
         ...

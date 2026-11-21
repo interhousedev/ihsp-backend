@@ -184,11 +184,12 @@ async def test_verify_needs_received_score() -> None:
 
 
 @pytest.mark.asyncio
-async def test_no_consent_blocks_staff_view() -> None:
+async def test_no_consent_counselor_still_reads_test_scores() -> None:
+    # Changed: this asserted a 403 for a counselor without consent; scores are
+    # visible by default to an assigned counselor (2026-11-21 decision).
     e = Env(consent=False)
     await e.svc.create(await e.student(), draft())
-    with pytest.raises(AdmissionForbiddenError):
-        await e.svc.overview(await e.counselor(), STUDENT)
+    await e.svc.overview(await e.counselor(), STUDENT)
 
 
 @pytest.mark.asyncio

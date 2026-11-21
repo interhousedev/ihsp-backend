@@ -1775,6 +1775,13 @@
             "title": "Questions",
             "type": "array"
           },
+          "school_grades": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "School Grades",
+            "type": "array"
+          },
           "stages": {
             "items": {
               "type": "string"
@@ -1808,7 +1815,8 @@
           "sub_roles",
           "pickup_location",
           "item_caps",
-          "workflow"
+          "workflow",
+          "school_grades"
         ],
         "title": "AdmissionConfigOut",
         "type": "object"
@@ -1826,6 +1834,12 @@
               }
             ],
             "title": "Entitlement Kind"
+          },
+          "estimates_visible": {
+            "default": true,
+            "description": "Whether admission estimates are shown to this caller.",
+            "title": "Estimates Visible",
+            "type": "boolean"
           },
           "grade": {
             "anyOf": [
@@ -1887,6 +1901,53 @@
           "sub_roles"
         ],
         "title": "AdmissionMeOut",
+        "type": "object"
+      },
+      "AdmitRateOut": {
+        "description": "The admit rate in percent.\n\n`intl` is the rate for international applicants, `overall` the all-applicant\nrate shown when no international one is known.",
+        "properties": {
+          "percent": {
+            "title": "Percent",
+            "type": "number"
+          },
+          "scope": {
+            "enum": [
+              "intl",
+              "overall"
+            ],
+            "title": "Scope",
+            "type": "string"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "percent",
+          "scope",
+          "year",
+          "source_url"
+        ],
+        "title": "AdmitRateOut",
         "type": "object"
       },
       "AdviceItemOut": {
@@ -2321,6 +2382,128 @@
           "why"
         ],
         "title": "AiStepOut",
+        "type": "object"
+      },
+      "AidProfileOut": {
+        "description": "How the institution's aid meets need.\n\nEvery field is null when no source gives it. `avg_aid` is in USD and\n`avg_aid_scope` says whether it is the average for international students or\nfor all students. The three shares split the package into grants, student\nloans and work-study.",
+        "properties": {
+          "avg_aid": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Aid"
+          },
+          "avg_aid_scope": {
+            "anyOf": [
+              {
+                "enum": [
+                  "intl",
+                  "overall"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Aid Scope"
+          },
+          "grant_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grant Pct"
+          },
+          "loan_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Loan Pct"
+          },
+          "meets_full_need": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meets Full Need"
+          },
+          "need_blind_intl": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Need Blind Intl"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "work_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Work Pct"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "need_blind_intl",
+          "meets_full_need",
+          "avg_aid",
+          "avg_aid_scope",
+          "grant_pct",
+          "loan_pct",
+          "work_pct",
+          "source_url",
+          "year"
+        ],
+        "title": "AidProfileOut",
         "type": "object"
       },
       "AlarmsIn": {
@@ -4439,6 +4622,76 @@
         "title": "AssignableUserOut",
         "type": "object"
       },
+      "AssignedEssayOut": {
+        "description": "The essay placed in a slot, as it is now; `over_limit` against the slot.",
+        "properties": {
+          "essay_id": {
+            "title": "Essay Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "over_limit": {
+            "title": "Over Limit",
+            "type": "boolean"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "essay_id",
+          "title",
+          "kind",
+          "word_count",
+          "status",
+          "over_limit"
+        ],
+        "title": "AssignedEssayOut",
+        "type": "object"
+      },
+      "AssignedStaffOut": {
+        "description": "A staff member assigned to the student.",
+        "properties": {
+          "assignment_id": {
+            "format": "uuid",
+            "title": "Assignment Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "assignment_id",
+          "user_id",
+          "name",
+          "kind"
+        ],
+        "title": "AssignedStaffOut",
+        "type": "object"
+      },
       "AssignmentIn": {
         "description": "Delegate a sub-role over one student or a class.",
         "properties": {
@@ -5219,6 +5472,82 @@
           "final"
         ],
         "title": "Averages",
+        "type": "object"
+      },
+      "AxisFitOut": {
+        "description": "One fit axis; `score` is null when its data is missing.",
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "raise": {
+            "items": {
+              "$ref": "#/components/schemas/RaiseOut"
+            },
+            "title": "Raise",
+            "type": "array"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "weight": {
+            "title": "Weight",
+            "type": "number"
+          },
+          "why": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Why",
+            "type": "array"
+          }
+        },
+        "required": [
+          "key",
+          "score",
+          "weight",
+          "why",
+          "raise"
+        ],
+        "title": "AxisFitOut",
+        "type": "object"
+      },
+      "AxisWeightsOut": {
+        "description": "Weights of the four fit axes; they sum to 1.",
+        "properties": {
+          "afford": {
+            "title": "Afford",
+            "type": "number"
+          },
+          "goals": {
+            "title": "Goals",
+            "type": "number"
+          },
+          "profile": {
+            "title": "Profile",
+            "type": "number"
+          },
+          "traits": {
+            "title": "Traits",
+            "type": "number"
+          }
+        },
+        "required": [
+          "afford",
+          "goals",
+          "profile",
+          "traits"
+        ],
+        "title": "AxisWeightsOut",
         "type": "object"
       },
       "BalanceOut": {
@@ -6920,6 +7249,126 @@
         "title": "BreakerState",
         "type": "string"
       },
+      "BriefBalanceOut": {
+        "description": "Counts per label and the verdict, for the brief's header.",
+        "properties": {
+          "reach": {
+            "title": "Reach",
+            "type": "integer"
+          },
+          "safety": {
+            "title": "Safety",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "empty",
+              "too_few",
+              "no_safety",
+              "too_many_reach",
+              "balanced"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "integer"
+          },
+          "unlabelled": {
+            "title": "Unlabelled",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "reach",
+          "target",
+          "safety",
+          "unlabelled",
+          "status"
+        ],
+        "title": "BriefBalanceOut",
+        "type": "object"
+      },
+      "BriefSuggestionOut": {
+        "description": "A catalog institution that fits the list.\n\nThe role comes from published data, the reason from the model. Adding it to\nthe list is the caller's action.",
+        "properties": {
+          "admit_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admit Percent"
+          },
+          "admit_scope": {
+            "anyOf": [
+              {
+                "enum": [
+                  "intl",
+                  "overall"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admit Scope"
+          },
+          "admit_year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Admit Year"
+          },
+          "country": {
+            "title": "Country",
+            "type": "string"
+          },
+          "institution_id": {
+            "format": "uuid",
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "safety",
+              "target"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "institution_id",
+          "name",
+          "country",
+          "role",
+          "reason",
+          "admit_percent",
+          "admit_scope",
+          "admit_year"
+        ],
+        "title": "BriefSuggestionOut",
+        "type": "object"
+      },
       "BroadcastInputBody": {
         "description": "Create a broadcast draft.",
         "properties": {
@@ -7277,6 +7726,16 @@
       "BudgetRowOut": {
         "description": "One list entry of the budget.",
         "properties": {
+          "admit_rate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AdmitRateOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "aid_deadline": {
             "anyOf": [
               {
@@ -7304,6 +7763,16 @@
           "aid_forms_known": {
             "title": "Aid Forms Known",
             "type": "boolean"
+          },
+          "aid_profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AidProfileOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "application_fee": {
             "anyOf": [
@@ -7357,7 +7826,9 @@
           "aid_forms",
           "aid_forms_known",
           "aid_deadline",
-          "cost_to_attend"
+          "cost_to_attend",
+          "aid_profile",
+          "admit_rate"
         ],
         "title": "BudgetRowOut",
         "type": "object"
@@ -7504,6 +7975,18 @@
             "title": "Key",
             "type": "string"
           },
+          "list_entry_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Entry Id"
+          },
           "predicted": {
             "title": "Predicted",
             "type": "boolean"
@@ -7548,7 +8031,8 @@
           "all_day",
           "url_path",
           "predicted",
-          "remind"
+          "remind",
+          "list_entry_id"
         ],
         "title": "CalendarEntryOut",
         "type": "object"
@@ -7944,7 +8428,7 @@
           },
           "professions": {
             "items": {
-              "$ref": "#/components/schemas/ProfessionOut"
+              "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_career__ProfessionOut"
             },
             "title": "Professions",
             "type": "array"
@@ -8155,6 +8639,14 @@
       "CaseloadItemOut": {
         "description": "One student on the staff member's list.",
         "properties": {
+          "assigned_staff": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AssignedStaffOut"
+            },
+            "title": "Assigned Staff",
+            "type": "array"
+          },
           "group_id": {
             "anyOf": [
               {
@@ -8909,6 +9401,28 @@
       "CertificateTypeInput": {
         "description": "Body of POST /admin/types.",
         "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "enum": [
+                  "olympiad",
+                  "award",
+                  "scholarship",
+                  "research",
+                  "leadership",
+                  "arts",
+                  "sports",
+                  "academic",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
           "code": {
             "maxLength": 40,
             "minLength": 1,
@@ -8938,6 +9452,11 @@
               }
             ],
             "title": "Position"
+          },
+          "standard": {
+            "default": false,
+            "title": "Standard",
+            "type": "boolean"
           }
         },
         "required": [
@@ -8950,6 +9469,28 @@
       "CertificateTypePatch": {
         "description": "Body of PATCH /admin/types/{id}: only the sent fields change.",
         "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "enum": [
+                  "olympiad",
+                  "award",
+                  "scholarship",
+                  "research",
+                  "leadership",
+                  "arts",
+                  "sports",
+                  "academic",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
           "code": {
             "anyOf": [
               {
@@ -9000,6 +9541,17 @@
               }
             ],
             "title": "Position"
+          },
+          "standard": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Standard"
           }
         },
         "title": "CertificateTypePatch",
@@ -9011,6 +9563,28 @@
           "builtin": {
             "title": "Builtin",
             "type": "boolean"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "enum": [
+                  "olympiad",
+                  "award",
+                  "scholarship",
+                  "research",
+                  "leadership",
+                  "arts",
+                  "sports",
+                  "academic",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
           },
           "code": {
             "title": "Code",
@@ -9034,6 +9608,10 @@
           "position": {
             "title": "Position",
             "type": "integer"
+          },
+          "standard": {
+            "title": "Standard",
+            "type": "boolean"
           }
         },
         "required": [
@@ -9042,6 +9620,8 @@
           "name",
           "builtin",
           "position",
+          "standard",
+          "category",
           "custom_fields"
         ],
         "title": "CertificateTypeResponse",
@@ -9822,6 +10402,47 @@
         "title": "ChecklistEntrySchema",
         "type": "object"
       },
+      "ChecklistLineOut": {
+        "description": "One line of the season checklist.",
+        "properties": {
+          "done": {
+            "title": "Done",
+            "type": "boolean"
+          },
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "done",
+          "progress",
+          "href"
+        ],
+        "title": "ChecklistLineOut",
+        "type": "object"
+      },
       "ChecklistOut": {
         "description": "One checklist item.",
         "properties": {
@@ -10118,6 +10739,45 @@
           "lock_version"
         ],
         "title": "ChoiceIn",
+        "type": "object"
+      },
+      "ChosenIn": {
+        "description": "One pick.",
+        "properties": {
+          "profession_id": {
+            "title": "Profession Id",
+            "type": "string"
+          },
+          "rank": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Rank",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "profession_id",
+          "rank"
+        ],
+        "title": "ChosenIn",
+        "type": "object"
+      },
+      "ChosenListIn": {
+        "description": "At most five picks.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ChosenIn"
+            },
+            "maxItems": 5,
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ChosenListIn",
         "type": "object"
       },
       "Citation": {
@@ -10998,6 +11658,28 @@
           "anchor"
         ],
         "title": "CommentOut",
+        "type": "object"
+      },
+      "CommonAppIn": {
+        "description": "The personal statement for every Common App university; null empties it.",
+        "properties": {
+          "essay_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Essay Id"
+          }
+        },
+        "required": [
+          "essay_id"
+        ],
+        "title": "CommonAppIn",
         "type": "object"
       },
       "CommonWorkOffBody": {
@@ -16042,6 +16724,111 @@
         "title": "DeclineSuggestionBody",
         "type": "object"
       },
+      "DeepReadBodyOut": {
+        "description": "The reading: paragraphs, uniqueness 0-100, tropes, moments and one fix.",
+        "properties": {
+          "fix_dimension": {
+            "title": "Fix Dimension",
+            "type": "string"
+          },
+          "fix_paragraph": {
+            "title": "Fix Paragraph",
+            "type": "integer"
+          },
+          "fix_problem": {
+            "title": "Fix Problem",
+            "type": "string"
+          },
+          "fix_try": {
+            "title": "Fix Try",
+            "type": "string"
+          },
+          "moments": {
+            "items": {
+              "$ref": "#/components/schemas/MomentOut"
+            },
+            "title": "Moments",
+            "type": "array"
+          },
+          "paragraphs": {
+            "items": {
+              "$ref": "#/components/schemas/ParagraphReadOut"
+            },
+            "title": "Paragraphs",
+            "type": "array"
+          },
+          "tropes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tropes",
+            "type": "array"
+          },
+          "uniqueness": {
+            "title": "Uniqueness",
+            "type": "integer"
+          },
+          "uniqueness_note": {
+            "title": "Uniqueness Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paragraphs",
+          "uniqueness",
+          "uniqueness_note",
+          "tropes",
+          "moments",
+          "fix_paragraph",
+          "fix_dimension",
+          "fix_problem",
+          "fix_try"
+        ],
+        "title": "DeepReadBodyOut",
+        "type": "object"
+      },
+      "DeepReadIn": {
+        "description": "`refresh` ignores the stored reading and reads again.",
+        "properties": {
+          "refresh": {
+            "default": false,
+            "title": "Refresh",
+            "type": "boolean"
+          }
+        },
+        "title": "DeepReadIn",
+        "type": "object"
+      },
+      "DeepReadOut": {
+        "description": "The stored deep read (`read` is null before the first run).",
+        "properties": {
+          "cached": {
+            "title": "Cached",
+            "type": "boolean"
+          },
+          "read": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeepReadBodyOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "stale": {
+            "title": "Stale",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "read",
+          "cached",
+          "stale"
+        ],
+        "title": "DeepReadOut",
+        "type": "object"
+      },
       "DefaultMaterialKind": {
         "description": "Where a default material's text comes from.",
         "enum": [
@@ -18442,6 +19229,14 @@
             "title": "Prompt Text",
             "type": "string"
           },
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/PromptTargetIn"
+            },
+            "maxItems": 5,
+            "title": "Targets",
+            "type": "array"
+          },
           "title": {
             "default": "",
             "maxLength": 120,
@@ -18507,6 +19302,23 @@
         "title": "EssayListOut",
         "type": "object"
       },
+      "EssayMatchListOut": {
+        "description": "The tables of every university on my list, soonest due first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MatchTableOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "EssayMatchListOut",
+        "type": "object"
+      },
       "EssayOut": {
         "description": "The owner's essay with its live draft.",
         "properties": {
@@ -18517,6 +19329,18 @@
           "current_version": {
             "title": "Current Version",
             "type": "integer"
+          },
+          "forked_from": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forked From"
           },
           "id": {
             "format": "uuid",
@@ -18569,6 +19393,13 @@
             "title": "Status",
             "type": "string"
           },
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/PromptTargetOut"
+            },
+            "title": "Targets",
+            "type": "array"
+          },
           "title": {
             "title": "Title",
             "type": "string"
@@ -18616,6 +19447,8 @@
           "status",
           "current_version",
           "lock_version",
+          "targets",
+          "forked_from",
           "updated_at"
         ],
         "title": "EssayOut",
@@ -18738,6 +19571,21 @@
             ],
             "title": "Status"
           },
+          "targets": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/PromptTargetIn"
+                },
+                "maxItems": 5,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Targets"
+          },
           "title": {
             "anyOf": [
               {
@@ -18832,6 +19680,40 @@
       "EssaySummaryOut": {
         "description": "A row of the essays list.",
         "properties": {
+          "deep_read": {
+            "description": "`stale` when the essay (or the UI language) changed since.",
+            "enum": [
+              "none",
+              "fresh",
+              "stale"
+            ],
+            "title": "Deep Read",
+            "type": "string"
+          },
+          "deep_read_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deep Read At"
+          },
+          "forked_from": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forked From"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -18857,9 +19739,28 @@
             "title": "Status",
             "type": "string"
           },
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/PromptTargetOut"
+            },
+            "title": "Targets",
+            "type": "array"
+          },
           "title": {
             "title": "Title",
             "type": "string"
+          },
+          "uniqueness": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The one score shown everywhere: deep-read uniqueness 0-100.",
+            "title": "Uniqueness"
           },
           "updated_at": {
             "anyOf": [
@@ -18897,7 +19798,12 @@
           "list_entry_id",
           "word_count",
           "status",
-          "updated_at"
+          "updated_at",
+          "forked_from",
+          "targets",
+          "uniqueness",
+          "deep_read",
+          "deep_read_at"
         ],
         "title": "EssaySummaryOut",
         "type": "object"
@@ -19111,6 +20017,66 @@
           "note"
         ],
         "title": "EvidenceOut",
+        "type": "object"
+      },
+      "ExamCertificateOut": {
+        "description": "A standard certificate of the platform that no catalog test matches.",
+        "properties": {
+          "entry_id": {
+            "format": "uuid",
+            "title": "Entry Id",
+            "type": "string"
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expires At"
+          },
+          "issued_at": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued At"
+          },
+          "name": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Name",
+            "type": "object"
+          },
+          "type_code": {
+            "title": "Type Code",
+            "type": "string"
+          },
+          "values": {
+            "additionalProperties": true,
+            "title": "Values",
+            "type": "object"
+          }
+        },
+        "required": [
+          "entry_id",
+          "type_code",
+          "name",
+          "issued_at",
+          "expires_at",
+          "values"
+        ],
+        "title": "ExamCertificateOut",
         "type": "object"
       },
       "ExamDateIn": {
@@ -22193,6 +23159,52 @@
         "title": "FileUrlSchema",
         "type": "object"
       },
+      "FitItemOut": {
+        "description": "The fit of one list entry.",
+        "properties": {
+          "axes": {
+            "items": {
+              "$ref": "#/components/schemas/AxisFitOut"
+            },
+            "title": "Axes",
+            "type": "array"
+          },
+          "institution_id": {
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "known_share": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Known Share",
+            "type": "number"
+          },
+          "list_entry_id": {
+            "title": "List Entry Id",
+            "type": "string"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "required": [
+          "list_entry_id",
+          "institution_id",
+          "total",
+          "known_share",
+          "axes"
+        ],
+        "title": "FitItemOut",
+        "type": "object"
+      },
       "FitOut": {
         "description": "How well a major fits, 0 to 100.",
         "properties": {
@@ -22215,6 +23227,49 @@
           "reason"
         ],
         "title": "FitOut",
+        "type": "object"
+      },
+      "FitPreferencesIn": {
+        "description": "The eight ratings the student saves.",
+        "properties": {
+          "ratings": {
+            "$ref": "#/components/schemas/RatingsBody"
+          }
+        },
+        "required": [
+          "ratings"
+        ],
+        "title": "FitPreferencesIn",
+        "type": "object"
+      },
+      "FitPreferencesOut": {
+        "description": "Saved ratings (defaults when never saved) and the weights they give.",
+        "properties": {
+          "ratings": {
+            "$ref": "#/components/schemas/RatingsBody"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "weights": {
+            "$ref": "#/components/schemas/AxisWeightsOut"
+          }
+        },
+        "required": [
+          "ratings",
+          "weights",
+          "updated_at"
+        ],
+        "title": "FitPreferencesOut",
         "type": "object"
       },
       "FlashcardInput": {
@@ -22556,6 +23611,51 @@
         "title": "FlashcardsOptions",
         "type": "object"
       },
+      "ForkIn": {
+        "description": "The prompt of the group the new essay takes (`null` owner: Common App).",
+        "properties": {
+          "institution_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution Id"
+          },
+          "position": {
+            "maximum": 999.0,
+            "minimum": 0.0,
+            "title": "Position",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "position"
+        ],
+        "title": "ForkIn",
+        "type": "object"
+      },
+      "ForkOut": {
+        "description": "`parent` without the taken target; `essay` is the new fork.",
+        "properties": {
+          "essay": {
+            "$ref": "#/components/schemas/EssayOut"
+          },
+          "parent": {
+            "$ref": "#/components/schemas/EssayOut"
+          }
+        },
+        "required": [
+          "parent",
+          "essay"
+        ],
+        "title": "ForkOut",
+        "type": "object"
+      },
       "FormulaSpec": {
         "description": "The expected expression of a math formula question.",
         "properties": {
@@ -22590,6 +23690,109 @@
           }
         },
         "title": "FormulaSpec",
+        "type": "object"
+      },
+      "GalleryItemOut": {
+        "description": "A published essay version; it never carries the author.",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "essay_id": {
+            "format": "uuid",
+            "title": "Essay Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "prompt_text": {
+            "title": "Prompt Text",
+            "type": "string"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/PromptTargetOut"
+            },
+            "title": "Targets",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          },
+          "word_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Word Limit"
+          }
+        },
+        "required": [
+          "essay_id",
+          "kind",
+          "title",
+          "prompt_text",
+          "word_limit",
+          "targets",
+          "version",
+          "body",
+          "word_count",
+          "published_at"
+        ],
+        "title": "GalleryItemOut",
+        "type": "object"
+      },
+      "GalleryOut": {
+        "description": "`items`: others' essays; `mine`: what the student published.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/GalleryItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "mine": {
+            "items": {
+              "$ref": "#/components/schemas/GalleryItemOut"
+            },
+            "title": "Mine",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items",
+          "mine"
+        ],
+        "title": "GalleryOut",
         "type": "object"
       },
       "GoalAlignmentOut": {
@@ -22952,6 +24155,18 @@
           "name"
         ],
         "title": "GroupCreateBody",
+        "type": "object"
+      },
+      "GroupCritiqueIn": {
+        "description": "`refresh` ignores stored reviews and reviews again.",
+        "properties": {
+          "refresh": {
+            "default": false,
+            "title": "Refresh",
+            "type": "boolean"
+          }
+        },
+        "title": "GroupCritiqueIn",
         "type": "object"
       },
       "GroupDetailResponse": {
@@ -24206,6 +25421,95 @@
         "title": "HomeworkSubmissionsResponse",
         "type": "object"
       },
+      "HonorSuggestionOut": {
+        "description": "A platform certificate with the honor fields it prefills.",
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "dismissed": {
+            "title": "Dismissed",
+            "type": "boolean"
+          },
+          "entry_id": {
+            "format": "uuid",
+            "title": "Entry Id",
+            "type": "string"
+          },
+          "issued_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issued At"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "entry_id",
+          "name",
+          "title",
+          "description",
+          "category",
+          "level",
+          "issued_at",
+          "dismissed"
+        ],
+        "title": "HonorSuggestionOut",
+        "type": "object"
+      },
+      "HonorSuggestionsOut": {
+        "description": "Suggestion row (`suggested`) and the creation pick list (`available`).",
+        "properties": {
+          "available": {
+            "items": {
+              "$ref": "#/components/schemas/HonorSuggestionOut"
+            },
+            "title": "Available",
+            "type": "array"
+          },
+          "suggested": {
+            "items": {
+              "$ref": "#/components/schemas/HonorSuggestionOut"
+            },
+            "title": "Suggested",
+            "type": "array"
+          }
+        },
+        "required": [
+          "suggested",
+          "available"
+        ],
+        "title": "HonorSuggestionsOut",
+        "type": "object"
+      },
       "HonourAward": {
         "description": "An award with its enabled rules.",
         "properties": {
@@ -24428,6 +25732,67 @@
           "serials"
         ],
         "title": "HonoursSerialsBody",
+        "type": "object"
+      },
+      "IdeaFitIn": {
+        "description": "An idea text to match against the prompts.",
+        "properties": {
+          "cached_only": {
+            "default": false,
+            "description": "Return a stored fit only; `pending` when none exists.",
+            "title": "Cached Only",
+            "type": "boolean"
+          },
+          "text": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "IdeaFitIn",
+        "type": "object"
+      },
+      "IdeaFitOut": {
+        "description": "Uncovered prompts, best fit first; empty when `available` is false.",
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "cached": {
+            "description": "Served from the store; no model was called.",
+            "title": "Cached",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PromptFitOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "pending": {
+            "description": "`cached_only` was set and nothing is stored.",
+            "title": "Pending",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "available",
+          "model",
+          "items",
+          "cached",
+          "pending"
+        ],
+        "title": "IdeaFitOut",
         "type": "object"
       },
       "IdeaIn": {
@@ -24718,6 +26083,45 @@
           "excuse_until"
         ],
         "title": "IdentifyOut",
+        "type": "object"
+      },
+      "IkigaiBody": {
+        "description": "Free-text chips of the four ikigai questions.",
+        "properties": {
+          "good_at": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "title": "Good At",
+            "type": "array"
+          },
+          "love": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "title": "Love",
+            "type": "array"
+          },
+          "needs": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "title": "Needs",
+            "type": "array"
+          },
+          "paid": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "title": "Paid",
+            "type": "array"
+          }
+        },
+        "title": "IkigaiBody",
         "type": "object"
       },
       "ImportBody": {
@@ -25141,6 +26545,17 @@
             ],
             "title": "Aid Basis"
           },
+          "aid_profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AidProfileOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Aid shares (grant, loan, work-study); detail view only."
+          },
           "aliases": {
             "items": {
               "type": "string"
@@ -25181,6 +26596,18 @@
               }
             ],
             "title": "Coa Total"
+          },
+          "cost_after_aid": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost After Aid"
           },
           "country": {
             "title": "Country",
@@ -25227,6 +26654,20 @@
             "title": "Facts",
             "type": "object"
           },
+          "fit_total": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Fit for the caller (as /list/fit); null when not computable.",
+            "title": "Fit Total"
+          },
           "highlights": {
             "items": {
               "$ref": "#/components/schemas/HighlightOut"
@@ -25238,6 +26679,19 @@
             "format": "uuid",
             "title": "Id",
             "type": "string"
+          },
+          "known_share": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Known Share"
           },
           "logo_fit": {
             "enum": [
@@ -25356,6 +26810,7 @@
           "logo_fit",
           "coa_total",
           "coa_currency",
+          "cost_after_aid",
           "aid_basis",
           "merit_available",
           "scholarship_count",
@@ -26014,6 +27469,18 @@
             ],
             "title": "Category"
           },
+          "certificate_entry_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Certificate Entry Id"
+          },
           "description": {
             "default": "",
             "title": "Description",
@@ -26065,6 +27532,18 @@
             ],
             "title": "Kind",
             "type": "string"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
           },
           "metrics": {
             "items": {
@@ -26332,6 +27811,18 @@
             ],
             "title": "Category"
           },
+          "certificate_entry_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Certificate Entry Id"
+          },
           "description": {
             "title": "Description",
             "type": "string"
@@ -26387,6 +27878,17 @@
           "kind": {
             "title": "Kind",
             "type": "string"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
           },
           "lock_version": {
             "title": "Lock Version",
@@ -26473,7 +27975,9 @@
           "review",
           "review_stale",
           "grade",
-          "grade_stale"
+          "grade_stale",
+          "level",
+          "certificate_entry_id"
         ],
         "title": "ItemOut",
         "type": "object"
@@ -26550,6 +28054,18 @@
               }
             ],
             "title": "Intend In College"
+          },
+          "level": {
+            "anyOf": [
+              {
+                "maxLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Level"
           },
           "lock_version": {
             "title": "Lock Version",
@@ -32246,6 +33762,50 @@
         "title": "ListAddIn",
         "type": "object"
       },
+      "ListBriefOut": {
+        "description": "The brief on the balance of my list: diagnosis, suggestions, next steps.",
+        "properties": {
+          "balance": {
+            "$ref": "#/components/schemas/BriefBalanceOut"
+          },
+          "diagnosis": {
+            "title": "Diagnosis",
+            "type": "string"
+          },
+          "entries": {
+            "title": "Entries",
+            "type": "integer"
+          },
+          "headline": {
+            "title": "Headline",
+            "type": "string"
+          },
+          "next_steps": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Next Steps",
+            "type": "array"
+          },
+          "suggestions": {
+            "items": {
+              "$ref": "#/components/schemas/BriefSuggestionOut"
+            },
+            "title": "Suggestions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "headline",
+          "diagnosis",
+          "balance",
+          "entries",
+          "suggestions",
+          "next_steps"
+        ],
+        "title": "ListBriefOut",
+        "type": "object"
+      },
       "ListEntryOut": {
         "description": "A list entry with institution, estimate and affordability.",
         "properties": {
@@ -32383,6 +33943,27 @@
           "conflicts"
         ],
         "title": "ListEntryOut",
+        "type": "object"
+      },
+      "ListFitOut": {
+        "description": "Weights and the fit of every list entry.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FitItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "weights": {
+            "$ref": "#/components/schemas/AxisWeightsOut"
+          }
+        },
+        "required": [
+          "weights",
+          "items"
+        ],
+        "title": "ListFitOut",
         "type": "object"
       },
       "ListInsightsOut": {
@@ -33863,6 +35444,52 @@
         "title": "MarkupShapeSchema",
         "type": "object"
       },
+      "MatchCandidateOut": {
+        "description": "An essay that may fill the slot; `alignment` is the stored review, 0-100.",
+        "properties": {
+          "alignment": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alignment"
+          },
+          "essay_id": {
+            "title": "Essay Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "target_match": {
+            "title": "Target Match",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "essay_id",
+          "title",
+          "kind",
+          "word_count",
+          "alignment",
+          "target_match"
+        ],
+        "title": "MatchCandidateOut",
+        "type": "object"
+      },
       "MatchListOut": {
         "description": "Undecided universities, best match first.",
         "properties": {
@@ -33901,6 +35528,18 @@
             ],
             "title": "Admission Rate"
           },
+          "avg_aid_intl": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Average aid for international students, USD.",
+            "title": "Avg Aid Intl"
+          },
           "city": {
             "anyOf": [
               {
@@ -33938,6 +35577,19 @@
             ],
             "title": "Cover Url"
           },
+          "fit_total": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fit Total"
+          },
           "institution_type": {
             "anyOf": [
               {
@@ -33948,6 +35600,32 @@
               }
             ],
             "title": "Institution Type"
+          },
+          "intl_acceptance_rate": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intl Acceptance Rate"
+          },
+          "known_share": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Known Share"
           },
           "logo_url": {
             "anyOf": [
@@ -33966,9 +35644,30 @@
             "title": "Match Pct",
             "type": "integer"
           },
+          "meets_full_need": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meets Full Need"
+          },
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "next_deadline": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NextDeadlineOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "overlap": {
             "$ref": "#/components/schemas/OverlapOut"
@@ -34009,6 +35708,169 @@
           "status"
         ],
         "title": "MatchOut",
+        "type": "object"
+      },
+      "MatchSlotOut": {
+        "description": "One slot: `ps` (no prompt) or `supp:<position>`; candidates best first.",
+        "properties": {
+          "assigned": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AssignedEssayOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/MatchCandidateOut"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Prompt category (see the prompt map); null for no prompt.",
+            "title": "Category"
+          },
+          "essay_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Essay Id"
+          },
+          "prompt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prompt"
+          },
+          "prompt_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Key of the prompt; null for `ps`.",
+            "title": "Prompt Key"
+          },
+          "required": {
+            "title": "Required",
+            "type": "boolean"
+          },
+          "shared": {
+            "description": "The personal statement of a Common App university: set once for all of them with `PUT /essays/match/common-app`.",
+            "title": "Shared",
+            "type": "boolean"
+          },
+          "short_answer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ShortAnswerOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "My short text; only on `short_answer` slots, null until written."
+          },
+          "slot": {
+            "title": "Slot",
+            "type": "string"
+          },
+          "word_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Word Limit"
+          }
+        },
+        "required": [
+          "slot",
+          "prompt",
+          "word_limit",
+          "required",
+          "essay_id",
+          "assigned",
+          "candidates",
+          "shared",
+          "category",
+          "prompt_key",
+          "short_answer"
+        ],
+        "title": "MatchSlotOut",
+        "type": "object"
+      },
+      "MatchTableOut": {
+        "description": "The matching table of one university.",
+        "properties": {
+          "due_predicted": {
+            "title": "Due Predicted",
+            "type": "boolean"
+          },
+          "due_utc": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Utc"
+          },
+          "institution_id": {
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "institution_name": {
+            "title": "Institution Name",
+            "type": "string"
+          },
+          "slots": {
+            "items": {
+              "$ref": "#/components/schemas/MatchSlotOut"
+            },
+            "title": "Slots",
+            "type": "array"
+          }
+        },
+        "required": [
+          "institution_id",
+          "institution_name",
+          "due_utc",
+          "due_predicted",
+          "slots"
+        ],
+        "title": "MatchTableOut",
         "type": "object"
       },
       "MaterialBlockSchema": {
@@ -35934,6 +37796,35 @@
         "title": "ModerationPageResponse",
         "type": "object"
       },
+      "MomentOut": {
+        "description": "A line (verbatim from the essay) that lands an insight.",
+        "properties": {
+          "kind": {
+            "enum": [
+              "surprising",
+              "fresh",
+              "earned"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "paragraph": {
+            "title": "Paragraph",
+            "type": "integer"
+          },
+          "quote": {
+            "title": "Quote",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paragraph",
+          "quote",
+          "kind"
+        ],
+        "title": "MomentOut",
+        "type": "object"
+      },
       "MonthOut": {
         "description": "Month to date and the projection to the end of the month.",
         "properties": {
@@ -36144,6 +38035,95 @@
           "members"
         ],
         "title": "MyGroupResponse",
+        "type": "object"
+      },
+      "MyProfessionListOut": {
+        "description": "The caller's ranked picks.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MyProfessionOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "MyProfessionListOut",
+        "type": "object"
+      },
+      "MyProfessionOut": {
+        "description": "A picked profession and its rank (1 = first choice).",
+        "properties": {
+          "ai_exposure": {
+            "title": "Ai Exposure",
+            "type": "number"
+          },
+          "ai_risk": {
+            "title": "Ai Risk",
+            "type": "string"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "horizon": {
+            "title": "Horizon",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "rank": {
+            "title": "Rank",
+            "type": "integer"
+          },
+          "related_fields": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Related Fields",
+            "type": "array"
+          },
+          "salary_band": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Band"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/ProfessionSourceOut"
+            },
+            "title": "Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "group",
+          "ai_exposure",
+          "ai_risk",
+          "horizon",
+          "salary_band",
+          "related_fields",
+          "sources",
+          "rank"
+        ],
+        "title": "MyProfessionOut",
         "type": "object"
       },
       "MySuggestionResponse": {
@@ -36593,6 +38573,89 @@
           "token"
         ],
         "title": "NewPersonalTokenResponse",
+        "type": "object"
+      },
+      "NextActionOut": {
+        "description": "A ranked next step.",
+        "properties": {
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "list_entry_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Entry Id"
+          },
+          "minutes": {
+            "title": "Minutes",
+            "type": "integer"
+          },
+          "pinned_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Name of the counselor who pinned it (`pinned`).",
+            "title": "Pinned By"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "why": {
+            "title": "Why",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "title",
+          "why",
+          "minutes",
+          "href",
+          "list_entry_id",
+          "kind"
+        ],
+        "title": "NextActionOut",
+        "type": "object"
+      },
+      "NextDeadlineOut": {
+        "description": "The soonest upcoming deadline and its round (plan code).",
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "round": {
+            "title": "Round",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "round"
+        ],
+        "title": "NextDeadlineOut",
         "type": "object"
       },
       "NextSectionResponse": {
@@ -38097,6 +40160,15 @@
             "title": "Created At",
             "type": "string"
           },
+          "delivery": {
+            "default": "external",
+            "enum": [
+              "local",
+              "external"
+            ],
+            "title": "Delivery",
+            "type": "string"
+          },
           "fields": {
             "$ref": "#/components/schemas/OpportunityFields"
           },
@@ -38346,6 +40418,19 @@
             ],
             "title": "Host Institution"
           },
+          "hours_per_week": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 80.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hours Per Week"
+          },
           "kind": {
             "enum": [
               "exam",
@@ -38502,6 +40587,18 @@
             ],
             "title": "Source Url"
           },
+          "starts_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts On"
+          },
           "study_field_ids": {
             "items": {
               "type": "string"
@@ -38628,6 +40725,15 @@
           "created_at": {
             "format": "date-time",
             "title": "Created At",
+            "type": "string"
+          },
+          "delivery": {
+            "default": "external",
+            "enum": [
+              "local",
+              "external"
+            ],
+            "title": "Delivery",
             "type": "string"
           },
           "fields": {
@@ -40159,6 +42265,48 @@
         "title": "ParagraphNoteOut",
         "type": "object"
       },
+      "ParagraphReadOut": {
+        "description": "What one paragraph (1-based) does and reveals about the writer.",
+        "properties": {
+          "paragraph": {
+            "title": "Paragraph",
+            "type": "integer"
+          },
+          "reveals": {
+            "title": "Reveals",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "hook",
+              "context",
+              "turn",
+              "evidence",
+              "insight",
+              "close"
+            ],
+            "title": "Role",
+            "type": "string"
+          },
+          "strength": {
+            "enum": [
+              "strong",
+              "ok",
+              "weak"
+            ],
+            "title": "Strength",
+            "type": "string"
+          }
+        },
+        "required": [
+          "paragraph",
+          "role",
+          "reveals",
+          "strength"
+        ],
+        "title": "ParagraphReadOut",
+        "type": "object"
+      },
       "PassageDetailResponse": {
         "description": "`PassageDetail`: a passage with the passages before and after it.",
         "properties": {
@@ -40786,6 +42934,102 @@
         "title": "PinExternalBody",
         "type": "object"
       },
+      "PinIn": {
+        "additionalProperties": false,
+        "description": "The action to pin on a student's Today (14 days).",
+        "properties": {
+          "href": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Href"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "PinIn",
+        "type": "object"
+      },
+      "PinOut": {
+        "description": "The stored pin.",
+        "properties": {
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "href": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Href"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "pinned_by": {
+            "title": "Pinned By",
+            "type": "string"
+          },
+          "student_id": {
+            "format": "uuid",
+            "title": "Student Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "student_id",
+          "title",
+          "href",
+          "note",
+          "pinned_by",
+          "expires_at"
+        ],
+        "title": "PinOut",
+        "type": "object"
+      },
       "PinReadingListBody": {
         "additionalProperties": false,
         "description": "`PUT /library/reading-lists/{id}/pin`: `{pinned}`.",
@@ -41025,8 +43269,8 @@
           "planned_grade": {
             "anyOf": [
               {
-                "maximum": 12.0,
-                "minimum": 9.0,
+                "maximum": 20.0,
+                "minimum": 1.0,
                 "type": "integer"
               },
               {
@@ -41034,6 +43278,22 @@
               }
             ],
             "title": "Planned Grade"
+          },
+          "planned_term": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fall",
+                  "spring",
+                  "summer"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Term"
           }
         },
         "title": "PlanEntryIn",
@@ -41078,12 +43338,29 @@
               }
             ],
             "title": "Planned Grade"
+          },
+          "planned_term": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fall",
+                  "spring",
+                  "summer"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Planned Term"
           }
         },
         "required": [
           "id",
           "opportunity_id",
           "planned_grade",
+          "planned_term",
           "note",
           "created_at"
         ],
@@ -42187,6 +44464,215 @@
         "title": "PostsResponse",
         "type": "object"
       },
+      "PracticeBodyIn": {
+        "description": "The text of today's entry.",
+        "properties": {
+          "body": {
+            "maxLength": 6000,
+            "title": "Body",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "title": "PracticeBodyIn",
+        "type": "object"
+      },
+      "PracticeEntryOut": {
+        "description": "One day's entry.",
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "day": {
+            "format": "date",
+            "title": "Day",
+            "type": "string"
+          },
+          "evaluation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PracticeEvaluationOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "theme": {
+            "title": "Theme",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "day",
+          "theme",
+          "body",
+          "word_count",
+          "evaluation",
+          "updated_at"
+        ],
+        "title": "PracticeEntryOut",
+        "type": "object"
+      },
+      "PracticeEvaluationOut": {
+        "description": "The coach's reading of one entry; never a rewrite.",
+        "properties": {
+          "idea_seeds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Idea Seeds",
+            "type": "array"
+          },
+          "praise": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Praise",
+            "type": "array"
+          },
+          "scores": {
+            "items": {
+              "$ref": "#/components/schemas/PracticeScoreOut"
+            },
+            "title": "Scores",
+            "type": "array"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "try_next": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Try Next",
+            "type": "array"
+          }
+        },
+        "required": [
+          "summary",
+          "scores",
+          "praise",
+          "try_next",
+          "idea_seeds"
+        ],
+        "title": "PracticeEvaluationOut",
+        "type": "object"
+      },
+      "PracticeListOut": {
+        "description": "My recent entries, newest first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PracticeEntryOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "streak": {
+            "title": "Streak",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "streak"
+        ],
+        "title": "PracticeListOut",
+        "type": "object"
+      },
+      "PracticeScoreOut": {
+        "description": "One creative-writing dimension, 0 to 5.",
+        "properties": {
+          "comment": {
+            "title": "Comment",
+            "type": "string"
+          },
+          "key": {
+            "enum": [
+              "imagery",
+              "voice",
+              "structure",
+              "originality"
+            ],
+            "title": "Key",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "key",
+          "score",
+          "comment"
+        ],
+        "title": "PracticeScoreOut",
+        "type": "object"
+      },
+      "PracticeTodayOut": {
+        "description": "Today's theme (`theme` is a stable key, `prompt` its English text).",
+        "properties": {
+          "day": {
+            "format": "date",
+            "title": "Day",
+            "type": "string"
+          },
+          "entry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PracticeEntryOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "prompt": {
+            "title": "Prompt",
+            "type": "string"
+          },
+          "streak": {
+            "description": "Consecutive practice days, ending today or yesterday.",
+            "title": "Streak",
+            "type": "integer"
+          },
+          "theme": {
+            "title": "Theme",
+            "type": "string"
+          }
+        },
+        "required": [
+          "day",
+          "theme",
+          "prompt",
+          "entry",
+          "streak"
+        ],
+        "title": "PracticeTodayOut",
+        "type": "object"
+      },
       "PreferenceAnswersIO": {
         "additionalProperties": false,
         "description": "The answers of the questionnaire; every field is optional.",
@@ -43059,28 +45545,40 @@
         "title": "ProcessStepOut",
         "type": "object"
       },
-      "ProfessionOut": {
-        "description": "A suggested profession; shortlisted ones stay across suggestions.",
+      "ProfessionListOut": {
+        "description": "Search result.",
         "properties": {
-          "reason": {
-            "title": "Reason",
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_fit__ProfessionOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ProfessionListOut",
+        "type": "object"
+      },
+      "ProfessionSourceOut": {
+        "description": "A cited source.",
+        "properties": {
+          "label": {
+            "title": "Label",
             "type": "string"
           },
-          "shortlisted": {
-            "title": "Shortlisted",
-            "type": "boolean"
-          },
-          "title": {
-            "title": "Title",
+          "url": {
+            "title": "Url",
             "type": "string"
           }
         },
         "required": [
-          "title",
-          "reason",
-          "shortlisted"
+          "label",
+          "url"
         ],
-        "title": "ProfessionOut",
+        "title": "ProfessionSourceOut",
         "type": "object"
       },
       "ProfileDetailsOut": {
@@ -43128,6 +45626,23 @@
             "additionalProperties": true,
             "title": "Answers",
             "type": "object"
+          },
+          "budget_shared": {
+            "default": false,
+            "title": "Budget Shared",
+            "type": "boolean"
+          },
+          "family_budget": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Budget band; set only when the student shares it.",
+            "title": "Family Budget"
           },
           "lock_version": {
             "title": "Lock Version",
@@ -43677,6 +46192,238 @@
         "title": "PromptDiffOut",
         "type": "object"
       },
+      "PromptFitOut": {
+        "description": "Fit of the idea to one prompt: 0 to 100.",
+        "properties": {
+          "distance": {
+            "title": "Distance",
+            "type": "number"
+          },
+          "prompt": {
+            "$ref": "#/components/schemas/PromptRefOut"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "prompt",
+          "distance",
+          "score"
+        ],
+        "title": "PromptFitOut",
+        "type": "object"
+      },
+      "PromptGroupOut": {
+        "description": "Prompts one essay can answer.",
+        "properties": {
+          "category": {
+            "description": "What the prompts ask, derived on the server from the prompt text, the stored group label and the word limit.",
+            "enum": [
+              "personal_statement",
+              "why_us",
+              "community",
+              "academic",
+              "activity",
+              "short_answer",
+              "other"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "covered": {
+            "description": "An essay or slot already answers a member.",
+            "title": "Covered",
+            "type": "boolean"
+          },
+          "due_predicted": {
+            "description": "`due_utc` is predicted, not confirmed.",
+            "title": "Due Predicted",
+            "type": "boolean"
+          },
+          "due_utc": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Earliest application due date among those universities.",
+            "title": "Due Utc"
+          },
+          "essay_ids": {
+            "description": "My essays targeting a member prompt.",
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Essay Ids",
+            "type": "array"
+          },
+          "in_list_count": {
+            "description": "Universities on my list with a prompt in the group.",
+            "title": "In List Count",
+            "type": "integer"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "common",
+              "shared",
+              "unique"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "description": "Short name of the shared theme in the UI language, stored.",
+            "title": "Label",
+            "type": "string"
+          },
+          "prompts": {
+            "items": {
+              "$ref": "#/components/schemas/PromptRefOut"
+            },
+            "title": "Prompts",
+            "type": "array"
+          },
+          "short_answers": {
+            "description": "My short texts for member prompts; only for `short_answer`.",
+            "items": {
+              "$ref": "#/components/schemas/ShortAnswerOut"
+            },
+            "title": "Short Answers",
+            "type": "array"
+          },
+          "spread": {
+            "title": "Spread",
+            "type": "number"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "kind",
+          "category",
+          "short_answers",
+          "spread",
+          "prompts",
+          "covered",
+          "essay_ids",
+          "in_list_count",
+          "due_utc",
+          "due_predicted"
+        ],
+        "title": "PromptGroupOut",
+        "type": "object"
+      },
+      "PromptMapOut": {
+        "description": "The prompt map; `available` is false when no embedding model was reachable.",
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "delta": {
+            "title": "Delta",
+            "type": "number"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/PromptGroupOut"
+            },
+            "title": "Groups",
+            "type": "array"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          }
+        },
+        "required": [
+          "available",
+          "model",
+          "delta",
+          "groups"
+        ],
+        "title": "PromptMapOut",
+        "type": "object"
+      },
+      "PromptRefOut": {
+        "description": "One prompt: a Common App prompt (`institution_id` null) or a supplement.",
+        "properties": {
+          "in_list": {
+            "title": "In List",
+            "type": "boolean"
+          },
+          "institution_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution Id"
+          },
+          "institution_name": {
+            "title": "Institution Name",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "limit_unit": {
+            "title": "Limit Unit",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "prompt": {
+            "title": "Prompt",
+            "type": "string"
+          },
+          "required": {
+            "title": "Required",
+            "type": "boolean"
+          },
+          "word_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Word Limit"
+          }
+        },
+        "required": [
+          "key",
+          "institution_id",
+          "institution_name",
+          "position",
+          "prompt",
+          "word_limit",
+          "limit_unit",
+          "required",
+          "in_list"
+        ],
+        "title": "PromptRefOut",
+        "type": "object"
+      },
       "PromptSizeOut": {
         "description": "The size of one prompt version (0 is the built-in text).",
         "properties": {
@@ -43904,6 +46651,78 @@
           "rating_average"
         ],
         "title": "PromptStatsOut",
+        "type": "object"
+      },
+      "PromptTargetIn": {
+        "description": "A prompt the draft answers: `institution_id` null is the Common App.",
+        "properties": {
+          "institution_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution Id"
+          },
+          "position": {
+            "maximum": 999.0,
+            "minimum": 0.0,
+            "title": "Position",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "position"
+        ],
+        "title": "PromptTargetIn",
+        "type": "object"
+      },
+      "PromptTargetOut": {
+        "description": "A prompt the draft answers, with the text copied from the catalog.",
+        "properties": {
+          "institution_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Institution Id"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "prompt": {
+            "title": "Prompt",
+            "type": "string"
+          },
+          "word_limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Word Limit"
+          }
+        },
+        "required": [
+          "institution_id",
+          "position",
+          "prompt",
+          "word_limit"
+        ],
+        "title": "PromptTargetOut",
         "type": "object"
       },
       "PromptVersionOut": {
@@ -45662,6 +48481,30 @@
         "title": "QuotaResponse",
         "type": "object"
       },
+      "RaiseOut": {
+        "description": "A step that moves an axis.",
+        "properties": {
+          "gain": {
+            "title": "Gain",
+            "type": "integer"
+          },
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "href",
+          "gain"
+        ],
+        "title": "RaiseOut",
+        "type": "object"
+      },
       "RandomSpec": {
         "description": "Variables and the formula of the answer; each attempt draws its own values.",
         "properties": {
@@ -45753,6 +48596,69 @@
           "url"
         ],
         "title": "RatingBookResponse",
+        "type": "object"
+      },
+      "RatingsBody": {
+        "description": "How much each thing matters, 1 (little) to 10 (a lot).",
+        "properties": {
+          "academics": {
+            "default": 5,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Academics",
+            "type": "integer"
+          },
+          "ai_resilience": {
+            "default": 5,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Ai Resilience",
+            "type": "integer"
+          },
+          "city": {
+            "default": 5,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "City",
+            "type": "integer"
+          },
+          "home": {
+            "default": 5,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Home",
+            "type": "integer"
+          },
+          "prestige": {
+            "default": 5,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Prestige",
+            "type": "integer"
+          },
+          "price": {
+            "default": 5,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Price",
+            "type": "integer"
+          },
+          "salary": {
+            "default": 5,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Salary",
+            "type": "integer"
+          },
+          "social": {
+            "default": 5,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Social",
+            "type": "integer"
+          }
+        },
+        "title": "RatingsBody",
         "type": "object"
       },
       "ReadinessComponentOut": {
@@ -49666,6 +52572,25 @@
         "title": "ScholarshipOut",
         "type": "object"
       },
+      "SchoolGradesBody": {
+        "description": "A contiguous range of school grades, e.g. [10, 11].",
+        "properties": {
+          "grades": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 12,
+            "minItems": 1,
+            "title": "Grades",
+            "type": "array"
+          }
+        },
+        "required": [
+          "grades"
+        ],
+        "title": "SchoolGradesBody",
+        "type": "object"
+      },
       "ScopeCatalogResponse": {
         "description": "ScopeCatalog.",
         "properties": {
@@ -50106,6 +53031,14 @@
             ],
             "title": "Send Note"
           },
+          "source": {
+            "enum": [
+              "manual",
+              "certificate"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
           "status": {
             "title": "Status",
             "type": "string"
@@ -50189,7 +53122,8 @@
           "is_official",
           "verified_at",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "source"
         ],
         "title": "ScoreEntryOut",
         "type": "object"
@@ -50208,6 +53142,13 @@
             "title": "Entries",
             "type": "array"
           },
+          "exams": {
+            "items": {
+              "$ref": "#/components/schemas/ExamCertificateOut"
+            },
+            "title": "Exams",
+            "type": "array"
+          },
           "is_owner": {
             "title": "Is Owner",
             "type": "boolean"
@@ -50224,7 +53165,8 @@
           "entries",
           "summaries",
           "is_owner",
-          "can_verify"
+          "can_verify",
+          "exams"
         ],
         "title": "ScoreOverviewOut",
         "type": "object"
@@ -50672,6 +53614,74 @@
           "hits"
         ],
         "title": "SearchSourceResponse",
+        "type": "object"
+      },
+      "SeasonIn": {
+        "description": "The season to fix; null goes back to the automatic one.",
+        "properties": {
+          "key": {
+            "anyOf": [
+              {
+                "enum": [
+                  "explore",
+                  "build",
+                  "choose",
+                  "write",
+                  "submit",
+                  "results"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key"
+          }
+        },
+        "required": [
+          "key"
+        ],
+        "title": "SeasonIn",
+        "type": "object"
+      },
+      "SeasonOut": {
+        "description": "The season in force; `source` says whether the student fixed it.",
+        "properties": {
+          "checklist": {
+            "items": {
+              "$ref": "#/components/schemas/ChecklistLineOut"
+            },
+            "title": "Checklist",
+            "type": "array"
+          },
+          "key": {
+            "enum": [
+              "explore",
+              "build",
+              "choose",
+              "write",
+              "submit",
+              "results"
+            ],
+            "title": "Key",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "auto",
+              "override"
+            ],
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "source",
+          "checklist"
+        ],
+        "title": "SeasonOut",
         "type": "object"
       },
       "SecondFactorResponse": {
@@ -52331,6 +55341,58 @@
         "title": "ShelfState",
         "type": "string"
       },
+      "ShortAnswerIn": {
+        "description": "The short text (at most 150 words and the prompt's own limit).",
+        "properties": {
+          "text": {
+            "maxLength": 2000,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "ShortAnswerIn",
+        "type": "object"
+      },
+      "ShortAnswerOut": {
+        "description": "A short answer to one prompt; `word_count` counts whitespace-separated words.",
+        "properties": {
+          "prompt_key": {
+            "title": "Prompt Key",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "prompt_key",
+          "text",
+          "word_count",
+          "updated_at"
+        ],
+        "title": "ShortAnswerOut",
+        "type": "object"
+      },
       "ShortlistIn": {
         "description": "The professions the student keeps.",
         "properties": {
@@ -52514,6 +55576,21 @@
         "title": "SlidesOptions",
         "type": "object"
       },
+      "SlotIn": {
+        "description": "The essay to place into the slot.",
+        "properties": {
+          "essay_id": {
+            "format": "uuid",
+            "title": "Essay Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "essay_id"
+        ],
+        "title": "SlotIn",
+        "type": "object"
+      },
       "SlotListOut": {
         "description": "The editable slots.",
         "properties": {
@@ -52621,6 +55698,22 @@
           "lock_version"
         ],
         "title": "SnapshotIn",
+        "type": "object"
+      },
+      "SnoozeIn": {
+        "description": "The next action to hide for three days (twice at most when dated).",
+        "properties": {
+          "key": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key"
+        ],
+        "title": "SnoozeIn",
         "type": "object"
       },
       "SourceDetailResponse": {
@@ -53566,6 +56659,23 @@
           "items"
         ],
         "title": "StaffAssessmentListResponse",
+        "type": "object"
+      },
+      "StaffDeadlinesOut": {
+        "description": "The caseload timeline, soonest first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StudentDeadlineOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "StaffDeadlinesOut",
         "type": "object"
       },
       "StaffEntriesResponse": {
@@ -55244,6 +58354,35 @@
         "title": "StorageUsage",
         "type": "object"
       },
+      "StreakOut": {
+        "description": "Consecutive active days; `last7` runs oldest to today.",
+        "properties": {
+          "days": {
+            "title": "Days",
+            "type": "integer"
+          },
+          "last7": {
+            "items": {
+              "type": "boolean"
+            },
+            "maxItems": 7,
+            "minItems": 7,
+            "title": "Last7",
+            "type": "array"
+          },
+          "today_done": {
+            "title": "Today Done",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "days",
+          "today_done",
+          "last7"
+        ],
+        "title": "StreakOut",
+        "type": "object"
+      },
       "Student360ProfileResponse": {
         "description": "`StudentProfile` plus the account status and roles.",
         "properties": {
@@ -55562,6 +58701,86 @@
           "refresh_in"
         ],
         "title": "StudentCardTokenResponse",
+        "type": "object"
+      },
+      "StudentDeadlineOut": {
+        "description": "One dated item of one student on the caseload.",
+        "properties": {
+          "by_staff": {
+            "description": "A task a staff member set for the student.",
+            "title": "By Staff",
+            "type": "boolean"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "group_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Name"
+          },
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "kind": {
+            "description": "A calendar source, or `task`.",
+            "title": "Kind",
+            "type": "string"
+          },
+          "list_entry_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Entry Id"
+          },
+          "student_id": {
+            "format": "uuid",
+            "title": "Student Id",
+            "type": "string"
+          },
+          "student_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Name"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "student_id",
+          "student_name",
+          "group_name",
+          "date",
+          "title",
+          "kind",
+          "href",
+          "list_entry_id",
+          "by_staff"
+        ],
+        "title": "StudentDeadlineOut",
         "type": "object"
       },
       "StudentGroupBody": {
@@ -59233,6 +62452,18 @@
             "title": "Links",
             "type": "array"
           },
+          "list_entry_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Entry Id"
+          },
           "priority": {
             "default": "medium",
             "enum": [
@@ -59279,6 +62510,18 @@
       "TaskOut": {
         "description": "A task. `overdue` is computed against today in Tashkent.",
         "properties": {
+          "assigned_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Name of the staff member who set the task; null when the student or the AI did.",
+            "title": "Assigned By Name"
+          },
           "completed_at": {
             "anyOf": [
               {
@@ -59352,6 +62595,18 @@
             },
             "title": "Links",
             "type": "array"
+          },
+          "list_entry_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Entry Id"
           },
           "lock_version": {
             "title": "Lock Version",
@@ -59434,8 +62689,10 @@
           "priority",
           "start_date",
           "deadline",
+          "list_entry_id",
           "created_by",
           "creator_id",
+          "assigned_by_name",
           "steps",
           "links",
           "progress",
@@ -59489,6 +62746,18 @@
               }
             ],
             "title": "Links"
+          },
+          "list_entry_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Entry Id"
           },
           "lock_version": {
             "minimum": 0.0,
@@ -61925,6 +65194,104 @@
         "title": "TodayCountsResponse",
         "type": "object"
       },
+      "TodayDeadlineOut": {
+        "description": "An upcoming deadline.",
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "list_entry_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Entry Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "title",
+          "list_entry_id",
+          "kind",
+          "href"
+        ],
+        "title": "TodayDeadlineOut",
+        "type": "object"
+      },
+      "TodayOut": {
+        "description": "What the Today screen shows.",
+        "properties": {
+          "deadlines": {
+            "items": {
+              "$ref": "#/components/schemas/TodayDeadlineOut"
+            },
+            "maxItems": 6,
+            "title": "Deadlines",
+            "type": "array"
+          },
+          "next": {
+            "items": {
+              "$ref": "#/components/schemas/NextActionOut"
+            },
+            "maxItems": 3,
+            "title": "Next",
+            "type": "array"
+          },
+          "readiness": {
+            "$ref": "#/components/schemas/TodayReadinessOut"
+          },
+          "season": {
+            "$ref": "#/components/schemas/SeasonOut"
+          },
+          "streak": {
+            "$ref": "#/components/schemas/StreakOut"
+          }
+        },
+        "required": [
+          "season",
+          "next",
+          "streak",
+          "readiness",
+          "deadlines"
+        ],
+        "title": "TodayOut",
+        "type": "object"
+      },
+      "TodayReadinessOut": {
+        "description": "The readiness percentage.",
+        "properties": {
+          "percent": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Percent",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "percent"
+        ],
+        "title": "TodayReadinessOut",
+        "type": "object"
+      },
       "ToggleBody": {
         "description": "Body of ``POST /v1/staff/journal/toggle``.",
         "properties": {
@@ -62132,6 +65499,62 @@
           "expires_at"
         ],
         "title": "ToolCallViewResponse",
+        "type": "object"
+      },
+      "TopEssayOut": {
+        "description": "An essay with its stored base review score, 0 to 100.",
+        "properties": {
+          "band": {
+            "title": "Band",
+            "type": "string"
+          },
+          "essay_id": {
+            "title": "Essay Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "essay_id",
+          "title",
+          "kind",
+          "word_count",
+          "score",
+          "band"
+        ],
+        "title": "TopEssayOut",
+        "type": "object"
+      },
+      "TopEssaysOut": {
+        "description": "My best essays, at most ten, best first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TopEssayOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "TopEssaysOut",
         "type": "object"
       },
       "TopItemResponse": {
@@ -66817,6 +70240,30 @@
         "title": "SuggestionsOut",
         "type": "object"
       },
+      "app__interfaces__http__v1__admission__routes_career__ProfessionOut": {
+        "description": "A suggested profession; shortlisted ones stay across suggestions.",
+        "properties": {
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "shortlisted": {
+            "title": "Shortlisted",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "reason",
+          "shortlisted"
+        ],
+        "title": "ProfessionOut",
+        "type": "object"
+      },
       "app__interfaces__http__v1__admission__routes_career__QuestionOut": {
         "description": "One inventory question with its text in every language.",
         "properties": {
@@ -67663,6 +71110,73 @@
           "body"
         ],
         "title": "CommentIn",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__admission__routes_fit__ProfessionOut": {
+        "description": "An ISCO-08 occupation with its GenAI exposure.",
+        "properties": {
+          "ai_exposure": {
+            "title": "Ai Exposure",
+            "type": "number"
+          },
+          "ai_risk": {
+            "title": "Ai Risk",
+            "type": "string"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "horizon": {
+            "title": "Horizon",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "related_fields": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Related Fields",
+            "type": "array"
+          },
+          "salary_band": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Band"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/ProfessionSourceOut"
+            },
+            "title": "Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "group",
+          "ai_exposure",
+          "ai_risk",
+          "horizon",
+          "salary_band",
+          "related_fields",
+          "sources"
+        ],
+        "title": "ProfessionOut",
         "type": "object"
       },
       "app__interfaces__http__v1__admission__routes_goal_plan__MilestoneOut": {
@@ -84182,7 +87696,7 @@
     },
     "/v1/admission/catalog/institutions": {
       "get": {
-        "description": "Search and filter the catalog; name and alias matches come first.\n\n`setting` is the campus setting (`city_type` is the same filter). `sort=deadline`\nlists the soonest next deadline first, institutions without one last.",
+        "description": "Search and filter the catalog; name and alias matches come first.\n\n`setting` is the campus setting (`city_type` is the same filter). `sort=deadline`\nlists the soonest next deadline first, institutions without one last;\n`sort=fit` lists the highest fit for the caller first, unscored last.",
         "operationId": "admission_search_institutions",
         "parameters": [
           {
@@ -84421,7 +87935,10 @@
             "schema": {
               "anyOf": [
                 {
-                  "const": "deadline",
+                  "enum": [
+                    "deadline",
+                    "fit"
+                  ],
                   "type": "string"
                 },
                 {
@@ -86702,8 +90219,26 @@
     },
     "/v1/admission/essays": {
       "get": {
-        "description": "My essays.",
+        "description": "My essays with forks, targets and the stored deep-read score (no model call).",
         "operationId": "admission_list_essays",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -86714,6 +90249,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "summary": "List Essays",
@@ -86757,6 +90302,650 @@
           }
         },
         "summary": "Create Essay",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/gallery": {
+      "get": {
+        "description": "Others' published essays (anonymous) and my own.",
+        "operationId": "admission_essay_gallery",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 30,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GalleryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Browse Gallery",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/ideas/fit": {
+      "post": {
+        "description": "Score an idea against the prompts no essay or slot covers (AI consent).",
+        "operationId": "admission_essay_idea_fit",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdeaFitIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdeaFitOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not the owner, or no AI consent."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The idea text is empty."
+          }
+        },
+        "summary": "Fit Idea",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/match": {
+      "get": {
+        "description": "Every listed university's slots at once, with its application due date.",
+        "operationId": "admission_essay_match_list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EssayMatchListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Essay Match List",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/match/common-app": {
+      "put": {
+        "description": "Fill or empty the shared personal statement of every Common App university.",
+        "operationId": "admission_essay_match_common_app",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommonAppIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EssayMatchListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Essay Match Common App",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/match/{university_id}": {
+      "get": {
+        "description": "The slots of a university with the essays that may fill them.",
+        "operationId": "admission_essay_match",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "university_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "University Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchTableOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Essay Match",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/match/{university_id}/slots/{slot_key}": {
+      "delete": {
+        "description": "Empty a slot.",
+        "operationId": "admission_essay_match_clear",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "university_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "University Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "slot_key",
+            "required": true,
+            "schema": {
+              "title": "Slot Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchTableOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Essay Match Clear",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Place an essay into a slot; it leaves its other slot of the university.",
+        "operationId": "admission_essay_match_assign",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "university_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "University Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "slot_key",
+            "required": true,
+            "schema": {
+              "title": "Slot Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SlotIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchTableOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Essay Match Assign",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/practice": {
+      "get": {
+        "description": "My recent entries, newest first.",
+        "operationId": "admission_essay_practice_history",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticeListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Practice History",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/practice/today": {
+      "get": {
+        "description": "Today's theme and my entry for it, if I started one.",
+        "operationId": "admission_essay_practice_today",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticeTodayOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Practice Today",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Write today's entry (sealed at rest); a changed text drops its evaluation.",
+        "operationId": "admission_essay_practice_save",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PracticeBodyIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticeTodayOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Practice Save",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/practice/today/evaluate": {
+      "post": {
+        "description": "Evaluate today's entry (AI consent, daily limit); cached until it changes.",
+        "operationId": "admission_essay_practice_evaluate",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PracticeTodayOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Practice Evaluate",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/prompt-map": {
+      "get": {
+        "description": "The prompts grouped into named clusters; `scope=list` is my list + Common App.",
+        "operationId": "admission_essay_prompt_map",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "list",
+                "all"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptMapOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not the owner, or no AI consent."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Prompt Map",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/short-answers/{slot_key}": {
+      "get": {
+        "description": "My short answer to a supplemental prompt (`slot_key` is the prompt key).",
+        "operationId": "admission_essay_short_answer",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slot_key",
+            "required": true,
+            "schema": {
+              "title": "Slot Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShortAnswerOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Essay Short Answer",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Store the short answer sealed; 422 above 150 words or the prompt's limit.",
+        "operationId": "admission_essay_short_answer_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slot_key",
+            "required": true,
+            "schema": {
+              "title": "Slot Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShortAnswerIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShortAnswerOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Essay Short Answer Put",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/top": {
+      "get": {
+        "description": "My best essays by stored review score (at most ten).",
+        "operationId": "admission_essay_top",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TopEssaysOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Essay Top",
         "tags": [
           "admission"
         ]
@@ -87339,6 +91528,194 @@
         ]
       }
     },
+    "/v1/admission/essays/{essay_id}/deep-read": {
+      "get": {
+        "description": "My stored deep read, marked stale when the essay changed; no model call.",
+        "operationId": "admission_essay_deep_read_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeepReadOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not the owner, or no AI."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not my essay."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The essay has under 50 words."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The weekly limit is used up."
+          }
+        },
+        "summary": "Get Deep Read",
+        "tags": [
+          "admission"
+        ]
+      },
+      "post": {
+        "description": "Read my essay paragraph by paragraph (AI consent, weekly review limit).",
+        "operationId": "admission_essay_deep_read",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeepReadIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeepReadOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not the owner, or no AI."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not my essay."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The essay has under 50 words."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The weekly limit is used up."
+          }
+        },
+        "summary": "Run Deep Read",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/essays/{essay_id}/feedback": {
       "get": {
         "description": "Every comment on my essay, placed in the current text.",
@@ -87609,6 +91986,239 @@
           }
         },
         "summary": "Patch Feedback",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/{essay_id}/fork": {
+      "post": {
+        "description": "Copy the body into a new essay for one target of the group.",
+        "operationId": "admission_essay_fork",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForkIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForkOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Fork Essay",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/{essay_id}/gallery": {
+      "delete": {
+        "description": "Take my essay out of the gallery.",
+        "operationId": "admission_essay_unpublish",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unpublish Essay",
+        "tags": [
+          "admission"
+        ]
+      },
+      "post": {
+        "description": "Publish the current text of my essay as a new version (needs sharing).",
+        "operationId": "admission_essay_publish",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GalleryItemOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Publish Essay",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/{essay_id}/group-critique": {
+      "post": {
+        "description": "Review my essay for each target university under that target's prompt.",
+        "operationId": "admission_essay_group_critique",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "essay_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Essay Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupCritiqueIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EssayReviewsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not the owner, or no AI."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "Not my essay."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The essay has under 50 words."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemOut"
+                }
+              }
+            },
+            "description": "The weekly limit is used up."
+          }
+        },
+        "summary": "Group Critique",
         "tags": [
           "admission"
         ]
@@ -89165,6 +93775,106 @@
         ]
       }
     },
+    "/v1/admission/list/brief": {
+      "post": {
+        "description": "A written brief on my list's balance (needs the `admission_ai` consent).",
+        "operationId": "admission_list_brief",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListBriefOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Brief",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/list/fit": {
+      "get": {
+        "description": "Fit of each entry of my list, from my preferences and plan.",
+        "operationId": "admission_get_list_fit",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListFitOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get List Fit",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/list/insights": {
       "get": {
         "description": "Classification and balance of my list or of a student's list.",
@@ -89611,6 +94321,22 @@
               "title": "Limit",
               "type": "integer"
             }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
           }
         ],
         "responses": {
@@ -89918,6 +94644,217 @@
           }
         },
         "summary": "Get App Review",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/me/fit-preferences": {
+      "get": {
+        "description": "The caller's ratings and the axis weights they give.",
+        "operationId": "admission_get_fit_preferences",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FitPreferencesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Fit Preferences",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Replace the caller's ratings.",
+        "operationId": "admission_put_fit_preferences",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FitPreferencesIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FitPreferencesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Fit Preferences",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/me/honor-suggestions": {
+      "get": {
+        "description": "Non-standard certificates of mine that can become honors.",
+        "operationId": "admission_list_honor_suggestions",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HonorSuggestionsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Honor Suggestions",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/me/honor-suggestions/{entry_id}/dismiss": {
+      "post": {
+        "description": "Hide a suggestion; the certificate stays in the creation pick list.",
+        "operationId": "admission_dismiss_honor_suggestion",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Entry Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Dismiss Honor Suggestion",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/me/ikigai": {
+      "get": {
+        "description": "The caller's ikigai chips.",
+        "operationId": "admission_get_ikigai",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IkigaiBody"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Ikigai",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Replace the caller's ikigai chips.",
+        "operationId": "admission_put_ikigai",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IkigaiBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IkigaiBody"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Ikigai",
         "tags": [
           "admission"
         ]
@@ -90456,6 +95393,114 @@
         ]
       }
     },
+    "/v1/admission/me/professions": {
+      "get": {
+        "description": "The caller's ranked professions.",
+        "operationId": "admission_get_my_professions",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyProfessionListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get My Professions",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Replace the caller's ranked professions (at most five).",
+        "operationId": "admission_put_my_professions",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChosenListIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyProfessionListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put My Professions",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/me/profile": {
       "get": {
         "description": "Return my profile answers and where to resume.",
@@ -90622,7 +95667,8 @@
             "schema": {
               "enum": [
                 "career",
-                "algorithm"
+                "algorithm",
+                "budget"
               ],
               "title": "Quiz",
               "type": "string"
@@ -90667,7 +95713,8 @@
             "schema": {
               "enum": [
                 "career",
-                "algorithm"
+                "algorithm",
+                "budget"
               ],
               "title": "Quiz",
               "type": "string"
@@ -90754,6 +95801,66 @@
           }
         },
         "summary": "Review Feedback",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/me/season": {
+      "put": {
+        "description": "Fix the season (or null for automatic); returns the refreshed feed.",
+        "operationId": "admission_set_season",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "accept-language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeasonIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodayOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Season",
         "tags": [
           "admission"
         ]
@@ -91350,8 +96457,8 @@
             "schema": {
               "anyOf": [
                 {
-                  "maximum": 12,
-                  "minimum": 9,
+                  "maximum": 20,
+                  "minimum": 1,
                   "type": "integer"
                 },
                 {
@@ -91523,6 +96630,80 @@
                 }
               ],
               "title": "College Credit"
+            }
+          },
+          {
+            "in": "query",
+            "name": "delivery",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "local",
+                    "external"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Delivery"
+            }
+          },
+          {
+            "in": "query",
+            "name": "max_hours",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 80,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Max Hours"
+            }
+          },
+          {
+            "in": "query",
+            "name": "starts_within",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 730,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Starts Within"
+            }
+          },
+          {
+            "in": "query",
+            "name": "starts_month",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 12,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Starts Month"
             }
           },
           {
@@ -92539,6 +97720,79 @@
         ]
       }
     },
+    "/v1/admission/professions": {
+      "get": {
+        "description": "Search professions by name in any language.",
+        "operationId": "admission_search_professions",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 80,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfessionListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Professions",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/readiness": {
       "get": {
         "description": "My college readiness.",
@@ -92709,6 +97963,68 @@
           }
         },
         "summary": "Put Prefs",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/settings/school-grades": {
+      "get": {
+        "description": "The school grades in force (who is entitled, which grades are planned).",
+        "operationId": "admission_school_grades",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolGradesBody"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get School Grades",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Replace the school grades (administrators; contiguous, 1–12).",
+        "operationId": "admission_set_school_grades",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SchoolGradesBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolGradesBody"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put School Grades",
         "tags": [
           "admission"
         ]
@@ -93031,6 +98347,70 @@
           }
         },
         "summary": "Revoke Assignment",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/caseload-deadlines": {
+      "get": {
+        "description": "Deadlines and tasks of the students the caller reaches (`mine`: assigned).",
+        "operationId": "admission_staff_caseload_deadlines",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "mine",
+              "enum": [
+                "mine",
+                "all"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffDeadlinesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Staff Deadlines",
         "tags": [
           "admission"
         ]
@@ -95148,7 +100528,7 @@
     },
     "/v1/admission/staff/students": {
       "get": {
-        "description": "Students the caller reaches, soonest deadline first.",
+        "description": "Students the caller reaches, soonest deadline first; `all` is admin-only.",
         "operationId": "admission_list_caseload",
         "parameters": [
           {
@@ -95210,6 +100590,31 @@
               ],
               "title": "Group Id"
             }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "mine",
+              "enum": [
+                "mine",
+                "all"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 80,
+              "title": "Q",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -95235,6 +100640,191 @@
           }
         },
         "summary": "List Caseload",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/students/{student_id}/pin": {
+      "delete": {
+        "description": "Remove the pinned action.",
+        "operationId": "admission_staff_unpin_action",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "student_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Student Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unpin Action",
+        "tags": [
+          "admission"
+        ]
+      },
+      "get": {
+        "description": "The pinned action in force; 404 when there is none.",
+        "operationId": "admission_staff_get_pin",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "student_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Student Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PinOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Pin",
+        "tags": [
+          "admission"
+        ]
+      },
+      "post": {
+        "description": "Pin one action at the top of the student's Today for 14 days.",
+        "operationId": "admission_staff_pin_action",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "student_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Student Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PinIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PinOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pin Action",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/students/{student_id}/tasks": {
+      "post": {
+        "description": "Create a task for a student (mentor or counselor in scope, or the owner).",
+        "operationId": "admission_staff_create_student_task",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "student_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Student Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create For",
         "tags": [
           "admission"
         ]
@@ -96999,6 +102589,91 @@
           }
         },
         "summary": "Verify Entry",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/today": {
+      "get": {
+        "description": "My season, next steps, streak, readiness and nearest deadlines.",
+        "operationId": "admission_today",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "accept-language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodayOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Today",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/today/snooze": {
+      "post": {
+        "description": "Hide a next action from `/today` for three days.",
+        "operationId": "admission_snooze_today",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SnoozeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Snooze",
         "tags": [
           "admission"
         ]

@@ -24,6 +24,7 @@ from app.modules.admission.infrastructure.orm.opportunities import (
 from app.settings import load_settings
 from app.shared.logging import configure_logging
 
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 _NS = uuid5(NAMESPACE_URL, "admission.opportunities.demo")
@@ -175,6 +176,8 @@ def _entries(year: int) -> list[tuple[str, OpportunityDraft]]:
                 ),
                 note=None,
                 study_field_ids=("mathematics", "literature_languages"),
+                tuition_usd=111,
+                hours_per_week=5,
             ),
         ),
         (
@@ -195,6 +198,8 @@ def _entries(year: int) -> list[tuple[str, OpportunityDraft]]:
                 materials=(),
                 note=None,
                 study_field_ids=("literature_languages",),
+                tuition_usd=245,
+                hours_per_week=5,
             ),
         ),
         (
@@ -215,12 +220,20 @@ def _entries(year: int) -> list[tuple[str, OpportunityDraft]]:
                 materials=(),
                 note=None,
                 study_field_ids=("computer_science", "mathematics"),
+                tuition_usd=0,
+                hours_per_week=4,
             ),
         ),
     ]
 
 
-def _program_rows() -> list[OpportunityRow]:
+def _program_start(year: int, today: dt.date) -> dt.date:
+    """Mid-June of this year, or of the next once it has passed (summer programs)."""
+    day = dt.date(year, 6, 15)
+    return day if day >= today else dt.date(year + 1, 6, 15)
+
+
+def _program_rows(year: int, today: dt.date) -> list[OpportunityRow]:
     rows = []
     for key, title, host, country, loc, online, acc, fee, weeks, rank, url in _PROGRAMS:
         payload = OpportunityDraft(
@@ -240,12 +253,45 @@ def _program_rows() -> list[OpportunityRow]:
             duration_weeks=weeks,
             ranking=rank,
             study_field_ids=_PROGRAM_FIELDS.get(key, ()),
+            hours_per_week=6 if online else 35,
+            starts_on=None if online else _program_start(year, today),
         ).to_payload()
         rows.append(
             OpportunityRow(
                 id=_id("program", key),
                 kind="program",
                 title=title,
+                payload=payload,
+                subject_ids=[],
+                created_by=_SEEDER,
+            )
+        )
+    return rows
+
+
+async def _local_rows(s: AsyncSession) -> list[OpportunityRow]:
+    """One entry per published LMS course, so the catalog has lyceum-run courses."""
+    found = await s.execute(
+        text("SELECT id, title FROM lms.courses WHERE status = 'active' LIMIT 5")
+    )
+    rows = []
+    for course_id, title in found:
+        payload = OpportunityDraft(
+            kind="course",
+            title=f"Lyceum LMS: {title}",
+            summary="A course run on the lyceum LMS; enrol in one click.",
+            provider="IHT lyceum",
+            grades=(9, 10, 11),
+            lms_course_id=course_id,
+            tuition_usd=0,
+            hours_per_week=3,
+            online=True,
+        ).to_payload()
+        rows.append(
+            OpportunityRow(
+                id=_id("local-course", str(course_id)),
+                kind="course",
+                title=payload["title"],
                 payload=payload,
                 subject_ids=[],
                 created_by=_SEEDER,
@@ -321,7 +367,9 @@ async def _run() -> None:
                         created_by=_SEEDER,
                     )
                 )
-            await _add_missing(s, _program_rows())
+            now = container.clock.now()
+            await _add_missing(s, _program_rows(now.year, now.date()))
+            await _add_missing(s, await _local_rows(s))
             await s.commit()
     finally:
         await container.close()

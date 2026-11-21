@@ -20,6 +20,7 @@ from app.modules.admission.application.config import get_me
 from app.modules.admission.domain.courses import Course
 
 from fastapi import APIRouter, status
+from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/v1/admission", tags=["admission"])
 
@@ -29,9 +30,48 @@ async def get_config(container: ContainerDep, ctx: AdmissionCtx) -> AdmissionCon
     return AdmissionConfigOut.of(await container.admission.config.execute())
 
 
+class SchoolGradesBody(BaseModel):
+    """A contiguous range of school grades, e.g. [10, 11]."""
+
+    grades: list[int] = Field(min_length=1, max_length=12)
+
+
+async def get_school_grades(
+    container: ContainerDep, ctx: AdmissionCtx
+) -> SchoolGradesBody:
+    """The school grades in force (who is entitled, which grades are planned)."""
+    return SchoolGradesBody(grades=list(await container.admission.school_grades.get()))
+
+
+async def put_school_grades(
+    body: SchoolGradesBody, container: ContainerDep, ctx: AdmissionCtx
+) -> SchoolGradesBody:
+    """Replace the school grades (administrators; contiguous, 1–12)."""
+    saved = await container.admission.school_grades.set(ctx, body.grades)
+    return SchoolGradesBody(grades=list(saved))
+
+
 async def get_admission_me(container: ContainerDep, ctx: AnyContext) -> AdmissionMeOut:
     """The caller's role, entitlement and assignments (never refused)."""
-    return AdmissionMeOut.of(get_me(ctx, container.clock.now()))
+    out = AdmissionMeOut.of(get_me(ctx, container.clock.now()))
+    out.estimates_visible = await container.admission.config.estimates_visible(ctx)
+    return out
+
+
+router.add_api_route(
+    "/settings/school-grades",
+    get_school_grades,
+    methods=["GET"],
+    response_model=SchoolGradesBody,
+    operation_id="admission_school_grades",
+)
+router.add_api_route(
+    "/settings/school-grades",
+    put_school_grades,
+    methods=["PUT"],
+    response_model=SchoolGradesBody,
+    operation_id="admission_set_school_grades",
+)
 
 
 async def list_my_courses(container: ContainerDep, ctx: StudentCtx) -> CourseListOut:

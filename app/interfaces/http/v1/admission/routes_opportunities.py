@@ -23,6 +23,7 @@ from app.interfaces.http.v1.admission.schemas_opportunities import (
     CollegeCredit,
     DeadlineListOut,
     DeadlineOut,
+    Delivery,
     Kind,
     OpportunityDetailOut,
     OpportunityListOut,
@@ -105,7 +106,7 @@ async def list_opportunities(
     subfield_id: UUID | None = None,
     subject_id: UUID | None = None,
     kind: Kind | None = None,
-    grade: Annotated[int | None, Query(ge=9, le=12)] = None,
+    grade: Annotated[int | None, Query(ge=1, le=20)] = None,
     q: Annotated[str | None, Query(max_length=100)] = None,
     country: Annotated[str | None, Query(max_length=300)] = None,
     online: bool | None = None,
@@ -115,6 +116,10 @@ async def list_opportunities(
     scope: Scope | None = None,
     org_id: UUID | None = None,
     college_credit: CollegeCredit | None = None,
+    delivery: Delivery | None = None,
+    max_hours: Annotated[float | None, Query(gt=0, le=80)] = None,
+    starts_within: Annotated[int | None, Query(ge=1, le=730)] = None,
+    starts_month: Annotated[int | None, Query(ge=1, le=12)] = None,
     sort: Sort | None = None,
     page: Annotated[int, Query(ge=1)] = 1,
     size: Annotated[int, Query(ge=1, le=200)] = 200,
@@ -137,6 +142,10 @@ async def list_opportunities(
             scope=scope,
             org_id=org_id,
             college_credit=college_credit,
+            delivery=delivery,
+            max_hours=max_hours,
+            starts_within=starts_within,
+            starts_month=starts_month,
             sort=sort,
             page=page,
             size=size,
@@ -259,7 +268,11 @@ async def save_opportunity_to_plan(
 ) -> PlanEntryOut:
     """Save (or re-place) an entry in the caller's plan."""
     entry = await container.admission.opportunities.save_to_plan(
-        ctx, opportunity_id, planned_grade=body.planned_grade, note=body.note
+        ctx,
+        opportunity_id,
+        planned_grade=body.planned_grade,
+        planned_term=body.planned_term,
+        note=body.note,
     )
     return PlanEntryOut.of(entry)
 

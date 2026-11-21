@@ -5,6 +5,7 @@ from collections.abc import Collection
 from dataclasses import dataclass
 from uuid import UUID
 
+from app.modules.admission.application.runtime_settings import RuntimeSettingsService
 from app.modules.admission.domain.access import ActorFacts, Assignment, Entitlement
 from app.modules.admission.domain.entitlement import (
     AdmissionActor,
@@ -18,17 +19,41 @@ from app.shared.clock import Clock
 from app.shared.contracts.academic import AcademicMembership, StudentRef
 
 
+async def school_grades(
+    runtime: RuntimeSettingsService | None, default: Collection[int]
+) -> frozenset[int]:
+    """Return the school grades set by an administrator, else the env default."""
+    if runtime is None:
+        return frozenset(default)
+    return frozenset((await runtime.get()).school_grades(default))
+
+
 def effective_entitlement(
     stored: Entitlement | None,
     student: StudentRef | None,
     eligible_grades: Collection[int],
     now: dt.datetime,
+    *,
+    student_role: bool,
+    user_id: UUID,
 ) -> Entitlement | None:
-    """Return the stored entitlement, or the implicit one of an eligible student.
+    """Return the entitlement the admission app applies to a user.
 
-    A lyceum student of an eligible grade is entitled without a row; a stored row
-    (granted or revoked by an administrator) always wins.
+    Access stacks by role: the student role alone opens the student side, whatever
+    other roles, group or grade the account has. A live stored row is kept and only
+    an explicit revocation closes the side. Without the student role the stored row
+    (e.g. alumni) or an eligible lyceum group decides.
     """
+    if stored is not None and (stored.revoked_at is not None or stored.is_applicant):
+        return stored
+    if student_role:
+        return Entitlement(
+            user_id=user_id,
+            kind="school_student",
+            cohort_year=None,
+            granted_by=None,
+            granted_at=now,
+        )
     if stored is not None:
         return stored
     if student is None:
@@ -92,12 +117,14 @@ class ResolveAdmissionActor:
         membership: AcademicMembership,
         clock: Clock,
         eligible_grades: Collection[int],
+        runtime: RuntimeSettingsService | None = None,
     ) -> None:
-        """Keep the transaction factory, membership, clock and eligible grades."""
+        """Keep the collaborators; `runtime` overrides the env grade range."""
         self._uow = uow_factory
         self._membership = membership
         self._clock = clock
         self._grades = frozenset(eligible_grades)
+        self._runtime = runtime
 
     async def execute(self, actor: Actor) -> AdmissionContext:
         """Read entitlement, assignments and the caller's group."""
@@ -111,23 +138,14 @@ class ResolveAdmissionActor:
             stored = await uow.access.entitlement(actor.user_id)
             assignments = await uow.access.assignments_for(actor.user_id)
             opt_ins = await uow.access.opt_ins([actor.user_id])
-        entitlement = effective_entitlement(stored, student, self._grades, now)
-        revoked = stored is not None and stored.revoked_at is not None
-        if (
-            Role.STUDENT in actor.roles
-            and not revoked
-            and (entitlement is None or not entitlement.is_applicant)
-        ):
-            # Access stacks: the student role alone opens the student side, whatever
-            # other roles, group or grade the account has. Only an explicit
-            # revocation by staff closes it.
-            entitlement = Entitlement(
-                user_id=actor.user_id,
-                kind="school_student",
-                cohort_year=None,
-                granted_by=None,
-                granted_at=now,
-            )
+        entitlement = effective_entitlement(
+            stored,
+            student,
+            await school_grades(self._runtime, self._grades),
+            now,
+            student_role=Role.STUDENT in actor.roles,
+            user_id=actor.user_id,
+        )
         mine = opt_ins.get(actor.user_id)
         return AdmissionContext(
             actor=actor,

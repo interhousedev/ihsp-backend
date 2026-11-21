@@ -149,12 +149,36 @@ async def test_mentor_needs_both_opt_ins() -> None:
     assert (await w.policy.resolve(ctx, STUDENT)).in_scope
 
 
-async def test_no_consent_limits_to_403() -> None:
+async def test_no_consent_counselor_reads_defaults_and_is_denied_the_rest() -> None:
+    # Changed: this test asserted that PROFILE_READ is a 403 without consent.
     w = World(consent=False)
     w.store.assignments[STAFF] = (_assign("counselor_full", "all", None),)
     ctx = await w.ctx(STAFF, Role.COUNSELOR)
     res = await w.policy.resolve(ctx, STUDENT)
     assert res.in_scope and res.limited
+    for ok in (
+        Permission.PROFILE_READ,
+        Permission.LIST_READ,
+        Permission.DOCUMENTS_READ,
+        Permission.DEADLINES_MANAGE,
+    ):
+        await w.policy.require(ctx, STUDENT, ok)
+    for denied in (
+        Permission.ESSAYS_READ,
+        Permission.WORDS_READ,
+        Permission.ACTIVITIES_READ,
+        Permission.FINANCE_READ,
+        Permission.CONFIDENTIAL_READ,
+    ):
+        with pytest.raises(AdmissionForbiddenError):
+            await w.policy.require(ctx, STUDENT, denied)
+
+
+async def test_no_consent_mentor_is_denied_the_profile() -> None:
+    w = World(consent=False)
+    w.store.assignments[STAFF] = (_assign("student_counselor", "student", STUDENT),)
+    w.store.opt_ins[STAFF] = OptIns(mentee_opt_in=False, mentor_opt_in=True)
+    w.store.opt_ins[STUDENT] = OptIns(mentee_opt_in=True, mentor_opt_in=False)
+    ctx = await w.ctx(STAFF, Role.MENTOR)
     with pytest.raises(AdmissionForbiddenError):
         await w.policy.require(ctx, STUDENT, Permission.PROFILE_READ)
-    assert w.store.audit == []

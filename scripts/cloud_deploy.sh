@@ -100,6 +100,8 @@ say "deploying"
 ssh "$host" "cat > '$dir/.deploy.sh'" << 'REMOTE'
 set -euo pipefail
 dc() { docker compose --env-file .env.prod -f materials/docker-compose.prod.yaml "$@"; }
+# Every service except the stateful stores; Vault in particular would come back sealed.
+app_services() { dc config --services | grep -vxE 'postgres|redis|vault|s3|bugsink-db'; }
 domain=$(sed -n 's/^DOMAIN=//p' .env.prod | tail -n 1)
 tag=$(sed -n 's/^TAG=//p' .env.prod | tail -n 1)
 prev_tag=${PREV_TAG:-$tag}
@@ -123,7 +125,8 @@ on_error() {
     set_env_tag "$prev_tag" || true
     if [ "$phase" = "post" ]; then
         echo "ROLLBACK: redeploying TAG=$prev_tag" >&2
-        if dc pull --ignore-buildable >&2 && dc up -d --wait --force-recreate >&2; then
+        if dc pull --ignore-buildable >&2 && dc up -d --wait --remove-orphans >&2 \
+            && dc up -d --wait --no-deps --force-recreate $(app_services) >&2; then
             echo "ROLLBACK done: containers run TAG=$prev_tag." >&2
         else
             echo "ROLLBACK FAILED: fix by hand (TAG=$prev_tag is set in .env.prod)." >&2
@@ -221,7 +224,10 @@ dc run --rm --no-deps migrate
 phase=post
 # Services whose restart counters and health the stability gate watches.
 gate_services="api worker identity bot mail scheduler web nginx"
-dc up -d --wait --remove-orphans --force-recreate
+# Data stores (postgres, redis, vault) are recreated only when their image or config
+# changes: a recreated Vault starts sealed and needs a manual unseal.
+dc up -d --wait --remove-orphans
+dc up -d --wait --no-deps --force-recreate $(app_services)
 
 stable_gate() {
     local secs=${IHSP_DEPLOY_STABLE_SECS:-60} svc id state base now deadline

@@ -114,7 +114,12 @@ async def test_expired_pages_and_answers_go_with_their_vectors(
         queries = await repo.purge_queries(NOW - timedelta(days=183), 500)
 
         assert (pages, vectors, queries) == (1, 1, 1)
-        remaining = (await session.execute(select(Embedding.content_hash))).scalars()
+        ours = [text_hash(old_text), text_hash(kept_text)]
+        remaining = (
+            await session.execute(
+                select(Embedding.content_hash).where(Embedding.content_hash.in_(ours))
+            )
+        ).scalars()
         assert set(remaining) == {text_hash(kept_text)}
         assert await repo.cached("old", NOW - timedelta(days=500)) is None
         assert await repo.cached("new", NOW - timedelta(days=1)) == []
@@ -138,5 +143,9 @@ async def test_a_purge_works_in_batches_and_keeps_a_vector_still_in_use(
 
         assert (pages, vectors) == (1, 0)  # one page of the batch; its text still used
         assert (
-            await session.execute(select(Embedding.content_hash))
+            await session.execute(
+                select(Embedding.content_hash).where(
+                    Embedding.content_hash == text_hash(shared_text)
+                )
+            )
         ).scalars().all() == [text_hash(shared_text)]

@@ -1,11 +1,13 @@
 """Activities, honors, metrics, interview and item review routes (§9, §13)."""
 
 import datetime as dt
+from dataclasses import asdict
 from decimal import Decimal
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep, StudentCtx
+from app.modules.admission.application.honor_suggestions import HonorSuggestion
 from app.modules.admission.application.interview import InterviewState
 from app.modules.admission.application.items import ItemView, MetricDraft
 from app.modules.admission.application.review import NOTE_MAX
@@ -147,6 +149,8 @@ class ItemOut(BaseModel):
     review_stale: bool
     grade: ItemGradeOut | None
     grade_stale: bool
+    level: str | None
+    certificate_entry_id: UUID | None
 
     @classmethod
     def of(cls, v: ItemView) -> "ItemOut":
@@ -173,6 +177,8 @@ class ItemOut(BaseModel):
             review_stale=v.stale,
             grade=ItemGradeOut.of(i.grade) if i.grade else None,
             grade_stale=i.grade_stale,
+            level=i.level,
+            certificate_entry_id=i.certificate_entry_id,
         )
 
 
@@ -199,6 +205,9 @@ class ItemCreateIn(BaseModel):
     status: Literal["draft", "ready"] = "draft"
     timing: list[Timing] = Field(default_factory=list, max_length=3)
     intend_in_college: bool | None = None
+    level: str | None = Field(default=None, max_length=16)
+    certificate_entry_id: UUID | None = None
+    """Honors only: the platform certificate the honor is made from."""
     metrics: list[MetricIn] = Field(default_factory=list)
 
 
@@ -218,6 +227,7 @@ class ItemPatchIn(BaseModel):
     status: Literal["draft", "ready"] | None = None
     timing: list[Timing] | None = Field(default=None, max_length=3)
     intend_in_college: bool | None = None
+    level: str | None = Field(default=None, max_length=16)
 
 
 class ItemOrderIn(BaseModel):
@@ -241,6 +251,31 @@ class MetricsOut(BaseModel):
 
     items: list[MetricOut]
     next_cursor: str | None = None
+
+
+class HonorSuggestionOut(BaseModel):
+    """A platform certificate with the honor fields it prefills."""
+
+    entry_id: UUID
+    name: str
+    title: str
+    description: str
+    category: str
+    level: str | None
+    issued_at: str | None
+    dismissed: bool
+
+    @classmethod
+    def of(cls, s: HonorSuggestion) -> "HonorSuggestionOut":
+        """Map the suggestion."""
+        return cls(**asdict(s))
+
+
+class HonorSuggestionsOut(BaseModel):
+    """Suggestion row (`suggested`) and the creation pick list (`available`)."""
+
+    suggested: list[HonorSuggestionOut]
+    available: list[HonorSuggestionOut]
 
 
 class InterviewIn(BaseModel):
@@ -329,6 +364,8 @@ async def create_item(
         status=body.status,
         timing=tuple(body.timing),
         intend_in_college=body.intend_in_college,
+        level=body.level,
+        certificate_entry_id=body.certificate_entry_id,
     )
     view = await container.admission.items.create(
         ctx, item, [m.draft() for m in body.metrics]
@@ -352,6 +389,27 @@ async def patch_item(
             changes[key] = ""
     await container.admission.items.update(ctx, item_id, changes, body.lock_version)
     return await _one(container, ctx, item_id)
+
+
+async def list_honor_suggestions(
+    container: ContainerDep, ctx: StudentCtx, accept_language: LocaleHeader = None
+) -> HonorSuggestionsOut:
+    """Non-standard certificates of mine that can become honors."""
+    found = await container.admission.honor_suggestions.suggestions(
+        ctx, _locale(accept_language)
+    )
+    return HonorSuggestionsOut(
+        suggested=[HonorSuggestionOut.of(s) for s in found.suggested],
+        available=[HonorSuggestionOut.of(s) for s in found.available],
+    )
+
+
+async def dismiss_honor_suggestion(
+    entry_id: UUID, container: ContainerDep, ctx: StudentCtx
+) -> Response:
+    """Hide a suggestion; the certificate stays in the creation pick list."""
+    await container.admission.honor_suggestions.dismiss(ctx, entry_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 async def delete_item(
@@ -435,6 +493,22 @@ _NO = status.HTTP_204_NO_CONTENT
 for _path, _fn, _method, _model, _op, _code in (
     ("/me/items", list_my_items, "GET", ItemListOut, "admission_list_my_items", _OK),
     ("/me/items", create_item, "POST", ItemOut, "admission_create_item", 201),
+    (
+        "/me/honor-suggestions",
+        list_honor_suggestions,
+        "GET",
+        HonorSuggestionsOut,
+        "admission_list_honor_suggestions",
+        _OK,
+    ),
+    (
+        "/me/honor-suggestions/{entry_id}/dismiss",
+        dismiss_honor_suggestion,
+        "POST",
+        None,
+        "admission_dismiss_honor_suggestion",
+        _NO,
+    ),
     ("/me/items/order", order_items, "PUT", ItemListOut, "admission_order_items", _OK),
     ("/me/items/{item_id}", patch_item, "PATCH", ItemOut, "admission_patch_item", _OK),
     ("/me/items/{item_id}", delete_item, "DELETE", None, "admission_delete_item", _NO),

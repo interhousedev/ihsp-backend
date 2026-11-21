@@ -6,8 +6,10 @@ from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep, StudentCtx
 from app.interfaces.http.v1.admission.routes_items import _locale
+from app.modules.admission.application.essay_deep_read import ReadState
 from app.modules.admission.application.essay_review_core import EssayCheck
 from app.modules.admission.application.essays import SharedEssay
+from app.modules.admission.domain.essay_flow import MAX_GROUP, PromptTarget
 from app.modules.admission.domain.essays import (
     BODY_MAX,
     HEADING_MAX,
@@ -51,6 +53,22 @@ class EssayLinkIO(BaseModel):
     ref: str = Field(min_length=1, max_length=64)
 
 
+class PromptTargetIn(BaseModel):
+    """A prompt the draft answers: `institution_id` null is the Common App."""
+
+    institution_id: UUID | None = None
+    position: int = Field(ge=0, le=999)
+
+
+class PromptTargetOut(BaseModel):
+    """A prompt the draft answers, with the text copied from the catalog."""
+
+    institution_id: UUID | None
+    position: int
+    prompt: str
+    word_limit: int | None
+
+
 class EssayIn(BaseModel):
     """A new essay; supplemental essays need `list_entry_id`."""
 
@@ -59,6 +77,7 @@ class EssayIn(BaseModel):
     prompt_text: str = Field(default="", max_length=PROMPT_MAX)
     word_limit: int | None = Field(default=None, ge=1, le=WORD_LIMIT_MAX)
     list_entry_id: UUID | None = None
+    targets: list[PromptTargetIn] = Field(default_factory=list, max_length=MAX_GROUP)
 
 
 class EssayPatchIn(BaseModel):
@@ -75,6 +94,7 @@ class EssayPatchIn(BaseModel):
     plan: list[PlanSectionIO] | None = Field(default=None, max_length=MAX_SECTIONS)
     links: list[EssayLinkIO] | None = Field(default=None, max_length=MAX_LINKS)
     status: Literal["draft", "final"] | None = None
+    targets: list[PromptTargetIn] | None = Field(default=None, max_length=MAX_GROUP)
 
 
 class EssayOut(BaseModel):
@@ -94,6 +114,8 @@ class EssayOut(BaseModel):
     status: str
     current_version: int
     lock_version: int
+    targets: list[PromptTargetOut]
+    forked_from: UUID | None
     updated_at: dt.datetime | None
 
     @classmethod
@@ -114,8 +136,27 @@ class EssayOut(BaseModel):
             status=e.status,
             current_version=e.current_version,
             lock_version=e.lock_version,
+            targets=[
+                PromptTargetOut(
+                    institution_id=t.institution_id,
+                    position=t.position,
+                    prompt=t.prompt,
+                    word_limit=t.word_limit,
+                )
+                for t in e.targets
+            ],
+            forked_from=e.forked_from,
             updated_at=e.updated_at,
         )
+
+
+def _target_out(t: PromptTarget) -> PromptTargetOut:
+    return PromptTargetOut(
+        institution_id=t.institution_id,
+        position=t.position,
+        prompt=t.prompt,
+        word_limit=t.word_limit,
+    )
 
 
 class EssaySummaryOut(BaseModel):
@@ -129,10 +170,19 @@ class EssaySummaryOut(BaseModel):
     word_count: int
     status: str
     updated_at: dt.datetime | None
+    forked_from: UUID | None
+    targets: list[PromptTargetOut]
+    uniqueness: int | None = Field(
+        description="The one score shown everywhere: deep-read uniqueness 0-100."
+    )
+    deep_read: Literal["none", "fresh", "stale"] = Field(
+        description="`stale` when the essay (or the UI language) changed since."
+    )
+    deep_read_at: dt.datetime | None
 
     @classmethod
-    def of(cls, e: Essay) -> "EssaySummaryOut":
-        """Map the essay without its texts."""
+    def of(cls, e: Essay, read: ReadState | None = None) -> "EssaySummaryOut":
+        """Map the essay without its texts, with its stored deep read state."""
         return cls(
             id=e.id,
             kind=e.kind,
@@ -142,6 +192,11 @@ class EssaySummaryOut(BaseModel):
             word_count=e.word_count,
             status=e.status,
             updated_at=e.updated_at,
+            forked_from=e.forked_from,
+            targets=[_target_out(t) for t in e.targets],
+            uniqueness=None if read is None else read.uniqueness,
+            deep_read="none" if read is None else read.state,
+            deep_read_at=None if read is None else read.read_at,
         )
 
 
@@ -412,10 +467,13 @@ class LatestCheckOut(CoachCheckOut):
     created_at: dt.datetime
 
 
-async def list_essays(container: ContainerDep, ctx: StudentCtx) -> EssayListOut:
-    """My essays."""
+async def list_essays(
+    container: ContainerDep, ctx: StudentCtx, lang: Lang = None
+) -> EssayListOut:
+    """My essays with forks, targets and the stored deep-read score (no model call)."""
     rows = await container.admission.essays.mine(ctx)
-    return EssayListOut(items=[EssaySummaryOut.of(e) for e in rows])
+    states = await container.admission.essay_deep_read.states(ctx, rows, _locale(lang))
+    return EssayListOut(items=[EssaySummaryOut.of(e, states.get(e.id)) for e in rows])
 
 
 async def create_essay(
@@ -437,7 +495,16 @@ async def patch_essay(
 ) -> EssayOut:
     """Autosave; 409 when another tab saved first. May snapshot a version."""
     changes = body.model_dump(exclude_unset=True, exclude={"lock_version"})
-    for key in ("kind", "title", "prompt_text", "body", "notes", "plan", "links"):
+    for key in (
+        "kind",
+        "title",
+        "prompt_text",
+        "body",
+        "notes",
+        "plan",
+        "links",
+        "targets",
+    ):
         if key in changes and changes[key] is None:
             del changes[key]
     if changes.get("status") is None:

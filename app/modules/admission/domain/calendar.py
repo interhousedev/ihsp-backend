@@ -46,6 +46,7 @@ class CalendarEntry:
     remind: bool = True
     title_key: str | None = None
     subject: str | None = None
+    list_entry_id: UUID | None = None
 
 
 @dataclass(frozen=True, slots=True)

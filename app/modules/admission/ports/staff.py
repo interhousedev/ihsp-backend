@@ -42,6 +42,10 @@ class StaffRepository(Protocol):
         """Return unrevoked root assignments of a role kind and scope kind."""
         ...
 
+    async def active_assignments(self) -> list[Assignment]:
+        """Return every unrevoked assignment of counselor and mentor roles."""
+        ...
+
     async def add_assignment(self, assignment: Assignment) -> Assignment:
         """Store a new assignment; a live duplicate is returned unchanged."""
         ...

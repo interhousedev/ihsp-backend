@@ -6,11 +6,13 @@ from app.modules.admission.infrastructure.ai.prompts import (
     alignment_map,
     app_review,
     career,
+    essay_flow,
     essay_review,
     essays,
     goal_plan,
     item_grade,
     items,
+    list_brief,
     list_suggest,
     opportunity_intake,
     opportunity_plan,
@@ -39,6 +41,9 @@ BUILTIN_PROMPTS: dict[tuple[str, str], str] = {
     },
     (AiTask.ADMIT_ESSAY_REVIEW.value, "base"): essay_review.BASE,
     (AiTask.ADMIT_ESSAY_UNI_REVIEW.value, "uni"): essay_review.UNI,
+    (AiTask.ADMIT_ESSAY_PRACTICE.value, "practice"): essay_flow.PRACTICE,
+    (AiTask.ADMIT_ESSAY_DEEP_READ.value, "deep_read"): essay_flow.DEEP_READ,
+    (AiTask.ADMIT_PROMPT_GROUP_LABEL.value, "group_label"): essay_flow.GROUP_LABEL,
     **{
         (task.value, "system"): app_review.SECTION_SYSTEMS[key]
         for key, task in app_review.SECTION_TASKS.items()
@@ -49,6 +54,7 @@ BUILTIN_PROMPTS: dict[tuple[str, str], str] = {
     (AiTask.ADMIT_CAREER_SPIKE.value, "system"): career.SPIKE,
     (AiTask.ADMIT_UNI_ADVICE.value, "system"): uni_advice.SYSTEM,
     (AiTask.ADMIT_LIST_SUGGEST.value, "system"): list_suggest.SYSTEM,
+    (AiTask.ADMIT_LIST_BRIEF.value, "system"): list_brief.SYSTEM,
     (AiTask.ADMIT_TASKS_SUGGEST.value, "system"): tasks_suggest.SYSTEM,
     (AiTask.ADMIT_ACTIVITY_GRADE.value, "system"): item_grade.SYSTEM,
 }

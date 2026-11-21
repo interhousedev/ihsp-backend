@@ -58,6 +58,7 @@ def _task(row: TaskRow) -> Task:
         priority=cast(TaskPriority, row.priority),
         start_date=row.start_date,
         deadline=row.deadline,
+        list_entry_id=row.list_entry_id,
         created_by=cast(TaskSource, row.created_by),
         creator_id=row.creator_id,
         steps=tuple(_step(s) for s in row.steps or []),
@@ -76,6 +77,7 @@ def _fill(row: TaskRow, task: Task) -> None:
     row.priority = task.priority
     row.start_date = task.start_date
     row.deadline = task.deadline
+    row.list_entry_id = task.list_entry_id
     row.created_by = task.created_by
     row.creator_id = task.creator_id
     row.steps = [_step_json(s) for s in task.steps]

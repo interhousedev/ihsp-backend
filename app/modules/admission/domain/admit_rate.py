@@ -8,7 +8,7 @@ from app.modules.admission.domain.chooser import CatalogInstitution
 SAFETY_RATE: Final = 0.6
 TARGET_RATE: Final = 0.2
 """Rates (0..1) from which an institution is a safety and a target."""
-RATE_FACTS: Final = ("acceptance_rate_international", "acceptance_rate")
+RATE_FACTS: Final = ("intl_acceptance_rate", "acceptance_rate")
 
 
 def _number(value: object) -> float | None:
@@ -23,15 +23,26 @@ def _number(value: object) -> float | None:
     return None
 
 
-def admission_rate(inst: CatalogInstitution) -> float | None:
+def intl_admission_rate(inst: CatalogInstitution) -> float | None:
+    """The international cohort's rate as 0..1; never falls back to the overall one."""
+    return admission_rate(inst, ("intl_acceptance_rate",))
+
+
+def admission_rate(
+    inst: CatalogInstitution, facts: tuple[str, ...] = RATE_FACTS
+) -> float | None:
     """Published acceptance rate as 0..1, the international cohort first.
 
     The fact is a percent range (`min`/`max`); unparsable edges are ignored and
     a fact without a usable edge counts as unknown.
     """
-    for key in RATE_FACTS:
+    for key in facts:
         f = inst.fact(key)
-        if f is None or not isinstance(f.value, dict):
+        if f is None:
+            continue
+        if not isinstance(f.value, dict):
+            if (n := _number(f.value)) is not None:
+                return max(0.0, min(1.0, n / 100))
             continue
         edges = [
             n

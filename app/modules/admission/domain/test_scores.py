@@ -124,6 +124,8 @@ class ScoreEntry:
     verified_at: dt.datetime | None
     created_at: dt.datetime
     updated_at: dt.datetime
+    source: Literal["manual", "certificate"] = "manual"
+    """`certificate`: read from the student's platform certificate, not stored here."""
 
 
 @dataclass(frozen=True, slots=True)
