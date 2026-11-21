@@ -13,6 +13,7 @@ from app.modules.admission.domain.budget import (
     FeeFact,
     admit_rate_of,
     budget_totals,
+    estimated_aid,
     money_fact,
 )
 from app.modules.admission.domain.chooser import CatalogInstitution
@@ -37,9 +38,12 @@ def _attend(item: ListItem) -> AttendCost | None:
             if check.confirmed_aid is not None
             else check.estimated_aid
         )
+        if aid is None:
+            aid = estimated_aid(check.coa_total, inst.coa_currency, inst.aid_profile)
         return AttendCost(check.coa_total, inst.coa_currency, aid, check.gap)
     if inst.coa_total is not None and inst.coa_currency:
-        return AttendCost(inst.coa_total, inst.coa_currency)
+        aid = estimated_aid(inst.coa_total, inst.coa_currency, inst.aid_profile)
+        return AttendCost(inst.coa_total, inst.coa_currency, aid)
     return None
 
 

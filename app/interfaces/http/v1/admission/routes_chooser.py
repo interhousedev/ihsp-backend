@@ -9,6 +9,7 @@ from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep, St
 from app.interfaces.http.v1.admission.routes_items import _locale
 from app.modules.admission.application.chooser import ListItem
 from app.modules.admission.application.estimates import EstimateView
+from app.modules.admission.domain.budget import cost_after_aid
 from app.modules.admission.domain.catalog_display import (
     clean_deadlines,
     highlights,
@@ -130,6 +131,7 @@ class InstitutionOut(BaseModel):
     logo_fit: Literal["circle", "contain"]
     coa_total: Decimal | None
     coa_currency: str | None
+    cost_after_aid: Decimal | None
     aid_basis: str | None
     merit_available: bool | None
     scholarship_count: int
@@ -181,6 +183,7 @@ class InstitutionOut(BaseModel):
             logo_fit=resolve_logo_fit(i.logo_fit, i.logo_aspect),
             coa_total=i.coa_total,
             coa_currency=i.coa_currency,
+            cost_after_aid=cost_after_aid(i.coa_total, i.coa_currency, i.aid_profile),
             aid_basis=i.aid_basis,
             merit_available=i.merit_available,
             scholarship_count=i.scholarship_count,

@@ -26103,6 +26103,18 @@
             ],
             "title": "Coa Total"
           },
+          "cost_after_aid": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost After Aid"
+          },
           "country": {
             "title": "Country",
             "type": "string"
@@ -26277,6 +26289,7 @@
           "logo_fit",
           "coa_total",
           "coa_currency",
+          "cost_after_aid",
           "aid_basis",
           "merit_available",
           "scholarship_count",

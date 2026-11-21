@@ -35,6 +35,32 @@ class AttendCost:
     gap: Decimal | None = None
 
 
+def estimated_aid(
+    coa_total: Decimal | None, currency: str | None, profile: AidProfile | None
+) -> Decimal | None:
+    """The average aid of the institution's aid policy, USD only, capped at the cost.
+
+    One source for the budget and the institution page: the sticker price minus
+    this is the cost after aid.
+    """
+    if (
+        coa_total is None
+        or currency != "USD"
+        or profile is None
+        or profile.avg_aid is None
+    ):
+        return None
+    return min(profile.avg_aid, coa_total)
+
+
+def cost_after_aid(
+    coa_total: Decimal | None, currency: str | None, profile: AidProfile | None
+) -> Decimal | None:
+    """Yearly cost after the average aid, or None when no aid average is known."""
+    aid = estimated_aid(coa_total, currency, profile)
+    return None if aid is None or coa_total is None else coa_total - aid
+
+
 @dataclass(frozen=True, slots=True)
 class AdmitRate:
     """The admit rate in percent, for international applicants when published.
