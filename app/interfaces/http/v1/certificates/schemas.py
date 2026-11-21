@@ -19,12 +19,11 @@ from app.modules.certificates.domain.certificate_type import CertificateType
 from app.modules.certificates.domain.custom_fields import CustomField
 from app.modules.certificates.domain.entry import CertificateEntry, EntryFile
 from app.modules.certificates.ports.student_directory import GroupInfo
-from app.shared.honor_categories import HONOR_CATEGORIES
+from app.shared.honor_categories import HonorCategory
 
 from pydantic import BaseModel, Field
 
 Text = Field(min_length=1, max_length=120)
-HonorCategory = Literal[HONOR_CATEGORIES]  # type: ignore[valid-type]
 
 
 class TypeName(BaseModel):
