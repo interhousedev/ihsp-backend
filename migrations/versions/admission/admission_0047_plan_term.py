@@ -67,8 +67,8 @@ def upgrade() -> None:
     bind = op.get_bind()
     for title, (hours, cost) in _KNOWN.items():
         bind.execute(
-            sa.text(  # nosemgrep: constant SQL, values are bound parameters
-                f"UPDATE {S}.opportunities SET payload = payload"
+            sa.text(
+                "UPDATE admission.opportunities SET payload = payload"
                 " || jsonb_strip_nulls(jsonb_build_object("
                 "'hours_per_week', CAST(:hours AS numeric),"
                 " 'tuition_usd', CASE WHEN payload->>'tuition_usd' IS NULL"
