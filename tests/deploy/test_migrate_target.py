@@ -364,7 +364,7 @@ def test_finish_checks_every_store_against_the_source_counts(tmp_path: Path) -> 
     _, env = _finish_setup(tmp_path)
     done = _run(TARGET, env, "finish", "m-1")
     assert done.returncode == 0, done.stderr
-    assert "verification" in done.stderr
+    assert "verifying the restore" in done.stderr
     assert "MISMATCH" not in done.stderr
     for row in ("ihsp", "hydra", "bugsink", "redis", "s3", "vault", "alembic"):
         assert row in done.stderr

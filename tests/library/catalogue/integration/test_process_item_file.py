@@ -241,7 +241,7 @@ async def test_personal_data_and_exam_markers_are_flagged_and_change_no_status(
     assert scanned.status is ItemStatus.PUBLISHED
     assert scanned.material is not None
     assert scanned.material.scan["findings"] == ["phone_number", "email", "exam_marker"]
-    assert "998" not in str(scanned.material.scan)
+    assert "998" not in str({**scanned.material.scan, "file_id": ""})
     assert scanned.material.scan["file_id"] == str(file_id)
 
 

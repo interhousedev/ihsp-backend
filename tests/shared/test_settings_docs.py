@@ -22,7 +22,9 @@ def test_every_setting_has_a_description() -> None:
 def test_every_row_is_a_real_variable() -> None:
     """The rows name variables the loader accepts (task names as <TASK>)."""
     for row in collect(Settings):
-        variable = "IHSP_" + re.sub(r"<TASK>", "STUDIO_QUIZ", row.variable)
+        variable = "IHSP_" + re.sub(
+            r"<PIPELINE>", "CHAT", re.sub(r"<TASK>", "STUDIO_QUIZ", row.variable)
+        )
         assert setting_exists(variable), row.variable
 
 

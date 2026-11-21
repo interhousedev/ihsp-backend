@@ -21,15 +21,15 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 @pytest_asyncio.fixture(autouse=True)
 async def clean_admission(engine: AsyncEngine) -> AsyncIterator[None]:
-    """The shared cleanup skips the admission schema: empty it after the test."""
+    """The shared cleanup skips admission and certificates: empty both after."""
     yield
     async with engine.begin() as conn:
         tables = await conn.execute(
             text(
                 "SELECT quote_ident(schemaname) || '.' || quote_ident(tablename) "
-                "FROM pg_tables WHERE schemaname = :schema"
+                "FROM pg_tables WHERE schemaname = ANY(:schemas)"
             ),
-            {"schema": SCHEMA},
+            {"schemas": [SCHEMA, "certificates"]},
         )
         names = ", ".join(row[0] for row in tables)
         if names:
