@@ -21,6 +21,9 @@ class _Session:
     async def flush(self) -> None:
         return None
 
+    async def scalar(self, _stmt: Any) -> Any:
+        return None
+
 
 async def test_load_is_idempotent_and_marks_verification() -> None:
     s = _Session()
