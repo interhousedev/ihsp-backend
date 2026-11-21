@@ -4658,6 +4658,11 @@
       "AssignedStaffOut": {
         "description": "A staff member assigned to the student.",
         "properties": {
+          "assignment_id": {
+            "format": "uuid",
+            "title": "Assignment Id",
+            "type": "string"
+          },
           "kind": {
             "title": "Kind",
             "type": "string"
@@ -4673,6 +4678,7 @@
           }
         },
         "required": [
+          "assignment_id",
           "user_id",
           "name",
           "kind"
@@ -97916,7 +97922,7 @@
     "/v1/admission/staff/caseload-deadlines": {
       "get": {
         "description": "Deadlines and tasks of the students the caller reaches (`mine`: assigned).",
-        "operationId": "admission_staff_deadlines",
+        "operationId": "admission_staff_caseload_deadlines",
         "parameters": [
           {
             "in": "query",
@@ -100238,6 +100244,48 @@
           }
         },
         "summary": "Unpin Action",
+        "tags": [
+          "admission"
+        ]
+      },
+      "get": {
+        "description": "The pinned action in force; 404 when there is none.",
+        "operationId": "admission_staff_get_pin",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "student_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Student Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PinOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Pin",
         "tags": [
           "admission"
         ]

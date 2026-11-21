@@ -60,6 +60,7 @@ class CaseloadFilters:
 class AssignedStaff:
     """A staff member assigned to a student."""
 
+    assignment_id: UUID
     user_id: UUID
     name: str
     kind: str
@@ -194,7 +195,7 @@ class StaffService:
                 continue
             groups = frozenset({student.group_id}) if student else frozenset()
             assigned = tuple(
-                AssignedStaff(a.user_id, display_name(u), a.role.kind)
+                AssignedStaff(a.id, a.user_id, display_name(u), a.role.kind)
                 for a in live
                 if a.covers(row.student_id, groups)
                 and (u := names.get(a.user_id)) is not None
@@ -480,6 +481,17 @@ class StaffService:
         async with self._uow() as uow:
             await uow.today.set_pin(pin)
             await uow.commit()
+        return pin
+
+    async def current_pin(self, ctx: AdmissionContext, student_id: UUID) -> Pin:
+        """The pin in force; 404 when there is none or it expired."""
+        await self._access.require(
+            ctx, student_id, Permission.DEADLINES_MANAGE, object_type="pin"
+        )
+        async with self._uow() as uow:
+            pin = await uow.today.pin(student_id)
+        if pin is None or pin.expires_at <= self._clock.now():
+            raise AdmissionNotFoundError()
         return pin
 
     async def unpin(self, ctx: AdmissionContext, student_id: UUID) -> None:

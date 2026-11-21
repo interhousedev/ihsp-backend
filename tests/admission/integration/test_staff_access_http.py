@@ -209,10 +209,12 @@ async def test_pin_shows_first_on_the_student_today(
             url, json={"title": "x", "href": "https://evil.example"}
         )
         assert bad.status_code == 422, bad.text
+        assert (await client.get(url)).status_code == 404
         ok = await client.post(
             url, json={"title": "Send the transcript", "href": "/tasks/"}
         )
         assert ok.status_code == 200, ok.text
+        assert (await client.get(url)).json()["title"] == "Send the transcript"
         switch.set(student)
         top = (await client.get(f"{BASE}/today")).json()["next"][0]
         assert top["kind"] == "pinned" and top["title"] == "Send the transcript"

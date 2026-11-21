@@ -43,6 +43,7 @@ from app.interfaces.http.v1.admission.schemas_staff import (
 )
 from app.modules.admission.application.privacy import describe_purposes
 from app.modules.admission.application.staff import CaseloadFilters
+from app.modules.admission.domain.today import Pin
 
 from fastapi import APIRouter, Header, Query, Response, status
 
@@ -325,6 +326,10 @@ async def pin_action(
     p = await container.admission.staff.pin(
         ctx, student_id, body.title, body.href, body.note
     )
+    return _pin_out(p)
+
+
+def _pin_out(p: Pin) -> PinOut:
     return PinOut(
         student_id=p.student_id,
         title=p.title,
@@ -333,6 +338,13 @@ async def pin_action(
         pinned_by=p.pinned_by_name,
         expires_at=p.expires_at,
     )
+
+
+async def get_pin(
+    student_id: UUID, container: ContainerDep, ctx: AdmissionCtx
+) -> PinOut:
+    """The pinned action in force; 404 when there is none."""
+    return _pin_out(await container.admission.staff.current_pin(ctx, student_id))
 
 
 async def unpin_action(
@@ -556,5 +568,12 @@ _R(
     staff_deadlines,
     methods=["GET"],
     response_model=StaffDeadlinesOut,
-    operation_id="admission_staff_deadlines",
+    operation_id="admission_staff_caseload_deadlines",
+)
+_R(
+    "/staff/students/{student_id}/pin",
+    get_pin,
+    methods=["GET"],
+    response_model=PinOut,
+    operation_id="admission_staff_get_pin",
 )

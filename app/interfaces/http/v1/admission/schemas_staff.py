@@ -18,6 +18,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class AssignedStaffOut(BaseModel):
     """A staff member assigned to the student."""
 
+    assignment_id: UUID
     user_id: UUID
     name: str
     kind: str
@@ -52,7 +53,12 @@ class CaseloadItemOut(BaseModel):
             open_help=r.open_help,
             limited=item.limited,
             assigned_staff=[
-                AssignedStaffOut(user_id=a.user_id, name=a.name, kind=a.kind)
+                AssignedStaffOut(
+                    assignment_id=a.assignment_id,
+                    user_id=a.user_id,
+                    name=a.name,
+                    kind=a.kind,
+                )
                 for a in item.assigned
             ],
         )
