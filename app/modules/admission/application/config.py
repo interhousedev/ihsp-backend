@@ -160,6 +160,15 @@ class GetConfig:
         self._limits = limits
         self._runtime = runtime
 
+    async def estimates_visible(self, ctx: AdmissionContext) -> bool:
+        """Whether the caller sees estimates: staff always, students per setting."""
+        if ctx.admission.is_staff:
+            return True
+        rs = await self._runtime.get()
+        return bool(
+            rs.get(ESTIMATES_STUDENT_VISIBLE, self._settings.estimates_student_visible)
+        )
+
     async def execute(self) -> AdmissionConfig:
         """Return the config; the wellbeing section is hidden unless enabled."""
         rs = await self._runtime.get()

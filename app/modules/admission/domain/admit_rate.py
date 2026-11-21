@@ -23,13 +23,20 @@ def _number(value: object) -> float | None:
     return None
 
 
-def admission_rate(inst: CatalogInstitution) -> float | None:
+def intl_admission_rate(inst: CatalogInstitution) -> float | None:
+    """The international cohort's rate as 0..1; never falls back to the overall one."""
+    return admission_rate(inst, ("intl_acceptance_rate",))
+
+
+def admission_rate(
+    inst: CatalogInstitution, facts: tuple[str, ...] = RATE_FACTS
+) -> float | None:
     """Published acceptance rate as 0..1, the international cohort first.
 
     The fact is a percent range (`min`/`max`); unparsable edges are ignored and
     a fact without a usable edge counts as unknown.
     """
-    for key in RATE_FACTS:
+    for key in facts:
         f = inst.fact(key)
         if f is None:
             continue

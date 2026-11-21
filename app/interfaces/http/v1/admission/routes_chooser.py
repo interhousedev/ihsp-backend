@@ -1,6 +1,7 @@
 """University chooser routes: catalog, my list, estimates, affordability."""
 
 import datetime as dt
+from collections.abc import Sequence
 from decimal import Decimal
 from typing import Annotated, Any, Literal
 from uuid import UUID
@@ -23,6 +24,7 @@ from app.modules.admission.domain.chooser import (
     next_deadline,
 )
 from app.modules.admission.domain.errors import AdmissionNotFoundError
+from app.modules.admission.domain.fit import FitResult
 from app.modules.admission.domain.intl_fact_display import (
     detail_groups,
     importance_factors,
@@ -35,7 +37,7 @@ from pydantic import BaseModel, ConfigDict, Field
 router = APIRouter(prefix="/v1/admission", tags=["admission"])
 
 Round = Literal["ED", "ED2", "EA", "REA", "SCEA", "RD", "ROLLING"]
-CatalogSort = Literal["deadline"]
+CatalogSort = Literal["deadline", "fit"]
 Bucket = Literal["reach", "target", "safety"]
 FeeStatus = Literal["unpaid", "paid", "waiver_requested", "waiver_approved"]
 Status = Literal["considering", "applying", "applied", "dropped"]
@@ -138,6 +140,13 @@ class InstitutionOut(BaseModel):
     logo_url: str | None
     cover_url: str | None
     website_url: str | None
+    fit_total: int | None = Field(
+        default=None,
+        ge=0,
+        le=100,
+        description="Fit for the caller (as /list/fit); null when not computable.",
+    )
+    known_share: float | None = Field(default=None, ge=0, le=1)
     details: list[DetailGroupOut] = []
     factors: list[ImportanceFactorOut] = []
 
@@ -149,6 +158,7 @@ class InstitutionOut(BaseModel):
         *,
         today: dt.date | None = None,
         detail: bool = False,
+        fit: FitResult | None = None,
     ) -> "InstitutionOut":
         """Map the domain institution; text is localized, notes are left out.
 
@@ -190,6 +200,8 @@ class InstitutionOut(BaseModel):
             logo_url=i.logo_url,
             cover_url=i.cover_url,
             website_url=(f"https://{i.website_domain}" if i.website_domain else None),
+            fit_total=fit.total if fit is not None else None,
+            known_share=fit.known_share if fit is not None else None,
             details=(
                 [DetailGroupOut(**g) for g in detail_groups(i, locale)]
                 if detail
@@ -447,9 +459,19 @@ async def search_institutions(
     """Search and filter the catalog; name and alias matches come first.
 
     `setting` is the campus setting (`city_type` is the same filter). `sort=deadline`
-    lists the soonest next deadline first, institutions without one last.
+    lists the soonest next deadline first, institutions without one last;
+    `sort=fit` lists the highest fit for the caller first, unscored last.
     """
     today = local_today(container.clock)
+    locale = _locale(accept_language)
+
+    async def scorer(
+        hits: Sequence[CatalogInstitution],
+    ) -> dict[UUID, FitResult]:
+        return await container.admission.fit.fits_for(
+            ctx, hits, locale, container.clock.now().year
+        )
+
     page = await container.admission.catalog.search(
         CatalogFilters(
             q=q,
@@ -470,10 +492,12 @@ async def search_institutions(
         today=today,
         cursor=cursor,
         limit=limit,
+        scorer=scorer,
     )
+    fits = await scorer(page.items)
     return InstitutionPageOut(
         items=[
-            InstitutionOut.of(i, _locale(accept_language), today=today)
+            InstitutionOut.of(i, locale, today=today, fit=fits.get(i.id))
             for i in page.items
         ],
         next_cursor=page.next_cursor,
@@ -487,11 +511,17 @@ async def get_institution(
     accept_language: Lang = None,
 ) -> InstitutionOut:
     """Return one institution with localized highlights and deadlines."""
+    inst = await container.admission.catalog.institution(institution_id)
+    locale = _locale(accept_language)
+    fits = await container.admission.fit.fits_for(
+        ctx, [inst], locale, container.clock.now().year
+    )
     return InstitutionOut.of(
-        await container.admission.catalog.institution(institution_id),
-        _locale(accept_language),
+        inst,
+        locale,
         today=local_today(container.clock),
         detail=True,
+        fit=fits.get(inst.id),
     )
 
 

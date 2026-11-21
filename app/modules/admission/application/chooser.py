@@ -2,6 +2,7 @@
 
 import dataclasses
 import datetime as dt
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
@@ -37,6 +38,7 @@ from app.modules.admission.domain.errors import (
     AffordabilityRequiredError,
 )
 from app.modules.admission.domain.estimates import estimate
+from app.modules.admission.domain.fit import FitResult, fit_sort_key
 from app.modules.admission.domain.permissions import Permission
 from app.modules.admission.domain.plan_conflicts import (
     PlanConflict,
@@ -68,6 +70,10 @@ class CatalogPage:
     next_cursor: int | None
 
 
+FitScorer = Callable[[Sequence[CatalogInstitution]], Awaitable[dict[UUID, FitResult]]]
+"""Scores institutions for the caller (see `FitService.fits_for`)."""
+
+
 class CatalogService:
     """Reads of the catalog; open to every admission user."""
 
@@ -83,6 +89,7 @@ class CatalogService:
         limit: int = 20,
         sort: str | None = None,
         today: dt.date | None = None,
+        scorer: FitScorer | None = None,
     ) -> CatalogPage:
         """Filter institutions by text and facts; best text match first.
 
@@ -95,7 +102,17 @@ class CatalogService:
                 country=filters.country.upper() if filters.country else None
             )
         hits = [i for i in found if matches(i, filters)]
-        if sort == "deadline":
+        if sort == "fit" and scorer is not None:
+            fits = await scorer(hits)
+            hits = sorted(
+                rank_hits(hits, filters.q),
+                key=lambda i: fit_sort_key(
+                    fits[i.id].total if i.id in fits else None,
+                    fits[i.id].known_share if i.id in fits else 0.0,
+                    i.name,
+                ),
+            )
+        elif sort == "deadline":
             hits = sort_by_deadline(hits, today or local_today(SystemClock()))
         else:
             hits = rank_hits(hits, filters.q)

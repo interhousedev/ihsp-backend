@@ -1,5 +1,6 @@
 """Fit of every list entry to the student: affordability, goals, profile, traits."""
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from uuid import UUID
 
@@ -7,6 +8,8 @@ from app.modules.admission.application.actor import AdmissionContext
 from app.modules.admission.application.chooser import ListService
 from app.modules.admission.application.fit_preferences import view_of
 from app.modules.admission.application.study_focus import load_study_focus
+from app.modules.admission.domain.chooser import CatalogInstitution
+from app.modules.admission.domain.estimates import estimate
 from app.modules.admission.domain.fit import (
     EntryFit,
     FitResult,
@@ -74,6 +77,31 @@ class FitService:
             prefs.ratings, band, tuple(chosen), focus.field_ids, bool(scores)
         )
         return student, prefs.weights
+
+    async def fits_for(
+        self,
+        ctx: AdmissionContext,
+        institutions: Sequence[CatalogInstitution],
+        locale: str,
+        year: int,
+    ) -> dict[UUID, FitResult]:
+        """Fit of any institutions for the caller, the student loaded once.
+
+        Empty for callers without the student role. Institutions off the list
+        have no affordability status, so the estimate label uses `unknown`.
+        """
+        if not institutions or not ctx.admission.is_applicant:
+            return {}
+        student, weights = await self._student(ctx.user_id)
+        return {
+            i.id: compute_fit(
+                student,
+                EntryFit(i, estimate(i, "unknown", year).label),
+                weights,
+                locale,
+            )
+            for i in institutions
+        }
 
     async def list_fit(self, ctx: AdmissionContext, locale: str) -> ListFit:
         """Fit of each entry of the caller's own list."""

@@ -373,3 +373,10 @@ def compute_fit(
         return FitResult(None, axes, share)
     total = sum((a.score or 0) * a.weight for a in known) / wsum
     return FitResult(_clamp(total), axes, share)
+
+
+def fit_sort_key(
+    total: int | None, known_share: float, name: str
+) -> tuple[bool, int, float, str]:
+    """Sort key for `sort=fit`: total desc, nulls last, known share, then name."""
+    return (total is None, -(total or 0), -known_share, name.casefold())

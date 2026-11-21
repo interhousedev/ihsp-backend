@@ -254,6 +254,19 @@ def next_deadline(inst: CatalogInstitution, today: dt.date) -> dt.date | None:
     return min((d for d in dates if d is not None and d >= today), default=None)
 
 
+def next_deadline_round(
+    inst: CatalogInstitution, today: dt.date
+) -> tuple[dt.date, str] | None:
+    """Earliest dated deadline on or after `today` with its round (plan code)."""
+    f = inst.fact("deadlines")
+    due = [
+        (d["date"], str(d["plan"]))
+        for d in clean_deadlines(f.value if f is not None else None)
+        if d["date"] is not None and d["date"] >= today
+    ]
+    return min(due, default=None)
+
+
 def sort_by_deadline(
     hits: list[CatalogInstitution], today: dt.date
 ) -> list[CatalogInstitution]:

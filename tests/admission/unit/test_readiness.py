@@ -61,7 +61,12 @@ class Rows:
     def __getattr__(self, name: str) -> Any:
         if name == self.read:
             return self._rows
+        if name == "statuses" and self.read == "list_for":
+            return self._statuses
         raise AttributeError(name)
+
+    async def _statuses(self, student_id: UUID) -> list[str]:
+        return [r.status for r in await self._rows(student_id)]
 
 
 class ReadinessUow(FakeUow):
