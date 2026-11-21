@@ -1,7 +1,7 @@
 """admission: localized description of an institution.
 
-Revision ID: admission_0061_institution_description
-Revises: admission_0060_item_opportunity_link
+Revision ID: admission_0061_inst_description
+Revises: admission_0060_item_opp_link
 Create Date: 2026-11-22 03:00:00.000000
 """
 
@@ -11,8 +11,8 @@ import sqlalchemy as sa
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
-revision: str = "admission_0061_institution_description"
-down_revision: str | Sequence[str] | None = "admission_0060_item_opportunity_link"
+revision: str = "admission_0061_inst_description"
+down_revision: str | Sequence[str] | None = "admission_0060_item_opp_link"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

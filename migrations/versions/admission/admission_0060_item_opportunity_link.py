@@ -1,6 +1,6 @@
 """admission: link an activity to an opportunity (pending submission or entry).
 
-Revision ID: admission_0060_item_opportunity_link
+Revision ID: admission_0060_item_opp_link
 Revises: admission_0059_item_text_limits
 Create Date: 2026-11-22 02:00:00.000000
 """
@@ -10,7 +10,7 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 from alembic import op
 
-revision: str = "admission_0060_item_opportunity_link"
+revision: str = "admission_0060_item_opp_link"
 down_revision: str | Sequence[str] | None = "admission_0059_item_text_limits"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
