@@ -25,7 +25,19 @@ def test_seed_validates_and_is_unique() -> None:
             assert any(facts) or i["deadlines"], i["slug"]
 
 
-_CURRENCIES = {"USD", "EUR", "GBP", "KRW", "JPY", "TRY", "MYR", "AED", "HUF"}
+_CURRENCIES = {
+    "USD",
+    "EUR",
+    "GBP",
+    "KRW",
+    "JPY",
+    "TRY",
+    "MYR",
+    "AED",
+    "HUF",
+    "CAD",
+    "KZT",
+}
 
 
 def test_every_value_has_source_and_year() -> None:

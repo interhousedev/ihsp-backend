@@ -1,0 +1,291 @@
+{
+  "institutions": [
+    {
+      "slug": "ucalgary",
+      "name": "University of Calgary",
+      "country": "CA",
+      "city": "Calgary",
+      "website_domain": "ucalgary.ca",
+      "fields": ["Engineering", "Computer Science", "Business", "Medicine & Health", "Nursing", "Psychology", "Earth Sciences", "Architecture"],
+      "intl_tuition_usd": {
+        "value": null,
+        "currency": "CAD",
+        "source_url": "https://calendar.ucalgary.ca/pages/b15b7e973a234197aded0daf61f34b9a",
+        "year": 2026,
+        "note": "International rate CAD 3,078.21 per 3-unit course for most faculties (per course, not annual); annual total depends on course load and faculty"
+      },
+      "source_url": "https://calendar.ucalgary.ca/pages/b15b7e973a234197aded0daf61f34b9a",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "dalhousie",
+      "name": "Dalhousie University",
+      "country": "CA",
+      "city": "Halifax",
+      "website_domain": "dal.ca",
+      "fields": ["Engineering", "Computer Science", "Business", "Medicine & Health", "Law", "Psychology", "Marine Biology", "Environmental Science"],
+      "intl_tuition_usd": {
+        "value": null,
+        "currency": "CAD",
+        "source_url": "https://www.dal.ca/admissions/cost-and-payment/tuition/undergraduate-program-tuition.html",
+        "year": 2026,
+        "note": "International fall/winter estimated tuition range CAD 33,091-51,503 per year depending on program"
+      },
+      "source_url": "https://www.dal.ca/admissions/cost-and-payment/tuition/undergraduate-program-tuition.html",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "sfu",
+      "name": "Simon Fraser University",
+      "country": "CA",
+      "city": "Burnaby",
+      "website_domain": "sfu.ca",
+      "fields": ["Computer Science", "Business", "Psychology", "Kinesiology", "Economics", "Criminology", "Biology", "Data Science"],
+      "intl_tuition_usd": {
+        "value": 38944,
+        "currency": "CAD",
+        "source_url": "https://www.sfu.ca/students/admission/fees-scholarships.html",
+        "year": 2026,
+        "note": "Tuition and fees for international students, typical Arts/Social Sciences or Science program, 2026/27 estimate; includes public transit pass"
+      },
+      "source_url": "https://www.sfu.ca/students/admission/fees-scholarships.html",
+      "year": 2026,
+      "verified": true
+    },
+    {
+      "slug": "york",
+      "name": "York University",
+      "country": "CA",
+      "city": "Toronto",
+      "website_domain": "yorku.ca",
+      "fields": ["Business", "Law", "Psychology", "Economics", "Kinesiology", "Computer Science", "Engineering", "Environmental Science"],
+      "intl_tuition_usd": {
+        "value": 40000,
+        "currency": "CAD",
+        "source_url": "https://futurestudents.yorku.ca/financing-your-degree/tuition-fees",
+        "year": 2026,
+        "note": "Approximate average international tuition for most Arts & Sciences programs (Business ~40k-44k, Computer Science ~38k, Engineering ~47k)"
+      },
+      "source_url": "https://futurestudents.yorku.ca/financing-your-degree/tuition-fees",
+      "year": 2026,
+      "verified": true
+    },
+    {
+      "slug": "concordia",
+      "name": "Concordia University",
+      "country": "CA",
+      "city": "Montreal",
+      "website_domain": "concordia.ca",
+      "fields": ["Computer Science", "Engineering", "Business", "Arts", "Communications", "Psychology", "Journalism", "Film"],
+      "intl_tuition_usd": {
+        "value": null,
+        "currency": "CAD",
+        "source_url": "https://www.concordia.ca/students/financial/tuition-fees/rates/undergrad.html",
+        "year": 2026,
+        "note": "Published international rates are per credit by faculty/term (e.g. Fall 2026 CAD 1,010-1,400 per credit); no annual figure stated on the page"
+      },
+      "source_url": "https://www.concordia.ca/students/financial/tuition-fees/rates/undergrad.html",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "uvic",
+      "name": "University of Victoria",
+      "country": "CA",
+      "city": "Victoria",
+      "website_domain": "uvic.ca",
+      "fields": ["Computer Science", "Engineering", "Business", "Psychology", "Biology", "Law", "Linguistics", "Music & Performing Arts"],
+      "intl_tuition_usd": {
+        "value": 37575,
+        "currency": "CAD",
+        "source_url": "http://continuingstudies.uvic.ca/media/h52kilrx/elc-uvicadmissioninfo-handout.pdf",
+        "year": 2026,
+        "note": "Estimated international tuition, Year 1, May 2026-January 2027 rates, from the UVic admission handout"
+      },
+      "source_url": "http://continuingstudies.uvic.ca/media/h52kilrx/elc-uvicadmissioninfo-handout.pdf",
+      "year": 2026,
+      "verified": true
+    },
+    {
+      "slug": "umanitoba",
+      "name": "University of Manitoba",
+      "country": "CA",
+      "city": "Winnipeg",
+      "website_domain": "umanitoba.ca",
+      "fields": ["Engineering", "Computer Science", "Business", "Medicine & Health", "Agriculture", "Education", "Kinesiology", "Pharmacy"],
+      "intl_tuition_usd": {
+        "value": null,
+        "currency": "CAD",
+        "source_url": "https://umanitoba.ca/institutional-analysis/sites/institutional-analysis/files/2026-07/average-tuition-rates-2026-2027_estimates_accessible.pdf",
+        "year": 2026,
+        "note": "Estimated 2026-27 average international tuition per faculty: Arts CAD 21,498; Science 23,455; Business 25,860; Engineering 29,165; Education 22,544; Agriculture 23,979"
+      },
+      "source_url": "https://umanitoba.ca/institutional-analysis/sites/institutional-analysis/files/2026-07/average-tuition-rates-2026-2027_estimates_accessible.pdf",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "usask",
+      "name": "University of Saskatchewan",
+      "country": "CA",
+      "city": "Saskatoon",
+      "website_domain": "usask.ca",
+      "fields": ["Engineering", "Agriculture", "Medicine & Health", "Pharmacy", "Dentistry", "Computer Science", "Business", "Veterinary Medicine"],
+      "intl_tuition_usd": {
+        "value": null,
+        "currency": "CAD",
+        "source_url": "https://admissions.usask.ca/documents/brochures/international.pdf",
+        "year": 2026,
+        "note": "International student tuition CAD 39,007-59,383 per year for typical programs in the 2026-2027 brochure"
+      },
+      "source_url": "https://admissions.usask.ca/documents/brochures/international.pdf",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "carleton",
+      "name": "Carleton University",
+      "country": "CA",
+      "city": "Ottawa",
+      "website_domain": "carleton.ca",
+      "fields": ["Engineering", "Computer Science", "Business", "Journalism", "Architecture", "Psychology", "Politics & Government", "Aerospace Engineering"],
+      "intl_tuition_usd": {
+        "value": null,
+        "currency": "CAD",
+        "source_url": "https://carleton.ca/studentaccounts/tuition-fees/fw-ug/f26w27-ug-international",
+        "year": 2026,
+        "note": "International undergraduate annual tuition roughly CAD 41,373-57,495 by program for Fall 2026 / Winter 2027"
+      },
+      "source_url": "https://carleton.ca/studentaccounts/tuition-fees/fw-ug/f26w27-ug-international",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "tmu",
+      "name": "Toronto Metropolitan University",
+      "country": "CA",
+      "city": "Toronto",
+      "website_domain": "torontomu.ca",
+      "fields": ["Business", "Computer Science", "Engineering", "Journalism", "Media Studies", "Nursing", "Architecture", "Fashion"],
+      "intl_tuition_usd": {
+        "value": null,
+        "currency": "CAD",
+        "source_url": "https://www.torontomu.ca/international/admissions/paying-for-your-education/tuition-fees",
+        "year": 2026,
+        "note": "International full-time undergraduate tuition range CAD 38,693-44,675 per year for 2026-2027"
+      },
+      "source_url": "https://www.torontomu.ca/international/admissions/paying-for-your-education/tuition-fees",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "laval",
+      "name": "Université Laval",
+      "country": "CA",
+      "city": "Quebec City",
+      "website_domain": "ulaval.ca",
+      "fields": ["Engineering", "Computer Science", "Business", "Law", "Medicine & Health", "Pharmacy", "Nursing", "Environmental Science"],
+      "intl_tuition_usd": {
+        "value": null,
+        "currency": "CAD",
+        "source_url": "https://www.ulaval.ca/etudes/droits-de-scolarite/etudiant-de-linternational/programmes-de-1er-cycle/automne-2026-hiver-2027",
+        "year": 2026,
+        "note": "Charged per credit: tuition plus foreign surcharge; for a 15-credit term the page gives CAD 1,558.80 + 11,988.45 (per term, not annual)"
+      },
+      "source_url": "https://www.ulaval.ca/etudes/droits-de-scolarite/etudiant-de-linternational/programmes-de-1er-cycle/automne-2026-hiver-2027",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "guelph",
+      "name": "University of Guelph",
+      "country": "CA",
+      "city": "Guelph",
+      "website_domain": "uoguelph.ca",
+      "fields": ["Agriculture", "Veterinary Medicine", "Food Science", "Environmental Science", "Biology", "Business", "Engineering", "Psychology"],
+      "intl_tuition_usd": {
+        "value": null,
+        "currency": "CAD",
+        "source_url": "https://www.uoguelph.ca/registrar/finances-fees/tuition-fees/guelph-undergrad",
+        "year": 2026,
+        "note": "Arts & Science international tuition CAD 22,276.10 per semester (Cohort 2026); per-credit rate CAD 8,910.44 for the same cohort"
+      },
+      "source_url": "https://www.uoguelph.ca/registrar/finances-fees/tuition-fees/guelph-undergrad",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "mun",
+      "name": "Memorial University of Newfoundland",
+      "country": "CA",
+      "city": "St. John's",
+      "website_domain": "mun.ca",
+      "fields": ["Engineering", "Business", "Education", "Medicine & Health", "Computer Science", "Marine Biology", "Music & Performing Arts", "Kinesiology"],
+      "intl_tuition_usd": {
+        "value": 22500,
+        "currency": "CAD",
+        "source_url": "https://www.mun.ca/undergrad/money-matters",
+        "year": 2026,
+        "note": "St. John's campus, international students, new students as of fall 2026 (tuition table; per academic year)"
+      },
+      "source_url": "https://www.mun.ca/undergrad/money-matters",
+      "year": 2026,
+      "verified": true
+    },
+    {
+      "slug": "uregina",
+      "name": "University of Regina",
+      "country": "CA",
+      "city": "Regina",
+      "website_domain": "uregina.ca",
+      "fields": ["Engineering", "Business", "Computer Science", "Psychology", "Kinesiology", "Social Work", "Arts", "Journalism"],
+      "intl_tuition_usd": {
+        "value": null,
+        "currency": "CAD",
+        "source_url": "https://www.uregina.ca/ur-international/tuition-and-fees.html",
+        "year": 2026,
+        "note": "Page gives an example budget only (tuition and fees CAD 32,500 for a living-on-campus example); the per-program tuition schedule was not extracted"
+      },
+      "source_url": "https://www.uregina.ca/ur-international/tuition-and-fees.html",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "laurier",
+      "name": "Wilfrid Laurier University",
+      "country": "CA",
+      "city": "Waterloo",
+      "website_domain": "wlu.ca",
+      "fields": ["Business", "Economics", "Social Work", "Computer Science", "Psychology", "Music & Performing Arts", "Kinesiology", "Geography"],
+      "intl_tuition_usd": {
+        "value": null,
+        "currency": "CAD",
+        "source_url": "https://www.wlu.ca/future-students/undergraduate/applicants/international/tuition-and-finances.html",
+        "year": 2026,
+        "note": "Two-term tuition by faculty for 2026/27 ranges from about CAD 36,624 (Arts) to 44,332 (Business); see page for the full table"
+      },
+      "scholarships": [
+        {
+          "name": "President's Gold Entrance Scholarship",
+          "amount": "CAD 6,000 per year (renewable)",
+          "deadline": null,
+          "url": "https://www.wlu.ca/future-students/undergraduate/applicants/international/tuition-and-finances.html",
+          "year": 2026
+        },
+        {
+          "name": "Inspiring Lives Scholarship",
+          "amount": "CAD 500-5,000",
+          "deadline": null,
+          "url": "https://www.wlu.ca/future-students/undergraduate/applicants/international/tuition-and-finances.html",
+          "year": 2026
+        }
+      ],
+      "source_url": "https://www.wlu.ca/future-students/undergraduate/applicants/international/tuition-and-finances.html",
+      "year": 2026,
+      "verified": false
+    }
+  ],
+  "programs": []
+}

@@ -1,0 +1,201 @@
+{
+  "institutions": [
+    {
+      "slug": "nu-kz",
+      "name": "Nazarbayev University",
+      "country": "KZ",
+      "city": "Astana",
+      "fields": [],
+      "source_url": "https://nu.edu.kz/admissions/",
+      "year": 2026,
+      "intl_tuition_usd": {
+        "value": 15000,
+        "currency": "USD",
+        "source_url": "https://nu.edu.kz/admissions/fees-and-funding/",
+        "year": 2026,
+        "note": "Undergraduate programs, one academic year, from the official fees table. The page converts resident fees to KZT separately; non-resident rate not split out on the page. Deadlines and foreigner grants not read."
+      },
+      "scholarships": [],
+      "deadlines": [],
+      "verified": true
+    },
+    {
+      "slug": "kimep-kz",
+      "name": "KIMEP University",
+      "country": "KZ",
+      "city": "Almaty",
+      "fields": [],
+      "source_url": "https://www.kimep.kz/kz/",
+      "year": 2026,
+      "intl_tuition_usd": {
+        "value": null,
+        "note": "Tuition page https://www.kimep.kz/prospective-students/kz/tuition-and-fees/ returned no figures via curl (client-rendered). Unknown."
+      },
+      "scholarships": [],
+      "deadlines": [],
+      "verified": false
+    },
+    {
+      "slug": "kbtu-kz",
+      "name": "Kazakh-British Technical University",
+      "country": "KZ",
+      "city": "Almaty",
+      "fields": [],
+      "source_url": "https://kbtu.edu.kz/en",
+      "year": 2026,
+      "intl_tuition_usd": {
+        "value": null,
+        "note": "Student fee page https://kbtu.edu.kz/en/students/student-fee-en returned no tuition figures via curl. Unknown."
+      },
+      "scholarships": [],
+      "deadlines": [],
+      "verified": false
+    },
+    {
+      "slug": "kaznu-kz",
+      "name": "Al-Farabi Kazakh National University",
+      "country": "KZ",
+      "city": "Almaty",
+      "fields": [],
+      "source_url": "https://www.kaznu.kz/en/",
+      "year": 2026,
+      "intl_tuition_usd": {
+        "value": null,
+        "note": "Official site did not respond to curl at build time (HTTP 000). Tuition unknown."
+      },
+      "scholarships": [],
+      "deadlines": [],
+      "verified": false
+    },
+    {
+      "slug": "enu-kz",
+      "name": "L.N. Gumilyov Eurasian National University",
+      "country": "KZ",
+      "city": "Astana",
+      "fields": [],
+      "source_url": "https://www.enu.kz/en",
+      "year": 2026,
+      "intl_tuition_usd": {
+        "value": null,
+        "source_url": "https://www.enu.kz/en/page/applicants/tuition-fees",
+        "year": 2026,
+        "note": "Official tuition page lists 2026-2027 price lists only as PDF attachments; amounts not extracted. Unknown."
+      },
+      "scholarships": [],
+      "deadlines": [],
+      "verified": false
+    },
+    {
+      "slug": "satbayev-kz",
+      "name": "Satbayev University",
+      "country": "KZ",
+      "city": "Almaty",
+      "fields": [],
+      "source_url": "https://satbayev.university/en",
+      "year": 2026,
+      "intl_tuition_usd": {
+        "value": null,
+        "note": "Tuition not located on the English homepage via curl. Unknown."
+      },
+      "scholarships": [],
+      "deadlines": [],
+      "verified": false
+    },
+    {
+      "slug": "aitu-kz",
+      "name": "Astana IT University",
+      "country": "KZ",
+      "city": "Astana",
+      "fields": [],
+      "source_url": "https://astanait.edu.kz/en",
+      "year": 2026,
+      "intl_tuition_usd": {
+        "value": null,
+        "note": "Homepage read via curl; no tuition figures extracted. Unknown."
+      },
+      "scholarships": [],
+      "deadlines": [],
+      "verified": false
+    },
+    {
+      "slug": "sdu-kz",
+      "name": "SDU University",
+      "country": "KZ",
+      "city": "Kaskelen",
+      "fields": [],
+      "source_url": "https://sdu.edu.kz/en/tuition-fees/",
+      "year": 2026,
+      "intl_tuition_usd": {
+        "value": null,
+        "note": "Tuition fees page read via curl; no figures in the HTML text. Unknown."
+      },
+      "scholarships": [],
+      "deadlines": [],
+      "verified": false
+    },
+    {
+      "slug": "narxoz-kz",
+      "name": "Narxoz University",
+      "country": "KZ",
+      "city": "Almaty",
+      "fields": [],
+      "source_url": "https://narxoz.kz/en",
+      "year": 2026,
+      "intl_tuition_usd": {
+        "value": null,
+        "note": "Homepage read via curl; no tuition figures found. Unknown."
+      },
+      "scholarships": [],
+      "deadlines": [],
+      "verified": false
+    },
+    {
+      "slug": "almau-kz",
+      "name": "Almaty Management University",
+      "country": "KZ",
+      "city": "Almaty",
+      "fields": [],
+      "source_url": "https://almau.edu.kz/en/admission-conditions/",
+      "year": 2026,
+      "intl_tuition_usd": {
+        "value": null,
+        "note": "Admission conditions page read via curl; tuition figures not extracted. Unknown."
+      },
+      "scholarships": [],
+      "deadlines": [],
+      "verified": false
+    },
+    {
+      "slug": "kaznmu-kz",
+      "name": "Kazakh National Medical University named after S.D. Asfendiyarov",
+      "country": "KZ",
+      "city": "Almaty",
+      "fields": [],
+      "source_url": "https://kaznmu.kz/",
+      "year": 2026,
+      "intl_tuition_usd": {
+        "value": null,
+        "note": "Official site redirects; fee page not read. Unknown."
+      },
+      "scholarships": [],
+      "deadlines": [],
+      "verified": false
+    },
+    {
+      "slug": "buketov-kz",
+      "name": "Karaganda Buketov University",
+      "country": "KZ",
+      "city": "Karaganda",
+      "fields": [],
+      "source_url": "https://buketov.edu.kz/en/page/grants",
+      "year": 2026,
+      "intl_tuition_usd": {
+        "value": null,
+        "note": "Grants page read via curl; no international tuition figures. Unknown."
+      },
+      "scholarships": [],
+      "deadlines": [],
+      "verified": false
+    }
+  ]
+}
