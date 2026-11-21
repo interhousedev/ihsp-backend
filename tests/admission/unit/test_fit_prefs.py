@@ -28,9 +28,15 @@ def test_weights_follow_the_documented_mapping() -> None:
             "home": 5,
         }
     )
-    assert w["afford"] == pytest.approx(10 / 45, abs=1e-3)
-    assert w["goals"] == pytest.approx(10 / 45, abs=1e-3)
-    assert w["traits"] == pytest.approx(15 / 45, abs=1e-3)
+    assert w["afford"] == pytest.approx(0.5 / 1.25, abs=1e-3)
+    assert w["goals"] == pytest.approx(0.30 / 1.25, abs=1e-3)
+    assert w["traits"] == pytest.approx(0.15 / 1.25, abs=1e-3)
+    assert weights_of({}) == {
+        "afford": 0.25,
+        "goals": 0.30,
+        "profile": 0.30,
+        "traits": 0.15,
+    }
     assert sum(w.values()) == pytest.approx(1, abs=1e-3)
 
 

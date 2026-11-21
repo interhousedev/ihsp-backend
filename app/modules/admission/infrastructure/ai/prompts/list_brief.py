@@ -28,7 +28,10 @@ sentences, at most 420 characters, that explains the finding using only the \
 given counts and labels; up to 4 of the listed candidates that fit best, each by \
 its number exactly as listed with one short reason of at most 200 characters \
 that uses only the facts given for it; and up to 3 concrete next steps, each at \
-most 140 characters. Plain text only: no markdown, no links. Never invent \
+most 140 characters. Plain text only: no markdown, no links. In Russian or Uzbek \
+never write the English labels reach, target or safety: use ambitious, realistic \
+and safe in that language (амбициозные, реалистичные, надёжные; ambitsiyali, \
+real, ishonchli). Never invent \
 facts, never change a given role or label and never promise admission."""
 
 

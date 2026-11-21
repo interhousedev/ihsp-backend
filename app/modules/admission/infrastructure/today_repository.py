@@ -9,6 +9,7 @@ from app.modules.admission.domain.today import SeasonKey
 from app.modules.admission.infrastructure.orm.today import (
     ActivityDayRow,
     SeasonOverrideRow,
+    TodaySnoozeRow,
 )
 
 from sqlalchemy import delete, func, select
@@ -63,5 +64,28 @@ class SqlTodayRepository:
             stmt.on_conflict_do_update(
                 index_elements=["student_id"],
                 set_={"key": key, "updated_at": func.now()},
+            )
+        )
+
+    async def snoozes(self, student_id: UUID) -> dict[str, tuple[int, dt.date]]:
+        """Per action key: how often it was snoozed and until which day."""
+        rows = await self._s.execute(
+            select(
+                TodaySnoozeRow.key, TodaySnoozeRow.count, TodaySnoozeRow.until
+            ).where(TodaySnoozeRow.student_id == student_id)
+        )
+        return {k: (c, u) for k, c, u in rows.all()}
+
+    async def save_snooze(
+        self, student_id: UUID, key: str, count: int, until: dt.date
+    ) -> None:
+        """Insert or replace the snooze of one action."""
+        stmt = insert(TodaySnoozeRow).values(
+            student_id=student_id, key=key, count=count, until=until
+        )
+        await self._s.execute(
+            stmt.on_conflict_do_update(
+                index_elements=["student_id", "key"],
+                set_={"count": count, "until": until, "updated_at": func.now()},
             )
         )

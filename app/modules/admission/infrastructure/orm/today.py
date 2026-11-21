@@ -12,10 +12,10 @@ from app.modules.admission.infrastructure.orm._common import (
 )
 from app.shared.db.base import Base
 
-from sqlalchemy import Date, String, Uuid
+from sqlalchemy import Date, SmallInteger, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
-__all__ = ["ActivityDayRow", "SeasonOverrideRow"]
+__all__ = ["ActivityDayRow", "SeasonOverrideRow", "TodaySnoozeRow"]
 
 
 class ActivityDayRow(CreatedMixin, Base):
@@ -36,3 +36,15 @@ class SeasonOverrideRow(CreatedMixin, UpdatedMixin, Base):
 
     student_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
     key: Mapped[str] = mapped_column(String(10))
+
+
+class TodaySnoozeRow(CreatedMixin, UpdatedMixin, Base):
+    """A next action the student pushed back: hidden until `until`."""
+
+    __tablename__ = "today_snoozes"
+    __table_args__ = (S,)
+
+    student_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    key: Mapped[str] = mapped_column(String(200), primary_key=True)
+    count: Mapped[int] = mapped_column(SmallInteger)
+    until: Mapped[dt.date] = mapped_column(Date)

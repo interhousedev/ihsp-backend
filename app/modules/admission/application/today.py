@@ -50,6 +50,10 @@ _SOURCE_MINUTES: Final = {
     "test_score": 15,
 }
 _TASK_MINUTES: Final = 30
+SNOOZE_DAYS: Final = 3
+MAX_DATED_SNOOZES: Final = 2
+_DATED_PREFIXES: Final = ("deadline:", "task:")
+_ESSAY_LINES: Final = frozenset({"statement", "statement_final", "supplements"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -112,6 +116,27 @@ class _Data:
     focus: Any
     override: SeasonKey | None
     days: set[dt.date]
+
+
+def _nearest_rounds(calendar: Sequence[CalendarEntry]) -> list[CalendarEntry]:
+    """One university deadline per (list entry, round): the nearest one.
+
+    The key of a university entry is `uni:<entry>:<round>:<date>`; a round that
+    publishes two dates would otherwise appear twice.
+    """
+    best: dict[tuple[UUID, str], CalendarEntry] = {}
+    for e in calendar:
+        if e.source == "university" and e.list_entry_id is not None:
+            k = (e.list_entry_id, e.key.split(":")[2])
+            if k not in best or e.day < best[k].day:
+                best[k] = e
+    return [
+        e
+        for e in calendar
+        if e.source != "university"
+        or e.list_entry_id is None
+        or best[(e.list_entry_id, e.key.split(":")[2])] is e
+    ]
 
 
 def _days_text(t: Translate, locale: str, days: int) -> str:
@@ -239,6 +264,7 @@ class TodayService:
                         _SOURCE_MINUTES.get(e.source, 20),
                         e.url_path or CALENDAR_HREF,
                         str(e.list_entry_id) if e.list_entry_id else None,
+                        e.source,
                     )
                 )
         for x in tasks:
@@ -254,11 +280,21 @@ class TodayService:
                         x.title,
                         _days_text(t, locale, left),
                         _TASK_MINUTES,
-                        "/tasks",
+                        f"/tasks/?task={x.id}",
                         str(x.list_entry_id) if x.list_entry_id else None,
+                        "task",
                     )
                 )
         return out
+
+    @staticmethod
+    def _open_essay(line_key: str, d: _Data) -> Any | None:
+        """The first unfinished essay a season line is about, if there is one."""
+        want_supplement = line_key == "supplements"
+        for e in d.essays:
+            if (e.list_entry_id is not None) == want_supplement and e.status != "final":
+                return e
+        return None
 
     def _gap_candidates(
         self, locale: str, season: SeasonKey, lines: Sequence[Line], d: _Data
@@ -279,6 +315,12 @@ class TodayService:
                 if line.progress
                 else t(locale, "today-why-line", season=season_name)
             )
+            href, kind = line.href, "season"
+            if line.key in _ESSAY_LINES:
+                kind = "essay"
+                essay = self._open_essay(line.key, d)
+                if essay is not None:
+                    href = f"/essays/edit/?id={essay.id}"
             out.append(
                 Candidate(
                     1,
@@ -287,7 +329,9 @@ class TodayService:
                     t(locale, f"today-action-{line.key}"),
                     why,
                     line.minutes,
-                    line.href,
+                    href,
+                    None,
+                    kind,
                 )
             )
         for i, e in enumerate(d.entries):
@@ -303,9 +347,26 @@ class TodayService:
                     15,
                     "/chooser/list/",
                     str(e.id),
+                    "afford",
                 )
             )
         return out
+
+    async def snooze(self, ctx: AdmissionContext, key: str) -> None:
+        """Hide a next action for three days; a dated one at most twice."""
+        today = self._clock.now().astimezone(TASHKENT).date()
+        async with self._uow() as uow:
+            count, _ = (await uow.today.snoozes(ctx.user_id)).get(key, (0, today))
+            if key.startswith(_DATED_PREFIXES) and count >= MAX_DATED_SNOOZES:
+                return
+            until = today + dt.timedelta(days=SNOOZE_DAYS)
+            await uow.today.save_snooze(ctx.user_id, key, count + 1, until)
+            await uow.commit()
+
+    async def _snoozed(self, student: UUID, today: dt.date) -> set[str]:
+        async with self._uow() as uow:
+            found = await uow.today.snoozes(student)
+        return {k for k, (_, until) in found.items() if until > today}
 
     async def get(self, ctx: AdmissionContext, locale: str) -> TodayView:
         """The feed of the caller."""
@@ -315,13 +376,17 @@ class TodayService:
         season: SeasonKey = d.override or auto_season(snap)
         lines = season_lines(season, snap)
         window = today + dt.timedelta(days=DEADLINE_WINDOW_DAYS)
-        calendar = [
-            e
-            for e in await self._calendar.entries(ctx, today, window, locale)
-            if e.day >= today
-        ]
+        calendar = _nearest_rounds(
+            [
+                e
+                for e in await self._calendar.entries(ctx, today, window, locale)
+                if e.day >= today
+            ]
+        )
         cands = self._deadline_candidates(locale, today, calendar, d.tasks)
         cands += self._gap_candidates(locale, season, lines, d)
+        hidden = await self._snoozed(ctx.user_id, today)
+        cands = [c for c in cands if c.key not in hidden]
         run, today_done, last7 = streak(d.days, today)
         readiness = await self._readiness.get(ctx)
         return TodayView(

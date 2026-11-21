@@ -229,6 +229,8 @@ class Candidate:
     minutes: int
     href: str
     list_entry_id: str | None = None
+    kind: str = "season"
+    """What it is about: a calendar source, `task`, `essay`, `season`, `afford`."""
 
 
 def rank(candidates: Iterable[Candidate]) -> list[Candidate]:

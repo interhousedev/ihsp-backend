@@ -23106,6 +23106,12 @@
             "title": "Institution Id",
             "type": "string"
           },
+          "known_share": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Known Share",
+            "type": "number"
+          },
           "list_entry_id": {
             "title": "List Entry Id",
             "type": "string"
@@ -23126,6 +23132,7 @@
           "list_entry_id",
           "institution_id",
           "total",
+          "known_share",
           "axes"
         ],
         "title": "FitItemOut",
@@ -38358,6 +38365,10 @@
             "title": "Key",
             "type": "string"
           },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
           "list_entry_id": {
             "anyOf": [
               {
@@ -38388,7 +38399,8 @@
           "why",
           "minutes",
           "href",
-          "list_entry_id"
+          "list_entry_id",
+          "kind"
         ],
         "title": "NextActionOut",
         "type": "object"
@@ -55244,6 +55256,22 @@
           "lock_version"
         ],
         "title": "SnapshotIn",
+        "type": "object"
+      },
+      "SnoozeIn": {
+        "description": "The next action to hide for three days (twice at most when dated).",
+        "properties": {
+          "key": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key"
+        ],
+        "title": "SnoozeIn",
         "type": "object"
       },
       "SourceDetailResponse": {
@@ -101630,6 +101658,41 @@
           }
         },
         "summary": "Get Today",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/today/snooze": {
+      "post": {
+        "description": "Hide a next action from `/today` for three days.",
+        "operationId": "admission_snooze_today",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SnoozeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Post Snooze",
         "tags": [
           "admission"
         ]

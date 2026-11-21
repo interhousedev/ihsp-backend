@@ -28,3 +28,13 @@ class TodayRepository(Protocol):
     ) -> None:
         """Fix a season, or None to go back to the automatic one."""
         ...
+
+    async def snoozes(self, student_id: UUID) -> dict[str, tuple[int, dt.date]]:
+        """Per action key: how often it was snoozed and until which day."""
+        ...
+
+    async def save_snooze(
+        self, student_id: UUID, key: str, count: int, until: dt.date
+    ) -> None:
+        """Insert or replace the snooze of one action."""
+        ...

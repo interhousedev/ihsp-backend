@@ -18,6 +18,7 @@ from app.modules.admission.domain.admit_rate import (
     TARGET_RATE,
     admission_rate,
 )
+from app.modules.admission.domain.budget import cost_after_aid
 from app.modules.admission.domain.chooser import (
     CatalogInstitution,
     budget_upper,
@@ -263,6 +264,9 @@ def _cost(inst: CatalogInstitution, st: StudentData) -> Factor:
             else None
         )
     )
+    net = cost_after_aid(cost, "USD", inst.aid_profile) if cost is not None else None
+    if net is not None:
+        cost_n = float(net)
     band = st.prefs.budget or st.budget_band
     upper = _budget_upper(band)
     open_band = band == "any" or (band or "").startswith("over_")
@@ -271,7 +275,7 @@ def _cost(inst: CatalogInstitution, st: StudentData) -> Factor:
         if cost_n is not None:
             detail["cost"] = round(cost_n)
         return Factor(
-            "cost", "unknown", detail, Action("set_budget", "/chooser/budget/")
+            "cost", "unknown", detail, Action("set_budget", "/chooser/?step=quiz")
         )
     detail = {"cost": round(cost_n)}
     if upper is None:

@@ -105,9 +105,14 @@ _COPY: Final[dict[str, tuple[str, str, str]]] = {
         "Qabul qilinish real maqsad",
     ),
     "profile.reach": (
-        "Admission is a stretch: the acceptance rate is low",
-        "Поступить сложно: низкий процент приёма",
-        "Qabul qiyin: qabul foizi past",
+        "An ambitious university for you (acceptance {rate}%)",
+        "Вуз для вас амбициозный (приём {rate} %)",
+        "Siz uchun ambitsiyali oliygoh (qabul {rate} %)",
+    ),
+    "profile.reach_plain": (
+        "An ambitious university for you",
+        "Вуз для вас амбициозный",
+        "Siz uchun ambitsiyali oliygoh",
     ),
     "profile.tests_missing": (
         "Test scores are required and you have none entered",
@@ -138,11 +143,6 @@ _COPY: Final[dict[str, tuple[str, str, str]]] = {
         "Distance from home: {distance}",
         "Расстояние от дома: {distance}",
         "Uydan masofa: {distance}",
-    ),
-    "traits.prestige": (
-        "Selectivity: acceptance rate {rate}%",
-        "Избирательность: процент приёма {rate}%",
-        "Tanlov: qabul foizi {rate}%",
     ),
     "traits.social": (
         "International community: {share}% of students",

@@ -56,7 +56,7 @@ def test_nothing_known_gives_null_axes_and_no_total() -> None:
     res, ax = _axes(StudentFit(), EntryFit(_inst(country="")))
     assert res.total is None or ax["traits"].score is not None
     assert ax["afford"].score is None and ax["goals"].score is None
-    assert ax["afford"].raises[0].href == "/chooser/budget"
+    assert ax["afford"].raises[0].href == "/chooser/?step=quiz"
 
 
 def test_afford_within_and_over_budget() -> None:

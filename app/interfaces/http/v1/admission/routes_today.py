@@ -9,7 +9,7 @@ from app.interfaces.http.v1.admission.routes_items import _locale
 from app.modules.admission.application.today import TodayView
 from app.modules.admission.domain.today import MAX_DEADLINES, MAX_NEXT
 
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Header, Response
 from pydantic import BaseModel, Field
 
 router = APIRouter(prefix="/v1/admission", tags=["admission"])
@@ -44,6 +44,7 @@ class NextActionOut(BaseModel):
     minutes: int
     href: str
     list_entry_id: str | None
+    kind: str
 
 
 class StreakOut(BaseModel):
@@ -105,6 +106,7 @@ class TodayOut(BaseModel):
                     minutes=n.minutes,
                     href=n.href,
                     list_entry_id=n.list_entry_id,
+                    kind=n.kind,
                 )
                 for n in v.next
             ],
@@ -166,4 +168,28 @@ router.add_api_route(
     methods=["PUT"],
     response_model=TodayOut,
     operation_id="admission_set_season",
+)
+
+
+class SnoozeIn(BaseModel):
+    """The next action to hide for three days (twice at most when dated)."""
+
+    key: str = Field(min_length=1, max_length=200)
+
+
+async def post_snooze(
+    body: SnoozeIn, container: ContainerDep, ctx: StudentCtx
+) -> Response:
+    """Hide a next action from `/today` for three days."""
+    await container.admission.today.snooze(ctx, body.key)
+    return Response(status_code=204)
+
+
+router.add_api_route(
+    "/today/snooze",
+    post_snooze,
+    methods=["POST"],
+    status_code=204,
+    response_class=Response,
+    operation_id="admission_snooze_today",
 )

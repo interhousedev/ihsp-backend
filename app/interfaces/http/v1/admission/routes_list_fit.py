@@ -38,6 +38,7 @@ class FitItemOut(BaseModel):
     list_entry_id: str
     institution_id: str
     total: int | None
+    known_share: float = Field(ge=0, le=1)
     axes: list[AxisFitOut]
 
 
@@ -57,6 +58,7 @@ class ListFitOut(BaseModel):
                     list_entry_id=str(i.list_entry_id),
                     institution_id=str(i.institution_id),
                     total=i.fit.total,
+                    known_share=i.fit.known_share,
                     axes=[
                         AxisFitOut(
                             key=a.key,

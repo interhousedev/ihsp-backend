@@ -55,6 +55,9 @@ class FitService:
             saved = await uow.fit_preferences.get(student_id)
             plan = await uow.profession_plans.get(student_id)
             band = await uow.shortlist.budget_band(student_id)
+            if band is None:
+                survey = await uow.preferences.get(student_id)
+                band = survey[0].budget if survey is not None else None
             focus = await load_study_focus(uow, student_id)
             scores = await uow.test_scores.entries(student_id)
         prefs = (
@@ -89,4 +92,12 @@ class FitService:
             )
             for i in items
         )
+        out = tuple(sorted(out, key=_rank, reverse=True))
         return ListFit(weights, out)
+
+
+def _rank(v: EntryFitView) -> float:
+    """Sort key: the total, discounted when much of it is unknown."""
+    if v.fit.total is None:
+        return -1.0
+    return v.fit.total * (0.5 + 0.5 * v.fit.known_share)

@@ -56,11 +56,15 @@ def default_ratings() -> dict[str, int]:
 def weights_of(ratings: dict[str, int]) -> dict[str, float]:
     """Axis weights from ratings (see the module docstring), summing to 1."""
     r = {k: ratings.get(k, RATING_DEFAULT) for k in RATING_KEYS}
+    groups = {
+        "afford": ("price",),
+        "goals": ("salary", "ai_resilience"),
+        "profile": ("academics", "prestige"),
+        "traits": ("social", "city", "home"),
+    }
     raw = {
-        "afford": r["price"],
-        "goals": r["salary"] + r["ai_resilience"],
-        "profile": r["academics"] + r["prestige"],
-        "traits": r["social"] + r["city"] + r["home"],
+        g: DEFAULT_WEIGHTS[g] * sum(r[k] for k in ks) / len(ks) / RATING_DEFAULT
+        for g, ks in groups.items()
     }
     total = sum(raw.values())
     return {k: round(v / total, 4) for k, v in raw.items()}
@@ -92,6 +96,8 @@ class FitResult:
 
     total: int | None
     axes: tuple[AxisFit, ...]
+    known_share: float = 0.0
+    """Share of the axis weight whose data is known, 0..1."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -141,7 +147,13 @@ def _afford(s: StudentFit, e: EntryFit, loc: str, weight: float) -> AxisFit:
             None,
             weight,
             (msg(loc, "afford.no_budget"),),
-            (Raise(msg(loc, "raise.afford.budget"), "/chooser/budget", _NO_DATA_GAIN),),
+            (
+                Raise(
+                    msg(loc, "raise.afford.budget"),
+                    "/chooser/?step=quiz",
+                    _NO_DATA_GAIN,
+                ),
+            ),
         )
     if cost is None:
         return AxisFit("afford", None, weight, (msg(loc, "afford.no_cost"),))
@@ -216,6 +228,15 @@ def _goals(s: StudentFit, e: EntryFit, loc: str, weight: float) -> AxisFit:
     )
 
 
+def _chance_line(inst: CatalogInstitution, estimate: str, loc: str) -> str:
+    if estimate != "reach":
+        return msg(loc, f"profile.{estimate}")
+    rate = _acceptance_rate(inst)
+    if rate is None:
+        return msg(loc, "profile.reach_plain")
+    return msg(loc, "profile.reach", rate=round(rate))
+
+
 def _profile(s: StudentFit, e: EntryFit, loc: str, weight: float) -> AxisFit:
     inst = e.institution
     parts: list[float] = []
@@ -241,7 +262,7 @@ def _profile(s: StudentFit, e: EntryFit, loc: str, weight: float) -> AxisFit:
     chance = {"safety": 90, "target": 70, "reach": 40}.get(e.estimate)
     if chance is not None:
         parts.append(chance)
-        why.append(msg(loc, f"profile.{e.estimate}"))
+        why.append(_chance_line(inst, e.estimate, loc))
     policy = inst.fact("test_policy")
     if policy is not None and str(policy.value) == "required" and not s.has_scores:
         parts = [p * 0.7 for p in parts] or [40]
@@ -309,12 +330,6 @@ def _traits(s: StudentFit, e: EntryFit, loc: str, weight: float) -> AxisFit:
             msg(loc, "traits.home", distance=msg(loc, f"distance.{key}")),
         )
     )
-    rate = _acceptance_rate(inst)
-    if rate is not None:
-        sel = 1.0 if rate < 10 else 0.8 if rate < 25 else 0.55 if rate < 50 else 0.3
-        comps.append(
-            (r.get("prestige", 5), sel, msg(loc, "traits.prestige", rate=round(rate)))
-        )
     share_fact = inst.fact("intl_share")
     share = _num(share_fact.value) if share_fact is not None else None
     if share is not None:
@@ -352,7 +367,9 @@ def compute_fit(
     )
     known = [a for a in axes if a.score is not None]
     wsum = sum(a.weight for a in known)
+    allw = sum(a.weight for a in axes)
+    share = round(wsum / allw, 4) if allw else 0.0
     if not known or wsum == 0:
-        return FitResult(None, axes)
+        return FitResult(None, axes, share)
     total = sum((a.score or 0) * a.weight for a in known) / wsum
-    return FitResult(_clamp(total), axes)
+    return FitResult(_clamp(total), axes, share)
