@@ -4616,6 +4616,45 @@
         "title": "AssignableUserOut",
         "type": "object"
       },
+      "AssignedEssayOut": {
+        "description": "The essay placed in a slot, as it is now; `over_limit` against the slot.",
+        "properties": {
+          "essay_id": {
+            "title": "Essay Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "over_limit": {
+            "title": "Over Limit",
+            "type": "boolean"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "word_count": {
+            "title": "Word Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "essay_id",
+          "title",
+          "kind",
+          "word_count",
+          "status",
+          "over_limit"
+        ],
+        "title": "AssignedEssayOut",
+        "type": "object"
+      },
       "AssignmentIn": {
         "description": "Delegate a sub-role over one student or a class.",
         "properties": {
@@ -5396,6 +5435,82 @@
           "final"
         ],
         "title": "Averages",
+        "type": "object"
+      },
+      "AxisFitOut": {
+        "description": "One fit axis; `score` is null when its data is missing.",
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "raise": {
+            "items": {
+              "$ref": "#/components/schemas/RaiseOut"
+            },
+            "title": "Raise",
+            "type": "array"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "weight": {
+            "title": "Weight",
+            "type": "number"
+          },
+          "why": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Why",
+            "type": "array"
+          }
+        },
+        "required": [
+          "key",
+          "score",
+          "weight",
+          "why",
+          "raise"
+        ],
+        "title": "AxisFitOut",
+        "type": "object"
+      },
+      "AxisWeightsOut": {
+        "description": "Weights of the four fit axes; they sum to 1.",
+        "properties": {
+          "afford": {
+            "title": "Afford",
+            "type": "number"
+          },
+          "goals": {
+            "title": "Goals",
+            "type": "number"
+          },
+          "profile": {
+            "title": "Profile",
+            "type": "number"
+          },
+          "traits": {
+            "title": "Traits",
+            "type": "number"
+          }
+        },
+        "required": [
+          "afford",
+          "goals",
+          "profile",
+          "traits"
+        ],
+        "title": "AxisWeightsOut",
         "type": "object"
       },
       "BalanceOut": {
@@ -8276,7 +8391,7 @@
           },
           "professions": {
             "items": {
-              "$ref": "#/components/schemas/ProfessionOut"
+              "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_career__ProfessionOut"
             },
             "title": "Professions",
             "type": "array"
@@ -10242,6 +10357,47 @@
         "title": "ChecklistEntrySchema",
         "type": "object"
       },
+      "ChecklistLineOut": {
+        "description": "One line of the season checklist.",
+        "properties": {
+          "done": {
+            "title": "Done",
+            "type": "boolean"
+          },
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress"
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "done",
+          "progress",
+          "href"
+        ],
+        "title": "ChecklistLineOut",
+        "type": "object"
+      },
       "ChecklistOut": {
         "description": "One checklist item.",
         "properties": {
@@ -10538,6 +10694,45 @@
           "lock_version"
         ],
         "title": "ChoiceIn",
+        "type": "object"
+      },
+      "ChosenIn": {
+        "description": "One pick.",
+        "properties": {
+          "profession_id": {
+            "title": "Profession Id",
+            "type": "string"
+          },
+          "rank": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Rank",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "profession_id",
+          "rank"
+        ],
+        "title": "ChosenIn",
+        "type": "object"
+      },
+      "ChosenListIn": {
+        "description": "At most five picks.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ChosenIn"
+            },
+            "maxItems": 5,
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "ChosenListIn",
         "type": "object"
       },
       "Citation": {
@@ -19401,6 +19596,40 @@
       "EssaySummaryOut": {
         "description": "A row of the essays list.",
         "properties": {
+          "deep_read": {
+            "description": "`stale` when the essay (or the UI language) changed since.",
+            "enum": [
+              "none",
+              "fresh",
+              "stale"
+            ],
+            "title": "Deep Read",
+            "type": "string"
+          },
+          "deep_read_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deep Read At"
+          },
+          "forked_from": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forked From"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -19426,9 +19655,28 @@
             "title": "Status",
             "type": "string"
           },
+          "targets": {
+            "items": {
+              "$ref": "#/components/schemas/PromptTargetOut"
+            },
+            "title": "Targets",
+            "type": "array"
+          },
           "title": {
             "title": "Title",
             "type": "string"
+          },
+          "uniqueness": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The one score shown everywhere: deep-read uniqueness 0-100.",
+            "title": "Uniqueness"
           },
           "updated_at": {
             "anyOf": [
@@ -19466,7 +19714,12 @@
           "list_entry_id",
           "word_count",
           "status",
-          "updated_at"
+          "updated_at",
+          "forked_from",
+          "targets",
+          "uniqueness",
+          "deep_read",
+          "deep_read_at"
         ],
         "title": "EssaySummaryOut",
         "type": "object"
@@ -22822,6 +23075,45 @@
         "title": "FileUrlSchema",
         "type": "object"
       },
+      "FitItemOut": {
+        "description": "The fit of one list entry.",
+        "properties": {
+          "axes": {
+            "items": {
+              "$ref": "#/components/schemas/AxisFitOut"
+            },
+            "title": "Axes",
+            "type": "array"
+          },
+          "institution_id": {
+            "title": "Institution Id",
+            "type": "string"
+          },
+          "list_entry_id": {
+            "title": "List Entry Id",
+            "type": "string"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "required": [
+          "list_entry_id",
+          "institution_id",
+          "total",
+          "axes"
+        ],
+        "title": "FitItemOut",
+        "type": "object"
+      },
       "FitOut": {
         "description": "How well a major fits, 0 to 100.",
         "properties": {
@@ -22844,6 +23136,49 @@
           "reason"
         ],
         "title": "FitOut",
+        "type": "object"
+      },
+      "FitPreferencesIn": {
+        "description": "The eight ratings the student saves.",
+        "properties": {
+          "ratings": {
+            "$ref": "#/components/schemas/RatingsBody"
+          }
+        },
+        "required": [
+          "ratings"
+        ],
+        "title": "FitPreferencesIn",
+        "type": "object"
+      },
+      "FitPreferencesOut": {
+        "description": "Saved ratings (defaults when never saved) and the weights they give.",
+        "properties": {
+          "ratings": {
+            "$ref": "#/components/schemas/RatingsBody"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "weights": {
+            "$ref": "#/components/schemas/AxisWeightsOut"
+          }
+        },
+        "required": [
+          "ratings",
+          "weights",
+          "updated_at"
+        ],
+        "title": "FitPreferencesOut",
         "type": "object"
       },
       "FlashcardInput": {
@@ -25311,6 +25646,12 @@
       "IdeaFitIn": {
         "description": "An idea text to match against the prompts.",
         "properties": {
+          "cached_only": {
+            "default": false,
+            "description": "Return a stored fit only; `pending` when none exists.",
+            "title": "Cached Only",
+            "type": "boolean"
+          },
           "text": {
             "maxLength": 1000,
             "minLength": 1,
@@ -25331,6 +25672,11 @@
             "title": "Available",
             "type": "boolean"
           },
+          "cached": {
+            "description": "Served from the store; no model was called.",
+            "title": "Cached",
+            "type": "boolean"
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/PromptFitOut"
@@ -25341,12 +25687,19 @@
           "model": {
             "title": "Model",
             "type": "string"
+          },
+          "pending": {
+            "description": "`cached_only` was set and nothing is stored.",
+            "title": "Pending",
+            "type": "boolean"
           }
         },
         "required": [
           "available",
           "model",
-          "items"
+          "items",
+          "cached",
+          "pending"
         ],
         "title": "IdeaFitOut",
         "type": "object"
@@ -25639,6 +25992,45 @@
           "excuse_until"
         ],
         "title": "IdentifyOut",
+        "type": "object"
+      },
+      "IkigaiBody": {
+        "description": "Free-text chips of the four ikigai questions.",
+        "properties": {
+          "good_at": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "title": "Good At",
+            "type": "array"
+          },
+          "love": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "title": "Love",
+            "type": "array"
+          },
+          "needs": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "title": "Needs",
+            "type": "array"
+          },
+          "paid": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "title": "Paid",
+            "type": "array"
+          }
+        },
+        "title": "IkigaiBody",
         "type": "object"
       },
       "ImportBody": {
@@ -26250,7 +26642,7 @@
           },
           "sources": {
             "items": {
-              "$ref": "#/components/schemas/SourceOut"
+              "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_chooser__SourceOut"
             },
             "title": "Sources",
             "type": "array"
@@ -33424,6 +33816,27 @@
         "title": "ListEntryOut",
         "type": "object"
       },
+      "ListFitOut": {
+        "description": "Weights and the fit of every list entry.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/FitItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "weights": {
+            "$ref": "#/components/schemas/AxisWeightsOut"
+          }
+        },
+        "required": [
+          "weights",
+          "items"
+        ],
+        "title": "ListFitOut",
+        "type": "object"
+      },
       "ListInsightsOut": {
         "description": "`profile_used` is false when the profile was not readable or empty.",
         "properties": {
@@ -34948,28 +35361,6 @@
         "title": "MatchCandidateOut",
         "type": "object"
       },
-      "MatchListOut": {
-        "description": "Undecided universities, best match first.",
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/MatchOut"
-            },
-            "title": "Items",
-            "type": "array"
-          },
-          "undecided_only": {
-            "default": true,
-            "title": "Undecided Only",
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "items"
-        ],
-        "title": "MatchListOut",
-        "type": "object"
-      },
       "MatchOut": {
         "description": "A university with its match for the caller.",
         "properties": {
@@ -35099,6 +35490,16 @@
       "MatchSlotOut": {
         "description": "One slot: `ps` (no prompt) or `supp:<position>`; candidates best first.",
         "properties": {
+          "assigned": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AssignedEssayOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "candidates": {
             "items": {
               "$ref": "#/components/schemas/MatchCandidateOut"
@@ -35128,6 +35529,10 @@
             ],
             "title": "Prompt"
           },
+          "required": {
+            "title": "Required",
+            "type": "boolean"
+          },
           "slot": {
             "title": "Slot",
             "type": "string"
@@ -35148,7 +35553,9 @@
           "slot",
           "prompt",
           "word_limit",
+          "required",
           "essay_id",
+          "assigned",
           "candidates"
         ],
         "title": "MatchSlotOut",
@@ -35157,6 +35564,22 @@
       "MatchTableOut": {
         "description": "The matching table of one university.",
         "properties": {
+          "due_predicted": {
+            "title": "Due Predicted",
+            "type": "boolean"
+          },
+          "due_utc": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Due Utc"
+          },
           "institution_id": {
             "title": "Institution Id",
             "type": "string"
@@ -35176,6 +35599,8 @@
         "required": [
           "institution_id",
           "institution_name",
+          "due_utc",
+          "due_predicted",
           "slots"
         ],
         "title": "MatchTableOut",
@@ -37345,6 +37770,95 @@
         "title": "MyGroupResponse",
         "type": "object"
       },
+      "MyProfessionListOut": {
+        "description": "The caller's ranked picks.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MyProfessionOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "MyProfessionListOut",
+        "type": "object"
+      },
+      "MyProfessionOut": {
+        "description": "A picked profession and its rank (1 = first choice).",
+        "properties": {
+          "ai_exposure": {
+            "title": "Ai Exposure",
+            "type": "number"
+          },
+          "ai_risk": {
+            "title": "Ai Risk",
+            "type": "string"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "horizon": {
+            "title": "Horizon",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "rank": {
+            "title": "Rank",
+            "type": "integer"
+          },
+          "related_fields": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Related Fields",
+            "type": "array"
+          },
+          "salary_band": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Band"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_fit__SourceOut"
+            },
+            "title": "Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "group",
+          "ai_exposure",
+          "ai_risk",
+          "horizon",
+          "salary_band",
+          "related_fields",
+          "sources",
+          "rank"
+        ],
+        "title": "MyProfessionOut",
+        "type": "object"
+      },
       "MySuggestionResponse": {
         "description": "`MySuggestion`: one of the signed-in person's suggestions and its status.",
         "properties": {
@@ -37792,6 +38306,52 @@
           "token"
         ],
         "title": "NewPersonalTokenResponse",
+        "type": "object"
+      },
+      "NextActionOut": {
+        "description": "A ranked next step.",
+        "properties": {
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "list_entry_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Entry Id"
+          },
+          "minutes": {
+            "title": "Minutes",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "why": {
+            "title": "Why",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "title",
+          "why",
+          "minutes",
+          "href",
+          "list_entry_id"
+        ],
+        "title": "NextActionOut",
         "type": "object"
       },
       "NextSectionResponse": {
@@ -43628,10 +44188,15 @@
             },
             "title": "Items",
             "type": "array"
+          },
+          "streak": {
+            "title": "Streak",
+            "type": "integer"
           }
         },
         "required": [
-          "items"
+          "items",
+          "streak"
         ],
         "title": "PracticeListOut",
         "type": "object"
@@ -43688,6 +44253,11 @@
             "title": "Prompt",
             "type": "string"
           },
+          "streak": {
+            "description": "Consecutive practice days, ending today or yesterday.",
+            "title": "Streak",
+            "type": "integer"
+          },
           "theme": {
             "title": "Theme",
             "type": "string"
@@ -43697,7 +44267,8 @@
           "day",
           "theme",
           "prompt",
-          "entry"
+          "entry",
+          "streak"
         ],
         "title": "PracticeTodayOut",
         "type": "object"
@@ -44574,28 +45145,21 @@
         "title": "ProcessStepOut",
         "type": "object"
       },
-      "ProfessionOut": {
-        "description": "A suggested profession; shortlisted ones stay across suggestions.",
+      "ProfessionListOut": {
+        "description": "Search result.",
         "properties": {
-          "reason": {
-            "title": "Reason",
-            "type": "string"
-          },
-          "shortlisted": {
-            "title": "Shortlisted",
-            "type": "boolean"
-          },
-          "title": {
-            "title": "Title",
-            "type": "string"
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_fit__ProfessionOut"
+            },
+            "title": "Items",
+            "type": "array"
           }
         },
         "required": [
-          "title",
-          "reason",
-          "shortlisted"
+          "items"
         ],
-        "title": "ProfessionOut",
+        "title": "ProfessionListOut",
         "type": "object"
       },
       "ProfileDetailsOut": {
@@ -45223,6 +45787,38 @@
             "title": "Covered",
             "type": "boolean"
           },
+          "due_predicted": {
+            "description": "`due_utc` is predicted, not confirmed.",
+            "title": "Due Predicted",
+            "type": "boolean"
+          },
+          "due_utc": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Earliest application due date among those universities.",
+            "title": "Due Utc"
+          },
+          "essay_ids": {
+            "description": "My essays targeting a member prompt.",
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Essay Ids",
+            "type": "array"
+          },
+          "in_list_count": {
+            "description": "Universities on my list with a prompt in the group.",
+            "title": "In List Count",
+            "type": "integer"
+          },
           "key": {
             "title": "Key",
             "type": "string"
@@ -45234,6 +45830,11 @@
               "unique"
             ],
             "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "description": "Short name of the shared theme in the UI language, stored.",
+            "title": "Label",
             "type": "string"
           },
           "prompts": {
@@ -45250,10 +45851,15 @@
         },
         "required": [
           "key",
+          "label",
           "kind",
           "spread",
           "prompts",
-          "covered"
+          "covered",
+          "essay_ids",
+          "in_list_count",
+          "due_utc",
+          "due_predicted"
         ],
         "title": "PromptGroupOut",
         "type": "object"
@@ -47415,6 +48021,30 @@
         "title": "QuotaResponse",
         "type": "object"
       },
+      "RaiseOut": {
+        "description": "A step that moves an axis.",
+        "properties": {
+          "gain": {
+            "title": "Gain",
+            "type": "integer"
+          },
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "href",
+          "gain"
+        ],
+        "title": "RaiseOut",
+        "type": "object"
+      },
       "RandomSpec": {
         "description": "Variables and the formula of the answer; each attempt draws its own values.",
         "properties": {
@@ -47506,6 +48136,69 @@
           "url"
         ],
         "title": "RatingBookResponse",
+        "type": "object"
+      },
+      "RatingsBody": {
+        "description": "How much each thing matters, 1 (little) to 10 (a lot).",
+        "properties": {
+          "academics": {
+            "default": 5,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Academics",
+            "type": "integer"
+          },
+          "ai_resilience": {
+            "default": 5,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Ai Resilience",
+            "type": "integer"
+          },
+          "city": {
+            "default": 5,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "City",
+            "type": "integer"
+          },
+          "home": {
+            "default": 5,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Home",
+            "type": "integer"
+          },
+          "prestige": {
+            "default": 5,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Prestige",
+            "type": "integer"
+          },
+          "price": {
+            "default": 5,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Price",
+            "type": "integer"
+          },
+          "salary": {
+            "default": 5,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Salary",
+            "type": "integer"
+          },
+          "social": {
+            "default": 5,
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Social",
+            "type": "integer"
+          }
+        },
+        "title": "RatingsBody",
         "type": "object"
       },
       "ReadinessComponentOut": {
@@ -52463,6 +53156,74 @@
         "title": "SearchSourceResponse",
         "type": "object"
       },
+      "SeasonIn": {
+        "description": "The season to fix; null goes back to the automatic one.",
+        "properties": {
+          "key": {
+            "anyOf": [
+              {
+                "enum": [
+                  "explore",
+                  "build",
+                  "choose",
+                  "write",
+                  "submit",
+                  "results"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key"
+          }
+        },
+        "required": [
+          "key"
+        ],
+        "title": "SeasonIn",
+        "type": "object"
+      },
+      "SeasonOut": {
+        "description": "The season in force; `source` says whether the student fixed it.",
+        "properties": {
+          "checklist": {
+            "items": {
+              "$ref": "#/components/schemas/ChecklistLineOut"
+            },
+            "title": "Checklist",
+            "type": "array"
+          },
+          "key": {
+            "enum": [
+              "explore",
+              "build",
+              "choose",
+              "write",
+              "submit",
+              "results"
+            ],
+            "title": "Key",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "auto",
+              "override"
+            ],
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "source",
+          "checklist"
+        ],
+        "title": "SeasonOut",
+        "type": "object"
+      },
       "SecondFactorResponse": {
         "description": "A code was sent (otp), or the authenticator app is asked for (totp).",
         "properties": {
@@ -54859,44 +55620,6 @@
         "title": "SourceKind",
         "type": "string"
       },
-      "SourceOut": {
-        "description": "Where a fact came from; kept apart from the facts themselves.",
-        "properties": {
-          "key": {
-            "title": "Key",
-            "type": "string"
-          },
-          "url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Url"
-          },
-          "year": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Year"
-          }
-        },
-        "required": [
-          "key",
-          "url",
-          "year"
-        ],
-        "title": "SourceOut",
-        "type": "object"
-      },
       "SourceStatus": {
         "description": "Processing state of a source.",
         "enum": [
@@ -57046,6 +57769,35 @@
           "by_scope"
         ],
         "title": "StorageUsage",
+        "type": "object"
+      },
+      "StreakOut": {
+        "description": "Consecutive active days; `last7` runs oldest to today.",
+        "properties": {
+          "days": {
+            "title": "Days",
+            "type": "integer"
+          },
+          "last7": {
+            "items": {
+              "type": "boolean"
+            },
+            "maxItems": 7,
+            "minItems": 7,
+            "title": "Last7",
+            "type": "array"
+          },
+          "today_done": {
+            "title": "Today Done",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "days",
+          "today_done",
+          "last7"
+        ],
+        "title": "StreakOut",
         "type": "object"
       },
       "Student360ProfileResponse": {
@@ -63766,6 +64518,104 @@
         "title": "TodayCountsResponse",
         "type": "object"
       },
+      "TodayDeadlineOut": {
+        "description": "An upcoming deadline.",
+        "properties": {
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "list_entry_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Entry Id"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "title",
+          "list_entry_id",
+          "kind",
+          "href"
+        ],
+        "title": "TodayDeadlineOut",
+        "type": "object"
+      },
+      "TodayOut": {
+        "description": "What the Today screen shows.",
+        "properties": {
+          "deadlines": {
+            "items": {
+              "$ref": "#/components/schemas/TodayDeadlineOut"
+            },
+            "maxItems": 6,
+            "title": "Deadlines",
+            "type": "array"
+          },
+          "next": {
+            "items": {
+              "$ref": "#/components/schemas/NextActionOut"
+            },
+            "maxItems": 3,
+            "title": "Next",
+            "type": "array"
+          },
+          "readiness": {
+            "$ref": "#/components/schemas/TodayReadinessOut"
+          },
+          "season": {
+            "$ref": "#/components/schemas/SeasonOut"
+          },
+          "streak": {
+            "$ref": "#/components/schemas/StreakOut"
+          }
+        },
+        "required": [
+          "season",
+          "next",
+          "streak",
+          "readiness",
+          "deadlines"
+        ],
+        "title": "TodayOut",
+        "type": "object"
+      },
+      "TodayReadinessOut": {
+        "description": "The readiness percentage.",
+        "properties": {
+          "percent": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Percent",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "percent"
+        ],
+        "title": "TodayReadinessOut",
+        "type": "object"
+      },
       "ToggleBody": {
         "description": "Body of ``POST /v1/staff/journal/toggle``.",
         "properties": {
@@ -68714,6 +69564,30 @@
         "title": "SuggestionsOut",
         "type": "object"
       },
+      "app__interfaces__http__v1__admission__routes_career__ProfessionOut": {
+        "description": "A suggested profession; shortlisted ones stay across suggestions.",
+        "properties": {
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "shortlisted": {
+            "title": "Shortlisted",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "reason",
+          "shortlisted"
+        ],
+        "title": "ProfessionOut",
+        "type": "object"
+      },
       "app__interfaces__http__v1__admission__routes_career__QuestionOut": {
         "description": "One inventory question with its text in every language.",
         "properties": {
@@ -68841,6 +69715,44 @@
           "label_short"
         ],
         "title": "DeadlineOut",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__admission__routes_chooser__SourceOut": {
+        "description": "Where a fact came from; kept apart from the facts themselves.",
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "key",
+          "url",
+          "year"
+        ],
+        "title": "SourceOut",
         "type": "object"
       },
       "app__interfaces__http__v1__admission__routes_documents__AttachmentOut": {
@@ -69496,6 +70408,23 @@
         "title": "FeedbackOut",
         "type": "object"
       },
+      "app__interfaces__http__v1__admission__routes_essay_match__MatchListOut": {
+        "description": "The tables of every university on my list, soonest due first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MatchTableOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "MatchListOut",
+        "type": "object"
+      },
       "app__interfaces__http__v1__admission__routes_essay_review_public__CommentIn": {
         "description": "A guest comment, optionally anchored to a quoted span.",
         "properties": {
@@ -69560,6 +70489,92 @@
           "body"
         ],
         "title": "CommentIn",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__admission__routes_fit__ProfessionOut": {
+        "description": "An ISCO-08 occupation with its GenAI exposure.",
+        "properties": {
+          "ai_exposure": {
+            "title": "Ai Exposure",
+            "type": "number"
+          },
+          "ai_risk": {
+            "title": "Ai Risk",
+            "type": "string"
+          },
+          "group": {
+            "title": "Group",
+            "type": "string"
+          },
+          "horizon": {
+            "title": "Horizon",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "related_fields": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Related Fields",
+            "type": "array"
+          },
+          "salary_band": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary Band"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_fit__SourceOut"
+            },
+            "title": "Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "group",
+          "ai_exposure",
+          "ai_risk",
+          "horizon",
+          "salary_band",
+          "related_fields",
+          "sources"
+        ],
+        "title": "ProfessionOut",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__admission__routes_fit__SourceOut": {
+        "description": "A cited source.",
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "url"
+        ],
+        "title": "SourceOut",
         "type": "object"
       },
       "app__interfaces__http__v1__admission__routes_goal_plan__MilestoneOut": {
@@ -69706,6 +70721,28 @@
           "kind"
         ],
         "title": "FeedbackIn",
+        "type": "object"
+      },
+      "app__interfaces__http__v1__admission__routes_matching__MatchListOut": {
+        "description": "Undecided universities, best match first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MatchOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "undecided_only": {
+            "default": true,
+            "title": "Undecided Only",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "MatchListOut",
         "type": "object"
       },
       "app__interfaces__http__v1__admission__routes_prompt_studio__VersionOut": {
@@ -88599,8 +89636,26 @@
     },
     "/v1/admission/essays": {
       "get": {
-        "description": "My essays.",
+        "description": "My essays with forks, targets and the stored deep-read score (no model call).",
         "operationId": "admission_list_essays",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -88611,6 +89666,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "summary": "List Essays",
@@ -88752,6 +89817,28 @@
           }
         },
         "summary": "Fit Idea",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/essays/match": {
+      "get": {
+        "description": "Every listed university's slots at once, with its application due date.",
+        "operationId": "admission_essay_match_list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_essay_match__MatchListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Essay Match List",
         "tags": [
           "admission"
         ]
@@ -89051,8 +90138,40 @@
     },
     "/v1/admission/essays/prompt-map": {
       "get": {
-        "description": "The prompts grouped into common, shared and unique clusters.",
+        "description": "The prompts grouped into named clusters; `scope=list` is my list + Common App.",
         "operationId": "admission_essay_prompt_map",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "list",
+                "all"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -89073,6 +90192,16 @@
               }
             },
             "description": "Not the owner, or no AI consent."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "summary": "Get Prompt Map",
@@ -91977,6 +93106,56 @@
         ]
       }
     },
+    "/v1/admission/list/fit": {
+      "get": {
+        "description": "Fit of each entry of my list, from my preferences and plan.",
+        "operationId": "admission_get_list_fit",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListFitOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get List Fit",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/list/insights": {
       "get": {
         "description": "Classification and balance of my list or of a student's list.",
@@ -92430,7 +93609,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/MatchListOut"
+                  "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_matching__MatchListOut"
                 }
               }
             },
@@ -92735,6 +93914,68 @@
         ]
       }
     },
+    "/v1/admission/me/fit-preferences": {
+      "get": {
+        "description": "The caller's ratings and the axis weights they give.",
+        "operationId": "admission_get_fit_preferences",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FitPreferencesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Fit Preferences",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Replace the caller's ratings.",
+        "operationId": "admission_put_fit_preferences",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FitPreferencesIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FitPreferencesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Fit Preferences",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/me/honor-suggestions": {
       "get": {
         "description": "Non-standard certificates of mine that can become honors.",
@@ -92817,6 +94058,68 @@
           }
         },
         "summary": "Dismiss Honor Suggestion",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/me/ikigai": {
+      "get": {
+        "description": "The caller's ikigai chips.",
+        "operationId": "admission_get_ikigai",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IkigaiBody"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Ikigai",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Replace the caller's ikigai chips.",
+        "operationId": "admission_put_ikigai",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IkigaiBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IkigaiBody"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Ikigai",
         "tags": [
           "admission"
         ]
@@ -93355,6 +94658,114 @@
         ]
       }
     },
+    "/v1/admission/me/professions": {
+      "get": {
+        "description": "The caller's ranked professions.",
+        "operationId": "admission_get_my_professions",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyProfessionListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get My Professions",
+        "tags": [
+          "admission"
+        ]
+      },
+      "put": {
+        "description": "Replace the caller's ranked professions (at most five).",
+        "operationId": "admission_put_my_professions",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChosenListIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyProfessionListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put My Professions",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/me/profile": {
       "get": {
         "description": "Return my profile answers and where to resume.",
@@ -93655,6 +95066,66 @@
           }
         },
         "summary": "Review Feedback",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/me/season": {
+      "put": {
+        "description": "Fix the season (or null for automatic); returns the refreshed feed.",
+        "operationId": "admission_set_season",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "accept-language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeasonIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodayOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Season",
         "tags": [
           "admission"
         ]
@@ -95509,6 +96980,79 @@
           }
         },
         "summary": "Export Data",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/professions": {
+      "get": {
+        "description": "Search professions by name in any language.",
+        "operationId": "admission_search_professions",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 80,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfessionListOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Professions",
         "tags": [
           "admission"
         ]
@@ -100036,6 +101580,56 @@
           }
         },
         "summary": "Verify Entry",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/today": {
+      "get": {
+        "description": "My season, next steps, streak, readiness and nearest deadlines.",
+        "operationId": "admission_today",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "accept-language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TodayOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Today",
         "tags": [
           "admission"
         ]

@@ -34,6 +34,7 @@ from app.modules.admission.application.document_process import DocumentProcessSe
 from app.modules.admission.application.documents import DocumentService
 from app.modules.admission.application.essay_deep_read import EssayDeepReadService
 from app.modules.admission.application.essay_gallery import EssayGalleryService
+from app.modules.admission.application.essay_group_labels import GroupLabeler
 from app.modules.admission.application.essay_invites import EssayInviteService
 from app.modules.admission.application.essay_match import EssayMatchService
 from app.modules.admission.application.essay_practice import EssayPracticeService
@@ -47,6 +48,8 @@ from app.modules.admission.application.essays import (
 )
 from app.modules.admission.application.exemplar_search import UowExemplarSource
 from app.modules.admission.application.exemplars import ExemplarService
+from app.modules.admission.application.fit import FitService
+from app.modules.admission.application.fit_preferences import FitPreferenceService
 from app.modules.admission.application.goal_plan import GoalPlanService
 from app.modules.admission.application.goal_plan_suggest import GoalPlanSuggester
 from app.modules.admission.application.honor_suggestions import HonorSuggestionService
@@ -69,6 +72,7 @@ from app.modules.admission.application.opportunity_planner import OpportunityPla
 from app.modules.admission.application.orgs import OrgService
 from app.modules.admission.application.outcomes import OutcomeService
 from app.modules.admission.application.privacy import Eraser, PrivacyService
+from app.modules.admission.application.professions import ProfessionService
 from app.modules.admission.application.profile import ProfileService
 from app.modules.admission.application.profile_alignment import AlignmentService
 from app.modules.admission.application.profile_details import ProfileDetailsService
@@ -86,6 +90,7 @@ from app.modules.admission.application.supp_prompts import SuppPromptService
 from app.modules.admission.application.tasks import TaskService
 from app.modules.admission.application.tasks_suggest import TaskSuggester
 from app.modules.admission.application.test_scores import ScoreService
+from app.modules.admission.application.today import TodayService
 from app.modules.admission.application.transcripts import TranscriptService
 from app.modules.admission.application.uni_advice import UniAdviceService
 from app.modules.admission.application.uni_chat import UniChatService
@@ -105,6 +110,9 @@ from app.modules.admission.infrastructure.essay_crypto import (
     MemoryEssayKeyStore,
 )
 from app.modules.admission.infrastructure.kb_repository import SqlKbRepository
+from app.modules.admission.infrastructure.professions_catalog import (
+    JsonProfessionCatalog,
+)
 from app.modules.admission.infrastructure.prompt_vectors import EmbeddingPromptVectors
 from app.modules.admission.infrastructure.uni_chat_repository import (
     SqlUniChatRepository,
@@ -210,6 +218,10 @@ class AdmissionServices:
     document_process: DocumentProcessService
     matching: MatchService
     readiness: ReadinessService
+    today: TodayService
+    fit_preferences: FitPreferenceService
+    fit: FitService
+    professions: ProfessionService
     tasks_ai: TaskSuggester
     assistant: AssistantService
     memory_notes: MemoryNoteService
@@ -356,6 +368,9 @@ def build(
         texts,
         exemplar_source,
         cipher,
+    )
+    readiness = ReadinessService(
+        uow_factory, access, runtime, settings.readiness, deps.clock, list_plan
     )
     return AdmissionServices(
         actor=ResolveAdmissionActor(
@@ -535,8 +550,17 @@ def build(
         profile_details=ProfileDetailsService(uow_factory, access, deps.clock),
         document_process=DocumentProcessService(uow_factory, access),
         matching=MatchService(uow_factory, chooser, deps.clock),
-        readiness=ReadinessService(
-            uow_factory, access, runtime, settings.readiness, deps.clock, list_plan
+        readiness=readiness,
+        fit_preferences=FitPreferenceService(uow_factory),
+        professions=ProfessionService(uow_factory, JsonProfessionCatalog()),
+        fit=FitService(uow_factory, chooser, JsonProfessionCatalog()),
+        today=TodayService(
+            uow_factory,
+            readiness,
+            calendar,
+            settings.readiness,
+            deps.clock,
+            deps.i18n.t,
         ),
         tasks_ai=TaskSuggester(
             uow_factory,
@@ -587,6 +611,8 @@ def build(
             uow_factory,
             flow_gate,
             EmbeddingPromptVectors(deps.sessionmaker, embeddings),
+            cipher,
+            GroupLabeler(uow_factory, model, texts),
         ),
         essay_practice=EssayPracticeService(
             uow_factory,
@@ -644,6 +670,7 @@ def _sql_uow_factory(deps: ModuleDeps, cipher: EssayCipher) -> UowFactory:
             deps.outbox_committed_hook,
             notification_outbox=deps.notification_outbox,
             cipher=cipher,
+            clock=deps.clock,
         )
 
     return factory

@@ -1,9 +1,11 @@
 """Top essays and the per-university matching table (`/v1/admission/essays/...`)."""
 
+import datetime as dt
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import ContainerDep, StudentCtx
 from app.modules.admission.application.essay_match import (
+    AssignedEssay,
     MatchCandidate,
     MatchSlot,
     MatchTable,
@@ -68,13 +70,38 @@ class MatchCandidateOut(BaseModel):
         )
 
 
+class AssignedEssayOut(BaseModel):
+    """The essay placed in a slot, as it is now; `over_limit` against the slot."""
+
+    essay_id: str
+    title: str
+    kind: str
+    word_count: int
+    status: str
+    over_limit: bool
+
+    @classmethod
+    def of(cls, a: AssignedEssay) -> "AssignedEssayOut":
+        """Build from the assigned essay."""
+        return cls(
+            essay_id=str(a.essay_id),
+            title=a.title,
+            kind=a.kind,
+            word_count=a.word_count,
+            status=a.status,
+            over_limit=a.over_limit,
+        )
+
+
 class MatchSlotOut(BaseModel):
     """One slot: `ps` (no prompt) or `supp:<position>`; candidates best first."""
 
     slot: str
     prompt: str | None
     word_limit: int | None
+    required: bool
     essay_id: str | None
+    assigned: AssignedEssayOut | None
     candidates: list[MatchCandidateOut]
 
     @classmethod
@@ -84,6 +111,8 @@ class MatchSlotOut(BaseModel):
             slot=s.slot,
             prompt=s.prompt,
             word_limit=s.word_limit,
+            required=s.required,
+            assigned=None if s.assigned is None else AssignedEssayOut.of(s.assigned),
             essay_id=None if s.essay_id is None else str(s.essay_id),
             candidates=[MatchCandidateOut.of(c) for c in s.candidates],
         )
@@ -94,6 +123,8 @@ class MatchTableOut(BaseModel):
 
     institution_id: str
     institution_name: str
+    due_utc: dt.datetime | None
+    due_predicted: bool
     slots: list[MatchSlotOut]
 
     @classmethod
@@ -102,8 +133,16 @@ class MatchTableOut(BaseModel):
         return cls(
             institution_id=str(t.institution_id),
             institution_name=t.institution_name,
+            due_utc=t.due_utc,
+            due_predicted=t.due_predicted,
             slots=[MatchSlotOut.of(s) for s in t.slots],
         )
+
+
+class MatchListOut(BaseModel):
+    """The tables of every university on my list, soonest due first."""
+
+    items: list[MatchTableOut]
 
 
 class SlotIn(BaseModel):
@@ -119,6 +158,17 @@ async def essay_top(container: ContainerDep, ctx: StudentCtx) -> TopEssaysOut:
     """My best essays by stored review score (at most ten)."""
     rows = await container.admission.essay_match.top(ctx)
     return TopEssaysOut(items=[TopEssayOut.of(t) for t in rows])
+
+
+@router.get(
+    "/essays/match",
+    operation_id="admission_essay_match_list",
+    response_model=MatchListOut,
+)
+async def essay_match_list(container: ContainerDep, ctx: StudentCtx) -> MatchListOut:
+    """Every listed university's slots at once, with its application due date."""
+    tables = await container.admission.essay_match.listing(ctx)
+    return MatchListOut(items=[MatchTableOut.of(t) for t in tables])
 
 
 @router.get(

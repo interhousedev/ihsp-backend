@@ -8,9 +8,11 @@ from uuid import UUID
 
 from app.modules.admission.domain.essay_flow import (
     GalleryEntry,
+    GroupLabel,
     PracticeEntry,
     PromptRef,
     SlotAssignment,
+    StoredIdeaFit,
 )
 from app.shared.contracts.embeddings import QueryVector
 
@@ -40,6 +42,10 @@ class PracticeRepository(Protocol):
 
     async def recent(self, student_id: UUID, limit: int) -> list[PracticeEntry]:
         """The newest entries, latest day first."""
+        ...
+
+    async def days(self, student_id: UUID, limit: int) -> list[dt.date]:
+        """The days with an entry, newest first (nothing is opened)."""
         ...
 
 
@@ -82,6 +88,30 @@ class SlotRepository(Protocol):
 
     async def clear(self, student_id: UUID, institution_id: UUID, slot: str) -> None:
         """Empty one slot (no error when it is empty)."""
+        ...
+
+
+class GroupLabelRepository(Protocol):
+    """Generated names of prompt groups, keyed by the digest of their members."""
+
+    async def get_many(self, hashes: Sequence[str]) -> dict[str, GroupLabel]:
+        """The stored labels among `hashes`."""
+        ...
+
+    async def put_many(self, labels: Sequence[GroupLabel]) -> None:
+        """Store labels; one already stored for the same members is kept."""
+        ...
+
+
+class IdeaFitCache(Protocol):
+    """Idea fits per student and idea text digest."""
+
+    async def get(self, student_id: UUID, text_digest: str) -> StoredIdeaFit | None:
+        """The cached fit of the idea, or None."""
+        ...
+
+    async def put(self, student_id: UUID, text_digest: str, fit: StoredIdeaFit) -> None:
+        """Store or replace the fit of the idea."""
         ...
 
 

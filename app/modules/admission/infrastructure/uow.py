@@ -1,7 +1,9 @@
 """SQL unit of work of the admission module."""
 
-from typing import Any
+from typing import Any, Self
+from uuid import UUID
 
+from app.modules.admission.domain.calendar import TASHKENT
 from app.modules.admission.infrastructure.career_repository import (
     SqlCareerRepository,
 )
@@ -24,6 +26,8 @@ from app.modules.admission.infrastructure.documents_repositories import (
 )
 from app.modules.admission.infrastructure.essay_flow_repository import (
     SqlGalleryRepository,
+    SqlGroupLabelRepository,
+    SqlIdeaFitCache,
     SqlPracticeRepository,
     SqlPromptCatalog,
     SqlSlotRepository,
@@ -40,6 +44,10 @@ from app.modules.admission.infrastructure.essays_repository import (
 )
 from app.modules.admission.infrastructure.exemplars_repository import (
     SqlExemplarRepository,
+)
+from app.modules.admission.infrastructure.fit_repository import (
+    SqlFitPreferenceRepository,
+    SqlProfessionPlanRepository,
 )
 from app.modules.admission.infrastructure.goal_plan_repository import (
     SqlGoalRepository,
@@ -62,6 +70,10 @@ from app.modules.admission.infrastructure.opp_social_repository import (
 from app.modules.admission.infrastructure.opportunities_repository import (
     SqlOpportunityRepository,
 )
+from app.modules.admission.infrastructure.orm.essay_flow import EssayPracticeRow
+from app.modules.admission.infrastructure.orm.profile import EssayRow, ItemRow
+from app.modules.admission.infrastructure.orm.tasks import TaskRow
+from app.modules.admission.infrastructure.orm.test_scores import ScoreEntryRow
 from app.modules.admission.infrastructure.outcomes_repository import (
     SqlOutcomeRepository,
 )
@@ -86,9 +98,26 @@ from app.modules.admission.infrastructure.tasks_repository import SqlTaskReposit
 from app.modules.admission.infrastructure.test_scores_repository import (
     SqlScoreRepository,
 )
+from app.modules.admission.infrastructure.today_repository import SqlTodayRepository
 from app.modules.admission.ports.essay_crypto import EssayCipher
+from app.shared.clock import Clock
 from app.shared.db.uow import SqlUnitOfWork
 from app.shared.notifications import NotificationOutbox
+
+from sqlalchemy import event
+from sqlalchemy.orm import Session
+
+_STUDENT_WRITES = (EssayRow, ItemRow, ScoreEntryRow, EssayPracticeRow)
+"""Rows whose change is a student's own work (the streak)."""
+
+
+def _worker(obj: object) -> UUID | None:
+    """The student whose work a changed row is, or None when it is not work."""
+    if isinstance(obj, TaskRow):
+        return obj.student_id if obj.created_by == "student" else None
+    if isinstance(obj, _STUDENT_WRITES):
+        return obj.student_id
+    return None
 
 
 class SqlAdmissionUnitOfWork(SqlUnitOfWork):
@@ -123,6 +152,9 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
     opportunities: SqlOpportunityRepository
     tasks: SqlTaskRepository
     test_scores: SqlScoreRepository
+    today: SqlTodayRepository
+    fit_preferences: SqlFitPreferenceRepository
+    profession_plans: SqlProfessionPlanRepository
     preferences: SqlPreferenceRepository
     decisions: SqlDecisionRepository
     outcomes: SqlOutcomeRepository
@@ -134,18 +166,46 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
     practice: SqlPracticeRepository
     gallery: SqlGalleryRepository
     slots: SqlSlotRepository
+    group_labels: SqlGroupLabelRepository
+    idea_fits: SqlIdeaFitCache
 
     def __init__(
         self,
         *args: Any,
         cipher: EssayCipher,
+        clock: Clock,
         notification_outbox: NotificationOutbox | None = None,
         **kwargs: Any,
     ) -> None:
-        """Keep the essay cipher and the outbox that can cancel notifications."""
+        """Keep the essay cipher, the clock and the outbox that can cancel."""
         super().__init__(*args, **kwargs)
         self._cipher = cipher
+        self._clock = clock
         self._notification_outbox = notification_outbox
+
+    async def __aenter__(self) -> Self:
+        """Open the transaction and watch the rows that count toward the streak."""
+        await super().__aenter__()
+        self._active: set[UUID] = set()
+        event.listen(self.session.sync_session, "after_flush", self._on_flush)
+        return self
+
+    def _on_flush(self, session: Session, _context: object) -> None:
+        changed = (
+            *session.new,
+            *(o for o in session.dirty if session.is_modified(o)),
+            *session.deleted,
+        )
+        self._active.update(w for w in map(_worker, changed) if w is not None)
+
+    async def commit(self) -> None:
+        """Record today as an active day of every student who worked, then commit."""
+        if self._active:
+            await self.today.touch(
+                self._active, self._clock.now().astimezone(TASHKENT).date()
+            )
+            self._active = set()
+        await super().commit()
 
     def _init_repos(self) -> None:
         """Create the repositories on the open session."""
@@ -178,6 +238,9 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
         self.opportunities = SqlOpportunityRepository(self.session)
         self.tasks = SqlTaskRepository(self.session)
         self.test_scores = SqlScoreRepository(self.session)
+        self.today = SqlTodayRepository(self.session)
+        self.fit_preferences = SqlFitPreferenceRepository(self.session)
+        self.profession_plans = SqlProfessionPlanRepository(self.session)
         self.preferences = SqlPreferenceRepository(self.session)
         self.decisions = SqlDecisionRepository(self.session)
         self.outcomes = SqlOutcomeRepository(self.session)
@@ -189,6 +252,8 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
         self.practice = SqlPracticeRepository(self.session, self._cipher)
         self.gallery = SqlGalleryRepository(self.session)
         self.slots = SqlSlotRepository(self.session)
+        self.group_labels = SqlGroupLabelRepository(self.session)
+        self.idea_fits = SqlIdeaFitCache(self.session)
 
     async def cancel_notification(self, dedupe_key: str) -> bool:
         """Cancel a still-pending notification; False when it was claimed."""

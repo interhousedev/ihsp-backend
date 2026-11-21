@@ -22,13 +22,14 @@ from app.modules.admission.domain.essay_flow import (
     PracticeEntry,
     PracticeEvaluation,
     PracticeScore,
+    practice_streak,
     theme_for,
 )
 from app.modules.admission.domain.essays import word_count
 from app.modules.admission.infrastructure.ai.prompts import essay_flow as prompt
 from app.modules.admission.ports.ai import PromptSource, QuotaOf, StructuredAi
 from app.modules.admission.ports.consent import AI
-from app.modules.admission.ports.unit_of_work import UowFactory
+from app.modules.admission.ports.unit_of_work import AdmissionUnitOfWork, UowFactory
 from app.shared.ai_tasks import AiTask
 from app.shared.brand import with_brand
 from app.shared.clock import Clock, local_today
@@ -37,6 +38,7 @@ from app.shared.rate_limit import RateLimiter
 
 _DAY: Final = 86400
 _TOKENS: Final = 1200
+_STREAK_DAYS: Final = 400
 
 
 @dataclass(frozen=True, slots=True)
@@ -47,6 +49,8 @@ class PracticeToday:
     theme: str
     prompt: str
     entry: PracticeEntry | None
+    streak: int = 0
+    """Consecutive days with an entry, ending today (or yesterday if still open)."""
 
 
 def _line(value: Any, limit: int) -> str:
@@ -65,7 +69,7 @@ def _score(value: Any) -> int:
         return 0
 
 
-def evaluation_from(data: dict[str, Any]) -> PracticeEvaluation:
+def evaluation_from(data: dict[str, Any], locale: str = "") -> PracticeEvaluation:
     """Turn the model's reply into the four ordered scores and short lists."""
     given: dict[str, Any] = {}
     for raw in data.get("scores") or []:
@@ -85,6 +89,7 @@ def evaluation_from(data: dict[str, Any]) -> PracticeEvaluation:
         praise=_lines(data.get("praise"), prompt.MAX_POINTS),
         try_next=_lines(data.get("try_next"), prompt.MAX_POINTS),
         idea_seeds=_lines(data.get("idea_seeds"), prompt.MAX_POINTS),
+        locale=locale,
     )
 
 
@@ -116,7 +121,8 @@ class EssayPracticeService:
         day = local_today(self._clock)
         async with self._uow() as uow:
             entry = await uow.practice.get(ctx.user_id, day)
-        return self._view(day, entry)
+            streak = await self._streak(uow, ctx, day)
+        return self._view(day, entry, streak)
 
     async def save(self, ctx: AdmissionContext, body: str) -> PracticeToday:
         """Write today's entry; a changed text drops the stale evaluation."""
@@ -127,8 +133,10 @@ class EssayPracticeService:
         now = self._clock.now()
         async with self._uow() as uow:
             old = await uow.practice.get(ctx.user_id, day)
+            if old is None and not body.strip():
+                return self._view(day, None, await self._streak(uow, ctx, day))
             if old is not None and old.body == body:
-                return self._view(day, old)
+                return self._view(day, old, await self._streak(uow, ctx, day))
             entry = await uow.practice.save(
                 PracticeEntry(
                     id=old.id if old else new_id(),
@@ -141,7 +149,8 @@ class EssayPracticeService:
                 )
             )
             await uow.commit()
-        return self._view(day, entry)
+            streak = await self._streak(uow, ctx, day)
+        return self._view(day, entry, streak)
 
     async def evaluate(self, ctx: AdmissionContext, locale: str) -> PracticeToday:
         """Evaluate today's entry (AI consent, daily limit); cached until it changes."""
@@ -152,8 +161,8 @@ class EssayPracticeService:
         count = word_count(entry.body) if entry else 0
         if entry is None or count < PRACTICE_MIN_WORDS:
             raise EssayTooShortError(params={"min": PRACTICE_MIN_WORDS, "count": count})
-        if entry.evaluation is not None:
-            return self._view(day, entry)
+        if entry.evaluation is not None and entry.evaluation.locale == locale:
+            return await self._with_streak(ctx, day, entry)
         limit = await self._limit(ctx.user_id)
         if limit is not None:
             await self._limiter.hit(
@@ -180,15 +189,17 @@ class EssayPracticeService:
             schema=schema,
             max_tokens=_TOKENS,
         )
-        entry.evaluation = evaluation_from(data)
+        entry.evaluation = evaluation_from(data, locale)
         entry.model = model
         async with self._uow() as uow:
             current = await uow.practice.get(ctx.user_id, day)
             if current is not None and current.body != entry.body:
-                return self._view(day, current)  # edited meanwhile: keep it unscored
+                # edited meanwhile: keep it unscored
+                return self._view(day, current, await self._streak(uow, ctx, day))
             saved = await uow.practice.save(entry)
             await uow.commit()
-        return self._view(day, saved)
+            streak = await self._streak(uow, ctx, day)
+        return self._view(day, saved, streak)
 
     async def history(self, ctx: AdmissionContext) -> list[PracticeEntry]:
         """My recent entries, newest first."""
@@ -196,7 +207,27 @@ class EssayPracticeService:
         async with self._uow() as uow:
             return await uow.practice.recent(ctx.user_id, PRACTICE_HISTORY)
 
+    async def streak(self, ctx: AdmissionContext) -> int:
+        """My current practice streak in days."""
+        await self._gate.owner(ctx)
+        async with self._uow() as uow:
+            return await self._streak(uow, ctx, local_today(self._clock))
+
+    async def _with_streak(
+        self, ctx: AdmissionContext, day: dt.date, entry: PracticeEntry
+    ) -> PracticeToday:
+        async with self._uow() as uow:
+            return self._view(day, entry, await self._streak(uow, ctx, day))
+
     @staticmethod
-    def _view(day: dt.date, entry: PracticeEntry | None) -> PracticeToday:
+    async def _streak(
+        uow: AdmissionUnitOfWork, ctx: AdmissionContext, day: dt.date
+    ) -> int:
+        return practice_streak(await uow.practice.days(ctx.user_id, _STREAK_DAYS), day)
+
+    @staticmethod
+    def _view(
+        day: dt.date, entry: PracticeEntry | None, streak: int = 0
+    ) -> PracticeToday:
         theme = theme_for(day)
-        return PracticeToday(day, theme, PRACTICE_THEMES[theme], entry)
+        return PracticeToday(day, theme, PRACTICE_THEMES[theme], entry, streak)

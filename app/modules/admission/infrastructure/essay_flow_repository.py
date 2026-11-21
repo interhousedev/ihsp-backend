@@ -5,16 +5,19 @@ Practice `body` and `evaluation` are sealed per student like every essay text.
 
 import datetime as dt
 import json
+from collections.abc import Sequence
 from typing import Any
 from uuid import UUID
 
 from app.modules.admission.domain.essay_flow import (
     GalleryEntry,
+    GroupLabel,
     PracticeEntry,
     PracticeEvaluation,
     PracticeScore,
     PromptRef,
     SlotAssignment,
+    StoredIdeaFit,
     prompt_key,
 )
 from app.modules.admission.infrastructure.essays_repository import (
@@ -26,13 +29,18 @@ from app.modules.admission.infrastructure.orm.essay_flow import (
     EssayGalleryRow,
     EssayPracticeRow,
     EssaySlotRow,
+    IdeaFitRow,
+    PromptGroupLabelRow,
 )
 from app.modules.admission.infrastructure.orm.sealed import to_json
 from app.modules.admission.infrastructure.orm.supp_prompts import SuppPromptRow
 from app.modules.admission.ports.essay_crypto import EssayCipher
 from app.shared.ids import new_id
 
-from sqlalchemy import and_, delete, or_, select
+from sqlalchemy import and_, delete
+from sqlalchemy import func as sa_func
+from sqlalchemy import or_, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -99,6 +107,7 @@ def _evaluation_json(value: PracticeEvaluation) -> dict[str, Any]:
         "praise": list(value.praise),
         "try_next": list(value.try_next),
         "idea_seeds": list(value.idea_seeds),
+        "locale": value.locale,
     }
 
 
@@ -112,6 +121,7 @@ def _evaluation(raw: dict[str, Any]) -> PracticeEvaluation:
         praise=tuple(str(t) for t in raw["praise"]),
         try_next=tuple(str(t) for t in raw["try_next"]),
         idea_seeds=tuple(str(t) for t in raw["idea_seeds"]),
+        locale=str(raw.get("locale") or ""),
     )
 
 
@@ -184,6 +194,16 @@ class SqlPracticeRepository:
             .limit(limit)
         )
         return [await self._view(r) for r in await self._s.scalars(q)]
+
+    async def days(self, student_id: UUID, limit: int) -> list[dt.date]:
+        """The days with an entry, newest first (nothing is opened)."""
+        q = (
+            select(EssayPracticeRow.day)
+            .where(EssayPracticeRow.student_id == student_id)
+            .order_by(EssayPracticeRow.day.desc())
+            .limit(limit)
+        )
+        return list(await self._s.scalars(q))
 
 
 def _entry(row: EssayGalleryRow) -> GalleryEntry:
@@ -312,5 +332,92 @@ class SqlSlotRepository:
                     EssaySlotRow.institution_id == institution_id,
                     EssaySlotRow.slot == slot,
                 )
+            )
+        )
+
+
+class SqlGroupLabelRepository:
+    """Group labels in `admission.prompt_group_labels`."""
+
+    def __init__(self, session: AsyncSession) -> None:
+        """Keep the session."""
+        self._s = session
+
+    async def get_many(self, hashes: Sequence[str]) -> dict[str, GroupLabel]:
+        """The stored labels among `hashes`."""
+        if not hashes:
+            return {}
+        q = select(PromptGroupLabelRow).where(
+            PromptGroupLabelRow.members_hash.in_(list(hashes))
+        )
+        return {
+            r.members_hash: GroupLabel(
+                r.members_hash, r.label_ru, r.label_en, r.label_uz, r.model
+            )
+            for r in await self._s.scalars(q)
+        }
+
+    async def put_many(self, labels: Sequence[GroupLabel]) -> None:
+        """Store labels; one already stored for the same members is kept."""
+        if not labels:
+            return
+        stmt = pg_insert(PromptGroupLabelRow).values(
+            [
+                {
+                    "members_hash": g.members_hash,
+                    "label_ru": g.ru,
+                    "label_en": g.en,
+                    "label_uz": g.uz,
+                    "model": g.model,
+                }
+                for g in labels
+            ]
+        )
+        await self._s.execute(stmt.on_conflict_do_nothing())
+
+
+class SqlIdeaFitCache:
+    """Idea fits in `admission.idea_fits`."""
+
+    def __init__(self, session: AsyncSession) -> None:
+        """Keep the session."""
+        self._s = session
+
+    async def get(self, student_id: UUID, text_digest: str) -> StoredIdeaFit | None:
+        """The cached fit of the idea, or None."""
+        row = await self._s.get(IdeaFitRow, (student_id, text_digest))
+        if row is None:
+            return None
+        p = row.payload
+        return StoredIdeaFit(
+            version=row.version,
+            available=bool(p["available"]),
+            model=str(p["model"]),
+            delta=float(p["delta"]),
+            items=tuple((str(k), float(d), int(sc)) for k, d, sc in p["items"]),
+        )
+
+    async def put(self, student_id: UUID, text_digest: str, fit: StoredIdeaFit) -> None:
+        """Store or replace the fit of the idea."""
+        payload = {
+            "available": fit.available,
+            "model": fit.model,
+            "delta": fit.delta,
+            "items": [list(i) for i in fit.items],
+        }
+        stmt = pg_insert(IdeaFitRow).values(
+            student_id=student_id,
+            text_digest=text_digest,
+            version=fit.version,
+            payload=payload,
+        )
+        await self._s.execute(
+            stmt.on_conflict_do_update(
+                index_elements=["student_id", "text_digest"],
+                set_={
+                    "version": stmt.excluded.version,
+                    "payload": stmt.excluded.payload,
+                    "created_at": sa_func.now(),
+                },
             )
         )

@@ -1,5 +1,6 @@
 """Daily practice: theme of the day, sealed entry, cached evaluation, quota."""
 
+import datetime as dt
 from typing import Any
 from uuid import UUID
 
@@ -10,10 +11,15 @@ from app.modules.admission.domain.errors import (
     ConsentRequiredError,
     EssayTooShortError,
 )
-from app.modules.admission.domain.essay_flow import PRACTICE_THEMES, theme_for
+from app.modules.admission.domain.essay_flow import (
+    PRACTICE_THEMES,
+    PracticeEntry,
+    theme_for,
+)
 from app.modules.admission.infrastructure.ai.prompt_source import BuiltinPrompts
 from app.shared.base_error import RateLimitedError
 from app.shared.clock import local_today
+from app.shared.ids import new_id
 from tests.admission.unit.fakes_flow import MemPractice
 from tests.admission.unit.test_essays import Desk
 
@@ -151,3 +157,40 @@ async def test_garbled_reply_is_normalised() -> None:
     assert t.entry is not None and t.entry.evaluation is not None
     got = {s.key: s.score for s in t.entry.evaluation.scores}
     assert got == {"imagery": 0, "voice": 5, "structure": 0, "originality": 0}
+
+
+async def test_evaluation_cache_is_per_locale() -> None:
+    b = Bench(_reply(summary="Привет."), _reply(summary="Hello."))
+    ctx = await b.w.ctx()
+    await b.service.save(ctx, TEXT)
+    ru = await b.service.evaluate(ctx, "ru")
+    assert ru.entry is not None and ru.entry.evaluation is not None
+    assert ru.entry.evaluation.summary == "Привет."
+    b.hits.cap = 5
+    b.service._limit = _no_limit
+    en = await b.service.evaluate(ctx, "en")
+    assert en.entry is not None and en.entry.evaluation is not None
+    assert en.entry.evaluation.summary == "Hello." and len(b.w.ai.calls) == 2
+    await b.service.evaluate(ctx, "en")
+    assert len(b.w.ai.calls) == 2
+
+
+async def _no_limit(_: UUID) -> int | None:
+    return None
+
+
+async def test_streak_counts_today_or_yesterday_and_blank_is_not_saved() -> None:
+    b = Bench()
+    ctx = await b.w.ctx()
+    day = local_today(b.clock)
+    blank = await b.service.save(ctx, "   ")
+    assert blank.entry is None and blank.streak == 0
+    assert b.practice.rows == {}
+    for back in (1, 2, 4):
+        e = PracticeEntry(
+            new_id(), ctx.user_id, day - dt.timedelta(days=back), "x", "t"
+        )
+        b.practice.rows[(ctx.user_id, e.day)] = e
+    assert (await b.service.today(ctx)).streak == 2  # yesterday still open
+    assert (await b.service.save(ctx, TEXT)).streak == 3
+    assert await b.service.streak(ctx) == 3

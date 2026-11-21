@@ -19,6 +19,8 @@ from app.modules.admission.ports.documents import (
 )
 from app.modules.admission.ports.essay_flow import (
     GalleryRepository,
+    GroupLabelRepository,
+    IdeaFitCache,
     PracticeRepository,
     PromptCatalog,
     SlotRepository,
@@ -30,6 +32,10 @@ from app.modules.admission.ports.essay_invites import (
 from app.modules.admission.ports.essay_reviews import EssayReviewRepository
 from app.modules.admission.ports.essays import EssayRepository
 from app.modules.admission.ports.exemplars import ExemplarRepository
+from app.modules.admission.ports.fit import (
+    FitPreferenceRepository,
+    ProfessionPlanRepository,
+)
 from app.modules.admission.ports.goal_plan import GoalRepository
 from app.modules.admission.ports.help_proofs import HelpProofsRepository
 from app.modules.admission.ports.items import ItemRepository
@@ -58,6 +64,7 @@ from app.modules.admission.ports.staff import (
 from app.modules.admission.ports.supp_prompts import SuppPromptRepository
 from app.modules.admission.ports.tasks import TaskRepository
 from app.modules.admission.ports.test_scores import ScoreRepository
+from app.modules.admission.ports.today import TodayRepository
 from app.shared.notifications import NotificationDraft
 
 
@@ -170,6 +177,21 @@ class AdmissionUnitOfWork(Protocol):
         ...
 
     @property
+    def today(self) -> TodayRepository:
+        """Activity days (the streak) and the season override."""
+        ...
+
+    @property
+    def fit_preferences(self) -> FitPreferenceRepository:
+        """Fit preference ratings."""
+        ...
+
+    @property
+    def profession_plans(self) -> ProfessionPlanRepository:
+        """Ranked professions and ikigai chips."""
+        ...
+
+    @property
     def preferences(self) -> PreferenceRepository:
         """Stored preference answers."""
         ...
@@ -261,6 +283,16 @@ class AdmissionUnitOfWork(Protocol):
     @property
     def gallery(self) -> GalleryRepository:
         """Essay versions published to other students."""
+        ...
+
+    @property
+    def group_labels(self) -> GroupLabelRepository:
+        """Generated names of prompt groups."""
+        ...
+
+    @property
+    def idea_fits(self) -> IdeaFitCache:
+        """Cached idea fits."""
         ...
 
     @property

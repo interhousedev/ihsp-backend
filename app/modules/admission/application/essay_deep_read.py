@@ -7,9 +7,11 @@ essay is served without a model call. The group critique runs the existing
 review service once per target university of the essay.
 """
 
+import datetime as dt
 import re
+from collections.abc import Sequence
 from dataclasses import asdict, dataclass
-from typing import Any, Final
+from typing import Any, Final, Literal
 from uuid import UUID
 
 from app.modules.admission.application.actor import AdmissionContext
@@ -63,6 +65,15 @@ class DeepReadResult:
     read: DeepRead
     cached: bool
     stale: bool
+
+
+@dataclass(frozen=True, slots=True)
+class ReadState:
+    """What the ledger shows of an essay's deep read."""
+
+    state: Literal["none", "fresh", "stale"]
+    uniqueness: int | None
+    read_at: dt.datetime | None
 
 
 def _flat(text: str) -> str:
@@ -264,6 +275,29 @@ class EssayDeepReadService:
             return None
         digest = await self._digest(ctx.user_id, essay_input(essay), locale)
         return DeepReadResult(deep_from(row.payload), True, digest != row.input_digest)
+
+    async def states(
+        self, ctx: AdmissionContext, essays: Sequence[Essay], locale: str
+    ) -> dict[UUID, ReadState]:
+        """The stored deep read of each of my essays: score and freshness, no model."""
+        await self._gate.owner(ctx)
+        out: dict[UUID, ReadState] = {}
+        async with self._uow() as uow:
+            for essay in essays:
+                if essay.student_id != ctx.user_id:
+                    continue
+                stored = await uow.essay_reviews.list_for_essay(essay.id)
+                row = next((s for s in stored if s.kind == "deep"), None)
+                if row is None:
+                    out[essay.id] = ReadState("none", None, None)
+                    continue
+                digest = await self._digest(ctx.user_id, essay_input(essay), locale)
+                out[essay.id] = ReadState(
+                    "fresh" if digest == row.input_digest else "stale",
+                    _int(row.payload.get("uniqueness")),
+                    row.created_at,
+                )
+        return out
 
     async def group_critique(
         self,

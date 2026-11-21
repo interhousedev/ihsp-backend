@@ -28,7 +28,13 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-__all__ = ["EssayGalleryRow", "EssayPracticeRow", "EssaySlotRow"]
+__all__ = [
+    "EssayGalleryRow",
+    "EssayPracticeRow",
+    "EssaySlotRow",
+    "IdeaFitRow",
+    "PromptGroupLabelRow",
+]
 
 
 class EssayPracticeRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
@@ -96,3 +102,28 @@ class EssaySlotRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
     essay_id: Mapped[UUID] = mapped_column(
         ForeignKey(f"{SCHEMA}.essays.id", ondelete="CASCADE")
     )
+
+
+class PromptGroupLabelRow(CreatedMixin, Base):
+    """The generated short name of a prompt group (public data, no student text)."""
+
+    __tablename__ = "prompt_group_labels"
+    __table_args__ = (S,)
+
+    members_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    label_ru: Mapped[str] = mapped_column(String(80))
+    label_en: Mapped[str] = mapped_column(String(80))
+    label_uz: Mapped[str] = mapped_column(String(80))
+    model: Mapped[str] = mapped_column(String(200), server_default="")
+
+
+class IdeaFitRow(CreatedMixin, Base):
+    """A cached idea fit: prompt keys and scores only, keyed by a keyed text digest."""
+
+    __tablename__ = "idea_fits"
+    __table_args__ = (S,)
+
+    student_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    text_digest: Mapped[str] = mapped_column(String(128), primary_key=True)
+    version: Mapped[str] = mapped_column(String(64))
+    payload: Mapped[dict[str, Any]] = mapped_column(JSONB)

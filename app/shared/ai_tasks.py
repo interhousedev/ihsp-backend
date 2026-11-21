@@ -105,6 +105,7 @@ class AiTask(StrEnum):
     ADMIT_ESSAY_UNI_REVIEW = "admit_essay_uni_review"
     ADMIT_ESSAY_PRACTICE = "admit_essay_practice"
     ADMIT_ESSAY_DEEP_READ = "admit_essay_deep_read"
+    ADMIT_PROMPT_GROUP_LABEL = "admit_prompt_group_label"
     ADMIT_ALIGNMENT_MAP = "admit_alignment_map"
     ADMIT_ALIGNMENT_REFRESH = "admit_alignment_refresh"
     ADMIT_PROOF_EXTRACT = "admit_proof_extract"
@@ -567,6 +568,12 @@ TASK_SPECS: Final[dict[AiTask, TaskSpec]] = {
     ),
     AiTask.ADMIT_ESSAY_PRACTICE: _admission(
         "Admission: creative-writing evaluation of one daily practice entry.",
+        model=NOTEBOOK_MODEL,
+        budget_weight=1,
+        reasoning_effort=_NO_REASONING,
+    ),
+    AiTask.ADMIT_PROMPT_GROUP_LABEL: _admission(
+        "Admission: short ru/en/uz names of essay prompt groups (public prompts).",
         model=NOTEBOOK_MODEL,
         budget_weight=1,
         reasoning_effort=_NO_REASONING,

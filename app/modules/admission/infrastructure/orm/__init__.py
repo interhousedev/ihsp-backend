@@ -11,6 +11,7 @@ from app.modules.admission.infrastructure.orm.essay_flow import *  # noqa: F401,
 from app.modules.admission.infrastructure.orm.essay_invites import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.essay_reviews import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.exemplars import *  # noqa: F401,F403
+from app.modules.admission.infrastructure.orm.fit import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.kb import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.matching import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.memory_notes import *  # noqa: F401,F403
@@ -22,4 +23,5 @@ from app.modules.admission.infrastructure.orm.student_chunks import *  # noqa: F
 from app.modules.admission.infrastructure.orm.supp_prompts import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.tasks import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.test_scores import *  # noqa: F401,F403
+from app.modules.admission.infrastructure.orm.today import *  # noqa: F401,F403
 from app.modules.admission.infrastructure.orm.uni_chat import *  # noqa: F401,F403

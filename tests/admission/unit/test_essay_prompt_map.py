@@ -20,8 +20,17 @@ from app.modules.admission.domain.essay_flow import (
     prompt_key,
 )
 from app.modules.admission.domain.essays import Essay
+from app.modules.admission.infrastructure.essay_crypto import (
+    AesGcmEssayCipher,
+    MemoryEssayKeyStore,
+)
 from app.shared.ids import new_id
-from tests.admission.unit.fakes_flow import FakeVectors, MemPrompts, MemSlots
+from tests.admission.unit.fakes_flow import (
+    FakeVectors,
+    MemIdeaFits,
+    MemPrompts,
+    MemSlots,
+)
 from tests.admission.unit.test_essays import Desk
 from tests.admission.unit.test_items_service import STUDENT, ItemsUow
 
@@ -46,6 +55,7 @@ def _svc(
     d: Desk, vectors: FakeVectors, refs: list[PromptRef] | None = None
 ) -> tuple[EssayPromptMap, MemSlots]:
     slots = MemSlots()
+    fits = MemIdeaFits()
     prompts = MemPrompts(REFS if refs is None else refs)
 
     def uow() -> Any:
@@ -53,10 +63,14 @@ def _svc(
         u.essays = d.repo  # type: ignore[attr-defined]
         u.prompt_catalog = prompts  # type: ignore[attr-defined]
         u.slots = slots  # type: ignore[attr-defined]
+        u.idea_fits = fits  # type: ignore[attr-defined]
         return u
 
     gate = FlowGate(d.w.policy, d.consents)
-    return EssayPromptMap(uow, gate, vectors), slots
+    return (
+        EssayPromptMap(uow, gate, vectors, AesGcmEssayCipher(MemoryEssayKeyStore())),
+        slots,
+    )
 
 
 def test_cluster_groups_close_prompts_but_not_same_owner() -> None:
@@ -133,3 +147,18 @@ async def test_fit_unavailable_offline() -> None:
     svc, _ = _svc(d, FakeVectors(offline=True))
     out = await svc.fit(await d.w.ctx(), TEXT)
     assert not out.available and out.items == ()
+
+
+async def test_fit_is_cached_and_cache_only_never_calls_model() -> None:
+    d = Desk()
+    ctx = await d.w.ctx()
+    vectors = FakeVectors()
+    svc, _ = _svc(d, vectors)
+    pending = await svc.fit(ctx, TEXT, cached_only=True)
+    assert pending.pending and not pending.cached and pending.items == ()
+    first = await svc.fit(ctx, TEXT)
+    assert first.available and not first.cached
+    vectors.offline = True
+    again = await svc.fit(ctx, TEXT)
+    assert again.cached and again.available
+    assert [f.score for f in again.items] == [f.score for f in first.items]

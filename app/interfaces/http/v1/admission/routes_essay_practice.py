@@ -53,6 +53,9 @@ class PracticeTodayOut(BaseModel):
     theme: str
     prompt: str
     entry: PracticeEntryOut | None
+    streak: int = Field(
+        description="Consecutive practice days, ending today or yesterday."
+    )
 
 
 class PracticeBodyIn(BaseModel):
@@ -65,6 +68,7 @@ class PracticeListOut(BaseModel):
     """My recent entries, newest first."""
 
     items: list[PracticeEntryOut]
+    streak: int
 
 
 def _entry(e: PracticeEntry) -> PracticeEntryOut:
@@ -98,6 +102,7 @@ def _today(t: PracticeToday) -> PracticeTodayOut:
         theme=t.theme,
         prompt=t.prompt,
         entry=None if t.entry is None else _entry(t.entry),
+        streak=t.streak,
     )
 
 
@@ -123,7 +128,8 @@ async def practice_evaluate(
 async def practice_history(container: ContainerDep, ctx: StudentCtx) -> PracticeListOut:
     """My recent entries, newest first."""
     rows = await container.admission.essay_practice.history(ctx)
-    return PracticeListOut(items=[_entry(e) for e in rows])
+    streak = await container.admission.essay_practice.streak(ctx)
+    return PracticeListOut(items=[_entry(e) for e in rows], streak=streak)
 
 
 def _route(path: str, endpoint: Any, method: str, op: str) -> None:

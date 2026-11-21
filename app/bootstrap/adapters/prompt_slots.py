@@ -235,6 +235,13 @@ _PARTS: tuple[tuple[Iterable[AiTask], str, str, str, bool], ...] = (
         False,
     ),
     (
+        (AiTask.ADMIT_PROMPT_GROUP_LABEL,),
+        "group_label",
+        "Admission essay flow: short names of prompt groups in ru, en and uz",
+        admit_essay_flow.GROUP_LABEL,
+        False,
+    ),
+    (
         (AiTask.ADMIT_OPPORTUNITY_INTAKE,),
         "system",
         "Admission: event post into an opportunity draft (bot intake)",

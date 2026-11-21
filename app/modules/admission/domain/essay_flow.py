@@ -8,8 +8,9 @@ with others and finally dropped into the prompt slots of each university.
 """
 
 import datetime as dt
+import hashlib
 import math
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import Final, Literal
 from uuid import UUID
@@ -95,6 +96,17 @@ PRACTICE_KEYS: Final[tuple[PracticeKey, ...]] = (
 MomentKind = Literal["surprising", "fresh", "earned"]
 ParagraphRole = Literal["hook", "context", "turn", "evidence", "insight", "close"]
 Strength = Literal["strong", "ok", "weak"]
+
+
+def practice_streak(days: Iterable[dt.date], today: dt.date) -> int:
+    """Consecutive practice days ending today, or yesterday when today is still open."""
+    have = set(days)
+    day = today if today in have else today - dt.timedelta(days=1)
+    n = 0
+    while day in have:
+        n += 1
+        day -= dt.timedelta(days=1)
+    return n
 
 
 def theme_for(day: dt.date) -> str:
@@ -250,6 +262,38 @@ class PromptGroup:
     """Largest distance inside the group; for a unique prompt, its nearest other."""
 
 
+LABEL_MAX: Final = 60
+LABEL_LOCALES: Final = ("ru", "en", "uz")
+
+
+def members_hash(prompts: Sequence[PromptRef]) -> str:
+    """A digest of the member prompts of a group: its stored label is valid for it."""
+    raw = "\n".join(sorted(f"{p.key}\t{p.prompt}" for p in prompts))
+    return hashlib.sha256(raw.encode()).hexdigest()
+
+
+def fallback_label(prompts: Sequence[PromptRef]) -> str:
+    """A label made of the first words of the first prompt (no model needed)."""
+    words = prompts[0].prompt.split()[:6]
+    text = " ".join(words).rstrip(",.;:?!")
+    return text[:LABEL_MAX] or prompts[0].institution_name
+
+
+@dataclass(frozen=True, slots=True)
+class GroupLabel:
+    """The short human name of a group in each locale, generated once and stored."""
+
+    members_hash: str
+    ru: str
+    en: str
+    uz: str
+    model: str = ""
+
+    def of(self, locale: str) -> str:
+        """The label in the locale (English when the locale has none)."""
+        return {"ru": self.ru, "uz": self.uz}.get(locale) or self.en
+
+
 @dataclass(frozen=True, slots=True)
 class PromptMap:
     """The groups of the map and the threshold that made them."""
@@ -305,6 +349,18 @@ def build_map(
 
 
 @dataclass(frozen=True, slots=True)
+class StoredIdeaFit:
+    """A cached idea fit: scored prompt keys valid for one prompt-map version."""
+
+    version: str
+    available: bool
+    model: str
+    delta: float
+    items: tuple[tuple[str, float, int], ...]
+    """`(prompt key, distance, score)`, best first."""
+
+
+@dataclass(frozen=True, slots=True)
 class PromptTarget:
     """A prompt a draft answers; the text is copied so the draft keeps it."""
 
@@ -337,6 +393,8 @@ class PracticeEvaluation:
     praise: tuple[str, ...]
     try_next: tuple[str, ...]
     idea_seeds: tuple[str, ...]
+    locale: str = ""
+    """The language of the feedback; an evaluation is reused only for the same one."""
 
 
 @dataclass(slots=True)

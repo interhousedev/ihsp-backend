@@ -5,11 +5,13 @@ prompt of the university (`supp:<n>`) and the personal statement slot (`ps`),
 which only personal statements may fill. An essay holds one slot per university.
 """
 
+import datetime as dt
 from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
 
 from app.modules.admission.application.actor import AdmissionContext
+from app.modules.admission.application.essay_due import DueDate, application_dues
 from app.modules.admission.application.essay_prompts import FlowGate
 from app.modules.admission.domain.errors import AdmissionNotFoundError
 from app.modules.admission.domain.essay_flow import (
@@ -50,6 +52,18 @@ class MatchCandidate:
 
 
 @dataclass(frozen=True, slots=True)
+class AssignedEssay:
+    """The essay placed in a slot, as it is now."""
+
+    essay_id: UUID
+    title: str
+    kind: str
+    word_count: int
+    status: str
+    over_limit: bool
+
+
+@dataclass(frozen=True, slots=True)
 class MatchSlot:
     """One slot of the table: the prompt, the placed essay and the candidates."""
 
@@ -58,6 +72,8 @@ class MatchSlot:
     word_limit: int | None
     essay_id: UUID | None
     candidates: tuple[MatchCandidate, ...]
+    required: bool = True
+    assigned: AssignedEssay | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,6 +83,25 @@ class MatchTable:
     institution_id: UUID
     institution_name: str
     slots: tuple[MatchSlot, ...]
+    due_utc: dt.datetime | None = None
+    due_predicted: bool = False
+
+
+def _held(essays: dict[UUID, Essay], essay_id: UUID | None) -> Essay | None:
+    return None if essay_id is None else essays.get(essay_id)
+
+
+def _assigned(essay: Essay | None, limit: int | None) -> AssignedEssay | None:
+    if essay is None:
+        return None
+    return AssignedEssay(
+        essay.id,
+        essay.title,
+        essay.kind,
+        essay.word_count,
+        essay.status,
+        limit is not None and essay.word_count > limit,
+    )
 
 
 def _bad_slot() -> ValidationFailedError:
@@ -115,6 +150,20 @@ class EssayMatchService:
         await self._gate.owner(ctx)
         async with self._uow() as uow:
             return await self._table(uow, ctx.user_id, institution_id)
+
+    async def listing(self, ctx: AdmissionContext) -> list[MatchTable]:
+        """The tables of every university on my list, soonest due first."""
+        await self._gate.owner(ctx)
+        async with self._uow() as uow:
+            dues = await application_dues(uow, ctx.user_id)
+            ids = list(
+                dict.fromkeys(
+                    e.institution_id for e in await uow.shortlist.entries(ctx.user_id)
+                )
+            )
+            tables = [await self._table(uow, ctx.user_id, i, dues) for i in ids]
+        far = dt.datetime.max.replace(tzinfo=dt.UTC)
+        return sorted(tables, key=lambda t: (t.due_utc or far, t.institution_name))
 
     async def assign(
         self,
@@ -165,27 +214,54 @@ class EssayMatchService:
         return inst.name, await uow.prompt_catalog.for_institution(institution_id)
 
     async def _table(
-        self, uow: AdmissionUnitOfWork, student_id: UUID, institution_id: UUID
+        self,
+        uow: AdmissionUnitOfWork,
+        student_id: UUID,
+        institution_id: UUID,
+        dues: dict[UUID, DueDate] | None = None,
     ) -> MatchTable:
         name, refs = await self._university(uow, institution_id)
+        if dues is None:
+            dues = await application_dues(uow, student_id)
+        due = dues.get(institution_id)
         essays = await uow.essays.list_for(student_id)
         alignment = await self._alignments(uow, essays, institution_id)
         placed = {
             s.slot: s.essay_id
             for s in await uow.slots.for_student(student_id, institution_id)
         }
-        slots = [MatchSlot(PS_SLOT, None, None, placed.get(PS_SLOT), ())]
+        by_id = {e.id: e for e in essays}
+        slots = [
+            MatchSlot(
+                PS_SLOT,
+                None,
+                None,
+                placed.get(PS_SLOT),
+                (),
+                True,
+                _assigned(_held(by_id, placed.get(PS_SLOT)), None),
+            )
+        ]
         slots[0] = self._slot(slots[0], essays, alignment, institution_id, None)
         for ref in sorted(refs, key=lambda r: r.position):
+            key = supp_slot(ref.position)
             base = MatchSlot(
-                supp_slot(ref.position),
+                key,
                 ref.prompt,
                 ref.word_limit,
-                placed.get(supp_slot(ref.position)),
+                placed.get(key),
                 (),
+                ref.required,
+                _assigned(_held(by_id, placed.get(key)), ref.word_limit),
             )
             slots.append(self._slot(base, essays, alignment, institution_id, ref))
-        return MatchTable(institution_id, name, tuple(slots))
+        return MatchTable(
+            institution_id,
+            name,
+            tuple(slots),
+            None if due is None else due.due_utc,
+            due is not None and due.predicted,
+        )
 
     @staticmethod
     def _slot(
@@ -218,7 +294,13 @@ class EssayMatchService:
             )
         )
         return MatchSlot(
-            slot.slot, slot.prompt, slot.word_limit, slot.essay_id, tuple(cands)
+            slot.slot,
+            slot.prompt,
+            slot.word_limit,
+            slot.essay_id,
+            tuple(cands),
+            slot.required,
+            slot.assigned,
         )
 
     @staticmethod

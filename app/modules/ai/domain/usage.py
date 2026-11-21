@@ -92,6 +92,7 @@ _FEATURE_OF: dict[str, str] = {
     "admit_essay_uni_review": "admission",
     "admit_essay_practice": "admission",
     "admit_essay_deep_read": "admission",
+    "admit_prompt_group_label": "admission",
     "admit_alignment_map": "admission",
     "admit_alignment_refresh": "admission",
     "admit_proof_extract": "admission",

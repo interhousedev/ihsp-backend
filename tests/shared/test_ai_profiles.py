@@ -94,6 +94,7 @@ def test_the_catalog_lists_the_places_that_call_a_model() -> None:
         "admit_essay_uni_review",
         "admit_essay_practice",
         "admit_essay_deep_read",
+        "admit_prompt_group_label",
         "admit_alignment_map",
         "admit_alignment_refresh",
         "admit_proof_extract",

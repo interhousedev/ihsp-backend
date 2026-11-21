@@ -6,9 +6,10 @@ from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep, StudentCtx
 from app.interfaces.http.v1.admission.routes_items import _locale
+from app.modules.admission.application.essay_deep_read import ReadState
 from app.modules.admission.application.essay_review_core import EssayCheck
 from app.modules.admission.application.essays import SharedEssay
-from app.modules.admission.domain.essay_flow import MAX_GROUP
+from app.modules.admission.domain.essay_flow import MAX_GROUP, PromptTarget
 from app.modules.admission.domain.essays import (
     BODY_MAX,
     HEADING_MAX,
@@ -149,6 +150,15 @@ class EssayOut(BaseModel):
         )
 
 
+def _target_out(t: PromptTarget) -> PromptTargetOut:
+    return PromptTargetOut(
+        institution_id=t.institution_id,
+        position=t.position,
+        prompt=t.prompt,
+        word_limit=t.word_limit,
+    )
+
+
 class EssaySummaryOut(BaseModel):
     """A row of the essays list."""
 
@@ -160,10 +170,19 @@ class EssaySummaryOut(BaseModel):
     word_count: int
     status: str
     updated_at: dt.datetime | None
+    forked_from: UUID | None
+    targets: list[PromptTargetOut]
+    uniqueness: int | None = Field(
+        description="The one score shown everywhere: deep-read uniqueness 0-100."
+    )
+    deep_read: Literal["none", "fresh", "stale"] = Field(
+        description="`stale` when the essay (or the UI language) changed since."
+    )
+    deep_read_at: dt.datetime | None
 
     @classmethod
-    def of(cls, e: Essay) -> "EssaySummaryOut":
-        """Map the essay without its texts."""
+    def of(cls, e: Essay, read: ReadState | None = None) -> "EssaySummaryOut":
+        """Map the essay without its texts, with its stored deep read state."""
         return cls(
             id=e.id,
             kind=e.kind,
@@ -173,6 +192,11 @@ class EssaySummaryOut(BaseModel):
             word_count=e.word_count,
             status=e.status,
             updated_at=e.updated_at,
+            forked_from=e.forked_from,
+            targets=[_target_out(t) for t in e.targets],
+            uniqueness=None if read is None else read.uniqueness,
+            deep_read="none" if read is None else read.state,
+            deep_read_at=None if read is None else read.read_at,
         )
 
 
@@ -443,10 +467,13 @@ class LatestCheckOut(CoachCheckOut):
     created_at: dt.datetime
 
 
-async def list_essays(container: ContainerDep, ctx: StudentCtx) -> EssayListOut:
-    """My essays."""
+async def list_essays(
+    container: ContainerDep, ctx: StudentCtx, lang: Lang = None
+) -> EssayListOut:
+    """My essays with forks, targets and the stored deep-read score (no model call)."""
     rows = await container.admission.essays.mine(ctx)
-    return EssayListOut(items=[EssaySummaryOut.of(e) for e in rows])
+    states = await container.admission.essay_deep_read.states(ctx, rows, _locale(lang))
+    return EssayListOut(items=[EssaySummaryOut.of(e, states.get(e.id)) for e in rows])
 
 
 async def create_essay(

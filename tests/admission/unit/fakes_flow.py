@@ -5,6 +5,7 @@ import hashlib
 import math
 from collections.abc import Iterable, Sequence
 from dataclasses import replace
+from typing import Any
 from uuid import UUID
 
 from app.modules.admission.domain.essay_flow import (
@@ -52,6 +53,9 @@ class MemPractice:
     async def recent(self, student_id: UUID, limit: int) -> list[PracticeEntry]:
         mine = [e for (s, _), e in self.rows.items() if s == student_id]
         return sorted(mine, key=lambda e: e.day, reverse=True)[:limit]
+
+    async def days(self, student_id: UUID, limit: int) -> list[dt.date]:
+        return [e.day for e in await self.recent(student_id, limit)]
 
 
 class MemGallery:
@@ -155,3 +159,16 @@ class FakeVectors:
         if self.offline or not text.strip():
             return None
         return QueryVector(self.model, bag_vector(text))
+
+
+class MemIdeaFits:
+    """Idea fits keyed by student and text digest."""
+
+    def __init__(self) -> None:
+        self.rows: dict[tuple[UUID, str], Any] = {}
+
+    async def get(self, student_id: UUID, text_digest: str) -> Any:
+        return self.rows.get((student_id, text_digest))
+
+    async def put(self, student_id: UUID, text_digest: str, fit: Any) -> None:
+        self.rows[(student_id, text_digest)] = fit
