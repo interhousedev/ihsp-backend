@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Literal
 
 from app.modules.ai.application.connectors import PipelineView
+from app.modules.ai.application.tracing_admin import TracingView
 from app.modules.ai.domain.connectors import (
     Connector,
     ConnectorKind,
@@ -102,6 +103,9 @@ class PipelineRouteBody(BaseModel):
     connector_id: str | None = Field(default=None, max_length=48)
     model: str | None = Field(default=None, max_length=255)
     reasoning_effort: Effort | None = None
+    # null: the default (admission untraced, the rest traced; content per env)
+    tracing_enabled: bool | None = None
+    capture_content: bool | None = None
 
 
 class RouteOut(BaseModel):
@@ -111,6 +115,8 @@ class RouteOut(BaseModel):
     model: str | None
     reasoning_effort: str | None
     updated_at: datetime | None
+    tracing_enabled: bool | None = None
+    capture_content: bool | None = None
 
 
 class EffectiveOut(BaseModel):
@@ -140,6 +146,14 @@ class EnvDefaultOut(BaseModel):
     reasoning_effort: str | None
 
 
+class PipelineTracingOut(BaseModel):
+    """Whether a pipeline's calls are traced to Langfuse, and with content."""
+
+    enabled: bool
+    capture_content: bool
+    default_enabled: bool
+
+
 class PipelineOut(BaseModel):
     """One pipeline with its tasks and routes."""
 
@@ -148,6 +162,7 @@ class PipelineOut(BaseModel):
     route: RouteOut
     effective: EffectiveOut
     env_default: EnvDefaultOut
+    tracing: PipelineTracingOut
 
     @classmethod
     def of(cls, view: PipelineView) -> "PipelineOut":
@@ -161,12 +176,19 @@ class PipelineOut(BaseModel):
                 model=route.model if route else None,
                 reasoning_effort=route.reasoning_effort if route else None,
                 updated_at=route.updated_at if route else None,
+                tracing_enabled=route.tracing_enabled if route else None,
+                capture_content=route.capture_content if route else None,
             ),
             effective=EffectiveOut.of(view.effective),
             env_default=EnvDefaultOut(
                 connector_id=view.env_default.connector_id,
                 model=view.env_default.model,
                 reasoning_effort=view.env_default.reasoning_effort,
+            ),
+            tracing=PipelineTracingOut(
+                enabled=view.tracing_enabled,
+                capture_content=view.capture_content,
+                default_enabled=view.tracing_default,
             ),
         )
 
@@ -175,3 +197,42 @@ class PipelinesResponse(BaseModel):
     """GET /pipelines."""
 
     items: list[PipelineOut]
+
+
+class TracingOut(BaseModel):
+    """GET/PUT/DELETE /tracing: the Langfuse project, never its secret key."""
+
+    source: Literal["runtime", "env", "none"]
+    host: str
+    public_key: str | None
+    has_secret: bool
+    secret_last4: str | None
+    env_configured: bool
+    env_host: str
+    capture_default: bool
+    updated_at: datetime | None
+
+    @classmethod
+    def of(cls, view: TracingView) -> "TracingOut":
+        """Build from the application view."""
+        return cls(
+            source=view.source,
+            host=view.host,
+            public_key=view.public_key,
+            has_secret=view.has_secret,
+            secret_last4=view.secret_last4,
+            env_configured=view.env_configured,
+            env_host=view.env_host,
+            capture_default=view.capture_default,
+            updated_at=view.updated_at,
+        )
+
+
+class TracingBody(BaseModel):
+    """PUT /tracing: `secret_key` is write-only; omitted keeps the stored one."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    host: str = Field(max_length=500)
+    public_key: str = Field(min_length=1, max_length=255)
+    secret_key: SecretStr | None = Field(default=None, max_length=255)

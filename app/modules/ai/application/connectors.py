@@ -21,6 +21,7 @@ from app.modules.ai.domain.connectors import (
     Pipeline,
     PipelineRoute,
     ProbeResult,
+    default_tracing,
     kind_fits,
     valid_base_url,
     valid_slug,
@@ -251,6 +252,9 @@ class PipelineView:
     route: PipelineRoute | None
     effective: EffectiveRoute
     env_default: EffectiveRoute
+    tracing_enabled: bool
+    capture_content: bool
+    tracing_default: bool
 
 
 class PipelineAdmin:
@@ -262,12 +266,18 @@ class PipelineAdmin:
         runtime: ConnectorRuntime,
         routing: RouteService,
         clock: Clock,
+        *,
+        capture_default: bool = False,
     ) -> None:
-        """Keep the transaction factory, the environment connectors and the router."""
+        """Keep the transaction factory, the environment connectors and the router.
+
+        `capture_default` is the environment's `LANGFUSE__CAPTURE_CONTENT`.
+        """
         self.uow_factory = uow_factory
         self.runtime = runtime
         self.routing = routing
         self.clock = clock
+        self.capture_default = capture_default
 
     async def list(self, actor: Actor) -> list[PipelineView]:
         """Every pipeline with its tasks and routes."""
@@ -284,8 +294,14 @@ class PipelineAdmin:
         connector_id: str | None,
         model: str | None,
         reasoning_effort: str | None,
+        tracing_enabled: bool | None = None,
+        capture_content: bool | None = None,
     ) -> PipelineView:
-        """Route a pipeline; all three fields empty removes the route."""
+        """Route a pipeline; every field empty removes the route.
+
+        `tracing_enabled` and `capture_content` null mean the default: admission
+        untraced, the rest traced, content per the environment.
+        """
         found = _pipeline(pipeline)
         model = (model or "").strip() or None
         if model is not None and len(model) > _MAX_MODEL:
@@ -307,16 +323,17 @@ class PipelineAdmin:
                 reasoning_effort=reasoning_effort,
                 updated_at=self.clock.now(),
                 updated_by=actor.user_id,
+                tracing_enabled=tracing_enabled,
+                capture_content=capture_content,
             )
-            empty = connector_id is None and model is None and reasoning_effort is None
-            if empty:
+            if route.empty:
                 await uow.routes.delete(found)
             else:
                 await uow.routes.put(route)
             uow.audit(_route_audit(actor, route))
             await uow.commit()
         self.routing.invalidate()
-        return await self._view(found, None if empty else route)
+        return await self._view(found, None if route.empty else route)
 
     async def delete(self, actor: Actor, pipeline: str) -> None:
         """Send the pipeline back to the environment's values."""
@@ -331,12 +348,17 @@ class PipelineAdmin:
         self, pipeline: Pipeline, route: PipelineRoute | None
     ) -> PipelineView:
         tasks = sorted(t.value for t, p in PIPELINE_OF.items() if p is pipeline)
+        traced = route.tracing_enabled if route else None
+        capture = route.capture_content if route else None
         return PipelineView(
             pipeline=pipeline,
             tasks=tasks,
             route=route,
             effective=await self.routing.route_of(pipeline),
             env_default=self.routing.env_route(pipeline),
+            tracing_enabled=default_tracing(pipeline) if traced is None else traced,
+            capture_content=self.capture_default if capture is None else capture,
+            tracing_default=default_tracing(pipeline),
         )
 
 
@@ -356,5 +378,7 @@ def _route_audit(actor: Actor, route: PipelineRoute) -> AuditDraft:
             "connector_id": route.connector_id,
             "model": route.model,
             "reasoning_effort": route.reasoning_effort,
+            "tracing_enabled": route.tracing_enabled,
+            "capture_content": route.capture_content,
         },
     )

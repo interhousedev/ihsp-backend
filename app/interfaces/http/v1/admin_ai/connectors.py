@@ -1,4 +1,4 @@
-"""Routes /v1/admin/ai/connectors and /pipelines (admin only; mounted by router.py)."""
+"""Routes /v1/admin/ai/connectors, /pipelines and /tracing (admin only)."""
 
 from typing import Annotated
 
@@ -13,6 +13,8 @@ from app.interfaces.http.v1.admin_ai.connectors_schemas import (
     PipelineOut,
     PipelineRouteBody,
     PipelinesResponse,
+    TracingBody,
+    TracingOut,
 )
 from app.modules.ai.domain.connectors import ConnectorKind
 from app.modules.ai.wiring import ConnectorServices
@@ -127,6 +129,8 @@ async def route_pipeline(
         connector_id=body.connector_id,
         model=body.model,
         reasoning_effort=body.reasoning_effort,
+        tracing_enabled=body.tracing_enabled,
+        capture_content=body.capture_content,
     )
     return PipelineOut.of(view)
 
@@ -142,3 +146,31 @@ async def reset_pipeline(
     """Send the pipeline back to the environment's values."""
     await _services(container).pipelines.delete(actor, pipeline)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/tracing", response_model=TracingOut)
+async def get_tracing(container: ContainerDep, actor: AdminActor) -> TracingOut:
+    """The Langfuse project calls are traced to; the secret key is never shown."""
+    view = await _services(container).tracing.get(actor)
+    return TracingOut.of(view)
+
+
+@router.put("/tracing", response_model=TracingOut)
+async def set_tracing(
+    body: TracingBody, container: ContainerDep, actor: AdminActor
+) -> TracingOut:
+    """Set the Langfuse project; the secret key goes to Vault, never back out."""
+    view = await _services(container).tracing.put(
+        actor,
+        host=body.host,
+        public_key=body.public_key,
+        secret_key=body.secret_key.get_secret_value() if body.secret_key else None,
+    )
+    return TracingOut.of(view)
+
+
+@router.delete("/tracing", response_model=TracingOut)
+async def remove_tracing(container: ContainerDep, actor: AdminActor) -> TracingOut:
+    """Remove the stored project and its key; the environment's applies again."""
+    view = await _services(container).tracing.delete(actor)
+    return TracingOut.of(view)

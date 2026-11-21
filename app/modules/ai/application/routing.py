@@ -10,7 +10,7 @@ process within that time; the process that made it drops its cache at once.
 
 import asyncio
 import time
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
 from dataclasses import replace
 
@@ -53,13 +53,18 @@ class RouteService:
         runtime: ConnectorRuntime,
         *,
         monotonic: Callable[[], float] = time.monotonic,
+        on_load: Callable[[RoutingSnapshot], Awaitable[None]] | None = None,
     ) -> None:
-        """Keep the settings, the loader, the client builder and the time source."""
+        """Keep the settings, the loader, the client builder and the time source.
+
+        `on_load` sees every fresh read (the tracing switches follow it).
+        """
         self._settings = settings
         self._loader = loader
         self._runtime = runtime
         self._ttl = float(settings.ai.routing_ttl_seconds)
         self._monotonic = monotonic
+        self._on_load = on_load
         self._snapshot: RoutingSnapshot | None = None
         self._expires_at = 0.0
         self._lock = asyncio.Lock()
@@ -83,8 +88,18 @@ class RouteService:
                 log.exception("ai_routing_read_failed")
                 if self._snapshot is None:
                     self._snapshot = RoutingSnapshot()
+            else:
+                await self._notify(self._snapshot)
             self._expires_at = self._monotonic() + self._ttl
             return self._snapshot
+
+    async def _notify(self, snapshot: RoutingSnapshot) -> None:
+        if self._on_load is None:
+            return
+        try:
+            await self._on_load(snapshot)
+        except Exception:
+            log.exception("ai_routing_listener_failed")
 
     async def connectors(self) -> dict[str, Connector]:
         """The environment's connectors, replaced by the stored row of the same id."""

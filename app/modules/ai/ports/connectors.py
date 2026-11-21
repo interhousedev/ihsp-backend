@@ -12,6 +12,7 @@ from app.modules.ai.domain.connectors import (
     Pipeline,
     PipelineRoute,
     ProbeResult,
+    TracingConfig,
 )
 from app.shared.ai_tasks import AiTask
 from app.shared.contracts.ai import LlmGateway
@@ -59,6 +60,22 @@ class PipelineRouteRepository(Protocol):
         ...
 
 
+class TracingSettingsRepository(Protocol):
+    """The one row of the runtime Langfuse project."""
+
+    async def get(self) -> TracingConfig | None:
+        """The row, or None (the environment applies)."""
+        ...
+
+    async def put(self, config: TracingConfig) -> None:
+        """Insert or replace the row."""
+        ...
+
+    async def delete(self) -> None:
+        """Remove the row."""
+        ...
+
+
 class ConnectorSecrets(Protocol):
     """The connector keys, in Vault KV v2 under `<kv_prefix>/<connector_id>`."""
 
@@ -92,6 +109,11 @@ class ConnectorUnitOfWork(Protocol):
         """The route repository of the open transaction."""
         ...
 
+    @property
+    def tracing(self) -> TracingSettingsRepository:
+        """The tracing settings repository of the open transaction."""
+        ...
+
     async def __aenter__(self) -> Self:
         """Open the transaction."""
         ...
@@ -120,6 +142,7 @@ class RoutingSnapshot:
 
     connectors: Mapping[str, Connector] = field(default_factory=dict)
     routes: Mapping[Pipeline, PipelineRoute] = field(default_factory=dict)
+    tracing: TracingConfig | None = None
 
 
 class RoutingLoader(Protocol):

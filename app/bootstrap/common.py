@@ -5,10 +5,8 @@ the credentials it needs; modules talk to each other through the contracts in
 `app/shared/contracts`, never by importing another module's internals.
 """
 
-import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from functools import partial
 from typing import Any, Literal, cast
 from uuid import UUID
 
@@ -110,13 +108,13 @@ from app.modules.ai.infrastructure.gateway_factory import (
     make_llm_gateway,
     make_web_search_gateway,
 )
-from app.modules.ai.infrastructure.langfuse_tracer import make_langfuse_tracer
 from app.modules.ai.infrastructure.recording_gateways import (
     RecordingEmbeddings,
     RecordingLlmGateway,
     RecordingWebSearch,
     UsageRecorder,
 )
+from app.modules.ai.infrastructure.tracing_runtime import TracingRuntime
 from app.modules.ai.infrastructure.usage_store import SqlUsageStore
 from app.modules.ai.wiring import build as build_ai
 from app.modules.ai.wiring import build_connectors, build_prompts
@@ -292,12 +290,12 @@ class _Assembler:
         self.embedding_index: EmbeddingIndex | None = None
         self.knowledge_lookup: KnowledgeLookupAdapter | None = None
         self.knowledge_gaps: KnowledgeGapAdapter | None = None
-        tracer = make_langfuse_tracer(container.settings.langfuse)
-        if tracer is not None:
-            # Flush on shutdown; the SDK blocks while it sends, so off the loop.
-            container.closers.append(partial(asyncio.to_thread, tracer.close))
+        # Langfuse: the environment's project until Administration sets one; the
+        # route service feeds it the per-pipeline switches. Flushed on shutdown.
+        self.tracing = TracingRuntime(container.settings.langfuse)
+        container.closers.append(self.tracing.close)
         self.recorder = UsageRecorder(
-            SqlUsageStore(container.sessionmaker), container.clock, tracer
+            SqlUsageStore(container.sessionmaker), container.clock, self.tracing
         )
         self.deps = make_deps(container)
         self.prompts = build_prompts(self.deps, prompt_slots(), declared_requests())
@@ -715,7 +713,9 @@ class _Assembler:
         env_search = make_web_search_gateway(
             c.settings, c.redis, required=self.plan.ai_keys
         )
-        connectors = build_connectors(self.deps, llm=env_llm, search=env_search)
+        connectors = build_connectors(
+            self.deps, llm=env_llm, search=env_search, tracing=self.tracing
+        )
         # Administration can route a pipeline at runtime: calls go through the router
         # (a test's own gateway is used as it is).
         self.raw_llm = (

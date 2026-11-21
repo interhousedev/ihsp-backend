@@ -6,6 +6,7 @@ from app.interfaces.http.dependencies import get_actor
 from app.interfaces.http.v1.admin_ai.connectors import router as connectors_router
 from app.modules.ai.application.connectors import ConnectorAdmin, PipelineAdmin
 from app.modules.ai.application.routing import RouteService
+from app.modules.ai.application.tracing_admin import TracingAdmin
 from app.modules.ai.infrastructure.connector_clients import EnvConnectorRuntime
 from app.modules.ai.infrastructure.connector_store import (
     SqlConnectorUnitOfWork,
@@ -73,6 +74,16 @@ def _services(
             make_uow, secrets, runtime, routing, allow_plain_local_urls=False
         ),
         pipelines=PipelineAdmin(make_uow, runtime, routing, clock),
+        tracing=TracingAdmin(
+            make_uow,
+            secrets,
+            routing,
+            clock,
+            env_host="https://cloud.langfuse.com",
+            env_configured=False,
+            capture_default=False,
+            allow_plain_local_urls=False,
+        ),
     )
 
 

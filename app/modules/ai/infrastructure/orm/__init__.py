@@ -9,6 +9,7 @@ from app.modules.ai.infrastructure.orm.project import Project, ProjectFile
 from app.modules.ai.infrastructure.orm.prompt_default import PromptDefaultRow
 from app.modules.ai.infrastructure.orm.prompt_version import PromptVersionRow
 from app.modules.ai.infrastructure.orm.telegram_topic import TelegramTopicRow
+from app.modules.ai.infrastructure.orm.tracing_settings import TracingSettingsRow
 from app.modules.ai.infrastructure.orm.usage_event import UsageEventRow
 from app.modules.ai.infrastructure.orm.web_page import WebPageRow, WebQueryRow
 
@@ -23,6 +24,7 @@ __all__ = [
     "PromptDefaultRow",
     "PromptVersionRow",
     "TelegramTopicRow",
+    "TracingSettingsRow",
     "UsageEventRow",
     "WebPageRow",
     "WebQueryRow",
