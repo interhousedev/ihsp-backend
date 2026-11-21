@@ -19,6 +19,7 @@ from app.modules.admission.application.essay_due import (
     earliest,
 )
 from app.modules.admission.application.essay_group_labels import GroupLabeler
+from app.modules.admission.application.essay_match import uses_common_app
 from app.modules.admission.application.essay_prompts import FlowGate
 from app.modules.admission.domain.errors import InvalidAnswerError
 from app.modules.admission.domain.essay_categories import (
@@ -129,10 +130,18 @@ class EssayPromptMap:
         """
         await self._gate.owner(ctx)
         async with self._uow() as uow:
-            refs = [*common_app_refs(), *await uow.prompt_catalog.all()]
             listed = {
                 e.institution_id for e in await uow.shortlist.entries(ctx.user_id)
             }
+            # Common App prompts only matter when a listed university takes it.
+            common = not listed
+            for iid in listed:
+                inst = await uow.catalog.institution(iid)
+                if inst is not None and uses_common_app(inst):
+                    common = True
+                    break
+            catalog = await uow.prompt_catalog.all()
+            refs = [*(common_app_refs() if common else []), *catalog]
             covered = await self._covered(uow, ctx)
             dues = await application_dues(uow, ctx.user_id)
             essays = await uow.essays.list_for(ctx.user_id)
