@@ -5,6 +5,7 @@ from typing import Any, Literal
 from uuid import UUID
 
 from app.modules.admission.domain.catalog_proposals import CatalogProposal
+from app.modules.admission.domain.catalog_staff import StaffInstitution
 from app.modules.admission.domain.supp_prompts import (
     MAX_CHAR_LIMIT,
     MAX_PROMPT_LEN,
@@ -246,3 +247,101 @@ class CatalogProposalListOut(BaseModel):
 
     items: list[CatalogProposalOut]
     can_review: bool
+
+
+InstitutionKind = Literal["university", "college", "foundation_provider"]
+InstitutionSetting = Literal["big_city", "college_town", "campus", "small_city"]
+InstitutionStatus = Literal["published", "provisional", "archived"]
+LogoFit = Literal["circle", "contain"]
+
+
+class StaffInstitutionRowOut(BaseModel):
+    """An institution of any status, for the staff table and the edit form."""
+
+    id: UUID
+    name: str
+    name_local: str | None
+    country: str
+    city: str | None
+    website_domain: str | None
+    kind: InstitutionKind
+    size_band: str | None
+    setting: InstitutionSetting | None
+    languages: list[str]
+    aliases: list[str]
+    status: InstitutionStatus
+    logo_url: str | None
+    cover_url: str | None
+    logo_zoom: float
+    logo_fit: LogoFit | None
+    in_use: bool
+    lock_version: int
+    updated_at: datetime
+
+    @classmethod
+    def of(cls, i: StaffInstitution) -> "StaffInstitutionRowOut":
+        """Map an institution."""
+        return cls(
+            id=i.id,
+            name=i.name,
+            name_local=i.name_local,
+            country=i.country,
+            city=i.city,
+            website_domain=i.website_domain,
+            kind=i.kind,
+            size_band=i.size_band,
+            setting=i.setting,
+            languages=list(i.languages),
+            aliases=list(i.aliases),
+            status=i.status,
+            logo_url=i.logo_url,
+            cover_url=i.cover_url,
+            logo_zoom=i.logo_zoom,
+            logo_fit=i.logo_fit,
+            in_use=i.in_use,
+            lock_version=i.lock_version,
+            updated_at=i.updated_at,
+        )
+
+
+class StaffInstitutionPageOut(BaseModel):
+    """One page of institutions and the countries the filter offers."""
+
+    items: list[StaffInstitutionRowOut]
+    total: int
+    page: int
+    page_size: int
+    countries: list[str]
+
+
+class StaffInstitutionEditIn(BaseModel):
+    """Fields of an institution; on edit an omitted field stays, `null` clears."""
+
+    name: str | None = Field(default=None, min_length=1, max_length=200)
+    name_local: str | None = Field(default=None, max_length=200)
+    country: str | None = Field(default=None, min_length=2, max_length=2)
+    city: str | None = Field(default=None, max_length=120)
+    website_domain: str | None = Field(default=None, max_length=200)
+    kind: InstitutionKind | None = None
+    size_band: str | None = Field(default=None, max_length=10)
+    setting: InstitutionSetting | None = None
+    languages: list[str] | None = Field(default=None, max_length=50)
+    aliases: list[str] | None = Field(default=None, max_length=50)
+    status: InstitutionStatus | None = None
+    logo_url: str | None = Field(default=None, max_length=2000)
+    cover_url: str | None = Field(default=None, max_length=2000)
+    logo_zoom: float | None = Field(default=None, ge=0.5, le=3.0)
+    logo_fit: LogoFit | None = None
+
+
+class StaffInstitutionCreateIn(StaffInstitutionEditIn):
+    """A new institution: `name` and `country` are required."""
+
+    name: str = Field(min_length=1, max_length=200)
+    country: str = Field(min_length=2, max_length=2)
+
+
+class StaffInstitutionPutIn(StaffInstitutionEditIn):
+    """An edit under the optimistic lock the form was loaded with."""
+
+    lock_version: int = Field(ge=0)

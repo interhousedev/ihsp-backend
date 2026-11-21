@@ -1,0 +1,558 @@
+{
+  "institutions": [
+    {
+      "slug": "usc-edu",
+      "name": "University of Southern California",
+      "country": "US",
+      "city": "Los Angeles",
+      "website_domain": "usc.edu",
+      "description": {
+        "en": "The University of Southern California is a private research university in Los Angeles, California. Founded in 1880, it is the oldest private research university in California.",
+        "ru": "Университет Южной Калифорнии — частный исследовательский университет в Лос-Анджелесе, штат Калифорния. Основан в 1880 году и является старейшим частным исследовательским университетом Калифорнии.",
+        "uz": "Janubiy Kaliforniya universiteti — Kaliforniya shtatining Los-Anjeles shahridagi xususiy ilmiy-tadqiqot universiteti. 1880-yilda tashkil etilgan boʼlib, Kaliforniyadagi eng qadimgi xususiy ilmiy-tadqiqot universitetidir."
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-10",
+          "cycle": "2026-27",
+          "source_url": "https://ask.usc.edu/s/article/000001498",
+          "note": "No year on page; treated as 2026-27 cycle."
+        }
+      ],
+      "source_url": "https://admission.usc.edu/prospective-students/how-to-apply/international-students/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "utexas-edu",
+      "name": "University of Texas at Austin",
+      "country": "US",
+      "city": "Austin",
+      "website_domain": "utexas.edu",
+      "description": {
+        "en": "The University of Texas at Austin is a public research university in Austin, Texas, founded in 1883. It is the flagship institution of the University of Texas System.",
+        "ru": "Техасский университет в Остине — государственный исследовательский университет в Остине, штат Техас, основанный в 1883 году. Является флагманским вузом университетской системы Техаса.",
+        "uz": "Texas universiteti (Ostin) — Texas shtatining Ostin shahridagi davlat ilmiy-tadqiqot universiteti boʼlib, 1883-yilda tashkil etilgan. Texas universiteti tizimining yetakchi oliygohidir."
+      },
+      "acceptance_rate": {
+        "min": 29.1,
+        "max": 29.1,
+        "source_url": "https://en.wikipedia.org/wiki/University_of_Texas_at_Austin",
+        "year": 2023,
+        "note": "19,253 admitted of 66,109, fall 2023, per Wikipedia."
+      },
+      "test_policy": {
+        "value": "required",
+        "source_url": "https://admissions.utexas.edu/apply/frequently-asked-questions/",
+        "year": 2026,
+        "note": "ACT, SAT or CLT required."
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2026-12-01",
+          "cycle": "2026-27",
+          "source_url": "https://admissions.utexas.edu/apply/frequently-asked-questions/",
+          "note": "No year on page; treated as 2026-27 cycle."
+        }
+      ],
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Texas_at_Austin",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "virginia-edu",
+      "name": "University of Virginia",
+      "country": "US",
+      "city": "Charlottesville",
+      "website_domain": "virginia.edu",
+      "description": {
+        "en": "The University of Virginia is a public research university in Charlottesville, Virginia, founded in 1819 by Thomas Jefferson. Its Academical Village is a UNESCO World Heritage Site.",
+        "ru": "Университет Виргинии — государственный исследовательский университет в Шарлотсвилле, штат Виргиния, основанный в 1819 году Томасом Джефферсоном. Его Академическая деревня включена в список объектов Всемирного наследия ЮНЕСКО.",
+        "uz": "Virjiniya universiteti — Virjiniya shtatining Sharlottsvill shahridagi davlat ilmiy-tadqiqot universiteti boʼlib, 1819-yilda Tomas Jefferson tomonidan asos solingan. Uning Akademik qishlogʼi YUNESKOning Butunjahon meros obyekti hisoblanadi."
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://admission.virginia.edu/faqs",
+        "year": 2026,
+        "note": "Fall 2026 applicants."
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-05",
+          "cycle": "2026-27",
+          "source_url": "https://records.ureg.virginia.edu/content.php?catoid=72&navoid=6694",
+          "note": "Registrar catalog; treated as 2026-27 cycle."
+        }
+      ],
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Virginia",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "washington-edu",
+      "name": "University of Washington",
+      "country": "US",
+      "city": "Seattle",
+      "website_domain": "washington.edu",
+      "description": {
+        "en": "The University of Washington is a public research university in Seattle, Washington, founded in 1861. It is one of the oldest universities on the West Coast of the United States.",
+        "ru": "Вашингтонский университет — государственный исследовательский университет в Сиэтле, штат Вашингтон, основанный в 1861 году. Один из старейших университетов западного побережья США.",
+        "uz": "Vashington universiteti — Vashington shtatining Sietl shahridagi davlat ilmiy-tadqiqot universiteti boʼlib, 1861-yilda tashkil etilgan. AQShning gʼarbiy qirgʻogʻidagi eng qadimgi universitetlardan biridir."
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://admit.washington.edu/apply/first-year/how-to-apply/test-scores",
+        "year": 2026,
+        "note": "SAT/ACT requirement permanently removed; reviewers do not see submitted scores."
+      },
+      "intl_tuition_usd": {
+        "value": 45789,
+        "currency": "USD",
+        "source_url": "https://admit.washington.edu/costs/coa/",
+        "year": 2026,
+        "note": "Non-resident tuition for the nine-month academic year, as listed in the cost-of-attendance table (non-resident column, tuition only)"
+      },
+      "source_url": "https://admit.washington.edu/costs/coa/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "wisc-edu",
+      "name": "University of Wisconsin–Madison",
+      "country": "US",
+      "city": "Madison",
+      "website_domain": "wisc.edu",
+      "description": {
+        "en": "The University of Wisconsin–Madison is a public land-grant research university in Madison, Wisconsin, founded in 1848. It is the flagship campus of the University of Wisconsin System.",
+        "ru": "Университет Висконсина в Мэдисоне — государственный исследовательский университет land-grant в Мэдисоне, штат Висконсин, основанный в 1848 году. Флагманский кампус системы университетов Висконсина.",
+        "uz": "Viskonsin universiteti (Medison) — Viskonsin shtatining Medison shahridagi davlat ilmiy-tadqiqot universiteti boʼlib, 1848-yilda tashkil etilgan. Viskonsin universiteti tizimining yetakchi kampusidir."
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-15",
+          "cycle": "2026-27",
+          "source_url": "https://admissions.wisc.edu/apply-as-a-freshman/",
+          "note": "No year on page; treated as 2026-27 cycle."
+        }
+      ],
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Wisconsin%E2%80%93Madison",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "vanderbilt-edu",
+      "name": "Vanderbilt University",
+      "country": "US",
+      "city": "Nashville",
+      "website_domain": "vanderbilt.edu",
+      "description": {
+        "en": "Vanderbilt University is a private research university in Nashville, Tennessee, founded in 1873. It is named after shipping and railroad magnate Cornelius Vanderbilt, whose initial $1 million endowment founded the school.",
+        "ru": "Университет Вандербильта — частный исследовательский университет в Нэшвилле, штат Теннесси, основанный в 1873 году. Назван в честь судовладельца и железнодорожного магната Корнелиуса Вандербильта, чей первоначальный дар в 1 млн долларов стал основой вуза.",
+        "uz": "Vanderbilt universiteti — Tennessi shtatining Nashvill shahridagi xususiy ilmiy-tadqiqot universiteti boʼlib, 1873-yilda tashkil etilgan. Universitet kema va temir yoʼl magnati Kornelius Vanderbiltning sharafiga nomlangan; uning 1 million dollarlik dastlabki xayriyasi maktab asosini tashkil etgan."
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://admissions.vanderbilt.edu/apply/testing-policies/",
+        "year": 2026,
+        "note": "Test-optional for fall 2027 and 2028 entry; testing required from fall 2029."
+      },
+      "acceptance_rate": {
+        "min": 4.6,
+        "max": 4.6,
+        "source_url": "https://admissions.vanderbilt.edu/profile/",
+        "year": 2026,
+        "note": "Overall admit rate for fall 2026 (2,519 admits); no separate international figure published"
+      },
+      "intl_tuition_usd": {
+        "value": 69822,
+        "currency": "USD",
+        "source_url": "https://admissions.vanderbilt.edu/affordability/",
+        "year": 2026,
+        "note": "Undergraduate tuition as listed on the affordability page for 2026-27"
+      },
+      "aid": {
+        "merit_for_internationals": {
+          "value": true,
+          "source_url": "https://admissions.vanderbilt.edu/profile/",
+          "year": 2026,
+          "note": "Fall 2026: need-based aid and/or merit scholarships offered to 89 admitted international students (54 countries), range $16,815-$99,998 per year"
+        }
+      },
+      "source_url": "https://admissions.vanderbilt.edu/profile/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "vassar-edu",
+      "name": "Vassar College",
+      "country": "US",
+      "city": "Poughkeepsie",
+      "website_domain": "vassar.edu",
+      "description": {
+        "en": "Vassar College is a private liberal arts college in Poughkeepsie, New York, founded in 1861 by Matthew Vassar. It became coeducational in 1969.",
+        "ru": "Колледж Вассар — частный колледж гуманитарных наук в Покипси, штат Нью-Йорк, основанный в 1861 году Мэтью Вассаром. Стал совместным для мужчин и женщин в 1969 году.",
+        "uz": "Vassar kolleji — Nyu-York shtatining Pokipsi shahridagi xususiy liberal san’at kollegiyasi boʼlib, 1861-yilda Metyu Vassar tomonidan asos solingan. 1969-yilda aralash taʼlim muassasasiga aylangan."
+      },
+      "acceptance_rate": {
+        "min": 17.7,
+        "max": 17.7,
+        "source_url": "https://en.wikipedia.org/wiki/Vassar_College",
+        "year": 2023,
+        "note": "Class of 2027 (enrolled fall 2023), per Wikipedia."
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.vassar.edu/admission/quick-facts/class-profile/",
+        "year": 2026,
+        "note": null
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-01",
+          "cycle": "2026-27",
+          "source_url": "https://www.vassar.edu/admission/apply/requirements/",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-01",
+          "cycle": "2026-27",
+          "source_url": "https://www.vassar.edu/admission/apply/requirements/",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ],
+      "source_url": "https://en.wikipedia.org/wiki/Vassar_College",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "wfu-edu",
+      "name": "Wake Forest University",
+      "country": "US",
+      "city": "Winston-Salem",
+      "website_domain": "wfu.edu",
+      "description": {
+        "en": "Wake Forest University is a private research university in Winston-Salem, North Carolina, founded by Baptist Christians in 1834. Its main campus is the Reynolda Campus.",
+        "ru": "Университет Уэйк-Форест — частный исследовательский университет в Уинстон-Сейлеме, штат Северная Каролина, основанный баптистами в 1834 году. Основной кампус — Reynolda Campus.",
+        "uz": "Ueyk-Forest universiteti — Shimoliy Karolina shtatining Uinston-Seylem shahridagi xususiy ilmiy-tadqiqot universiteti boʼlib, 1834-yilda baptistlar tomonidan asos solingan. Asosiy kampusi Reynolda kampusidir."
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://prod.wp.cdn.aws.wfu.edu/sites/203/2026/08/2026-27-Undergraduate-Admissions-Application-Wake-Forest-University.pdf",
+        "year": 2026,
+        "note": "Test-optional since 2008."
+      },
+      "acceptance_rate": {
+        "min": 19,
+        "max": 19,
+        "source_url": "https://admissions.wfu.edu/facts/",
+        "year": 2026,
+        "note": "First-year student acceptance rate as published on the facts page (2026-27 cycle)"
+      },
+      "intl_tuition_usd": {
+        "value": 71894,
+        "currency": "USD",
+        "source_url": "https://admissions.wfu.edu/facts/",
+        "year": 2026,
+        "note": "Undergraduate tuition as published; not split by citizenship on this page"
+      },
+      "intl_coa_usd": {
+        "value": 98730,
+        "currency": "USD",
+        "source_url": "https://admissions.wfu.edu/facts/",
+        "year": 2026,
+        "note": "Estimated total cost of attendance (tuition, housing, food, books and fees); not split by citizenship"
+      },
+      "source_url": "https://admissions.wfu.edu/facts/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "wustl-edu",
+      "name": "Washington University in St. Louis",
+      "country": "US",
+      "city": "St. Louis",
+      "website_domain": "wustl.edu",
+      "description": {
+        "en": "Washington University in St. Louis (WashU) is a private research university in the St. Louis metropolitan area, Missouri. Founded in 1853 by civic leaders, it is commonly known as WashU.",
+        "ru": "Вашингтонский университет в Сент-Луисе (WashU) — частный исследовательский университет в агломерации Сент-Луиса, штат Миссури. Основан в 1853 году группой общественных деятелей и часто называется WashU.",
+        "uz": "Sent-Luis Vashington universiteti (WashU) — Missuri shtatining Sent-Luis shahar hududidagi xususiy ilmiy-tadqiqot universiteti boʼlib, 1853-yilda jamoat arboblari tomonidan tashkil etilgan."
+      },
+      "acceptance_rate": {
+        "min": 12.0,
+        "max": 12.0,
+        "source_url": "https://en.wikipedia.org/wiki/Washington_University_in_St._Louis",
+        "year": 2024,
+        "note": "Class of 2028, per Wikipedia."
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://admissions.washu.edu/whats-new-at-washu/",
+        "year": 2026,
+        "note": null
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://admissions.washu.edu/whats-new-at-washu/",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://admissions.washu.edu/whats-new-at-washu/",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ],
+      "source_url": "https://en.wikipedia.org/wiki/Washington_University_in_St._Louis",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "wellesley-edu",
+      "name": "Wellesley College",
+      "country": "US",
+      "city": "Wellesley",
+      "website_domain": "wellesley.edu",
+      "description": {
+        "en": "Wellesley College is a private women's liberal arts college in Wellesley, Massachusetts, founded in 1870. It is one of the Seven Sisters colleges.",
+        "ru": "Колледж Уэллсли — частный женский колледж гуманитарных наук в Уэллсли, штат Массачусетс, основанный в 1870 году. Входит в число колледжей «Семи сестёр».",
+        "uz": "Wellesley kolleji — Massachusets shtatining Wellesley shahridagi xususiy ayollar liberal san’at kollegiyasi boʼlib, 1870-yilda tashkil etilgan. «Yetti opa-singil» kollejlaridan biridir."
+      },
+      "intl_tuition_usd": {
+        "value": 72570,
+        "currency": "USD",
+        "source_url": "https://www.wellesley.edu/admission-aid/student-financial-services/tuition-cost",
+        "year": 2026,
+        "note": "Tuition for the 2026-27 intake as listed on the tuition-cost page"
+      },
+      "aid": {
+        "meets_full_need": {
+          "value": true,
+          "source_url": "https://www.wellesley.edu/admission-aid/student-financial-services/tuition-cost",
+          "year": 2026,
+          "note": "States it meets 100% of calculated need for all admitted students"
+        }
+      },
+      "source_url": "https://www.wellesley.edu/admission-aid/student-financial-services/tuition-cost",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "wesleyan-edu",
+      "name": "Wesleyan University",
+      "country": "US",
+      "city": "Middletown",
+      "website_domain": "wesleyan.edu",
+      "description": {
+        "en": "Wesleyan University is a private liberal arts college in Middletown, Connecticut, founded in 1831 as a men's college. It later became a secular, coeducational institution.",
+        "ru": "Уэслианский университет — частный колледж гуманитарных наук в Миддлтауне, штат Коннектикут, основанный в 1831 году как мужской колледж. Позднее стал светским совместным учебным заведением.",
+        "uz": "Uesleyan universiteti — Konnektikut shtatining Midltaun shahridagi xususiy liberal san’at kollegiyasi boʼlib, 1831-yilda erkaklar kolleji sifatida tashkil etilgan. Keyinchalik dunyoviy, aralash taʼlim muassasasiga aylangan."
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.wesleyan.edu/admission/undergraduate-admission/first-year.html",
+        "year": 2026,
+        "note": null
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-01",
+          "cycle": "2026-27",
+          "source_url": "https://www.wesleyan.edu/admission/undergraduate-admission/first-year.html",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-01",
+          "cycle": "2026-27",
+          "source_url": "https://www.wesleyan.edu/admission/undergraduate-admission/first-year.html",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ],
+      "acceptance_rate": {
+        "min": 16,
+        "max": 16,
+        "source_url": "https://www.wesleyan.edu/about/at-a-glance.html",
+        "year": 2024,
+        "note": "Acceptance rate for the Class of 2028 (entering 2024), as published on the at-a-glance page"
+      },
+      "intl_tuition_usd": {
+        "value": 75916,
+        "currency": "USD",
+        "source_url": "https://www.wesleyan.edu/admission/affordability-and-aid/cost-of-attendance.html",
+        "year": 2026,
+        "note": "Tuition for 2026-27 as listed on the cost-of-attendance page"
+      },
+      "intl_coa_usd": {
+        "value": 101030,
+        "currency": "USD",
+        "source_url": "https://www.wesleyan.edu/admission/affordability-and-aid/cost-of-attendance.html",
+        "year": 2026,
+        "note": "First-year total cost without the optional Green Fund fee (tuition, fees, food and housing, books and personal expenses)"
+      },
+      "source_url": "https://www.wesleyan.edu/admission/affordability-and-aid/cost-of-attendance.html",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "williams-edu",
+      "name": "Williams College",
+      "country": "US",
+      "city": "Williamstown",
+      "website_domain": "williams.edu",
+      "description": {
+        "en": "Williams College is a private liberal arts college in Williamstown, Massachusetts. It was established in 1793 as a men's college.",
+        "ru": "Колледж Уильямс — частный колледж гуманитарных наук в Уильямстауне, штат Массачусетс. Основан в 1793 году как мужской колледж.",
+        "uz": "Uilyams kolleji — Massachusets shtatining Uilyamstaun shahridagi xususiy liberal san’at kollegiyasi boʼlib, 1793-yilda erkaklar kolleji sifatida tashkil etilgan."
+      },
+      "acceptance_rate": {
+        "min": 8.0,
+        "max": 8.0,
+        "source_url": "https://en.wikipedia.org/wiki/Williams_College",
+        "year": 2021,
+        "note": "Class of 2025 per Wikipedia."
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.commonapp.org/explore/williams-college/",
+        "year": 2026,
+        "note": "Test-optional option for 2026-27 applicants."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Williams_College",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "ajou-uz",
+      "name": "Ajou University in Tashkent (AUT)",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "ajou.uz",
+      "description": {
+        "en": "Ajou University in Tashkent is a branch campus of Ajou University in South Korea. It offers international educational programmes taught by professors from South Korea and other countries.",
+        "ru": "Ajou University в Ташкенте — филиал университета Ajou из Южной Кореи. Предлагает международные образовательные программы, которые ведут профессора из Южной Кореи и других стран.",
+        "uz": "Toshkentdagi Ajou universiteti — Janubiy Koreyadagi Ajou universitetining filiali boʼlib, Koreya va boshqa mamlakatlardan kelgan professorlar tomonidan oʻqitiladigan xalqaro taʼlim dasturlarini taklif etadi."
+      },
+      "source_url": "https://info.ajou.uz/en",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "afu-uz",
+      "name": "Alfraganus University",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "afu.uz",
+      "description": {
+        "en": "Alfraganus University is a licensed higher education institution in Tashkent. It offers full-time and distance learning programmes and runs international cooperation with foreign professors.",
+        "ru": "Университет Альфраганус — лицензированное высшее учебное заведение в Ташкенте. Предлагает очную и дистанционную формы обучения, ведёт международное сотрудничество и привлекает иностранных преподавателей.",
+        "uz": "Alfraganus universiteti — Toshkentdagi litsenziyalangan oliy taʼlim muassasasi boʼlib, kunduzgi va masofaviy taʼlim dasturlarini taklif etadi hamda xorijiy professorlar bilan xalqaro hamkorlikni yoʼlga qoʼygan."
+      },
+      "deadlines": [],
+      "source_url": "https://www.afu.uz/en/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "tsuull-uz",
+      "name": "Alisher Navoi Tashkent State University of Uzbek Language and Literature",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "tsuull.uz",
+      "description": {
+        "en": "Alisher Navoi Tashkent State University of Uzbek Language and Literature is a state university in Tashkent that trains teachers and specialists in Uzbek language and literature.",
+        "ru": "Ташкентский государственный университет узбекского языка и литературы имени Алишера Навои — государственный вуз в Ташкенте, готовящий преподавателей и специалистов в области узбекского языка и литературы.",
+        "uz": "Alisher Navoiy nomidagi Toshkent davlat oʼzbek tili va adabiyoti universiteti — Toshkentdagi davlat universiteti boʼlib, oʼzbek tili va adabiyoti boʼyicha oʼqituvchi hamda mutaxassislar tayyorlaydi."
+      },
+      "source_url": "https://tsuull.uz/node/4504",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "amity-uz",
+      "name": "Amity University Tashkent",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "amity.uz",
+      "description": {
+        "en": "Amity University Tashkent is the Tashkent branch of India's Amity University. It offers undergraduate and master's programmes in IT, computing and engineering, plus a foundation course.",
+        "ru": "Amity University Tashkent — ташкентский филиал индийского университета Amity. Предлагает бакалаврские и магистерские программы в области ИТ, информатики и инженерии, а также подготовительный курс.",
+        "uz": "Amity universiteti (Toshkent) — Hindistondagi Amity universitetining Toshkentdagi filiali boʼlib, axborot texnologiyalari, informatika va muhandislik boʼyicha bakalavriat hamda magistratura dasturlarini taklif etadi."
+      },
+      "deadlines": [],
+      "source_url": "https://amity.uz/en/pages/view/fees",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "centralasian-uz",
+      "name": "Central Asian University (formerly AKFA University)",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "centralasian.uz",
+      "description": {
+        "en": "Central Asian University (CAU) is a private university in Tashkent, Uzbekistan, established in 2019. It provides undergraduate, postgraduate and medical education, mainly in English.",
+        "ru": "Центральноазиатский университет (ЦАУ) — частный университет в Ташкенте, основанный в 2019 году. Предлагает бакалавриат, магистратуру и медицинское образование; преподавание ведётся преимущественно на английском языке.",
+        "uz": "Markaziy Osiyo universiteti (CAU) — Toshkentdagi xususiy universitet boʼlib, 2019-yilda tashkil etilgan. Bakalavriat, magistratura va tibbiy taʼlim dasturlarini taklif etadi; taʼlim asosan ingliz tilida olib boriladi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Central_Asian_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "inha-uz",
+      "name": "INHA University in Tashkent",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "inha.uz",
+      "description": {
+        "en": "INHA University in Tashkent is a branch of Korea's INHA University. It offers engineering, business and logistics programmes, and joint programmes with partners in the United Kingdom and Italy.",
+        "ru": "Университет INHA в Ташкенте — филиал корейского университета INHA. Предлагает программы в области инженерии, бизнеса и логистики, а также совместные программы с партнёрами из Великобритании и Италии.",
+        "uz": "INHA universiteti (Toshkent) — Koreyadagi INHA universitetining filiali boʼlib, muhandislik, biznes va logistika boʼyicha dasturlarni hamda Buyuk Britaniya va Italiya hamkorlari bilan qoʼshma dasturlarni taklif etadi."
+      },
+      "test_policy": {
+        "value": "required",
+        "source_url": "https://inha.uz/prospective-students/admissions/application-guideline/",
+        "year": 2026,
+        "note": "Own IUT entrance examination."
+      },
+      "deadlines": [],
+      "intl_tuition_usd": {
+        "value": 5000,
+        "currency": "USD",
+        "source_url": "https://inha.uz/prospective-students/admissions/tuitions/",
+        "year": 2025,
+        "note": "SOCIE (School of Computer and Information Engineering) tuition for international students, 2025/26; SBL (School of Business and Logistics) is $5,250; subject to change"
+      },
+      "source_url": "https://inha.uz/prospective-students/admissions/tuitions/",
+      "year": 2025,
+      "verified": false
+    },
+    {
+      "slug": "iiau-uz",
+      "name": "International Islamic Academy of Uzbekistan (IIAU)",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "iiau.uz",
+      "description": {
+        "en": "The International Islamic Academy of Uzbekistan is a higher education institution in Tashkent focused on Islamic studies and related disciplines.",
+        "ru": "Международная исламская академия Узбекистана — высшее учебное заведение в Ташкенте, специализирующееся на исламоведении и смежных дисциплинах.",
+        "uz": "Oʼzbekiston xalqaro islom akademiyasi — Toshkentdagi oliy taʼlim muassasasi boʼlib, islomshunoslik va unga yaqin fanlarga ixtisoslashgan."
+      },
+      "source_url": "https://iiau.uz/en/news/1735",
+      "year": 2023,
+      "verified": false
+    }
+  ],
+  "programs": []
+}

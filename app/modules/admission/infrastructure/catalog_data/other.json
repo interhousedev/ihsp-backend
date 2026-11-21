@@ -5,6 +5,12 @@
    "name": "Technical University of Munich",
    "country": "DE",
    "city": "Munich",
+   "website_domain": "tum.de",
+   "description": {
+    "en": "The Technical University of Munich is Germany's leading technical university, strong in engineering, natural sciences, computer science and medicine, with close ties to industry and a low-fee public model.",
+    "ru": "Технический университет Мюнхена — ведущий технический университет Германии, сильный в инженерии, естественных науках, информатике и медицине, тесно связанный с промышленностью.",
+    "uz": "Myunxen texnika universiteti — Germaniyaning yetakchi texnika universiteti; muhandislik, tabiiy fanlar, informatika va tibbiyotda kuchli, sanoat bilan chambarchas bogʼliq."
+   },
    "fields": [
     "Engineering",
     "Natural sciences",
@@ -56,6 +62,12 @@
    "name": "Heidelberg University",
    "country": "DE",
    "city": "Heidelberg",
+   "website_domain": "uni-heidelberg.de",
+   "description": {
+    "en": "Heidelberg University, founded in 1386, is Germany's oldest university, a comprehensive research university with strong life sciences, medicine, physics and humanities.",
+    "ru": "Гейдельбергский университет, основанный в 1386 году, — старейший университет Германии, классический исследовательский университет с сильными науками о жизни, медициной, физикой и гуманитарными науками.",
+    "uz": "1386-yilda asos solingan Geydelberg universiteti — Germaniyaning eng qadimiy universiteti; hayot haqidagi fanlar, tibbiyot, fizika va gumanitar fanlarda kuchli keng profilli tadqiqot universiteti."
+   },
    "fields": [
     "Medicine",
     "Natural sciences",
@@ -74,15 +86,7 @@
     "year": 2026,
     "note": "EUR per year: EUR 1,500 per semester for non-EU/EEA with foreign entrance qualification (Bachelor/Staatsexamen). Up to 5% exempted. Plus semester fee EUR 189.80 per semester."
    },
-   "deadlines": [
-    {
-     "plan": "RD",
-     "date": "2026-07-15",
-     "cycle": "2026-27",
-     "source_url": "https://www.uni-heidelberg.de/en/study/management-of-studies/key-dates-deadlines/application-deadlines-for-the-1st-semester-of-undergraduate-degree-programmes",
-     "note": "Non-EU applicants with foreign qualification: 1 Jun-15 Jul, winter semester only; year not stated on page, date assumed for 2026."
-    }
-   ],
+   "deadlines": [],
    "scholarships": [],
    "verified": true
   },
@@ -91,6 +95,12 @@
    "name": "Bocconi University",
    "country": "IT",
    "city": "Milan",
+   "website_domain": "unibocconi.it",
+   "description": {
+    "en": "Bocconi University in Milan is a private university specialised in economics, management, finance, law and politics, with a strongly international student body and English-taught programs.",
+    "ru": "Университет Боккони в Милане — частный университет, специализирующийся на экономике, менеджменте, финансах, праве и политологии, с международным составом студентов и программами на английском языке.",
+    "uz": "Milandagi Bokkoni universiteti — iqtisodiyot, menejment, moliya, huquq va siyosatshunoslikka ixtisoslashgan xususiy universitet; talabalar tarkibi xalqaro, dasturlar ingliz tilida."
+   },
    "fields": [
     "economics",
     "management",
@@ -145,6 +155,12 @@
    "name": "Politecnico di Milano",
    "country": "IT",
    "city": "Milan",
+   "website_domain": "polimi.it",
+   "description": {
+    "en": "Politecnico di Milano is Italy's largest technical university, offering engineering, architecture and design, with many English-taught degrees and strong industry links.",
+    "ru": "Миланский политехнический университет — крупнейший технический университет Италии: инженерия, архитектура и дизайн, много программ на английском языке и тесные связи с промышленностью.",
+    "uz": "Milan politexnika universiteti — Italiyaning eng yirik texnika universiteti: muhandislik, arxitektura va dizayn, ingliz tilidagi koʼplab dasturlar va sanoat bilan mustahkam aloqalar."
+   },
    "fields": [
     "engineering",
     "architecture",
@@ -175,6 +191,12 @@
    "name": "University of Bologna",
    "country": "IT",
    "city": "Bologna",
+   "website_domain": "unibo.it",
+   "description": {
+    "en": "The University of Bologna, founded in 1088, is widely regarded as the oldest university in continuous operation, a large public university with a broad range of subjects.",
+    "ru": "Болонский университет, основанный в 1088 году, считается старейшим непрерывно действующим университетом мира; крупный государственный университет с широким выбором направлений.",
+    "uz": "1088-yilda asos solingan Boloniya universiteti uzluksiz faoliyat yuritayotgan eng qadimiy universitet hisoblanadi; yoʼnalishlari keng yirik davlat universiteti."
+   },
    "fields": [],
    "source_url": "https://www.unibo.it/en/study/enrolment-fees-and-other-procedures/degree-programmes/tuition-fees-and-exemptions/reduced-fixed-fee-for-citizens-of-particularly-poor-and-developing-countries-or-non-eu-non-oecd-countries",
    "year": 2026,
@@ -195,6 +217,12 @@
    "name": "Corvinus University of Budapest",
    "country": "HU",
    "city": "Budapest",
+   "website_domain": "uni-corvinus.hu",
+   "description": {
+    "en": "Corvinus University of Budapest is a leading Hungarian university in economics, business, public administration and social sciences, with English-taught programs.",
+    "ru": "Будапештский университет Корвина — ведущий венгерский университет в области экономики, бизнеса, государственного управления и общественных наук, с программами на английском языке.",
+    "uz": "Budapesht Korvinus universiteti — iqtisodiyot, biznes, davlat boshqaruvi va ijtimoiy fanlar boʼyicha Vengriyaning yetakchi universiteti; ingliz tilidagi dasturlar mavjud."
+   },
    "fields": [
     "economics",
     "business",
@@ -220,6 +248,12 @@
    "name": "Semmelweis University",
    "country": "HU",
    "city": "Budapest",
+   "website_domain": "semmelweis.hu",
+   "description": {
+    "en": "Semmelweis University in Budapest is Hungary's leading medical university, teaching medicine, dentistry, pharmacy and health sciences, including English-language programs.",
+    "ru": "Университет Земмельвайса в Будапеште — ведущий медицинский университет Венгрии: медицина, стоматология, фармацевтика и науки о здоровье, в том числе на английском языке.",
+    "uz": "Budapeshtdagi Semmelveys universiteti — Vengriyaning yetakchi tibbiyot universiteti: tibbiyot, stomatologiya, farmatsevtika va salomatlik fanlari, shu jumladan ingliz tilida."
+   },
    "fields": [
     "medicine",
     "dentistry",
@@ -274,6 +308,12 @@
    "name": "Eötvös Loránd University (ELTE)",
    "country": "HU",
    "city": "Budapest",
+   "website_domain": "elte.hu",
+   "description": {
+    "en": "Eötvös Loránd University (ELTE) in Budapest, founded in 1635, is Hungary's oldest and one of its largest universities, strong in sciences, humanities, law and teacher education.",
+    "ru": "Университет имени Лоранда Этвёша (ELTE) в Будапеште, основан в 1635 году, — старейший и один из крупнейших университетов Венгрии, сильный в естественных, гуманитарных науках, праве и подготовке учителей.",
+    "uz": "Budapeshtdagi Lorand Etvesh universiteti (ELTE) 1635-yilda asos solingan, Vengriyaning eng qadimiy va yirik universitetlaridan biri; tabiiy va gumanitar fanlar, huquq hamda oʼqituvchilar tayyorlashda kuchli."
+   },
    "fields": [
     "humanities",
     "social sciences",
@@ -291,13 +331,6 @@
     "note": "International Relations BA: oral online entrance exam; English B2 (IELTS 5.5)."
    },
    "deadlines": [
-    {
-     "plan": "OTHER",
-     "date": "2026-11-15",
-     "cycle": "2027-28",
-     "source_url": "https://www.elte.hu/en/international-relations-ba",
-     "note": "Early Bird 1 (1 Oct-15 Nov 2026), fee EUR 100."
-    },
     {
      "plan": "OTHER",
      "date": "2027-01-15",
@@ -328,6 +361,12 @@
    "name": "KAIST",
    "country": "KR",
    "city": "Daejeon",
+   "website_domain": "kaist.ac.kr",
+   "description": {
+    "en": "KAIST in Daejeon is South Korea's leading science and technology university, focused on engineering, computing and research, with many courses taught in English.",
+    "ru": "KAIST в Тэджоне — ведущий научно-технологический университет Южной Кореи, специализирующийся на инженерии, информатике и научных исследованиях; многие курсы читаются на английском.",
+    "uz": "Daejeondagi KAIST — Janubiy Koreyaning yetakchi fan va texnologiya universiteti; muhandislik, informatika va tadqiqotlarga yoʼnaltirilgan, koʼp kurslar ingliz tilida oʼtiladi."
+   },
    "fields": [
     "engineering",
     "computer science",
@@ -367,13 +406,6 @@
    },
    "deadlines": [
     {
-     "plan": "EA",
-     "date": "2026-10-22",
-     "cycle": "2026-27",
-     "source_url": "https://admission.kaist.ac.kr/intl-undergraduate/application/ApplicationGuide/ApplicationTimeline",
-     "note": "Early admission (Spring or Fall track), 6:00 PM KST; announcement 2027-01-07"
-    },
-    {
      "plan": "RD",
      "date": "2027-01-14",
      "cycle": "2026-27",
@@ -397,6 +429,12 @@
    "name": "Seoul National University",
    "country": "KR",
    "city": "Seoul",
+   "website_domain": "snu.ac.kr",
+   "description": {
+    "en": "Seoul National University is South Korea's top national university, a large comprehensive research university with strong sciences, engineering, medicine and humanities.",
+    "ru": "Сеульский национальный университет — главный национальный университет Южной Кореи, крупный исследовательский университет с сильными естественными науками, инженерией, медициной и гуманитарными науками.",
+    "uz": "Seul milliy universiteti — Janubiy Koreyaning eng nufuzli milliy universiteti; tabiiy fanlar, muhandislik, tibbiyot va gumanitar fanlarda kuchli yirik tadqiqot universiteti."
+   },
    "fields": [
     "humanities",
     "social sciences",
@@ -422,15 +460,7 @@
     "year": 2026,
     "note": "Global Talent track: language proof by TOEFL iBT 80 / IELTS 6.0 / TEPS 269 or TOPIK 3, or English-medium schooling proof; SAT/ACT/AP/IB/A-Level optional"
    },
-   "deadlines": [
-    {
-     "plan": "OTHER",
-     "date": "2026-07-09",
-     "cycle": "2026-27",
-     "source_url": "https://en.snu.ac.kr/webdata/uploads/eng/file/2026/06/Admissions_for_Undergraduate_Spring_2027.pdf",
-     "note": "Global Talent Special Admission for Spring 2027 entry; online 2026-07-06 to 07-09 17:00 KST; application fee KRW 70,000; results 2026-11-20 after 17:00. Fall 2027 schedule not published"
-    }
-   ],
+   "deadlines": [],
    "scholarships": [
     {
      "name": "Global Korea Scholarship (GKS) - NIIED",
@@ -447,6 +477,12 @@
    "name": "Yonsei University",
    "country": "KR",
    "city": "Seoul",
+   "website_domain": "yonsei.ac.kr",
+   "description": {
+    "en": "Yonsei University in Seoul, founded in 1885, is one of South Korea's top private universities, with a strong international college and wide-ranging programs.",
+    "ru": "Университет Ёнсе в Сеуле, основан в 1885 году, — один из ведущих частных университетов Южной Кореи с сильным международным колледжем и широким выбором программ.",
+    "uz": "Seuldagi Yonse universiteti 1885-yilda asos solingan, Janubiy Koreyaning yetakchi xususiy universitetlaridan biri; kuchli xalqaro kolleji va keng dasturlari bor."
+   },
    "fields": [
     "humanities",
     "social sciences",
@@ -462,15 +498,7 @@
    ],
    "source_url": "https://admission.yonsei.ac.kr/seoul/admission/html/international/guide.asp",
    "year": 2026,
-   "deadlines": [
-    {
-     "plan": "OTHER",
-     "date": "2026-09-17",
-     "cycle": "2026-27",
-     "source_url": "https://k-admission.com/universities/yonsei/",
-     "note": "Spring 2027 international track online application closed 2026-09-17 17:00 KST, documents by 09-30; results 2026-12-04; secondary source (k-admission.com), official Yonsei page not read; UIC separate (to 2026-09-17, interviews Dec 11-12)"
-    }
-   ],
+   "deadlines": [],
    "scholarships": [],
    "verified": false
   },
@@ -479,6 +507,12 @@
    "name": "University of Tokyo",
    "country": "JP",
    "city": "Tokyo",
+   "website_domain": "u-tokyo.ac.jp",
+   "description": {
+    "en": "The University of Tokyo is Japan's most prestigious national university, a research powerhouse in sciences, engineering, medicine and the humanities, with growing English-taught programs.",
+    "ru": "Токийский университет — самый престижный национальный университет Японии, научный центр в области естественных наук, инженерии, медицины и гуманитарных наук, с растущим числом программ на английском.",
+    "uz": "Tokio universiteti — Yaponiyaning eng nufuzli milliy universiteti; tabiiy fanlar, muhandislik, tibbiyot va gumanitar fanlar boʼyicha tadqiqot markazi, ingliz tilidagi dasturlari koʼpaymoqda."
+   },
    "fields": [
     "humanities and social sciences",
     "natural sciences",
@@ -501,6 +535,12 @@
    "name": "Waseda University",
    "country": "JP",
    "city": "Tokyo",
+   "website_domain": "waseda.jp",
+   "description": {
+    "en": "Waseda University in Tokyo is one of Japan's top private universities, known for social sciences, politics, economics and engineering, with a large international student community.",
+    "ru": "Университет Васэда в Токио — один из ведущих частных университетов Японии, известный социальными науками, политологией, экономикой и инженерией, с крупным сообществом иностранных студентов.",
+    "uz": "Tokiodagi Vaseda universiteti — Yaponiyaning yetakchi xususiy universitetlaridan biri; ijtimoiy fanlar, siyosatshunoslik, iqtisodiyot va muhandislik bilan mashhur, xorijiy talabalar jamoasi katta."
+   },
    "fields": [
     "political science",
     "economics",
@@ -557,6 +597,12 @@
    "name": "Bilkent University",
    "country": "TR",
    "city": "Ankara",
+   "website_domain": "bilkent.edu.tr",
+   "description": {
+    "en": "Bilkent University in Ankara is Turkey's first private non-profit university, with English-language instruction and strong programs in engineering, sciences, business and the arts.",
+    "ru": "Университет Билькент в Анкаре — первый частный некоммерческий университет Турции; обучение ведётся на английском, сильные программы по инженерии, наукам, бизнесу и искусству.",
+    "uz": "Ankaradagi Bilkent universiteti — Turkiyadagi birinchi notijorat xususiy universitet; taʼlim ingliz tilida, muhandislik, fanlar, biznes va sanʼat boʼyicha kuchli dasturlar."
+   },
    "fields": [
     "Engineering",
     "Science",
@@ -600,6 +646,12 @@
    "name": "Koç University",
    "country": "TR",
    "city": "Istanbul",
+   "website_domain": "ku.edu.tr",
+   "description": {
+    "en": "Koç University in Istanbul is a private research university with English-language instruction, generous scholarships and strong engineering, sciences and social sciences.",
+    "ru": "Университет Коч в Стамбуле — частный исследовательский университет с обучением на английском, щедрыми стипендиями и сильными инженерными, естественными и социальными науками.",
+    "uz": "Istanbuldagi Koch universiteti — taʼlim ingliz tilida olib boriladigan xususiy tadqiqot universiteti; saxovatli stipendiyalar, muhandislik, tabiiy va ijtimoiy fanlar kuchli."
+   },
    "fields": [
     "Medicine",
     "Law",
@@ -656,6 +708,12 @@
    "name": "Middle East Technical University",
    "country": "TR",
    "city": "Ankara",
+   "website_domain": "metu.edu.tr",
+   "description": {
+    "en": "Middle East Technical University in Ankara is a leading Turkish public university teaching in English, strong in engineering, sciences and architecture.",
+    "ru": "Ближневосточный технический университет в Анкаре — ведущий государственный университет Турции с обучением на английском, сильный в инженерии, естественных науках и архитектуре.",
+    "uz": "Ankaradagi Oʼrta Sharq texnika universiteti — ingliz tilida oʼqitadigan Turkiyaning yetakchi davlat universiteti; muhandislik, tabiiy fanlar va arxitekturada kuchli."
+   },
    "fields": [
     "Engineering",
     "Architecture",
@@ -689,6 +747,12 @@
    "name": "Monash University Malaysia",
    "country": "MY",
    "city": "Subang Jaya",
+   "website_domain": "monash.edu.my",
+   "description": {
+    "en": "Monash University Malaysia is the Malaysian campus of Australia's Monash University, offering Monash degrees in engineering, business, medicine and sciences in English.",
+    "ru": "Университет Монаш Малайзия — малайзийский кампус австралийского университета Монаш; дипломы Monash по инженерии, бизнесу, медицине и наукам, обучение на английском.",
+    "uz": "Monash universiteti Malayziya — Avstraliyadagi Monash universitetining Malayziya kampusi; muhandislik, biznes, tibbiyot va fanlar boʼyicha Monash diplomlari, taʼlim ingliz tilida."
+   },
    "fields": [
     "Computer Science",
     "Engineering",
@@ -708,6 +772,12 @@
    "name": "Taylor's University",
    "country": "MY",
    "city": "Subang Jaya",
+   "website_domain": "taylors.edu.my",
+   "description": {
+    "en": "Taylor's University in Kuala Lumpur is a private Malaysian university with English-taught programs in business, hospitality, design, engineering and health sciences.",
+    "ru": "Университет Тейлора в Куала-Лумпуре — частный малайзийский университет с программами на английском по бизнесу, гостеприимству, дизайну, инженерии и наукам о здоровье.",
+    "uz": "Kuala-Lumpurdagi Teylor universiteti — biznes, mehmondoʼstlik, dizayn, muhandislik va salomatlik fanlari boʼyicha ingliz tilidagi dasturlarga ega xususiy Malayziya universiteti."
+   },
    "fields": [
     "Business",
     "Computing",
@@ -727,6 +797,12 @@
    "name": "NYU Abu Dhabi",
    "country": "AE",
    "city": "Abu Dhabi",
+   "website_domain": "nyuad.nyu.edu",
+   "description": {
+    "en": "NYU Abu Dhabi is a highly selective liberal-arts and research campus of New York University in the UAE, with a very international student body and generous need-based aid.",
+    "ru": "NYU Абу-Даби — высокоселективный кампус свободных искусств и науки Нью-Йоркского университета в ОАЭ с очень международным составом студентов и щедрой помощью по потребностям.",
+    "uz": "NYU Abu-Dabi — Nyu-York universitetining BAAdagi juda saralovchi liberal sanʼat va tadqiqot kampusi; talabalar tarkibi xalqaro, ehtiyojga asoslangan yordam saxovatli."
+   },
    "fields": [
     "Arts and Humanities",
     "Sciences",
@@ -749,15 +825,7 @@
      "note": "Aid by demonstrated need via CSS Profile; page no longer uses 'need-blind' wording, admissions says policy unchanged (Gazelle 2021, secondary)"
     }
    },
-   "deadlines": [
-    {
-     "plan": "ED",
-     "date": "2026-11-10",
-     "cycle": "2026-27",
-     "source_url": "https://nyuad.nyu.edu/en/admissions/undergraduate/financial-support.html",
-     "note": "CSS Profile deadline ED I (Nov 10); ED II Jan 10; RD Feb 1; year inferred from page, admission deadlines not read"
-    }
-   ],
+   "deadlines": [],
    "scholarships": [],
    "verified": true
   },
@@ -766,6 +834,12 @@
    "name": "Khalifa University",
    "country": "AE",
    "city": "Abu Dhabi",
+   "website_domain": "ku.ac.ae",
+   "description": {
+    "en": "Khalifa University in Abu Dhabi is a research-focused UAE university specialised in engineering, science and technology, with English-language instruction.",
+    "ru": "Университет Халифа в Абу-Даби — ориентированный на исследования университет ОАЭ, специализирующийся на инженерии, науке и технологиях, обучение на английском.",
+    "uz": "Abu-Dabidagi Xalifa universiteti — muhandislik, fan va texnologiyalarga ixtisoslashgan, tadqiqotga yoʼnaltirilgan BAA universiteti; taʼlim ingliz tilida."
+   },
    "fields": [
     "Engineering",
     "Sciences",

@@ -20,8 +20,8 @@ from app.modules.ai.domain.structured_check import schema_violation
 from app.modules.ai.domain.usage import UNKNOWN_TASK, UsageEvent, counts_of, feature_of
 from app.modules.ai.infrastructure.langfuse_tracer import (
     PRIVATE_ERROR_CODE,
-    LangfuseTracer,
     OpenSpan,
+    TracingSource,
 )
 from app.modules.ai.ports.prompts import PromptRewriter
 from app.modules.ai.ports.usage import UsageSink
@@ -54,12 +54,12 @@ class UsageRecorder:
     """Turns the end of a call into a ledger event (the actor is read at the start)."""
 
     def __init__(
-        self, sink: UsageSink, clock: Clock, tracer: LangfuseTracer | None = None
+        self, sink: UsageSink, clock: Clock, tracing: TracingSource | None = None
     ) -> None:
-        """Keep the sink, the clock and the optional Langfuse tracer."""
+        """Keep the sink, the clock and the optional Langfuse tracing source."""
         self._sink = sink
         self._clock = clock
-        self._tracer = tracer
+        self._tracing = tracing
 
     def begin(
         self,
@@ -74,8 +74,11 @@ class UsageRecorder:
         name = task or UNKNOWN_TASK
         private = is_private_task(task)
         span = None
-        if self._tracer is not None:
-            span = self._tracer.begin(
+        # a pipeline with tracing off (admission by default) gets no tracer
+        tracing = self._tracing
+        tracer = tracing.tracer_for(task) if tracing is not None else None
+        if tracer is not None and tracing is not None:
+            span = tracer.begin(
                 task=name,
                 model=model,
                 user_id=actor.user_id,
@@ -85,6 +88,7 @@ class UsageRecorder:
                 private=private,
                 prompt_version=prompt.version if prompt else None,
                 prompt_hash=prompt.hash if prompt else None,
+                capture=tracing.capture_for(task),
             )
         request = current_request.get()
         route = current_route.get()

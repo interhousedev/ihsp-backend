@@ -1173,6 +1173,32 @@ APP_MAP: Final[tuple[Destination, ...]] = (
         "бесплатные курсы",
     ),
     _d(
+        "admission-staff-opportunities",
+        "admission",
+        "/staff/opportunities/manage/",
+        _ADM,
+        (
+            "Imkoniyatlarni boshqarish",
+            "Управление возможностями",
+            "Manage opportunities",
+        ),
+        "imkoniyat boshqarish tahrirlash arxiv возможности управление "
+        "редактировать архив manage opportunities edit archive delete catalog",
+    ),
+    _d(
+        "admission-staff-institutions",
+        "admission",
+        "/staff/universities/",
+        _ADM,
+        (
+            "Universitetlar roʻyxati",
+            "Список университетов",
+            "Manage universities",
+        ),
+        "universitet roʻyxat tahrirlash университеты список редактировать "
+        "manage universities institutions colleges catalog edit",
+    ),
+    _d(
         "admission-opportunities-plan",
         "admission",
         "/plan/",

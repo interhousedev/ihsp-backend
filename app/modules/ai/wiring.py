@@ -92,6 +92,7 @@ from app.modules.ai.application.tools.search_project_files import (
 )
 from app.modules.ai.application.tools.search_web import SearchWeb
 from app.modules.ai.application.tools.show_ui_block import ShowUiBlock
+from app.modules.ai.application.tracing_admin import TracingAdmin
 from app.modules.ai.application.transcribe_audio import AudioSniffer, TranscribeAudio
 from app.modules.ai.application.turn_result import TurnResults
 from app.modules.ai.application.usage_report import UsageReport
@@ -134,11 +135,12 @@ from app.modules.ai.infrastructure.redis_search_quota import RedisSearchQuotaSto
 from app.modules.ai.infrastructure.redis_summary_store import RedisSummaryStore
 from app.modules.ai.infrastructure.redis_turn_lock import RedisTurnLock
 from app.modules.ai.infrastructure.request_store import SqlRequestPublishUnitOfWork
+from app.modules.ai.infrastructure.tracing_runtime import TracingRuntime
 from app.modules.ai.infrastructure.uow import SqlAiUnitOfWork
 from app.modules.ai.infrastructure.usage_reader import SqlUsageReader
 from app.modules.ai.infrastructure.usage_store import SqlUsageStore
 from app.modules.ai.ports.budget_store import BudgetStore
-from app.modules.ai.ports.connectors import ConnectorSecrets
+from app.modules.ai.ports.connectors import ConnectorSecrets, RoutingSnapshot
 from app.modules.ai.ports.search_quota import SearchQuotaStore
 from app.modules.ai.ports.summary_store import SummaryStore
 from app.modules.ai.ports.turn_lock import TurnLock
@@ -245,6 +247,7 @@ class ConnectorServices:
     routing: RouteService
     connectors: ConnectorAdmin
     pipelines: PipelineAdmin
+    tracing: TracingAdmin
 
 
 def build_connectors(
@@ -252,8 +255,13 @@ def build_connectors(
     *,
     llm: LlmGateway,
     search: WebSearchGateway | None,
+    tracing: TracingRuntime,
 ) -> ConnectorServices:
-    """The route resolver over the stored routes, and the administration of both."""
+    """The route resolver over the stored routes, and the administration of both.
+
+    Every fresh routing read also sets the Langfuse project and the per-pipeline
+    tracing switches of `tracing`.
+    """
     settings = deps.settings
     vault = settings.ai_connector_vault
     secrets: ConnectorSecrets = (
@@ -262,7 +270,16 @@ def build_connectors(
     runtime = EnvConnectorRuntime(
         settings, secrets, llm=llm, search=search, redis=deps.redis
     )
-    routing = RouteService(settings, SqlRoutingLoader(deps.sessionmaker), runtime)
+
+    async def apply_tracing(snapshot: RoutingSnapshot) -> None:
+        await tracing.apply(snapshot, secrets)
+
+    routing = RouteService(
+        settings,
+        SqlRoutingLoader(deps.sessionmaker),
+        runtime,
+        on_load=apply_tracing,
+    )
 
     def make_uow() -> SqlConnectorUnitOfWork:
         return SqlConnectorUnitOfWork(
@@ -281,7 +298,23 @@ def build_connectors(
             routing,
             allow_plain_local_urls=settings.env != "prod",
         ),
-        pipelines=PipelineAdmin(make_uow, runtime, routing, deps.clock),
+        pipelines=PipelineAdmin(
+            make_uow,
+            runtime,
+            routing,
+            deps.clock,
+            capture_default=tracing.capture_default,
+        ),
+        tracing=TracingAdmin(
+            make_uow,
+            secrets,
+            routing,
+            deps.clock,
+            env_host=settings.langfuse.host,
+            env_configured=tracing.env_configured,
+            capture_default=tracing.capture_default,
+            allow_plain_local_urls=settings.env != "prod",
+        ),
     )
 
 

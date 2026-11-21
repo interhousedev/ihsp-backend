@@ -20,6 +20,9 @@ from app.modules.admission.infrastructure.ai.prompts import (
     essay_review as admit_essay_review,
 )
 from app.modules.admission.infrastructure.ai.prompts import essays as admit_essays
+from app.modules.admission.infrastructure.ai.prompts import (
+    fit_analysis as admit_fit_analysis,
+)
 from app.modules.admission.infrastructure.ai.prompts import goal_plan as admit_goal_plan
 from app.modules.admission.infrastructure.ai.prompts import item_grade as admit_grade
 from app.modules.admission.infrastructure.ai.prompts import items as admit_items
@@ -153,6 +156,13 @@ _PARTS: tuple[tuple[Iterable[AiTask], str, str, str, bool], ...] = (
         "system",
         "Admission career: spike draft",
         admit_career.SPIKE,
+        False,
+    ),
+    (
+        (AiTask.ADMIT_FIT_ANALYSIS,),
+        "system",
+        "Admission: quick fit analysis of one university",
+        admit_fit_analysis.SYSTEM,
         False,
     ),
     (

@@ -17,7 +17,7 @@ from app.modules.admission.domain.errors import (
     AdmissionNotFoundError,
 )
 from app.modules.admission.domain.items import (
-    HONOR_DESCRIPTION_MAX,
+    DESCRIPTION_MAX,
     RECOGNITION_LEVELS,
     TITLE_MAX,
 )
@@ -75,7 +75,7 @@ def prefill(cert: StudentCertificate, locale: str, dismissed: bool) -> HonorSugg
         entry_id=cert.entry_id,
         name=cert.name(locale),
         title=title[:TITLE_MAX].strip(),
-        description=", ".join(facts)[:HONOR_DESCRIPTION_MAX].strip(", "),
+        description=", ".join(facts)[:DESCRIPTION_MAX].strip(", "),
         category=category,
         level=level if level in RECOGNITION_LEVELS else None,
         issued_at=cert.issued_at.isoformat() if cert.issued_at else None,

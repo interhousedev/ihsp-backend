@@ -10,6 +10,9 @@ from app.modules.admission.infrastructure.career_repository import (
 from app.modules.admission.infrastructure.catalog_proposals_repository import (
     SqlCatalogProposalRepository,
 )
+from app.modules.admission.infrastructure.catalog_staff_repository import (
+    SqlCatalogStaffRepository,
+)
 from app.modules.admission.infrastructure.chooser_repositories import (
     SqlCatalogRepository,
     SqlListRepository,
@@ -127,6 +130,7 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
     access: SqlAccessRepository
     catalog: SqlCatalogRepository
     catalog_proposals: SqlCatalogProposalRepository
+    catalog_staff: SqlCatalogStaffRepository
     shortlist: SqlListRepository
     courses: SqlCourseRepository
     runtime_settings: SqlRuntimeSettingsRepository
@@ -214,6 +218,7 @@ class SqlAdmissionUnitOfWork(SqlUnitOfWork):
         self.access = SqlAccessRepository(self.session)
         self.catalog = SqlCatalogRepository(self.session)
         self.catalog_proposals = SqlCatalogProposalRepository(self.session)
+        self.catalog_staff = SqlCatalogStaffRepository(self.session)
         self.shortlist = SqlListRepository(self.session)
         self.courses = SqlCourseRepository(self.session)
         self.runtime_settings = SqlRuntimeSettingsRepository(self.session)

@@ -26,6 +26,7 @@ from app.modules.admission.domain.errors import (
     InvalidTransitionError,
 )
 from app.modules.admission.domain.opportunities import (
+    ItemOpportunityLink,
     Opportunity,
     OpportunityDraft,
     OpportunitySubmission,
@@ -57,6 +58,7 @@ class FakeOpportunities:
         self.subs: dict[UUID, OpportunitySubmission] = {}
         self.plans: dict[tuple[UUID, UUID], PlanEntry] = {}
         self.ai: dict[UUID, tuple[dict[str, Any], dt.datetime]] = {}
+        self.links: dict[UUID, ItemOpportunityLink] = {}
 
     async def taxonomy(self) -> list[TaxonomyNode]:
         return list(self.nodes.values())
@@ -128,6 +130,25 @@ class FakeOpportunities:
         saved = dataclasses.replace(submission, lock_version=cur.lock_version + 1)
         self.subs[saved.id] = saved
         return saved
+
+    async def item_link(self, item_id: UUID) -> ItemOpportunityLink | None:
+        return self.links.get(item_id)
+
+    async def save_item_link(self, link: ItemOpportunityLink) -> None:
+        self.links[link.item_id] = link
+
+    async def delete_item_link(self, item_id: UUID) -> bool:
+        return self.links.pop(item_id, None) is not None
+
+    async def resolve_item_links(
+        self, submission_id: UUID, opportunity_id: UUID
+    ) -> int:
+        hits = [k for k, v in self.links.items() if v.submission_id == submission_id]
+        for key in hits:
+            self.links[key] = dataclasses.replace(
+                self.links[key], opportunity_id=opportunity_id
+            )
+        return len(hits)
 
     async def plan(self, student_id: UUID) -> list[PlanEntry]:
         return [e for (s, _), e in self.plans.items() if s == student_id]
@@ -231,7 +252,7 @@ def test_review_transition() -> None:
         review_transition("pending", False, " ")
     for done in ("approved", "rejected"):
         with pytest.raises(ValueError):
-            review_transition(done, True, None)  # type: ignore[arg-type]
+            review_transition(done, True, None)
 
 
 async def test_submit_approve_publishes_and_audits() -> None:
@@ -341,7 +362,7 @@ async def _helper_ctx(e: Env, *, grant: bool, kind: str = "counselor") -> Any:
             user_id=helper,
             role=StaffRole(
                 id=new_id(),
-                kind=kind,  # type: ignore[arg-type]
+                kind=kind,
                 name="Opportunity helper",
                 name_i18n={},
                 permissions=perms,

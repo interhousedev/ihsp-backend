@@ -43,6 +43,7 @@
   "admission-purpose-finance-text": "Byudjet va yordam boʼyicha javoblarim toʼlov imkoniyatini tekshirish uchun ishlatilishi va maslahatchiga koʼrinishi mumkin.",
   "admission-catalog-fact-invalid": "Bu maʼlumot qabul qilinmadi. Qiymatni, manba havolasini va yilni tekshiring.",
   "admission-catalog-duplicate": "Bu maktab katalogda bor yoki uning taklifi koʻrib chiqilmoqda.",
+  "admission-catalog-in-use": "Bu yozuv oʻquvchilar maʼlumotlarida ishlatilmoqda, shuning uchun uni oʻchirib boʻlmaydi. Uning oʻrniga yashiring.",
   "admission-catalog-proposal-limit": "Katalog uchun kunlik {limit} ta taklif limitiga yetdingiz. Ertaga urinib koʻring.",
   "admission-fork-last-target": "Qoʻshimcha insho kamida bitta savolga ega boʻlishi kerak. Oxirgi savolni bu inshoda qoldiring yoki uni oʻzgartiring.",
   "admission-essay-too-short": "Insho tekshirish uchun juda qisqa. Kamida {min} ta soʻz yozing, hozir {count} ta.",

@@ -1,0 +1,571 @@
+{
+  "institutions": [
+    {
+      "slug": "grinnell-edu",
+      "name": "Grinnell College",
+      "country": "US",
+      "city": "Grinnell",
+      "website_domain": "grinnell.edu",
+      "description": {
+        "en": "Grinnell College is a private liberal arts college in Grinnell, Iowa, known for its open curriculum and emphasis on undergraduate research. It meets full demonstrated need for admitted international students.",
+        "ru": "Колледж Гриннелл — частный колледж гуманитарных искусств в Гриннелле, штат Айова, известный открытой учебной программой и акцентом на студенческие исследования. Он покрывает полную доказанную потребность принятых иностранных студентов.",
+        "uz": "Grinnell kolleji — Ayova shtatidagi Grinnell shahridagi xususiy liberal san’at kollegiyasi bo‘lib, ochiq o‘quv dasturi va talabalar tadqiqotlari bilan tanilgan. Qabul qilingan xalqaro talabalarning to‘liq isbotlangan ehtiyojini qoplaydi."
+      },
+      "source_url": "https://www.collegedata.fyi/schools/grinnell-college/2024-25",
+      "year": 2025,
+      "verified": false,
+      "acceptance_rate": {
+        "min": 14.5,
+        "max": 14.5,
+        "source_url": "https://www.collegedata.fyi/schools/grinnell-college/2024-25",
+        "year": 2025,
+        "note": "Overall, 2024-25 CDS: 1,416 of 9,758; CDS text also states 15%"
+      },
+      "intl_tuition_usd": {
+        "value": 67650,
+        "currency": "USD",
+        "source_url": "https://www.collegedata.fyi/schools/grinnell-college/2024-25",
+        "year": 2024,
+        "note": "IPEDS tuition, 2024-25"
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.grinnell.edu/admission/apply/first-year/requirements",
+        "year": 2026,
+        "note": "Test optional for 2026-27 applicants; applicants must state whether they will submit a score."
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-05",
+          "cycle": "2026-27",
+          "source_url": "https://www.grinnell.edu/admission/apply/first-year/requirements",
+          "note": "Application Deadlines 2026-27."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-15",
+          "cycle": "2026-27",
+          "source_url": "https://www.grinnell.edu/admission/apply/first-year/requirements",
+          "note": "Application Deadlines 2026-27."
+        }
+      ]
+    },
+    {
+      "slug": "hamilton-edu",
+      "name": "Hamilton College",
+      "country": "US",
+      "city": "Clinton",
+      "website_domain": "hamilton.edu",
+      "description": {
+        "en": "Hamilton College is a private liberal arts college in Clinton, New York, known for its writing-intensive curriculum. It meets 100% of demonstrated need for all admitted students.",
+        "ru": "Колледж Гамильтон — частный колледж гуманитарных искусств в Клинтоне, штат Нью-Йорк, известный программой с упором на письменные работы. Покрывает 100% доказанной потребности всех принятых студентов.",
+        "uz": "Hamilton kolleji — Nyu-York shtatidagi Klinton shahridagi xususiy liberal san’at kollegiyasi bo‘lib, yozma ishlarga urg‘u beruvchi o‘quv dasturi bilan tanilgan. Barcha qabul qilingan talabalarning isbotlangan ehtiyojining 100 foizini qoplaydi."
+      },
+      "source_url": "https://www.collegedata.fyi/schools/hamilton/2024-25",
+      "year": 2025,
+      "verified": false,
+      "acceptance_rate": {
+        "min": 13.6,
+        "max": 13.6,
+        "source_url": "https://www.collegedata.fyi/schools/hamilton/2024-25",
+        "year": 2025,
+        "note": "Overall, 2024-25 CDS: 1,162 of 8,531"
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.hamilton.edu/admission/apply",
+        "year": 2026,
+        "note": null
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://www.hamilton.edu/admission/apply",
+          "note": "Important Deadlines page lists these exact 2026/2027 dates."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://www.hamilton.edu/admission/apply",
+          "note": "Important Deadlines page lists these exact 2026/2027 dates."
+        }
+      ]
+    },
+    {
+      "slug": "haverford-edu",
+      "name": "Haverford College",
+      "country": "US",
+      "city": "Haverford",
+      "website_domain": "haverford.edu",
+      "description": {
+        "en": "Haverford College is a private liberal arts college near Philadelphia, Pennsylvania, known for its honor code and open curriculum. It is a member of the Tri-College Consortium with Bryn Mawr and Swarthmore.",
+        "ru": "Колледж Хаверфорд — частный колледж гуманитарных искусств недалеко от Филадельфии, штат Пенсильвания, известный кодексом чести и открытой учебной программой. Входит в консорциум Tri-College вместе с Брин-Мар и Суортмор.",
+        "uz": "Haverford kolleji — Pensilvaniya shtatida, Filadelfiya yaqinidagi xususiy liberal san’at kollegiyasi bo‘lib, sharaf kodeksi va ochiq o‘quv dasturi bilan tanilgan. Bryn Mawr va Swarthmore bilan Tri-College konsorsiumiga kiradi."
+      },
+      "source_url": "https://www.collegedata.fyi/schools/haverford-college/2025-26",
+      "year": 2025,
+      "verified": false,
+      "acceptance_rate": {
+        "min": 13.3,
+        "max": 13.3,
+        "source_url": "https://www.collegedata.fyi/schools/haverford-college/2025-26",
+        "year": 2025,
+        "note": "Overall, 2025-26 CDS: 896 of 6,730"
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.haverford.edu/admission/applying/international-students",
+        "year": 2026,
+        "note": "SAT/ACT submission is the applicant's choice."
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-05",
+          "cycle": "2026-27",
+          "source_url": "https://www.haverford.edu/admission/applying/application-checklist",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-10",
+          "cycle": "2026-27",
+          "source_url": "https://www.haverford.edu/admission/applying/application-checklist",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "lehigh-edu",
+      "name": "Lehigh University",
+      "country": "US",
+      "city": "Bethlehem",
+      "website_domain": "lehigh.edu",
+      "description": {
+        "en": "Lehigh University is a private research university in Bethlehem, Pennsylvania, known for engineering, business and the sciences. It offers undergraduate and graduate programs.",
+        "ru": "Университет Лихай — частный исследовательский университет в Бетлехеме, штат Пенсильвания, известный инженерией, бизнесом и естественными науками. Предлагает бакалаврские и магистерские программы.",
+        "uz": "Lexay universiteti — Pensilvaniya shtatidagi Betlexem shahridagi xususiy tadqiqot universiteti bo‘lib, muhandislik, biznes va tabiiy fanlari bilan tanilgan. Bakalavriat va magistratura dasturlarini taklif etadi."
+      },
+      "source_url": "https://www.collegedata.fyi/schools/lehigh/2025-26",
+      "year": 2025,
+      "verified": false,
+      "acceptance_rate": {
+        "min": 29.0,
+        "max": 29.0,
+        "source_url": "https://www.collegedata.fyi/schools/lehigh/2025-26",
+        "year": 2025,
+        "note": "Overall, 2025-26 CDS: 5,601 of 19,342"
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://admissions.lehigh.edu/apply",
+        "year": 2026,
+        "note": "Test-optional extended indefinitely."
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-01",
+          "cycle": "2026-27",
+          "source_url": "https://admissions.lehigh.edu/apply",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-01",
+          "cycle": "2026-27",
+          "source_url": "https://admissions.lehigh.edu/apply",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "macalester-edu",
+      "name": "Macalester College",
+      "country": "US",
+      "city": "Saint Paul",
+      "website_domain": "macalester.edu",
+      "description": {
+        "en": "Macalester College is a private liberal arts college in Saint Paul, Minnesota, known for its global focus and strong international student community. It meets 100% of demonstrated need for admitted students.",
+        "ru": "Колледж Макалестер — частный колледж гуманитарных искусств в Сент-Поле, штат Миннесота, известный глобальным подходом и сильным сообществом иностранных студентов. Покрывает 100% доказанной потребности принятых студентов.",
+        "uz": "Makalester kolleji — Minnesota shtatidagi Sent-Pol shahridagi xususiy liberal san’at kollegiyasi bo‘lib, global yondashuvi va kuchli xalqaro talabalar hamjamiyati bilan tanilgan. Qabul qilingan talabalarning isbotlangan ehtiyojining 100 foizini qoplaydi."
+      },
+      "source_url": "https://www.collegedata.fyi/schools/macalester-college/2024-25",
+      "year": 2025,
+      "verified": false,
+      "acceptance_rate": {
+        "min": 28.5,
+        "max": 28.5,
+        "source_url": "https://www.collegedata.fyi/schools/macalester-college/2024-25",
+        "year": 2025,
+        "note": "Overall, 2024-25 CDS: 2,558 of 8,968"
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.macalester.edu/admissions/first-year/",
+        "year": 2026,
+        "note": null
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-01",
+          "cycle": "2026-27",
+          "source_url": "https://www.macalester.edu/admissions/first-year/apply/",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-15",
+          "cycle": "2026-27",
+          "source_url": "https://www.macalester.edu/admissions/first-year/apply/",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "middlebury-edu",
+      "name": "Middlebury College",
+      "country": "US",
+      "city": "Middlebury",
+      "website_domain": "middlebury.edu",
+      "description": {
+        "en": "Middlebury College is a private liberal arts college in Middlebury, Vermont, known for its language schools and study-abroad programs. It is need-aware for international applicants.",
+        "ru": "Колледж Миддлбери — частный колледж гуманитарных искусств в Миддлбери, штат Вермонт, известный языковыми школами и программами обучения за рубежом. Учитывает финансовую потребность при приеме иностранных абитуриентов.",
+        "uz": "Midlberi kolleji — Vermont shtatidagi Midlberi shahridagi xususiy liberal san’at kollegiyasi bo‘lib, til maktablari va xorijda o‘qish dasturlari bilan tanilgan. Xalqaro abituriyentlarni qabul qilishda moliyaviy ehtiyojni hisobga oladi."
+      },
+      "source_url": "https://www.collegedata.fyi/schools/middlebury-college/2024-25",
+      "year": 2025,
+      "verified": false,
+      "acceptance_rate": {
+        "min": 10.7,
+        "max": 10.7,
+        "source_url": "https://www.collegedata.fyi/schools/middlebury-college/2024-25",
+        "year": 2025,
+        "note": "Overall, 2024-25 CDS: 1,348 of 12,540"
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.commonapp.org/explore/middlebury-college/",
+        "year": 2026,
+        "note": "Middlebury College is test optional."
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://www.middlebury.edu/college/admissions/application-instructions-and-deadlines/student-admissions-options",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://www.middlebury.edu/college/admissions/application-instructions-and-deadlines/student-admissions-options",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "minerva-edu",
+      "name": "Minerva University",
+      "country": "US",
+      "city": "San Francisco",
+      "website_domain": "minerva.edu",
+      "description": {
+        "en": "Minerva University is a private university in San Francisco, California, with a seven-city residential model and a focus on critical thinking. It was renamed from Minerva Schools at KGI in 2021.",
+        "ru": "Университет Минерва — частный университет в Сан-Франциско, штат Калифорния, с моделью обучения в семи городах и акцентом на критическое мышление. Переименован из Minerva Schools at KGI в 2021 году.",
+        "uz": "Minerva universiteti — Kaliforniya shtatidagi San-Fransisko shahridagi xususiy universitet bo‘lib, yetti shaharda yashash modeli va tanqidiy fikrlashga urg‘u beradi. 2021-yilda Minerva Schools at KGI nomidan o‘zgartirilgan."
+      },
+      "source_url": "https://www.collegedata.fyi/schools/minerva-university",
+      "year": 2025,
+      "verified": false,
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://my.minerva.edu/frequently-asked-questions/",
+        "year": 2026,
+        "note": "Test scores not required; may be submitted voluntarily."
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-05",
+          "cycle": "2026-27",
+          "source_url": "https://www.minerva.edu/apply/",
+          "note": "Regular Decision I. Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-03-02",
+          "cycle": "2026-27",
+          "source_url": "https://www.minerva.edu/apply/",
+          "note": "Regular Decision II. Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "northeastern-edu",
+      "name": "Northeastern University",
+      "country": "US",
+      "city": "Boston",
+      "website_domain": "northeastern.edu",
+      "description": {
+        "en": "Northeastern University is a private research university in Boston, Massachusetts, known for its cooperative education (co-op) program. It emphasizes experiential learning and professional practice.",
+        "ru": "Северо-Восточный университет — частный исследовательский университет в Бостоне, штат Массачусетс, известный программой кооперативного обучения (co-op). Делает акцент на практическом опыте и профессиональной подготовке.",
+        "uz": "Shimoli-sharqiy universiteti — Massachusets shtatidagi Boston shahridagi xususiy tadqiqot universiteti bo‘lib, kooperativ ta’lim (co-op) dasturi bilan tanilgan. Amaliy tajriba va kasbiy tayyorgarlikka urg‘u beradi."
+      },
+      "source_url": "https://www.collegedata.fyi/schools/northeastern/2024-25",
+      "year": 2025,
+      "verified": false,
+      "acceptance_rate": {
+        "min": 5.2,
+        "max": 5.2,
+        "source_url": "https://www.collegedata.fyi/schools/northeastern/2024-25",
+        "year": 2025,
+        "note": "Overall, 2024-25 CDS: 5,133 of 98,425"
+      }
+    },
+    {
+      "slug": "northwestern-edu",
+      "name": "Northwestern University",
+      "country": "US",
+      "city": "Evanston",
+      "website_domain": "northwestern.edu",
+      "description": {
+        "en": "Northwestern University is a private research university in Evanston, Illinois, near Chicago. It is known for journalism, communication, law and its medical school.",
+        "ru": "Северо-Западный университет — частный исследовательский университет в Эванстоне, штат Иллинойс, рядом с Чикаго. Известен журналистикой, коммуникациями, правом и медицинской школой.",
+        "uz": "Shimoliy-g‘arbiy universiteti — Illinoys shtatidagi Chikago yaqinidagi Evanston shahridagi xususiy tadqiqot universiteti. Jurnalistika, kommunikatsiya, huquq va tibbiyot maktabi bilan tanilgan."
+      },
+      "source_url": "https://www.collegedata.fyi/schools/northwestern/2024-25",
+      "year": 2025,
+      "verified": false,
+      "acceptance_rate": {
+        "min": 7.7,
+        "max": 7.7,
+        "source_url": "https://www.collegedata.fyi/schools/northwestern/2024-25",
+        "year": 2025,
+        "note": "Overall, 2024-25 CDS: 3,806 of 49,474"
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://admissions.northwestern.edu/faqs/standardized-testing-policy",
+        "year": 2026,
+        "note": null
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://admissions.northwestern.edu/apply/application-deadlines.html",
+          "note": "Application deadlines page lists 2026/2027 dates."
+        }
+      ]
+    },
+    {
+      "slug": "psu-edu",
+      "name": "Pennsylvania State University",
+      "country": "US",
+      "city": "University Park",
+      "website_domain": "psu.edu",
+      "description": {
+        "en": "Penn State is a public research university with its main campus in University Park, Pennsylvania. It has a large system of campuses across the state and a broad range of undergraduate majors.",
+        "ru": "Университет штата Пенсильвания — государственный исследовательский университет с основным кампусом в Юниверсити-Парк, штат Пенсильвания. Имеет большую сеть кампусов по всему штату и широкий выбор направлений бакалавриата.",
+        "uz": "Pensilvaniya shtati universiteti — Pensilvaniya shtatidagi Yunivörsiti-Park shahridagi asosiy kampusga ega davlat tadqiqot universiteti. Shtat bo‘ylab keng kampuslar tizimi va bakalavriat yo‘nalishlarining keng tanlovi mavjud."
+      },
+      "source_url": "https://www.collegedata.fyi/schools/penn-state/2025-26",
+      "year": 2025,
+      "verified": false,
+      "acceptance_rate": {
+        "min": 55.3,
+        "max": 55.3,
+        "source_url": "https://www.collegedata.fyi/schools/penn-state/2025-26",
+        "year": 2025,
+        "note": "Overall, 2025-26 CDS: 58,952 of 106,547"
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://admissions.psu.edu/apply/",
+        "year": 2026,
+        "note": "Applicants choose whether SAT/ACT scores are considered."
+      },
+      "deadlines": []
+    },
+    {
+      "slug": "pomona-edu",
+      "name": "Pomona College",
+      "country": "US",
+      "city": "Claremont",
+      "website_domain": "pomona.edu",
+      "description": {
+        "en": "Pomona College is a private liberal arts college in Claremont, California, one of the Claremont Colleges. It is known for its strong science programs and undergraduate research.",
+        "ru": "Колледж Помона — частный колледж гуманитарных искусств в Клермонте, штат Калифорния, один из колледжей Клермонта. Известен сильными естественно-научными программами и студенческими исследованиями.",
+        "uz": "Pomona kolleji — Kaliforniya shtatidagi Klermont shahridagi xususiy liberal san’at kollegiyasi bo‘lib, Klermont kollegiyalaridan biridir. Kuchli tabiiy fanlar dasturlari va talabalar tadqiqotlari bilan tanilgan."
+      },
+      "source_url": "https://www.collegedata.fyi/schools/pomona-college/2025-26",
+      "year": 2025,
+      "verified": false,
+      "acceptance_rate": {
+        "min": 7.1,
+        "max": 7.1,
+        "source_url": "https://www.collegedata.fyi/schools/pomona-college/2025-26",
+        "year": 2025,
+        "note": "Overall, 2025-26 CDS: 890 of 12,470"
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.commonapp.org/explore/pomona-college/",
+        "year": 2026,
+        "note": "Pomona is test-optional for all applicants."
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-08",
+          "cycle": "2026-27",
+          "source_url": "https://www.pomona.edu/admissions/paths-apply",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-08",
+          "cycle": "2026-27",
+          "source_url": "https://www.pomona.edu/admissions/paths-apply",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "purdue-edu",
+      "name": "Purdue University",
+      "country": "US",
+      "city": "West Lafayette",
+      "website_domain": "purdue.edu",
+      "description": {
+        "en": "Purdue University is a public research university in West Lafayette, Indiana, known for engineering, technology and agriculture. It is one of the largest universities in the state of Indiana.",
+        "ru": "Университет Пердью — государственный исследовательский университет в Уэст-Лафайетт, штат Индиана, известный инженерией, технологиями и сельским хозяйством. Один из крупнейших университетов штата Индиана.",
+        "uz": "Purdue universiteti — Indiana shtatidagi Uest-Lafayet shahridagi davlat tadqiqot universiteti bo‘lib, muhandislik, texnologiya va qishloq xo‘jaligi bilan tanilgan. Indiana shtatidagi eng yirik universitetlardan biridir."
+      },
+      "source_url": "https://www.collegedata.fyi/schools/purdue/2025-26",
+      "year": 2025,
+      "verified": false,
+      "acceptance_rate": {
+        "min": 43.4,
+        "max": 43.4,
+        "source_url": "https://www.collegedata.fyi/schools/purdue/2025-26",
+        "year": 2025,
+        "note": "Overall, 2025-26 CDS: 37,881 of 87,220"
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-15",
+          "cycle": "2026-27",
+          "source_url": "https://www.commonapp.org/explore/purdue-university/",
+          "note": "Regular Decision deadline Jan. 15 per Purdue admissions (admissions.purdue.edu/become-student/application-status/). Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "rpi-edu",
+      "name": "Rensselaer Polytechnic Institute",
+      "country": "US",
+      "city": "Troy",
+      "website_domain": "rpi.edu",
+      "description": {
+        "en": "Rensselaer Polytechnic Institute is a private research university in Troy, New York, the oldest technological university in the English-speaking world. It specializes in engineering, science and technology.",
+        "ru": "Политехнический институт Ренсселера — частный исследовательский университет в Трое, штат Нью-Йорк, старейший технологический университет англоязычного мира. Специализируется на инженерии, науке и технологиях.",
+        "uz": "Rensselaer politexnika instituti — Nyu-York shtatidagi Troy shahridagi xususiy tadqiqot universiteti bo‘lib, ingliz tilida so‘zlashuvchi dunyodagi eng qadimgi texnologik universitet hisoblanadi. Muhandislik, fan va texnologiyalarga ixtisoslashgan."
+      },
+      "source_url": "https://www.collegedata.fyi/schools/rpi/2024-25",
+      "year": 2025,
+      "verified": false,
+      "acceptance_rate": {
+        "min": 63.4,
+        "max": 63.4,
+        "source_url": "https://www.collegedata.fyi/schools/rpi/2024-25",
+        "year": 2025,
+        "note": "Overall, 2024-25 CDS: 10,906 of 17,193"
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://undergrad.admissions.rpi.edu/announcements",
+        "year": 2026,
+        "note": "Test optional through fall 2030 applicants; Physician-Scientist Program requires testing."
+      },
+      "deadlines": [
+        {
+          "plan": "EA",
+          "date": "2026-12-01",
+          "cycle": "2026-27",
+          "source_url": "https://undergrad.admissions.rpi.edu/apply",
+          "note": "Application Options - Fall 2027."
+        },
+        {
+          "plan": "ED2",
+          "date": "2027-01-06",
+          "cycle": "2026-27",
+          "source_url": "https://undergrad.admissions.rpi.edu/apply",
+          "note": "Application Options - Fall 2027."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-15",
+          "cycle": "2026-27",
+          "source_url": "https://undergrad.admissions.rpi.edu/apply",
+          "note": "Application Options - Fall 2027."
+        }
+      ]
+    },
+    {
+      "slug": "rice-edu",
+      "name": "Rice University",
+      "country": "US",
+      "city": "Houston",
+      "website_domain": "rice.edu",
+      "description": {
+        "en": "Rice University is a private research university in Houston, Texas, known for its small size, undergraduate focus and residential colleges. It is among the most selective universities in the United States.",
+        "ru": "Университет Райса — частный исследовательский университет в Хьюстоне, штат Техас, известный небольшим размером, упором на бакалавриат и системой резиденционных колледжей. Входит в число самых избирательных университетов США.",
+        "uz": "Rays universiteti — Texas shtatidagi Xyuston shahridagi xususiy tadqiqot universiteti bo‘lib, kichik hajmi, bakalavriat ta’limiga e’tibori va rezidensiya kollegiyalari bilan tanilgan. AQShning eng tanlovchan universitetlari qatoriga kiradi."
+      },
+      "source_url": "https://www.collegedata.fyi/schools/rice/2025-26",
+      "year": 2025,
+      "verified": false,
+      "acceptance_rate": {
+        "min": 8.0,
+        "max": 8.0,
+        "source_url": "https://www.collegedata.fyi/schools/rice/2025-26",
+        "year": 2025,
+        "note": "Overall, 2025-26 CDS: 2,948 of 36,791"
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://admission.rice.edu/blog/in-the-know/admission-updates",
+        "year": 2026,
+        "note": "From 2024-25 Rice recommends but does not require SAT/ACT."
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://ga.rice.edu/undergraduate-students/academic-policies-procedures/admission/",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://ga.rice.edu/undergraduate-students/academic-policies-procedures/admission/",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    }
+  ],
+  "programs": []
+}

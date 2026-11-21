@@ -4,7 +4,7 @@ from uuid import UUID
 
 from app.shared.db.base import Base, TimestampMixin
 
-from sqlalchemy import CheckConstraint, String, Uuid
+from sqlalchemy import Boolean, CheckConstraint, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
 
@@ -27,3 +27,6 @@ class PipelineRouteRow(TimestampMixin, Base):
     model: Mapped[str | None] = mapped_column(String(255))
     reasoning_effort: Mapped[str | None] = mapped_column(String(16))
     updated_by: Mapped[UUID | None] = mapped_column(Uuid)
+    # null: the default (admission off, the rest on; content per environment)
+    tracing_enabled: Mapped[bool | None] = mapped_column(Boolean)
+    capture_content: Mapped[bool | None] = mapped_column(Boolean)

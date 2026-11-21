@@ -3,7 +3,7 @@
 import datetime as dt
 from dataclasses import replace
 from decimal import Decimal
-from typing import Any, Sequence
+from typing import Any, Callable, Sequence, cast
 from uuid import UUID
 
 from app.modules.admission.application.access import AccessPolicy
@@ -21,6 +21,7 @@ from app.modules.admission.application.review import ItemReviewService
 from app.modules.admission.domain.errors import (
     AdmissionConflictError,
     AdmissionNotFoundError,
+    CharLimitError,
     ConsentRequiredError,
     InvalidAnswerError,
     ItemIncompleteError,
@@ -265,7 +266,7 @@ class World:
         membership = FakeMembership(
             [student_ref(STUDENT, GROUP), student_ref(OTHER, GROUP)]
         )
-        uow = lambda: ItemsUow(self.store, self.data)  # noqa: E731
+        uow: Callable[[], Any] = lambda: ItemsUow(self.store, self.data)  # noqa: E731
         self.consents = FakeConsents({STUDENT: frozenset({STAFF_VIEW, AI})})
         self.policy = AccessPolicy(
             uow,
@@ -298,7 +299,13 @@ class World:
 
     async def item(self, kind: str = "activity", **kw: Any) -> Item:
         draft = Item(
-            new_id(), STUDENT, kind, "Captain", "Robotics", "Built robots", **kw
+            new_id(),
+            STUDENT,
+            cast(Any, kind),
+            "Captain",
+            "Robotics",
+            "Built robots",
+            **kw,
         )
         return (await self.items.create(await self.ctx(), draft)).item
 
@@ -353,23 +360,36 @@ async def test_drafts_are_capped() -> None:
         await w.items.create(ctx, _bare())
 
 
-async def test_ready_requires_complete_fields() -> None:
+async def test_ready_needs_only_a_title() -> None:
     w = World()
     ctx = await w.ctx()
     ready = replace(_bare(), status="ready")
-    with pytest.raises(ItemIncompleteError) as err:
-        await w.items.create(ctx, ready)
-    assert set(err.value.params["fields"]) == {"category", "level", "grades"}
+    created = (await w.items.create(ctx, ready)).item
+    assert created.status == "ready"
+    assert set(created.missing_for_ready()) == {"category", "level", "grades"}
     draft = (await w.items.create(ctx, _bare())).item
-    with pytest.raises(ItemIncompleteError):
-        await w.items.update(ctx, draft.id, {"status": "ready"}, draft.lock_version)
-    done = await w.items.update(
-        ctx,
-        draft.id,
-        {"status": "ready", "category": "award", "level": "school", "grades": (10,)},
-        draft.lock_version,
-    )
-    assert done.status == "ready"
+    moved = await w.items.update(ctx, draft.id, {"status": "ready"}, draft.lock_version)
+    assert moved.status == "ready"
+    untitled = replace(_bare(), title=" ", status="ready")
+    with pytest.raises(ItemIncompleteError) as err:
+        await w.items.create(ctx, untitled)
+    assert err.value.params["fields"] == ["title"]
+
+
+async def test_text_limits_are_the_same_for_both_kinds() -> None:
+    w = World()
+    ctx = await w.ctx()
+    for kind in ("activity", "honor"):
+        ok = Item(new_id(), STUDENT, kind, "t" * 60, "o" * 110, "d" * 600)
+        await w.items.create(ctx, ok)
+        for title, org, desc in (
+            ("t" * 61, "", ""),
+            ("t", "o" * 111, ""),
+            ("t", "", "d" * 601),
+        ):
+            with pytest.raises(CharLimitError):
+                bad = Item(new_id(), STUDENT, kind, title, org, desc)
+                await w.items.create(ctx, bad)
 
 
 async def test_draft_to_ready_respects_cap() -> None:
@@ -447,6 +467,15 @@ async def test_review_caches_and_marks_stale() -> None:
     await w.items.update(ctx, item.id, {"description": "Built six robots"}, 0)
     [view] = await w.items.list_items(ctx, STUDENT)
     assert view.stale
+
+
+async def test_review_without_words_skips_alignment() -> None:
+    w = World(_review())
+    w.data.words.clear()
+    item = await w.item()
+    review = await w.reviews.review(await w.ctx(), item.id, "en")
+    assert review.words_version is None
+    assert review.payload["word_fit"] == []
 
 
 async def test_review_quota_per_item() -> None:
@@ -528,7 +557,7 @@ class _NoLimit:
 
 def _grader(w: World) -> ItemGradeService:
     return ItemGradeService(
-        lambda: ItemsUow(w.store, w.data),
+        cast(Any, lambda: ItemsUow(w.store, w.data)),
         w.policy,
         w.ai,
         w.consents,
@@ -591,8 +620,8 @@ async def test_move_honor_between_columns_and_reorder() -> None:
     await w.items.move(ctx, a.id, "draft", 0)
     assert w.data.items[a.id].status == "draft"
     assert w.data.items[a.id].position == 0 and w.data.items[draft.id].position == 1
-    with pytest.raises(ItemIncompleteError):
-        await w.items.move(ctx, draft.id, "ready", 0)
+    await w.items.move(ctx, draft.id, "ready", 0)
+    assert w.data.items[draft.id].status == "ready"
 
 
 async def test_move_honor_to_ready_respects_cap() -> None:

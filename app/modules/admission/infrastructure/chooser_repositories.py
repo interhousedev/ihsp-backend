@@ -179,6 +179,7 @@ class SqlCatalogRepository:
                     logo_url=r.logo_url,
                     cover_url=r.cover_url,
                     website_domain=r.website_domain,
+                    description=r.description,
                     name_local=r.name_local,
                     aliases=tuple(r.aliases or ()),
                     logo_zoom=float(r.logo_zoom),

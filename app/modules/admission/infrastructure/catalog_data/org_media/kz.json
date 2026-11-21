@@ -1,0 +1,122 @@
+[
+  {
+    "domain": "almau.edu.kz",
+    "name": "Almaty Management University",
+    "aliases": [
+      "Almaty Management University",
+      "AlmaU"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "astanait.edu.kz",
+    "name": "Astana IT University",
+    "aliases": [
+      "Astana IT University"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/6/6a/Logo_astana_it_university.png",
+    "cover_url": null
+  },
+  {
+    "domain": "buketov.edu.kz",
+    "name": "Karaganda Buketov University",
+    "aliases": [
+      "Karaganda Buketov University",
+      "Buketov University"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "enu.kz",
+    "name": "L.N. Gumilyov Eurasian National University",
+    "aliases": [
+      "L.N. Gumilyov Eurasian National University",
+      "L. N. Gumilev Eurasian National University",
+      "ENU"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "kaznmu.kz",
+    "name": "Kazakh National Medical University named after S.D. Asfendiyarov",
+    "aliases": [
+      "Kazakh National Medical University named after S.D. Asfendiyarov",
+      "Kazakh National Medical University",
+      "KazNMU"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Main_building%2C_Kazak_National_Medical_University.jpg/960px-Main_building%2C_Kazak_National_Medical_University.jpg"
+  },
+  {
+    "domain": "kaznu.kz",
+    "name": "Al-Farabi Kazakh National University",
+    "aliases": [
+      "Al-Farabi Kazakh National University",
+      "KazNU"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Al-Farabi_KazNU_rektorat.jpg/960px-Al-Farabi_KazNU_rektorat.jpg"
+  },
+  {
+    "domain": "kbtu.edu.kz",
+    "name": "Kazakh-British Technical University",
+    "aliases": [
+      "Kazakh-British Technical University",
+      "KBTU"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "kimep.kz",
+    "name": "KIMEP University",
+    "aliases": [
+      "KIMEP University",
+      "KIMEP"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Aerial-view-kimep.jpg/960px-Aerial-view-kimep.jpg"
+  },
+  {
+    "domain": "narxoz.kz",
+    "name": "Narxoz University",
+    "aliases": [
+      "Narxoz University",
+      "Narxoz"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Narxoz_University_logo.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Narxoz_University_1.jpg/960px-Narxoz_University_1.jpg"
+  },
+  {
+    "domain": "nu.edu.kz",
+    "name": "Nazarbayev University",
+    "aliases": [
+      "Nazarbayev University",
+      "NU"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/en/thumb/c/ca/NU_Building.jpg/960px-NU_Building.jpg"
+  },
+  {
+    "domain": "satbayev.university",
+    "name": "Satbayev University",
+    "aliases": [
+      "Satbayev University"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Satbayev_University_2.jpg/960px-Satbayev_University_2.jpg"
+  },
+  {
+    "domain": "sdu.edu.kz",
+    "name": "SDU University",
+    "aliases": [
+      "SDU University",
+      "Suleyman Demirel University"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/5/51/SDU_Logo.svg",
+    "cover_url": null
+  }
+]

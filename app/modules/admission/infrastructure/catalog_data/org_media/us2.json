@@ -1,0 +1,376 @@
+[
+  {
+    "domain": "asu.edu",
+    "name": "Arizona State University",
+    "aliases": [
+      "Arizona State University",
+      "ASU"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/en/a/a1/Arizona_State_University_seal.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fe/Campus_view_-_Arizona_State_University_-_Tempe%2C_AZ_-_DSC05925.JPG/960px-Campus_view_-_Arizona_State_University_-_Tempe%2C_AZ_-_DSC05925.JPG"
+  },
+  {
+    "domain": "babson.edu",
+    "name": "Babson College",
+    "aliases": [
+      "Babson College",
+      "Babson"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/9/93/Babson-logo.png",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Babson_College_entrance.jpg/960px-Babson_College_entrance.jpg"
+  },
+  {
+    "domain": "berea.edu",
+    "name": "Berea College",
+    "aliases": [
+      "Berea College",
+      "Berea"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Berea_College_seal.png",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Berea_College%2C_Lincoln_Hall%2C_Berea_College%2C_Berea_%28Madison_County%2C_Kentucky%29.jpg/960px-Berea_College%2C_Lincoln_Hall%2C_Berea_College%2C_Berea_%28Madison_County%2C_Kentucky%29.jpg"
+  },
+  {
+    "domain": "berkeley.edu",
+    "name": "University of California, Berkeley",
+    "aliases": [
+      "University of California, Berkeley",
+      "UC Berkeley",
+      "UC Berkeley (Berkeley campus)"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/a/a1/Seal_of_University_of_California%2C_Berkeley.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/UCBerkeleyCampus.jpg/960px-UCBerkeleyCampus.jpg"
+  },
+  {
+    "domain": "brandeis.edu",
+    "name": "Brandeis University",
+    "aliases": [
+      "Brandeis University",
+      "Brandeis"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Brandeis_University_aerial_1.JPG/960px-Brandeis_University_aerial_1.JPG"
+  },
+  {
+    "domain": "bu.edu",
+    "name": "Boston University",
+    "aliases": [
+      "Boston University",
+      "BU"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/f/f5/Boston_University_seal.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Boston_University_East_Campus_May_2014.jpg/960px-Boston_University_East_Campus_May_2014.jpg"
+  },
+  {
+    "domain": "case.edu",
+    "name": "Case Western Reserve University",
+    "aliases": [
+      "Case Western Reserve University",
+      "Case Western"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Case_western_reserve_campus_2005.jpg/960px-Case_western_reserve_campus_2005.jpg"
+  },
+  {
+    "domain": "colgate.edu",
+    "name": "Colgate University",
+    "aliases": [
+      "Colgate University",
+      "Colgate"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Colgate_University_campus_setting.jpg/960px-Colgate_University_campus_setting.jpg"
+  },
+  {
+    "domain": "drexel.edu",
+    "name": "Drexel University",
+    "aliases": [
+      "Drexel University",
+      "Drexel"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a3/Drexel_Main_Building.jpg/960px-Drexel_Main_Building.jpg"
+  },
+  {
+    "domain": "gatech.edu",
+    "name": "Georgia Institute of Technology",
+    "aliases": [
+      "Georgia Institute of Technology",
+      "Georgia Tech"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/6/6c/Georgia_Tech_seal.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Tech_Tower_Building_-_10.jpg/960px-Tech_Tower_Building_-_10.jpg"
+  },
+  {
+    "domain": "haverford.edu",
+    "name": "Haverford College",
+    "aliases": [
+      "Haverford College",
+      "Haverford"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Haverford_College_-_Roberts_Hall_%281983%29.jpg/960px-Haverford_College_-_Roberts_Hall_%281983%29.jpg"
+  },
+  {
+    "domain": "lehigh.edu",
+    "name": "Lehigh University",
+    "aliases": [
+      "Lehigh University",
+      "Lehigh"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Lehigh_University_Mountain_Top_Campus.jpg/960px-Lehigh_University_Mountain_Top_Campus.jpg"
+  },
+  {
+    "domain": "minerva.edu",
+    "name": "Minerva Schools at KGI",
+    "aliases": [
+      "Minerva Schools at KGI",
+      "Minerva Schools"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "northeastern.edu",
+    "name": "Northeastern University",
+    "aliases": [
+      "Northeastern University"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/b/bb/NU_RGB_seal_R.png",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Northeastern_University_campus_in_spring.jpg/960px-Northeastern_University_campus_in_spring.jpg"
+  },
+  {
+    "domain": "nyu.edu",
+    "name": "New York University",
+    "aliases": [
+      "New York University",
+      "NYU"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/1/16/New_York_University_Seal.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/NYU_Campus_aerial.jpg/960px-NYU_Campus_aerial.jpg"
+  },
+  {
+    "domain": "osu.edu",
+    "name": "The Ohio State University",
+    "aliases": [
+      "The Ohio State University",
+      "Ohio State University",
+      "Ohio State"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/University_Hall%2C_The_Ohio_State_University_%28Columbus%2C_Ohio%29.jpg/960px-University_Hall%2C_The_Ohio_State_University_%28Columbus%2C_Ohio%29.jpg"
+  },
+  {
+    "domain": "psu.edu",
+    "name": "Pennsylvania State University",
+    "aliases": [
+      "Pennsylvania State University",
+      "Penn State"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Penn_State_University_Park_campus_in_the_snow%2C_January_2019.jpg/960px-Penn_State_University_Park_campus_in_the_snow%2C_January_2019.jpg"
+  },
+  {
+    "domain": "purdue.edu",
+    "name": "Purdue University",
+    "aliases": [
+      "Purdue University",
+      "Purdue"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/2/2e/Old_Purdue_Seal.png",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Frederick_L_Hovde_Hall_of_Administration_Purdue_University_2016_01.jpg/960px-Frederick_L_Hovde_Hall_of_Administration_Purdue_University_2016_01.jpg"
+  },
+  {
+    "domain": "richmond.edu",
+    "name": "University of Richmond",
+    "aliases": [
+      "University of Richmond",
+      "Richmond"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/d/d0/UR_Shield.svg",
+    "cover_url": null
+  },
+  {
+    "domain": "rochester.edu",
+    "name": "University of Rochester",
+    "aliases": [
+      "University of Rochester",
+      "Rochester"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Beneath_clock_at_the_University_of_Rochester.jpg/960px-Beneath_clock_at_the_University_of_Rochester.jpg"
+  },
+  {
+    "domain": "rpi.edu",
+    "name": "Rensselaer Polytechnic Institute",
+    "aliases": [
+      "Rensselaer Polytechnic Institute",
+      "RPI"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/e/e7/Rensselear_poly_inst_seal.png",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/26/Folsom_Library-_RPI.JPG/960px-Folsom_Library-_RPI.JPG"
+  },
+  {
+    "domain": "stevens.edu",
+    "name": "Stevens Institute of Technology",
+    "aliases": [
+      "Stevens Institute of Technology",
+      "Stevens"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Stevens_Institute_of_Technology_001.jpg/960px-Stevens_Institute_of_Technology_001.jpg"
+  },
+  {
+    "domain": "trincoll.edu",
+    "name": "Trinity College",
+    "aliases": [
+      "Trinity College",
+      "Trinity College Hartford"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/TrinCollHartford.jpg/960px-TrinCollHartford.jpg"
+  },
+  {
+    "domain": "tufts.edu",
+    "name": "Tufts University",
+    "aliases": [
+      "Tufts University",
+      "Tufts"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/1/12/Tufts_University_wordmark.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Tufts_University%2C_light_on_the_hill.jpg/960px-Tufts_University%2C_light_on_the_hill.jpg"
+  },
+  {
+    "domain": "tulane.edu",
+    "name": "Tulane University",
+    "aliases": [
+      "Tulane University",
+      "Tulane"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/7/77/Tulane_University_Logo.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Tulane_University_Campus_Quad_1980.jpg/960px-Tulane_University_Campus_Quad_1980.jpg"
+  },
+  {
+    "domain": "ucla.edu",
+    "name": "University of California, Los Angeles",
+    "aliases": [
+      "University of California, Los Angeles",
+      "UCLA"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/0/0d/The_University_of_California_UCLA.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/University_of_California_at_Los_Angeles%2C_Westwood%2C_California_%2863742%29.jpg/960px-University_of_California_at_Los_Angeles%2C_Westwood%2C_California_%2863742%29.jpg"
+  },
+  {
+    "domain": "ufl.edu",
+    "name": "University of Florida",
+    "aliases": [
+      "University of Florida",
+      "UF"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/UF_Buckman_Face.jpg/960px-UF_Buckman_Face.jpg"
+  },
+  {
+    "domain": "umich.edu",
+    "name": "University of Michigan–Ann Arbor",
+    "aliases": [
+      "University of Michigan–Ann Arbor",
+      "University of Michigan",
+      "UMich"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/9/93/Seal_of_the_University_of_Michigan.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/A_picture_of_the_University_of_Michigan_campus_in_Ann_Arbor%2C_Michigan%2C_USA.jpg/960px-A_picture_of_the_University_of_Michigan_campus_in_Ann_Arbor%2C_Michigan%2C_USA.jpg"
+  },
+  {
+    "domain": "umn.edu",
+    "name": "University of Minnesota–Twin Cities",
+    "aliases": [
+      "University of Minnesota–Twin Cities",
+      "University of Minnesota"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/8/86/Seal_of_the_University_of_Minnesota.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Old_Main%2C_University_of_Minnesota%2C_1885.jpg/960px-Old_Main%2C_University_of_Minnesota%2C_1885.jpg"
+  },
+  {
+    "domain": "unc.edu",
+    "name": "University of North Carolina at Chapel Hill",
+    "aliases": [
+      "University of North Carolina at Chapel Hill",
+      "UNC Chapel Hill",
+      "UNC"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/5/5c/University_of_North_Carolina_at_Chapel_Hill_seal.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/University_of_North_Carolina_at_Chapel_Hill_Campus.jpg/960px-University_of_North_Carolina_at_Chapel_Hill_Campus.jpg"
+  },
+  {
+    "domain": "usc.edu",
+    "name": "University of Southern California",
+    "aliases": [
+      "University of Southern California",
+      "USC"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/5/5c/University_of_Southern_California_%28USC%29_seal.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/Calisthenics_outside_Athletics_Hall_-_Campus_of_University_of_Southern_California_-_Los_Angeles%2C_CA_-_USA_%286787832760%29.jpg/960px-Calisthenics_outside_Athletics_Hall_-_Campus_of_University_of_Southern_California_-_Los_Angeles%2C_CA_-_USA_%286787832760%29.jpg"
+  },
+  {
+    "domain": "utexas.edu",
+    "name": "University of Texas at Austin",
+    "aliases": [
+      "University of Texas at Austin",
+      "UT Austin"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/en/e/e1/University_of_Texas_at_Austin_seal.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Aerial_view_of_University_of_Texas_at_Austin_Main_Campus.jpg/960px-Aerial_view_of_University_of_Texas_at_Austin_Main_Campus.jpg"
+  },
+  {
+    "domain": "virginia.edu",
+    "name": "University of Virginia",
+    "aliases": [
+      "University of Virginia",
+      "UVA"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/1/17/University_of_Virginia_seal.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/University_of_Virginia_Campus_Staircase.jpg/960px-University_of_Virginia_Campus_Staircase.jpg"
+  },
+  {
+    "domain": "washington.edu",
+    "name": "University of Washington",
+    "aliases": [
+      "University of Washington",
+      "UW"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/UDub_Red_Square_Suzzallo_Library.jpg/960px-UDub_Red_Square_Suzzallo_Library.jpg"
+  },
+  {
+    "domain": "wesleyan.edu",
+    "name": "Wesleyan University",
+    "aliases": [
+      "Wesleyan University",
+      "Wesleyan"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Wesleyan_University_Campus_%284454748042%29.jpg/960px-Wesleyan_University_Campus_%284454748042%29.jpg"
+  },
+  {
+    "domain": "wfu.edu",
+    "name": "Wake Forest University",
+    "aliases": [
+      "Wake Forest University",
+      "Wake Forest"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/College_plaza%2C_Wake_Forest_College%2C_Wake_Forest%2C_N.C.jpg/960px-College_plaza%2C_Wake_Forest_College%2C_Wake_Forest%2C_N.C.jpg"
+  },
+  {
+    "domain": "wisc.edu",
+    "name": "University of Wisconsin–Madison",
+    "aliases": [
+      "University of Wisconsin–Madison",
+      "University of Wisconsin-Madison",
+      "UW–Madison"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/4/45/Seal_of_the_University_of_Wisconsin.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/BascomHill.JPG/960px-BascomHill.JPG"
+  }
+]

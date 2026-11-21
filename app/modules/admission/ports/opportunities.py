@@ -6,6 +6,7 @@ from typing import Any, Protocol, Self
 from uuid import UUID
 
 from app.modules.admission.domain.opportunities import (
+    ItemOpportunityLink,
     Opportunity,
     OpportunityDraft,
     OpportunitySubmission,
@@ -76,6 +77,24 @@ class OpportunityRepository(Protocol):
         self, submission: OpportunitySubmission, *, expected_lock: int
     ) -> OpportunitySubmission:
         """Write the review; conflict if the lock moved or it is not pending."""
+        ...
+
+    async def item_link(self, item_id: UUID) -> ItemOpportunityLink | None:
+        """The opportunity link of an activity."""
+        ...
+
+    async def save_item_link(self, link: ItemOpportunityLink) -> None:
+        """Insert or replace the link of an activity."""
+        ...
+
+    async def delete_item_link(self, item_id: UUID) -> bool:
+        """Remove the link of an activity; return whether it existed."""
+        ...
+
+    async def resolve_item_links(
+        self, submission_id: UUID, opportunity_id: UUID
+    ) -> int:
+        """Point every activity linked to the submission at the approved entry."""
         ...
 
     async def plan(self, student_id: UUID) -> list[PlanEntry]:

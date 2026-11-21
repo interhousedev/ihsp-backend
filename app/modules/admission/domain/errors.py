@@ -287,6 +287,13 @@ class CatalogDuplicateError(ConflictError):
     message_key = "admission-catalog-duplicate"
 
 
+class CatalogInUseError(ConflictError):
+    """Students still use the entry, so it can only be hidden. Params: kind."""
+
+    code = "admission/catalog_in_use"
+    message_key = "admission-catalog-in-use"
+
+
 class CatalogProposalLimitError(RateLimitedError):
     """Too many catalog proposals today. Params: limit."""
 

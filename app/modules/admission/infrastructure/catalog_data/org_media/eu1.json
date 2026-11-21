@@ -1,0 +1,240 @@
+[
+  {
+    "domain": "aalto.fi",
+    "name": "Aalto University",
+    "aliases": ["Aalto University", "Aalto"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/0/07/Aalto-yliopiston_logo.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Aalto_yliopisto_Otaniemi_2018.jpg/960px-Aalto_yliopisto_Otaniemi_2018.jpg"
+  },
+  {
+    "domain": "aubg.edu",
+    "name": "American University in Bulgaria",
+    "aliases": ["American University in Bulgaria", "AUBG"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/1/12/Logo_of_American_University_in_Bulgaria.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Blagoevgrad-American_University.jpg/960px-Blagoevgrad-American_University.jpg"
+  },
+  {
+    "domain": "cuni.cz",
+    "name": "Charles University",
+    "aliases": ["Charles University", "Univerzita Karlova", "Charles University in Prague"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Univerzita_Karlova_horizontal_logo_2023.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Praha%2C_Univerzita_Karlova_-_Karolinum.jpg/960px-Praha%2C_Univerzita_Karlova_-_Karolinum.jpg"
+  },
+  {
+    "domain": "cvut.cz",
+    "name": "Czech Technical University in Prague",
+    "aliases": ["Czech Technical University in Prague", "ČVUT", "CTU"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/0/0b/CVUT_logo.jpg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/CVUT_Karlovo_namesti.jpg/960px-CVUT_Karlovo_namesti.jpg"
+  },
+  {
+    "domain": "epfl.ch",
+    "name": "EPFL",
+    "aliases": ["EPFL", "École polytechnique fédérale de Lausanne"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/9/95/Logo_EPFL_2019.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Campus_EPFL_-_B%C3%A2timent_BI_01.jpg/960px-Campus_EPFL_-_B%C3%A2timent_BI_01.jpg"
+  },
+  {
+    "domain": "esade.edu",
+    "name": "ESADE Business School",
+    "aliases": ["ESADE Business School", "ESADE"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/e/ed/Esade_logo_nuevo.png",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/ESADE_Building_1_in_Barcelona.jpg/960px-ESADE_Building_1_in_Barcelona.jpg"
+  },
+  {
+    "domain": "ethz.ch",
+    "name": "ETH Zurich",
+    "aliases": ["ETH Zurich", "ETH Zürich", "ETH"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/9/99/ETH_Z%C3%BCrich_Logo_black.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/7/7c/ETH_Zurich_from_Polyterrace.jpg"
+  },
+  {
+    "domain": "fu-berlin.de",
+    "name": "Freie Universität Berlin",
+    "aliases": ["Freie Universität Berlin", "FU Berlin"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/6/6d/Freie_Universit%C3%A4t_Berlin_Logo_05.2024.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Freie_Universitaet_Berlin_-_Gebaeudekomplex_Rost-_und_Silberlaube.jpg/960px-Freie_Universitaet_Berlin_-_Gebaeudekomplex_Rost-_und_Silberlaube.jpg"
+  },
+  {
+    "domain": "helsinki.fi",
+    "name": "University of Helsinki",
+    "aliases": ["University of Helsinki", "Helsingin yliopisto"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/b/b6/Logo_University_of_Helsinki_fi.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/University_of_Helsinki%2C_Main_Building_%2852890870759%29.jpg/960px-University_of_Helsinki%2C_Main_Building_%2852890870759%29.jpg"
+  },
+  {
+    "domain": "ie.edu",
+    "name": "IE University",
+    "aliases": ["IE University", "IE"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/c/ce/IE_University_logo.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/IE_Universidad.jpg/960px-IE_Universidad.jpg"
+  },
+  {
+    "domain": "jacobs-university.de",
+    "name": "Jacobs University Bremen",
+    "aliases": ["Jacobs University Bremen", "Jacobs University"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/a/af/Jacobs_University_Bremen_logo.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Campus%2C_Jacobs_University_Bremen%2C_2006.jpg/960px-Campus%2C_Jacobs_University_Bremen%2C_2006.jpg"
+  },
+  {
+    "domain": "kuleuven.be",
+    "name": "KU Leuven",
+    "aliases": ["KU Leuven", "Katholieke Universiteit Leuven"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/4/49/KU_Leuven_logo.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Leuven-University-Library.jpg/960px-Leuven-University-Library.jpg"
+  },
+  {
+    "domain": "lmu.de",
+    "name": "LMU Munich",
+    "aliases": ["LMU Munich", "Ludwig-Maximilians-Universität München", "LMU"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/0/06/LMU_Muenchen_Logo.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/LMU_Munich_main_building_Geschwister-Scholl-Platz_center.jpeg/960px-LMU_Munich_main_building_Geschwister-Scholl-Platz_center.jpeg"
+  },
+  {
+    "domain": "mu-sofia.bg",
+    "name": "Medical University of Sofia",
+    "aliases": ["Medical University of Sofia", "Medical University - Sofia", "MU Sofia"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/d/d3/Logo_MU_Sofia.png",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Medical_Academy_Sofia_20090405_004.JPG/960px-Medical_Academy_Sofia_20090405_004.JPG"
+  },
+  {
+    "domain": "muni.cz",
+    "name": "Masaryk University",
+    "aliases": ["Masaryk University", "Masarykova univerzita", "MUNI"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/f/f0/LogoMUNI-2018.png",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f0/Masaryk_University_Campus_Brno.jpg/960px-Masaryk_University_Campus_Brno.jpg"
+  },
+  {
+    "domain": "rwth-aachen.de",
+    "name": "RWTH Aachen University",
+    "aliases": ["RWTH Aachen University", "RWTH Aachen"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/1/1e/RWTH_Logo_3.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/2022_Aachen%2C_W%C3%BCllnerstrasse%2C_RWTH_%2805%29.jpg/960px-2022_Aachen%2C_W%C3%BCllnerstrasse%2C_RWTH_%2805%29.jpg"
+  },
+  {
+    "domain": "tu-berlin.de",
+    "name": "Technische Universität Berlin",
+    "aliases": ["Technische Universität Berlin", "TU Berlin"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/2/2e/Logo_der_Technischen_Universit%C3%A4t_Berlin.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/TU_Berlin_Hauptgebaeude070710_UlrichDahl.jpg/960px-TU_Berlin_Hauptgebaeude070710_UlrichDahl.jpg"
+  },
+  {
+    "domain": "tum.de",
+    "name": "Technical University of Munich",
+    "aliases": ["Technical University of Munich", "Technische Universität München", "TUM"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/4/4c/TU_Muenchen_Logo.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/2/28/Technische_Universitaet_Muenchen-1.jpg"
+  },
+  {
+    "domain": "tuni.fi",
+    "name": "Tampere University",
+    "aliases": ["Tampere University", "Tampereen yliopisto"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/0/0d/Tampere_University_logo.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Tampere_University_of_Technology_campus_view.jpg/960px-Tampere_University_of_Technology_campus_view.jpg"
+  },
+  {
+    "domain": "ub.edu",
+    "name": "Universitat de Barcelona",
+    "aliases": ["Universitat de Barcelona", "University of Barcelona", "UB"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/6/60/Universit%C3%A4t_Barcelona.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c2/Universitat_de_Barcelona_-_panoramio_%281%29.jpg/960px-Universitat_de_Barcelona_-_panoramio_%281%29.jpg"
+  },
+  {
+    "domain": "uclouvain.be",
+    "name": "UCLouvain",
+    "aliases": ["UCLouvain", "Université catholique de Louvain"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/7/72/UCLouvain_logo.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Belgique_-_Brabant_wallon_-_Halles_universitaires_de_Louvain-la-Neuve_-_01.jpg/960px-Belgique_-_Brabant_wallon_-_Halles_universitaires_de_Louvain-la-Neuve_-_01.jpg"
+  },
+  {
+    "domain": "ucm.es",
+    "name": "Universidad Complutense de Madrid",
+    "aliases": ["Universidad Complutense de Madrid", "UCM", "Complutense University of Madrid"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/9/91/Escudo_de_la_Universidad_Complutense_de_Madrid.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Rectorado_de_la_Universidad_Complutense_de_Madrid.jpg/960px-Rectorado_de_la_Universidad_Complutense_de_Madrid.jpg"
+  },
+  {
+    "domain": "ugent.be",
+    "name": "Ghent University",
+    "aliases": ["Ghent University", "Universiteit Gent", "UGent"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/9/9d/Universiteit_Gent_logo.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Boekentoren_2010PM_1184_21H9022.JPG/960px-Boekentoren_2010PM_1184_21H9022.JPG"
+  },
+  {
+    "domain": "ulb.be",
+    "name": "Université libre de Bruxelles",
+    "aliases": ["Université libre de Bruxelles", "Université Libre de Bruxelles", "ULB"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/3/33/Universit%C3%A9_Libre_de_Bruxelles_Logo.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Clock_Tower_of_the_ULB_Solbosch_Campus_in_the_City_of_Brussels.JPG/960px-Clock_Tower_of_the_ULB_Solbosch_Campus_in_the_City_of_Brussels.JPG"
+  },
+  {
+    "domain": "unav.edu",
+    "name": "Universidad de Navarra",
+    "aliases": ["Universidad de Navarra", "University of Navarra", "UNAV"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/8/8a/Logotipo_Universidad_de_Navarra_negro_sobre_blanco-SVG.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/9/9c/CENTRALUN.JPG"
+  },
+  {
+    "domain": "uni-heidelberg.de",
+    "name": "Heidelberg University",
+    "aliases": ["Heidelberg University", "Universität Heidelberg"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Logo_University_of_Heidelberg.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Alte_Universitaet.JPG/960px-Alte_Universitaet.JPG"
+  },
+  {
+    "domain": "uni-sofia.bg",
+    "name": "Sofia University St. Kliment Ohridski",
+    "aliases": ["Sofia University St. Kliment Ohridski", "Sofia University", "Софийски университет"],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/Sofia_University_panorama_2.jpg/960px-Sofia_University_panorama_2.jpg"
+  },
+  {
+    "domain": "unige.ch",
+    "name": "University of Geneva",
+    "aliases": ["University of Geneva", "Université de Genève", "UNIGE"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Uni_GE_logo.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/GenevaUniversity.JPG/960px-GenevaUniversity.JPG"
+  },
+  {
+    "domain": "unil.ch",
+    "name": "Université de Lausanne",
+    "aliases": ["Université de Lausanne", "University of Lausanne", "UNIL"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/3/37/Logo-universit%C3%A9-lausanne-2025.jpg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/Anthropole_UNIL.jpg/960px-Anthropole_UNIL.jpg"
+  },
+  {
+    "domain": "unisg.ch",
+    "name": "University of St. Gallen",
+    "aliases": ["University of St. Gallen", "University of St.Gallen", "Universität St. Gallen", "HSG"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/8/84/HSG_Logo_EN_RGB.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/HSG_Campus_1963_Hauptgeb%C3%A4ude%2C_Ansicht_von_Osten_HSGH_022-001769-06.png/960px-HSG_Campus_1963_Hauptgeb%C3%A4ude%2C_Ansicht_von_Osten_HSGH_022-001769-06.png"
+  },
+  {
+    "domain": "upf.edu",
+    "name": "Universitat Pompeu Fabra",
+    "aliases": ["Universitat Pompeu Fabra", "Pompeu Fabra University", "UPF"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/5/53/Logo_UPF.jpg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Pla%C3%A7a_de_la_Merc%C3%A8_-_Rectorat_de_la_Universitat_Pompeu_Fabra.JPG/960px-Pla%C3%A7a_de_la_Merc%C3%A8_-_Rectorat_de_la_Universitat_Pompeu_Fabra.JPG"
+  },
+  {
+    "domain": "uzh.ch",
+    "name": "University of Zurich",
+    "aliases": ["University of Zurich", "Universität Zürich", "UZH"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/8/89/Universit%C3%A4t_Z%C3%BCrich_logo.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Z%C3%BCrich_Switzerland-University-of-Zurich-Main-Building-01.jpg/960px-Z%C3%BCrich_Switzerland-University-of-Zurich-Main-Building-01.jpg"
+  },
+  {
+    "domain": "vub.be",
+    "name": "Vrije Universiteit Brussel",
+    "aliases": ["Vrije Universiteit Brussel", "VUB"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/3/31/Vrije_Universiteit_Brussel_logo.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Renaat_Braem_Rectoraat_VUB.JPG/960px-Renaat_Braem_Rectoraat_VUB.JPG"
+  },
+  {
+    "domain": "vse.cz",
+    "name": "University of Economics, Prague",
+    "aliases": ["University of Economics, Prague", "Prague University of Economics and Business", "VŠE"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo_-_Prague_University_of_Economics_and_Business.png",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/Ji%C5%BEn%C3%AD_M%C4%9Bsto_campus_-_University_of_Economics%2C_Prague.jpg/960px-Ji%C5%BEn%C3%AD_M%C4%9Bsto_campus_-_University_of_Economics%2C_Prague.jpg"
+  }
+]

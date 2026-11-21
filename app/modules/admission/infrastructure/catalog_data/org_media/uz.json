@@ -1,0 +1,389 @@
+[
+  {
+    "domain": "afu.uz",
+    "name": "Alfraganus University",
+    "aliases": [
+      "Alfraganus University"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Alfraganus_Universiteti.jpg/960px-Alfraganus_Universiteti.jpg"
+  },
+  {
+    "domain": "ajou.uz",
+    "name": "Ajou University in Tashkent (AUT)",
+    "aliases": [
+      "Ajou University in Tashkent (AUT)"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c5/Ajou_university_Tashkent.jpg/960px-Ajou_university_Tashkent.jpg"
+  },
+  {
+    "domain": "amity.uz",
+    "name": "Amity University Tashkent",
+    "aliases": [
+      "Amity University Tashkent"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "centralasian.uz",
+    "name": "Central Asian University (formerly AKFA University)",
+    "aliases": [
+      "Central Asian University (formerly AKFA University)"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f7/Central_asian_university_campus.jpg/960px-Central_asian_university_campus.jpg"
+  },
+  {
+    "domain": "dsmi.uz",
+    "name": "Uzbekistan State Institute of Arts and Culture (UzSIAC)",
+    "aliases": [
+      "Uzbekistan State Institute of Arts and Culture (UzSIAC)"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "iiau.uz",
+    "name": "International Islamic Academy of Uzbekistan (IIAU)",
+    "aliases": [
+      "International Islamic Academy of Uzbekistan (IIAU)"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/International_islamic_academy_of_Uzbekistan.jpg/960px-International_islamic_academy_of_Uzbekistan.jpg"
+  },
+  {
+    "domain": "inha.uz",
+    "name": "INHA University in Tashkent",
+    "aliases": [
+      "INHA University in Tashkent"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/c/c6/Emblem-IUT.jpg",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/aa/Ziyolilar_street%2C_Inha_University.JPG/960px-Ziyolilar_street%2C_Inha_University.JPG"
+  },
+  {
+    "domain": "jdu.uz",
+    "name": "Japan Digital University (JDU)",
+    "aliases": [
+      "Japan Digital University (JDU)"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "jtsu.uz",
+    "name": "Uzbekistan State University of Physical Education and Sport (UzSUPES)",
+    "aliases": [
+      "Uzbekistan State University of Physical Education and Sport (UzSUPES)"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "kiut.uz",
+    "name": "Kimyo International University in Tashkent (KIUT, formerly Yeoju Technical Institute)",
+    "aliases": [
+      "Kimyo International University in Tashkent (KIUT, formerly Yeoju Technical Institute)"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/YTIT_logo.png/960px-YTIT_logo.png",
+    "cover_url": null
+  },
+  {
+    "domain": "konservatoriya.uz",
+    "name": "State Conservatory of Uzbekistan",
+    "aliases": [
+      "State Conservatory of Uzbekistan"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/%D0%97%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5_%D0%9A%D0%BE%D0%BD%D1%81%D0%B5%D1%80%D0%B2%D0%B0%D1%82%D0%BE%D1%80%D0%B8%D0%B8_%D0%A2%D0%B0%D1%88%D0%BA%D0%B5%D0%BD%D1%82.jpg/960px-%D0%97%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5_%D0%9A%D0%BE%D0%BD%D1%81%D0%B5%D1%80%D0%B2%D0%B0%D1%82%D0%BE%D1%80%D0%B8%D0%B8_%D0%A2%D0%B0%D1%88%D0%BA%D0%B5%D0%BD%D1%82.jpg"
+  },
+  {
+    "domain": "mrdi.uz",
+    "name": "National Institute of Fine Arts and Design named after Kamoliddin Behzod (MRDI)",
+    "aliases": [
+      "National Institute of Fine Arts and Design named after Kamoliddin Behzod (MRDI)"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "newuu.uz",
+    "name": "New Uzbekistan University",
+    "aliases": [
+      "New Uzbekistan University"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/1/13/NewUU_logo.jpg",
+    "cover_url": null
+  },
+  {
+    "domain": "npuu.uz",
+    "name": "National Pedagogical University of Uzbekistan named after Nizami",
+    "aliases": [
+      "National Pedagogical University of Uzbekistan named after Nizami"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/d/d7/NPUU_logo.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3f/Frontside_of_the_NPUU_main_campus.jpg/960px-Frontside_of_the_NPUU_main_campus.jpg"
+  },
+  {
+    "domain": "nuu.uz",
+    "name": "National University of Uzbekistan named after Mirzo Ulugbek",
+    "aliases": [
+      "National University of Uzbekistan named after Mirzo Ulugbek"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/f/fa/National_University_of_Uzbekistan.jpg"
+  },
+  {
+    "domain": "pharmi.uz",
+    "name": "Tashkent Pharmaceutical Institute",
+    "aliases": [
+      "Tashkent Pharmaceutical Institute"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5b/PharmiMain.jpg/960px-PharmiMain.jpg"
+  },
+  {
+    "domain": "renessans-edu.uz",
+    "name": "Renaissance Education University (Renessans universiteti)",
+    "aliases": [
+      "Renaissance Education University (Renessans universiteti)"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "reu.uz",
+    "name": "Tashkent Branch of Plekhanov Russian University of Economics (REU)",
+    "aliases": [
+      "Tashkent Branch of Plekhanov Russian University of Economics (REU)"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "taqu.uz",
+    "name": "Tashkent Architecture and Civil Engineering University (TAQU)",
+    "aliases": [
+      "Tashkent Architecture and Civil Engineering University (TAQU)"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/Yangi_logotip.png/960px-Yangi_logotip.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0b/Toshkent_arxitektura_qurilish_universiteti.jpg/960px-Toshkent_arxitektura_qurilish_universiteti.jpg"
+  },
+  {
+    "domain": "tashpmi.uz",
+    "name": "Tashkent Pediatric Medical Institute",
+    "aliases": [
+      "Tashkent Pediatric Medical Institute"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "tdau.uz",
+    "name": "Tashkent State Agrarian University",
+    "aliases": [
+      "Tashkent State Agrarian University"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "tdtu.uz",
+    "name": "Islom Karimov nomidagi Toshkent Davlat Texnika Universiteti",
+    "aliases": [
+      "Islom Karimov nomidagi Toshkent Davlat Texnika Universiteti"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/5/57/TDTU.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Tashkent_State_Technical_University_named_after_Islam_Karimov.jpg/960px-Tashkent_State_Technical_University_named_after_Islam_Karimov.jpg"
+  },
+  {
+    "domain": "tift.uz",
+    "name": "TIFT University of Tashkent (Tashkent International University of Financial Management and Technologies)",
+    "aliases": [
+      "TIFT University of Tashkent (Tashkent International University of Financial Management and Technologies)"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "tiiame.uz",
+    "name": "Tashkent Institute of Irrigation and Agricultural Mechanization Engineers National Research University",
+    "aliases": [
+      "Tashkent Institute of Irrigation and Agricultural Mechanization Engineers National Research University"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a8/%D0%A2%D0%B0%D1%88%D0%BA%D0%B5%D0%BD%D1%82%D1%81%D0%BA%D0%B8%D0%B9_%D0%B8%D0%BD%D1%81%D1%82%D0%B8%D1%82%D1%83%D1%82_%D0%B8%D0%BD%D0%B6%D0%B5%D0%BD%D0%B5%D1%80%D0%BE%D0%B2_%D0%B8%D1%80%D1%80%D0%B8%D0%B3%D0%B0%D1%86%D0%B8%D0%B8.jpg/960px-%D0%A2%D0%B0%D1%88%D0%BA%D0%B5%D0%BD%D1%82%D1%81%D0%BA%D0%B8%D0%B9_%D0%B8%D0%BD%D1%81%D1%82%D0%B8%D1%82%D1%83%D1%82_%D0%B8%D0%BD%D0%B6%D0%B5%D0%BD%D0%B5%D1%80%D0%BE%D0%B2_%D0%B8%D1%80%D1%80%D0%B8%D0%B3%D0%B0%D1%86%D0%B8%D0%B8.jpg"
+  },
+  {
+    "domain": "tiu.uz",
+    "name": "Tashkent International University (TIU)",
+    "aliases": [
+      "Tashkent International University (TIU)"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a8/Logo_tashiun.png/960px-Logo_tashiun.png",
+    "cover_url": null
+  },
+  {
+    "domain": "tiue.uz",
+    "name": "Tashkent International University of Education (TIUE)",
+    "aliases": [
+      "Tashkent International University of Education (TIUE)"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/e/eb/Tiue_logo.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bd/Tiue_kampus.png/960px-Tiue_kampus.png"
+  },
+  {
+    "domain": "tkti.uz",
+    "name": "Tashkent Institute of Chemical Technology",
+    "aliases": [
+      "Tashkent Institute of Chemical Technology"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/Tashkent_Institute_of_Chemical_Technology.jpg/960px-Tashkent_Institute_of_Chemical_Technology.jpg"
+  },
+  {
+    "domain": "tma.uz",
+    "name": "Tashkent Medical Academy",
+    "aliases": [
+      "Tashkent Medical Academy"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/4/41/Toshkent_tibbiyot_akademiyasi_logotipi.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c1/TTA_campus.jpg/960px-TTA_campus.jpg"
+  },
+  {
+    "domain": "tsdi.uz",
+    "name": "Tashkent State Dental Institute",
+    "aliases": [
+      "Tashkent State Dental Institute"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "tstu.uz",
+    "name": "Tashkent State Transport University (TSTU)",
+    "aliases": [
+      "Tashkent State Transport University (TSTU)"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/73/TSTU.svg/960px-TSTU.svg.png",
+    "cover_url": null
+  },
+  {
+    "domain": "tsue.uz",
+    "name": "Tashkent State University of Economics",
+    "aliases": [
+      "Tashkent State University of Economics"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Tsue_logo_en.png",
+    "cover_url": null
+  },
+  {
+    "domain": "tsul.uz",
+    "name": "Tashkent State University of Law",
+    "aliases": [
+      "Tashkent State University of Law"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/6/6a/Tashkent_State_University_of_Law.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/13/Tashkent_State_Law_university.jpg/960px-Tashkent_State_Law_university.jpg"
+  },
+  {
+    "domain": "tsuos.uz",
+    "name": "Tashkent State University of Oriental Studies",
+    "aliases": [
+      "Tashkent State University of Oriental Studies"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/The_main_builting_of_TSIOS.jpg/960px-The_main_builting_of_TSIOS.jpg"
+  },
+  {
+    "domain": "tsuull.uz",
+    "name": "Alisher Navoi Tashkent State University of Uzbek Language and Literature",
+    "aliases": [
+      "Alisher Navoi Tashkent State University of Uzbek Language and Literature"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "ttysi.uz",
+    "name": "Tashkent Institute of Textile and Light Industry (TTYSI)",
+    "aliases": [
+      "Tashkent Institute of Textile and Light Industry (TTYSI)"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/%D0%93%D0%BB%D0%B0%D0%B2%D0%BD%D0%BE%D0%B5_%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5_%D0%A2%D0%98%D0%A2%D0%9B%D0%9F.png/960px-%D0%93%D0%BB%D0%B0%D0%B2%D0%BD%D0%BE%D0%B5_%D0%B7%D0%B4%D0%B0%D0%BD%D0%B8%D0%B5_%D0%A2%D0%98%D0%A2%D0%9B%D0%9F.png"
+  },
+  {
+    "domain": "tuit.uz",
+    "name": "Tashkent University of Information Technologies named after Muhammad al-Khwarizmi",
+    "aliases": [
+      "Tashkent University of Information Technologies named after Muhammad al-Khwarizmi"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dc/TATU_logotip.png/960px-TATU_logotip.png",
+    "cover_url": null
+  },
+  {
+    "domain": "turin.uz",
+    "name": "Turin Polytechnic University in Tashkent (TTPU)",
+    "aliases": [
+      "Turin Polytechnic University in Tashkent (TTPU)"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/0/04/TTPU_LOGO_copy.jpg",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b0/TTPU%27s_entrance.jpg/960px-TTPU%27s_entrance.jpg"
+  },
+  {
+    "domain": "ubsu.uz",
+    "name": "University of Business and Science (UBS)",
+    "aliases": [
+      "University of Business and Science (UBS)"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/5/50/UBSU_logo.jpg",
+    "cover_url": null
+  },
+  {
+    "domain": "uwed.uz",
+    "name": "University of World Economy and Diplomacy",
+    "aliases": [
+      "University of World Economy and Diplomacy"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/The_University_of_World_Economy_and_Diplomacy_logo.jpg/960px-The_University_of_World_Economy_and_Diplomacy_logo.jpg",
+    "cover_url": null
+  },
+  {
+    "domain": "uzjoku.uz",
+    "name": "Uzbekistan State University of Journalism and Mass Communications (UzJOKU)",
+    "aliases": [
+      "Uzbekistan State University of Journalism and Mass Communications (UzJOKU)"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "uzswlu.uz",
+    "name": "Uzbekistan State World Languages University",
+    "aliases": [
+      "Uzbekistan State World Languages University"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "webstertashkent.uz",
+    "name": "Webster University in Tashkent",
+    "aliases": [
+      "Webster University in Tashkent"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/Webster_University_in_Tashkent.png/960px-Webster_University_in_Tashkent.png"
+  },
+  {
+    "domain": "wiut.uz",
+    "name": "Westminster International University in Tashkent (WIUT)",
+    "aliases": [
+      "Westminster International University in Tashkent (WIUT)"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/71/Westminster_International_University_in_Tashkent.jpg/960px-Westminster_International_University_in_Tashkent.jpg"
+  }
+]

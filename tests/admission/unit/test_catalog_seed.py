@@ -1,5 +1,6 @@
 from app.modules.admission.infrastructure.catalog_data import (
     Institution,
+    enrich_slugs,
     load_programs,
     load_seed,
 )
@@ -25,10 +26,25 @@ def test_seed_validates_and_is_unique() -> None:
             assert any(facts) or i["deadlines"], i["slug"]
 
 
-_CURRENCIES = {"USD", "EUR", "GBP", "KRW", "JPY", "TRY", "MYR", "AED", "HUF"}
+_CURRENCIES = {
+    "USD",
+    "EUR",
+    "GBP",
+    "KRW",
+    "JPY",
+    "TRY",
+    "MYR",
+    "AED",
+    "HUF",
+    "CAD",
+    "KZT",
+    "SGD",
+    "UZS",
+}
 
 
 def test_every_value_has_source_and_year() -> None:
+    enriched = enrich_slugs()
     for i in load_seed():
         slug = i["slug"]
         facts = [i["test_policy"], i["intl_tuition_usd"], i["intl_coa_usd"]]
@@ -40,6 +56,8 @@ def test_every_value_has_source_and_year() -> None:
             if i[k]:
                 assert i[k]["currency"] in _CURRENCIES, slug
         assert all(d["source_url"] for d in i["deadlines"]), slug
+        if slug in enriched:  # enrichment entries may leave the profile unset
+            continue
         assert i["city_type"] in {"urban", "suburban", "rural"}, slug
         assert i["institution_type"] in {"public", "private"}, slug
 

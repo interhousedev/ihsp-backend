@@ -43,10 +43,9 @@ async def grade_item(
     accept_language: LocaleHeader = None,
 ) -> ItemGradeOut:
     """Grade the title and description A-E (cached per content)."""
-    grade = await container.admission.item_grades.grade(
-        ctx, item_id, _locale(accept_language)
-    )
-    return ItemGradeOut.of(grade)
+    locale = _locale(accept_language)
+    grade = await container.admission.item_grades.grade(ctx, item_id, locale)
+    return ItemGradeOut.of(grade, locale)
 
 
 router.add_api_route(

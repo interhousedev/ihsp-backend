@@ -4,6 +4,26 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-11-21
+
+### Added
+
+- Admission activities and honors: soft length warnings (organization 100/110, description 150/600, position 50/60) instead of hard size limits; numbers are a writing helper in the creation flow (`admission_0059`).
+- Activity auto-grading on change with A–E descriptors shared 1:1 between the prompt and the API.
+- "Not in the list" opportunities: one injection-safe string, AI research, unified suggestions, counselor verification into the library, and linked activities updated on approval (`admission_0060`).
+- Staff management of opportunities (`/v1/admission/staff/opportunities`) and universities (`/v1/admission/staff/catalog/institutions`).
+- Approximate university fit before research and a short Haiku fit analysis after it.
+- Langfuse keys and per-pipeline tracing and content-capture switches (`ai_0014`).
+- Institution descriptions (`admission_0061`), Canadian and Kazakh universities, organization logos and campus photos, and sourced acceptance rates, test policies and deadlines for 271 institutions.
+
+### Fixed
+
+- Review of an activity or honor no longer fails with `admission/words_not_set`; a partly filled activity can move from draft to ready.
+
+### Known issues
+
+- Most catalogue facts are `verified: false`; ru/uz descriptions are machine-written.
+
 ## [1.10.0] - 2026-11-21
 
 ### Added

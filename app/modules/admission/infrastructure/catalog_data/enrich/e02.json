@@ -1,0 +1,362 @@
+{
+  "institutions": [
+    {
+      "slug": "cvut-cz",
+      "name": "Czech Technical University in Prague",
+      "country": "CZ",
+      "city": "Prague",
+      "website_domain": "cvut.cz",
+      "description": {
+        "en": "Czech Technical University in Prague is a public technical university founded in 1707. It is one of the oldest technical universities in the world, with faculties in engineering, natural sciences and architecture.",
+        "ru": "Чешский технический университет в Праге — государственный технический университет, основанный в 1707 году. Один из старейших технических вузов мира, с факультетами инженерии, естественных наук и архитектуры.",
+        "uz": "Praga Chex texnika universiteti — 1707 yilda asos solingan davlat texnika universiteti. Dunyodagi eng qadimgi texnika universitetlaridan biri bo‘lib, muhandislik, tabiiy fanlar va arxitektura fakultetlariga ega."
+      },
+      "intl_tuition_usd": {
+        "value": 4400,
+        "currency": "EUR",
+        "source_url": "http://cuni.cz/UKEN-191-version1-sip_programs_flier_2026_august_print.pdf",
+        "year": 2026,
+        "note": "Per year for English-taught bachelor's programmes (Study in Prague flier, 2026); other programmes may differ"
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Czech_Technical_University_in_Prague",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "muni-cz",
+      "name": "Masaryk University",
+      "country": "CZ",
+      "city": "Brno",
+      "website_domain": "muni.cz",
+      "description": {
+        "en": "Masaryk University is a public research university in Brno, Czech Republic, founded in 1919 and named after President Tomáš Garrigue Masaryk. It has faculties in the humanities, sciences, medicine and law.",
+        "ru": "Масариков университет — государственный исследовательский университет в Брно, Чехия, основанный в 1919 году и названный в честь президента Томаша Масарика. Включает гуманитарные, естественно-научные, медицинские и юридические факультеты.",
+        "uz": "Masaryk universiteti — Chexiyaning Brno shahridagi davlat ilmiy-tadqiqot universiteti. U 1919 yilda tashkil etilgan va prezident Tomaš Garrig Masarik sharafiga nomlangan. Gumanitar, tabiiy fanlar, tibbiyot va huquq fakultetlariga ega."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Masaryk_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "vse-cz",
+      "name": "University of Economics, Prague",
+      "country": "CZ",
+      "city": "Prague",
+      "website_domain": "vse.cz",
+      "description": {
+        "en": "University of Economics, Prague is a public university in Prague specialising in economics, business, management and informatics. It offers bachelor's, master's and doctoral programmes.",
+        "ru": "Пражский университет экономики — государственный университет в Праге, специализирующийся на экономике, бизнесе, менеджменте и информатике. Предлагает бакалаврские, магистерские и докторские программы.",
+        "uz": "Praga iqtisodiyot universiteti — Pragadagi davlat universiteti bo‘lib, iqtisodiyot, biznes, menejment va informatika yo‘nalishlariga ixtisoslashgan. Bakalavr, magistratura va doktorantura dasturlarini taklif etadi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Economics,_Prague",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "fu-berlin-de",
+      "name": "Freie Universität Berlin",
+      "country": "DE",
+      "city": "Berlin",
+      "website_domain": "fu-berlin.de",
+      "description": {
+        "en": "Freie Universität Berlin is a public research university founded in 1948. It has about 34,400 students and offers programmes across the humanities, social sciences, natural sciences and medicine.",
+        "ru": "Свободный университет Берлина — государственный исследовательский университет, основанный в 1948 году. В нём около 34 400 студентов; программы охватывают гуманитарные, социальные и естественные науки, а также медицину.",
+        "uz": "Berlin erkin universiteti — 1948 yilda tashkil etilgan davlat ilmiy-tadqiqot universiteti. Unda taxminan 34 400 talaba tahsil oladi; gumanitar, ijtimoiy, tabiiy fanlar va tibbiyot yo‘nalishlari mavjud."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Freie_Universitat_Berlin",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "jacobs-university-de",
+      "name": "Jacobs University Bremen",
+      "country": "DE",
+      "city": "Bremen",
+      "website_domain": "jacobs-university.de",
+      "description": {
+        "en": "Jacobs University Bremen, renamed Constructor University in 2022, is a private English-medium university in Bremen, Germany. It was founded in 1999 as International University Bremen.",
+        "ru": "Университет Джекобс в Бремене, переименованный в Constructor University в 2022 году, — частный англоязычный университет в Бремене, Германия. Основан в 1999 году как Международный университет Бремена.",
+        "uz": "Jacobs universiteti (Bremen) — 2022 yilda Constructor universiteti deb nomi o‘zgartirilgan, Bremen (Germaniya) dagi ingliz tilidagi xususiy universitet. 1999 yilda Bremen xalqaro universiteti sifatida tashkil etilgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Constructor_University",
+      "year": 2026,
+      "verified": false,
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://constructor.university/admission-aid/application-information-undergraduate",
+        "year": 2026,
+        "note": "Does not require SAT/ACT for admission evaluation; testing may be needed at enrolment if the diploma does not grant direct access to a German university"
+      }
+    },
+    {
+      "slug": "lmu-de",
+      "name": "LMU Munich",
+      "country": "DE",
+      "city": "Munich",
+      "website_domain": "lmu.de",
+      "description": {
+        "en": "Ludwig Maximilian University of Munich is a public research university founded in 1472. It is one of Germany's largest and most research-intensive universities, located in Munich, Bavaria.",
+        "ru": "Мюнхенский университет имени Людвига и Максимилиана — государственный исследовательский университет, основанный в 1472 году. Один из крупнейших и наиболее научно-активных университетов Германии, расположен в Мюнхене, Бавария.",
+        "uz": "Myunxen Lyudvig-Maksimilian universiteti — 1472 yilda tashkil etilgan davlat ilmiy-tadqiqot universiteti. Germaniyaning eng yirik va ilmiy faol universitetlaridan biri bo‘lib, Myunxenda (Bavariya) joylashgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Ludwig-Maximilians-Universit%C3%A4t_M%C3%BCnchen",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "rwth-aachen-de",
+      "name": "RWTH Aachen University",
+      "country": "DE",
+      "city": "Aachen",
+      "website_domain": "rwth-aachen.de",
+      "description": {
+        "en": "RWTH Aachen University is a public technical university in Aachen, North Rhine-Westphalia, founded in 1870. It is known for engineering, natural sciences and medicine.",
+        "ru": "Технический университет RWTH Aachen — государственный технический университет в Аахене, земля Северный Рейн-Вестфалия, основан в 1870 году. Известен инженерией, естественными науками и медициной.",
+        "uz": "RWTH Aachen universiteti — Aaxenda (Shimoliy Reyn-Vestfaliya) joylashgan davlat texnika universiteti, 1870 yilda tashkil etilgan. Muhandislik, tabiiy fanlar va tibbiyot yo‘nalishlari bilan tanilgan."
+      },
+      "intl_tuition_usd": {
+        "value": 0,
+        "currency": "EUR",
+        "source_url": "https://www.rwth-aachen.de/cms/root/studium/im-studium/internationales/~inno/faq?lidx=1",
+        "year": 2026,
+        "note": "No tuition fees except RWTH Academy programmes; a semester student body and social contribution applies"
+      },
+      "source_url": "https://en.wikipedia.org/wiki/RWTH_Aachen_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "tu-berlin-de",
+      "name": "Technische Universität Berlin",
+      "country": "DE",
+      "city": "Berlin",
+      "website_domain": "tu-berlin.de",
+      "description": {
+        "en": "Technische Universität Berlin is a public technical university in Berlin. It focuses on engineering, natural sciences, economics and planning.",
+        "ru": "Берлинский технический университет — государственный технический университет в Берлине. Специализируется на инженерии, естественных науках, экономике и градостроительстве.",
+        "uz": "Berlin texnika universiteti — Berlindagi davlat texnika universiteti. Muhandislik, tabiiy fanlar, iqtisodiyot va shaharsozlik yo‘nalishlariga ixtisoslashgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Technical_University_of_Berlin",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "esade-edu",
+      "name": "ESADE Business School",
+      "country": "ES",
+      "city": "Barcelona",
+      "website_domain": "esade.edu",
+      "description": {
+        "en": "ESADE Business School is a private business school in Barcelona, Spain, part of the ESADE group. It offers undergraduate, master's, MBA and executive education programmes.",
+        "ru": "ESADE Business School — частная бизнес-школа в Барселоне, Испания, входящая в группу ESADE. Предлагает бакалаврские, магистерские, MBA и программы для руководителей.",
+        "uz": "ESADE Business School — Barselonadagi (Ispaniya) xususiy biznes-maktab bo‘lib, ESADE guruhiga kiradi. Bakalavr, magistratura, MBA va rahbarlar uchun dasturlarni taklif etadi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/ESADE_Business_School",
+      "year": 2026,
+      "verified": false,
+      "deadlines": [
+        {
+          "plan": "ROLLING",
+          "date": null,
+          "cycle": "2026-27",
+          "source_url": "https://www.esade.edu/bachelor/en/degrees/admissions",
+          "note": "Rolling admission; the process is open until June 2027 as long as places remain"
+        }
+      ]
+    },
+    {
+      "slug": "ie-edu",
+      "name": "IE University",
+      "country": "ES",
+      "city": "Madrid",
+      "website_domain": "ie.edu",
+      "description": {
+        "en": "IE University is a private university founded in 2006, with campuses in Madrid and Segovia, Spain. It offers undergraduate, master's and business programmes, many taught in English.",
+        "ru": "IE University — частный университет, основанный в 2006 году, с кампусами в Мадриде и Сеговии, Испания. Предлагает бакалаврские, магистерские и бизнес-программы, многие на английском языке.",
+        "uz": "IE universiteti — 2006 yilda tashkil etilgan xususiy universitet bo‘lib, Ispaniyaning Madrid va Segoviya shaharlarida kampuslari bor. Bakalavr, magistratura va biznes dasturlari ko‘pincha ingliz tilida o‘qitiladi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/IE_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "ucm-es",
+      "name": "Universidad Complutense de Madrid",
+      "country": "ES",
+      "city": "Madrid",
+      "website_domain": "ucm.es",
+      "description": {
+        "en": "Universidad Complutense de Madrid is a public university in Madrid and one of the largest in Spain. It offers a wide range of faculties, from humanities and law to health sciences and sciences.",
+        "ru": "Мадридский университет Комплутенсе — государственный университет в Мадриде и один из крупнейших в Испании. Предлагает широкий набор факультетов: от гуманитарных и юридических до медицинских и естественных наук.",
+        "uz": "Madrid Komplutense universiteti — Madriddagi davlat universiteti va Ispaniyaning eng yirik universitetlaridan biri. Gumanitar, huquq, sog‘liqni saqlash va tabiiy fanlar fakultetlari mavjud."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Complutense_University_of_Madrid",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "unav-es",
+      "name": "Universidad de Navarra",
+      "country": "ES",
+      "city": "Pamplona",
+      "website_domain": "unav.edu",
+      "description": {
+        "en": "The University of Navarra is a private university based in Pamplona, Spain, with a campus in San Sebastián. It has faculties in humanities, sciences, medicine and business.",
+        "ru": "Университет Наварры — частный университет в Памплоне, Испания, с кампусом в Сан-Себастьяне. Включает факультеты гуманитарных, естественных наук, медицины и бизнеса.",
+        "uz": "Navarra universiteti — Pamplonadagi (Ispaniya) xususiy universitet bo‘lib, San-Sebastyanda kampusi bor. Gumanitar, tabiiy fanlar, tibbiyot va biznes fakultetlariga ega."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Navarra",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "upf-es",
+      "name": "Universitat Pompeu Fabra",
+      "country": "ES",
+      "city": "Barcelona",
+      "website_domain": "upf.edu",
+      "description": {
+        "en": "Pompeu Fabra University is a public university in Barcelona, Spain, established in 1990. It focuses on social sciences, humanities, communication, economics and engineering.",
+        "ru": "Университет Помпеу Фабра — государственный университет в Барселоне, Испания, основанный в 1990 году. Специализируется на социальных науках, гуманитарных дисциплинах, коммуникации, экономике и инженерии.",
+        "uz": "Pompeu Fabra universiteti — Barselonadagi (Ispaniya) davlat universiteti, 1990 yilda tashkil etilgan. Ijtimoiy fanlar, gumanitar fanlar, kommunikatsiya, iqtisodiyot va muhandislikka ixtisoslashgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Pompeu_Fabra_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "ub-es",
+      "name": "Universitat de Barcelona",
+      "country": "ES",
+      "city": "Barcelona",
+      "website_domain": "ub.es",
+      "description": {
+        "en": "The University of Barcelona is a public university in Barcelona, Spain, and one of the largest and oldest in the country. It offers one of the widest course offerings of any Spanish university.",
+        "ru": "Барселонский университет — государственный университет в Барселоне, Испания, один из крупнейших и старейших в стране. Предлагает один из самых широких наборов программ среди испанских вузов.",
+        "uz": "Barselona universiteti — Barselonadagi (Ispaniya) davlat universiteti, mamlakatning eng yirik va eng qadimgi universitetlaridan biri. Ispaniyadagi eng keng dastur tanlovidan birini taklif etadi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Barcelona",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "aalto-fi",
+      "name": "Aalto University",
+      "country": "FI",
+      "city": "Espoo",
+      "website_domain": "aalto.fi",
+      "description": {
+        "en": "Aalto University is a public university in Espoo, Finland, established in 2010 by merging the Helsinki University of Technology, the Helsinki School of Economics and the University of Art and Design Helsinki.",
+        "ru": "Университет Аалто — государственный университет в Эспоо, Финляндия, основанный в 2010 году путём слияния Хельсинкского технологического университета, Хельсинкской школы экономики и Университета искусств и дизайна Хельсинки.",
+        "uz": "Aalto universiteti — Finlyandiyaning Espoo shahridagi davlat universiteti, 2010 yilda Helsinki texnologiya universiteti, Helsinki iqtisodiyot maktabi va Helsinki san’at va dizayn universitetini birlashtirish orqali tashkil etilgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Aalto_University",
+      "year": 2026,
+      "verified": false,
+      "test_policy": {
+        "value": "required",
+        "source_url": "https://www.aalto.fi/en/admission-services/english-taught-bachelors-programmes-i-am-applying-with-a-high-school-diploma",
+        "year": 2027,
+        "note": "SAT or ACT results required for applicants with a high school diploma (round A); IB Diploma holders apply in round B"
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-22",
+          "cycle": "2026-27",
+          "source_url": "https://www.aalto.fi/en/admission-services/apply-to-bachelors-programmes-in-english",
+          "note": "English-taught bachelor's application period 7-22 Jan 2027; SAT/ACT results due 29 Jan 2027"
+        }
+      ]
+    },
+    {
+      "slug": "tuni-fi",
+      "name": "Tampere University",
+      "country": "FI",
+      "city": "Tampere",
+      "website_domain": "tuni.fi",
+      "description": {
+        "en": "Tampere University is a public university in Tampere, Finland, formed in 2019 by merging the University of Tampere and Tampere University of Technology. Tuition for non-EU students is charged in English-taught programmes.",
+        "ru": "Тамперский университет — государственный университет в Тампере, Финляндия, образованный в 2019 году слиянием Тамперского университета и Тамперского технологического университета. Для студентов из стран вне ЕС обучение на английском платное.",
+        "uz": "Tampere universiteti — Finlyandiyaning Tampere shahridagi davlat universiteti, 2019 yilda Tampere universiteti va Tampere texnologiya universitetini birlashtirish orqali tashkil etilgan. Yevropa Ittifoqidan tashqaridagi talabalar uchun ingliz tilidagi dasturlar pullik."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Tampere_University",
+      "year": 2026,
+      "verified": false,
+      "test_policy": {
+        "value": "required",
+        "source_url": "https://www.tuni.fi/en/tau/bachelors-programmes/language-requirements",
+        "year": 2027,
+        "note": "Admission group 1 uses an SAT or ACT test (taken after 1 Jan 2025)"
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-21",
+          "cycle": "2026-27",
+          "source_url": "https://www.tuni.fi/en/tau/bachelors-programmes/applying",
+          "note": "Application period 7-21 Jan 2027 (ends 15:00 UTC+2); attachments due 28 Jan 2027"
+        }
+      ]
+    },
+    {
+      "slug": "helsinki-fi",
+      "name": "University of Helsinki",
+      "country": "FI",
+      "city": "Helsinki",
+      "website_domain": "helsinki.fi",
+      "description": {
+        "en": "The University of Helsinki is one of Finland's largest public research universities. Founded in 1640 in Turku, it has been based in Helsinki since 1828.",
+        "ru": "Хельсинкский университет — один из крупнейших государственных исследовательских университетов Финляндии. Основан в 1640 году в Турку, с 1828 года находится в Хельсинки.",
+        "uz": "Helsinki universiteti — Finlyandiyaning eng yirik davlat ilmiy-tadqiqot universitetlaridan biri. 1640 yilda Turkuda tashkil etilgan, 1828 yildan beri Helsinkida joylashgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Helsinki",
+      "year": 2026,
+      "verified": false,
+      "test_policy": {
+        "value": "required",
+        "source_url": "https://www.helsinki.fi/en/admissions-and-education/apply-bachelors-and-masters-programmes/apply-bachelors-programmes",
+        "year": 2027,
+        "note": "Admission group 1 (non-Finnish/IB/EB diploma holders) is based on SAT or ACT scores"
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-19",
+          "cycle": "2026-27",
+          "source_url": "https://www.helsinki.fi/en/admissions-and-education/apply-bachelors-and-masters-programmes/apply-bachelors-programmes",
+          "note": "Admission group 1 (SAT/ACT) application period 5-19 Jan 2027; test results due 26 Jan 2027"
+        },
+        {
+          "plan": "RD",
+          "date": "2027-03-23",
+          "cycle": "2026-27",
+          "source_url": "https://www.helsinki.fi/en/admissions-and-education/apply-bachelors-and-masters-programmes/apply-bachelors-programmes",
+          "note": "Admission group 2 (Finnish matriculation, IB or EB diploma) application period 9-23 Mar 2027"
+        }
+      ]
+    },
+    {
+      "slug": "hec-edu",
+      "name": "HEC Paris",
+      "country": "FR",
+      "city": "Jouy-en-Josas",
+      "website_domain": "hec.edu",
+      "description": {
+        "en": "HEC Paris is a private business school (grande école de commerce) on its campus in Jouy-en-Josas, near Paris, France. It offers master's, MBA and executive programmes.",
+        "ru": "HEC Paris — частная бизнес-школа (grande école de commerce) с кампусом в Жуй-ан-Жоза, недалеко от Парижа, Франция. Предлагает магистерские, MBA и программы для руководителей.",
+        "uz": "HEC Paris — Fransiyaning Parij yaqinidagi Juy-an-Josa shahrida joylashgan xususiy biznes-maktab (grande école de commerce). Magistratura, MBA va rahbarlar uchun dasturlarni taklif etadi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/HEC_Paris",
+      "year": 2026,
+      "verified": false,
+      "acceptance_rate": {
+        "min": 7,
+        "max": 7,
+        "source_url": "https://en.wikipedia.org/wiki/HEC_Paris",
+        "year": 2024,
+        "note": "Wikipedia infobox admission rate (2024); mainly the Grande École / Master in Management, not a bachelor's rate"
+      }
+    }
+  ]
+}

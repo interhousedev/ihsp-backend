@@ -1,0 +1,221 @@
+{
+  "institutions": [
+    {
+      "slug": "bme-hu",
+      "name": "Budapest University of Technology and Economics",
+      "country": "HU",
+      "city": "Budapest",
+      "website_domain": "bme.hu",
+      "description": {
+        "en": "Budapest University of Technology and Economics is a public technical university in Budapest, known for engineering, architecture and economics. It offers English-taught bachelor's, master's and doctoral programmes.",
+        "ru": "Будапештский университет технологии и экономики — государственный технический университет в Будапеште, известный инженерией, архитектурой и экономикой. Предлагает программы бакалавриата, магистратуры и докторантуры на английском языке.",
+        "uz": "Budapesht texnologiya va iqtisodiyot universiteti — Budapeshtdagi davlat texnika universiteti bo‘lib, muhandislik, arxitektura va iqtisodiyot yo‘nalishlari bilan tanilgan. Ingliz tilida bakalavr, magistratura va doktorantura dasturlarini taklif etadi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Budapest_University_of_Technology_and_Economics",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "ceu-edu",
+      "name": "Central European University",
+      "country": "HU",
+      "city": "Budapest",
+      "website_domain": "ceu.edu",
+      "description": {
+        "en": "Central European University is a private, English-language graduate-focused university, founded in 1991. It offers master's and doctoral programmes in social sciences and humanities.",
+        "ru": "Центральноевропейский университет — частный англоязычный университет с упором на магистратуру и докторантуру, основан в 1991 году. Предлагает программы магистратуры и докторантуры в области общественных и гуманитарных наук.",
+        "uz": "Markaziy Yevropa universiteti — 1991 yilda asos solingan xususiy, ingliz tilidagi universitet bo‘lib, asosan magistratura va doktoranturaga e’tibor qaratadi. Ijtimoiy va gumanitar fanlar bo‘yicha dasturlar taklif etadi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Central_European_University",
+      "year": 2026,
+      "verified": false,
+      "acceptance_rate": {
+        "min": 39,
+        "max": 39,
+        "source_url": "https://en.wikipedia.org/wiki/Central_European_University",
+        "year": 2025,
+        "note": "Bachelor's programmes only, 2025/26 (CEU Institutional Factbook, cited by Wikipedia); overall rate not published"
+      }
+    },
+    {
+      "slug": "polito-it",
+      "name": "Polytechnic University of Turin",
+      "country": "IT",
+      "city": "Turin",
+      "website_domain": "polito.it",
+      "description": {
+        "en": "The Polytechnic University of Turin is a public technical university specialising in engineering and architecture. It offers bachelor's, master's and doctoral programmes, several of them in English.",
+        "ru": "Туринский политехнический университет — государственный технический университет, специализирующийся на инженерии и архитектуре. Предлагает программы бакалавриата, магистратуры и докторантуры, некоторые на английском языке.",
+        "uz": "Turin politexnika universiteti — muhandislik va arxitekturaga ixtisoslashgan davlat texnika universiteti. Bakalavr, magistratura va doktorantura dasturlarini taklif etadi, ularning bir qismi ingliz tilida."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Polytechnic_University_of_Turin",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "uniroma1-it",
+      "name": "Sapienza University of Rome",
+      "country": "IT",
+      "city": "Rome",
+      "website_domain": "uniroma1.it",
+      "description": {
+        "en": "Sapienza University of Rome is one of the largest universities in Europe, founded in 1303. It offers programmes across all major disciplines, including English-taught master's degrees.",
+        "ru": "Римский университет «Сапиенца» — один из крупнейших университетов Европы, основан в 1303 году. Предлагает программы по всем основным дисциплинам, в том числе магистерские программы на английском языке.",
+        "uz": "Sapienza Rim universiteti — Yevropaning eng yirik universitetlaridan biri bo‘lib, 1303 yilda tashkil etilgan. Barcha asosiy fanlar bo‘yicha dasturlarni, shu jumladan ingliz tilidagi magistratura dasturlarini taklif etadi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Sapienza_University_of_Rome",
+      "year": 2026,
+      "verified": false,
+      "intl_tuition_usd": {
+        "value": 2790,
+        "currency": "EUR",
+        "source_url": "https://www.uniroma1.it/en/admissions",
+        "year": 2026,
+        "note": "All-inclusive fee for non-EU citizens, degree programme group A (Humanities), 2026-27; group B is EUR 2990"
+      }
+    },
+    {
+      "slug": "unibocconi-eu",
+      "name": "Bocconi University",
+      "country": "IT",
+      "city": "Milan",
+      "website_domain": "unibocconi.eu",
+      "description": {
+        "en": "Bocconi University is a private university in Milan specialising in economics, management, law and finance. It is known for its English-taught bachelor's and master's programmes for international students.",
+        "ru": "Университет Боккони — частный университет в Милане, специализирующийся на экономике, менеджменте, праве и финансах. Известен программами бакалавриата и магистратуры на английском языке для иностранных студентов.",
+        "uz": "Bokkoni universiteti — Milanda joylashgan xususiy universitet bo‘lib, iqtisodiyot, menejment, huquq va moliya yo‘nalishlariga ixtisoslashgan. Xalqaro talabalar uchun ingliz tilidagi bakalavr va magistratura dasturlari bilan tanilgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Bocconi_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "unipd-it",
+      "name": "University of Padua",
+      "country": "IT",
+      "city": "Padua",
+      "website_domain": "unipd.it",
+      "description": {
+        "en": "The University of Padua, founded in 1222, is one of the oldest universities in the world. It offers a broad range of programmes across scientific, humanistic and medical fields.",
+        "ru": "Падуанский университет, основанный в 1222 году, — один из старейших университетов мира. Предлагает широкий спектр программ в естественно-научной, гуманитарной и медицинской сферах.",
+        "uz": "Padua universiteti 1222 yilda tashkil etilgan bo‘lib, dunyodagi eng qadimgi universitetlardan biridir. Tabiiy-ilmiy, gumanitar va tibbiyot sohalari bo‘yicha keng dasturlarni taklif etadi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Padua",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "icu-ac-jp",
+      "name": "International Christian University",
+      "country": "JP",
+      "city": "Mitaka",
+      "website_domain": "icu.ac.jp",
+      "description": {
+        "en": "International Christian University is a private liberal arts university in Mitaka, Tokyo, founded in 1949. Around a third of its courses are taught in English, and it has a large international student body.",
+        "ru": "Международный христианский университет — частный университет свободных искусств в Митака (Токио), основан в 1949 году. Около трети курсов ведется на английском языке, в университете много иностранных студентов.",
+        "uz": "Xalqaro xristian universiteti — Tokioning Mitaka shahrida joylashgan xususiy liberal san’at universiteti bo‘lib, 1949 yilda tashkil etilgan. Kurslarning taxminan uchdan bir qismi ingliz tilida o‘qitiladi, xalqaro talabalar soni ko‘p."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/International_Christian_University",
+      "year": 2026,
+      "verified": false,
+      "intl_tuition_usd": {
+        "value": 1521000,
+        "currency": "JPY",
+        "source_url": "https://www.icu.ac.jp/en/admissions/tuition/",
+        "year": 2026,
+        "note": "Per year, College of Liberal Arts, tuition plus facilities fee (AY2026, current students); not USD"
+      }
+    },
+    {
+      "slug": "keio-ac-jp",
+      "name": "Keio University",
+      "country": "JP",
+      "city": "Tokyo",
+      "website_domain": "keio.ac.jp",
+      "description": {
+        "en": "Keio University is a private research university in Tokyo, founded in 1858 by Yukichi Fukuzawa. It has multiple campuses and a wide range of faculties.",
+        "ru": "Университет Кэйо — частный исследовательский университет в Токио, основан в 1858 году Юкити Фукудзавой. Имеет несколько кампусов и широкий спектр факультетов.",
+        "uz": "Keyo universiteti — Tokiodagi xususiy tadqiqot universiteti bo‘lib, 1858 yilda Yukichi Fukuzava tomonidan asos solingan. Bir nechta kampuslari va keng fakultetlari bor."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Keio_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "kyoto-u-ac-jp",
+      "name": "Kyoto University",
+      "country": "JP",
+      "city": "Kyoto",
+      "website_domain": "kyoto-u.ac.jp",
+      "description": {
+        "en": "Kyoto University is a national research university in Kyoto, founded in 1897. It is one of Japan's leading research universities and has a large number of international students.",
+        "ru": "Киотский университет — национальный исследовательский университет в Киото, основан в 1897 году. Является одним из ведущих исследовательских университетов Японии и имеет большое число иностранных студентов.",
+        "uz": "Kioto universiteti — Kiotodagi milliy tadqiqot universiteti bo‘lib, 1897 yilda tashkil etilgan. Yaponiyaning yetakchi tadqiqot universitetlaridan biri bo‘lib, xalqaro talabalari ko‘p."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Kyoto_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "osaka-u-ac-jp",
+      "name": "Osaka University",
+      "country": "JP",
+      "city": "Suita",
+      "website_domain": "osaka-u.ac.jp",
+      "description": {
+        "en": "Osaka University is a national research university in Suita, Osaka, formed in 1931. It is known for its research in science, medicine and engineering.",
+        "ru": "Осакский университет — национальный исследовательский университет в Сьюте (Осака), образован в 1931 году. Известен исследованиями в области естественных наук, медицины и инженерии.",
+        "uz": "Osaka universiteti — Osaka prefekturasidagi Suita shahrida joylashgan milliy tadqiqot universiteti bo‘lib, 1931 yilda tashkil etilgan. Tabiiy fanlar, tibbiyot va muhandislik sohalaridagi tadqiqotlari bilan tanilgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Osaka",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "apu-ac-jp",
+      "name": "Ritsumeikan Asia Pacific University",
+      "country": "JP",
+      "city": "Beppu",
+      "website_domain": "apu.ac.jp",
+      "description": {
+        "en": "Ritsumeikan Asia Pacific University is a private university in Beppu, Oita, founded in 2000. Its main language of instruction is English, and it enrols students from many countries.",
+        "ru": "Университет Ритсумэйкан Азиатско-Тихоокеанский — частный университет в Беппу (префектура Оита), основан в 2000 году. Основной язык обучения — английский, в нем учатся студенты из многих стран.",
+        "uz": "Ritsumeikan Osiyo-Tinch okean universiteti — Oita prefekturasidagi Beppu shahridagi xususiy universitet bo‘lib, 2000 yilda tashkil etilgan. Asosiy ta’lim tili ingliz tili bo‘lib, ko‘plab mamlakatlardan talabalar qabul qiladi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Ritsumeikan_Asia_Pacific_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "tohoku-ac-jp",
+      "name": "Tohoku University",
+      "country": "JP",
+      "city": "Sendai",
+      "website_domain": "tohoku.ac.jp",
+      "description": {
+        "en": "Tohoku University is a national research university in Sendai, founded in 1907. It is one of the leading research universities in Japan, with strengths in science, engineering and medicine.",
+        "ru": "Университет Тохоку — национальный исследовательский университет в Сендае, основан в 1907 году. Один из ведущих исследовательских университетов Японии, сильный в естественных науках, инженерии и медицине.",
+        "uz": "Tohoku universiteti — Sendayda joylashgan milliy tadqiqot universiteti bo‘lib, 1907 yilda tashkil etilgan. Yaponiyaning yetakchi tadqiqot universitetlaridan biri bo‘lib, tabiiy fanlar, muhandislik va tibbiyotda kuchli."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Tohoku_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "hanyang-ac-kr",
+      "name": "Hanyang University",
+      "country": "KR",
+      "city": "Seoul",
+      "website_domain": "hanyang.ac.kr",
+      "description": {
+        "en": "Hanyang University is a private research university in Seoul, founded in 1939. It is known for engineering, and it hosts over 3,000 international students each year.",
+        "ru": "Ханянский университет — частный исследовательский университет в Сеуле, основан в 1939 году. Известен инженерным образованием, ежегодно принимает более 3000 иностранных студентов.",
+        "uz": "Hanyang universiteti — Seulda joylashgan xususiy tadqiqot universiteti bo‘lib, 1939 yilda tashkil etilgan. Muhandislik ta’limi bilan tanilgan va har yili 3000 dan ortiq xalqaro talabani qabul qiladi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Hanyang_University",
+      "year": 2026,
+      "verified": false
+    }
+  ],
+  "programs": []
+}

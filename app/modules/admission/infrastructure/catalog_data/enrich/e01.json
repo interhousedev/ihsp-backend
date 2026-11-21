@@ -1,0 +1,348 @@
+{
+  "institutions": [
+    {
+      "slug": "uottawa-ca",
+      "name": "University of Ottawa",
+      "country": "CA",
+      "city": "Ottawa",
+      "website_domain": "uottawa.ca",
+      "description": {
+        "en": "The University of Ottawa is a public bilingual research university founded in 1848. It is a member of U15 Canada and has a large international student body.",
+        "ru": "Оттавский университет — государственный двуязычный исследовательский университет, основанный в 1848 году. Входит в U15 Canada и имеет большое число иностранных студентов.",
+        "uz": "Ottava universiteti — 1848-yilda tashkil etilgan davlat ikki tilli ilmiy-tadqiqot universiteti. U U15 Canada tarkibiga kiradi va xalqaro talabalar soni yuqori."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Ottawa",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "utoronto-ca",
+      "name": "University of Toronto",
+      "country": "CA",
+      "city": "Toronto",
+      "website_domain": "utoronto.ca",
+      "description": {
+        "en": "The University of Toronto is a public research university in Toronto, Ontario, founded in 1827. It is one of the largest universities in North America by enrolment.",
+        "ru": "Торонтский университет — государственный исследовательский университет в Торонто, провинция Онтарио, основанный в 1827 году. Один из крупнейших университетов Северной Америки по числу студентов.",
+        "uz": "Toronto universiteti — 1827-yilda tashkil etilgan, Ontario shtatining Toronto shahridagi davlat ilmiy-tadqiqot universiteti. Talabalar soni bo'yicha Shimoliy Amerikaning eng yirik universitetlaridan biri."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Toronto",
+      "year": 2026,
+      "verified": false,
+      "acceptance_rate": {
+        "min": 76.8,
+        "max": 76.8,
+        "source_url": "https://en.wikipedia.org/wiki/University_of_Toronto",
+        "year": 2025,
+        "note": "2024-25 cycle, first-entry divisions: 59,208 admitted of 77,087 applicants; second-entry professional 15.7%; overall undergraduate 69.7%"
+      }
+    },
+    {
+      "slug": "uwaterloo-ca",
+      "name": "University of Waterloo",
+      "country": "CA",
+      "city": "Waterloo",
+      "website_domain": "uwaterloo.ca",
+      "description": {
+        "en": "The University of Waterloo is a public research university in Waterloo, Ontario, known for its engineering, mathematics and co-operative education programs.",
+        "ru": "Университет Ватерлоо — государственный исследовательский университет в Ватерлоо, провинция Онтарио, известный программами инженерии, математики и кооперативного обучения.",
+        "uz": "Vaterloo universiteti — Ontario shtatining Vaterloo shahridagi davlat ilmiy-tadqiqot universiteti. U muhandislik, matematika va kooperativ ta'lim dasturlari bilan tanilgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Waterloo",
+      "year": 2026,
+      "verified": false,
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-02-01",
+          "cycle": "2026-27",
+          "source_url": "https://uwaterloo.ca/future-students/admissions/deadlines",
+          "note": "Programs other than Engineering; documents due Feb 15, 2027"
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-15",
+          "cycle": "2026-27",
+          "source_url": "https://uwaterloo.ca/future-students/admissions/deadlines",
+          "note": "Engineering programs (other than Architecture); documents due Feb 1, 2027"
+        }
+      ]
+    },
+    {
+      "slug": "umontreal-ca",
+      "name": "Université de Montréal",
+      "country": "CA",
+      "city": "Montreal",
+      "website_domain": "umontreal.ca",
+      "description": {
+        "en": "The Université de Montréal is a public French-language research university in Montreal, Quebec. Its programs are taught mainly in French.",
+        "ru": "Монреальский университет (Université de Montréal) — государственный франкоязычный исследовательский университет в Монреале, провинция Квебек. Программы преимущественно преподаются на французском языке.",
+        "uz": "Monreal universiteti (Université de Montréal) — Kvebek shtatining Monreal shahridagi davlat frantsuz tilidagi ilmiy-tadqiqot universiteti. Dasturlarning aksariyati frantsuz tilida o'qitiladi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Universit%C3%A9_de_Montr%C3%A9al",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "uwo-ca",
+      "name": "Western University",
+      "country": "CA",
+      "city": "London",
+      "website_domain": "uwo.ca",
+      "description": {
+        "en": "Western University, also known as Western, is a public research university in London, Ontario. It is known for its business, medical and law programs.",
+        "ru": "Западный университет (Western University) — государственный исследовательский университет в Лондоне, провинция Онтарио. Известен программами в области бизнеса, медицины и права.",
+        "uz": "G'arbiy universiteti (Western University) — Ontario shtatining London shahridagi davlat ilmiy-tadqiqot universiteti. Biznes, tibbiyot va huquq dasturlari bilan tanilgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Western_University",
+      "year": 2026,
+      "verified": false,
+      "intl_tuition_usd": {
+        "value": 47493,
+        "currency": "CAD",
+        "source_url": "https://www.registrar.uwo.ca/student_finances/fees_refunds/2026-27-UGRD-Fee-Schedule---FT-International1.pdf",
+        "year": 2026,
+        "note": "Tuition for international first-entry Arts & Humanities, years 1-3, 2026-27; excludes ancillary, health and other fees. Other programs differ (e.g. Engineering 64,310 CAD)."
+      }
+    },
+    {
+      "slug": "epfl-ch",
+      "name": "EPFL",
+      "country": "CH",
+      "city": "Lausanne",
+      "website_domain": "epfl.ch",
+      "description": {
+        "en": "EPFL, the Swiss Federal Institute of Technology in Lausanne, is a public federal research university focused on engineering, natural sciences and architecture.",
+        "ru": "EPFL — Швейцарский федеральный технологический институт в Лозанне, государственный федеральный исследовательский университет с упором на инженерию, естественные науки и архитектуру.",
+        "uz": "EPFL — Lozannadagi Shveytsariya federal texnologiya instituti. Muhandislik, tabiiy fanlar va arxitekturaga ixtisoslashgan davlat federal ilmiy-tadqiqot universiteti."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/EPFL",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "ethz-ch",
+      "name": "ETH Zurich",
+      "country": "CH",
+      "city": "Zurich",
+      "website_domain": "ethz.ch",
+      "description": {
+        "en": "ETH Zurich, the Swiss Federal Institute of Technology in Zurich, is a public federal research university known for engineering, natural sciences and mathematics.",
+        "ru": "ETH Zurich — Швейцарский федеральный технологический институт в Цюрихе, государственный федеральный исследовательский университет, известный инженерией, естественными науками и математикой.",
+        "uz": "ETH Zurich — Sürixdagi Shveytsariya federal texnologiya instituti. Muhandislik, tabiiy fanlar va matematika bo'yicha tanilgan davlat federal ilmiy-tadqiqot universiteti."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/ETH_Zurich",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "unige-ch",
+      "name": "University of Geneva",
+      "country": "CH",
+      "city": "Geneva",
+      "website_domain": "unige.ch",
+      "description": {
+        "en": "The University of Geneva is a public university in Geneva, Switzerland, founded in 1559. It is one of the oldest universities in Switzerland.",
+        "ru": "Женевский университет — государственный университет в Женеве, Швейцария, основанный в 1559 году. Один из старейших университетов Швейцарии.",
+        "uz": "Jeneva universiteti — Shveytsariyaning Jeneva shahridagi davlat universiteti, 1559-yilda tashkil etilgan. Shveytsariyaning eng qadimgi universitetlaridan biri."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Geneva",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "unisg-ch",
+      "name": "University of St. Gallen (HSG)",
+      "country": "CH",
+      "city": "St. Gallen",
+      "website_domain": "unisg.ch",
+      "description": {
+        "en": "The University of St. Gallen (HSG) is a public university in St. Gallen, Switzerland, specialising in economics, business administration, law and social sciences.",
+        "ru": "Санкт-Галленский университет (HSG) — государственный университет в Санкт-Галлене, Швейцария, специализирующийся на экономике, бизнес-администрировании, праве и социальных науках.",
+        "uz": "Sankt-Gallen universiteti (HSG) — Shveytsariyaning Sankt-Gallen shahridagi davlat universiteti. Iqtisodiyot, biznes ma'muriyati, huquq va ijtimoiy fanlarga ixtisoslashgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/University_of_St._Gallen",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "uzh-ch",
+      "name": "University of Zurich",
+      "country": "CH",
+      "city": "Zurich",
+      "website_domain": "uzh.ch",
+      "description": {
+        "en": "The University of Zurich is a public university in Zurich, Switzerland, founded in 1833. It is the largest university in Switzerland by number of students.",
+        "ru": "Цюрихский университет — государственный университет в Цюрихе, Швейцария, основанный в 1833 году. Крупнейший университет Швейцарии по числу студентов.",
+        "uz": "Sürix universiteti — Shveytsariyaning Sürix shahridagi davlat universiteti, 1833-yilda tashkil etilgan. Talabalar soni bo'yicha Shveytsariyaning eng yirik universiteti."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Zurich",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "unil-ch",
+      "name": "Université de Lausanne (UNIL)",
+      "country": "CH",
+      "city": "Lausanne",
+      "website_domain": "unil.ch",
+      "description": {
+        "en": "The University of Lausanne (UNIL) is a public French-speaking university in Lausanne, Switzerland, founded in 1537. It covers humanities, social sciences, law, and life sciences.",
+        "ru": "Лозаннский университет (UNIL) — государственный франкоязычный университет в Лозанне, Швейцария, основанный в 1537 году. Охватывает гуманитарные, социальные науки, право и науки о жизни.",
+        "uz": "Lozanna universiteti (UNIL) — Shveytsariyaning Lozanna shahridagi davlat frantsuz tilidagi universiteti, 1537-yilda tashkil etilgan. Gumanitar, ijtimoiy fanlar, huquq va hayot fanlarini qamrab oladi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Lausanne",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "dukekunshan-edu-cn",
+      "name": "Duke Kunshan University",
+      "country": "CN",
+      "city": "Kunshan",
+      "website_domain": "dukekunshan.edu.cn",
+      "description": {
+        "en": "Duke Kunshan University is a sino-foreign university in Kunshan, Jiangsu, China, established in partnership with Duke University. It offers undergraduate and graduate programs taught in English.",
+        "ru": "Университет Дьюка в Кунсане — китайско-зарубежный университет в Кунсане, провинция Цзянсу, созданный совместно с Университетом Дьюка. Программы бакалавриата и магистратуры ведутся на английском языке.",
+        "uz": "Duke Kunshan universiteti — Xitoyning Tszyansu viloyatidagi Kunshan shahrida Duke universiteti hamkorligida tashkil etilgan Xitoy-xorijiy universitet. Bakalavr va magistratura dasturlari ingliz tilida o'qitiladi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Duke_Kunshan_University",
+      "year": 2026,
+      "verified": false,
+      "acceptance_rate": {
+        "min": 4.6,
+        "max": 4.6,
+        "source_url": "https://en.wikipedia.org/wiki/Duke_Kunshan_University",
+        "year": 2025,
+        "note": "Class of 2029: 550 admitted of 11,884 applicants (Wikipedia says about 5%, citing DKU news)"
+      },
+      "intl_acceptance_rate": {
+        "value": 2.8,
+        "source_url": "https://en.wikipedia.org/wiki/Duke_Kunshan_University",
+        "year": 2025,
+        "note": "Class of 2029: 165 international students admitted of 5,882 applicants"
+      }
+    },
+    {
+      "slug": "fudan-edu-cn",
+      "name": "Fudan University",
+      "country": "CN",
+      "city": "Shanghai",
+      "website_domain": "fudan.edu.cn",
+      "description": {
+        "en": "Fudan University is a public research university in Shanghai, China, founded in 1905. It is a member of the Project 985 and Double First-Class universities.",
+        "ru": "Университет Фудань — государственный исследовательский университет в Шанхае, Китай, основанный в 1905 году. Входит в число университетов проекта «985» и «Двойного первого класса».",
+        "uz": "Fudan universiteti — Xitoyning Shanxay shahridagi davlat ilmiy-tadqiqot universiteti, 1905-yilda tashkil etilgan. «985» loyihasi va «Ikki birinchi sinf» universitetlari qatoriga kiradi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Fudan_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "shanghai-nyu-edu",
+      "name": "NYU Shanghai",
+      "country": "CN",
+      "city": "Shanghai",
+      "website_domain": "shanghai.nyu.edu",
+      "description": {
+        "en": "NYU Shanghai is a sino-foreign university in Shanghai, China, established in partnership with New York University and East China Normal University. Its courses are taught in English.",
+        "ru": "NYU Shanghai — китайско-зарубежный университет в Шанхае, созданный совместно с Нью-Йоркским университетом и Восточно-Китайским педагогическим университетом. Занятия ведутся на английском языке.",
+        "uz": "NYU Shanghai — Xitoyning Shanxay shahridagi Nyu-York universiteti va Sharqiy Xitoy pedagogika universiteti hamkorligida tashkil etilgan Xitoy-xorijiy universitet. Darslar ingliz tilida o'tiladi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/New_York_University_Shanghai",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "pku-edu-cn",
+      "name": "Peking University",
+      "country": "CN",
+      "city": "Beijing",
+      "website_domain": "pku.edu.cn",
+      "description": {
+        "en": "Peking University is a public research university in Beijing, China, founded in 1898. It is one of the country's leading comprehensive universities.",
+        "ru": "Пекинский университет — государственный исследовательский университет в Пекине, Китай, основанный в 1898 году. Один из ведущих комплексных университетов страны.",
+        "uz": "Pekin universiteti — Xitoyning Pekin shahridagi davlat ilmiy-tadqiqot universiteti, 1898-yilda tashkil etilgan. Mamlakatning yetakchi kompleks universitetlaridan biri."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Peking_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "sjtu-edu-cn",
+      "name": "Shanghai Jiao Tong University (SJTU)",
+      "country": "CN",
+      "city": "Shanghai",
+      "website_domain": "sjtu.edu.cn",
+      "description": {
+        "en": "Shanghai Jiao Tong University (SJTU) is a public research university in Shanghai, China, founded in 1896. It is known for engineering, medicine and natural sciences.",
+        "ru": "Шанхайский университет Цзяотун (SJTU) — государственный исследовательский университет в Шанхае, Китай, основанный в 1896 году. Известен инженерией, медициной и естественными науками.",
+        "uz": "Shanxay Tszyaotun universiteti (SJTU) — Xitoyning Shanxay shahridagi davlat ilmiy-tadqiqot universiteti, 1896-yilda tashkil etilgan. Muhandislik, tibbiyot va tabiiy fanlar bilan tanilgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Shanghai_Jiao_Tong_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "tsinghua-edu-cn",
+      "name": "Tsinghua University",
+      "country": "CN",
+      "city": "Beijing",
+      "website_domain": "tsinghua.edu.cn",
+      "description": {
+        "en": "Tsinghua University is a public research university in Beijing, China, founded in 1911. It is well known for engineering and science programs.",
+        "ru": "Университет Цинхуа — государственный исследовательский университет в Пекине, Китай, основанный в 1911 году. Известен программами в области инженерии и естественных наук.",
+        "uz": "Tsinxua universiteti — Xitoyning Pekin shahridagi davlat ilmiy-tadqiqot universiteti, 1911-yilda tashkil etilgan. Muhandislik va tabiiy fanlar dasturlari bilan tanilgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Tsinghua_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "westlake-edu-cn",
+      "name": "Westlake University",
+      "country": "CN",
+      "city": "Hangzhou",
+      "website_domain": "westlake.edu.cn",
+      "description": {
+        "en": "Westlake University is a private research university in Hangzhou, Zhejiang, China, founded in 2018. It focuses on science, engineering and life sciences research.",
+        "ru": "Университет Уэстлейк — частный исследовательский университет в Ханчжоу, провинция Чжэцзян, Китай, основанный в 2018 году. Ориентирован на исследования в области науки, инженерии и наук о жизни.",
+        "uz": "Westlake universiteti — Xitoyning Chjetszyan viloyatidagi Xansjou shahrida 2018-yilda tashkil etilgan xususiy ilmiy-tadqiqot universiteti. Fan, muhandislik va hayot fanlari tadqiqotlariga ixtisoslashgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Westlake_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "zju-edu-cn",
+      "name": "Zhejiang University",
+      "country": "CN",
+      "city": "Hangzhou",
+      "website_domain": "zju.edu.cn",
+      "description": {
+        "en": "Zhejiang University is a public research university in Hangzhou, Zhejiang, China, founded in 1897. It is one of the largest comprehensive universities in the country.",
+        "ru": "Чжэцзянский университет — государственный исследовательский университет в Ханчжоу, провинция Чжэцзян, Китай, основанный в 1897 году. Один из крупнейших комплексных университетов страны.",
+        "uz": "Chjetszyan universiteti — Xitoyning Chjetszyan viloyatidagi Xansjou shahridagi davlat ilmiy-tadqiqot universiteti, 1897-yilda tashkil etilgan. Mamlakatning eng yirik kompleks universitetlaridan biri."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Zhejiang_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "cuni-cz",
+      "name": "Charles University",
+      "country": "CZ",
+      "city": "Prague",
+      "website_domain": "cuni.cz",
+      "description": {
+        "en": "Charles University is a public university in Prague, Czech Republic, founded in 1348. It is the oldest university in Central Europe.",
+        "ru": "Карлов университет — государственный университет в Праге, Чехия, основанный в 1348 году. Старейший университет Центральной Европы.",
+        "uz": "Karl universiteti — Chexiyaning Praga shahridagi davlat universiteti, 1348-yilda tashkil etilgan. Markaziy Yevropadagi eng qadimgi universitet."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Charles_University",
+      "year": 2026,
+      "verified": false
+    }
+  ],
+  "programs": []
+}

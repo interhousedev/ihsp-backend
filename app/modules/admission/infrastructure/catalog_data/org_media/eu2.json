@@ -1,0 +1,308 @@
+[
+  {
+    "domain": "bme.hu",
+    "name": "Budapest University of Technology and Economics",
+    "aliases": [
+      "Budapest University of Technology and Economics"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Budapest%2C_M%C5%B1szaki_Egyetem.jpg/960px-Budapest%2C_M%C5%B1szaki_Egyetem.jpg"
+  },
+  {
+    "domain": "cam.ac.uk",
+    "name": "University of Cambridge",
+    "aliases": [
+      "University of Cambridge"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/4/4d/University_of_Cambridge_logo.png",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Cambridge-University-Senate-House.jpg/960px-Cambridge-University-Senate-House.jpg"
+  },
+  {
+    "domain": "ceu.edu",
+    "name": "Central European University",
+    "aliases": [
+      "Central European University"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/2/23/Central_European_University_Logo.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2d/Inauguration_of_the_Central_European_University_Vienna_Campus_-_49084685798.jpg/960px-Inauguration_of_the_Central_European_University_Vienna_Campus_-_49084685798.jpg"
+  },
+  {
+    "domain": "ed.ac.uk",
+    "name": "University of Edinburgh",
+    "aliases": [
+      "University of Edinburgh"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/6/69/University_of_Edinburgh_c%C3%ADmer.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/54/City_of_Edinburgh_-_University_of_Edinburgh_Main_Library_-_20240927155707.jpg/960px-City_of_Edinburgh_-_University_of_Edinburgh_Main_Library_-_20240927155707.jpg"
+  },
+  {
+    "domain": "elte.hu",
+    "name": "Eötvös Loránd University",
+    "aliases": [
+      "Eötvös Loránd University"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/6/66/Budapesti_Tudomanyegyetem_nagy_pecsetje_Orszag_Vilag_1880_XIII_sz.jpg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/ElteFotoThalerTamas2.jpg/960px-ElteFotoThalerTamas2.jpg"
+  },
+  {
+    "domain": "hec.edu",
+    "name": "HEC Paris",
+    "aliases": [
+      "HEC Paris"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/3/32/HEC_Paris.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Chateau%2C_HEC_Paris%2C_Jouy-en-Josas%2C_South_view_20160501_1.jpg/960px-Chateau%2C_HEC_Paris%2C_Jouy-en-Josas%2C_South_view_20160501_1.jpg"
+  },
+  {
+    "domain": "imperial.ac.uk",
+    "name": "Imperial College London",
+    "aliases": [
+      "Imperial College London"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/0/06/Imperial_College_London_new_logo.png",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Imperial_College_London_down_Exhibition_Road.jpg/960px-Imperial_College_London_down_Exhibition_Road.jpg"
+  },
+  {
+    "domain": "kcl.ac.uk",
+    "name": "King's College London",
+    "aliases": [
+      "King's College London"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/a/af/Kcl-logo.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/Strand_Building%2C_King%27s_College_London_02.jpg/960px-Strand_Building%2C_King%27s_College_London_02.jpg"
+  },
+  {
+    "domain": "lse.ac.uk",
+    "name": "London School of Economics and Political Science",
+    "aliases": [
+      "London School of Economics and Political Science"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/c/c7/London_school_of_economics_logo_with_name.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/9/96/LondonSchoolofEconomics_cford.jpg"
+  },
+  {
+    "domain": "manchester.ac.uk",
+    "name": "University of Manchester",
+    "aliases": [
+      "University of Manchester"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/c/cf/Manchester_University_Logo_%282%29.png",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Whitworth_Hall.jpg/960px-Whitworth_Hall.jpg"
+  },
+  {
+    "domain": "ntnu.edu",
+    "name": "Norwegian University of Science and Technology (NTNU)",
+    "aliases": [
+      "Norwegian University of Science and Technology (NTNU)"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/7/75/NTNU-logo.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/NTNU_Trondheim_Mainbuilding.jpg/960px-NTNU_Trondheim_Mainbuilding.jpg"
+  },
+  {
+    "domain": "ox.ac.uk",
+    "name": "University of Oxford",
+    "aliases": [
+      "University of Oxford"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/2/2f/University_of_Oxford.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/1_oxford_aerial_panorama_2016.jpg/960px-1_oxford_aerial_panorama_2016.jpg"
+  },
+  {
+    "domain": "polimi.it",
+    "name": "Politecnico di Milano",
+    "aliases": [
+      "Politecnico di Milano"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Politecnicomilano-logo.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Polimi_Leonardo_campus_main_building.jpg/960px-Polimi_Leonardo_campus_main_building.jpg"
+  },
+  {
+    "domain": "polito.it",
+    "name": "Politecnico di Torino",
+    "aliases": [
+      "Politecnico di Torino"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Politecnico_di_Torino_-_wordmark_%28Italy%2C_2021%29.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Politecnico_Torino.JPG/960px-Politecnico_Torino.JPG"
+  },
+  {
+    "domain": "polytechnique.edu",
+    "name": "École Polytechnique",
+    "aliases": [
+      "École Polytechnique"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/0/06/%C3%89cole_polytechnique_signature.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Ecole_Polytechnique_France_seen_from_lake_DSC03389.JPG/960px-Ecole_Polytechnique_France_seen_from_lake_DSC03389.JPG"
+  },
+  {
+    "domain": "psl.eu",
+    "name": "Université PSL",
+    "aliases": [
+      "Université PSL"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/3/3d/LOGO-PSL-juin-2026.svg",
+    "cover_url": null
+  },
+  {
+    "domain": "pw.edu.pl",
+    "name": "Warsaw University of Technology",
+    "aliases": [
+      "Warsaw University of Technology"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/4/47/Politechnika_Warszawska.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Gmach_G%C5%82%C3%B3wny_Politechniki_Warszawskiej_2018.jpg/960px-Gmach_G%C5%82%C3%B3wny_Politechniki_Warszawskiej_2018.jpg"
+  },
+  {
+    "domain": "sciencespo.fr",
+    "name": "Sciences Po",
+    "aliases": [
+      "Sciences Po"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/5/53/Logo_Sciences_Po.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/IEP_de_Paris%2C_27_rue_Saint-Guillaume%2C_Paris_7e.jpg/960px-IEP_de_Paris%2C_27_rue_Saint-Guillaume%2C_Paris_7e.jpg"
+  },
+  {
+    "domain": "semmelweis.hu",
+    "name": "Semmelweis University",
+    "aliases": [
+      "Semmelweis University"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/0/07/Logo_univsemmelweis.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Semmelweis_University%2C_main_building.jpg/960px-Semmelweis_University%2C_main_building.jpg"
+  },
+  {
+    "domain": "sorbonne-universite.fr",
+    "name": "Sorbonne Université",
+    "aliases": [
+      "Sorbonne Université"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/0/0e/Logo_of_Sorbonne_University.svg",
+    "cover_url": null
+  },
+  {
+    "domain": "st-andrews.ac.uk",
+    "name": "University of St Andrews",
+    "aliases": [
+      "University of St Andrews"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/6/6e/University_of_St_Andrews_arms.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/4/41/St_Andrews_University_Classics_Building.jpg"
+  },
+  {
+    "domain": "ucl.ac.uk",
+    "name": "University College London",
+    "aliases": [
+      "University College London"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/0/0f/UCL_Crest.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Wilkins_Building_1%2C_UCL%2C_London_-_Diliff.jpg/960px-Wilkins_Building_1%2C_UCL%2C_London_-_Diliff.jpg"
+  },
+  {
+    "domain": "uib.no",
+    "name": "University of Bergen",
+    "aliases": [
+      "University of Bergen"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "uio.no",
+    "name": "University of Oslo",
+    "aliases": [
+      "University of Oslo"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/f/f4/UiO_logo.png",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/The_University_of_Oslo.jpg/960px-The_University_of_Oslo.jpg"
+  },
+  {
+    "domain": "uj.edu.pl",
+    "name": "Jagiellonian University",
+    "aliases": [
+      "Jagiellonian University"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/5/54/Herb_Uniwersytetu_Jagiello%C5%84skiego.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Collegium_Maius_2017.jpg/960px-Collegium_Maius_2017.jpg"
+  },
+  {
+    "domain": "uni-corvinus.hu",
+    "name": "Corvinus University of Budapest",
+    "aliases": [
+      "Corvinus University of Budapest"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/5/57/Corvinus_eng_logo.jpg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Corvinus_foepulet.jpg/960px-Corvinus_foepulet.jpg"
+  },
+  {
+    "domain": "unibo.it",
+    "name": "Alma Mater Studiorum – Università di Bologna",
+    "aliases": [
+      "Alma Mater Studiorum – Università di Bologna"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/d/d0/Seal_of_the_University_of_Bologna.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/7/73/C%C3%A0_Grande_dei_Malvezzi_-_Sala_Borsa_06.jpg"
+  },
+  {
+    "domain": "unibocconi.eu",
+    "name": "Università Bocconi",
+    "aliases": [
+      "Università Bocconi"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/4/4c/Bocconi_University_Logo.svg",
+    "cover_url": null
+  },
+  {
+    "domain": "unipd.it",
+    "name": "Università degli Studi di Padova",
+    "aliases": [
+      "Università degli Studi di Padova"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "uniroma1.it",
+    "name": "Sapienza Università di Roma",
+    "aliases": [
+      "Sapienza Università di Roma"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/0/0d/Uniroma1.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Sapienza_entrance_%2820040201351%29.jpg/960px-Sapienza_entrance_%2820040201351%29.jpg"
+  },
+  {
+    "domain": "universite-paris-saclay.fr",
+    "name": "Université Paris-Saclay",
+    "aliases": [
+      "Université Paris-Saclay"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/2/27/Logo_Universit%C3%A9_Paris-Saclay_%28ComUE%29.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/All%C3%A9e_des_sciences_Paris-Saclay.jpg/960px-All%C3%A9e_des_sciences_Paris-Saclay.jpg"
+  },
+  {
+    "domain": "uw.edu.pl",
+    "name": "University of Warsaw",
+    "aliases": [
+      "University of Warsaw"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/Warszawa%2C_ul._Krakowskie_Przedmie%C5%9Bcie_26%2C_28_20170517_001.jpg/960px-Warszawa%2C_ul._Krakowskie_Przedmie%C5%9Bcie_26%2C_28_20170517_001.jpg"
+  },
+  {
+    "domain": "warwick.ac.uk",
+    "name": "University of Warwick",
+    "aliases": [
+      "University of Warwick"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/8/86/Warwick_University_Shield.svg",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Warwick_University_House.jpg/960px-Warwick_University_House.jpg"
+  },
+  {
+    "domain": "wum.edu.pl",
+    "name": "Medical University of Warsaw",
+    "aliases": [
+      "Medical University of Warsaw"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/0/0b/Logo_WUM.png",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Warszawski_Uniwersytet_Medyczny_2025.jpg/960px-Warszawski_Uniwersytet_Medyczny_2025.jpg"
+  }
+]

@@ -20,16 +20,20 @@ from app.shared.ai_tasks import PIPELINE_OF, Pipeline, pipeline_of
 __all__ = [
     "BUILTIN_IDS",
     "EFFORTS",
+    "LANGFUSE_SECRET_ID",
     "MODEL_KINDS",
     "PIPELINE_OF",
     "SEARCH_KINDS",
+    "UNTRACED_BY_DEFAULT",
     "Connector",
     "ConnectorKind",
     "EffectiveRoute",
     "Pipeline",
     "PipelineRoute",
     "ProbeResult",
+    "TracingConfig",
     "default_connector_id",
+    "default_tracing",
     "kind_fits",
     "pipeline_of",
     "valid_base_url",
@@ -92,6 +96,42 @@ class PipelineRoute:
     reasoning_effort: str | None
     updated_at: datetime | None = None
     updated_by: UUID | None = None
+    tracing_enabled: bool | None = None
+    capture_content: bool | None = None
+
+    @property
+    def empty(self) -> bool:
+        """True when every field falls through (the row can go)."""
+        return (
+            self.connector_id is None
+            and self.model is None
+            and self.reasoning_effort is None
+            and self.tracing_enabled is None
+            and self.capture_content is None
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class TracingConfig:
+    """The Langfuse project set by Administration; the secret key is in Vault."""
+
+    host: str
+    public_key: str
+    has_secret: bool
+    secret_last4: str | None
+    updated_at: datetime | None = None
+    updated_by: UUID | None = None
+
+
+# Vault path of the Langfuse secret key; not a valid connector slug, so no clash.
+LANGFUSE_SECRET_ID: Final = "_langfuse"
+# Pipelines that read essays and applicant profiles: untraced unless switched on.
+UNTRACED_BY_DEFAULT: Final = frozenset({Pipeline.ADMISSION})
+
+
+def default_tracing(pipeline: Pipeline) -> bool:
+    """Whether a pipeline's calls are traced when Administration set nothing."""
+    return pipeline not in UNTRACED_BY_DEFAULT
 
 
 @dataclass(frozen=True, slots=True)

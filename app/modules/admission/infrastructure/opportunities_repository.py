@@ -6,11 +6,15 @@ from uuid import UUID
 
 from app.modules.admission.domain.errors import AdmissionConflictError
 from app.modules.admission.domain.opportunities import (
+    ItemOpportunityLink,
     Opportunity,
     OpportunityDraft,
     OpportunitySubmission,
     PlanEntry,
     TaxonomyNode,
+)
+from app.modules.admission.infrastructure.orm.item_opportunity import (
+    ItemOpportunityLinkRow,
 )
 from app.modules.admission.infrastructure.orm.opportunities import (
     OpportunityAiPlanRow,
@@ -238,6 +242,54 @@ class SqlOpportunityRepository:
             raise AdmissionConflictError()
         await self._s.refresh(row)
         return _sub(row)
+
+    async def item_link(self, item_id: UUID) -> ItemOpportunityLink | None:
+        """The opportunity link of an activity."""
+        row = await self._s.get(ItemOpportunityLinkRow, item_id)
+        if row is None:
+            return None
+        return ItemOpportunityLink(row.item_id, row.submission_id, row.opportunity_id)
+
+    async def save_item_link(self, link: ItemOpportunityLink) -> None:
+        """Insert or replace the link of an activity."""
+        tbl = ItemOpportunityLinkRow
+        ins = insert(tbl).values(
+            item_id=link.item_id,
+            submission_id=link.submission_id,
+            opportunity_id=link.opportunity_id,
+        )
+        await self._s.execute(
+            ins.on_conflict_do_update(
+                index_elements=[tbl.item_id],
+                set_={
+                    "submission_id": ins.excluded.submission_id,
+                    "opportunity_id": ins.excluded.opportunity_id,
+                    "updated_at": dt.datetime.now(dt.UTC),
+                },
+            )
+        )
+
+    async def delete_item_link(self, item_id: UUID) -> bool:
+        """Remove the link of an activity; return whether it existed."""
+        tbl = ItemOpportunityLinkRow
+        result = await self._s.execute(
+            delete(tbl).where(tbl.item_id == item_id).returning(tbl.item_id)
+        )
+        return result.scalar_one_or_none() is not None
+
+    async def resolve_item_links(
+        self, submission_id: UUID, opportunity_id: UUID
+    ) -> int:
+        """Point every activity linked to the submission at the approved entry."""
+        tbl = ItemOpportunityLinkRow
+        result = await self._s.execute(
+            update(tbl)
+            .where(tbl.submission_id == submission_id)
+            .values(opportunity_id=opportunity_id)
+            .returning(tbl.item_id)
+            .execution_options(synchronize_session=False)
+        )
+        return len(result.all())
 
     async def plan(self, student_id: UUID) -> list[PlanEntry]:
         """A student's saved entries."""

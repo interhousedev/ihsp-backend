@@ -13,6 +13,7 @@ from app.modules.ai.domain.connectors import (
     Pipeline,
     PipelineRoute,
     ProbeResult,
+    TracingConfig,
 )
 from app.modules.ai.domain.errors import ConnectorSecretUnavailableError
 from app.modules.ai.ports.connectors import RoutingSnapshot
@@ -28,6 +29,7 @@ class ConnectorWorld:
     connectors: dict[str, Connector] = field(default_factory=dict)
     routes: dict[Pipeline, PipelineRoute] = field(default_factory=dict)
     audit: list[AuditDraft] = field(default_factory=list)
+    tracing: TracingConfig | None = None
     loads: int = 0
 
 
@@ -79,6 +81,26 @@ class FakeRouteRepository:
         self.world.routes.pop(pipeline, None)
 
 
+class FakeTracingRepository:
+    """Implements `TracingSettingsRepository` in memory."""
+
+    def __init__(self, world: ConnectorWorld) -> None:
+        """Keep the world."""
+        self.world = world
+
+    async def get(self) -> TracingConfig | None:
+        """The row."""
+        return self.world.tracing
+
+    async def put(self, config: TracingConfig) -> None:
+        """Insert or replace."""
+        self.world.tracing = config
+
+    async def delete(self) -> None:
+        """Remove."""
+        self.world.tracing = None
+
+
 class FakeConnectorUow:
     """Implements `ConnectorUnitOfWork`; changes apply at once, audit at commit."""
 
@@ -87,6 +109,7 @@ class FakeConnectorUow:
         self.world = world
         self.connectors = FakeConnectorRepository(world)
         self.routes = FakeRouteRepository(world)
+        self.tracing = FakeTracingRepository(world)
         self._audit: list[AuditDraft] = []
         self.committed = False
 
@@ -191,7 +214,9 @@ class FakeLoader:
         """A copy of the stored rows."""
         self.world.loads += 1
         return RoutingSnapshot(
-            connectors=dict(self.world.connectors), routes=dict(self.world.routes)
+            connectors=dict(self.world.connectors),
+            routes=dict(self.world.routes),
+            tracing=self.world.tracing,
         )
 
 

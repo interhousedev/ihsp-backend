@@ -60,8 +60,21 @@ class TraceBackend(Protocol):
         """Flush and stop the exporter."""
 
 
+class TracingSource(Protocol):
+    """Which tracer (if any) a task's call uses now."""
+
+    def tracer_for(self, task: str | None) -> "LangfuseTracer | None":
+        """The tracer of the task's call, or None to leave it untraced."""
+
+    def capture_for(self, task: str | None) -> bool:
+        """Whether the task's prompts and answers may be sent."""
+
+
 class LangfuseTracer:
-    """Opens spans on a backend and keeps privacy rules in one place."""
+    """Opens spans on a backend and keeps privacy rules in one place.
+
+    It is also a `TracingSource` that traces every task (the environment only).
+    """
 
     def __init__(
         self, backend: TraceBackend, *, salt: str, capture_content: bool
@@ -70,6 +83,14 @@ class LangfuseTracer:
         self._backend = backend
         self._salt = salt
         self._capture = capture_content
+
+    def tracer_for(self, task: str | None) -> "LangfuseTracer | None":
+        """This tracer, for every task."""
+        return self
+
+    def capture_for(self, task: str | None) -> bool:
+        """The tracer's own content switch."""
+        return self._capture
 
     def opaque_user(self, user_id: UUID | None) -> str | None:
         """A salted hash of the user id: stable per user, not reversible."""
@@ -90,15 +111,20 @@ class LangfuseTracer:
         private: bool = False,
         prompt_version: int | None = None,
         prompt_hash: str | None = None,
+        capture: bool | None = None,
     ) -> "OpenSpan | None":
-        """Open a span; None when the backend failed (the call goes on untraced)."""
+        """Open a span; None when the backend failed (the call goes on untraced).
+
+        `capture` overrides the tracer's content switch for this call.
+        """
+        send = (self._capture if capture is None else capture) and not private
         try:
             span = self._backend.start(
                 name=task,
                 model=model,
                 user_id=self.opaque_user(user_id),
                 session_id=session_id,
-                input=content if self._capture and not private else None,
+                input=content if send else None,
                 metadata={
                     "task": task,
                     "role": role,
@@ -106,7 +132,7 @@ class LangfuseTracer:
                     "prompt_hash": prompt_hash,
                 },
             )
-            return OpenSpan(span, self._capture and not private, private=private)
+            return OpenSpan(span, send, private=private)
         except Exception:
             log.warning("langfuse_start_failed", task=task, exc_info=True)
             return None
