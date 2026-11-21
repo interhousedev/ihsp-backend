@@ -96,3 +96,33 @@ async def test_readiness_for_limited_student_is_without_the_essay_key(
         assert essays and essays[0]["score"] > 0
         switch.set(stranger)
         assert (await client.get(path)).status_code == 404
+
+
+async def test_essay_list_leaves_out_a_row_that_does_not_open(
+    make_container: ContainerFactory,
+    overrides_cleaned: list[FastAPI],  # noqa: F811
+) -> None:
+    container, client, _switch, student = await _http(
+        make_container, overrides_cleaned, Role.STUDENT, "unread.student"
+    )
+    async with container.sessionmaker() as session, session.begin():
+        session.add(
+            EntitlementRow(
+                user_id=student.user_id,
+                kind="school_student",
+                cohort_year=None,
+                granted_by=None,
+            )
+        )
+    async with client:
+        made = await client.post(f"{BASE}/essays", json={"title": "Mine"})
+        assert made.status_code in (200, 201), made.text
+        # A row sealed under a different key (tampered, or its key was lost).
+        async with container.sessionmaker() as session, session.begin():
+            foreign = AesGcmEssayCipher(MemoryEssayKeyStore())
+            await SqlEssayRepository(session, foreign).add(
+                Essay(id=new_id(), student_id=student.user_id, title="T", body="B")
+            )
+        listed = await client.get(f"{BASE}/essays")
+        assert listed.status_code == 200, listed.text
+        assert [e["title"] for e in listed.json()["items"]] == ["Mine"]

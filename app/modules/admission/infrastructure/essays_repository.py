@@ -33,8 +33,11 @@ from app.modules.admission.infrastructure.orm.profile import (
 from app.modules.admission.infrastructure.orm.sealed import to_json
 from app.modules.admission.ports.essay_crypto import EssayCipher
 
+import structlog
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+
+log = structlog.get_logger(__name__)
 
 
 def _plan(raw: list[dict[str, Any]]) -> tuple[PlanSection, ...]:
@@ -175,13 +178,24 @@ class SqlEssayRepository:
         row.sort_order = idea.sort_order
 
     async def list_for(self, student_id: UUID) -> list[Essay]:
-        """Return the essays, newest edit first."""
+        """Return the essays, newest edit first.
+
+        A row that does not open under the owner's key (tampered, or sealed by a
+        key that no longer exists) is logged and left out, so one bad row never
+        blanks the student's whole essay list. A missing key still raises.
+        """
         rows = await self._s.scalars(
             select(EssayRow)
             .where(EssayRow.student_id == student_id)
             .order_by(EssayRow.updated_at.desc(), EssayRow.id)
         )
-        return [await self._essay(r) for r in rows]
+        essays: list[Essay] = []
+        for row in rows:
+            try:
+                essays.append(await self._essay(row))
+            except ValueError:
+                log.error("essay_unreadable", essay_id=str(row.id))
+        return essays
 
     async def statuses(self, student_id: UUID) -> list[str]:
         """Return the status of each essay; nothing is decrypted."""
