@@ -1,0 +1,323 @@
+{
+  "institutions": [
+    {
+      "slug": "korea-ac-kr",
+      "name": "Korea University",
+      "country": "KR",
+      "city": "Seoul",
+      "website_domain": "korea.ac.kr",
+      "description": {
+        "en": "Korea University is a private research university in Seoul, South Korea. It was established in 1905 as Bosung College and is one of the SKY universities.",
+        "ru": "Корейский университет — частный исследовательский университет в Сеуле, Южная Корея. Основан в 1905 году как колледж Босун и входит в группу университетов SKY.",
+        "uz": "Koreya universiteti — Janubiy Koreyaning Seul shahridagi xususiy tadqiqot universiteti. U 1905-yilda Bosung kolleji sifatida tashkil etilgan va SKY universitetlari qatoriga kiradi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Korea_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "postech-ac-kr",
+      "name": "Pohang University of Science and Technology (POSTECH)",
+      "country": "KR",
+      "city": "Pohang",
+      "website_domain": "postech.ac.kr",
+      "description": {
+        "en": "Pohang University of Science and Technology is a private research university in Pohang, South Korea.",
+        "ru": "Поханский университет науки и технологий — частный исследовательский университет в Поханге, Южная Корея.",
+        "uz": "Pohang fan va texnologiyalar universiteti — Janubiy Koreyaning Pohang shahridagi xususiy tadqiqot universiteti."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Pohang_University_of_Science_and_Technology",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "skku-edu",
+      "name": "Sungkyunkwan University (SKKU)",
+      "country": "KR",
+      "city": "Seoul",
+      "website_domain": "skku.edu",
+      "description": {
+        "en": "Sungkyunkwan University is a private research university with campuses in Seoul and Suwon, South Korea. Its origins trace back to Sungkyunkwan, founded in 1398.",
+        "ru": "Университет Сонгюнгван — частный исследовательский университет с кампусами в Сеуле и Сувоне, Южная Корея. Его истоки восходят к Сонгюнгвану, основанному в 1398 году.",
+        "uz": "Sungkyunkvan universiteti — Janubiy Koreyaning Seul va Suvon shaharlarida kampuslari bo‘lgan xususiy tadqiqot universiteti. Uning ildizlari 1398-yilda tashkil etilgan Sungkyunkvanga borib taqaladi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Sungkyunkwan_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "unist-ac-kr",
+      "name": "Ulsan National Institute of Science and Technology (UNIST)",
+      "country": "KR",
+      "city": "Ulsan",
+      "website_domain": "unist.ac.kr",
+      "description": {
+        "en": "UNIST is a public science and technology university in Ulsan, South Korea. It was founded in 2007 and focuses on science and technology research.",
+        "ru": "UNIST — государственный университет науки и технологий в Ульсане, Южная Корея. Основан в 2007 году и специализируется на научных и технологических исследованиях.",
+        "uz": "UNIST — Janubiy Koreyaning Ulsan shahridagi davlat fan va texnologiya universiteti. U 2007-yilda tashkil etilgan va fan hamda texnologiya tadqiqotlariga ixtisoslashgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Ulsan_National_Institute_of_Science_and_Technology",
+      "year": 2026,
+      "verified": false,
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-22",
+          "cycle": "2026-27",
+          "source_url": "https://admu-intl.unist.ac.kr/admission-eng/admissions/admissions.do",
+          "note": "Fall 2027 international undergraduate; online application 2 Dec 2026 to 22 Jan 2027 16:00 KST."
+        }
+      ],
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://admu-intl.unist.ac.kr/admission-eng/admissions/admissions.do",
+        "year": 2026,
+        "note": "Fall 2027 guideline lists SAT/ACT/IB/A-Level reports only as supplementary documents"
+      }
+    },
+    {
+      "slug": "ntnu-edu",
+      "name": "Norwegian University of Science and Technology (NTNU)",
+      "country": "NO",
+      "city": "Trondheim",
+      "website_domain": "ntnu.edu",
+      "description": {
+        "en": "NTNU is a public research university headquartered in Trondheim, Norway, with regional campuses in Gjøvik and Ålesund. It is the largest university in Norway by enrollment.",
+        "ru": "NTNU — государственный исследовательский университет со штаб-квартирой в Тронхейме, Норвегия, и региональными кампусами в Гьёвике и Олесунне. По числу студентов это крупнейший университет Норвегии.",
+        "uz": "NTNU — Norvegiyaning Trondxaym shahrida joylashgan davlat tadqiqot universiteti, Gyovik va Olesund shaharlarida mintaqaviy kampuslari bor. Talabalar soni bo‘yicha Norvegiyadagi eng yirik universitet."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Norwegian_University_of_Science_and_Technology",
+      "year": 2026,
+      "verified": false,
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2026-12-01",
+          "cycle": "2026-27",
+          "source_url": "https://www.ntnu.edu/studies/application",
+          "note": "International master's programmes, non-EU/EEA applicants (EU/EEA 1 March). Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "uib-no",
+      "name": "University of Bergen",
+      "country": "NO",
+      "city": "Bergen",
+      "website_domain": "uib.no",
+      "description": {
+        "en": "The University of Bergen is a public research university in Bergen, Norway. It is Norway's second-oldest university.",
+        "ru": "Бергенский университет — государственный исследовательский университет в Бергене, Норвегия. Это второй по возрасту университет Норвегии.",
+        "uz": "Bergen universiteti — Norvegiyaning Bergen shahridagi davlat tadqiqot universiteti. U Norvegiyadagi ikkinchi eng qadimiy universitet."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Bergen",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "uio-no",
+      "name": "University of Oslo",
+      "country": "NO",
+      "city": "Oslo",
+      "website_domain": "uio.no",
+      "description": {
+        "en": "The University of Oslo is a public research university in Oslo, Norway. It is the oldest university in Norway and was established in 1811 as the Royal Frederick University.",
+        "ru": "Университет Осло — государственный исследовательский университет в Осло, Норвегия. Это старейший университет страны, основан в 1811 году как Королевский университет Фредерика.",
+        "uz": "Oslo universiteti — Norvegiyaning Oslo shahridagi davlat tadqiqot universiteti. U mamlakatdagi eng qadimiy universitet bo‘lib, 1811-yilda Qirollik Fridrix universiteti sifatida tashkil etilgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Oslo",
+      "year": 2026,
+      "verified": false,
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2026-12-01",
+          "cycle": "2026-27",
+          "source_url": "https://www.uio.no/english/studies/admission/master/",
+          "note": "Master's programmes, applicants with citizenship outside EU/EEA and Switzerland; studies start August. Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "uj-edu-pl",
+      "name": "Jagiellonian University",
+      "country": "PL",
+      "city": "Kraków",
+      "website_domain": "uj.edu.pl",
+      "description": {
+        "en": "Jagiellonian University is a public research university in Kraków, Poland. It was founded in 1364 and is the oldest university in Poland.",
+        "ru": "Ягеллонский университет — государственный исследовательский университет в Кракове, Польша. Основан в 1364 году и является старейшим университетом Польши.",
+        "uz": "Yagellon universiteti — Polshaning Krakov shahridagi davlat tadqiqot universiteti. U 1364-yilda tashkil etilgan va Polshadagi eng qadimiy universitet."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Jagiellonian_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "wum-edu-pl",
+      "name": "Medical University of Warsaw",
+      "country": "PL",
+      "city": "Warsaw",
+      "website_domain": "wum.edu.pl",
+      "source_url": "https://en.wikipedia.org/wiki/Medical_University_of_Warsaw",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "uw-edu-pl",
+      "name": "University of Warsaw",
+      "country": "PL",
+      "city": "Warsaw",
+      "website_domain": "uw.edu.pl",
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Warsaw",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "pw-edu-pl",
+      "name": "Warsaw University of Technology",
+      "country": "PL",
+      "city": "Warsaw",
+      "website_domain": "pw.edu.pl",
+      "source_url": "https://en.wikipedia.org/wiki/Warsaw_University_of_Technology",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "ntu-edu-sg",
+      "name": "Nanyang Technological University (NTU)",
+      "country": "SG",
+      "city": "Singapore",
+      "website_domain": "ntu.edu.sg",
+      "description": {
+        "en": "Nanyang Technological University is a national public research university in Singapore. It was founded in 1981.",
+        "ru": "Наньянский технологический университет — национальный государственный исследовательский университет в Сингапуре. Основан в 1981 году.",
+        "uz": "Nanyan texnologik universiteti — Singapurdagi milliy davlat tadqiqot universiteti. U 1981-yilda tashkil etilgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Nanyang_Technological_University",
+      "year": 2026,
+      "verified": false,
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-03-19",
+          "cycle": "2026-27",
+          "source_url": "https://www.ntu.edu.sg/admissions/undergraduate/admissions",
+          "note": "Latest closing date for international qualifications (IB, A-Levels etc); window opens 15 Oct 2026 and closing date varies by qualification."
+        }
+      ]
+    },
+    {
+      "slug": "nus-edu-sg",
+      "name": "National University of Singapore (NUS)",
+      "country": "SG",
+      "city": "Singapore",
+      "website_domain": "nus.edu.sg",
+      "source_url": "https://en.wikipedia.org/wiki/National_University_of_Singapore",
+      "year": 2026,
+      "intl_tuition_usd": {
+        "value": 36650,
+        "currency": "SGD",
+        "source_url": "https://www.nus.edu.sg/registrar/docs/default-source/administrative-policies-procedures/ugtuitioncurrent.pdf",
+        "year": 2026,
+        "note": "Per annum, Humanities and Sciences, 'All other IS' (non-ASEAN) without MOE Tuition Grant, new intake AY2026/2027, incl. GST. Other faculties differ (e.g. Computing 39,700)."
+      },
+      "verified": false
+    },
+    {
+      "slug": "smu-edu-sg",
+      "name": "Singapore Management University (SMU)",
+      "country": "SG",
+      "city": "Singapore",
+      "website_domain": "smu.edu.sg",
+      "description": {
+        "en": "Singapore Management University is a publicly funded autonomous university in Singapore. It was established in 2000 and is triple accredited by AACSB, EQUIS and AMBA.",
+        "ru": "Сингапурский университет менеджмента — государственно финансируемый автономный университет в Сингапуре. Основан в 2000 году и имеет тройную аккредитацию AACSB, EQUIS и AMBA.",
+        "uz": "Singapur menejment universiteti — Singapurdagi davlat moliyalashtiriladigan avtonom universitet. U 2000-yilda tashkil etilgan va AACSB, EQUIS hamda AMBA tomonidan uch karra akkreditatsiyadan o‘tgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Singapore_Management_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "sutd-edu-sg",
+      "name": "Singapore University of Technology and Design (SUTD)",
+      "country": "SG",
+      "city": "Singapore",
+      "website_domain": "sutd.edu.sg",
+      "description": {
+        "en": "The Singapore University of Technology and Design is a public autonomous university in Singapore.",
+        "ru": "Сингапурский университет технологий и дизайна — государственный автономный университет в Сингапуре.",
+        "uz": "Singapur texnologiya va dizayn universiteti — Singapurdagi davlat avtonom universiteti."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Singapore_University_of_Technology_and_Design",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "amherst-edu",
+      "name": "Amherst College",
+      "country": "US",
+      "city": "Amherst",
+      "website_domain": "amherst.edu",
+      "source_url": "https://en.wikipedia.org/wiki/Amherst_College",
+      "year": 2026,
+      "acceptance_rate": {
+        "min": 7.7,
+        "max": 7.7,
+        "source_url": "https://www.amherst.edu/about/facts/common_data_sets/2025",
+        "year": 2025,
+        "note": "Fall 2025 admit rate, 1,222 of 15,819 applicants, per Common Data Set 2025-26 (secondary snippet)."
+      },
+      "verified": false,
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.amherst.edu/admission/apply/firstyear",
+        "year": 2026,
+        "note": "SAT/ACT results are optional for first-year applicants"
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-05",
+          "cycle": "2026-27",
+          "source_url": "https://www.amherst.edu/admission/apply/firstyear",
+          "note": null
+        }
+      ]
+    },
+    {
+      "slug": "asu-edu",
+      "name": "Arizona State University",
+      "country": "US",
+      "city": "Tempe",
+      "website_domain": "asu.edu",
+      "source_url": "https://en.wikipedia.org/wiki/Arizona_State_University",
+      "year": 2026,
+      "verified": false,
+      "acceptance_rate": {
+        "min": 88.0,
+        "max": 88.0,
+        "source_url": "https://en.wikipedia.org/wiki/Arizona_State_University",
+        "year": 2022,
+        "note": "Wikipedia, citing U.S. News: ASU admitted 88% of first-year applicants in 2022-23"
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://admission.asu.edu/apply/first-year/admission",
+        "year": 2026,
+        "note": "ACT/SAT not required for admission or merit scholarships"
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-15",
+          "cycle": "2026-27",
+          "source_url": "https://admission.asu.edu/apply/first-year",
+          "note": "Regular admission date for fall; rolling admission continues after it. Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    }
+  ],
+  "programs": []
+}

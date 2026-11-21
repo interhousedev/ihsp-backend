@@ -1,0 +1,645 @@
+{
+  "institutions": [
+    {
+      "slug": "babson-edu",
+      "name": "Babson College",
+      "country": "US",
+      "city": "Wellesley",
+      "website_domain": "babson.edu",
+      "description": {
+        "en": "Babson College is a private business school in Wellesley, Massachusetts, known for entrepreneurship education. Its undergraduate Bachelor of Science in Business Administration combines business with the liberal arts. For fall 2025 it received 10,552 first-year applications and admitted 1,705 students.",
+        "ru": "Колледж Бэбсон — частная бизнес-школа в Уэлсли (штат Массачусетс), известная образованием в области предпринимательства. Бакалавриат по бизнес-администрированию сочетает бизнес с гуманитарными науками. На осенний набор 2025 года поступило 10 552 заявления первокурсников, принято 1 705 студентов.",
+        "uz": "Babson kolleji — Massachusets shtatining Wellesli shahridagi xususiy biznes maktabi bo‘lib, tadbirkorlik ta’limi bilan tanilgan. Bakalavriat dasturi biznesni liberal san’at bilan birlashtiradi. 2025 yil kuzgi qabulida 10 552 ta birinchi kurs arizasi kelib tushdi, 1 705 talaba qabul qilindi."
+      },
+      "institution_type": "private",
+      "acceptance_rate": {
+        "min": 16.16,
+        "max": 16.16,
+        "source_url": "https://opencollegedata.org/colleges/babson-college",
+        "year": 2025,
+        "note": "Overall first-year rate, Common Data Set 2025-26 (1,705 of 10,552)"
+      },
+      "source_url": "https://opencollegedata.org/colleges/babson-college",
+      "year": 2025,
+      "verified": false,
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://undergraduatecatalog.babson.edu/standardized-testing-requirements-and-test-optional-policy",
+        "year": 2026,
+        "note": null
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://www.babson.edu/undergraduate/how-to-apply/",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://www.babson.edu/undergraduate/how-to-apply/",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "bates-edu",
+      "name": "Bates College",
+      "country": "US",
+      "city": "Lewiston",
+      "website_domain": "bates.edu",
+      "description": {
+        "en": "Bates College is a coeducational, nonsectarian residential liberal arts college in Lewiston, Maine, founded in 1855 as the Maine State Seminary. It offers 38 majors and a four-week Short Term for immersive study. Bates meets 100% of students' demonstrated financial need.",
+        "ru": "Колледж Бейтс — коэдукационный светский резидентный колледж свободных искусств в Льюистоне (штат Мэн), основанный в 1855 году как Maine State Seminary. Предлагает 38 специальностей и четырёхнедельный интенсивный семестр Short Term. Колледж покрывает 100% доказанной финансовой потребности студентов.",
+        "uz": "Bates kolleji — Men shtatining Lyuiston shahridagi aralash, dunyoviy rezident liberal san’at kolleji bo‘lib, 1855 yilda Maine State Seminary nomi bilan asos solingan. Unda 38 ta mutaxassislik va chuqur o‘qish uchun to‘rt haftalik Short Term mavjud. Kollej talabalarning isbotlangan moliyaviy ehtiyojining 100 foizini qoplaydi."
+      },
+      "institution_type": "private",
+      "acceptance_rate": {
+        "min": 14.83,
+        "max": 14.83,
+        "source_url": "https://www.collegedata.fyi/schools/bates/2025-26",
+        "year": 2025,
+        "note": "Overall first-year rate, Common Data Set 2025-26 (1,433 of 9,660)"
+      },
+      "source_url": "https://www.collegedata.fyi/schools/bates/2025-26",
+      "year": 2025,
+      "verified": false,
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.bates.edu/admission/apply/",
+        "year": 2026,
+        "note": "SAT and ACT optional for all applicants."
+      }
+    },
+    {
+      "slug": "berea-edu",
+      "name": "Berea College",
+      "country": "US",
+      "city": "Berea",
+      "website_domain": "berea.edu",
+      "description": {
+        "en": "Berea College in Berea, Kentucky, was founded in 1855 as a coeducational, interracial college. It has not charged tuition since 1892, and every student takes a campus or community labor position. The college plans to fully fund every enrolled student's four-year degree from Fall 2027.",
+        "ru": "Колледж Берия в Берии (штат Кентукки) основан в 1855 году как коэдукационный межрасовый колледж. С 1892 года он не берёт плату за обучение, а каждый студент работает на кампусе или в общине. С осени 2027 года колледж планирует полностью финансировать четырёхлетнее обучение каждого зачисленного студента.",
+        "uz": "Berea kolleji — Kentukki shtatining Berea shahrida 1855 yilda aralash irqli kollej sifatida tashkil etilgan. 1892 yildan beri o‘qish uchun to‘lov olinmaydi, har bir talaba kampusda yoki jamoada mehnat lavozimida ishlaydi. Kollej 2027 yil kuzidan boshlab har bir talabaning to‘rt yillik ta’limini to‘liq moliyalashtirishni rejalashtirmoqda."
+      },
+      "institution_type": "private",
+      "source_url": "https://www.berea.edu/fullyfunded",
+      "year": 2025,
+      "verified": false,
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.berea.edu/admissions/",
+        "year": 2026,
+        "note": "Students decide whether to submit ACT or SAT."
+      },
+      "deadlines": [
+        {
+          "plan": "EA",
+          "date": "2027-01-31",
+          "cycle": "2026-27",
+          "source_url": "https://www.berea.edu/admissions/",
+          "note": "Early Action II; first-year domestic students. Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-03-31",
+          "cycle": "2026-27",
+          "source_url": "https://www.berea.edu/admissions/",
+          "note": "First-year domestic students. Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "bu-edu",
+      "name": "Boston University",
+      "country": "US",
+      "city": "Boston",
+      "website_domain": "bu.edu",
+      "description": {
+        "en": "Boston University is a private research university in Boston, Massachusetts, chartered in 1869. It has 10 undergraduate schools and colleges, more than 300 majors and minors, and is a member of the Association of American Universities. Its two main campuses are in the heart of Boston.",
+        "ru": "Бостонский университет — частный исследовательский университет в Бостоне (штат Массачусетс), основанный в 1869 году. В нём 10 школ и колледжей для бакалавров, более 300 специальностей и направлений, он входит в Ассоциацию американских университетов. Основные кампусы расположены в центре Бостона.",
+        "uz": "Boston universiteti — Massachusets shtatining Boston shahridagi xususiy tadqiqot universiteti bo‘lib, 1869 yilda tashkil etilgan. Unda bakalavriat bo‘yicha 10 ta maktab va kollej, 300 dan ortiq mutaxassislik va yo‘nalish mavjud, u Amerika universitetlari assotsiatsiyasiga a’zo. Asosiy kampuslari Bostonning markazida joylashgan."
+      },
+      "institution_type": "private",
+      "source_url": "https://www.bu.edu/asir/bu-facts/common-data-set",
+      "year": 2025,
+      "verified": false,
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.bu.edu/admissions/apply/international/",
+        "year": 2026,
+        "note": "Test optional for first-year applicants through fall 2028 and spring 2029."
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-05",
+          "cycle": "2026-27",
+          "source_url": "https://www.bu.edu/admissions/apply/",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "bowdoin-edu",
+      "name": "Bowdoin College",
+      "country": "US",
+      "city": "Brunswick",
+      "website_domain": "bowdoin.edu",
+      "description": {
+        "en": "Bowdoin College is a private liberal arts college in Brunswick, Maine, chartered in 1794 and Maine's oldest college. It offers a bachelor of arts in more than 40 majors and is known for its environmental studies program. Students do not declare a major until the second semester of sophomore year.",
+        "ru": "Колледж Боудойн — частный колледж свободных искусств в Брансуике (штат Мэн), основанный в 1794 году и являющийся старейшим колледжем штата. Здесь выдают степень бакалавра искусств по более чем 40 специальностям, известна программа по экологическим исследованиям. Студенты выбирают специальность только во втором семестре второго курса.",
+        "uz": "Bowdoin kolleji — Men shtatining Brunsvik shahridagi xususiy liberal san’at kolleji bo‘lib, 1794 yilda tashkil etilgan va shtatdagi eng qadimgi kollej hisoblanadi. Unda 40 dan ortiq yo‘nalish bo‘yicha san’at bakalavri darajasi beriladi, atrof-muhit tadqiqotlari dasturi bilan tanilgan. Talabalar mutaxassislikni ikkinchi kurs ikkinchi semestrigacha tanlamaydi."
+      },
+      "institution_type": "private",
+      "acceptance_rate": {
+        "min": 6.81,
+        "max": 6.81,
+        "source_url": "https://www.collegedata.fyi/schools/bowdoin/2025-26",
+        "year": 2025,
+        "note": "Overall first-year rate, Common Data Set 2025-26 (957 of 14,045)"
+      },
+      "source_url": "https://www.collegedata.fyi/schools/bowdoin/2025-26",
+      "year": 2025,
+      "verified": false,
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.bowdoin.edu/admissions/apply/",
+        "year": 2026,
+        "note": "Test optional since 1969."
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-05",
+          "cycle": "2026-27",
+          "source_url": "https://www.commonapp.org/explore/bowdoin-college/",
+          "note": "Common App school page lists month/day only; treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-05",
+          "cycle": "2026-27",
+          "source_url": "https://www.commonapp.org/explore/bowdoin-college/",
+          "note": "Common App school page lists month/day only; treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "brandeis-edu",
+      "name": "Brandeis University",
+      "country": "US",
+      "city": "Waltham",
+      "website_domain": "brandeis.edu",
+      "description": {
+        "en": "Brandeis University is a private, nonsectarian research university in Waltham, Massachusetts, with undergraduate and graduate programs in the arts, sciences and social sciences. For fall 2025 it received 9,756 first-year applications and admitted 4,430 students. Its average admitted GPA was 3.84.",
+        "ru": "Университет Брандейс — частный светский исследовательский университет в Уолтеме (штат Массачусетс), с программами бакалавриата и магистратуры в области искусств, естественных и социальных наук. На осенний набор 2025 года поступило 9 756 заявлений первокурсников, принято 4 430 студентов. Средний GPA принятых составил 3,84.",
+        "uz": "Brandeis universiteti — Massachusets shtatining Voltem shahridagi xususiy, dunyoviy tadqiqot universiteti bo‘lib, san’at, tabiiy va ijtimoiy fanlar bo‘yicha bakalavriat va magistratura dasturlariga ega. 2025 yil kuzgi qabulida 9 756 ta birinchi kurs arizasi kelib tushdi, 4 430 talaba qabul qilindi. Qabul qilinganlarning o‘rtacha GPA ko‘rsatkichi 3,84 bo‘ldi."
+      },
+      "institution_type": "private",
+      "acceptance_rate": {
+        "min": 45.41,
+        "max": 45.41,
+        "source_url": "https://www.collegedata.fyi/schools/brandeis/2025-26",
+        "year": 2025,
+        "note": "Overall first-year rate, Common Data Set 2025-26 (4,430 of 9,756)"
+      },
+      "source_url": "https://www.collegedata.fyi/schools/brandeis/2025-26",
+      "year": 2025,
+      "verified": false,
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.brandeis.edu/registrar/bulletin/2025-2026/admissions/ug_admission.html",
+        "year": 2025,
+        "note": "Domestic students not required to submit SAT/ACT; three-option submission."
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-01",
+          "cycle": "2026-27",
+          "source_url": "https://www.brandeis.edu/admissions/apply/dates.html",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "brown-edu",
+      "name": "Brown University",
+      "country": "US",
+      "city": "Providence",
+      "website_domain": "brown.edu",
+      "description": {
+        "en": "Brown University is a private Ivy League research university in Providence, Rhode Island, chartered in 1764. Its Open Curriculum lets undergraduates design their own course of study. For 2025-26, 42,774 first-year students applied and 2,710 were admitted.",
+        "ru": "Университет Брауна — частный исследовательский университет Лиги плюща в Провиденсе (штат Род-Айленд), основанный в 1764 году. Открытый учебный план позволяет студентам самостоятельно выстраивать программу обучения. В 2025-26 учебном году 42 774 первокурсника подали заявления, 2 710 были приняты.",
+        "uz": "Brown universiteti — Rod-Aylend shtatining Providens shahridagi xususiy Ivy League tadqiqot universiteti bo‘lib, 1764 yilda tashkil etilgan. Ochiq o‘quv dasturi talabalarga o‘z o‘quv yo‘nalishini mustaqil tuzish imkonini beradi. 2025-26 o‘quv yilida 42 774 ta birinchi kurs talabasi ariza topshirdi, 2 710 nafari qabul qilindi."
+      },
+      "institution_type": "private",
+      "acceptance_rate": {
+        "min": 6.34,
+        "max": 6.34,
+        "source_url": "https://www.collegedata.fyi/schools/brown",
+        "year": 2025,
+        "note": "Overall first-year rate, Common Data Set 2025-26 (2,710 of 42,774)"
+      },
+      "source_url": "https://www.collegedata.fyi/schools/brown",
+      "year": 2025,
+      "verified": false,
+      "test_policy": {
+        "value": "required",
+        "source_url": "https://admission.brown.edu/first-year/standardized-tests",
+        "year": 2026,
+        "note": "SAT or ACT required again from the 2024-25 admission cycle; superscored."
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-05",
+          "cycle": "2026-27",
+          "source_url": "https://admission.brown.edu/first-year/application-checklist",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "caltech-edu",
+      "name": "California Institute of Technology",
+      "country": "US",
+      "city": "Pasadena",
+      "website_domain": "caltech.edu",
+      "description": {
+        "en": "The California Institute of Technology is a private research university in Pasadena, California, focused on science and engineering. Its undergraduate body is small and its admissions highly selective. For fall 2025 it received 11,285 first-year applications and admitted 428 students.",
+        "ru": "Калифорнийский технологический институт — частный исследовательский университет в Пасадене (штат Калифорния), специализирующийся на естественных науках и инженерии. Студенческий состав бакалавриата небольшой, а отбор очень строгий. На осенний набор 2025 года поступило 11 285 заявлений первокурсников, принято 428 студентов.",
+        "uz": "Kaliforniya texnologiya instituti — Kaliforniya shtatining Pasadena shahridagi xususiy tadqiqot universiteti bo‘lib, tabiiy fanlar va muhandislikka ixtisoslashgan. Bakalavriat talabalari soni kam, qabul jarayoni juda tanlovli. 2025 yil kuzgi qabulida 11 285 ta birinchi kurs arizasi ko‘rib chiqildi, 428 talaba qabul qilindi."
+      },
+      "institution_type": "private",
+      "acceptance_rate": {
+        "min": 3.79,
+        "max": 3.79,
+        "source_url": "https://www.oneprep.com/blog/how-to-get-into-caltech",
+        "year": 2025,
+        "note": "Overall first-year rate, Common Data Set 2025-26 as cited (428 of 11,285)"
+      },
+      "source_url": "https://www.oneprep.com/blog/how-to-get-into-caltech",
+      "year": 2025,
+      "verified": false,
+      "test_policy": {
+        "value": "required",
+        "source_url": "https://www.admissions.caltech.edu/apply/first-year-applicants/application-requirements",
+        "year": 2026,
+        "note": "Either SAT or ACT required."
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://www.admissions.caltech.edu/apply/first-year-applicants/deadlines"
+        }
+      ]
+    },
+    {
+      "slug": "case-edu",
+      "name": "Case Western Reserve University",
+      "country": "US",
+      "city": "Cleveland",
+      "website_domain": "case.edu",
+      "description": {
+        "en": "Case Western Reserve University is a private research university in Cleveland, Ohio, formed in 1967 by the merger of Case Institute of Technology and Western Reserve University. It is known for its medical, engineering and law schools. Its 2025-26 Common Data Set reports 39,332 first-year applicants and 13,890 admitted.",
+        "ru": "Case Western Reserve University — частный исследовательский университет в Кливленде (штат Огайо), образованный в 1967 году слиянием Case Institute of Technology и Western Reserve University. Известен медицинской, инженерной и юридической школами. По данным Common Data Set 2025-26, заявления подали 39 332 первокурсника, приняты 13 890.",
+        "uz": "Case Western Reserve universiteti — Ogayo shtatining Kliflend shahridagi xususiy tadqiqot universiteti bo‘lib, 1967 yilda Case Institute of Technology va Western Reserve University birlashishi natijasida tashkil topgan. Tibbiyot, muhandislik va huquq maktablari bilan tanilgan. 2025-26 Common Data Set ma’lumotlariga ko‘ra 39 332 ta birinchi kurs arizasi kelib tushgan, 13 890 talaba qabul qilingan."
+      },
+      "institution_type": "private",
+      "acceptance_rate": {
+        "min": 35.32,
+        "max": 35.32,
+        "source_url": "https://collegestatistics.org/casewesternreserve",
+        "year": 2025,
+        "note": "Overall rate, Common Data Set 2025-26 (13,890 of 39,332)"
+      },
+      "source_url": "https://collegestatistics.org/casewesternreserve",
+      "year": 2025,
+      "verified": false,
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://case.edu/admission/apply/application-tips",
+        "year": 2026,
+        "note": null
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-15",
+          "cycle": "2026-27",
+          "source_url": "https://case.edu/admission/apply/deadlines-and-requirements",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-15",
+          "cycle": "2026-27",
+          "source_url": "https://case.edu/admission/apply/deadlines-and-requirements",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "colby-edu",
+      "name": "Colby College",
+      "country": "US",
+      "city": "Waterville",
+      "website_domain": "colby.edu",
+      "description": {
+        "en": "Colby College is a private liberal arts college in Waterville, Maine, emphasizing undergraduate teaching and residential campus life. Its 2025-26 acceptance rate was 7.0% of 20,144 applicants. The middle 50% SAT range for enrolled students was 1450-1540.",
+        "ru": "Колледж Колби — частный колледж свободных искусств в Уотервилле (штат Мэн), делающий акцент на преподавании для бакалавров и жизни в кампусе. Доля принятых в 2025-26 учебном году составила 7,0% от 20 144 абитуриентов. Средний диапазон 50% SAT у зачисленных студентов — 1450-1540.",
+        "uz": "Colby kolleji — Men shtatining Uoterville shahridagi xususiy liberal san’at kolleji bo‘lib, bakalavriat o‘qitishi va kampusdagi turmush tarziga urg‘u beradi. 2025-26 o‘quv yilida qabul foizi 20 144 abituriyent ichidan 7,0 foiz bo‘ldi. Qabul qilinganlarning SAT ballining o‘rtacha 50 foiz oralig‘i 1450-1540."
+      },
+      "institution_type": "private",
+      "acceptance_rate": {
+        "min": 7.0,
+        "max": 7.0,
+        "source_url": "https://collegestatistics.org/colbycollege",
+        "year": 2025,
+        "note": "Overall rate, Common Data Set 2025-26 (20,144 applicants)"
+      },
+      "source_url": "https://collegestatistics.org/colbycollege",
+      "year": 2025,
+      "verified": false,
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://afa.colby.edu/apply/faq/",
+        "year": 2026,
+        "note": null
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://afa.colby.edu/apply/dates-and-deadlines/",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://afa.colby.edu/apply/dates-and-deadlines/",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "colgate-edu",
+      "name": "Colgate University",
+      "country": "US",
+      "city": "Hamilton",
+      "website_domain": "colgate.edu",
+      "description": {
+        "en": "Colgate University is a private liberal arts university in Hamilton, New York, with a residential campus. For 2025-26 it received 17,310 applications and admitted 3,030 students. Its binding Early Decision rounds are admitted at a higher rate than the overall pool.",
+        "ru": "Колгейтский университет — частный университет свободных искусств в Гамильтоне (штат Нью-Йорк) с кампусом для проживания. В 2025-26 учебном году поступило 17 310 заявлений, принято 3 030 студентов. Обязательные раунды раннего решения принимают большую долю абитуриентов, чем общий пул.",
+        "uz": "Colgate universiteti — Nyu-York shtatining Hamilton shahridagi xususiy liberal san’at universiteti bo‘lib, yotoqxonali kampusga ega. 2025-26 o‘quv yilida 17 310 ta ariza kelib tushdi, 3 030 talaba qabul qilindi. Majburiy erta qaror bosqichlarida qabul foizi umumiy qabulga qaraganda yuqori."
+      },
+      "institution_type": "private",
+      "acceptance_rate": {
+        "min": 17.5,
+        "max": 17.5,
+        "source_url": "https://collegestatistics.org/colgate",
+        "year": 2025,
+        "note": "Overall rate, Common Data Set 2025-26 (3,030 of 17,310)"
+      },
+      "source_url": "https://collegestatistics.org/colgate",
+      "year": 2025,
+      "verified": false,
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.colgate.edu/admission-aid/apply/first-year-applicants",
+        "year": 2026,
+        "note": "Applicants choose whether Colgate considers SAT/ACT scores."
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-15",
+          "cycle": "2026-27",
+          "source_url": "https://www.colgate.edu/admission-aid/apply",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-15",
+          "cycle": "2026-27",
+          "source_url": "https://www.colgate.edu/admission-aid/apply",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "dartmouth-edu",
+      "name": "Dartmouth College",
+      "country": "US",
+      "city": "Hanover",
+      "website_domain": "dartmouth.edu",
+      "description": {
+        "en": "Dartmouth College is a private Ivy League research university in Hanover, New Hampshire, founded in 1769. It is one of the nine colonial colleges. For fall 2025 it received 28,230 applications and admitted 1,699 students, and 1,205 admitted students enrolled.",
+        "ru": "Дартмутский колледж — частный исследовательский университет Лиги плюща в Ганновере (штат Нью-Гэмпшир), основанный в 1769 году. Он входит в число девяти колониальных колледжей. На осенний набор 2025 года поступило 28 230 заявлений, принято 1 699 студентов, из них зачислено 1 205.",
+        "uz": "Dartmut kolleji — Nyu-Hempshir shtatining Xanover shahridagi xususiy Ivy League tadqiqot universiteti bo‘lib, 1769 yilda tashkil etilgan. U to‘qqizta mustamlakachilik davri kollejlaridan biri. 2025 yil kuzgi qabulida 28 230 ta ariza kelib tushdi, 1 699 talaba qabul qilindi, shundan 1 205 nafari o‘qishga kirdi."
+      },
+      "institution_type": "private",
+      "acceptance_rate": {
+        "min": 6.02,
+        "max": 6.02,
+        "source_url": "https://www.collegedata.fyi/schools/dartmouth/2025-26",
+        "year": 2025,
+        "note": "Overall rate, Common Data Set 2025-26 (1,699 of 28,230)"
+      },
+      "source_url": "https://www.collegedata.fyi/schools/dartmouth/2025-26",
+      "year": 2025,
+      "verified": false,
+      "test_policy": {
+        "value": "required",
+        "source_url": "https://home.dartmouth.edu/news/sat-reactivate-faqs",
+        "year": 2024,
+        "note": "Testing requirement reactivated from the 2024-25 admission cycle (Class of 2029)."
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-01",
+          "cycle": "2026-27",
+          "source_url": "https://admissions.dartmouth.edu/glossary-term/application-deadline",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "davidson-edu",
+      "name": "Davidson College",
+      "country": "US",
+      "city": "Davidson",
+      "website_domain": "davidson.edu",
+      "description": {
+        "en": "Davidson College is a private liberal arts college in Davidson, North Carolina, with a residential campus and an honor code tradition. For 2025-26 it received 8,933 first-year applications and admitted 1,127 students. The Early Decision admit rate was 29%.",
+        "ru": "Колледж Дэвидсон — частный колледж свободных искусств в Дэвидсоне (штат Северная Каролина) с кампусом для проживания и традицией кодекса чести. В 2025-26 учебном году поступило 8 933 заявления первокурсников, принято 1 127 студентов. Доля принятых по раннему решению составила 29%.",
+        "uz": "Davidson kolleji — Shimoliy Karolina shtatining Devidson shahridagi xususiy liberal san’at kolleji bo‘lib, yotoqxonali kampusga va sharaf kodeksi an’analariga ega. 2025-26 o‘quv yilida 8 933 ta birinchi kurs arizasi kelib tushdi, 1 127 talaba qabul qilindi. Erta qaror bosqichida qabul foizi 29 foiz bo‘ldi."
+      },
+      "institution_type": "private",
+      "acceptance_rate": {
+        "min": 12.62,
+        "max": 12.62,
+        "source_url": "https://www.collegedata.fyi/schools/davidson-college/2025-26",
+        "year": 2025,
+        "note": "Overall rate, Common Data Set 2025-26 (1,127 of 8,933)"
+      },
+      "source_url": "https://www.collegedata.fyi/schools/davidson-college/2025-26",
+      "year": 2025,
+      "verified": false,
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.davidson.edu/admission-and-financial-aid",
+        "year": 2026,
+        "note": null
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://www.davidson.edu/admission-and-financial-aid/apply",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-11",
+          "cycle": "2026-27",
+          "source_url": "https://www.davidson.edu/admission-and-financial-aid/apply",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "drexel-edu",
+      "name": "Drexel University",
+      "country": "US",
+      "city": "Philadelphia",
+      "website_domain": "drexel.edu",
+      "description": {
+        "en": "Drexel University is a private research university in Philadelphia, Pennsylvania, known for cooperative education that alternates academic terms with paid work. For 2025-26 it received 38,030 first-year applications and admitted 26,583 students. Competitive programs such as engineering and nursing have stronger applicant pools.",
+        "ru": "Университет Дрексел — частный исследовательский университет в Филадельфии (штат Пенсильвания), известный программой кооперативного образования, которая чередует учебные семестры с оплачиваемой работой. В 2025-26 учебном году поступило 38 030 заявлений первокурсников, принято 26 583 студента. Конкурсные программы, такие как инженерия и сестринское дело, имеют более сильный поток абитуриентов.",
+        "uz": "Drexel universiteti — Pensilvaniya shtatining Filadelfiya shahridagi xususiy tadqiqot universiteti bo‘lib, o‘quv semestrlarini haq evaziga ishlash bilan almashtiruvchi kooperativ ta’limi bilan tanilgan. 2025-26 o‘quv yilida 38 030 ta birinchi kurs arizasi kelib tushdi, 26 583 talaba qabul qilindi. Muhandislik va hamshiralik kabi raqobatbardosh dasturlarga ariza beruvchilar oqimi kuchliroq."
+      },
+      "institution_type": "private",
+      "acceptance_rate": {
+        "min": 69.9,
+        "max": 69.9,
+        "source_url": "https://www.collegedata.fyi/schools/drexel/2025-26",
+        "year": 2025,
+        "note": "Overall rate, Common Data Set 2025-26 (26,583 of 38,030)"
+      },
+      "source_url": "https://www.collegedata.fyi/schools/drexel/2025-26",
+      "year": 2025,
+      "verified": false,
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://drexel.edu/admissions/apply/undergrad-instructions/first-year-instructions/standardized-tests",
+        "year": 2026,
+        "note": "No Harm Test-Optional; exception: BA/BS+MD Early Assurance requires scores."
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-15",
+          "cycle": "2026-27",
+          "source_url": "https://drexel.edu/admissions/apply/undergrad-instructions/first-year-instructions/application-deadlines",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "emory-edu",
+      "name": "Emory University",
+      "country": "US",
+      "city": "Atlanta",
+      "website_domain": "emory.edu",
+      "description": {
+        "en": "Emory University is a private research university in Atlanta, Georgia, with Emory College of Arts and Sciences and a major health system. For the class entering in fall 2025 it received 37,561 applications and admitted 3,869 students, of whom 1,443 enrolled. Early Decision admitted 1,049 of 4,728 applicants.",
+        "ru": "Университет Эмори — частный исследовательский университет в Атланте (штат Джорджия), в состав которого входят колледж искусств и наук Emory College и крупная медицинская система. На набор осени 2025 года поступило 37 561 заявление, принято 3 869 студентов, из них зачислено 1 443. По раннему решению приняли 1 049 из 4 728 абитуриентов.",
+        "uz": "Emori universiteti — Jorjiya shtatining Atlanta shahridagi xususiy tadqiqot universiteti bo‘lib, san’at va fanlar kolleji hamda yirik tibbiyot tizimiga ega. 2025 yil kuzgi qabuli uchun 37 561 ta ariza kelib tushdi, 3 869 talaba qabul qilindi, ulardan 1 443 nafari o‘qishga kirdi. Erta qaror bosqichida 4 728 nomzoddan 1 049 nafari qabul qilindi."
+      },
+      "institution_type": "private",
+      "acceptance_rate": {
+        "min": 10.3,
+        "max": 10.3,
+        "source_url": "https://www.cosmic.nyc/blog/emory-common-data-set-2025-2026",
+        "year": 2025,
+        "note": "Overall rate, Common Data Set 2025-26 as cited (3,869 of 37,561)"
+      },
+      "source_url": "https://www.cosmic.nyc/blog/emory-common-data-set-2025-2026",
+      "year": 2025,
+      "verified": false,
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://apply.emory.edu/apply/first-year/",
+        "year": 2026,
+        "note": "Test optional for the 2026-2027 application cycle."
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-01",
+          "cycle": "2026-27",
+          "source_url": "https://apply.emory.edu/apply/first-year/plans-deadlines/index.html",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-01",
+          "cycle": "2026-27",
+          "source_url": "https://apply.emory.edu/apply/first-year/plans-deadlines/index.html",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    },
+    {
+      "slug": "georgetown-edu",
+      "name": "Georgetown University",
+      "country": "US",
+      "city": "Washington",
+      "website_domain": "georgetown.edu",
+      "description": {
+        "en": "Georgetown University is a private Jesuit research university in Washington, D.C., founded in 1789. Its School of Foreign Service is internationally known. For 2025-26 it received 26,822 applications and admitted 3,618 students, with 1,589 enrolling.",
+        "ru": "Джорджтаунский университет — частный иезуитский исследовательский университет в Вашингтоне, округ Колумбия, основанный в 1789 году. Школа иностранной службы (School of Foreign Service) известна во всём мире. В 2025-26 учебном году поступило 26 822 заявления, принято 3 618 студентов, зачислено 1 589.",
+        "uz": "Jorjtaun universiteti — Vashington, Kolumbiya okrugidagi xususiy iezuit tadqiqot universiteti bo‘lib, 1789 yilda tashkil etilgan. Uning Xorijiy xizmat maktabi (School of Foreign Service) xalqaro miqyosda tanilgan. 2025-26 o‘quv yilida 26 822 ta ariza kelib tushdi, 3 618 talaba qabul qilindi, 1 589 nafari o‘qishga kirdi."
+      },
+      "institution_type": "private",
+      "acceptance_rate": {
+        "min": 13.49,
+        "max": 13.49,
+        "source_url": "https://www.esslo.org/colleges/georgetown",
+        "year": 2025,
+        "note": "Overall rate, Common Data Set 2025-26 as cited (3,618 of 26,822)"
+      },
+      "source_url": "https://www.esslo.org/colleges/georgetown",
+      "year": 2025,
+      "verified": false,
+      "test_policy": {
+        "value": "required",
+        "source_url": "https://uadmissions.georgetown.edu/apply/first-year-applicants/",
+        "year": 2026,
+        "note": "SAT or ACT required."
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-01",
+          "cycle": "2026-27",
+          "source_url": "https://uadmissions.georgetown.edu/apply/first-year-applicants/",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ]
+    }
+  ],
+  "programs": []
+}

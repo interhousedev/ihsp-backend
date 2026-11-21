@@ -5,6 +5,7 @@
       "name": "Nazarbayev University",
       "country": "KZ",
       "city": "Astana",
+      "website_domain": "nu.edu.kz",
       "fields": [],
       "source_url": "https://nu.edu.kz/admissions/",
       "year": 2026,
@@ -13,26 +14,44 @@
         "currency": "USD",
         "source_url": "https://nu.edu.kz/admissions/fees-and-funding/",
         "year": 2026,
-        "note": "Undergraduate programs, one academic year, from the official fees table. The page converts resident fees to KZT separately; non-resident rate not split out on the page. Deadlines and foreigner grants not read."
+        "note": "Undergraduate programs, one academic year"
       },
       "scholarships": [],
-      "deadlines": [],
-      "verified": true
+      "deadlines": [
+        {
+          "plan": "OTHER",
+          "date": "2026-11-28",
+          "cycle": "2026-27",
+          "source_url": "https://nu.edu.kz/admissions/how-to-apply/foundation-undergraduate/regular-admissions/",
+          "note": "Mid-year intake application period Aug 18 - Nov 28, 2026"
+        }
+      ],
+      "description": null,
+      "verified": true,
+      "test_policy": {
+        "value": "required",
+        "source_url": "https://nu.edu.kz/admissions/how-to-apply/foundation-undergraduate/regular-admissions/",
+        "year": 2026,
+        "note": "Undergraduate: IELTS/TOEFL plus SAT (1240) / ACT (26) or IB / A-level alternatives."
+      }
     },
     {
       "slug": "kimep-kz",
       "name": "KIMEP University",
       "country": "KZ",
       "city": "Almaty",
+      "website_domain": "kimep.kz",
       "fields": [],
       "source_url": "https://www.kimep.kz/kz/",
       "year": 2026,
-      "intl_tuition_usd": {
-        "value": null,
-        "note": "Tuition page https://www.kimep.kz/prospective-students/kz/tuition-and-fees/ returned no figures via curl (client-rendered). Unknown."
-      },
+      "intl_tuition_usd": null,
       "scholarships": [],
       "deadlines": [],
+      "description": {
+        "en": "KIMEP University is a private university in Almaty, founded in 1992. It is known for business, economics and law programs taught in English. It is institutionally accredited by FIBAA.",
+        "ru": "KIMEP — частный университет в Алматы, основанный в 1992 году. Известен программами по бизнесу, экономике и праву на английском языке. Институциональная аккредитация — FIBAA.",
+        "uz": "KIMEP — Almatidagi xususiy universitet, 1992-yilda tashkil etilgan. Biznes, iqtisod va huquq yo‘nalishlari ingliz tilida o‘qitilishi bilan tanilgan. Institutsional akkreditatsiyasi — FIBAA."
+      },
       "verified": false
     },
     {
@@ -40,15 +59,18 @@
       "name": "Kazakh-British Technical University",
       "country": "KZ",
       "city": "Almaty",
+      "website_domain": "kbtu.edu.kz",
       "fields": [],
-      "source_url": "https://kbtu.edu.kz/en",
+      "source_url": "https://kbtu.edu.kz/",
       "year": 2026,
-      "intl_tuition_usd": {
-        "value": null,
-        "note": "Student fee page https://kbtu.edu.kz/en/students/student-fee-en returned no tuition figures via curl. Unknown."
-      },
+      "intl_tuition_usd": null,
       "scholarships": [],
       "deadlines": [],
+      "description": {
+        "en": "Kazakh-British Technical University is a public technical university in Almaty, founded in 2001. It offers engineering and IT programs and has dual-degree partnerships with the University of London and LSE.",
+        "ru": "Казахстанско-Британский технический университет — государственный технический вуз в Алматы, основанный в 2001 году. Предлагает инженерные и IT-программы, имеет программы двойных дипломов с Лондонским университетом и LSE.",
+        "uz": "Qozog‘iston-Britaniya texnika universiteti — Almatidagi davlat texnika universiteti, 2001-yilda tashkil etilgan. Muhandislik va IT yo‘nalishlarini taklif etadi, London universiteti va LSE bilan qo‘shaloq diplom dasturlari mavjud."
+      },
       "verified": false
     },
     {
@@ -56,15 +78,18 @@
       "name": "Al-Farabi Kazakh National University",
       "country": "KZ",
       "city": "Almaty",
+      "website_domain": "kaznu.kz",
       "fields": [],
       "source_url": "https://www.kaznu.kz/en/",
       "year": 2026,
-      "intl_tuition_usd": {
-        "value": null,
-        "note": "Official site did not respond to curl at build time (HTTP 000). Tuition unknown."
-      },
+      "intl_tuition_usd": null,
       "scholarships": [],
       "deadlines": [],
+      "description": {
+        "en": "Al-Farabi Kazakh National University is a national research university in Almaty, founded in 1934. It enrols over 20,000 students and was ranked 150th by QS in 2023.",
+        "ru": "Казахский национальный университет имени аль-Фараби — национальный исследовательский университет в Алматы, основан в 1934 году. Обучает более 20 000 студентов; в 2023 году занял 150-е место в рейтинге QS.",
+        "uz": "Al-Farobiy nomidagi Qozog‘iston milliy universiteti — Almatidagi milliy tadqiqot universiteti, 1934-yilda tashkil etilgan. 20 000 dan ortiq talabaga ega; 2023-yilda QS reytingida 150-o‘rinni egalladi."
+      },
       "verified": false
     },
     {
@@ -72,17 +97,18 @@
       "name": "L.N. Gumilyov Eurasian National University",
       "country": "KZ",
       "city": "Astana",
+      "website_domain": "enu.kz",
       "fields": [],
-      "source_url": "https://www.enu.kz/en",
+      "source_url": "https://enu.kz/",
       "year": 2026,
-      "intl_tuition_usd": {
-        "value": null,
-        "source_url": "https://www.enu.kz/en/page/applicants/tuition-fees",
-        "year": 2026,
-        "note": "Official tuition page lists 2026-2027 price lists only as PDF attachments; amounts not extracted. Unknown."
-      },
+      "intl_tuition_usd": null,
       "scholarships": [],
       "deadlines": [],
+      "description": {
+        "en": "L.N. Gumilyov Eurasian National University is a national university in Astana, founded in 1996. It received national university status in 2001.",
+        "ru": "Евразийский национальный университет имени Л.Н. Гумилёва — национальный университет в Астане, основан в 1996 году. Статус национального получил в 2001 году.",
+        "uz": "L.N. Gumilyov nomidagi Yevroosiyo milliy universiteti — Astanadagi milliy universitet, 1996-yilda tashkil etilgan. 2001-yilda milliy universitet maqomini oldi."
+      },
       "verified": false
     },
     {
@@ -90,15 +116,18 @@
       "name": "Satbayev University",
       "country": "KZ",
       "city": "Almaty",
+      "website_domain": "satbayev.university",
       "fields": [],
-      "source_url": "https://satbayev.university/en",
+      "source_url": "https://satbayev.university/en/foreignApplicants-guide",
       "year": 2026,
-      "intl_tuition_usd": {
-        "value": null,
-        "note": "Tuition not located on the English homepage via curl. Unknown."
-      },
+      "intl_tuition_usd": null,
       "scholarships": [],
       "deadlines": [],
+      "description": {
+        "en": "Satbayev University is a technical university in Almaty and the oldest technical university in Kazakhstan. It specialises in geology, mining, metallurgy and other engineering fields.",
+        "ru": "Satbayev University — технический университет в Алматы, старейший технический вуз Казахстана. Специализируется на геологии, горном деле, металлургии и других инженерных направлениях.",
+        "uz": "Satbayev universiteti — Almatidagi texnika universiteti, Qozog‘istondagi eng qadimgi texnika oliy ta’lim muassasasi. Geologiya, konchilik, metallurgiya va boshqa muhandislik yo‘nalishlariga ixtisoslashgan."
+      },
       "verified": false
     },
     {
@@ -106,47 +135,78 @@
       "name": "Astana IT University",
       "country": "KZ",
       "city": "Astana",
+      "website_domain": "astanait.edu.kz",
       "fields": [],
-      "source_url": "https://astanait.edu.kz/en",
+      "source_url": "https://astanait.edu.kz/en/inc-academ",
       "year": 2026,
       "intl_tuition_usd": {
-        "value": null,
-        "note": "Homepage read via curl; no tuition figures extracted. Unknown."
+        "value": 5000,
+        "currency": "USD",
+        "source_url": "https://astanait.edu.kz/en/inc-academ",
+        "year": 2026,
+        "note": "Bachelor, per academic year, English-taught. Master 5,500 USD and PhD 7,000 USD per academic year on the same page."
       },
       "scholarships": [],
       "deadlines": [],
-      "verified": false
+      "description": {
+        "en": "Astana IT University is an IT-focused university in Astana offering English-taught bachelor, master and PhD programs. Its bachelor programs take 3 years and it has academic mobility with the USA, Europe and Asia.",
+        "ru": "Astana IT University — IT-университет в Астане с программами бакалавриата, магистратуры и PhD на английском языке. Бакалавриат длится 3 года; есть академическая мобильность в США, Европе и Азии.",
+        "uz": "Astana IT universiteti — Astanadagi IT yo‘nalishidagi universitet, ingliz tilida bakalavr, magistratura va PhD dasturlarini taklif etadi. Bakalavr dasturlari 3 yil davom etadi; AQSh, Yevropa va Osiyo bilan akademik almashinuv mavjud."
+      },
+      "verified": true,
+      "test_policy": {
+        "value": "required",
+        "source_url": "https://astanait.edu.kz/en/how-to-apply",
+        "year": 2026,
+        "note": "UNT minimum scores plus AITU Excellence Test (AET)."
+      }
     },
     {
       "slug": "sdu-kz",
       "name": "SDU University",
       "country": "KZ",
       "city": "Kaskelen",
+      "website_domain": "sdu.edu.kz",
       "fields": [],
-      "source_url": "https://sdu.edu.kz/en/tuition-fees/",
+      "source_url": "https://sdu.edu.kz/en/international-admissions/",
       "year": 2026,
-      "intl_tuition_usd": {
-        "value": null,
-        "note": "Tuition fees page read via curl; no figures in the HTML text. Unknown."
-      },
+      "intl_tuition_usd": null,
       "scholarships": [],
-      "deadlines": [],
-      "verified": false
+      "deadlines": [
+        {
+          "plan": "OTHER",
+          "date": "2026-11-30",
+          "cycle": "2026-27",
+          "source_url": "https://sdu.edu.kz/ru/admission-dlya-inostrannyh-abiturientov/",
+          "note": "Spring intake, international applicants"
+        }
+      ],
+      "description": null,
+      "verified": false,
+      "test_policy": {
+        "value": "not_applicable",
+        "source_url": "https://sdu.edu.kz/ru/admission-dlya-inostrannyh-abiturientov/",
+        "year": 2026,
+        "note": "Own English placement exam; IELTS 5.5+ exempts."
+      }
     },
     {
       "slug": "narxoz-kz",
       "name": "Narxoz University",
       "country": "KZ",
       "city": "Almaty",
+      "website_domain": "narxoz.kz",
       "fields": [],
       "source_url": "https://narxoz.kz/en",
       "year": 2026,
-      "intl_tuition_usd": {
-        "value": null,
-        "note": "Homepage read via curl; no tuition figures found. Unknown."
-      },
+      "intl_tuition_usd": null,
       "scholarships": [],
       "deadlines": [],
+      "description": {
+        "en": "Narxoz University is a business and economics university in Almaty. It was founded in 1963 as the Almaty Institute of National Economy and renamed Narxoz in 2016.",
+        "ru": "Университет Нархоз — бизнес- и экономический университет в Алматы. Основан в 1963 году как Алматинский институт народного хозяйства; переименован в Нархоз в 2016 году.",
+        "uz": "Narxoz universiteti — Almatidagi biznes va iqtisod universiteti. 1963-yilda Almatiy milliy iqtisod instituti sifatida tashkil etilgan, 2016-yilda Narxoz nomi bilan qayta nomlangan."
+      },
       "verified": false
     },
     {
@@ -154,48 +214,50 @@
       "name": "Almaty Management University",
       "country": "KZ",
       "city": "Almaty",
+      "website_domain": "almau.edu.kz",
       "fields": [],
-      "source_url": "https://almau.edu.kz/en/admission-conditions/",
+      "source_url": "https://almau.edu.kz/en/",
       "year": 2026,
-      "intl_tuition_usd": {
-        "value": null,
-        "note": "Admission conditions page read via curl; tuition figures not extracted. Unknown."
-      },
+      "intl_tuition_usd": null,
       "scholarships": [],
       "deadlines": [],
+      "description": {
+        "en": "Almaty Management University is a private business school in Almaty, founded in 1988 and renamed in 2014. It ran an EQUIS pilot accreditation project from 2002.",
+        "ru": "Алматы Менеджмент Университет — частная бизнес-школа в Алматы, основана в 1988 году, переименована в 2014 году. С 2002 года участвовала в пилотном проекте аккредитации EQUIS.",
+        "uz": "Almaty Management universiteti — Almatidagi xususiy biznes-maktab, 1988-yilda tashkil etilgan, 2014-yilda qayta nomlangan. 2002-yildan EQUIS akkreditatsiyasi bo‘yicha pilot loyihada ishtirok etgan."
+      },
       "verified": false
     },
     {
       "slug": "kaznmu-kz",
-      "name": "Kazakh National Medical University named after S.D. Asfendiyarov",
+      "name": "Kazakh National Medical University",
       "country": "KZ",
       "city": "Almaty",
+      "website_domain": "kaznmu.kz",
       "fields": [],
       "source_url": "https://kaznmu.kz/",
       "year": 2026,
-      "intl_tuition_usd": {
-        "value": null,
-        "note": "Official site redirects; fee page not read. Unknown."
-      },
+      "intl_tuition_usd": null,
       "scholarships": [],
       "deadlines": [],
+      "description": null,
       "verified": false
     },
     {
       "slug": "buketov-kz",
-      "name": "Karaganda Buketov University",
+      "name": "Buketov Karaganda University",
       "country": "KZ",
       "city": "Karaganda",
+      "website_domain": "buketov.edu.kz",
       "fields": [],
       "source_url": "https://buketov.edu.kz/en/page/grants",
       "year": 2026,
-      "intl_tuition_usd": {
-        "value": null,
-        "note": "Grants page read via curl; no international tuition figures. Unknown."
-      },
+      "intl_tuition_usd": null,
       "scholarships": [],
       "deadlines": [],
+      "description": null,
       "verified": false
     }
-  ]
+  ],
+  "programs": []
 }

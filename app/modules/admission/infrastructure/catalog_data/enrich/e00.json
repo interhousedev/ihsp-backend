@@ -1,0 +1,328 @@
+{
+  "institutions": [
+    {
+      "slug": "ugent-be",
+      "name": "Ghent University",
+      "country": "BE",
+      "city": "Ghent",
+      "website_domain": "ugent.be",
+      "description": {
+        "en": "Ghent University is a public research university located in Ghent, in the East Flanders province of Belgium.",
+        "ru": "Гентский университет — государственный исследовательский университет в городе Гент, провинция Восточная Фландрия, Бельгия.",
+        "uz": "Gent universiteti — Belgiyaning Sharqiy Flandriya viloyatidagi Gent shahrida joylashgan davlat ilmiy-tadqiqot universiteti."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Ghent_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "kuleuven-be",
+      "name": "KU Leuven",
+      "country": "BE",
+      "city": "Leuven",
+      "website_domain": "kuleuven.be",
+      "description": {
+        "en": "KU Leuven is a Catholic research university in the city of Leuven, Belgium.",
+        "ru": "KU Leuven — католический исследовательский университет в городе Лёвен, Бельгия.",
+        "uz": "KU Leuven — Belgiyaning Lyoven shahridagi katolik ilmiy-tadqiqot universiteti."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/KU_Leuven",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "uclouvain-be",
+      "name": "UCLouvain",
+      "country": "BE",
+      "city": "Louvain-la-Neuve",
+      "website_domain": "uclouvain.be",
+      "description": {
+        "en": "UCLouvain is Belgium's largest French-speaking university and one of the oldest in Europe. It is located in Louvain-la-Neuve, which was built to house the university, with smaller campuses in Brussels, Charleroi, Mons, Tournai and Namur.",
+        "ru": "UCLouvain — крупнейший франкоязычный университет Бельгии и один из старейших в Европе. Он расположен в Лувен-ла-Нев, городе, построенном специально для университета; меньшие кампусы находятся в Брюсселе, Шарлеруа, Монсе, Турне и Намюре.",
+        "uz": "UCLouvain — Belgiyadagi eng yirik frantsuz tilidagi universitet va Yevropadagi eng qadimgilaridan biri. U universitet uchun maxsus qurilgan Lyuven-la-Nev shahrida joylashgan; kichikroq kampuslari Brisel, Sharleroi, Mons, Turne va Namyurda."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/UCLouvain",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "ulb-be",
+      "name": "Université libre de Bruxelles (ULB)",
+      "country": "BE",
+      "city": "Brussels",
+      "website_domain": "ulb.be",
+      "description": {
+        "en": "The Université libre de Bruxelles is a French-speaking research university in Brussels, Belgium.",
+        "ru": "Свободный университет Брюсселя — франкоязычный исследовательский университет в Брюсселе, Бельгия.",
+        "uz": "Brisel erkin universiteti (ULB) — Belgiyaning Brisel shahridagi frantsuz tilidagi ilmiy-tadqiqot universiteti."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Universit%C3%A9_libre_de_Bruxelles",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "vub-be",
+      "name": "Vrije Universiteit Brussel (VUB)",
+      "country": "BE",
+      "city": "Brussels",
+      "website_domain": "vub.be",
+      "description": {
+        "en": "The Vrije Universiteit Brussel is a Dutch-speaking research university in Brussels, Belgium. It has several campuses, including Humanities, Science and Engineering, Health, Technology and Photonics.",
+        "ru": "Свободный университет Брюсселя (VUB) — нидерландоязычный исследовательский университет в Брюсселе, Бельгия. Имеет несколько кампусов: гуманитарный, естественно-научный и инженерный, медицинский, технологический и фотонный.",
+        "uz": "Brisel erkin universiteti (VUB) — Belgiyaning Brisel shahridagi gollandcha tilli ilmiy-tadqiqot universiteti. Gumanitar, tabiiy-ilmiy va muhandislik, tibbiyot, texnologiya hamda fotonika kampuslari mavjud."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Vrije_Universiteit_Brussel",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "aubg-edu",
+      "name": "American University in Bulgaria",
+      "country": "BG",
+      "city": "Blagoevgrad",
+      "website_domain": "aubg.edu",
+      "description": {
+        "en": "The American University in Bulgaria (AUBG) is a private university in Blagoevgrad, Bulgaria. It was established in 1991.",
+        "ru": "Американский университет в Болгарии (AUBG) — частный университет в городе Благоевград, Болгария. Основан в 1991 году.",
+        "uz": "Bolgariyadagi Amerika universiteti (AUBG) — Bolgariyaning Blagoevgrad shahridagi xususiy universitet. 1991-yilda tashkil etilgan."
+      },
+      "intl_tuition_usd": {
+        "value": 14200,
+        "currency": "EUR",
+        "source_url": "https://www.aubg.edu/admissions/bachelors/cost-aid/",
+        "year": 2027,
+        "note": "Tuition before any financial support: EUR 7,100 per semester for the 2027/28 academic year (EUR 14,200 per year); tuition is set each January and may rise over the eight semesters"
+      },
+      "source_url": "https://www.aubg.edu/admissions/bachelors/cost-aid/",
+      "year": 2027,
+      "verified": false
+    },
+    {
+      "slug": "mu-sofia-bg",
+      "name": "Medical University of Sofia",
+      "country": "BG",
+      "city": "Sofia",
+      "website_domain": "mu-sofia.bg",
+      "description": {
+        "en": "The Medical University, Sofia is a public university in Sofia, Bulgaria which was founded in 1917. It is the oldest institution for higher medical education in Bulgaria.",
+        "ru": "Медицинский университет София — государственный университет в Софии, Болгария, основанный в 1917 году. Старейшее учреждение высшего медицинского образования в стране.",
+        "uz": "Sofiya tibbiyot universiteti — Bolgariyaning Sofiya shahridagi davlat universiteti, 1917-yilda tashkil etilgan. Mamlakatdagi oliy tibbiy taʼlimning eng qadimgi muassasasi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Medical_University%2C_Sofia",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "uni-sofia-bg",
+      "name": "Sofia University St. Kliment Ohridski",
+      "country": "BG",
+      "city": "Sofia",
+      "website_domain": "uni-sofia.bg",
+      "description": {
+        "en": "Sofia University \"St. Kliment Ohridski\" is a public research university in Sofia, Bulgaria. It is the oldest institution of higher education in Bulgaria.",
+        "ru": "Софийский университет «Св. Климент Охридски» — государственный исследовательский университет в Софии, Болгария. Старейшее высшее учебное заведение страны.",
+        "uz": "Sofiya universiteti «Sv. Kliment Ohridskiy» — Bolgariyaning Sofiya shahridagi davlat ilmiy-tadqiqot universiteti. Mamlakatdagi eng qadimgi oliy taʼlim muassasasi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Sofia_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "fgv-br",
+      "name": "Fundação Getulio Vargas",
+      "country": "BR",
+      "city": "São Paulo",
+      "website_domain": "fgv.br",
+      "description": {
+        "en": "Fundação Getulio Vargas is a Brazilian higher education institution and think tank. It was founded on 20 December 1944.",
+        "ru": "Фонд Жетулиу Варгас — бразильское высшее учебное заведение и аналитический центр. Основан 20 декабря 1944 года.",
+        "uz": "Getuliu Vargas fondi — Braziliyaning oliy taʼlim muassasasi va tahliliy markaz. 1944-yil 20-dekabrda tashkil etilgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Funda%C3%A7%C3%A3o_Getulio_Vargas",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "insper-edu-br",
+      "name": "Insper",
+      "country": "BR",
+      "city": "São Paulo",
+      "website_domain": "insper.edu.br",
+      "description": {
+        "en": "Insper is a Brazilian non-profit higher education institution in the Vila Olympia district of São Paulo. It offers courses in business administration, economics, engineering, law and computer science.",
+        "ru": "Insper — бразильское некоммерческое высшее учебное заведение в районе Вила-Олимпия в Сан-Паулу. Предлагает программы по бизнес-администрированию, экономике, инженерии, праву и информатике.",
+        "uz": "Insper — Braziliyaning Sao-Paulu shahridagi Vila-Olimpiya tumanida joylashgan notijorat oliy taʼlim muassasasi. Biznes-ma’muriyat, iqtisodiyot, muhandislik, huquq va informatika yo‘nalishlari mavjud."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Insper",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "puc-rio-br",
+      "name": "Pontifícia Universidade Católica do Rio de Janeiro",
+      "country": "BR",
+      "city": "Rio de Janeiro",
+      "website_domain": "puc-rio.br",
+      "description": {
+        "en": "The Pontifical Catholic University of Rio de Janeiro is a Jesuit, Catholic, pontifical university in Rio de Janeiro, Brazil. It is jointly run by the Catholic Archdiocese of São Sebastião do Rio de Janeiro and the Society of Jesus.",
+        "ru": "Папский католический университет Рио-де-Жанейро — иезуитский католический папский университет в Рио-де-Жанейро, Бразилия. Управляется совместно католической архиепархией Сан-Себастьяну-ду-Рио-де-Жанейро и Обществом Иисуса.",
+        "uz": "Rio-de-Janeyro papa katolik universiteti — Braziliyaning Rio-de-Janeyro shahridagi iyezuitlar boshqaruvidagi katolik papa universiteti. U Rio-de-Janeyro Sankt-Sebastyan katolik arxiyeparxiyasi va Iso jamiyati tomonidan birgalikda boshqariladi."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Pontifical_Catholic_University_of_Rio_de_Janeiro",
+      "year": 2026,
+      "verified": false,
+      "acceptance_rate": {
+        "min": 12,
+        "max": 12,
+        "source_url": "https://en.wikipedia.org/wiki/Pontifical_Catholic_University_of_Rio_de_Janeiro",
+        "year": 2022,
+        "note": "Wikipedia: PUC-Rio accepted 12% of applicants for the class of 2022 (cites puc-rio.br vestibular manual)"
+      }
+    },
+    {
+      "slug": "unicamp-br",
+      "name": "Universidade Estadual de Campinas",
+      "country": "BR",
+      "city": "Campinas",
+      "website_domain": "unicamp.br",
+      "description": {
+        "en": "The State University of Campinas, commonly called Unicamp, is a public research university in the state of São Paulo, Brazil.",
+        "ru": "Государственный университет Кампинаса (Unicamp) — государственный исследовательский университет в штате Сан-Паулу, Бразилия.",
+        "uz": "Kampinas davlat universiteti (Unicamp) — Braziliyaning Sao-Paulu shtatidagi davlat ilmiy-tadqiqot universiteti."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/State_University_of_Campinas",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "ufmg-br",
+      "name": "Universidade Federal de Minas Gerais",
+      "country": "BR",
+      "city": "Belo Horizonte",
+      "website_domain": "ufmg.br",
+      "description": {
+        "en": "The Federal University of Minas Gerais is a federal research university located in the state of Minas Gerais, Brazil. Its main and biggest campus is located in the city of Belo Horizonte.",
+        "ru": "Федеральный университет штата Минас-Жерайс — федеральный исследовательский университет в штате Минас-Жерайс, Бразилия. Основной кампус расположен в городе Белу-Оризонти.",
+        "uz": "Minas-Jerais federal universiteti — Braziliyaning Minas-Jerais shtatidagi federal ilmiy-tadqiqot universiteti. Asosiy kampusi Belu-Orizonti shahrida joylashgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Federal_University_of_Minas_Gerais",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "ufrj-br",
+      "name": "Universidade Federal do Rio de Janeiro",
+      "country": "BR",
+      "city": "Rio de Janeiro",
+      "website_domain": "ufrj.br",
+      "description": {
+        "en": "The Federal University of Rio de Janeiro is a public research university in Rio de Janeiro, Brazil. It is the largest federal university in the country.",
+        "ru": "Федеральный университет Рио-де-Жанейро — государственный исследовательский университет в Рио-де-Жанейро, Бразилия. Крупнейший федеральный университет страны.",
+        "uz": "Rio-de-Janeyro federal universiteti — Braziliyaning Rio-de-Janeyro shahridagi davlat ilmiy-tadqiqot universiteti. Mamlakatdagi eng yirik federal universitet."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Federal_University_of_Rio_de_Janeiro",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "usp-br",
+      "name": "Universidade de São Paulo",
+      "country": "BR",
+      "city": "São Paulo",
+      "website_domain": "usp.br",
+      "description": {
+        "en": "The University of São Paulo is a public research university in the Brazilian state of São Paulo, and the largest public university in Brazil.",
+        "ru": "Университет Сан-Паулу — государственный исследовательский университет в штате Сан-Паулу, Бразилия; крупнейший государственный университет страны.",
+        "uz": "Sao-Paulu universiteti — Braziliyaning Sao-Paulu shtatidagi davlat ilmiy-tadqiqot universiteti hamda mamlakatdagi eng yirik davlat universiteti."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/University_of_S%C3%A3o_Paulo",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "mcgill-ca",
+      "name": "McGill University",
+      "country": "CA",
+      "city": "Montreal",
+      "website_domain": "mcgill.ca",
+      "description": {
+        "en": "McGill University is an English-language public research university in Montreal, Quebec, Canada. It was founded in 1821 by royal charter.",
+        "ru": "Университет Макгилла — англоязычный государственный исследовательский университет в Монреале, Квебек, Канада. Основан в 1821 году королевским уставом.",
+        "uz": "Makgill universiteti — Kanadaning Kvebek shtatidagi Monreal shahridagi ingliz tilidagi davlat ilmiy-tadqiqot universiteti. 1821-yilda qirollik xartiyasi bilan tashkil etilgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/McGill_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "mcmaster-ca",
+      "name": "McMaster University",
+      "country": "CA",
+      "city": "Hamilton",
+      "website_domain": "mcmaster.ca",
+      "description": {
+        "en": "McMaster University is a public research university in Hamilton, Ontario, Canada.",
+        "ru": "Университет Макмастера — государственный исследовательский университет в Гамильтоне, Онтарио, Канада.",
+        "uz": "Makmaster universiteti — Kanadaning Ontario shtatidagi Gamilton shahridagi davlat ilmiy-tadqiqot universiteti."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/McMaster_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "queensu-ca",
+      "name": "Queen's University",
+      "country": "CA",
+      "city": "Kingston",
+      "website_domain": "queensu.ca",
+      "source_url": "https://www.queensu.ca/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "ualberta-ca",
+      "name": "University of Alberta",
+      "country": "CA",
+      "city": "Edmonton",
+      "website_domain": "ualberta.ca",
+      "description": {
+        "en": "The University of Alberta is a public research university located in Edmonton, Alberta, Canada. It was founded in 1908.",
+        "ru": "Университет Альберты — государственный исследовательский университет в Эдмонтоне, Альберта, Канада. Основан в 1908 году.",
+        "uz": "Alberta universiteti — Kanadaning Alberta shtatidagi Edmonton shahrida joylashgan davlat ilmiy-tadqiqot universiteti. 1908-yilda tashkil etilgan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Alberta",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "ubc-ca",
+      "name": "University of British Columbia",
+      "country": "CA",
+      "city": "Vancouver",
+      "website_domain": "ubc.ca",
+      "description": {
+        "en": "The University of British Columbia (UBC) is a public research university with two main campuses near Vancouver and Kelowna, in British Columbia, Canada.",
+        "ru": "Университет Британской Колумбии (UBC) — государственный исследовательский университет с двумя основными кампусами рядом с Ванкувером и Келоуной, Канада.",
+        "uz": "Britaniya Kolumbiyasi universiteti (UBC) — Kanadaning Britaniya Kolumbiyasi shtatidagi davlat ilmiy-tadqiqot universiteti; asosiy kampuslari Vankuver va Kelouna yaqinida joylashgan."
+      },
+      "acceptance_rate": {
+        "min": 60,
+        "max": 76,
+        "source_url": "https://pair.ubc.ca/wp-content/uploads/sites/145/2026/03/UBC-Annual-Enrolment-Report-2025-26.pdf",
+        "year": 2026,
+        "note": "Undergraduate admit rate (offers / completed Choice 1 applications), 2025/26, Table 1: Vancouver total 60% (min), Okanagan total 76% (max). Admit rate is not a selectivity measure alone; it includes applicants refused for missing prerequisites."
+      },
+      "intl_tuition_usd": {
+        "value": 51530.4,
+        "currency": "CAD",
+        "source_url": "https://students.ubc.ca/finances/tuition-fees/undergraduate-tuition-fees/",
+        "year": 2026,
+        "note": "International full first-year course load, Arts, 2026/27 (CAD 1,717.68 per credit x 30); the table ranges from CAD 48,779.80 (Music) to CAD 67,237.20 (Medical Laboratory Science)"
+      },
+      "source_url": "https://students.ubc.ca/finances/tuition-fees/undergraduate-tuition-fees/",
+      "year": 2026,
+      "verified": false
+    }
+  ],
+  "programs": []
+}

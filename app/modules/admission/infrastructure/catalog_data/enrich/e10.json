@@ -1,0 +1,347 @@
+{
+  "institutions": [
+    {
+      "slug": "tdtu-uz",
+      "name": "Islom Karimov nomidagi Toshkent Davlat Texnika Universiteti",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "tdtu.uz",
+      "description": {
+        "en": "Named after Islam Karimov, Tashkent State Technical University is one of the oldest technical universities in Uzbekistan, with origins in 1918. Per Wikipedia it has 8 faculties, 58 departments and over 11,000 students.",
+        "ru": "Назван в честь Ислама Каримова. Ташкентский государственный технический университет – один из старейших технических вузов Узбекистана, его история начинается в 1918 году. По данным Википедии, в нём 8 факультетов, 58 кафедр и более 11 000 студентов.",
+        "uz": "Islom Karimov nomidagi Toshkent davlat texnika universiteti Oʼzbekistondagi eng qadimgi texnika oliy taʼlim muassasalaridan biri boʼlib, u 1918 yilga borib taqaladi. Vikipediya maʼlumotiga koʼra, universitetda 8 ta fakultet, 58 ta kafedra va 11 000 dan ortiq talaba bor."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Tashkent_State_Technical_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "jdu-uz",
+      "name": "Japan Digital University (JDU)",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "jdu.uz",
+      "description": {
+        "en": "Japan Digital University was established by government resolution No. 762 (2020) and received licence No. 0044 (2021). It focuses on IT education with a Japanese-oriented curriculum.",
+        "ru": "Японский цифровой университет создан постановлением правительства № 762 (2020), лицензия № 0044 получена в 2021 году. Вуз делает упор на IT-образование с японской ориентацией программ.",
+        "uz": "Yaponiya raqamli universiteti hukumat qarori № 762 (2020) asosida tashkil etilgan va 2021 yilda № 0044 litsenziyaga ega boʼlgan. Universitet yapon yoʼnalishidagi oʼquv dasturlari bilan IT taʼlimiga urgʼu beradi."
+      },
+      "source_url": "https://www.jdu.uz/",
+      "year": 2026,
+      "verified": false,
+      "test_policy": {
+        "value": "required",
+        "source_url": "https://jdu.uz/abituriyentlar_uchun",
+        "year": 2026,
+        "note": "Entrance exams; no Japanese required."
+      }
+    },
+    {
+      "slug": "kiut-uz",
+      "name": "Kimyo International University in Tashkent (KIUT, formerly Yeoju Technical Institute)",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "kiut.uz",
+      "description": {
+        "en": "Kimyo International University in Tashkent is a private university at 156 Shota Rustaveli St, Yakkasaray. Its admissions page lists bachelor's and master's programs with tuition in USD.",
+        "ru": "Международный университет Кимё в Ташкенте – частный вуз по адресу: ул. Шота Руставели, 156, Яккасарайский район. На странице приёма указаны программы бакалавриата и магистратуры со стоимостью обучения в долларах США.",
+        "uz": "Toshkentdagi Kimyo xalqaro universiteti – xususiy oliy taʼlim muassasasi, manzili: Shota Rustaveli koʼchasi, 156, Yakkasaroy tumani. Qabul sahifasida bakalavriat va magistratura dasturlari hamda AQSh dollaridagi oʼqish narxlari koʼrsatilgan."
+      },
+      "intl_tuition_usd": {
+        "value": 2000,
+        "currency": "USD",
+        "source_url": "https://www.kiut.uz/en/admissions/international-admission/",
+        "year": 2026,
+        "note": "Bachelor's programs (most fields); General Medicine, Dentistry, Pediatrics and Higher Nursing are $3,500; master's $2,500-4,000"
+      },
+      "source_url": "https://www.kiut.uz/en/admissions/international-admission/",
+      "year": 2026,
+      "verified": false,
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2026-12-31",
+          "cycle": "2026-27",
+          "source_url": "https://kiut.uz/en/admissions/international-admission/",
+          "note": "Spring intake (study begins February); fall intake deadline is July 31 (year not stated on page)"
+        }
+      ]
+    },
+    {
+      "slug": "mrdi-uz",
+      "name": "National Institute of Fine Arts and Design named after Kamoliddin Behzod (MRDI)",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "mrdi.uz",
+      "description": {
+        "en": "The National Institute of Fine Arts and Design named after Kamoliddin Behzod was founded in 1997 and operates under the Uzbekistan Academy of Arts. It has faculties of Design, Fine Arts, Art Studies and Applied Arts.",
+        "ru": "Национальный институт изобразительного искусства и дизайна имени Камолиддина Бехзода основан в 1997 году и работает при Академии художеств Узбекистана. В нём действуют факультеты дизайна, изобразительного искусства, искусствоведения и прикладного искусства.",
+        "uz": "Kamoliddin Behzod nomidagi milliy tasviriy san'at va dizayn instituti 1997 yilda tashkil etilgan va Oʼzbekiston San'at akademiyasi tarkibida faoliyat yuritadi. Institutda dizayn, tasviriy san'at, san'atshunoslik va amaliy san'at fakultetlari mavjud."
+      },
+      "source_url": "https://mrdi.uz/en",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "npuu-uz",
+      "name": "National Pedagogical University of Uzbekistan named after Nizami",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "npuu.uz",
+      "description": {
+        "en": "Nizami National Pedagogical University of Uzbekistan was founded in 1935. It has about 18,000 students and 728 teachers, with 58 bachelor's and 30 master's programs across 6 faculties.",
+        "ru": "Национальный педагогический университет Узбекистана имени Низами основан в 1935 году. В нём около 18 000 студентов и 728 преподавателей, 58 программ бакалавриата и 30 программ магистратуры на 6 факультетах.",
+        "uz": "Nizomiy nomidagi Oʼzbekiston milliy pedagogika universiteti 1935 yilda tashkil etilgan. Universitetda 18 000 ga yaqin talaba va 728 oʼqituvchi bor, 6 ta fakultet boʼyicha 58 ta bakalavriat va 30 ta magistratura dasturi mavjud."
+      },
+      "source_url": "https://www.npuu.uz/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "nuu-uz",
+      "name": "National University of Uzbekistan named after Mirzo Ulugbek",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "nuu.uz",
+      "description": {
+        "en": "The National University of Uzbekistan named after Mirzo Ulugbek was founded in 1918 as Turkestan People's University. It has 13 faculties, about 34,000 students and 56 fields of study.",
+        "ru": "Национальный университет Узбекистана имени Мирзо Улугбека основан в 1918 году как Туркестанский народный университет. В нём 13 факультетов, около 34 000 студентов и 56 направлений подготовки.",
+        "uz": "Mirzo Ulugʼbek nomidagi Oʼzbekiston milliy universiteti 1918 yilda Turkiston xalq universiteti sifatida tashkil etilgan. Universitetda 13 ta fakultet, 34 000 ga yaqin talaba va 56 ta taʼlim yoʼnalishi bor."
+      },
+      "source_url": "https://nuu.uz/en/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "newuu-uz",
+      "name": "New Uzbekistan University",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "newuu.uz",
+      "description": {
+        "en": "New Uzbekistan University was founded in 2021 by presidential decree as a public autonomous university. It offers undergraduate, graduate and PhD/DSc programs.",
+        "ru": "Новый Узбекистанский университет создан в 2021 году указом Президента как государственный автономный вуз. Он предлагает программы бакалавриата, магистратуры и PhD/DSc.",
+        "uz": "Yangi Oʼzbekiston universiteti 2021 yilda Prezident farmoni bilan davlat avtonom oliy taʼlim muassasasi sifatida tashkil etilgan. Universitetda bakalavriat, magistratura va PhD/DSc dasturlari mavjud."
+      },
+      "source_url": "https://newuu.uz/en",
+      "year": 2026,
+      "verified": false,
+      "test_policy": {
+        "value": "required",
+        "source_url": "https://newuu.uz/en/menu/exam-specification",
+        "year": 2026,
+        "note": "NewUU Entrance Exam (math and logic), with Cambridge."
+      }
+    },
+    {
+      "slug": "renessans-edu-uz",
+      "name": "Renaissance Education University (Renessans universiteti)",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "renessans-edu.uz",
+      "description": {
+        "en": "Renaissance Education University (Renessans universiteti) is a higher education institution in Uzbekistan. Its official site was reviewed only at the level of the page title.",
+        "ru": "Университет Ренессанс (Renessans universiteti) – высшее учебное заведение Узбекистана. Официальный сайт просмотрен только на уровне заголовка страницы.",
+        "uz": "Renessans taʼlim universiteti (Renessans universiteti) – Oʼzbekistondagi oliy taʼlim muassasasi. Rasmiy sayt faqat sahifa sarlavhasi darajasida koʼrib chiqildi."
+      },
+      "source_url": "https://renessans-edu.uz/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "konservatoriya-uz",
+      "name": "State Conservatory of Uzbekistan",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "konservatoriya.uz",
+      "description": {
+        "en": "The State Conservatory of Uzbekistan has been active since 1936 as a leading music education institution.",
+        "ru": "Государственная консерватория Узбекистана работает с 1936 года и является ведущим учреждением музыкального образования.",
+        "uz": "Oʼzbekiston davlat konservatoriyasi 1936 yildan beri faoliyat yuritadi va musiqa taʼlimining yetakchi muassasasi hisoblanadi."
+      },
+      "source_url": "https://konservatoriya.uz/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "tift-uz",
+      "name": "TIFT University of Tashkent (Tashkent International University of Financial Management and Technologies)",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "tift.uz",
+      "description": {
+        "en": "TIFT University of Tashkent (Tashkent International University of Financial Management and Technologies) is a private university offering bachelor's and master's programs.",
+        "ru": "Ташкентский университет TIFT (Ташкентский международный университет финансового менеджмента и технологий) – частный вуз, предлагающий программы бакалавриата и магистратуры.",
+        "uz": "Toshkent TIFT universiteti (Toshkent xalqaro moliyaviy boshqaruv va texnologiyalar universiteti) – xususiy oliy taʼlim muassasasi boʼlib, bakalavriat va magistratura dasturlarini taklif etadi."
+      },
+      "source_url": "https://tift.uz/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "taqu-uz",
+      "name": "Tashkent Architecture and Civil Engineering University (TAQU)",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "taqu.uz",
+      "description": {
+        "en": "Tashkent Architecture and Civil Engineering University was established in 1991 by presidential decree on the basis of Tashkent Polytechnic faculties. The official site lists 4 faculties, 18 fields of study and about 8,250 students.",
+        "ru": "Ташкентский архитектурно-строительный университет создан в 1991 году указом Президента на базе факультетов Ташкентского политехнического университета. По данным официального сайта, в вузе 4 факультета, 18 направлений и около 8 250 студентов.",
+        "uz": "Toshkent arxitektura-qurilish universiteti 1991 yilda Prezident farmoni bilan Toshkent politexnika universiteti fakultetlari negizida tashkil etilgan. Rasmiy sayt maʼlumotiga koʼra, universitetda 4 ta fakultet, 18 ta yoʼnalish va 8 250 ga yaqin talaba bor."
+      },
+      "source_url": "https://taqu.uz/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "reu-uz",
+      "name": "Tashkent Branch of Plekhanov Russian University of Economics (REU)",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "reu.uz",
+      "description": {
+        "en": "The Tashkent Branch of Plekhanov Russian University of Economics is a branch of the Russian university. Its official homepage was reviewed only for its title and main navigation.",
+        "ru": "Ташкентский филиал Российского экономического университета имени Г.В. Плеханова – филиал российского вуза. Официальная главная страница просмотрена только в части заголовка и навигации.",
+        "uz": "Plexanov nomidagi Rossiya iqtisodiyot universitetining Toshkent filiali – rossiyalik oliy taʼlim muassasasining filialidir. Rasmiy bosh sahifa faqat sarlavha va navigatsiya darajasida koʼrib chiqildi."
+      },
+      "source_url": "https://reu.uz/en/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "tkti-uz",
+      "name": "Tashkent Institute of Chemical Technology",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "tkti.uz",
+      "description": {
+        "en": "Tashkent Institute of Chemical Technology is a higher education institution in Tashkent. Its official homepage was reviewed only at the level of the page content and was not checked for programs.",
+        "ru": "Ташкентский институт химической технологии – высшее учебное заведение в Ташкенте. Официальная главная страница просмотрена без проверки программ обучения.",
+        "uz": "Toshkent kimyo texnologiyasi instituti – Toshkentdagi oliy taʼlim muassasasi. Rasmiy bosh sahifa koʼrib chiqildi, lekin oʼquv dasturlari tekshirilmadi."
+      },
+      "source_url": "https://tkti.uz/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "tiiame-uz",
+      "name": "Tashkent Institute of Irrigation and Agricultural Mechanization Engineers National Research University",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "tiiame.uz",
+      "description": {
+        "en": "The Tashkent Institute of Irrigation and Agricultural Mechanization Engineers National Research University is a research university in Tashkent. Its domain redirects to a site titled TIQXMMI.",
+        "ru": "Ташкентский институт инженеров ирригации и механизации сельского хозяйства – национальный исследовательский университет в Ташкенте. Домен перенаправляет на сайт с заголовком TIQXMMI.",
+        "uz": "Toshkent irrigatsiya va qishloq xoʼjaligini mexanizatsiyalash muhandislari instituti – Toshkentdagi milliy tadqiqot universiteti. Domen TIQXMMI nomli saytga yoʼnaltiriladi."
+      },
+      "source_url": "https://tiiame.uz/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "ttysi-uz",
+      "name": "Tashkent Institute of Textile and Light Industry (TTYSI)",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "ttysi.uz",
+      "description": {
+        "en": "Tashkent Institute of Textile and Light Industry is a higher education institution in Tashkent. Its official site title identifies it as the Toshkent to'qimachilik va yengil sanoat instituti.",
+        "ru": "Ташкентский институт текстильной и легкой промышленности – высшее учебное заведение в Ташкенте. Заголовок официального сайта: Toshkent to'qimachilik va yengil sanoat instituti.",
+        "uz": "Toshkent toʼqimachilik va yengil sanoat instituti – Toshkentdagi oliy taʼlim muassasasi. Rasmiy sayt sarlavhasi: Toshkent toʼqimachilik va yengil sanoat instituti."
+      },
+      "source_url": "https://ttysi.uz/oz",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "tiu-uz",
+      "name": "Tashkent International University (TIU)",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "tiu.uz",
+      "description": {
+        "en": "Tashkent International University was founded in October 2023 as a non-state higher education institution. Its bachelor's programs cover business and economics, IT, education, foreign language and literature, and jurisprudence.",
+        "ru": "Ташкентский международный университет основан в октябре 2023 года как негосударственное высшее учебное заведение. Бакалаврские программы охватывают бизнес и экономику, IT, образование, иностранные языки и литературу, юриспруденцию.",
+        "uz": "Toshkent xalqaro universiteti 2023 yil oktabr oyida nodavlat oliy taʼlim muassasasi sifatida tashkil etilgan. Bakalavriat dasturlari biznes va iqtisod, IT, taʼlim, chet tili va adabiyoti hamda yurisprudensiya yoʼnalishlarini qamrab oladi."
+      },
+      "source_url": "https://tiu.uz/",
+      "year": 2026,
+      "verified": false,
+      "test_policy": {
+        "value": "required",
+        "source_url": "https://tiu.uz/admissions/apply-bachelor/",
+        "year": 2026,
+        "note": "Entrance exams by chosen program; internal English test if no IELTS/TOEFL."
+      },
+      "deadlines": []
+    },
+    {
+      "slug": "tiue-uz",
+      "name": "Tashkent International University of Education (TIUE)",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "tiue.uz",
+      "description": {
+        "en": "Tashkent International University of Education was founded in 2020 and is a private international higher education institution. Its official site describes it as one of the fast-developing international universities in Uzbekistan.",
+        "ru": "Ташкентский международный университет образования основан в 2020 году и является частным международным вузом. Официальный сайт описывает его как один из быстро развивающихся международных вузов Узбекистана.",
+        "uz": "Toshkent xalqaro taʼlim universiteti 2020 yilda tashkil etilgan va xususiy xalqaro oliy taʼlim muassasasi hisoblanadi. Rasmiy sayt uni Oʼzbekistondagi tez rivojlanayotgan xalqaro universitetlardan biri deb taʼriflaydi."
+      },
+      "source_url": "https://tiue.uz/",
+      "year": 2026,
+      "verified": false,
+      "test_policy": {
+        "value": "required",
+        "source_url": "https://tiue.uz/abituriyentlar-uchun-ma-lumot/qabul-qilish-bo-yicha-qo-llanma/",
+        "year": 2026,
+        "note": "Own entrance exams held Jun 1 - Sep 30."
+      },
+      "deadlines": []
+    },
+    {
+      "slug": "tma-uz",
+      "name": "Tashkent Medical Academy",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "tma.uz",
+      "description": {
+        "en": "Tashkent Medical Academy is a public medical university in Tashkent offering undergraduate and graduate programs. Its official site title reads Toshkent davlat tibbiyot universiteti (Tashkent State Medical University).",
+        "ru": "Ташкентская медицинская академия – государственный медицинский вуз в Ташкенте, предлагающий программы бакалавриата и магистратуры. Заголовок официального сайта: Toshkent davlat tibbiyot universiteti.",
+        "uz": "Toshkent tibbiyot akademiyasi – Toshkentdagi davlat tibbiyot oliy taʼlim muassasasi boʼlib, bakalavriat va magistratura dasturlarini taklif etadi. Rasmiy sayt sarlavhasi: Toshkent davlat tibbiyot universiteti."
+      },
+      "source_url": "https://tma.uz/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "tashpmi-uz",
+      "name": "Tashkent Pediatric Medical Institute",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "tashpmi.uz",
+      "description": {
+        "en": "Tashkent Pediatric Medical Institute is a medical higher education institution in Tashkent. Its official homepage was not reviewed in detail, so programs and admissions are not described here.",
+        "ru": "Ташкентский педиатрический медицинский институт – медицинское высшее учебное заведение в Ташкенте. Официальная главная страница не просмотрена подробно, поэтому программы и приём здесь не описаны.",
+        "uz": "Toshkent pediatriya tibbiyot instituti – Toshkentdagi tibbiyot oliy taʼlim muassasasi. Rasmiy bosh sahifa batafsil koʼrib chiqilmagan, shuning uchun oʼquv dasturlari va qabul bu yerda yoritilmagan."
+      },
+      "source_url": "https://tashpmi.uz",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "pharmi-uz",
+      "name": "Tashkent Pharmaceutical Institute",
+      "country": "UZ",
+      "city": "Tashkent",
+      "website_domain": "pharmi.uz",
+      "description": {
+        "en": "Tashkent Pharmaceutical Institute is a higher education institution in Tashkent. Its official site title reads Toshkent farmatsevtika instituti.",
+        "ru": "Ташкентский фармацевтический институт – высшее учебное заведение в Ташкенте. Заголовок официального сайта: Toshkent farmatsevtika instituti.",
+        "uz": "Toshkent farmatsevtika instituti – Toshkentdagi oliy taʼlim muassasasi. Rasmiy sayt sarlavhasi: Toshkent farmatsevtika instituti."
+      },
+      "source_url": "https://pharmi.uz/",
+      "year": 2026,
+      "verified": false
+    }
+  ],
+  "programs": []
+}

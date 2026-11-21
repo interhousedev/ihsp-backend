@@ -1,0 +1,701 @@
+{
+  "institutions": [
+    {
+      "website_domain": "smith.edu",
+      "slug": "smith-edu",
+      "name": "Smith College",
+      "country": "US",
+      "city": "Northampton",
+      "description": {
+        "en": "Smith College is a private women's liberal arts college in Northampton, Massachusetts. It enrolls undergraduate students and offers need-based aid to international applicants who apply for aid by the published deadlines.",
+        "ru": "Колледж Смит — частный женский гуманитарный колледж в Нортгемптоне, штат Массачусетс. Он принимает студентов бакалавриата и предоставляет международным абитуриентам аид по потребностям при подаче заявки в установленные сроки.",
+        "uz": "Smit kolleji — Massachusets shtatining Nortgempton shahridagi xususiy ayollar gumanitar kolleji. U bakalavr talabalarini qabul qiladi va belgilangan muddatlarda ariza topshirgan xalqaro abituriyentlarga ehtiyojga asoslangan yordam beradi."
+      },
+      "fields": [],
+      "acceptance_rate": {
+        "min": 19.0,
+        "max": 19.0,
+        "source_url": "https://en.wikipedia.org/wiki/Smith_College",
+        "year": 2023,
+        "note": "Regular admit rate, Class of 2027 (enrolled fall 2023), per Wikipedia."
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.smith.edu/admission-aid/how-apply/first-year-students",
+        "year": 2026,
+        "note": null
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-05",
+          "cycle": "2026-27",
+          "source_url": "https://www.smith.edu/admission-aid/how-apply/first-year-students",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-15",
+          "cycle": "2026-27",
+          "source_url": "https://www.smith.edu/admission-aid/how-apply/first-year-students",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ],
+      "intl_tuition_usd": {
+        "value": 70460,
+        "currency": "USD",
+        "source_url": "https://new.smith.edu/admission-aid/tuition-aid-applicants/international-applicants",
+        "year": 2026,
+        "note": "Tuition, 2026-27"
+      },
+      "intl_coa_usd": {
+        "value": 103028,
+        "currency": "USD",
+        "source_url": "https://new.smith.edu/admission-aid/tuition-aid-applicants/international-applicants",
+        "year": 2026,
+        "note": "Sum of 2026-27 listed direct and indirect costs (tuition, food and housing, activities, health insurance, books, transport, personal)"
+      },
+      "source_url": "https://new.smith.edu/admission-aid/tuition-aid-applicants/international-applicants",
+      "year": 2026,
+      "verified": true
+    },
+    {
+      "website_domain": "stevens.edu",
+      "slug": "stevens-edu",
+      "name": "Stevens Institute of Technology",
+      "country": "US",
+      "city": "Hoboken",
+      "description": {
+        "en": "Stevens Institute of Technology is a private technological university in Hoboken, New Jersey. It focuses on engineering, science and technology programs.",
+        "ru": "Стивенсовский технологический институт — частный технический университет в Хобокене, штат Нью-Джерси. Он специализируется на программах в области инженерии, науки и технологий.",
+        "uz": "Stivens texnologiya instituti — Nyu-Jersi shtatining Xoboken shahridagi xususiy texnik universitet. U muhandislik, fan va texnologiya dasturlariga ixtisoslashgan."
+      },
+      "fields": [],
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.stevens.edu/admission-aid/undergraduate-admissions/first-year-students",
+        "year": 2026,
+        "note": null
+      },
+      "source_url": "https://www.stevens.edu/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "website_domain": "swarthmore.edu",
+      "slug": "swarthmore-edu",
+      "name": "Swarthmore College",
+      "country": "US",
+      "city": "Swarthmore",
+      "description": {
+        "en": "Swarthmore College is a private liberal arts college in Swarthmore, Pennsylvania, near Philadelphia. It meets the full demonstrated need of admitted students, including international students, through its need-aware admissions.",
+        "ru": "Колледж Суортмор — частный гуманитарный колледж в Суортморе, штат Пенсильвания, недалеко от Филадельфии. Он покрывает полную подтверждённую потребность принятых студентов, включая иностранных, благодаря приёму с учётом потребности в аиде.",
+        "uz": "Suortmor kolleji — Pensilvaniya shtatining Suortmor shahridagi, Filadelfiya yaqinidagi xususiy gumanitar kolleji. U qabul qilingan talabalar, shu jumladan xalqaro talabalar ehtiyojini ko‘rsatilgan darajada to‘liq qoplaydi."
+      },
+      "fields": [],
+      "acceptance_rate": {
+        "min": 7.46,
+        "max": 7.46,
+        "source_url": "https://en.wikipedia.org/wiki/Swarthmore_College",
+        "year": 2024,
+        "note": "975 admitted of 13,065 applicants, Class of 2028, per Wikipedia."
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.swarthmore.edu/admissions-aid/standardized-testing-policy",
+        "year": 2026,
+        "note": null
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://www.swarthmore.edu/admissions-aid/application-materials-deadlines",
+          "note": "Page lists the 2026-2027 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://www.swarthmore.edu/admissions-aid/application-materials-deadlines",
+          "note": "Page lists the 2026-2027 cycle."
+        }
+      ],
+      "intl_coa_usd": {
+        "value": 90692,
+        "currency": "USD",
+        "source_url": "https://www.swarthmore.edu/finance-and-investment-office/2025-26-operating-budget-summary",
+        "year": 2025,
+        "note": "FY2026 cost of attendance for full-paying students (tuition, housing, food, mandatory fees); not published separately for international students"
+      },
+      "source_url": "https://www.swarthmore.edu/finance-and-investment-office/2025-26-operating-budget-summary",
+      "year": 2025,
+      "verified": true
+    },
+    {
+      "website_domain": "osu.edu",
+      "slug": "osu-edu",
+      "name": "The Ohio State University",
+      "country": "US",
+      "city": "Columbus",
+      "description": {
+        "en": "The Ohio State University is a public research university in Columbus, Ohio. Its Columbus campus is the largest of its campuses and enrolls many international students.",
+        "ru": "Университет штата Огайо — государственный исследовательский университет в Колумбусе, штат Огайо. Его колумбусский кампус — крупнейший из его кампусов, и на нём учится много иностранных студентов.",
+        "uz": "Ogayo shtati universiteti — Ogayo shtatining Kolumbus shahridagi davlat tadqiqot universiteti. Kolumbus kampusi uning eng yirik kampusi bo‘lib, unda ko‘plab xalqaro talabalar tahsil oladi."
+      },
+      "fields": [],
+      "test_policy": {
+        "value": "required",
+        "source_url": "https://undergrad.osu.edu/apply/freshmen-columbus/apply-step-by-step",
+        "year": 2026,
+        "note": "ACT or SAT required for Columbus first-year applicants."
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-15",
+          "cycle": "2026-27",
+          "source_url": "https://undergrad.osu.edu/apply/freshmen-columbus/apply-step-by-step",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ],
+      "intl_tuition_usd": {
+        "value": 47358,
+        "currency": "USD",
+        "source_url": "https://sfa.osu.edu/international-student/about-aid/financial-aid-eligibility",
+        "year": 2026,
+        "note": "Sum of 2026-27 non-resident tuition and fees ($14,034), non-resident fees ($30,220) and international student fee ($3,104)"
+      },
+      "intl_coa_usd": {
+        "value": 68054,
+        "currency": "USD",
+        "source_url": "https://sfa.osu.edu/international-student/about-aid/financial-aid-eligibility",
+        "year": 2026,
+        "note": "Non-Ohio resident, living on campus, 2026-27 total estimated cost"
+      },
+      "source_url": "https://sfa.osu.edu/international-student/about-aid/financial-aid-eligibility",
+      "year": 2026,
+      "verified": true
+    },
+    {
+      "website_domain": "trincoll.edu",
+      "slug": "trincoll-edu",
+      "name": "Trinity College",
+      "country": "US",
+      "city": "Hartford",
+      "description": {
+        "en": "Trinity College is a private liberal arts college in Hartford, Connecticut. It offers undergraduate programs in the liberal arts and sciences.",
+        "ru": "Тринити-колледж — частный гуманитарный колледж в Хартфорде, штат Коннектикут. Он предлагает программы бакалавриата по гуманитарным и естественным наукам.",
+        "uz": "Trinity kolleji — Konnektikut shtatining Xartford shahridagi xususiy gumanitar kolleji. U gumanitar va tabiiy fanlar bo‘yicha bakalavr dasturlarini taklif etadi."
+      },
+      "fields": [],
+      "acceptance_rate": {
+        "min": 29.0,
+        "max": 29.0,
+        "source_url": "https://en.wikipedia.org/wiki/Trinity_College_(Connecticut)",
+        "year": 2024,
+        "note": "Class of 2028, 7,592 applications, per Wikipedia."
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.trincoll.edu/admissions/undergraduate-admissions/application-process/",
+        "year": 2026,
+        "note": null
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-15",
+          "cycle": "2026-27",
+          "source_url": "https://www.trincoll.edu/admissions/undergraduate-admissions/application-process/",
+          "note": "Page lists 2026-27 deadlines."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-15",
+          "cycle": "2026-27",
+          "source_url": "https://www.trincoll.edu/admissions/undergraduate-admissions/application-process/",
+          "note": "Page lists 2026-27 deadlines."
+        }
+      ],
+      "source_url": "https://www.trincoll.edu/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "website_domain": "tufts.edu",
+      "slug": "tufts-edu",
+      "name": "Tufts University",
+      "country": "US",
+      "city": "Medford",
+      "description": {
+        "en": "Tufts University is a private research university located in Medford and Somerville, Massachusetts, near Boston. It has schools of arts, sciences, engineering and medicine.",
+        "ru": "Университет Талтс — частный исследовательский университет в Медфорде и Сомервилле, штат Массачусетс, недалеко от Бостона. В нём есть школы искусств, наук, инженерии и медицины.",
+        "uz": "Tufts universiteti — Massachusets shtatining Medford va Somervill shaharlarida, Boston yaqinida joylashgan xususiy tadqiqot universiteti. Unda san’at, fan, muhandislik va tibbiyot maktablari mavjud."
+      },
+      "fields": [],
+      "acceptance_rate": {
+        "min": 10.8,
+        "max": 10.8,
+        "source_url": "https://admissions.tufts.edu/apply/enrolled-student-profile/",
+        "year": 2025,
+        "note": "3,613 admitted of 33,415 applications, Class of 2029."
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://admissions.tufts.edu/apply/enrolled-student-profile/",
+        "year": 2026,
+        "note": null
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://admissions.tufts.edu/apply/applying-to-tufts/",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://admissions.tufts.edu/apply/applying-to-tufts/",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ],
+      "source_url": "https://www.tufts.edu/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "website_domain": "tulane.edu",
+      "slug": "tulane-edu",
+      "name": "Tulane University",
+      "country": "US",
+      "city": "New Orleans",
+      "description": {
+        "en": "Tulane University is a private research university in New Orleans, Louisiana. It offers undergraduate and graduate programs across its schools.",
+        "ru": "Тулейнский университет — частный исследовательский университет в Новом Орлеане, штат Луизиана. Он предлагает программы бакалавриата и магистратуры в своих школах.",
+        "uz": "Tulan universiteti — Luiziana shtatining Nyu-Orlean shahridagi xususiy tadqiqot universiteti. U o‘z maktablari doirasida bakalavr va magistratura dasturlarini taklif etadi."
+      },
+      "fields": [],
+      "acceptance_rate": {
+        "min": 14.7,
+        "max": 14.7,
+        "source_url": "https://en.wikipedia.org/wiki/Tulane_University",
+        "year": 2025,
+        "note": "Class of 2029, per Wikipedia."
+      },
+      "deadlines": [],
+      "intl_coa_usd": {
+        "value": 99569,
+        "currency": "USD",
+        "source_url": "https://admission.tulane.edu/system/files?file=2026-01%2FTulaneCertificationofFinances2026.pdf",
+        "year": 2026,
+        "note": "International student cost of attendance per certification of finances (not re-read in this pass)"
+      },
+      "scholarships": [
+        {
+          "name": "Need-based aid for international students",
+          "amount": "up to $30,000 per year",
+          "deadline": null,
+          "url": "https://admission.tulane.edu/system/files?file=2026-01%2FTulaneCertificationofFinances2026.pdf",
+          "year": 2026
+        }
+      ],
+      "source_url": "https://admission.tulane.edu/system/files?file=2026-01%2FTulaneCertificationofFinances2026.pdf",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "website_domain": "berkeley.edu",
+      "slug": "berkeley-edu",
+      "name": "University of California, Berkeley",
+      "country": "US",
+      "city": "Berkeley",
+      "description": {
+        "en": "The University of California, Berkeley is a public research university in Berkeley, California. It is one of the campuses of the University of California system.",
+        "ru": "Калифорнийский университет в Беркли — государственный исследовательский университет в Беркли, штат Калифорния. Это один из кампусов системы Калифорнийского университета.",
+        "uz": "Kaliforniya universiteti, Berkli — Kaliforniya shtatining Berkli shahridagi davlat tadqiqot universiteti. U Kaliforniya universiteti tizimining kampuslaridan biridir."
+      },
+      "fields": [],
+      "acceptance_rate": {
+        "min": 11.4,
+        "max": 11.4,
+        "source_url": "https://en.wikipedia.org/wiki/University_of_California,_Berkeley",
+        "year": 2024,
+        "note": "14,614 admitted of 128,226 applicants per Wikipedia; entering year not stated on page, taken as fall 2024."
+      },
+      "test_policy": {
+        "value": "blind",
+        "source_url": "https://admissions.berkeley.edu/apply-to-berkeley/first-year-applicants-uc-berkeley/first-year-policy-changes/",
+        "year": 2026,
+        "note": "Test-free: SAT/ACT not used in any part of the application process."
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2026-11-30",
+          "cycle": "2026-27",
+          "source_url": "https://admissions.berkeley.edu/apply-to-berkeley/dates-deadlines/",
+          "note": "No early plans; page shows no year, treated as 2026-27 cycle."
+        }
+      ],
+      "intl_tuition_usd": {
+        "value": 60140,
+        "currency": "USD",
+        "source_url": "https://internationaloffice.berkeley.edu/students/current/expenses",
+        "year": 2025,
+        "note": "Undergraduate non-resident tuition and fees, 2025-26 (two semesters)"
+      },
+      "intl_coa_usd": {
+        "value": 81740,
+        "currency": "USD",
+        "source_url": "https://internationaloffice.berkeley.edu/students/current/expenses",
+        "year": 2025,
+        "note": "Total annual budget for non-resident undergraduates, 2025-26 (fees, tuition, living expenses)"
+      },
+      "source_url": "https://internationaloffice.berkeley.edu/students/current/expenses",
+      "year": 2025,
+      "verified": true
+    },
+    {
+      "website_domain": "ucla.edu",
+      "slug": "ucla-edu",
+      "name": "University of California, Los Angeles",
+      "country": "US",
+      "city": "Los Angeles",
+      "description": {
+        "en": "The University of California, Los Angeles is a public research university in Los Angeles, California. It is one of the campuses of the University of California system.",
+        "ru": "Калифорнийский университет в Лос-Анджелесе — государственный исследовательский университет в Лос-Анджелесе, штат Калифорния. Это один из кампусов системы Калифорнийского университета.",
+        "uz": "Kaliforniya universiteti, Los-Anjeles — Kaliforniya shtatining Los-Anjeles shahridagi davlat tadqiqot universiteti. U Kaliforniya universiteti tizimining kampuslaridan biridir."
+      },
+      "fields": [],
+      "acceptance_rate": {
+        "min": 9.4,
+        "max": 9.4,
+        "source_url": "https://admission.ucla.edu/apply/first-year/first-year-profile/2025",
+        "year": 2025,
+        "note": "13,659 admitted of 145,085 applicants (page rounds to 9%)."
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2026-11-30",
+          "cycle": "2026-27",
+          "source_url": "https://admission.ucla.edu/apply/first-year/",
+          "note": "UC application filing period Oct 1-Nov 30; page shows no year, treated as 2026-27 cycle."
+        }
+      ],
+      "intl_coa_usd": {
+        "value": 84770,
+        "currency": "USD",
+        "source_url": "https://financialaid.ucla.edu/go/coa",
+        "year": 2026,
+        "note": "Estimated nonresident total cost, on-campus housing, 2026-27 (includes NRST $39,270)"
+      },
+      "source_url": "https://financialaid.ucla.edu/go/coa",
+      "year": 2026,
+      "verified": true
+    },
+    {
+      "website_domain": "uchicago.edu",
+      "slug": "uchicago-edu",
+      "name": "University of Chicago",
+      "country": "US",
+      "city": "Chicago",
+      "description": {
+        "en": "The University of Chicago is a private research university in Chicago, Illinois. It is known for its core undergraduate curriculum and graduate schools.",
+        "ru": "Чикагский университет — частный исследовательский университет в Чикаго, штат Иллинойс. Он известен программой общего ядра для бакалавров и своими аспирантскими школами.",
+        "uz": "Chikago universiteti — Illinoys shtatining Chikago shahridagi xususiy tadqiqot universiteti. U bakalavriat uchun umumiy o‘quv dasturi va aspiranturasi bilan tanilgan."
+      },
+      "fields": [],
+      "acceptance_rate": {
+        "min": 4.7,
+        "max": 4.7,
+        "source_url": "https://en.wikipedia.org/wiki/University_of_Chicago",
+        "year": 2023,
+        "note": "College admit rate per Wikipedia."
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://collegeadmissions.uchicago.edu/account/",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://collegeadmissions.uchicago.edu/account/",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ],
+      "source_url": "https://www.uchicago.edu/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "website_domain": "ufl.edu",
+      "slug": "ufl-edu",
+      "name": "University of Florida",
+      "country": "US",
+      "city": "Gainesville",
+      "description": {
+        "en": "The University of Florida is a public research university in Gainesville, Florida. It is the flagship university of the State University System of Florida.",
+        "ru": "Университет Флориды — государственный исследовательский университет в Гейнсвилле, штат Флорида. Это флагманский университет системы государственных университетов Флориды.",
+        "uz": "Florida universiteti — Florida shtatining Geynesvil shahridagi davlat tadqiqot universiteti. U Florida davlat universitetlari tizimining yetakchi universitetidir."
+      },
+      "fields": [],
+      "acceptance_rate": {
+        "min": 19.8,
+        "max": 19.8,
+        "source_url": "https://admissions.ufl.edu/freshman-student-profile",
+        "year": 2026,
+        "note": "19,012 admitted of 95,986 applicants, Class of 2030."
+      },
+      "test_policy": {
+        "value": "required",
+        "source_url": "https://admissions.ufl.edu/apply/freshman/deadlines",
+        "year": 2026,
+        "note": "Official SAT, ACT or CLT scores required."
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-15",
+          "cycle": "2026-27",
+          "source_url": "https://admissions.ufl.edu/apply/freshman/deadlines",
+          "note": "Page lists the 2026-27 cycle."
+        }
+      ],
+      "source_url": "https://www.ufl.edu/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "website_domain": "illinois.edu",
+      "slug": "illinois-edu",
+      "name": "University of Illinois Urbana-Champaign",
+      "country": "US",
+      "city": "Champaign",
+      "description": {
+        "en": "The University of Illinois Urbana-Champaign is a public research university in Champaign and Urbana, Illinois. It is the flagship campus of the University of Illinois system.",
+        "ru": "Университет Иллинойса в Урбана-Шампейн — государственный исследовательский университет в Шампейне и Урбане, штат Иллинойс. Это флагманский кампус системы Университета Иллинойса.",
+        "uz": "Illinoys universiteti, Urbana-Shampeyn — Illinoys shtatining Shampeyn va Urbana shaharlaridagi davlat tadqiqot universiteti. U Illinoys universiteti tizimining yetakchi kampusidir."
+      },
+      "fields": [],
+      "acceptance_rate": {
+        "min": 36.6,
+        "max": 36.6,
+        "source_url": "https://en.wikipedia.org/wiki/University_of_Illinois_Urbana-Champaign",
+        "year": 2025,
+        "note": "Overall first-year admit rate per Wikipedia."
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://www.admissions.illinois.edu/faq/applicant-freshman",
+        "year": 2026,
+        "note": null
+      },
+      "intl_tuition_usd": {
+        "value": 34338,
+        "currency": "USD",
+        "source_url": "https://cost.illinois.edu/Home/UgradBase?DiffCode=BASE&TermCode=120258&TableType=1",
+        "year": 2025,
+        "note": "Other International academic-year rate, Summer 2025 through Spring 2026 (LAS International rate $35,872)"
+      },
+      "source_url": "https://cost.illinois.edu/Home/UgradBase?DiffCode=BASE&TermCode=120258&TableType=1",
+      "year": 2025,
+      "verified": true
+    },
+    {
+      "website_domain": "umn.edu",
+      "slug": "umn-edu",
+      "name": "University of Minnesota–Twin Cities",
+      "country": "US",
+      "city": "Minneapolis",
+      "description": {
+        "en": "The University of Minnesota Twin Cities is a public research university in Minneapolis and St. Paul, Minnesota. It is the flagship campus of the University of Minnesota system.",
+        "ru": "Миннесотский университет, кампус Твин-Ситис, — государственный исследовательский университет в Миннеаполисе и Сент-Поле, штат Миннесота. Это флагманский кампус системы Миннесотского университета.",
+        "uz": "Minnesota universiteti, Twin Cities — Minnesota shtatining Minneapolis va Sent-Pol shaharlaridagi davlat tadqiqot universiteti. U Minnesota universiteti tizimining yetakchi kampusidir."
+      },
+      "fields": [],
+      "source_url": "https://intlstudy.umn.edu/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "website_domain": "unc.edu",
+      "slug": "unc-edu",
+      "name": "University of North Carolina at Chapel Hill",
+      "country": "US",
+      "city": "Chapel Hill",
+      "description": {
+        "en": "The University of North Carolina at Chapel Hill is a public research university in Chapel Hill, North Carolina. It is the flagship campus of the University of North Carolina system.",
+        "ru": "Университет Северной Каролины в Чапел-Хилл — государственный исследовательский университет в Чапел-Хилл, штат Северная Каролина. Это флагманский кампус системы Университета Северной Каролины.",
+        "uz": "Shimoliy Karolina universiteti, Chapel-Xill — Shimoliy Karolina shtatining Chapel-Xill shahridagi davlat tadqiqot universiteti. U Shimoliy Karolina universiteti tizimining yetakchi kampusidir."
+      },
+      "fields": [],
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-15",
+          "cycle": "2026-27",
+          "source_url": "https://admissions.unc.edu/apply/types-of-applications/first-year/",
+          "note": "Page shows no year; treated as 2026-27 cycle."
+        }
+      ],
+      "source_url": "https://admissions.unc.edu/",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "website_domain": "nd.edu",
+      "slug": "nd-edu",
+      "name": "University of Notre Dame",
+      "country": "US",
+      "city": "Notre Dame",
+      "description": {
+        "en": "The University of Notre Dame is a private Catholic research university in Notre Dame, Indiana. It enrolls undergraduate and graduate students across its colleges.",
+        "ru": "Университет Нотр-Дам — частный католический исследовательский университет в Нотр-Даме, штат Индиана. Он принимает студентов бакалавриата и магистратуры в своих колледжах.",
+        "uz": "Notr-Dam universiteti — Indiana shtatining Notr-Dam shahridagi xususiy katolik tadqiqot universiteti. U o‘z kollejlarida bakalavr va magistratura talabalarini qabul qiladi."
+      },
+      "fields": [],
+      "acceptance_rate": {
+        "min": 9.0,
+        "max": 9.0,
+        "source_url": "https://en.wikipedia.org/wiki/University_of_Notre_Dame",
+        "year": 2026,
+        "note": "Class of 2030 per Wikipedia."
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://catalog.nd.edu/undergraduate/general-information/admission/",
+        "year": 2026,
+        "note": "Test-optional through 2026-27."
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-04",
+          "cycle": "2026-27",
+          "source_url": "https://admissions.nd.edu/apply/resources-for/international-applicants/application-information/",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ],
+      "intl_tuition_usd": {
+        "value": 67606,
+        "currency": "USD",
+        "source_url": "https://financialaid.nd.edu/assets/595849/2526_faci.pdf",
+        "year": 2025,
+        "note": "Undergraduate tuition and fees, 2025/26 (same for all undergraduates)"
+      },
+      "intl_coa_usd": {
+        "value": 89243,
+        "currency": "USD",
+        "source_url": "https://financialaid.nd.edu/assets/595849/2526_faci.pdf",
+        "year": 2025,
+        "note": "Estimated undergraduate cost of attendance 2025/26 (not international-specific)"
+      },
+      "source_url": "https://financialaid.nd.edu/assets/595849/2526_faci.pdf",
+      "year": 2025,
+      "verified": true
+    },
+    {
+      "website_domain": "richmond.edu",
+      "slug": "richmond-edu",
+      "name": "University of Richmond",
+      "country": "US",
+      "city": "Richmond",
+      "description": {
+        "en": "The University of Richmond is a private university in Richmond, Virginia. It offers undergraduate programs in arts and sciences and professional schools.",
+        "ru": "Университет Ричмонда — частный университет в Ричмонде, штат Виргиния. Он предлагает программы бакалавриата по гуманитарным и естественным наукам, а также профессиональные школы.",
+        "uz": "Richmond universiteti — Virjiniya shtatining Richmond shahridagi xususiy universiteti. U san’at va fanlar bo‘yicha bakalavr dasturlari hamda professional maktablarni taklif etadi."
+      },
+      "fields": [],
+      "acceptance_rate": {
+        "min": 20.8,
+        "max": 20.8,
+        "source_url": "https://en.wikipedia.org/wiki/University_of_Richmond",
+        "year": 2026,
+        "note": "Class of 2030 per Wikipedia."
+      },
+      "test_policy": {
+        "value": "optional",
+        "source_url": "https://admission.richmond.edu/process/index.html",
+        "year": 2026,
+        "note": null
+      },
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-01",
+          "cycle": "2026-27",
+          "source_url": "https://admission.richmond.edu/process/index.html",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-01",
+          "cycle": "2026-27",
+          "source_url": "https://admission.richmond.edu/process/index.html",
+          "note": "Page shows no year; read Nov 2026, treated as 2026-27 cycle."
+        }
+      ],
+      "intl_coa_usd": {
+        "value": 94660,
+        "currency": "USD",
+        "source_url": "https://admission.richmond.edu/forms/pdf/print-pieces/international-brochure.pdf",
+        "year": 2025,
+        "note": "International cost of attendance 2025-26 (tuition $67,840, housing and food $18,010, personal $8,810); brochure fetch failed in this pass, figure from earlier retrieval"
+      },
+      "source_url": "https://admission.richmond.edu/forms/pdf/print-pieces/international-brochure.pdf",
+      "year": 2025,
+      "verified": false
+    },
+    {
+      "website_domain": "rochester.edu",
+      "slug": "rochester-edu",
+      "name": "University of Rochester",
+      "country": "US",
+      "city": "Rochester",
+      "description": {
+        "en": "The University of Rochester is a private research university in Rochester, New York. Its River Campus includes the College of Arts and Sciences and the Hajim School of Engineering.",
+        "ru": "Университет Рочестера — частный исследовательский университет в Рочестере, штат Нью-Йорк. Его кампус River включает колледж искусств и наук и инженерную школу Хаджима.",
+        "uz": "Rochester universiteti — Nyu-York shtatining Rochester shahridagi xususiy tadqiqot universiteti. Uning River kampusida san’at va fanlar kolleji hamda Xajim muhandislik maktabi joylashgan."
+      },
+      "fields": [],
+      "deadlines": [
+        {
+          "plan": "ED2",
+          "date": "2027-01-05",
+          "cycle": "2026-27",
+          "source_url": "https://www.rochester.edu/bulletin/college/admissions.html",
+          "note": "Bulletin shows no year; treated as 2026-27 cycle."
+        },
+        {
+          "plan": "RD",
+          "date": "2027-01-05",
+          "cycle": "2026-27",
+          "source_url": "https://www.rochester.edu/bulletin/college/admissions.html",
+          "note": "Bulletin shows no year; treated as 2026-27 cycle."
+        }
+      ],
+      "intl_tuition_usd": {
+        "value": 69030,
+        "currency": "USD",
+        "source_url": "https://adminfinance.rochester.edu/resources/2025-2026-tuition-and-fees-for-undergraduates/",
+        "year": 2025,
+        "note": "Undergraduate tuition, School of Arts and Sciences, 2025-26 (total with fees $74,202; same tuition for international students)"
+      },
+      "source_url": "https://adminfinance.rochester.edu/resources/2025-2026-tuition-and-fees-for-undergraduates/",
+      "year": 2025,
+      "verified": true
+    }
+  ],
+  "programs": []
+}

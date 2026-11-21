@@ -1,0 +1,275 @@
+{
+  "institutions": [
+    {
+      "name": "Tashkent State Agrarian University",
+      "slug": "tdau-uz",
+      "website_domain": "tdau.uz",
+      "country": "UZ",
+      "city": "Tashkent",
+      "institution_type": "public",
+      "source_url": "https://en.wikipedia.org/wiki/Tashkent_State_Agrarian_University",
+      "year": 2026,
+      "description": {
+        "en": "Tashkent State Agrarian University is a public agricultural university in Tashkent. Its roots date to 1918, and it took its present name in 1991.",
+        "ru": "Ташкентский государственный аграрный университет — государственный аграрный вуз в Ташкенте. Его корни восходят к 1918 году, нынешнее название с 1991 года.",
+        "uz": "Toshkent davlat agrar universiteti — Toshkentdagi davlat qishloq xoʼjaligi oliy oʼquv yurti. Ildizlari 1918 yilga borib taqaladi, hozirgi nomi 1991 yildan beri."
+      },
+      "verified": false
+    },
+    {
+      "name": "Tashkent State Dental Institute",
+      "slug": "tsdi-uz",
+      "website_domain": "tsdi.uz",
+      "country": "UZ",
+      "city": "Tashkent",
+      "source_url": "https://tsdi.uz",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "name": "Tashkent State Transport University (TSTU)",
+      "slug": "tstu-uz",
+      "website_domain": "tstu.uz",
+      "country": "UZ",
+      "city": "Tashkent",
+      "institution_type": "public",
+      "source_url": "https://en.wikipedia.org/wiki/Tashkent_State_Transport_University",
+      "year": 2026,
+      "description": {
+        "en": "Tashkent State Transport University was formed in 2020 by merging several transport institutes in Tashkent. It has eight faculties.",
+        "ru": "Ташкентский государственный транспортный университет образован в 2020 году путем слияния нескольких транспортных институтов Ташкента. В составе восемь факультетов.",
+        "uz": "Toshkent davlat transport universiteti 2020 yilda Toshkentdagi bir nechta transport institutlarining birlashuvi natijasida tashkil etilgan. Tarkibida sakkizta fakultet bor."
+      },
+      "verified": false
+    },
+    {
+      "name": "Tashkent State University of Economics",
+      "slug": "tsue-uz",
+      "website_domain": "tsue.uz",
+      "country": "UZ",
+      "city": "Tashkent",
+      "institution_type": "public",
+      "source_url": "https://en.wikipedia.org/wiki/Tashkent_State_University_of_Economics",
+      "year": 2026,
+      "description": {
+        "en": "Tashkent State University of Economics is a public university in Tashkent, historically the Tashkent Institute of National Economy. It is often cited as one of the largest business schools in Central Asia.",
+        "ru": "Ташкентский государственный экономический университет — государственный вуз в Ташкенте, ранее Ташкентский институт народного хозяйства. Часто называется одной из крупнейших бизнес-школ Центральной Азии.",
+        "uz": "Toshkent davlat iqtisodiyot universiteti — Toshkentdagi davlat oliy oʼquv yurti, avval Toshkent milliy iqtisodiyot instituti boʼlgan. Markaziy Osiyodagi eng yirik biznes maktablaridan biri hisoblanadi."
+      },
+      "verified": false
+    },
+    {
+      "name": "Tashkent State University of Law",
+      "slug": "tsul-uz",
+      "website_domain": "tsul.uz",
+      "country": "UZ",
+      "city": "Tashkent",
+      "institution_type": "public",
+      "source_url": "https://en.wikipedia.org/wiki/Tashkent_State_University_of_Law",
+      "year": 2026,
+      "description": {
+        "en": "Tashkent State University of Law is a public law university in Tashkent. Its history goes back to 1918, and it became a university in 2013.",
+        "ru": "Ташкентский государственный юридический университет — государственный юридический вуз в Ташкенте. Его история начинается в 1918 году, статус университета получил в 2013 году.",
+        "uz": "Toshkent davlat yuridik universiteti — Toshkentdagi davlat huquqshunoslik oliy oʼquv yurti. Tarixi 1918 yilga borib taqaladi, universitet maqomini 2013 yilda olgan."
+      },
+      "verified": false
+    },
+    {
+      "name": "Tashkent State University of Oriental Studies",
+      "slug": "tsuos-uz",
+      "website_domain": "tsuos.uz",
+      "country": "UZ",
+      "city": "Tashkent",
+      "institution_type": "public",
+      "source_url": "https://en.wikipedia.org/wiki/Tashkent_State_University_of_Oriental_Studies",
+      "year": 2026,
+      "description": {
+        "en": "Tashkent State University of Oriental Studies is a state institution founded in November 1918 as the Turkestan Institute of Oriental Studies. It is described as the only Oriental-studies institute in Central Asia.",
+        "ru": "Ташкентский государственный университет востоковедения — государственное учреждение, основанное в ноябре 1918 года как Туркестанский институт востоковедения. Описывается как единственный институт востоковедения в Центральной Азии.",
+        "uz": "Toshkent davlat sharqshunoslik universiteti — 1918 yil noyabrda Turkiston sharqshunoslik instituti sifatida tashkil etilgan davlat muassasasi. Markaziy Osiyodagi yagona sharqshunoslik instituti hisoblanadi."
+      },
+      "verified": false
+    },
+    {
+      "name": "Tashkent University of Information Technologies named after Muhammad al-Khwarizmi",
+      "slug": "tuit-uz",
+      "website_domain": "tuit.uz",
+      "country": "UZ",
+      "city": "Tashkent",
+      "institution_type": "public",
+      "source_url": "https://en.wikipedia.org/wiki/Tashkent_University_of_Information_Technologies",
+      "year": 2026,
+      "description": {
+        "en": "Tashkent University of Information Technologies named after Muhammad al-Khwarizmi is a public university established in 1955.",
+        "ru": "Ташкентский университет информационных технологий имени Мухаммада аль-Хорезми — государственный вуз, основанный в 1955 году.",
+        "uz": "Muhammad al-Xorazmiy nomidagi Toshkent axborot texnologiyalari universiteti — 1955 yilda tashkil etilgan davlat oliy oʼquv yurti."
+      },
+      "verified": false,
+      "deadlines": []
+    },
+    {
+      "name": "Turin Polytechnic University in Tashkent (TTPU)",
+      "slug": "turin-uz",
+      "website_domain": "turin.uz",
+      "country": "UZ",
+      "city": "Tashkent",
+      "source_url": "https://en.wikipedia.org/wiki/Turin_Polytechnic_University_in_Tashkent",
+      "year": 2026,
+      "description": {
+        "en": "Turin Polytechnic University in Tashkent is a non-profit higher education institution established in 2009 in partnership with the Polytechnic University of Turin. Instruction is in English.",
+        "ru": "Туринский политехнический университет в Ташкенте — некоммерческое высшее учебное заведение, основанное в 2009 году в партнерстве с Туринским политехническим университетом. Обучение ведется на английском языке.",
+        "uz": "Toshkentdagi Turin politexnika universiteti — 2009 yilda Turin politexnika universiteti bilan hamkorlikda tashkil etilgan notijorat oliy taʼlim muassasasi. Taʼlim ingliz tilida olib boriladi."
+      },
+      "verified": false
+    },
+    {
+      "name": "University of Business and Science (UBS)",
+      "slug": "ubsu-uz",
+      "website_domain": "ubsu.uz",
+      "country": "UZ",
+      "city": "Tashkent",
+      "institution_type": "private",
+      "source_url": "https://studyin-uzbekistan.uz/universities/253",
+      "year": 2026,
+      "description": {
+        "en": "University of Business and Science is a private higher education institution founded in 2022, based in Namangan with a branch in Tashkent. It offers undergraduate, master's and doctoral programs.",
+        "ru": "Университет бизнеса и науки — частное высшее учебное заведение, основанное в 2022 году, с головным офисом в Намангане и филиалом в Ташкенте. Предлагает бакалавриат, магистратуру и докторантуру.",
+        "uz": "Biznes va fan universiteti — 2022 yilda tashkil etilgan xususiy oliy taʼlim muassasasi. Asosiy kampusi Namanganda, filiali Toshkentda joylashgan. Bakalavriat, magistratura va doktorantura dasturlarini taklif etadi."
+      },
+      "verified": false
+    },
+    {
+      "name": "University of World Economy and Diplomacy",
+      "slug": "uwed-uz",
+      "website_domain": "uwed.uz",
+      "country": "UZ",
+      "city": "Tashkent",
+      "institution_type": "public",
+      "source_url": "https://en.wikipedia.org/wiki/University_of_World_Economy_and_Diplomacy",
+      "year": 2026,
+      "description": {
+        "en": "University of World Economy and Diplomacy is a public university founded in September 1992 and affiliated with the Ministry of Foreign Affairs of Uzbekistan.",
+        "ru": "Университет мировой экономики и дипломатии — государственный вуз, основанный в сентябре 1992 года, подведомственный Министерству иностранных дел Узбекистана.",
+        "uz": "Jahon iqtisodiyoti va diplomatiya universiteti — 1992 yil sentyabrda tashkil etilgan davlat oliy oʼquv yurti, Oʼzbekiston Tashqi ishlar vazirligi tasarrufida."
+      },
+      "verified": false,
+      "test_policy": {
+        "value": "required",
+        "source_url": "https://uwed.uz/admission/bachelor",
+        "year": 2026,
+        "note": "State entrance exam via my.uzbmb.uz."
+      },
+      "deadlines": []
+    },
+    {
+      "name": "Uzbekistan State Institute of Arts and Culture (UzSIAC)",
+      "slug": "dsmi-uz",
+      "website_domain": "dsmi.uz",
+      "country": "UZ",
+      "city": "Tashkent",
+      "institution_type": "public",
+      "source_url": "https://en.wikipedia.org/wiki/Uzbekistan_State_Institute_of_Arts_and_Culture",
+      "year": 2026,
+      "description": {
+        "en": "Uzbekistan State Institute of Arts and Culture is a state-run institution formed in 2012 by merging earlier institutes; its roots go back to a 1945 institute. It has three faculties.",
+        "ru": "Узбекский государственный институт искусств и культуры — государственное учебное заведение, образованное в 2012 году слиянием прежних институтов; корни восходят к 1945 году. Имеет три факультета.",
+        "uz": "Oʼzbekiston davlat sanʼat va madaniyat instituti — 2012 yilda oldingi institutlarning birlashuvi natijasida tashkil etilgan davlat muassasasi; ildizlari 1945 yilga borib taqaladi. Uchta fakultetga ega."
+      },
+      "verified": false
+    },
+    {
+      "name": "Uzbekistan State University of Journalism and Mass Communications (UzJOKU)",
+      "slug": "uzjoku-uz",
+      "website_domain": "uzjoku.uz",
+      "country": "UZ",
+      "city": "Tashkent",
+      "institution_type": "public",
+      "source_url": "https://uzjoku.uz/en",
+      "year": 2026,
+      "description": {
+        "en": "University of Journalism and Mass Communications of Uzbekistan was established on May 24, 2018 by presidential decree and is part of the Ministry of Higher and Secondary Specialized Education.",
+        "ru": "Университет журналистики и массовых коммуникаций Узбекистана создан 24 мая 2018 года указом Президента и входит в систему Министерства высшего и среднего специального образования.",
+        "uz": "Oʼzbekiston jurnalistika va ommaviy kommunikatsiyalar universiteti 2018 yil 24 mayda Prezident qarori bilan tashkil etilgan. Oliy va oʼrta maxsus taʼlim vazirligi tarkibida faoliyat yuritadi."
+      },
+      "verified": false
+    },
+    {
+      "name": "Uzbekistan State University of Physical Education and Sport (UzSUPES)",
+      "slug": "jtsu-uz",
+      "website_domain": "jtsu.uz",
+      "country": "UZ",
+      "city": "Chirchiq",
+      "institution_type": "public",
+      "source_url": "https://jtsu.uz/en/e/pages/66-about-universitet",
+      "year": 2026,
+      "description": {
+        "en": "Uzbekistan State University of Physical Education and Sport traces its origins to a Tashkent physical education school founded in 1935. It gained university status in 2018.",
+        "ru": "Узбекский государственный университет физической культуры и спорта ведет происхождение от ташкентской школы физической культуры, основанной в 1935 году. Статус университета получил в 2018 году.",
+        "uz": "Oʼzbekiston davlat jismoniy tarbiya va sport universiteti 1935 yilda tashkil etilgan Toshkent jismoniy tarbiya maktabidan kelib chiqqan. 2018 yilda universitet maqomini olgan."
+      },
+      "verified": false
+    },
+    {
+      "name": "Uzbekistan State World Languages University",
+      "slug": "uzswlu-uz",
+      "website_domain": "uzswlu.uz",
+      "country": "UZ",
+      "city": "Tashkent",
+      "institution_type": "public",
+      "source_url": "https://en.wikipedia.org/wiki/Uzbekistan_State_World_Languages_University",
+      "year": 2026,
+      "description": {
+        "en": "Uzbekistan State World Languages University is a public, language-focused university established on May 12, 1992.",
+        "ru": "Узбекский государственный университет мировых языков — государственный вуз с языковой специализацией, основанный 12 мая 1992 года.",
+        "uz": "Oʼzbekiston davlat jahon tillari universiteti — 1992 yil 12 mayda tashkil etilgan, tillarga ixtisoslashgan davlat oliy oʼquv yurti."
+      },
+      "verified": false
+    },
+    {
+      "name": "Webster University in Tashkent",
+      "slug": "webstertashkent-uz",
+      "website_domain": "webstertashkent.uz",
+      "country": "UZ",
+      "city": "Tashkent",
+      "institution_type": "private",
+      "source_url": "https://en.wikipedia.org/wiki/Webster_University_in_Tashkent",
+      "year": 2026,
+      "description": {
+        "en": "Webster University in Tashkent is a private, non-profit American branch campus established in 2019. Instruction is in English, and the institution is accredited by the Higher Learning Commission.",
+        "ru": "Университет Вебстер в Ташкенте — частный некоммерческий американский филиал, основанный в 2019 году. Обучение ведется на английском языке, вуз аккредитован Комиссией по высшему образованию (HLC).",
+        "uz": "Toshkentdagi Webster universiteti — 2019 yilda tashkil etilgan xususiy notijorat Amerika filiali. Taʼlim ingliz tilida olib boriladi, u Higher Learning Commission akkreditatsiyasiga ega."
+      },
+      "verified": false,
+      "deadlines": []
+    },
+    {
+      "name": "Westminster International University in Tashkent (WIUT)",
+      "slug": "wiut-uz",
+      "website_domain": "wiut.uz",
+      "country": "UZ",
+      "city": "Tashkent",
+      "source_url": "https://en.wikipedia.org/wiki/Westminster_International_University_in_Tashkent",
+      "year": 2026,
+      "description": {
+        "en": "Westminster International University in Tashkent is an English-medium international university founded in January 2002, with first classes in September 2002.",
+        "ru": "Вестминстерский международный университет в Ташкенте — международный вуз с обучением на английском языке, основан в январе 2002 года, первые занятия прошли в сентябре 2002 года.",
+        "uz": "Toshkentdagi Westminster xalqaro universiteti — 2002 yil yanvarda tashkil etilgan, ingliz tilida taʼlim beradigan xalqaro oliy taʼlim muassasasi. Birinchi darslari 2002 yil sentyabrda boshlangan."
+      },
+      "intl_tuition_usd": {
+        "value": 4484,
+        "currency": "USD",
+        "source_url": "https://www.westminster.uz/tuition-fees-international",
+        "year": 2026,
+        "note": "Undergraduate and International Foundation Studies: 54,600,000 UZS per academic year (120 credits); converted to USD at the 7 Apr 2026 rate stated on the university page."
+      },
+      "verified": false,
+      "test_policy": {
+        "value": "required",
+        "source_url": "https://wiut.uz/math-exams",
+        "year": 2026,
+        "note": "WIUT Maths entrance exam; IGCSE Maths/SAT/BAQS 2 may exempt."
+      }
+    }
+  ],
+  "programs": []
+}

@@ -5,6 +5,12 @@
    "name": "University of Oxford",
    "country": "GB",
    "city": "Oxford",
+   "website_domain": "ox.ac.uk",
+   "description": {
+    "en": "The University of Oxford is the oldest university in the English-speaking world, a collegiate research university with tutorial-based teaching and very strong humanities, sciences and medicine.",
+    "ru": "Оксфордский университет — старейший университет англоязычного мира, коллегиальный исследовательский университет с тьюториальной системой обучения и очень сильными гуманитарными, естественными науками и медициной.",
+    "uz": "Oksford universiteti — ingliz tilli dunyodagi eng qadimiy universitet; kollejlar tizimiga asoslangan, tyutorial taʼlimga ega tadqiqot universiteti, gumanitar fanlar, tabiiy fanlar va tibbiyotda juda kuchli."
+   },
    "fields": [
     "Humanities",
     "Social sciences",
@@ -13,15 +19,7 @@
    ],
    "source_url": "https://www.ox.ac.uk/admissions/undergraduate",
    "year": 2026,
-   "deadlines": [
-    {
-     "plan": "OTHER",
-     "date": "2026-10-15",
-     "cycle": "2026-27",
-     "source_url": "https://www.imperial.ac.uk/study/apply/undergraduate/process/deadlines/",
-     "note": "UCAS deadline for Oxford/Cambridge, read on Imperial's page; ox.ac.uk returned HTTP 403 so Oxford's own page was not read"
-    }
-   ],
+   "deadlines": [],
    "scholarships": [],
    "verified": false
   },
@@ -30,6 +28,12 @@
    "name": "Imperial College London",
    "country": "GB",
    "city": "London",
+   "website_domain": "imperial.ac.uk",
+   "description": {
+    "en": "Imperial College London is a public research university devoted entirely to science, engineering, medicine and business, located in South Kensington in the heart of London.",
+    "ru": "Имперский колледж Лондона — государственный исследовательский университет, полностью посвящённый науке, инженерии, медицине и бизнесу; расположен в Южном Кенсингтоне в центре Лондона.",
+    "uz": "Londondagi Imperial kolleji — toʼliq fan, muhandislik, tibbiyot va biznesga bagʼishlangan davlat tadqiqot universiteti; London markazidagi South Kensingtonda joylashgan."
+   },
    "fields": [
     "Engineering",
     "Natural sciences",
@@ -41,13 +45,6 @@
    "source_url": "https://www.imperial.ac.uk/study/apply/undergraduate",
    "year": 2026,
    "deadlines": [
-    {
-     "plan": "OTHER",
-     "date": "2026-10-15",
-     "cycle": "2026-27",
-     "source_url": "https://www.imperial.ac.uk/study/apply/undergraduate/process/deadlines/",
-     "note": "UCAS deadline for medicine (2027 entry)"
-    },
     {
      "plan": "OTHER",
      "date": "2027-01-13",
@@ -64,6 +61,12 @@
    "name": "University of Cambridge",
    "country": "GB",
    "city": "Cambridge",
+   "website_domain": "cam.ac.uk",
+   "description": {
+    "en": "The University of Cambridge is a collegiate research university in England, founded in 1209, with small-group supervisions and world-leading mathematics, sciences, engineering and humanities.",
+    "ru": "Кембриджский университет — коллегиальный исследовательский университет в Англии, основан в 1209 году; обучение в малых группах (supervisions) и мировой уровень математики, естественных наук, инженерии и гуманитарных наук.",
+    "uz": "Kembrij universiteti — Angliyadagi 1209-yilda asos solingan kollejlar tizimidagi tadqiqot universiteti; kichik guruhlarda oʼqitish (supervisions), matematika, tabiiy fanlar, muhandislik va gumanitar fanlar boʼyicha jahon darajasida."
+   },
    "fields": [
     "Archaeology",
     "Architecture",
@@ -105,15 +108,7 @@
      "note": "Basis inferred: no need-based aid for internationals found on the pages read; not an explicit statement."
     }
    },
-   "deadlines": [
-    {
-     "plan": "OTHER",
-     "date": "2026-10-22",
-     "cycle": "2026-27",
-     "source_url": "https://www.undergraduate.study.cam.ac.uk/apply/how/cambridge-application",
-     "note": "My Cambridge Application deadline 6pm UK; UCAS deadline is 15 Oct 2026. Mature January round 20 Jan 2027. GBP 60 fee for applicants outside UK/Ireland."
-    }
-   ],
+   "deadlines": [],
    "scholarships": [],
    "verified": true
   },
@@ -122,6 +117,12 @@
    "name": "University College London",
    "country": "GB",
    "city": "London",
+   "website_domain": "ucl.ac.uk",
+   "description": {
+    "en": "University College London is a large public research university in central London with a broad range of subjects, notably strong in architecture, medicine, law, and social and data sciences.",
+    "ru": "Университетский колледж Лондона — крупный государственный исследовательский университет в центре Лондона с широким выбором направлений, особенно сильный в архитектуре, медицине, праве, социальных науках и науке о данных.",
+    "uz": "London universitet kolleji — London markazidagi yirik davlat tadqiqot universiteti; yoʼnalishlari keng, ayniqsa arxitektura, tibbiyot, huquq, ijtimoiy fanlar va maʼlumotlar fanida kuchli."
+   },
    "fields": [
     "Engineering",
     "Medical sciences",

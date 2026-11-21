@@ -1,0 +1,313 @@
+{
+  "institutions": [
+    {
+      "slug": "sciencespo-fr",
+      "name": "Sciences Po",
+      "country": "FR",
+      "city": "Paris",
+      "website_domain": "sciencespo.fr",
+      "description": {
+        "en": "Sciences Po (Paris Institute of Political Studies) is a public research university in Paris, France, holding the status of grande école. It was founded in 1871 as the École libre des sciences politiques and teaches on its Paris campus and six regional campuses.",
+        "ru": "Sciences Po (Парижский институт политических исследований) — государственный исследовательский университет в Париже, имеющий статус grande école. Основан в 1871 году как Свободная школа политических наук; обучение ведётся в Париже и в шести региональных кампусах.",
+        "uz": "Sciences Po (Parij siyosiy tadqiqotlar instituti) — Parijdagi davlat tadqiqot universiteti boʼlib, grande école maqomiga ega. 1871 yilda École libre des sciences politiques sifatida tashkil etilgan; hozir Parijda va oltita hududiy kampusda oʻqitadi."
+      },
+      "acceptance_rate": {
+        "min": 7,
+        "max": 7,
+        "source_url": "https://en.wikipedia.org/wiki/Sciences_Po",
+        "year": 2021,
+        "note": "Undergraduate overall, all three admissions pathways (1,630 of 15,284 applicants). Parcoursup-only rate ~10% in 2021."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Sciences_Po",
+      "year": 2026,
+      "verified": false,
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-13",
+          "cycle": "2026-27",
+          "source_url": "https://www.sciencespo.fr/admissions/en/undergraduate/foreign-secondary-schools/",
+          "note": "Results early April 2027; Émile Boutmy scholarship deadline"
+        },
+        {
+          "plan": "RD",
+          "date": "2027-03-01",
+          "cycle": "2026-27",
+          "source_url": "https://www.sciencespo.fr/admissions/en/undergraduate/foreign-secondary-schools/",
+          "note": "Applications close 1 Mar 2027 23:59 Paris time; results early May 2027"
+        }
+      ]
+    },
+    {
+      "slug": "sorbonne-universite-fr",
+      "name": "Sorbonne Université",
+      "country": "FR",
+      "city": "Paris",
+      "website_domain": "sorbonne-universite.fr",
+      "source_url": "https://en.wikipedia.org/wiki/Sorbonne_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "psl-eu",
+      "name": "Université PSL",
+      "country": "FR",
+      "city": "Paris",
+      "website_domain": "psl.eu",
+      "description": {
+        "en": "PSL University (Paris Sciences et Lettres) is a public research university and grand établissement based in Paris, France. Established in 2010 and formally created as a university in 2019, it is a collegiate university with 11 constituent schools, the oldest founded in 1530.",
+        "ru": "Университет PSL (Paris Sciences et Lettres) — государственный исследовательский университет и grand établissement в Париже. Основан в 2010 году, официально создан как университет в 2019 году; объединяет 11 школ, старейшая основана в 1530 году.",
+        "uz": "PSL universiteti (Paris Sciences et Lettres) — Parijdagi davlat tadqiqot universiteti va grand établissement. 2010 yilda tashkil etilgan, 2019 yilda rasman universitet maqomini olgan; tarkibida 11 ta maktab bor, eng qadimgisi 1530 yilda asos solingan."
+      },
+      "source_url": "https://en.wikipedia.org/wiki/Paris_Sciences_et_Lettres_University",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "universite-paris-saclay-fr",
+      "name": "Université Paris-Saclay",
+      "country": "FR",
+      "city": "Gif-sur-Yvette",
+      "website_domain": "universite-paris-saclay.fr",
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Paris-Saclay",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "polytechnique-edu",
+      "name": "École Polytechnique",
+      "country": "FR",
+      "city": "Palaiseau",
+      "website_domain": "polytechnique.edu",
+      "source_url": "https://en.wikipedia.org/wiki/%C3%89cole_polytechnique",
+      "year": 2026,
+      "verified": false
+    },
+    {
+      "slug": "kcl-ac-uk",
+      "name": "King's College London",
+      "country": "GB",
+      "city": "London",
+      "website_domain": "kcl.ac.uk",
+      "source_url": "https://en.wikipedia.org/wiki/King%27s_College_London",
+      "year": 2026,
+      "verified": false,
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-13",
+          "cycle": "2026-27",
+          "source_url": "https://www.ucas.com/discover/advice-for-parents-guardians-and-carers/key-dates-and-the-application-journey",
+          "note": "UCAS equal consideration date for most undergraduate courses, 18:00 UK time (2027 entry); Oxford/Cambridge/medicine date is 15 Oct 2026"
+        }
+      ]
+    },
+    {
+      "slug": "lse-ac-uk",
+      "name": "London School of Economics and Political Science",
+      "country": "GB",
+      "city": "London",
+      "website_domain": "lse.ac.uk",
+      "source_url": "https://en.wikipedia.org/wiki/London_School_of_Economics",
+      "year": 2026,
+      "verified": false,
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-13",
+          "cycle": "2026-27",
+          "source_url": "https://www.ucas.com/discover/advice-for-parents-guardians-and-carers/key-dates-and-the-application-journey",
+          "note": "UCAS equal consideration date for most undergraduate courses, 18:00 UK time (2027 entry); Oxford/Cambridge/medicine date is 15 Oct 2026"
+        }
+      ]
+    },
+    {
+      "slug": "ed-ac-uk",
+      "name": "University of Edinburgh",
+      "country": "GB",
+      "city": "Edinburgh",
+      "website_domain": "ed.ac.uk",
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Edinburgh",
+      "year": 2026,
+      "verified": false,
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-13",
+          "cycle": "2026-27",
+          "source_url": "https://www.ucas.com/discover/advice-for-parents-guardians-and-carers/key-dates-and-the-application-journey",
+          "note": "UCAS equal consideration date for most undergraduate courses, 18:00 UK time (2027 entry); Oxford/Cambridge/medicine date is 15 Oct 2026"
+        }
+      ]
+    },
+    {
+      "slug": "manchester-ac-uk",
+      "name": "University of Manchester",
+      "country": "GB",
+      "city": "Manchester",
+      "website_domain": "manchester.ac.uk",
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Manchester",
+      "year": 2026,
+      "verified": false,
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-13",
+          "cycle": "2026-27",
+          "source_url": "https://www.ucas.com/discover/advice-for-parents-guardians-and-carers/key-dates-and-the-application-journey",
+          "note": "UCAS equal consideration date for most undergraduate courses, 18:00 UK time (2027 entry); Oxford/Cambridge/medicine date is 15 Oct 2026"
+        }
+      ]
+    },
+    {
+      "slug": "st-andrews-ac-uk",
+      "name": "University of St Andrews",
+      "country": "GB",
+      "city": "St Andrews",
+      "website_domain": "st-andrews.ac.uk",
+      "source_url": "https://en.wikipedia.org/wiki/University_of_St_Andrews",
+      "year": 2026,
+      "verified": false,
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-13",
+          "cycle": "2026-27",
+          "source_url": "https://www.ucas.com/discover/advice-for-parents-guardians-and-carers/key-dates-and-the-application-journey",
+          "note": "UCAS equal consideration date for most undergraduate courses, 18:00 UK time (2027 entry); Oxford/Cambridge/medicine date is 15 Oct 2026"
+        }
+      ]
+    },
+    {
+      "slug": "warwick-ac-uk",
+      "name": "University of Warwick",
+      "country": "GB",
+      "city": "Coventry",
+      "website_domain": "warwick.ac.uk",
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Warwick",
+      "year": 2026,
+      "verified": false,
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-13",
+          "cycle": "2026-27",
+          "source_url": "https://www.ucas.com/discover/advice-for-parents-guardians-and-carers/key-dates-and-the-application-journey",
+          "note": "UCAS equal consideration date for most undergraduate courses, 18:00 UK time (2027 entry); Oxford/Cambridge/medicine date is 15 Oct 2026"
+        }
+      ]
+    },
+    {
+      "slug": "cityu-edu-hk",
+      "name": "City University of Hong Kong (CityU)",
+      "country": "HK",
+      "city": "Hong Kong",
+      "website_domain": "cityu.edu.hk",
+      "source_url": "https://en.wikipedia.org/wiki/City_University_of_Hong_Kong",
+      "year": 2026,
+      "verified": false,
+      "test_policy": {
+        "value": "flexible",
+        "source_url": "https://www.cityu.edu.hk/international/admissions/entrance-requirements",
+        "year": 2026,
+        "note": "US diploma holders: SAT 1190 or ACT 24; other qualifications (IB, A-Level) accepted; SAT alone does not meet entrance requirements"
+      }
+    },
+    {
+      "slug": "ust-hk",
+      "name": "Hong Kong University of Science and Technology (HKUST)",
+      "country": "HK",
+      "city": "Hong Kong",
+      "website_domain": "ust.hk",
+      "source_url": "https://en.wikipedia.org/wiki/Hong_Kong_University_of_Science_and_Technology",
+      "year": 2026,
+      "verified": false,
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2026-11-25",
+          "cycle": "2026-27",
+          "source_url": "https://seng.hkust.edu.hk/academics/undergraduate/faq-info-for-non-jupas-and-non-local-students",
+          "note": "Priority round; application opens 2 Oct 2026; offers late Dec 2026 onwards"
+        }
+      ]
+    },
+    {
+      "slug": "cuhk-edu-hk",
+      "name": "The Chinese University of Hong Kong (CUHK)",
+      "country": "HK",
+      "city": "Hong Kong",
+      "website_domain": "cuhk.edu.hk",
+      "source_url": "https://en.wikipedia.org/wiki/Chinese_University_of_Hong_Kong",
+      "year": 2026,
+      "verified": false,
+      "test_policy": {
+        "value": "flexible",
+        "source_url": "https://admission.cuhk.edu.hk/application/overseas-other-qualifications-non-local-international-team/requirements/",
+        "year": 2026,
+        "note": "SAT 1190/ACT 24 plus two AP at grade 3 is one accepted route; IB, A-Level and others also accepted"
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-01-07",
+          "cycle": "2026-27",
+          "source_url": "https://admission.cuhk.edu.hk/application/non-jupas/faq/",
+          "note": "Regular Round; later applications considered subject to availability"
+        }
+      ]
+    },
+    {
+      "slug": "polyu-edu-hk",
+      "name": "The Hong Kong Polytechnic University (PolyU)",
+      "country": "HK",
+      "city": "Hong Kong",
+      "website_domain": "polyu.edu.hk",
+      "source_url": "https://en.wikipedia.org/wiki/Hong_Kong_Polytechnic_University",
+      "year": 2026,
+      "verified": false,
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2027-02-11",
+          "cycle": "2026-27",
+          "source_url": "https://www.polyu.edu.hk/study/ug/admissions/international-other-qualifications",
+          "note": "Main round for September 2027 entry; late applications accepted until 14 May 2027 subject to places"
+        }
+      ]
+    },
+    {
+      "slug": "hku-hk",
+      "name": "University of Hong Kong (HKU)",
+      "country": "HK",
+      "city": "Hong Kong",
+      "website_domain": "hku.hk",
+      "source_url": "https://en.wikipedia.org/wiki/University_of_Hong_Kong",
+      "year": 2026,
+      "verified": false,
+      "test_policy": {
+        "value": "flexible",
+        "source_url": "https://admissions.hku.hk/node/2201",
+        "year": 2026,
+        "note": "SAT/ACT with AP accepted as one qualification route (ACT composite 30+); IB, A-Level and other qualifications also accepted"
+      },
+      "deadlines": [
+        {
+          "plan": "RD",
+          "date": "2026-11-25",
+          "cycle": "2026-27",
+          "source_url": "https://admissions.hku.hk/sites/default/files/2026-09/HKU_General_Information_NJ_2027.pdf",
+          "note": "First-round evaluation, non-JUPAS international, 12:00 noon HKT"
+        },
+        {
+          "plan": "ROLLING",
+          "date": "2027-08-25",
+          "cycle": "2026-27",
+          "source_url": "https://admissions.hku.hk/sites/default/files/2026-09/HKU_General_Information_NJ_2027.pdf",
+          "note": "Applications may still be submitted until 25 Aug 2027 12:00 noon HKT"
+        }
+      ]
+    }
+  ],
+  "programs": []
+}

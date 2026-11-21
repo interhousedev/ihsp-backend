@@ -6,7 +6,16 @@
       "country": "CA",
       "city": "Calgary",
       "website_domain": "ucalgary.ca",
-      "fields": ["Engineering", "Computer Science", "Business", "Medicine & Health", "Nursing", "Psychology", "Earth Sciences", "Architecture"],
+      "fields": [
+        "Engineering",
+        "Computer Science",
+        "Business",
+        "Medicine & Health",
+        "Nursing",
+        "Psychology",
+        "Earth Sciences",
+        "Architecture"
+      ],
       "intl_tuition_usd": {
         "value": null,
         "currency": "CAD",
@@ -24,7 +33,16 @@
       "country": "CA",
       "city": "Halifax",
       "website_domain": "dal.ca",
-      "fields": ["Engineering", "Computer Science", "Business", "Medicine & Health", "Law", "Psychology", "Marine Biology", "Environmental Science"],
+      "fields": [
+        "Engineering",
+        "Computer Science",
+        "Business",
+        "Medicine & Health",
+        "Law",
+        "Psychology",
+        "Marine Biology",
+        "Environmental Science"
+      ],
       "intl_tuition_usd": {
         "value": null,
         "currency": "CAD",
@@ -42,7 +60,16 @@
       "country": "CA",
       "city": "Burnaby",
       "website_domain": "sfu.ca",
-      "fields": ["Computer Science", "Business", "Psychology", "Kinesiology", "Economics", "Criminology", "Biology", "Data Science"],
+      "fields": [
+        "Computer Science",
+        "Business",
+        "Psychology",
+        "Kinesiology",
+        "Economics",
+        "Criminology",
+        "Biology",
+        "Data Science"
+      ],
       "intl_tuition_usd": {
         "value": 38944,
         "currency": "CAD",
@@ -60,7 +87,16 @@
       "country": "CA",
       "city": "Toronto",
       "website_domain": "yorku.ca",
-      "fields": ["Business", "Law", "Psychology", "Economics", "Kinesiology", "Computer Science", "Engineering", "Environmental Science"],
+      "fields": [
+        "Business",
+        "Law",
+        "Psychology",
+        "Economics",
+        "Kinesiology",
+        "Computer Science",
+        "Engineering",
+        "Environmental Science"
+      ],
       "intl_tuition_usd": {
         "value": 40000,
         "currency": "CAD",
@@ -78,7 +114,16 @@
       "country": "CA",
       "city": "Montreal",
       "website_domain": "concordia.ca",
-      "fields": ["Computer Science", "Engineering", "Business", "Arts", "Communications", "Psychology", "Journalism", "Film"],
+      "fields": [
+        "Computer Science",
+        "Engineering",
+        "Business",
+        "Arts",
+        "Communications",
+        "Psychology",
+        "Journalism",
+        "Film"
+      ],
       "intl_tuition_usd": {
         "value": null,
         "currency": "CAD",
@@ -96,7 +141,16 @@
       "country": "CA",
       "city": "Victoria",
       "website_domain": "uvic.ca",
-      "fields": ["Computer Science", "Engineering", "Business", "Psychology", "Biology", "Law", "Linguistics", "Music & Performing Arts"],
+      "fields": [
+        "Computer Science",
+        "Engineering",
+        "Business",
+        "Psychology",
+        "Biology",
+        "Law",
+        "Linguistics",
+        "Music & Performing Arts"
+      ],
       "intl_tuition_usd": {
         "value": 37575,
         "currency": "CAD",
@@ -114,7 +168,16 @@
       "country": "CA",
       "city": "Winnipeg",
       "website_domain": "umanitoba.ca",
-      "fields": ["Engineering", "Computer Science", "Business", "Medicine & Health", "Agriculture", "Education", "Kinesiology", "Pharmacy"],
+      "fields": [
+        "Engineering",
+        "Computer Science",
+        "Business",
+        "Medicine & Health",
+        "Agriculture",
+        "Education",
+        "Kinesiology",
+        "Pharmacy"
+      ],
       "intl_tuition_usd": {
         "value": null,
         "currency": "CAD",
@@ -132,7 +195,16 @@
       "country": "CA",
       "city": "Saskatoon",
       "website_domain": "usask.ca",
-      "fields": ["Engineering", "Agriculture", "Medicine & Health", "Pharmacy", "Dentistry", "Computer Science", "Business", "Veterinary Medicine"],
+      "fields": [
+        "Engineering",
+        "Agriculture",
+        "Medicine & Health",
+        "Pharmacy",
+        "Dentistry",
+        "Computer Science",
+        "Business",
+        "Veterinary Medicine"
+      ],
       "intl_tuition_usd": {
         "value": null,
         "currency": "CAD",
@@ -150,7 +222,16 @@
       "country": "CA",
       "city": "Ottawa",
       "website_domain": "carleton.ca",
-      "fields": ["Engineering", "Computer Science", "Business", "Journalism", "Architecture", "Psychology", "Politics & Government", "Aerospace Engineering"],
+      "fields": [
+        "Engineering",
+        "Computer Science",
+        "Business",
+        "Journalism",
+        "Architecture",
+        "Psychology",
+        "Politics & Government",
+        "Aerospace Engineering"
+      ],
       "intl_tuition_usd": {
         "value": null,
         "currency": "CAD",
@@ -168,7 +249,16 @@
       "country": "CA",
       "city": "Toronto",
       "website_domain": "torontomu.ca",
-      "fields": ["Business", "Computer Science", "Engineering", "Journalism", "Media Studies", "Nursing", "Architecture", "Fashion"],
+      "fields": [
+        "Business",
+        "Computer Science",
+        "Engineering",
+        "Journalism",
+        "Media Studies",
+        "Nursing",
+        "Architecture",
+        "Fashion"
+      ],
       "intl_tuition_usd": {
         "value": null,
         "currency": "CAD",
@@ -186,7 +276,16 @@
       "country": "CA",
       "city": "Quebec City",
       "website_domain": "ulaval.ca",
-      "fields": ["Engineering", "Computer Science", "Business", "Law", "Medicine & Health", "Pharmacy", "Nursing", "Environmental Science"],
+      "fields": [
+        "Engineering",
+        "Computer Science",
+        "Business",
+        "Law",
+        "Medicine & Health",
+        "Pharmacy",
+        "Nursing",
+        "Environmental Science"
+      ],
       "intl_tuition_usd": {
         "value": null,
         "currency": "CAD",
@@ -204,7 +303,16 @@
       "country": "CA",
       "city": "Guelph",
       "website_domain": "uoguelph.ca",
-      "fields": ["Agriculture", "Veterinary Medicine", "Food Science", "Environmental Science", "Biology", "Business", "Engineering", "Psychology"],
+      "fields": [
+        "Agriculture",
+        "Veterinary Medicine",
+        "Food Science",
+        "Environmental Science",
+        "Biology",
+        "Business",
+        "Engineering",
+        "Psychology"
+      ],
       "intl_tuition_usd": {
         "value": null,
         "currency": "CAD",
@@ -222,7 +330,16 @@
       "country": "CA",
       "city": "St. John's",
       "website_domain": "mun.ca",
-      "fields": ["Engineering", "Business", "Education", "Medicine & Health", "Computer Science", "Marine Biology", "Music & Performing Arts", "Kinesiology"],
+      "fields": [
+        "Engineering",
+        "Business",
+        "Education",
+        "Medicine & Health",
+        "Computer Science",
+        "Marine Biology",
+        "Music & Performing Arts",
+        "Kinesiology"
+      ],
       "intl_tuition_usd": {
         "value": 22500,
         "currency": "CAD",
@@ -240,7 +357,16 @@
       "country": "CA",
       "city": "Regina",
       "website_domain": "uregina.ca",
-      "fields": ["Engineering", "Business", "Computer Science", "Psychology", "Kinesiology", "Social Work", "Arts", "Journalism"],
+      "fields": [
+        "Engineering",
+        "Business",
+        "Computer Science",
+        "Psychology",
+        "Kinesiology",
+        "Social Work",
+        "Arts",
+        "Journalism"
+      ],
       "intl_tuition_usd": {
         "value": null,
         "currency": "CAD",
@@ -258,7 +384,16 @@
       "country": "CA",
       "city": "Waterloo",
       "website_domain": "wlu.ca",
-      "fields": ["Business", "Economics", "Social Work", "Computer Science", "Psychology", "Music & Performing Arts", "Kinesiology", "Geography"],
+      "fields": [
+        "Business",
+        "Economics",
+        "Social Work",
+        "Computer Science",
+        "Psychology",
+        "Music & Performing Arts",
+        "Kinesiology",
+        "Geography"
+      ],
       "intl_tuition_usd": {
         "value": null,
         "currency": "CAD",
