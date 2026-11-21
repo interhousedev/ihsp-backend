@@ -61971,6 +61971,18 @@
       "TaskOut": {
         "description": "A task. `overdue` is computed against today in Tashkent.",
         "properties": {
+          "assigned_by_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Name of the staff member who set the task; null when the student or the AI did.",
+            "title": "Assigned By Name"
+          },
           "completed_at": {
             "anyOf": [
               {
@@ -62141,6 +62153,7 @@
           "list_entry_id",
           "created_by",
           "creator_id",
+          "assigned_by_name",
           "steps",
           "links",
           "progress",
@@ -99844,6 +99857,60 @@
           }
         },
         "summary": "List Caseload",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/students/{student_id}/tasks": {
+      "post": {
+        "description": "Create a task for a student (mentor or counselor in scope, or the owner).",
+        "operationId": "admission_staff_create_student_task",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "student_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Student Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create For",
         "tags": [
           "admission"
         ]

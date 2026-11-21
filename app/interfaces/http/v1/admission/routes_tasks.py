@@ -7,11 +7,13 @@ ones they want with `POST /tasks/suggest/accept`.
 """
 
 import datetime as dt
+from collections.abc import Sequence
 from typing import Annotated, Any, Literal
 from uuid import UUID
 
 from app.interfaces.http.v1.admission.deps import AdmissionCtx, ContainerDep
 from app.interfaces.http.v1.admission.routes_items import _locale
+from app.modules.admission.application.tasks import TaskService
 from app.modules.admission.domain.tasks import (
     DESCRIPTION_MAX,
     LABEL_MAX,
@@ -87,6 +89,10 @@ class TaskOut(BaseModel):
     list_entry_id: UUID | None
     created_by: Source
     creator_id: UUID | None
+    assigned_by_name: str | None = Field(
+        description="Name of the staff member who set the task; null when the "
+        "student or the AI did."
+    )
     steps: list[StepOut]
     links: list[LinkIO]
     progress: ProgressOut
@@ -172,7 +178,13 @@ def _draft(body: TaskIn) -> Task:
     )
 
 
-def _out(t: Task, today: dt.date) -> TaskOut:
+async def _outs(svc: TaskService, tasks: Sequence[Task]) -> list[TaskOut]:
+    today = svc.today()
+    names = await svc.assigned_by(tasks)
+    return [_out(t, today, names.get(t.id)) for t in tasks]
+
+
+def _out(t: Task, today: dt.date, assigned_by: str | None = None) -> TaskOut:
     done, total = t.progress
     link = LinkIO
     return TaskOut(
@@ -187,6 +199,7 @@ def _out(t: Task, today: dt.date) -> TaskOut:
         list_entry_id=t.list_entry_id,
         created_by=t.created_by,
         creator_id=t.creator_id,
+        assigned_by_name=assigned_by,
         steps=[
             StepOut(
                 id=s.id,
@@ -253,8 +266,7 @@ async def _list(
         source=source,
         horizon=horizon,
     )
-    today = svc.today()
-    return TasksOut(items=[_out(t, today) for t in rows])
+    return TasksOut(items=await _outs(svc, rows))
 
 
 async def create_mine(
@@ -270,7 +282,7 @@ async def create_for(
     """Create a task for a student (mentor or counselor in scope, or the owner)."""
     svc = container.admission.tasks
     task = await svc.create(ctx, student_id, _draft(body))
-    return _out(task, svc.today())
+    return (await _outs(svc, [task]))[0]
 
 
 async def get_task(
@@ -278,7 +290,7 @@ async def get_task(
 ) -> TaskOut:
     """One task the caller may read."""
     svc = container.admission.tasks
-    return _out(await svc.get(ctx, task_id), svc.today())
+    return (await _outs(svc, [await svc.get(ctx, task_id)]))[0]
 
 
 def patch_changes(body: TaskPatch) -> dict[str, Any]:
@@ -303,7 +315,7 @@ async def patch_task(
     changes = patch_changes(body)
     svc = container.admission.tasks
     task = await svc.update(ctx, task_id, changes, body.lock_version)
-    return _out(task, svc.today())
+    return (await _outs(svc, [task]))[0]
 
 
 async def delete_task(
@@ -324,7 +336,7 @@ async def patch_step(
     """Check or uncheck a step; the task status stays as it is."""
     svc = container.admission.tasks
     task = await svc.toggle_step(ctx, task_id, step_id, body.done)
-    return _out(task, svc.today())
+    return (await _outs(svc, [task]))[0]
 
 
 async def suggest(
@@ -332,8 +344,7 @@ async def suggest(
 ) -> TasksOut:
     """AI task drafts for my board; nothing is stored (needs `admission_ai`)."""
     rows = await container.admission.tasks_ai.suggest(ctx, _locale(accept_language))
-    today = container.admission.tasks.today()
-    return TasksOut(items=[_out(t, today) for t in rows])
+    return TasksOut(items=await _outs(container.admission.tasks, rows))
 
 
 async def accept(
@@ -342,8 +353,7 @@ async def accept(
     """Store the suggested tasks I picked, as source `ai`."""
     svc = container.admission.tasks
     rows = await svc.create_many(ctx, [_draft(t) for t in body.tasks], source="ai")
-    today = svc.today()
-    return TasksOut(items=[_out(t, today) for t in rows])
+    return TasksOut(items=await _outs(svc, rows))
 
 
 def _route(path: str, endpoint: Any, method: str, op: str, **kw: Any) -> None:
@@ -378,5 +388,12 @@ _route(
     create_for,
     "POST",
     "tasks_create_for_student",
+    response_model=TaskOut,
+)
+_route(
+    "/staff/students/{student_id}/tasks",
+    create_for,
+    "POST",
+    "staff_create_student_task",
     response_model=TaskOut,
 )

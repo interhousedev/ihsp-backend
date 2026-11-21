@@ -24,6 +24,7 @@ from app.modules.admission.ports.repositories import AuditEvent
 from app.modules.admission.ports.unit_of_work import UowFactory
 from app.shared.actor import Role
 from app.shared.clock import Clock
+from app.shared.contracts.identity import IdentityDirectory
 
 HORIZONS: Final = ("overdue", "week", "month")
 """Deadline windows a list can be narrowed to."""
@@ -60,22 +61,60 @@ class TaskService:
     """Reads and writes of a student's tasks."""
 
     def __init__(
-        self, uow_factory: UowFactory, access: AccessPolicy, clock: Clock
+        self,
+        uow_factory: UowFactory,
+        access: AccessPolicy,
+        clock: Clock,
+        identity: IdentityDirectory | None = None,
     ) -> None:
-        """Keep the transaction factory, the access policy and the clock."""
+        """Keep the transaction factory, the access policy, the clock, the names."""
         self._uow = uow_factory
         self._access = access
         self._clock = clock
+        self._identity = identity
 
     def today(self) -> dt.date:
         """Today's date in Tashkent, the day overdue is measured against."""
         return self._clock.now().astimezone(TASHKENT).date()
+
+    async def assigned_by(self, tasks: Sequence[Task]) -> dict[UUID, str]:
+        """Names of the staff who set tasks for a student (by task id)."""
+        by_user = {
+            t.id: t.creator_id
+            for t in tasks
+            if t.created_by in ("counselor", "mentor")
+            and t.creator_id is not None
+            and t.creator_id != t.student_id
+        }
+        if self._identity is None or not by_user:
+            return {}
+        users = await self._identity.get_users(sorted(set(by_user.values())))
+        return {
+            task_id: f"{u.first_name} {u.last_name}".strip()
+            for task_id, user_id in by_user.items()
+            if (u := users.get(user_id)) is not None
+        }
 
     async def _no_helper(self, ctx: AdmissionContext, student_id: UUID) -> None:
         """A peer helper is not staff: the task board stays out of their reach."""
         res = await self._access.resolve(ctx, student_id)
         if not res.owner and not res.via:
             raise AdmissionNotFoundError()
+
+    async def _may_read(
+        self, ctx: AdmissionContext, student_id: UUID, task_id: UUID | None = None
+    ) -> None:
+        """Tasks are read with `activities:read`, or `deadlines:manage` (counselors)."""
+        await self._no_helper(ctx, student_id)
+        res = await self._access.resolve(ctx, student_id)
+        permission = (
+            Permission.ACTIVITIES_READ
+            if Permission.ACTIVITIES_READ in res.permissions
+            else Permission.DEADLINES_MANAGE
+        )
+        await self._access.require(
+            ctx, student_id, permission, object_type="task", object_id=task_id
+        )
 
     async def list_for(
         self,
@@ -88,10 +127,7 @@ class TaskService:
         horizon: str | None = None,
     ) -> list[Task]:
         """List the student's tasks, narrowed by the filters."""
-        await self._no_helper(ctx, student_id)
-        await self._access.require(
-            ctx, student_id, Permission.ACTIVITIES_READ, object_type="task"
-        )
+        await self._may_read(ctx, student_id)
         async with self._uow() as uow:
             rows = await uow.tasks.list_for(student_id)
         today = self.today()
@@ -110,14 +146,7 @@ class TaskService:
             task = await uow.tasks.get(task_id)
         if task is None:
             raise AdmissionNotFoundError()
-        await self._no_helper(ctx, task.student_id)
-        await self._access.require(
-            ctx,
-            task.student_id,
-            Permission.ACTIVITIES_READ,
-            object_type="task",
-            object_id=task.id,
-        )
+        await self._may_read(ctx, task.student_id, task.id)
         return task
 
     async def _writer(self, ctx: AdmissionContext, student_id: UUID) -> bool:

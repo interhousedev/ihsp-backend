@@ -544,7 +544,7 @@ def build(
             else None
         ),
         list_plan=list_plan,
-        tasks=TaskService(uow_factory, access, deps.clock),
+        tasks=TaskService(uow_factory, access, deps.clock, identity),
         test_scores=scores,
         consultations=ConsultationService(uow_factory, access, deps.clock, identity),
         profile_details=ProfileDetailsService(uow_factory, access, deps.clock),

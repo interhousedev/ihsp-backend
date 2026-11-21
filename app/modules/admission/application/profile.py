@@ -165,6 +165,7 @@ def _view(
     questions: tuple[Question, ...],
     permissions: frozenset[Permission],
     owner: bool,
+    limited: bool = False,
 ) -> ProfileView:
     answers = profile.answers
     missing = tuple(
@@ -179,7 +180,7 @@ def _view(
         answers={
             k: v
             for k, v in answers.items()
-            if k in BY_ID and _can_see(BY_ID[k], permissions, owner)
+            if not limited and k in BY_ID and _can_see(BY_ID[k], permissions, owner)
         },
         next_question=first,
         missing_required=missing,
@@ -224,6 +225,7 @@ class ProfileService:
             await self._questions(profile.account_kind == "alumni"),
             res.permissions,
             res.owner,
+            limited=res.limited,
         )
 
     @staticmethod

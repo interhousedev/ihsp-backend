@@ -132,7 +132,7 @@ class StaffService:
             student = await self._membership.student(row.student_id)
             if not _passes(filters, row, student):
                 continue
-            if resolution.limited:
+            if Permission.PROFILE_READ not in resolution.permissions:
                 row = replace(row, stage=None, open_help=0)
             if student:
                 row = replace(row, group_name=student.group_name)
