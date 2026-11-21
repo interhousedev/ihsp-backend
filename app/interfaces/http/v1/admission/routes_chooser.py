@@ -18,6 +18,7 @@ from app.modules.admission.domain.catalog_display import (
 )
 from app.modules.admission.domain.chooser import (
     AffordabilityCheck,
+    AidProfile,
     CatalogFilters,
     CatalogInstitution,
     CatalogScholarship,
@@ -113,6 +114,45 @@ class ImportanceFactorOut(BaseModel):
     importance: str
 
 
+class AidProfileOut(BaseModel):
+    """How the institution's aid meets need.
+
+    Every field is null when no source gives it. `avg_aid` is in USD and
+    `avg_aid_scope` says whether it is the average for international students or
+    for all students. The three shares split the package into grants, student
+    loans and work-study.
+    """
+
+    need_blind_intl: bool | None
+    meets_full_need: bool | None
+    avg_aid: Decimal | None
+    avg_aid_scope: Literal["intl", "overall"] | None
+    grant_pct: int | None
+    loan_pct: int | None
+    work_pct: int | None
+    source_url: str | None
+    year: int | None
+
+    @classmethod
+    def of(cls, a: AidProfile) -> "AidProfileOut":
+        """Map the profile."""
+        return cls(
+            need_blind_intl=a.need_blind_intl,
+            meets_full_need=a.meets_full_need,
+            avg_aid=a.avg_aid,
+            avg_aid_scope=(
+                "intl"
+                if a.avg_aid_scope == "intl"
+                else ("overall" if a.avg_aid_scope == "overall" else None)
+            ),
+            grant_pct=a.grant_pct,
+            loan_pct=a.loan_pct,
+            work_pct=a.work_pct,
+            source_url=a.source_url,
+            year=a.year,
+        )
+
+
 class InstitutionOut(BaseModel):
     """A catalog institution with its cited facts."""
 
@@ -147,6 +187,10 @@ class InstitutionOut(BaseModel):
         description="Fit for the caller (as /list/fit); null when not computable.",
     )
     known_share: float | None = Field(default=None, ge=0, le=1)
+    aid_profile: AidProfileOut | None = Field(
+        default=None,
+        description="Aid shares (grant, loan, work-study); detail view only.",
+    )
     details: list[DetailGroupOut] = []
     factors: list[ImportanceFactorOut] = []
 
@@ -202,6 +246,11 @@ class InstitutionOut(BaseModel):
             website_url=(f"https://{i.website_domain}" if i.website_domain else None),
             fit_total=fit.total if fit is not None else None,
             known_share=fit.known_share if fit is not None else None,
+            aid_profile=(
+                AidProfileOut.of(i.aid_profile)
+                if detail and i.aid_profile is not None
+                else None
+            ),
             details=(
                 [DetailGroupOut(**g) for g in detail_groups(i, locale)]
                 if detail

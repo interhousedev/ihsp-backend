@@ -26545,6 +26545,17 @@
             ],
             "title": "Aid Basis"
           },
+          "aid_profile": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AidProfileOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Aid shares (grant, loan, work-study); detail view only."
+          },
           "aliases": {
             "items": {
               "type": "string"
