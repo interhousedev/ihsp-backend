@@ -19235,6 +19235,23 @@
         "title": "EssayListOut",
         "type": "object"
       },
+      "EssayMatchListOut": {
+        "description": "The tables of every university on my list, soonest due first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MatchTableOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "EssayMatchListOut",
+        "type": "object"
+      },
       "EssayOut": {
         "description": "The owner's essay with its live draft.",
         "properties": {
@@ -26642,7 +26659,7 @@
           },
           "sources": {
             "items": {
-              "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_chooser__SourceOut"
+              "$ref": "#/components/schemas/SourceOut"
             },
             "title": "Sources",
             "type": "array"
@@ -35361,6 +35378,28 @@
         "title": "MatchCandidateOut",
         "type": "object"
       },
+      "MatchListOut": {
+        "description": "Undecided universities, best match first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/MatchOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "undecided_only": {
+            "default": true,
+            "title": "Undecided Only",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "MatchListOut",
+        "type": "object"
+      },
       "MatchOut": {
         "description": "A university with its match for the caller.",
         "properties": {
@@ -37838,7 +37877,7 @@
           },
           "sources": {
             "items": {
-              "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_fit__SourceOut"
+              "$ref": "#/components/schemas/ProfessionSourceOut"
             },
             "title": "Sources",
             "type": "array"
@@ -45160,6 +45199,25 @@
           "items"
         ],
         "title": "ProfessionListOut",
+        "type": "object"
+      },
+      "ProfessionSourceOut": {
+        "description": "A cited source.",
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "url"
+        ],
+        "title": "ProfessionSourceOut",
         "type": "object"
       },
       "ProfileDetailsOut": {
@@ -55619,6 +55677,44 @@
         ],
         "title": "SourceKind",
         "type": "string"
+      },
+      "SourceOut": {
+        "description": "Where a fact came from; kept apart from the facts themselves.",
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "key",
+          "url",
+          "year"
+        ],
+        "title": "SourceOut",
+        "type": "object"
       },
       "SourceStatus": {
         "description": "Processing state of a source.",
@@ -69717,44 +69813,6 @@
         "title": "DeadlineOut",
         "type": "object"
       },
-      "app__interfaces__http__v1__admission__routes_chooser__SourceOut": {
-        "description": "Where a fact came from; kept apart from the facts themselves.",
-        "properties": {
-          "key": {
-            "title": "Key",
-            "type": "string"
-          },
-          "url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Url"
-          },
-          "year": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Year"
-          }
-        },
-        "required": [
-          "key",
-          "url",
-          "year"
-        ],
-        "title": "SourceOut",
-        "type": "object"
-      },
       "app__interfaces__http__v1__admission__routes_documents__AttachmentOut": {
         "description": "A document attached to a list entry.",
         "properties": {
@@ -70408,23 +70466,6 @@
         "title": "FeedbackOut",
         "type": "object"
       },
-      "app__interfaces__http__v1__admission__routes_essay_match__MatchListOut": {
-        "description": "The tables of every university on my list, soonest due first.",
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/MatchTableOut"
-            },
-            "title": "Items",
-            "type": "array"
-          }
-        },
-        "required": [
-          "items"
-        ],
-        "title": "MatchListOut",
-        "type": "object"
-      },
       "app__interfaces__http__v1__admission__routes_essay_review_public__CommentIn": {
         "description": "A guest comment, optionally anchored to a quoted span.",
         "properties": {
@@ -70538,7 +70579,7 @@
           },
           "sources": {
             "items": {
-              "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_fit__SourceOut"
+              "$ref": "#/components/schemas/ProfessionSourceOut"
             },
             "title": "Sources",
             "type": "array"
@@ -70556,25 +70597,6 @@
           "sources"
         ],
         "title": "ProfessionOut",
-        "type": "object"
-      },
-      "app__interfaces__http__v1__admission__routes_fit__SourceOut": {
-        "description": "A cited source.",
-        "properties": {
-          "label": {
-            "title": "Label",
-            "type": "string"
-          },
-          "url": {
-            "title": "Url",
-            "type": "string"
-          }
-        },
-        "required": [
-          "label",
-          "url"
-        ],
-        "title": "SourceOut",
         "type": "object"
       },
       "app__interfaces__http__v1__admission__routes_goal_plan__MilestoneOut": {
@@ -70721,28 +70743,6 @@
           "kind"
         ],
         "title": "FeedbackIn",
-        "type": "object"
-      },
-      "app__interfaces__http__v1__admission__routes_matching__MatchListOut": {
-        "description": "Undecided universities, best match first.",
-        "properties": {
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/MatchOut"
-            },
-            "title": "Items",
-            "type": "array"
-          },
-          "undecided_only": {
-            "default": true,
-            "title": "Undecided Only",
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "items"
-        ],
-        "title": "MatchListOut",
         "type": "object"
       },
       "app__interfaces__http__v1__admission__routes_prompt_studio__VersionOut": {
@@ -89831,7 +89831,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_essay_match__MatchListOut"
+                  "$ref": "#/components/schemas/EssayMatchListOut"
                 }
               }
             },
@@ -93609,7 +93609,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/app__interfaces__http__v1__admission__routes_matching__MatchListOut"
+                  "$ref": "#/components/schemas/MatchListOut"
                 }
               }
             },

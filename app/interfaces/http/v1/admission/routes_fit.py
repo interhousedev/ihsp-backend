@@ -72,7 +72,7 @@ class FitPreferencesOut(BaseModel):
         )
 
 
-class SourceOut(BaseModel):
+class ProfessionSourceOut(BaseModel):
     """A cited source."""
 
     label: str
@@ -90,7 +90,7 @@ class ProfessionOut(BaseModel):
     horizon: str
     salary_band: str | None
     related_fields: list[str]
-    sources: list[SourceOut]
+    sources: list[ProfessionSourceOut]
 
     @classmethod
     def of(cls, p: Profession, locale: str) -> "ProfessionOut":
@@ -105,7 +105,7 @@ class ProfessionOut(BaseModel):
             horizon=p.horizon,
             salary_band=p.salary_band,
             related_fields=list(p.related_fields),
-            sources=[SourceOut(label=s.label, url=s.url) for s in p.sources],
+            sources=[ProfessionSourceOut(label=s.label, url=s.url) for s in p.sources],
         )
 
 

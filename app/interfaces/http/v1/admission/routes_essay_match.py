@@ -139,7 +139,7 @@ class MatchTableOut(BaseModel):
         )
 
 
-class MatchListOut(BaseModel):
+class EssayMatchListOut(BaseModel):
     """The tables of every university on my list, soonest due first."""
 
     items: list[MatchTableOut]
@@ -163,12 +163,14 @@ async def essay_top(container: ContainerDep, ctx: StudentCtx) -> TopEssaysOut:
 @router.get(
     "/essays/match",
     operation_id="admission_essay_match_list",
-    response_model=MatchListOut,
+    response_model=EssayMatchListOut,
 )
-async def essay_match_list(container: ContainerDep, ctx: StudentCtx) -> MatchListOut:
+async def essay_match_list(
+    container: ContainerDep, ctx: StudentCtx
+) -> EssayMatchListOut:
     """Every listed university's slots at once, with its application due date."""
     tables = await container.admission.essay_match.listing(ctx)
-    return MatchListOut(items=[MatchTableOut.of(t) for t in tables])
+    return EssayMatchListOut(items=[MatchTableOut.of(t) for t in tables])
 
 
 @router.get(
