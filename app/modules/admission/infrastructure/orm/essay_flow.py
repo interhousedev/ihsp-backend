@@ -55,7 +55,7 @@ class EssayPracticeRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
     model: Mapped[str | None] = mapped_column(String(200))
 
 
-class EssayGalleryRow(IdMixin, CreatedMixin, Base):
+class EssayGalleryRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
     """An essay version published to other students, without the author's name."""
 
     __tablename__ = "essay_gallery"
@@ -104,7 +104,7 @@ class EssaySlotRow(IdMixin, CreatedMixin, UpdatedMixin, Base):
     )
 
 
-class PromptGroupLabelRow(CreatedMixin, Base):
+class PromptGroupLabelRow(CreatedMixin, UpdatedMixin, Base):
     """The generated short name of a prompt group (public data, no student text)."""
 
     __tablename__ = "prompt_group_labels"
@@ -117,7 +117,7 @@ class PromptGroupLabelRow(CreatedMixin, Base):
     model: Mapped[str] = mapped_column(String(200), server_default="")
 
 
-class IdeaFitRow(CreatedMixin, Base):
+class IdeaFitRow(CreatedMixin, UpdatedMixin, Base):
     """A cached idea fit: prompt keys and scores only, keyed by a keyed text digest."""
 
     __tablename__ = "idea_fits"

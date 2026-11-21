@@ -23,3 +23,6 @@ class PromptDefaultRow(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=sql_text("now()")
     )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=sql_text("now()")
+    )
