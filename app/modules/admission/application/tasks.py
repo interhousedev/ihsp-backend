@@ -35,6 +35,7 @@ _EDITABLE: Final = frozenset(
         "priority",
         "start_date",
         "deadline",
+        "list_entry_id",
         "steps",
         "links",
     }
@@ -132,6 +133,15 @@ class TaskService:
             return "student"
         return "counselor" if Role.COUNSELOR in ctx.actor.roles else "mentor"
 
+    @staticmethod
+    async def _own_entry(uow: Any, student_id: UUID, entry_id: UUID | None) -> None:
+        """The linked list entry must belong to the same student."""
+        if entry_id is None:
+            return
+        entry = await uow.shortlist.entry(entry_id)
+        if entry is None or entry.student_id != student_id:
+            raise InvalidAnswerError(params={"field": "list_entry_id"})
+
     async def create(
         self, ctx: AdmissionContext, student_id: UUID, draft: Task
     ) -> Task:
@@ -147,6 +157,7 @@ class TaskService:
         )
         task.validate()
         async with self._uow() as uow:
+            await self._own_entry(uow, student_id, task.list_entry_id)
             saved = await uow.tasks.add(task)
             self._audit(uow, ctx, "task.created", saved)
             await uow.commit()
@@ -179,6 +190,8 @@ class TaskService:
         for t in tasks:
             t.validate()
         async with self._uow() as uow:
+            for t in tasks:
+                await self._own_entry(uow, ctx.user_id, t.list_entry_id)
             saved = [await uow.tasks.add(t) for t in tasks]
             for s in saved:
                 self._audit(uow, ctx, "task.created", s)
@@ -207,6 +220,8 @@ class TaskService:
             edited.set_status(changes["status"], self._clock.now())
         edited.validate()
         async with self._uow() as uow:
+            if edited.list_entry_id != task.list_entry_id:
+                await self._own_entry(uow, task.student_id, edited.list_entry_id)
             saved = await uow.tasks.save(edited, expected_lock=lock_version)
             self._audit(uow, ctx, "task.updated", saved)
             await uow.commit()

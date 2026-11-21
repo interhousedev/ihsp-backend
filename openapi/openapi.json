@@ -7823,6 +7823,18 @@
             "title": "Key",
             "type": "string"
           },
+          "list_entry_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Entry Id"
+          },
           "predicted": {
             "title": "Predicted",
             "type": "boolean"
@@ -7867,7 +7879,8 @@
           "all_day",
           "url_path",
           "predicted",
-          "remind"
+          "remind",
+          "list_entry_id"
         ],
         "title": "CalendarEntryOut",
         "type": "object"
@@ -61011,6 +61024,18 @@
             "title": "Links",
             "type": "array"
           },
+          "list_entry_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Entry Id"
+          },
           "priority": {
             "default": "medium",
             "enum": [
@@ -61131,6 +61156,18 @@
             "title": "Links",
             "type": "array"
           },
+          "list_entry_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Entry Id"
+          },
           "lock_version": {
             "title": "Lock Version",
             "type": "integer"
@@ -61212,6 +61249,7 @@
           "priority",
           "start_date",
           "deadline",
+          "list_entry_id",
           "created_by",
           "creator_id",
           "steps",
@@ -61267,6 +61305,18 @@
               }
             ],
             "title": "Links"
+          },
+          "list_entry_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Entry Id"
           },
           "lock_version": {
             "minimum": 0.0,

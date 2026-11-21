@@ -134,6 +134,7 @@ class UniversitySource:
                             remind=plan.upper() == e.round.upper(),
                             title_key=key,
                             subject=inst.name,
+                            list_entry_id=e.id,
                         )
                     )
         return out
@@ -190,6 +191,7 @@ class ChecklistSource:
                         url_path="/documents/",
                         title_key=key,
                         subject=subject,
+                        list_entry_id=entry.id if entry is not None else None,
                     )
                 )
         return out

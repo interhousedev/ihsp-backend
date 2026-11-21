@@ -84,6 +84,7 @@ class TaskOut(BaseModel):
     priority: Priority
     start_date: dt.date | None
     deadline: dt.date | None
+    list_entry_id: UUID | None
     created_by: Source
     creator_id: UUID | None
     steps: list[StepOut]
@@ -110,6 +111,7 @@ class TaskIn(BaseModel):
     priority: Priority = "medium"
     start_date: dt.date | None = None
     deadline: dt.date | None = None
+    list_entry_id: UUID | None = None
     steps: list[StepIn] = Field(default_factory=list, max_length=STEPS_MAX)
     links: list[LinkIO] = Field(default_factory=list, max_length=LINKS_MAX)
 
@@ -127,6 +129,7 @@ class TaskPatch(BaseModel):
     priority: Priority | None = None
     start_date: dt.date | None = None
     deadline: dt.date | None = None
+    list_entry_id: UUID | None = None
     steps: list[StepIn] | None = Field(default=None, max_length=STEPS_MAX)
     links: list[LinkIO] | None = Field(default=None, max_length=LINKS_MAX)
 
@@ -163,6 +166,7 @@ def _draft(body: TaskIn) -> Task:
         priority=body.priority,
         start_date=body.start_date,
         deadline=body.deadline,
+        list_entry_id=body.list_entry_id,
         steps=_steps(body.steps),
         links=tuple(_link(x) for x in body.links),
     )
@@ -180,6 +184,7 @@ def _out(t: Task, today: dt.date) -> TaskOut:
         priority=t.priority,
         start_date=t.start_date,
         deadline=t.deadline,
+        list_entry_id=t.list_entry_id,
         created_by=t.created_by,
         creator_id=t.creator_id,
         steps=[

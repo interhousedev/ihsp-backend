@@ -55,7 +55,9 @@ def upgrade() -> None:
         ),
         schema=S,
     )
-    op.add_column("essays", sa.Column("forked_from", sa.Uuid(), nullable=True), schema=S)
+    op.add_column(
+        "essays", sa.Column("forked_from", sa.Uuid(), nullable=True), schema=S
+    )
     op.create_foreign_key(
         op.f("fk_essays_forked_from_essays"),
         "essays",

@@ -45,6 +45,7 @@ class CalendarEntryOut(BaseModel):
     url_path: str | None
     predicted: bool
     remind: bool
+    list_entry_id: UUID | None
 
     @classmethod
     def of(cls, e: CalendarEntry) -> "CalendarEntryOut":
@@ -59,6 +60,7 @@ class CalendarEntryOut(BaseModel):
             url_path=e.url_path,
             predicted=e.predicted,
             remind=e.remind,
+            list_entry_id=e.list_entry_id,
         )
 
 
