@@ -52,6 +52,9 @@ class MemEssays:
     async def list_for(self, student_id: UUID) -> list[Essay]:
         return [e for e in self.rows.values() if e.student_id == student_id]
 
+    async def statuses(self, student_id: UUID) -> list[str]:
+        return [e.status for e in self.rows.values() if e.student_id == student_id]
+
     async def get(self, essay_id: UUID) -> Essay | None:
         return self.rows.get(essay_id)
 

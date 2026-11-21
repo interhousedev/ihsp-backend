@@ -163,7 +163,7 @@ class ReadinessService:
             profile = await uow.profiles.get(target)
             goals = await uow.goals.list_for(target)
             items = await uow.items.list_for(target)
-            essays = await uow.essays.list_for(target)
+            essay_statuses = await uow.essays.statuses(target)
             entries = await uow.test_scores.entries(target)
             checklist = await uow.checklist.for_student(target)
             shortlist = await uow.shortlist.entries(target)
@@ -176,7 +176,7 @@ class ReadinessService:
         scores["plans"] = ratio_score(planned, max(cfg.plans_target, 1))
         scores["countries"] = 100 if _filled(answers.get(COUNTRIES_QUESTION)) else 0
         scores["list"] = await self._list_score(ctx, target, len(shortlist))
-        points = sum(1.0 if e.status == "final" else 0.5 for e in essays)
+        points = sum(1.0 if s == "final" else 0.5 for s in essay_statuses)
         scores["essays"] = ratio_score(points, max(cfg.essays_target, 1))
         ready = sum(1 for i in items if i.status == "ready")
         scores["activities"] = ratio_score(ready, max(cfg.activities_target, 1))

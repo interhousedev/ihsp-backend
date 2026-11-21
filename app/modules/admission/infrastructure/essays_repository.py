@@ -183,6 +183,13 @@ class SqlEssayRepository:
         )
         return [await self._essay(r) for r in rows]
 
+    async def statuses(self, student_id: UUID) -> list[str]:
+        """Return the status of each essay; nothing is decrypted."""
+        rows = await self._s.scalars(
+            select(EssayRow.status).where(EssayRow.student_id == student_id)
+        )
+        return list(rows)
+
     async def get(self, essay_id: UUID) -> Essay | None:
         """Return one essay."""
         row = await self._s.get(EssayRow, essay_id)
