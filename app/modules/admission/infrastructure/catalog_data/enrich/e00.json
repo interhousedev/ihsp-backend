@@ -131,12 +131,12 @@
       "slug": "fgv-br",
       "name": "Fundação Getulio Vargas",
       "country": "BR",
-      "city": "São Paulo",
+      "city": "Rio de Janeiro, São Paulo, Brasília",
       "website_domain": "fgv.br",
       "description": {
-        "en": "Fundação Getulio Vargas is a Brazilian higher education institution and think tank. It was founded on 20 December 1944.",
-        "ru": "Фонд Жетулиу Варгас — бразильское высшее учебное заведение и аналитический центр. Основан 20 декабря 1944 года.",
-        "uz": "Getuliu Vargas fondi — Braziliyaning oliy taʼlim muassasasi va tahliliy markaz. 1944-yil 20-dekabrda tashkil etilgan."
+        "en": "Fundação Getulio Vargas is a Brazilian higher education institution and think tank founded in 1944. Its schools have campuses in Rio de Janeiro (headquarters), São Paulo and Brasília.",
+        "ru": "Фонд Жетулиу Варгас — бразильское высшее учебное заведение и аналитический центр, основанный в 1944 году. Кампусы его школ находятся в Рио-де-Жанейро (штаб-квартира), Сан-Паулу и Бразилиа.",
+        "uz": "Getuliu Vargas fondi — 1944-yilda tashkil etilgan Braziliya oliy taʼlim muassasasi va tahliliy markazi. Maktablarining kampuslari Rio-de-Janeyro (bosh qarorgoh), San-Paulu va Braziliyada joylashgan."
       },
       "source_url": "https://en.wikipedia.org/wiki/Funda%C3%A7%C3%A3o_Getulio_Vargas",
       "year": 2026,
