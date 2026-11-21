@@ -280,6 +280,8 @@ async def test_the_pipelines_list_shows_every_pipeline_with_tasks_and_defaults(
         "model": None,
         "reasoning_effort": None,
         "updated_at": None,
+        "tracing_enabled": None,
+        "capture_content": None,
     }
     assert studio["effective"]["source"] == "env"
     assert studio["env_default"]["connector_id"] == "openrouter"
