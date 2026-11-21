@@ -10,6 +10,7 @@ import datetime as dt
 from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Final, Literal
+from uuid import UUID
 
 SeasonKey = Literal["explore", "build", "choose", "write", "submit", "results"]
 SEASONS: Final[tuple[SeasonKey, ...]] = (
@@ -217,6 +218,25 @@ def season_lines(season: SeasonKey, s: Snapshot) -> list[Line]:
     ]
 
 
+PIN_DAYS: Final = 14
+"""How long a counselor-pinned action stays on the student's Today."""
+PIN_TITLE_MAX: Final = 200
+PIN_NOTE_MAX: Final = 500
+
+
+@dataclass(frozen=True, slots=True)
+class Pin:
+    """The one action a counselor pinned for a student."""
+
+    student_id: UUID
+    title: str
+    href: str | None
+    note: str | None
+    pinned_by: UUID
+    pinned_by_name: str
+    expires_at: dt.datetime
+
+
 @dataclass(frozen=True, slots=True)
 class Candidate:
     """A possible next action; `tier` 0 deadline, 1 season gap, 2 fit gap."""
@@ -230,7 +250,9 @@ class Candidate:
     href: str
     list_entry_id: str | None = None
     kind: str = "season"
-    """What it is about: a calendar source, `task`, `essay`, `season`, `afford`."""
+    """What it is about: a calendar source, `task`, `essay`, `season`, `afford`,
+    `pinned`."""
+    pinned_by: str | None = None
 
 
 def rank(candidates: Iterable[Candidate]) -> list[Candidate]:

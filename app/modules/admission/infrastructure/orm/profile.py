@@ -150,7 +150,7 @@ class ItemRow(IdMixin, CreatedMixin, UpdatedMixin, LockMixin, Base):
     certificate_entry_id: Mapped[UUID | None] = mapped_column(Uuid)
 
 
-class HonorSuggestionDismissalRow(CreatedMixin, Base):
+class HonorSuggestionDismissalRow(CreatedMixin, UpdatedMixin, Base):
     """A certificate the student waved away from the honor suggestions."""
 
     __tablename__ = "honor_dismissals"

@@ -45,5 +45,6 @@
   "today-why-line": "Следующий шаг сезона «{season}»",
   "today-why-line-progress": "Следующий шаг сезона «{season}» ({progress})",
   "today-why-afford-gap": "Стоимость выше ваших возможностей",
-  "today-why-afford-unknown": "Стоимость ещё не проверена"
+  "today-why-afford-unknown": "Стоимость ещё не проверена",
+  "today-why-pinned": "Закрепил(а) {name}"
 }

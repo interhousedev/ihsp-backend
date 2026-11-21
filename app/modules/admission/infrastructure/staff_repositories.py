@@ -172,6 +172,29 @@ class SqlStaffRepository:
                 out.append(_assignment(row, role))
         return out
 
+    async def active_assignments(self) -> list[Assignment]:
+        """Return every unrevoked assignment of counselor and mentor roles."""
+        rows = (
+            await self._s.scalars(
+                select(StaffAssignmentRow)
+                .join(StaffRoleRow, StaffRoleRow.id == StaffAssignmentRow.staff_role_id)
+                .where(
+                    StaffRoleRow.kind.in_(("counselor", "mentor")),
+                    StaffAssignmentRow.revoked_at.is_(None),
+                )
+            )
+        ).all()
+        roles = {
+            r.id: r
+            for r in [await self.role(i) for i in {x.staff_role_id for x in rows}]
+            if r
+        }
+        return [
+            _assignment(a, roles[a.staff_role_id])
+            for a in rows
+            if a.staff_role_id in roles
+        ]
+
     async def add_assignment(self, assignment: Assignment) -> Assignment:
         """Store a new assignment; a live duplicate is returned unchanged."""
         live = await self._s.scalar(

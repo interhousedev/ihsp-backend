@@ -5,7 +5,7 @@ from collections.abc import Collection
 from typing import Protocol
 from uuid import UUID
 
-from app.modules.admission.domain.today import SeasonKey
+from app.modules.admission.domain.today import Pin, SeasonKey
 
 
 class TodayRepository(Protocol):
@@ -37,4 +37,16 @@ class TodayRepository(Protocol):
         self, student_id: UUID, key: str, count: int, until: dt.date
     ) -> None:
         """Insert or replace the snooze of one action."""
+        ...
+
+    async def pin(self, student_id: UUID) -> Pin | None:
+        """The stored pin of the student (expired ones included)."""
+        ...
+
+    async def set_pin(self, pin: Pin) -> None:
+        """Insert or replace the student's pin."""
+        ...
+
+    async def clear_pin(self, student_id: UUID) -> bool:
+        """Remove the pin; return whether there was one."""
         ...

@@ -5,10 +5,11 @@ from collections.abc import Collection
 from typing import cast
 from uuid import UUID
 
-from app.modules.admission.domain.today import SeasonKey
+from app.modules.admission.domain.today import Pin, SeasonKey
 from app.modules.admission.infrastructure.orm.today import (
     ActivityDayRow,
     SeasonOverrideRow,
+    StaffPinRow,
     TodaySnoozeRow,
 )
 
@@ -89,3 +90,43 @@ class SqlTodayRepository:
                 set_={"count": count, "until": until, "updated_at": func.now()},
             )
         )
+
+    async def pin(self, student_id: UUID) -> Pin | None:
+        """The stored pin of the student (expired ones included)."""
+        r = await self._s.get(StaffPinRow, student_id)
+        if r is None:
+            return None
+        return Pin(
+            r.student_id,
+            r.title,
+            r.href,
+            r.note,
+            r.pinned_by,
+            r.pinned_by_name,
+            r.expires_at,
+        )
+
+    async def set_pin(self, pin: Pin) -> None:
+        """Insert or replace the student's pin."""
+        values = {
+            "title": pin.title,
+            "href": pin.href,
+            "note": pin.note,
+            "pinned_by": pin.pinned_by,
+            "pinned_by_name": pin.pinned_by_name,
+            "expires_at": pin.expires_at,
+        }
+        stmt = insert(StaffPinRow).values(student_id=pin.student_id, **values)
+        await self._s.execute(
+            stmt.on_conflict_do_update(
+                index_elements=["student_id"],
+                set_={**values, "updated_at": func.now()},
+            )
+        )
+
+    async def clear_pin(self, student_id: UUID) -> bool:
+        """Remove the pin; return whether there was one."""
+        result = await self._s.execute(
+            delete(StaffPinRow).where(StaffPinRow.student_id == student_id)
+        )
+        return bool(result.rowcount)  # type: ignore[attr-defined]

@@ -86,6 +86,7 @@ from app.modules.admission.application.review import ItemReviewService
 from app.modules.admission.application.runtime_settings import RuntimeSettingsService
 from app.modules.admission.application.school_grades import SchoolGradesService
 from app.modules.admission.application.staff import StaffService
+from app.modules.admission.application.staff_timeline import StaffTimelineService
 from app.modules.admission.application.supp_prompts import SuppPromptService
 from app.modules.admission.application.tasks import TaskService
 from app.modules.admission.application.tasks_suggest import TaskSuggester
@@ -170,6 +171,7 @@ class AdmissionServices:
     config: GetConfig
     courses: CourseService
     staff: StaffService
+    staff_timeline: StaffTimelineService
     comments: CommentService
     privacy: PrivacyService
     mentoring: MentoringService
@@ -369,6 +371,10 @@ def build(
         exemplar_source,
         cipher,
     )
+    staff = StaffService(
+        uow_factory, access, membership, staff_directory, deps.clock, identity
+    )
+    task_service = TaskService(uow_factory, access, deps.clock, identity)
     readiness = ReadinessService(
         uow_factory, access, runtime, settings.readiness, deps.clock, list_plan
     )
@@ -381,8 +387,9 @@ def build(
         school_grades=SchoolGradesService(uow_factory, runtime, grades),
         config=GetConfig(settings, runtime, limits, cache(_fields)),
         courses=CourseService(uow_factory, access, course_sources),
-        staff=StaffService(
-            uow_factory, access, membership, staff_directory, deps.clock, identity
+        staff=staff,
+        staff_timeline=StaffTimelineService(
+            staff, calendar, task_service, access, deps.clock
         ),
         comments=CommentService(uow_factory, access, deps.clock, identity),
         mentoring=MentoringService(uow_factory),
@@ -544,7 +551,7 @@ def build(
             else None
         ),
         list_plan=list_plan,
-        tasks=TaskService(uow_factory, access, deps.clock, identity),
+        tasks=task_service,
         test_scores=scores,
         consultations=ConsultationService(uow_factory, access, deps.clock, identity),
         profile_details=ProfileDetailsService(uow_factory, access, deps.clock),

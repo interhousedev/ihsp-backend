@@ -45,5 +45,6 @@
   "today-why-line": "“{season}” mavsumining navbatdagi qadami",
   "today-why-line-progress": "“{season}” mavsumining navbatdagi qadami ({progress})",
   "today-why-afford-gap": "Narx imkoniyatingizdan yuqori",
-  "today-why-afford-unknown": "Narx hali tekshirilmagan"
+  "today-why-afford-unknown": "Narx hali tekshirilmagan",
+  "today-why-pinned": "{name} biriktirgan"
 }

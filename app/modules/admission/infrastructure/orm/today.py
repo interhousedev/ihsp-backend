@@ -12,13 +12,13 @@ from app.modules.admission.infrastructure.orm._common import (
 )
 from app.shared.db.base import Base
 
-from sqlalchemy import Date, SmallInteger, String, Uuid
+from sqlalchemy import Date, DateTime, SmallInteger, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
-__all__ = ["ActivityDayRow", "SeasonOverrideRow", "TodaySnoozeRow"]
+__all__ = ["ActivityDayRow", "SeasonOverrideRow", "StaffPinRow", "TodaySnoozeRow"]
 
 
-class ActivityDayRow(CreatedMixin, Base):
+class ActivityDayRow(CreatedMixin, UpdatedMixin, Base):
     """A day on which the student changed something (the streak)."""
 
     __tablename__ = "activity_days"
@@ -48,3 +48,18 @@ class TodaySnoozeRow(CreatedMixin, UpdatedMixin, Base):
     key: Mapped[str] = mapped_column(String(200), primary_key=True)
     count: Mapped[int] = mapped_column(SmallInteger)
     until: Mapped[dt.date] = mapped_column(Date)
+
+
+class StaffPinRow(CreatedMixin, UpdatedMixin, Base):
+    """The action a counselor pinned to the top of a student's Today."""
+
+    __tablename__ = "staff_pins"
+    __table_args__ = (S,)
+
+    student_id: Mapped[UUID] = mapped_column(Uuid, primary_key=True)
+    title: Mapped[str] = mapped_column(String(200))
+    href: Mapped[str | None] = mapped_column(String(500))
+    note: Mapped[str | None] = mapped_column(String(500))
+    pinned_by: Mapped[UUID] = mapped_column(Uuid)
+    pinned_by_name: Mapped[str] = mapped_column(String(160))
+    expires_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True))

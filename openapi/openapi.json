@@ -4655,6 +4655,31 @@
         "title": "AssignedEssayOut",
         "type": "object"
       },
+      "AssignedStaffOut": {
+        "description": "A staff member assigned to the student.",
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "user_id": {
+            "format": "uuid",
+            "title": "User Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "user_id",
+          "name",
+          "kind"
+        ],
+        "title": "AssignedStaffOut",
+        "type": "object"
+      },
       "AssignmentIn": {
         "description": "Delegate a sub-role over one student or a class.",
         "properties": {
@@ -8602,6 +8627,14 @@
       "CaseloadItemOut": {
         "description": "One student on the staff member's list.",
         "properties": {
+          "assigned_staff": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/AssignedStaffOut"
+            },
+            "title": "Assigned Staff",
+            "type": "array"
+          },
           "group_id": {
             "anyOf": [
               {
@@ -38384,6 +38417,18 @@
             "title": "Minutes",
             "type": "integer"
           },
+          "pinned_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Name of the counselor who pinned it (`pinned`).",
+            "title": "Pinned By"
+          },
           "title": {
             "title": "Title",
             "type": "string"
@@ -42681,6 +42726,102 @@
         "title": "PinExternalBody",
         "type": "object"
       },
+      "PinIn": {
+        "additionalProperties": false,
+        "description": "The action to pin on a student's Today (14 days).",
+        "properties": {
+          "href": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Href"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "PinIn",
+        "type": "object"
+      },
+      "PinOut": {
+        "description": "The stored pin.",
+        "properties": {
+          "expires_at": {
+            "format": "date-time",
+            "title": "Expires At",
+            "type": "string"
+          },
+          "href": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Href"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "pinned_by": {
+            "title": "Pinned By",
+            "type": "string"
+          },
+          "student_id": {
+            "format": "uuid",
+            "title": "Student Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "student_id",
+          "title",
+          "href",
+          "note",
+          "pinned_by",
+          "expires_at"
+        ],
+        "title": "PinOut",
+        "type": "object"
+      },
       "PinReadingListBody": {
         "additionalProperties": false,
         "description": "`PUT /library/reading-lists/{id}/pin`: `{pinned}`.",
@@ -45277,6 +45418,23 @@
             "additionalProperties": true,
             "title": "Answers",
             "type": "object"
+          },
+          "budget_shared": {
+            "default": false,
+            "title": "Budget Shared",
+            "type": "boolean"
+          },
+          "family_budget": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Budget band; set only when the student shares it.",
+            "title": "Family Budget"
           },
           "lock_version": {
             "title": "Lock Version",
@@ -56219,6 +56377,23 @@
         "title": "StaffAssessmentListResponse",
         "type": "object"
       },
+      "StaffDeadlinesOut": {
+        "description": "The caseload timeline, soonest first.",
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StudentDeadlineOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "StaffDeadlinesOut",
+        "type": "object"
+      },
       "StaffEntriesResponse": {
         "description": "A page of staff entries.",
         "properties": {
@@ -58242,6 +58417,86 @@
           "refresh_in"
         ],
         "title": "StudentCardTokenResponse",
+        "type": "object"
+      },
+      "StudentDeadlineOut": {
+        "description": "One dated item of one student on the caseload.",
+        "properties": {
+          "by_staff": {
+            "description": "A task a staff member set for the student.",
+            "title": "By Staff",
+            "type": "boolean"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "group_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Group Name"
+          },
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "kind": {
+            "description": "A calendar source, or `task`.",
+            "title": "Kind",
+            "type": "string"
+          },
+          "list_entry_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "List Entry Id"
+          },
+          "student_id": {
+            "format": "uuid",
+            "title": "Student Id",
+            "type": "string"
+          },
+          "student_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Student Name"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "student_id",
+          "student_name",
+          "group_name",
+          "date",
+          "title",
+          "kind",
+          "href",
+          "list_entry_id",
+          "by_staff"
+        ],
+        "title": "StudentDeadlineOut",
         "type": "object"
       },
       "StudentGroupBody": {
@@ -97658,6 +97913,70 @@
         ]
       }
     },
+    "/v1/admission/staff/caseload-deadlines": {
+      "get": {
+        "description": "Deadlines and tasks of the students the caller reaches (`mine`: assigned).",
+        "operationId": "admission_staff_deadlines",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "mine",
+              "enum": [
+                "mine",
+                "all"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Accept-Language",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Accept-Language"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StaffDeadlinesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Staff Deadlines",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
     "/v1/admission/staff/catalog/fact-spec": {
       "get": {
         "description": "The international facts the proposal form can fill, labelled by locale.",
@@ -99770,7 +100089,7 @@
     },
     "/v1/admission/staff/students": {
       "get": {
-        "description": "Students the caller reaches, soonest deadline first.",
+        "description": "Students the caller reaches, soonest deadline first; `all` is admin-only.",
         "operationId": "admission_list_caseload",
         "parameters": [
           {
@@ -99832,6 +100151,31 @@
               ],
               "title": "Group Id"
             }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "mine",
+              "enum": [
+                "mine",
+                "all"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 80,
+              "title": "Q",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -99857,6 +100201,95 @@
           }
         },
         "summary": "List Caseload",
+        "tags": [
+          "admission"
+        ]
+      }
+    },
+    "/v1/admission/staff/students/{student_id}/pin": {
+      "delete": {
+        "description": "Remove the pinned action.",
+        "operationId": "admission_staff_unpin_action",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "student_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Student Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unpin Action",
+        "tags": [
+          "admission"
+        ]
+      },
+      "post": {
+        "description": "Pin one action at the top of the student's Today for 14 days.",
+        "operationId": "admission_staff_pin_action",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "student_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Student Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PinIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PinOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pin Action",
         "tags": [
           "admission"
         ]

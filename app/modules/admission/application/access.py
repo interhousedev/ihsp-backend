@@ -20,7 +20,7 @@ from app.modules.admission.domain.errors import (
     AdmissionNotFoundError,
 )
 from app.modules.admission.domain.permissions import KIND_ROLE, Permission
-from app.modules.admission.ports.consent import STAFF_VIEW, PurposeConsents
+from app.modules.admission.ports.consent import FINANCE, STAFF_VIEW, PurposeConsents
 from app.modules.admission.ports.repositories import AuditEvent
 from app.modules.admission.ports.unit_of_work import UowFactory
 from app.shared.actor import Role
@@ -109,6 +109,11 @@ class AccessPolicy:
             mentee_opt_in=bool(mine and mine.mentee_opt_in),
             entitled=entitlement is not None and entitlement.is_applicant,
         )
+
+    async def finance_shared(self, student_id: UUID) -> bool:
+        """Return whether the student shares the family budget (finance consent)."""
+        granted = await self._consents.granted([student_id])
+        return FINANCE in granted.get(student_id, frozenset())
 
     async def resolve(self, ctx: AdmissionContext, student_id: UUID) -> Resolution:
         """Return the caller's permissions over the student."""

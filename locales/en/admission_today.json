@@ -45,5 +45,6 @@
   "today-why-line": "Next step of your {season} season",
   "today-why-line-progress": "Next step of your {season} season ({progress})",
   "today-why-afford-gap": "The cost is above what you can pay",
-  "today-why-afford-unknown": "The cost is not checked yet"
+  "today-why-afford-unknown": "The cost is not checked yet",
+  "today-why-pinned": "Pinned by {name}"
 }

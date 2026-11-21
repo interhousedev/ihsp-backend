@@ -45,6 +45,9 @@ class NextActionOut(BaseModel):
     href: str
     list_entry_id: str | None
     kind: str
+    pinned_by: str | None = Field(
+        default=None, description="Name of the counselor who pinned it (`pinned`)."
+    )
 
 
 class StreakOut(BaseModel):
@@ -107,6 +110,7 @@ class TodayOut(BaseModel):
                     href=n.href,
                     list_entry_id=n.list_entry_id,
                     kind=n.kind,
+                    pinned_by=n.pinned_by,
                 )
                 for n in v.next
             ],

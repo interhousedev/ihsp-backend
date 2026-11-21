@@ -22,6 +22,7 @@ from app.modules.admission.domain.tasks import Task
 from app.modules.admission.domain.today import (
     DEADLINE_WINDOW_DAYS,
     MAX_DEADLINES,
+    MAX_NEXT,
     Candidate,
     Line,
     SeasonKey,
@@ -368,6 +369,28 @@ class TodayService:
             found = await uow.today.snoozes(student)
         return {k for k, (_, until) in found.items() if until > today}
 
+    async def _pinned(self, student: UUID, locale: str) -> tuple[Candidate, ...]:
+        """The counselor-pinned action while it is in force; it is never snoozed."""
+        async with self._uow() as uow:
+            pin = await uow.today.pin(student)
+        if pin is None or pin.expires_at <= self._clock.now():
+            return ()
+        why = pin.note or self._t(locale, "today-why-pinned", name=pin.pinned_by_name)
+        return (
+            Candidate(
+                -1,
+                0,
+                f"pinned:{student}",
+                pin.title,
+                why,
+                _TASK_MINUTES,
+                pin.href or "/tasks/",
+                None,
+                "pinned",
+                pin.pinned_by_name,
+            ),
+        )
+
     async def get(self, ctx: AdmissionContext, locale: str) -> TodayView:
         """The feed of the caller."""
         today = self._clock.now().astimezone(TASHKENT).date()
@@ -387,6 +410,7 @@ class TodayService:
         cands += self._gap_candidates(locale, season, lines, d)
         hidden = await self._snoozed(ctx.user_id, today)
         cands = [c for c in cands if c.key not in hidden]
+        pinned = await self._pinned(ctx.user_id, locale)
         run, today_done, last7 = streak(d.days, today)
         readiness = await self._readiness.get(ctx)
         return TodayView(
@@ -395,7 +419,7 @@ class TodayService:
                 source="override" if d.override else "auto",
                 checklist=tuple(self._line(locale, ln) for ln in lines),
             ),
-            next=tuple(rank(cands)),
+            next=(*pinned, *rank(cands))[:MAX_NEXT],
             streak_days=run,
             today_done=today_done,
             last7=tuple(last7),

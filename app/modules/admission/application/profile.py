@@ -26,6 +26,7 @@ from app.modules.admission.domain.questions import (
 )
 from app.modules.admission.domain.runtime_settings import WELLBEING_QUESTIONS
 from app.modules.admission.ports.unit_of_work import UowFactory
+from app.shared.actor import Role
 from app.shared.clock import Clock
 
 
@@ -42,6 +43,8 @@ class ProfileView:
     missing_required: tuple[str, ...]
     setup_completed: bool
     lock_version: int
+    family_budget: str | None = None
+    budget_shared: bool = False
 
 
 def active_questions(*, alumni: bool, wellbeing: bool) -> tuple[Question, ...]:
@@ -160,19 +163,29 @@ def _can_see(q: Question, permissions: frozenset[Permission], owner: bool) -> bo
     return False
 
 
+BUDGET_QUESTION = "q32"
+"""The family budget band of the profile (finance-sensitive)."""
+
+
 def _view(
     profile: AdmissionProfile,
     questions: tuple[Question, ...],
     permissions: frozenset[Permission],
     owner: bool,
     limited: bool = False,
+    budget_shared: bool = False,
 ) -> ProfileView:
     answers = profile.answers
     missing = tuple(
         q.id for q in questions if q.required and not _answered(answers.get(q.id))
     )
     first = next((q.id for q in questions if not _answered(answers.get(q.id))), None)
+    budget = answers.get(BUDGET_QUESTION)
     return ProfileView(
+        family_budget=(
+            budget if (owner or budget_shared) and isinstance(budget, str) else None
+        ),
+        budget_shared=budget_shared,
         student_id=profile.student_id,
         account_kind=profile.account_kind,
         stage=profile.stage,
@@ -209,6 +222,14 @@ class ProfileService:
         flag = (await self._runtime.get()).get(WELLBEING_QUESTIONS, False)
         return active_questions(alumni=alumni, wellbeing=flag is True)
 
+    async def _budget_shared(
+        self, ctx: AdmissionContext, student_id: UUID, owner: bool
+    ) -> bool:
+        """The budget is shown to the owner and to counselors once it is shared."""
+        if not owner and Role.COUNSELOR not in ctx.actor.roles:
+            return False
+        return await self._access.finance_shared(student_id)
+
     async def get(self, ctx: AdmissionContext, student_id: UUID) -> ProfileView:
         """Return the answers visible to the caller; a new student gets an empty one."""
         res = await self._access.require(
@@ -226,6 +247,7 @@ class ProfileService:
             res.permissions,
             res.owner,
             limited=res.limited,
+            budget_shared=await self._budget_shared(ctx, student_id, res.owner),
         )
 
     @staticmethod
