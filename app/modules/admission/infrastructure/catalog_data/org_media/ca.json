@@ -1,0 +1,107 @@
+[
+  {
+    "domain": "carleton.ca",
+    "name": "Carleton University",
+    "aliases": ["Carleton University"],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/57/Carleton_University_Logo.svg/960px-Carleton_University_Logo.svg.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/13/Carleton_University_Bronson_Entrance.jpg/960px-Carleton_University_Bronson_Entrance.jpg"
+  },
+  {
+    "domain": "concordia.ca",
+    "name": "Concordia University",
+    "aliases": ["Concordia University"],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/69/Concordia_univ_montreal_textlogo.png/960px-Concordia_univ_montreal_textlogo.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/Concordia_2003-07-09_campus_shuttle_Hall_bldg.jpg/960px-Concordia_2003-07-09_campus_shuttle_Hall_bldg.jpg"
+  },
+  {
+    "domain": "dal.ca",
+    "name": "Dalhousie University",
+    "aliases": ["Dalhousie University"],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/Dalhousie_University_Wordmark_2014.svg/960px-Dalhousie_University_Wordmark_2014.svg.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e9/Gerard_Hall%2C_Dalhousie_University_%281%29.jpg/960px-Gerard_Hall%2C_Dalhousie_University_%281%29.jpg"
+  },
+  {
+    "domain": "mun.ca",
+    "name": "Memorial University of Newfoundland",
+    "aliases": ["Memorial University of Newfoundland"],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dc/Memorial_University_of_Newfoundland_Logo.svg/960px-Memorial_University_of_Newfoundland_Logo.svg.png",
+    "cover_url": null
+  },
+  {
+    "domain": "sfu.ca",
+    "name": "Simon Fraser University",
+    "aliases": ["Simon Fraser University"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/4/4d/SFU_logo.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/05/Simon_Fraser_University-Surrey_Campus_Grand_Hall_2024.jpg/960px-Simon_Fraser_University-Surrey_Campus_Grand_Hall_2024.jpg"
+  },
+  {
+    "domain": "torontomu.ca",
+    "name": "Toronto Metropolitan University",
+    "aliases": ["Toronto Metropolitan University"],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9f/TMU_logo.svg/960px-TMU_logo.svg.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4d/Kerr_Hall_Lawn_2023.jpg/960px-Kerr_Hall_Lawn_2023.jpg"
+  },
+  {
+    "domain": "ucalgary.ca",
+    "name": "University of Calgary",
+    "aliases": ["University of Calgary"],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a3/University_of_Calgary_Campus.jpg/960px-University_of_Calgary_Campus.jpg"
+  },
+  {
+    "domain": "ulaval.ca",
+    "name": "Université Laval",
+    "aliases": ["Université Laval"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Universit%C3%A9_laval.gif",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f9/Universit%C3%A9_Laval%2C_Quebec_Canada_3.jpg/960px-Universit%C3%A9_Laval%2C_Quebec_Canada_3.jpg"
+  },
+  {
+    "domain": "umanitoba.ca",
+    "name": "University of Manitoba",
+    "aliases": ["University of Manitoba"],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/48/University_of_Manitoba%2C_Winnipeg%2C_Manitoba_%2843254802144%29.jpg/960px-University_of_Manitoba%2C_Winnipeg%2C_Manitoba_%2843254802144%29.jpg"
+  },
+  {
+    "domain": "uoguelph.ca",
+    "name": "University of Guelph",
+    "aliases": ["University of Guelph"],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6f/University_of_Guelph_logo.svg/960px-University_of_Guelph_logo.svg.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0a/Johnston_Green%2C_University_of_Guelph_-_Guelph%2C_ON_%282026%29-001.jpg/960px-Johnston_Green%2C_University_of_Guelph_-_Guelph%2C_ON_%282026%29-001.jpg"
+  },
+  {
+    "domain": "uregina.ca",
+    "name": "University of Regina",
+    "aliases": ["University of Regina"],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a1/UofRegina_Logo.svg/960px-UofRegina_Logo.svg.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/UofR_campus.jpg/960px-UofR_campus.jpg"
+  },
+  {
+    "domain": "usask.ca",
+    "name": "University of Saskatchewan",
+    "aliases": ["University of Saskatchewan"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/UofS-Logo.jpg",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2e/University_of_Saskatchewan_campus.jpg/960px-University_of_Saskatchewan_campus.jpg"
+  },
+  {
+    "domain": "uvic.ca",
+    "name": "University of Victoria",
+    "aliases": ["University of Victoria"],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/40/Univ_of_victoria_logo.png/960px-Univ_of_victoria_logo.png",
+    "cover_url": null
+  },
+  {
+    "domain": "wlu.ca",
+    "name": "Wilfrid Laurier University",
+    "aliases": ["Wilfrid Laurier University"],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1d/Laurier_univ_textlogo.png/960px-Laurier_univ_textlogo.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7e/Science_Building_WLU.jpg/960px-Science_Building_WLU.jpg"
+  },
+  {
+    "domain": "yorku.ca",
+    "name": "York University",
+    "aliases": ["York University"],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/9/9e/York_University_Arms.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/55/KeeleCampus.jpg/960px-KeeleCampus.jpg"
+  }
+]

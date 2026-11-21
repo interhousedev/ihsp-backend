@@ -13,6 +13,12 @@ from typing import Any
 from uuid import NAMESPACE_URL, UUID, uuid5
 
 from app.modules.admission.infrastructure.catalog_data import load_programs, load_seed
+from app.modules.admission.infrastructure.org_media import (
+    OrgMedia,
+    by_domain,
+    load_org_media,
+    normalize_domain,
+)
 from app.modules.admission.infrastructure.orm.catalog import (
     AidPolicyRow,
     CostOfAttendanceRow,
@@ -22,6 +28,7 @@ from app.modules.admission.infrastructure.orm.catalog import (
     SourceRow,
 )
 
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 _NS = uuid5(NAMESPACE_URL, "admission.catalog.seed")
@@ -46,12 +53,16 @@ class LoadReport:
     institutions: int
     facts: int
     scholarships: int
+    skipped: int
 
 
 class _Loader:
-    def __init__(self, session: AsyncSession, now: dt.datetime) -> None:
+    def __init__(
+        self, session: AsyncSession, now: dt.datetime, media: dict[str, OrgMedia]
+    ) -> None:
         self.s = session
         self.now = now
+        self.media = media
         self.facts = 0
         self.sources: set[UUID] = set()
 
@@ -105,6 +116,7 @@ class _Loader:
     async def institution(self, d: dict[str, Any]) -> int:
         inst = seed_id("institution", d["slug"])
         verified = bool(d["verified"])
+        org = self.media.get(normalize_domain(d.get("website_domain")) or "")
         await self.s.merge(
             InstitutionRow(
                 id=inst,
@@ -112,10 +124,11 @@ class _Loader:
                 name=d["name"],
                 country=d["country"],
                 city=d["city"],
+                website_domain=normalize_domain(d.get("website_domain")),
                 kind="university",
                 status="published" if verified else "provisional",
-                logo_url=d.get("logo_url"),
-                cover_url=d.get("cover_url"),
+                logo_url=d.get("logo_url") or (org.logo_url if org else None),
+                cover_url=d.get("cover_url") or (org.cover_url if org else None),
             )
         )
         base = {"url": d["source_url"], "year": d["year"], "verified": verified}
@@ -266,16 +279,35 @@ class _Loader:
             )
         )
 
+    async def owner_of_domain(self, domain: str) -> UUID | None:
+        """The id of the institution row that already has this website domain."""
+        owner: UUID | None = await self.s.scalar(
+            select(InstitutionRow.id).where(
+                func.lower(InstitutionRow.website_domain) == domain
+            )
+        )
+        return owner
+
 
 async def load_catalog(session: AsyncSession, now: dt.datetime) -> LoadReport:
-    """Upsert the seed institutions and national programmes; the caller commits."""
-    loader = _Loader(session, now)
-    schol = 0
+    """Upsert the seed institutions and national programmes; the caller commits.
+
+    A seed institution whose website domain belongs to another row (typically one
+    created by staff) is skipped rather than duplicated.
+    """
+    loader = _Loader(session, now, by_domain(load_org_media()))
+    schol = skipped = 0
     seed = load_seed()
     for d in seed:
+        domain = normalize_domain(d.get("website_domain"))
+        if domain is not None:
+            owner = await loader.owner_of_domain(domain)
+            if owner is not None and owner != seed_id("institution", d["slug"]):
+                skipped += 1
+                continue
         schol += await loader.institution(d)
     programs = load_programs()
     for p in programs:
         await loader.program(p)
     await session.flush()
-    return LoadReport(len(seed), loader.facts, schol + len(programs))
+    return LoadReport(len(seed) - skipped, loader.facts, schol + len(programs), skipped)

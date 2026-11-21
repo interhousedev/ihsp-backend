@@ -1,0 +1,503 @@
+[
+  {
+    "domain": "apu.ac.jp",
+    "name": "Ritsumeikan Asia Pacific University",
+    "aliases": [
+      "Ritsumeikan Asia Pacific University",
+      "Ritsumeikan APU",
+      "APU"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/e/e8/Ritsumeikan_Asia_Pacific_University_logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/Ritsumeikan_Asia-Pacific_University%2C_Campus_view%2C_January_2012.jpg/960px-Ritsumeikan_Asia-Pacific_University%2C_Campus_view%2C_January_2012.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "cityu.edu.hk",
+    "name": "City University of Hong Kong",
+    "aliases": [
+      "City University of Hong Kong",
+      "CityU"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9e/Hong_Kong%2C_aerial_view_from_City_University_of_Hong_Kong.JPG/960px-Hong_Kong%2C_aerial_view_from_City_University_of_Hong_Kong.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "cuhk.edu.hk",
+    "name": "The Chinese University of Hong Kong",
+    "aliases": [
+      "The Chinese University of Hong Kong",
+      "Chinese University of Hong Kong",
+      "CUHK"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/9/93/CUHK_Emblem_%281973-2008%29.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cd/Chinese_University_of_Hong_Kong_Lake_05-06-2018.jpg/960px-Chinese_University_of_Hong_Kong_Lake_05-06-2018.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "dukekunshan.edu.cn",
+    "name": "Duke Kunshan University",
+    "aliases": [
+      "Duke Kunshan University",
+      "DKU"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/18/Duke_Kunshan_University_Academic_Building.jpg/960px-Duke_Kunshan_University_Academic_Building.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "fgv.br",
+    "name": "Fundação Getulio Vargas",
+    "aliases": [
+      "Fundação Getulio Vargas",
+      "FGV"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cf/Logo_FGV_-_Funda%C3%A7%C3%A3o_Getulio_Vargas.png/960px-Logo_FGV_-_Funda%C3%A7%C3%A3o_Getulio_Vargas.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/2/21/FGV_center_495x330.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+  },
+  {
+    "domain": "fudan.edu.cn",
+    "name": "Fudan University",
+    "aliases": [
+      "Fudan University",
+      "Fudan"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/4/44/Fudan_University_Logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2d/Fudan_University_Jiangwan_Campus.jpg/960px-Fudan_University_Jiangwan_Campus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "hanyang.ac.kr",
+    "name": "Hanyang University",
+    "aliases": [
+      "Hanyang University",
+      "HYU"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/5/51/Hanyang_University_KORENG_logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d6/Hanyang_University_ERICA_Campus_Building_201_front_view.jpg/960px-Hanyang_University_ERICA_Campus_Building_201_front_view.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "hku.hk",
+    "name": "University of Hong Kong",
+    "aliases": [
+      "University of Hong Kong",
+      "HKU"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/HKU_Bonham_Road_PFL_campus_Loke_Yew_Hall_facade_Jan-2016_DSC_001.JPG/960px-HKU_Bonham_Road_PFL_campus_Loke_Yew_Hall_facade_Jan-2016_DSC_001.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "icu.ac.jp",
+    "name": "International Christian University",
+    "aliases": [
+      "International Christian University",
+      "ICU"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/d/da/International_Christian_University%2C_Mitaka%2C_Tokyo%2C_Japan.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+  },
+  {
+    "domain": "insper.edu.br",
+    "name": "Insper",
+    "aliases": [
+      "Insper"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/3/39/Logo_Insper.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/C%C3%A2mpus_Insper_-_Pr%C3%A9dio_1.jpg/960px-C%C3%A2mpus_Insper_-_Pr%C3%A9dio_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "kaist.ac.kr",
+    "name": "Korea Advanced Institute of Science and Technology",
+    "aliases": [
+      "Korea Advanced Institute of Science and Technology",
+      "KAIST"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/0/0a/KAIST_logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cb/IBS%E2%80%93KAIST_Campus_Building.jpg/960px-IBS%E2%80%93KAIST_Campus_Building.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "keio.ac.jp",
+    "name": "Keio University",
+    "aliases": [
+      "Keio University",
+      "Keio"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/a/a3/Keio_University_logo%2C_en_1.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Keio_University_Hiyoshi_Campus_%284%29.jpg/960px-Keio_University_Hiyoshi_Campus_%284%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "korea.ac.kr",
+    "name": "Korea University",
+    "aliases": [
+      "Korea University"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/4/49/Korea_University_logotype.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5d/Korea_University_Anam_Campus.jpg/960px-Korea_University_Anam_Campus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "kyoto-u.ac.jp",
+    "name": "Kyoto University",
+    "aliases": [
+      "Kyoto University"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Kyoto_University_logo%2C_1.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b3/Kyoto_University_Main_Campus_2018_a.jpg/960px-Kyoto_University_Main_Campus_2018_a.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "mcgill.ca",
+    "name": "McGill University",
+    "aliases": [
+      "McGill University",
+      "McGill"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/1/11/Mcgill_univ_ca_logo.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/90/McGill_University_downtown_campus_August_2017_01.jpg/960px-McGill_University_downtown_campus_August_2017_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "mcmaster.ca",
+    "name": "McMaster University",
+    "aliases": [
+      "McMaster University",
+      "McMaster"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/18/McMaster_University_wordmark.png/960px-McMaster_University_wordmark.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2c/McMaster_University_campus.jpg/960px-McMaster_University_campus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "ntu.edu.sg",
+    "name": "Nanyang Technological University",
+    "aliases": [
+      "Nanyang Technological University",
+      "NTU"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/NTU_Administration_Building.JPG/960px-NTU_Administration_Building.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "nus.edu.sg",
+    "name": "National University of Singapore",
+    "aliases": [
+      "National University of Singapore",
+      "NUS"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a7/National_University_of_Singapore_logo_print.jpg/960px-National_University_of_Singapore_logo_print.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f4/Manasseh_Meyer_Building%2C_National_University_of_Singapore_Bukit_Timah_Campus%2C_October_2025.jpg/960px-Manasseh_Meyer_Building%2C_National_University_of_Singapore_Bukit_Timah_Campus%2C_October_2025.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "osaka-u.ac.jp",
+    "name": "Osaka University",
+    "aliases": [
+      "Osaka University"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/4/41/University_of_Osaka_logo%2C_A.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3f/Osaka_University_Toyonaka_Campus.jpg/960px-Osaka_University_Toyonaka_Campus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "pku.edu.cn",
+    "name": "Peking University",
+    "aliases": [
+      "Peking University",
+      "PKU"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/f/f4/Peking_University_seal.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/6/63/Peking_University%2C_Campus_No.2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+  },
+  {
+    "domain": "polyu.edu.hk",
+    "name": "The Hong Kong Polytechnic University",
+    "aliases": [
+      "The Hong Kong Polytechnic University",
+      "Hong Kong Polytechnic University",
+      "PolyU"
+    ],
+    "logo_url": null,
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/d/d0/Hong_Kong_Polytechnic_University_%288426918474%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+  },
+  {
+    "domain": "postech.ac.kr",
+    "name": "Pohang University of Science and Technology",
+    "aliases": [
+      "Pohang University of Science and Technology",
+      "POSTECH"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/9/93/Postech_Logotype.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": null
+  },
+  {
+    "domain": "puc-rio.br",
+    "name": "Pontifícia Universidade Católica do Rio de Janeiro",
+    "aliases": [
+      "Pontifícia Universidade Católica do Rio de Janeiro",
+      "PUC-Rio"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "queensu.ca",
+    "name": "Queen's University",
+    "aliases": [
+      "Queen's University",
+      "Queens University"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/Ontario_Hall_at_Dusk%2C_Queen%27s_University_Campus.jpg/960px-Ontario_Hall_at_Dusk%2C_Queen%27s_University_Campus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "shanghai.nyu.edu",
+    "name": "New York University Shanghai",
+    "aliases": [
+      "New York University Shanghai",
+      "NYU Shanghai"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7d/NYU-ECNU_Joint_Research_Institutes_at_NYU_Shanghai.jpg/960px-NYU-ECNU_Joint_Research_Institutes_at_NYU_Shanghai.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "sjtu.edu.cn",
+    "name": "Shanghai Jiao Tong University",
+    "aliases": [
+      "Shanghai Jiao Tong University",
+      "SJTU"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b1/Shanghai_Jiao_Tong_University_Xuhui_campus.jpg/960px-Shanghai_Jiao_Tong_University_Xuhui_campus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "skku.edu",
+    "name": "Sungkyunkwan University",
+    "aliases": [
+      "Sungkyunkwan University",
+      "SKKU"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/4/44/Sungkyunkwan_University_-_logotype_%28ko%2Ben%29.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/10/Sungkyunkwan_University_Suwon_Hill_2.JPG/960px-Sungkyunkwan_University_Suwon_Hill_2.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "smu.edu.sg",
+    "name": "Singapore Management University",
+    "aliases": [
+      "Singapore Management University",
+      "SMU"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/e/e7/Singapore_Management_University_Logo.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/07/SMU_Campus_Green.jpg/960px-SMU_Campus_Green.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "snu.ac.kr",
+    "name": "Seoul National University",
+    "aliases": [
+      "Seoul National University",
+      "SNU"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/0/05/%EC%84%9C%EC%9A%B8%EB%8C%80%ED%95%99%EA%B5%90.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://upload.wikimedia.org/wikipedia/commons/7/77/SNU_Yeongeon.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled"
+  },
+  {
+    "domain": "sutd.edu.sg",
+    "name": "Singapore University of Technology and Design",
+    "aliases": [
+      "Singapore University of Technology and Design",
+      "SUTD"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/Singapore_University_of_Technology_and_Design_%28SUTD%29_campus.jpg/960px-Singapore_University_of_Technology_and_Design_%28SUTD%29_campus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "tohoku.ac.jp",
+    "name": "Tohoku University",
+    "aliases": [
+      "Tohoku University"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a8/%E6%9D%B1%E5%8C%97%E5%A4%A7%E5%AD%A6%E3%81%AE%E5%AD%A6%E7%AB%A0.jpg/960px-%E6%9D%B1%E5%8C%97%E5%A4%A7%E5%AD%A6%E3%81%AE%E5%AD%A6%E7%AB%A0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/df/Aobayama_New_Campus%2C_Tohoku_University%2C_1st_Nov_2025%E2%91%A0.jpg/960px-Aobayama_New_Campus%2C_Tohoku_University%2C_1st_Nov_2025%E2%91%A0.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "tsinghua.edu.cn",
+    "name": "Tsinghua University",
+    "aliases": [
+      "Tsinghua University",
+      "Tsinghua"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Tsinghua_University_Logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ef/Tsinghua_University_campus_1.jpg/960px-Tsinghua_University_campus_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "u-tokyo.ac.jp",
+    "name": "The University of Tokyo",
+    "aliases": [
+      "The University of Tokyo",
+      "University of Tokyo",
+      "Tokyo University"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/d/d6/University_of_Tokyo_logo_%282024%29.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c7/November_2024%2C_Tokyo_University_Komaba_campus.jpg/960px-November_2024%2C_Tokyo_University_Komaba_campus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "ualberta.ca",
+    "name": "University of Alberta",
+    "aliases": [
+      "University of Alberta",
+      "UAlberta"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f9/Rutherford_Humanities_and_Social_Sciences_Library_University_of_Alberta_Edmonton_Alberta_Canada.jpg/960px-Rutherford_Humanities_and_Social_Sciences_Library_University_of_Alberta_Edmonton_Alberta_Canada.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "ubc.ca",
+    "name": "University of British Columbia",
+    "aliases": [
+      "University of British Columbia",
+      "UBC"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/f/fb/British_columbia_univ_coat_arms.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b4/UBC_Clock_Tower_and_IKB_Learning_Centre_as_seen_from_Hennings.jpg/960px-UBC_Clock_Tower_and_IKB_Learning_Centre_as_seen_from_Hennings.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "ufmg.br",
+    "name": "Universidade Federal de Minas Gerais",
+    "aliases": [
+      "Universidade Federal de Minas Gerais",
+      "UFMG"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/b/b5/Logo_UFMG.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "cover_url": null
+  },
+  {
+    "domain": "ufrj.br",
+    "name": "Universidade Federal do Rio de Janeiro",
+    "aliases": [
+      "Universidade Federal do Rio de Janeiro",
+      "UFRJ"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/f/f0/UFRJ_logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/31/C%C3%A2mpus_da_Praia_Vermelha_da_Universidade_Federal_do_Rio_de_Janeiro_2.jpg/960px-C%C3%A2mpus_da_Praia_Vermelha_da_Universidade_Federal_do_Rio_de_Janeiro_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "umontreal.ca",
+    "name": "Université de Montréal",
+    "aliases": [
+      "Université de Montréal",
+      "Universite de Montreal",
+      "UdeM"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/c/ca/Universit%C3%A9-de-Montr%C3%A9al_%28logo%29.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6b/Campus_de_l%27Universit%C3%A9_de_Montr%C3%A9al_%285888180286%29.jpg/960px-Campus_de_l%27Universit%C3%A9_de_Montr%C3%A9al_%285888180286%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "unicamp.br",
+    "name": "Universidade Estadual de Campinas",
+    "aliases": [
+      "Universidade Estadual de Campinas",
+      "Unicamp"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1f/Unicamp_campus_1990.jpg/960px-Unicamp_campus_1990.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "unist.ac.kr",
+    "name": "Ulsan National Institute of Science and Technology",
+    "aliases": [
+      "Ulsan National Institute of Science and Technology",
+      "UNIST"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/0/0e/%EC%9C%A0%EB%8B%88%EC%8A%A4%ED%8A%B8_%EB%A1%9C%EA%B3%A0.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": null
+  },
+  {
+    "domain": "uottawa.ca",
+    "name": "University of Ottawa",
+    "aliases": [
+      "University of Ottawa",
+      "uOttawa"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/8/8e/Ottawa_University_wordmark.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Tabaret_Hall_Ottawa_2014.jpg/960px-Tabaret_Hall_Ottawa_2014.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "usp.br",
+    "name": "Universidade de São Paulo",
+    "aliases": [
+      "Universidade de São Paulo",
+      "USP"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Webysther_20170627_-_Bras%C3%A3o_USP.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e1/University_of_Sao_Paulo_campus_2016_008.jpg/960px-University_of_Sao_Paulo_campus_2016_008.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "ust.hk",
+    "name": "Hong Kong University of Science and Technology",
+    "aliases": [
+      "Hong Kong University of Science and Technology",
+      "HKUST"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/67/Hong_Kong_University_of_Science_and_Technology_%282878441947%29.jpg/960px-Hong_Kong_University_of_Science_and_Technology_%282878441947%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "utoronto.ca",
+    "name": "University of Toronto",
+    "aliases": [
+      "University of Toronto",
+      "U of T",
+      "UofT"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/f/f4/Wikipedia_Education_Program_University_of_Toronto_logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/Simcoe_Hall_%28University_of_Toronto%29.jpg/960px-Simcoe_Hall_%28University_of_Toronto%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "uwaterloo.ca",
+    "name": "University of Waterloo",
+    "aliases": [
+      "University of Waterloo",
+      "Waterloo"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/b/b9/University_of_Waterloo_logo.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/39/University_of_Waterloo_%28Waterloo_Campus%29_-_Waterloo%2C_Ontario.jpg/960px-University_of_Waterloo_%28Waterloo_Campus%29_-_Waterloo%2C_Ontario.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "uwo.ca",
+    "name": "Western University",
+    "aliases": [
+      "Western University",
+      "University of Western Ontario",
+      "Western"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Wikipedia_Education_Program_University_of_Western_Ontario_logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/42/University_of_Western_Ontario_-_lawn_%28I0015398%29.jpg/960px-University_of_Western_Ontario_-_lawn_%28I0015398%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "waseda.jp",
+    "name": "Waseda University",
+    "aliases": [
+      "Waseda University",
+      "Waseda"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Waseda_university_logo.svg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9c/Waseda_University_2014.JPG/960px-Waseda_University_2014.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "westlake.edu.cn",
+    "name": "Westlake University",
+    "aliases": [
+      "Westlake University"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "yonsei.ac.kr",
+    "name": "Yonsei University",
+    "aliases": [
+      "Yonsei University",
+      "Yonsei"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/2/24/Yonsei_University_logotype.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4e/Yonsei_University_campus.jpg/960px-Yonsei_University_campus.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  },
+  {
+    "domain": "zju.edu.cn",
+    "name": "Zhejiang University",
+    "aliases": [
+      "Zhejiang University",
+      "ZJU"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/99/Yuquan_campus_30.jpg/960px-Yuquan_campus_30.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail"
+  }
+]

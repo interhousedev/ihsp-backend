@@ -113,6 +113,7 @@ class Institution(_Model):
     name: str
     country: str = Field(pattern=r"^[A-Z]{2}$")
     city: str
+    website_domain: str | None = None
     city_type: CityType | None = None
     fields: list[str] = []
     acceptance_rate: RangeFact | None = None  # percent

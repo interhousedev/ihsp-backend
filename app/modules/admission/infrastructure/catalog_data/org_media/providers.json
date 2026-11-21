@@ -1,0 +1,274 @@
+[
+  {
+    "domain": "amazon.com",
+    "name": "Amazon Web Services",
+    "aliases": [
+      "Amazon Web Services"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/93/Amazon_Web_Services_Logo.svg/960px-Amazon_Web_Services_Logo.svg.png",
+    "cover_url": null
+  },
+  {
+    "domain": "anthropic.com",
+    "name": "Anthropic",
+    "aliases": [
+      "Anthropic"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/78/Anthropic_logo.svg/960px-Anthropic_logo.svg.png",
+    "cover_url": null
+  },
+  {
+    "domain": "asu.edu",
+    "name": "Arizona State University",
+    "aliases": [
+      "Arizona State University"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f2/Campus_view_-_Arizona_State_University_-_Tempe%2C_AZ_-_DSC05930.JPG/960px-Campus_view_-_Arizona_State_University_-_Tempe%2C_AZ_-_DSC05930.JPG"
+  },
+  {
+    "domain": "cambridgeenglish.org",
+    "name": "Cambridge English",
+    "aliases": [
+      "Cambridge English"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "campusfrance.org",
+    "name": "Campus France",
+    "aliases": [
+      "French Ministry for Europe and Foreign Affairs / Campus France"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "cern.ch",
+    "name": "CERN",
+    "aliases": [
+      "CERN"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f1/CERN_logo_badge.svg/960px-CERN_logo_badge.svg.png",
+    "cover_url": null
+  },
+  {
+    "domain": "csc.edu.cn",
+    "name": "China Scholarship Council (CSC)",
+    "aliases": [
+      "China Scholarship Council (CSC)"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "deeplearning.ai",
+    "name": "DeepLearning.AI",
+    "aliases": [
+      "DeepLearning.AI and Stanford on Coursera"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "deepteachingsolutions.com",
+    "name": "Deep Teaching Solutions",
+    "aliases": [
+      "Deep Teaching Solutions on Coursera"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "duolingo.com",
+    "name": "Duolingo",
+    "aliases": [
+      "Duolingo"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/Duolingo_logo_%282019%29.svg/960px-Duolingo_logo_%282019%29.svg.png",
+    "cover_url": null
+  },
+  {
+    "domain": "epfl.ch",
+    "name": "EPFL",
+    "aliases": [
+      "EPFL"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/Logo_EPFL_2019.svg/960px-Logo_EPFL_2019.svg.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e2/EPFL_campus_2017.jpg/960px-EPFL_campus_2017.jpg"
+  },
+  {
+    "domain": "esteri.it",
+    "name": "Ministry of Foreign Affairs and International Cooperation (Italy)",
+    "aliases": [
+      "Italian Ministry of Foreign Affairs and International Cooperation (MAECI)"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "ets.org",
+    "name": "Educational Testing Service",
+    "aliases": [
+      "ETS"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/78/ETS_Logo_2024.svg/960px-ETS_Logo_2024.svg.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bb/ETS_Messick_Hall.jpg/960px-ETS_Messick_Hall.jpg"
+  },
+  {
+    "domain": "google.com",
+    "name": "Google",
+    "aliases": [
+      "Google on Coursera"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Google_2015_logo.svg/960px-Google_2015_logo.svg.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e2/Google_Campus%2C_Mountain_View%2C_CA.jpg/960px-Google_Campus%2C_Mountain_View%2C_CA.jpg"
+  },
+  {
+    "domain": "harvard.edu",
+    "name": "Harvard University",
+    "aliases": [
+      "Harvard University"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cc/Harvard_University_coat_of_arms.svg/960px-Harvard_University_coat_of_arms.svg.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Harvard_Science_Center_from_the_Yard.jpg/960px-Harvard_Science_Center_from_the_Yard.jpg"
+  },
+  {
+    "domain": "helsinki.fi",
+    "name": "University of Helsinki",
+    "aliases": [
+      "University of Helsinki",
+      "University of Helsinki and MinnaLearn"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b6/Logo_University_of_Helsinki_fi.svg/960px-Logo_University_of_Helsinki_fi.svg.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fd/University_of_Helsinki_City_Centre_Campus_on_28th_September_2014_1.jpg/960px-University_of_Helsinki_City_Centre_Campus_on_28th_September_2014_1.jpg"
+  },
+  {
+    "domain": "imo-official.org",
+    "name": "International Mathematical Olympiad",
+    "aliases": [
+      "IMO"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/17/IMO_logo.svg/960px-IMO_logo.svg.png",
+    "cover_url": null
+  },
+  {
+    "domain": "ioinformatics.org",
+    "name": "International Olympiad in Informatics",
+    "aliases": [
+      "IOI"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bf/InternationalOlympiadInInformatics.png/960px-InternationalOlympiadInInformatics.png",
+    "cover_url": null
+  },
+  {
+    "domain": "mit.edu",
+    "name": "Massachusetts Institute of Technology",
+    "aliases": [
+      "MIT on edX",
+      "MIT OpenCourseWare"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/MIT_2023_red_logo.svg/960px-MIT_2023_red_logo.svg.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e2/MIT_from_Harvard_Bridge_%284713031548%29.jpg/960px-MIT_from_Harvard_Bridge_%284713031548%29.jpg"
+  },
+  {
+    "domain": "nasa.gov",
+    "name": "NASA",
+    "aliases": [
+      "NASA"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/NASA_seal.svg/960px-NASA_seal.svg.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f0/NASA_HQ_Building.jpg/960px-NASA_HQ_Building.jpg"
+  },
+  {
+    "domain": "niied.go.kr",
+    "name": "National Institute for International Education",
+    "aliases": [
+      "National Institute for International Education, Korea Ministry of Education"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "rhodestrust.com",
+    "name": "Rhodes Trust",
+    "aliases": [
+      "Schmidt Futures and the Rhodes Trust"
+    ],
+    "logo_url": null,
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/eb/Rhodes_House_Oxford_20040909.jpg/960px-Rhodes_House_Oxford_20040909.jpg"
+  },
+  {
+    "domain": "sbfi.admin.ch",
+    "name": "State Secretariat for Education, Research and Innovation (SERI)",
+    "aliases": [
+      "Swiss Federal Commission for Scholarships for Foreign Students (FCS / ESKAS), SERI"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/05/Logo_der_Schweizerischen_Eidgenossenschaft.svg/960px-Logo_der_Schweizerischen_Eidgenossenschaft.svg.png",
+    "cover_url": null
+  },
+  {
+    "domain": "schwarzmanscholars.org",
+    "name": "Schwarzman Scholars",
+    "aliases": [
+      "Schwarzman Scholars, Tsinghua University"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/Schwarzman_Scholars.png/960px-Schwarzman_Scholars.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ef/Tsinghua_University_campus_1.jpg/960px-Tsinghua_University_campus_1.jpg"
+  },
+  {
+    "domain": "societyforscience.org",
+    "name": "Society for Science",
+    "aliases": [
+      "Society for Science"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "technovation.org",
+    "name": "Technovation",
+    "aliases": [
+      "Technovation"
+    ],
+    "logo_url": "https://upload.wikimedia.org/wikipedia/commons/1/1f/Technovation_girls.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/20190815_845a_Event_Technovation-Girls-2019_XE3_DSCF2730.jpg/960px-20190815_845a_Event_Technovation-Girls-2019_XE3_DSCF2730.jpg"
+  },
+  {
+    "domain": "ugc.edu.hk",
+    "name": "Research Grants Council, University Grants Committee Hong Kong",
+    "aliases": [
+      "Research Grants Council, University Grants Committee Hong Kong"
+    ],
+    "logo_url": null,
+    "cover_url": null
+  },
+  {
+    "domain": "unibocconi.it",
+    "name": "Bocconi University",
+    "aliases": [
+      "Bocconi University"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/Bocconi_University_Logo.svg/960px-Bocconi_University_Logo.svg.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/13/Campus_Bocconi_di_sera_%2828_novembre_2019%29.jpg/960px-Campus_Bocconi_di_sera_%2828_novembre_2019%29.jpg"
+  },
+  {
+    "domain": "wolfram.com",
+    "name": "Wolfram Research",
+    "aliases": [
+      "Wolfram Research"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/eb/WolframCorporateLogo.svg/960px-WolframCorporateLogo.svg.png",
+    "cover_url": null
+  },
+  {
+    "domain": "yale.edu",
+    "name": "Yale University",
+    "aliases": [
+      "Yale University on Coursera"
+    ],
+    "logo_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/07/Yale_University_Shield_1.svg/960px-Yale_University_Shield_1.svg.png",
+    "cover_url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cd/Old_Campus_Courtyard_and_Durfee_Hall%2C_Yale_University%2C_New_Haven%2C_2007.jpg/960px-Old_Campus_Courtyard_and_Durfee_Hall%2C_Yale_University%2C_New_Haven%2C_2007.jpg"
+  }
+]
